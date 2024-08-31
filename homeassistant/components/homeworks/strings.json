@@ -1,0 +1,180 @@
+{
+  "config": {
+    "error": {
+      "connection_error": "Could not connect to the controller.",
+      "credentials_needed": "The controller needs credentials.",
+      "duplicated_controller_id": "The controller name is already in use.",
+      "duplicated_host_port": "The specified host and port is already configured.",
+      "invalid_credentials": "The provided credentials are not valid.",
+      "need_username_with_password": "Credentials must be either a username and a password or only a username.",
+      "unknown_error": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "import_finish": {
+        "description": "The existing YAML configuration has succesfully been imported.\n\nYou can now remove the `homeworks` configuration from your configuration.yaml file."
+      },
+      "import_controller_name": {
+        "description": "Lutron Homeworks is no longer configured through configuration.yaml.\n\nPlease fill in the form to import the existing configuration to the UI.",
+        "data": {
+          "name": "[%key:component::homeworks::config::step::user::data::name%]"
+        },
+        "data_description": {
+          "name": "[%key:component::homeworks::config::step::user::data_description::name%]"
+        }
+      },
+      "reconfigure": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "password": "Optional password, leave blank if your system does not need credentials or only needs a single credential",
+          "username": "Optional username, leave blank if your system does not need login credentials"
+        },
+        "description": "Modify a Lutron Homeworks controller connection settings"
+      },
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "name": "Controller name",
+          "port": "[%key:common::config_flow::data::port%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "name": "A unique name identifying the Lutron Homeworks controller",
+          "password": "[%key:component::homeworks::config::step::reconfigure::data_description::password%]",
+          "username": "[%key:component::homeworks::config::step::reconfigure::data_description::username%]"
+        },
+        "description": "Add a Lutron Homeworks controller"
+      }
+    }
+  },
+  "exceptions": {
+    "invalid_controller_id": {
+      "message": "Invalid controller_id \"{controller_id}\", expected one of \"{controller_ids}\""
+    }
+  },
+  "options": {
+    "error": {
+      "duplicated_addr": "The specified address is already in use",
+      "duplicated_number": "The specified number is already in use",
+      "invalid_addr": "Invalid address"
+    },
+    "step": {
+      "init": {
+        "menu_options": {
+          "add_keypad": "Add keypad",
+          "add_light": "Add light",
+          "remove_keypad": "Remove keypad",
+          "remove_light": "Remove light",
+          "select_edit_keypad": "Configure keypad",
+          "select_edit_light": "Configure light"
+        }
+      },
+      "add_button": {
+        "data": {
+          "name": "[%key:common::config_flow::data::name%]",
+          "number": "Number",
+          "led": "LED",
+          "release_delay": "Release delay"
+        },
+        "data_description": {
+          "number": "Button number in the range 1 to 24",
+          "led": "Enable if the button has a scene select indicator",
+          "release_delay": "Time between press and release, set to 0 to only press"
+        },
+        "title": "[%key:component::homeworks::options::step::init::menu_options::add_keypad%]"
+      },
+      "add_keypad": {
+        "data": {
+          "name": "[%key:common::config_flow::data::name%]",
+          "addr": "Address"
+        },
+        "data_description": {
+          "addr": "Keypad address, must be formatted as `[##:##:##:##]`"
+        },
+        "title": "[%key:component::homeworks::options::step::init::menu_options::add_keypad%]"
+      },
+      "add_light": {
+        "data": {
+          "name": "[%key:common::config_flow::data::name%]",
+          "addr": "[%key:component::homeworks::options::step::add_keypad::data::addr%]",
+          "rate": "Fade rate"
+        },
+        "data_description": {
+          "addr": "Keypad address, must be formatted as `[##:##:##:##]`",
+          "rate": "Time in seconds for the light to transition to a new brightness level"
+        },
+        "title": "[%key:component::homeworks::options::step::init::menu_options::add_light%]"
+      },
+      "edit_button": {
+        "data": {
+          "led": "[%key:component::homeworks::options::step::add_button::data::led%]",
+          "release_delay": "[%key:component::homeworks::options::step::add_button::data::release_delay%]"
+        },
+        "data_description": {
+          "led": "[%key:component::homeworks::options::step::add_button::data_description::led%]",
+          "release_delay": "[%key:component::homeworks::options::step::add_button::data_description::release_delay%]"
+        },
+        "title": "[%key:component::homeworks::options::step::edit_keypad::menu_options::select_edit_button%]"
+      },
+      "edit_keypad": {
+        "menu_options": {
+          "add_button": "Add button",
+          "remove_button": "Remove button",
+          "select_edit_button": "Configure button"
+        }
+      },
+      "edit_light": {
+        "data": {
+          "rate": "[%key:component::homeworks::options::step::add_light::data::rate%]"
+        },
+        "data_description": {
+          "rate": "[%key:component::homeworks::options::step::add_light::data_description::rate%]"
+        },
+        "description": "Select a light to configure",
+        "title": "[%key:component::homeworks::options::step::init::menu_options::select_edit_light%]"
+      },
+      "remove_button": {
+        "description": "Select buttons to remove",
+        "title": "[%key:component::homeworks::options::step::edit_keypad::menu_options::remove_button%]"
+      },
+      "remove_keypad": {
+        "description": "Select keypads to remove",
+        "title": "[%key:component::homeworks::options::step::init::menu_options::remove_keypad%]"
+      },
+      "remove_light": {
+        "description": "Select lights to remove",
+        "title": "[%key:component::homeworks::options::step::init::menu_options::remove_light%]"
+      },
+      "select_edit_button": {
+        "title": "[%key:component::homeworks::options::step::edit_keypad::menu_options::select_edit_button%]"
+      },
+      "select_edit_keypad": {
+        "title": "[%key:component::homeworks::options::step::init::menu_options::select_edit_keypad%]"
+      },
+      "select_edit_light": {
+        "title": "[%key:component::homeworks::options::step::init::menu_options::select_edit_light%]"
+      }
+    }
+  },
+  "services": {
+    "send_command": {
+      "name": "Send command",
+      "description": "Send custom command to a controller",
+      "fields": {
+        "command": {
+          "name": "Command",
+          "description": "Command to send to the controller. This can either be a single command or a list of commands."
+        },
+        "controller_id": {
+          "name": "Controller ID",
+          "description": "The controller to which to send command."
+        }
+      }
+    }
+  }
+}

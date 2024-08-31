@@ -1,4 +1,5 @@
 """Platform for device tracker integration."""
+
 from __future__ import annotations
 
 from devolo_plc_api.device import Device
@@ -9,7 +10,6 @@ from homeassistant.components.device_tracker import (
     ScannerEntity,
     SourceType,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_UNKNOWN, UnitOfFrequency
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
@@ -19,17 +19,22 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
+from . import DevoloHomeNetworkConfigEntry
 from .const import CONNECTED_WIFI_CLIENTS, DOMAIN, WIFI_APTYPE, WIFI_BANDS
+
+PARALLEL_UPDATES = 1
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: DevoloHomeNetworkConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Get all devices and sensors and setup them via config entry."""
-    device: Device = hass.data[DOMAIN][entry.entry_id]["device"]
-    coordinators: dict[
-        str, DataUpdateCoordinator[list[ConnectedStationInfo]]
-    ] = hass.data[DOMAIN][entry.entry_id]["coordinators"]
+    device = entry.runtime_data.device
+    coordinators: dict[str, DataUpdateCoordinator[list[ConnectedStationInfo]]] = (
+        entry.runtime_data.coordinators
+    )
     registry = er.async_get(hass)
     tracked = set()
 

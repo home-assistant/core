@@ -1,16 +1,17 @@
 """Config flow to configure songpal component."""
+
 from __future__ import annotations
 
 import logging
+from typing import Any
 from urllib.parse import urlparse
 
 from songpal import Device, SongpalException
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.components import ssdp
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_NAME
-from homeassistant.data_entry_flow import FlowResult
 
 from .const import CONF_ENDPOINT, DOMAIN
 
@@ -27,7 +28,7 @@ class SongpalConfig:
         self.endpoint = endpoint
 
 
-class SongpalConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class SongpalConfigFlow(ConfigFlow, domain=DOMAIN):
     """Songpal configuration flow."""
 
     VERSION = 1
@@ -36,7 +37,9 @@ class SongpalConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize the flow."""
         self.conf: SongpalConfig | None = None
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
         if user_input is None:
             return self.async_show_form(
@@ -93,7 +96,9 @@ class SongpalConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data={CONF_NAME: self.conf.name, CONF_ENDPOINT: self.conf.endpoint},
         )
 
-    async def async_step_ssdp(self, discovery_info: ssdp.SsdpServiceInfo) -> FlowResult:
+    async def async_step_ssdp(
+        self, discovery_info: ssdp.SsdpServiceInfo
+    ) -> ConfigFlowResult:
         """Handle a discovered Songpal device."""
         await self.async_set_unique_id(discovery_info.upnp[ssdp.ATTR_UPNP_UDN])
         self._abort_if_unique_id_configured()
@@ -121,10 +126,10 @@ class SongpalConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_init()
 
-    async def async_step_import(self, user_input=None):
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Import a config entry."""
-        name = user_input.get(CONF_NAME)
-        endpoint = user_input.get(CONF_ENDPOINT)
+        name = import_data.get(CONF_NAME)
+        endpoint = import_data.get(CONF_ENDPOINT)
         parsed_url = urlparse(endpoint)
 
         # Try to connect to test the endpoint
@@ -141,4 +146,4 @@ class SongpalConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         self.conf = SongpalConfig(name, parsed_url.hostname, endpoint)
 
-        return await self.async_step_init(user_input)
+        return await self.async_step_init(import_data)

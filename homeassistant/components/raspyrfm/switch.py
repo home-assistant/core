@@ -1,4 +1,5 @@
 """Support for switches that can be controlled using the RaspyRFM rc module."""
+
 from __future__ import annotations
 
 from raspyrfm_client import RaspyRFMClient
@@ -12,7 +13,10 @@ from raspyrfm_client.device_implementations.gateway.manufacturer.gateway_constan
 from raspyrfm_client.device_implementations.manufacturer_constants import Manufacturer
 import voluptuous as vol
 
-from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
+from homeassistant.components.switch import (
+    PLATFORM_SCHEMA as SWITCH_PLATFORM_SCHEMA,
+    SwitchEntity,
+)
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -33,7 +37,7 @@ CONF_CHANNEL_CONFIG = "channel_config"
 DEFAULT_HOST = "127.0.0.1"
 
 # define configuration parameters
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
         vol.Optional(CONF_PORT): cv.port,

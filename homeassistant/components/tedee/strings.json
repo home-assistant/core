@@ -1,0 +1,67 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Setup your tedee locks",
+        "data": {
+          "local_access_token": "Local access token",
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "The IP address of the bridge you want to connect to.",
+          "local_access_token": "You can find it in the tedee app under \"Bridge Settings\" -> \"Local API\"."
+        }
+      },
+      "reauth_confirm": {
+        "title": "Update of access key required",
+        "description": "Tedee needs an updated access key, because the existing one is invalid, or might have expired.",
+        "data": {
+          "local_access_token": "[%key:component::tedee::config::step::user::data::local_access_token%]"
+        },
+        "data_description": {
+          "local_access_token": "[%key:component::tedee::config::step::user::data_description::local_access_token%]"
+        }
+      },
+      "reconfigure_confirm": {
+        "title": "Reconfigure Tedee",
+        "description": "Update the settings of this integration.",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "local_access_token": "[%key:component::tedee::config::step::user::data::local_access_token%]"
+        },
+        "data_description": {
+          "host": "[%key:component::tedee::config::step::user::data_description::host%]",
+          "local_access_token": "[%key:component::tedee::config::step::user::data_description::local_access_token%]"
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+    },
+    "error": {
+      "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]",
+      "invalid_host": "[%key:common::config_flow::error::invalid_host%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "pullspring_enabled": {
+        "name": "Pullspring enabled"
+      },
+      "semi_locked": {
+        "name": "Semi locked"
+      },
+      "uncalibrated": {
+        "name": "Lock uncalibrated"
+      }
+    },
+    "sensor": {
+      "pullspring_duration": {
+        "name": "Pullspring duration"
+      }
+    }
+  }
+}

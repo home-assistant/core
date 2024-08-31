@@ -1,14 +1,11 @@
 """Helper class to convert between Home Assistant and ESPHome enum values."""
 
-from typing import Generic, TypeVar, overload
+from typing import overload
 
 from aioesphomeapi import APIIntEnum
 
-_EnumT = TypeVar("_EnumT", bound=APIIntEnum)
-_ValT = TypeVar("_ValT")
 
-
-class EsphomeEnumMapper(Generic[_EnumT, _ValT]):
+class EsphomeEnumMapper[_EnumT: APIIntEnum, _ValT]:
     """Helper class to convert between hass and esphome enum values."""
 
     def __init__(self, mapping: dict[_EnumT, _ValT]) -> None:
@@ -21,12 +18,10 @@ class EsphomeEnumMapper(Generic[_EnumT, _ValT]):
         self._inverse: dict[_ValT, _EnumT] = {v: k for k, v in mapping.items()}
 
     @overload
-    def from_esphome(self, value: _EnumT) -> _ValT:
-        ...
+    def from_esphome(self, value: _EnumT) -> _ValT: ...
 
     @overload
-    def from_esphome(self, value: _EnumT | None) -> _ValT | None:
-        ...
+    def from_esphome(self, value: _EnumT | None) -> _ValT | None: ...
 
     def from_esphome(self, value: _EnumT | None) -> _ValT | None:
         """Convert from an esphome int representation to a hass string."""

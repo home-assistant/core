@@ -1,0 +1,18 @@
+{
+  "entity": {
+    "sensor": {
+      "free_space_short": {
+        "default": "mdi:car"
+      },
+      "free_space_long": {
+        "default": "mdi:car"
+      },
+      "short_capacity": {
+        "default": "mdi:car"
+      },
+      "long_capacity": {
+        "default": "mdi:car"
+      }
+    }
+  }
+}

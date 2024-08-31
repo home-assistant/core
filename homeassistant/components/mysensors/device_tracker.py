@@ -1,4 +1,5 @@
 """Support for tracking MySensors devices."""
+
 from __future__ import annotations
 
 from homeassistant.components.device_tracker import SourceType, TrackerEntity

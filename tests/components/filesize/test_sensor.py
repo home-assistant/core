@@ -1,4 +1,5 @@
 """The tests for the filesize sensor."""
+
 import os
 from pathlib import Path
 

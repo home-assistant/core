@@ -1,4 +1,5 @@
 """Test the sql utils."""
+
 from homeassistant.components.recorder import Recorder, get_instance
 from homeassistant.components.sql.util import resolve_db_url
 from homeassistant.core import HomeAssistant

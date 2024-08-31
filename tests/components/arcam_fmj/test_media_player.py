@@ -1,10 +1,17 @@
 """Tests for arcam fmj receivers."""
+
 from math import isclose
 from unittest.mock import ANY, PropertyMock, patch
 
 from arcam.fmj import ConnectionFailed, DecodeMode2CH, DecodeModeMCH, SourceCodes
 import pytest
 
+from homeassistant.components.arcam_fmj.const import (
+    SIGNAL_CLIENT_DATA,
+    SIGNAL_CLIENT_STARTED,
+    SIGNAL_CLIENT_STOPPED,
+)
+from homeassistant.components.arcam_fmj.media_player import ArcamFmj
 from homeassistant.components.homeassistant import (
     DOMAIN as HA_DOMAIN,
     SERVICE_UPDATE_ENTITY,
@@ -337,7 +344,6 @@ async def test_media_artist(player, state, source, dls, artist) -> None:
 )
 async def test_media_title(player, state, source, channel, title) -> None:
     """Test media title."""
-    from homeassistant.components.arcam_fmj.media_player import ArcamFmj
 
     state.get_source.return_value = source
     with patch.object(
@@ -353,11 +359,6 @@ async def test_media_title(player, state, source, channel, title) -> None:
 
 async def test_added_to_hass(player, state) -> None:
     """Test addition to hass."""
-    from homeassistant.components.arcam_fmj.const import (
-        SIGNAL_CLIENT_DATA,
-        SIGNAL_CLIENT_STARTED,
-        SIGNAL_CLIENT_STOPPED,
-    )
 
     with patch(
         "homeassistant.components.arcam_fmj.media_player.async_dispatcher_connect"

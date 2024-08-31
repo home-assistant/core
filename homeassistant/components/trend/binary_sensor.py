@@ -1,4 +1,5 @@
 """A sensor that monitors trends in other components."""
+
 from __future__ import annotations
 
 from collections import deque
@@ -13,10 +14,11 @@ import voluptuous as vol
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA,
     ENTITY_ID_FORMAT,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as BINARY_SENSOR_PLATFORM_SCHEMA,
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
@@ -29,17 +31,16 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device import async_device_info_to_link_from_entity
 from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.event import (
-    EventStateChangedData,
-    async_track_state_change_event,
-)
+from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, EventType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.dt import utcnow
 
 from . import PLATFORMS
@@ -54,6 +55,10 @@ from .const import (
     CONF_MIN_GRADIENT,
     CONF_MIN_SAMPLES,
     CONF_SAMPLE_DURATION,
+    DEFAULT_MAX_SAMPLES,
+    DEFAULT_MIN_GRADIENT,
+    DEFAULT_MIN_SAMPLES,
+    DEFAULT_SAMPLE_DURATION,
     DOMAIN,
 )
 
@@ -87,7 +92,7 @@ SENSOR_SCHEMA = vol.All(
     _validate_min_max,
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_SENSORS): cv.schema_with_slug_keys(SENSOR_SCHEMA)}
 )
 
@@ -101,40 +106,58 @@ async def async_setup_platform(
     """Set up the trend sensors."""
     await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
 
-    sensors = []
-
-    for device_id, device_config in config[CONF_SENSORS].items():
-        entity_id = device_config[ATTR_ENTITY_ID]
-        attribute = device_config.get(CONF_ATTRIBUTE)
-        device_class = device_config.get(CONF_DEVICE_CLASS)
-        friendly_name = device_config.get(ATTR_FRIENDLY_NAME, device_id)
-        invert = device_config[CONF_INVERT]
-        max_samples = device_config[CONF_MAX_SAMPLES]
-        min_gradient = device_config[CONF_MIN_GRADIENT]
-        sample_duration = device_config[CONF_SAMPLE_DURATION]
-        min_samples = device_config[CONF_MIN_SAMPLES]
-
-        sensors.append(
+    entities = []
+    for sensor_name, sensor_config in config[CONF_SENSORS].items():
+        entities.append(
             SensorTrend(
-                hass,
-                device_id,
-                friendly_name,
-                entity_id,
-                attribute,
-                device_class,
-                invert,
-                max_samples,
-                min_gradient,
-                sample_duration,
-                min_samples,
+                name=sensor_config.get(CONF_FRIENDLY_NAME, sensor_name),
+                entity_id=sensor_config[CONF_ENTITY_ID],
+                attribute=sensor_config.get(CONF_ATTRIBUTE),
+                invert=sensor_config[CONF_INVERT],
+                sample_duration=sensor_config[CONF_SAMPLE_DURATION],
+                min_gradient=sensor_config[CONF_MIN_GRADIENT],
+                min_samples=sensor_config[CONF_MIN_SAMPLES],
+                max_samples=sensor_config[CONF_MAX_SAMPLES],
+                device_class=sensor_config.get(CONF_DEVICE_CLASS),
+                sensor_entity_id=generate_entity_id(
+                    ENTITY_ID_FORMAT, sensor_name, hass=hass
+                ),
             )
         )
 
-    if not sensors:
-        _LOGGER.error("No sensors added")
-        return
+    async_add_entities(entities)
 
-    async_add_entities(sensors)
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up trend sensor from config entry."""
+
+    device_info = async_device_info_to_link_from_entity(
+        hass,
+        entry.options[CONF_ENTITY_ID],
+    )
+
+    async_add_entities(
+        [
+            SensorTrend(
+                name=entry.title,
+                entity_id=entry.options[CONF_ENTITY_ID],
+                attribute=entry.options.get(CONF_ATTRIBUTE),
+                invert=entry.options[CONF_INVERT],
+                sample_duration=entry.options.get(
+                    CONF_SAMPLE_DURATION, DEFAULT_SAMPLE_DURATION
+                ),
+                min_gradient=entry.options.get(CONF_MIN_GRADIENT, DEFAULT_MIN_GRADIENT),
+                min_samples=entry.options.get(CONF_MIN_SAMPLES, DEFAULT_MIN_SAMPLES),
+                max_samples=entry.options.get(CONF_MAX_SAMPLES, DEFAULT_MAX_SAMPLES),
+                unique_id=entry.entry_id,
+                device_info=device_info,
+            )
+        ]
+    )
 
 
 class SensorTrend(BinarySensorEntity, RestoreEntity):
@@ -146,30 +169,35 @@ class SensorTrend(BinarySensorEntity, RestoreEntity):
 
     def __init__(
         self,
-        hass: HomeAssistant,
-        device_id: str,
-        friendly_name: str,
+        name: str,
         entity_id: str,
-        attribute: str,
-        device_class: BinarySensorDeviceClass,
+        attribute: str | None,
         invert: bool,
-        max_samples: int,
-        min_gradient: float,
         sample_duration: int,
+        min_gradient: float,
         min_samples: int,
+        max_samples: int,
+        unique_id: str | None = None,
+        device_class: BinarySensorDeviceClass | None = None,
+        sensor_entity_id: str | None = None,
+        device_info: dr.DeviceInfo | None = None,
     ) -> None:
         """Initialize the sensor."""
-        self._hass = hass
-        self.entity_id = generate_entity_id(ENTITY_ID_FORMAT, device_id, hass=hass)
-        self._attr_name = friendly_name
-        self._attr_device_class = device_class
         self._entity_id = entity_id
         self._attribute = attribute
         self._invert = invert
         self._sample_duration = sample_duration
         self._min_gradient = min_gradient
         self._min_samples = min_samples
-        self.samples: deque = deque(maxlen=max_samples)
+        self.samples: deque = deque(maxlen=int(max_samples))
+
+        self._attr_name = name
+        self._attr_device_class = device_class
+        self._attr_unique_id = unique_id
+        self._attr_device_info = device_info
+
+        if sensor_entity_id:
+            self.entity_id = sensor_entity_id
 
     @property
     def is_on(self) -> bool | None:
@@ -194,7 +222,7 @@ class SensorTrend(BinarySensorEntity, RestoreEntity):
 
         @callback
         def trend_sensor_state_listener(
-            event: EventType[EventStateChangedData],
+            event: Event[EventStateChangedData],
         ) -> None:
             """Handle state changes on the observed device."""
             if (new_state := event.data["new_state"]) is None:

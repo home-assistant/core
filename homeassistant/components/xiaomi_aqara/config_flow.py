@@ -1,15 +1,16 @@
 """Config flow to configure Xiaomi Aqara."""
+
 import logging
 from socket import gaierror
+from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 from xiaomi_gateway import MULTICAST_PORT, XiaomiGateway, XiaomiGatewayDiscovery
 
-from homeassistant import config_entries
 from homeassistant.components import zeroconf
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_PORT, CONF_PROTOCOL
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.device_registry import format_mac
 
 from .const import (
@@ -44,18 +45,18 @@ GATEWAY_SETTINGS = vol.Schema(
 )
 
 
-class XiaomiAqaraFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class XiaomiAqaraFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a Xiaomi Aqara config flow."""
 
     VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize."""
-        self.host = None
+        self.host: str | None = None
         self.interface = DEFAULT_INTERFACE
-        self.sid = None
-        self.gateways = None
-        self.selected_gateway = None
+        self.sid: str | None = None
+        self.gateways: dict[str, XiaomiGateway] | None = None
+        self.selected_gateway: XiaomiGateway | None = None
 
     @callback
     def async_show_form_step_user(self, errors):
@@ -66,9 +67,11 @@ class XiaomiAqaraFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
-        errors = {}
+        errors: dict[str, str] = {}
         if user_input is None:
             return self.async_show_form_step_user(errors)
 
@@ -96,6 +99,8 @@ class XiaomiAqaraFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 None,
             )
 
+            if TYPE_CHECKING:
+                assert self.selected_gateway
             if self.selected_gateway.connection_error:
                 errors[CONF_HOST] = "invalid_host"
             if self.selected_gateway.mac_error:
@@ -115,6 +120,8 @@ class XiaomiAqaraFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         self.gateways = xiaomi.gateways
 
+        if TYPE_CHECKING:
+            assert self.gateways is not None
         if len(self.gateways) == 1:
             self.selected_gateway = list(self.gateways.values())[0]
             self.sid = self.selected_gateway.sid
@@ -148,7 +155,7 @@ class XiaomiAqaraFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_zeroconf(
         self, discovery_info: zeroconf.ZeroconfServiceInfo
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
         name = discovery_info.name
         self.host = discovery_info.host
@@ -158,9 +165,7 @@ class XiaomiAqaraFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="not_xiaomi_aqara")
 
         # Check if the discovered device is an xiaomi aqara gateway.
-        if not (
-            name.startswith(ZEROCONF_GATEWAY) or name.startswith(ZEROCONF_ACPARTNER)
-        ):
+        if not (name.startswith((ZEROCONF_GATEWAY, ZEROCONF_ACPARTNER))):
             _LOGGER.debug(
                 (
                     "Xiaomi device '%s' discovered with host %s, not identified as"
@@ -206,7 +211,7 @@ class XiaomiAqaraFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 valid_key = True
 
             if valid_key:
-                # format_mac, for a gateway the sid equels the mac address
+                # format_mac, for a gateway the sid equals the mac address
                 mac_address = format_mac(self.sid)
 
                 # set unique_id

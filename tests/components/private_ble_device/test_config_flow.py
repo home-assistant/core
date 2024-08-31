@@ -1,5 +1,8 @@
 """Tests for private bluetooth device config flow."""
+
 from unittest.mock import patch
+
+import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.private_ble_device import const
@@ -12,29 +15,29 @@ from tests.components.bluetooth import inject_bluetooth_service_info
 
 def assert_form_error(result: FlowResult, key: str, value: str) -> None:
     """Assert that a flow returned a form error."""
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"]
     assert result["errors"][key] == value
 
 
-async def test_setup_user_no_bluetooth(
-    hass: HomeAssistant, mock_bluetooth_adapters: None
-) -> None:
+@pytest.mark.usefixtures("mock_bluetooth_adapters")
+async def test_setup_user_no_bluetooth(hass: HomeAssistant) -> None:
     """Test setting up via user interaction when bluetooth is not enabled."""
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN,
         context={"source": config_entries.SOURCE_USER},
     )
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "bluetooth_not_available"
 
 
-async def test_invalid_irk(hass: HomeAssistant, enable_bluetooth: None) -> None:
+@pytest.mark.usefixtures("enable_bluetooth")
+async def test_invalid_irk(hass: HomeAssistant) -> None:
     """Test invalid irk."""
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={"irk": "irk:000000"}
@@ -42,12 +45,13 @@ async def test_invalid_irk(hass: HomeAssistant, enable_bluetooth: None) -> None:
     assert_form_error(result, "irk", "irk_not_valid")
 
 
-async def test_invalid_irk_base64(hass: HomeAssistant, enable_bluetooth: None) -> None:
+@pytest.mark.usefixtures("enable_bluetooth")
+async def test_invalid_irk_base64(hass: HomeAssistant) -> None:
     """Test invalid irk."""
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={"irk": "Ucredacted4T8n!!ZZZ=="}
@@ -55,12 +59,13 @@ async def test_invalid_irk_base64(hass: HomeAssistant, enable_bluetooth: None) -
     assert_form_error(result, "irk", "irk_not_valid")
 
 
-async def test_invalid_irk_hex(hass: HomeAssistant, enable_bluetooth: None) -> None:
+@pytest.mark.usefixtures("enable_bluetooth")
+async def test_invalid_irk_hex(hass: HomeAssistant) -> None:
     """Test invalid irk."""
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={"irk": "irk:abcdefghi"}
@@ -68,12 +73,13 @@ async def test_invalid_irk_hex(hass: HomeAssistant, enable_bluetooth: None) -> N
     assert_form_error(result, "irk", "irk_not_valid")
 
 
-async def test_irk_not_found(hass: HomeAssistant, enable_bluetooth: None) -> None:
+@pytest.mark.usefixtures("enable_bluetooth")
+async def test_irk_not_found(hass: HomeAssistant) -> None:
     """Test irk not found."""
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -82,7 +88,8 @@ async def test_irk_not_found(hass: HomeAssistant, enable_bluetooth: None) -> Non
     assert_form_error(result, "irk", "irk_not_found")
 
 
-async def test_flow_works(hass: HomeAssistant, enable_bluetooth: None) -> None:
+@pytest.mark.usefixtures("enable_bluetooth")
+async def test_flow_works(hass: HomeAssistant) -> None:
     """Test config flow works."""
 
     inject_bluetooth_service_info(
@@ -101,7 +108,7 @@ async def test_flow_works(hass: HomeAssistant, enable_bluetooth: None) -> None:
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
 
     # Check you can finish the flow
     with patch(
@@ -113,15 +120,14 @@ async def test_flow_works(hass: HomeAssistant, enable_bluetooth: None) -> None:
             user_input={"irk": "irk:00000000000000000000000000000000"},
         )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Test Test Test"
     assert result["data"] == {"irk": "00000000000000000000000000000000"}
     assert result["result"].unique_id == "00000000000000000000000000000000"
 
 
-async def test_flow_works_by_base64(
-    hass: HomeAssistant, enable_bluetooth: None
-) -> None:
+@pytest.mark.usefixtures("enable_bluetooth")
+async def test_flow_works_by_base64(hass: HomeAssistant) -> None:
     """Test config flow works."""
 
     inject_bluetooth_service_info(
@@ -140,7 +146,7 @@ async def test_flow_works_by_base64(
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
 
     # Check you can finish the flow
     with patch(
@@ -152,7 +158,7 @@ async def test_flow_works_by_base64(
             user_input={"irk": "AAAAAAAAAAAAAAAAAAAAAA=="},
         )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Test Test Test"
     assert result["data"] == {"irk": "00000000000000000000000000000000"}
     assert result["result"].unique_id == "00000000000000000000000000000000"

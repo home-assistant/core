@@ -1,6 +1,5 @@
 """Constants and mock for the twinkly component tests."""
 
-
 from aiohttp.client_exceptions import ClientConnectionError
 
 from homeassistant.components.twinkly.const import DEV_NAME
@@ -43,38 +42,38 @@ class ClientMock:
     async def get_details(self):
         """Get the mocked device info."""
         if self.is_offline:
-            raise ClientConnectionError()
+            raise ClientConnectionError
         return self.device_info
 
     async def is_on(self) -> bool:
         """Get the mocked on/off state."""
         if self.is_offline:
-            raise ClientConnectionError()
+            raise ClientConnectionError
         return self.state
 
     async def turn_on(self) -> None:
         """Set the mocked on state."""
         if self.is_offline:
-            raise ClientConnectionError()
+            raise ClientConnectionError
         self.state = True
         self.mode = self.default_mode
 
     async def turn_off(self) -> None:
         """Set the mocked off state."""
         if self.is_offline:
-            raise ClientConnectionError()
+            raise ClientConnectionError
         self.state = False
 
     async def get_brightness(self) -> int:
         """Get the mocked brightness."""
         if self.is_offline:
-            raise ClientConnectionError()
+            raise ClientConnectionError
         return self.brightness
 
     async def set_brightness(self, brightness: int) -> None:
         """Set the mocked brightness."""
         if self.is_offline:
-            raise ClientConnectionError()
+            raise ClientConnectionError
         self.brightness = {"mode": "enabled", "value": brightness}
 
     def change_name(self, new_name: str) -> None:

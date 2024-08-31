@@ -1,4 +1,5 @@
 """The lookin integration."""
+
 from __future__ import annotations
 
 import asyncio
@@ -101,7 +102,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         lookin_device = await lookin_protocol.get_info()
         devices = await lookin_protocol.get_devices()
-    except (asyncio.TimeoutError, aiohttp.ClientError, NoUsableService) as ex:
+    except (TimeoutError, aiohttp.ClientError, NoUsableService) as ex:
         raise ConfigEntryNotReady from ex
 
     if entry.unique_id != (found_uuid := lookin_device.id.upper()):

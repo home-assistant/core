@@ -1,0 +1,9 @@
+{
+  "entity": {
+    "switch": {
+      "steam_active": {
+        "default": "mdi:pot-steam"
+      }
+    }
+  }
+}

@@ -1,6 +1,8 @@
 """Support for Homekit covers."""
+
 from __future__ import annotations
 
+from functools import cached_property
 from typing import Any
 
 from aiohomekit.model.characteristics import CharacteristicsTypes
@@ -128,6 +130,12 @@ class HomeKitGarageDoorCover(HomeKitEntity, CoverEntity):
 class HomeKitWindowCover(HomeKitEntity, CoverEntity):
     """Representation of a HomeKit Window or Window Covering."""
 
+    @callback
+    def _async_reconfigure(self) -> None:
+        """Reconfigure entity."""
+        self._async_clear_property_cache(("supported_features",))
+        super()._async_reconfigure()
+
     def get_characteristic_types(self) -> list[str]:
         """Define the homekit characteristics the entity cares about."""
         return [
@@ -142,7 +150,7 @@ class HomeKitWindowCover(HomeKitEntity, CoverEntity):
             CharacteristicsTypes.OBSTRUCTION_DETECTED,
         ]
 
-    @property
+    @cached_property
     def supported_features(self) -> CoverEntityFeature:
         """Flag supported features."""
         features = (
@@ -204,34 +212,34 @@ class HomeKitWindowCover(HomeKitEntity, CoverEntity):
         )
 
     @property
-    def current_cover_tilt_position(self) -> int:
+    def current_cover_tilt_position(self) -> int | None:
         """Return current position of cover tilt."""
-        tilt_position = self.service.value(CharacteristicsTypes.VERTICAL_TILT_CURRENT)
-        if not tilt_position:
-            tilt_position = self.service.value(
-                CharacteristicsTypes.HORIZONTAL_TILT_CURRENT
-            )
-        # Recalculate to convert from arcdegree scale to percentage scale.
         if self.is_vertical_tilt:
-            scale = 0.9
-            if (
-                self.service[CharacteristicsTypes.VERTICAL_TILT_CURRENT].minValue == -90
-                and self.service[CharacteristicsTypes.VERTICAL_TILT_CURRENT].maxValue
-                == 0
-            ):
-                scale = -0.9
-            tilt_position = int(tilt_position / scale)
+            char = self.service[CharacteristicsTypes.VERTICAL_TILT_CURRENT]
         elif self.is_horizontal_tilt:
-            scale = 0.9
-            if (
-                self.service[CharacteristicsTypes.HORIZONTAL_TILT_TARGET].minValue
-                == -90
-                and self.service[CharacteristicsTypes.HORIZONTAL_TILT_TARGET].maxValue
-                == 0
-            ):
-                scale = -0.9
-            tilt_position = int(tilt_position / scale)
-        return tilt_position
+            char = self.service[CharacteristicsTypes.HORIZONTAL_TILT_CURRENT]
+        else:
+            return None
+
+        # Recalculate tilt_position. Convert arc to percent scale based on min/max values.
+        tilt_position = char.value
+        min_value = char.minValue
+        max_value = char.maxValue
+        total_range = int(max_value or 0) - int(min_value or 0)
+
+        if (
+            tilt_position is None
+            or min_value is None
+            or max_value is None
+            or total_range <= 0
+        ):
+            return None
+
+        # inverted scale
+        if min_value == -90 and max_value == 0:
+            return abs(int(100 / total_range * (tilt_position - max_value)))
+        # normal scale
+        return abs(int(100 / total_range * (tilt_position - min_value)))
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Send hold command."""
@@ -255,33 +263,31 @@ class HomeKitWindowCover(HomeKitEntity, CoverEntity):
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the cover tilt to a specific position."""
         tilt_position = kwargs[ATTR_TILT_POSITION]
+
         if self.is_vertical_tilt:
-            # Recalculate to convert from percentage scale to arcdegree scale.
-            scale = 0.9
-            if (
-                self.service[CharacteristicsTypes.VERTICAL_TILT_TARGET].minValue == -90
-                and self.service[CharacteristicsTypes.VERTICAL_TILT_TARGET].maxValue
-                == 0
-            ):
-                scale = -0.9
-            tilt_position = int(tilt_position * scale)
-            await self.async_put_characteristics(
-                {CharacteristicsTypes.VERTICAL_TILT_TARGET: tilt_position}
-            )
+            char = self.service[CharacteristicsTypes.VERTICAL_TILT_TARGET]
         elif self.is_horizontal_tilt:
-            # Recalculate to convert from percentage scale to arcdegree scale.
-            scale = 0.9
-            if (
-                self.service[CharacteristicsTypes.HORIZONTAL_TILT_TARGET].minValue
-                == -90
-                and self.service[CharacteristicsTypes.HORIZONTAL_TILT_TARGET].maxValue
-                == 0
-            ):
-                scale = -0.9
-            tilt_position = int(tilt_position * scale)
-            await self.async_put_characteristics(
-                {CharacteristicsTypes.HORIZONTAL_TILT_TARGET: tilt_position}
+            char = self.service[CharacteristicsTypes.HORIZONTAL_TILT_TARGET]
+
+        # Calculate tilt_position. Convert from 1-100 scale to arc degree scale respecting possible min/max Values.
+        min_value = char.minValue
+        max_value = char.maxValue
+        if min_value is None or max_value is None:
+            raise ValueError(
+                "Entity does not provide minValue and maxValue for the tilt"
             )
+
+        # inverted scale
+        if min_value == -90 and max_value == 0:
+            tilt_position = int(
+                tilt_position / 100 * (min_value - max_value) + max_value
+            )
+        else:
+            tilt_position = int(
+                tilt_position / 100 * (max_value - min_value) + min_value
+            )
+
+        await self.async_put_characteristics({char.type: tilt_position})
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:

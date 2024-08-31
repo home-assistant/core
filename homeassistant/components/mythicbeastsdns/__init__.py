@@ -1,4 +1,5 @@
 """Support for Mythic Beasts Dynamic DNS service."""
+
 from datetime import timedelta
 
 import mbddns

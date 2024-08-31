@@ -1,4 +1,5 @@
 """Tests for the DirecTV integration."""
+
 from homeassistant.components.directv.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant

@@ -1,0 +1,12 @@
+{
+  "entity": {
+    "switch": {
+      "other1": { "name": "Other 1" },
+      "other2": { "name": "Other 2" },
+      "other3": { "name": "Other 3" },
+      "other4": { "name": "Other 4" },
+      "outlet": { "name": "Outlet {placeholder}" }
+    }
+  },
+  "something": "else"
+}

@@ -1,4 +1,5 @@
 """Support for Roborock sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -11,36 +12,26 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util import slugify
 
-from .const import DOMAIN
+from . import RoborockConfigEntry
 from .coordinator import RoborockDataUpdateCoordinator
-from .device import RoborockCoordinatedEntity
+from .device import RoborockCoordinatedEntityV1
 
 
-@dataclass(frozen=True)
-class RoborockBinarySensorDescriptionMixin:
-    """A class that describes binary sensor entities."""
+@dataclass(frozen=True, kw_only=True)
+class RoborockBinarySensorDescription(BinarySensorEntityDescription):
+    """A class that describes Roborock binary sensors."""
 
     value_fn: Callable[[DeviceProp], bool | int | None]
-
-
-@dataclass(frozen=True)
-class RoborockBinarySensorDescription(
-    BinarySensorEntityDescription, RoborockBinarySensorDescriptionMixin
-):
-    """A class that describes Roborock binary sensors."""
 
 
 BINARY_SENSOR_DESCRIPTIONS = [
     RoborockBinarySensorDescription(
         key="dry_status",
         translation_key="mop_drying_status",
-        icon="mdi:heat-wave",
         device_class=BinarySensorDeviceClass.RUNNING,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data.status.dry_status,
@@ -48,7 +39,6 @@ BINARY_SENSOR_DESCRIPTIONS = [
     RoborockBinarySensorDescription(
         key="water_box_carriage_status",
         translation_key="mop_attached",
-        icon="mdi:square-rounded",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data.status.water_box_carriage_status,
@@ -56,7 +46,6 @@ BINARY_SENSOR_DESCRIPTIONS = [
     RoborockBinarySensorDescription(
         key="water_box_status",
         translation_key="water_box_attached",
-        icon="mdi:water",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data.status.water_box_status,
@@ -64,7 +53,6 @@ BINARY_SENSOR_DESCRIPTIONS = [
     RoborockBinarySensorDescription(
         key="water_shortage",
         translation_key="water_shortage",
-        icon="mdi:water",
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data.status.water_shortage_status,
@@ -72,7 +60,6 @@ BINARY_SENSOR_DESCRIPTIONS = [
     RoborockBinarySensorDescription(
         key="in_cleaning",
         translation_key="in_cleaning",
-        icon="mdi:vacuum",
         device_class=BinarySensorDeviceClass.RUNNING,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data.status.in_cleaning,
@@ -82,38 +69,36 @@ BINARY_SENSOR_DESCRIPTIONS = [
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: RoborockConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Roborock vacuum binary sensors."""
-    coordinators: dict[str, RoborockDataUpdateCoordinator] = hass.data[DOMAIN][
-        config_entry.entry_id
-    ]
     async_add_entities(
         RoborockBinarySensorEntity(
-            f"{description.key}_{slugify(device_id)}",
             coordinator,
             description,
         )
-        for device_id, coordinator in coordinators.items()
+        for coordinator in config_entry.runtime_data.v1
         for description in BINARY_SENSOR_DESCRIPTIONS
         if description.value_fn(coordinator.roborock_device_info.props) is not None
     )
 
 
-class RoborockBinarySensorEntity(RoborockCoordinatedEntity, BinarySensorEntity):
+class RoborockBinarySensorEntity(RoborockCoordinatedEntityV1, BinarySensorEntity):
     """Representation of a Roborock binary sensor."""
 
     entity_description: RoborockBinarySensorDescription
 
     def __init__(
         self,
-        unique_id: str,
         coordinator: RoborockDataUpdateCoordinator,
         description: RoborockBinarySensorDescription,
     ) -> None:
         """Initialize the entity."""
-        super().__init__(unique_id, coordinator)
+        super().__init__(
+            f"{description.key}_{coordinator.duid_slug}",
+            coordinator,
+        )
         self.entity_description = description
 
     @property

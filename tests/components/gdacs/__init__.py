@@ -1,4 +1,5 @@
 """Tests for the GDACS component."""
+
 from unittest.mock import MagicMock
 
 

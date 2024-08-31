@@ -1,4 +1,5 @@
 """Test utilities."""
+
 from collections.abc import Awaitable, Callable
 
 from aiohttp.web import Application, Request, StreamResponse, middleware

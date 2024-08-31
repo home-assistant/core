@@ -1,7 +1,7 @@
 """Support for Xiaomi Yeelight WiFi color bulb."""
+
 from __future__ import annotations
 
-import asyncio
 import logging
 
 import voluptuous as vol
@@ -20,7 +20,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, VolDictType
 
 from .const import (
     ACTION_OFF,
@@ -59,7 +59,7 @@ from .scanner import YeelightScanner
 _LOGGER = logging.getLogger(__name__)
 
 
-YEELIGHT_FLOW_TRANSITION_SCHEMA = {
+YEELIGHT_FLOW_TRANSITION_SCHEMA: VolDictType = {
     vol.Optional(ATTR_COUNT, default=0): cv.positive_int,
     vol.Optional(ATTR_ACTION, default=ACTION_RECOVER): vol.Any(
         ACTION_RECOVER, ACTION_OFF, ACTION_STAY
@@ -214,7 +214,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         device = await _async_get_device(hass, entry.data[CONF_HOST], entry)
         await _async_initialize(hass, entry, device)
-    except (asyncio.TimeoutError, OSError, BulbException) as ex:
+    except (TimeoutError, OSError, BulbException) as ex:
         raise ConfigEntryNotReady from ex
 
     found_unique_id = device.unique_id

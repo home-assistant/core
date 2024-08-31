@@ -1,0 +1,100 @@
+{
+  "config": {
+    "flow_title": "{name}",
+    "step": {
+      "user": {
+        "description": "Set up your TechnoVE station to integrate with Home Assistant.",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "Hostname or IP address of your TechnoVE station."
+        }
+      },
+      "zeroconf_confirm": {
+        "description": "Do you want to add the TechnoVE Station named `{name}` to Home Assistant?",
+        "title": "Discovered TechnoVE station"
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "conflict_in_sharing_config": {
+        "name": "Conflict with power sharing mode"
+      },
+      "in_sharing_mode": {
+        "name": "Power sharing mode"
+      },
+      "is_battery_protected": {
+        "name": "Battery protected"
+      },
+      "is_static_ip": {
+        "name": "Static IP"
+      }
+    },
+    "number": {
+      "max_current": {
+        "name": "Maximum current"
+      }
+    },
+    "sensor": {
+      "voltage_in": {
+        "name": "Input voltage"
+      },
+      "voltage_out": {
+        "name": "Output voltage"
+      },
+      "max_station_current": {
+        "name": "Max station current"
+      },
+      "energy_total": {
+        "name": "Total energy usage"
+      },
+      "energy_session": {
+        "name": "Last session energy usage"
+      },
+      "ssid": {
+        "name": "Wi-Fi network name"
+      },
+      "status": {
+        "name": "Status",
+        "state": {
+          "unplugged": "Unplugged",
+          "plugged_waiting": "Plugged, waiting",
+          "plugged_charging": "Plugged, charging",
+          "out_of_activation_period": "Out of activation period",
+          "high_charge_period": "High charge period"
+        }
+      }
+    },
+    "switch": {
+      "auto_charge": {
+        "name": "Auto charge"
+      },
+      "session_active": {
+        "name": "Charging Enabled"
+      }
+    }
+  },
+  "exceptions": {
+    "max_current_in_sharing_mode": {
+      "message": "Cannot set the max current when power sharing mode is enabled."
+    },
+    "set_charging_enabled_on_auto_charge": {
+      "message": "Cannot enable or disable charging when auto-charge is enabled. Try disabling auto-charge first."
+    }
+  },
+  "issues": {
+    "deprecated_entity_is_session_active": {
+      "title": "The TechnoVE `{sensor_name}` binary sensor is deprecated",
+      "description": "`{entity}` is deprecated.\nPlease update your automations and scripts to replace the binary sensor entity with the newly added switch entity.\nWhen you are done migrating you can disable `{entity}`."
+    }
+  }
+}

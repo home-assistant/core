@@ -1,7 +1,0 @@
-open_commissioning_window:
-  fields:
-    device_id:
-      required: true
-      selector:
-        device:
-          integration: matter

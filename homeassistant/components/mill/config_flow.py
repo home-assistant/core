@@ -1,21 +1,26 @@
 """Adds config flow for Mill integration."""
+
+from typing import Any
+
 from mill import Mill
 from mill_local import Mill as MillLocal
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CLOUD, CONNECTION_TYPE, DOMAIN, LOCAL
 
 
-class MillConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class MillConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Mill integration."""
 
     VERSION = 1
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         data_schema = vol.Schema(
             {
@@ -38,7 +43,9 @@ class MillConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return await self.async_step_local()
         return await self.async_step_cloud()
 
-    async def async_step_local(self, user_input=None):
+    async def async_step_local(
+        self, user_input: dict[str, str] | None = None
+    ) -> ConfigFlowResult:
         """Handle the local step."""
         data_schema = vol.Schema({vol.Required(CONF_IP_ADDRESS): str})
         if user_input is None:
@@ -70,7 +77,9 @@ class MillConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             },
         )
 
-    async def async_step_cloud(self, user_input=None):
+    async def async_step_cloud(
+        self, user_input: dict[str, str] | None = None
+    ) -> ConfigFlowResult:
         """Handle the cloud step."""
         data_schema = vol.Schema(
             {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str}

@@ -1,4 +1,5 @@
 """Constants for the Iammeter integration."""
+
 from __future__ import annotations
 
 DOMAIN = "iammeter"

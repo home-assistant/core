@@ -1,4 +1,5 @@
 """Code to handle a Xiaomi Gateway."""
+
 import logging
 
 from construct.core import ChecksumError

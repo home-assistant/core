@@ -1,4 +1,5 @@
 """Constants for the Solar-Log integration."""
+
 from __future__ import annotations
 
 DOMAIN = "solarlog"

@@ -1,0 +1,51 @@
+{
+  "entity": {
+    "sensor": {
+      "disk_free": {
+        "default": "mdi:harddisk"
+      },
+      "disk_use": {
+        "default": "mdi:harddisk"
+      },
+      "disk_use_percent": {
+        "default": "mdi:harddisk"
+      },
+      "ipv4_address": {
+        "default": "mdi:ip-network"
+      },
+      "ipv6_address": {
+        "default": "mdi:ip-network"
+      },
+      "memory_free": {
+        "default": "mdi:memory"
+      },
+      "memory_use": {
+        "default": "mdi:memory"
+      },
+      "memory_use_percent": {
+        "default": "mdi:memory"
+      },
+      "network_in": {
+        "default": "mdi:server-network"
+      },
+      "network_out": {
+        "default": "mdi:server-network"
+      },
+      "packets_in": {
+        "default": "mdi:server-network"
+      },
+      "packets_out": {
+        "default": "mdi:server-network"
+      },
+      "swap_free": {
+        "default": "mdi:harddisk"
+      },
+      "swap_use": {
+        "default": "mdi:harddisk"
+      },
+      "swap_use_percent": {
+        "default": "mdi:harddisk"
+      }
+    }
+  }
+}

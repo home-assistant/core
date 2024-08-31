@@ -1,4 +1,5 @@
-"""Support for WaterHeater devices of (EMEA/EU) Honeywell TCC systems."""
+"""Support for WaterHeater entities of the Evohome integration."""
+
 from __future__ import annotations
 
 import logging
@@ -30,8 +31,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
-from . import EvoChild
 from .const import DOMAIN, EVO_FOLLOW, EVO_PERMOVER
+from .entity import EvoChild
 
 if TYPE_CHECKING:
     from . import EvoBroker
@@ -89,6 +90,7 @@ class EvoDHW(EvoChild, WaterHeaterEntity):
         self._evo_id = evo_device.dhwId
 
         self._attr_unique_id = evo_device.dhwId
+        self._attr_name = evo_device.name  # is static
 
         self._attr_precision = (
             PRECISION_TENTHS if evo_broker.client_v1 else PRECISION_WHOLE

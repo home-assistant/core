@@ -1,4 +1,5 @@
 """SunWEG Sensor definitions for Totals."""
+
 from __future__ import annotations
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
@@ -39,11 +40,6 @@ TOTAL_SENSOR_TYPES: tuple[SunWEGSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL,
         never_resets=True,
-    ),
-    SunWEGSensorEntityDescription(
-        key="kwh_per_kwp",
-        name="kWh por kWp",
-        api_variable_key="_kwh_per_kwp",
     ),
     SunWEGSensorEntityDescription(
         key="last_update",

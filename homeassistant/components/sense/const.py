@@ -1,6 +1,5 @@
 """Constants for monitoring a Sense energy sensor."""
 
-import asyncio
 import socket
 
 from sense_energy import (
@@ -13,11 +12,7 @@ DOMAIN = "sense"
 DEFAULT_TIMEOUT = 30
 ACTIVE_UPDATE_RATE = 60
 DEFAULT_NAME = "Sense"
-SENSE_DATA = "sense_data"
 SENSE_DEVICE_UPDATE = "sense_devices_update"
-SENSE_DEVICES_DATA = "sense_devices_data"
-SENSE_DISCOVERED_DEVICES_DATA = "sense_discovered_devices"
-SENSE_TRENDS_COORDINATOR = "sense_trends_coordinator"
 
 ACTIVE_NAME = "Energy"
 ACTIVE_TYPE = "active"
@@ -39,11 +34,11 @@ FROM_GRID_ID = "from_grid"
 SOLAR_POWERED_NAME = "Solar Powered Percentage"
 SOLAR_POWERED_ID = "solar_powered"
 
-SENSE_TIMEOUT_EXCEPTIONS = (asyncio.TimeoutError, SenseAPITimeoutException)
+SENSE_TIMEOUT_EXCEPTIONS = (TimeoutError, SenseAPITimeoutException)
 SENSE_WEBSOCKET_EXCEPTIONS = (socket.gaierror, SenseWebsocketException)
 SENSE_CONNECT_EXCEPTIONS = (
     socket.gaierror,
-    asyncio.TimeoutError,
+    TimeoutError,
     SenseAPITimeoutException,
     SenseAPIException,
 )

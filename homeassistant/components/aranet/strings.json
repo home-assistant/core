@@ -11,13 +11,13 @@
         "description": "[%key:component::bluetooth::config::step::bluetooth_confirm::description%]"
       }
     },
-    "flow_title": "[%key:component::bluetooth::config::flow_title%]",
+    "flow_title": "{name}",
     "error": {
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "integrations_diabled": "This device doesn't have integrations enabled. Please enable smart home integrations using the app and try again.",
+      "integrations_disabled": "This device doesn't have integrations enabled. Please enable smart home integrations using the app and try again.",
       "no_devices_found": "No unconfigured Aranet devices found.",
       "outdated_version": "This device is using outdated firmware. Please update it to at least v1.2.0 and try again."
     }

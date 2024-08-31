@@ -1,4 +1,5 @@
 """Component for wiffi support."""
+
 from datetime import timedelta
 import errno
 import logging

@@ -1,4 +1,5 @@
 """Read status of SunWEG inverters."""
+
 from __future__ import annotations
 
 import logging

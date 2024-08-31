@@ -1,4 +1,5 @@
 """Config flow for Slack integration."""
+
 from __future__ import annotations
 
 import logging
@@ -7,9 +8,8 @@ from slack import WebClient
 from slack.errors import SlackApiError
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY, CONF_ICON, CONF_NAME, CONF_USERNAME
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import aiohttp_client
 
 from .const import CONF_DEFAULT_CHANNEL, DOMAIN
@@ -26,12 +26,12 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-class SlackFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class SlackFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Slack."""
 
     async def async_step_user(
         self, user_input: dict[str, str] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
         errors = {}
 
@@ -68,7 +68,7 @@ class SlackFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             if ex.response["error"] == "invalid_auth":
                 return "invalid_auth", None
             return "cannot_connect", None
-        except Exception as ex:  # pylint:disable=broad-except
-            _LOGGER.exception("Unexpected exception: %s", ex)
+        except Exception:
+            _LOGGER.exception("Unexpected exception")
             return "unknown", None
         return None, info

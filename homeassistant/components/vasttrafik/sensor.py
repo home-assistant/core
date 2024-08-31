@@ -1,4 +1,5 @@
 """Support for Västtrafik public transport."""
+
 from __future__ import annotations
 
 from datetime import datetime, timedelta
@@ -7,7 +8,10 @@ import logging
 import vasttrafik
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+    SensorEntity,
+)
 from homeassistant.const import CONF_DELAY, CONF_NAME
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -37,7 +41,7 @@ DEFAULT_DELAY = 0
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=120)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_KEY): cv.string,
         vol.Required(CONF_SECRET): cv.string,
@@ -64,10 +68,8 @@ def setup_platform(
 ) -> None:
     """Set up the departure sensor."""
     planner = vasttrafik.JournyPlanner(config.get(CONF_KEY), config.get(CONF_SECRET))
-    sensors = []
-
-    for departure in config[CONF_DEPARTURES]:
-        sensors.append(
+    add_entities(
+        (
             VasttrafikDepartureSensor(
                 planner,
                 departure.get(CONF_NAME),
@@ -76,8 +78,10 @@ def setup_platform(
                 departure.get(CONF_LINES),
                 departure.get(CONF_DELAY),
             )
-        )
-    add_entities(sensors, True)
+            for departure in config[CONF_DEPARTURES]
+        ),
+        True,
+    )
 
 
 class VasttrafikDepartureSensor(SensorEntity):

@@ -1,4 +1,5 @@
 """Refoss devices platform loader."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -14,6 +15,7 @@ from .const import COORDINATORS, DATA_DISCOVERY_SERVICE, DISCOVERY_SCAN_INTERVAL
 from .util import refoss_discovery_server
 
 PLATFORMS: Final = [
+    Platform.SENSOR,
     Platform.SWITCH,
 ]
 

@@ -1,11 +1,12 @@
 """Define constants for the GeoNet NZ Quakes integration."""
+
 from datetime import timedelta
 
 from homeassistant.const import Platform
 
 DOMAIN = "geonetnz_quakes"
 
-PLATFORMS = [Platform.SENSOR, Platform.GEO_LOCATION]
+PLATFORMS = [Platform.GEO_LOCATION, Platform.SENSOR]
 
 CONF_MINIMUM_MAGNITUDE = "minimum_magnitude"
 CONF_MMI = "mmi"

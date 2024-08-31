@@ -1,0 +1,9 @@
+{
+  "entity": {
+    "sensor": {
+      "energy_tariff_period": {
+        "default": "mdi:calendar-clock"
+      }
+    }
+  }
+}

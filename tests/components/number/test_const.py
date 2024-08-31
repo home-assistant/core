@@ -4,7 +4,12 @@ import pytest
 
 from homeassistant.components.number import const
 
-from tests.common import import_and_test_deprecated_constant_enum
+from tests.common import help_test_all, import_and_test_deprecated_constant_enum
+
+
+def test_all() -> None:
+    """Test module.__all__ is correctly set."""
+    help_test_all(const)
 
 
 @pytest.mark.parametrize(("enum"), list(const.NumberMode))

@@ -1,4 +1,5 @@
 """Demo platform that has two fake alarm control panels."""
+
 from __future__ import annotations
 
 import datetime
@@ -29,9 +30,10 @@ async def async_setup_entry(
     """Set up the Demo config entry."""
     async_add_entities(
         [
-            ManualAlarm(  # type:ignore[no-untyped-call]
+            ManualAlarm(
                 hass,
                 "Security",
+                "demo_alarm_control_panel",
                 "1234",
                 None,
                 True,

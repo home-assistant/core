@@ -1,4 +1,5 @@
 """Notifications for Android TV notification service."""
+
 from __future__ import annotations
 
 from io import BufferedReader
@@ -18,6 +19,7 @@ from homeassistant.components.notify import (
 )
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -43,6 +45,7 @@ from .const import (
     ATTR_POSITION,
     ATTR_TRANSPARENCY,
     DEFAULT_TIMEOUT,
+    DOMAIN,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -132,21 +135,49 @@ class NFAndroidTVNotificationService(BaseNotificationService):
                         "Invalid interrupt-value: %s", data.get(ATTR_INTERRUPT)
                     )
             if imagedata := data.get(ATTR_IMAGE):
-                image_file = self.load_file(
-                    url=imagedata.get(ATTR_IMAGE_URL),
-                    local_path=imagedata.get(ATTR_IMAGE_PATH),
-                    username=imagedata.get(ATTR_IMAGE_USERNAME),
-                    password=imagedata.get(ATTR_IMAGE_PASSWORD),
-                    auth=imagedata.get(ATTR_IMAGE_AUTH),
-                )
+                if isinstance(imagedata, str):
+                    image_file = (
+                        self.load_file(url=imagedata)
+                        if imagedata.startswith("http")
+                        else self.load_file(local_path=imagedata)
+                    )
+                elif isinstance(imagedata, dict):
+                    image_file = self.load_file(
+                        url=imagedata.get(ATTR_IMAGE_URL),
+                        local_path=imagedata.get(ATTR_IMAGE_PATH),
+                        username=imagedata.get(ATTR_IMAGE_USERNAME),
+                        password=imagedata.get(ATTR_IMAGE_PASSWORD),
+                        auth=imagedata.get(ATTR_IMAGE_AUTH),
+                    )
+                else:
+                    raise ServiceValidationError(
+                        "Invalid image provided",
+                        translation_domain=DOMAIN,
+                        translation_key="invalid_notification_image",
+                        translation_placeholders={"type": type(imagedata).__name__},
+                    )
             if icondata := data.get(ATTR_ICON):
-                icon = self.load_file(
-                    url=icondata.get(ATTR_ICON_URL),
-                    local_path=icondata.get(ATTR_ICON_PATH),
-                    username=icondata.get(ATTR_ICON_USERNAME),
-                    password=icondata.get(ATTR_ICON_PASSWORD),
-                    auth=icondata.get(ATTR_ICON_AUTH),
-                )
+                if isinstance(icondata, str):
+                    icondata = (
+                        self.load_file(url=icondata)
+                        if icondata.startswith("http")
+                        else self.load_file(local_path=icondata)
+                    )
+                elif isinstance(icondata, dict):
+                    icon = self.load_file(
+                        url=icondata.get(ATTR_ICON_URL),
+                        local_path=icondata.get(ATTR_ICON_PATH),
+                        username=icondata.get(ATTR_ICON_USERNAME),
+                        password=icondata.get(ATTR_ICON_PASSWORD),
+                        auth=icondata.get(ATTR_ICON_AUTH),
+                    )
+                else:
+                    raise ServiceValidationError(
+                        "Invalid Icon provided",
+                        translation_domain=DOMAIN,
+                        translation_key="invalid_notification_icon",
+                        translation_placeholders={"type": type(icondata).__name__},
+                    )
         self.notify.send(
             message,
             title=title,

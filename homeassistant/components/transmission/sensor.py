@@ -1,4 +1,5 @@
 """Support for monitoring the Transmission BitTorrent client API."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -13,7 +14,6 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_IDLE, UnitOfDataRate
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
@@ -21,6 +21,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import TransmissionConfigEntry
 from .const import (
     DOMAIN,
     STATE_ATTR_TORRENT_INFO,
@@ -133,14 +134,12 @@ SENSOR_TYPES: tuple[TransmissionSensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: TransmissionConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Transmission sensors."""
 
-    coordinator: TransmissionDataUpdateCoordinator = hass.data[DOMAIN][
-        config_entry.entry_id
-    ]
+    coordinator = config_entry.runtime_data
 
     async_add_entities(
         TransmissionSensor(coordinator, description) for description in SENSOR_TYPES

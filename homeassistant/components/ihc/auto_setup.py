@@ -1,4 +1,5 @@
 """Handle auto setup of IHC products from the ihc project file."""
+
 import logging
 import os.path
 

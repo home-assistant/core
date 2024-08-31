@@ -1,4 +1,5 @@
 """Tests for the Pure Energie integration."""
+
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from gridnet import GridNetConnectionError
@@ -36,7 +37,7 @@ async def test_load_unload_config_entry(
 
 
 @patch(
-    "homeassistant.components.pure_energie.GridNet._request",
+    "homeassistant.components.pure_energie.coordinator.GridNet._request",
     side_effect=GridNetConnectionError,
 )
 async def test_config_entry_not_ready(

@@ -1,21 +1,15 @@
 """Constants for the KNX integration."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
 from enum import Enum
 from typing import Final, TypedDict
 
+from xknx.dpt.dpt_20 import HVACControllerMode
 from xknx.telegram import Telegram
 
-from homeassistant.components.climate import (
-    PRESET_AWAY,
-    PRESET_COMFORT,
-    PRESET_ECO,
-    PRESET_NONE,
-    PRESET_SLEEP,
-    HVACAction,
-    HVACMode,
-)
+from homeassistant.components.climate import HVACAction, HVACMode
 from homeassistant.const import Platform
 
 DOMAIN: Final = "knx"
@@ -82,8 +76,18 @@ DATA_HASS_CONFIG: Final = "knx_hass_config"
 ATTR_COUNTER: Final = "counter"
 ATTR_SOURCE: Final = "source"
 
-AsyncMessageCallbackType = Callable[[Telegram], Awaitable[None]]
-MessageCallbackType = Callable[[Telegram], None]
+
+type AsyncMessageCallbackType = Callable[[Telegram], Awaitable[None]]
+type MessageCallbackType = Callable[[Telegram], None]
+
+SERVICE_KNX_SEND: Final = "send"
+SERVICE_KNX_ATTR_PAYLOAD: Final = "payload"
+SERVICE_KNX_ATTR_TYPE: Final = "type"
+SERVICE_KNX_ATTR_RESPONSE: Final = "response"
+SERVICE_KNX_ATTR_REMOVE: Final = "remove"
+SERVICE_KNX_EVENT_REGISTER: Final = "event_register"
+SERVICE_KNX_EXPOSURE_REGISTER: Final = "exposure_register"
+SERVICE_KNX_READ: Final = "read"
 
 
 class KNXConfigEntryData(TypedDict, total=False):
@@ -116,12 +120,13 @@ class KNXConfigEntryData(TypedDict, total=False):
 class ColorTempModes(Enum):
     """Color temperature modes for config validation."""
 
-    ABSOLUTE = "DPT-7.600"
-    ABSOLUTE_FLOAT = "DPT-9"
-    RELATIVE = "DPT-5.001"
+    # YAML uses Enum.name (with vol.Upper), UI uses Enum.value for lookup
+    ABSOLUTE = "7.600"
+    ABSOLUTE_FLOAT = "9"
+    RELATIVE = "5.001"
 
 
-SUPPORTED_PLATFORMS: Final = [
+SUPPORTED_PLATFORMS_YAML: Final = {
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
     Platform.CLIMATE,
@@ -139,17 +144,19 @@ SUPPORTED_PLATFORMS: Final = [
     Platform.TEXT,
     Platform.TIME,
     Platform.WEATHER,
-]
+}
+
+SUPPORTED_PLATFORMS_UI: Final = {Platform.SWITCH, Platform.LIGHT}
 
 # Map KNX controller modes to HA modes. This list might not be complete.
 CONTROLLER_MODES: Final = {
     # Map DPT 20.105 HVAC control modes
-    "Auto": HVACMode.AUTO,
-    "Heat": HVACMode.HEAT,
-    "Cool": HVACMode.COOL,
-    "Off": HVACMode.OFF,
-    "Fan only": HVACMode.FAN_ONLY,
-    "Dry": HVACMode.DRY,
+    HVACControllerMode.AUTO: HVACMode.AUTO,
+    HVACControllerMode.HEAT: HVACMode.HEAT,
+    HVACControllerMode.COOL: HVACMode.COOL,
+    HVACControllerMode.OFF: HVACMode.OFF,
+    HVACControllerMode.FAN_ONLY: HVACMode.FAN_ONLY,
+    HVACControllerMode.DEHUMIDIFICATION: HVACMode.DRY,
 }
 
 CURRENT_HVAC_ACTIONS: Final = {
@@ -158,13 +165,4 @@ CURRENT_HVAC_ACTIONS: Final = {
     HVACMode.OFF: HVACAction.OFF,
     HVACMode.FAN_ONLY: HVACAction.FAN,
     HVACMode.DRY: HVACAction.DRYING,
-}
-
-PRESET_MODES: Final = {
-    # Map DPT 20.102 HVAC operating modes to HA presets
-    "Auto": PRESET_NONE,
-    "Frost Protection": PRESET_ECO,
-    "Night": PRESET_SLEEP,
-    "Standby": PRESET_AWAY,
-    "Comfort": PRESET_COMFORT,
 }

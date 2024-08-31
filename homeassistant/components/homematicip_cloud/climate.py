@@ -1,4 +1,5 @@
 """Support for HomematicIP Cloud climate devices."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -12,6 +13,7 @@ from homematicip.aio.group import AsyncHeatingGroup
 from homematicip.base.enums import AbsenceType
 from homematicip.device import Switch
 from homematicip.functionalHomes import IndoorClimateHome
+from homematicip.group import HeatingCoolingProfile
 
 from homeassistant.components.climate import (
     PRESET_AWAY,
@@ -34,6 +36,14 @@ from .hap import HomematicipHAP
 
 HEATING_PROFILES = {"PROFILE_1": 0, "PROFILE_2": 1, "PROFILE_3": 2}
 COOLING_PROFILES = {"PROFILE_4": 3, "PROFILE_5": 4, "PROFILE_6": 5}
+NICE_PROFILE_NAMES = {
+    "PROFILE_1": "Default",
+    "PROFILE_2": "Alternative 1",
+    "PROFILE_3": "Alternative 2",
+    "PROFILE_4": "Cooling 1",
+    "PROFILE_5": "Cooling 2",
+    "PROFILE_6": "Cooling 3",
+}
 
 ATTR_PRESET_END_TIME = "preset_end_time"
 PERMANENT_END_TIME = "permanent"
@@ -50,12 +60,12 @@ async def async_setup_entry(
 ) -> None:
     """Set up the HomematicIP climate from a config entry."""
     hap = hass.data[HMIPC_DOMAIN][config_entry.unique_id]
-    entities = []
-    for device in hap.home.groups:
-        if isinstance(device, AsyncHeatingGroup):
-            entities.append(HomematicipHeatingGroup(hap, device))
 
-    async_add_entities(entities)
+    async_add_entities(
+        HomematicipHeatingGroup(hap, device)
+        for device in hap.home.groups
+        if isinstance(device, AsyncHeatingGroup)
+    )
 
 
 class HomematicipHeatingGroup(HomematicipGenericEntity, ClimateEntity):
@@ -70,6 +80,7 @@ class HomematicipHeatingGroup(HomematicipGenericEntity, ClimateEntity):
         ClimateEntityFeature.PRESET_MODE | ClimateEntityFeature.TARGET_TEMPERATURE
     )
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, hap: HomematicipHAP, device: AsyncHeatingGroup) -> None:
         """Initialize heating group."""
@@ -162,8 +173,9 @@ class HomematicipHeatingGroup(HomematicipGenericEntity, ClimateEntity):
                 return PRESET_ECO
 
         return (
-            self._device.activeProfile.name
-            if self._device.activeProfile.name in self._device_profile_names
+            self._get_qualified_profile_name(self._device.activeProfile)
+            if self._get_qualified_profile_name(self._device.activeProfile)
+            in self._device_profile_names
             else None
         )
 
@@ -216,9 +228,6 @@ class HomematicipHeatingGroup(HomematicipGenericEntity, ClimateEntity):
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
-        if preset_mode not in self.preset_modes:
-            return
-
         if self._device.boostMode and preset_mode != PRESET_BOOST:
             await self._device.set_boost(False)
         if preset_mode == PRESET_BOOST:
@@ -254,20 +263,30 @@ class HomematicipHeatingGroup(HomematicipGenericEntity, ClimateEntity):
         return self._home.get_functionalHome(IndoorClimateHome)
 
     @property
-    def _device_profiles(self) -> list[Any]:
+    def _device_profiles(self) -> list[HeatingCoolingProfile]:
         """Return the relevant profiles."""
         return [
             profile
             for profile in self._device.profiles
-            if profile.visible
-            and profile.name != ""
-            and profile.index in self._relevant_profile_group
+            if profile.visible and profile.index in self._relevant_profile_group
         ]
 
     @property
     def _device_profile_names(self) -> list[str]:
         """Return a collection of profile names."""
-        return [profile.name for profile in self._device_profiles]
+        return [
+            self._get_qualified_profile_name(profile)
+            for profile in self._device_profiles
+        ]
+
+    def _get_qualified_profile_name(self, profile: HeatingCoolingProfile) -> str:
+        """Get a name for the given profile. If exists, this is the name of the profile."""
+        if profile.name != "":
+            return profile.name
+        if profile.index in NICE_PROFILE_NAMES:
+            return NICE_PROFILE_NAMES[profile.index]
+
+        return profile.index
 
     def _get_profile_idx_by_name(self, profile_name: str) -> int:
         """Return a profile index by name."""
@@ -275,7 +294,7 @@ class HomematicipHeatingGroup(HomematicipGenericEntity, ClimateEntity):
         index_name = [
             profile.index
             for profile in self._device_profiles
-            if profile.name == profile_name
+            if self._get_qualified_profile_name(profile) == profile_name
         ]
 
         return relevant_index[index_name[0]]
@@ -303,11 +322,7 @@ class HomematicipHeatingGroup(HomematicipGenericEntity, ClimateEntity):
     @property
     def _has_switch(self) -> bool:
         """Return, if a switch is in the hmip heating group."""
-        for device in self._device.devices:
-            if isinstance(device, Switch):
-                return True
-
-        return False
+        return any(isinstance(device, Switch) for device in self._device.devices)
 
     @property
     def _has_radiator_thermostat(self) -> bool:

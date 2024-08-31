@@ -1,4 +1,5 @@
 """LlamaLab Automate notification service."""
+
 from __future__ import annotations
 
 from http import HTTPStatus
@@ -9,7 +10,7 @@ import voluptuous as vol
 
 from homeassistant.components.notify import (
     ATTR_DATA,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA,
     BaseNotificationService,
 )
 from homeassistant.const import CONF_API_KEY, CONF_DEVICE
@@ -24,7 +25,7 @@ ATTR_PRIORITY = "priority"
 
 CONF_TO = "to"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_API_KEY): cv.string,
         vol.Required(CONF_TO): cv.string,

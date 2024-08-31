@@ -1,4 +1,5 @@
 """The JuiceNet integration."""
+
 from datetime import timedelta
 import logging
 
@@ -20,7 +21,7 @@ from .device import JuiceNetApi
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [Platform.SENSOR, Platform.SWITCH, Platform.NUMBER]
+PLATFORMS = [Platform.NUMBER, Platform.SENSOR, Platform.SWITCH]
 
 CONFIG_SCHEMA = vol.Schema(
     vol.All(

@@ -1,4 +1,5 @@
 """Constants used for Insteon test cases."""
+
 from homeassistant.components.insteon.const import (
     CONF_CAT,
     CONF_DIM_STEPS,
@@ -78,5 +79,4 @@ PATCH_CONNECTION = "homeassistant.components.insteon.config_flow.async_connect"
 PATCH_CONNECTION_CLOSE = "homeassistant.components.insteon.config_flow.async_close"
 PATCH_DEVICES = "homeassistant.components.insteon.config_flow.devices"
 PATCH_USB_LIST = "homeassistant.components.insteon.config_flow.async_get_usb_ports"
-PATCH_ASYNC_SETUP = "homeassistant.components.insteon.async_setup"
 PATCH_ASYNC_SETUP_ENTRY = "homeassistant.components.insteon.async_setup_entry"

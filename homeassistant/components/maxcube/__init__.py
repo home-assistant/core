@@ -1,6 +1,6 @@
 """Support for the MAX! Cube LAN Gateway."""
+
 import logging
-from socket import timeout
 from threading import Lock
 import time
 
@@ -65,7 +65,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         try:
             cube = MaxCube(host, port, now=now)
             hass.data[DATA_KEY][host] = MaxCubeHandle(cube, scan_interval)
-        except timeout as ex:
+        except TimeoutError as ex:
             _LOGGER.error("Unable to connect to Max!Cube gateway: %s", str(ex))
             persistent_notification.create(
                 hass,
@@ -98,7 +98,7 @@ class MaxCubeHandle:
         self.mutex = Lock()
         self._updatets = time.monotonic()
 
-    def update(self):
+    def update(self) -> None:
         """Pull the latest data from the MAX! Cube."""
         # Acquire mutex to prevent simultaneous update from multiple threads
         with self.mutex:
@@ -108,9 +108,9 @@ class MaxCubeHandle:
 
                 try:
                     self.cube.update()
-                except timeout:
+                except TimeoutError:
                     _LOGGER.error("Max!Cube connection failed")
-                    return False
+                    return
 
                 self._updatets = time.monotonic()
             else:

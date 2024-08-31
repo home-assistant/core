@@ -1,14 +1,15 @@
 """Config flow for Bose SoundTouch integration."""
+
 import logging
+from typing import Any
 
 from libsoundtouch import soundtouch_device
 from requests import RequestException
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.components.zeroconf import ZeroconfServiceInfo
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv
 
 from .const import DOMAIN
@@ -16,17 +17,19 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-class SoundtouchConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class SoundtouchConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Bose SoundTouch."""
 
     VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize a new SoundTouch config flow."""
-        self.host = None
+        self.host: str | None = None
         self.name = None
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
         errors = {}
 
@@ -53,7 +56,7 @@ class SoundtouchConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initiated by a zeroconf discovery."""
         self.host = discovery_info.host
 

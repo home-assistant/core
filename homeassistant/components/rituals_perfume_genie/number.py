@@ -1,4 +1,5 @@
 """Support for Rituals Perfume Genie numbers."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
@@ -29,7 +30,6 @@ ENTITY_DESCRIPTIONS = (
     RitualsNumberEntityDescription(
         key="perfume_amount",
         translation_key="perfume_amount",
-        icon="mdi:gauge",
         native_min_value=1,
         native_max_value=3,
         value_fn=lambda diffuser: diffuser.perfume_amount,

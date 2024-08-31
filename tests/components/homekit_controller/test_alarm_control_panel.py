@@ -1,14 +1,18 @@
 """Basic checks for HomeKitalarm_control_panel."""
+
+from collections.abc import Callable
+
+from aiohomekit.model import Accessory
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import ServicesTypes
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .common import get_next_aid, setup_test_component
+from .common import setup_test_component
 
 
-def create_security_system_service(accessory):
+def create_security_system_service(accessory: Accessory) -> None:
     """Define a security-system characteristics as per page 219 of HAP spec."""
     service = accessory.add_service(ServicesTypes.SECURITY_SYSTEM)
 
@@ -26,14 +30,18 @@ def create_security_system_service(accessory):
     targ_state.value = 50
 
 
-async def test_switch_change_alarm_state(hass: HomeAssistant) -> None:
+async def test_switch_change_alarm_state(
+    hass: HomeAssistant, get_next_aid: Callable[[], int]
+) -> None:
     """Test that we can turn a HomeKit alarm on and off again."""
-    helper = await setup_test_component(hass, create_security_system_service)
+    helper = await setup_test_component(
+        hass, get_next_aid(), create_security_system_service
+    )
 
     await hass.services.async_call(
         "alarm_control_panel",
         "alarm_arm_home",
-        {"entity_id": "alarm_control_panel.testdevice"},
+        {"entity_id": "alarm_control_panel.testdevice", "code": "1234"},
         blocking=True,
     )
     helper.async_assert_service_values(
@@ -46,7 +54,7 @@ async def test_switch_change_alarm_state(hass: HomeAssistant) -> None:
     await hass.services.async_call(
         "alarm_control_panel",
         "alarm_arm_away",
-        {"entity_id": "alarm_control_panel.testdevice"},
+        {"entity_id": "alarm_control_panel.testdevice", "code": "1234"},
         blocking=True,
     )
     helper.async_assert_service_values(
@@ -59,7 +67,7 @@ async def test_switch_change_alarm_state(hass: HomeAssistant) -> None:
     await hass.services.async_call(
         "alarm_control_panel",
         "alarm_arm_night",
-        {"entity_id": "alarm_control_panel.testdevice"},
+        {"entity_id": "alarm_control_panel.testdevice", "code": "1234"},
         blocking=True,
     )
     helper.async_assert_service_values(
@@ -72,7 +80,7 @@ async def test_switch_change_alarm_state(hass: HomeAssistant) -> None:
     await hass.services.async_call(
         "alarm_control_panel",
         "alarm_disarm",
-        {"entity_id": "alarm_control_panel.testdevice"},
+        {"entity_id": "alarm_control_panel.testdevice", "code": "1234"},
         blocking=True,
     )
     helper.async_assert_service_values(
@@ -83,9 +91,13 @@ async def test_switch_change_alarm_state(hass: HomeAssistant) -> None:
     )
 
 
-async def test_switch_read_alarm_state(hass: HomeAssistant) -> None:
+async def test_switch_read_alarm_state(
+    hass: HomeAssistant, get_next_aid: Callable[[], int]
+) -> None:
     """Test that we can read the state of a HomeKit alarm accessory."""
-    helper = await setup_test_component(hass, create_security_system_service)
+    helper = await setup_test_component(
+        hass, get_next_aid(), create_security_system_service
+    )
 
     await helper.async_update(
         ServicesTypes.SECURITY_SYSTEM,
@@ -125,7 +137,9 @@ async def test_switch_read_alarm_state(hass: HomeAssistant) -> None:
 
 
 async def test_migrate_unique_id(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    get_next_aid: Callable[[], int],
 ) -> None:
     """Test a we can migrate a alarm_control_panel unique id."""
     aid = get_next_aid()
@@ -134,7 +148,7 @@ async def test_migrate_unique_id(
         "homekit_controller",
         f"homekit-00:00:00:00:00:00-{aid}-8",
     )
-    await setup_test_component(hass, create_security_system_service)
+    await setup_test_component(hass, aid, create_security_system_service)
 
     assert (
         entity_registry.async_get(alarm_control_panel_entry.entity_id).unique_id

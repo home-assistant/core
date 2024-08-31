@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import AsyncGenerator, Awaitable, Callable, Generator
-from typing import Any, TypeVar
+from collections.abc import AsyncGenerator, Awaitable, Callable
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -23,9 +23,8 @@ SERVER_URL = "http://127.0.0.1:8083"
 CONFIG_ENTRY_DATA = {"server_url": SERVER_URL}
 
 # Typing helpers
-ComponentSetup = Callable[[], Awaitable[None]]
-_T = TypeVar("_T")
-YieldFixture = Generator[_T, None, None]
+type ComponentSetup = Callable[[], Awaitable[None]]
+type AsyncYieldFixture[_T] = AsyncGenerator[_T]
 
 
 @pytest.fixture(autouse=True)
@@ -39,21 +38,21 @@ async def webrtc_server() -> None:
 
 
 @pytest.fixture
-async def mock_camera(hass) -> AsyncGenerator[None, None]:
+async def mock_camera(hass: HomeAssistant) -> AsyncGenerator[None]:
     """Initialize a demo camera platform."""
     assert await async_setup_component(
         hass, "camera", {camera.DOMAIN: {"platform": "demo"}}
     )
     await hass.async_block_till_done()
-    with patch(
-        "homeassistant.components.demo.camera.Path.read_bytes",
-        return_value=b"Test",
-    ), patch(
-        "homeassistant.components.camera.Camera.stream_source",
-        return_value=STREAM_SOURCE,
-    ), patch(
-        "homeassistant.components.camera.Camera.supported_features",
-        return_value=camera.SUPPORT_STREAM,
+    with (
+        patch(
+            "homeassistant.components.demo.camera.Path.read_bytes",
+            return_value=b"Test",
+        ),
+        patch(
+            "homeassistant.components.camera.Camera.stream_source",
+            return_value=STREAM_SOURCE,
+        ),
     ):
         yield
 
@@ -91,7 +90,7 @@ async def rtsp_to_webrtc_client() -> None:
 @pytest.fixture
 async def setup_integration(
     hass: HomeAssistant, config_entry: MockConfigEntry
-) -> YieldFixture[ComponentSetup]:
+) -> AsyncYieldFixture[ComponentSetup]:
     """Fixture for setting up the component."""
     config_entry.add_to_hass(hass)
 

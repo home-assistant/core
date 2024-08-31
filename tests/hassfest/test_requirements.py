@@ -1,17 +1,25 @@
 """Tests for hassfest requirements."""
+
 from pathlib import Path
 
 import pytest
 
-from script.hassfest.model import Integration
+from script.hassfest.model import Config, Integration
 from script.hassfest.requirements import validate_requirements_format
 
 
 @pytest.fixture
 def integration():
     """Fixture for hassfest integration model."""
-    integration = Integration(
+    return Integration(
         path=Path("homeassistant/components/test"),
+        _config=Config(
+            root=Path(".").absolute(),
+            specific_integrations=None,
+            action="validate",
+            requirements=True,
+            core_integrations_path=Path("homeassistant/components"),
+        ),
         _manifest={
             "domain": "test",
             "documentation": "https://example.com",
@@ -20,7 +28,6 @@ def integration():
             "requirements": [],
         },
     )
-    return integration
 
 
 def test_validate_requirements_format_with_space(integration: Integration) -> None:

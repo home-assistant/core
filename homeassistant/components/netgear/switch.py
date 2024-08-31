@@ -1,4 +1,5 @@
 """Support for Netgear switches."""
+
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import timedelta
@@ -26,7 +27,6 @@ SWITCH_TYPES = [
     SwitchEntityDescription(
         key="allow_or_block",
         translation_key="allowed_on_network",
-        icon="mdi:block-helper",
         entity_category=EntityCategory.CONFIG,
     )
 ]
@@ -36,22 +36,19 @@ SWITCH_TYPES = [
 class NetgearSwitchEntityDescriptionRequired:
     """Required attributes of NetgearSwitchEntityDescription."""
 
+
+@dataclass(frozen=True, kw_only=True)
+class NetgearSwitchEntityDescription(SwitchEntityDescription):
+    """Class describing Netgear Switch entities."""
+
     update: Callable[[NetgearRouter], bool]
     action: Callable[[NetgearRouter], bool]
-
-
-@dataclass(frozen=True)
-class NetgearSwitchEntityDescription(
-    SwitchEntityDescription, NetgearSwitchEntityDescriptionRequired
-):
-    """Class describing Netgear Switch entities."""
 
 
 ROUTER_SWITCH_TYPES = [
     NetgearSwitchEntityDescription(
         key="access_control",
         translation_key="access_control",
-        icon="mdi:block-helper",
         entity_category=EntityCategory.CONFIG,
         update=lambda router: router.api.get_block_device_enable_status,
         action=lambda router: router.api.set_block_device_enable,
@@ -59,7 +56,6 @@ ROUTER_SWITCH_TYPES = [
     NetgearSwitchEntityDescription(
         key="traffic_meter",
         translation_key="traffic_meter",
-        icon="mdi:wifi-arrow-up-down",
         entity_category=EntityCategory.CONFIG,
         update=lambda router: router.api.get_traffic_meter_enabled,
         action=lambda router: router.api.enable_traffic_meter,
@@ -67,7 +63,6 @@ ROUTER_SWITCH_TYPES = [
     NetgearSwitchEntityDescription(
         key="parental_control",
         translation_key="parental_control",
-        icon="mdi:account-child-outline",
         entity_category=EntityCategory.CONFIG,
         update=lambda router: router.api.get_parental_control_enable_status,
         action=lambda router: router.api.enable_parental_control,
@@ -75,7 +70,6 @@ ROUTER_SWITCH_TYPES = [
     NetgearSwitchEntityDescription(
         key="qos",
         translation_key="quality_of_service",
-        icon="mdi:wifi-star",
         entity_category=EntityCategory.CONFIG,
         update=lambda router: router.api.get_qos_enable_status,
         action=lambda router: router.api.set_qos_enable_status,
@@ -83,7 +77,6 @@ ROUTER_SWITCH_TYPES = [
     NetgearSwitchEntityDescription(
         key="2g_guest_wifi",
         translation_key="2g_guest_wifi",
-        icon="mdi:wifi",
         entity_category=EntityCategory.CONFIG,
         update=lambda router: router.api.get_2g_guest_access_enabled,
         action=lambda router: router.api.set_2g_guest_access_enabled,
@@ -91,7 +84,6 @@ ROUTER_SWITCH_TYPES = [
     NetgearSwitchEntityDescription(
         key="5g_guest_wifi",
         translation_key="5g_guest_wifi",
-        icon="mdi:wifi",
         entity_category=EntityCategory.CONFIG,
         update=lambda router: router.api.get_5g_guest_access_enabled,
         action=lambda router: router.api.set_5g_guest_access_enabled,
@@ -99,7 +91,6 @@ ROUTER_SWITCH_TYPES = [
     NetgearSwitchEntityDescription(
         key="smart_connect",
         translation_key="smart_connect",
-        icon="mdi:wifi",
         entity_category=EntityCategory.CONFIG,
         update=lambda router: router.api.get_smart_connect_enabled,
         action=lambda router: router.api.set_smart_connect_enabled,
@@ -113,13 +104,10 @@ async def async_setup_entry(
     """Set up switches for Netgear component."""
     router = hass.data[DOMAIN][entry.entry_id][KEY_ROUTER]
 
-    # Router entities
-    router_entities = []
-
-    for description in ROUTER_SWITCH_TYPES:
-        router_entities.append(NetgearRouterSwitchEntity(router, description))
-
-    async_add_entities(router_entities)
+    async_add_entities(
+        NetgearRouterSwitchEntity(router, description)
+        for description in ROUTER_SWITCH_TYPES
+    )
 
     # Entities per network device
     coordinator = hass.data[DOMAIN][entry.entry_id][KEY_COORDINATOR]

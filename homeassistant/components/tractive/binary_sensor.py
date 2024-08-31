@@ -1,4 +1,5 @@
 """Support for Tractive binary sensors."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -8,13 +9,12 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_BATTERY_CHARGING, EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import Trackables, TractiveClient
-from .const import CLIENT, DOMAIN, TRACKABLES, TRACKER_HARDWARE_STATUS_UPDATED
+from . import Trackables, TractiveClient, TractiveConfigEntry
+from .const import TRACKER_HARDWARE_STATUS_UPDATED
 from .entity import TractiveEntity
 
 
@@ -56,11 +56,13 @@ SENSOR_TYPE = BinarySensorEntityDescription(
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: TractiveConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Tractive device trackers."""
-    client = hass.data[DOMAIN][entry.entry_id][CLIENT]
-    trackables = hass.data[DOMAIN][entry.entry_id][TRACKABLES]
+    client = entry.runtime_data.client
+    trackables = entry.runtime_data.trackables
 
     entities = [
         TractiveBinarySensor(client, item, SENSOR_TYPE)

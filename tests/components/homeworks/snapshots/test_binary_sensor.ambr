@@ -1,0 +1,43 @@
+# serializer version: 1
+# name: test_binary_sensor_attributes_state_update
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Foyer Keypad Morning',
+      'homeworks_address': '[02:08:02:01]',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.foyer_keypad_morning',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_binary_sensor_attributes_state_update.1
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Foyer Keypad Morning',
+      'homeworks_address': '[02:08:02:01]',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.foyer_keypad_morning',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_binary_sensor_attributes_state_update.2
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Foyer Keypad Morning',
+      'homeworks_address': '[02:08:02:01]',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.foyer_keypad_morning',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---

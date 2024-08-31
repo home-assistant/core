@@ -1,4 +1,5 @@
 """Class to hold all light accessories."""
+
 from __future__ import annotations
 
 from datetime import datetime

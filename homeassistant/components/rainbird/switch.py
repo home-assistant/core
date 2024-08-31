@@ -1,4 +1,5 @@
 """Support for Rain Bird Irrigation system LNK Wi-Fi Module."""
+
 from __future__ import annotations
 
 import logging
@@ -13,6 +14,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import VolDictType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import ATTR_DURATION, CONF_IMPORTED_NAMES, DOMAIN, MANUFACTURER
@@ -22,7 +24,7 @@ _LOGGER = logging.getLogger(__name__)
 
 SERVICE_START_IRRIGATION = "start_irrigation"
 
-SERVICE_SCHEMA_IRRIGATION = {
+SERVICE_SCHEMA_IRRIGATION: VolDictType = {
     vol.Required(ATTR_DURATION): cv.positive_float,
 }
 
@@ -103,6 +105,10 @@ class RainBirdSwitch(CoordinatorEntity[RainbirdUpdateCoordinator], SwitchEntity)
         except RainbirdApiException as err:
             raise HomeAssistantError("Rain Bird device failure") from err
 
+        # The device reflects the old state for a few moments. Update the
+        # state manually and trigger a refresh after a short debounced delay.
+        self.coordinator.data.active_zones.add(self._zone)
+        self.async_write_ha_state()
         await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self, **kwargs):
@@ -115,6 +121,12 @@ class RainBirdSwitch(CoordinatorEntity[RainbirdUpdateCoordinator], SwitchEntity)
             ) from err
         except RainbirdApiException as err:
             raise HomeAssistantError("Rain Bird device failure") from err
+
+        # The device reflects the old state for a few moments. Update the
+        # state manually and trigger a refresh after a short debounced delay.
+        if self.is_on:
+            self.coordinator.data.active_zones.remove(self._zone)
+        self.async_write_ha_state()
         await self.coordinator.async_request_refresh()
 
     @property

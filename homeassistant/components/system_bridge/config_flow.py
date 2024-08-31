@@ -1,4 +1,5 @@
 """Config flow for System Bridge integration."""
+
 from __future__ import annotations
 
 import asyncio
@@ -12,28 +13,27 @@ from systembridgeconnector.exceptions import (
     ConnectionErrorException,
 )
 from systembridgeconnector.websocket_client import WebSocketClient
-from systembridgemodels.get_data import GetData
-from systembridgemodels.system import System
+from systembridgemodels.modules import GetData, Module
 import voluptuous as vol
 
-from homeassistant import config_entries, exceptions
 from homeassistant.components import zeroconf
-from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TOKEN
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN
+from .const import DATA_WAIT_TIMEOUT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_AUTHENTICATE_DATA_SCHEMA = vol.Schema({vol.Required(CONF_API_KEY): cv.string})
+STEP_AUTHENTICATE_DATA_SCHEMA = vol.Schema({vol.Required(CONF_TOKEN): cv.string})
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_PORT, default=9170): cv.string,
-        vol.Required(CONF_API_KEY): cv.string,
+        vol.Required(CONF_TOKEN): cv.string,
     }
 )
 
@@ -46,25 +46,25 @@ async def _validate_input(
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
-    host = data[CONF_HOST]
 
     websocket_client = WebSocketClient(
-        host,
+        data[CONF_HOST],
         data[CONF_PORT],
-        data[CONF_API_KEY],
+        data[CONF_TOKEN],
+        session=async_get_clientsession(hass),
     )
+
     try:
-        async with asyncio.timeout(15):
-            await websocket_client.connect(session=async_get_clientsession(hass))
-            hass.async_create_task(websocket_client.listen())
-            response = await websocket_client.get_data(GetData(modules=["system"]))
-            _LOGGER.debug("Got response: %s", response.json())
-            if response.data is None or not isinstance(response.data, System):
-                raise CannotConnect("No data received")
-            system: System = response.data
+        async with asyncio.timeout(DATA_WAIT_TIMEOUT):
+            await websocket_client.connect()
+            modules_data = await websocket_client.get_data(
+                GetData(modules=[Module.SYSTEM])
+            )
     except AuthenticationException as exception:
         _LOGGER.warning(
-            "Authentication error when connecting to %s: %s", data[CONF_HOST], exception
+            "Authentication error when connecting to %s: %s",
+            data[CONF_HOST],
+            exception,
         )
         raise InvalidAuth from exception
     except (
@@ -75,15 +75,19 @@ async def _validate_input(
             "Connection error when connecting to %s: %s", data[CONF_HOST], exception
         )
         raise CannotConnect from exception
-    except asyncio.TimeoutError as exception:
+    except TimeoutError as exception:
         _LOGGER.warning("Timed out connecting to %s: %s", data[CONF_HOST], exception)
         raise CannotConnect from exception
     except ValueError as exception:
         raise CannotConnect from exception
 
-    _LOGGER.debug("Got System data: %s", system.json())
+    _LOGGER.debug("Got modules data: %s", modules_data)
+    if modules_data is None or modules_data.system is None:
+        raise CannotConnect("No system data received")
 
-    return {"hostname": host, "uuid": system.uuid}
+    _LOGGER.debug("Got System data: %s", modules_data.system)
+
+    return {"hostname": data[CONF_HOST], "uuid": modules_data.system.uuid}
 
 
 async def _async_get_info(
@@ -98,7 +102,7 @@ async def _async_get_info(
         errors["base"] = "cannot_connect"
     except InvalidAuth:
         errors["base"] = "invalid_auth"
-    except Exception:  # pylint: disable=broad-except
+    except Exception:
         _LOGGER.exception("Unexpected exception")
         errors["base"] = "unknown"
     else:
@@ -107,13 +111,14 @@ async def _async_get_info(
     return errors, None
 
 
-class ConfigFlow(
-    config_entries.ConfigFlow,
+class SystemBridgeConfigFlow(
+    ConfigFlow,
     domain=DOMAIN,
 ):
     """Handle a config flow for System Bridge."""
 
     VERSION = 1
+    MINOR_VERSION = 2
 
     def __init__(self) -> None:
         """Initialize flow."""
@@ -123,7 +128,7 @@ class ConfigFlow(
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         if user_input is None:
             return self.async_show_form(
@@ -144,7 +149,7 @@ class ConfigFlow(
 
     async def async_step_authenticate(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle getting the api-key for authentication."""
         errors: dict[str, str] = {}
 
@@ -177,7 +182,7 @@ class ConfigFlow(
 
     async def async_step_zeroconf(
         self, discovery_info: zeroconf.ZeroconfServiceInfo
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
         properties = discovery_info.properties
         host = properties.get("ip")
@@ -198,7 +203,9 @@ class ConfigFlow(
 
         return await self.async_step_authenticate()
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Perform reauth upon an API authentication error."""
         self._name = entry_data[CONF_HOST]
         self._input = {
@@ -209,9 +216,9 @@ class ConfigFlow(
         return await self.async_step_authenticate()
 
 
-class CannotConnect(exceptions.HomeAssistantError):
+class CannotConnect(HomeAssistantError):
     """Error to indicate we cannot connect."""
 
 
-class InvalidAuth(exceptions.HomeAssistantError):
+class InvalidAuth(HomeAssistantError):
     """Error to indicate there is invalid auth."""

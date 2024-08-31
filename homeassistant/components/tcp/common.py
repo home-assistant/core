@@ -1,4 +1,5 @@
 """Common code for TCP component."""
+
 from __future__ import annotations
 
 import logging
@@ -24,7 +25,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -62,10 +62,6 @@ class TcpEntity(Entity):
     def __init__(self, hass: HomeAssistant, config: ConfigType) -> None:
         """Set all the config values if they exist and get initial state."""
 
-        value_template: Template | None = config.get(CONF_VALUE_TEMPLATE)
-        if value_template is not None:
-            value_template.hass = hass
-
         self._hass = hass
         self._config: TcpSensorConfig = {
             CONF_NAME: config[CONF_NAME],
@@ -74,7 +70,7 @@ class TcpEntity(Entity):
             CONF_TIMEOUT: config[CONF_TIMEOUT],
             CONF_PAYLOAD: config[CONF_PAYLOAD],
             CONF_UNIT_OF_MEASUREMENT: config.get(CONF_UNIT_OF_MEASUREMENT),
-            CONF_VALUE_TEMPLATE: value_template,
+            CONF_VALUE_TEMPLATE: config.get(CONF_VALUE_TEMPLATE),
             CONF_VALUE_ON: config.get(CONF_VALUE_ON),
             CONF_BUFFER_SIZE: config[CONF_BUFFER_SIZE],
             CONF_SSL: config[CONF_SSL],
@@ -148,7 +144,6 @@ class TcpEntity(Entity):
         if value_template is not None:
             try:
                 self._state = value_template.render(parse_result=False, value=value)
-                return
             except TemplateError:
                 _LOGGER.error(
                     "Unable to render template of %r with value: %r",
@@ -156,5 +151,6 @@ class TcpEntity(Entity):
                     value,
                 )
                 return
+            return
 
         self._state = value

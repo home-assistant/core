@@ -1,5 +1,5 @@
 """Tests for the WLED number platform."""
-import json
+
 from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
@@ -12,13 +12,13 @@ from homeassistant.components.number import (
     DOMAIN as NUMBER_DOMAIN,
     SERVICE_SET_VALUE,
 )
-from homeassistant.components.wled.const import SCAN_INTERVAL
+from homeassistant.components.wled.const import DOMAIN, SCAN_INTERVAL
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from tests.common import async_fire_time_changed, load_fixture
+from tests.common import async_fire_time_changed, load_json_object_fixture
 
 pytestmark = pytest.mark.usefixtures("init_integration")
 
@@ -127,8 +127,8 @@ async def test_speed_dynamically_handle_segments(
 
     # Test adding a segment dynamically...
     return_value = mock_wled.update.return_value
-    mock_wled.update.return_value = WLEDDevice(
-        json.loads(load_fixture("wled/rgb.json"))
+    mock_wled.update.return_value = WLEDDevice.from_dict(
+        load_json_object_fixture("rgb.json", DOMAIN)
     )
 
     freezer.tick(SCAN_INTERVAL)

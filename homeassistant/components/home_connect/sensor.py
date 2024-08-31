@@ -1,4 +1,5 @@
 """Provides a sensor for Home Connect."""
+
 from datetime import datetime, timedelta
 import logging
 from typing import cast
@@ -10,7 +11,14 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.dt as dt_util
 
-from .const import ATTR_VALUE, BSH_OPERATION_STATE, DOMAIN
+from .const import (
+    ATTR_VALUE,
+    BSH_OPERATION_STATE,
+    BSH_OPERATION_STATE_FINISHED,
+    BSH_OPERATION_STATE_PAUSE,
+    BSH_OPERATION_STATE_RUN,
+    DOMAIN,
+)
 from .entity import HomeConnectEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -69,9 +77,20 @@ class HomeConnectSensor(HomeConnectEntity, SensorEntity):
                 # if the date is supposed to be in the future but we're
                 # already past it, set state to None.
                 self._attr_native_value = None
-            else:
+            elif (
+                BSH_OPERATION_STATE in status
+                and ATTR_VALUE in status[BSH_OPERATION_STATE]
+                and status[BSH_OPERATION_STATE][ATTR_VALUE]
+                in [
+                    BSH_OPERATION_STATE_RUN,
+                    BSH_OPERATION_STATE_PAUSE,
+                    BSH_OPERATION_STATE_FINISHED,
+                ]
+            ):
                 seconds = self._sign * float(status[self._key][ATTR_VALUE])
                 self._attr_native_value = dt_util.utcnow() + timedelta(seconds=seconds)
+            else:
+                self._attr_native_value = None
         else:
             self._attr_native_value = status[self._key].get(ATTR_VALUE)
             if self._key == BSH_OPERATION_STATE:

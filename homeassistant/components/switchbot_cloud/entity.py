@@ -1,4 +1,5 @@
 """Base class for SwitchBot via API entities."""
+
 from typing import Any
 
 from switchbot_api import Commands, Device, Remote, SwitchBotAPI

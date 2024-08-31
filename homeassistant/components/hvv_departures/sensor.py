@@ -1,4 +1,5 @@
 """Sensor platform for hvv."""
+
 from datetime import timedelta
 import logging
 from typing import Any
@@ -8,7 +9,7 @@ from pygti.exceptions import InvalidAuth
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ID
+from homeassistant.const import ATTR_ID, CONF_OFFSET
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
@@ -21,7 +22,6 @@ from .const import ATTRIBUTION, CONF_REAL_TIME, CONF_STATION, DOMAIN, MANUFACTUR
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
 MAX_LIST = 20
 MAX_TIME_OFFSET = 360
-ICON = "mdi:bus"
 
 ATTR_DEPARTURE = "departure"
 ATTR_LINE = "line"
@@ -42,7 +42,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_devices: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the sensor platform."""
     hub = hass.data[DOMAIN][config_entry.entry_id]
@@ -50,7 +50,7 @@ async def async_setup_entry(
     session = aiohttp_client.async_get_clientsession(hass)
 
     sensor = HVVDepartureSensor(hass, config_entry, session, hub)
-    async_add_devices([sensor], True)
+    async_add_entities([sensor], True)
 
 
 class HVVDepartureSensor(SensorEntity):
@@ -58,7 +58,6 @@ class HVVDepartureSensor(SensorEntity):
 
     _attr_attribution = ATTRIBUTION
     _attr_device_class = SensorDeviceClass.TIMESTAMP
-    _attr_icon = ICON
     _attr_translation_key = "departures"
     _attr_has_entity_name = True
     _attr_available = False
@@ -93,7 +92,7 @@ class HVVDepartureSensor(SensorEntity):
     async def async_update(self, **kwargs: Any) -> None:
         """Update the sensor."""
         departure_time = utcnow() + timedelta(
-            minutes=self.config_entry.options.get("offset", 0)
+            minutes=self.config_entry.options.get(CONF_OFFSET, 0)
         )
 
         departure_time_tz_berlin = departure_time.astimezone(BERLIN_TIME_ZONE)
@@ -126,7 +125,7 @@ class HVVDepartureSensor(SensorEntity):
                 _LOGGER.warning("Network unavailable: %r", error)
                 self._last_error = ClientConnectorError
             self._attr_available = False
-        except Exception as error:  # pylint: disable=broad-except
+        except Exception as error:  # noqa: BLE001
             if self._last_error != error:
                 _LOGGER.error("Error occurred while fetching data: %r", error)
                 self._last_error = error

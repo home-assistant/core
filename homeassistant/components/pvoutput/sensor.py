@@ -1,4 +1,5 @@
 """Support for getting collected information from PVOutput."""
+
 from __future__ import annotations
 
 from collections.abc import Callable

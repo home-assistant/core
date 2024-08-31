@@ -1,4 +1,5 @@
 """Test different accessory types: Triggers (Programmable Switches)."""
+
 from unittest.mock import MagicMock
 
 from homeassistant.components.device_automation import DeviceAutomationType
@@ -6,7 +7,7 @@ from homeassistant.components.homekit.const import CHAR_PROGRAMMABLE_SWITCH_EVEN
 from homeassistant.components.homekit.type_triggers import DeviceTriggerAccessory
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, async_get_device_automations
@@ -15,9 +16,7 @@ from tests.common import MockConfigEntry, async_get_device_automations
 async def test_programmable_switch_button_fires_on_trigger(
     hass: HomeAssistant,
     hk_driver,
-    events,
     demo_cleanup,
-    device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test that DeviceTriggerAccessory fires the programmable switch event on trigger."""
@@ -48,7 +47,8 @@ async def test_programmable_switch_button_fires_on_trigger(
         device_id=device_id,
         device_triggers=device_triggers,
     )
-    await acc.run()
+    acc.run()
+    await acc.async_attach()
     await hass.async_block_till_done()
 
     assert acc.entity_id is None

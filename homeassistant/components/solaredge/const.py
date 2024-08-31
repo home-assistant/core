@@ -1,12 +1,14 @@
 """Constants for the SolarEdge Monitoring API."""
+
 from datetime import timedelta
 import logging
+from typing import Final
 
 DOMAIN = "solaredge"
 
 LOGGER = logging.getLogger(__package__)
 
-DATA_API_CLIENT = "api_client"
+DATA_API_CLIENT: Final = "api_client"
 
 # Config for solaredge monitoring api requests.
 CONF_SITE_ID = "site_id"

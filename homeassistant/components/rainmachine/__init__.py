@@ -1,12 +1,12 @@
 """Support for RainMachine devices."""
+
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from datetime import timedelta
 from functools import partial, wraps
-from typing import Any
+from typing import Any, cast
 
 from regenmaschine import Client
 from regenmaschine.controller import Controller
@@ -38,6 +38,7 @@ from homeassistant.util.network import is_ip_address
 
 from .config_flow import get_client_controller
 from .const import (
+    CONF_ALLOW_INACTIVE_ZONES_TO_RUN,
     CONF_DEFAULT_ZONE_RUN_TIME,
     CONF_DURATION,
     CONF_USE_APP_RUN_TIMES,
@@ -48,15 +49,15 @@ from .const import (
     DATA_RESTRICTIONS_CURRENT,
     DATA_RESTRICTIONS_UNIVERSAL,
     DATA_ZONES,
+    DEFAULT_ZONE_RUN,
     DOMAIN,
     LOGGER,
 )
+from .coordinator import RainMachineDataUpdateCoordinator
 from .model import RainMachineEntityDescription
-from .util import RainMachineDataUpdateCoordinator
 
 DEFAULT_SSL = True
 
-CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
@@ -167,9 +168,12 @@ COORDINATOR_UPDATE_INTERVAL_MAP = {
 }
 
 
+type RainMachineConfigEntry = ConfigEntry[RainMachineData]
+
+
 @dataclass
 class RainMachineData:
-    """Define an object to be stored in `hass.data`."""
+    """Define an object to be stored in `entry.runtime_data`."""
 
     controller: Controller
     coordinators: dict[str, RainMachineDataUpdateCoordinator]
@@ -178,7 +182,7 @@ class RainMachineData:
 @callback
 def async_get_entry_for_service_call(
     hass: HomeAssistant, call: ServiceCall
-) -> ConfigEntry:
+) -> RainMachineConfigEntry:
     """Get the controller related to a service call (by device ID)."""
     device_id = call.data[CONF_DEVICE_ID]
     device_registry = dr.async_get(hass)
@@ -190,31 +194,28 @@ def async_get_entry_for_service_call(
         if (entry := hass.config_entries.async_get_entry(entry_id)) is None:
             continue
         if entry.domain == DOMAIN:
-            return entry
+            return cast(RainMachineConfigEntry, entry)
 
     raise ValueError(f"No controller for device ID: {device_id}")
 
 
 async def async_update_programs_and_zones(
-    hass: HomeAssistant, entry: ConfigEntry
+    hass: HomeAssistant, entry: RainMachineConfigEntry
 ) -> None:
     """Update program and zone DataUpdateCoordinators.
 
     Program and zone updates always go together because of how linked they are:
     programs affect zones and certain combinations of zones affect programs.
     """
-    data: RainMachineData = hass.data[DOMAIN][entry.entry_id]
-
-    await asyncio.gather(
-        *[
-            data.coordinators[DATA_PROGRAMS].async_refresh(),
-            data.coordinators[DATA_ZONES].async_refresh(),
-        ]
-    )
+    data = entry.runtime_data
+    # No gather here to allow http keep-alive to reuse
+    # the connection for each coordinator.
+    await data.coordinators[DATA_PROGRAMS].async_refresh()
+    await data.coordinators[DATA_ZONES].async_refresh()
 
 
 async def async_setup_entry(  # noqa: C901
-    hass: HomeAssistant, entry: ConfigEntry
+    hass: HomeAssistant, entry: RainMachineConfigEntry
 ) -> bool:
     """Set up RainMachine as config entry."""
     websession = aiohttp_client.async_get_clientsession(hass)
@@ -249,8 +250,13 @@ async def async_setup_entry(  # noqa: C901
             **entry.options,
             CONF_DEFAULT_ZONE_RUN_TIME: data.pop(CONF_DEFAULT_ZONE_RUN_TIME),
         }
+    entry_updates["options"] = {**entry.options}
     if CONF_USE_APP_RUN_TIMES not in entry.options:
-        entry_updates["options"] = {**entry.options, CONF_USE_APP_RUN_TIMES: False}
+        entry_updates["options"][CONF_USE_APP_RUN_TIMES] = False
+    if CONF_DEFAULT_ZONE_RUN_TIME not in entry.options:
+        entry_updates["options"][CONF_DEFAULT_ZONE_RUN_TIME] = DEFAULT_ZONE_RUN
+    if CONF_ALLOW_INACTIVE_ZONES_TO_RUN not in entry.options:
+        entry_updates["options"][CONF_ALLOW_INACTIVE_ZONES_TO_RUN] = False
     if entry_updates:
         hass.config_entries.async_update_entry(entry, **entry_updates)
 
@@ -295,14 +301,6 @@ async def async_setup_entry(  # noqa: C901
 
         return data
 
-    async def async_init_coordinator(
-        coordinator: RainMachineDataUpdateCoordinator,
-    ) -> None:
-        """Initialize a RainMachineDataUpdateCoordinator."""
-        await coordinator.async_initialize()
-        await coordinator.async_config_entry_first_refresh()
-
-    controller_init_tasks = []
     coordinators = {}
     for api_category, update_interval in COORDINATOR_UPDATE_INTERVAL_MAP.items():
         coordinator = coordinators[api_category] = RainMachineDataUpdateCoordinator(
@@ -313,12 +311,13 @@ async def async_setup_entry(  # noqa: C901
             update_interval=update_interval,
             update_method=partial(async_update, api_category),
         )
-        controller_init_tasks.append(async_init_coordinator(coordinator))
+        coordinator.async_initialize()
+        # Its generally faster not to gather here so we can
+        # reuse the connection instead of creating a new
+        # connection for each coordinator.
+        await coordinator.async_config_entry_first_refresh()
 
-    await asyncio.gather(*controller_init_tasks)
-
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = RainMachineData(
+    entry.runtime_data = RainMachineData(
         controller=controller, coordinators=coordinators
     )
 
@@ -343,7 +342,7 @@ async def async_setup_entry(  # noqa: C901
             async def wrapper(call: ServiceCall) -> None:
                 """Wrap the service function."""
                 entry = async_get_entry_for_service_call(hass, call)
-                data: RainMachineData = hass.data[DOMAIN][entry.entry_id]
+                data = entry.runtime_data
 
                 try:
                     await func(call, data.controller)
@@ -463,16 +462,15 @@ async def async_setup_entry(  # noqa: C901
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, entry: RainMachineConfigEntry
+) -> bool:
     """Unload an RainMachine config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
-
     loaded_entries = [
         entry
         for entry in hass.config_entries.async_entries(DOMAIN)
-        if entry.state == ConfigEntryState.LOADED
+        if entry.state is ConfigEntryState.LOADED
     ]
     if len(loaded_entries) == 1:
         # If this is the last loaded instance of RainMachine, deregister any services
@@ -491,7 +489,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_migrate_entry(
+    hass: HomeAssistant, entry: RainMachineConfigEntry
+) -> bool:
     """Migrate an old config entry."""
     version = entry.version
 
@@ -500,7 +500,8 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # 1 -> 2: Update unique IDs to be consistent across platform (including removing
     # the silly removal of colons in the MAC address that was added originally):
     if version == 1:
-        version = entry.version = 2
+        version = 2
+        hass.config_entries.async_update_entry(entry, version=version)
 
         @callback
         def migrate_unique_id(entity_entry: er.RegistryEntry) -> dict[str, Any]:
@@ -522,7 +523,9 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def async_reload_entry(
+    hass: HomeAssistant, entry: RainMachineConfigEntry
+) -> None:
     """Handle an options update."""
     await hass.config_entries.async_reload(entry.entry_id)
 
@@ -534,7 +537,7 @@ class RainMachineEntity(CoordinatorEntity[RainMachineDataUpdateCoordinator]):
 
     def __init__(
         self,
-        entry: ConfigEntry,
+        entry: RainMachineConfigEntry,
         data: RainMachineData,
         description: RainMachineEntityDescription,
     ) -> None:

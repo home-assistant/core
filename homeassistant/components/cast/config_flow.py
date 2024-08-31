@@ -1,15 +1,20 @@
 """Config flow for Cast."""
+
 from __future__ import annotations
 
 from typing import Any
 
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.components import onboarding, zeroconf
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import CONF_UUID
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv
 
 from .const import CONF_IGNORE_CEC, CONF_KNOWN_HOSTS, DOMAIN
@@ -19,26 +24,28 @@ KNOWN_HOSTS_SCHEMA = vol.Schema(vol.All(cv.ensure_list, [cv.string]))
 WANTED_UUID_SCHEMA = vol.Schema(vol.All(cv.ensure_list, [cv.string]))
 
 
-class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class FlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
     VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize flow."""
-        self._ignore_cec = set()
-        self._known_hosts = set()
-        self._wanted_uuid = set()
+        self._ignore_cec = set[str]()
+        self._known_hosts = set[str]()
+        self._wanted_uuid = set[str]()
 
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
+        config_entry: ConfigEntry,
     ) -> CastOptionsFlowHandler:
         """Get the options flow for this handler."""
         return CastOptionsFlowHandler(config_entry)
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
@@ -47,7 +54,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_zeroconf(
         self, discovery_info: zeroconf.ZeroconfServiceInfo
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by zeroconf discovery."""
         if self._async_in_progress() or self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
@@ -101,10 +108,10 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         }
 
 
-class CastOptionsFlowHandler(config_entries.OptionsFlow):
+class CastOptionsFlowHandler(OptionsFlow):
     """Handle Google Cast options."""
 
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+    def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize Google Cast options flow."""
         self.config_entry = config_entry
         self.updated_config: dict[str, Any] = {}

@@ -1,4 +1,5 @@
 """IMAP sensor support."""
+
 from __future__ import annotations
 
 from homeassistant.components.sensor import (
@@ -6,47 +7,42 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import ImapPollingDataUpdateCoordinator, ImapPushDataUpdateCoordinator
+from . import ImapConfigEntry
 from .const import DOMAIN
+from .coordinator import ImapDataUpdateCoordinator
 
 IMAP_MAIL_COUNT_DESCRIPTION = SensorEntityDescription(
     key="imap_mail_count",
     state_class=SensorStateClass.MEASUREMENT,
     suggested_display_precision=0,
+    translation_key="imap_mail_count",
+    name=None,
 )
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant, entry: ImapConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the Imap sensor."""
 
-    coordinator: ImapPushDataUpdateCoordinator | ImapPollingDataUpdateCoordinator = (
-        hass.data[DOMAIN][entry.entry_id]
-    )
+    coordinator = entry.runtime_data
     async_add_entities([ImapSensor(coordinator, IMAP_MAIL_COUNT_DESCRIPTION)])
 
 
-class ImapSensor(
-    CoordinatorEntity[ImapPushDataUpdateCoordinator | ImapPollingDataUpdateCoordinator],
-    SensorEntity,
-):
+class ImapSensor(CoordinatorEntity[ImapDataUpdateCoordinator], SensorEntity):
     """Representation of an IMAP sensor."""
 
-    _attr_icon = "mdi:email-outline"
     _attr_has_entity_name = True
-    _attr_name = None
 
     def __init__(
         self,
-        coordinator: ImapPushDataUpdateCoordinator | ImapPollingDataUpdateCoordinator,
+        coordinator: ImapDataUpdateCoordinator,
         description: SensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""

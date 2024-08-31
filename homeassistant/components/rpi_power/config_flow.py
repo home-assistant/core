@@ -1,4 +1,5 @@
 """Config flow for Raspberry Pi Power Supply Checker."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable
@@ -6,8 +7,8 @@ from typing import Any
 
 from rpi_bad_power import new_under_voltage
 
+from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.config_entry_flow import DiscoveryFlowHandler
 
 from .const import DOMAIN
@@ -34,7 +35,7 @@ class RPiPowerFlow(DiscoveryFlowHandler[Awaitable[bool]], domain=DOMAIN):
 
     async def async_step_onboarding(
         self, data: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by onboarding."""
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")

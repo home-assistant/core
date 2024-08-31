@@ -1,4 +1,5 @@
 """The Flux LED/MagicLight integration."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -11,7 +12,7 @@ from flux_led.const import ATTR_ID, WhiteChannelType
 from flux_led.scanner import FluxLEDDiscovery
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STARTED, Platform
+from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import (
@@ -37,7 +38,6 @@ from .const import (
     FLUX_LED_DISCOVERY_SIGNAL,
     FLUX_LED_EXCEPTIONS,
     SIGNAL_STATE_UPDATED,
-    STARTUP_SCAN_TIMEOUT,
 )
 from .coordinator import FluxLedUpdateCoordinator
 from .discovery import (
@@ -89,24 +89,21 @@ def async_wifi_bulb_for_host(
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the flux_led component."""
     domain_data = hass.data.setdefault(DOMAIN, {})
-    domain_data[FLUX_LED_DISCOVERY] = await async_discover_devices(
-        hass, STARTUP_SCAN_TIMEOUT
-    )
+    domain_data[FLUX_LED_DISCOVERY] = []
 
     @callback
     def _async_start_background_discovery(*_: Any) -> None:
         """Run discovery in the background."""
-        hass.async_create_background_task(_async_discovery(), "flux_led-discovery")
+        hass.async_create_background_task(
+            _async_discovery(), "flux_led-discovery", eager_start=True
+        )
 
     async def _async_discovery(*_: Any) -> None:
         async_trigger_discovery(
             hass, await async_discover_devices(hass, DISCOVER_SCAN_TIMEOUT)
         )
 
-    async_trigger_discovery(hass, domain_data[FLUX_LED_DISCOVERY])
-    hass.bus.async_listen_once(
-        EVENT_HOMEASSISTANT_STARTED, _async_start_background_discovery
-    )
+    _async_start_background_discovery()
     async_track_time_interval(
         hass,
         _async_start_background_discovery,

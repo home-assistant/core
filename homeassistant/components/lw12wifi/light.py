@@ -1,4 +1,5 @@
 """Support for Lagute LW-12 WiFi LED Controller."""
+
 from __future__ import annotations
 
 import logging
@@ -12,7 +13,7 @@ from homeassistant.components.light import (
     ATTR_EFFECT,
     ATTR_HS_COLOR,
     ATTR_TRANSITION,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as LIGHT_PLATFORM_SCHEMA,
     ColorMode,
     LightEntity,
     LightEntityFeature,
@@ -30,7 +31,7 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_NAME = "LW-12 FC"
 DEFAULT_PORT = 5000
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = LIGHT_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,

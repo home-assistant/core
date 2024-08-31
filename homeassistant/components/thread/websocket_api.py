@@ -1,4 +1,5 @@
 """The thread websocket API."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -20,7 +21,7 @@ def async_setup(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, ws_discover_routers)
     websocket_api.async_register_command(hass, ws_get_dataset)
     websocket_api.async_register_command(hass, ws_list_datasets)
-    websocket_api.async_register_command(hass, ws_set_preferred_border_agent_id)
+    websocket_api.async_register_command(hass, ws_set_preferred_border_agent)
     websocket_api.async_register_command(hass, ws_set_preferred_dataset)
 
 
@@ -43,9 +44,7 @@ async def ws_add_dataset(
     try:
         await dataset_store.async_add_dataset(hass, source, tlv)
     except TLVError as exc:
-        connection.send_error(
-            msg["id"], websocket_api.const.ERR_INVALID_FORMAT, str(exc)
-        )
+        connection.send_error(msg["id"], websocket_api.ERR_INVALID_FORMAT, str(exc))
         return
 
     connection.send_result(msg["id"])
@@ -54,20 +53,24 @@ async def ws_add_dataset(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "thread/set_preferred_border_agent_id",
+        vol.Required("type"): "thread/set_preferred_border_agent",
         vol.Required("dataset_id"): str,
-        vol.Required("border_agent_id"): str,
+        vol.Required("border_agent_id"): vol.Any(str, None),
+        vol.Required("extended_address"): str,
     }
 )
 @websocket_api.async_response
-async def ws_set_preferred_border_agent_id(
+async def ws_set_preferred_border_agent(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
-    """Set the preferred border agent ID."""
+    """Set the preferred border agent's border agent ID and extended address."""
     dataset_id = msg["dataset_id"]
     border_agent_id = msg["border_agent_id"]
+    extended_address = msg["extended_address"]
     store = await dataset_store.async_get_store(hass)
-    store.async_set_preferred_border_agent_id(dataset_id, border_agent_id)
+    store.async_set_preferred_border_agent(
+        dataset_id, border_agent_id, extended_address
+    )
     connection.send_result(msg["id"])
 
 
@@ -89,9 +92,7 @@ async def ws_set_preferred_dataset(
     try:
         store.preferred_dataset = dataset_id
     except KeyError:
-        connection.send_error(
-            msg["id"], websocket_api.const.ERR_NOT_FOUND, "unknown dataset"
-        )
+        connection.send_error(msg["id"], websocket_api.ERR_NOT_FOUND, "unknown dataset")
         return
 
     connection.send_result(msg["id"])
@@ -115,10 +116,10 @@ async def ws_delete_dataset(
     try:
         store.async_delete(dataset_id)
     except KeyError as exc:
-        connection.send_error(msg["id"], websocket_api.const.ERR_NOT_FOUND, str(exc))
+        connection.send_error(msg["id"], websocket_api.ERR_NOT_FOUND, str(exc))
         return
     except dataset_store.DatasetPreferredError as exc:
-        connection.send_error(msg["id"], websocket_api.const.ERR_NOT_ALLOWED, str(exc))
+        connection.send_error(msg["id"], websocket_api.ERR_NOT_ALLOWED, str(exc))
         return
 
     connection.send_result(msg["id"])
@@ -140,9 +141,7 @@ async def ws_get_dataset(
 
     store = await dataset_store.async_get_store(hass)
     if not (dataset := store.async_get(dataset_id)):
-        connection.send_error(
-            msg["id"], websocket_api.const.ERR_NOT_FOUND, "unknown dataset"
-        )
+        connection.send_error(msg["id"], websocket_api.ERR_NOT_FOUND, "unknown dataset")
         return
 
     connection.send_result(msg["id"], {"tlv": dataset.tlv})
@@ -161,22 +160,22 @@ async def ws_list_datasets(
     """Get a list of thread datasets."""
 
     store = await dataset_store.async_get_store(hass)
-    result = []
     preferred_dataset = store.preferred_dataset
-    for dataset in store.datasets.values():
-        result.append(
-            {
-                "channel": dataset.channel,
-                "created": dataset.created,
-                "dataset_id": dataset.id,
-                "extended_pan_id": dataset.extended_pan_id,
-                "network_name": dataset.network_name,
-                "pan_id": dataset.pan_id,
-                "preferred": dataset.id == preferred_dataset,
-                "preferred_border_agent_id": dataset.preferred_border_agent_id,
-                "source": dataset.source,
-            }
-        )
+    result = [
+        {
+            "channel": dataset.channel,
+            "created": dataset.created,
+            "dataset_id": dataset.id,
+            "extended_pan_id": dataset.extended_pan_id,
+            "network_name": dataset.network_name,
+            "pan_id": dataset.pan_id,
+            "preferred": dataset.id == preferred_dataset,
+            "preferred_border_agent_id": dataset.preferred_border_agent_id,
+            "preferred_extended_address": dataset.preferred_extended_address,
+            "source": dataset.source,
+        }
+        for dataset in store.datasets.values()
+    ]
 
     connection.send_result(msg["id"], {"datasets": result})
 

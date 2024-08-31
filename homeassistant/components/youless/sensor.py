@@ -1,4 +1,5 @@
 """The sensor entity for the Youless integration."""
+
 from __future__ import annotations
 
 from youless_api import YoulessAPI
@@ -41,6 +42,7 @@ async def async_setup_entry(
 
     async_add_entities(
         [
+            WaterSensor(coordinator, device),
             GasSensor(coordinator, device),
             EnergyMeterSensor(
                 coordinator, device, "low", SensorStateClass.TOTAL_INCREASING
@@ -107,6 +109,27 @@ class YoulessBaseSensor(
     def available(self) -> bool:
         """Return a flag to indicate the sensor not being available."""
         return super().available and self.get_sensor is not None
+
+
+class WaterSensor(YoulessBaseSensor):
+    """The Youless Water sensor."""
+
+    _attr_native_unit_of_measurement = UnitOfVolume.CUBIC_METERS
+    _attr_device_class = SensorDeviceClass.WATER
+    _attr_state_class = SensorStateClass.TOTAL_INCREASING
+
+    def __init__(
+        self, coordinator: DataUpdateCoordinator[YoulessAPI], device: str
+    ) -> None:
+        """Instantiate a Water sensor."""
+        super().__init__(coordinator, device, "water", "Water meter", "water")
+        self._attr_name = "Water usage"
+        self._attr_icon = "mdi:water"
+
+    @property
+    def get_sensor(self) -> YoulessSensor | None:
+        """Get the sensor for providing the value."""
+        return self.coordinator.data.water_meter
 
 
 class GasSensor(YoulessBaseSensor):

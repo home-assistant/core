@@ -1,0 +1,279 @@
+# serializer version: 1
+# name: test_sensors[binary_sensor.technove_station_battery_protected-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.technove_station_battery_protected',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Battery protected',
+    'platform': 'technove',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'is_battery_protected',
+    'unique_id': 'AA:AA:AA:AA:AA:BB_is_battery_protected',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[binary_sensor.technove_station_battery_protected-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'TechnoVE Station Battery protected',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.technove_station_battery_protected',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_sensors[binary_sensor.technove_station_charging-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.technove_station_charging',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.BATTERY_CHARGING: 'battery_charging'>,
+    'original_icon': None,
+    'original_name': 'Charging',
+    'platform': 'technove',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'AA:AA:AA:AA:AA:BB_is_session_active',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[binary_sensor.technove_station_charging-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery_charging',
+      'friendly_name': 'TechnoVE Station Charging',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.technove_station_charging',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_sensors[binary_sensor.technove_station_conflict_with_power_sharing_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.technove_station_conflict_with_power_sharing_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Conflict with power sharing mode',
+    'platform': 'technove',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'conflict_in_sharing_config',
+    'unique_id': 'AA:AA:AA:AA:AA:BB_conflict_in_sharing_config',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[binary_sensor.technove_station_conflict_with_power_sharing_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'TechnoVE Station Conflict with power sharing mode',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.technove_station_conflict_with_power_sharing_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_sensors[binary_sensor.technove_station_power_sharing_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.technove_station_power_sharing_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Power sharing mode',
+    'platform': 'technove',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'in_sharing_mode',
+    'unique_id': 'AA:AA:AA:AA:AA:BB_in_sharing_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[binary_sensor.technove_station_power_sharing_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'TechnoVE Station Power sharing mode',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.technove_station_power_sharing_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_sensors[binary_sensor.technove_station_static_ip-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.technove_station_static_ip',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Static IP',
+    'platform': 'technove',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'is_static_ip',
+    'unique_id': 'AA:AA:AA:AA:AA:BB_is_static_ip',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[binary_sensor.technove_station_static_ip-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'TechnoVE Station Static IP',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.technove_station_static_ip',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_sensors[binary_sensor.technove_station_update-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.technove_station_update',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.UPDATE: 'update'>,
+    'original_icon': None,
+    'original_name': 'Update',
+    'platform': 'technove',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'AA:AA:AA:AA:AA:BB_update_available',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[binary_sensor.technove_station_update-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'update',
+      'friendly_name': 'TechnoVE Station Update',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.technove_station_update',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---

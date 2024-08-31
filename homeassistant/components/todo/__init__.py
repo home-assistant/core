@@ -3,6 +3,7 @@
 from collections.abc import Callable, Iterable
 import dataclasses
 import datetime
+from functools import cached_property
 import logging
 from typing import Any, final
 
@@ -19,12 +20,8 @@ from homeassistant.core import (
     SupportsResponse,
     callback,
 )
-from homeassistant.exceptions import HomeAssistantError
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.config_validation import (  # noqa: F401
-    PLATFORM_SCHEMA,
-    PLATFORM_SCHEMA_BASE,
-)
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
@@ -36,16 +33,21 @@ from .const import (
     ATTR_DUE,
     ATTR_DUE_DATE,
     ATTR_DUE_DATETIME,
+    ATTR_ITEM,
+    ATTR_RENAME,
+    ATTR_STATUS,
     DOMAIN,
     TodoItemStatus,
     TodoListEntityFeature,
+    TodoServices,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
-SCAN_INTERVAL = datetime.timedelta(seconds=60)
-
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
+PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
+PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
+SCAN_INTERVAL = datetime.timedelta(seconds=60)
 
 
 @dataclasses.dataclass
@@ -68,19 +70,19 @@ class TodoItemFieldDescription:
 TODO_ITEM_FIELDS = [
     TodoItemFieldDescription(
         service_field=ATTR_DUE_DATE,
-        validation=cv.date,
+        validation=vol.Any(cv.date, None),
         todo_item_field=ATTR_DUE,
         required_feature=TodoListEntityFeature.SET_DUE_DATE_ON_ITEM,
     ),
     TodoItemFieldDescription(
         service_field=ATTR_DUE_DATETIME,
-        validation=vol.All(cv.datetime, dt_util.as_local),
+        validation=vol.Any(vol.All(cv.datetime, dt_util.as_local), None),
         todo_item_field=ATTR_DUE,
         required_feature=TodoListEntityFeature.SET_DUE_DATETIME_ON_ITEM,
     ),
     TodoItemFieldDescription(
         service_field=ATTR_DESCRIPTION,
-        validation=cv.string,
+        validation=vol.Any(cv.string, None),
         todo_item_field=ATTR_DESCRIPTION,
         required_feature=TodoListEntityFeature.SET_DESCRIPTION_ON_ITEM,
     ),
@@ -100,8 +102,10 @@ def _validate_supported_features(
         if desc.service_field not in call_data:
             continue
         if not supported_features or not supported_features & desc.required_feature:
-            raise ValueError(
-                f"Entity does not support setting field '{desc.service_field}'"
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="update_field_not_supported",
+                translation_placeholders={"service_field": desc.service_field},
             )
 
 
@@ -118,11 +122,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     websocket_api.async_register_command(hass, websocket_handle_todo_item_move)
 
     component.async_register_entity_service(
-        "add_item",
+        TodoServices.ADD_ITEM,
         vol.All(
             cv.make_entity_service_schema(
                 {
-                    vol.Required("item"): vol.All(cv.string, vol.Length(min=1)),
+                    vol.Required(ATTR_ITEM): vol.All(cv.string, vol.Length(min=1)),
                     **TODO_ITEM_FIELD_SCHEMA,
                 }
             ),
@@ -132,13 +136,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         required_features=[TodoListEntityFeature.CREATE_TODO_ITEM],
     )
     component.async_register_entity_service(
-        "update_item",
+        TodoServices.UPDATE_ITEM,
         vol.All(
             cv.make_entity_service_schema(
                 {
-                    vol.Required("item"): vol.All(cv.string, vol.Length(min=1)),
-                    vol.Optional("rename"): vol.All(cv.string, vol.Length(min=1)),
-                    vol.Optional("status"): vol.In(
+                    vol.Required(ATTR_ITEM): vol.All(cv.string, vol.Length(min=1)),
+                    vol.Optional(ATTR_RENAME): vol.All(cv.string, vol.Length(min=1)),
+                    vol.Optional(ATTR_STATUS): vol.In(
                         {TodoItemStatus.NEEDS_ACTION, TodoItemStatus.COMPLETED},
                     ),
                     **TODO_ITEM_FIELD_SCHEMA,
@@ -146,27 +150,29 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             ),
             *TODO_ITEM_FIELD_VALIDATIONS,
             cv.has_at_least_one_key(
-                "rename", "status", *[desc.service_field for desc in TODO_ITEM_FIELDS]
+                ATTR_RENAME,
+                ATTR_STATUS,
+                *[desc.service_field for desc in TODO_ITEM_FIELDS],
             ),
         ),
         _async_update_todo_item,
         required_features=[TodoListEntityFeature.UPDATE_TODO_ITEM],
     )
     component.async_register_entity_service(
-        "remove_item",
+        TodoServices.REMOVE_ITEM,
         cv.make_entity_service_schema(
             {
-                vol.Required("item"): vol.All(cv.ensure_list, [cv.string]),
+                vol.Required(ATTR_ITEM): vol.All(cv.ensure_list, [cv.string]),
             }
         ),
         _async_remove_todo_items,
         required_features=[TodoListEntityFeature.DELETE_TODO_ITEM],
     )
     component.async_register_entity_service(
-        "get_items",
+        TodoServices.GET_ITEMS,
         cv.make_entity_service_schema(
             {
-                vol.Optional("status"): vol.All(
+                vol.Optional(ATTR_STATUS): vol.All(
                     cv.ensure_list,
                     [vol.In({TodoItemStatus.NEEDS_ACTION, TodoItemStatus.COMPLETED})],
                 ),
@@ -176,8 +182,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         supports_response=SupportsResponse.ONLY,
     )
     component.async_register_entity_service(
-        "remove_completed_items",
-        {},
+        TodoServices.REMOVE_COMPLETED_ITEMS,
+        None,
         _async_remove_completed_items,
         required_features=[TodoListEntityFeature.DELETE_TODO_ITEM],
     )
@@ -226,7 +232,12 @@ class TodoItem:
     """
 
 
-class TodoListEntity(Entity):
+CACHED_PROPERTIES_WITH_ATTR_ = {
+    "todo_items",
+}
+
+
+class TodoListEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     """An entity that represents a To-do list."""
 
     _attr_todo_items: list[TodoItem] | None = None
@@ -240,22 +251,22 @@ class TodoListEntity(Entity):
             return None
         return sum([item.status == TodoItemStatus.NEEDS_ACTION for item in items])
 
-    @property
+    @cached_property
     def todo_items(self) -> list[TodoItem] | None:
         """Return the To-do items in the To-do list."""
         return self._attr_todo_items
 
     async def async_create_todo_item(self, item: TodoItem) -> None:
         """Add an item to the To-do list."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_update_todo_item(self, item: TodoItem) -> None:
         """Update an item in the To-do list."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_delete_todo_items(self, uids: list[str]) -> None:
         """Delete an item in the To-do list."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_move_todo_item(
         self, uid: str, previous_uid: str | None = None
@@ -266,7 +277,7 @@ class TodoListEntity(Entity):
         in the list after the specified by `previous_uid` or `None` for the first
         position in the To-do list.
         """
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @final
     @callback
@@ -470,22 +481,30 @@ async def _async_update_todo_item(entity: TodoListEntity, call: ServiceCall) -> 
     item = call.data["item"]
     found = _find_by_uid_or_summary(item, entity.todo_items)
     if not found:
-        raise ValueError(f"Unable to find To-do item '{item}'")
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="item_not_found",
+            translation_placeholders={"item": item},
+        )
 
     _validate_supported_features(entity.supported_features, call.data)
 
-    await entity.async_update_todo_item(
-        item=TodoItem(
-            uid=found.uid,
-            summary=call.data.get("rename"),
-            status=call.data.get("status"),
-            **{
-                desc.todo_item_field: call.data[desc.service_field]
-                for desc in TODO_ITEM_FIELDS
-                if desc.service_field in call.data
-            },
-        )
+    # Perform a partial update on the existing entity based on the fields
+    # present in the update. This allows explicitly clearing any of the
+    # extended fields present and set to None.
+    updated_data = dataclasses.asdict(found)
+    if summary := call.data.get("rename"):
+        updated_data["summary"] = summary
+    if status := call.data.get("status"):
+        updated_data["status"] = status
+    updated_data.update(
+        {
+            desc.todo_item_field: call.data[desc.service_field]
+            for desc in TODO_ITEM_FIELDS
+            if desc.service_field in call.data
+        }
     )
+    await entity.async_update_todo_item(item=TodoItem(**updated_data))
 
 
 async def _async_remove_todo_items(entity: TodoListEntity, call: ServiceCall) -> None:
@@ -494,7 +513,11 @@ async def _async_remove_todo_items(entity: TodoListEntity, call: ServiceCall) ->
     for item in call.data.get("item", []):
         found = _find_by_uid_or_summary(item, entity.todo_items)
         if not found or not found.uid:
-            raise ValueError(f"Unable to find To-do item '{item}")
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="item_not_found",
+                translation_placeholders={"item": item},
+            )
         uids.append(found.uid)
     await entity.async_delete_todo_items(uids=uids)
 

@@ -1,6 +1,5 @@
 """Tests for the INKBIRD integration."""
 
-
 from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
 
 NOT_INKBIRD_SERVICE_INFO = BluetoothServiceInfo(

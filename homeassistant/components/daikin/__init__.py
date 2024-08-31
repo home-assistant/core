@@ -1,10 +1,15 @@
 """Platform for the Daikin AC."""
+
+from __future__ import annotations
+
 import asyncio
 from datetime import timedelta
 import logging
+from typing import Any
 
 from aiohttp import ClientConnectionError
 from pydaikin.daikin_base import Appliance
+from pydaikin.factory import DaikinFactory
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -18,7 +23,6 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.util import Throttle
 
@@ -30,8 +34,6 @@ PARALLEL_UPDATES = 0
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
 PLATFORMS = [Platform.CLIMATE, Platform.SENSOR, Platform.SWITCH]
-
-CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -68,28 +70,33 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-async def daikin_api_setup(hass: HomeAssistant, host, key, uuid, password):
+async def daikin_api_setup(
+    hass: HomeAssistant,
+    host: str,
+    key: str | None,
+    uuid: str | None,
+    password: str | None,
+) -> DaikinApi | None:
     """Create a Daikin instance only once."""
 
     session = async_get_clientsession(hass)
     try:
         async with asyncio.timeout(TIMEOUT):
-            device = await Appliance.factory(
+            device: Appliance = await DaikinFactory(
                 host, session, key=key, uuid=uuid, password=password
             )
-    except asyncio.TimeoutError as err:
+        _LOGGER.debug("Connection to %s successful", host)
+    except TimeoutError as err:
         _LOGGER.debug("Connection to %s timed out", host)
         raise ConfigEntryNotReady from err
     except ClientConnectionError as err:
         _LOGGER.debug("ClientConnectionError to %s", host)
         raise ConfigEntryNotReady from err
-    except Exception:  # pylint: disable=broad-except
+    except Exception:  # noqa: BLE001
         _LOGGER.error("Unexpected error creating device %s", host)
         return None
 
-    api = DaikinApi(device)
-
-    return api
+    return DaikinApi(device)
 
 
 class DaikinApi:
@@ -103,7 +110,7 @@ class DaikinApi:
         self._available = True
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    async def async_update(self, **kwargs):
+    async def async_update(self, **kwargs: Any) -> None:
         """Pull the latest data from Daikin."""
         try:
             await self.device.update_status()

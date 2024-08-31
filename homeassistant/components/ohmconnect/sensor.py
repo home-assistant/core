@@ -1,4 +1,5 @@
 """Support for OhmConnect."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -8,7 +9,10 @@ import defusedxml.ElementTree as ET
 import requests
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+    SensorEntity,
+)
 from homeassistant.const import CONF_ID, CONF_NAME
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -22,7 +26,7 @@ DEFAULT_NAME = "OhmConnect Status"
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_ID): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,

@@ -1,4 +1,5 @@
 """Tests for Plex setup."""
+
 import copy
 from datetime import timedelta
 from http import HTTPStatus
@@ -9,7 +10,7 @@ import plexapi
 import requests
 import requests_mock
 
-import homeassistant.components.plex.const as const
+from homeassistant.components.plex import const
 from homeassistant.components.plex.models import (
     LIVE_TV_SECTION,
     TRANSIENT_SECTION,
@@ -76,7 +77,8 @@ async def test_setup_with_insecure_config_entry(
     """Test setup component with config."""
     INSECURE_DATA = copy.deepcopy(DEFAULT_DATA)
     INSECURE_DATA[const.PLEX_SERVER_CONFIG][CONF_VERIFY_SSL] = False
-    entry.data = INSECURE_DATA
+    entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(entry, data=INSECURE_DATA)
 
     await setup_plex_server(config_entry=entry)
 
@@ -207,7 +209,7 @@ async def test_setup_when_certificate_changed(
     class WrongCertHostnameException(requests.exceptions.SSLError):
         """Mock the exception showing a mismatched hostname."""
 
-        def __init__(self):
+        def __init__(self) -> None:  # pylint: disable=super-init-not-called
             self.__context__ = ssl.SSLCertVerificationError(
                 f"hostname '{old_domain}' doesn't match"
             )
@@ -253,7 +255,7 @@ async def test_setup_when_certificate_changed(
     # Test with success
     new_url = PLEX_DIRECT_URL
     requests_mock.get("https://plex.tv/api/v2/resources", text=plextv_resources)
-    for resource_url in [new_url, "http://1.2.3.4:32400"]:
+    for resource_url in (new_url, "http://1.2.3.4:32400"):
         requests_mock.get(resource_url, text=plex_server_default)
     requests_mock.get(f"{new_url}/accounts", text=plex_server_accounts)
     requests_mock.get(f"{new_url}/library", text=empty_library)
@@ -268,11 +270,12 @@ async def test_setup_when_certificate_changed(
     assert old_entry.data[const.PLEX_SERVER_CONFIG][CONF_URL] == new_url
 
 
-async def test_tokenless_server(entry, setup_plex_server) -> None:
+async def test_tokenless_server(hass: HomeAssistant, entry, setup_plex_server) -> None:
     """Test setup with a server with token auth disabled."""
     TOKENLESS_DATA = copy.deepcopy(DEFAULT_DATA)
     TOKENLESS_DATA[const.PLEX_SERVER_CONFIG].pop(CONF_TOKEN, None)
-    entry.data = TOKENLESS_DATA
+    entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(entry, data=TOKENLESS_DATA)
 
     await setup_plex_server(config_entry=entry)
     assert entry.state is ConfigEntryState.LOADED
@@ -348,11 +351,16 @@ async def test_trigger_reauth(
 
     assert entry.state is ConfigEntryState.LOADED
 
-    with patch(
-        "plexapi.server.PlexServer.clients", side_effect=plexapi.exceptions.Unauthorized
-    ), patch("plexapi.server.PlexServer", side_effect=plexapi.exceptions.Unauthorized):
+    with (
+        patch(
+            "plexapi.server.PlexServer.clients",
+            side_effect=plexapi.exceptions.Unauthorized,
+        ),
+        patch("plexapi.server.PlexServer", side_effect=plexapi.exceptions.Unauthorized),
+    ):
         trigger_plex_update(mock_websocket)
         await wait_for_debouncer(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     assert len(hass.config_entries.async_entries(const.DOMAIN)) == 1
     assert entry.state is not ConfigEntryState.LOADED

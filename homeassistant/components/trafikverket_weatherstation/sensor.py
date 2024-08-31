@@ -1,11 +1,12 @@
 """Weather information for air and road temperature (by Trafikverket)."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
 
-from pytrafikverket.trafikverket_weather import WeatherStationInfo
+from pytrafikverket.models import WeatherStationInfoModel
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -13,7 +14,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     DEGREE,
     PERCENTAGE,
@@ -29,6 +29,7 @@ from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
+from . import TVWeatherConfigEntry
 from .const import ATTRIBUTION, CONF_STATION, DOMAIN
 from .coordinator import TVDataUpdateCoordinator
 
@@ -42,18 +43,11 @@ PRECIPITATION_TYPE = [
 ]
 
 
-@dataclass(frozen=True)
-class TrafikverketRequiredKeysMixin:
-    """Mixin for required keys."""
-
-    value_fn: Callable[[WeatherStationInfo], StateType | datetime]
-
-
-@dataclass(frozen=True)
-class TrafikverketSensorEntityDescription(
-    SensorEntityDescription, TrafikverketRequiredKeysMixin
-):
+@dataclass(frozen=True, kw_only=True)
+class TrafikverketSensorEntityDescription(SensorEntityDescription):
     """Describes Trafikverket sensor entity."""
+
+    value_fn: Callable[[WeatherStationInfoModel], StateType | datetime]
 
 
 def add_utc_timezone(date_time: datetime | None) -> datetime | None:
@@ -67,7 +61,7 @@ SENSOR_TYPES: tuple[TrafikverketSensorEntityDescription, ...] = (
     TrafikverketSensorEntityDescription(
         key="air_temp",
         translation_key="air_temperature",
-        value_fn=lambda data: data.air_temp or 0,
+        value_fn=lambda data: data.air_temp,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -75,7 +69,7 @@ SENSOR_TYPES: tuple[TrafikverketSensorEntityDescription, ...] = (
     TrafikverketSensorEntityDescription(
         key="road_temp",
         translation_key="road_temperature",
-        value_fn=lambda data: data.road_temp or 0,
+        value_fn=lambda data: data.road_temp,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -84,7 +78,6 @@ SENSOR_TYPES: tuple[TrafikverketSensorEntityDescription, ...] = (
         key="precipitation",
         translation_key="precipitation",
         value_fn=lambda data: data.precipitationtype,
-        icon="mdi:weather-snowy-rainy",
         entity_registry_enabled_default=False,
         options=PRECIPITATION_TYPE,
         device_class=SensorDeviceClass.ENUM,
@@ -94,12 +87,11 @@ SENSOR_TYPES: tuple[TrafikverketSensorEntityDescription, ...] = (
         translation_key="wind_direction",
         value_fn=lambda data: data.winddirection,
         native_unit_of_measurement=DEGREE,
-        icon="mdi:flag-triangle",
         state_class=SensorStateClass.MEASUREMENT,
     ),
     TrafikverketSensorEntityDescription(
         key="wind_speed",
-        value_fn=lambda data: data.windforce or 0,
+        value_fn=lambda data: data.windforce,
         native_unit_of_measurement=UnitOfSpeed.METERS_PER_SECOND,
         device_class=SensorDeviceClass.WIND_SPEED,
         state_class=SensorStateClass.MEASUREMENT,
@@ -107,16 +99,15 @@ SENSOR_TYPES: tuple[TrafikverketSensorEntityDescription, ...] = (
     TrafikverketSensorEntityDescription(
         key="wind_speed_max",
         translation_key="wind_speed_max",
-        value_fn=lambda data: data.windforcemax or 0,
+        value_fn=lambda data: data.windforcemax,
         native_unit_of_measurement=UnitOfSpeed.METERS_PER_SECOND,
         device_class=SensorDeviceClass.WIND_SPEED,
-        icon="mdi:weather-windy-variant",
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     TrafikverketSensorEntityDescription(
         key="humidity",
-        value_fn=lambda data: data.humidity or 0,
+        value_fn=lambda data: data.humidity,
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
         entity_registry_enabled_default=False,
@@ -124,7 +115,7 @@ SENSOR_TYPES: tuple[TrafikverketSensorEntityDescription, ...] = (
     ),
     TrafikverketSensorEntityDescription(
         key="precipitation_amount",
-        value_fn=lambda data: data.precipitation_amount or 0,
+        value_fn=lambda data: data.precipitation_amount,
         native_unit_of_measurement=UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
         device_class=SensorDeviceClass.PRECIPITATION_INTENSITY,
         state_class=SensorStateClass.MEASUREMENT,
@@ -133,14 +124,13 @@ SENSOR_TYPES: tuple[TrafikverketSensorEntityDescription, ...] = (
         key="measure_time",
         translation_key="measure_time",
         value_fn=lambda data: data.measure_time,
-        icon="mdi:clock",
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.TIMESTAMP,
     ),
     TrafikverketSensorEntityDescription(
         key="dew_point",
         translation_key="dew_point",
-        value_fn=lambda data: data.dew_point or 0,
+        value_fn=lambda data: data.dew_point,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -203,7 +193,6 @@ SENSOR_TYPES: tuple[TrafikverketSensorEntityDescription, ...] = (
         key="modified_time",
         translation_key="modified_time",
         value_fn=lambda data: add_utc_timezone(data.modified_time),
-        icon="mdi:clock",
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.TIMESTAMP,
     ),
@@ -211,11 +200,13 @@ SENSOR_TYPES: tuple[TrafikverketSensorEntityDescription, ...] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: TVWeatherConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Trafikverket sensor entry."""
 
-    coordinator: TVDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     async_add_entities(
         TrafikverketWeatherStation(

@@ -1,4 +1,5 @@
 """OwnTracks Message handlers."""
+
 import json
 import logging
 
@@ -134,8 +135,6 @@ def _decrypt_payload(secret, topic, ciphertext):
     try:
         message = decrypt(ciphertext, key)
         message = message.decode("utf-8")
-        _LOGGER.debug("Decrypted payload: %s", message)
-        return message
     except ValueError:
         _LOGGER.warning(
             (
@@ -145,6 +144,8 @@ def _decrypt_payload(secret, topic, ciphertext):
             topic,
         )
         return None
+    _LOGGER.debug("Decrypted payload: %s", message)
+    return message
 
 
 def encrypt_message(secret, topic, message):

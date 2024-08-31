@@ -1,4 +1,5 @@
 """Support for System Bridge updates."""
+
 from __future__ import annotations
 
 from homeassistant.components.update import UpdateEntity

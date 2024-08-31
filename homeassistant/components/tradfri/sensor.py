@@ -1,4 +1,5 @@
 """Support for IKEA Tradfri sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -37,19 +38,11 @@ from .const import (
 from .coordinator import TradfriDeviceDataUpdateCoordinator
 
 
-@dataclass(frozen=True)
-class TradfriSensorEntityDescriptionMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class TradfriSensorEntityDescription(SensorEntityDescription):
+    """Class describing Tradfri sensor entities."""
 
     value: Callable[[Device], Any | None]
-
-
-@dataclass(frozen=True)
-class TradfriSensorEntityDescription(
-    SensorEntityDescription,
-    TradfriSensorEntityDescriptionMixin,
-):
-    """Class describing Tradfri sensor entities."""
 
 
 def _get_air_quality(device: Device) -> int | None:
@@ -91,7 +84,6 @@ SENSOR_DESCRIPTIONS_FAN: tuple[TradfriSensorEntityDescription, ...] = (
         translation_key="aqi",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-        icon="mdi:air-filter",
         value=_get_air_quality,
     ),
     TradfriSensorEntityDescription(
@@ -99,7 +91,6 @@ SENSOR_DESCRIPTIONS_FAN: tuple[TradfriSensorEntityDescription, ...] = (
         translation_key="filter_life_remaining",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTime.HOURS,
-        icon="mdi:clock-outline",
         value=_get_filter_time_left,
     ),
 )

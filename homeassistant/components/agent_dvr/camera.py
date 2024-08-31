@@ -1,4 +1,5 @@
 """Support for Agent camera streaming."""
+
 from datetime import timedelta
 import logging
 
@@ -6,7 +7,6 @@ from agent import AgentError
 
 from homeassistant.components.camera import CameraEntityFeature
 from homeassistant.components.mjpeg import MjpegCamera, filter_urllib3_logging
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import (
@@ -14,12 +14,8 @@ from homeassistant.helpers.entity_platform import (
     async_get_current_platform,
 )
 
-from .const import (
-    ATTRIBUTION,
-    CAMERA_SCAN_INTERVAL_SECS,
-    CONNECTION,
-    DOMAIN as AGENT_DOMAIN,
-)
+from . import AgentDVRConfigEntry
+from .const import ATTRIBUTION, CAMERA_SCAN_INTERVAL_SECS, DOMAIN as AGENT_DOMAIN
 
 SCAN_INTERVAL = timedelta(seconds=CAMERA_SCAN_INTERVAL_SECS)
 
@@ -42,14 +38,14 @@ CAMERA_SERVICES = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: AgentDVRConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Agent cameras."""
     filter_urllib3_logging()
     cameras = []
 
-    server = hass.data[AGENT_DOMAIN][config_entry.entry_id][CONNECTION]
+    server = config_entry.runtime_data
     if not server.devices:
         _LOGGER.warning("Could not fetch cameras from Agent server")
         return
@@ -63,7 +59,7 @@ async def async_setup_entry(
 
     platform = async_get_current_platform()
     for service, method in CAMERA_SERVICES.items():
-        platform.async_register_entity_service(service, {}, method)
+        platform.async_register_entity_service(service, None, method)
 
 
 class AgentCamera(MjpegCamera):
@@ -79,11 +75,11 @@ class AgentCamera(MjpegCamera):
         """Initialize as a subclass of MjpegCamera."""
         self.device = device
         self._removed = False
-        self._attr_unique_id = f"{device._client.unique}_{device.typeID}_{device.id}"
+        self._attr_unique_id = f"{device.client.unique}_{device.typeID}_{device.id}"
         super().__init__(
             name=device.name,
-            mjpeg_url=f"{device.client._server_url}{device.mjpeg_image_url}&size={device.mjpegStreamWidth}x{device.mjpegStreamHeight}",
-            still_image_url=f"{device.client._server_url}{device.still_image_url}&size={device.mjpegStreamWidth}x{device.mjpegStreamHeight}",
+            mjpeg_url=f"{device.client._server_url}{device.mjpeg_image_url}&size={device.mjpegStreamWidth}x{device.mjpegStreamHeight}",  # noqa: SLF001
+            still_image_url=f"{device.client._server_url}{device.still_image_url}&size={device.mjpegStreamWidth}x{device.mjpegStreamHeight}",  # noqa: SLF001
         )
         self._attr_device_info = DeviceInfo(
             identifiers={(AGENT_DOMAIN, self.unique_id)},

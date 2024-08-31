@@ -1,4 +1,5 @@
 """Offer MQTT listening automation rules."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -9,8 +10,15 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.const import CONF_PAYLOAD, CONF_PLATFORM, CONF_VALUE_TEMPLATE
-from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    HassJob,
+    HassJobType,
+    HomeAssistant,
+    callback,
+)
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.service_info.mqtt import ReceivePayloadType
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.trigger import TriggerActionType, TriggerData, TriggerInfo
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
@@ -24,7 +32,6 @@ from .models import (
     PayloadSentinel,
     PublishPayloadType,
     ReceiveMessage,
-    ReceivePayloadType,
 )
 
 TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
@@ -53,10 +60,10 @@ async def async_attach_trigger(
     trigger_data: TriggerData = trigger_info["trigger_data"]
     command_template: Callable[
         [PublishPayloadType, TemplateVarsType], PublishPayloadType
-    ] = MqttCommandTemplate(config.get(CONF_PAYLOAD), hass=hass).async_render
+    ] = MqttCommandTemplate(config.get(CONF_PAYLOAD)).async_render
     value_template: Callable[[ReceivePayloadType, str], ReceivePayloadType]
     value_template = MqttValueTemplate(
-        config.get(CONF_VALUE_TEMPLATE), hass=hass
+        config.get(CONF_VALUE_TEMPLATE)
     ).async_render_with_possible_json_value
     encoding: str | None = config[CONF_ENCODING] or None
     qos: int = config[CONF_QOS]
@@ -68,7 +75,6 @@ async def async_attach_trigger(
     wanted_payload = command_template(None, variables)
 
     topic_template: Template = config[CONF_TOPIC]
-    topic_template.hass = hass
     topic = topic_template.async_render(variables, limited=True, parse_result=False)
     mqtt.util.valid_subscribe_topic(topic)
 
@@ -98,7 +104,11 @@ async def async_attach_trigger(
         "Attaching MQTT trigger for topic: '%s', payload: '%s'", topic, wanted_payload
     )
 
-    remove = await mqtt.async_subscribe(
-        hass, topic, mqtt_automation_listener, encoding=encoding, qos=qos
+    return mqtt.async_subscribe_internal(
+        hass,
+        topic,
+        mqtt_automation_listener,
+        encoding=encoding,
+        qos=qos,
+        job_type=HassJobType.Callback,
     )
-    return remove

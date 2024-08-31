@@ -1,0 +1,28 @@
+{
+  "services": {
+    "update_dsp": {
+      "service": "mdi:update"
+    },
+    "set_mode": {
+      "service": "mdi:cog"
+    },
+    "set_desk_db": {
+      "service": "mdi:volume-high"
+    },
+    "set_wall_db": {
+      "service": "mdi:volume-high"
+    },
+    "set_treble_db": {
+      "service": "mdi:volume-high"
+    },
+    "set_high_hz": {
+      "service": "mdi:sine-wave"
+    },
+    "set_low_hz": {
+      "service": "mdi:cosine-wave"
+    },
+    "set_sub_db": {
+      "service": "mdi:volume-high"
+    }
+  }
+}

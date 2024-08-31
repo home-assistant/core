@@ -1,27 +1,21 @@
 """Support KNX devices."""
+
 from __future__ import annotations
 
-import asyncio
 import contextlib
 import logging
 from pathlib import Path
-from typing import Final
 
 import voluptuous as vol
 from xknx import XKNX
 from xknx.core import XknxConnectionState
 from xknx.core.telegram_queue import TelegramQueue
-from xknx.dpt import DPTArray, DPTBase, DPTBinary
+from xknx.dpt import DPTBase
 from xknx.exceptions import ConversionError, CouldNotParseTelegram, XKNXException
 from xknx.io import ConnectionConfig, ConnectionType, SecureConfig
 from xknx.telegram import AddressFilter, Telegram
-from xknx.telegram.address import (
-    DeviceGroupAddress,
-    GroupAddress,
-    InternalGroupAddress,
-    parse_device_group_address,
-)
-from xknx.telegram.apci import GroupValueRead, GroupValueResponse, GroupValueWrite
+from xknx.telegram.address import DeviceGroupAddress, GroupAddress, InternalGroupAddress
+from xknx.telegram.apci import GroupValueResponse, GroupValueWrite
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -30,15 +24,14 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_TYPE,
     EVENT_HOMEASSISTANT_STOP,
-    SERVICE_RELOAD,
     Platform,
 )
-from homeassistant.core import Event, HomeAssistant, ServiceCall
-from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
+from homeassistant.core import Event, HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.reload import async_integration_yaml_config
-from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.storage import STORAGE_DIR
 from homeassistant.helpers.typing import ConfigType
 
@@ -69,7 +62,8 @@ from .const import (
     DATA_KNX_CONFIG,
     DOMAIN,
     KNX_ADDRESS,
-    SUPPORTED_PLATFORMS,
+    SUPPORTED_PLATFORMS_UI,
+    SUPPORTED_PLATFORMS_YAML,
     TELEGRAM_LOG_DEFAULT,
 )
 from .device import KNXInterfaceDevice
@@ -95,23 +89,14 @@ from .schema import (
     TextSchema,
     TimeSchema,
     WeatherSchema,
-    ga_validator,
-    sensor_type_validator,
 )
+from .services import register_knx_services
+from .storage.config_store import KNXConfigStore
 from .telegrams import STORAGE_KEY as TELEGRAMS_STORAGE_KEY, Telegrams
 from .websocket import register_panel
 
 _LOGGER = logging.getLogger(__name__)
 
-
-SERVICE_KNX_SEND: Final = "send"
-SERVICE_KNX_ATTR_PAYLOAD: Final = "payload"
-SERVICE_KNX_ATTR_TYPE: Final = "type"
-SERVICE_KNX_ATTR_RESPONSE: Final = "response"
-SERVICE_KNX_ATTR_REMOVE: Final = "remove"
-SERVICE_KNX_EVENT_REGISTER: Final = "event_register"
-SERVICE_KNX_EXPOSURE_REGISTER: Final = "exposure_register"
-SERVICE_KNX_READ: Final = "read"
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -158,83 +143,14 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-SERVICE_KNX_SEND_SCHEMA = vol.Any(
-    vol.Schema(
-        {
-            vol.Required(KNX_ADDRESS): vol.All(
-                cv.ensure_list,
-                [ga_validator],
-            ),
-            vol.Required(SERVICE_KNX_ATTR_PAYLOAD): cv.match_all,
-            vol.Required(SERVICE_KNX_ATTR_TYPE): sensor_type_validator,
-            vol.Optional(SERVICE_KNX_ATTR_RESPONSE, default=False): cv.boolean,
-        }
-    ),
-    vol.Schema(
-        # without type given payload is treated as raw bytes
-        {
-            vol.Required(KNX_ADDRESS): vol.All(
-                cv.ensure_list,
-                [ga_validator],
-            ),
-            vol.Required(SERVICE_KNX_ATTR_PAYLOAD): vol.Any(
-                cv.positive_int, [cv.positive_int]
-            ),
-            vol.Optional(SERVICE_KNX_ATTR_RESPONSE, default=False): cv.boolean,
-        }
-    ),
-)
-
-SERVICE_KNX_READ_SCHEMA = vol.Schema(
-    {
-        vol.Required(KNX_ADDRESS): vol.All(
-            cv.ensure_list,
-            [ga_validator],
-        )
-    }
-)
-
-SERVICE_KNX_EVENT_REGISTER_SCHEMA = vol.Schema(
-    {
-        vol.Required(KNX_ADDRESS): vol.All(
-            cv.ensure_list,
-            [ga_validator],
-        ),
-        vol.Optional(CONF_TYPE): sensor_type_validator,
-        vol.Optional(SERVICE_KNX_ATTR_REMOVE, default=False): cv.boolean,
-    }
-)
-
-SERVICE_KNX_EXPOSURE_REGISTER_SCHEMA = vol.Any(
-    ExposeSchema.EXPOSE_SENSOR_SCHEMA.extend(
-        {
-            vol.Optional(SERVICE_KNX_ATTR_REMOVE, default=False): cv.boolean,
-        }
-    ),
-    vol.Schema(
-        # for removing only `address` is required
-        {
-            vol.Required(KNX_ADDRESS): ga_validator,
-            vol.Required(SERVICE_KNX_ATTR_REMOVE): vol.All(cv.boolean, True),
-        },
-        extra=vol.ALLOW_EXTRA,
-    ),
-)
-
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Start the KNX integration."""
     hass.data[DATA_HASS_CONFIG] = config
-    conf: ConfigType | None = config.get(DOMAIN)
+    if (conf := config.get(DOMAIN)) is not None:
+        hass.data[DATA_KNX_CONFIG] = dict(conf)
 
-    if conf is None:
-        # If we have a config entry, setup is done by that config entry.
-        # If there is no config entry, this should fail.
-        return bool(hass.config_entries.async_entries(DOMAIN))
-
-    conf = dict(conf)
-    hass.data[DATA_KNX_CONFIG] = conf
-
+    register_knx_services(hass)
     return True
 
 
@@ -268,61 +184,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             knx_module.exposures.append(
                 create_knx_exposure(hass, knx_module.xknx, expose_config)
             )
-    # always forward sensor for system entities (telegram counter, etc.)
-    await hass.config_entries.async_forward_entry_setup(entry, Platform.SENSOR)
     await hass.config_entries.async_forward_entry_setups(
         entry,
-        [
-            platform
-            for platform in SUPPORTED_PLATFORMS
-            if platform in config and platform not in (Platform.SENSOR, Platform.NOTIFY)
-        ],
+        {
+            Platform.SENSOR,  # always forward sensor for system entities (telegram counter, etc.)
+            *SUPPORTED_PLATFORMS_UI,  # forward all platforms that support UI entity management
+            *{  # forward yaml-only managed platforms on demand
+                platform for platform in SUPPORTED_PLATFORMS_YAML if platform in config
+            },
+        },
     )
 
-    # set up notify platform, no entry support for notify component yet
+    # set up notify service for backwards compatibility - remove 2024.11
     if NotifySchema.PLATFORM in config:
         hass.async_create_task(
             discovery.async_load_platform(
                 hass, Platform.NOTIFY, DOMAIN, {}, hass.data[DATA_HASS_CONFIG]
             )
         )
-
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_KNX_SEND,
-        knx_module.service_send_to_knx_bus,
-        schema=SERVICE_KNX_SEND_SCHEMA,
-    )
-
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_KNX_READ,
-        knx_module.service_read_to_knx_bus,
-        schema=SERVICE_KNX_READ_SCHEMA,
-    )
-
-    async_register_admin_service(
-        hass,
-        DOMAIN,
-        SERVICE_KNX_EVENT_REGISTER,
-        knx_module.service_event_register_modify,
-        schema=SERVICE_KNX_EVENT_REGISTER_SCHEMA,
-    )
-
-    async_register_admin_service(
-        hass,
-        DOMAIN,
-        SERVICE_KNX_EXPOSURE_REGISTER,
-        knx_module.service_exposure_register_modify,
-        schema=SERVICE_KNX_EXPOSURE_REGISTER_SCHEMA,
-    )
-
-    async def _reload_integration(call: ServiceCall) -> None:
-        """Reload the integration."""
-        await hass.config_entries.async_reload(entry.entry_id)
-        hass.bus.async_fire(f"event_{DOMAIN}_reloaded", context=call.context)
-
-    async_register_admin_service(hass, DOMAIN, SERVICE_RELOAD, _reload_integration)
 
     await register_panel(hass)
 
@@ -337,19 +216,19 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     knx_module: KNXModule = hass.data[DOMAIN]
     for exposure in knx_module.exposures:
-        exposure.shutdown()
+        exposure.async_remove()
 
     unload_ok = await hass.config_entries.async_unload_platforms(
         entry,
-        [
+        {
             Platform.SENSOR,  # always unload system entities (telegram counter, etc.)
-            *[
+            *SUPPORTED_PLATFORMS_UI,  # unload all platforms that support UI entity management
+            *{  # unload yaml-only managed platforms if configured
                 platform
-                for platform in SUPPORTED_PLATFORMS
+                for platform in SUPPORTED_PLATFORMS_YAML
                 if platform in hass.data[DATA_KNX_CONFIG]
-                and platform not in (Platform.SENSOR, Platform.NOTIFY)
-            ],
-        ],
+            },
+        },
     )
     if unload_ok:
         await knx_module.stop()
@@ -384,6 +263,22 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     await hass.async_add_executor_job(remove_files, storage_dir, knxkeys_filename)
 
 
+async def async_remove_config_entry_device(
+    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: DeviceEntry
+) -> bool:
+    """Remove a config entry from a device."""
+    knx_module: KNXModule = hass.data[DOMAIN]
+    if not device_entry.identifiers.isdisjoint(
+        knx_module.interface_device.device_info["identifiers"]
+    ):
+        # can not remove interface device
+        return False
+    for entity in knx_module.config_store.get_entity_entries():
+        if entity.device_id == device_entry.id:
+            await knx_module.config_store.delete_entity(entity.entity_id)
+    return True
+
+
 class KNXModule:
     """Representation of KNX Object."""
 
@@ -399,8 +294,10 @@ class KNXModule:
         self.entry = entry
 
         self.project = KNXProject(hass=hass, entry=entry)
+        self.config_store = KNXConfigStore(hass=hass, config_entry=entry)
 
         self.xknx = XKNX(
+            address_format=self.project.get_address_format(),
             connection_config=self.connection_config(),
             rate_limit=self.entry.data[CONF_KNX_RATE_LIMIT],
             state_updater=self.entry.data[CONF_KNX_STATE_UPDATER],
@@ -419,10 +316,8 @@ class KNXModule:
         )
 
         self._address_filter_transcoder: dict[AddressFilter, type[DPTBase]] = {}
-        self._group_address_transcoder: dict[DeviceGroupAddress, type[DPTBase]] = {}
-        self._knx_event_callback: TelegramQueue.Callback = (
-            self.register_event_callback()
-        )
+        self.group_address_transcoder: dict[DeviceGroupAddress, type[DPTBase]] = {}
+        self.knx_event_callback: TelegramQueue.Callback = self.register_event_callback()
 
         self.entry.async_on_unload(
             self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.stop)
@@ -431,7 +326,8 @@ class KNXModule:
 
     async def start(self) -> None:
         """Start XKNX object. Connect to tunneling or Routing device."""
-        await self.project.load_project()
+        await self.project.load_project(self.xknx)
+        await self.config_store.load_data()
         await self.telegrams.load_history()
         await self.xknx.start()
 
@@ -535,13 +431,13 @@ class KNXModule:
             threaded=True,
         )
 
-    async def connection_state_changed_cb(self, state: XknxConnectionState) -> None:
+    def connection_state_changed_cb(self, state: XknxConnectionState) -> None:
         """Call invoked after a KNX connection state change was received."""
         self.connected = state == XknxConnectionState.CONNECTED
-        if tasks := [device.after_update() for device in self.xknx.devices]:
-            await asyncio.gather(*tasks)
+        for device in self.xknx.devices:
+            device.after_update()
 
-    async def telegram_received_cb(self, telegram: Telegram) -> None:
+    def telegram_received_cb(self, telegram: Telegram) -> None:
         """Call invoked after a KNX telegram was received."""
         # Not all telegrams have serializable data.
         data: int | tuple[int, ...] | None = None
@@ -555,7 +451,7 @@ class KNXModule:
         ):
             data = telegram.payload.value.value
             if transcoder := (
-                self._group_address_transcoder.get(telegram.destination_address)
+                self.group_address_transcoder.get(telegram.destination_address)
                 or next(
                     (
                         _transcoder
@@ -600,10 +496,7 @@ class KNXModule:
                 transcoder := DPTBase.parse_transcoder(dpt)
             ):
                 self._address_filter_transcoder.update(
-                    {
-                        _filter: transcoder  # type: ignore[type-abstract]
-                        for _filter in _filters
-                    }
+                    {_filter: transcoder for _filter in _filters}
                 )
 
         return self.xknx.telegram_queue.register_telegram_received_cb(
@@ -612,111 +505,3 @@ class KNXModule:
             group_addresses=[],
             match_for_outgoing=True,
         )
-
-    async def service_event_register_modify(self, call: ServiceCall) -> None:
-        """Service for adding or removing a GroupAddress to the knx_event filter."""
-        attr_address = call.data[KNX_ADDRESS]
-        group_addresses = list(map(parse_device_group_address, attr_address))
-
-        if call.data.get(SERVICE_KNX_ATTR_REMOVE):
-            for group_address in group_addresses:
-                try:
-                    self._knx_event_callback.group_addresses.remove(group_address)
-                except ValueError:
-                    _LOGGER.warning(
-                        "Service event_register could not remove event for '%s'",
-                        str(group_address),
-                    )
-                if group_address in self._group_address_transcoder:
-                    del self._group_address_transcoder[group_address]
-            return
-
-        if (dpt := call.data.get(CONF_TYPE)) and (
-            transcoder := DPTBase.parse_transcoder(dpt)
-        ):
-            self._group_address_transcoder.update(
-                {
-                    _address: transcoder  # type: ignore[type-abstract]
-                    for _address in group_addresses
-                }
-            )
-        for group_address in group_addresses:
-            if group_address in self._knx_event_callback.group_addresses:
-                continue
-            self._knx_event_callback.group_addresses.append(group_address)
-            _LOGGER.debug(
-                "Service event_register registered event for '%s'",
-                str(group_address),
-            )
-
-    async def service_exposure_register_modify(self, call: ServiceCall) -> None:
-        """Service for adding or removing an exposure to KNX bus."""
-        group_address = call.data[KNX_ADDRESS]
-
-        if call.data.get(SERVICE_KNX_ATTR_REMOVE):
-            try:
-                removed_exposure = self.service_exposures.pop(group_address)
-            except KeyError as err:
-                raise HomeAssistantError(
-                    f"Could not find exposure for '{group_address}' to remove."
-                ) from err
-
-            removed_exposure.shutdown()
-            return
-
-        if group_address in self.service_exposures:
-            replaced_exposure = self.service_exposures.pop(group_address)
-            _LOGGER.warning(
-                (
-                    "Service exposure_register replacing already registered exposure"
-                    " for '%s' - %s"
-                ),
-                group_address,
-                replaced_exposure.device.name,
-            )
-            replaced_exposure.shutdown()
-        exposure = create_knx_exposure(self.hass, self.xknx, call.data)
-        self.service_exposures[group_address] = exposure
-        _LOGGER.debug(
-            "Service exposure_register registered exposure for '%s' - %s",
-            group_address,
-            exposure.device.name,
-        )
-
-    async def service_send_to_knx_bus(self, call: ServiceCall) -> None:
-        """Service for sending an arbitrary KNX message to the KNX bus."""
-        attr_address = call.data[KNX_ADDRESS]
-        attr_payload = call.data[SERVICE_KNX_ATTR_PAYLOAD]
-        attr_type = call.data.get(SERVICE_KNX_ATTR_TYPE)
-        attr_response = call.data[SERVICE_KNX_ATTR_RESPONSE]
-
-        payload: DPTBinary | DPTArray
-        if attr_type is not None:
-            transcoder = DPTBase.parse_transcoder(attr_type)
-            if transcoder is None:
-                raise ValueError(f"Invalid type for knx.send service: {attr_type}")
-            payload = transcoder.to_knx(attr_payload)
-        elif isinstance(attr_payload, int):
-            payload = DPTBinary(attr_payload)
-        else:
-            payload = DPTArray(attr_payload)
-
-        for address in attr_address:
-            telegram = Telegram(
-                destination_address=parse_device_group_address(address),
-                payload=GroupValueResponse(payload)
-                if attr_response
-                else GroupValueWrite(payload),
-                source_address=self.xknx.current_address,
-            )
-            await self.xknx.telegrams.put(telegram)
-
-    async def service_read_to_knx_bus(self, call: ServiceCall) -> None:
-        """Service for sending a GroupValueRead telegram to the KNX bus."""
-        for address in call.data[KNX_ADDRESS]:
-            telegram = Telegram(
-                destination_address=parse_device_group_address(address),
-                payload=GroupValueRead(),
-                source_address=self.xknx.current_address,
-            )
-            await self.xknx.telegrams.put(telegram)

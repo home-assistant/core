@@ -1,4 +1,5 @@
 """Fixtures for the SlimProto Player integration tests."""
+
 from __future__ import annotations
 
 from collections.abc import Generator
@@ -22,7 +23,7 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch(
         "homeassistant.components.slimproto.async_setup_entry",

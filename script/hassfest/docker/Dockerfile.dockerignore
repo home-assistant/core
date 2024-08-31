@@ -1,0 +1,8 @@
+# Ignore everything except the specified files
+*
+
+!homeassistant/
+!requirements.txt
+!script/
+script/hassfest/docker/
+!script/hassfest/docker/entrypoint.sh

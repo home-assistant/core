@@ -1,4 +1,5 @@
 """Support for ClearPass Policy Manager."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -9,7 +10,7 @@ import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
     DOMAIN,
-    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
     DeviceScanner,
 )
 from homeassistant.const import CONF_API_KEY, CONF_CLIENT_ID, CONF_HOST
@@ -21,7 +22,7 @@ SCAN_INTERVAL = timedelta(seconds=120)
 
 GRANT_TYPE = "client_credentials"
 
-PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_CLIENT_ID): cv.string,
@@ -63,10 +64,9 @@ class CPPMDeviceScanner(DeviceScanner):
 
     def get_device_name(self, device):
         """Retrieve device name."""
-        name = next(
+        return next(
             (result["name"] for result in self.results if result["mac"] == device), None
         )
-        return name
 
     def get_cppm_data(self):
         """Retrieve data from Aruba Clearpass and return parsed result."""

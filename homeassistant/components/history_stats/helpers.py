@@ -1,4 +1,5 @@
 """Helpers to make instant statistics about your history."""
+
 from __future__ import annotations
 
 import datetime

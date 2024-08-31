@@ -1,4 +1,5 @@
 """Tests for the devolo Home Control binary sensors."""
+
 from unittest.mock import patch
 
 import pytest
@@ -65,7 +66,7 @@ async def test_siren_switching(
 
     with patch(
         "devolo_home_control_api.properties.multi_level_switch_property.MultiLevelSwitchProperty.set"
-    ) as set:
+    ) as property_set:
         await hass.services.async_call(
             "siren",
             "turn_on",
@@ -77,11 +78,11 @@ async def test_siren_switching(
             "Test", ("devolo.SirenMultiLevelSwitch:Test", 1)
         )
         await hass.async_block_till_done()
-        set.assert_called_once_with(1)
+        property_set.assert_called_once_with(1)
 
     with patch(
         "devolo_home_control_api.properties.multi_level_switch_property.MultiLevelSwitchProperty.set"
-    ) as set:
+    ) as property_set:
         await hass.services.async_call(
             "siren",
             "turn_off",
@@ -94,7 +95,7 @@ async def test_siren_switching(
         )
         await hass.async_block_till_done()
         assert hass.states.get(f"{DOMAIN}.test").state == STATE_OFF
-        set.assert_called_once_with(0)
+        property_set.assert_called_once_with(0)
 
 
 @pytest.mark.usefixtures("mock_zeroconf")
@@ -118,7 +119,7 @@ async def test_siren_change_default_tone(
 
     with patch(
         "devolo_home_control_api.properties.multi_level_switch_property.MultiLevelSwitchProperty.set"
-    ) as set:
+    ) as property_set:
         test_gateway.publisher.dispatch("Test", ("mss:Test", 2))
         await hass.services.async_call(
             "siren",
@@ -126,7 +127,7 @@ async def test_siren_change_default_tone(
             {"entity_id": f"{DOMAIN}.test"},
             blocking=True,
         )
-        set.assert_called_once_with(2)
+        property_set.assert_called_once_with(2)
 
 
 @pytest.mark.usefixtures("mock_zeroconf")

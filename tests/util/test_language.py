@@ -1,4 +1,5 @@
 """Test Home Assistant language util methods."""
+
 from __future__ import annotations
 
 import pytest

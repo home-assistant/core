@@ -1,4 +1,5 @@
 """API for Netatmo bound to HASS OAuth."""
+
 from collections.abc import Iterable
 from typing import cast
 

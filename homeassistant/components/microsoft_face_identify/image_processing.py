@@ -1,4 +1,5 @@
 """Component that will help set the Microsoft face for verify processing."""
+
 from __future__ import annotations
 
 import logging
@@ -8,7 +9,7 @@ import voluptuous as vol
 from homeassistant.components.image_processing import (
     ATTR_CONFIDENCE,
     CONF_CONFIDENCE,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as IMAGE_PROCESSING_PLATFORM_SCHEMA,
     ImageProcessingFaceEntity,
 )
 from homeassistant.components.microsoft_face import DATA_MICROSOFT_FACE
@@ -23,7 +24,9 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_GROUP = "group"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({vol.Required(CONF_GROUP): cv.slugify})
+PLATFORM_SCHEMA = IMAGE_PROCESSING_PLATFORM_SCHEMA.extend(
+    {vol.Required(CONF_GROUP): cv.slugify}
+)
 
 
 async def async_setup_platform(
@@ -37,19 +40,16 @@ async def async_setup_platform(
     face_group = config[CONF_GROUP]
     confidence = config[CONF_CONFIDENCE]
 
-    entities = []
-    for camera in config[CONF_SOURCE]:
-        entities.append(
-            MicrosoftFaceIdentifyEntity(
-                camera[CONF_ENTITY_ID],
-                api,
-                face_group,
-                confidence,
-                camera.get(CONF_NAME),
-            )
+    async_add_entities(
+        MicrosoftFaceIdentifyEntity(
+            camera[CONF_ENTITY_ID],
+            api,
+            face_group,
+            confidence,
+            camera.get(CONF_NAME),
         )
-
-    async_add_entities(entities)
+        for camera in config[CONF_SOURCE]
+    )
 
 
 class MicrosoftFaceIdentifyEntity(ImageProcessingFaceEntity):

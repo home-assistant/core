@@ -1,4 +1,5 @@
 """Support for Aseko Pool Live sensors."""
+
 from __future__ import annotations
 
 from aioaseko import Unit, Variable
@@ -26,11 +27,12 @@ async def async_setup_entry(
     data: list[tuple[Unit, AsekoDataUpdateCoordinator]] = hass.data[DOMAIN][
         config_entry.entry_id
     ]
-    entities = []
-    for unit, coordinator in data:
-        for variable in unit.variables:
-            entities.append(VariableSensorEntity(unit, variable, coordinator))
-    async_add_entities(entities)
+
+    async_add_entities(
+        VariableSensorEntity(unit, variable, coordinator)
+        for unit, coordinator in data
+        for variable in unit.variables
+    )
 
 
 class VariableSensorEntity(AsekoEntity, SensorEntity):
@@ -59,10 +61,8 @@ class VariableSensorEntity(AsekoEntity, SensorEntity):
         self._attr_native_unit_of_measurement = self._variable.unit
 
         self._attr_icon = {
-            "clf": "mdi:flask",
             "rx": "mdi:test-tube",
             "waterLevel": "mdi:waves",
-            "waterTemp": "mdi:coolant-temperature",
         }.get(self._variable.type)
 
         self._attr_device_class = {

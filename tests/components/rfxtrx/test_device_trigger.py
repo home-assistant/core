@@ -1,4 +1,5 @@
 """The tests for RFXCOM RFXtrx device triggers."""
+
 from __future__ import annotations
 
 from typing import Any, NamedTuple
@@ -6,7 +7,7 @@ from typing import Any, NamedTuple
 import pytest
 from pytest_unordered import unordered
 
-import homeassistant.components.automation as automation
+from homeassistant.components import automation
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.rfxtrx import DOMAIN
 from homeassistant.core import HomeAssistant
@@ -45,7 +46,7 @@ EVENT_FIREALARM_1 = EventTestData(
 )
 
 
-async def setup_entry(hass, devices):
+async def setup_entry(hass: HomeAssistant, devices: dict[str, Any]) -> None:
     """Construct a config setup."""
     entry_data = create_rfx_test_cfg(devices=devices)
     mock_entry = MockConfigEntry(domain="rfxtrx", unique_id=DOMAIN, data=entry_data)
@@ -60,11 +61,11 @@ async def setup_entry(hass, devices):
 @pytest.mark.parametrize(
     ("event", "expected"),
     [
-        [
+        (
             EVENT_LIGHTING_1,
             [
                 {"type": "command", "subtype": subtype}
-                for subtype in [
+                for subtype in (
                     "Off",
                     "On",
                     "Dim",
@@ -73,9 +74,9 @@ async def setup_entry(hass, devices):
                     "All/group On",
                     "Chime",
                     "Illegal command",
-                ]
+                )
             ],
-        ]
+        )
     ],
 )
 async def test_get_triggers(

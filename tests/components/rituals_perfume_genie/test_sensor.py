@@ -1,8 +1,8 @@
 """Tests for the Rituals Perfume Genie sensor platform."""
+
 from homeassistant.components.rituals_perfume_genie.sensor import SensorDeviceClass
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
-    ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT,
     PERCENTAGE,
     EntityCategory,
@@ -29,7 +29,6 @@ async def test_sensors_diffuser_v1_battery_cartridge(
     state = hass.states.get("sensor.genie_perfume")
     assert state
     assert state.state == diffuser.perfume
-    assert state.attributes.get(ATTR_ICON) == "mdi:tag"
 
     entry = entity_registry.async_get("sensor.genie_perfume")
     assert entry
@@ -38,7 +37,6 @@ async def test_sensors_diffuser_v1_battery_cartridge(
     state = hass.states.get("sensor.genie_fill")
     assert state
     assert state.state == diffuser.fill
-    assert state.attributes.get(ATTR_ICON) == "mdi:beaker"
 
     entry = entity_registry.async_get("sensor.genie_fill")
     assert entry

@@ -1,4 +1,5 @@
 """Support for ADS light sources."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -8,7 +9,7 @@ import voluptuous as vol
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as LIGHT_PLATFORM_SCHEMA,
     ColorMode,
     LightEntity,
 )
@@ -28,7 +29,7 @@ from . import (
 )
 
 DEFAULT_NAME = "ADS Light"
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = LIGHT_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_ADS_VAR): cv.string,
         vol.Optional(CONF_ADS_VAR_BRIGHTNESS): cv.string,

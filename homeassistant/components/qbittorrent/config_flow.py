@@ -1,16 +1,15 @@
 """Config flow for qBittorrent."""
+
 from __future__ import annotations
 
 import logging
 from typing import Any
 
-from qbittorrent.client import LoginRequired
-from requests.exceptions import RequestException
+from qbittorrentapi import APIConnectionError, Forbidden403Error, LoginFailed
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME, CONF_VERIFY_SSL
-from homeassistant.data_entry_flow import FlowResult
 
 from .const import DEFAULT_NAME, DEFAULT_URL, DOMAIN
 from .helpers import setup_client
@@ -32,7 +31,7 @@ class QbittorrentConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a user-initiated config flow."""
         errors = {}
 
@@ -46,9 +45,9 @@ class QbittorrentConfigFlow(ConfigFlow, domain=DOMAIN):
                     user_input[CONF_PASSWORD],
                     user_input[CONF_VERIFY_SSL],
                 )
-            except LoginRequired:
+            except (LoginFailed, Forbidden403Error):
                 errors = {"base": "invalid_auth"}
-            except RequestException:
+            except APIConnectionError:
                 errors = {"base": "cannot_connect"}
             else:
                 return self.async_create_entry(title=DEFAULT_NAME, data=user_input)

@@ -1,0 +1,20 @@
+get_packages:
+  fields:
+    package_state:
+      selector:
+        select:
+          multiple: true
+          options:
+            - "not_found"
+            - "in_transit"
+            - "expired"
+            - "ready_to_be_picked_up"
+            - "undelivered"
+            - "delivered"
+            - "returned"
+          translation_key: package_state
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: seventeentrack

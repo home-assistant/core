@@ -1,16 +1,15 @@
 """Helpers for components that manage entities."""
+
 from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable, Iterable
 from datetime import timedelta
-from itertools import chain
 import logging
 from types import ModuleType
 from typing import Any, Generic
 
 from typing_extensions import TypeVar
-import voluptuous as vol
 
 from homeassistant import config as conf_util
 from homeassistant.config_entries import ConfigEntry
@@ -20,8 +19,9 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import (
-    EntityServiceResponse,
     Event,
+    HassJob,
+    HassJobType,
     HomeAssistant,
     ServiceCall,
     ServiceResponse,
@@ -34,7 +34,7 @@ from homeassistant.setup import async_prepare_setup_platform
 
 from . import config_validation as cv, discovery, entity, service
 from .entity_platform import EntityPlatform
-from .typing import ConfigType, DiscoveryInfoType
+from .typing import ConfigType, DiscoveryInfoType, VolDictType, VolSchemaType
 
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=15)
 DATA_INSTANCES = "entity_components"
@@ -89,12 +89,13 @@ class EntityComponent(Generic[_EntityT]):
 
         self.config: ConfigType | None = None
 
+        domain_platform = self._async_init_entity_platform(domain, None)
         self._platforms: dict[
             str | tuple[str, timedelta | None, str | None], EntityPlatform
-        ] = {domain: self._async_init_entity_platform(domain, None)}
-        self.async_add_entities = self._platforms[domain].async_add_entities
-        self.add_entities = self._platforms[domain].add_entities
-
+        ] = {domain: domain_platform}
+        self.async_add_entities = domain_platform.async_add_entities
+        self.add_entities = domain_platform.add_entities
+        self._entities: dict[str, entity.Entity] = domain_platform.domain_entities
         hass.data.setdefault(DATA_INSTANCES, {})[domain] = self
 
     @property
@@ -105,18 +106,11 @@ class EntityComponent(Generic[_EntityT]):
         callers that iterate over this asynchronously should make a copy
         using list() before iterating.
         """
-        return chain.from_iterable(
-            platform.entities.values()  # type: ignore[misc]
-            for platform in self._platforms.values()
-        )
+        return self._entities.values()  # type: ignore[return-value]
 
     def get_entity(self, entity_id: str) -> _EntityT | None:
         """Get an entity."""
-        for platform in self._platforms.values():
-            entity_obj = platform.entities.get(entity_id)
-            if entity_obj is not None:
-                return entity_obj  # type: ignore[return-value]
-        return None
+        return self._entities.get(entity_id)  # type: ignore[return-value]
 
     def register_shutdown(self) -> None:
         """Register shutdown on Home Assistant STOP event.
@@ -150,22 +144,23 @@ class EntityComponent(Generic[_EntityT]):
         # Look in config for Domain, Domain 2, Domain 3 etc and load them
         for p_type, p_config in conf_util.config_per_platform(config, self.domain):
             if p_type is not None:
-                self.hass.async_create_task(
+                self.hass.async_create_task_internal(
                     self.async_setup_platform(p_type, p_config),
                     f"EntityComponent setup platform {p_type} {self.domain}",
+                    eager_start=True,
                 )
 
         # Generic discovery listener for loading platform dynamically
         # Refer to: homeassistant.helpers.discovery.async_load_platform()
-        async def component_platform_discovered(
-            platform: str, info: dict[str, Any] | None
-        ) -> None:
-            """Handle the loading of a platform."""
-            await self.async_setup_platform(platform, {}, info)
-
         discovery.async_listen_platform(
-            self.hass, self.domain, component_platform_discovered
+            self.hass, self.domain, self._async_component_platform_discovered
         )
+
+    async def _async_component_platform_discovered(
+        self, platform: str, info: dict[str, Any] | None
+    ) -> None:
+        """Handle the loading of a platform."""
+        await self.async_setup_platform(platform, {}, info)
 
     async def async_setup_entry(self, config_entry: ConfigEntry) -> bool:
         """Set up a config entry."""
@@ -185,7 +180,10 @@ class EntityComponent(Generic[_EntityT]):
         key = config_entry.entry_id
 
         if key in self._platforms:
-            raise ValueError("Config entry has already been setup!")
+            raise ValueError(
+                f"Config entry {config_entry.title} ({key}) for "
+                f"{platform_type}.{self.domain} has already been setup!"
+            )
 
         self._platforms[key] = self._async_init_entity_platform(
             platform_type,
@@ -222,7 +220,7 @@ class EntityComponent(Generic[_EntityT]):
     def async_register_legacy_entity_service(
         self,
         name: str,
-        schema: dict[str | vol.Marker, Any] | vol.Schema,
+        schema: VolDictType | VolSchemaType,
         func: str | Callable[..., Any],
         required_features: list[int] | None = None,
         supports_response: SupportsResponse = SupportsResponse.NONE,
@@ -231,13 +229,16 @@ class EntityComponent(Generic[_EntityT]):
         if isinstance(schema, dict):
             schema = cv.make_entity_service_schema(schema)
 
+        service_func: str | HassJob[..., Any]
+        service_func = func if isinstance(func, str) else HassJob(func)
+
         async def handle_service(
             call: ServiceCall,
         ) -> ServiceResponse:
             """Handle the service."""
 
             result = await service.entity_service_call(
-                self.hass, self._platforms.values(), func, call, required_features
+                self.hass, self._entities, service_func, call, required_features
             )
 
             if result:
@@ -256,25 +257,22 @@ class EntityComponent(Generic[_EntityT]):
     def async_register_entity_service(
         self,
         name: str,
-        schema: dict[str | vol.Marker, Any] | vol.Schema,
+        schema: VolDictType | VolSchemaType | None,
         func: str | Callable[..., Any],
         required_features: list[int] | None = None,
         supports_response: SupportsResponse = SupportsResponse.NONE,
     ) -> None:
         """Register an entity service."""
-        if isinstance(schema, dict):
-            schema = cv.make_entity_service_schema(schema)
-
-        async def handle_service(
-            call: ServiceCall,
-        ) -> EntityServiceResponse | None:
-            """Handle the service."""
-            return await service.entity_service_call(
-                self.hass, self._platforms.values(), func, call, required_features
-            )
-
-        self.hass.services.async_register(
-            self.domain, name, handle_service, schema, supports_response
+        service.async_register_entity_service(
+            self.hass,
+            self.domain,
+            name,
+            entities=self._entities,
+            func=func,
+            job_type=HassJobType.Coroutinefunction,
+            required_features=required_features,
+            schema=schema,
+            supports_response=supports_response,
         )
 
     async def async_setup_platform(
@@ -379,7 +377,7 @@ class EntityComponent(Generic[_EntityT]):
         if scan_interval is None:
             scan_interval = self.scan_interval
 
-        return EntityPlatform(
+        entity_platform = EntityPlatform(
             hass=self.hass,
             logger=self.logger,
             domain=self.domain,
@@ -388,9 +386,11 @@ class EntityComponent(Generic[_EntityT]):
             scan_interval=scan_interval,
             entity_namespace=entity_namespace,
         )
+        entity_platform.async_prepare()
+        return entity_platform
 
-    async def _async_shutdown(self, event: Event) -> None:
+    @callback
+    def _async_shutdown(self, event: Event) -> None:
         """Call when Home Assistant is stopping."""
-        await asyncio.gather(
-            *(platform.async_shutdown() for platform in chain(self._platforms.values()))
-        )
+        for platform in self._platforms.values():
+            platform.async_shutdown()

@@ -1,4 +1,5 @@
 """Script to ensure a configuration file exists."""
+
 import argparse
 import asyncio
 import os

@@ -1,0 +1,59 @@
+# serializer version: 1
+# name: test_entity[fan.centralized_ventilation_controler-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'preset_modes': list([
+        'slow',
+        'fast',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'fan',
+    'entity_category': None,
+    'entity_id': 'fan.centralized_ventilation_controler',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'netatmo',
+    'previous_unique_id': None,
+    'supported_features': <FanEntityFeature: 8>,
+    'translation_key': None,
+    'unique_id': '12:34:56:00:01:01:01:b1-DeviceType.NLLF',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity[fan.centralized_ventilation_controler-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Netatmo',
+      'friendly_name': 'Centralized ventilation controler',
+      'preset_mode': 'slow',
+      'preset_modes': list([
+        'slow',
+        'fast',
+      ]),
+      'supported_features': <FanEntityFeature: 8>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'fan.centralized_ventilation_controler',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---

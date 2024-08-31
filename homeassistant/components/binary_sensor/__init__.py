@@ -1,9 +1,10 @@
 """Component to interface with binary sensors."""
+
 from __future__ import annotations
 
 from datetime import timedelta
 from enum import StrEnum
-from functools import partial
+from functools import cached_property, partial
 import logging
 from typing import Literal, final
 
@@ -13,12 +14,10 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_ON, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.config_validation import (  # noqa: F401
-    PLATFORM_SCHEMA,
-    PLATFORM_SCHEMA_BASE,
-)
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.deprecation import (
     DeprecatedConstantEnum,
+    all_with_deprecated_constants,
     check_if_deprecated_constant,
     dir_with_deprecated_constants,
 )
@@ -29,9 +28,10 @@ from homeassistant.helpers.typing import ConfigType
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "binary_sensor"
-SCAN_INTERVAL = timedelta(seconds=30)
-
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
+PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
+PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
+SCAN_INTERVAL = timedelta(seconds=30)
 
 
 class BinarySensorDeviceClass(StrEnum):
@@ -212,10 +212,6 @@ _DEPRECATED_DEVICE_CLASS_WINDOW = DeprecatedConstantEnum(
     BinarySensorDeviceClass.WINDOW, "2025.1"
 )
 
-# Both can be removed if no deprecated constant are in this module anymore
-__getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
-__dir__ = partial(dir_with_deprecated_constants, module_globals=globals())
-
 # mypy: disallow-any-generics
 
 
@@ -247,7 +243,13 @@ class BinarySensorEntityDescription(EntityDescription, frozen_or_thawed=True):
     device_class: BinarySensorDeviceClass | None = None
 
 
-class BinarySensorEntity(Entity):
+CACHED_PROPERTIES_WITH_ATTR_ = {
+    "device_class",
+    "is_on",
+}
+
+
+class BinarySensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     """Represent a binary sensor."""
 
     entity_description: BinarySensorEntityDescription
@@ -270,7 +272,7 @@ class BinarySensorEntity(Entity):
         """
         return self.device_class is not None
 
-    @property
+    @cached_property
     def device_class(self) -> BinarySensorDeviceClass | None:
         """Return the class of this entity."""
         if hasattr(self, "_attr_device_class"):
@@ -279,7 +281,7 @@ class BinarySensorEntity(Entity):
             return self.entity_description.device_class
         return None
 
-    @property
+    @cached_property
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
         return self._attr_is_on
@@ -291,3 +293,11 @@ class BinarySensorEntity(Entity):
         if (is_on := self.is_on) is None:
             return None
         return STATE_ON if is_on else STATE_OFF
+
+
+# These can be removed if no deprecated constant are in this module anymore
+__getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
+__dir__ = partial(
+    dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
+)
+__all__ = all_with_deprecated_constants(globals())

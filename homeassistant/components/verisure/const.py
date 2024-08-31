@@ -1,4 +1,5 @@
 """Constants for the Verisure integration."""
+
 from datetime import timedelta
 import logging
 

@@ -1,4 +1,5 @@
 """Test the Fibaro config flow."""
+
 from unittest.mock import Mock
 
 import pytest
@@ -34,7 +35,7 @@ async def _recovery_after_failure_works(
         },
     )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TEST_NAME
     assert result["data"] == {
         CONF_URL: TEST_URL,
@@ -55,7 +56,7 @@ async def _recovery_after_reauth_failure_works(
         user_input={CONF_PASSWORD: "other_fake_password"},
     )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
 
 
@@ -65,7 +66,7 @@ async def test_config_flow_user_initiated_success(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
@@ -78,7 +79,7 @@ async def test_config_flow_user_initiated_success(hass: HomeAssistant) -> None:
         },
     )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TEST_NAME
     assert result["data"] == {
         CONF_URL: TEST_URL,
@@ -86,36 +87,6 @@ async def test_config_flow_user_initiated_success(hass: HomeAssistant) -> None:
         CONF_PASSWORD: TEST_PASSWORD,
         CONF_IMPORT_PLUGINS: False,
     }
-
-
-async def test_config_flow_user_initiated_connect_failure(
-    hass: HomeAssistant, mock_fibaro_client: Mock
-) -> None:
-    """Connect failure in flow manually initialized by the user."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {}
-
-    mock_fibaro_client.connect.return_value = False
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_URL: TEST_URL,
-            CONF_USERNAME: TEST_USERNAME,
-            CONF_PASSWORD: TEST_PASSWORD,
-        },
-    )
-
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {"base": "cannot_connect"}
-
-    await _recovery_after_failure_works(hass, mock_fibaro_client, result)
 
 
 async def test_config_flow_user_initiated_auth_failure(
@@ -126,7 +97,7 @@ async def test_config_flow_user_initiated_auth_failure(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
@@ -141,7 +112,7 @@ async def test_config_flow_user_initiated_auth_failure(
         },
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "invalid_auth"}
 
@@ -156,7 +127,7 @@ async def test_config_flow_user_initiated_unknown_failure_1(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
@@ -171,7 +142,7 @@ async def test_config_flow_user_initiated_unknown_failure_1(
         },
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "cannot_connect"}
 
@@ -186,7 +157,7 @@ async def test_config_flow_user_initiated_unknown_failure_2(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
@@ -201,7 +172,7 @@ async def test_config_flow_user_initiated_unknown_failure_2(
         },
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "cannot_connect"}
 
@@ -212,16 +183,8 @@ async def test_reauth_success(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Successful reauth flow initialized by the user."""
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": mock_config_entry.entry_id,
-        },
-    )
-
-    assert result["type"] == FlowResultType.FORM
+    result = await mock_config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
     assert result["errors"] == {}
 
@@ -230,7 +193,7 @@ async def test_reauth_success(
         user_input={CONF_PASSWORD: "other_fake_password"},
     )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
 
 
@@ -240,16 +203,8 @@ async def test_reauth_connect_failure(
     mock_fibaro_client: Mock,
 ) -> None:
     """Successful reauth flow initialized by the user."""
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": mock_config_entry.entry_id,
-        },
-    )
-
-    assert result["type"] == FlowResultType.FORM
+    result = await mock_config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
     assert result["errors"] == {}
 
@@ -260,7 +215,7 @@ async def test_reauth_connect_failure(
         user_input={CONF_PASSWORD: "other_fake_password"},
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
     assert result["errors"] == {"base": "cannot_connect"}
 
@@ -273,16 +228,8 @@ async def test_reauth_auth_failure(
     mock_fibaro_client: Mock,
 ) -> None:
     """Successful reauth flow initialized by the user."""
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": mock_config_entry.entry_id,
-        },
-    )
-
-    assert result["type"] == FlowResultType.FORM
+    result = await mock_config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
     assert result["errors"] == {}
 
@@ -293,7 +240,7 @@ async def test_reauth_auth_failure(
         user_input={CONF_PASSWORD: "other_fake_password"},
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
     assert result["errors"] == {"base": "invalid_auth"}
 

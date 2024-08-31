@@ -1,0 +1,28 @@
+{
+  "services": {
+    "light_fade_start": {
+      "service": "mdi:transition"
+    },
+    "light_fade_stop": {
+      "service": "mdi:transition-masked"
+    },
+    "light_blink": {
+      "service": "mdi:eye"
+    },
+    "link_deactivate": {
+      "service": "mdi:link-off"
+    },
+    "link_goto": {
+      "service": "mdi:link-variant"
+    },
+    "link_fade_start": {
+      "service": "mdi:transition"
+    },
+    "link_fade_stop": {
+      "service": "mdi:transition-masked"
+    },
+    "link_blink": {
+      "service": "mdi:eye"
+    }
+  }
+}

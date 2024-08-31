@@ -1,4 +1,5 @@
 """Tests for entity permissions."""
+
 import pytest
 import voluptuous as vol
 

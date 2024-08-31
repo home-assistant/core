@@ -1,6 +1,8 @@
 """Offer state listening automation rules."""
+
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import timedelta
 import logging
 
@@ -8,20 +10,27 @@ import voluptuous as vol
 
 from homeassistant import exceptions
 from homeassistant.const import CONF_ATTRIBUTE, CONF_FOR, CONF_PLATFORM, MATCH_ALL
-from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, State, callback
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    Event,
+    EventStateChangedData,
+    HassJob,
+    HomeAssistant,
+    State,
+    callback,
+)
 from homeassistant.helpers import (
     config_validation as cv,
     entity_registry as er,
     template,
 )
 from homeassistant.helpers.event import (
-    EventStateChangedData,
     async_track_same_state,
     async_track_state_change_event,
     process_state_match,
 )
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
-from homeassistant.helpers.typing import ConfigType, EventType
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -108,13 +117,12 @@ async def async_attach_trigger(
         match_to_state = process_state_match(MATCH_ALL)
 
     time_delta = config.get(CONF_FOR)
-    template.attach(hass, time_delta)
     # If neither CONF_FROM or CONF_TO are specified,
     # fire on all changes to the state or an attribute
     match_all = all(
         item not in config for item in (CONF_FROM, CONF_NOT_FROM, CONF_NOT_TO, CONF_TO)
     )
-    unsub_track_same = {}
+    unsub_track_same: dict[str, Callable[[], None]] = {}
     period: dict[str, timedelta] = {}
     attribute = config.get(CONF_ATTRIBUTE)
     job = HassJob(action, f"state trigger {trigger_info}")
@@ -123,7 +131,7 @@ async def async_attach_trigger(
     _variables = trigger_info["variables"] or {}
 
     @callback
-    def state_automation_listener(event: EventType[EventStateChangedData]) -> None:
+    def state_automation_listener(event: Event[EventStateChangedData]) -> None:
         """Listen for state changes and calls action."""
         entity = event.data["entity_id"]
         from_s = event.data["old_state"]
@@ -158,7 +166,7 @@ async def async_attach_trigger(
             return
 
         @callback
-        def call_action():
+        def call_action() -> None:
             """Call action with right context."""
             hass.async_run_hass_job(
                 job,
@@ -201,7 +209,7 @@ async def async_attach_trigger(
             )
             return
 
-        def _check_same_state(_, _2, new_st: State | None) -> bool:
+        def _check_same_state(_: str, _2: State | None, new_st: State | None) -> bool:
             if new_st is None:
                 return False
 
@@ -227,7 +235,7 @@ async def async_attach_trigger(
     unsub = async_track_state_change_event(hass, entity_ids, state_automation_listener)
 
     @callback
-    def async_remove():
+    def async_remove() -> None:
         """Remove state listeners async."""
         unsub()
         for async_remove in unsub_track_same.values():

@@ -1,52 +1,36 @@
 """Support for VELUX KLF 200 devices."""
-import logging
 
 from pyvlx import Node, PyVLX, PyVLXException
-import voluptuous as vol
 
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_PASSWORD,
-    EVENT_HOMEASSISTANT_STOP,
-    Platform,
-)
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.helpers import discovery
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.typing import ConfigType
 
-DOMAIN = "velux"
-DATA_VELUX = "data_velux"
-PLATFORMS = [Platform.COVER, Platform.LIGHT, Platform.SCENE]
-_LOGGER = logging.getLogger(__name__)
-
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {vol.Required(CONF_HOST): cv.string, vol.Required(CONF_PASSWORD): cv.string}
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
+from .const import DOMAIN, LOGGER, PLATFORMS
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the velux component."""
+    module = VeluxModule(hass, entry.data)
     try:
-        hass.data[DATA_VELUX] = VeluxModule(hass, config[DOMAIN])
-        hass.data[DATA_VELUX].setup()
-        await hass.data[DATA_VELUX].async_start()
+        module.setup()
+        await module.async_start()
 
     except PyVLXException as ex:
-        _LOGGER.exception("Can't connect to velux interface: %s", ex)
+        LOGGER.exception("Can't connect to velux interface: %s", ex)
         return False
 
-    for platform in PLATFORMS:
-        hass.async_create_task(
-            discovery.async_load_platform(hass, platform, DOMAIN, {}, config)
-        )
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = module
+
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
     return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload a config entry."""
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 class VeluxModule:
@@ -63,7 +47,7 @@ class VeluxModule:
 
         async def on_hass_stop(event):
             """Close connection when hass stops."""
-            _LOGGER.debug("Velux interface terminated")
+            LOGGER.debug("Velux interface terminated")
             await self.pyvlx.disconnect()
 
         async def async_reboot_gateway(service_call: ServiceCall) -> None:
@@ -80,7 +64,7 @@ class VeluxModule:
 
     async def async_start(self):
         """Start velux component."""
-        _LOGGER.debug("Velux interface started")
+        LOGGER.debug("Velux interface started")
         await self.pyvlx.load_scenes()
         await self.pyvlx.load_nodes()
 
@@ -90,10 +74,14 @@ class VeluxEntity(Entity):
 
     _attr_should_poll = False
 
-    def __init__(self, node: Node) -> None:
+    def __init__(self, node: Node, config_entry_id: str) -> None:
         """Initialize the Velux device."""
         self.node = node
-        self._attr_unique_id = node.serial_number
+        self._attr_unique_id = (
+            node.serial_number
+            if node.serial_number
+            else f"{config_entry_id}_{node.node_id}"
+        )
         self._attr_name = node.name if node.name else f"#{node.node_id}"
 
     @callback

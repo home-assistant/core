@@ -1,4 +1,5 @@
 """Climate platform for Advantage Air integration."""
+
 from __future__ import annotations
 
 import logging
@@ -15,17 +16,18 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, UnitOfTemperature
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import AdvantageAirDataConfigEntry
 from .const import (
+    ADVANTAGE_AIR_AUTOFAN_ENABLED,
     ADVANTAGE_AIR_STATE_CLOSE,
     ADVANTAGE_AIR_STATE_OFF,
     ADVANTAGE_AIR_STATE_ON,
     ADVANTAGE_AIR_STATE_OPEN,
-    DOMAIN as ADVANTAGE_AIR_DOMAIN,
 )
 from .entity import AdvantageAirAcEntity, AdvantageAirZoneEntity
 from .models import AdvantageAirData
@@ -39,16 +41,6 @@ ADVANTAGE_AIR_HVAC_MODES = {
 }
 HASS_HVAC_MODES = {v: k for k, v in ADVANTAGE_AIR_HVAC_MODES.items()}
 
-ADVANTAGE_AIR_FAN_MODES = {
-    "autoAA": FAN_AUTO,
-    "low": FAN_LOW,
-    "medium": FAN_MEDIUM,
-    "high": FAN_HIGH,
-}
-HASS_FAN_MODES = {v: k for k, v in ADVANTAGE_AIR_FAN_MODES.items()}
-FAN_SPEEDS = {FAN_LOW: 30, FAN_MEDIUM: 60, FAN_HIGH: 100}
-
-ADVANTAGE_AIR_AUTOFAN = "aaAutoFanModeEnabled"
 ADVANTAGE_AIR_MYZONE = "MyZone"
 ADVANTAGE_AIR_MYAUTO = "MyAuto"
 ADVANTAGE_AIR_MYAUTO_ENABLED = "myAutoModeEnabled"
@@ -56,6 +48,25 @@ ADVANTAGE_AIR_MYTEMP = "MyTemp"
 ADVANTAGE_AIR_MYTEMP_ENABLED = "climateControlModeEnabled"
 ADVANTAGE_AIR_HEAT_TARGET = "myAutoHeatTargetTemp"
 ADVANTAGE_AIR_COOL_TARGET = "myAutoCoolTargetTemp"
+ADVANTAGE_AIR_MYFAN = "autoAA"
+
+HVAC_MODES = [
+    HVACMode.OFF,
+    HVACMode.COOL,
+    HVACMode.HEAT,
+    HVACMode.FAN_ONLY,
+    HVACMode.DRY,
+]
+HVAC_MODES_MYAUTO = [*HVAC_MODES, HVACMode.HEAT_COOL]
+SUPPORTED_FEATURES = (
+    ClimateEntityFeature.FAN_MODE
+    | ClimateEntityFeature.TURN_OFF
+    | ClimateEntityFeature.TURN_ON
+)
+SUPPORTED_FEATURES_MYZONE = SUPPORTED_FEATURES | ClimateEntityFeature.TARGET_TEMPERATURE
+SUPPORTED_FEATURES_MYAUTO = (
+    SUPPORTED_FEATURES | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+)
 
 PARALLEL_UPDATES = 0
 
@@ -64,12 +75,12 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: AdvantageAirDataConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up AdvantageAir climate platform."""
 
-    instance: AdvantageAirData = hass.data[ADVANTAGE_AIR_DOMAIN][config_entry.entry_id]
+    instance = config_entry.runtime_data
 
     entities: list[ClimateEntity] = []
     if aircons := instance.coordinator.data.get("aircons"):
@@ -85,42 +96,63 @@ async def async_setup_entry(
 class AdvantageAirAC(AdvantageAirAcEntity, ClimateEntity):
     """AdvantageAir AC unit."""
 
-    _attr_fan_modes = [FAN_LOW, FAN_MEDIUM, FAN_HIGH]
+    _attr_fan_modes = [FAN_LOW, FAN_MEDIUM, FAN_HIGH, FAN_AUTO]
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_target_temperature_step = PRECISION_WHOLE
     _attr_max_temp = 32
     _attr_min_temp = 16
     _attr_name = None
-
-    _attr_hvac_modes = [
-        HVACMode.OFF,
-        HVACMode.COOL,
-        HVACMode.HEAT,
-        HVACMode.FAN_ONLY,
-        HVACMode.DRY,
-    ]
-
-    _attr_supported_features = ClimateEntityFeature.FAN_MODE
+    _enable_turn_on_off_backwards_compatibility = False
+    _support_preset = ClimateEntityFeature(0)
 
     def __init__(self, instance: AdvantageAirData, ac_key: str) -> None:
         """Initialize an AdvantageAir AC unit."""
         super().__init__(instance, ac_key)
 
-        # Set supported features and HVAC modes based on current operating mode
+        self._attr_preset_modes = [ADVANTAGE_AIR_MYZONE]
+
+        # Add "MyTemp" preset if available
+        if ADVANTAGE_AIR_MYTEMP_ENABLED in self._ac:
+            self._attr_preset_modes += [ADVANTAGE_AIR_MYTEMP]
+            self._support_preset = ClimateEntityFeature.PRESET_MODE
+
+        # Add "MyAuto" preset if available
+        if ADVANTAGE_AIR_MYAUTO_ENABLED in self._ac:
+            self._attr_preset_modes += [ADVANTAGE_AIR_MYAUTO]
+            self._support_preset = ClimateEntityFeature.PRESET_MODE
+
+        # Setup attributes based on current preset
+        self._async_configure_preset()
+
+    def _async_configure_preset(self) -> None:
+        """Configure attributes based on preset."""
+
+        # Preset Changes
         if self._ac.get(ADVANTAGE_AIR_MYAUTO_ENABLED):
             # MyAuto
-            self._attr_supported_features |= (
-                ClimateEntityFeature.TARGET_TEMPERATURE
-                | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+            self._attr_preset_mode = ADVANTAGE_AIR_MYAUTO
+            self._attr_hvac_modes = HVAC_MODES_MYAUTO
+            self._attr_supported_features = (
+                SUPPORTED_FEATURES_MYAUTO | self._support_preset
             )
-            self._attr_hvac_modes += [HVACMode.HEAT_COOL]
-        elif not self._ac.get(ADVANTAGE_AIR_MYTEMP_ENABLED):
+        elif self._ac.get(ADVANTAGE_AIR_MYTEMP_ENABLED):
+            # MyTemp
+            self._attr_preset_mode = ADVANTAGE_AIR_MYTEMP
+            self._attr_hvac_modes = HVAC_MODES
+            self._attr_supported_features = SUPPORTED_FEATURES | self._support_preset
+        else:
             # MyZone
-            self._attr_supported_features |= ClimateEntityFeature.TARGET_TEMPERATURE
+            self._attr_preset_mode = ADVANTAGE_AIR_MYZONE
+            self._attr_hvac_modes = HVAC_MODES
+            self._attr_supported_features = (
+                SUPPORTED_FEATURES_MYZONE | self._support_preset
+            )
 
-        # Add "ezfan" mode if supported
-        if self._ac.get(ADVANTAGE_AIR_AUTOFAN):
-            self._attr_fan_modes += [FAN_AUTO]
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._async_configure_preset()
+        super()._handle_coordinator_update()
 
     @property
     def current_temperature(self) -> float | None:
@@ -133,11 +165,7 @@ class AdvantageAirAC(AdvantageAirAcEntity, ClimateEntity):
     def target_temperature(self) -> float | None:
         """Return the current target temperature."""
         # If the system is in MyZone mode, and a zone is set, return that temperature instead.
-        if (
-            self._myzone
-            and not self._ac.get(ADVANTAGE_AIR_MYAUTO_ENABLED)
-            and not self._ac.get(ADVANTAGE_AIR_MYTEMP_ENABLED)
-        ):
+        if self._myzone and self.preset_mode == ADVANTAGE_AIR_MYZONE:
             return self._myzone["setTemp"]
         return self._ac["setTemp"]
 
@@ -151,7 +179,7 @@ class AdvantageAirAC(AdvantageAirAcEntity, ClimateEntity):
     @property
     def fan_mode(self) -> str | None:
         """Return the current fan modes."""
-        return ADVANTAGE_AIR_FAN_MODES.get(self._ac["fan"])
+        return FAN_AUTO if self._ac["fan"] == ADVANTAGE_AIR_MYFAN else self._ac["fan"]
 
     @property
     def target_temperature_high(self) -> float | None:
@@ -178,18 +206,24 @@ class AdvantageAirAC(AdvantageAirAcEntity, ClimateEntity):
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the HVAC Mode and State."""
         if hvac_mode == HVACMode.OFF:
-            await self.async_update_ac({"state": ADVANTAGE_AIR_STATE_OFF})
-        else:
-            await self.async_update_ac(
-                {
-                    "state": ADVANTAGE_AIR_STATE_ON,
-                    "mode": HASS_HVAC_MODES.get(hvac_mode),
-                }
-            )
+            await self.async_turn_off()
+            return
+        if hvac_mode == HVACMode.HEAT_COOL and self.preset_mode != ADVANTAGE_AIR_MYAUTO:
+            raise ServiceValidationError("Heat/Cool is not supported in this mode")
+        await self.async_update_ac(
+            {
+                "state": ADVANTAGE_AIR_STATE_ON,
+                "mode": HASS_HVAC_MODES.get(hvac_mode),
+            }
+        )
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set the Fan Mode."""
-        await self.async_update_ac({"fan": HASS_FAN_MODES.get(fan_mode)})
+        if fan_mode == FAN_AUTO and self._ac.get(ADVANTAGE_AIR_AUTOFAN_ENABLED):
+            mode = ADVANTAGE_AIR_MYFAN
+        else:
+            mode = fan_mode
+        await self.async_update_ac({"fan": mode})
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set the Temperature."""
@@ -203,16 +237,31 @@ class AdvantageAirAC(AdvantageAirAcEntity, ClimateEntity):
                 }
             )
 
+    async def async_set_preset_mode(self, preset_mode: str) -> None:
+        """Set the preset mode."""
+        change = {}
+        if ADVANTAGE_AIR_MYTEMP_ENABLED in self._ac:
+            change[ADVANTAGE_AIR_MYTEMP_ENABLED] = preset_mode == ADVANTAGE_AIR_MYTEMP
+        if ADVANTAGE_AIR_MYAUTO_ENABLED in self._ac:
+            change[ADVANTAGE_AIR_MYAUTO_ENABLED] = preset_mode == ADVANTAGE_AIR_MYAUTO
+        if change:
+            await self.async_update_ac(change)
+
 
 class AdvantageAirZone(AdvantageAirZoneEntity, ClimateEntity):
     """AdvantageAir MyTemp Zone control."""
 
     _attr_hvac_modes = [HVACMode.OFF, HVACMode.HEAT_COOL]
-    _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
+    _attr_supported_features = (
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
+    )
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_target_temperature_step = PRECISION_WHOLE
     _attr_max_temp = 32
     _attr_min_temp = 16
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, instance: AdvantageAirData, ac_key: str, zone_key: str) -> None:
         """Initialize an AdvantageAir Zone control."""

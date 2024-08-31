@@ -1,4 +1,5 @@
 """Test the Z-Wave JS switch platform."""
+
 import pytest
 from zwave_js_server.const import CURRENT_VALUE_PROPERTY, CommandClass
 from zwave_js_server.event import Event
@@ -218,17 +219,20 @@ async def test_switch_no_value(
 
 
 async def test_config_parameter_switch(
-    hass: HomeAssistant, hank_binary_switch, integration, client
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    hank_binary_switch,
+    integration,
+    client,
 ) -> None:
     """Test config parameter switch is created."""
     switch_entity_id = "switch.smart_plug_with_two_usb_ports_overload_protection"
-    ent_reg = er.async_get(hass)
-    entity_entry = ent_reg.async_get(switch_entity_id)
+    entity_entry = entity_registry.async_get(switch_entity_id)
     assert entity_entry
     assert entity_entry.disabled
 
-    updated_entry = ent_reg.async_update_entity(
-        switch_entity_id, **{"disabled_by": None}
+    updated_entry = entity_registry.async_update_entity(
+        switch_entity_id, disabled_by=None
     )
     assert updated_entry != entity_entry
     assert updated_entry.disabled is False

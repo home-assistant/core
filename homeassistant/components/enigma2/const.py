@@ -1,4 +1,5 @@
 """Constants for the Enigma2 platform."""
+
 DOMAIN = "enigma2"
 
 CONF_USE_CHANNEL_ICON = "use_channel_icon"
@@ -15,3 +16,4 @@ DEFAULT_PASSWORD = "dreambox"
 DEFAULT_DEEP_STANDBY = False
 DEFAULT_SOURCE_BOUQUET = ""
 DEFAULT_MAC_ADDRESS = ""
+DEFAULT_VERIFY_SSL = False

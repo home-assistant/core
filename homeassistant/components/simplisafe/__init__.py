@@ -1,4 +1,5 @@
 """Support for SimpliSafe alarm systems."""
+
 from __future__ import annotations
 
 import asyncio
@@ -210,8 +211,6 @@ WEBSOCKET_EVENTS_TO_FIRE_HASS_EVENT = [
     EVENT_SENSOR_PAIRED_AND_NAMED,
     EVENT_USER_INITIATED_TEST,
 ]
-
-CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 
 @callback
@@ -456,7 +455,7 @@ class SimpliSafe:
     @callback
     def _async_process_new_notifications(self, system: SystemType) -> None:
         """Act on any new system notifications."""
-        if self._hass.state != CoreState.running:
+        if self._hass.state is not CoreState.running:
             # If HASS isn't fully running yet, it may cause the SIMPLISAFE_NOTIFICATION
             # event to fire before dependent components (like automation) are fully
             # ready. If that's the case, skip:
@@ -502,7 +501,7 @@ class SimpliSafe:
             raise
         except WebsocketError as err:
             LOGGER.error("Failed to connect to websocket: %s", err)
-        except Exception as err:  # pylint: disable=broad-except
+        except Exception as err:  # noqa: BLE001
             LOGGER.error("Unknown exception while connecting to websocket: %s", err)
 
         LOGGER.info("Reconnecting to websocket")

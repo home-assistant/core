@@ -1,4 +1,5 @@
 """Support for interfacing with Monoprice 6 zone home audio controller."""
+
 import logging
 
 from serial import SerialException
@@ -127,7 +128,6 @@ class MonopriceZone(MediaPlayerEntity):
     )
     _attr_has_entity_name = True
     _attr_name = None
-    _attr_volume_step = 1 / MAX_VOLUME
 
     def __init__(self, monoprice, sources, namespace, zone_id):
         """Initialize new zone."""
@@ -211,3 +211,17 @@ class MonopriceZone(MediaPlayerEntity):
     def set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         self._monoprice.set_volume(self._zone_id, round(volume * MAX_VOLUME))
+
+    def volume_up(self) -> None:
+        """Volume up the media player."""
+        if self.volume_level is None:
+            return
+        volume = round(self.volume_level * MAX_VOLUME)
+        self._monoprice.set_volume(self._zone_id, min(volume + 1, MAX_VOLUME))
+
+    def volume_down(self) -> None:
+        """Volume down media player."""
+        if self.volume_level is None:
+            return
+        volume = round(self.volume_level * MAX_VOLUME)
+        self._monoprice.set_volume(self._zone_id, max(volume - 1, 0))

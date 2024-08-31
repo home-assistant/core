@@ -8,6 +8,7 @@
     'context': <ANY>,
     'entity_id': 'button.tailwind_iq3_identify',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
@@ -29,6 +30,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -65,10 +68,14 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'Tailwind',
     'model': 'iQ3',
+    'model_id': None,
     'name': 'Tailwind iQ3',
     'name_by_user': None,
+    'primary_config_entry': <ANY>,
     'serial_number': None,
     'suggested_area': None,
     'sw_version': '10.10',

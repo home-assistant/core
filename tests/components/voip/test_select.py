@@ -1,4 +1,5 @@
 """Test VoIP select."""
+
 from homeassistant.components.voip.devices import VoIPDevice
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant

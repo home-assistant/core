@@ -1,4 +1,5 @@
 """Test Wyoming switch devices."""
+
 from homeassistant.components.wyoming.devices import SatelliteDevice
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_ON
@@ -39,3 +40,4 @@ async def test_muted(
     state = hass.states.get(muted_id)
     assert state is not None
     assert state.state == STATE_ON
+    assert satellite_device.is_muted

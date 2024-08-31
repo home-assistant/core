@@ -1,16 +1,17 @@
 """The test for device automation toggle entity helpers."""
+
 from datetime import timedelta
 
 import pytest
 
-import homeassistant.components.automation as automation
+from homeassistant.components import automation
 from homeassistant.const import STATE_OFF, STATE_ON
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.common import MockConfigEntry, async_fire_time_changed, async_mock_service
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.fixture(autouse=True, name="stub_blueprint_populate")
@@ -18,17 +19,11 @@ def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
     """Stub copying the blueprints to the config folder."""
 
 
-@pytest.fixture
-def calls(hass):
-    """Track calls to a mock service."""
-    return async_mock_service(hass, "test", "automation")
-
-
 async def test_if_fires_on_state_change(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    calls,
+    service_calls: list[ServiceCall],
 ) -> None:
     """Test for turn_on and turn_off triggers firing.
 
@@ -63,15 +58,12 @@ async def test_if_fires_on_state_change(
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "turn_on {{ trigger.%s }}"
-                            % "}} - {{ trigger.".join(
-                                (
-                                    "platform",
-                                    "entity_id",
-                                    "from_state.state",
-                                    "to_state.state",
-                                    "for",
-                                )
+                            "some": (
+                                "turn_on {{ trigger.platform }}"
+                                " - {{ trigger.entity_id }}"
+                                " - {{ trigger.from_state.state }}"
+                                " - {{ trigger.to_state.state }}"
+                                " - {{ trigger.for }}"
                             )
                         },
                     },
@@ -87,15 +79,12 @@ async def test_if_fires_on_state_change(
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "turn_off {{ trigger.%s }}"
-                            % "}} - {{ trigger.".join(
-                                (
-                                    "platform",
-                                    "entity_id",
-                                    "from_state.state",
-                                    "to_state.state",
-                                    "for",
-                                )
+                            "some": (
+                                "turn_off {{ trigger.platform }}"
+                                " - {{ trigger.entity_id }}"
+                                " - {{ trigger.from_state.state }}"
+                                " - {{ trigger.to_state.state }}"
+                                " - {{ trigger.for }}"
                             )
                         },
                     },
@@ -111,15 +100,12 @@ async def test_if_fires_on_state_change(
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "turn_on_or_off {{ trigger.%s }}"
-                            % "}} - {{ trigger.".join(
-                                (
-                                    "platform",
-                                    "entity_id",
-                                    "from_state.state",
-                                    "to_state.state",
-                                    "for",
-                                )
+                            "some": (
+                                "turn_on_or_off {{ trigger.platform }}"
+                                " - {{ trigger.entity_id }}"
+                                " - {{ trigger.from_state.state }}"
+                                " - {{ trigger.to_state.state }}"
+                                " - {{ trigger.for }}"
                             )
                         },
                     },
@@ -129,20 +115,20 @@ async def test_if_fires_on_state_change(
     )
     await hass.async_block_till_done()
     assert hass.states.get(entry.entity_id).state == STATE_ON
-    assert len(calls) == 0
+    assert len(service_calls) == 0
 
     hass.states.async_set(entry.entity_id, STATE_OFF)
     await hass.async_block_till_done()
-    assert len(calls) == 2
-    assert {calls[0].data["some"], calls[1].data["some"]} == {
+    assert len(service_calls) == 2
+    assert {service_calls[0].data["some"], service_calls[1].data["some"]} == {
         f"turn_off device - {entry.entity_id} - on - off - None",
         f"turn_on_or_off device - {entry.entity_id} - on - off - None",
     }
 
     hass.states.async_set(entry.entity_id, STATE_ON)
     await hass.async_block_till_done()
-    assert len(calls) == 4
-    assert {calls[2].data["some"], calls[3].data["some"]} == {
+    assert len(service_calls) == 4
+    assert {service_calls[2].data["some"], service_calls[3].data["some"]} == {
         f"turn_on device - {entry.entity_id} - off - on - None",
         f"turn_on_or_off device - {entry.entity_id} - off - on - None",
     }
@@ -153,8 +139,8 @@ async def test_if_fires_on_state_change_with_for(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    calls,
-    trigger,
+    service_calls: list[ServiceCall],
+    trigger: str,
 ) -> None:
     """Test for triggers firing with delay."""
     config_entry = MockConfigEntry(domain="test", data={})
@@ -186,15 +172,12 @@ async def test_if_fires_on_state_change_with_for(
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "turn_off {{ trigger.%s }}"
-                            % "}} - {{ trigger.".join(
-                                (
-                                    "platform",
-                                    "entity_id",
-                                    "from_state.state",
-                                    "to_state.state",
-                                    "for",
-                                )
+                            "some": (
+                                "turn_off {{ trigger.platform }}"
+                                " - {{ trigger.entity_id }}"
+                                " - {{ trigger.from_state.state }}"
+                                " - {{ trigger.to_state.state }}"
+                                " - {{ trigger.for }}"
                             )
                         },
                     },
@@ -204,15 +187,16 @@ async def test_if_fires_on_state_change_with_for(
     )
     await hass.async_block_till_done()
     assert hass.states.get(entry.entity_id).state == STATE_ON
-    assert len(calls) == 0
+    assert len(service_calls) == 0
 
     hass.states.async_set(entry.entity_id, STATE_OFF)
     await hass.async_block_till_done()
-    assert len(calls) == 0
+    assert len(service_calls) == 0
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=10))
     await hass.async_block_till_done()
-    assert len(calls) == 1
+    assert len(service_calls) == 1
     await hass.async_block_till_done()
-    assert calls[0].data["some"] == "turn_off device - {} - on - off - 0:00:05".format(
-        entry.entity_id
+    assert (
+        service_calls[0].data["some"]
+        == f"turn_off device - {entry.entity_id} - on - off - 0:00:05"
     )

@@ -1,9 +1,11 @@
 """Class to manage satellite devices."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
 
+from homeassistant.components.assist_pipeline.vad import VadSensitivity
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 
@@ -22,6 +24,7 @@ class SatelliteDevice:
     noise_suppression_level: int = 0
     auto_gain: int = 0
     volume_multiplier: float = 1.0
+    vad_sensitivity: VadSensitivity = VadSensitivity.DEFAULT
 
     _is_active_listener: Callable[[], None] | None = None
     _is_muted_listener: Callable[[], None] | None = None
@@ -73,6 +76,14 @@ class SatelliteDevice:
         """Set auto gain amount."""
         if volume_multiplier != self.volume_multiplier:
             self.volume_multiplier = volume_multiplier
+            if self._audio_settings_listener is not None:
+                self._audio_settings_listener()
+
+    @callback
+    def set_vad_sensitivity(self, vad_sensitivity: VadSensitivity) -> None:
+        """Set VAD sensitivity."""
+        if vad_sensitivity != self.vad_sensitivity:
+            self.vad_sensitivity = vad_sensitivity
             if self._audio_settings_listener is not None:
                 self._audio_settings_listener()
 
@@ -138,4 +149,11 @@ class SatelliteDevice:
         ent_reg = er.async_get(hass)
         return ent_reg.async_get_entity_id(
             "number", DOMAIN, f"{self.satellite_id}-volume_multiplier"
+        )
+
+    def get_vad_sensitivity_entity_id(self, hass: HomeAssistant) -> str | None:
+        """Return entity id for VAD sensitivity."""
+        ent_reg = er.async_get(hass)
+        return ent_reg.async_get_entity_id(
+            "select", DOMAIN, f"{self.satellite_id}-vad_sensitivity"
         )

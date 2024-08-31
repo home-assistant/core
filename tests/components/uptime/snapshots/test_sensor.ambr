@@ -8,6 +8,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.uptime',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2022-03-01T00:00:00+00:00',
   })
@@ -29,6 +30,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -54,32 +57,14 @@
     'hw_version': None,
     'id': <ANY>,
     'is_new': False,
-    'manufacturer': None,
-    'model': None,
-    'name': 'Uptime',
-    'name_by_user': None,
-    'serial_number': None,
-    'suggested_area': None,
-    'sw_version': None,
-    'via_device_id': None,
-  })
-# ---
-# name: test_uptime_sensor.3
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entries': <ANY>,
-    'configuration_url': None,
-    'connections': set({
+    'labels': set({
     }),
-    'disabled_by': None,
-    'entry_type': <DeviceEntryType.SERVICE: 'service'>,
-    'hw_version': None,
-    'id': <ANY>,
-    'is_new': False,
     'manufacturer': None,
     'model': None,
+    'model_id': None,
     'name': 'Uptime',
     'name_by_user': None,
+    'primary_config_entry': <ANY>,
     'serial_number': None,
     'suggested_area': None,
     'sw_version': None,

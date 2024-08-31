@@ -1,4 +1,9 @@
 """Test the auth script to manage local users."""
+
+import argparse
+from asyncio import AbstractEventLoop
+from collections.abc import Generator
+import logging
 from typing import Any
 from unittest.mock import Mock, patch
 
@@ -11,8 +16,17 @@ from homeassistant.scripts import auth as script_auth
 from tests.common import register_auth_provider
 
 
+@pytest.fixture(autouse=True)
+def reset_log_level() -> Generator[None]:
+    """Reset log level after each test case."""
+    logger = logging.getLogger("homeassistant.core")
+    orig_level = logger.level
+    yield
+    logger.setLevel(orig_level)
+
+
 @pytest.fixture
-def provider(hass):
+def provider(hass: HomeAssistant) -> hass_auth.HassAuthProvider:
     """Home Assistant auth provider."""
     provider = hass.loop.run_until_complete(
         register_auth_provider(hass, {"type": "homeassistant"})
@@ -21,7 +35,11 @@ def provider(hass):
     return provider
 
 
-async def test_list_user(hass: HomeAssistant, provider, capsys) -> None:
+async def test_list_user(
+    hass: HomeAssistant,
+    provider: hass_auth.HassAuthProvider,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
     """Test we can list users."""
     data = provider.data
     data.add_auth("test-user", "test-pass")
@@ -31,13 +49,14 @@ async def test_list_user(hass: HomeAssistant, provider, capsys) -> None:
 
     captured = capsys.readouterr()
 
-    assert captured.out == "\n".join(
-        ["test-user", "second-user", "", "Total users: 2", ""]
-    )
+    assert captured.out == "test-user\nsecond-user\n\nTotal users: 2\n"
 
 
 async def test_add_user(
-    hass: HomeAssistant, provider, capsys, hass_storage: dict[str, Any]
+    hass: HomeAssistant,
+    provider: hass_auth.HassAuthProvider,
+    capsys: pytest.CaptureFixture[str],
+    hass_storage: dict[str, Any],
 ) -> None:
     """Test we can add a user."""
     data = provider.data
@@ -54,7 +73,11 @@ async def test_add_user(
     data.validate_login("paulus", "test-pass")
 
 
-async def test_validate_login(hass: HomeAssistant, provider, capsys) -> None:
+async def test_validate_login(
+    hass: HomeAssistant,
+    provider: hass_auth.HassAuthProvider,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
     """Test we can validate a user login."""
     data = provider.data
     data.add_auth("test-user", "test-pass")
@@ -79,7 +102,10 @@ async def test_validate_login(hass: HomeAssistant, provider, capsys) -> None:
 
 
 async def test_change_password(
-    hass: HomeAssistant, provider, capsys, hass_storage: dict[str, Any]
+    hass: HomeAssistant,
+    provider: hass_auth.HassAuthProvider,
+    capsys: pytest.CaptureFixture[str],
+    hass_storage: dict[str, Any],
 ) -> None:
     """Test we can change a password."""
     data = provider.data
@@ -98,7 +124,10 @@ async def test_change_password(
 
 
 async def test_change_password_invalid_user(
-    hass: HomeAssistant, provider, capsys, hass_storage: dict[str, Any]
+    hass: HomeAssistant,
+    provider: hass_auth.HassAuthProvider,
+    capsys: pytest.CaptureFixture[str],
+    hass_storage: dict[str, Any],
 ) -> None:
     """Test changing password of non-existing user."""
     data = provider.data
@@ -116,11 +145,13 @@ async def test_change_password_invalid_user(
         data.validate_login("invalid-user", "new-pass")
 
 
-def test_parsing_args(event_loop) -> None:
+def test_parsing_args(event_loop: AbstractEventLoop) -> None:
     """Test we parse args correctly."""
     called = False
 
-    async def mock_func(hass, provider, args2):
+    async def mock_func(
+        hass: HomeAssistant, provider: hass_auth.AuthProvider, args2: argparse.Namespace
+    ) -> None:
         """Mock function to be called."""
         nonlocal called
         called = True

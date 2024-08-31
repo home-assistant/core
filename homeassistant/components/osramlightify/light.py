@@ -1,4 +1,5 @@
 """Support for Osram Lightify."""
+
 from __future__ import annotations
 
 import logging
@@ -15,7 +16,7 @@ from homeassistant.components.light import (
     ATTR_HS_COLOR,
     ATTR_TRANSITION,
     EFFECT_RANDOM,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as LIGHT_PLATFORM_SCHEMA,
     ColorMode,
     LightEntity,
     LightEntityFeature,
@@ -44,7 +45,7 @@ DEFAULT_ALLOW_LIGHTIFY_SWITCHES = True
 DEFAULT_INTERVAL_LIGHTIFY_STATUS = 5
 DEFAULT_INTERVAL_LIGHTIFY_CONF = 3600
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = LIGHT_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(
@@ -82,8 +83,8 @@ def setup_platform(
     host = config[CONF_HOST]
     try:
         bridge = Lightify(host, log_level=logging.NOTSET)
-    except OSError as err:
-        _LOGGER.exception("Error connecting to bridge: %s due to: %s", host, err)
+    except OSError:
+        _LOGGER.exception("Error connecting to bridge %s", host)
         return
 
     setup_bridge(bridge, add_entities, config)

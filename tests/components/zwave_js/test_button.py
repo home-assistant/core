@@ -1,4 +1,5 @@
 """Test the Z-Wave JS button entities."""
+
 import pytest
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
@@ -6,11 +7,12 @@ from homeassistant.components.zwave_js.const import DOMAIN, SERVICE_REFRESH_VALU
 from homeassistant.components.zwave_js.helpers import get_valueless_base_unique_id
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_registry import async_get
+from homeassistant.helpers import entity_registry as er
 
 
 async def test_ping_entity(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     client,
     climate_radio_thermostat_ct100_plus_different_endpoints,
     integration,
@@ -55,7 +57,7 @@ async def test_ping_entity(
     node = driver.controller.nodes[1]
     assert node.is_controller_node
     assert (
-        async_get(hass).async_get_entity_id(
+        entity_registry.async_get_entity_id(
             DOMAIN, "sensor", f"{get_valueless_base_unique_id(driver, node)}.ping"
         )
         is None

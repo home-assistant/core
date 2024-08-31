@@ -1,4 +1,5 @@
 """Tests for the sensor module."""
+
 import pytest
 import requests_mock
 from syrupy import SnapshotAssertion

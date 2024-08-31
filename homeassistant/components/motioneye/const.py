@@ -1,4 +1,5 @@
 """Constants for the motionEye integration."""
+
 from datetime import timedelta
 from typing import Final
 

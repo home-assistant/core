@@ -1,21 +1,20 @@
 """Diagnostics support for Powerview Hunter Douglas."""
+
 from __future__ import annotations
 
 from dataclasses import asdict
-import logging
 from typing import Any
 
 import attr
 
 from homeassistant.components.diagnostics import async_redact_data
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_CONFIGURATION_URL, CONF_HOST
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntry
 
-from .const import DOMAIN, REDACT_HUB_ADDRESS, REDACT_MAC_ADDRESS, REDACT_SERIAL_NUMBER
-from .model import PowerviewEntryData
+from .const import REDACT_HUB_ADDRESS, REDACT_MAC_ADDRESS, REDACT_SERIAL_NUMBER
+from .model import PowerviewConfigEntry
 
 REDACT_CONFIG = {
     CONF_HOST,
@@ -25,11 +24,9 @@ REDACT_CONFIG = {
     ATTR_CONFIGURATION_URL,
 }
 
-_LOGGER = logging.getLogger(__name__)
-
 
 async def async_get_config_entry_diagnostics(
-    hass: HomeAssistant, entry: ConfigEntry
+    hass: HomeAssistant, entry: PowerviewConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
     data = _async_get_diagnostics(hass, entry)
@@ -46,7 +43,7 @@ async def async_get_config_entry_diagnostics(
 
 
 async def async_get_device_diagnostics(
-    hass: HomeAssistant, entry: ConfigEntry, device: DeviceEntry
+    hass: HomeAssistant, entry: PowerviewConfigEntry, device: DeviceEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a device entry."""
     data = _async_get_diagnostics(hass, entry)
@@ -64,10 +61,10 @@ async def async_get_device_diagnostics(
 @callback
 def _async_get_diagnostics(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: PowerviewConfigEntry,
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    pv_entry: PowerviewEntryData = hass.data[DOMAIN][entry.entry_id]
+    pv_entry = entry.runtime_data
     shade_data = pv_entry.coordinator.data.get_all_raw_data()
     hub_info = async_redact_data(asdict(pv_entry.device_info), REDACT_CONFIG)
     return {"hub_info": hub_info, "shade_data": shade_data}

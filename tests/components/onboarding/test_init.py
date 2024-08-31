@@ -1,4 +1,5 @@
 """Tests for the init."""
+
 from typing import Any
 from unittest.mock import Mock, patch
 
@@ -47,10 +48,10 @@ async def test_is_onboarded() -> None:
 
     assert onboarding.async_is_onboarded(hass)
 
-    hass.data[onboarding.DOMAIN] = True
+    hass.data[onboarding.DOMAIN] = onboarding.OnboardingData([], True, {"done": []})
     assert onboarding.async_is_onboarded(hass)
 
-    hass.data[onboarding.DOMAIN] = {"done": []}
+    hass.data[onboarding.DOMAIN] = onboarding.OnboardingData([], False, {"done": []})
     assert not onboarding.async_is_onboarded(hass)
 
 
@@ -61,10 +62,15 @@ async def test_is_user_onboarded() -> None:
 
     assert onboarding.async_is_user_onboarded(hass)
 
-    hass.data[onboarding.DOMAIN] = True
+    hass.data[onboarding.DOMAIN] = onboarding.OnboardingData([], True, {"done": []})
     assert onboarding.async_is_user_onboarded(hass)
 
-    hass.data[onboarding.DOMAIN] = {"done": []}
+    hass.data[onboarding.DOMAIN] = onboarding.OnboardingData(
+        [], False, {"done": ["user"]}
+    )
+    assert onboarding.async_is_user_onboarded(hass)
+
+    hass.data[onboarding.DOMAIN] = onboarding.OnboardingData([], False, {"done": []})
     assert not onboarding.async_is_user_onboarded(hass)
 
 
@@ -74,9 +80,10 @@ async def test_having_owner_finishes_user_step(
     """If owner user already exists, mark user step as complete."""
     MockUser(is_owner=True).add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.onboarding.views.async_setup"
-    ) as mock_setup, patch.object(onboarding, "STEPS", [onboarding.STEP_USER]):
+    with (
+        patch("homeassistant.components.onboarding.views.async_setup") as mock_setup,
+        patch.object(onboarding, "STEPS", [onboarding.STEP_USER]),
+    ):
         assert await async_setup_component(hass, "onboarding", {})
 
     assert len(mock_setup.mock_calls) == 0

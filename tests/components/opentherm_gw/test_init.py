@@ -1,4 +1,5 @@
 """Test Opentherm Gateway init."""
+
 from unittest.mock import patch
 
 from pyotgw.vars import OTGW, OTGW_ABOUT
@@ -31,19 +32,22 @@ MOCK_CONFIG_ENTRY = MockConfigEntry(
 
 # This tests needs to be adjusted to remove lingering tasks
 @pytest.mark.parametrize("expected_lingering_tasks", [True])
-async def test_device_registry_insert(hass: HomeAssistant) -> None:
+async def test_device_registry_insert(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
     """Test that the device registry is initialized correctly."""
     MOCK_CONFIG_ENTRY.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.opentherm_gw.OpenThermGatewayDevice.cleanup",
-        return_value=None,
-    ), patch("pyotgw.OpenThermGateway.connect", return_value=MINIMAL_STATUS):
+    with (
+        patch(
+            "homeassistant.components.opentherm_gw.OpenThermGatewayHub.cleanup",
+            return_value=None,
+        ),
+        patch("pyotgw.OpenThermGateway.connect", return_value=MINIMAL_STATUS),
+    ):
         await setup.async_setup_component(hass, DOMAIN, {})
 
     await hass.async_block_till_done()
-
-    device_registry = dr.async_get(hass)
 
     gw_dev = device_registry.async_get_device(identifiers={(DOMAIN, MOCK_GATEWAY_ID)})
     assert gw_dev.sw_version == VERSION_OLD
@@ -66,10 +70,13 @@ async def test_device_registry_update(
         sw_version=VERSION_OLD,
     )
 
-    with patch(
-        "homeassistant.components.opentherm_gw.OpenThermGatewayDevice.cleanup",
-        return_value=None,
-    ), patch("pyotgw.OpenThermGateway.connect", return_value=MINIMAL_STATUS_UPD):
+    with (
+        patch(
+            "homeassistant.components.opentherm_gw.OpenThermGatewayHub.cleanup",
+            return_value=None,
+        ),
+        patch("pyotgw.OpenThermGateway.connect", return_value=MINIMAL_STATUS_UPD),
+    ):
         await setup.async_setup_component(hass, DOMAIN, {})
 
     await hass.async_block_till_done()

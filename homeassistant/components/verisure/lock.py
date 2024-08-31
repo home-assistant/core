@@ -1,4 +1,5 @@
 """Support for Verisure locks."""
+
 from __future__ import annotations
 
 import asyncio
@@ -40,12 +41,12 @@ async def async_setup_entry(
     platform = async_get_current_platform()
     platform.async_register_entity_service(
         SERVICE_DISABLE_AUTOLOCK,
-        {},
+        None,
         VerisureDoorlock.disable_autolock.__name__,
     )
     platform.async_register_entity_service(
         SERVICE_ENABLE_AUTOLOCK,
-        {},
+        None,
         VerisureDoorlock.enable_autolock.__name__,
     )
 
@@ -77,7 +78,6 @@ class VerisureDoorlock(CoordinatorEntity[VerisureDataUpdateCoordinator], LockEnt
         area = self.coordinator.data["locks"][self.serial_number]["device"]["area"]
         return DeviceInfo(
             name=area,
-            suggested_area=area,
             manufacturer="Verisure",
             model="Lockguard Smartlock",
             identifiers={(DOMAIN, self.serial_number)},
@@ -112,7 +112,7 @@ class VerisureDoorlock(CoordinatorEntity[VerisureDataUpdateCoordinator], LockEnt
         digits = self.coordinator.entry.options.get(
             CONF_LOCK_CODE_DIGITS, DEFAULT_LOCK_CODE_DIGITS
         )
-        return "^\\d{%s}$" % digits
+        return f"^\\d{{{digits}}}$"
 
     @property
     def is_locked(self) -> bool:

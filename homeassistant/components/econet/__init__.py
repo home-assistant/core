@@ -1,4 +1,5 @@
 """Support for EcoNet products."""
+
 import asyncio
 from datetime import timedelta
 import logging
@@ -27,8 +28,8 @@ from .const import API_CLIENT, DOMAIN, EQUIPMENT
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [
-    Platform.CLIMATE,
     Platform.BINARY_SENSOR,
+    Platform.CLIMATE,
     Platform.SENSOR,
     Platform.WATER_HEATER,
 ]

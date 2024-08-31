@@ -1,4 +1,5 @@
 """The Nibe Heat Pump integration."""
+
 from __future__ import annotations
 
 from nibe.connection import Connection

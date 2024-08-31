@@ -25,7 +25,7 @@ from homeassistant.components.wallbox.const import (
 )
 from homeassistant.core import HomeAssistant
 
-from .const import ERROR, STATUS, TTL, USER_ID
+from .const import ERROR, REFRESH_TOKEN_TTL, STATUS, TTL, USER_ID
 
 from tests.common import MockConfigEntry
 
@@ -72,8 +72,10 @@ authorisation_response = {
     "data": {
         "attributes": {
             "token": "fakekeyhere",
+            "refresh_token": "refresh_fakekeyhere",
             USER_ID: 12345,
             TTL: 145656758,
+            REFRESH_TOKEN_TTL: 145756758,
             ERROR: "false",
             STATUS: 200,
         }
@@ -85,8 +87,10 @@ authorisation_response_unauthorised = {
     "data": {
         "attributes": {
             "token": "fakekeyhere",
+            "refresh_token": "refresh_fakekeyhere",
             USER_ID: 12345,
             TTL: 145656758,
+            REFRESH_TOKEN_TTL: 145756758,
             ERROR: "false",
             STATUS: 404,
         }

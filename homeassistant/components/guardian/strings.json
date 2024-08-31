@@ -33,6 +33,18 @@
       }
     },
     "sensor": {
+      "current": {
+        "name": "Current"
+      },
+      "instantaneous_current": {
+        "name": "Instantaneous current"
+      },
+      "instantaneous_current_ddt": {
+        "name": "Instantaneous current (DDT)"
+      },
+      "travel_count": {
+        "name": "Travel count"
+      },
       "uptime": {
         "name": "Uptime"
       }
@@ -44,6 +56,11 @@
       "valve_controller": {
         "name": "Valve controller"
       }
+    },
+    "valve": {
+      "valve_controller": {
+        "name": "Valve controller"
+      }
     }
   },
   "services": {
@@ -52,7 +69,7 @@
       "description": "Adds a new paired sensor to the valve controller.",
       "fields": {
         "device_id": {
-          "name": "[%key:component::guardian::entity::switch::valve_controller::name%]",
+          "name": "[%key:component::guardian::entity::valve::valve_controller::name%]",
           "description": "The valve controller to add the sensor to."
         },
         "uid": {
@@ -66,7 +83,7 @@
       "description": "Removes a paired sensor from the valve controller.",
       "fields": {
         "device_id": {
-          "name": "[%key:component::guardian::entity::switch::valve_controller::name%]",
+          "name": "[%key:component::guardian::entity::valve::valve_controller::name%]",
           "description": "The valve controller to remove the sensor from."
         },
         "uid": {
@@ -80,7 +97,7 @@
       "description": "Upgrades the device firmware.",
       "fields": {
         "device_id": {
-          "name": "[%key:component::guardian::entity::switch::valve_controller::name%]",
+          "name": "[%key:component::guardian::entity::valve::valve_controller::name%]",
           "description": "The valve controller whose firmware should be upgraded."
         },
         "url": {

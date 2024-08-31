@@ -1,4 +1,5 @@
 """Fixtures for easyEnergy integration tests."""
+
 from collections.abc import Generator
 import json
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -13,7 +14,7 @@ from tests.common import MockConfigEntry, load_fixture
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch(
         "homeassistant.components.easyenergy.async_setup_entry", return_value=True
@@ -33,7 +34,7 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_easyenergy() -> Generator[MagicMock, None, None]:
+def mock_easyenergy() -> Generator[MagicMock]:
     """Return a mocked easyEnergy client."""
     with patch(
         "homeassistant.components.easyenergy.coordinator.EasyEnergy", autospec=True

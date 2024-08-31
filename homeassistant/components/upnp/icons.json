@@ -1,0 +1,42 @@
+{
+  "entity": {
+    "sensor": {
+      "data_received": {
+        "default": "mdi:server-network"
+      },
+      "data_sent": {
+        "default": "mdi:server-network"
+      },
+      "packets_received": {
+        "default": "mdi:server-network"
+      },
+      "packets_sent": {
+        "default": "mdi:server-network"
+      },
+      "external_ip": {
+        "default": "mdi:server-network"
+      },
+      "uptime": {
+        "default": "mdi:server-network"
+      },
+      "wan_status": {
+        "default": "mdi:server-network"
+      },
+      "download_speed": {
+        "default": "mdi:server-network"
+      },
+      "upload_speed": {
+        "default": "mdi:server-network"
+      },
+      "packet_download_speed": {
+        "default": "mdi:server-network"
+      },
+      "packet_upload_speed": {
+        "default": "mdi:server-network"
+      },
+      "port_mapping_number_of_entries_ipv4": {
+        "default": "mdi:server-network"
+      }
+    }
+  }
+}

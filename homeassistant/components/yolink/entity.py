@@ -1,4 +1,5 @@
 """Support for YoLink Device."""
+
 from __future__ import annotations
 
 from abc import abstractmethod
@@ -54,6 +55,7 @@ class YoLinkEntity(CoordinatorEntity[YoLinkCoordinator]):
             identifiers={(DOMAIN, self.coordinator.device.device_id)},
             manufacturer=MANUFACTURER,
             model=self.coordinator.device.device_type,
+            model_id=self.coordinator.device.device_model_name,
             name=self.coordinator.device.device_name,
         )
 

@@ -1,0 +1,12 @@
+{
+  "entity": {
+    "sensor": {
+      "carbon_intensity": {
+        "default": "mdi:molecule-co2"
+      },
+      "fossil_fuel_percentage": {
+        "default": "mdi:molecule-co2"
+      }
+    }
+  }
+}

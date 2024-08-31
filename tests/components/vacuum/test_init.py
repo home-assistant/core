@@ -1,123 +1,243 @@
 """The tests for the Vacuum entity integration."""
+
 from __future__ import annotations
 
-from collections.abc import Generator
+from typing import Any
 
 import pytest
 
-from homeassistant.components.vacuum import DOMAIN as VACUUM_DOMAIN, VacuumEntity
-from homeassistant.config_entries import ConfigEntry, ConfigFlow
+from homeassistant.components.vacuum import (
+    DOMAIN,
+    SERVICE_CLEAN_SPOT,
+    SERVICE_LOCATE,
+    SERVICE_PAUSE,
+    SERVICE_RETURN_TO_BASE,
+    SERVICE_SEND_COMMAND,
+    SERVICE_SET_FAN_SPEED,
+    SERVICE_START,
+    SERVICE_STOP,
+    STATE_CLEANING,
+    STATE_IDLE,
+    STATE_PAUSED,
+    STATE_RETURNING,
+    StateVacuumEntity,
+    VacuumEntityFeature,
+)
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import issue_registry as ir
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+from . import MockVacuum, help_async_setup_entry_init, help_async_unload_entry
 
 from tests.common import (
     MockConfigEntry,
     MockModule,
-    MockPlatform,
-    mock_config_flow,
     mock_integration,
-    mock_platform,
+    setup_test_component_platform,
 )
-
-TEST_DOMAIN = "test"
-
-
-class MockFlow(ConfigFlow):
-    """Test flow."""
-
-
-@pytest.fixture(autouse=True)
-def config_flow_fixture(hass: HomeAssistant) -> Generator[None, None, None]:
-    """Mock config flow."""
-    mock_platform(hass, f"{TEST_DOMAIN}.config_flow")
-
-    with mock_config_flow(TEST_DOMAIN, MockFlow):
-        yield
-
-
-ISSUE_TRACKER = "https://blablabla.com"
 
 
 @pytest.mark.parametrize(
-    ("manifest_extra", "translation_key", "translation_placeholders_extra"),
+    ("service", "expected_state"),
     [
-        (
-            {},
-            "deprecated_vacuum_base_class",
-            {},
-        ),
-        (
-            {"issue_tracker": ISSUE_TRACKER},
-            "deprecated_vacuum_base_class_url",
-            {"issue_tracker": ISSUE_TRACKER},
-        ),
+        (SERVICE_CLEAN_SPOT, STATE_CLEANING),
+        (SERVICE_PAUSE, STATE_PAUSED),
+        (SERVICE_RETURN_TO_BASE, STATE_RETURNING),
+        (SERVICE_START, STATE_CLEANING),
+        (SERVICE_STOP, STATE_IDLE),
     ],
 )
-async def test_deprecated_base_class(
-    hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
-    manifest_extra: dict[str, str],
-    translation_key: str,
-    translation_placeholders_extra: dict[str, str],
+async def test_state_services(
+    hass: HomeAssistant, config_flow_fixture: None, service: str, expected_state: str
 ) -> None:
-    """Test warnings when adding VacuumEntity to the state machine."""
+    """Test get vacuum service that affect state."""
+    mock_vacuum = MockVacuum(
+        name="Testing",
+        entity_id="vacuum.testing",
+    )
+    config_entry = MockConfigEntry(domain="test")
+    config_entry.add_to_hass(hass)
 
-    async def async_setup_entry_init(
-        hass: HomeAssistant, config_entry: ConfigEntry
-    ) -> bool:
-        """Set up test config entry."""
-        await hass.config_entries.async_forward_entry_setup(config_entry, VACUUM_DOMAIN)
-        return True
-
-    mock_platform(hass, f"{TEST_DOMAIN}.config_flow")
     mock_integration(
         hass,
         MockModule(
-            TEST_DOMAIN,
-            async_setup_entry=async_setup_entry_init,
-            partial_manifest=manifest_extra,
+            "test",
+            async_setup_entry=help_async_setup_entry_init,
+            async_unload_entry=help_async_unload_entry,
         ),
-        built_in=False,
     )
-
-    entity1 = VacuumEntity()
-    entity1.entity_id = "vacuum.test1"
-
-    async def async_setup_entry_platform(
-        hass: HomeAssistant,
-        config_entry: ConfigEntry,
-        async_add_entities: AddEntitiesCallback,
-    ) -> None:
-        """Set up test vacuum platform via config entry."""
-        async_add_entities([entity1])
-
-    mock_platform(
-        hass,
-        f"{TEST_DOMAIN}.{VACUUM_DOMAIN}",
-        MockPlatform(async_setup_entry=async_setup_entry_platform),
-    )
-
-    config_entry = MockConfigEntry(domain=TEST_DOMAIN)
-    config_entry.add_to_hass(hass)
+    setup_test_component_platform(hass, DOMAIN, [mock_vacuum], from_config_entry=True)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
 
-    assert hass.states.get(entity1.entity_id)
+    await hass.services.async_call(
+        DOMAIN,
+        service,
+        {"entity_id": mock_vacuum.entity_id},
+        blocking=True,
+    )
+    vacuum_state = hass.states.get(mock_vacuum.entity_id)
 
-    assert (
-        "test::VacuumEntity is extending the deprecated base class VacuumEntity"
-        in caplog.text
+    assert vacuum_state.state == expected_state
+
+
+async def test_fan_speed(hass: HomeAssistant, config_flow_fixture: None) -> None:
+    """Test set vacuum fan speed."""
+    mock_vacuum = MockVacuum(
+        name="Testing",
+        entity_id="vacuum.testing",
+    )
+    config_entry = MockConfigEntry(domain="test")
+    config_entry.add_to_hass(hass)
+
+    mock_integration(
+        hass,
+        MockModule(
+            "test",
+            async_setup_entry=help_async_setup_entry_init,
+            async_unload_entry=help_async_unload_entry,
+        ),
+    )
+    setup_test_component_platform(hass, DOMAIN, [mock_vacuum], from_config_entry=True)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_FAN_SPEED,
+        {"entity_id": mock_vacuum.entity_id, "fan_speed": "high"},
+        blocking=True,
     )
 
-    issue_registry = ir.async_get(hass)
-    issue = issue_registry.async_get_issue(
-        VACUUM_DOMAIN, f"deprecated_vacuum_base_class_{TEST_DOMAIN}"
+    assert mock_vacuum.fan_speed == "high"
+
+
+async def test_locate(hass: HomeAssistant, config_flow_fixture: None) -> None:
+    """Test vacuum locate."""
+
+    calls = []
+
+    class MockVacuumWithLocation(MockVacuum):
+        def __init__(self, calls: list[str], **kwargs) -> None:
+            super().__init__()
+            self._attr_supported_features = (
+                self.supported_features | VacuumEntityFeature.LOCATE
+            )
+            self._calls = calls
+
+        def locate(self, **kwargs: Any) -> None:
+            self._calls.append("locate")
+
+    mock_vacuum = MockVacuumWithLocation(
+        name="Testing", entity_id="vacuum.testing", calls=calls
     )
-    assert issue.issue_domain == TEST_DOMAIN
-    assert issue.issue_id == f"deprecated_vacuum_base_class_{TEST_DOMAIN}"
-    assert issue.translation_key == translation_key
-    assert (
-        issue.translation_placeholders
-        == {"platform": "test"} | translation_placeholders_extra
+    config_entry = MockConfigEntry(domain="test")
+    config_entry.add_to_hass(hass)
+
+    mock_integration(
+        hass,
+        MockModule(
+            "test",
+            async_setup_entry=help_async_setup_entry_init,
+            async_unload_entry=help_async_unload_entry,
+        ),
     )
+    setup_test_component_platform(hass, DOMAIN, [mock_vacuum], from_config_entry=True)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_LOCATE,
+        {"entity_id": mock_vacuum.entity_id},
+        blocking=True,
+    )
+
+    assert "locate" in calls
+
+
+async def test_send_command(hass: HomeAssistant, config_flow_fixture: None) -> None:
+    """Test Vacuum send command."""
+
+    strings = []
+
+    class MockVacuumWithSendCommand(MockVacuum):
+        def __init__(self, strings: list[str], **kwargs) -> None:
+            super().__init__()
+            self._attr_supported_features = (
+                self.supported_features | VacuumEntityFeature.SEND_COMMAND
+            )
+            self._strings = strings
+
+        def send_command(
+            self,
+            command: str,
+            params: dict[str, Any] | list[Any] | None = None,
+            **kwargs: Any,
+        ) -> None:
+            if command == "add_str":
+                self._strings.append(params["str"])
+
+    mock_vacuum = MockVacuumWithSendCommand(
+        name="Testing", entity_id="vacuum.testing", strings=strings
+    )
+    config_entry = MockConfigEntry(domain="test")
+    config_entry.add_to_hass(hass)
+
+    mock_integration(
+        hass,
+        MockModule(
+            "test",
+            async_setup_entry=help_async_setup_entry_init,
+            async_unload_entry=help_async_unload_entry,
+        ),
+    )
+    setup_test_component_platform(hass, DOMAIN, [mock_vacuum], from_config_entry=True)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SEND_COMMAND,
+        {
+            "entity_id": mock_vacuum.entity_id,
+            "command": "add_str",
+            "params": {"str": "test"},
+        },
+        blocking=True,
+    )
+
+    assert "test" in strings
+
+
+async def test_supported_features_compat(hass: HomeAssistant) -> None:
+    """Test StateVacuumEntity using deprecated feature constants features."""
+
+    features = (
+        VacuumEntityFeature.BATTERY
+        | VacuumEntityFeature.FAN_SPEED
+        | VacuumEntityFeature.START
+        | VacuumEntityFeature.STOP
+        | VacuumEntityFeature.PAUSE
+    )
+
+    class _LegacyConstantsStateVacuum(StateVacuumEntity):
+        _attr_supported_features = int(features)
+        _attr_fan_speed_list = ["silent", "normal", "pet hair"]
+
+    entity = _LegacyConstantsStateVacuum()
+    assert isinstance(entity.supported_features, int)
+    assert entity.supported_features == int(features)
+    assert entity.supported_features_compat is (
+        VacuumEntityFeature.BATTERY
+        | VacuumEntityFeature.FAN_SPEED
+        | VacuumEntityFeature.START
+        | VacuumEntityFeature.STOP
+        | VacuumEntityFeature.PAUSE
+    )
+    assert entity.state_attributes == {
+        "battery_level": None,
+        "battery_icon": "mdi:battery-unknown",
+        "fan_speed": None,
+    }
+    assert entity.capability_attributes == {
+        "fan_speed_list": ["silent", "normal", "pet hair"]
+    }
+    assert entity._deprecated_supported_features_reported

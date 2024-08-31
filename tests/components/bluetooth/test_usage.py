@@ -1,4 +1,5 @@
 """Tests for the Bluetooth integration."""
+
 from unittest.mock import patch
 
 import bleak
@@ -7,6 +8,7 @@ from habluetooth.usage import (
     uninstall_multiple_bleak_catcher,
 )
 from habluetooth.wrappers import HaBleakClientWrapper, HaBleakScannerWrapper
+import pytest
 
 from homeassistant.core import HomeAssistant
 
@@ -37,9 +39,8 @@ async def test_multiple_bleak_scanner_instances(hass: HomeAssistant) -> None:
     assert not isinstance(instance, HaBleakScannerWrapper)
 
 
-async def test_wrapping_bleak_client(
-    hass: HomeAssistant, enable_bluetooth: None
-) -> None:
+@pytest.mark.usefixtures("enable_bluetooth")
+async def test_wrapping_bleak_client(hass: HomeAssistant) -> None:
     """Test we wrap BleakClient."""
     install_multiple_bleak_catcher()
 

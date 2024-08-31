@@ -1,4 +1,5 @@
 """Constants for the Homewizard integration."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass

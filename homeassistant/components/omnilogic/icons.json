@@ -1,0 +1,7 @@
+{
+  "services": {
+    "set_pump_speed": {
+      "service": "mdi:water-pump"
+    }
+  }
+}

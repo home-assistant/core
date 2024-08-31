@@ -1,4 +1,5 @@
 """Describe logbook events."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -12,7 +13,7 @@ from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import Event, HomeAssistant, callback
 
 from .const import DOMAIN
-from .models import DoorBirdData
+from .util import async_get_entries
 
 
 @callback
@@ -34,8 +35,8 @@ def async_describe_events(
             LOGBOOK_ENTRY_ENTITY_ID: event.data.get(ATTR_ENTITY_ID),
         }
 
-    domain_data: dict[str, DoorBirdData] = hass.data[DOMAIN]
-    for data in domain_data.values():
+    for entry in async_get_entries(hass):
+        data = entry.runtime_data
         for event in data.door_station.door_station_events:
             async_describe_event(
                 DOMAIN, f"{DOMAIN}_{event}", async_describe_logbook_event

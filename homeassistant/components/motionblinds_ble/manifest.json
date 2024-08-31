@@ -1,0 +1,18 @@
+{
+  "domain": "motionblinds_ble",
+  "name": "Motionblinds Bluetooth",
+  "bluetooth": [
+    {
+      "local_name": "MOTION_*",
+      "connectable": true
+    }
+  ],
+  "codeowners": ["@LennP", "@jerrybboy"],
+  "config_flow": true,
+  "dependencies": ["bluetooth_adapters"],
+  "documentation": "https://www.home-assistant.io/integrations/motionblinds_ble",
+  "integration_type": "device",
+  "iot_class": "assumed_state",
+  "loggers": ["motionblindsble"],
+  "requirements": ["motionblindsble==0.1.1"]
+}

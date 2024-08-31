@@ -1,11 +1,17 @@
 """Test mobile app device tracker."""
+
 from http import HTTPStatus
+from typing import Any
+
+from aiohttp.test_utils import TestClient
 
 from homeassistant.core import HomeAssistant
 
 
 async def test_sending_location(
-    hass: HomeAssistant, create_registrations, webhook_client
+    hass: HomeAssistant,
+    create_registrations: tuple[dict[str, Any], dict[str, Any]],
+    webhook_client: TestClient,
 ) -> None:
     """Test sending a location via a webhook."""
     resp = await webhook_client.post(
@@ -75,7 +81,9 @@ async def test_sending_location(
 
 
 async def test_restoring_location(
-    hass: HomeAssistant, create_registrations, webhook_client
+    hass: HomeAssistant,
+    create_registrations: tuple[dict[str, Any], dict[str, Any]],
+    webhook_client: TestClient,
 ) -> None:
     """Test sending a location via a webhook."""
     resp = await webhook_client.post(
@@ -103,7 +111,9 @@ async def test_restoring_location(
 
     # mobile app doesn't support unloading, so we just reload device tracker
     await hass.config_entries.async_forward_entry_unload(config_entry, "device_tracker")
-    await hass.config_entries.async_forward_entry_setup(config_entry, "device_tracker")
+    await hass.config_entries.async_forward_entry_setups(
+        config_entry, ["device_tracker"]
+    )
     await hass.async_block_till_done()
 
     state_2 = hass.states.get("device_tracker.test_1_2")

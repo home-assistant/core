@@ -1,11 +1,15 @@
 """Config flow to configure StarLine component."""
+
 from __future__ import annotations
+
+from typing import Any
 
 from starline import StarlineAuth
 import voluptuous as vol
 
-from homeassistant import config_entries, core
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import callback
 
 from .const import (
     _LOGGER,
@@ -24,7 +28,7 @@ from .const import (
 )
 
 
-class StarlineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class StarlineFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a StarLine config flow."""
 
     VERSION = 1
@@ -50,7 +54,9 @@ class StarlineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         self._auth = StarlineAuth()
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
         return await self.async_step_auth_app(user_input)
 
@@ -84,7 +90,7 @@ class StarlineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return await self._async_authenticate_user(error)
         return self._async_form_auth_captcha(error)
 
-    @core.callback
+    @callback
     def _async_form_auth_app(self, error=None):
         """Authenticate application form."""
         errors = {}
@@ -106,7 +112,7 @@ class StarlineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    @core.callback
+    @callback
     def _async_form_auth_user(self, error=None):
         """Authenticate user form."""
         errors = {}
@@ -128,7 +134,7 @@ class StarlineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    @core.callback
+    @callback
     def _async_form_auth_mfa(self, error=None):
         """Authenticate mfa form."""
         errors = {}
@@ -148,7 +154,7 @@ class StarlineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             description_placeholders={"phone_number": self._phone_number},
         )
 
-    @core.callback
+    @callback
     def _async_form_auth_captcha(self, error=None):
         """Captcha verification form."""
         errors = {}
@@ -180,7 +186,7 @@ class StarlineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 self._auth.get_app_token, self._app_id, self._app_secret, self._app_code
             )
             return self._async_form_auth_user(error)
-        except Exception as err:  # pylint: disable=broad-except
+        except Exception as err:  # noqa: BLE001
             _LOGGER.error("Error auth StarLine: %s", err)
             return self._async_form_auth_app(ERROR_AUTH_APP)
 
@@ -212,9 +218,8 @@ class StarlineFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 self._captcha_image = data["captchaImg"]
                 return self._async_form_auth_captcha(error)
 
-            #  pylint: disable=broad-exception-raised
-            raise Exception(data)
-        except Exception as err:  # pylint: disable=broad-except
+            raise Exception(data)  # noqa: TRY002, TRY301
+        except Exception as err:  # noqa: BLE001
             _LOGGER.error("Error auth user: %s", err)
             return self._async_form_auth_user(ERROR_AUTH_USER)
 

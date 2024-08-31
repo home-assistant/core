@@ -1,4 +1,5 @@
 """Support for IntelliFire Binary Sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -39,25 +40,21 @@ INTELLIFIRE_BINARY_SENSORS: tuple[IntellifireBinarySensorEntityDescription, ...]
     IntellifireBinarySensorEntityDescription(
         key="on_off",  # This is the sensor name
         translation_key="flame",  # This is the translation key
-        icon="mdi:fire",
         value_fn=lambda data: data.is_on,
     ),
     IntellifireBinarySensorEntityDescription(
         key="timer_on",
         translation_key="timer_on",
-        icon="mdi:camera-timer",
         value_fn=lambda data: data.timer_on,
     ),
     IntellifireBinarySensorEntityDescription(
         key="pilot_light_on",
         translation_key="pilot_light_on",
-        icon="mdi:fire-alert",
         value_fn=lambda data: data.pilot_on,
     ),
     IntellifireBinarySensorEntityDescription(
         key="thermostat_on",
         translation_key="thermostat_on",
-        icon="mdi:home-thermometer-outline",
         value_fn=lambda data: data.thermostat_on,
     ),
     IntellifireBinarySensorEntityDescription(
@@ -77,7 +74,6 @@ INTELLIFIRE_BINARY_SENSORS: tuple[IntellifireBinarySensorEntityDescription, ...]
     IntellifireBinarySensorEntityDescription(
         key="error_fan_delay",
         translation_key="fan_delay_error",
-        icon="mdi:fan-alert",
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data.error_fan_delay,
         device_class=BinarySensorDeviceClass.PROBLEM,
@@ -99,7 +95,6 @@ INTELLIFIRE_BINARY_SENSORS: tuple[IntellifireBinarySensorEntityDescription, ...]
     IntellifireBinarySensorEntityDescription(
         key="error_fan",
         translation_key="fan_error",
-        icon="mdi:fan-alert",
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data.error_fan,
         device_class=BinarySensorDeviceClass.PROBLEM,

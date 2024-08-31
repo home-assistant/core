@@ -5,8 +5,8 @@ from __future__ import annotations
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
-from pyunifiprotect.data import Camera
-from pyunifiprotect.exceptions import StreamError
+from uiprotect.data import Camera
+from uiprotect.exceptions import StreamError
 
 from homeassistant.components.media_player import (
     ATTR_MEDIA_CONTENT_TYPE,
@@ -49,6 +49,7 @@ async def test_media_player_camera_remove(
 
 async def test_media_player_setup(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     ufp: MockUFPFixture,
     doorbell: Camera,
     unadopted_camera: Camera,
@@ -61,7 +62,6 @@ async def test_media_player_setup(
     unique_id = f"{doorbell.mac}_speaker"
     entity_id = "media_player.test_camera_speaker"
 
-    entity_registry = er.async_get(hass)
     entity = entity_registry.async_get(entity_id)
     assert entity
     assert entity.unique_id == unique_id

@@ -1,4 +1,5 @@
 """Representation of Z-Wave buttons."""
+
 from __future__ import annotations
 
 from zwave_js_server.client import Client as ZwaveClient
@@ -26,7 +27,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Z-Wave button from config entry."""
-    client: ZwaveClient = hass.data[DOMAIN][config_entry.entry_id][DATA_CLIENT]
+    client: ZwaveClient = config_entry.runtime_data[DATA_CLIENT]
 
     @callback
     def async_add_button(info: ZwaveDiscoveryInfo) -> None:
@@ -86,13 +87,13 @@ class ZWaveNodePingButton(ButtonEntity):
     _attr_should_poll = False
     _attr_entity_category = EntityCategory.CONFIG
     _attr_has_entity_name = True
+    _attr_translation_key = "ping"
 
     def __init__(self, driver: Driver, node: ZwaveNode) -> None:
         """Initialize a ping Z-Wave device button entity."""
         self.node = node
 
         # Entity class attributes
-        self._attr_name = "Ping"
         self._base_unique_id = get_valueless_base_unique_id(driver, node)
         self._attr_unique_id = f"{self._base_unique_id}.ping"
         # device may not be precreated in main handler yet

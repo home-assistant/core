@@ -1,12 +1,13 @@
 """The Google Tasks integration."""
+
 from __future__ import annotations
 
-from aiohttp import ClientError
+from aiohttp import ClientError, ClientResponseError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from . import api
@@ -17,8 +18,6 @@ PLATFORMS: list[Platform] = [Platform.TODO]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Google Tasks from a config entry."""
-    hass.data.setdefault(DOMAIN, {})
-
     implementation = (
         await config_entry_oauth2_flow.async_get_config_entry_implementation(
             hass, entry
@@ -28,10 +27,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     auth = api.AsyncConfigEntryAuth(hass, session)
     try:
         await auth.async_get_access_token()
+    except ClientResponseError as err:
+        if 400 <= err.status < 500:
+            raise ConfigEntryAuthFailed(
+                "OAuth session is not valid, reauth required"
+            ) from err
+        raise ConfigEntryNotReady from err
     except ClientError as err:
         raise ConfigEntryNotReady from err
 
-    hass.data[DOMAIN][entry.entry_id] = auth
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = auth
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

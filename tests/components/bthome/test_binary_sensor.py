@@ -1,4 +1,5 @@
 """Test BTHome binary sensors."""
+
 from datetime import timedelta
 import logging
 import time
@@ -67,7 +68,7 @@ _LOGGER = logging.getLogger(__name__)
             "A4:C1:38:8D:18:B2",
             make_bthome_v1_adv(
                 "A4:C1:38:8D:18:B2",
-                b"\x02\x0F\x01",
+                b"\x02\x0f\x01",
             ),
             None,
             [
@@ -153,7 +154,7 @@ async def test_v1_binary_sensors(
             "A4:C1:38:8D:18:B2",
             make_bthome_v2_adv(
                 "A4:C1:38:8D:18:B2",
-                b"\x40\x0F\x01",
+                b"\x40\x0f\x01",
             ),
             None,
             [

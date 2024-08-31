@@ -1,4 +1,5 @@
 """The tests for the Open Hardware Monitor platform."""
+
 import requests_mock
 
 from homeassistant.core import HomeAssistant
@@ -19,7 +20,7 @@ async def test_setup(hass: HomeAssistant, requests_mock: requests_mock.Mocker) -
 
     requests_mock.get(
         "http://localhost:8085/data.json",
-        text=load_fixture("openhardwaremonitor.json"),
+        text=load_fixture("openhardwaremonitor.json", "openhardwaremonitor"),
     )
 
     await async_setup_component(hass, "sensor", config)

@@ -1,6 +1,8 @@
 """Test config flow."""
+
 from homeassistant import config_entries
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
 
 from tests.common import MockConfigEntry
@@ -17,7 +19,7 @@ async def test_mqtt_abort_if_existing_entry(
         "tasmota", context={"source": config_entries.SOURCE_MQTT}
     )
 
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"
 
 
@@ -45,7 +47,7 @@ async def test_mqtt_abort_invalid_topic(
     result = await hass.config_entries.flow.async_init(
         "tasmota", context={"source": config_entries.SOURCE_MQTT}, data=discovery_info
     )
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "invalid_discovery_info"
 
     discovery_info = MqttServiceInfo(
@@ -59,7 +61,7 @@ async def test_mqtt_abort_invalid_topic(
     result = await hass.config_entries.flow.async_init(
         "tasmota", context={"source": config_entries.SOURCE_MQTT}, data=discovery_info
     )
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "invalid_discovery_info"
 
     discovery_info = MqttServiceInfo(
@@ -82,7 +84,7 @@ async def test_mqtt_abort_invalid_topic(
     result = await hass.config_entries.flow.async_init(
         "tasmota", context={"source": config_entries.SOURCE_MQTT}, data=discovery_info
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
 
 
 async def test_mqtt_setup(hass: HomeAssistant, mqtt_mock: MqttMockHAClient) -> None:
@@ -107,11 +109,11 @@ async def test_mqtt_setup(hass: HomeAssistant, mqtt_mock: MqttMockHAClient) -> N
     result = await hass.config_entries.flow.async_init(
         "tasmota", context={"source": config_entries.SOURCE_MQTT}, data=discovery_info
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
-    assert result["type"] == "create_entry"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].data == {"discovery_prefix": "tasmota/discovery"}
 
 
@@ -120,11 +122,11 @@ async def test_user_setup(hass: HomeAssistant, mqtt_mock: MqttMockHAClient) -> N
     result = await hass.config_entries.flow.async_init(
         "tasmota", context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
-    assert result["type"] == "create_entry"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].data == {
         "discovery_prefix": "tasmota/discovery",
     }
@@ -138,13 +140,13 @@ async def test_user_setup_advanced(
         "tasmota",
         context={"source": config_entries.SOURCE_USER, "show_advanced_options": True},
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"discovery_prefix": "test_tasmota/discovery"}
     )
 
-    assert result["type"] == "create_entry"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].data == {
         "discovery_prefix": "test_tasmota/discovery",
     }
@@ -158,13 +160,13 @@ async def test_user_setup_advanced_strip_wildcard(
         "tasmota",
         context={"source": config_entries.SOURCE_USER, "show_advanced_options": True},
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"discovery_prefix": "test_tasmota/discovery/#"}
     )
 
-    assert result["type"] == "create_entry"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].data == {
         "discovery_prefix": "test_tasmota/discovery",
     }
@@ -178,13 +180,13 @@ async def test_user_setup_invalid_topic_prefix(
         "tasmota",
         context={"source": config_entries.SOURCE_USER, "show_advanced_options": True},
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"discovery_prefix": "tasmota/config/##"}
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"]["base"] == "invalid_discovery_topic"
 
 
@@ -197,5 +199,5 @@ async def test_user_single_instance(
     result = await hass.config_entries.flow.async_init(
         "tasmota", context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"

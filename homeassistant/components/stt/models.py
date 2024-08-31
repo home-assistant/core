@@ -1,4 +1,5 @@
 """Speech-to-text data models."""
+
 from dataclasses import dataclass
 
 from .const import (

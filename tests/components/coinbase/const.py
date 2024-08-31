@@ -1,6 +1,5 @@
 """Constants for testing the Coinbase integration."""
 
-
 GOOD_CURRENCY = "BTC"
 GOOD_CURRENCY_2 = "USD"
 GOOD_CURRENCY_3 = "EUR"
@@ -30,5 +29,33 @@ MOCK_ACCOUNTS_RESPONSE = [
         "id": "987654321",
         "name": "USD Wallet",
         "type": "fiat",
+    },
+]
+
+MOCK_ACCOUNTS_RESPONSE_V3 = [
+    {
+        "uuid": "123456789",
+        "name": "BTC Wallet",
+        "currency": GOOD_CURRENCY,
+        "available_balance": {"value": "0.00001", "currency": GOOD_CURRENCY},
+        "type": "ACCOUNT_TYPE_CRYPTO",
+        "hold": {"value": "0", "currency": GOOD_CURRENCY},
+    },
+    {
+        "uuid": "abcdefg",
+        "name": "BTC Vault",
+        "currency": GOOD_CURRENCY,
+        "available_balance": {"value": "100.00", "currency": GOOD_CURRENCY},
+        "type": "ACCOUNT_TYPE_VAULT",
+        "hold": {"value": "0", "currency": GOOD_CURRENCY},
+    },
+    {
+        "uuid": "987654321",
+        "name": "USD Wallet",
+        "currency": GOOD_CURRENCY_2,
+        "available_balance": {"value": "9.90", "currency": GOOD_CURRENCY_2},
+        "type": "ACCOUNT_TYPE_FIAT",
+        "ready": True,
+        "hold": {"value": "0", "currency": GOOD_CURRENCY_2},
     },
 ]

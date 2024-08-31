@@ -1,4 +1,5 @@
 """Tests for the WLED config flow."""
+
 from ipaddress import ip_address
 from unittest.mock import AsyncMock, MagicMock
 
@@ -24,17 +25,15 @@ async def test_full_user_flow_implementation(hass: HomeAssistant) -> None:
     )
 
     assert result.get("step_id") == "user"
-    assert result.get("type") == FlowResultType.FORM
+    assert result.get("type") is FlowResultType.FORM
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={CONF_HOST: "192.168.1.123"}
     )
 
     assert result.get("title") == "WLED RGB Light"
-    assert result.get("type") == FlowResultType.CREATE_ENTRY
-    assert "data" in result
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_HOST] == "192.168.1.123"
-    assert "result" in result
     assert result["result"].unique_id == "aabbccddeeff"
 
 
@@ -63,14 +62,14 @@ async def test_full_zeroconf_flow_implementation(hass: HomeAssistant) -> None:
     )
     assert result.get("description_placeholders") == {CONF_NAME: "WLED RGB Light"}
     assert result.get("step_id") == "zeroconf_confirm"
-    assert result.get("type") == FlowResultType.FORM
+    assert result.get("type") is FlowResultType.FORM
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={}
     )
 
     assert result2.get("title") == "WLED RGB Light"
-    assert result2.get("type") == FlowResultType.CREATE_ENTRY
+    assert result2.get("type") is FlowResultType.CREATE_ENTRY
 
     assert "data" in result2
     assert result2["data"][CONF_HOST] == "192.168.1.123"
@@ -100,7 +99,7 @@ async def test_zeroconf_during_onboarding(
     )
 
     assert result.get("title") == "WLED RGB Light"
-    assert result.get("type") == FlowResultType.CREATE_ENTRY
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
 
     assert result.get("data") == {CONF_HOST: "192.168.1.123"}
     assert "result" in result
@@ -119,7 +118,7 @@ async def test_connection_error(hass: HomeAssistant, mock_wled: MagicMock) -> No
         data={CONF_HOST: "example.com"},
     )
 
-    assert result.get("type") == FlowResultType.FORM
+    assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "user"
     assert result.get("errors") == {"base": "cannot_connect"}
 
@@ -144,7 +143,7 @@ async def test_zeroconf_connection_error(
         ),
     )
 
-    assert result.get("type") == FlowResultType.ABORT
+    assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "cannot_connect"
 
 
@@ -162,25 +161,8 @@ async def test_user_device_exists_abort(
         data={CONF_HOST: "192.168.1.123"},
     )
 
-    assert result.get("type") == FlowResultType.ABORT
+    assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "already_configured"
-
-
-async def test_user_with_cct_channel_abort(
-    hass: HomeAssistant,
-    mock_wled: MagicMock,
-) -> None:
-    """Test we abort user flow if WLED device uses a CCT channel."""
-    mock_wled.update.return_value.info.leds.cct = True
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={CONF_HOST: "192.168.1.123"},
-    )
-
-    assert result.get("type") == FlowResultType.ABORT
-    assert result.get("reason") == "cct_unsupported"
 
 
 @pytest.mark.usefixtures("mock_wled")
@@ -204,7 +186,7 @@ async def test_zeroconf_without_mac_device_exists_abort(
         ),
     )
 
-    assert result.get("type") == FlowResultType.ABORT
+    assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "already_configured"
 
 
@@ -229,33 +211,8 @@ async def test_zeroconf_with_mac_device_exists_abort(
         ),
     )
 
-    assert result.get("type") == FlowResultType.ABORT
+    assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "already_configured"
-
-
-async def test_zeroconf_with_cct_channel_abort(
-    hass: HomeAssistant,
-    mock_wled: MagicMock,
-) -> None:
-    """Test we abort zeroconf flow if WLED device uses a CCT channel."""
-    mock_wled.update.return_value.info.leds.cct = True
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_ZEROCONF},
-        data=zeroconf.ZeroconfServiceInfo(
-            ip_address=ip_address("192.168.1.123"),
-            ip_addresses=[ip_address("192.168.1.123")],
-            hostname="example.local.",
-            name="mock_name",
-            port=None,
-            properties={CONF_MAC: "aabbccddeeff"},
-            type="mock_type",
-        ),
-    )
-
-    assert result.get("type") == FlowResultType.ABORT
-    assert result.get("reason") == "cct_unsupported"
 
 
 async def test_options_flow(
@@ -266,7 +223,7 @@ async def test_options_flow(
 
     result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
 
-    assert result.get("type") == FlowResultType.FORM
+    assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "init"
 
     result2 = await hass.config_entries.options.async_configure(
@@ -274,7 +231,7 @@ async def test_options_flow(
         user_input={CONF_KEEP_MAIN_LIGHT: True},
     )
 
-    assert result2.get("type") == FlowResultType.CREATE_ENTRY
+    assert result2.get("type") is FlowResultType.CREATE_ENTRY
     assert result2.get("data") == {
         CONF_KEEP_MAIN_LIGHT: True,
     }

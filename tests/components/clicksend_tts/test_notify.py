@@ -1,4 +1,5 @@
 """The test for the Facebook notify module."""
+
 import base64
 from http import HTTPStatus
 import logging
@@ -45,7 +46,7 @@ def mock_clicksend_tts_notify():
         yield ns
 
 
-async def setup_notify(hass):
+async def setup_notify(hass: HomeAssistant) -> None:
     """Test setup."""
     with assert_setup_component(1, notify.DOMAIN) as config:
         assert await async_setup_component(hass, notify.DOMAIN, CONFIG)

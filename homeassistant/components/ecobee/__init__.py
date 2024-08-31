@@ -1,4 +1,5 @@
 """Support for ecobee."""
+
 from datetime import timedelta
 
 from pyecobee import ECOBEE_API_KEY, ECOBEE_REFRESH_TOKEN, Ecobee, ExpiredTokenError
@@ -72,6 +73,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
+    # The legacy Ecobee notify.notify service is deprecated
+    # was with HA Core 2024.5.0 and will be removed with HA core 2024.11.0
     hass.async_create_task(
         discovery.async_load_platform(
             hass,
@@ -96,7 +99,7 @@ class EcobeeData:
     ) -> None:
         """Initialize the Ecobee data object."""
         self._hass = hass
-        self._entry = entry
+        self.entry = entry
         self.ecobee = Ecobee(
             config={ECOBEE_API_KEY: api_key, ECOBEE_REFRESH_TOKEN: refresh_token}
         )
@@ -116,7 +119,7 @@ class EcobeeData:
         _LOGGER.debug("Refreshing ecobee tokens and updating config entry")
         if await self._hass.async_add_executor_job(self.ecobee.refresh_tokens):
             self._hass.config_entries.async_update_entry(
-                self._entry,
+                self.entry,
                 data={
                     CONF_API_KEY: self.ecobee.config[ECOBEE_API_KEY],
                     CONF_REFRESH_TOKEN: self.ecobee.config[ECOBEE_REFRESH_TOKEN],

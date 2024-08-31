@@ -1,0 +1,54 @@
+{
+  "entity": {
+    "sensor": {
+      "status": {
+        "default": "mdi:checkbox-marked-circle-outline"
+      },
+      "cpu_usage": {
+        "default": "mdi:chip"
+      },
+      "memory_free": {
+        "default": "mdi:memory"
+      },
+      "memory_used": {
+        "default": "mdi:memory"
+      },
+      "memory_percent_used": {
+        "default": "mdi:memory"
+      },
+      "network_link_status": {
+        "default": "mdi:checkbox-marked-circle-outline"
+      },
+      "network_tx": {
+        "default": "mdi:upload"
+      },
+      "network_rx": {
+        "default": "mdi:download"
+      },
+      "drive_smart_status": {
+        "default": "mdi:checkbox-marked-circle-outline"
+      },
+      "volume_size_used": {
+        "default": "mdi:chart-pie"
+      },
+      "volume_size_free": {
+        "default": "mdi:chart-pie"
+      },
+      "volume_percentage_used": {
+        "default": "mdi:chart-pie"
+      },
+      "volume_size_total": {
+        "default": "mdi:chart-pie"
+      },
+      "memory_size": {
+        "default": "mdi:memory"
+      },
+      "network_err": {
+        "default": "mdi:alert"
+      },
+      "network_max_speed": {
+        "default": "mdi:speedometer"
+      }
+    }
+  }
+}

@@ -1,11 +1,16 @@
 """Test Alexa capabilities."""
+
 from typing import Any
 from unittest.mock import patch
 
 import pytest
 
 from homeassistant.components.alexa import smart_home
-from homeassistant.components.climate import ATTR_CURRENT_TEMPERATURE, HVACMode
+from homeassistant.components.climate import (
+    ATTR_CURRENT_TEMPERATURE,
+    ClimateEntityFeature,
+    HVACMode,
+)
 from homeassistant.components.lock import STATE_JAMMED, STATE_LOCKING, STATE_UNLOCKING
 from homeassistant.components.media_player import MediaPlayerEntityFeature
 from homeassistant.components.valve import ValveEntityFeature
@@ -41,6 +46,42 @@ from .test_common import (
 )
 
 from tests.common import async_mock_service
+
+
+@pytest.mark.parametrize(
+    (
+        "current_activity",
+        "activity_list",
+    ),
+    [
+        ("TV", ["TV", "MUSIC", "DVD"]),
+        ("TV", ["TV"]),
+    ],
+)
+async def test_discovery_remote(
+    hass: HomeAssistant, current_activity: str, activity_list: list[str]
+) -> None:
+    """Test discory for a remote entity."""
+    request = get_new_request("Alexa.Discovery", "Discover")
+    # setup test device
+    hass.states.async_set(
+        "remote.test",
+        "off",
+        {
+            "current_activity": current_activity,
+            "activity_list": activity_list,
+            "supported_features": 4,
+        },
+    )
+    msg = await smart_home.async_handle_message(hass, get_default_config(hass), request)
+    assert "event" in msg
+    msg = msg["event"]
+    assert len(msg["payload"]["endpoints"]) == 1
+    endpoint = msg["payload"]["endpoints"][0]
+    assert endpoint["endpointId"] == "remote#test"
+    interfaces = {capability["interface"] for capability in endpoint["capabilities"]}
+    assert "Alexa.PowerController" in interfaces
+    assert "Alexa.ModeController" in interfaces
 
 
 @pytest.mark.parametrize("adjust", ["-5", "5", "-80"])
@@ -194,7 +235,6 @@ async def test_api_increase_color_temp(
         ("media_player", "GAME CONSOLE", ["tv", "game console", 10000], 1),
         ("media_player", "SATELLITE TV", ["satellite-tv", "game console", None], 0),
         ("media_player", "SATELLITE TV", ["satellite_tv", "game console"], 0),
-        ("media_player", "BAD DEVICE", ["satellite_tv", "game console"], None),
     ],
 )
 async def test_api_select_input(
@@ -215,18 +255,6 @@ async def test_api_select_input(
         },
     )
 
-    # test where no source matches
-    if idx is None:
-        await assert_request_fails(
-            "Alexa.InputController",
-            "SelectInput",
-            "media_player#test",
-            "media_player.select_source",
-            hass,
-            payload={"input": payload},
-        )
-        return
-
     call, _ = await assert_request_calls_service(
         "Alexa.InputController",
         "SelectInput",
@@ -236,6 +264,130 @@ async def test_api_select_input(
         payload={"input": payload},
     )
     assert call.data["source"] == source_list[idx]
+
+
+@pytest.mark.parametrize(
+    ("source_list"),
+    [(["satellite_tv", "game console"]), ([])],
+)
+async def test_api_select_input_fails(
+    hass: HomeAssistant,
+    source_list: list[Any],
+) -> None:
+    """Test api set input process fails."""
+    hass.states.async_set(
+        "media_player.test",
+        "off",
+        {
+            "friendly_name": "Test media player",
+            "source": "unknown",
+            "source_list": source_list,
+        },
+    )
+    await assert_request_fails(
+        "Alexa.InputController",
+        "SelectInput",
+        "media_player#test",
+        "media_player.select_source",
+        hass,
+        payload={"input": "BAD DEVICE"},
+    )
+
+
+@pytest.mark.parametrize(
+    ("activity", "activity_list", "target_activity_index"),
+    [
+        ("TV", ["TV", "MUSIC", "DVD"], 0),
+        ("MUSIC", ["TV", "MUSIC", "DVD", 1000], 1),
+        ("DVD", ["TV", "MUSIC", "DVD", None], 2),
+        ("TV", ["TV"], 0),
+    ],
+)
+async def test_api_select_activity(
+    hass: HomeAssistant,
+    activity: str,
+    activity_list: list[str],
+    target_activity_index: int | None,
+) -> None:
+    """Test api set activity process."""
+    hass.states.async_set(
+        "remote.test",
+        "off",
+        {
+            "current_activity": activity,
+            "activity_list": activity_list,
+        },
+    )
+    call, _ = await assert_request_calls_service(
+        "Alexa.ModeController",
+        "SetMode",
+        "remote#test",
+        "remote.turn_on",
+        hass,
+        payload={"mode": f"activity.{activity}"},
+        instance="remote.activity",
+    )
+    assert call.data["activity"] == activity_list[target_activity_index]
+
+
+@pytest.mark.parametrize(("activity_list"), [(["TV", "MUSIC", "DVD"]), ([])])
+async def test_api_select_activity_fails(
+    hass: HomeAssistant, activity_list: list[str]
+) -> None:
+    """Test api set activity process fails."""
+    hass.states.async_set(
+        "remote.test",
+        "off",
+        {
+            "current_activity": None,
+            "activity_list": activity_list,
+        },
+    )
+    await assert_request_fails(
+        "Alexa.ModeController",
+        "SetMode",
+        "remote#test",
+        "remote.turn_on",
+        hass,
+        payload={"mode": "activity.BAD"},
+        instance="remote.activity",
+    )
+
+
+@pytest.mark.parametrize(
+    (
+        "current_state",
+        "target_name",
+        "target_service",
+    ),
+    [
+        ("on", "TurnOff", "turn_off"),
+        ("off", "TurnOn", "turn_on"),
+    ],
+)
+async def test_api_remote_set_power_state(
+    hass: HomeAssistant,
+    current_state: str,
+    target_name: str,
+    target_service: str,
+) -> None:
+    """Test api remote set power state process."""
+    hass.states.async_set(
+        "remote.test",
+        current_state,
+        {
+            "current_activity": ["TV", "MUSIC", "DVD"],
+            "activity_list": "TV",
+        },
+    )
+
+    _, msg = await assert_request_calls_service(
+        "Alexa.PowerController",
+        target_name,
+        "remote#test",
+        f"remote.{target_service}",
+        hass,
+    )
 
 
 async def test_report_lock_state(hass: HomeAssistant) -> None:
@@ -614,6 +766,77 @@ async def test_report_fan_direction(hass: HomeAssistant) -> None:
     properties.assert_equal("Alexa.ModeController", "mode", "direction.forward")
 
 
+async def test_report_remote_power(hass: HomeAssistant) -> None:
+    """Test ModeController reports remote power state correctly."""
+    hass.states.async_set(
+        "remote.off",
+        "off",
+        {"current_activity": "TV", "activity_list": ["TV", "MUSIC", "DVD"]},
+    )
+    hass.states.async_set(
+        "remote.on",
+        "on",
+        {"current_activity": "TV", "activity_list": ["TV", "MUSIC", "DVD"]},
+    )
+
+    properties = await reported_properties(hass, "remote#off")
+    properties.assert_equal("Alexa.PowerController", "powerState", "OFF")
+
+    properties = await reported_properties(hass, "remote#on")
+    properties.assert_equal("Alexa.PowerController", "powerState", "ON")
+
+
+async def test_report_remote_activity(hass: HomeAssistant) -> None:
+    """Test ModeController reports remote activity correctly."""
+    hass.states.async_set(
+        "remote.unknown",
+        "on",
+        {
+            "current_activity": "UNKNOWN",
+            "supported_features": 4,
+        },
+    )
+    hass.states.async_set(
+        "remote.tv",
+        "on",
+        {
+            "current_activity": "TV",
+            "activity_list": ["TV", "MUSIC", "DVD"],
+            "supported_features": 4,
+        },
+    )
+    hass.states.async_set(
+        "remote.music",
+        "on",
+        {
+            "current_activity": "MUSIC",
+            "activity_list": ["TV", "MUSIC", "DVD"],
+            "supported_features": 4,
+        },
+    )
+    hass.states.async_set(
+        "remote.dvd",
+        "on",
+        {
+            "current_activity": "DVD",
+            "activity_list": ["TV", "MUSIC", "DVD"],
+            "supported_features": 4,
+        },
+    )
+
+    properties = await reported_properties(hass, "remote#unknown")
+    properties.assert_not_has_property("Alexa.ModeController", "mode")
+
+    properties = await reported_properties(hass, "remote#tv")
+    properties.assert_equal("Alexa.ModeController", "mode", "activity.TV")
+
+    properties = await reported_properties(hass, "remote#music")
+    properties.assert_equal("Alexa.ModeController", "mode", "activity.MUSIC")
+
+    properties = await reported_properties(hass, "remote#dvd")
+    properties.assert_equal("Alexa.ModeController", "mode", "activity.DVD")
+
+
 async def test_report_cover_range_value(hass: HomeAssistant) -> None:
     """Test RangeController reports cover position correctly."""
     hass.states.async_set(
@@ -812,7 +1035,7 @@ async def test_report_climate_state(hass: HomeAssistant) -> None:
             {"value": 34.0, "scale": "CELSIUS"},
         )
 
-    for off_modes in [HVACMode.OFF]:
+    for off_modes in (HVACMode.OFF,):
         hass.states.async_set(
             "climate.downstairs",
             off_modes,
@@ -923,6 +1146,52 @@ async def test_report_climate_state(hass: HomeAssistant) -> None:
     assert msg["event"]["payload"]["type"] == "INTERNAL_ERROR"
 
 
+async def test_report_on_off_climate_state(hass: HomeAssistant) -> None:
+    """Test ThermostatController with on/off features reports state correctly."""
+    on_off_features = (
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.TURN_ON
+        | ClimateEntityFeature.TURN_OFF
+    )
+    for auto_modes in (HVACMode.HEAT,):
+        hass.states.async_set(
+            "climate.onoff",
+            auto_modes,
+            {
+                "friendly_name": "Climate Downstairs",
+                "supported_features": on_off_features,
+                ATTR_CURRENT_TEMPERATURE: 34,
+                ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS,
+            },
+        )
+        properties = await reported_properties(hass, "climate.onoff")
+        properties.assert_equal("Alexa.ThermostatController", "thermostatMode", "HEAT")
+        properties.assert_equal(
+            "Alexa.TemperatureSensor",
+            "temperature",
+            {"value": 34.0, "scale": "CELSIUS"},
+        )
+
+    for off_modes in (HVACMode.OFF,):
+        hass.states.async_set(
+            "climate.onoff",
+            off_modes,
+            {
+                "friendly_name": "Climate Downstairs",
+                "supported_features": on_off_features,
+                ATTR_CURRENT_TEMPERATURE: 34,
+                ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS,
+            },
+        )
+        properties = await reported_properties(hass, "climate.onoff")
+        properties.assert_equal("Alexa.ThermostatController", "thermostatMode", "OFF")
+        properties.assert_equal(
+            "Alexa.TemperatureSensor",
+            "temperature",
+            {"value": 34.0, "scale": "CELSIUS"},
+        )
+
+
 async def test_report_water_heater_state(hass: HomeAssistant) -> None:
     """Test ThermostatController also reports state correctly for water heaters."""
     for operation_mode in (STATE_ECO, STATE_GAS, STATE_HEAT_PUMP):
@@ -951,7 +1220,7 @@ async def test_report_water_heater_state(hass: HomeAssistant) -> None:
             {"value": 34.0, "scale": "CELSIUS"},
         )
 
-    for off_mode in [STATE_OFF]:
+    for off_mode in (STATE_OFF,):
         hass.states.async_set(
             "water_heater.boyler",
             off_mode,

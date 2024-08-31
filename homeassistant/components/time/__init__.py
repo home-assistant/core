@@ -1,7 +1,9 @@
 """Component to allow setting time as platforms."""
+
 from __future__ import annotations
 
 from datetime import time, timedelta
+from functools import cached_property
 import logging
 from typing import final
 
@@ -11,21 +13,19 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TIME
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.config_validation import (  # noqa: F401
-    PLATFORM_SCHEMA,
-    PLATFORM_SCHEMA_BASE,
-)
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, SERVICE_SET_VALUE
 
-SCAN_INTERVAL = timedelta(seconds=30)
+_LOGGER = logging.getLogger(__name__)
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
+PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
+PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
+SCAN_INTERVAL = timedelta(seconds=30)
 
-_LOGGER = logging.getLogger(__name__)
 
 __all__ = ["DOMAIN", "TimeEntity", "TimeEntityDescription"]
 
@@ -65,7 +65,10 @@ class TimeEntityDescription(EntityDescription, frozen_or_thawed=True):
     """A class that describes time entities."""
 
 
-class TimeEntity(Entity):
+CACHED_PROPERTIES_WITH_ATTR_ = {"native_value"}
+
+
+class TimeEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     """Representation of a Time entity."""
 
     entity_description: TimeEntityDescription
@@ -73,13 +76,13 @@ class TimeEntity(Entity):
     _attr_device_class: None = None
     _attr_state: None = None
 
-    @property
+    @cached_property
     @final
     def device_class(self) -> None:
         """Return the device class for the entity."""
         return None
 
-    @property
+    @cached_property
     @final
     def state_attributes(self) -> None:
         """Return the state attributes."""
@@ -93,14 +96,14 @@ class TimeEntity(Entity):
             return None
         return self.native_value.isoformat()
 
-    @property
+    @cached_property
     def native_value(self) -> time | None:
         """Return the value reported by the time."""
         return self._attr_native_value
 
     def set_value(self, value: time) -> None:
         """Change the time."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_set_value(self, value: time) -> None:
         """Change the time."""

@@ -1,4 +1,5 @@
 """Support for SimpliSafe locks."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -33,15 +34,16 @@ async def async_setup_entry(
 ) -> None:
     """Set up SimpliSafe locks based on a config entry."""
     simplisafe = hass.data[DOMAIN][entry.entry_id]
-    locks = []
+    locks: list[SimpliSafeLock] = []
 
     for system in simplisafe.systems.values():
         if system.version == 2:
             LOGGER.info("Skipping lock setup for V2 system: %s", system.system_id)
             continue
 
-        for lock in system.locks.values():
-            locks.append(SimpliSafeLock(simplisafe, system, lock))
+        locks.extend(
+            SimpliSafeLock(simplisafe, system, lock) for lock in system.locks.values()
+        )
 
     async_add_entities(locks)
 

@@ -8,8 +8,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import async_wemo_dispatcher_connect
+from .coordinator import DeviceCoordinator
 from .entity import WemoBinaryStateEntity, WemoEntity
-from .wemo_device import DeviceCoordinator
 
 
 async def async_setup_entry(

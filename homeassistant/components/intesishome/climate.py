@@ -1,4 +1,5 @@
 """Support for IntesisHome and airconwithme Smart AC Controllers."""
+
 from __future__ import annotations
 
 import logging
@@ -10,7 +11,7 @@ import voluptuous as vol
 
 from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as CLIMATE_PLATFORM_SCHEMA,
     PRESET_BOOST,
     PRESET_COMFORT,
     PRESET_ECO,
@@ -43,7 +44,7 @@ IH_DEVICE_INTESISHOME = "IntesisHome"
 IH_DEVICE_AIRCONWITHME = "airconwithme"
 IH_DEVICE_ANYWAIR = "anywair"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = CLIMATE_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
@@ -146,6 +147,7 @@ class IntesisAC(ClimateEntity):
 
     _attr_should_poll = False
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, ih_device_id, ih_device, controller):
         """Initialize the thermostat."""
@@ -203,6 +205,11 @@ class IntesisAC(ClimateEntity):
             mode_list = [MAP_IH_TO_HVAC_MODE[mode] for mode in modes]
             self._attr_hvac_modes.extend(mode_list)
         self._attr_hvac_modes.append(HVACMode.OFF)
+
+        if len(self.hvac_modes) > 1:
+            self._attr_supported_features |= (
+                ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
+            )
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to event updates."""

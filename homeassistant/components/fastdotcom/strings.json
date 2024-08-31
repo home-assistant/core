@@ -15,24 +15,5 @@
         "name": "Download"
       }
     }
-  },
-  "services": {
-    "speedtest": {
-      "name": "Speed test",
-      "description": "Immediately executes a speed test with Fast.com."
-    }
-  },
-  "issues": {
-    "service_deprecation": {
-      "title": "Fast.com speedtest service is being removed",
-      "fix_flow": {
-        "step": {
-          "confirm": {
-            "title": "[%key:component::fastdotcom::issues::service_deprecation::title%]",
-            "description": "Use `homeassistant.update_entity` instead to update the data.\n\nPlease replace this service and adjust your automations and scripts and select **submit** to fix this issue."
-          }
-        }
-      }
-    }
   }
 }

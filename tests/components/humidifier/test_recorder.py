@@ -1,4 +1,5 @@
 """The tests for humidifier recorder."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -12,7 +13,7 @@ from homeassistant.components.humidifier import (
 from homeassistant.components.recorder import Recorder
 from homeassistant.components.recorder.history import get_significant_states
 from homeassistant.const import ATTR_FRIENDLY_NAME
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, split_entity_id
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -35,9 +36,13 @@ async def test_exclude_attributes(recorder_mock: Recorder, hass: HomeAssistant) 
         get_significant_states, hass, now, None, hass.states.async_entity_ids()
     )
     assert len(states) >= 1
-    for entity_states in states.values():
-        for state in entity_states:
-            assert ATTR_MIN_HUMIDITY not in state.attributes
-            assert ATTR_MAX_HUMIDITY not in state.attributes
-            assert ATTR_AVAILABLE_MODES not in state.attributes
-            assert ATTR_FRIENDLY_NAME in state.attributes
+    for state in (
+        state
+        for entity_states in states.values()
+        for state in entity_states
+        if split_entity_id(state.entity_id)[0] == humidifier.DOMAIN
+    ):
+        assert ATTR_MIN_HUMIDITY not in state.attributes
+        assert ATTR_MAX_HUMIDITY not in state.attributes
+        assert ATTR_AVAILABLE_MODES not in state.attributes
+        assert ATTR_FRIENDLY_NAME in state.attributes

@@ -1,14 +1,13 @@
 """Manage the history_stats data."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
 import datetime
 
 from homeassistant.components.recorder import get_instance, history
-from homeassistant.core import HomeAssistant, State
-from homeassistant.helpers.event import EventStateChangedData
+from homeassistant.core import Event, EventStateChangedData, HomeAssistant, State
 from homeassistant.helpers.template import Template
-from homeassistant.helpers.typing import EventType
 import homeassistant.util.dt as dt_util
 
 from .helpers import async_calculate_period, floored_timestamp
@@ -58,7 +57,7 @@ class HistoryStats:
         self._end = end
 
     async def async_update(
-        self, event: EventType[EventStateChangedData] | None
+        self, event: Event[EventStateChangedData] | None
     ) -> HistoryStatsState:
         """Update the stats at a given time."""
         # Get previous values of start and end

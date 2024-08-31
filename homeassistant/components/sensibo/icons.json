@@ -1,0 +1,64 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "is_main_sensor": {
+        "default": "mdi:connection"
+      }
+    },
+    "button": {
+      "reset_filter": {
+        "default": "mdi:air-filter"
+      }
+    },
+    "select": {
+      "horizontalswing": {
+        "default": "mdi:air-conditioner"
+      },
+      "light": {
+        "default": "mdi:flashlight"
+      }
+    },
+    "sensor": {
+      "filter_last_reset": {
+        "default": "mdi:timer"
+      },
+      "battery_voltage": {
+        "default": "mdi:battery"
+      },
+      "sensitivity": {
+        "default": "mdi:air-filter"
+      },
+      "timer_time": {
+        "default": "mdi:timer"
+      },
+      "airq_tvoc": {
+        "default": "mdi:air-filter"
+      }
+    },
+    "switch": {
+      "timer_on_switch": {
+        "default": "mdi:timer"
+      },
+      "climate_react_switch": {
+        "default": "mdi:wizard-hat"
+      }
+    }
+  },
+  "services": {
+    "assume_state": {
+      "service": "mdi:shape-outline"
+    },
+    "enable_timer": {
+      "service": "mdi:timer-play"
+    },
+    "enable_pure_boost": {
+      "service": "mdi:air-filter"
+    },
+    "full_state": {
+      "service": "mdi:shape"
+    },
+    "enable_climate_react": {
+      "service": "mdi:wizard-hat"
+    }
+  }
+}

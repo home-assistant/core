@@ -25,8 +25,7 @@ def mock_discovery_service_fixture() -> AsyncMock:
 @pytest.fixture(name="mock_controller")
 def mock_controller_fixture() -> MagicMock:
     """Mock controller."""
-    controller = MagicMock()
-    return controller
+    return MagicMock()
 
 
 def _mock_start_discovery(
@@ -47,10 +46,11 @@ async def test_not_found(
 ) -> None:
     """Test not finding any Escea controllers."""
 
-    with patch(
-        "homeassistant.components.escea.discovery.pescea_discovery_service"
-    ) as discovery_service, patch(
-        "homeassistant.components.escea.config_flow.TIMEOUT_DISCOVERY", 0
+    with (
+        patch(
+            "homeassistant.components.escea.discovery.pescea_discovery_service"
+        ) as discovery_service,
+        patch("homeassistant.components.escea.config_flow.TIMEOUT_DISCOVERY", 0),
     ):
         discovery_service.return_value = mock_discovery_service
 
@@ -59,12 +59,12 @@ async def test_not_found(
         )
 
         # Confirmation form
-        assert result["type"] == FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
 
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_devices_found"
     assert discovery_service.return_value.close.call_count == 1
 
@@ -75,12 +75,15 @@ async def test_found(
     """Test finding an Escea controller."""
     mock_discovery_service.controllers["test-uid"] = mock_controller
 
-    with patch(
-        "homeassistant.components.escea.async_setup_entry",
-        return_value=True,
-    ) as mock_setup, patch(
-        "homeassistant.components.escea.discovery.pescea_discovery_service"
-    ) as discovery_service:
+    with (
+        patch(
+            "homeassistant.components.escea.async_setup_entry",
+            return_value=True,
+        ) as mock_setup,
+        patch(
+            "homeassistant.components.escea.discovery.pescea_discovery_service"
+        ) as discovery_service,
+    ):
         discovery_service.return_value = mock_discovery_service
         mock_discovery_service.start_discovery.side_effect = _mock_start_discovery(
             discovery_service, mock_controller
@@ -91,12 +94,12 @@ async def test_found(
         )
 
         # Confirmation form
-        assert result["type"] == FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
 
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert mock_setup.call_count == 1
 
 
@@ -113,6 +116,6 @@ async def test_single_instance_allowed(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"
     assert discovery_service.call_count == 0

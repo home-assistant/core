@@ -1,4 +1,5 @@
 """Support to control ecoal/esterownik.pl coal/wood boiler controller."""
+
 import logging
 
 from ecoaliface.simple import ECoalController

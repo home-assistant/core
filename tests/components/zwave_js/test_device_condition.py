@@ -1,4 +1,5 @@
 """The tests for Z-Wave JS device conditions."""
+
 from __future__ import annotations
 
 from unittest.mock import patch
@@ -19,18 +20,12 @@ from homeassistant.components.zwave_js.helpers import (
     get_device_id,
     get_zwave_value_from_config,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.setup import async_setup_component
 
-from tests.common import async_get_device_automations, async_mock_service
-
-
-@pytest.fixture
-def calls(hass: HomeAssistant):
-    """Track calls to a mock service."""
-    return async_mock_service(hass, "test", "automation")
+from tests.common import async_get_device_automations
 
 
 async def test_get_conditions(
@@ -98,7 +93,7 @@ async def test_node_status_state(
     client,
     lock_schlage_be469,
     integration,
-    calls,
+    service_calls: list[ServiceCall],
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test for node_status conditions."""
@@ -205,8 +200,8 @@ async def test_node_status_state(
     hass.bus.async_fire("test_event3")
     hass.bus.async_fire("test_event4")
     await hass.async_block_till_done()
-    assert len(calls) == 1
-    assert calls[0].data["some"] == "alive - event - test_event1"
+    assert len(service_calls) == 1
+    assert service_calls[0].data["some"] == "alive - event - test_event1"
 
     event = Event(
         "wake up",
@@ -224,8 +219,8 @@ async def test_node_status_state(
     hass.bus.async_fire("test_event3")
     hass.bus.async_fire("test_event4")
     await hass.async_block_till_done()
-    assert len(calls) == 2
-    assert calls[1].data["some"] == "awake - event - test_event2"
+    assert len(service_calls) == 2
+    assert service_calls[1].data["some"] == "awake - event - test_event2"
 
     event = Event(
         "sleep",
@@ -239,8 +234,8 @@ async def test_node_status_state(
     hass.bus.async_fire("test_event3")
     hass.bus.async_fire("test_event4")
     await hass.async_block_till_done()
-    assert len(calls) == 3
-    assert calls[2].data["some"] == "asleep - event - test_event3"
+    assert len(service_calls) == 3
+    assert service_calls[2].data["some"] == "asleep - event - test_event3"
 
     event = Event(
         "dead",
@@ -254,8 +249,8 @@ async def test_node_status_state(
     hass.bus.async_fire("test_event3")
     hass.bus.async_fire("test_event4")
     await hass.async_block_till_done()
-    assert len(calls) == 4
-    assert calls[3].data["some"] == "dead - event - test_event4"
+    assert len(service_calls) == 4
+    assert service_calls[3].data["some"] == "dead - event - test_event4"
 
 
 async def test_config_parameter_state(
@@ -263,7 +258,7 @@ async def test_config_parameter_state(
     client,
     lock_schlage_be469,
     integration,
-    calls,
+    service_calls: list[ServiceCall],
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test for config_parameter conditions."""
@@ -330,8 +325,8 @@ async def test_config_parameter_state(
     hass.bus.async_fire("test_event1")
     hass.bus.async_fire("test_event2")
     await hass.async_block_till_done()
-    assert len(calls) == 1
-    assert calls[0].data["some"] == "Beeper - event - test_event1"
+    assert len(service_calls) == 1
+    assert service_calls[0].data["some"] == "Beeper - event - test_event1"
 
     # Flip Beeper state to not match condition
     event = Event(
@@ -374,8 +369,8 @@ async def test_config_parameter_state(
     hass.bus.async_fire("test_event1")
     hass.bus.async_fire("test_event2")
     await hass.async_block_till_done()
-    assert len(calls) == 2
-    assert calls[1].data["some"] == "User Slot Status - event - test_event2"
+    assert len(service_calls) == 2
+    assert service_calls[1].data["some"] == "User Slot Status - event - test_event2"
 
 
 async def test_value_state(
@@ -383,7 +378,7 @@ async def test_value_state(
     client,
     lock_schlage_be469,
     integration,
-    calls,
+    service_calls: list[ServiceCall],
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test for value conditions."""
@@ -426,8 +421,8 @@ async def test_value_state(
 
     hass.bus.async_fire("test_event1")
     await hass.async_block_till_done()
-    assert len(calls) == 1
-    assert calls[0].data["some"] == "value - event - test_event1"
+    assert len(service_calls) == 1
+    assert service_calls[0].data["some"] == "value - event - test_event1"
 
 
 async def test_get_condition_capabilities_node_status(
@@ -626,12 +621,15 @@ async def test_failure_scenarios(
             hass, {"type": "failed.test", "device_id": device.id}
         )
 
-    with patch(
-        "homeassistant.components.zwave_js.device_condition.async_get_node_from_device_id",
-        return_value=None,
-    ), patch(
-        "homeassistant.components.zwave_js.device_condition.get_zwave_value_from_config",
-        return_value=None,
+    with (
+        patch(
+            "homeassistant.components.zwave_js.device_condition.async_get_node_from_device_id",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.zwave_js.device_condition.get_zwave_value_from_config",
+            return_value=None,
+        ),
     ):
         assert (
             await device_condition.async_get_condition_capabilities(

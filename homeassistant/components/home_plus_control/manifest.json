@@ -1,11 +1,6 @@
 {
   "domain": "home_plus_control",
   "name": "Legrand Home+ Control",
-  "codeowners": ["@chemaaa"],
-  "config_flow": true,
-  "dependencies": ["auth"],
-  "documentation": "https://www.home-assistant.io/integrations/home_plus_control",
-  "iot_class": "cloud_polling",
-  "loggers": ["homepluscontrol"],
-  "requirements": ["homepluscontrol==0.0.5"]
+  "integration_type": "virtual",
+  "supported_by": "netatmo"
 }

@@ -1,4 +1,5 @@
 """Support for OASA Telematics from telematics.oasa.gr."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -9,7 +10,7 @@ import oasatelematics
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
 )
@@ -38,7 +39,7 @@ DEFAULT_NAME = "OASA Telematics"
 
 SCAN_INTERVAL = timedelta(seconds=60)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_STOP_ID): cv.string,
         vol.Required(CONF_ROUTE_ID): cv.string,

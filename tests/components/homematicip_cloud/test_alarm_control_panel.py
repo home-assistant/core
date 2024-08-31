@@ -1,4 +1,7 @@
 """Tests for HomematicIP Cloud alarm control panel."""
+
+from homematicip.aio.home import AsyncHome
+
 from homeassistant.components.alarm_control_panel import (
     DOMAIN as ALARM_CONTROL_PANEL_DOMAIN,
 )
@@ -12,12 +15,16 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from .helper import get_and_check_entity_basics
+from .helper import HomeFactory, get_and_check_entity_basics
 
 
 async def _async_manipulate_security_zones(
-    hass, home, internal_active=False, external_active=False, alarm_triggered=False
-):
+    hass: HomeAssistant,
+    home: AsyncHome,
+    internal_active: bool = False,
+    external_active: bool = False,
+    alarm_triggered: bool = False,
+) -> None:
     """Set new values on hmip security zones."""
     json = home._rawJSONData
     json["functionalHomes"]["SECURITY_AND_ALARM"]["alarmActive"] = alarm_triggered
@@ -49,7 +56,7 @@ async def test_manually_configured_platform(hass: HomeAssistant) -> None:
 
 
 async def test_hmip_alarm_control_panel(
-    hass: HomeAssistant, default_mock_hap_factory
+    hass: HomeAssistant, default_mock_hap_factory: HomeFactory
 ) -> None:
     """Test HomematicipAlarmControlPanel."""
     entity_id = "alarm_control_panel.hmip_alarm_control_panel"

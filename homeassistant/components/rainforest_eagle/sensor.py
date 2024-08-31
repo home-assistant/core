@@ -1,4 +1,5 @@
 """Support for the Rainforest Eagle energy monitor."""
+
 from __future__ import annotations
 
 from homeassistant.components.sensor import (
@@ -16,7 +17,7 @@ from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .data import EagleDataCoordinator
+from .coordinator import EagleDataCoordinator
 
 SENSORS = (
     SensorEntityDescription(

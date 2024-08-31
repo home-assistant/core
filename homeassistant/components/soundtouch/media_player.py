@@ -1,4 +1,5 @@
 """Support for interface with a Bose SoundTouch."""
+
 from __future__ import annotations
 
 from functools import partial
@@ -408,10 +409,8 @@ class SoundTouchMediaPlayer(MediaPlayerEntity):
             if slave_instance and slave_instance.entity_id != master:
                 slaves.append(slave_instance.entity_id)
 
-        attributes = {
+        return {
             "master": master,
             "is_master": master == self.entity_id,
             "slaves": slaves,
         }
-
-        return attributes

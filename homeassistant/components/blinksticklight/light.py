@@ -1,15 +1,17 @@
 """Support for Blinkstick lights."""
+
+# mypy: ignore-errors
 from __future__ import annotations
 
 from typing import Any
 
-from blinkstick import blinkstick
+# from blinkstick import blinkstick
 import voluptuous as vol
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_HS_COLOR,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as LIGHT_PLATFORM_SCHEMA,
     ColorMode,
     LightEntity,
 )
@@ -24,7 +26,7 @@ CONF_SERIAL = "serial"
 
 DEFAULT_NAME = "Blinkstick"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = LIGHT_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_SERIAL): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,

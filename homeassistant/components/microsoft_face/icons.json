@@ -1,0 +1,22 @@
+{
+  "services": {
+    "create_group": {
+      "service": "mdi:account-multiple-plus"
+    },
+    "create_person": {
+      "service": "mdi:account-plus"
+    },
+    "delete_group": {
+      "service": "mdi:account-multiple-remove"
+    },
+    "delete_person": {
+      "service": "mdi:account-remove"
+    },
+    "face_person": {
+      "service": "mdi:face-man"
+    },
+    "train_group": {
+      "service": "mdi:account-multiple-check"
+    }
+  }
+}

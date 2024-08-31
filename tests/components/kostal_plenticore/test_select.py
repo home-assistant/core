@@ -1,7 +1,8 @@
 """Test the Kostal Plenticore Solar Inverter select platform."""
+
 from pykoplenti import SettingsData
 
-from homeassistant.components.kostal_plenticore.helper import Plenticore
+from homeassistant.components.kostal_plenticore.coordinator import Plenticore
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 

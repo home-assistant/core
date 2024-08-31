@@ -1,4 +1,5 @@
 """Binary sensor platform for Trafikverket Camera integration."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -8,45 +9,38 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
-from .coordinator import CameraData, TVDataUpdateCoordinator
+from . import TVCameraConfigEntry
+from .coordinator import CameraData
 from .entity import TrafikverketCameraNonCameraEntity
 
 PARALLEL_UPDATES = 0
 
 
-@dataclass(frozen=True)
-class DeviceBaseEntityDescriptionMixin:
-    """Mixin for required Trafikverket Camera base description keys."""
+@dataclass(frozen=True, kw_only=True)
+class TVCameraSensorEntityDescription(BinarySensorEntityDescription):
+    """Describes Trafikverket Camera binary sensor entity."""
 
     value_fn: Callable[[CameraData], bool | None]
-
-
-@dataclass(frozen=True)
-class TVCameraSensorEntityDescription(
-    BinarySensorEntityDescription, DeviceBaseEntityDescriptionMixin
-):
-    """Describes Trafikverket Camera binary sensor entity."""
 
 
 BINARY_SENSOR_TYPE = TVCameraSensorEntityDescription(
     key="active",
     translation_key="active",
-    icon="mdi:camera-outline",
     value_fn=lambda data: data.data.active,
 )
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: TVCameraConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Trafikverket Camera binary sensor platform."""
 
-    coordinator: TVDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     async_add_entities(
         [
             TrafikverketCameraBinarySensor(

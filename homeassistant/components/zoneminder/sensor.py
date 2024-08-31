@@ -1,4 +1,5 @@
 """Support for ZoneMinder sensors."""
+
 from __future__ import annotations
 
 import logging
@@ -8,12 +9,13 @@ from zoneminder.monitor import Monitor, TimePeriod
 from zoneminder.zm import ZoneMinder
 
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorEntity,
     SensorEntityDescription,
 )
 from homeassistant.const import CONF_MONITORED_CONDITIONS
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -51,7 +53,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
 
 SENSOR_KEYS: list[str] = [desc.key for desc in SENSOR_TYPES]
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(
             CONF_INCLUDE_ARCHIVED, default=DEFAULT_INCLUDE_ARCHIVED
@@ -77,7 +79,9 @@ def setup_platform(
     zm_client: ZoneMinder
     for zm_client in hass.data[ZONEMINDER_DOMAIN].values():
         if not (monitors := zm_client.get_monitors()):
-            _LOGGER.warning("Could not fetch any monitors from ZoneMinder")
+            raise PlatformNotReady(
+                "Sensor could not fetch any monitors from ZoneMinder"
+            )
 
         for monitor in monitors:
             sensors.append(ZMSensorMonitors(monitor))

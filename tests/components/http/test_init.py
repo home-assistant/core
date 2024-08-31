@@ -1,5 +1,7 @@
 """The tests for the Home Assistant HTTP component."""
+
 import asyncio
+from collections.abc import Callable
 from datetime import timedelta
 from http import HTTPStatus
 from ipaddress import ip_network
@@ -9,11 +11,10 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from homeassistant.auth.providers.legacy_api_password import (
-    LegacyApiPasswordAuthProvider,
-)
-import homeassistant.components.http as http
+from homeassistant.auth.providers.homeassistant import HassAuthProvider
+from homeassistant.components import http
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.http import KEY_HASS
 from homeassistant.helpers.network import NoURLAvailableError
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -83,7 +84,9 @@ class TestView(http.HomeAssistantView):
 
 
 async def test_registering_view_while_running(
-    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator, unused_tcp_port_factory
+    hass: HomeAssistant,
+    aiohttp_client: ClientSessionGenerator,
+    unused_tcp_port_factory: Callable[[], int],
 ) -> None:
     """Test that we can register a view while the server is running."""
     await async_setup_component(
@@ -97,11 +100,20 @@ async def test_registering_view_while_running(
     hass.http.register_view(TestView)
 
 
+async def test_homeassistant_assigned_to_app(hass: HomeAssistant) -> None:
+    """Test HomeAssistant instance is assigned to HomeAssistantApp."""
+    assert await async_setup_component(hass, "api", {"http": {}})
+    await hass.async_start()
+    assert hass.http.app[KEY_HASS] == hass
+    assert hass.http.app["hass"] == hass  # For backwards compatibility
+    await hass.async_stop()
+
+
 async def test_not_log_password(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     caplog: pytest.LogCaptureFixture,
-    legacy_auth: LegacyApiPasswordAuthProvider,
+    local_auth: HassAuthProvider,
 ) -> None:
     """Test access with password doesn't get logged."""
     assert await async_setup_component(hass, "api", {"http": {}})
@@ -162,10 +174,13 @@ async def test_ssl_profile_defaults_modern(hass: HomeAssistant, tmp_path: Path) 
         _setup_empty_ssl_pem_files, tmp_path
     )
 
-    with patch("ssl.SSLContext.load_cert_chain"), patch(
-        "homeassistant.util.ssl.server_context_modern",
-        side_effect=server_context_modern,
-    ) as mock_context:
+    with (
+        patch("ssl.SSLContext.load_cert_chain"),
+        patch(
+            "homeassistant.util.ssl.server_context_modern",
+            side_effect=server_context_modern,
+        ) as mock_context,
+    ):
         assert (
             await async_setup_component(
                 hass,
@@ -189,10 +204,13 @@ async def test_ssl_profile_change_intermediate(
         _setup_empty_ssl_pem_files, tmp_path
     )
 
-    with patch("ssl.SSLContext.load_cert_chain"), patch(
-        "homeassistant.util.ssl.server_context_intermediate",
-        side_effect=server_context_intermediate,
-    ) as mock_context:
+    with (
+        patch("ssl.SSLContext.load_cert_chain"),
+        patch(
+            "homeassistant.util.ssl.server_context_intermediate",
+            side_effect=server_context_intermediate,
+        ) as mock_context,
+    ):
         assert (
             await async_setup_component(
                 hass,
@@ -220,10 +238,13 @@ async def test_ssl_profile_change_modern(hass: HomeAssistant, tmp_path: Path) ->
         _setup_empty_ssl_pem_files, tmp_path
     )
 
-    with patch("ssl.SSLContext.load_cert_chain"), patch(
-        "homeassistant.util.ssl.server_context_modern",
-        side_effect=server_context_modern,
-    ) as mock_context:
+    with (
+        patch("ssl.SSLContext.load_cert_chain"),
+        patch(
+            "homeassistant.util.ssl.server_context_modern",
+            side_effect=server_context_modern,
+        ) as mock_context,
+    ):
         assert (
             await async_setup_component(
                 hass,
@@ -250,12 +271,14 @@ async def test_peer_cert(hass: HomeAssistant, tmp_path: Path) -> None:
         _setup_empty_ssl_pem_files, tmp_path
     )
 
-    with patch("ssl.SSLContext.load_cert_chain"), patch(
-        "ssl.SSLContext.load_verify_locations"
-    ) as mock_load_verify_locations, patch(
-        "homeassistant.util.ssl.server_context_modern",
-        side_effect=server_context_modern,
-    ) as mock_context:
+    with (
+        patch("ssl.SSLContext.load_cert_chain"),
+        patch("ssl.SSLContext.load_verify_locations") as mock_load_verify_locations,
+        patch(
+            "homeassistant.util.ssl.server_context_modern",
+            side_effect=server_context_modern,
+        ) as mock_context,
+    ):
         assert (
             await async_setup_component(
                 hass,
@@ -443,7 +466,9 @@ async def test_cors_defaults(hass: HomeAssistant) -> None:
 
 
 async def test_storing_config(
-    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator, unused_tcp_port_factory
+    hass: HomeAssistant,
+    aiohttp_client: ClientSessionGenerator,
+    unused_tcp_port_factory: Callable[[], int],
 ) -> None:
     """Test that we store last working config."""
     config = {
@@ -459,7 +484,7 @@ async def test_storing_config(
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=200))
     await hass.async_block_till_done()
 
-    restored = await hass.components.http.async_get_last_config()
+    restored = await http.async_get_last_config(hass)
     restored["trusted_proxies"][0] = ip_network(restored["trusted_proxies"][0])
 
     assert restored == http.HTTP_SCHEMA(config)
@@ -499,3 +524,24 @@ async def test_logging(
     response = await client.get("/api/states/logging.entity")
     assert response.status == HTTPStatus.OK
     assert "GET /api/states/logging.entity" not in caplog.text
+
+
+async def test_register_static_paths(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test registering a static path with old api."""
+    assert await async_setup_component(hass, "frontend", {})
+    path = str(Path(__file__).parent)
+    hass.http.register_static_path("/something", path)
+    client = await hass_client()
+    resp = await client.get("/something/__init__.py")
+    assert resp.status == HTTPStatus.OK
+
+    assert (
+        "Detected code that calls hass.http.register_static_path "
+        "which is deprecated because it does blocking I/O in the "
+        "event loop, instead call "
+        "`await hass.http.async_register_static_paths"
+    ) in caplog.text

@@ -1,7 +1,7 @@
 """Support for Minut Point sensors."""
+
 from __future__ import annotations
 
-from dataclasses import dataclass
 import logging
 
 from homeassistant.components.sensor import (
@@ -23,36 +23,22 @@ from .const import DOMAIN as POINT_DOMAIN, POINT_DISCOVERY_NEW
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass(frozen=True)
-class MinutPointRequiredKeysMixin:
-    """Mixin for required keys."""
-
-    precision: int
-
-
-@dataclass(frozen=True)
-class MinutPointSensorEntityDescription(
-    SensorEntityDescription, MinutPointRequiredKeysMixin
-):
-    """Describes MinutPoint sensor entity."""
-
-
-SENSOR_TYPES: tuple[MinutPointSensorEntityDescription, ...] = (
-    MinutPointSensorEntityDescription(
+SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
         key="temperature",
-        precision=1,
+        suggested_display_precision=1,
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
     ),
-    MinutPointSensorEntityDescription(
+    SensorEntityDescription(
         key="humidity",
-        precision=1,
+        suggested_display_precision=1,
         device_class=SensorDeviceClass.HUMIDITY,
         native_unit_of_measurement=PERCENTAGE,
     ),
-    MinutPointSensorEntityDescription(
+    SensorEntityDescription(
         key="sound",
-        precision=1,
+        suggested_display_precision=1,
         device_class=SensorDeviceClass.SOUND_PRESSURE,
         native_unit_of_measurement=UnitOfSoundPressure.WEIGHTED_DECIBEL_A,
     ),
@@ -85,10 +71,8 @@ async def async_setup_entry(
 class MinutPointSensor(MinutPointEntity, SensorEntity):
     """The platform class required by Home Assistant."""
 
-    entity_description: MinutPointSensorEntityDescription
-
     def __init__(
-        self, point_client, device_id, description: MinutPointSensorEntityDescription
+        self, point_client, device_id, description: SensorEntityDescription
     ) -> None:
         """Initialize the sensor."""
         super().__init__(point_client, device_id, description.device_class)
@@ -99,9 +83,5 @@ class MinutPointSensor(MinutPointEntity, SensorEntity):
         _LOGGER.debug("Update sensor value for %s", self)
         if self.is_updated:
             self._attr_native_value = await self.device.sensor(self.device_class)
-            if self.native_value is not None:
-                self._attr_native_value = round(
-                    self.native_value, self.entity_description.precision
-                )
             self._updated = parse_datetime(self.device.last_update)
         self.async_write_ha_state()

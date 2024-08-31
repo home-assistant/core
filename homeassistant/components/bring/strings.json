@@ -1,0 +1,88 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "email": "[%key:common::config_flow::data::email%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      },
+      "reauth_confirm": {
+        "title": "[%key:common::config_flow::title::reauth%]",
+        "description": "The Bring! integration needs to re-authenticate your account",
+        "data": {
+          "email": "[%key:common::config_flow::data::email%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    }
+  },
+  "exceptions": {
+    "todo_save_item_failed": {
+      "message": "Failed to save item {name} to Bring! list"
+    },
+    "todo_update_item_failed": {
+      "message": "Failed to update item {name} to Bring! list"
+    },
+    "todo_rename_item_failed": {
+      "message": "Failed to rename item {name} to Bring! list"
+    },
+    "todo_delete_item_failed": {
+      "message": "Failed to delete {count} item(s) from Bring! list"
+    },
+    "setup_request_exception": {
+      "message": "Failed to connect to server, try again later"
+    },
+    "setup_parse_exception": {
+      "message": "Failed to parse server response, try again later"
+    },
+    "setup_authentication_exception": {
+      "message": "Authentication failed for {email}, check your email and password"
+    },
+    "notify_missing_argument_item": {
+      "message": "Failed to perform action {service}. 'URGENT_MESSAGE' requires a value @ data['item']. Got None"
+    },
+    "notify_request_failed": {
+      "message": "Failed to send push notification for bring due to a connection error, try again later"
+    }
+  },
+  "services": {
+    "send_message": {
+      "name": "[%key:component::notify::services::notify::name%]",
+      "description": "Send a mobile push notification to members of a shared Bring! list.",
+      "fields": {
+        "entity_id": {
+          "name": "List",
+          "description": "Bring! list whose members (except sender) will be notified."
+        },
+        "message": {
+          "name": "Notification type",
+          "description": "Type of push notification to send to list members."
+        },
+        "item": {
+          "name": "Article (Required if message type `Urgent Message` selected)",
+          "description": "Article name to include in an urgent message e.g. `Urgent Message - Please buy Cilantro urgently`"
+        }
+      }
+    }
+  },
+  "selector": {
+    "notification_type_selector": {
+      "options": {
+        "going_shopping": "I'm going shopping! - Last chance to make changes",
+        "changed_list": "List updated - Take a look at the articles",
+        "shopping_done": "Shopping done - The fridge is well stocked",
+        "urgent_message": "Urgent Message - Please buy `Article name` urgently"
+      }
+    }
+  }
+}

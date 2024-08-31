@@ -1,11 +1,12 @@
 """Fixtures for Trafikverket Ferry integration tests."""
+
 from __future__ import annotations
 
 from datetime import datetime, timedelta
 from unittest.mock import patch
 
 import pytest
-from pytrafikverket.trafikverket_ferry import FerryStop
+from pytrafikverket.models import FerryStopModel
 
 from homeassistant.components.trafikverket_ferry.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -19,7 +20,7 @@ from tests.common import MockConfigEntry
 
 @pytest.fixture(name="load_int")
 async def load_integration_from_entry(
-    hass: HomeAssistant, get_ferries: list[FerryStop]
+    hass: HomeAssistant, get_ferries: list[FerryStopModel]
 ) -> MockConfigEntry:
     """Set up the Trafikverket Ferry integration in Home Assistant."""
     config_entry = MockConfigEntry(
@@ -43,40 +44,51 @@ async def load_integration_from_entry(
 
 
 @pytest.fixture(name="get_ferries")
-def fixture_get_ferries() -> list[FerryStop]:
+def fixture_get_ferries() -> list[FerryStopModel]:
     """Construct FerryStop Mock."""
 
-    depart1 = FerryStop(
-        "13",
-        False,
-        datetime(dt_util.now().year + 1, 5, 1, 12, 0, tzinfo=dt_util.UTC),
-        [""],
-        "0",
-        datetime(dt_util.now().year, 5, 1, 12, 0, tzinfo=dt_util.UTC),
-        "Harbor 1",
-        "Harbor 2",
+    depart1 = FerryStopModel(
+        ferry_stop_id="13",
+        ferry_stop_name="Harbor1lane",
+        short_name="Harle",
+        deleted=False,
+        departure_time=datetime(
+            dt_util.now().year + 1, 5, 1, 12, 0, tzinfo=dt_util.UTC
+        ),
+        other_information=[""],
+        deviation_id="0",
+        modified_time=datetime(dt_util.now().year, 5, 1, 12, 0, tzinfo=dt_util.UTC),
+        from_harbor_name="Harbor 1",
+        to_harbor_name="Harbor 2",
+        type_name="Turnaround",
     )
-    depart2 = FerryStop(
-        "14",
-        False,
-        datetime(dt_util.now().year + 1, 5, 1, 12, 0, tzinfo=dt_util.UTC)
+    depart2 = FerryStopModel(
+        ferry_stop_id="14",
+        ferry_stop_name="Harbor1lane",
+        short_name="Harle",
+        deleted=False,
+        departure_time=datetime(dt_util.now().year + 1, 5, 1, 12, 0, tzinfo=dt_util.UTC)
         + timedelta(minutes=15),
-        [""],
-        "0",
-        datetime(dt_util.now().year, 5, 1, 12, 0, tzinfo=dt_util.UTC),
-        "Harbor 1",
-        "Harbor 2",
+        other_information=[""],
+        deviation_id="0",
+        modified_time=datetime(dt_util.now().year, 5, 1, 12, 0, tzinfo=dt_util.UTC),
+        from_harbor_name="Harbor 1",
+        to_harbor_name="Harbor 2",
+        type_name="Turnaround",
     )
-    depart3 = FerryStop(
-        "15",
-        False,
-        datetime(dt_util.now().year + 1, 5, 1, 12, 0, tzinfo=dt_util.UTC)
+    depart3 = FerryStopModel(
+        ferry_stop_id="15",
+        ferry_stop_name="Harbor1lane",
+        short_name="Harle",
+        deleted=False,
+        departure_time=datetime(dt_util.now().year + 1, 5, 1, 12, 0, tzinfo=dt_util.UTC)
         + timedelta(minutes=30),
-        [""],
-        "0",
-        datetime(dt_util.now().year, 5, 1, 12, 0, tzinfo=dt_util.UTC),
-        "Harbor 1",
-        "Harbor 2",
+        other_information=[""],
+        deviation_id="0",
+        modified_time=datetime(dt_util.now().year, 5, 1, 12, 0, tzinfo=dt_util.UTC),
+        from_harbor_name="Harbor 1",
+        to_harbor_name="Harbor 2",
+        type_name="Turnaround",
     )
 
     return [depart1, depart2, depart3]

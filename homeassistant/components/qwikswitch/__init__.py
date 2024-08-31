@@ -1,4 +1,5 @@
 """Support for Qwikswitch devices."""
+
 from __future__ import annotations
 
 import logging
@@ -224,7 +225,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 async_dispatcher_send(hass, qspacket[QS_ID], qspacket)
 
         # Update all ha_objects
-        hass.async_add_job(qsusb.update_from_devices)
+        hass.async_create_task(qsusb.update_from_devices())
 
     @callback
     def async_start(_):

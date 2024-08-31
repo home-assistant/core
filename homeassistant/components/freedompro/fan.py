@@ -1,4 +1,5 @@
 """Support for Freedompro fan."""
+
 from __future__ import annotations
 
 import json
@@ -39,6 +40,7 @@ class FreedomproFan(CoordinatorEntity[FreedomproDataUpdateCoordinator], FanEntit
     _attr_name = None
     _attr_is_on = False
     _attr_percentage = 0
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self,
@@ -61,8 +63,11 @@ class FreedomproFan(CoordinatorEntity[FreedomproDataUpdateCoordinator], FanEntit
             model=device["type"],
             name=device["name"],
         )
+        self._attr_supported_features = (
+            FanEntityFeature.TURN_OFF | FanEntityFeature.TURN_ON
+        )
         if "rotationSpeed" in self._characteristics:
-            self._attr_supported_features = FanEntityFeature.SET_SPEED
+            self._attr_supported_features |= FanEntityFeature.SET_SPEED
 
     @property
     def is_on(self) -> bool | None:

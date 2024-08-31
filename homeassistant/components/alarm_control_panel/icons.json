@@ -1,0 +1,40 @@
+{
+  "entity_component": {
+    "_": {
+      "default": "mdi:shield",
+      "state": {
+        "armed_away": "mdi:shield-lock",
+        "armed_custom_bypass": "mdi:security",
+        "armed_home": "mdi:shield-home",
+        "armed_night": "mdi:shield-moon",
+        "armed_vacation": "mdi:shield-airplane",
+        "disarmed": "mdi:shield-off",
+        "pending": "mdi:shield-outline",
+        "triggered": "mdi:bell-ring"
+      }
+    }
+  },
+  "services": {
+    "alarm_arm_away": {
+      "service": "mdi:shield-lock"
+    },
+    "alarm_arm_home": {
+      "service": "mdi:shield-home"
+    },
+    "alarm_arm_night": {
+      "service": "mdi:shield-moon"
+    },
+    "alarm_arm_custom_bypass": {
+      "service": "mdi:security"
+    },
+    "alarm_disarm": {
+      "service": "mdi:shield-off"
+    },
+    "alarm_trigger": {
+      "service": "mdi:bell-ring"
+    },
+    "alarm_arm_vacation": {
+      "service": "mdi:shield-airplane"
+    }
+  }
+}

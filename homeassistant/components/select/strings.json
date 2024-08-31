@@ -13,6 +13,13 @@
     },
     "condition_type": {
       "selected_option": "Current {entity_name} selected option"
+    },
+    "extra_fields": {
+      "for": "[%key:common::device_automation::extra_fields::for%]",
+      "to": "[%key:common::device_automation::extra_fields::to%]",
+      "cycle": "Cycle",
+      "from": "From",
+      "option": "Option"
     }
   },
   "entity_component": {
@@ -63,6 +70,11 @@
           "description": "If the option should cycle from the first to the last."
         }
       }
+    }
+  },
+  "exceptions": {
+    "not_valid_option": {
+      "message": "Option {option} is not valid for entity {entity_id}, valid options are: {options}."
     }
   }
 }

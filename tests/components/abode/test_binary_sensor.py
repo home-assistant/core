@@ -1,4 +1,5 @@
 """Tests for the Abode binary sensor device."""
+
 from homeassistant.components.abode import ATTR_DEVICE_ID
 from homeassistant.components.abode.const import ATTRIBUTION
 from homeassistant.components.binary_sensor import (

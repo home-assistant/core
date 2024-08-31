@@ -1,4 +1,5 @@
 """Config flow to configure Coolmaster."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -7,10 +8,9 @@ from pycoolmasternet_async import CoolMasterNet
 import voluptuous as vol
 
 from homeassistant.components.climate import HVACMode
-from homeassistant.config_entries import ConfigFlow
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
 
 from .const import CONF_SUPPORTED_MODES, CONF_SWING_SUPPORT, DEFAULT_PORT, DOMAIN
 
@@ -46,7 +46,7 @@ class CoolmasterConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
     @callback
-    def _async_get_entry(self, data: dict[str, Any]) -> FlowResult:
+    def _async_get_entry(self, data: dict[str, Any]) -> ConfigFlowResult:
         supported_modes = [
             key for (key, value) in data.items() if key in AVAILABLE_MODES and value
         ]
@@ -62,7 +62,7 @@ class CoolmasterConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
         if user_input is None:
             return self.async_show_form(step_id="user", data_schema=DATA_SCHEMA)

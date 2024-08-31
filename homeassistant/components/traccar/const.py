@@ -1,4 +1,4 @@
-"""Constants for Traccar integration."""
+"""Constants for Traccar client integration."""
 
 DOMAIN = "traccar"
 

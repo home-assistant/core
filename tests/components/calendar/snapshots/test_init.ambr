@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_list_events_service_duration[calendar.calendar_1-00:15:00-get_events]
+# name: test_list_events_service_duration[frozen_time-calendar.calendar_1-00:15:00-get_events]
   dict({
     'calendar.calendar_1': dict({
       'events': list([
@@ -7,61 +7,31 @@
     }),
   })
 # ---
-# name: test_list_events_service_duration[calendar.calendar_1-00:15:00-list_events]
-  dict({
-    'events': list([
-    ]),
-  })
-# ---
-# name: test_list_events_service_duration[calendar.calendar_1-01:00:00-get_events]
+# name: test_list_events_service_duration[frozen_time-calendar.calendar_1-01:00:00-get_events]
   dict({
     'calendar.calendar_1': dict({
       'events': list([
         dict({
           'description': 'Future Description',
-          'end': '2023-10-19T08:20:05-07:00',
+          'end': '2023-10-19T09:20:05-06:00',
           'location': 'Future Location',
-          'start': '2023-10-19T07:20:05-07:00',
+          'start': '2023-10-19T08:20:05-06:00',
           'summary': 'Future Event',
         }),
       ]),
     }),
   })
 # ---
-# name: test_list_events_service_duration[calendar.calendar_1-01:00:00-list_events]
-  dict({
-    'events': list([
-      dict({
-        'description': 'Future Description',
-        'end': '2023-10-19T08:20:05-07:00',
-        'location': 'Future Location',
-        'start': '2023-10-19T07:20:05-07:00',
-        'summary': 'Future Event',
-      }),
-    ]),
-  })
-# ---
-# name: test_list_events_service_duration[calendar.calendar_2-00:15:00-get_events]
+# name: test_list_events_service_duration[frozen_time-calendar.calendar_2-00:15:00-get_events]
   dict({
     'calendar.calendar_2': dict({
       'events': list([
         dict({
-          'end': '2023-10-19T07:20:05-07:00',
-          'start': '2023-10-19T06:20:05-07:00',
+          'end': '2023-10-19T08:20:05-06:00',
+          'start': '2023-10-19T07:20:05-06:00',
           'summary': 'Current Event',
         }),
       ]),
     }),
-  })
-# ---
-# name: test_list_events_service_duration[calendar.calendar_2-00:15:00-list_events]
-  dict({
-    'events': list([
-      dict({
-        'end': '2023-10-19T07:20:05-07:00',
-        'start': '2023-10-19T06:20:05-07:00',
-        'summary': 'Current Event',
-      }),
-    ]),
   })
 # ---

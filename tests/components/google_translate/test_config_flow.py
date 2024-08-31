@@ -1,4 +1,5 @@
 """Test the Google Translate text-to-speech config flow."""
+
 from unittest.mock import AsyncMock
 
 import pytest
@@ -19,7 +20,7 @@ async def test_user_step(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> No
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
 
     result = await hass.config_entries.flow.async_configure(
@@ -31,7 +32,7 @@ async def test_user_step(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> No
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Google Translate text-to-speech"
     assert result["data"] == {
         CONF_LANG: "de",
@@ -52,7 +53,7 @@ async def test_already_configured(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
 
     result = await hass.config_entries.flow.async_configure(
@@ -63,7 +64,7 @@ async def test_already_configured(
         },
     )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert len(mock_setup_entry.mock_calls) == 0
 
@@ -76,7 +77,7 @@ async def test_onboarding_flow(
         DOMAIN, context={"source": "onboarding"}
     )
 
-    assert result.get("type") == FlowResultType.CREATE_ENTRY
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
     assert result.get("title") == "Google Translate text-to-speech"
     assert result.get("data") == {
         CONF_LANG: "en",

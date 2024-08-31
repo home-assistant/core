@@ -1,4 +1,5 @@
 """Fixtures for Uptime integration tests."""
+
 from __future__ import annotations
 
 from collections.abc import Generator
@@ -22,7 +23,7 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[None, None, None]:
+def mock_setup_entry() -> Generator[None]:
     """Mock setting up a config entry."""
     with patch("homeassistant.components.uptime.async_setup_entry", return_value=True):
         yield

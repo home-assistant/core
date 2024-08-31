@@ -1,4 +1,5 @@
 """Platform for sensor integration."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -6,7 +7,6 @@ from dataclasses import dataclass
 from enum import StrEnum
 from typing import Any, Generic, TypeVar
 
-from devolo_plc_api.device import Device
 from devolo_plc_api.device_api import ConnectedStationInfo, NeighborAPInfo
 from devolo_plc_api.plcnet_api import REMOTE, DataRate, LogicalNetwork
 
@@ -16,21 +16,22 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory, UnitOfDataRate
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
+from . import DevoloHomeNetworkConfigEntry
 from .const import (
     CONNECTED_PLC_DEVICES,
     CONNECTED_WIFI_CLIENTS,
-    DOMAIN,
     NEIGHBORING_WIFI_NETWORKS,
     PLC_RX_RATE,
     PLC_TX_RATE,
 )
 from .entity import DevoloCoordinatorEntity
+
+PARALLEL_UPDATES = 1
 
 _CoordinatorDataT = TypeVar(
     "_CoordinatorDataT",
@@ -49,18 +50,13 @@ class DataRateDirection(StrEnum):
     TX = "tx_rate"
 
 
-@dataclass(frozen=True)
-class DevoloSensorRequiredKeysMixin(Generic[_CoordinatorDataT]):
-    """Mixin for required keys."""
-
-    value_func: Callable[[_CoordinatorDataT], float]
-
-
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class DevoloSensorEntityDescription(
-    SensorEntityDescription, DevoloSensorRequiredKeysMixin[_CoordinatorDataT]
+    SensorEntityDescription, Generic[_CoordinatorDataT]
 ):
     """Describes devolo sensor entity."""
+
+    value_func: Callable[[_CoordinatorDataT], float]
 
 
 SENSOR_TYPES: dict[str, DevoloSensorEntityDescription[Any]] = {
@@ -68,14 +64,12 @@ SENSOR_TYPES: dict[str, DevoloSensorEntityDescription[Any]] = {
         key=CONNECTED_PLC_DEVICES,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        icon="mdi:lan",
         value_func=lambda data: len(
             {device.mac_address_from for device in data.data_rates}
         ),
     ),
     CONNECTED_WIFI_CLIENTS: DevoloSensorEntityDescription[list[ConnectedStationInfo]](
         key=CONNECTED_WIFI_CLIENTS,
-        icon="mdi:wifi",
         state_class=SensorStateClass.MEASUREMENT,
         value_func=len,
     ),
@@ -83,7 +77,6 @@ SENSOR_TYPES: dict[str, DevoloSensorEntityDescription[Any]] = {
         key=NEIGHBORING_WIFI_NETWORKS,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        icon="mdi:wifi-marker",
         value_func=len,
     ),
     PLC_RX_RATE: DevoloSensorEntityDescription[DataRate](
@@ -108,13 +101,13 @@ SENSOR_TYPES: dict[str, DevoloSensorEntityDescription[Any]] = {
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: DevoloHomeNetworkConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Get all devices and sensors and setup them via config entry."""
-    device: Device = hass.data[DOMAIN][entry.entry_id]["device"]
-    coordinators: dict[str, DataUpdateCoordinator[Any]] = hass.data[DOMAIN][
-        entry.entry_id
-    ]["coordinators"]
+    device = entry.runtime_data.device
+    coordinators = entry.runtime_data.coordinators
 
     entities: list[BaseDevoloSensorEntity[Any, Any]] = []
     if device.plcnet:
@@ -123,7 +116,6 @@ async def async_setup_entry(
                 entry,
                 coordinators[CONNECTED_PLC_DEVICES],
                 SENSOR_TYPES[CONNECTED_PLC_DEVICES],
-                device,
             )
         )
         network = await device.plcnet.async_get_network_overview()
@@ -136,7 +128,6 @@ async def async_setup_entry(
                     entry,
                     coordinators[CONNECTED_PLC_DEVICES],
                     SENSOR_TYPES[PLC_TX_RATE],
-                    device,
                     peer,
                 )
             )
@@ -145,7 +136,6 @@ async def async_setup_entry(
                     entry,
                     coordinators[CONNECTED_PLC_DEVICES],
                     SENSOR_TYPES[PLC_RX_RATE],
-                    device,
                     peer,
                 )
             )
@@ -155,7 +145,6 @@ async def async_setup_entry(
                 entry,
                 coordinators[CONNECTED_WIFI_CLIENTS],
                 SENSOR_TYPES[CONNECTED_WIFI_CLIENTS],
-                device,
             )
         )
         entities.append(
@@ -163,7 +152,6 @@ async def async_setup_entry(
                 entry,
                 coordinators[NEIGHBORING_WIFI_NETWORKS],
                 SENSOR_TYPES[NEIGHBORING_WIFI_NETWORKS],
-                device,
             )
         )
     async_add_entities(entities)
@@ -178,14 +166,13 @@ class BaseDevoloSensorEntity(
 
     def __init__(
         self,
-        entry: ConfigEntry,
+        entry: DevoloHomeNetworkConfigEntry,
         coordinator: DataUpdateCoordinator[_CoordinatorDataT],
         description: DevoloSensorEntityDescription[_ValueDataT],
-        device: Device,
     ) -> None:
         """Initialize entity."""
         self.entity_description = description
-        super().__init__(entry, coordinator, device)
+        super().__init__(entry, coordinator)
 
 
 class DevoloSensorEntity(BaseDevoloSensorEntity[_CoordinatorDataT, _CoordinatorDataT]):
@@ -206,14 +193,13 @@ class DevoloPlcDataRateSensorEntity(BaseDevoloSensorEntity[LogicalNetwork, DataR
 
     def __init__(
         self,
-        entry: ConfigEntry,
+        entry: DevoloHomeNetworkConfigEntry,
         coordinator: DataUpdateCoordinator[LogicalNetwork],
         description: DevoloSensorEntityDescription[DataRate],
-        device: Device,
         peer: str,
     ) -> None:
         """Initialize entity."""
-        super().__init__(entry, coordinator, description, device)
+        super().__init__(entry, coordinator, description)
         self._peer = peer
         peer_device = next(
             device

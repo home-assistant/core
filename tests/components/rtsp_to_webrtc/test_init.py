@@ -11,7 +11,7 @@ import pytest
 import rtsp_to_webrtc
 
 from homeassistant.components.rtsp_to_webrtc import CONF_STUN_SERVER, DOMAIN
-from homeassistant.components.websocket_api.const import TYPE_RESULT
+from homeassistant.components.websocket_api import TYPE_RESULT
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component

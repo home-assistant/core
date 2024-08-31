@@ -1,4 +1,5 @@
 """Test the Met integration init."""
+
 import pytest
 
 from homeassistant.components.met.const import (

@@ -1,6 +1,8 @@
 """Constants for AccuWeather integration."""
+
 from __future__ import annotations
 
+from datetime import timedelta
 from typing import Final
 
 from homeassistant.components.weather import (
@@ -26,10 +28,8 @@ ATTR_CATEGORY: Final = "Category"
 ATTR_DIRECTION: Final = "Direction"
 ATTR_ENGLISH: Final = "English"
 ATTR_LEVEL: Final = "level"
-ATTR_FORECAST: Final = "forecast"
 ATTR_SPEED: Final = "Speed"
 ATTR_VALUE: Final = "Value"
-CONF_FORECAST: Final = "forecast"
 DOMAIN: Final = "accuweather"
 MANUFACTURER: Final = "AccuWeather, Inc."
 MAX_FORECAST_DAYS: Final = 4
@@ -55,3 +55,5 @@ CONDITION_MAP = {
     for cond_ha, cond_codes in CONDITION_CLASSES.items()
     for cond_code in cond_codes
 }
+UPDATE_INTERVAL_OBSERVATION = timedelta(minutes=40)
+UPDATE_INTERVAL_DAILY_FORECAST = timedelta(hours=6)

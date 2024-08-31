@@ -1,4 +1,5 @@
 """Constants for Google Assistant."""
+
 from homeassistant.components import (
     alarm_control_panel,
     binary_sensor,
@@ -22,6 +23,7 @@ from homeassistant.components import (
     sensor,
     switch,
     vacuum,
+    valve,
     water_heater,
 )
 
@@ -65,6 +67,7 @@ DEFAULT_EXPOSED_DOMAINS = [
     "sensor",
     "switch",
     "vacuum",
+    "valve",
     "water_heater",
 ]
 
@@ -80,6 +83,7 @@ TYPE_DOOR = f"{PREFIX_TYPES}DOOR"
 TYPE_DOORBELL = f"{PREFIX_TYPES}DOORBELL"
 TYPE_FAN = f"{PREFIX_TYPES}FAN"
 TYPE_GARAGE = f"{PREFIX_TYPES}GARAGE"
+TYPE_GATE = f"{PREFIX_TYPES}GATE"
 TYPE_HUMIDIFIER = f"{PREFIX_TYPES}HUMIDIFIER"
 TYPE_LIGHT = f"{PREFIX_TYPES}LIGHT"
 TYPE_LOCK = f"{PREFIX_TYPES}LOCK"
@@ -95,6 +99,7 @@ TYPE_THERMOSTAT = f"{PREFIX_TYPES}THERMOSTAT"
 TYPE_TV = f"{PREFIX_TYPES}TV"
 TYPE_WINDOW = f"{PREFIX_TYPES}WINDOW"
 TYPE_VACUUM = f"{PREFIX_TYPES}VACUUM"
+TYPE_VALVE = f"{PREFIX_TYPES}VALVE"
 TYPE_WATERHEATER = f"{PREFIX_TYPES}WATERHEATER"
 
 SERVICE_REQUEST_SYNC = "request_sync"
@@ -150,6 +155,7 @@ DOMAIN_TO_GOOGLE_TYPES = {
     sensor.DOMAIN: TYPE_SENSOR,
     switch.DOMAIN: TYPE_SWITCH,
     vacuum.DOMAIN: TYPE_VACUUM,
+    valve.DOMAIN: TYPE_VALVE,
     water_heater.DOMAIN: TYPE_WATERHEATER,
 }
 
@@ -166,7 +172,7 @@ DEVICE_CLASS_TO_GOOGLE_TYPES = {
     (cover.DOMAIN, cover.CoverDeviceClass.CURTAIN): TYPE_CURTAIN,
     (cover.DOMAIN, cover.CoverDeviceClass.DOOR): TYPE_DOOR,
     (cover.DOMAIN, cover.CoverDeviceClass.GARAGE): TYPE_GARAGE,
-    (cover.DOMAIN, cover.CoverDeviceClass.GATE): TYPE_GARAGE,
+    (cover.DOMAIN, cover.CoverDeviceClass.GATE): TYPE_GATE,
     (cover.DOMAIN, cover.CoverDeviceClass.SHUTTER): TYPE_SHUTTER,
     (cover.DOMAIN, cover.CoverDeviceClass.WINDOW): TYPE_WINDOW,
     (event.DOMAIN, event.EventDeviceClass.DOORBELL): TYPE_DOORBELL,

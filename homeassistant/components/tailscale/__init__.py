@@ -1,4 +1,5 @@
 """The Tailscale integration."""
+
 from __future__ import annotations
 
 from tailscale import Device as TailscaleDevice

@@ -1,7 +1,7 @@
 # serializer version: 1
 # name: test_diagnostics
   dict({
-    'AUTH CHECK': dict({
+    'auth_check': dict({
       'agent': False,
       'dealer_group': 'yale',
       'dealer_id': '605',
@@ -16,7 +16,7 @@
       'user_id': '**REDACTED**',
       'xml_version': '2',
     }),
-    'CYCLE': dict({
+    'cycle': dict({
       'alarm_event_latest': None,
       'capture_latest': None,
       'device_status': list([
@@ -572,6 +572,65 @@
           'type': 'device_type.door_lock',
           'type_no': '72',
         }),
+        dict({
+          'address': '**REDACTED**',
+          'area': '1',
+          'bypass': '0',
+          'device_group': '001',
+          'device_id': '**REDACTED**',
+          'device_id2': '',
+          'extension': None,
+          'group_id': None,
+          'group_name': None,
+          'ipcam_trigger_by_zone1': None,
+          'ipcam_trigger_by_zone2': None,
+          'ipcam_trigger_by_zone3': None,
+          'ipcam_trigger_by_zone4': None,
+          'mac': '**REDACTED**',
+          'minigw_configuration_data': '',
+          'minigw_lock_status': '',
+          'minigw_number_of_credentials_supported': '',
+          'minigw_product_data': '',
+          'minigw_protocol': '',
+          'minigw_syncing': '',
+          'name': '**REDACTED**',
+          'no': '8',
+          'rf': None,
+          'rssi': '9',
+          'scene_restore': None,
+          'scene_trigger': '0',
+          'sresp_button_1': None,
+          'sresp_button_2': None,
+          'sresp_button_3': None,
+          'sresp_button_4': None,
+          'status1': '',
+          'status2': None,
+          'status_dim_level': None,
+          'status_fault': list([
+          ]),
+          'status_hue': None,
+          'status_humi': None,
+          'status_lux': '',
+          'status_open': list([
+          ]),
+          'status_power': None,
+          'status_saturation': None,
+          'status_switch': None,
+          'status_temp': 21,
+          'status_temp_format': 'C',
+          'status_total_energy': None,
+          'thermo_c_setpoint': None,
+          'thermo_c_setpoint_away': None,
+          'thermo_fan_mode': None,
+          'thermo_mode': None,
+          'thermo_schd_setting': None,
+          'thermo_setpoint': None,
+          'thermo_setpoint_away': None,
+          'trigger_by_zone': list([
+          ]),
+          'type': 'device_type.temperature_sensor',
+          'type_no': '40',
+        }),
       ]),
       'model': list([
         dict({
@@ -591,7 +650,7 @@
         'utc_event_time': None,
       }),
     }),
-    'DEVICES': list([
+    'devices': list([
       dict({
         'address': '**REDACTED**',
         'area': '1',
@@ -1130,8 +1189,67 @@
         'type': 'device_type.door_lock',
         'type_no': '72',
       }),
+      dict({
+        'address': '**REDACTED**',
+        'area': '1',
+        'bypass': '0',
+        'device_group': '001',
+        'device_id': '**REDACTED**',
+        'device_id2': '',
+        'extension': None,
+        'group_id': None,
+        'group_name': None,
+        'ipcam_trigger_by_zone1': None,
+        'ipcam_trigger_by_zone2': None,
+        'ipcam_trigger_by_zone3': None,
+        'ipcam_trigger_by_zone4': None,
+        'mac': '**REDACTED**',
+        'minigw_configuration_data': '',
+        'minigw_lock_status': '',
+        'minigw_number_of_credentials_supported': '',
+        'minigw_product_data': '',
+        'minigw_protocol': '',
+        'minigw_syncing': '',
+        'name': '**REDACTED**',
+        'no': '8',
+        'rf': None,
+        'rssi': '9',
+        'scene_restore': None,
+        'scene_trigger': '0',
+        'sresp_button_1': None,
+        'sresp_button_2': None,
+        'sresp_button_3': None,
+        'sresp_button_4': None,
+        'status1': '',
+        'status2': None,
+        'status_dim_level': None,
+        'status_fault': list([
+        ]),
+        'status_hue': None,
+        'status_humi': None,
+        'status_lux': '',
+        'status_open': list([
+        ]),
+        'status_power': None,
+        'status_saturation': None,
+        'status_switch': None,
+        'status_temp': 21,
+        'status_temp_format': 'C',
+        'status_total_energy': None,
+        'thermo_c_setpoint': None,
+        'thermo_c_setpoint_away': None,
+        'thermo_fan_mode': None,
+        'thermo_mode': None,
+        'thermo_schd_setting': None,
+        'thermo_setpoint': None,
+        'thermo_setpoint_away': None,
+        'trigger_by_zone': list([
+        ]),
+        'type': 'device_type.temperature_sensor',
+        'type_no': '40',
+      }),
     ]),
-    'HISTORY': list([
+    'history': list([
       dict({
         'area': 1,
         'cid': '18180701000',
@@ -1273,14 +1391,14 @@
         'zone': 1,
       }),
     ]),
-    'MODE': list([
+    'mode': list([
       dict({
         'area': '1',
         'mode': 'disarm',
       }),
     ]),
-    'ONLINE': 'online',
-    'PANEL INFO': dict({
+    'online': 'online',
+    'panel_info': dict({
       'SMS_Balance': '50',
       'contact': '',
       'dealer_name': 'Poland',
@@ -1298,7 +1416,7 @@
       'zb_version': '4.1.2.6.2',
       'zw_version': '',
     }),
-    'STATUS': dict({
+    'status': dict({
       'acfail': 'main.normal',
       'battery': 'main.normal',
       'gsm_rssi': '0',

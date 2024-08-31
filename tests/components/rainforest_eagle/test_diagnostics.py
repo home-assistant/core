@@ -1,4 +1,5 @@
 """Test the Rainforest Eagle diagnostics."""
+
 from homeassistant.components.diagnostics import REDACTED
 from homeassistant.components.rainforest_eagle.const import (
     CONF_CLOUD_ID,

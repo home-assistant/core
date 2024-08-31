@@ -1,4 +1,5 @@
 """Tests for Broadlink heartbeats."""
+
 from unittest.mock import call, patch
 
 import pytest
@@ -50,7 +51,7 @@ async def test_heartbeat_trigger_right_time(hass: HomeAssistant) -> None:
         async_fire_time_changed(
             hass, dt_util.utcnow() + BroadlinkHeartbeat.HEARTBEAT_INTERVAL
         )
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     assert mock_ping.call_count == 1
     assert mock_ping.call_args == call(device.host)
@@ -68,7 +69,7 @@ async def test_heartbeat_do_not_trigger_before_time(hass: HomeAssistant) -> None
             hass,
             dt_util.utcnow() + BroadlinkHeartbeat.HEARTBEAT_INTERVAL // 2,
         )
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     assert mock_ping.call_count == 0
 
@@ -87,6 +88,7 @@ async def test_heartbeat_unload(hass: HomeAssistant) -> None:
         async_fire_time_changed(
             hass, dt_util.utcnow() + BroadlinkHeartbeat.HEARTBEAT_INTERVAL
         )
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     assert mock_ping.call_count == 0
 
@@ -107,7 +109,7 @@ async def test_heartbeat_do_not_unload(hass: HomeAssistant) -> None:
         async_fire_time_changed(
             hass, dt_util.utcnow() + BroadlinkHeartbeat.HEARTBEAT_INTERVAL
         )
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     assert mock_ping.call_count == 1
     assert mock_ping.call_args == call(device_b.host)

@@ -1,4 +1,5 @@
 """The Wallbox integration."""
+
 from __future__ import annotations
 
 from wallbox import Wallbox
@@ -11,7 +12,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from .const import CONF_STATION, DOMAIN, UPDATE_INTERVAL
 from .coordinator import InvalidAuth, WallboxCoordinator
 
-PLATFORMS = [Platform.SENSOR, Platform.NUMBER, Platform.LOCK, Platform.SWITCH]
+PLATFORMS = [Platform.LOCK, Platform.NUMBER, Platform.SENSOR, Platform.SWITCH]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

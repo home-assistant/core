@@ -1,0 +1,9 @@
+{
+  "entity": {
+    "sensor": {
+      "watching": {
+        "default": "mdi:television-play"
+      }
+    }
+  }
+}

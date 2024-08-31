@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 from typing import Any
 
 from homeassistant.components.binary_sensor import (
@@ -45,14 +44,14 @@ class AmberPriceGridSensor(
     @property
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
-        return self.coordinator.data["grid"][self.entity_description.key]
+        return self.coordinator.data["grid"][self.entity_description.key]  # type: ignore[no-any-return]
 
 
 class AmberPriceSpikeBinarySensor(AmberPriceGridSensor):
     """Sensor to show single grid binary values."""
 
     @property
-    def icon(self):
+    def icon(self) -> str:
         """Return the sensor icon."""
         status = self.coordinator.data["grid"]["price_spike"]
         return PRICE_SPIKE_ICONS[status]
@@ -60,16 +59,28 @@ class AmberPriceSpikeBinarySensor(AmberPriceGridSensor):
     @property
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
-        return self.coordinator.data["grid"]["price_spike"] == "spike"
+        return self.coordinator.data["grid"]["price_spike"] == "spike"  # type: ignore[no-any-return]
 
     @property
-    def extra_state_attributes(self) -> Mapping[str, Any] | None:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return additional pieces of information about the price spike."""
 
         spike_status = self.coordinator.data["grid"]["price_spike"]
         return {
             "spike_status": spike_status,
         }
+
+
+class AmberDemandWindowBinarySensor(AmberPriceGridSensor):
+    """Sensor to show whether demand window is active."""
+
+    @property
+    def is_on(self) -> bool | None:
+        """Return true if the binary sensor is on."""
+        grid = self.coordinator.data["grid"]
+        if "demand_window" in grid:
+            return grid["demand_window"]  # type: ignore[no-any-return]
+        return None
 
 
 async def async_setup_entry(
@@ -80,10 +91,18 @@ async def async_setup_entry(
     """Set up a config entry."""
     coordinator: AmberUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
-    entities: list = []
     price_spike_description = BinarySensorEntityDescription(
         key="price_spike",
         name=f"{entry.title} - Price Spike",
     )
-    entities.append(AmberPriceSpikeBinarySensor(coordinator, price_spike_description))
-    async_add_entities(entities)
+    demand_window_description = BinarySensorEntityDescription(
+        key="demand_window",
+        name=f"{entry.title} - Demand Window",
+        translation_key="demand_window",
+    )
+    async_add_entities(
+        [
+            AmberPriceSpikeBinarySensor(coordinator, price_spike_description),
+            AmberDemandWindowBinarySensor(coordinator, demand_window_description),
+        ]
+    )

@@ -1,4 +1,5 @@
 """Constants for the AirVisual Pro integration."""
+
 import logging
 
 DOMAIN = "airvisual_pro"

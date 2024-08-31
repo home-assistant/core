@@ -7,6 +7,7 @@ from pydexcom import GlucoseReading
 
 from homeassistant.components.dexcom.const import CONF_SERVER, DOMAIN, SERVER_US
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, load_fixture
 
@@ -19,7 +20,7 @@ CONFIG = {
 GLUCOSE_READING = GlucoseReading(json.loads(load_fixture("data.json", "dexcom")))
 
 
-async def init_integration(hass) -> MockConfigEntry:
+async def init_integration(hass: HomeAssistant) -> MockConfigEntry:
     """Set up the Dexcom integration in Home Assistant."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -28,12 +29,15 @@ async def init_integration(hass) -> MockConfigEntry:
         data=CONFIG,
         options=None,
     )
-    with patch(
-        "homeassistant.components.dexcom.Dexcom.get_current_glucose_reading",
-        return_value=GLUCOSE_READING,
-    ), patch(
-        "homeassistant.components.dexcom.Dexcom.create_session",
-        return_value="test_session_id",
+    with (
+        patch(
+            "homeassistant.components.dexcom.Dexcom.get_current_glucose_reading",
+            return_value=GLUCOSE_READING,
+        ),
+        patch(
+            "homeassistant.components.dexcom.Dexcom.create_session",
+            return_value="test_session_id",
+        ),
     ):
         entry.add_to_hass(hass)
         await hass.config_entries.async_setup(entry.entry_id)

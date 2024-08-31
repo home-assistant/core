@@ -1,4 +1,5 @@
 """Sensor platform for Brottsplatskartan information."""
+
 from __future__ import annotations
 
 from collections import defaultdict
@@ -62,9 +63,9 @@ class BrottsplatskartanSensor(SensorEntity):
         """Update device state."""
 
         incident_counts: defaultdict[str, int] = defaultdict(int)
-        get_incidents: dict[str, list] | Literal[
-            False
-        ] = self._brottsplatskartan.get_incidents()
+        get_incidents: dict[str, list] | Literal[False] = (
+            self._brottsplatskartan.get_incidents()
+        )
 
         if get_incidents is False:
             LOGGER.debug("Problems fetching incidents")

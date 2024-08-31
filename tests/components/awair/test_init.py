@@ -1,4 +1,5 @@
 """Test Awair init."""
+
 from unittest.mock import patch
 
 from homeassistant.core import HomeAssistant

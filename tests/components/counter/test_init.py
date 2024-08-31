@@ -1,5 +1,7 @@
 """The tests for the counter component."""
+
 import logging
+from typing import Any
 
 import pytest
 
@@ -36,7 +38,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @pytest.fixture
-def storage_setup(hass, hass_storage):
+def storage_setup(hass: HomeAssistant, hass_storage: dict[str, Any]):
     """Storage setup."""
 
     async def _storage(items=None, config=None):
@@ -282,7 +284,7 @@ async def test_initial_state_overrules_restore_state(hass: HomeAssistant) -> Non
         hass, (State("counter.test1", "11"), State("counter.test2", "-22"))
     )
 
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
 
     await async_setup_component(
         hass,
@@ -315,7 +317,7 @@ async def test_restore_state_overrules_initial_state(hass: HomeAssistant) -> Non
         ),
     )
 
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
 
     await async_setup_component(
         hass, DOMAIN, {DOMAIN: {"test1": {}, "test2": {CONF_INITIAL: 10}, "test3": {}}}
@@ -332,7 +334,7 @@ async def test_restore_state_overrules_initial_state(hass: HomeAssistant) -> Non
 
 async def test_no_initial_state_and_no_restore_state(hass: HomeAssistant) -> None:
     """Ensure that entity is create without initial and restore feature."""
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
 
     await async_setup_component(hass, DOMAIN, {DOMAIN: {"test1": {CONF_STEP: 5}}})
 
@@ -531,7 +533,10 @@ async def test_ws_delete(
 
 
 async def test_update_min_max(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, storage_setup
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    entity_registry: er.EntityRegistry,
+    storage_setup,
 ) -> None:
     """Test updating min/max updates the state."""
 
@@ -548,7 +553,6 @@ async def test_update_min_max(
 
     input_id = "from_storage"
     input_entity_id = f"{DOMAIN}.{input_id}"
-    entity_registry = er.async_get(hass)
 
     state = hass.states.get(input_entity_id)
     assert state is not None
@@ -619,7 +623,10 @@ async def test_update_min_max(
 
 
 async def test_create(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, storage_setup
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    entity_registry: er.EntityRegistry,
+    storage_setup,
 ) -> None:
     """Test creating counter using WS."""
 
@@ -629,7 +636,6 @@ async def test_create(
 
     counter_id = "new_counter"
     input_entity_id = f"{DOMAIN}.{counter_id}"
-    entity_registry = er.async_get(hass)
 
     state = hass.states.get(input_entity_id)
     assert state is None

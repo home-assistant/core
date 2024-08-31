@@ -1,6 +1,7 @@
 """Tests for the lifx integration light platform."""
 
 from datetime import timedelta
+from typing import Any
 from unittest.mock import patch
 
 import aiolifx_effects
@@ -11,15 +12,19 @@ from homeassistant.components.lifx import DOMAIN
 from homeassistant.components.lifx.const import ATTR_POWER
 from homeassistant.components.lifx.light import ATTR_INFRARED, ATTR_ZONES
 from homeassistant.components.lifx.manager import (
+    ATTR_CLOUD_SATURATION_MAX,
+    ATTR_CLOUD_SATURATION_MIN,
     ATTR_DIRECTION,
     ATTR_PALETTE,
     ATTR_SATURATION_MAX,
     ATTR_SATURATION_MIN,
+    ATTR_SKY_TYPE,
     ATTR_SPEED,
     ATTR_THEME,
     SERVICE_EFFECT_COLORLOOP,
     SERVICE_EFFECT_MORPH,
     SERVICE_EFFECT_MOVE,
+    SERVICE_EFFECT_SKY,
 )
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -62,6 +67,7 @@ from . import (
     _mocked_brightness_bulb,
     _mocked_bulb,
     _mocked_bulb_new_firmware,
+    _mocked_ceiling,
     _mocked_clean_bulb,
     _mocked_light_strip,
     _mocked_tile,
@@ -92,9 +98,11 @@ async def test_light_unique_id(
     )
     already_migrated_config_entry.add_to_hass(hass)
     bulb = _mocked_bulb()
-    with _patch_discovery(device=bulb), _patch_config_flow_try_connect(
-        device=bulb
-    ), _patch_device(device=bulb):
+    with (
+        _patch_discovery(device=bulb),
+        _patch_config_flow_try_connect(device=bulb),
+        _patch_device(device=bulb),
+    ):
         await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
         await hass.async_block_till_done()
 
@@ -118,9 +126,11 @@ async def test_light_unique_id_new_firmware(
     )
     already_migrated_config_entry.add_to_hass(hass)
     bulb = _mocked_bulb_new_firmware()
-    with _patch_discovery(device=bulb), _patch_config_flow_try_connect(
-        device=bulb
-    ), _patch_device(device=bulb):
+    with (
+        _patch_discovery(device=bulb),
+        _patch_config_flow_try_connect(device=bulb),
+        _patch_device(device=bulb),
+    ):
         await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
         await hass.async_block_till_done()
 
@@ -141,9 +151,11 @@ async def test_light_strip(hass: HomeAssistant) -> None:
     bulb = _mocked_light_strip()
     bulb.power_level = 65535
     bulb.color = [65535, 65535, 65535, 65535]
-    with _patch_discovery(device=bulb), _patch_config_flow_try_connect(
-        device=bulb
-    ), _patch_device(device=bulb):
+    with (
+        _patch_discovery(device=bulb),
+        _patch_config_flow_try_connect(device=bulb),
+        _patch_device(device=bulb),
+    ):
         await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
         await hass.async_block_till_done()
 
@@ -438,9 +450,11 @@ async def test_extended_multizone_messages(hass: HomeAssistant) -> None:
     bulb.color = [65535, 65535, 65535, 3500]
     bulb.color_zones = [(65535, 65535, 65535, 3500)] * 8
     bulb.zones_count = 8
-    with _patch_discovery(device=bulb), _patch_config_flow_try_connect(
-        device=bulb
-    ), _patch_device(device=bulb):
+    with (
+        _patch_discovery(device=bulb),
+        _patch_config_flow_try_connect(device=bulb),
+        _patch_device(device=bulb),
+    ):
         await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
         await hass.async_block_till_done()
 
@@ -663,6 +677,7 @@ async def test_extended_multizone_messages(hass: HomeAssistant) -> None:
         )
 
 
+@pytest.mark.usefixtures("mock_discovery")
 async def test_matrix_flame_morph_effects(hass: HomeAssistant) -> None:
     """Test the firmware flame and morph effects on a matrix device."""
     config_entry = MockConfigEntry(
@@ -672,14 +687,17 @@ async def test_matrix_flame_morph_effects(hass: HomeAssistant) -> None:
     bulb = _mocked_tile()
     bulb.power_level = 0
     bulb.color = [65535, 65535, 65535, 65535]
-    with _patch_discovery(device=bulb), _patch_config_flow_try_connect(
-        device=bulb
-    ), _patch_device(device=bulb):
+    with (
+        _patch_discovery(device=bulb),
+        _patch_config_flow_try_connect(device=bulb),
+        _patch_device(device=bulb),
+    ):
         await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
         await hass.async_block_till_done()
 
     entity_id = "light.my_bulb"
 
+    # FLAME effect test
     await hass.services.async_call(
         LIGHT_DOMAIN,
         "turn_on",
@@ -696,11 +714,15 @@ async def test_matrix_flame_morph_effects(hass: HomeAssistant) -> None:
         "effect": 3,
         "speed": 3,
         "palette": [],
+        "sky_type": None,
+        "cloud_saturation_min": None,
+        "cloud_saturation_max": None,
     }
     bulb.get_tile_effect.reset_mock()
     bulb.set_tile_effect.reset_mock()
     bulb.set_power.reset_mock()
 
+    # MORPH effect tests
     bulb.power_level = 0
     await hass.services.async_call(
         DOMAIN,
@@ -721,7 +743,7 @@ async def test_matrix_flame_morph_effects(hass: HomeAssistant) -> None:
         ],
     }
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=30))
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get(entity_id)
     assert state.state == STATE_ON
@@ -739,6 +761,9 @@ async def test_matrix_flame_morph_effects(hass: HomeAssistant) -> None:
             (8920, 65535, 32768, 3500),
             (10558, 65535, 32768, 3500),
         ],
+        "sky_type": None,
+        "cloud_saturation_min": None,
+        "cloud_saturation_max": None,
     }
     bulb.get_tile_effect.reset_mock()
     bulb.set_tile_effect.reset_mock()
@@ -777,7 +802,7 @@ async def test_matrix_flame_morph_effects(hass: HomeAssistant) -> None:
         ],
     }
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=30))
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get(entity_id)
     assert state.state == STATE_ON
@@ -797,12 +822,147 @@ async def test_matrix_flame_morph_effects(hass: HomeAssistant) -> None:
             (43690, 65535, 65535, 3500),
             (54613, 65535, 65535, 3500),
         ],
+        "sky_type": None,
+        "cloud_saturation_min": None,
+        "cloud_saturation_max": None,
     }
     bulb.get_tile_effect.reset_mock()
     bulb.set_tile_effect.reset_mock()
     bulb.set_power.reset_mock()
 
 
+@pytest.mark.usefixtures("mock_discovery")
+async def test_sky_effect(hass: HomeAssistant) -> None:
+    """Test the firmware sky effect on a ceiling device."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=SERIAL
+    )
+    config_entry.add_to_hass(hass)
+    bulb = _mocked_ceiling()
+    bulb.power_level = 0
+    bulb.color = [65535, 65535, 65535, 65535]
+    with (
+        _patch_discovery(device=bulb),
+        _patch_config_flow_try_connect(device=bulb),
+        _patch_device(device=bulb),
+    ):
+        await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
+        await hass.async_block_till_done()
+
+    entity_id = "light.my_bulb"
+
+    # SKY effect test
+    bulb.power_level = 0
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_EFFECT_SKY,
+        {
+            ATTR_ENTITY_ID: entity_id,
+            ATTR_PALETTE: [],
+            ATTR_SKY_TYPE: "Clouds",
+            ATTR_CLOUD_SATURATION_MAX: 180,
+            ATTR_CLOUD_SATURATION_MIN: 50,
+        },
+        blocking=True,
+    )
+
+    bulb.power_level = 65535
+    bulb.effect = {
+        "effect": "SKY",
+        "palette": [],
+        "sky_type": 2,
+        "cloud_saturation_min": 50,
+        "cloud_saturation_max": 180,
+    }
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=30))
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_ON
+
+    assert len(bulb.set_power.calls) == 1
+    assert len(bulb.set_tile_effect.calls) == 1
+    call_dict = bulb.set_tile_effect.calls[0][1]
+    call_dict.pop("callb")
+    assert call_dict == {
+        "effect": 5,
+        "speed": 50,
+        "palette": [],
+        "sky_type": 2,
+        "cloud_saturation_min": 50,
+        "cloud_saturation_max": 180,
+    }
+    bulb.get_tile_effect.reset_mock()
+    bulb.set_tile_effect.reset_mock()
+    bulb.set_power.reset_mock()
+
+    bulb.power_level = 0
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_EFFECT_SKY,
+        {
+            ATTR_ENTITY_ID: entity_id,
+            ATTR_PALETTE: [
+                (200, 100, 1, 3500),
+                (241, 100, 1, 3500),
+                (189, 100, 8, 3500),
+                (40, 100, 100, 3500),
+                (40, 50, 100, 3500),
+                (0, 0, 100, 6500),
+            ],
+            ATTR_SKY_TYPE: "Sunrise",
+            ATTR_CLOUD_SATURATION_MAX: 180,
+            ATTR_CLOUD_SATURATION_MIN: 50,
+        },
+        blocking=True,
+    )
+
+    bulb.power_level = 65535
+    bulb.effect = {
+        "effect": "SKY",
+        "palette": [
+            (200, 100, 1, 3500),
+            (241, 100, 1, 3500),
+            (189, 100, 8, 3500),
+            (40, 100, 100, 3500),
+            (40, 50, 100, 3500),
+            (0, 0, 100, 6500),
+        ],
+        "sky_type": 0,
+        "cloud_saturation_min": 50,
+        "cloud_saturation_max": 180,
+    }
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=30))
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_ON
+
+    assert len(bulb.set_power.calls) == 1
+    assert len(bulb.set_tile_effect.calls) == 1
+    call_dict = bulb.set_tile_effect.calls[0][1]
+    call_dict.pop("callb")
+    assert call_dict == {
+        "effect": 5,
+        "speed": 50,
+        "palette": [
+            (36408, 65535, 65535, 3500),
+            (43872, 65535, 65535, 3500),
+            (34406, 65535, 5243, 3500),
+            (7281, 65535, 65535, 3500),
+            (7281, 32768, 65535, 3500),
+            (0, 0, 65535, 6500),
+        ],
+        "sky_type": 0,
+        "cloud_saturation_min": 50,
+        "cloud_saturation_max": 180,
+    }
+    bulb.get_tile_effect.reset_mock()
+    bulb.set_tile_effect.reset_mock()
+    bulb.set_power.reset_mock()
+
+
+@pytest.mark.usefixtures("mock_discovery")
 async def test_lightstrip_move_effect(hass: HomeAssistant) -> None:
     """Test the firmware move effect on a light strip."""
     config_entry = MockConfigEntry(
@@ -813,9 +973,11 @@ async def test_lightstrip_move_effect(hass: HomeAssistant) -> None:
     bulb.product = 38
     bulb.power_level = 0
     bulb.color = [65535, 65535, 65535, 65535]
-    with _patch_discovery(device=bulb), _patch_config_flow_try_connect(
-        device=bulb
-    ), _patch_device(device=bulb):
+    with (
+        _patch_discovery(device=bulb),
+        _patch_config_flow_try_connect(device=bulb),
+        _patch_device(device=bulb),
+    ):
         await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
         await hass.async_block_till_done()
 
@@ -859,7 +1021,7 @@ async def test_lightstrip_move_effect(hass: HomeAssistant) -> None:
     bulb.power_level = 65535
     bulb.effect = {"name": "MOVE", "speed": 4.5, "direction": "Left"}
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=30))
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get(entity_id)
     assert state.state == STATE_ON
@@ -910,9 +1072,11 @@ async def test_color_light_with_temp(
     bulb = _mocked_bulb()
     bulb.power_level = 65535
     bulb.color = [65535, 65535, 65535, 65535]
-    with _patch_discovery(device=bulb), _patch_config_flow_try_connect(
-        device=bulb
-    ), _patch_device(device=bulb):
+    with (
+        _patch_discovery(device=bulb),
+        _patch_config_flow_try_connect(device=bulb),
+        _patch_device(device=bulb),
+    ):
         await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
         await hass.async_block_till_done()
 
@@ -1071,9 +1235,11 @@ async def test_white_bulb(hass: HomeAssistant) -> None:
     bulb = _mocked_white_bulb()
     bulb.power_level = 65535
     bulb.color = [32000, None, 32000, 6000]
-    with _patch_discovery(device=bulb), _patch_config_flow_try_connect(
-        device=bulb
-    ), _patch_device(device=bulb):
+    with (
+        _patch_discovery(device=bulb),
+        _patch_config_flow_try_connect(device=bulb),
+        _patch_device(device=bulb),
+    ):
         await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
         await hass.async_block_till_done()
 
@@ -1119,6 +1285,7 @@ async def test_white_bulb(hass: HomeAssistant) -> None:
     bulb.set_color.reset_mock()
 
 
+@pytest.mark.usefixtures("mock_discovery")
 async def test_config_zoned_light_strip_fails(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
@@ -1133,7 +1300,7 @@ async def test_config_zoned_light_strip_fails(
     class MockFailingLifxCommand:
         """Mock a lifx command that fails on the 2nd try."""
 
-        def __init__(self, bulb, **kwargs):
+        def __init__(self, bulb, **kwargs: Any) -> None:
             """Init command."""
             self.bulb = bulb
             self.call_count = 0
@@ -1154,7 +1321,7 @@ async def test_config_zoned_light_strip_fails(
         assert hass.states.get(entity_id).state == STATE_OFF
 
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=30))
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
         assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 
 
@@ -1172,7 +1339,7 @@ async def test_legacy_zoned_light_strip(
     class MockPopulateLifxZonesCommand:
         """Mock populating the number of zones."""
 
-        def __init__(self, bulb, **kwargs):
+        def __init__(self, bulb, **kwargs: Any) -> None:
             """Init command."""
             self.bulb = bulb
             self.call_count = 0
@@ -1251,9 +1418,11 @@ async def test_brightness_bulb(hass: HomeAssistant) -> None:
     bulb = _mocked_brightness_bulb()
     bulb.power_level = 65535
     bulb.color = [32000, None, 32000, 6000]
-    with _patch_discovery(device=bulb), _patch_config_flow_try_connect(
-        device=bulb
-    ), _patch_device(device=bulb):
+    with (
+        _patch_discovery(device=bulb),
+        _patch_config_flow_try_connect(device=bulb),
+        _patch_device(device=bulb),
+    ):
         await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
         await hass.async_block_till_done()
 
@@ -1298,9 +1467,11 @@ async def test_transitions_brightness_only(hass: HomeAssistant) -> None:
     bulb = _mocked_brightness_bulb()
     bulb.power_level = 65535
     bulb.color = [32000, None, 32000, 6000]
-    with _patch_discovery(device=bulb), _patch_config_flow_try_connect(
-        device=bulb
-    ), _patch_device(device=bulb):
+    with (
+        _patch_discovery(device=bulb),
+        _patch_config_flow_try_connect(device=bulb),
+        _patch_device(device=bulb),
+    ):
         await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
         await hass.async_block_till_done()
 
@@ -1365,9 +1536,11 @@ async def test_transitions_color_bulb(hass: HomeAssistant) -> None:
     bulb = _mocked_bulb_new_firmware()
     bulb.power_level = 65535
     bulb.color = [32000, None, 32000, 6000]
-    with _patch_discovery(device=bulb), _patch_config_flow_try_connect(
-        device=bulb
-    ), _patch_device(device=bulb):
+    with (
+        _patch_discovery(device=bulb),
+        _patch_config_flow_try_connect(device=bulb),
+        _patch_device(device=bulb),
+    ):
         await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
         await hass.async_block_till_done()
 
@@ -1476,9 +1649,11 @@ async def test_lifx_set_state_color(hass: HomeAssistant) -> None:
     bulb = _mocked_bulb_new_firmware()
     bulb.power_level = 65535
     bulb.color = [32000, None, 32000, 2700]
-    with _patch_discovery(device=bulb), _patch_config_flow_try_connect(
-        device=bulb
-    ), _patch_device(device=bulb):
+    with (
+        _patch_discovery(device=bulb),
+        _patch_config_flow_try_connect(device=bulb),
+        _patch_device(device=bulb),
+    ):
         await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
         await hass.async_block_till_done()
 
@@ -1554,9 +1729,11 @@ async def test_lifx_set_state_kelvin(hass: HomeAssistant) -> None:
     bulb = _mocked_bulb_new_firmware()
     bulb.power_level = 65535
     bulb.color = [32000, None, 32000, 6000]
-    with _patch_discovery(device=bulb), _patch_config_flow_try_connect(
-        device=bulb
-    ), _patch_device(device=bulb):
+    with (
+        _patch_discovery(device=bulb),
+        _patch_config_flow_try_connect(device=bulb),
+        _patch_device(device=bulb),
+    ):
         await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
         await hass.async_block_till_done()
 
@@ -1610,9 +1787,11 @@ async def test_infrared_color_bulb(hass: HomeAssistant) -> None:
     bulb = _mocked_bulb_new_firmware()
     bulb.power_level = 65535
     bulb.color = [32000, None, 32000, 6000]
-    with _patch_discovery(device=bulb), _patch_config_flow_try_connect(
-        device=bulb
-    ), _patch_device(device=bulb):
+    with (
+        _patch_discovery(device=bulb),
+        _patch_config_flow_try_connect(device=bulb),
+        _patch_device(device=bulb),
+    ):
         await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
         await hass.async_block_till_done()
 
@@ -1651,9 +1830,11 @@ async def test_color_bulb_is_actually_off(hass: HomeAssistant) -> None:
     bulb = _mocked_bulb_new_firmware()
     bulb.power_level = 65535
     bulb.color = [32000, None, 32000, 6000]
-    with _patch_discovery(device=bulb), _patch_config_flow_try_connect(
-        device=bulb
-    ), _patch_device(device=bulb):
+    with (
+        _patch_discovery(device=bulb),
+        _patch_config_flow_try_connect(device=bulb),
+        _patch_device(device=bulb),
+    ):
         await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
         await hass.async_block_till_done()
 
@@ -1665,7 +1846,7 @@ async def test_color_bulb_is_actually_off(hass: HomeAssistant) -> None:
     class MockLifxCommandActuallyOff:
         """Mock a lifx command that will update our power level state."""
 
-        def __init__(self, bulb, **kwargs):
+        def __init__(self, bulb, **kwargs: Any) -> None:
             """Init command."""
             self.bulb = bulb
             self.calls = []
@@ -1702,9 +1883,11 @@ async def test_clean_bulb(hass: HomeAssistant) -> None:
     bulb = _mocked_clean_bulb()
     bulb.power_level = 0
     bulb.hev_cycle = {"duration": 7200, "remaining": 0, "last_power": False}
-    with _patch_discovery(device=bulb), _patch_config_flow_try_connect(
-        device=bulb
-    ), _patch_device(device=bulb):
+    with (
+        _patch_discovery(device=bulb),
+        _patch_config_flow_try_connect(device=bulb),
+        _patch_device(device=bulb),
+    ):
         await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
         await hass.async_block_till_done()
 
@@ -1732,9 +1915,11 @@ async def test_set_hev_cycle_state_fails_for_color_bulb(hass: HomeAssistant) -> 
     config_entry.add_to_hass(hass)
     bulb = _mocked_bulb()
     bulb.power_level = 0
-    with _patch_discovery(device=bulb), _patch_config_flow_try_connect(
-        device=bulb
-    ), _patch_device(device=bulb):
+    with (
+        _patch_discovery(device=bulb),
+        _patch_config_flow_try_connect(device=bulb),
+        _patch_device(device=bulb),
+    ):
         await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
         await hass.async_block_till_done()
 
@@ -1763,9 +1948,11 @@ async def test_light_strip_zones_not_populated_yet(hass: HomeAssistant) -> None:
     bulb.color = [65535, 65535, 65535, 65535]
     assert bulb.get_color_zones.calls == []
 
-    with _patch_discovery(device=bulb), _patch_config_flow_try_connect(
-        device=bulb
-    ), _patch_device(device=bulb):
+    with (
+        _patch_discovery(device=bulb),
+        _patch_config_flow_try_connect(device=bulb),
+        _patch_device(device=bulb),
+    ):
         await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
         await hass.async_block_till_done()
 

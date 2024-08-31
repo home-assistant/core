@@ -81,15 +81,18 @@ def lock_fixture() -> loqed.Lock:
 @pytest.fixture(name="integration")
 async def integration_fixture(
     hass: HomeAssistant, config_entry: MockConfigEntry, lock: loqed.Lock
-) -> AsyncGenerator[MockConfigEntry, None]:
+) -> AsyncGenerator[MockConfigEntry]:
     """Set up the loqed integration with a config entry."""
     config: dict[str, Any] = {DOMAIN: {CONF_API_TOKEN: ""}}
     config_entry.add_to_hass(hass)
 
     lock_status = json.loads(load_fixture("loqed/status_ok.json"))
 
-    with patch("loqedAPI.loqed.LoqedAPI.async_get_lock", return_value=lock), patch(
-        "loqedAPI.loqed.LoqedAPI.async_get_lock_details", return_value=lock_status
+    with (
+        patch("loqedAPI.loqed.LoqedAPI.async_get_lock", return_value=lock),
+        patch(
+            "loqedAPI.loqed.LoqedAPI.async_get_lock_details", return_value=lock_status
+        ),
     ):
         await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done()

@@ -1,0 +1,13 @@
+{
+  "services": {
+    "restart": {
+      "service": "mdi:restart"
+    },
+    "start": {
+      "service": "mdi:play"
+    },
+    "stop": {
+      "service": "mdi:stop"
+    }
+  }
+}

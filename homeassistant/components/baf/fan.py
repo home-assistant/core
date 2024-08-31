@@ -1,4 +1,5 @@
 """Support for Big Ass Fans fan."""
+
 from __future__ import annotations
 
 import math
@@ -6,7 +7,6 @@ from typing import Any
 
 from aiobafi6 import OffOnAuto
 
-from homeassistant import config_entries
 from homeassistant.components.fan import (
     DIRECTION_FORWARD,
     DIRECTION_REVERSE,
@@ -20,20 +20,20 @@ from homeassistant.util.percentage import (
     ranged_value_to_percentage,
 )
 
-from .const import DOMAIN, PRESET_MODE_AUTO, SPEED_COUNT, SPEED_RANGE
+from . import BAFConfigEntry
+from .const import PRESET_MODE_AUTO, SPEED_COUNT, SPEED_RANGE
 from .entity import BAFEntity
-from .models import BAFData
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: config_entries.ConfigEntry,
+    entry: BAFConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up SenseME fans."""
-    data: BAFData = hass.data[DOMAIN][entry.entry_id]
-    if data.device.has_fan:
-        async_add_entities([BAFFan(data.device)])
+    device = entry.runtime_data
+    if device.has_fan:
+        async_add_entities([BAFFan(device)])
 
 
 class BAFFan(BAFEntity, FanEntity):
@@ -43,10 +43,14 @@ class BAFFan(BAFEntity, FanEntity):
         FanEntityFeature.SET_SPEED
         | FanEntityFeature.DIRECTION
         | FanEntityFeature.PRESET_MODE
+        | FanEntityFeature.TURN_OFF
+        | FanEntityFeature.TURN_ON
     )
+    _enable_turn_on_off_backwards_compatibility = False
     _attr_preset_modes = [PRESET_MODE_AUTO]
     _attr_speed_count = SPEED_COUNT
     _attr_name = None
+    _attr_translation_key = "baf"
 
     @callback
     def _async_update_attrs(self) -> None:
