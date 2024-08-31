@@ -24,3 +24,15 @@ async def test_climate_entity(
     await setup_with_selected_platforms(hass, mock_config_entry, [Platform.CLIMATE])
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+    # Spoof the current_temperature value to "---"
+    mock_bsblan.set_current_temperature("---")
+
+    # Update the state in Home Assistant
+    await hass.helpers.entity_component.async_update_entity("climate.bsb_lan")
+
+    # Get the state of the climate entity
+    state = hass.states.get("climate.bsb_lan")
+
+    # Assert that the current_temperature attribute is None
+    assert state.attributes["current_temperature"] is None

@@ -56,6 +56,14 @@ def mock_bsblan(request: pytest.FixtureRequest) -> Generator[MagicMock, None, No
         bsblan.static_values.return_value = StaticState.from_json(
             load_fixture(request.param, DOMAIN)
         )
+
+        # Add a method to update the current_temperature dynamically
+        def set_current_temperature(value):
+            state = bsblan.state.return_value
+            state.current_temperature.value = value
+
+        bsblan.set_current_temperature = set_current_temperature
+
         yield bsblan
 
 
