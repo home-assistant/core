@@ -9,7 +9,7 @@ from aiohttp.client_exceptions import ClientError
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import Resource, build
 from googleapiclient.errors import HttpError
-from googleapiclient.http import BatchHttpRequest, HttpRequest
+from googleapiclient.http import HttpRequest
 
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
@@ -27,6 +27,9 @@ GET_MEDIA_ITEM_FIELDS = (
 )
 LIST_MEDIA_ITEM_FIELDS = f"nextPageToken,mediaItems({GET_MEDIA_ITEM_FIELDS})"
 UPLOAD_API = "https://photoslibrary.googleapis.com/v1/uploads"
+LIST_ALBUMS_FIELDS = (
+    "nextPageToken,albums(id,title,coverPhotoBaseUrl,coverPhotoMediaItemId)"
+)
 
 
 class AuthBase(ABC):
@@ -61,14 +64,38 @@ class AuthBase(ABC):
         return await self._execute(cmd)
 
     async def list_media_items(
-        self, page_size: int | None = None, page_token: str | None = None
+        self,
+        page_size: int | None = None,
+        page_token: str | None = None,
+        album_id: str | None = None,
+        favorites: bool = False,
     ) -> dict[str, Any]:
         """Get all MediaItem resources."""
         service = await self._get_photos_service()
-        cmd: HttpRequest = service.mediaItems().list(
+        args: dict[str, Any] = {
+            "pageSize": (page_size or DEFAULT_PAGE_SIZE),
+            "pageToken": page_token,
+        }
+        cmd: HttpRequest
+        if album_id is not None or favorites:
+            if album_id is not None:
+                args["albumId"] = album_id
+            if favorites:
+                args["filters"] = {"featureFilter": {"includedFeatures": "FAVORITES"}}
+            cmd = service.mediaItems().search(body=args, fields=LIST_MEDIA_ITEM_FIELDS)
+        else:
+            cmd = service.mediaItems().list(**args, fields=LIST_MEDIA_ITEM_FIELDS)
+        return await self._execute(cmd)
+
+    async def list_albums(
+        self, page_size: int | None = None, page_token: str | None = None
+    ) -> dict[str, Any]:
+        """Get all Album resources."""
+        service = await self._get_photos_service()
+        cmd: HttpRequest = service.albums().list(
             pageSize=(page_size or DEFAULT_PAGE_SIZE),
             pageToken=page_token,
-            fields=LIST_MEDIA_ITEM_FIELDS,
+            fields=LIST_ALBUMS_FIELDS,
         )
         return await self._execute(cmd)
 
@@ -126,7 +153,7 @@ class AuthBase(ABC):
             partial(build, "oauth2", "v2", credentials=Credentials(token=token))  # type: ignore[no-untyped-call]
         )
 
-    async def _execute(self, request: HttpRequest | BatchHttpRequest) -> dict[str, Any]:
+    async def _execute(self, request: HttpRequest) -> dict[str, Any]:
         try:
             result = await self._hass.async_add_executor_job(request.execute)
         except HttpError as err:

@@ -15,7 +15,11 @@ from homeassistant.components.google_photos.const import DOMAIN, OAUTH2_SCOPES
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry, load_json_array_fixture
+from tests.common import (
+    MockConfigEntry,
+    load_json_array_fixture,
+    load_json_object_fixture,
+)
 
 USER_IDENTIFIER = "user-identifier-1"
 CONFIG_ENTRY_ID = "user-identifier-1"
@@ -119,6 +123,7 @@ def mock_setup_api(
             return mock
 
         mock.return_value.mediaItems.return_value.list = list_media_items
+        mock.return_value.mediaItems.return_value.search = list_media_items
 
         # Mock a point lookup by reading contents of the fixture above
         def get_media_item(mediaItemId: str, **kwargs: Any) -> Mock:
@@ -131,6 +136,10 @@ def mock_setup_api(
             return None
 
         mock.return_value.mediaItems.return_value.get = get_media_item
+        mock.return_value.albums.return_value.list.return_value.execute.return_value = (
+            load_json_object_fixture("list_albums.json", DOMAIN)
+        )
+
         yield mock
 
 
