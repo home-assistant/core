@@ -100,12 +100,12 @@ class PhotosIdentifier:
         return PhotosIdentifier(parts[0], PhotosIdentifierType.of(parts[1]), parts[2])
 
     @staticmethod
-    def album(config_entry_id: str, media_id) -> "PhotosIdentifier":
+    def album(config_entry_id: str, media_id: str) -> "PhotosIdentifier":
         """Create an album PhotosIdentifier."""
         return PhotosIdentifier(config_entry_id, PhotosIdentifierType.ALBUM, media_id)
 
     @staticmethod
-    def photo(config_entry_id: str, media_id) -> "PhotosIdentifier":
+    def photo(config_entry_id: str, media_id: str) -> "PhotosIdentifier":
         """Create an album PhotosIdentifier."""
         return PhotosIdentifier(config_entry_id, PhotosIdentifierType.PHOTO, media_id)
 
