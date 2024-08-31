@@ -1,6 +1,6 @@
 """Test STT component setup."""
 
-from collections.abc import AsyncIterable, Generator, Iterable
+from collections.abc import Generator, Iterable
 from contextlib import ExitStack
 from http import HTTPStatus
 from pathlib import Path
@@ -10,16 +10,6 @@ import pytest
 
 from homeassistant.components.stt import (
     DOMAIN,
-    AudioBitRates,
-    AudioChannels,
-    AudioCodecs,
-    AudioFormats,
-    AudioSampleRates,
-    Provider,
-    SpeechMetadata,
-    SpeechResult,
-    SpeechResultState,
-    SpeechToTextEntity,
     async_default_engine,
     async_get_provider,
     async_get_speech_to_text_engine,
@@ -29,7 +19,13 @@ from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.setup import async_setup_component
 
-from .common import mock_stt_entity_platform, mock_stt_platform
+from .common import (
+    TEST_DOMAIN,
+    MockSTTProvider,
+    MockSTTProviderEntity,
+    mock_stt_entity_platform,
+    mock_stt_platform,
+)
 
 from tests.common import (
     MockConfigEntry,
@@ -41,82 +37,17 @@ from tests.common import (
 )
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
-TEST_DOMAIN = "test"
-
-
-class BaseProvider:
-    """Mock provider."""
-
-    fail_process_audio = False
-
-    def __init__(self) -> None:
-        """Init test provider."""
-        self.calls: list[tuple[SpeechMetadata, AsyncIterable[bytes]]] = []
-
-    @property
-    def supported_languages(self) -> list[str]:
-        """Return a list of supported languages."""
-        return ["de", "de-CH", "en"]
-
-    @property
-    def supported_formats(self) -> list[AudioFormats]:
-        """Return a list of supported formats."""
-        return [AudioFormats.WAV, AudioFormats.OGG]
-
-    @property
-    def supported_codecs(self) -> list[AudioCodecs]:
-        """Return a list of supported codecs."""
-        return [AudioCodecs.PCM, AudioCodecs.OPUS]
-
-    @property
-    def supported_bit_rates(self) -> list[AudioBitRates]:
-        """Return a list of supported bitrates."""
-        return [AudioBitRates.BITRATE_16]
-
-    @property
-    def supported_sample_rates(self) -> list[AudioSampleRates]:
-        """Return a list of supported samplerates."""
-        return [AudioSampleRates.SAMPLERATE_16000]
-
-    @property
-    def supported_channels(self) -> list[AudioChannels]:
-        """Return a list of supported channels."""
-        return [AudioChannels.CHANNEL_MONO]
-
-    async def async_process_audio_stream(
-        self, metadata: SpeechMetadata, stream: AsyncIterable[bytes]
-    ) -> SpeechResult:
-        """Process an audio stream."""
-        self.calls.append((metadata, stream))
-        if self.fail_process_audio:
-            return SpeechResult(None, SpeechResultState.ERROR)
-
-        return SpeechResult("test_result", SpeechResultState.SUCCESS)
-
-
-class MockProvider(BaseProvider, Provider):
-    """Mock provider."""
-
-    url_path = TEST_DOMAIN
-
-
-class MockProviderEntity(BaseProvider, SpeechToTextEntity):
-    """Mock provider entity."""
-
-    url_path = "stt.test"
-    _attr_name = "test"
-
 
 @pytest.fixture
-def mock_provider() -> MockProvider:
+def mock_provider() -> MockSTTProvider:
     """Test provider fixture."""
-    return MockProvider()
+    return MockSTTProvider()
 
 
 @pytest.fixture
-def mock_provider_entity() -> MockProviderEntity:
+def mock_provider_entity() -> MockSTTProviderEntity:
     """Test provider entity fixture."""
-    return MockProviderEntity()
+    return MockSTTProviderEntity()
 
 
 class STTFlow(ConfigFlow):
@@ -148,14 +79,14 @@ async def setup_fixture(
     hass: HomeAssistant,
     tmp_path: Path,
     request: pytest.FixtureRequest,
-) -> MockProvider | MockProviderEntity:
+) -> MockSTTProvider | MockSTTProviderEntity:
     """Set up the test environment."""
-    provider: MockProvider | MockProviderEntity
+    provider: MockSTTProvider | MockSTTProviderEntity
     if request.param == "mock_setup":
-        provider = MockProvider()
+        provider = MockSTTProvider()
         await mock_setup(hass, tmp_path, provider)
     elif request.param == "mock_config_entry_setup":
-        provider = MockProviderEntity()
+        provider = MockSTTProviderEntity()
         await mock_config_entry_setup(hass, tmp_path, provider)
     else:
         raise RuntimeError("Invalid setup fixture")
@@ -166,7 +97,7 @@ async def setup_fixture(
 async def mock_setup(
     hass: HomeAssistant,
     tmp_path: Path,
-    mock_provider: MockProvider,
+    mock_provider: MockSTTProvider,
 ) -> None:
     """Set up a test provider."""
     mock_stt_platform(
@@ -182,7 +113,7 @@ async def mock_setup(
 async def mock_config_entry_setup(
     hass: HomeAssistant,
     tmp_path: Path,
-    mock_provider_entity: MockProviderEntity,
+    mock_provider_entity: MockSTTProviderEntity,
     test_domain: str = TEST_DOMAIN,
 ) -> MockConfigEntry:
     """Set up a test provider via config entry."""
@@ -234,7 +165,7 @@ async def mock_config_entry_setup(
 async def test_get_provider_info(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
-    setup: MockProvider | MockProviderEntity,
+    setup: MockSTTProvider | MockSTTProviderEntity,
 ) -> None:
     """Test engine that doesn't exist."""
     client = await hass_client()
@@ -256,7 +187,7 @@ async def test_get_provider_info(
 async def test_non_existing_provider(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
-    setup: MockProvider | MockProviderEntity,
+    setup: MockSTTProvider | MockSTTProviderEntity,
 ) -> None:
     """Test streaming to engine that doesn't exist."""
     client = await hass_client()
@@ -282,7 +213,7 @@ async def test_non_existing_provider(
 async def test_stream_audio(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
-    setup: MockProvider | MockProviderEntity,
+    setup: MockSTTProvider | MockSTTProviderEntity,
 ) -> None:
     """Test streaming audio and getting response."""
     client = await hass_client()
@@ -343,7 +274,7 @@ async def test_metadata_errors(
     header: str | None,
     status: int,
     error: str,
-    setup: MockProvider | MockProviderEntity,
+    setup: MockSTTProvider | MockSTTProviderEntity,
 ) -> None:
     """Test metadata errors."""
     client = await hass_client()
@@ -359,7 +290,7 @@ async def test_metadata_errors(
 async def test_get_provider(
     hass: HomeAssistant,
     tmp_path: Path,
-    mock_provider: MockProvider,
+    mock_provider: MockSTTProvider,
 ) -> None:
     """Test we can get STT providers."""
     await mock_setup(hass, tmp_path, mock_provider)
@@ -370,7 +301,7 @@ async def test_get_provider(
 
 
 async def test_config_entry_unload(
-    hass: HomeAssistant, tmp_path: Path, mock_provider_entity: MockProviderEntity
+    hass: HomeAssistant, tmp_path: Path, mock_provider_entity: MockSTTProviderEntity
 ) -> None:
     """Test we can unload config entry."""
     config_entry = await mock_config_entry_setup(hass, tmp_path, mock_provider_entity)
@@ -382,7 +313,7 @@ async def test_config_entry_unload(
 async def test_restore_state(
     hass: HomeAssistant,
     tmp_path: Path,
-    mock_provider_entity: MockProviderEntity,
+    mock_provider_entity: MockSTTProviderEntity,
 ) -> None:
     """Test we restore state in the integration."""
     entity_id = f"{DOMAIN}.{TEST_DOMAIN}"
@@ -409,7 +340,7 @@ async def test_restore_state(
 async def test_ws_list_engines(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
-    setup: MockProvider | MockProviderEntity,
+    setup: MockSTTProvider | MockSTTProviderEntity,
     engine_id: str,
     extra_data: dict[str, str],
 ) -> None:
@@ -491,7 +422,7 @@ async def test_default_engine_none(hass: HomeAssistant, tmp_path: Path) -> None:
 async def test_default_engine(
     hass: HomeAssistant,
     tmp_path: Path,
-    mock_provider: MockProvider,
+    mock_provider: MockSTTProvider,
 ) -> None:
     """Test async_default_engine."""
     mock_stt_platform(
@@ -507,7 +438,7 @@ async def test_default_engine(
 
 
 async def test_default_engine_entity(
-    hass: HomeAssistant, tmp_path: Path, mock_provider_entity: MockProviderEntity
+    hass: HomeAssistant, tmp_path: Path, mock_provider_entity: MockSTTProviderEntity
 ) -> None:
     """Test async_default_engine."""
     await mock_config_entry_setup(hass, tmp_path, mock_provider_entity)
@@ -519,8 +450,8 @@ async def test_default_engine_entity(
 async def test_default_engine_prefer_entity(
     hass: HomeAssistant,
     tmp_path: Path,
-    mock_provider_entity: MockProviderEntity,
-    mock_provider: MockProvider,
+    mock_provider_entity: MockSTTProviderEntity,
+    mock_provider: MockSTTProvider,
     config_flow_test_domains: str,
 ) -> None:
     """Test async_default_engine.
@@ -558,7 +489,7 @@ async def test_default_engine_prefer_entity(
 async def test_default_engine_prefer_cloud_entity(
     hass: HomeAssistant,
     tmp_path: Path,
-    mock_provider: MockProvider,
+    mock_provider: MockSTTProvider,
     config_flow_test_domains: str,
 ) -> None:
     """Test async_default_engine.
@@ -569,7 +500,7 @@ async def test_default_engine_prefer_cloud_entity(
     """
     await mock_setup(hass, tmp_path, mock_provider)
     for domain in config_flow_test_domains:
-        entity = MockProviderEntity()
+        entity = MockSTTProviderEntity()
         entity.url_path = f"stt.{domain}"
         entity._attr_name = f"{domain} STT entity"
         await mock_config_entry_setup(hass, tmp_path, entity, test_domain=domain)
@@ -589,7 +520,7 @@ async def test_default_engine_prefer_cloud_entity(
 
 
 async def test_get_engine_legacy(
-    hass: HomeAssistant, tmp_path: Path, mock_provider: MockProvider
+    hass: HomeAssistant, tmp_path: Path, mock_provider: MockSTTProvider
 ) -> None:
     """Test async_get_speech_to_text_engine."""
     mock_stt_platform(
@@ -614,7 +545,7 @@ async def test_get_engine_legacy(
 
 
 async def test_get_engine_entity(
-    hass: HomeAssistant, tmp_path: Path, mock_provider_entity: MockProviderEntity
+    hass: HomeAssistant, tmp_path: Path, mock_provider_entity: MockSTTProviderEntity
 ) -> None:
     """Test async_get_speech_to_text_engine."""
     await mock_config_entry_setup(hass, tmp_path, mock_provider_entity)

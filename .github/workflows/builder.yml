@@ -32,7 +32,7 @@ jobs:
           fetch-depth: 0
 
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v5.1.1
+        uses: actions/setup-python@v5.2.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
 
@@ -116,7 +116,7 @@ jobs:
 
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         if: needs.init.outputs.channel == 'dev'
-        uses: actions/setup-python@v5.1.1
+        uses: actions/setup-python@v5.2.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
 
@@ -453,7 +453,7 @@ jobs:
         uses: actions/checkout@v4.1.7
 
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v5.1.1
+        uses: actions/setup-python@v5.2.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
 
@@ -482,3 +482,56 @@ jobs:
           export TWINE_PASSWORD="${{ secrets.TWINE_TOKEN }}"
 
           twine upload dist/* --skip-existing
+
+  hassfest-image:
+    name: Build and test hassfest image
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      attestations: write
+      id-token: write
+    needs: ["init"]
+    if: github.repository_owner == 'home-assistant'
+    env:
+      HASSFEST_IMAGE_NAME: ghcr.io/home-assistant/hassfest
+      HASSFEST_IMAGE_TAG: ghcr.io/home-assistant/hassfest:${{ needs.init.outputs.version }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567 # v3.3.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build Docker image
+        uses: docker/build-push-action@5cd11c3a4ced054e52742c5fd54dca954e0edd85 # v6.7.0
+        with:
+          context: . # So action will not pull the repository again
+          file: ./script/hassfest/docker/Dockerfile
+          load: true
+          tags: ${{ env.HASSFEST_IMAGE_TAG }}
+
+      - name: Run hassfest against core
+        run: docker run --rm -v ${{ github.workspace }}/homeassistant:/github/workspace/homeassistant ${{ env.HASSFEST_IMAGE_TAG }} --core-integrations-path=/github/workspace/homeassistant/components
+
+      - name: Push Docker image
+        if: needs.init.outputs.channel != 'dev' && needs.init.outputs.publish == 'true'
+        id: push
+        uses: docker/build-push-action@5cd11c3a4ced054e52742c5fd54dca954e0edd85 # v6.7.0
+        with:
+          context: . # So action will not pull the repository again
+          file: ./script/hassfest/docker/Dockerfile
+          push: true
+          tags: ${{ env.HASSFEST_IMAGE_TAG }},${{ env.HASSFEST_IMAGE_NAME }}:latest
+
+      - name: Generate artifact attestation
+        if: needs.init.outputs.channel != 'dev' && needs.init.outputs.publish == 'true'
+        uses: actions/attest-build-provenance@6149ea5740be74af77f260b9db67e633f6b0a9a1 # v1.4.2
+        with:
+          subject-name: ${{ env.HASSFEST_IMAGE_NAME }}
+          subject-digest: ${{ steps.push.outputs.digest }}
+          push-to-registry: true

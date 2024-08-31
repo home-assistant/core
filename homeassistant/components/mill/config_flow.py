@@ -43,7 +43,9 @@ class MillConfigFlow(ConfigFlow, domain=DOMAIN):
             return await self.async_step_local()
         return await self.async_step_cloud()
 
-    async def async_step_local(self, user_input=None):
+    async def async_step_local(
+        self, user_input: dict[str, str] | None = None
+    ) -> ConfigFlowResult:
         """Handle the local step."""
         data_schema = vol.Schema({vol.Required(CONF_IP_ADDRESS): str})
         if user_input is None:
@@ -75,7 +77,9 @@ class MillConfigFlow(ConfigFlow, domain=DOMAIN):
             },
         )
 
-    async def async_step_cloud(self, user_input=None):
+    async def async_step_cloud(
+        self, user_input: dict[str, str] | None = None
+    ) -> ConfigFlowResult:
         """Handle the cloud step."""
         data_schema = vol.Schema(
             {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str}

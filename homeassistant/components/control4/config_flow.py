@@ -1,17 +1,14 @@
 """Config flow for Control4 integration."""
 
-# mypy: ignore-errors
-
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from aiohttp.client_exceptions import ClientError
-
-# from pyControl4.account import C4Account
-# from pyControl4.director import C4Director
-# from pyControl4.error_handling import NotFound, Unauthorized
+from pyControl4.account import C4Account
+from pyControl4.director import C4Director
+from pyControl4.error_handling import NotFound, Unauthorized
 import voluptuous as vol
 
 from homeassistant.config_entries import (
@@ -26,7 +23,7 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_USERNAME,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
@@ -52,7 +49,9 @@ DATA_SCHEMA = vol.Schema(
 class Control4Validator:
     """Validates that config details can be used to authenticate and communicate with Control4."""
 
-    def __init__(self, host, username, password, hass):
+    def __init__(
+        self, host: str, username: str, password: str, hass: HomeAssistant
+    ) -> None:
         """Initialize."""
         self.host = host
         self.username = username
@@ -129,6 +128,8 @@ class Control4ConfigFlow(ConfigFlow, domain=DOMAIN):
 
             if not errors:
                 controller_unique_id = hub.controller_unique_id
+                if TYPE_CHECKING:
+                    assert hub.controller_unique_id
                 mac = (controller_unique_id.split("_", 3))[2]
                 formatted_mac = format_mac(mac)
                 await self.async_set_unique_id(formatted_mac)
@@ -163,7 +164,9 @@ class OptionsFlowHandler(OptionsFlow):
         """Initialize options flow."""
         self.config_entry = config_entry
 
-    async def async_step_init(self, user_input=None):
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle options flow."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
