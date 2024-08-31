@@ -1,6 +1,7 @@
 """Media source for Google Photos."""
 
 from dataclasses import dataclass
+from enum import StrEnum
 import logging
 from typing import Any, cast
 
@@ -28,7 +29,7 @@ MAX_PHOTOS = 50
 PAGE_SIZE = 100
 
 THUMBNAIL_SIZE = 256
-LARGE_IMAGE_SIZE = 2048
+LARGE_IMAGE_SIZE = 2160
 
 
 # Markers for parts of PhotosIdentifier url pattern.
@@ -47,6 +48,21 @@ RECENT_PHOTOS_ALBUM = "recent"
 RECENT_PHOTOS_TITLE = "Recent Photos"
 
 
+class PhotosIdentifierType(StrEnum):
+    """Type for a PhotosIdentifier."""
+
+    PHOTO = "p"
+    ALBUM = "a"
+
+    @classmethod
+    def of(cls, name: str) -> "PhotosIdentifierType":
+        """Parse a PhotosIdentifierType by string value."""
+        for enum in PhotosIdentifierType:
+            if enum.value == name:
+                return enum
+        raise ValueError(f"Invalid PhotosIdentifierType: {name}")
+
+
 @dataclass
 class PhotosIdentifier:
     """Google Photos item identifier in a media source URL."""
@@ -54,47 +70,48 @@ class PhotosIdentifier:
     config_entry_id: str
     """Identifies the account for the media item."""
 
-    album_media_id: str | None = None
-    """Identifies the album contents to show.
+    id_type: PhotosIdentifierType | None = None
+    """Type of identifier"""
 
-    Not present at the same time as `photo_media_id`.
-    """
-
-    photo_media_id: str | None = None
-    """Identifies an indiviidual photo or video.
-
-    Not present at the same time as `album_media_id`.
-    """
+    media_id: str | None = None
+    """Identifies the album or photo contents to show."""
 
     def as_string(self) -> str:
         """Serialize the identiifer as a string.
 
-        This is the opposite if parse_identifier().
+        This is the opposite if of().
         """
-        if self.photo_media_id is None:
-            if self.album_media_id is None:
-                return self.config_entry_id
-            return f"{self.config_entry_id}/{PHOTO_SOURCE_IDENTIFIER_ALBUM}/{self.album_media_id}"
-        return f"{self.config_entry_id}/{PHOTO_SOURCE_IDENTIFIER_PHOTO}/{self.photo_media_id}"
+        if self.id_type is None:
+            return self.config_entry_id
+        return f"{self.config_entry_id}/{self.id_type}/{self.media_id}"
 
+    @staticmethod
+    def of(identifier: str) -> "PhotosIdentifier":
+        """Parse a PhotosIdentifier form a string.
 
-def parse_identifier(identifier: str) -> PhotosIdentifier:
-    """Parse a PhotosIdentifier form a string.
+        This is the opposite of as_string().
+        """
+        parts = identifier.split("/")
+        _LOGGER.debug("parts=%s", parts)
+        if len(parts) == 1:
+            return PhotosIdentifier(parts[0])
+        if len(parts) != 3:
+            raise BrowseError(f"Invalid identifier: {identifier}")
+        return PhotosIdentifier(parts[0], PhotosIdentifierType.of(parts[1]), parts[2])
 
-    This is the opposite of as_string().
-    """
-    parts = identifier.split("/")
-    if len(parts) == 1:
-        return PhotosIdentifier(parts[0])
-    if len(parts) != 3:
-        raise BrowseError(f"Invalid identifier: {identifier}")
-    if parts[1] == PHOTO_SOURCE_IDENTIFIER_PHOTO:
-        return PhotosIdentifier(parts[0], photo_media_id=parts[2])
-    return PhotosIdentifier(parts[0], album_media_id=parts[2])
+    @staticmethod
+    def album(config_entry_id: str, media_id: str) -> "PhotosIdentifier":
+        """Create an album PhotosIdentifier."""
+        return PhotosIdentifier(config_entry_id, PhotosIdentifierType.ALBUM, media_id)
+
+    @staticmethod
+    def photo(config_entry_id: str, media_id: str) -> "PhotosIdentifier":
+        """Create an album PhotosIdentifier."""
+        return PhotosIdentifier(config_entry_id, PhotosIdentifierType.PHOTO, media_id)
 
 
 async def async_get_media_source(hass: HomeAssistant) -> MediaSource:
-    """Set up Synology media source."""
+    """Set up Google Photos media source."""
     return GooglePhotosMediaSource(hass)
 
 
@@ -113,16 +130,20 @@ class GooglePhotosMediaSource(MediaSource):
 
         This will resolve a specific media item to a url for the full photo or video contents.
         """
-        identifier = parse_identifier(item.identifier)
-        if identifier.photo_media_id is None:
+        try:
+            identifier = PhotosIdentifier.of(item.identifier)
+        except ValueError as err:
+            raise BrowseError(f"Could not parse identifier: {item.identifier}") from err
+        if (
+            identifier.media_id is None
+            or identifier.id_type != PhotosIdentifierType.PHOTO
+        ):
             raise BrowseError(
-                f"Could not resolve identifier without a photo_media_id: {identifier}"
+                f"Could not resolve identiifer that is not a Photo: {identifier}"
             )
         entry = self._async_config_entry(identifier.config_entry_id)
         client = entry.runtime_data
-        media_item = await client.get_media_item(
-            media_item_id=identifier.photo_media_id
-        )
+        media_item = await client.get_media_item(media_item_id=identifier.media_id)
         is_video = media_item["mediaMetadata"].get("video") is not None
         return PlayMedia(
             url=(
@@ -158,24 +179,24 @@ class GooglePhotosMediaSource(MediaSource):
             )
 
         # Determine the configuration entry for this item
-        identifier = parse_identifier(item.identifier)
+        identifier = PhotosIdentifier.of(item.identifier)
         entry = self._async_config_entry(identifier.config_entry_id)
         client = entry.runtime_data
 
-        if identifier.album_media_id is None:
-            source = _build_account(entry, identifier)
+        source = _build_account(entry, identifier)
+        if identifier.id_type is None:
             source.children = [
                 _build_album(
                     RECENT_PHOTOS_TITLE,
-                    PhotosIdentifier(
-                        identifier.config_entry_id, album_media_id=RECENT_PHOTOS_ALBUM
+                    PhotosIdentifier.album(
+                        identifier.config_entry_id, RECENT_PHOTOS_ALBUM
                     ),
                 )
             ]
             return source
 
         # Currently only supports listing a single album of recent photos.
-        if identifier.album_media_id != RECENT_PHOTOS_ALBUM:
+        if identifier.media_id != RECENT_PHOTOS_ALBUM:
             raise BrowseError(f"Unsupported album: {identifier}")
 
         # Fetch recent items
@@ -194,12 +215,9 @@ class GooglePhotosMediaSource(MediaSource):
                 break
 
         # Render the grid of media item results
-        source = _build_account(entry, PhotosIdentifier(cast(str, entry.unique_id)))
         source.children = [
             _build_media_item(
-                PhotosIdentifier(
-                    identifier.config_entry_id, photo_media_id=media_item["id"]
-                ),
+                PhotosIdentifier.photo(identifier.config_entry_id, media_item["id"]),
                 media_item,
             )
             for media_item in media_items
@@ -250,7 +268,7 @@ def _build_album(title: str, identifier: PhotosIdentifier) -> BrowseMediaSource:
 def _build_media_item(
     identifier: PhotosIdentifier, media_item: dict[str, Any]
 ) -> BrowseMediaSource:
-    """Build the node for an individual photos or video."""
+    """Build the node for an individual photo or video."""
     is_video = media_item["mediaMetadata"].get("video") is not None
     return BrowseMediaSource(
         domain=DOMAIN,
@@ -269,10 +287,7 @@ def _media_url(media_item: dict[str, Any], max_size: int) -> str:
 
     See https://developers.google.com/photos/library/guides/access-media-items#base-urls
     """
-    width = media_item["mediaMetadata"]["width"]
-    height = media_item["mediaMetadata"]["height"]
-    key = "h" if height > width else "w"
-    return f"{media_item["baseUrl"]}={key}{max_size}"
+    return f"{media_item["baseUrl"]}=h{max_size}"
 
 
 def _video_url(media_item: dict[str, Any]) -> str:

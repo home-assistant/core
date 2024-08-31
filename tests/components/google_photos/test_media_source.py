@@ -58,7 +58,7 @@ async def test_no_config_entries(
                 (f"{CONFIG_ENTRY_ID}/p/id2", "example2.mp4"),
             ],
             [
-                ("http://img.example.com/id1=w2048", "image/jpeg"),
+                ("http://img.example.com/id1=h2160", "image/jpeg"),
                 ("http://img.example.com/id2=dv", "video/mp4"),
             ],
         ),
@@ -90,7 +90,7 @@ async def test_recent_items(
         hass, f"{URI_SCHEME}{DOMAIN}/{CONFIG_ENTRY_ID}/a/recent"
     )
     assert browse.domain == DOMAIN
-    assert browse.identifier == CONFIG_ENTRY_ID
+    assert browse.identifier == f"{CONFIG_ENTRY_ID}/a/recent"
     assert browse.title == "Account Name"
     assert [
         (child.identifier, child.title) for child in browse.children
@@ -136,7 +136,9 @@ async def test_invalid_album_id(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     ("identifier", "expected_error"),
     [
-        ("invalid-config-entry", "without a photo_media_id"),
+        (CONFIG_ENTRY_ID, "not a Photo"),
+        ("invalid-config-entry/a/example", "not a Photo"),
+        ("invalid-config-entry/q/example", "Could not parse"),
         ("too/many/slashes/in/path", "Invalid identifier"),
     ],
 )
