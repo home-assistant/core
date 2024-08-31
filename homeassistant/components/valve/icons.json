@@ -3,7 +3,7 @@
     "_": {
       "default": "mdi:valve-open",
       "state": {
-        "off": "mdi:valve-closed"
+        "closed": "mdi:valve-closed"
       }
     },
     "gas": {
@@ -12,15 +12,25 @@
     "water": {
       "default": "mdi:valve-open",
       "state": {
-        "off": "mdi:valve-closed"
+        "closed": "mdi:valve-closed"
       }
     }
   },
   "services": {
-    "close_valve": "mdi:valve-closed",
-    "open_valve": "mdi:valve-open",
-    "set_valve_position": "mdi:valve",
-    "stop_valve": "mdi:stop",
-    "toggle": "mdi:valve-open"
+    "close_valve": {
+      "service": "mdi:valve-closed"
+    },
+    "open_valve": {
+      "service": "mdi:valve-open"
+    },
+    "set_valve_position": {
+      "service": "mdi:valve"
+    },
+    "stop_valve": {
+      "service": "mdi:stop"
+    },
+    "toggle": {
+      "service": "mdi:valve-open"
+    }
   }
 }

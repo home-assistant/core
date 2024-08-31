@@ -6,9 +6,12 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
-from bring_api.bring import Bring
-from bring_api.exceptions import BringAuthException, BringRequestException
-from bring_api.types import BringAuthResponse
+from bring_api import (
+    Bring,
+    BringAuthException,
+    BringAuthResponse,
+    BringRequestException,
+)
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult

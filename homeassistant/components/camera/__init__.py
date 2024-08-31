@@ -431,13 +431,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, unsub_track_time_interval)
 
     component.async_register_entity_service(
-        SERVICE_ENABLE_MOTION, {}, "async_enable_motion_detection"
+        SERVICE_ENABLE_MOTION, None, "async_enable_motion_detection"
     )
     component.async_register_entity_service(
-        SERVICE_DISABLE_MOTION, {}, "async_disable_motion_detection"
+        SERVICE_DISABLE_MOTION, None, "async_disable_motion_detection"
     )
-    component.async_register_entity_service(SERVICE_TURN_OFF, {}, "async_turn_off")
-    component.async_register_entity_service(SERVICE_TURN_ON, {}, "async_turn_on")
+    component.async_register_entity_service(SERVICE_TURN_OFF, None, "async_turn_off")
+    component.async_register_entity_service(SERVICE_TURN_ON, None, "async_turn_on")
     component.async_register_entity_service(
         SERVICE_SNAPSHOT, CAMERA_SERVICE_SNAPSHOT, async_handle_snapshot_service
     )
@@ -862,7 +862,7 @@ class CameraMjpegStream(CameraView):
             # Compose camera stream from stills
             interval = float(interval_str)
             if interval < MIN_STREAM_INTERVAL:
-                raise ValueError(f"Stream interval must be > {MIN_STREAM_INTERVAL}")
+                raise ValueError(f"Stream interval must be > {MIN_STREAM_INTERVAL}")  # noqa: TRY301
             return await camera.handle_async_still_stream(request, interval)
         except ValueError as err:
             raise web.HTTPBadRequest from err
@@ -992,7 +992,6 @@ async def async_handle_snapshot_service(
     """Handle snapshot services calls."""
     hass = camera.hass
     filename: Template = service_call.data[ATTR_FILENAME]
-    filename.hass = hass
 
     snapshot_file = filename.async_render(variables={ATTR_ENTITY_ID: camera})
 
@@ -1069,9 +1068,7 @@ async def async_handle_record_service(
     if not stream:
         raise HomeAssistantError(f"{camera.entity_id} does not support record service")
 
-    hass = camera.hass
     filename = service_call.data[CONF_FILENAME]
-    filename.hass = hass
     video_path = filename.async_render(variables={ATTR_ENTITY_ID: camera})
 
     await stream.async_record(

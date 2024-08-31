@@ -1,8 +1,10 @@
 """deCONZ climate platform tests."""
 
 from collections.abc import Callable
+from unittest.mock import patch
 
 import pytest
+from syrupy import SnapshotAssertion
 
 from homeassistant.components.climate import (
     ATTR_FAN_MODE,
@@ -11,15 +13,10 @@ from homeassistant.components.climate import (
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
     DOMAIN as CLIMATE_DOMAIN,
-    FAN_AUTO,
-    FAN_HIGH,
-    FAN_LOW,
-    FAN_MEDIUM,
     FAN_OFF,
     FAN_ON,
     PRESET_BOOST,
     PRESET_COMFORT,
-    PRESET_ECO,
     SERVICE_SET_FAN_MODE,
     SERVICE_SET_HVAC_MODE,
     SERVICE_SET_PRESET_MODE,
@@ -30,23 +27,17 @@ from homeassistant.components.climate import (
 from homeassistant.components.deconz.climate import (
     DECONZ_FAN_SMART,
     DECONZ_PRESET_AUTO,
-    DECONZ_PRESET_COMPLEX,
-    DECONZ_PRESET_HOLIDAY,
     DECONZ_PRESET_MANUAL,
 )
 from homeassistant.components.deconz.const import CONF_ALLOW_CLIP_SENSOR
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    ATTR_TEMPERATURE,
-    STATE_OFF,
-    STATE_UNAVAILABLE,
-)
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, STATE_OFF, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers import entity_registry as er
 
-from .conftest import WebsocketDataType
+from .conftest import ConfigEntryFactoryType, WebsocketDataType
 
+from tests.common import snapshot_platform
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
@@ -85,28 +76,21 @@ from tests.test_util.aiohttp import AiohttpClientMocker
         }
     ],
 )
-@pytest.mark.usefixtures("config_entry_setup")
 async def test_simple_climate_device(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    config_entry_factory: ConfigEntryFactoryType,
     mock_put_request: Callable[[str, str], AiohttpClientMocker],
     sensor_ws_data: WebsocketDataType,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test successful creation of climate entities.
 
     This is a simple water heater that only supports setting temperature and on and off.
     """
-    assert len(hass.states.async_all()) == 2
-    climate_thermostat = hass.states.get("climate.thermostat")
-    assert climate_thermostat.state == HVACMode.HEAT
-    assert climate_thermostat.attributes["hvac_modes"] == [
-        HVACMode.HEAT,
-        HVACMode.OFF,
-    ]
-    assert climate_thermostat.attributes["current_temperature"] == 21.0
-    assert climate_thermostat.attributes["temperature"] == 21.0
-    assert climate_thermostat.attributes["locked"] is True
-    assert hass.states.get("sensor.thermostat_battery").state == "59"
-    assert climate_thermostat.attributes["hvac_action"] == HVACAction.HEATING
+    with patch("homeassistant.components.deconz.PLATFORMS", [Platform.CLIMATE]):
+        config_entry = await config_entry_factory()
+    await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
     # Event signals thermostat configured off
 
@@ -181,29 +165,16 @@ async def test_simple_climate_device(
 )
 async def test_climate_device_without_cooling_support(
     hass: HomeAssistant,
-    config_entry_setup: ConfigEntry,
+    entity_registry: er.EntityRegistry,
+    config_entry_factory: ConfigEntryFactoryType,
     mock_put_request: Callable[[str, str], AiohttpClientMocker],
     sensor_ws_data: WebsocketDataType,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test successful creation of sensor entities."""
-    assert len(hass.states.async_all()) == 2
-    climate_thermostat = hass.states.get("climate.thermostat")
-    assert climate_thermostat.state == HVACMode.AUTO
-    assert climate_thermostat.attributes["hvac_modes"] == [
-        HVACMode.HEAT,
-        HVACMode.OFF,
-        HVACMode.AUTO,
-    ]
-    assert climate_thermostat.attributes["current_temperature"] == 22.6
-    assert climate_thermostat.attributes["temperature"] == 22.0
-    assert hass.states.get("sensor.thermostat") is None
-    assert hass.states.get("sensor.thermostat_battery").state == "100"
-    assert hass.states.get("climate.presence_sensor") is None
-    assert hass.states.get("climate.clip_thermostat") is None
-    assert (
-        hass.states.get("climate.thermostat").attributes["hvac_action"]
-        == HVACAction.HEATING
-    )
+    with patch("homeassistant.components.deconz.PLATFORMS", [Platform.CLIMATE]):
+        config_entry = await config_entry_factory()
+    await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
     # Event signals thermostat configured off
 
@@ -300,17 +271,6 @@ async def test_climate_device_without_cooling_support(
             blocking=True,
         )
 
-    await hass.config_entries.async_unload(config_entry_setup.entry_id)
-
-    states = hass.states.async_all()
-    assert len(states) == 2
-    for state in states:
-        assert state.state == STATE_UNAVAILABLE
-
-    await hass.config_entries.async_remove(config_entry_setup.entry_id)
-    await hass.async_block_till_done()
-    assert len(hass.states.async_all()) == 0
-
 
 @pytest.mark.parametrize(
     "sensor_payload",
@@ -342,28 +302,18 @@ async def test_climate_device_without_cooling_support(
         }
     ],
 )
-@pytest.mark.usefixtures("config_entry_setup")
 async def test_climate_device_with_cooling_support(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    config_entry_factory: ConfigEntryFactoryType,
     mock_put_request: Callable[[str, str], AiohttpClientMocker],
     sensor_ws_data: WebsocketDataType,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test successful creation of sensor entities."""
-    assert len(hass.states.async_all()) == 2
-    climate_thermostat = hass.states.get("climate.zen_01")
-    assert climate_thermostat.state == HVACMode.HEAT
-    assert climate_thermostat.attributes["hvac_modes"] == [
-        HVACMode.HEAT,
-        HVACMode.OFF,
-        HVACMode.AUTO,
-        HVACMode.COOL,
-    ]
-    assert climate_thermostat.attributes["current_temperature"] == 23.2
-    assert climate_thermostat.attributes["temperature"] == 22.2
-    assert hass.states.get("sensor.zen_01_battery").state == "25"
-    assert (
-        hass.states.get("climate.zen_01").attributes["hvac_action"] == HVACAction.IDLE
-    )
+    with patch("homeassistant.components.deconz.PLATFORMS", [Platform.CLIMATE]):
+        config_entry = await config_entry_factory()
+    await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
     # Event signals thermostat mode cool
 
@@ -428,29 +378,18 @@ async def test_climate_device_with_cooling_support(
         }
     ],
 )
-@pytest.mark.usefixtures("config_entry_setup")
 async def test_climate_device_with_fan_support(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    config_entry_factory: ConfigEntryFactoryType,
     mock_put_request: Callable[[str, str], AiohttpClientMocker],
     sensor_ws_data: WebsocketDataType,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test successful creation of sensor entities."""
-    assert len(hass.states.async_all()) == 2
-    climate_thermostat = hass.states.get("climate.zen_01")
-    assert climate_thermostat.state == HVACMode.HEAT
-    assert climate_thermostat.attributes["fan_mode"] == FAN_AUTO
-    assert climate_thermostat.attributes["fan_modes"] == [
-        DECONZ_FAN_SMART,
-        FAN_AUTO,
-        FAN_HIGH,
-        FAN_MEDIUM,
-        FAN_LOW,
-        FAN_ON,
-        FAN_OFF,
-    ]
-    assert (
-        hass.states.get("climate.zen_01").attributes["hvac_action"] == HVACAction.IDLE
-    )
+    with patch("homeassistant.components.deconz.PLATFORMS", [Platform.CLIMATE]):
+        config_entry = await config_entry_factory()
+    await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
     # Event signals fan mode defaults to off
 
@@ -544,32 +483,18 @@ async def test_climate_device_with_fan_support(
         }
     ],
 )
-@pytest.mark.usefixtures("config_entry_setup")
 async def test_climate_device_with_preset(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     mock_put_request: Callable[[str, str], AiohttpClientMocker],
     sensor_ws_data: WebsocketDataType,
+    config_entry_factory: ConfigEntryFactoryType,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test successful creation of sensor entities."""
-    assert len(hass.states.async_all()) == 2
-
-    climate_zen_01 = hass.states.get("climate.zen_01")
-    assert climate_zen_01.state == HVACMode.HEAT
-    assert climate_zen_01.attributes["current_temperature"] == 23.2
-    assert climate_zen_01.attributes["temperature"] == 22.2
-    assert climate_zen_01.attributes["preset_mode"] == DECONZ_PRESET_AUTO
-    assert climate_zen_01.attributes["preset_modes"] == [
-        DECONZ_PRESET_AUTO,
-        PRESET_BOOST,
-        PRESET_COMFORT,
-        DECONZ_PRESET_COMPLEX,
-        PRESET_ECO,
-        DECONZ_PRESET_HOLIDAY,
-        DECONZ_PRESET_MANUAL,
-    ]
-    assert (
-        hass.states.get("climate.zen_01").attributes["hvac_action"] == HVACAction.IDLE
-    )
+    with patch("homeassistant.components.deconz.PLATFORMS", [Platform.CLIMATE]):
+        config_entry = await config_entry_factory()
+    await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
     # Event signals deCONZ preset
 
@@ -648,34 +573,34 @@ async def test_climate_device_with_preset(
 )
 @pytest.mark.parametrize("config_entry_options", [{CONF_ALLOW_CLIP_SENSOR: True}])
 async def test_clip_climate_device(
-    hass: HomeAssistant, config_entry_setup: ConfigEntry
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    config_entry_factory: ConfigEntryFactoryType,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test successful creation of sensor entities."""
-    assert len(hass.states.async_all()) == 3
-    assert hass.states.get("climate.clip_thermostat").state == HVACMode.HEAT
-    assert (
-        hass.states.get("climate.clip_thermostat").attributes["hvac_action"]
-        == HVACAction.HEATING
-    )
+    with patch("homeassistant.components.deconz.PLATFORMS", [Platform.CLIMATE]):
+        config_entry = await config_entry_factory()
+    await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
     # Disallow clip sensors
 
     hass.config_entries.async_update_entry(
-        config_entry_setup, options={CONF_ALLOW_CLIP_SENSOR: False}
+        config_entry, options={CONF_ALLOW_CLIP_SENSOR: False}
     )
     await hass.async_block_till_done()
 
-    assert len(hass.states.async_all()) == 2
+    assert len(hass.states.async_all()) == 1
     assert not hass.states.get("climate.clip_thermostat")
 
     # Allow clip sensors
 
     hass.config_entries.async_update_entry(
-        config_entry_setup, options={CONF_ALLOW_CLIP_SENSOR: True}
+        config_entry, options={CONF_ALLOW_CLIP_SENSOR: True}
     )
     await hass.async_block_till_done()
 
-    assert len(hass.states.async_all()) == 3
+    assert len(hass.states.async_all()) == 2
     assert hass.states.get("climate.clip_thermostat").state == HVACMode.HEAT
     assert (
         hass.states.get("climate.clip_thermostat").attributes["hvac_action"]
@@ -808,7 +733,6 @@ async def test_no_mode_no_state(hass: HomeAssistant) -> None:
     assert len(hass.states.async_all()) == 2
 
     climate_thermostat = hass.states.get("climate.zen_01")
-
     assert climate_thermostat.state is STATE_OFF
     assert climate_thermostat.attributes["preset_mode"] is DECONZ_PRESET_AUTO
     assert climate_thermostat.attributes["hvac_action"] is HVACAction.IDLE
@@ -857,13 +781,10 @@ async def test_boost_mode(
     sensor_ws_data: WebsocketDataType,
 ) -> None:
     """Test that a climate device with boost mode and different state works."""
-
     assert len(hass.states.async_all()) == 3
 
     climate_thermostat = hass.states.get("climate.thermostat")
-
     assert climate_thermostat.state == HVACMode.HEAT
-
     assert climate_thermostat.attributes["preset_mode"] is DECONZ_PRESET_MANUAL
     assert climate_thermostat.attributes["hvac_action"] is HVACAction.IDLE
 

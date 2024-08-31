@@ -1,6 +1,10 @@
 {
   "services": {
-    "reconnect_client": "mdi:sync",
-    "remove_clients": "mdi:delete"
+    "reconnect_client": {
+      "service": "mdi:sync"
+    },
+    "remove_clients": {
+      "service": "mdi:delete"
+    }
   }
 }

@@ -68,6 +68,10 @@ HOMEKIT = {
         "always_discover": True,
         "domain": "lifx",
     },
+    "LIFX B10": {
+        "always_discover": True,
+        "domain": "lifx",
+    },
     "LIFX BR30": {
         "always_discover": True,
         "domain": "lifx",
@@ -157,6 +161,10 @@ HOMEKIT = {
         "domain": "lifx",
     },
     "LIFX String": {
+        "always_discover": True,
+        "domain": "lifx",
+    },
+    "LIFX T10": {
         "always_discover": True,
         "domain": "lifx",
     },
@@ -415,6 +423,11 @@ ZEROCONF = {
             "domain": "forked_daapd",
         },
     ],
+    "_deako._tcp.local.": [
+        {
+            "domain": "deako",
+        },
+    ],
     "_devialet-http._tcp.local.": [
         {
             "domain": "devialet",
@@ -515,6 +528,10 @@ ZEROCONF = {
             "name": "bosch shc*",
         },
         {
+            "domain": "lektrico",
+            "name": "lektrico*",
+        },
+        {
             "domain": "loqed",
             "name": "loqed*",
         },
@@ -589,6 +606,11 @@ ZEROCONF = {
             "name": "gateway*",
         },
     ],
+    "_linkplay._tcp.local.": [
+        {
+            "domain": "linkplay",
+        },
+    ],
     "_lookin._tcp.local.": [
         {
             "domain": "lookin",
@@ -644,6 +666,11 @@ ZEROCONF = {
         {
             "domain": "yeelight",
             "name": "yeelink-*",
+        },
+    ],
+    "_musc._tcp.local.": [
+        {
+            "domain": "bluesound",
         },
     ],
     "_nanoleafapi._tcp.local.": [
@@ -737,6 +764,9 @@ ZEROCONF = {
         },
     ],
     "_slzb-06._tcp.local.": [
+        {
+            "domain": "smlight",
+        },
         {
             "domain": "zha",
             "name": "slzb-06*",

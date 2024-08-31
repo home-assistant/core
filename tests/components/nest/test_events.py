@@ -186,6 +186,8 @@ async def test_event(
         "type": expected_type,
         "timestamp": event_time,
     }
+    assert "image" in events[0].data["attachment"]
+    assert "video" not in events[0].data["attachment"]
 
 
 @pytest.mark.parametrize(
@@ -344,6 +346,8 @@ async def test_doorbell_event_thread(
         "type": "camera_motion",
         "timestamp": timestamp1.replace(microsecond=0),
     }
+    assert "image" in events[0].data["attachment"]
+    assert "video" in events[0].data["attachment"]
 
 
 @pytest.mark.parametrize(

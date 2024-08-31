@@ -5,6 +5,7 @@ from datetime import timedelta
 DOMAIN = "aquacell"
 DATA_AQUACELL = "DATA_AQUACELL"
 
+CONF_BRAND = "brand"
 CONF_REFRESH_TOKEN = "refresh_token"
 CONF_REFRESH_TOKEN_CREATION_TIME = "refresh_token_creation_time"
 

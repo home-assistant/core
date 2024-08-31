@@ -2,23 +2,28 @@
 
 from collections.abc import Callable
 from typing import Any
+from unittest.mock import patch
 
+from pydeconz.models.sensor.air_purifier import AirPurifierFanMode
 from pydeconz.models.sensor.presence import (
     PresenceConfigDeviceMode,
     PresenceConfigTriggerDistance,
 )
 import pytest
+from syrupy import SnapshotAssertion
 
 from homeassistant.components.select import (
     ATTR_OPTION,
     DOMAIN as SELECT_DOMAIN,
     SERVICE_SELECT_OPTION,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, EntityCategory
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import entity_registry as er
 
+from .conftest import ConfigEntryFactoryType
+
+from tests.common import snapshot_platform
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 TEST_DATA = [
@@ -47,15 +52,7 @@ TEST_DATA = [
             "uniqueid": "xx:xx:xx:xx:xx:xx:xx:xx-01-0406",
         },
         {
-            "entity_count": 5,
-            "device_count": 3,
             "entity_id": "select.aqara_fp1_device_mode",
-            "unique_id": "xx:xx:xx:xx:xx:xx:xx:xx-01-0406-device_mode",
-            "entity_category": EntityCategory.CONFIG,
-            "attributes": {
-                "friendly_name": "Aqara FP1 Device Mode",
-                "options": ["leftright", "undirected"],
-            },
             "option": PresenceConfigDeviceMode.LEFT_AND_RIGHT.value,
             "request": "/sensors/0/config",
             "request_data": {"devicemode": "leftright"},
@@ -86,15 +83,7 @@ TEST_DATA = [
             "uniqueid": "xx:xx:xx:xx:xx:xx:xx:xx-01-0406",
         },
         {
-            "entity_count": 5,
-            "device_count": 3,
             "entity_id": "select.aqara_fp1_sensitivity",
-            "unique_id": "xx:xx:xx:xx:xx:xx:xx:xx-01-0406-sensitivity",
-            "entity_category": EntityCategory.CONFIG,
-            "attributes": {
-                "friendly_name": "Aqara FP1 Sensitivity",
-                "options": ["High", "Medium", "Low"],
-            },
             "option": "Medium",
             "request": "/sensors/0/config",
             "request_data": {"sensitivity": 2},
@@ -125,18 +114,46 @@ TEST_DATA = [
             "uniqueid": "xx:xx:xx:xx:xx:xx:xx:xx-01-0406",
         },
         {
-            "entity_count": 5,
-            "device_count": 3,
             "entity_id": "select.aqara_fp1_trigger_distance",
-            "unique_id": "xx:xx:xx:xx:xx:xx:xx:xx-01-0406-trigger_distance",
-            "entity_category": EntityCategory.CONFIG,
-            "attributes": {
-                "friendly_name": "Aqara FP1 Trigger Distance",
-                "options": ["far", "medium", "near"],
-            },
             "option": PresenceConfigTriggerDistance.FAR.value,
             "request": "/sensors/0/config",
             "request_data": {"triggerdistance": "far"},
+        },
+    ),
+    (  # Air Purifier Fan Mode
+        {
+            "config": {
+                "filterlifetime": 259200,
+                "ledindication": True,
+                "locked": False,
+                "mode": "speed_1",
+                "on": True,
+                "reachable": True,
+            },
+            "ep": 1,
+            "etag": "de26d19d9e91b2db3ded6ee7ab6b6a4b",
+            "lastannounced": None,
+            "lastseen": "2024-08-07T18:27Z",
+            "manufacturername": "IKEA of Sweden",
+            "modelid": "STARKVIND Air purifier",
+            "name": "IKEA Starkvind",
+            "productid": "E2007",
+            "state": {
+                "deviceruntime": 73405,
+                "filterruntime": 73405,
+                "lastupdated": "2024-08-07T18:27:52.543",
+                "replacefilter": False,
+                "speed": 20,
+            },
+            "swversion": "1.1.001",
+            "type": "ZHAAirPurifier",
+            "uniqueid": "0c:43:14:ff:fe:6c:20:12-01-fc7d",
+        },
+        {
+            "entity_id": "select.ikea_starkvind_fan_mode",
+            "option": AirPurifierFanMode.AUTO.value,
+            "request": "/sensors/0/config",
+            "request_data": {"mode": "auto"},
         },
     ),
 ]
@@ -145,36 +162,16 @@ TEST_DATA = [
 @pytest.mark.parametrize(("sensor_payload", "expected"), TEST_DATA)
 async def test_select(
     hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    config_entry_setup: ConfigEntry,
+    config_entry_factory: ConfigEntryFactoryType,
     mock_put_request: Callable[[str, str], AiohttpClientMocker],
     expected: dict[str, Any],
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test successful creation of button entities."""
-    assert len(hass.states.async_all()) == expected["entity_count"]
-
-    # Verify state data
-
-    button = hass.states.get(expected["entity_id"])
-    assert button.attributes == expected["attributes"]
-
-    # Verify entity registry data
-
-    ent_reg_entry = entity_registry.async_get(expected["entity_id"])
-    assert ent_reg_entry.entity_category is expected["entity_category"]
-    assert ent_reg_entry.unique_id == expected["unique_id"]
-
-    # Verify device registry data
-
-    assert (
-        len(
-            dr.async_entries_for_config_entry(
-                device_registry, config_entry_setup.entry_id
-            )
-        )
-        == expected["device_count"]
-    )
+    with patch("homeassistant.components.deconz.PLATFORMS", [Platform.SELECT]):
+        config_entry = await config_entry_factory()
+    await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
     # Verify selecting option
     aioclient_mock = mock_put_request(expected["request"])
@@ -189,14 +186,3 @@ async def test_select(
         blocking=True,
     )
     assert aioclient_mock.mock_calls[1][2] == expected["request_data"]
-
-    # Unload entry
-
-    await hass.config_entries.async_unload(config_entry_setup.entry_id)
-    assert hass.states.get(expected["entity_id"]).state == STATE_UNAVAILABLE
-
-    # Remove entry
-
-    await hass.config_entries.async_remove(config_entry_setup.entry_id)
-    await hass.async_block_till_done()
-    assert len(hass.states.async_all()) == 0

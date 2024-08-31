@@ -5,17 +5,19 @@ from unittest.mock import AsyncMock, Mock, patch
 import pytest
 
 from homeassistant.components import axis
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
+from tests.common import MockConfigEntry
 
-async def test_setup_entry(config_entry_setup: ConfigEntry) -> None:
+
+async def test_setup_entry(config_entry_setup: MockConfigEntry) -> None:
     """Test successful setup of entry."""
     assert config_entry_setup.state is ConfigEntryState.LOADED
 
 
 async def test_setup_entry_fails(
-    hass: HomeAssistant, config_entry: ConfigEntry
+    hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
     """Test successful setup of entry."""
     config_entry.add_to_hass(hass)
@@ -32,7 +34,7 @@ async def test_setup_entry_fails(
 
 
 async def test_unload_entry(
-    hass: HomeAssistant, config_entry_setup: ConfigEntry
+    hass: HomeAssistant, config_entry_setup: MockConfigEntry
 ) -> None:
     """Test successful unload of entry."""
     assert config_entry_setup.state is ConfigEntryState.LOADED
@@ -42,7 +44,9 @@ async def test_unload_entry(
 
 
 @pytest.mark.parametrize("config_entry_version", [1])
-async def test_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+async def test_migrate_entry(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
     """Test successful migration of entry data."""
     config_entry.add_to_hass(hass)
     assert config_entry.version == 1

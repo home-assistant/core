@@ -37,7 +37,7 @@ class JvcProjectorConfigFlow(ConfigFlow, domain=DOMAIN):
 
             try:
                 if not is_host_valid(host):
-                    raise InvalidHost
+                    raise InvalidHost  # noqa: TRY301
 
                 mac = await get_mac_address(host, port, password)
             except InvalidHost:
@@ -74,7 +74,7 @@ class JvcProjectorConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_reauth(
-        self, user_input: Mapping[str, Any]
+        self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Perform reauth on password authentication error."""
         self._reauth_entry = self.hass.config_entries.async_get_entry(
