@@ -6,7 +6,10 @@ from pyotgw.vars import OTGW, OTGW_ABOUT
 import pytest
 
 from homeassistant import setup
-from homeassistant.components.opentherm_gw.const import DEVICE_IDENT_GATEWAY, DOMAIN
+from homeassistant.components.opentherm_gw.const import (
+    DOMAIN,
+    OpenThermDeviceIdentifier,
+)
 from homeassistant.const import CONF_DEVICE, CONF_ID, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -50,7 +53,7 @@ async def test_device_registry_insert(
     await hass.async_block_till_done()
 
     gw_dev = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{MOCK_GATEWAY_ID}-{DEVICE_IDENT_GATEWAY}")}
+        identifiers={(DOMAIN, f"{MOCK_GATEWAY_ID}-{OpenThermDeviceIdentifier.GATEWAY}")}
     )
     assert gw_dev.sw_version == VERSION_OLD
 
@@ -65,7 +68,9 @@ async def test_device_registry_update(
 
     device_registry.async_get_or_create(
         config_entry_id=MOCK_CONFIG_ENTRY.entry_id,
-        identifiers={(DOMAIN, f"{MOCK_GATEWAY_ID}-{DEVICE_IDENT_GATEWAY}")},
+        identifiers={
+            (DOMAIN, f"{MOCK_GATEWAY_ID}-{OpenThermDeviceIdentifier.GATEWAY}")
+        },
         name="Mock Gateway",
         manufacturer="Schelte Bron",
         model="OpenTherm Gateway",
@@ -83,6 +88,6 @@ async def test_device_registry_update(
 
     await hass.async_block_till_done()
     gw_dev = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{MOCK_GATEWAY_ID}-{DEVICE_IDENT_GATEWAY}")}
+        identifiers={(DOMAIN, f"{MOCK_GATEWAY_ID}-{OpenThermDeviceIdentifier.GATEWAY}")}
     )
     assert gw_dev.sw_version == VERSION_NEW
