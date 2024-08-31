@@ -175,7 +175,7 @@ def _enable_posix_spawn() -> None:
     # less efficient. This is a workaround to force posix_spawn()
     # when using musl since cpython is not aware its supported.
     tag = next(packaging.tags.sys_tags())
-    subprocess._USE_POSIX_SPAWN = "musllinux" in tag.platform  # noqa: SLF001
+    subprocess._USE_POSIX_SPAWN = "musllinux" in tag.platform  # type: ignore[misc]  # noqa: SLF001
 
 
 def run(runtime_config: RuntimeConfig) -> int:
