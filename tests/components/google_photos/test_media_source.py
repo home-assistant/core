@@ -7,7 +7,7 @@ from googleapiclient.errors import HttpError
 from httplib2 import Response
 import pytest
 
-from homeassistant.components.google_photos.const import DOMAIN
+from homeassistant.components.google_photos.const import DOMAIN, UPLOAD_SCOPE
 from homeassistant.components.media_source import (
     URI_SCHEME,
     BrowseError,
@@ -43,6 +43,24 @@ async def test_no_config_entries(
     assert browse.identifier is None
     assert browse.title == "Google Photos"
     assert browse.can_expand
+    assert not browse.children
+
+
+@pytest.mark.usefixtures("setup_integration", "setup_api")
+@pytest.mark.parametrize(
+    ("scopes"),
+    [
+        [UPLOAD_SCOPE],
+    ],
+)
+async def test_no_read_scopes(
+    hass: HomeAssistant,
+) -> None:
+    """Test a media source with only write scopes configured so no media source exists."""
+    browse = await async_browse_media(hass, f"{URI_SCHEME}{DOMAIN}")
+    assert browse.domain == DOMAIN
+    assert browse.identifier is None
+    assert browse.title == "Google Photos"
     assert not browse.children
 
 
