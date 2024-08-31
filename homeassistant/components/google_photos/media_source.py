@@ -77,7 +77,7 @@ class PhotosIdentifier:
     """Identifies the album or photo contents to show."""
 
     def as_string(self) -> str:
-        """Serialize the identiifer as a string."""
+        """Serialize the identifier as a string."""
         if self.id_type is None:
             return self.config_entry_id
         return f"{self.config_entry_id}/{self.id_type}/{self.media_id}"
