@@ -1,4 +1,45 @@
 {
+  "entity": {
+    "binary_sensor": {
+      "remote_control": {
+        "default": "mdi:remote",
+        "state": {
+          "on": "mdi:remote",
+          "off": "mdi:remote-off"
+        }
+      },
+      "remote_start": {
+        "default": "mdi:remote",
+        "state": {
+          "on": "mdi:remote",
+          "off": "mdi:remote-off"
+        }
+      }
+    },
+    "sensor": {
+      "duration": {
+        "default": "mdi:update"
+      },
+      "operation_state": {
+        "default": "mdi:state-machine"
+      },
+      "program_progress": {
+        "default": "mdi:progress-clock"
+      }
+    },
+    "switch": {
+      "child_lock": {
+        "default": "mdi:lock",
+        "state": {
+          "on": "mdi:lock",
+          "off": "mdi:lock-off"
+        }
+      },
+      "power": {
+        "default": "mdi:power"
+      }
+    }
+  },
   "services": {
     "start_program": {
       "service": "mdi:play"
@@ -20,16 +61,6 @@
     },
     "change_setting": {
       "service": "mdi:cog"
-    }
-  },
-  "entity": {
-    "switch": {
-      "refrigeration_dispenser": {
-        "default": "mdi:snowflake",
-        "state": {
-          "off": "mdi:snowflake-off"
-        }
-      }
     }
   }
 }

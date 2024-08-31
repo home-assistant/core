@@ -147,7 +147,7 @@ class HomeConnectPowerSwitch(HomeConnectEntity, SwitchEntity):
 
     def __init__(self, device):
         """Initialize the entity."""
-        super().__init__(device, "Power")
+        super().__init__(device, "power")
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Switch the device on."""
@@ -214,7 +214,7 @@ class HomeConnectChildLockSwitch(HomeConnectEntity, SwitchEntity):
 
     def __init__(self, device) -> None:
         """Initialize the entity."""
-        super().__init__(device, "ChildLock")
+        super().__init__(device, "child_lock")
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Switch child lock on."""

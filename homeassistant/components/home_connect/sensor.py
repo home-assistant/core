@@ -20,6 +20,7 @@ from .const import (
     DOMAIN,
 )
 from .entity import HomeConnectEntity
+from .utils import bsh_key_to_translation_key
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,13 +47,12 @@ async def async_setup_entry(
 class HomeConnectSensor(HomeConnectEntity, SensorEntity):
     """Sensor class for Home Connect."""
 
-    def __init__(self, device, desc, key, unit, icon, device_class, sign=1):
+    def __init__(self, device, desc, key, unit, device_class, sign=1):
         """Initialize the entity."""
         super().__init__(device, desc)
         self._key = key
         self._sign = sign
         self._attr_native_unit_of_measurement = unit
-        self._attr_icon = icon
         self._attr_device_class = device_class
 
     @property
@@ -94,10 +94,8 @@ class HomeConnectSensor(HomeConnectEntity, SensorEntity):
         else:
             self._attr_native_value = status[self._key].get(ATTR_VALUE)
             if self._key == BSH_OPERATION_STATE:
-                # Value comes back as an enum, we only really care about the
-                # last part, so split it off
-                # https://developer.home-connect.com/docs/status/operation_state
-                self._attr_native_value = cast(str, self._attr_native_value).split(".")[
-                    -1
-                ]
+                original_value = cast(str, self._attr_native_value)
+                self._attr_native_value = bsh_key_to_translation_key(cast(str, self._attr_native_value))
+                _LOGGER.debug("Updated, new state: %s", original_value)
+                return
         _LOGGER.debug("Updated, new state: %s", self._attr_native_value)

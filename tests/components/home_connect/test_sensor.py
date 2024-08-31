@@ -6,6 +6,7 @@ from unittest.mock import MagicMock, Mock
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
+from homeassistant.components.home_connect.utils import bsh_key_to_translation_key
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -18,14 +19,14 @@ TEST_HC_APP = "Dishwasher"
 
 EVENT_PROG_DELAYED_START = {
     "BSH.Common.Status.OperationState": {
-        "value": "BSH.Common.EnumType.OperationState.Delayed"
+        "value": "BSH.Common.EnumType.OperationState.DelayedStart"
     },
 }
 
 EVENT_PROG_REMAIN_NO_VALUE = {
     "BSH.Common.Option.RemainingProgramTime": {},
     "BSH.Common.Status.OperationState": {
-        "value": "BSH.Common.EnumType.OperationState.Delayed"
+        "value": "BSH.Common.EnumType.OperationState.DelayedStart"
     },
 }
 
@@ -94,12 +95,15 @@ PROGRAM_SEQUENCE_EVENTS = (
 
 # Entity mapping to expected state at each program sequence.
 ENTITY_ID_STATES = {
-    "sensor.dishwasher_operation_state": (
-        "Delayed",
-        "Run",
-        "Run",
-        "Run",
-        "Ready",
+    "sensor.dishwasher_operation_state": tuple(
+        bsh_key_to_translation_key(state)
+        for state in (
+            "BSH.Common.EnumType.OperationState.DelayedStart",
+            "BSH.Common.EnumType.OperationState.Run",
+            "BSH.Common.EnumType.OperationState.Run",
+            "BSH.Common.EnumType.OperationState.Run",
+            "BSH.Common.EnumType.OperationState.Ready",
+        )
     ),
     "sensor.dishwasher_remaining_program_time": (
         "unavailable",

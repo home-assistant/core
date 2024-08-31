@@ -6,12 +6,13 @@ from typing import Any
 
 import homeconnect
 from homeconnect.api import HomeConnectError
+from stringcase import pascalcase
 
 from homeassistant import config_entries, core
+from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
-    ATTR_ICON,
     CONF_DEVICE,
     CONF_ENTITIES,
     PERCENTAGE,
@@ -25,7 +26,6 @@ from .const import (
     ATTR_DESC,
     ATTR_DEVICE,
     ATTR_KEY,
-    ATTR_SENSOR_TYPE,
     ATTR_SIGN,
     ATTR_UNIT,
     ATTR_VALUE,
@@ -170,21 +170,20 @@ class DeviceWithPrograms(HomeConnectDevice):
         device.
         """
         sensors = {
-            "Remaining Program Time": (None, None, SensorDeviceClass.TIMESTAMP, 1),
-            "Duration": (UnitOfTime.SECONDS, "mdi:update", None, 1),
-            "Program Progress": (PERCENTAGE, "mdi:progress-clock", None, 1),
+            "remaining_program_time": (None, SensorDeviceClass.TIMESTAMP, 1),
+            "duration": (UnitOfTime.SECONDS, None, 1),
+            "program_progress": (PERCENTAGE, None, 1),
         }
         return [
             {
                 ATTR_DEVICE: self,
                 ATTR_DESC: k,
                 ATTR_UNIT: unit,
-                ATTR_KEY: "BSH.Common.Option.{}".format(k.replace(" ", "")),
-                ATTR_ICON: icon,
+                ATTR_KEY: f"BSH.Common.Option.{pascalcase(k)}",
                 ATTR_DEVICE_CLASS: device_class,
                 ATTR_SIGN: sign,
             }
-            for k, (unit, icon, device_class, sign) in sensors.items()
+            for k, (unit, device_class, sign) in sensors.items()
         ]
 
 
@@ -197,10 +196,9 @@ class DeviceWithOpState(HomeConnectDevice):
         return [
             {
                 ATTR_DEVICE: self,
-                ATTR_DESC: "Operation State",
+                ATTR_DESC: "operation_state",
                 ATTR_UNIT: None,
                 ATTR_KEY: BSH_OPERATION_STATE,
-                ATTR_ICON: "mdi:state-machine",
                 ATTR_DEVICE_CLASS: None,
                 ATTR_SIGN: 1,
             }
@@ -214,9 +212,8 @@ class DeviceWithDoor(HomeConnectDevice):
         """Get a dictionary with info about the door binary sensor."""
         return {
             ATTR_DEVICE: self,
-            ATTR_DESC: "Door",
-            ATTR_SENSOR_TYPE: "door",
-            ATTR_DEVICE_CLASS: "door",
+            ATTR_DESC: "door",
+            ATTR_DEVICE_CLASS: BinarySensorDeviceClass.DOOR,
         }
 
 
@@ -225,7 +222,7 @@ class DeviceWithLight(HomeConnectDevice):
 
     def get_light_entity(self):
         """Get a dictionary with info about the lighting."""
-        return {ATTR_DEVICE: self, ATTR_DESC: "Light", ATTR_AMBIENT: None}
+        return {ATTR_DEVICE: self, ATTR_DESC: "light", ATTR_AMBIENT: None}
 
 
 class DeviceWithAmbientLight(HomeConnectDevice):
@@ -233,7 +230,7 @@ class DeviceWithAmbientLight(HomeConnectDevice):
 
     def get_ambientlight_entity(self):
         """Get a dictionary with info about the ambient lighting."""
-        return {ATTR_DEVICE: self, ATTR_DESC: "AmbientLight", ATTR_AMBIENT: True}
+        return {ATTR_DEVICE: self, ATTR_DESC: "ambient_light", ATTR_AMBIENT: True}
 
 
 class DeviceWithRemoteControl(HomeConnectDevice):
@@ -243,8 +240,7 @@ class DeviceWithRemoteControl(HomeConnectDevice):
         """Get a dictionary with info about the remote control sensor."""
         return {
             ATTR_DEVICE: self,
-            ATTR_DESC: "Remote Control",
-            ATTR_SENSOR_TYPE: "remote_control",
+            ATTR_DESC: "remote_control",
         }
 
 
@@ -255,8 +251,7 @@ class DeviceWithRemoteStart(HomeConnectDevice):
         """Get a dictionary with info about the remote start sensor."""
         return {
             ATTR_DEVICE: self,
-            ATTR_DESC: "Remote Start",
-            ATTR_SENSOR_TYPE: "remote_start",
+            ATTR_DESC: "remote_start",
         }
 
 

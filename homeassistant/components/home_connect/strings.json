@@ -18,6 +18,25 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "door": {
+        "name": "Door"
+      },
+      "remote_control": {
+        "name": "Remote control"
+      },
+      "remote_start": {
+        "name": "Remote start"
+      }
+    },
+    "light": {
+      "ambient_light": {
+        "name": "Ambient light"
+      },
+      "light": {
+        "name": "[%key:component::light::title%]"
+      }
+    },
     "select": {
       "program": {
         "name": "Program",
@@ -177,6 +196,39 @@
           "laundry_care-washer_dryer-program-wash_and_dry_60": "Wash and dry 60 min",
           "laundry_care-washer_dryer-program-wash_and_dry_90": "Wash and dry 90 min"
         }
+      }
+    },
+    "sensor": {
+      "duration": {
+        "name": "Duration"
+      },
+      "operation_state": {
+        "name": "Operation state",
+        "state": {
+          "bsh-common-enum_type-operation_state-inactive": "Inactive",
+          "bsh-common-enum_type-operation_state-ready": "Ready",
+          "bsh-common-enum_type-operation_state-delayed_start": "Delayed Start",
+          "bsh-common-enum_type-operation_state-run": "Run",
+          "bsh-common-enum_type-operation_state-pause": "Pause",
+          "bsh-common-enum_type-operation_state-action_required": "Action required",
+          "bsh-common-enum_type-operation_state-finished": "Finished",
+          "bsh-common-enum_type-operation_state-error": "Error",
+          "bsh-common-enum_type-operation_state-aborting": "Aborting"
+        }
+      },
+      "program_progress": {
+        "name": "Program progress"
+      },
+      "remaining_program_time": {
+        "name": "Remaining program time"
+      }
+    },
+    "switch": {
+      "child_lock": {
+        "name": "Child lock"
+      },
+      "power": {
+        "name": "Power"
       }
     }
   },

@@ -17,12 +17,13 @@ class HomeConnectEntity(Entity):
     """Generic Home Connect entity (base class)."""
 
     _attr_should_poll = False
+    _attr_has_entity_name = True
 
     def __init__(self, device: HomeConnectDevice, desc: str) -> None:
         """Initialize the entity."""
         self.device = device
-        if not hasattr(self, "entity_description"):
-            self._attr_name = f"{device.appliance.name} {desc}"
+        self._attr_translation_key = desc
+        self._attr_des = desc
         self._attr_unique_id = f"{device.appliance.haId}-{desc}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, device.appliance.haId)},

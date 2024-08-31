@@ -4,7 +4,7 @@ import logging
 
 from homeconnect.api import HomeConnectError
 
-from homeassistant.components.select import SelectEntity, SelectEntityDescription
+from homeassistant.components.select import SelectEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ENTITIES
 from homeassistant.core import HomeAssistant
@@ -45,18 +45,14 @@ class HomeConnectProgramSelect(HomeConnectEntity, SelectEntity):
     def __init__(self, device, programs: list[str]) -> None:
         """Initialize the entity."""
         super().__init__(device, "program")
-        self.entity_description = SelectEntityDescription(
-            key="program",
-            translation_key="program",
-            options=[bsh_key_to_translation_key(program) for program in programs],
-        )
+        self._attr_options = [bsh_key_to_translation_key(program) for program in programs]
 
     async def async_update(self) -> None:
         """Update the program selection status."""
         self._attr_current_option = bsh_key_to_translation_key(
             self.device.appliance.status
             .get(BSH_ACTIVE_PROGRAM, {})
-            .get( ATTR_VALUE, None)
+            .get(ATTR_VALUE, None)
         )
         _LOGGER.debug("Updated, new program: %s", self._attr_current_option)
 

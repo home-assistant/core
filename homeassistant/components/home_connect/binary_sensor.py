@@ -44,24 +44,24 @@ async def async_setup_entry(
 class HomeConnectBinarySensor(HomeConnectEntity, BinarySensorEntity):
     """Binary sensor for Home Connect."""
 
-    def __init__(self, device, desc, sensor_type, device_class=None):
+    def __init__(self, device, desc, device_class=None):
         """Initialize the entity."""
         super().__init__(device, desc)
         self._state = None
         self._device_class = device_class
-        self._type = sensor_type
-        if self._type == "door":
-            self._update_key = BSH_DOOR_STATE
-            self._false_value_list = (BSH_DOOR_STATE_CLOSED, BSH_DOOR_STATE_LOCKED)
-            self._true_value_list = [BSH_DOOR_STATE_OPEN]
-        elif self._type == "remote_control":
-            self._update_key = BSH_REMOTE_CONTROL_ACTIVATION_STATE
-            self._false_value_list = [False]
-            self._true_value_list = [True]
-        elif self._type == "remote_start":
-            self._update_key = BSH_REMOTE_START_ALLOWANCE_STATE
-            self._false_value_list = [False]
-            self._true_value_list = [True]
+        match desc:
+            case "door":
+                self._update_key = BSH_DOOR_STATE
+                self._false_value_list = (BSH_DOOR_STATE_CLOSED, BSH_DOOR_STATE_LOCKED)
+                self._true_value_list = [BSH_DOOR_STATE_OPEN]
+            case "remote_control":
+                self._update_key = BSH_REMOTE_CONTROL_ACTIVATION_STATE
+                self._false_value_list = [False]
+                self._true_value_list = [True]
+            case "remote_start":
+                self._update_key = BSH_REMOTE_START_ALLOWANCE_STATE
+                self._false_value_list = [False]
+                self._true_value_list = [True]
 
     @property
     def is_on(self):
@@ -83,9 +83,7 @@ class HomeConnectBinarySensor(HomeConnectEntity, BinarySensorEntity):
         elif state.get(ATTR_VALUE) in self._true_value_list:
             self._state = True
         else:
-            _LOGGER.warning(
-                "Unexpected value for HomeConnect %s state: %s", self._type, state
-            )
+            _LOGGER.warning("Unexpected value for %s state: %s", self.entity_id, state)
             self._state = None
         _LOGGER.debug("Updated, new state: %s", self._state)
 

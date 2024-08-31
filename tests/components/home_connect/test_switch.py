@@ -87,13 +87,13 @@ async def test_switches(
             STATE_OFF,
         ),
         (
-            "switch.washer_childlock",
+            "switch.washer_child_lock",
             {BSH_CHILD_LOCK_STATE: {"value": True}},
             SERVICE_TURN_ON,
             STATE_ON,
         ),
         (
-            "switch.washer_childlock",
+            "switch.washer_child_lock",
             {BSH_CHILD_LOCK_STATE: {"value": False}},
             SERVICE_TURN_OFF,
             STATE_OFF,
@@ -144,13 +144,13 @@ async def test_switch_functionality(
             "set_setting",
         ),
         (
-            "switch.washer_childlock",
+            "switch.washer_child_lock",
             {BSH_CHILD_LOCK_STATE: {"value": ""}},
             SERVICE_TURN_ON,
             "set_setting",
         ),
         (
-            "switch.washer_childlock",
+            "switch.washer_child_lock",
             {BSH_CHILD_LOCK_STATE: {"value": ""}},
             SERVICE_TURN_OFF,
             "set_setting",

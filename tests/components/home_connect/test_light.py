@@ -114,7 +114,7 @@ async def test_light(
             "Hood",
         ),
         (
-            "light.hood_ambientlight",
+            "light.hood_ambient_light",
             {
                 BSH_AMBIENT_LIGHT_ENABLED: {
                     "value": True,
@@ -127,7 +127,7 @@ async def test_light(
             "Hood",
         ),
         (
-            "light.hood_ambientlight",
+            "light.hood_ambient_light",
             {
                 BSH_AMBIENT_LIGHT_ENABLED: {"value": False},
                 BSH_AMBIENT_LIGHT_BRIGHTNESS: {"value": 70},
@@ -138,7 +138,7 @@ async def test_light(
             "Hood",
         ),
         (
-            "light.hood_ambientlight",
+            "light.hood_ambient_light",
             {
                 BSH_AMBIENT_LIGHT_ENABLED: {"value": True},
                 BSH_AMBIENT_LIGHT_CUSTOM_COLOR: {},
@@ -234,7 +234,7 @@ async def test_light_functionality(
             "Hood",
         ),
         (
-            "light.hood_ambientlight",
+            "light.hood_ambient_light",
             {
                 BSH_AMBIENT_LIGHT_ENABLED: {
                     "value": True,
@@ -248,7 +248,7 @@ async def test_light_functionality(
             "Hood",
         ),
         (
-            "light.hood_ambientlight",
+            "light.hood_ambient_light",
             {
                 BSH_AMBIENT_LIGHT_ENABLED: {
                     "value": True,
