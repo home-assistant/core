@@ -13,14 +13,13 @@ from tests.common import MockUser
 from tests.typing import WebSocketGenerator
 
 
-async def test_entity_state(
+async def test_intercept_wake_word(
     hass: HomeAssistant,
     init_components: ConfigEntry,
     entity: MockAssistSatellite,
     hass_ws_client: WebSocketGenerator,
-    hass_admin_user: MockUser,
 ) -> None:
-    """Test entity state represent events."""
+    """Test intercepting a wake word."""
     ws_client = await hass_ws_client(hass)
 
     await ws_client.send_json_auto_id(
@@ -44,7 +43,16 @@ async def test_entity_state(
     assert response["success"]
     assert response["result"] == {"wake_word_phrase": "ok, nabu"}
 
-    # Ensure we error out for wake word processing in Home Assistant
+
+async def test_intercept_wake_word_requires_on_device_wake_word(
+    hass: HomeAssistant,
+    init_components: ConfigEntry,
+    entity: MockAssistSatellite,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test intercepting a wake word fails if detection happens in HA."""
+    ws_client = await hass_ws_client(hass)
+
     await ws_client.send_json_auto_id(
         {
             "type": "assist_satellite/intercept_wake_word",
@@ -68,8 +76,51 @@ async def test_entity_state(
         "message": "Only on-device wake words currently supported",
     }
 
+
+async def test_intercept_wake_word_requires_wake_word_phrase(
+    hass: HomeAssistant,
+    init_components: ConfigEntry,
+    entity: MockAssistSatellite,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test intercepting a wake word fails if detection happens in HA."""
+    ws_client = await hass_ws_client(hass)
+
+    await ws_client.send_json_auto_id(
+        {
+            "type": "assist_satellite/intercept_wake_word",
+            "entity_id": ENTITY_ID,
+        }
+    )
+
+    for _ in range(3):
+        await asyncio.sleep(0)
+
+    await entity.async_accept_pipeline_from_satellite(
+        object(),
+        start_stage=PipelineStage.STT,
+        # We are not passing wake word phrase
+    )
+
+    response = await ws_client.receive_json()
+    assert not response["success"]
+    assert response["error"] == {
+        "code": "home_assistant_error",
+        "message": "No wake word phrase provided",
+    }
+
+
+async def test_intercept_wake_word_require_admin(
+    hass: HomeAssistant,
+    init_components: ConfigEntry,
+    entity: MockAssistSatellite,
+    hass_ws_client: WebSocketGenerator,
+    hass_admin_user: MockUser,
+) -> None:
+    """Test intercepting a wake word requires admin access."""
     # Remove admin permission and verify we're not allowed
     hass_admin_user.groups = []
+    ws_client = await hass_ws_client(hass)
 
     await ws_client.send_json_auto_id(
         {
