@@ -13,7 +13,7 @@ from homeassistant.const import PERCENTAGE, UnitOfElectricPotential, UnitOfTempe
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from .const import CONF_ENTRY_FLIPR_COORDINATORS, DOMAIN
 from .entity import FliprEntity
 
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
@@ -61,10 +61,12 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Defer sensor setup to the shared sensor module."""
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinators = hass.data[DOMAIN][CONF_ENTRY_FLIPR_COORDINATORS]
 
-    sensors = [FliprSensor(coordinator, description) for description in SENSOR_TYPES]
-    async_add_entities(sensors)
+    for coordinator in coordinators:
+        async_add_entities(
+            FliprSensor(coordinator, description) for description in SENSOR_TYPES
+        )
 
 
 class FliprSensor(FliprEntity, SensorEntity):

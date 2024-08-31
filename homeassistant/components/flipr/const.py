@@ -2,9 +2,10 @@
 
 DOMAIN = "flipr"
 
-CONF_FLIPR_ID = "flipr_id"
-
 ATTRIBUTION = "Flipr Data"
 
 MANUFACTURER = "CTAC-TECH"
 NAME = "Flipr"
+
+CONF_ENTRY_FLIPR_COORDINATORS = "flipr_coordinators"
+CONF_ENTRY_HUB_COORDINATORS = "hub_coordinators"
