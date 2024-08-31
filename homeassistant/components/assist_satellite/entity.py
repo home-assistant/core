@@ -75,7 +75,7 @@ class AssistSatelliteEntity(entity.Entity):
             raise SatelliteBusyError
 
         # Will cause next wake word to be intercepted in
-        # _async_accept_pipeline_from_satellite
+        # async_accept_pipeline_from_satellite
         self._wake_word_intercept_future = asyncio.Future()
 
         _LOGGER.debug("Next wake word will be intercepted: %s", self.entity_id)
