@@ -1091,6 +1091,11 @@ def key_dependency[_KT: Hashable, _VT](
 
 def custom_serializer(schema: Any) -> Any:
     """Serialize additional types for voluptuous_serialize."""
+    return _custom_serializer(schema, allow_section=True)
+
+
+def _custom_serializer(schema: Any, *, allow_section: bool) -> Any:
+    """Serialize additional types for voluptuous_serialize."""
     from .. import data_entry_flow  # pylint: disable=import-outside-toplevel
     from . import selector  # pylint: disable=import-outside-toplevel
 
@@ -1104,10 +1109,15 @@ def custom_serializer(schema: Any) -> Any:
         return {"type": "boolean"}
 
     if isinstance(schema, data_entry_flow.section):
+        if not allow_section:
+            raise ValueError("Nesting expandable sections is not supported")
         return {
             "type": "expandable",
             "schema": voluptuous_serialize.convert(
-                schema.schema, custom_serializer=custom_serializer
+                schema.schema,
+                custom_serializer=functools.partial(
+                    _custom_serializer, allow_section=False
+                ),
             ),
             "expanded": not schema.options["collapsed"],
         }
@@ -1305,9 +1315,28 @@ TARGET_SERVICE_FIELDS = {
 _HAS_ENTITY_SERVICE_FIELD = has_at_least_one_key(*ENTITY_SERVICE_FIELDS)
 
 
+def is_entity_service_schema(validator: VolSchemaType) -> bool:
+    """Check if the passed validator is an entity schema validator.
+
+    The validator must be either of:
+    - A validator returned by cv._make_entity_service_schema
+    - A validator returned by cv._make_entity_service_schema, wrapped in a vol.Schema
+    - A validator returned by cv._make_entity_service_schema, wrapped in a vol.All
+    Nesting is allowed.
+    """
+    if hasattr(validator, "_entity_service_schema"):
+        return True
+    if isinstance(validator, (vol.All)):
+        return any(is_entity_service_schema(val) for val in validator.validators)
+    if isinstance(validator, (vol.Schema)):
+        return is_entity_service_schema(validator.schema)
+
+    return False
+
+
 def _make_entity_service_schema(schema: dict, extra: int) -> VolSchemaType:
     """Create an entity service schema."""
-    return vol.All(
+    validator = vol.All(
         vol.Schema(
             {
                 # The frontend stores data here. Don't use in core.
@@ -1319,6 +1348,8 @@ def _make_entity_service_schema(schema: dict, extra: int) -> VolSchemaType:
         ),
         _HAS_ENTITY_SERVICE_FIELD,
     )
+    setattr(validator, "_entity_service_schema", True)
+    return validator
 
 
 BASE_ENTITY_SCHEMA = _make_entity_service_schema({}, vol.PREVENT_EXTRA)

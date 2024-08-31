@@ -9,7 +9,6 @@ import pytest
 from homeassistant.components import zeroconf
 from homeassistant.components.nam.const import DOMAIN
 from homeassistant.config_entries import (
-    SOURCE_REAUTH,
     SOURCE_RECONFIGURE,
     SOURCE_USER,
     SOURCE_ZEROCONF,
@@ -122,6 +121,9 @@ async def test_reauth_successful(hass: HomeAssistant) -> None:
         data={"host": "10.10.2.3"},
     )
     entry.add_to_hass(hass)
+    result = await entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
 
     with (
         patch(
@@ -133,15 +135,6 @@ async def test_reauth_successful(hass: HomeAssistant) -> None:
             return_value="aa:bb:cc:dd:ee:ff",
         ),
     ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_REAUTH, "entry_id": entry.entry_id},
-            data=entry.data,
-        )
-
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "reauth_confirm"
-
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input=VALID_AUTH,
@@ -160,20 +153,14 @@ async def test_reauth_unsuccessful(hass: HomeAssistant) -> None:
         data={"host": "10.10.2.3"},
     )
     entry.add_to_hass(hass)
+    result = await entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
 
     with patch(
         "homeassistant.components.nam.NettigoAirMonitor.async_check_credentials",
         side_effect=ApiError("API Error"),
     ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_REAUTH, "entry_id": entry.entry_id},
-            data=entry.data,
-        )
-
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "reauth_confirm"
-
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input=VALID_AUTH,

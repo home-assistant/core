@@ -89,15 +89,7 @@ async def test_reauth_success(hass: HomeAssistant) -> None:
     entry = MockConfigEntry(domain=glances.DOMAIN, data=MOCK_USER_INPUT)
     entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        glances.DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": entry.entry_id,
-        },
-        data=MOCK_USER_INPUT,
-    )
-
+    result = await entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
     assert result["description_placeholders"] == {"username": "username"}
@@ -128,15 +120,7 @@ async def test_reauth_fails(
     entry.add_to_hass(hass)
 
     mock_api.return_value.get_ha_sensor_data.side_effect = [error, HA_SENSOR_DATA]
-    result = await hass.config_entries.flow.async_init(
-        glances.DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": entry.entry_id,
-        },
-        data=MOCK_USER_INPUT,
-    )
-
+    result = await entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
     assert result["description_placeholders"] == {"username": "username"}
