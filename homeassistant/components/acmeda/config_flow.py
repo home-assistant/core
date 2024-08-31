@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from asyncio import timeout
-from contextlib import suppress
 from typing import Any
 
 import aiopulse
