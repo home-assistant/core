@@ -98,7 +98,7 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
                     account.meter_type.name.lower(),
                     # Some utilities like AEP have "-" in their account id.
                     # Replace it with "_" to avoid "Invalid statistic_id"
-                    account.utility_account_id.replace("-", "_"),
+                    account.utility_account_id.replace("-", "_").lower(),
                 )
             )
             cost_statistic_id = f"{DOMAIN}:{id_prefix}_energy_cost"
@@ -110,7 +110,7 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
             )
 
             last_stat = await get_instance(self.hass).async_add_executor_job(
-                get_last_statistics, self.hass, 1, cost_statistic_id, True, set()
+                get_last_statistics, self.hass, 1, consumption_statistic_id, True, set()
             )
             if not last_stat:
                 _LOGGER.debug("Updating statistic for the first time")
@@ -124,7 +124,7 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
                 cost_reads = await self._async_get_cost_reads(
                     account,
                     self.api.utility.timezone(),
-                    last_stat[cost_statistic_id][0]["start"],
+                    last_stat[consumption_statistic_id][0]["start"],
                 )
                 if not cost_reads:
                     _LOGGER.debug("No recent usage/cost data. Skipping update")
@@ -141,7 +141,7 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
                 )
                 cost_sum = cast(float, stats[cost_statistic_id][0]["sum"])
                 consumption_sum = cast(float, stats[consumption_statistic_id][0]["sum"])
-                last_stats_time = stats[cost_statistic_id][0]["start"]
+                last_stats_time = stats[consumption_statistic_id][0]["start"]
 
             cost_statistics = []
             consumption_statistics = []
@@ -187,7 +187,17 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
                 else UnitOfVolume.CENTUM_CUBIC_FEET,
             )
 
+            _LOGGER.debug(
+                "Adding %s statistics for %s",
+                len(cost_statistics),
+                cost_statistic_id,
+            )
             async_add_external_statistics(self.hass, cost_metadata, cost_statistics)
+            _LOGGER.debug(
+                "Adding %s statistics for %s",
+                len(consumption_statistics),
+                consumption_statistic_id,
+            )
             async_add_external_statistics(
                 self.hass, consumption_metadata, consumption_statistics
             )

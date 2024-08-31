@@ -1159,7 +1159,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': 'True',
   })
 # ---
 # name: test_entity[sensor.cold_water_power-entry]
@@ -1508,7 +1508,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': 'True',
   })
 # ---
 # name: test_entity[sensor.gas_power-entry]
@@ -3257,7 +3257,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': 'True',
   })
 # ---
 # name: test_entity[sensor.hot_water_power-entry]
@@ -3896,7 +3896,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': 'True',
   })
 # ---
 # name: test_entity[sensor.line_1_power-entry]
@@ -3995,7 +3995,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': 'True',
   })
 # ---
 # name: test_entity[sensor.line_2_power-entry]
@@ -4094,7 +4094,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': 'True',
   })
 # ---
 # name: test_entity[sensor.line_3_power-entry]
@@ -4193,7 +4193,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': 'True',
   })
 # ---
 # name: test_entity[sensor.line_4_power-entry]
@@ -4292,7 +4292,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': 'True',
   })
 # ---
 # name: test_entity[sensor.line_5_power-entry]
@@ -5622,7 +5622,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': 'True',
   })
 # ---
 # name: test_entity[sensor.total_power-entry]

@@ -109,7 +109,7 @@ CONFIG_ENTRY_DATA = {CONF_ID: ID}
 class MockAsyncBulb:
     """A mock for yeelight.aio.AsyncBulb."""
 
-    def __init__(self, model, bulb_type, cannot_connect):
+    def __init__(self, model, bulb_type, cannot_connect) -> None:
         """Init the mock."""
         self.model = model
         self.bulb_type = bulb_type

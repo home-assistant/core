@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 
+from aiohomekit.model import Accessory
 from aiohomekit.model.characteristics import (
     ActivationStateValues,
     CharacteristicsTypes,
@@ -28,7 +29,7 @@ from .common import setup_test_component
 # Test thermostat devices
 
 
-def create_thermostat_service(accessory):
+def create_thermostat_service(accessory: Accessory) -> None:
     """Define thermostat characteristics."""
     service = accessory.add_service(ServicesTypes.THERMOSTAT)
 
@@ -66,7 +67,7 @@ def create_thermostat_service(accessory):
     char.value = 0
 
 
-def create_thermostat_service_min_max(accessory):
+def create_thermostat_service_min_max(accessory: Accessory) -> None:
     """Define thermostat characteristics."""
     service = accessory.add_service(ServicesTypes.THERMOSTAT)
     char = service.add_char(CharacteristicsTypes.HEATING_COOLING_TARGET)
@@ -86,7 +87,7 @@ async def test_climate_respect_supported_op_modes_1(
     assert state.attributes["hvac_modes"] == ["off", "heat"]
 
 
-def create_thermostat_service_valid_vals(accessory):
+def create_thermostat_service_valid_vals(accessory: Accessory) -> None:
     """Define thermostat characteristics."""
     service = accessory.add_service(ServicesTypes.THERMOSTAT)
     char = service.add_char(CharacteristicsTypes.HEATING_COOLING_TARGET)
@@ -364,7 +365,7 @@ async def test_climate_cannot_set_thermostat_temp_range_in_wrong_mode(
     )
 
 
-def create_thermostat_single_set_point_auto(accessory):
+def create_thermostat_single_set_point_auto(accessory: Accessory) -> None:
     """Define thermostat characteristics with a single set point in auto."""
     service = accessory.add_service(ServicesTypes.THERMOSTAT)
 
@@ -685,7 +686,7 @@ async def test_hvac_mode_vs_hvac_action_current_mode_wrong(
     assert state.attributes["hvac_action"] == "idle"
 
 
-def create_heater_cooler_service(accessory):
+def create_heater_cooler_service(accessory: Accessory) -> None:
     """Define thermostat characteristics."""
     service = accessory.add_service(ServicesTypes.HEATER_COOLER)
 
@@ -719,7 +720,7 @@ def create_heater_cooler_service(accessory):
 
 
 # Test heater-cooler devices
-def create_heater_cooler_service_min_max(accessory):
+def create_heater_cooler_service_min_max(accessory: Accessory) -> None:
     """Define thermostat characteristics."""
     service = accessory.add_service(ServicesTypes.HEATER_COOLER)
     char = service.add_char(CharacteristicsTypes.TARGET_HEATER_COOLER_STATE)
@@ -739,7 +740,7 @@ async def test_heater_cooler_respect_supported_op_modes_1(
     assert state.attributes["hvac_modes"] == ["heat", "cool", "off"]
 
 
-def create_theater_cooler_service_valid_vals(accessory):
+def create_theater_cooler_service_valid_vals(accessory: Accessory) -> None:
     """Define heater-cooler characteristics."""
     service = accessory.add_service(ServicesTypes.HEATER_COOLER)
     char = service.add_char(CharacteristicsTypes.TARGET_HEATER_COOLER_STATE)

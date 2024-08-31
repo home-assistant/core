@@ -52,6 +52,7 @@ def common_requests(aioclient_mock: AiohttpClientMocker) -> AiohttpClientMocker:
         "https://habitica.com/api/v3/user",
         json={
             "data": {
+                "auth": {"local": {"username": TEST_USER_NAME}},
                 "api_user": "test-api-user",
                 "profile": {"name": TEST_USER_NAME},
                 "stats": {
@@ -73,7 +74,20 @@ def common_requests(aioclient_mock: AiohttpClientMocker) -> AiohttpClientMocker:
             }
         },
     )
-
+    aioclient_mock.get(
+        "https://habitica.com/api/v3/tasks/user?type=completedTodos",
+        json={
+            "data": [
+                {
+                    "text": "this is a mock todo #5",
+                    "id": 5,
+                    "_id": 5,
+                    "type": "todo",
+                    "completed": True,
+                }
+            ]
+        },
+    )
     aioclient_mock.get(
         "https://habitica.com/api/v3/tasks/user",
         json={
@@ -85,19 +99,6 @@ def common_requests(aioclient_mock: AiohttpClientMocker) -> AiohttpClientMocker:
                     "completed": False,
                 }
                 for i, task in enumerate(("habit", "daily", "todo", "reward"), start=1)
-            ]
-        },
-    )
-    aioclient_mock.get(
-        "https://habitica.com/api/v3/tasks/user?type=completedTodos",
-        json={
-            "data": [
-                {
-                    "text": "this is a mock todo #5",
-                    "id": 5,
-                    "type": "todo",
-                    "completed": True,
-                }
             ]
         },
     )

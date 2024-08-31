@@ -18,14 +18,14 @@ from homeassistant.helpers import discovery
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util import dt as dt_util
+from homeassistant.util import dt as dt_util, ssl as ssl_util
 
 from .const import DATA_HASS_CONFIG, DOMAIN
 from .services import async_setup_services
 
 PLATFORMS = [Platform.NOTIFY, Platform.SENSOR]
 
-CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,6 +47,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         access_token=entry.data[CONF_ACCESS_TOKEN],
         websession=async_get_clientsession(hass),
         time_zone=dt_util.get_default_time_zone(),
+        ssl=ssl_util.get_default_context(),
     )
     hass.data[DOMAIN] = tibber_connection
 
@@ -61,13 +62,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except (
         TimeoutError,
         aiohttp.ClientError,
-        tibber.RetryableHttpException,
+        tibber.RetryableHttpExceptionError,
     ) as err:
         raise ConfigEntryNotReady("Unable to connect") from err
-    except tibber.InvalidLogin as exp:
+    except tibber.InvalidLoginError as exp:
         _LOGGER.error("Failed to login. %s", exp)
         return False
-    except tibber.FatalHttpException:
+    except tibber.FatalHttpExceptionError:
         return False
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
