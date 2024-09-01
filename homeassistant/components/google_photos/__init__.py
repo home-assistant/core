@@ -11,6 +11,7 @@ from homeassistant.helpers import config_entry_oauth2_flow
 
 from . import api
 from .const import DOMAIN
+from .services import async_register_services
 
 type GooglePhotosConfigEntry = ConfigEntry[api.AsyncConfigEntryAuth]
 
@@ -41,6 +42,9 @@ async def async_setup_entry(
     except ClientError as err:
         raise ConfigEntryNotReady from err
     entry.runtime_data = auth
+
+    async_register_services(hass)
+
     return True
 
 

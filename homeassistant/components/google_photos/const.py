@@ -4,7 +4,14 @@ DOMAIN = "google_photos"
 
 OAUTH2_AUTHORIZE = "https://accounts.google.com/o/oauth2/v2/auth"
 OAUTH2_TOKEN = "https://oauth2.googleapis.com/token"
-OAUTH2_SCOPES = [
+
+UPLOAD_SCOPE = "https://www.googleapis.com/auth/photoslibrary.appendonly"
+READ_SCOPES = [
     "https://www.googleapis.com/auth/photoslibrary.readonly",
+    "https://www.googleapis.com/auth/photoslibrary.readonly.appcreateddata",
+]
+OAUTH2_SCOPES = [
+    *READ_SCOPES,
+    UPLOAD_SCOPE,
     "https://www.googleapis.com/auth/userinfo.profile",
 ]
