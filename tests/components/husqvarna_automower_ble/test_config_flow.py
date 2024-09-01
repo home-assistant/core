@@ -113,7 +113,7 @@ async def test_bluetooth_invalid(
 
 async def test_failed_connect(
     hass: HomeAssistant,
-    mock_client: Mock,
+    mock_automower_client: Mock,
 ) -> None:
     """Test we can select a device."""
 
@@ -121,7 +121,7 @@ async def test_failed_connect(
     inject_bluetooth_service_info(hass, AUTOMOWER_UNNAMED_SERVICE_INFO)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    mock_client.connect.side_effect = False
+    mock_automower_client.connect.side_effect = False
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -148,7 +148,7 @@ async def test_failed_connect(
 
 async def test_exception_connect(
     hass: HomeAssistant,
-    mock_client: Mock,
+    mock_automower_client: Mock,
 ) -> None:
     """Test we can select a device."""
 
@@ -160,12 +160,12 @@ async def test_exception_connect(
         """Mock BleakClient.probe_gatts."""
         raise BleakError
 
-    mock_client.probe_gatts = _probe_gatts
+    mock_automower_client.probe_gatts = _probe_gatts
 
 
 async def test_failed_is_connected(
     hass: HomeAssistant,
-    mock_client: Mock,
+    mock_automower_client: Mock,
 ) -> None:
     """Test we can select a device."""
 
@@ -173,4 +173,4 @@ async def test_failed_is_connected(
     inject_bluetooth_service_info(hass, AUTOMOWER_UNNAMED_SERVICE_INFO)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    mock_client.is_connected.side_effect = False
+    mock_automower_client.is_connected.side_effect = False

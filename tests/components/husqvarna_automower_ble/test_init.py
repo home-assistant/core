@@ -17,7 +17,7 @@ from . import AUTOMOWER_SERVICE_INFO
 
 from tests.common import MockConfigEntry
 
-pytestmark = pytest.mark.usefixtures("mock_client")
+pytestmark = pytest.mark.usefixtures("mock_automower_client")
 
 
 async def test_setup(
@@ -44,7 +44,7 @@ async def test_setup(
 async def test_setup_retry_connect(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    mock_client: Mock,
+    mock_automower_client: Mock,
     mock_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
 ) -> None:
@@ -54,7 +54,7 @@ async def test_setup_retry_connect(
         """Mock BleakClient.connect."""
         return False
 
-    mock_client.connect = _connect
+    mock_automower_client.connect = _connect
 
     mock_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_entry.entry_id)
@@ -66,7 +66,7 @@ async def test_setup_retry_connect(
 async def test_setup_failed_connect(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    mock_client: Mock,
+    mock_automower_client: Mock,
     mock_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
 ) -> None:
@@ -76,7 +76,7 @@ async def test_setup_failed_connect(
         """Mock BleakClient.connect."""
         raise BleakError
 
-    mock_client.connect = _connect
+    mock_automower_client.connect = _connect
 
     mock_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_entry.entry_id)
@@ -88,7 +88,7 @@ async def test_setup_failed_connect(
 async def test_setup_disconnect_one(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    mock_client: Mock,
+    mock_automower_client: Mock,
     mock_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
 ) -> None:
@@ -98,7 +98,7 @@ async def test_setup_disconnect_one(
         """Mock BleakClient.connect."""
         return True
 
-    mock_client.connect = _connect_success
+    mock_automower_client.connect = _connect_success
 
     mock_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_entry.entry_id)
@@ -108,11 +108,7 @@ async def test_setup_disconnect_one(
 
     coordinator = mock_entry.runtime_data
 
-    def _is_connected(self, *args, **kwargs) -> bool:
-        """Mock BleakClient.is_connected."""
-        return False
-
-    mock_client.is_connected = _is_connected
+    mock_automower_client.is_connected.return_value = False
 
     await coordinator._async_update_data()
 
@@ -120,7 +116,7 @@ async def test_setup_disconnect_one(
 async def test_setup_disconnect_two(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    mock_client: Mock,
+    mock_automower_client: Mock,
     mock_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
 ) -> None:
@@ -130,7 +126,7 @@ async def test_setup_disconnect_two(
         """Mock BleakClient.connect."""
         return True
 
-    mock_client.connect = _connect_success
+    mock_automower_client.connect = _connect_success
 
     mock_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_entry.entry_id)
@@ -138,16 +134,12 @@ async def test_setup_disconnect_two(
 
     assert mock_entry.state is ConfigEntryState.LOADED
 
-    def _is_connected(self, *args, **kwargs) -> bool:
-        """Mock BleakClient.is_connected."""
-        return False
-
     async def _connect(self, *args, **kwargs) -> bool:
         """Mock BleakClient.connect."""
         raise BleakError
 
-    mock_client.connect = _connect
-    mock_client.is_connected = _is_connected
+    mock_automower_client.connect = _connect
+    mock_automower_client.is_connected.return_value = False
 
     coordinator = mock_entry.runtime_data
 
@@ -160,7 +152,7 @@ async def test_setup_disconnect_two(
 async def test_setup_disconnect_three(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    mock_client: Mock,
+    mock_automower_client: Mock,
     mock_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
 ) -> None:
@@ -170,7 +162,7 @@ async def test_setup_disconnect_three(
         """Mock BleakClient.connect."""
         return True
 
-    mock_client.connect = _connect_success
+    mock_automower_client.connect = _connect_success
 
     mock_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_entry.entry_id)
@@ -178,16 +170,12 @@ async def test_setup_disconnect_three(
 
     assert mock_entry.state is ConfigEntryState.LOADED
 
-    def _is_connected(self, *args, **kwargs) -> bool:
-        """Mock BleakClient.is_connected."""
-        return False
-
     async def _connect(self, *args, **kwargs) -> bool:
         """Mock BleakClient.connect."""
         return False
 
-    mock_client.connect = _connect
-    mock_client.is_connected = _is_connected
+    mock_automower_client.connect = _connect
+    mock_automower_client.is_connected.return_value = False
 
     coordinator = mock_entry.runtime_data
 
@@ -200,7 +188,7 @@ async def test_setup_disconnect_three(
 async def test_setup_disconnect_five(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    mock_client: Mock,
+    mock_automower_client: Mock,
     mock_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
 ) -> None:
@@ -210,7 +198,7 @@ async def test_setup_disconnect_five(
         """Mock BleakClient.connect."""
         return True
 
-    mock_client.connect = _connect_success
+    mock_automower_client.connect = _connect_success
 
     mock_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_entry.entry_id)
@@ -218,11 +206,11 @@ async def test_setup_disconnect_five(
 
     assert mock_entry.state is ConfigEntryState.LOADED
 
-    def _is_connected(self, *args, **kwargs) -> bool:
+    def _is_connected() -> bool:
         """Mock BleakClient.is_connected."""
         raise BleakError
 
-    mock_client.is_connected = _is_connected
+    mock_automower_client.is_connected = _is_connected
 
     coordinator = mock_entry.runtime_data
 
@@ -233,22 +221,18 @@ async def test_setup_disconnect_five(
 async def test_setup_invalid_mower_activity(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    mock_client: Mock,
+    mock_automower_client: Mock,
     mock_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test setup creates expected devices."""
 
-    def _is_connected_success(self, *args, **kwargs) -> bool:
-        """Mock BleakClient.is_connected."""
-        return True
-
     async def _connect_success(self, *args, **kwargs) -> bool:
         """Mock BleakClient.connect."""
         return True
 
-    mock_client.connect = _connect_success
-    mock_client.is_connected = _is_connected_success
+    mock_automower_client.connect = _connect_success
+    mock_automower_client.is_connected.return_value = True
 
     mock_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_entry.entry_id)
@@ -256,39 +240,35 @@ async def test_setup_invalid_mower_activity(
 
     assert mock_entry.state is ConfigEntryState.LOADED
 
-    async def _mower_activity(self, *args, **kwargs):
+    async def _mower_activity():
         return None
 
-    og_mower_activity = mock_client.mower_activity
-    mock_client.mower_activity = _mower_activity
+    og_mower_activity = mock_automower_client.mower_activity
+    mock_automower_client.mower_activity = _mower_activity
 
     coordinator = mock_entry.runtime_data
 
     with contextlib.suppress(UpdateFailed):
         await coordinator._async_update_data()
 
-    mock_client.mower_activity = og_mower_activity
+    mock_automower_client.mower_activity = og_mower_activity
 
 
 async def test_setup_invalid_mower_state(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    mock_client: Mock,
+    mock_automower_client: Mock,
     mock_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test setup creates expected devices."""
 
-    def _is_connected_success(self, *args, **kwargs) -> bool:
-        """Mock BleakClient.is_connected."""
-        return True
-
     async def _connect_success(self, *args, **kwargs) -> bool:
         """Mock BleakClient.connect."""
         return True
 
-    mock_client.connect = _connect_success
-    mock_client.is_connected = _is_connected_success
+    mock_automower_client.connect = _connect_success
+    mock_automower_client.is_connected.return_value = True
 
     mock_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_entry.entry_id)
@@ -296,39 +276,35 @@ async def test_setup_invalid_mower_state(
 
     assert mock_entry.state is ConfigEntryState.LOADED
 
-    async def _mower_state(self, *args, **kwargs):
+    async def _mower_state():
         return None
 
-    og_mower_state = mock_client.mower_state
-    mock_client.mower_state = _mower_state
+    og_mower_state = mock_automower_client.mower_state
+    mock_automower_client.mower_state = _mower_state
 
     coordinator = mock_entry.runtime_data
 
     with contextlib.suppress(UpdateFailed):
         await coordinator._async_update_data()
 
-    mock_client.mower_state = og_mower_state
+    mock_automower_client.mower_state = og_mower_state
 
 
 async def test_setup_invalid_battery(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    mock_client: Mock,
+    mock_automower_client: Mock,
     mock_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test setup creates expected devices."""
 
-    def _is_connected_success(self, *args, **kwargs) -> bool:
-        """Mock BleakClient.is_connected."""
-        return True
-
     async def _connect_success(self, *args, **kwargs) -> bool:
         """Mock BleakClient.connect."""
         return True
 
-    mock_client.connect = _connect_success
-    mock_client.is_connected = _is_connected_success
+    mock_automower_client.connect = _connect_success
+    mock_automower_client.is_connected.return_value = True
 
     mock_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_entry.entry_id)
@@ -336,39 +312,28 @@ async def test_setup_invalid_battery(
 
     assert mock_entry.state is ConfigEntryState.LOADED
 
-    async def _battery_level(self, *args, **kwargs):
-        return None
-
-    og_battery_level = mock_client.battery_level
-    mock_client.battery_level = _battery_level
+    og_battery_level = mock_automower_client.battery_level
+    mock_automower_client.battery_level.return_value = None
 
     coordinator = mock_entry.runtime_data
 
     with contextlib.suppress(UpdateFailed):
         await coordinator._async_update_data()
 
-    mock_client.battery_level = og_battery_level
+    mock_automower_client.battery_level = og_battery_level
 
 
 async def test_setup_exception_battery(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    mock_client: Mock,
+    mock_automower_client: Mock,
     mock_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test setup creates expected devices."""
 
-    def _is_connected_success(self, *args, **kwargs) -> bool:
-        """Mock BleakClient.is_connected."""
-        return True
-
-    async def _connect_success(self, *args, **kwargs) -> bool:
-        """Mock BleakClient.connect."""
-        return True
-
-    mock_client.connect = _connect_success
-    mock_client.is_connected = _is_connected_success
+    mock_automower_client.connect.return_value = True
+    mock_automower_client.is_connected.return_value = True
 
     mock_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_entry.entry_id)
@@ -376,15 +341,15 @@ async def test_setup_exception_battery(
 
     assert mock_entry.state is ConfigEntryState.LOADED
 
-    async def _battery_level(self, *args, **kwargs):
+    async def _battery_level():
         raise BleakError
 
-    og_battery_level = mock_client.battery_level
-    mock_client.battery_level = _battery_level
+    og_battery_level = mock_automower_client.battery_level
+    mock_automower_client.battery_level = _battery_level
 
     coordinator = mock_entry.runtime_data
 
     with contextlib.suppress(UpdateFailed):
         await coordinator._async_update_data()
 
-    mock_client.battery_level = og_battery_level
+    mock_automower_client.battery_level = og_battery_level

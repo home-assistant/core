@@ -56,56 +56,65 @@ async def scan_step(
     return delay
 
 
-class MockMower:
-    """Mock BleakClient."""
-
-    def __init__(self, *args, **kwargs) -> None:
-        """Mock BleakClient."""
-
-    async def __aexit__(self, *args, **kwargs):
-        """Mock BleakClient.__aexit__."""
-
-    async def connect(self, *args, **kwargs) -> bool:
-        """Mock BleakClient.connect."""
-        return True
-
-    async def disconnect(self, *args, **kwargs):
-        """Mock BleakClient.disconnect."""
-
-    def is_connected(self):
-        """Mock BleakClient.is_connected."""
-        return True
-
-    async def get_model(self) -> str:
-        """Mock BleakClient.get_model."""
-        return "305"
-
-    async def battery_level(self) -> int:
-        """Mock BleakClient.battery_level."""
-        return 100
-
-    async def mower_state(self) -> str:
-        """Mock BleakClient.mower_state."""
-        return "pendingStart"
-
-    async def mower_activity(self) -> str:
-        """Mock BleakClient.mower_activity."""
-        return "charging"
-
-    async def probe_gatts(self, device):
-        """Mock BleakClient.probe_gatts."""
-        return ("Husqvarna", "Automower", "305")
-
-
 @pytest.fixture(autouse=True)
-def mock_client(enable_bluetooth: None, scan_step) -> None:
-    """Auto mock bluetooth."""
-
+def mock_automower_client(enable_bluetooth: None, scan_step) -> Generator[AsyncMock]:
+    """Mock a BleakClient client."""
     with (
         patch(
+            "homeassistant.components.husqvarna_automower_ble.Mower",
+            autospec=True,
+        ) as mock_client,
+        patch(
             "homeassistant.components.husqvarna_automower_ble.config_flow.Mower",
-            MockMower,
+            new=mock_client,
         ),
-        patch("homeassistant.components.husqvarna_automower_ble.Mower", MockMower),
     ):
-        yield MockMower
+        client = mock_client.return_value
+        client.connect.return_value = True
+        client.is_connected.return_value = True
+        client.get_model.return_value = "305"
+        client.battery_level.return_value = 100
+        client.mower_state.return_value = "pendingStart"
+        client.mower_activity.return_value = "charging"
+        client.probe_gatts.return_value = ("Husqvarna", "Automower", "305")
+
+        yield client
+
+
+@pytest.fixture
+def airgradient_devices(
+    mock_automower_client: AsyncMock, request: pytest.FixtureRequest
+) -> Generator[AsyncMock]:
+    """Return a list of AirGradient devices."""
+    return mock_automower_client
+
+
+@pytest.fixture
+def mock_new_airgradient_client(
+    mock_automower_client: AsyncMock,
+) -> AsyncMock:
+    """Mock a new AirGradient client."""
+    return mock_automower_client
+
+
+@pytest.fixture
+def mock_cloud_airgradient_client(
+    mock_automower_client: AsyncMock,
+) -> AsyncMock:
+    """Mock a cloud AirGradient client."""
+    return mock_automower_client
+
+
+@pytest.fixture
+def mock_config_entry() -> MockConfigEntry:
+    """Mock a config entry."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        title="Husqvarna AutoMower",
+        data={
+            CONF_ADDRESS: AUTOMOWER_SERVICE_INFO.address,
+            CONF_UNIQUE_ID: AUTOMOWER_SERVICE_INFO.address,
+            CONF_CLIENT_ID: 1197489078,
+        },
+        unique_id="84fce612f5b8",
+    )
