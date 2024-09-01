@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from datetime import datetime
 import json
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from nice_go import (
     BARRIER_STATUS,
@@ -22,7 +22,7 @@ from nice_go import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -187,14 +187,19 @@ class NiceGOUpdateCoordinator(DataUpdateCoordinator[dict[str, NiceGODevice]]):
         self._unsub_connection_lost = self.api.listen(
             "on_connection_lost", self.on_connection_lost
         )
-        try:
-            await self.api.connect(reconnect=True)
-        except ApiError:
-            _LOGGER.exception("API error")
 
-        if not self.hass.is_stopping:
+        for _ in range(3):
+            if self.hass.is_stopping:
+                return
+
+            try:
+                await self.api.connect(reconnect=True)
+            except ApiError:
+                _LOGGER.exception("API error")
+
             await asyncio.sleep(5)
-            await self.client_listen()
+
+        raise ConfigEntryNotReady
 
     async def on_data(self, data: dict[str, Any]) -> None:
         """Handle incoming data from the websocket."""
@@ -250,12 +255,11 @@ class NiceGOUpdateCoordinator(DataUpdateCoordinator[dict[str, NiceGODevice]]):
 
     def unsubscribe(self) -> None:
         """Unsubscribe from the websocket."""
-        if (
-            self._unsub_connected is None
-            or self._unsub_data is None
-            or self._unsub_connection_lost is None
-        ):
-            return
+        if TYPE_CHECKING:
+            assert self._unsub_connected is not None
+            assert self._unsub_data is not None
+            assert self._unsub_connection_lost is not None
+
         self._unsub_connection_lost()
         self._unsub_connected()
         self._unsub_data()
