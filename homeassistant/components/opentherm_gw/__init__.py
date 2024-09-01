@@ -4,7 +4,7 @@ import asyncio
 from datetime import date, datetime
 import logging
 
-import pyotgw
+from pyotgw import OpenThermGateway
 import pyotgw.vars as gw_vars
 from serial import SerialException
 import voluptuous as vol
@@ -448,7 +448,7 @@ class OpenThermGatewayHub:
         self.config_entry_id = config_entry.entry_id
         self.update_signal = f"{DATA_OPENTHERM_GW}_{self.hub_id}_update"
         self.options_update_signal = f"{DATA_OPENTHERM_GW}_{self.hub_id}_options_update"
-        self.gateway = pyotgw.OpenThermGateway()
+        self.gateway = OpenThermGateway()
         self.gw_version = None
 
     async def cleanup(self, event=None) -> None:

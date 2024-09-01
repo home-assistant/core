@@ -1,6 +1,6 @@
 """Test Opentherm Gateway init."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from pyotgw.vars import OTGW, OTGW_ABOUT
 import pytest
@@ -113,10 +113,15 @@ async def test_device_migration(
     )
 
     with (
-        patch("pyotgw.OpenThermGateway.set_control_setpoint"),
-        patch("pyotgw.OpenThermGateway.set_max_relative_mod"),
-        patch("pyotgw.OpenThermGateway.disconnect"),
-        patch("pyotgw.OpenThermGateway.connect", return_value=MINIMAL_STATUS_UPD),
+        patch(
+            "homeassistant.components.opentherm_gw.OpenThermGateway",
+            return_value=MagicMock(
+                connect=AsyncMock(return_value=MINIMAL_STATUS_UPD),
+                set_control_setpoint=AsyncMock(),
+                set_max_relative_mod=AsyncMock(),
+                disconnect=AsyncMock(),
+            ),
+        ),
     ):
         await setup.async_setup_component(hass, DOMAIN, {})
 
