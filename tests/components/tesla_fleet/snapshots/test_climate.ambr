@@ -280,12 +280,6 @@
     'state': 'off',
   })
 # ---
-# name: test_climate_noscope[invalid_hvac_mode]
-  'Climate mode {hvac_mode} is not supported'
-# ---
-# name: test_climate_noscope[no_service]
-  'Entity climate.test_climate does not support this service.'
-# ---
 # name: test_climate_offline[climate.test_cabin_overheat_protection-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({

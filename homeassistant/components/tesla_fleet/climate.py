@@ -169,7 +169,7 @@ class TeslaFleetClimateEntity(TeslaFleetVehicleEntity, ClimateEntity):
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="invalid_hvac_mode",
-                translation_placeholders={hvac_mode: hvac_mode},
+                translation_placeholders={"hvac_mode": hvac_mode},
             )
         if hvac_mode == HVACMode.OFF:
             await self.async_turn_off()

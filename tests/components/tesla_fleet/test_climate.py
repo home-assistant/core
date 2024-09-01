@@ -233,7 +233,10 @@ async def test_invalid_error(
             "homeassistant.components.tesla_fleet.VehicleSpecific.auto_conditioning_start",
             side_effect=InvalidCommand,
         ) as mock_on,
-        pytest.raises(HomeAssistantError) as error,
+        pytest.raises(
+            HomeAssistantError,
+            match="Command failed: The data request or command is unknown.",
+        ),
     ):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
@@ -242,7 +245,6 @@ async def test_invalid_error(
             blocking=True,
         )
     mock_on.assert_called_once()
-    assert str(error.value) == "Command failed: The data request or command is unknown."
 
 
 @pytest.mark.parametrize("response", COMMAND_ERRORS)
@@ -317,14 +319,15 @@ async def test_asleep_or_offline(
 
     # Run a command but fail trying to wake up the vehicle
     mock_wake_up.side_effect = InvalidCommand
-    with pytest.raises(HomeAssistantError) as error:
+    with pytest.raises(
+        HomeAssistantError, match="The data request or command is unknown."
+    ):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_TURN_ON,
             {ATTR_ENTITY_ID: [entity_id]},
             blocking=True,
         )
-    assert str(error.value) == "The data request or command is unknown."
     mock_wake_up.assert_called_once()
 
     mock_wake_up.side_effect = None
@@ -335,7 +338,7 @@ async def test_asleep_or_offline(
     mock_vehicle_state.return_value = VEHICLE_ASLEEP
     with (
         patch("homeassistant.components.tesla_fleet.helpers.asyncio.sleep"),
-        pytest.raises(HomeAssistantError) as error,
+        pytest.raises(HomeAssistantError, match="Could not wake up vehicle"),
     ):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
@@ -343,7 +346,6 @@ async def test_asleep_or_offline(
             {ATTR_ENTITY_ID: [entity_id]},
             blocking=True,
         )
-    assert str(error.value) == "Could not wake up vehicle"
     mock_wake_up.assert_called_once()
     mock_vehicle_state.assert_called()
 
@@ -369,23 +371,26 @@ async def test_climate_noscope(
     await setup_platform(hass, readonly_config_entry, [Platform.CLIMATE])
     entity_id = "climate.test_climate"
 
-    with pytest.raises(ServiceValidationError) as error:
+    with pytest.raises(
+        ServiceValidationError, match="Climate mode off is not supported"
+    ):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_HVAC_MODE,
             {ATTR_ENTITY_ID: [entity_id], ATTR_HVAC_MODE: HVACMode.OFF},
             blocking=True,
         )
-    assert str(error.value) == snapshot(name="invalid_hvac_mode")
 
-    with pytest.raises(HomeAssistantError) as error:
+    with pytest.raises(
+        HomeAssistantError,
+        match="Entity climate.test_climate does not support this service.",
+    ):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_TEMPERATURE,
             {ATTR_ENTITY_ID: [entity_id], ATTR_TEMPERATURE: 20},
             blocking=True,
         )
-    assert str(error.value) == snapshot(name="no_service")
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
