@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 from tesla_fleet_api.exceptions import InvalidCommand, VehicleOffline
 
 from homeassistant.components.climate import (
@@ -381,23 +381,50 @@ async def test_asleep_or_offline(
 async def test_climate_noscope(
     hass: HomeAssistant,
     readonly_config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Tests that the climate entity is correct."""
     await setup_platform(hass, readonly_config_entry, [Platform.CLIMATE])
     entity_id = "climate.test_climate"
 
-    with pytest.raises(ServiceValidationError):
+    with pytest.raises(ServiceValidationError) as error:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_HVAC_MODE,
             {ATTR_ENTITY_ID: [entity_id], ATTR_HVAC_MODE: HVACMode.OFF},
             blocking=True,
         )
+    assert str(error.value) == snapshot(name="invalid_hvac_mode")
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(HomeAssistantError) as error:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_TEMPERATURE,
             {ATTR_ENTITY_ID: [entity_id], ATTR_TEMPERATURE: 20},
             blocking=True,
         )
+    assert str(error.value) == snapshot(name="no_service")
+
+
+async def test_climate_notemp(
+    hass: HomeAssistant,
+    normal_config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Tests that the climate entity is correct."""
+
+    await setup_platform(hass, normal_config_entry, [Platform.CLIMATE])
+    entity_id = "climate.test_climate"
+
+    with pytest.raises(ServiceValidationError) as error:
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_TEMPERATURE,
+            {
+                ATTR_ENTITY_ID: [entity_id],
+                ATTR_TARGET_TEMP_HIGH: 25,
+                ATTR_TARGET_TEMP_LOW: 20,
+            },
+            blocking=True,
+        )
+    assert str(error.value) == snapshot(name="missing_temperature")
