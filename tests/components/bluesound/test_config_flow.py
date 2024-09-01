@@ -87,6 +87,7 @@ async def test_user_flow_aleady_configured(
     config_entry: MockConfigEntry,
 ) -> None:
     """Test we handle already configured."""
+    config_entry.add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
@@ -150,6 +151,7 @@ async def test_import_flow_already_configured(
     config_entry: MockConfigEntry,
 ) -> None:
     """Test we handle already configured."""
+    config_entry.add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_IMPORT},
@@ -229,6 +231,7 @@ async def test_zeroconf_flow_already_configured(
     config_entry: MockConfigEntry,
 ) -> None:
     """Test we handle already configured and update the host."""
+    config_entry.add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},

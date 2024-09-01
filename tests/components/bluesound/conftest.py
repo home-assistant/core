@@ -47,7 +47,7 @@ def status() -> Status:
         etag="etag",
         input_id=None,
         service=None,
-        state="playing",
+        state="play",
         shuffle=False,
         album=None,
         artist=None,
@@ -81,7 +81,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 @pytest.fixture
 def config_entry(hass: HomeAssistant) -> MockConfigEntry:
     """Return a mocked config entry."""
-    mock_entry = MockConfigEntry(
+    return MockConfigEntry(
         domain=DOMAIN,
         data={
             CONF_HOST: "1.1.1.2",
@@ -89,16 +89,14 @@ def config_entry(hass: HomeAssistant) -> MockConfigEntry:
         },
         unique_id="00:11:22:33:44:55-11000",
     )
-    mock_entry.add_to_hass(hass)
-
-    return mock_entry
 
 
 @pytest.fixture
-async def setup_platform(
+async def setup_config_entry(
     hass: HomeAssistant, config_entry: MockConfigEntry, player: Player
 ) -> None:
     """Set up the platform."""
+    config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
