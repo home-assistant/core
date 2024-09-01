@@ -104,6 +104,7 @@ class EnumTypeData:
             return None
         return cls(dpcode, **parsed)
 
+
 @dataclass
 class ElectricityTypeData:
     """Electricity Type Data."""
