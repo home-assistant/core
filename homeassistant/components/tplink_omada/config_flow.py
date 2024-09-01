@@ -218,7 +218,7 @@ class TpLinkOmadaConfigFlow(ConfigFlow, domain=DOMAIN):
         except OmadaClientException as ex:
             _LOGGER.error("Unexpected API error: %s", ex)
             errors["base"] = "unknown"
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         return None

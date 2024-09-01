@@ -24,7 +24,7 @@ EXECUTOR_SHUTDOWN_TIMEOUT = 10
 
 def _log_thread_running_at_shutdown(name: str, ident: int) -> None:
     """Log the stack of a thread that was still running at shutdown."""
-    frames = sys._current_frames()  # pylint: disable=protected-access
+    frames = sys._current_frames()  # noqa: SLF001
     stack = frames.get(ident)
     formatted_stack = traceback.format_stack(stack)
     _LOGGER.warning(
@@ -63,10 +63,18 @@ def join_or_interrupt_threads(
 class InterruptibleThreadPoolExecutor(ThreadPoolExecutor):
     """A ThreadPoolExecutor instance that will not deadlock on shutdown."""
 
-    def shutdown(self, *args: Any, **kwargs: Any) -> None:
-        """Shutdown with interrupt support added."""
+    def shutdown(
+        self, *args: Any, join_threads_or_timeout: bool = True, **kwargs: Any
+    ) -> None:
+        """Shutdown with interrupt support added.
+
+        By default shutdown will wait for threads to finish up
+        to the timeout before forcefully stopping them. This can
+        be disabled by setting `join_threads_or_timeout` to False.
+        """
         super().shutdown(wait=False, cancel_futures=True)
-        self.join_threads_or_timeout()
+        if join_threads_or_timeout:
+            self.join_threads_or_timeout()
 
     def join_threads_or_timeout(self) -> None:
         """Join threads or timeout."""

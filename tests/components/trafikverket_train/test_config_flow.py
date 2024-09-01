@@ -12,7 +12,7 @@ from pytrafikverket.exceptions import (
     NoTrainStationFound,
     UnknownError,
 )
-from pytrafikverket.trafikverket_train import TrainStop
+from pytrafikverket.models import TrainStopModel
 
 from homeassistant import config_entries
 from homeassistant.components.trafikverket_train.const import (
@@ -246,15 +246,7 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
     )
     entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "unique_id": entry.unique_id,
-            "entry_id": entry.entry_id,
-        },
-        data=entry.data,
-    )
+    result = await entry.start_reauth_flow(hass)
     assert result["step_id"] == "reauth_confirm"
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
@@ -328,15 +320,7 @@ async def test_reauth_flow_error(
     )
     entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "unique_id": entry.unique_id,
-            "entry_id": entry.entry_id,
-        },
-        data=entry.data,
-    )
+    result = await entry.start_reauth_flow(hass)
 
     with (
         patch(
@@ -418,15 +402,7 @@ async def test_reauth_flow_error_departures(
     )
     entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "unique_id": entry.unique_id,
-            "entry_id": entry.entry_id,
-        },
-        data=entry.data,
-    )
+    result = await entry.start_reauth_flow(hass)
 
     with (
         patch(
@@ -479,8 +455,8 @@ async def test_reauth_flow_error_departures(
 
 async def test_options_flow(
     hass: HomeAssistant,
-    get_trains: list[TrainStop],
-    get_train_stop: TrainStop,
+    get_trains: list[TrainStopModel],
+    get_train_stop: TrainStopModel,
 ) -> None:
     """Test a reauthentication flow."""
     entry = MockConfigEntry(
@@ -499,7 +475,7 @@ async def test_options_flow(
 
     with (
         patch(
-            "homeassistant.components.trafikverket_train.TrafikverketTrain.async_get_train_station",
+            "homeassistant.components.trafikverket_train.coordinator.TrafikverketTrain.async_get_train_station",
         ),
         patch(
             "homeassistant.components.trafikverket_train.coordinator.TrafikverketTrain.async_get_next_train_stops",

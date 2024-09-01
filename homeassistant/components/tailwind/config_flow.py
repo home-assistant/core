@@ -61,7 +61,7 @@ class TailwindFlowHandler(ConfigFlow, domain=DOMAIN):
                 errors[CONF_TOKEN] = "invalid_auth"
             except TailwindConnectionError:
                 errors[CONF_HOST] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:  # noqa: BLE001
                 LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
         else:
@@ -127,7 +127,7 @@ class TailwindFlowHandler(ConfigFlow, domain=DOMAIN):
                 errors[CONF_TOKEN] = "invalid_auth"
             except TailwindConnectionError:
                 errors["base"] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:  # noqa: BLE001
                 LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
 
@@ -144,7 +144,9 @@ class TailwindFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_reauth(self, _: Mapping[str, Any]) -> ConfigFlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Handle initiation of re-authentication with a Tailwind device."""
         self.reauth_entry = self.hass.config_entries.async_get_entry(
             self.context["entry_id"]
@@ -167,7 +169,7 @@ class TailwindFlowHandler(ConfigFlow, domain=DOMAIN):
                 errors[CONF_TOKEN] = "invalid_auth"
             except TailwindConnectionError:
                 errors["base"] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:  # noqa: BLE001
                 LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
 

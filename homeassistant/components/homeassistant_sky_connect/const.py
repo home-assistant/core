@@ -5,6 +5,7 @@ import enum
 from typing import Self
 
 DOMAIN = "homeassistant_sky_connect"
+DOCS_WEB_FLASHER_URL = "https://skyconnect.home-assistant.io/firmware-update/"
 
 
 @dataclasses.dataclass(frozen=True)

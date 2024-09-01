@@ -1,19 +1,16 @@
 """Configuration for 17Track tests."""
 
 from collections.abc import Generator
-from typing import Optional
 from unittest.mock import AsyncMock, patch
 
-from py17track.package import Package
+from pyseventeentrack.package import Package
 import pytest
 
 from homeassistant.components.seventeentrack.const import (
-    DEFAULT_SHOW_ARCHIVED,
-    DEFAULT_SHOW_DELIVERED,
-)
-from homeassistant.components.seventeentrack.sensor import (
     CONF_SHOW_ARCHIVED,
     CONF_SHOW_DELIVERED,
+    DEFAULT_SHOW_ARCHIVED,
+    DEFAULT_SHOW_DELIVERED,
 )
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
@@ -28,6 +25,8 @@ DEFAULT_SUMMARY = {
     "Delivered": 0,
     "Returned": 0,
 }
+
+DEFAULT_SUMMARY_LENGTH = len(DEFAULT_SUMMARY)
 
 ACCOUNT_ID = "1234"
 
@@ -70,7 +69,7 @@ VALID_PLATFORM_CONFIG_FULL = {
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.seventeentrack.async_setup_entry", return_value=True
@@ -129,7 +128,7 @@ def mock_seventeentrack():
 def get_package(
     tracking_number: str = "456",
     destination_country: int = 206,
-    friendly_name: Optional[str] = "friendly name 1",
+    friendly_name: str | None = "friendly name 1",
     info_text: str = "info text 1",
     location: str = "location 1",
     timestamp: str = "2020-08-10 10:32",

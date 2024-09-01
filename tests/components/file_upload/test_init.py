@@ -3,6 +3,7 @@
 from contextlib import contextmanager
 from pathlib import Path
 from random import getrandbits
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -16,7 +17,9 @@ from tests.typing import ClientSessionGenerator
 
 
 @pytest.fixture
-async def uploaded_file_dir(hass: HomeAssistant, hass_client) -> Path:
+async def uploaded_file_dir(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> Path:
     """Test uploading and using a file."""
     assert await async_setup_component(hass, "file_upload", {})
     client = await hass_client()
@@ -90,9 +93,9 @@ async def test_upload_large_file(
             file_upload.TEMP_DIR_NAME + f"-{getrandbits(10):03x}",
         ),
         patch(
-            # Patch one megabyte to 8 bytes to prevent having to use big files in tests
+            # Patch one megabyte to 50 bytes to prevent having to use big files in tests
             "homeassistant.components.file_upload.ONE_MEGABYTE",
-            8,
+            50,
         ),
     ):
         res = await client.post("/api/file_upload", data={"file": large_file_io})
@@ -139,7 +142,7 @@ async def test_upload_large_file_fails(
         yield MockPathOpen()
 
     class MockPathOpen:
-        def __init__(self, *args, **kwargs) -> None:
+        def __init__(self, *args: Any, **kwargs: Any) -> None:
             pass
 
         def write(self, data: bytes) -> None:
@@ -152,9 +155,9 @@ async def test_upload_large_file_fails(
             file_upload.TEMP_DIR_NAME + f"-{getrandbits(10):03x}",
         ),
         patch(
-            # Patch one megabyte to 8 bytes to prevent having to use big files in tests
+            # Patch one megabyte to 50 bytes to prevent having to use big files in tests
             "homeassistant.components.file_upload.ONE_MEGABYTE",
-            8,
+            50,
         ),
         patch(
             "homeassistant.components.file_upload.Path.open", return_value=_mock_open()

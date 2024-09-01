@@ -4,6 +4,8 @@ from http import HTTPStatus
 from ipaddress import ip_address
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant import setup
 from homeassistant.components import zeroconf
 from homeassistant.components.smappee.const import (
@@ -427,11 +429,11 @@ async def test_abort_cloud_flow_if_local_device_exists(hass: HomeAssistant) -> N
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_full_user_flow(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    current_request_with_host: None,
 ) -> None:
     """Check full flow."""
     assert await setup.async_setup_component(

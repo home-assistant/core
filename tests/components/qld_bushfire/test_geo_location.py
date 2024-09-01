@@ -169,7 +169,7 @@ async def test_setup(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> Non
                 [mock_entry_1, mock_entry_4, mock_entry_3],
             )
             async_fire_time_changed(hass, utcnow + SCAN_INTERVAL)
-            await hass.async_block_till_done()
+            await hass.async_block_till_done(wait_background_tasks=True)
 
             all_states = hass.states.async_all()
             assert len(all_states) == 3

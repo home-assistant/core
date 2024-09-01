@@ -11,8 +11,9 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util import dt as dt_util
 
-from . import ModernFormsDataUpdateCoordinator, ModernFormsDeviceEntity
+from . import ModernFormsDeviceEntity
 from .const import CLEAR_TIMER, DOMAIN
+from .coordinator import ModernFormsDataUpdateCoordinator
 
 
 async def async_setup_entry(

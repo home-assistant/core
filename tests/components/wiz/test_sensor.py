@@ -17,13 +17,14 @@ from . import (
 )
 
 
-async def test_signal_strength(hass: HomeAssistant) -> None:
+async def test_signal_strength(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test signal strength."""
     bulb, entry = await async_setup_integration(
         hass, bulb_type=FAKE_DUAL_HEAD_RGBWW_BULB
     )
     entity_id = "sensor.mock_title_signal_strength"
-    entity_registry = er.async_get(hass)
     reg_entry = entity_registry.async_get(entity_id)
     assert reg_entry.unique_id == f"{FAKE_MAC}_rssi"
     updated_entity = entity_registry.async_update_entity(
@@ -41,7 +42,9 @@ async def test_signal_strength(hass: HomeAssistant) -> None:
     assert hass.states.get(entity_id).state == "-50"
 
 
-async def test_power_monitoring(hass: HomeAssistant) -> None:
+async def test_power_monitoring(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test power monitoring."""
     socket = _mocked_wizlight(None, None, FAKE_SOCKET_WITH_POWER_MONITORING)
     socket.power_monitoring = None
@@ -50,7 +53,6 @@ async def test_power_monitoring(hass: HomeAssistant) -> None:
         hass, wizlight=socket, bulb_type=FAKE_SOCKET_WITH_POWER_MONITORING
     )
     entity_id = "sensor.mock_title_power"
-    entity_registry = er.async_get(hass)
     reg_entry = entity_registry.async_get(entity_id)
     assert reg_entry.unique_id == f"{FAKE_MAC}_power"
     updated_entity = entity_registry.async_update_entity(

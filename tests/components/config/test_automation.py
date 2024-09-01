@@ -7,12 +7,12 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.bootstrap import async_setup_component
 from homeassistant.components import config
 from homeassistant.components.config import automation
-from homeassistant.const import STATE_ON, STATE_UNAVAILABLE
+from homeassistant.const import STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.setup import async_setup_component
 from homeassistant.util import yaml
 
 from tests.typing import ClientSessionGenerator
@@ -25,10 +25,10 @@ def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
 
 @pytest.fixture
 async def setup_automation(
-    hass,
-    automation_config,
-    stub_blueprint_populate,
-):
+    hass: HomeAssistant,
+    automation_config: dict[str, Any],
+    stub_blueprint_populate: None,
+) -> None:
     """Set up automation integration."""
     assert await async_setup_component(
         hass, "automation", {"automation": automation_config}
@@ -36,11 +36,11 @@ async def setup_automation(
 
 
 @pytest.mark.parametrize("automation_config", [{}])
+@pytest.mark.usefixtures("setup_automation")
 async def test_get_automation_config(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
-    hass_config_store,
-    setup_automation,
+    hass_config_store: dict[str, Any],
 ) -> None:
     """Test getting automation config."""
     with patch.object(config, "SECTIONS", [automation]):
@@ -59,11 +59,11 @@ async def test_get_automation_config(
 
 
 @pytest.mark.parametrize("automation_config", [{}])
+@pytest.mark.usefixtures("setup_automation")
 async def test_update_automation_config(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
-    hass_config_store,
-    setup_automation,
+    hass_config_store: dict[str, Any],
 ) -> None:
     """Test updating automation config."""
     with patch.object(config, "SECTIONS", [automation]):
@@ -82,10 +82,8 @@ async def test_update_automation_config(
     )
     await hass.async_block_till_done()
     assert sorted(hass.states.async_entity_ids("automation")) == [
-        "automation.automation_0",
         "automation.automation_1",
     ]
-    assert hass.states.get("automation.automation_0").state == STATE_UNAVAILABLE
     assert hass.states.get("automation.automation_1").state == STATE_ON
 
     assert resp.status == HTTPStatus.OK
@@ -145,11 +143,11 @@ async def test_update_automation_config(
         ),
     ],
 )
+@pytest.mark.usefixtures("setup_automation")
 async def test_update_automation_config_with_error(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
-    hass_config_store,
-    setup_automation,
+    hass_config_store: dict[str, Any],
     caplog: pytest.LogCaptureFixture,
     updated_config: Any,
     validation_error: str,
@@ -198,11 +196,11 @@ async def test_update_automation_config_with_error(
         ),
     ],
 )
+@pytest.mark.usefixtures("setup_automation")
 async def test_update_automation_config_with_blueprint_substitution_error(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
-    hass_config_store,
-    setup_automation,
+    hass_config_store: dict[str, Any],
     caplog: pytest.LogCaptureFixture,
     updated_config: Any,
     validation_error: str,
@@ -237,11 +235,11 @@ async def test_update_automation_config_with_blueprint_substitution_error(
 
 
 @pytest.mark.parametrize("automation_config", [{}])
+@pytest.mark.usefixtures("setup_automation")
 async def test_update_remove_key_automation_config(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
-    hass_config_store,
-    setup_automation,
+    hass_config_store: dict[str, Any],
 ) -> None:
     """Test updating automation config while removing a key."""
     with patch.object(config, "SECTIONS", [automation]):
@@ -260,10 +258,8 @@ async def test_update_remove_key_automation_config(
     )
     await hass.async_block_till_done()
     assert sorted(hass.states.async_entity_ids("automation")) == [
-        "automation.automation_0",
         "automation.automation_1",
     ]
-    assert hass.states.get("automation.automation_0").state == STATE_UNAVAILABLE
     assert hass.states.get("automation.automation_1").state == STATE_ON
 
     assert resp.status == HTTPStatus.OK
@@ -276,11 +272,11 @@ async def test_update_remove_key_automation_config(
 
 
 @pytest.mark.parametrize("automation_config", [{}])
+@pytest.mark.usefixtures("setup_automation")
 async def test_bad_formatted_automations(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
-    hass_config_store,
-    setup_automation,
+    hass_config_store: dict[str, Any],
 ) -> None:
     """Test that we handle automations without ID."""
     with patch.object(config, "SECTIONS", [automation]):
@@ -305,10 +301,8 @@ async def test_bad_formatted_automations(
     )
     await hass.async_block_till_done()
     assert sorted(hass.states.async_entity_ids("automation")) == [
-        "automation.automation_0",
         "automation.automation_1",
     ]
-    assert hass.states.get("automation.automation_0").state == STATE_UNAVAILABLE
     assert hass.states.get("automation.automation_1").state == STATE_ON
 
     assert resp.status == HTTPStatus.OK
@@ -338,12 +332,12 @@ async def test_bad_formatted_automations(
         ],
     ],
 )
+@pytest.mark.usefixtures("setup_automation")
 async def test_delete_automation(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     entity_registry: er.EntityRegistry,
-    hass_config_store,
-    setup_automation,
+    hass_config_store: dict[str, Any],
 ) -> None:
     """Test deleting an automation."""
 
@@ -379,12 +373,12 @@ async def test_delete_automation(
 
 
 @pytest.mark.parametrize("automation_config", [{}])
+@pytest.mark.usefixtures("setup_automation")
 async def test_api_calls_require_admin(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     hass_read_only_access_token: str,
-    hass_config_store,
-    setup_automation,
+    hass_config_store: dict[str, Any],
 ) -> None:
     """Test cloud APIs endpoints do not work as a normal user."""
     with patch.object(config, "SECTIONS", [automation]):

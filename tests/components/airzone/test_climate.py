@@ -248,7 +248,7 @@ async def test_airzone_create_climates(hass: HomeAssistant) -> None:
         ),
     ):
         async_fire_time_changed(hass, utcnow() + SCAN_INTERVAL)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get("climate.salon")
     assert state.attributes.get(ATTR_MAX_TEMP) == 25

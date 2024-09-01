@@ -23,7 +23,9 @@ async def async_get_config_entry_diagnostics(
     for ch in api.channels:
         IPC_cam[ch] = {}
         IPC_cam[ch]["model"] = api.camera_model(ch)
+        IPC_cam[ch]["hardware version"] = api.camera_hardware_version(ch)
         IPC_cam[ch]["firmware version"] = api.camera_sw_version(ch)
+        IPC_cam[ch]["encoding main"] = await api.get_encoding(ch)
 
     return {
         "model": api.model,
@@ -42,6 +44,8 @@ async def async_get_config_entry_diagnostics(
         "stream channels": api.stream_channels,
         "IPC cams": IPC_cam,
         "capabilities": api.capabilities,
+        "cmd list": host.update_cmd,
+        "firmware ch list": host.firmware_ch_list,
         "api versions": api.checked_api_versions,
         "abilities": api.abilities,
     }

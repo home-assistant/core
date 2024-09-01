@@ -44,7 +44,9 @@ class VulcanFlowHandler(ConfigFlow, domain=DOMAIN):
         self.keystore = None
         self.students = None
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle config flow."""
         if self._async_current_entries():
             return await self.async_step_add_next_config_entry()
@@ -73,7 +75,7 @@ class VulcanFlowHandler(ConfigFlow, domain=DOMAIN):
             except ClientConnectionError as err:
                 errors = {"base": "cannot_connect"}
                 _LOGGER.error("Connection error: %s", err)
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors = {"base": "unknown"}
             if not errors:
@@ -156,7 +158,7 @@ class VulcanFlowHandler(ConfigFlow, domain=DOMAIN):
                 return await self.async_step_select_saved_credentials(
                     errors={"base": "cannot_connect"}
                 )
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 return await self.async_step_auth(errors={"base": "unknown"})
             if len(students) == 1:
@@ -268,7 +270,7 @@ class VulcanFlowHandler(ConfigFlow, domain=DOMAIN):
             except ClientConnectionError as err:
                 errors["base"] = "cannot_connect"
                 _LOGGER.error("Connection error: %s", err)
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             if not errors:

@@ -3,6 +3,8 @@
 from datetime import timedelta
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
@@ -16,13 +18,12 @@ from homeassistant.util import dt as dt_util
 from . import init_integration
 
 
-async def test_sensors(hass: HomeAssistant, nzbget_api) -> None:
+@pytest.mark.usefixtures("nzbget_api")
+async def test_sensors(hass: HomeAssistant, entity_registry: er.EntityRegistry) -> None:
     """Test the creation and values of the sensors."""
     now = dt_util.utcnow().replace(microsecond=0)
     with patch("homeassistant.components.nzbget.sensor.utcnow", return_value=now):
         entry = await init_integration(hass)
-
-    registry = er.async_get(hass)
 
     uptime = now - timedelta(seconds=600)
 
@@ -76,7 +77,7 @@ async def test_sensors(hass: HomeAssistant, nzbget_api) -> None:
     }
 
     for sensor_id, data in sensors.items():
-        entity_entry = registry.async_get(f"sensor.nzbgettest_{sensor_id}")
+        entity_entry = entity_registry.async_get(f"sensor.nzbgettest_{sensor_id}")
         assert entity_entry
         assert entity_entry.original_device_class == data[3]
         assert entity_entry.unique_id == f"{entry.entry_id}_{data[0]}"

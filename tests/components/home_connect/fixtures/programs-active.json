@@ -1,0 +1,28 @@
+{
+  "Oven": {
+    "data": {
+      "key": "Cooking.Oven.Program.HeatingMode.HotAir",
+      "name": "Hot air",
+      "options": [
+        {
+          "key": "Cooking.Oven.Option.SetpointTemperature",
+          "name": "Target temperature for the cavity",
+          "value": 230,
+          "unit": "°C"
+        },
+        {
+          "key": "BSH.Common.Option.Duration",
+          "name": "Adjust the duration",
+          "value": 1200,
+          "unit": "seconds"
+        }
+      ]
+    }
+  },
+  "Washer": {
+    "data": {
+      "key": "BSH.Common.Root.ActiveProgram",
+      "value": "LaundryCare.Dryer.Program.Mix"
+    }
+  }
+}

@@ -39,21 +39,21 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNKNOWN,
 )
-from homeassistant.core import CoreState, HomeAssistant
+from homeassistant.core import CoreState, Event, HomeAssistant
 from homeassistant.helpers import entity_registry as er
 import homeassistant.util.dt as dt_util
 
 from tests.common import async_fire_time_changed, async_mock_service
 
 
-async def _wait_for_light_coalesce(hass):
+async def _wait_for_light_coalesce(hass: HomeAssistant) -> None:
     async_fire_time_changed(
         hass, dt_util.utcnow() + timedelta(seconds=CHANGE_COALESCE_TIME_WINDOW)
     )
     await hass.async_block_till_done()
 
 
-async def test_light_basic(hass: HomeAssistant, hk_driver, events) -> None:
+async def test_light_basic(hass: HomeAssistant, hk_driver, events: list[Event]) -> None:
     """Test light with char state."""
     entity_id = "light.demo"
 
@@ -127,7 +127,7 @@ async def test_light_basic(hass: HomeAssistant, hk_driver, events) -> None:
     [[ColorMode.BRIGHTNESS], [ColorMode.HS], [ColorMode.COLOR_TEMP]],
 )
 async def test_light_brightness(
-    hass: HomeAssistant, hk_driver, events, supported_color_modes
+    hass: HomeAssistant, hk_driver, events: list[Event], supported_color_modes
 ) -> None:
     """Test light with brightness."""
     entity_id = "light.demo"
@@ -274,7 +274,9 @@ async def test_light_brightness(
     assert acc.char_brightness.value == 1
 
 
-async def test_light_color_temperature(hass: HomeAssistant, hk_driver, events) -> None:
+async def test_light_color_temperature(
+    hass: HomeAssistant, hk_driver, events: list[Event]
+) -> None:
     """Test light with color temperature."""
     entity_id = "light.demo"
 
@@ -323,7 +325,7 @@ async def test_light_color_temperature(hass: HomeAssistant, hk_driver, events) -
     [["color_temp", "hs"], ["color_temp", "rgb"], ["color_temp", "xy"]],
 )
 async def test_light_color_temperature_and_rgb_color(
-    hass: HomeAssistant, hk_driver, events, supported_color_modes
+    hass: HomeAssistant, hk_driver, events: list[Event], supported_color_modes
 ) -> None:
     """Test light with color temperature and rgb color not exposing temperature."""
     entity_id = "light.demo"
@@ -524,7 +526,7 @@ async def test_light_color_temperature_and_rgb_color(
     "supported_color_modes", [[ColorMode.HS], [ColorMode.RGB], [ColorMode.XY]]
 )
 async def test_light_rgb_color(
-    hass: HomeAssistant, hk_driver, events, supported_color_modes
+    hass: HomeAssistant, hk_driver, events: list[Event], supported_color_modes
 ) -> None:
     """Test light with rgb_color."""
     entity_id = "light.demo"
@@ -578,7 +580,7 @@ async def test_light_rgb_color(
 
 
 async def test_light_restore(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry, hk_driver, events
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, hk_driver
 ) -> None:
     """Test setting up an entity from state in the event registry."""
     hass.set_state(CoreState.not_running)
@@ -642,7 +644,7 @@ async def test_light_restore(
 async def test_light_rgb_with_color_temp(
     hass: HomeAssistant,
     hk_driver,
-    events,
+    events: list[Event],
     supported_color_modes,
     state_props,
     turn_on_props_with_brightness,
@@ -762,7 +764,7 @@ async def test_light_rgb_with_color_temp(
 async def test_light_rgbwx_with_color_temp_and_brightness(
     hass: HomeAssistant,
     hk_driver,
-    events,
+    events: list[Event],
     supported_color_modes,
     state_props,
     turn_on_props_with_brightness,
@@ -824,7 +826,7 @@ async def test_light_rgbwx_with_color_temp_and_brightness(
 async def test_light_rgb_or_w_lights(
     hass: HomeAssistant,
     hk_driver,
-    events,
+    events: list[Event],
 ) -> None:
     """Test lights with RGB or W lights."""
     entity_id = "light.demo"
@@ -957,7 +959,7 @@ async def test_light_rgb_or_w_lights(
 async def test_light_rgb_with_white_switch_to_temp(
     hass: HomeAssistant,
     hk_driver,
-    events,
+    events: list[Event],
     supported_color_modes,
     state_props,
 ) -> None:
@@ -1034,11 +1036,7 @@ async def test_light_rgb_with_white_switch_to_temp(
     assert acc.char_brightness.value == 100
 
 
-async def test_light_rgb_with_hs_color_none(
-    hass: HomeAssistant,
-    hk_driver,
-    events,
-) -> None:
+async def test_light_rgb_with_hs_color_none(hass: HomeAssistant, hk_driver) -> None:
     """Test lights hs color set to None."""
     entity_id = "light.demo"
 
@@ -1071,7 +1069,7 @@ async def test_light_rgb_with_hs_color_none(
 async def test_light_rgbww_with_color_temp_conversion(
     hass: HomeAssistant,
     hk_driver,
-    events,
+    events: list[Event],
 ) -> None:
     """Test lights with RGBWW convert color temp as expected."""
     entity_id = "light.demo"
@@ -1192,7 +1190,7 @@ async def test_light_rgbww_with_color_temp_conversion(
 async def test_light_rgbw_with_color_temp_conversion(
     hass: HomeAssistant,
     hk_driver,
-    events,
+    events: list[Event],
 ) -> None:
     """Test lights with RGBW convert color temp as expected."""
     entity_id = "light.demo"
@@ -1280,7 +1278,7 @@ async def test_light_rgbw_with_color_temp_conversion(
 
 
 async def test_light_set_brightness_and_color(
-    hass: HomeAssistant, hk_driver, events
+    hass: HomeAssistant, hk_driver, events: list[Event]
 ) -> None:
     """Test light with all chars in one go."""
     entity_id = "light.demo"
@@ -1365,7 +1363,7 @@ async def test_light_set_brightness_and_color(
     )
 
 
-async def test_light_min_max_mireds(hass: HomeAssistant, hk_driver, events) -> None:
+async def test_light_min_max_mireds(hass: HomeAssistant, hk_driver) -> None:
     """Test mireds are forced to ints."""
     entity_id = "light.demo"
 
@@ -1386,7 +1384,7 @@ async def test_light_min_max_mireds(hass: HomeAssistant, hk_driver, events) -> N
 
 
 async def test_light_set_brightness_and_color_temp(
-    hass: HomeAssistant, hk_driver, events
+    hass: HomeAssistant, hk_driver, events: list[Event]
 ) -> None:
     """Test light with all chars in one go."""
     entity_id = "light.demo"

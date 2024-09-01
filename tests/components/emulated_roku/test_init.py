@@ -7,7 +7,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 
-async def test_config_required_fields(hass: HomeAssistant, mock_get_source_ip) -> None:
+async def test_config_required_fields(hass: HomeAssistant) -> None:
     """Test that configuration is successful with required fields."""
     with (
         patch.object(emulated_roku, "configured_servers", return_value=[]),
@@ -35,9 +35,7 @@ async def test_config_required_fields(hass: HomeAssistant, mock_get_source_ip) -
         )
 
 
-async def test_config_already_registered_not_configured(
-    hass: HomeAssistant, mock_get_source_ip
-) -> None:
+async def test_config_already_registered_not_configured(hass: HomeAssistant) -> None:
     """Test that an already registered name causes the entry to be ignored."""
     with (
         patch(

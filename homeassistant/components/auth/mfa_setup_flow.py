@@ -62,7 +62,8 @@ class MfaFlowManager(data_entry_flow.FlowManager):
         return result
 
 
-async def async_setup(hass: HomeAssistant) -> None:
+@callback
+def async_setup(hass: HomeAssistant) -> None:
     """Init mfa setup flow manager."""
     hass.data[DATA_SETUP_FLOW_MGR] = MfaFlowManager(hass)
 
@@ -155,7 +156,7 @@ def _prepare_result_json(
     data = result.copy()
 
     if (schema := data["data_schema"]) is None:
-        data["data_schema"] = []
+        data["data_schema"] = []  # type: ignore[typeddict-item]  # json result type
     else:
         data["data_schema"] = voluptuous_serialize.convert(schema)
 

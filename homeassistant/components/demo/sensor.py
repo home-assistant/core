@@ -149,7 +149,7 @@ class DemoSensor(SensorEntity):
         self,
         unique_id: str,
         device_name: str | None,
-        state: float | int | str | None,
+        state: float | str | None,
         device_class: SensorDeviceClass,
         state_class: SensorStateClass | None,
         unit_of_measurement: str | None,

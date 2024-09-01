@@ -1,13 +1,8 @@
 """Tests for Islamic Prayer Times config flow."""
 
-from unittest.mock import patch
-
-from prayer_times_calculator import InvalidResponseError
 import pytest
-from requests.exceptions import ConnectionError as ConnError
 
 from homeassistant import config_entries
-from homeassistant.components import islamic_prayer_times
 from homeassistant.components.islamic_prayer_times.const import (
     CONF_CALC_METHOD,
     CONF_LAT_ADJ_METHOD,
@@ -28,52 +23,18 @@ pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 async def test_flow_works(hass: HomeAssistant) -> None:
     """Test user config."""
     result = await hass.config_entries.flow.async_init(
-        islamic_prayer_times.DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    with patch(
-        "homeassistant.components.islamic_prayer_times.config_flow.async_validate_location",
-        return_value={},
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input=MOCK_USER_INPUT
-        )
-        await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=MOCK_USER_INPUT
+    )
+    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Home"
-
-
-@pytest.mark.parametrize(
-    ("exception", "error"),
-    [
-        (InvalidResponseError, "invalid_location"),
-        (ConnError, "conn_error"),
-    ],
-)
-async def test_flow_error(
-    hass: HomeAssistant, exception: Exception, error: str
-) -> None:
-    """Test flow errors."""
-    result = await hass.config_entries.flow.async_init(
-        islamic_prayer_times.DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-
-    with patch(
-        "homeassistant.components.islamic_prayer_times.config_flow.PrayerTimesCalculator.fetch_prayer_times",
-        side_effect=exception,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input=MOCK_USER_INPUT
-        )
-        await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"]["base"] == error
 
 
 async def test_options(hass: HomeAssistant) -> None:
@@ -114,7 +75,7 @@ async def test_integration_already_configured(hass: HomeAssistant) -> None:
     )
     entry.add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
-        islamic_prayer_times.DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"

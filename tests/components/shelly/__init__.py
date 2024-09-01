@@ -20,12 +20,13 @@ from homeassistant.components.shelly.const import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
+    DeviceEntry,
     DeviceRegistry,
     format_mac,
 )
-from homeassistant.helpers.entity_registry import async_get
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -111,9 +112,10 @@ def register_entity(
     unique_id: str,
     config_entry: ConfigEntry | None = None,
     capabilities: Mapping[str, Any] | None = None,
+    device_id: str | None = None,
 ) -> str:
     """Register enabled entity, return entity_id."""
-    entity_registry = async_get(hass)
+    entity_registry = er.async_get(hass)
     entity_registry.async_get_or_create(
         domain,
         DOMAIN,
@@ -122,6 +124,7 @@ def register_entity(
         disabled_by=None,
         config_entry=config_entry,
         capabilities=capabilities,
+        device_id=device_id,
     )
     return f"{domain}.{object_id}"
 
@@ -132,7 +135,7 @@ def get_entity(
     unique_id: str,
 ) -> str | None:
     """Get Shelly entity."""
-    entity_registry = async_get(hass)
+    entity_registry = er.async_get(hass)
     return entity_registry.async_get_entity_id(
         domain, DOMAIN, f"{MOCK_MAC}-{unique_id}"
     )
@@ -145,9 +148,11 @@ def get_entity_state(hass: HomeAssistant, entity_id: str) -> str:
     return entity.state
 
 
-def register_device(device_reg: DeviceRegistry, config_entry: ConfigEntry) -> None:
+def register_device(
+    device_registry: DeviceRegistry, config_entry: ConfigEntry
+) -> DeviceEntry:
     """Register Shelly device."""
-    device_reg.async_get_or_create(
+    return device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         connections={(CONNECTION_NETWORK_MAC, format_mac(MOCK_MAC))},
     )

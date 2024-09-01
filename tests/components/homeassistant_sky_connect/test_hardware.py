@@ -1,9 +1,8 @@
 """Test the Home Assistant SkyConnect hardware platform."""
 
-from unittest.mock import patch
-
 from homeassistant.components.homeassistant_sky_connect.const import DOMAIN
-from homeassistant.core import EVENT_HOMEASSISTANT_STARTED, HomeAssistant
+from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
@@ -15,7 +14,8 @@ CONFIG_ENTRY_DATA = {
     "pid": "EA60",
     "serial_number": "9e2adbd75b8beb119fe564a0f320645d",
     "manufacturer": "Nabu Casa",
-    "description": "SkyConnect v1.0",
+    "product": "SkyConnect v1.0",
+    "firmware": "ezsp",
 }
 
 CONFIG_ENTRY_DATA_2 = {
@@ -24,7 +24,8 @@ CONFIG_ENTRY_DATA_2 = {
     "pid": "EA60",
     "serial_number": "9e2adbd75b8beb119fe564a0f320645d",
     "manufacturer": "Nabu Casa",
-    "description": "Home Assistant Connect ZBT-1",
+    "product": "Home Assistant Connect ZBT-1",
+    "firmware": "ezsp",
 }
 
 
@@ -42,22 +43,24 @@ async def test_hardware_info(
         options={},
         title="Home Assistant SkyConnect",
         unique_id="unique_1",
+        version=1,
+        minor_version=2,
     )
     config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+
     config_entry_2 = MockConfigEntry(
         data=CONFIG_ENTRY_DATA_2,
         domain=DOMAIN,
         options={},
         title="Home Assistant Connect ZBT-1",
         unique_id="unique_2",
+        version=1,
+        minor_version=2,
     )
     config_entry_2.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.homeassistant_sky_connect.usb.async_is_plugged_in",
-        return_value=True,
-    ):
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
+
+    assert await hass.config_entries.async_setup(config_entry_2.entry_id)
 
     client = await hass_ws_client(hass)
 

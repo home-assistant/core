@@ -49,6 +49,35 @@ class ViCareNumberEntityDescription(NumberEntityDescription, ViCareRequiredKeysM
     stepping_getter: Callable[[PyViCareDevice], float | None] | None = None
 
 
+DEVICE_ENTITY_DESCRIPTIONS: tuple[ViCareNumberEntityDescription, ...] = (
+    ViCareNumberEntityDescription(
+        key="dhw_temperature",
+        translation_key="dhw_temperature",
+        entity_category=EntityCategory.CONFIG,
+        device_class=NumberDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        value_getter=lambda api: api.getDomesticHotWaterConfiguredTemperature(),
+        value_setter=lambda api, value: api.setDomesticHotWaterTemperature(value),
+        min_value_getter=lambda api: api.getDomesticHotWaterMinTemperature(),
+        max_value_getter=lambda api: api.getDomesticHotWaterMaxTemperature(),
+        native_step=1,
+    ),
+    ViCareNumberEntityDescription(
+        key="dhw_secondary_temperature",
+        translation_key="dhw_secondary_temperature",
+        entity_category=EntityCategory.CONFIG,
+        device_class=NumberDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        value_getter=lambda api: api.getDomesticHotWaterConfiguredTemperature2(),
+        value_setter=lambda api, value: api.setDomesticHotWaterTemperature2(value),
+        # no getters for min, max, stepping exposed yet, using static values
+        native_min_value=10,
+        native_max_value=60,
+        native_step=1,
+    ),
+)
+
+
 CIRCUIT_ENTITY_DESCRIPTIONS: tuple[ViCareNumberEntityDescription, ...] = (
     ViCareNumberEntityDescription(
         key="heating curve shift",
@@ -216,17 +245,31 @@ def _build_entities(
 ) -> list[ViCareNumber]:
     """Create ViCare number entities for a device."""
 
-    return [
+    entities: list[ViCareNumber] = [
         ViCareNumber(
-            circuit,
             device.config,
+            device.api,
             description,
         )
         for device in device_list
-        for circuit in get_circuits(device.api)
-        for description in CIRCUIT_ENTITY_DESCRIPTIONS
-        if is_supported(description.key, description, circuit)
+        for description in DEVICE_ENTITY_DESCRIPTIONS
+        if is_supported(description.key, description, device.api)
     ]
+
+    entities.extend(
+        [
+            ViCareNumber(
+                device.config,
+                circuit,
+                description,
+            )
+            for device in device_list
+            for circuit in get_circuits(device.api)
+            for description in CIRCUIT_ENTITY_DESCRIPTIONS
+            if is_supported(description.key, description, circuit)
+        ]
+    )
+    return entities
 
 
 async def async_setup_entry(
@@ -252,8 +295,8 @@ class ViCareNumber(ViCareEntity, NumberEntity):
 
     def __init__(
         self,
-        api: PyViCareHeatingDeviceComponent,
         device_config: PyViCareDeviceConfig,
+        api: PyViCareDevice | PyViCareHeatingDeviceComponent,
         description: ViCareNumberEntityDescription,
     ) -> None:
         """Initialize the number."""

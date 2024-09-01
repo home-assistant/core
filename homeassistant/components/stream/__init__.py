@@ -214,7 +214,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     # Only pass through PyAV log messages if stream logging is above DEBUG
     cancel_logging_listener = hass.bus.async_listen(
-        EVENT_LOGGING_CHANGED, update_pyav_logging, run_immediately=True
+        EVENT_LOGGING_CHANGED, update_pyav_logging
     )
     # libav.mp4 and libav.swscaler have a few unimportant messages that are logged
     # at logging.WARNING. Set those Logger levels to logging.ERROR
@@ -266,7 +266,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         _LOGGER.debug("Stopped stream workers")
         cancel_logging_listener()
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shutdown, run_immediately=True)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shutdown)
 
     return True
 

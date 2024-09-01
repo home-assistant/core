@@ -76,15 +76,16 @@ async def test_setup_no_data_fails_with_recovery(
     assert state.state == "Current Version: 2021.12.10"
 
 
-async def test_setup_config_no_configuration(hass: HomeAssistant) -> None:
+async def test_setup_config_no_configuration(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test setup from yaml missing configuration options."""
     config = {DOMAIN: None}
 
     assert await async_setup_component(hass, DOMAIN, config)
     await hass.async_block_till_done()
 
-    entities = er.async_get(hass)
-    assert entities.entities == {}
+    assert entity_registry.entities == {}
 
 
 async def test_setup_config_no_sensors(
@@ -129,46 +130,25 @@ async def test_unload_entry(hass: HomeAssistant, loaded_entry: MockConfigEntry) 
     assert loaded_entry.state is ConfigEntryState.NOT_LOADED
 
 
-async def remove_device(ws_client, device_id, config_entry_id):
-    """Remove config entry from a device."""
-    await ws_client.send_json(
-        {
-            "id": 5,
-            "type": "config/device_registry/remove_config_entry",
-            "config_entry_id": config_entry_id,
-            "device_id": device_id,
-        }
-    )
-    response = await ws_client.receive_json()
-    return response["success"]
-
-
 async def test_device_remove_devices(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     loaded_entry: MockConfigEntry,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test we can only remove a device that no longer exists."""
     assert await async_setup_component(hass, "config", {})
-    registry: er.EntityRegistry = er.async_get(hass)
-    entity = registry.entities["sensor.current_version"]
+    entity = entity_registry.entities["sensor.current_version"]
 
-    device_registry = dr.async_get(hass)
     device_entry = device_registry.async_get(entity.device_id)
-    assert (
-        await remove_device(
-            await hass_ws_client(hass), device_entry.id, loaded_entry.entry_id
-        )
-        is False
-    )
+    client = await hass_ws_client(hass)
+    response = await client.remove_device(device_entry.id, loaded_entry.entry_id)
+    assert not response["success"]
 
     dead_device_entry = device_registry.async_get_or_create(
         config_entry_id=loaded_entry.entry_id,
         identifiers={(DOMAIN, "remove-device-id")},
     )
-    assert (
-        await remove_device(
-            await hass_ws_client(hass), dead_device_entry.id, loaded_entry.entry_id
-        )
-        is True
-    )
+    response = await client.remove_device(dead_device_entry.id, loaded_entry.entry_id)
+    assert response["success"]

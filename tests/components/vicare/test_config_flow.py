@@ -11,7 +11,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import dhcp
 from homeassistant.components.vicare.const import DOMAIN
-from homeassistant.config_entries import SOURCE_DHCP, SOURCE_REAUTH, SOURCE_USER
+from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER
 from homeassistant.const import CONF_CLIENT_ID, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -81,7 +81,7 @@ async def test_user_create_entry(
     with patch(
         f"{MODULE}.config_flow.vicare_login",
         return_value=None,
-    ) as mock_setup_entry:
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             VALID_CONFIG,
@@ -104,11 +104,7 @@ async def test_step_reauth(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> 
     )
     config_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_REAUTH, "entry_id": config_entry.entry_id},
-        data=VALID_CONFIG,
-    )
+    result = await config_entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 

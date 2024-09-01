@@ -1,95 +1,44 @@
 # serializer version: 1
-# name: test_forecast_service[get_forecast]
+# name: test_detailed_forecast_service[hourly]
   dict({
-    'forecast': list([
-      dict({
-        'condition': 'lightning-rainy',
-        'datetime': '2019-08-12T20:00:00-04:00',
-        'detailed_description': 'A detailed forecast.',
-        'dew_point': -15.6,
-        'humidity': 75,
-        'is_daytime': False,
-        'precipitation_probability': 89,
-        'temperature': -12.2,
-        'wind_bearing': 180,
-        'wind_speed': 16.09,
-      }),
-    ]),
+    'weather.abc': dict({
+      'forecast': list([
+        dict({
+          'datetime': '2019-08-12T20:00:00-04:00',
+          'short_description': 'A short forecast.',
+        }),
+      ]),
+    }),
   })
 # ---
-# name: test_forecast_service[get_forecast].1
+# name: test_detailed_forecast_service[twice_daily]
   dict({
-    'forecast': list([
-      dict({
-        'condition': 'lightning-rainy',
-        'datetime': '2019-08-12T20:00:00-04:00',
-        'detailed_description': 'A detailed forecast.',
-        'dew_point': -15.6,
-        'humidity': 75,
-        'precipitation_probability': 89,
-        'temperature': -12.2,
-        'wind_bearing': 180,
-        'wind_speed': 16.09,
-      }),
-    ]),
+    'weather.abc': dict({
+      'forecast': list([
+        dict({
+          'datetime': '2019-08-12T20:00:00-04:00',
+          'detailed_description': 'A detailed forecast.',
+          'is_daytime': False,
+          'short_description': 'A short forecast.',
+        }),
+      ]),
+    }),
   })
 # ---
-# name: test_forecast_service[get_forecast].2
+# name: test_detailed_forecast_service_no_data[hourly]
   dict({
-    'forecast': list([
-      dict({
-        'condition': 'lightning-rainy',
-        'datetime': '2019-08-12T20:00:00-04:00',
-        'detailed_description': 'A detailed forecast.',
-        'dew_point': -15.6,
-        'humidity': 75,
-        'is_daytime': False,
-        'precipitation_probability': 89,
-        'temperature': -12.2,
-        'wind_bearing': 180,
-        'wind_speed': 16.09,
-      }),
-    ]),
+    'weather.abc': dict({
+      'forecast': list([
+      ]),
+    }),
   })
 # ---
-# name: test_forecast_service[get_forecast].3
+# name: test_detailed_forecast_service_no_data[twice_daily]
   dict({
-    'forecast': list([
-      dict({
-        'condition': 'lightning-rainy',
-        'datetime': '2019-08-12T20:00:00-04:00',
-        'detailed_description': 'A detailed forecast.',
-        'dew_point': -15.6,
-        'humidity': 75,
-        'precipitation_probability': 89,
-        'temperature': -12.2,
-        'wind_bearing': 180,
-        'wind_speed': 16.09,
-      }),
-    ]),
-  })
-# ---
-# name: test_forecast_service[get_forecast].4
-  dict({
-    'forecast': list([
-      dict({
-        'condition': 'lightning-rainy',
-        'datetime': '2019-08-12T20:00:00-04:00',
-        'detailed_description': 'A detailed forecast.',
-        'dew_point': -15.6,
-        'humidity': 75,
-        'precipitation_probability': 89,
-        'temperature': -12.2,
-        'wind_bearing': 180,
-        'wind_speed': 16.09,
-      }),
-    ]),
-  })
-# ---
-# name: test_forecast_service[get_forecast].5
-  dict({
-    'forecast': list([
-    ]),
+    'weather.abc': dict({
+      'forecast': list([
+      ]),
+    }),
   })
 # ---
 # name: test_forecast_service[get_forecasts]
@@ -99,7 +48,6 @@
         dict({
           'condition': 'lightning-rainy',
           'datetime': '2019-08-12T20:00:00-04:00',
-          'detailed_description': 'A detailed forecast.',
           'dew_point': -15.6,
           'humidity': 75,
           'is_daytime': False,
@@ -119,7 +67,6 @@
         dict({
           'condition': 'lightning-rainy',
           'datetime': '2019-08-12T20:00:00-04:00',
-          'detailed_description': 'A detailed forecast.',
           'dew_point': -15.6,
           'humidity': 75,
           'precipitation_probability': 89,
@@ -138,7 +85,6 @@
         dict({
           'condition': 'lightning-rainy',
           'datetime': '2019-08-12T20:00:00-04:00',
-          'detailed_description': 'A detailed forecast.',
           'dew_point': -15.6,
           'humidity': 75,
           'is_daytime': False,
@@ -158,7 +104,6 @@
         dict({
           'condition': 'lightning-rainy',
           'datetime': '2019-08-12T20:00:00-04:00',
-          'detailed_description': 'A detailed forecast.',
           'dew_point': -15.6,
           'humidity': 75,
           'precipitation_probability': 89,
@@ -177,7 +122,6 @@
         dict({
           'condition': 'lightning-rainy',
           'datetime': '2019-08-12T20:00:00-04:00',
-          'detailed_description': 'A detailed forecast.',
           'dew_point': -15.6,
           'humidity': 75,
           'precipitation_probability': 89,
@@ -202,7 +146,6 @@
     dict({
       'condition': 'lightning-rainy',
       'datetime': '2019-08-12T20:00:00-04:00',
-      'detailed_description': 'A detailed forecast.',
       'dew_point': -15.6,
       'humidity': 75,
       'precipitation_probability': 89,
@@ -217,7 +160,6 @@
     dict({
       'condition': 'lightning-rainy',
       'datetime': '2019-08-12T20:00:00-04:00',
-      'detailed_description': 'A detailed forecast.',
       'dew_point': -15.6,
       'humidity': 75,
       'precipitation_probability': 89,

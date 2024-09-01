@@ -1,6 +1,7 @@
 """Tests for Vallox sensor platform."""
 
 from datetime import datetime, timedelta, tzinfo
+from typing import Any
 
 import pytest
 from vallox_websocket_api import MetricData
@@ -12,27 +13,27 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture
-def set_tz(request):
+def set_tz(request: pytest.FixtureRequest) -> Any:
     """Set the default TZ to the one requested."""
     request.getfixturevalue(request.param)
 
 
 @pytest.fixture
-def utc(hass: HomeAssistant) -> None:
+async def utc(hass: HomeAssistant) -> None:
     """Set the default TZ to UTC."""
-    hass.config.set_time_zone("UTC")
+    await hass.config.async_set_time_zone("UTC")
 
 
 @pytest.fixture
-def helsinki(hass: HomeAssistant) -> None:
+async def helsinki(hass: HomeAssistant) -> None:
     """Set the default TZ to Europe/Helsinki."""
-    hass.config.set_time_zone("Europe/Helsinki")
+    await hass.config.async_set_time_zone("Europe/Helsinki")
 
 
 @pytest.fixture
-def new_york(hass: HomeAssistant) -> None:
+async def new_york(hass: HomeAssistant) -> None:
     """Set the default TZ to America/New_York."""
-    hass.config.set_time_zone("America/New_York")
+    await hass.config.async_set_time_zone("America/New_York")
 
 
 def _sensor_to_datetime(sensor):
@@ -133,4 +134,49 @@ async def test_cell_state_sensor(
 
     # Assert
     sensor = hass.states.get("sensor.vallox_cell_state")
+    assert sensor.state == expected_state
+
+
+@pytest.mark.parametrize(
+    ("metrics", "expected_state"),
+    [
+        (
+            {"A_CYC_STATE": 0},
+            "unknown",
+        ),
+        (
+            {"A_CYC_STATE": 1},
+            "unknown",
+        ),
+        (
+            {"A_CYC_EXTRA_TIMER": 10},
+            "10",
+        ),
+        (
+            {"A_CYC_FIREPLACE_TIMER": 9},
+            "9",
+        ),
+        (
+            {"A_CYC_BOOST_TIMER": 8},
+            "8",
+        ),
+    ],
+)
+async def test_profile_duration_sensor(
+    metrics,
+    expected_state,
+    mock_entry: MockConfigEntry,
+    hass: HomeAssistant,
+    setup_fetch_metric_data_mock,
+) -> None:
+    """Test profile sensor in different states."""
+    # Arrange
+    setup_fetch_metric_data_mock(metrics=metrics)
+
+    # Act
+    await hass.config_entries.async_setup(mock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Assert
+    sensor = hass.states.get("sensor.vallox_profile_duration")
     assert sensor.state == expected_state

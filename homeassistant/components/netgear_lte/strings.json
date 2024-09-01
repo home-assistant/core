@@ -17,16 +17,6 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     }
   },
-  "issues": {
-    "deprecated_notify": {
-      "title": "The Netgear LTE notify service is changing",
-      "description": "The Netgear LTE notify service was previously set up via YAML configuration.\n\nThis created a service for a specified recipient without having to include the phone number.\n\nPlease adjust any automations or scripts you may have to use the `{name}` service and include target for specifying a recipient."
-    },
-    "import_failure": {
-      "title": "The Netgear LTE integration failed to import",
-      "description": "The Netgear LTE notify service was previously set up via YAML configuration.\n\nAn error occurred when trying to communicate with the device while attempting to import the configuration to the UI.\n\nPlease remove the Netgear LTE notify section from your YAML configuration and set it up in the UI instead."
-    }
-  },
   "services": {
     "delete_sms": {
       "name": "Delete SMS",

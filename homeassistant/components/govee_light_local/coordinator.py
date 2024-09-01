@@ -1,5 +1,6 @@
 """Coordinator for Govee light local."""
 
+import asyncio
 from collections.abc import Callable
 import logging
 
@@ -54,9 +55,9 @@ class GoveeLocalApiCoordinator(DataUpdateCoordinator[list[GoveeDevice]]):
         """Set discovery callback for automatic Govee light discovery."""
         self._controller.set_device_discovered_callback(callback)
 
-    def cleanup(self) -> None:
+    def cleanup(self) -> asyncio.Event:
         """Stop and cleanup the cooridinator."""
-        self._controller.cleanup()
+        return self._controller.cleanup()
 
     async def turn_on(self, device: GoveeDevice) -> None:
         """Turn on the light."""

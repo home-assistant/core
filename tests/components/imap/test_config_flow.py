@@ -29,11 +29,13 @@ MOCK_CONFIG = {
     "charset": "utf-8",
     "folder": "INBOX",
     "search": "UnSeen UnDeleted",
+    "event_message_data": ["text", "headers"],
 }
 
 MOCK_OPTIONS = {
     "folder": "INBOX",
     "search": "UnSeen UnDeleted",
+    "event_message_data": ["text", "headers"],
 }
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
@@ -213,15 +215,7 @@ async def test_reauth_success(hass: HomeAssistant, mock_setup_entry: AsyncMock) 
     )
     entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": entry.entry_id,
-        },
-        data=MOCK_CONFIG,
-    )
-
+    result = await entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
     assert result["description_placeholders"] == {CONF_USERNAME: "email@email.com"}
@@ -254,15 +248,7 @@ async def test_reauth_failed(hass: HomeAssistant) -> None:
     )
     entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": entry.entry_id,
-        },
-        data=MOCK_CONFIG,
-    )
-
+    result = await entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
@@ -292,15 +278,7 @@ async def test_reauth_failed_conn_error(hass: HomeAssistant) -> None:
     )
     entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": entry.entry_id,
-        },
-        data=MOCK_CONFIG,
-    )
-
+    result = await entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
@@ -482,6 +460,38 @@ async def test_config_flow_with_cipherlist_and_ssl_verify(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_USER, "show_advanced_options": True},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] is None
+
+    with patch(
+        "homeassistant.components.imap.config_flow.connect_to_server"
+    ) as mock_client:
+        mock_client.return_value.search.return_value = (
+            "OK",
+            [b""],
+        )
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], config
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["title"] == "email@email.com"
+    assert result2["data"] == config
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+@pytest.mark.parametrize("event_message_data", [[], ["headers"], ["text", "headers"]])
+async def test_config_flow_with_event_message_data(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, event_message_data: list
+) -> None:
+    """Test with different message data."""
+    config = MOCK_CONFIG.copy()
+    config["event_message_data"] = event_message_data
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USER, "show_advanced_options": False},
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None

@@ -10,33 +10,14 @@ from twitchAPI.twitch import (
     TwitchResourceNotFound,
     TwitchUser,
 )
-import voluptuous as vol
 
-from homeassistant.components.application_credentials import (
-    ClientCredential,
-    async_import_client_credential,
-)
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_TOKEN
+from homeassistant.components.sensor import SensorEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import CLIENT, CONF_CHANNELS, DOMAIN, LOGGER, OAUTH_SCOPES, SESSION
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_CLIENT_ID): cv.string,
-        vol.Required(CONF_CLIENT_SECRET): cv.string,
-        vol.Required(CONF_CHANNELS): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(CONF_TOKEN): cv.string,
-    }
-)
-
 
 ATTR_GAME = "game"
 ATTR_TITLE = "title"
@@ -47,6 +28,7 @@ ATTR_FOLLOW = "following"
 ATTR_FOLLOW_SINCE = "following_since"
 ATTR_FOLLOWING = "followers"
 ATTR_VIEWS = "views"
+ATTR_STARTED_AT = "started_at"
 
 STATE_OFFLINE = "offline"
 STATE_STREAMING = "streaming"
@@ -57,40 +39,6 @@ PARALLEL_UPDATES = 1
 def chunk_list(lst: list, chunk_size: int) -> list[list]:
     """Split a list into chunks of chunk_size."""
     return [lst[i : i + chunk_size] for i in range(0, len(lst), chunk_size)]
-
-
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up the Twitch platform."""
-    await async_import_client_credential(
-        hass,
-        DOMAIN,
-        ClientCredential(config[CONF_CLIENT_ID], config[CONF_CLIENT_SECRET]),
-    )
-    if CONF_TOKEN in config:
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": SOURCE_IMPORT}, data=config
-            )
-        )
-    else:
-        async_create_issue(
-            hass,
-            DOMAIN,
-            "deprecated_yaml_credentials_imported",
-            breaks_in_ha_version="2024.4.0",
-            is_fixable=False,
-            severity=IssueSeverity.WARNING,
-            translation_key="deprecated_yaml_credentials_imported",
-            translation_placeholders={
-                "domain": DOMAIN,
-                "integration_title": "Twitch",
-            },
-        )
 
 
 async def async_setup_entry(
@@ -157,6 +105,7 @@ class TwitchSensor(SensorEntity):
             self._attr_native_value = STATE_STREAMING
             self._attr_extra_state_attributes[ATTR_GAME] = stream.game_name
             self._attr_extra_state_attributes[ATTR_TITLE] = stream.title
+            self._attr_extra_state_attributes[ATTR_STARTED_AT] = stream.started_at
             self._attr_entity_picture = stream.thumbnail_url
             if self._attr_entity_picture is not None:
                 self._attr_entity_picture = self._attr_entity_picture.format(
@@ -167,6 +116,7 @@ class TwitchSensor(SensorEntity):
             self._attr_native_value = STATE_OFFLINE
             self._attr_extra_state_attributes[ATTR_GAME] = None
             self._attr_extra_state_attributes[ATTR_TITLE] = None
+            self._attr_extra_state_attributes[ATTR_STARTED_AT] = None
             self._attr_entity_picture = self._channel.profile_image_url
 
     async def _async_add_user_attributes(self) -> None:

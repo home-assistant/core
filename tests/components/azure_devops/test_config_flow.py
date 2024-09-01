@@ -2,7 +2,6 @@
 
 from unittest.mock import AsyncMock
 
-from aioazuredevops.core import DevOpsProject
 import aiohttp
 
 from homeassistant import config_entries
@@ -54,18 +53,14 @@ async def test_authorization_error(
 
 async def test_reauth_authorization_error(
     hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
     mock_devops_client: AsyncMock,
 ) -> None:
     """Test we show user form on Azure DevOps authorization error."""
     mock_devops_client.authorize.return_value = False
     mock_devops_client.authorized = False
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_REAUTH},
-        data=FIXTURE_USER_INPUT,
-    )
-
+    result = await mock_config_entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth"
 
@@ -109,17 +104,14 @@ async def test_connection_error(
 
 async def test_reauth_connection_error(
     hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
     mock_devops_client: AsyncMock,
 ) -> None:
     """Test we show user form on Azure DevOps connection error."""
     mock_devops_client.authorize.side_effect = aiohttp.ClientError
     mock_devops_client.authorized = False
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_REAUTH},
-        data=FIXTURE_USER_INPUT,
-    )
+    result = await mock_config_entry.start_reauth_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth"
@@ -175,11 +167,7 @@ async def test_reauth_project_error(
 
     mock_config_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_REAUTH},
-        data=FIXTURE_USER_INPUT,
-    )
+    result = await mock_config_entry.start_reauth_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth"
@@ -206,11 +194,7 @@ async def test_reauth_flow(
 
     mock_config_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_REAUTH},
-        data=FIXTURE_USER_INPUT,
-    )
+    result = await mock_config_entry.start_reauth_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth"
@@ -218,9 +202,6 @@ async def test_reauth_flow(
 
     mock_devops_client.authorize.return_value = True
     mock_devops_client.authorized = True
-    mock_devops_client.get_project.return_value = DevOpsProject(
-        "abcd-abcd-abcd-abcd", FIXTURE_USER_INPUT[CONF_PROJECT]
-    )
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],

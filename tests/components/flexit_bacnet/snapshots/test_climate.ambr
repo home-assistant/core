@@ -1,35 +1,5 @@
 # serializer version: 1
-# name: test_climate_entity
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'current_temperature': 19.0,
-      'friendly_name': 'Device Name',
-      'hvac_action': <HVACAction.HEATING: 'heating'>,
-      'hvac_modes': list([
-        <HVACMode.OFF: 'off'>,
-        <HVACMode.FAN_ONLY: 'fan_only'>,
-      ]),
-      'max_temp': 30,
-      'min_temp': 10,
-      'preset_mode': 'boost',
-      'preset_modes': list([
-        'away',
-        'home',
-        'boost',
-      ]),
-      'supported_features': <ClimateEntityFeature: 401>,
-      'target_temp_step': 0.5,
-      'temperature': 22.0,
-    }),
-    'context': <ANY>,
-    'entity_id': 'climate.device_name',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'fan_only',
-  })
-# ---
-# name: test_climate_entity.1
+# name: test_climate_entity[climate.device_name-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -73,5 +43,35 @@
     'translation_key': None,
     'unique_id': '0000-0001',
     'unit_of_measurement': None,
+  })
+# ---
+# name: test_climate_entity[climate.device_name-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 19.0,
+      'friendly_name': 'Device Name',
+      'hvac_action': <HVACAction.HEATING: 'heating'>,
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.FAN_ONLY: 'fan_only'>,
+      ]),
+      'max_temp': 30,
+      'min_temp': 10,
+      'preset_mode': 'boost',
+      'preset_modes': list([
+        'away',
+        'home',
+        'boost',
+      ]),
+      'supported_features': <ClimateEntityFeature: 401>,
+      'target_temp_step': 0.5,
+      'temperature': 22.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.device_name',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'fan_only',
   })
 # ---

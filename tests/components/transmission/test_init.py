@@ -119,7 +119,6 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.NOT_LOADED
-    assert not hass.data[DOMAIN]
 
 
 @pytest.mark.parametrize(

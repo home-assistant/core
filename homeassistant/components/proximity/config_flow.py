@@ -23,6 +23,7 @@ from homeassistant.helpers.selector import (
     NumberSelector,
     NumberSelectorConfig,
 )
+from homeassistant.helpers.typing import VolDictType
 from homeassistant.util import slugify
 
 from .const import (
@@ -37,7 +38,7 @@ from .const import (
 RESULT_SUCCESS = "success"
 
 
-def _base_schema(user_input: dict[str, Any]) -> vol.Schema:
+def _base_schema(user_input: dict[str, Any]) -> VolDictType:
     return {
         vol.Required(
             CONF_TRACKED_ENTITIES, default=user_input.get(CONF_TRACKED_ENTITIES, [])
@@ -115,12 +116,6 @@ class ProximityConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=self._user_form_schema(user_input),
         )
-
-    async def async_step_import(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Import a yaml config entry."""
-        return await self.async_step_user(user_input)
 
 
 class ProximityOptionsFlow(OptionsFlow):

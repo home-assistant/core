@@ -20,7 +20,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture(name="currencies", autouse=True)
-def currencies_fixture(hass: HomeAssistant) -> Generator[AsyncMock, None, None]:
+def currencies_fixture(hass: HomeAssistant) -> Generator[AsyncMock]:
     """Mock currencies."""
     with patch(
         "homeassistant.components.openexchangerates.config_flow.Client.get_currencies",
@@ -200,16 +200,7 @@ async def test_reauth(
 ) -> None:
     """Test we can reauthenticate the config entry."""
     mock_config_entry.add_to_hass(hass)
-    flow_context = {
-        "source": config_entries.SOURCE_REAUTH,
-        "entry_id": mock_config_entry.entry_id,
-        "title_placeholders": {"name": mock_config_entry.title},
-        "unique_id": mock_config_entry.unique_id,
-    }
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context=flow_context, data=mock_config_entry.data
-    )
+    result = await mock_config_entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
 

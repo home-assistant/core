@@ -2,13 +2,14 @@
 
 from http import HTTPStatus
 import logging
+from typing import Any
 
 from aiohttp import ClientResponseError
 from pysmartthings import APIResponseError, AppOAuth, SmartThings
 from pysmartthings.installedapp import format_install_url
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -53,11 +54,13 @@ class SmartThingsFlowHandler(ConfigFlow, domain=DOMAIN):
         self.location_id = None
         self.endpoints_initialized = False
 
-    async def async_step_import(self, user_input=None):
+    async def async_step_import(self, import_data: None) -> ConfigFlowResult:
         """Occurs when a previously entry setup fails and is re-initiated."""
-        return await self.async_step_user(user_input)
+        return await self.async_step_user(import_data)
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Validate and confirm webhook setup."""
         if not self.endpoints_initialized:
             self.endpoints_initialized = True
@@ -159,7 +162,7 @@ class SmartThingsFlowHandler(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "app_setup_error"
                 _LOGGER.exception("Unexpected error setting up the SmartApp")
             return self._show_step_pat(errors)
-        except Exception:  # pylint:disable=broad-except
+        except Exception:
             errors["base"] = "app_setup_error"
             _LOGGER.exception("Unexpected error setting up the SmartApp")
             return self._show_step_pat(errors)

@@ -6,11 +6,8 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.ping import DOMAIN
-from homeassistant.components.ping.const import CONF_IMPORTED_BY
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from .const import BINARY_SENSOR_IMPORT_DATA
 
 from tests.common import MockConfigEntry
 
@@ -85,43 +82,5 @@ async def test_options(hass: HomeAssistant, host, count, expected_title) -> None
     assert result["data"] == {
         "count": count,
         "host": "10.10.10.1",
-        "consider_home": 180,
-    }
-
-
-@pytest.mark.usefixtures("patch_setup")
-async def test_step_import(hass: HomeAssistant) -> None:
-    """Test for import step."""
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_IMPORT},
-        data={CONF_IMPORTED_BY: "binary_sensor", **BINARY_SENSOR_IMPORT_DATA},
-    )
-    await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "test2"
-    assert result["data"] == {CONF_IMPORTED_BY: "binary_sensor"}
-    assert result["options"] == {
-        "host": "127.0.0.1",
-        "count": 1,
-        "consider_home": 240,
-    }
-
-    # test import without name
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_IMPORT},
-        data={CONF_IMPORTED_BY: "binary_sensor", "host": "10.10.10.10", "count": 5},
-    )
-    await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "10.10.10.10"
-    assert result["data"] == {CONF_IMPORTED_BY: "binary_sensor"}
-    assert result["options"] == {
-        "host": "10.10.10.10",
-        "count": 5,
         "consider_home": 180,
     }

@@ -13,6 +13,7 @@ from airthings_ble import (
 from homeassistant.components.airthings_ble.const import DOMAIN
 from homeassistant.components.bluetooth.models import BluetoothServiceInfoBleak
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceRegistry
 
 from tests.common import MockConfigEntry, MockEntity
@@ -97,6 +98,7 @@ WAVE_SERVICE_INFO = BluetoothServiceInfoBleak(
     ),
     connectable=True,
     time=0,
+    tx_power=0,
 )
 
 VIEW_PLUS_SERVICE_INFO = BluetoothServiceInfoBleak(
@@ -141,6 +143,7 @@ VIEW_PLUS_SERVICE_INFO = BluetoothServiceInfoBleak(
     ),
     connectable=True,
     time=0,
+    tx_power=0,
 )
 
 UNKNOWN_SERVICE_INFO = BluetoothServiceInfoBleak(
@@ -161,6 +164,7 @@ UNKNOWN_SERVICE_INFO = BluetoothServiceInfoBleak(
     ),
     connectable=True,
     time=0,
+    tx_power=0,
 )
 
 WAVE_DEVICE_INFO = AirthingsDevice(
@@ -222,7 +226,7 @@ VOC_V3 = MockEntity(
 )
 
 
-def create_entry(hass):
+def create_entry(hass: HomeAssistant) -> MockConfigEntry:
     """Create a config entry."""
     entry = MockConfigEntry(
         domain=DOMAIN,

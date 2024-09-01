@@ -5,7 +5,8 @@ from unittest.mock import patch
 from total_connect_client import ArmingState, ResultCode, ZoneStatus, ZoneType
 
 from homeassistant.components.totalconnect.const import CONF_USERCODES, DOMAIN
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
@@ -206,6 +207,17 @@ ZONE_7 = {
     "CanBeBypassed": 0,
 }
 
+# ZoneType security that cannot be bypassed is a Button on the alarm panel
+ZONE_8 = {
+    "ZoneID": 8,
+    "ZoneDescription": "Button",
+    "ZoneStatus": ZoneStatus.FAULT,
+    "ZoneTypeId": ZoneType.SECURITY,
+    "PartitionId": "1",
+    "CanBeBypassed": 0,
+}
+
+
 ZONE_INFO = [ZONE_NORMAL, ZONE_2, ZONE_3, ZONE_4, ZONE_5, ZONE_6, ZONE_7]
 ZONES = {"ZoneInfo": ZONE_INFO}
 
@@ -318,6 +330,14 @@ RESPONSE_USER_CODE_INVALID = {
     "ResultData": "testing user code invalid",
 }
 RESPONSE_SUCCESS = {"ResultCode": ResultCode.SUCCESS.value}
+RESPONSE_ZONE_BYPASS_SUCCESS = {
+    "ResultCode": ResultCode.SUCCESS.value,
+    "ResultData": "None",
+}
+RESPONSE_ZONE_BYPASS_FAILURE = {
+    "ResultCode": ResultCode.FAILED_TO_BYPASS_ZONE.value,
+    "ResultData": "None",
+}
 
 USERNAME = "username@me.com"
 PASSWORD = "password"
@@ -375,7 +395,7 @@ TOTALCONNECT_REQUEST = (
 )
 
 
-async def setup_platform(hass, platform):
+async def setup_platform(hass: HomeAssistant, platform: Platform) -> MockConfigEntry:
     """Set up the TotalConnect platform."""
     # first set up a config entry and add it to hass
     mock_entry = MockConfigEntry(domain=DOMAIN, data=CONFIG_DATA)
@@ -403,7 +423,7 @@ async def setup_platform(hass, platform):
     return mock_entry
 
 
-async def init_integration(hass):
+async def init_integration(hass: HomeAssistant) -> MockConfigEntry:
     """Set up the TotalConnect integration."""
     # first set up a config entry and add it to hass
     mock_entry = MockConfigEntry(domain=DOMAIN, data=CONFIG_DATA)

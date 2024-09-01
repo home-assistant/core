@@ -19,6 +19,9 @@ async def test_remote_receives_push_updates(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_api: MagicMock
 ) -> None:
     """Test the Android TV Remote receives push updates and state is updated."""
+    mock_config_entry.options = {
+        "apps": {"com.google.android.youtube.tv": {"app_name": "YouTube"}}
+    }
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     assert mock_config_entry.state is ConfigEntryState.LOADED
@@ -34,6 +37,11 @@ async def test_remote_receives_push_updates(
         hass.states.get(REMOTE_ENTITY).attributes.get("current_activity") == "activity1"
     )
 
+    mock_api._on_current_app_updated("com.google.android.youtube.tv")
+    assert (
+        hass.states.get(REMOTE_ENTITY).attributes.get("current_activity") == "YouTube"
+    )
+
     mock_api._on_is_available_updated(False)
     assert hass.states.is_state(REMOTE_ENTITY, STATE_UNAVAILABLE)
 
@@ -45,6 +53,9 @@ async def test_remote_toggles(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_api: MagicMock
 ) -> None:
     """Test the Android TV Remote toggles."""
+    mock_config_entry.options = {
+        "apps": {"com.google.android.youtube.tv": {"app_name": "YouTube"}}
+    }
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     assert mock_config_entry.state is ConfigEntryState.LOADED
@@ -80,6 +91,17 @@ async def test_remote_toggles(
     mock_api.send_key_command.send_launch_app_command("activity1")
     assert mock_api.send_key_command.call_count == 2
     assert mock_api.send_launch_app_command.call_count == 1
+
+    await hass.services.async_call(
+        "remote",
+        "turn_on",
+        {"entity_id": REMOTE_ENTITY, "activity": "YouTube"},
+        blocking=True,
+    )
+
+    mock_api.send_key_command.send_launch_app_command("com.google.android.youtube.tv")
+    assert mock_api.send_key_command.call_count == 2
+    assert mock_api.send_launch_app_command.call_count == 2
 
 
 async def test_remote_send_command(

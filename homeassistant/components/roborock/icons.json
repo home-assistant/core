@@ -75,6 +75,18 @@
       },
       "dock_error": {
         "default": "mdi:garage-open"
+      },
+      "zeo_error": {
+        "default": "mdi:alert-circle"
+      },
+      "zeo_state": {
+        "default": "mdi:information-outline"
+      },
+      "washing_left": {
+        "default": "mdi:clock-outline"
+      },
+      "countdown": {
+        "default": "mdi:clock-outline"
       }
     },
     "switch": {
@@ -104,6 +116,11 @@
       "off_peak_end": {
         "default": "mdi:power-plug-off"
       }
+    }
+  },
+  "services": {
+    "get_maps": {
+      "service": "mdi:floor-plan"
     }
   }
 }

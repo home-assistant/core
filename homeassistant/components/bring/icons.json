@@ -5,5 +5,10 @@
         "default": "mdi:cart"
       }
     }
+  },
+  "services": {
+    "send_message": {
+      "service": "mdi:cellphone-message"
+    }
   }
 }

@@ -1,0 +1,135 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Setup madVR Envy",
+        "description": "Your device needs to be on in order to add the integation. ",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your madVR Envy device.",
+          "port": "The port your madVR Envy is listening on. In 99% of cases, leave this as the default."
+        }
+      },
+      "reconfigure": {
+        "title": "Reconfigure madVR Envy",
+        "description": "Your device needs to be on in order to reconfigure the integation. ",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your madVR Envy device.",
+          "port": "The port your madVR Envy is listening on. In 99% of cases, leave this as the default."
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "no_mac": "A MAC address was not found. It required to identify the device. Please ensure your device is connectable.",
+      "set_up_new_device": "A new device was detected. Please set it up as a new entity instead of reconfiguring."
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "hdr_flag": {
+        "name": "HDR flag"
+      },
+      "outgoing_hdr_flag": {
+        "name": "Outgoing HDR flag"
+      },
+      "power_state": {
+        "name": "Power state"
+      },
+      "signal_state": {
+        "name": "Signal state"
+      }
+    },
+    "sensor": {
+      "temp_gpu": {
+        "name": "GPU temperature"
+      },
+      "temp_hdmi": {
+        "name": "HDMI temperature"
+      },
+      "temp_cpu": {
+        "name": "CPU temperature"
+      },
+      "temp_mainboard": {
+        "name": "Mainboard temperature"
+      },
+      "incoming_res": {
+        "name": "Incoming resolution"
+      },
+      "incoming_signal_type": {
+        "name": "Incoming signal type"
+      },
+      "incoming_frame_rate": {
+        "name": "Incoming frame rate"
+      },
+      "incoming_color_space": {
+        "name": "Incoming color space"
+      },
+      "incoming_bit_depth": {
+        "name": "Incoming bit depth"
+      },
+      "incoming_colorimetry": {
+        "name": "Incoming colorimetry"
+      },
+      "incoming_black_levels": {
+        "name": "Incoming black levels"
+      },
+      "incoming_aspect_ratio": {
+        "name": "Incoming aspect ratio"
+      },
+      "outgoing_res": {
+        "name": "Outgoing resolution"
+      },
+      "outgoing_signal_type": {
+        "name": "Outgoing signal type"
+      },
+      "outgoing_frame_rate": {
+        "name": "Outgoing frame rate"
+      },
+      "outgoing_color_space": {
+        "name": "Outgoing color space"
+      },
+      "outgoing_bit_depth": {
+        "name": "Outgoing bit depth"
+      },
+      "outgoing_colorimetry": {
+        "name": "Outgoing colorimetry"
+      },
+      "outgoing_black_levels": {
+        "name": "Outgoing black levels"
+      },
+      "aspect_res": {
+        "name": "Aspect resolution"
+      },
+      "aspect_dec": {
+        "name": "Aspect decimal"
+      },
+      "aspect_int": {
+        "name": "Aspect integer"
+      },
+      "aspect_name": {
+        "name": "Aspect name"
+      },
+      "masking_res": {
+        "name": "Masking resolution"
+      },
+      "masking_dec": {
+        "name": "Masking decimal"
+      },
+      "masking_int": {
+        "name": "Masking integer"
+      }
+    }
+  }
+}

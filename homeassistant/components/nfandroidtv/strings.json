@@ -1,4 +1,12 @@
 {
+  "exceptions": {
+    "invalid_notification_icon": {
+      "message": "Invalid icon data provided. Got {type}"
+    },
+    "invalid_notification_image": {
+      "message": "Invalid image data provided. Got {type}"
+    }
+  },
   "config": {
     "step": {
       "user": {

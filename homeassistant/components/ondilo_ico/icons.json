@@ -4,9 +4,6 @@
       "oxydo_reduction_potential": {
         "default": "mdi:pool"
       },
-      "ph": {
-        "default": "mdi:pool"
-      },
       "tds": {
         "default": "mdi:pool"
       },

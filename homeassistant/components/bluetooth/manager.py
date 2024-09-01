@@ -97,10 +97,9 @@ class HomeAssistantBluetoothManager(BluetoothManager):
         matched_domains = self._integration_matcher.match_domains(service_info)
         if self._debug:
             _LOGGER.debug(
-                "%s: %s %s match: %s",
+                "%s: %s match: %s",
                 self._async_describe_source(service_info),
-                service_info.address,
-                service_info.advertisement,
+                service_info,
                 matched_domains,
             )
 
@@ -108,7 +107,7 @@ class HomeAssistantBluetoothManager(BluetoothManager):
             callback = match[CALLBACK]
             try:
                 callback(service_info, BluetoothChange.ADVERTISEMENT)
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Error in bluetooth callback")
 
         for domain in matched_domains:
@@ -135,11 +134,9 @@ class HomeAssistantBluetoothManager(BluetoothManager):
             self._bluetooth_adapters, self.storage
         )
         self._cancel_logging_listener = self.hass.bus.async_listen(
-            EVENT_LOGGING_CHANGED, self._async_logging_changed, run_immediately=True
+            EVENT_LOGGING_CHANGED, self._async_logging_changed
         )
-        self.hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_STOP, self.async_stop, run_immediately=True
-        )
+        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.async_stop)
         seen: set[str] = set()
         for address, service_info in itertools.chain(
             self._connectable_history.items(), self._all_history.items()
@@ -185,7 +182,7 @@ class HomeAssistantBluetoothManager(BluetoothManager):
             if ble_device_matches(callback_matcher, service_info):
                 try:
                     callback(service_info, BluetoothChange.ADVERTISEMENT)
-                except Exception:  # pylint: disable=broad-except
+                except Exception:
                     _LOGGER.exception("Error in bluetooth callback")
 
         return _async_remove_callback

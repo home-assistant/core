@@ -5,6 +5,7 @@ from __future__ import annotations
 import datetime as dt
 import logging
 
+from reolink_aio.api import DUAL_LENS_MODELS
 from reolink_aio.enums import VodRequestType
 
 from homeassistant.components.camera import DOMAIN as CAM_DOMAIN, DynamicStreamSettings
@@ -34,7 +35,15 @@ async def async_get_media_source(hass: HomeAssistant) -> ReolinkVODMediaSource:
 
 def res_name(stream: str) -> str:
     """Return the user friendly name for a stream."""
-    return "High res." if stream == "main" else "Low res."
+    match stream:
+        case "main":
+            return "High res."
+        case "autotrack_sub":
+            return "Autotrack low res."
+        case "autotrack_main":
+            return "Autotrack high res."
+        case _:
+            return "Low res."
 
 
 class ReolinkVODMediaSource(MediaSource):
@@ -59,18 +68,30 @@ class ReolinkVODMediaSource(MediaSource):
         data: dict[str, ReolinkData] = self.hass.data[DOMAIN]
         host = data[config_entry_id].host
 
-        vod_type = VodRequestType.RTMP
-        if host.api.is_nvr:
-            vod_type = VodRequestType.FLV
+        def get_vod_type() -> VodRequestType:
+            if filename.endswith(".mp4"):
+                return VodRequestType.PLAYBACK
+            if host.api.is_nvr:
+                return VodRequestType.FLV
+            return VodRequestType.RTMP
+
+        vod_type = get_vod_type()
 
         mime_type, url = await host.api.get_vod_source(
             channel, filename, stream_res, vod_type
         )
         if _LOGGER.isEnabledFor(logging.DEBUG):
-            url_log = f"{url.split('&user=')[0]}&user=xxxxx&password=xxxxx"
+            url_log = url
+            if "&user=" in url_log:
+                url_log = f"{url_log.split('&user=')[0]}&user=xxxxx&password=xxxxx"
+            elif "&token=" in url_log:
+                url_log = f"{url_log.split('&token=')[0]}&token=xxxxx"
             _LOGGER.debug(
                 "Opening VOD stream from %s: %s", host.api.camera_name(channel), url_log
             )
+
+        if mime_type == "video/mp4":
+            return PlayMedia(url, mime_type)
 
         stream = create_stream(self.hass, url, {}, DynamicStreamSettings())
         stream.add_provider("hls", timeout=3600)
@@ -144,21 +165,25 @@ class ReolinkVODMediaSource(MediaSource):
                     continue
 
                 device = device_reg.async_get(entity.device_id)
-                ch = entity.unique_id.split("_")[1]
-                if ch in channels or device is None:
+                ch_id = entity.unique_id.split("_")[1]
+                if ch_id in channels or device is None:
                     continue
-                channels.append(ch)
+                channels.append(ch_id)
 
-                if (
-                    host.api.api_version("recReplay", int(ch)) < 1
-                    or not host.api.hdd_info
-                ):
+                ch: int | str = ch_id
+                if len(ch_id) > 3:
+                    ch = host.api.channel_for_uid(ch_id)
+
+                if not host.api.supported(int(ch), "replay") or not host.api.hdd_info:
                     # playback stream not supported by this camera or no storage installed
                     continue
 
                 device_name = device.name
                 if device.name_by_user is not None:
                     device_name = device.name_by_user
+
+                if host.api.model in DUAL_LENS_MODELS:
+                    device_name = f"{device_name} lens {ch}"
 
                 children.append(
                     BrowseMediaSource(
@@ -198,9 +223,6 @@ class ReolinkVODMediaSource(MediaSource):
                 "playback only possible using sub stream",
                 host.api.camera_name(channel),
             )
-            return await self._async_generate_camera_days(
-                config_entry_id, channel, "sub"
-            )
 
         children = [
             BrowseMediaSource(
@@ -212,23 +234,60 @@ class ReolinkVODMediaSource(MediaSource):
                 can_play=False,
                 can_expand=True,
             ),
-            BrowseMediaSource(
-                domain=DOMAIN,
-                identifier=f"RES|{config_entry_id}|{channel}|main",
-                media_class=MediaClass.CHANNEL,
-                media_content_type=MediaType.PLAYLIST,
-                title="High resolution",
-                can_play=False,
-                can_expand=True,
-            ),
         ]
+        if main_enc != "h265":
+            children.append(
+                BrowseMediaSource(
+                    domain=DOMAIN,
+                    identifier=f"RES|{config_entry_id}|{channel}|main",
+                    media_class=MediaClass.CHANNEL,
+                    media_content_type=MediaType.PLAYLIST,
+                    title="High resolution",
+                    can_play=False,
+                    can_expand=True,
+                ),
+            )
+
+        if host.api.supported(channel, "autotrack_stream"):
+            children.append(
+                BrowseMediaSource(
+                    domain=DOMAIN,
+                    identifier=f"RES|{config_entry_id}|{channel}|autotrack_sub",
+                    media_class=MediaClass.CHANNEL,
+                    media_content_type=MediaType.PLAYLIST,
+                    title="Autotrack low resolution",
+                    can_play=False,
+                    can_expand=True,
+                ),
+            )
+            if main_enc != "h265":
+                children.append(
+                    BrowseMediaSource(
+                        domain=DOMAIN,
+                        identifier=f"RES|{config_entry_id}|{channel}|autotrack_main",
+                        media_class=MediaClass.CHANNEL,
+                        media_content_type=MediaType.PLAYLIST,
+                        title="Autotrack high resolution",
+                        can_play=False,
+                        can_expand=True,
+                    ),
+                )
+
+        if len(children) == 1:
+            return await self._async_generate_camera_days(
+                config_entry_id, channel, "sub"
+            )
+
+        title = host.api.camera_name(channel)
+        if host.api.model in DUAL_LENS_MODELS:
+            title = f"{host.api.camera_name(channel)} lens {channel}"
 
         return BrowseMediaSource(
             domain=DOMAIN,
             identifier=f"RESs|{config_entry_id}|{channel}",
             media_class=MediaClass.CHANNEL,
             media_content_type=MediaType.PLAYLIST,
-            title=host.api.camera_name(channel),
+            title=title,
             can_play=False,
             can_expand=True,
             children=children,
@@ -270,12 +329,16 @@ class ReolinkVODMediaSource(MediaSource):
             for day in status.days
         ]
 
+        title = f"{host.api.camera_name(channel)} {res_name(stream)}"
+        if host.api.model in DUAL_LENS_MODELS:
+            title = f"{host.api.camera_name(channel)} lens {channel} {res_name(stream)}"
+
         return BrowseMediaSource(
             domain=DOMAIN,
             identifier=f"DAYS|{config_entry_id}|{channel}|{stream}",
             media_class=MediaClass.CHANNEL,
             media_content_type=MediaType.PLAYLIST,
-            title=f"{host.api.camera_name(channel)} {res_name(stream)}",
+            title=title,
             can_play=False,
             can_expand=True,
             children=children,
@@ -330,12 +393,18 @@ class ReolinkVODMediaSource(MediaSource):
                 )
             )
 
+        title = (
+            f"{host.api.camera_name(channel)} {res_name(stream)} {year}/{month}/{day}"
+        )
+        if host.api.model in DUAL_LENS_MODELS:
+            title = f"{host.api.camera_name(channel)} lens {channel} {res_name(stream)} {year}/{month}/{day}"
+
         return BrowseMediaSource(
             domain=DOMAIN,
             identifier=f"FILES|{config_entry_id}|{channel}|{stream}",
             media_class=MediaClass.CHANNEL,
             media_content_type=MediaType.PLAYLIST,
-            title=f"{host.api.camera_name(channel)} {res_name(stream)} {year}/{month}/{day}",
+            title=title,
             can_play=False,
             can_expand=True,
             children=children,

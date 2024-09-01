@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 import json
+from typing import Any
 from unittest.mock import ANY, AsyncMock, MagicMock, Mock, patch
 from uuid import UUID
 
@@ -112,7 +114,9 @@ def get_fake_zconf(host="192.168.178.42", port=8009):
     return zconf
 
 
-async def async_setup_cast(hass, config=None):
+async def async_setup_cast(
+    hass: HomeAssistant, config: dict[str, Any] | None = None
+) -> MagicMock:
     """Set up the cast platform."""
     if config is None:
         config = {}
@@ -128,7 +132,20 @@ async def async_setup_cast(hass, config=None):
     return add_entities
 
 
-async def async_setup_cast_internal_discovery(hass, config=None):
+async def async_setup_cast_internal_discovery(
+    hass: HomeAssistant, config: dict[str, Any] | None = None
+) -> tuple[
+    Callable[
+        [
+            pychromecast.discovery.HostServiceInfo
+            | pychromecast.discovery.MDNSServiceInfo,
+            ChromecastInfo,
+        ],
+        None,
+    ],
+    Callable[[str, ChromecastInfo], None],
+    MagicMock,
+]:
     """Set up the cast platform and the discovery."""
     browser = MagicMock(devices={}, zc={})
 
@@ -813,15 +830,7 @@ async def test_device_registry(
     chromecast.disconnect.assert_not_called()
 
     client = await hass_ws_client(hass)
-    await client.send_json(
-        {
-            "id": 5,
-            "type": "config/device_registry/remove_config_entry",
-            "config_entry_id": cast_entry.entry_id,
-            "device_id": device_entry.id,
-        }
-    )
-    response = await client.receive_json()
+    response = await client.remove_device(device_entry.id, cast_entry.entry_id)
     assert response["success"]
 
     await hass.async_block_till_done()

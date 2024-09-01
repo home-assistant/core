@@ -10,6 +10,7 @@ from boschshcpy.exceptions import (
     SHCSessionError,
 )
 from boschshcpy.information import SHCInformation
+import pytest
 
 from homeassistant import config_entries
 from homeassistant.components import zeroconf
@@ -35,7 +36,8 @@ DISCOVERY_INFO = zeroconf.ZeroconfServiceInfo(
 )
 
 
-async def test_form_user(hass: HomeAssistant, mock_zeroconf: None) -> None:
+@pytest.mark.usefixtures("mock_zeroconf")
+async def test_form_user(hass: HomeAssistant) -> None:
     """Test we get the form."""
 
     result = await hass.config_entries.flow.async_init(
@@ -107,9 +109,8 @@ async def test_form_user(hass: HomeAssistant, mock_zeroconf: None) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_get_info_connection_error(
-    hass: HomeAssistant, mock_zeroconf: None
-) -> None:
+@pytest.mark.usefixtures("mock_zeroconf")
+async def test_form_get_info_connection_error(hass: HomeAssistant) -> None:
     """Test we handle connection error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -153,7 +154,8 @@ async def test_form_get_info_exception(hass: HomeAssistant) -> None:
     assert result2["errors"] == {"base": "unknown"}
 
 
-async def test_form_pairing_error(hass: HomeAssistant, mock_zeroconf: None) -> None:
+@pytest.mark.usefixtures("mock_zeroconf")
+async def test_form_pairing_error(hass: HomeAssistant) -> None:
     """Test we handle pairing error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -199,7 +201,8 @@ async def test_form_pairing_error(hass: HomeAssistant, mock_zeroconf: None) -> N
     assert result3["errors"] == {"base": "pairing_failed"}
 
 
-async def test_form_user_invalid_auth(hass: HomeAssistant, mock_zeroconf: None) -> None:
+@pytest.mark.usefixtures("mock_zeroconf")
+async def test_form_user_invalid_auth(hass: HomeAssistant) -> None:
     """Test we handle invalid auth."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -257,9 +260,8 @@ async def test_form_user_invalid_auth(hass: HomeAssistant, mock_zeroconf: None) 
     assert result3["errors"] == {"base": "invalid_auth"}
 
 
-async def test_form_validate_connection_error(
-    hass: HomeAssistant, mock_zeroconf: None
-) -> None:
+@pytest.mark.usefixtures("mock_zeroconf")
+async def test_form_validate_connection_error(hass: HomeAssistant) -> None:
     """Test we handle connection error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -317,9 +319,8 @@ async def test_form_validate_connection_error(
     assert result3["errors"] == {"base": "cannot_connect"}
 
 
-async def test_form_validate_session_error(
-    hass: HomeAssistant, mock_zeroconf: None
-) -> None:
+@pytest.mark.usefixtures("mock_zeroconf")
+async def test_form_validate_session_error(hass: HomeAssistant) -> None:
     """Test we handle session error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -377,9 +378,8 @@ async def test_form_validate_session_error(
     assert result3["errors"] == {"base": "session_error"}
 
 
-async def test_form_validate_exception(
-    hass: HomeAssistant, mock_zeroconf: None
-) -> None:
+@pytest.mark.usefixtures("mock_zeroconf")
+async def test_form_validate_exception(hass: HomeAssistant) -> None:
     """Test we handle exception."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -437,9 +437,8 @@ async def test_form_validate_exception(
     assert result3["errors"] == {"base": "unknown"}
 
 
-async def test_form_already_configured(
-    hass: HomeAssistant, mock_zeroconf: None
-) -> None:
+@pytest.mark.usefixtures("mock_zeroconf")
+async def test_form_already_configured(hass: HomeAssistant) -> None:
     """Test we get the form."""
 
     entry = MockConfigEntry(
@@ -479,7 +478,8 @@ async def test_form_already_configured(
     assert entry.data["host"] == "1.1.1.1"
 
 
-async def test_zeroconf(hass: HomeAssistant, mock_zeroconf: None) -> None:
+@pytest.mark.usefixtures("mock_zeroconf")
+async def test_zeroconf(hass: HomeAssistant) -> None:
     """Test we get the form."""
 
     with (
@@ -557,9 +557,8 @@ async def test_zeroconf(hass: HomeAssistant, mock_zeroconf: None) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_zeroconf_already_configured(
-    hass: HomeAssistant, mock_zeroconf: None
-) -> None:
+@pytest.mark.usefixtures("mock_zeroconf")
+async def test_zeroconf_already_configured(hass: HomeAssistant) -> None:
     """Test we get the form."""
 
     entry = MockConfigEntry(
@@ -596,9 +595,8 @@ async def test_zeroconf_already_configured(
     assert entry.data["host"] == "1.1.1.1"
 
 
-async def test_zeroconf_cannot_connect(
-    hass: HomeAssistant, mock_zeroconf: None
-) -> None:
+@pytest.mark.usefixtures("mock_zeroconf")
+async def test_zeroconf_cannot_connect(hass: HomeAssistant) -> None:
     """Test we get the form."""
     with patch(
         "boschshcpy.session.SHCSession.mdns_info", side_effect=SHCConnectionError
@@ -612,7 +610,8 @@ async def test_zeroconf_cannot_connect(
         assert result["reason"] == "cannot_connect"
 
 
-async def test_zeroconf_not_bosch_shc(hass: HomeAssistant, mock_zeroconf: None) -> None:
+@pytest.mark.usefixtures("mock_zeroconf")
+async def test_zeroconf_not_bosch_shc(hass: HomeAssistant) -> None:
     """Test we filter out non-bosch_shc devices."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -631,7 +630,8 @@ async def test_zeroconf_not_bosch_shc(hass: HomeAssistant, mock_zeroconf: None) 
     assert result["reason"] == "not_bosch_shc"
 
 
-async def test_reauth(hass: HomeAssistant, mock_zeroconf: None) -> None:
+@pytest.mark.usefixtures("mock_zeroconf")
+async def test_reauth(hass: HomeAssistant) -> None:
     """Test we get the form."""
 
     mock_config = MockConfigEntry(
@@ -646,11 +646,7 @@ async def test_reauth(hass: HomeAssistant, mock_zeroconf: None) -> None:
         title="shc012345",
     )
     mock_config.add_to_hass(hass)
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_REAUTH},
-        data=mock_config.data,
-    )
+    result = await mock_config.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 

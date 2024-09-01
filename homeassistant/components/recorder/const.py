@@ -1,6 +1,9 @@
 """Recorder constants."""
 
+from __future__ import annotations
+
 from enum import StrEnum
+from typing import TYPE_CHECKING
 
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
@@ -11,7 +14,10 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.json import JSON_DUMP  # noqa: F401
 
-DATA_INSTANCE = "recorder_instance"
+if TYPE_CHECKING:
+    from .core import Recorder  # noqa: F401
+
+
 SQLITE_URL_PREFIX = "sqlite://"
 MARIADB_URL_PREFIX = "mariadb://"
 MARIADB_PYMYSQL_URL_PREFIX = "mariadb+pymysql://"
@@ -22,8 +28,7 @@ DOMAIN = "recorder"
 CONF_DB_INTEGRITY_CHECK = "db_integrity_check"
 
 MAX_QUEUE_BACKLOG_MIN_VALUE = 65000
-ESTIMATED_QUEUE_ITEM_SIZE = 10240
-QUEUE_PERCENTAGE_ALLOWED_AVAILABLE_MEMORY = 0.65
+MIN_AVAILABLE_MEMORY_FOR_QUEUE_BACKLOG = 256 * 1024**2
 
 # The maximum number of rows (events) we purge in one delete statement
 
@@ -61,7 +66,7 @@ INTEGRATION_PLATFORM_COMPILE_STATISTICS = "compile_statistics"
 INTEGRATION_PLATFORM_VALIDATE_STATISTICS = "validate_statistics"
 INTEGRATION_PLATFORM_LIST_STATISTIC_IDS = "list_statistic_ids"
 
-INTEGRATION_PLATFORMS_LOAD_IN_RECORDER_THREAD = {
+INTEGRATION_PLATFORM_METHODS = {
     INTEGRATION_PLATFORM_COMPILE_STATISTICS,
     INTEGRATION_PLATFORM_VALIDATE_STATISTICS,
     INTEGRATION_PLATFORM_LIST_STATISTIC_IDS,

@@ -32,9 +32,9 @@ async def test_setup_retry(hass: HomeAssistant) -> None:
     bulb.getMac = AsyncMock(return_value=FAKE_MAC)
 
     with _patch_discovery(), _patch_wizlight(device=bulb):
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
         async_fire_time_changed(hass, utcnow() + datetime.timedelta(minutes=15))
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
     assert entry.state is ConfigEntryState.LOADED
 
 
@@ -44,7 +44,7 @@ async def test_cleanup_on_shutdown(hass: HomeAssistant) -> None:
     _, entry = await async_setup_integration(hass, wizlight=bulb)
     assert entry.state is ConfigEntryState.LOADED
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     bulb.async_close.assert_called_once()
 
 
@@ -63,7 +63,7 @@ async def test_cleanup_on_failed_first_update(hass: HomeAssistant) -> None:
         _patch_wizlight(device=bulb),
     ):
         await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
     assert entry.state is ConfigEntryState.SETUP_RETRY
     bulb.async_close.assert_called_once()
 
@@ -74,6 +74,7 @@ async def test_wrong_device_now_has_our_ip(hass: HomeAssistant) -> None:
     bulb.mac = "dddddddddddd"
     _, entry = await async_setup_integration(hass, wizlight=bulb)
     assert entry.state is ConfigEntryState.SETUP_RETRY
+    await hass.async_block_till_done(wait_background_tasks=True)
 
 
 async def test_reload_on_title_change(hass: HomeAssistant) -> None:
@@ -81,12 +82,12 @@ async def test_reload_on_title_change(hass: HomeAssistant) -> None:
     bulb = _mocked_wizlight(None, None, FAKE_SOCKET)
     _, entry = await async_setup_integration(hass, wizlight=bulb)
     assert entry.state is ConfigEntryState.LOADED
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     with _patch_discovery(), _patch_wizlight(device=bulb):
         hass.config_entries.async_update_entry(entry, title="Shop Switch")
         assert entry.title == "Shop Switch"
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     assert (
         hass.states.get("switch.mock_title").attributes[ATTR_FRIENDLY_NAME]

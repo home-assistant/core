@@ -22,6 +22,7 @@ from homeassistant.const import (
     STATE_NOT_HOME,
     STATE_OFF,
     STATE_ON,
+    STATE_UNKNOWN,
 )
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -76,11 +77,10 @@ async def scanner(
     )
     await hass.async_block_till_done()
 
-    return scanner
 
-
+@pytest.mark.usefixtures("scanner")
 async def test_lights_on_when_sun_sets(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory, scanner
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
     """Test lights go on when there is someone home and the sun sets."""
     test_time = datetime(2017, 4, 5, 1, 2, 3, tzinfo=dt_util.UTC)
@@ -107,9 +107,8 @@ async def test_lights_on_when_sun_sets(
     )
 
 
-async def test_lights_turn_off_when_everyone_leaves(
-    hass: HomeAssistant, enable_custom_integrations: None
-) -> None:
+@pytest.mark.usefixtures("enable_custom_integrations")
+async def test_lights_turn_off_when_everyone_leaves(hass: HomeAssistant) -> None:
     """Test lights turn off when everyone leaves the house."""
     assert await async_setup_component(
         hass, "light", {light.DOMAIN: {CONF_PLATFORM: "test"}}
@@ -136,8 +135,9 @@ async def test_lights_turn_off_when_everyone_leaves(
     )
 
 
+@pytest.mark.usefixtures("scanner")
 async def test_lights_turn_on_when_coming_home_after_sun_set(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory, scanner
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
     """Test lights turn on when coming home after sun set."""
     test_time = datetime(2017, 4, 5, 3, 2, 3, tzinfo=dt_util.UTC)
@@ -150,18 +150,31 @@ async def test_lights_turn_on_when_coming_home_after_sun_set(
         hass, device_sun_light_trigger.DOMAIN, {device_sun_light_trigger.DOMAIN: {}}
     )
 
-    hass.states.async_set(f"{DOMAIN}.device_2", STATE_HOME)
-
+    hass.states.async_set(f"{DOMAIN}.device_2", STATE_UNKNOWN)
     await hass.async_block_till_done()
+    assert all(
+        hass.states.get(ent_id).state == STATE_OFF
+        for ent_id in hass.states.async_entity_ids("light")
+    )
 
+    hass.states.async_set(f"{DOMAIN}.device_2", STATE_NOT_HOME)
+    await hass.async_block_till_done()
+    assert all(
+        hass.states.get(ent_id).state == STATE_OFF
+        for ent_id in hass.states.async_entity_ids("light")
+    )
+
+    hass.states.async_set(f"{DOMAIN}.device_2", STATE_HOME)
+    await hass.async_block_till_done()
     assert all(
         hass.states.get(ent_id).state == light.STATE_ON
         for ent_id in hass.states.async_entity_ids("light")
     )
 
 
+@pytest.mark.usefixtures("scanner")
 async def test_lights_turn_on_when_coming_home_after_sun_set_person(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory, scanner
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
     """Test lights turn on when coming home after sun set."""
     device_1 = f"{DOMAIN}.device_1"

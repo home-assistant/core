@@ -1,6 +1,18 @@
 {
+  "entity_component": {
+    "_": {
+      "default": "mdi:message"
+    }
+  },
   "services": {
-    "notify": "mdi:bell-ring",
-    "persistent_notification": "mdi:bell-badge"
+    "notify": {
+      "service": "mdi:bell-ring"
+    },
+    "persistent_notification": {
+      "service": "mdi:bell-badge"
+    },
+    "send_message": {
+      "service": "mdi:message-arrow-right"
+    }
   }
 }

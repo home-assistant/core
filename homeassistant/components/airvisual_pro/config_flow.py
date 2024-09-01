@@ -60,7 +60,7 @@ async def async_validate_credentials(
     except NodeProError as err:
         LOGGER.error("Unknown Pro error while connecting to %s: %s", ip_address, err)
         errors["base"] = "unknown"
-    except Exception as err:  # pylint: disable=broad-except
+    except Exception as err:  # noqa: BLE001
         LOGGER.exception("Unknown error while connecting to %s: %s", ip_address, err)
         errors["base"] = "unknown"
     else:
@@ -80,11 +80,9 @@ class AirVisualProFlowHandler(ConfigFlow, domain=DOMAIN):
         """Initialize."""
         self._reauth_entry: ConfigEntry | None = None
 
-    async def async_step_import(
-        self, import_config: dict[str, Any]
-    ) -> ConfigFlowResult:
-        """Import a config entry from configuration.yaml."""
-        return await self.async_step_user(import_config)
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
+        """Import a config entry from `airvisual` integration (see #83882)."""
+        return await self.async_step_user(import_data)
 
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]

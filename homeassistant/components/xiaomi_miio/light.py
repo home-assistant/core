@@ -68,6 +68,7 @@ from .const import (
 )
 from .device import XiaomiMiioEntity
 from .gateway import XiaomiGatewayDevice
+from .typing import ServiceMethodDetails
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -108,20 +109,24 @@ SERVICE_SCHEMA_SET_DELAYED_TURN_OFF = XIAOMI_MIIO_SERVICE_SCHEMA.extend(
 )
 
 SERVICE_TO_METHOD = {
-    SERVICE_SET_DELAYED_TURN_OFF: {
-        "method": "async_set_delayed_turn_off",
-        "schema": SERVICE_SCHEMA_SET_DELAYED_TURN_OFF,
-    },
-    SERVICE_SET_SCENE: {
-        "method": "async_set_scene",
-        "schema": SERVICE_SCHEMA_SET_SCENE,
-    },
-    SERVICE_REMINDER_ON: {"method": "async_reminder_on"},
-    SERVICE_REMINDER_OFF: {"method": "async_reminder_off"},
-    SERVICE_NIGHT_LIGHT_MODE_ON: {"method": "async_night_light_mode_on"},
-    SERVICE_NIGHT_LIGHT_MODE_OFF: {"method": "async_night_light_mode_off"},
-    SERVICE_EYECARE_MODE_ON: {"method": "async_eyecare_mode_on"},
-    SERVICE_EYECARE_MODE_OFF: {"method": "async_eyecare_mode_off"},
+    SERVICE_SET_DELAYED_TURN_OFF: ServiceMethodDetails(
+        method="async_set_delayed_turn_off",
+        schema=SERVICE_SCHEMA_SET_DELAYED_TURN_OFF,
+    ),
+    SERVICE_SET_SCENE: ServiceMethodDetails(
+        method="async_set_scene",
+        schema=SERVICE_SCHEMA_SET_SCENE,
+    ),
+    SERVICE_REMINDER_ON: ServiceMethodDetails(method="async_reminder_on"),
+    SERVICE_REMINDER_OFF: ServiceMethodDetails(method="async_reminder_off"),
+    SERVICE_NIGHT_LIGHT_MODE_ON: ServiceMethodDetails(
+        method="async_night_light_mode_on"
+    ),
+    SERVICE_NIGHT_LIGHT_MODE_OFF: ServiceMethodDetails(
+        method="async_night_light_mode_off"
+    ),
+    SERVICE_EYECARE_MODE_ON: ServiceMethodDetails(method="async_eyecare_mode_on"),
+    SERVICE_EYECARE_MODE_OFF: ServiceMethodDetails(method="async_eyecare_mode_off"),
 }
 
 
@@ -232,9 +237,9 @@ async def async_setup_entry(
 
             update_tasks = []
             for target_device in target_devices:
-                if not hasattr(target_device, method["method"]):
+                if not hasattr(target_device, method.method):
                     continue
-                await getattr(target_device, method["method"])(**params)
+                await getattr(target_device, method.method)(**params)
                 update_tasks.append(
                     asyncio.create_task(target_device.async_update_ha_state(True))
                 )
@@ -243,7 +248,7 @@ async def async_setup_entry(
                 await asyncio.wait(update_tasks)
 
         for xiaomi_miio_service, method in SERVICE_TO_METHOD.items():
-            schema = method.get("schema", XIAOMI_MIIO_SERVICE_SCHEMA)
+            schema = method.schema or XIAOMI_MIIO_SERVICE_SCHEMA
             hass.services.async_register(
                 DOMAIN, xiaomi_miio_service, async_service_handler, schema=schema
             )

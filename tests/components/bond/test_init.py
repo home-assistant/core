@@ -6,7 +6,7 @@ from aiohttp import ClientConnectionError, ClientResponseError
 from bond_async import DeviceType
 import pytest
 
-from homeassistant.components.bond.const import DOMAIN
+from homeassistant.components.bond import DOMAIN, BondData
 from homeassistant.components.fan import DOMAIN as FAN_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ASSUMED_STATE, CONF_ACCESS_TOKEN, CONF_HOST
@@ -24,7 +24,6 @@ from .common import (
     patch_bond_version,
     patch_setup_entry,
     patch_start_bpup,
-    remove_device,
     setup_bond_entity,
     setup_platform,
 )
@@ -108,7 +107,7 @@ async def test_async_setup_entry_sets_up_hub_and_supported_domains(
         assert result is True
         await hass.async_block_till_done()
 
-    assert config_entry.entry_id in hass.data[DOMAIN]
+    assert isinstance(config_entry.runtime_data, BondData)
     assert config_entry.state is ConfigEntryState.LOADED
     assert config_entry.unique_id == "ZXXX12345"
 
@@ -149,7 +148,6 @@ async def test_unload_config_entry(hass: HomeAssistant) -> None:
     await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert config_entry.entry_id not in hass.data[DOMAIN]
     assert config_entry.state is ConfigEntryState.NOT_LOADED
 
 
@@ -195,7 +193,6 @@ async def test_old_identifiers_are_removed(
         assert await hass.config_entries.async_setup(config_entry.entry_id) is True
         await hass.async_block_till_done()
 
-    assert config_entry.entry_id in hass.data[DOMAIN]
     assert config_entry.state is ConfigEntryState.LOADED
     assert config_entry.unique_id == "ZXXX12345"
 
@@ -239,7 +236,6 @@ async def test_smart_by_bond_device_suggested_area(
         assert await hass.config_entries.async_setup(config_entry.entry_id) is True
         await hass.async_block_till_done()
 
-    assert config_entry.entry_id in hass.data[DOMAIN]
     assert config_entry.state is ConfigEntryState.LOADED
     assert config_entry.unique_id == "KXXX12345"
 
@@ -288,7 +284,6 @@ async def test_bridge_device_suggested_area(
         assert await hass.config_entries.async_setup(config_entry.entry_id) is True
         await hass.async_block_till_done()
 
-    assert config_entry.entry_id in hass.data[DOMAIN]
     assert config_entry.state is ConfigEntryState.LOADED
     assert config_entry.unique_id == "ZXXX12345"
 
@@ -318,45 +313,30 @@ async def test_device_remove_devices(
     assert entity.unique_id == "test-hub-id_test-device-id"
 
     device_entry = device_registry.async_get(entity.device_id)
-    assert (
-        await remove_device(
-            await hass_ws_client(hass), device_entry.id, config_entry.entry_id
-        )
-        is False
-    )
+    client = await hass_ws_client(hass)
+    response = await client.remove_device(device_entry.id, config_entry.entry_id)
+    assert not response["success"]
 
     dead_device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         identifiers={(DOMAIN, "test-hub-id", "remove-device-id")},
     )
-    assert (
-        await remove_device(
-            await hass_ws_client(hass), dead_device_entry.id, config_entry.entry_id
-        )
-        is True
-    )
+    response = await client.remove_device(dead_device_entry.id, config_entry.entry_id)
+    assert response["success"]
 
     dead_device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         identifiers={(DOMAIN, "wrong-hub-id", "test-device-id")},
     )
-    assert (
-        await remove_device(
-            await hass_ws_client(hass), dead_device_entry.id, config_entry.entry_id
-        )
-        is True
-    )
+    response = await client.remove_device(dead_device_entry.id, config_entry.entry_id)
+    assert response["success"]
 
     hub_device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         identifiers={(DOMAIN, "test-hub-id")},
     )
-    assert (
-        await remove_device(
-            await hass_ws_client(hass), hub_device_entry.id, config_entry.entry_id
-        )
-        is False
-    )
+    response = await client.remove_device(hub_device_entry.id, config_entry.entry_id)
+    assert not response["success"]
 
 
 async def test_smart_by_bond_v3_firmware(hass: HomeAssistant) -> None:

@@ -120,7 +120,9 @@ async def test_wrong_version(hass: HomeAssistant) -> None:
         await smart_home.async_handle_message(hass, get_default_config(hass), msg)
 
 
-async def discovery_test(device, hass, expected_endpoints=1):
+async def discovery_test(
+    device, hass: HomeAssistant, expected_endpoints: int = 1
+) -> dict[str, Any] | list[dict[str, Any]] | None:
     """Test alexa discovery request."""
     request = get_new_request("Alexa.Discovery", "Discover")
 
@@ -882,7 +884,7 @@ async def test_direction_fan(hass: HomeAssistant) -> None:
             payload={},
             instance=None,
         )
-        assert call.data
+    assert call.data
 
 
 async def test_preset_mode_fan(
@@ -1823,12 +1825,6 @@ async def test_media_player_seek_error(hass: HomeAssistant) -> None:
             payload={"deltaPositionMilliseconds": 30000},
         )
 
-        assert "event" in msg
-        msg = msg["event"]
-        assert msg["header"]["name"] == "ErrorResponse"
-        assert msg["header"]["namespace"] == "Alexa.Video"
-        assert msg["payload"]["type"] == "ACTION_NOT_PERMITTED_FOR_CONTENT"
-
 
 @pytest.mark.freeze_time("2022-04-19 07:53:05")
 async def test_alert(hass: HomeAssistant) -> None:
@@ -1985,7 +1981,7 @@ async def test_cover_position(
             "friendly_name": "Test cover range",
             "device_class": "blind",
             "supported_features": supported_features,
-            "position": position,
+            "current_position": position,
         },
     )
     appliance = await discovery_test(device, hass)
@@ -2302,7 +2298,7 @@ async def test_cover_position_range(
             "friendly_name": "Test cover range",
             "device_class": "blind",
             "supported_features": 7,
-            "position": 30,
+            "current_position": 30,
         },
     )
     appliance = await discovery_test(device, hass)
@@ -2607,8 +2603,15 @@ async def test_stop_valve(
 
 
 async def assert_percentage_changes(
-    hass, adjustments, namespace, name, endpoint, parameter, service, changed_parameter
-):
+    hass: HomeAssistant,
+    adjustments,
+    namespace,
+    name,
+    endpoint,
+    parameter,
+    service,
+    changed_parameter,
+) -> None:
     """Assert an API request making percentage changes works.
 
     AdjustPercentage, AdjustBrightness, etc. are examples of such requests.
@@ -2622,8 +2625,15 @@ async def assert_percentage_changes(
 
 
 async def assert_range_changes(
-    hass, adjustments, namespace, name, endpoint, service, changed_parameter, instance
-):
+    hass: HomeAssistant,
+    adjustments: list[tuple[int | str, int, bool]],
+    namespace: str,
+    name: str,
+    endpoint: str,
+    service: str,
+    changed_parameter: str | None,
+    instance: str,
+) -> None:
     """Assert an API request making range changes works.
 
     AdjustRangeValue are examples of such requests.
@@ -3827,7 +3837,6 @@ async def test_disabled(hass: HomeAssistant) -> None:
         await smart_home.async_handle_message(
             hass, get_default_config(hass), request, enabled=False
         )
-        await hass.async_block_till_done()
 
 
 async def test_endpoint_good_health(hass: HomeAssistant) -> None:
@@ -4665,7 +4674,7 @@ async def test_cover_semantics_position_and_tilt(hass: HomeAssistant) -> None:
             "friendly_name": "Test cover semantics",
             "device_class": "blind",
             "supported_features": 255,
-            "position": 30,
+            "current_position": 30,
             "tilt_position": 30,
         },
     )
@@ -5650,6 +5659,6 @@ async def test_alexa_config(
     with patch.object(test_config, "_auth", AsyncMock()):
         test_config._auth.async_invalidate_access_token = MagicMock()
         test_config.async_invalidate_access_token()
-        assert len(test_config._auth.async_invalidate_access_token.mock_calls)
+        assert len(test_config._auth.async_invalidate_access_token.mock_calls) == 1
         await test_config.async_accept_grant("grant_code")
         test_config._auth.async_do_auth.assert_called_once_with("grant_code")

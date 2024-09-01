@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .const import ADDONS_COORDINATOR
-from .data import HassioDataUpdateCoordinator
+from .coordinator import HassioDataUpdateCoordinator
 
 
 async def async_get_config_entry_diagnostics(

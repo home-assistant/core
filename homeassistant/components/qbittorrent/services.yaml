@@ -1,0 +1,35 @@
+get_torrents:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: qbittorrent
+    torrent_filter:
+      required: true
+      example: "all"
+      default: "all"
+      selector:
+        select:
+          options:
+            - "active"
+            - "inactive"
+            - "paused"
+            - "all"
+            - "seeding"
+            - "started"
+get_all_torrents:
+  fields:
+    torrent_filter:
+      required: true
+      example: "all"
+      default: "all"
+      selector:
+        select:
+          options:
+            - "active"
+            - "inactive"
+            - "paused"
+            - "all"
+            - "seeding"
+            - "started"

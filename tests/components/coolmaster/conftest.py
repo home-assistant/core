@@ -18,7 +18,7 @@ DEFAULT_INFO: dict[str, str] = {
     "version": "1",
 }
 
-TEST_UNITS: dict[dict[str, Any]] = {
+TEST_UNITS: dict[str, dict[str, Any]] = {
     "L1.100": {
         "is_on": False,
         "thermostat": 20,
@@ -64,7 +64,7 @@ class CoolMasterNetUnitMock:
         self._attributes["mode"] = value
         return CoolMasterNetUnitMock(self.unit_id, self._attributes)
 
-    async def set_thermostat(self, value: int | float) -> CoolMasterNetUnitMock:
+    async def set_thermostat(self, value: float) -> CoolMasterNetUnitMock:
         """Set the target temperature."""
         self._attributes["thermostat"] = value
         return CoolMasterNetUnitMock(self.unit_id, self._attributes)

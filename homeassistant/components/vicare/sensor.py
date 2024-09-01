@@ -10,7 +10,7 @@ import logging
 from PyViCare.PyViCareDevice import Device as PyViCareDevice
 from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
 from PyViCare.PyViCareHeatingDevice import (
-    HeatingDeviceWithComponent as PyViCareHeatingDeviceWithComponent,
+    HeatingDeviceWithComponent as PyViCareHeatingDeviceComponent,
 )
 from PyViCare.PyViCareUtils import (
     PyViCareInvalidDataError,
@@ -694,8 +694,48 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         key="photovoltaic_energy_production_today",
         translation_key="photovoltaic_energy_production_today",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_getter=lambda api: api.getPhotovoltaicProductionCumulatedCurrentDay(),
+        unit_getter=lambda api: api.getPhotovoltaicProductionCumulatedUnit(),
+    ),
+    ViCareSensorEntityDescription(
+        key="photovoltaic_energy_production_this_week",
+        translation_key="photovoltaic_energy_production_this_week",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_getter=lambda api: api.getPhotovoltaicProductionCumulatedCurrentWeek(),
+        unit_getter=lambda api: api.getPhotovoltaicProductionCumulatedUnit(),
+        entity_registry_enabled_default=False,
+    ),
+    ViCareSensorEntityDescription(
+        key="photovoltaic_energy_production_this_month",
+        translation_key="photovoltaic_energy_production_this_month",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_getter=lambda api: api.getPhotovoltaicProductionCumulatedCurrentMonth(),
+        unit_getter=lambda api: api.getPhotovoltaicProductionCumulatedUnit(),
+        entity_registry_enabled_default=False,
+    ),
+    ViCareSensorEntityDescription(
+        key="photovoltaic_energy_production_this_year",
+        translation_key="photovoltaic_energy_production_this_year",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_getter=lambda api: api.getPhotovoltaicProductionCumulatedCurrentYear(),
+        unit_getter=lambda api: api.getPhotovoltaicProductionCumulatedUnit(),
+        entity_registry_enabled_default=False,
+    ),
+    ViCareSensorEntityDescription(
+        key="photovoltaic_energy_production_total",
+        translation_key="photovoltaic_energy_production_total",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_getter=lambda api: api.getPhotovoltaicProductionCumulatedLifeCycle(),
         unit_getter=lambda api: api.getPhotovoltaicProductionCumulatedUnit(),
     ),
     ViCareSensorEntityDescription(
@@ -852,8 +892,8 @@ def _build_entities_for_device(
 
     return [
         ViCareSensor(
-            device,
             device_config,
+            device,
             description,
         )
         for description in GLOBAL_SENSORS
@@ -862,7 +902,7 @@ def _build_entities_for_device(
 
 
 def _build_entities_for_component(
-    components: list[PyViCareHeatingDeviceWithComponent],
+    components: list[PyViCareHeatingDeviceComponent],
     device_config: PyViCareDeviceConfig,
     entity_descriptions: tuple[ViCareSensorEntityDescription, ...],
 ) -> list[ViCareSensor]:
@@ -870,8 +910,8 @@ def _build_entities_for_component(
 
     return [
         ViCareSensor(
-            component,
             device_config,
+            component,
             description,
         )
         for component in components
@@ -892,7 +932,9 @@ async def async_setup_entry(
         await hass.async_add_executor_job(
             _build_entities,
             device_list,
-        )
+        ),
+        # run update to have device_class set depending on unit_of_measurement
+        True,
     )
 
 
@@ -903,8 +945,8 @@ class ViCareSensor(ViCareEntity, SensorEntity):
 
     def __init__(
         self,
-        api,
         device_config: PyViCareDeviceConfig,
+        api: PyViCareDevice | PyViCareHeatingDeviceComponent,
         description: ViCareSensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""

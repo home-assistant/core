@@ -8,6 +8,11 @@
         "default": "mdi:debug-step-into"
       }
     },
+    "number": {
+      "cutting_height": {
+        "default": "mdi:grass"
+      }
+    },
     "select": {
       "headlight_mode": {
         "default": "mdi:car-light-high"
@@ -26,6 +31,14 @@
       "restricted_reason": {
         "default": "mdi:tooltip-question"
       }
+    }
+  },
+  "services": {
+    "override_schedule": {
+      "service": "mdi:debug-step-over"
+    },
+    "override_schedule_work_area": {
+      "service": "mdi:land-fields"
     }
   }
 }

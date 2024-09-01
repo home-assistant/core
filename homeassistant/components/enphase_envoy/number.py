@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
+from operator import attrgetter
 from typing import Any
 
 from pyenphase import Envoy, EnvoyDryContactSettings
@@ -15,14 +16,13 @@ from homeassistant.components.number import (
     NumberEntity,
     NumberEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .coordinator import EnphaseUpdateCoordinator
+from .coordinator import EnphaseConfigEntry, EnphaseUpdateCoordinator
 from .entity import EnvoyBaseEntity
 
 
@@ -47,14 +47,14 @@ RELAY_ENTITIES = (
         translation_key="cutoff_battery_level",
         device_class=NumberDeviceClass.BATTERY,
         entity_category=EntityCategory.CONFIG,
-        value_fn=lambda relay: relay.soc_low,
+        value_fn=attrgetter("soc_low"),
     ),
     EnvoyRelayNumberEntityDescription(
         key="soc_high",
         translation_key="restore_battery_level",
         device_class=NumberDeviceClass.BATTERY,
         entity_category=EntityCategory.CONFIG,
-        value_fn=lambda relay: relay.soc_high,
+        value_fn=attrgetter("soc_high"),
     ),
 )
 
@@ -63,18 +63,18 @@ STORAGE_RESERVE_SOC_ENTITY = EnvoyStorageSettingsNumberEntityDescription(
     translation_key="reserve_soc",
     native_unit_of_measurement=PERCENTAGE,
     device_class=NumberDeviceClass.BATTERY,
-    value_fn=lambda storage_settings: storage_settings.reserved_soc,
+    value_fn=attrgetter("reserved_soc"),
     update_fn=lambda envoy, value: envoy.set_reserve_soc(int(value)),
 )
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: EnphaseConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Enphase Envoy number platform."""
-    coordinator: EnphaseUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
     envoy_data = coordinator.envoy.data
     assert envoy_data is not None
     entities: list[NumberEntity] = []
@@ -88,6 +88,7 @@ async def async_setup_entry(
         envoy_data.tariff
         and envoy_data.tariff.storage_settings
         and coordinator.envoy.supported_features & SupportedFeatures.ENCHARGE
+        and coordinator.envoy.supported_features & SupportedFeatures.ENPOWER
     ):
         entities.append(
             EnvoyStorageSettingsNumberEntity(coordinator, STORAGE_RESERVE_SOC_ENTITY)

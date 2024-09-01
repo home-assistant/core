@@ -20,7 +20,7 @@ from google_nest_sdm.exceptions import (
     ConfigurationException,
     SubscriberException,
 )
-from google_nest_sdm.structure import InfoTrait, Structure
+from google_nest_sdm.structure import Structure
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry, ConfigFlowResult
@@ -72,9 +72,9 @@ def _generate_subscription_id(cloud_project_id: str) -> str:
 def generate_config_title(structures: Iterable[Structure]) -> str | None:
     """Pick a user friendly config title based on the Google Home name(s)."""
     names: list[str] = [
-        trait.custom_name
+        structure.info.custom_name
         for structure in structures
-        if (trait := structure.traits.get(InfoTrait.NAME)) and trait.custom_name
+        if structure.info and structure.info.custom_name
     ]
     if not names:
         return None

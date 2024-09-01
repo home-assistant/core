@@ -14,14 +14,16 @@ from .helpers.deprecation import (
     dir_with_deprecated_constants,
 )
 from .util.event_type import EventType
+from .util.hass_dict import HassKey
 from .util.signal_type import SignalType
 
 if TYPE_CHECKING:
-    from .core import EventStateChangedData
+    from .core import EventStateChangedData, EventStateReportedData
+    from .helpers.typing import NoEventData
 
 APPLICATION_NAME: Final = "HomeAssistant"
 MAJOR_VERSION: Final = 2024
-MINOR_VERSION: Final = 5
+MINOR_VERSION: Final = 10
 PATCH_VERSION: Final = "0.dev0"
 __short_version__: Final = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__: Final = f"{__short_version__}.{PATCH_VERSION}"
@@ -44,6 +46,7 @@ class Platform(StrEnum):
     CALENDAR = "calendar"
     CAMERA = "camera"
     CLIMATE = "climate"
+    CONVERSATION = "conversation"
     COVER = "cover"
     DATE = "date"
     DATETIME = "datetime"
@@ -57,7 +60,6 @@ class Platform(StrEnum):
     LAWN_MOWER = "lawn_mower"
     LIGHT = "light"
     LOCK = "lock"
-    MAILBOX = "mailbox"
     MEDIA_PLAYER = "media_player"
     NOTIFY = "notify"
     NUMBER = "number"
@@ -78,6 +80,9 @@ class Platform(StrEnum):
     WAKE_WORD = "wake_word"
     WATER_HEATER = "water_heater"
     WEATHER = "weather"
+
+
+BASE_PLATFORMS: Final = {platform.value for platform in Platform}
 
 
 # Can be used to specify a catch all when registering state or event listeners.
@@ -107,9 +112,11 @@ SUN_EVENT_SUNRISE: Final = "sunrise"
 # #### CONFIG ####
 CONF_ABOVE: Final = "above"
 CONF_ACCESS_TOKEN: Final = "access_token"
+CONF_ACTION: Final = "action"
 CONF_ADDRESS: Final = "address"
 CONF_AFTER: Final = "after"
 CONF_ALIAS: Final = "alias"
+CONF_LLM_HASS_API = "llm_hass_api"
 CONF_ALLOWLIST_EXTERNAL_URLS: Final = "allowlist_external_urls"
 CONF_API_KEY: Final = "api_key"
 CONF_API_TOKEN: Final = "api_token"
@@ -214,6 +221,7 @@ CONF_METHOD: Final = "method"
 CONF_MINIMUM: Final = "minimum"
 CONF_MODE: Final = "mode"
 CONF_MODEL: Final = "model"
+CONF_MODEL_ID: Final = "model_id"
 CONF_MONITORED_CONDITIONS: Final = "monitored_conditions"
 CONF_MONITORED_VARIABLES: Final = "monitored_variables"
 CONF_NAME: Final = "name"
@@ -294,6 +302,7 @@ CONF_WHILE: Final = "while"
 CONF_WHITELIST: Final = "whitelist"
 CONF_ALLOWLIST_EXTERNAL_DIRS: Final = "allowlist_external_dirs"
 LEGACY_CONF_WHITELIST_EXTERNAL_DIRS: Final = "whitelist_external_dirs"
+CONF_DEBUG: Final = "debug"
 CONF_XY: Final = "xy"
 CONF_ZONE: Final = "zone"
 
@@ -301,17 +310,19 @@ CONF_ZONE: Final = "zone"
 EVENT_CALL_SERVICE: Final = "call_service"
 EVENT_COMPONENT_LOADED: Final = "component_loaded"
 EVENT_CORE_CONFIG_UPDATE: Final = "core_config_updated"
-EVENT_HOMEASSISTANT_CLOSE: Final = "homeassistant_close"
-EVENT_HOMEASSISTANT_START: Final = "homeassistant_start"
-EVENT_HOMEASSISTANT_STARTED: Final = "homeassistant_started"
-EVENT_HOMEASSISTANT_STOP: Final = "homeassistant_stop"
-EVENT_HOMEASSISTANT_FINAL_WRITE: Final = "homeassistant_final_write"
+EVENT_HOMEASSISTANT_CLOSE: EventType[NoEventData] = EventType("homeassistant_close")
+EVENT_HOMEASSISTANT_START: EventType[NoEventData] = EventType("homeassistant_start")
+EVENT_HOMEASSISTANT_STARTED: EventType[NoEventData] = EventType("homeassistant_started")
+EVENT_HOMEASSISTANT_STOP: EventType[NoEventData] = EventType("homeassistant_stop")
+EVENT_HOMEASSISTANT_FINAL_WRITE: EventType[NoEventData] = EventType(
+    "homeassistant_final_write"
+)
 EVENT_LOGBOOK_ENTRY: Final = "logbook_entry"
 EVENT_LOGGING_CHANGED: Final = "logging_changed"
 EVENT_SERVICE_REGISTERED: Final = "service_registered"
 EVENT_SERVICE_REMOVED: Final = "service_removed"
 EVENT_STATE_CHANGED: EventType[EventStateChangedData] = EventType("state_changed")
-EVENT_STATE_REPORTED: Final = "state_reported"
+EVENT_STATE_REPORTED: EventType[EventStateReportedData] = EventType("state_reported")
 EVENT_THEMES_UPDATED: Final = "themes_updated"
 EVENT_PANELS_UPDATED: Final = "panels_updated"
 EVENT_LOVELACE_UPDATED: Final = "lovelace_updated"
@@ -554,6 +565,7 @@ ATTR_CONNECTIONS: Final = "connections"
 ATTR_DEFAULT_NAME: Final = "default_name"
 ATTR_MANUFACTURER: Final = "manufacturer"
 ATTR_MODEL: Final = "model"
+ATTR_MODEL_ID: Final = "model_id"
 ATTR_SERIAL_NUMBER: Final = "serial_number"
 ATTR_SUGGESTED_AREA: Final = "suggested_area"
 ATTR_SW_VERSION: Final = "sw_version"
@@ -660,8 +672,19 @@ _DEPRECATED_POWER_BTU_PER_HOUR: Final = DeprecatedConstantEnum(
 )
 """Deprecated: please use UnitOfPower.BTU_PER_HOUR."""
 
+
 # Reactive power units
-POWER_VOLT_AMPERE_REACTIVE: Final = "var"
+class UnitOfReactivePower(StrEnum):
+    """Reactive power units."""
+
+    VOLT_AMPERE_REACTIVE = "var"
+
+
+_DEPRECATED_POWER_VOLT_AMPERE_REACTIVE: Final = DeprecatedConstantEnum(
+    UnitOfReactivePower.VOLT_AMPERE_REACTIVE,
+    "2025.9",
+)
+"""Deprecated: please use UnitOfReactivePower.VOLT_AMPERE_REACTIVE."""
 
 
 # Energy units
@@ -1119,8 +1142,21 @@ _DEPRECATED_MASS_POUNDS: Final = DeprecatedConstantEnum(
 )
 """Deprecated: please use UnitOfMass.POUNDS"""
 
+
 # Conductivity units
-CONDUCTIVITY: Final = "µS/cm"
+class UnitOfConductivity(StrEnum):
+    """Conductivity units."""
+
+    SIEMENS = "S/cm"
+    MICROSIEMENS = "µS/cm"
+    MILLISIEMENS = "mS/cm"
+
+
+_DEPRECATED_CONDUCTIVITY: Final = DeprecatedConstantEnum(
+    UnitOfConductivity.MICROSIEMENS,
+    "2025.6",
+)
+"""Deprecated: please use UnitOfConductivity.MICROSIEMENS"""
 
 # Light units
 LIGHT_LUX: Final = "lx"
@@ -1620,13 +1656,19 @@ SIGNAL_BOOTSTRAP_INTEGRATIONS: SignalType[dict[str, float]] = SignalType(
 
 
 # hass.data key for logging information.
-KEY_DATA_LOGGING = "logging"
+KEY_DATA_LOGGING: HassKey[str] = HassKey("logging")
 
 
 # Date/Time formats
 FORMAT_DATE: Final = "%Y-%m-%d"
 FORMAT_TIME: Final = "%H:%M:%S"
 FORMAT_DATETIME: Final = f"{FORMAT_DATE} {FORMAT_TIME}"
+
+
+# Maximum entities expected in the state machine
+# This is not a hard limit, but caches and other
+# data structures will be pre-allocated to this size
+MAX_EXPECTED_ENTITY_IDS: Final = 16384
 
 # These can be removed if no deprecated constant are in this module anymore
 __getattr__ = partial(check_if_deprecated_constant, module_globals=globals())

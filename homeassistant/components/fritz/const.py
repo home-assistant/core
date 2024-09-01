@@ -46,8 +46,10 @@ DSL_CONNECTION: Literal["dsl"] = "dsl"
 
 DEFAULT_DEVICE_NAME = "Unknown device"
 DEFAULT_HOST = "192.168.178.1"
-DEFAULT_PORT = 49000
+DEFAULT_HTTP_PORT = 49000
+DEFAULT_HTTPS_PORT = 49443
 DEFAULT_USERNAME = ""
+DEFAULT_SSL = False
 
 ERROR_AUTH_INVALID = "invalid_auth"
 ERROR_CANNOT_CONNECT = "cannot_connect"
@@ -55,9 +57,6 @@ ERROR_UPNP_NOT_CONFIGURED = "upnp_not_configured"
 ERROR_UNKNOWN = "unknown_error"
 
 FRITZ_SERVICES = "fritz_services"
-SERVICE_REBOOT = "reboot"
-SERVICE_RECONNECT = "reconnect"
-SERVICE_CLEANUP = "cleanup"
 SERVICE_SET_GUEST_WIFI_PW = "set_guest_wifi_password"
 
 SWITCH_TYPE_DEFLECTION = "CallDeflection"

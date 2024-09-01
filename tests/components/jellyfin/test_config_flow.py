@@ -3,9 +3,14 @@
 from unittest.mock import MagicMock
 
 import pytest
+from voluptuous.error import Invalid
 
 from homeassistant import config_entries
-from homeassistant.components.jellyfin.const import CONF_CLIENT_DEVICE_ID, DOMAIN
+from homeassistant.components.jellyfin.const import (
+    CONF_AUDIO_CODEC,
+    CONF_CLIENT_DEVICE_ID,
+    DOMAIN,
+)
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -217,14 +222,7 @@ async def test_reauth(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": mock_config_entry.entry_id,
-        },
-        data=USER_INPUT,
-    )
+    result = await mock_config_entry.start_reauth_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
@@ -267,14 +265,7 @@ async def test_reauth_cannot_connect(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": mock_config_entry.entry_id,
-        },
-        data=USER_INPUT,
-    )
+    result = await mock_config_entry.start_reauth_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
@@ -334,14 +325,7 @@ async def test_reauth_invalid(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": mock_config_entry.entry_id,
-        },
-        data=USER_INPUT,
-    )
+    result = await mock_config_entry.start_reauth_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
@@ -395,14 +379,7 @@ async def test_reauth_exception(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": mock_config_entry.entry_id,
-        },
-        data=USER_INPUT,
-    )
+    result = await mock_config_entry.start_reauth_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
@@ -435,3 +412,57 @@ async def test_reauth_exception(
     )
     assert result3["type"] is FlowResultType.ABORT
     assert result3["reason"] == "reauth_successful"
+
+
+async def test_options_flow(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_jellyfin: MagicMock,
+    mock_client: MagicMock,
+) -> None:
+    """Test config flow options."""
+    config_entry = MockConfigEntry(domain=DOMAIN)
+    config_entry.add_to_hass(hass)
+
+    assert config_entry.options == {}
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    # Audio Codec
+    # Default
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={}
+    )
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert CONF_AUDIO_CODEC not in config_entry.options
+
+    # Bad
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    with pytest.raises(Invalid):
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"], user_input={CONF_AUDIO_CODEC: "ogg"}
+        )
+
+
+@pytest.mark.parametrize(
+    "codec",
+    [("aac"), ("wma"), ("vorbis"), ("mp3")],
+)
+async def test_setting_codec(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_jellyfin: MagicMock,
+    mock_client: MagicMock,
+    codec: str,
+) -> None:
+    """Test setting the audio_codec."""
+    config_entry = MockConfigEntry(domain=DOMAIN)
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={CONF_AUDIO_CODEC: codec}
+    )
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert config_entry.options[CONF_AUDIO_CODEC] == codec

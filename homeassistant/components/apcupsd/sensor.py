@@ -25,7 +25,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
+from .const import DOMAIN, LAST_S_TEST
 from .coordinator import APCUPSdCoordinator
 
 PARALLEL_UPDATES = 0
@@ -87,7 +87,9 @@ SENSORS: dict[str, SensorEntityDescription] = {
     "cumonbatt": SensorEntityDescription(
         key="cumonbatt",
         translation_key="total_time_on_battery",
+        native_unit_of_measurement=UnitOfTime.SECONDS,
         state_class=SensorStateClass.TOTAL_INCREASING,
+        device_class=SensorDeviceClass.DURATION,
     ),
     "date": SensorEntityDescription(
         key="date",
@@ -154,8 +156,8 @@ SENSORS: dict[str, SensorEntityDescription] = {
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    "laststest": SensorEntityDescription(
-        key="laststest",
+    LAST_S_TEST: SensorEntityDescription(
+        key=LAST_S_TEST,
         translation_key="last_self_test",
     ),
     "lastxfer": SensorEntityDescription(
@@ -340,12 +342,16 @@ SENSORS: dict[str, SensorEntityDescription] = {
     "timeleft": SensorEntityDescription(
         key="timeleft",
         translation_key="time_left",
+        native_unit_of_measurement=UnitOfTime.MINUTES,
         state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.DURATION,
     ),
     "tonbatt": SensorEntityDescription(
         key="tonbatt",
         translation_key="time_on_battery",
+        native_unit_of_measurement=UnitOfTime.SECONDS,
         state_class=SensorStateClass.TOTAL_INCREASING,
+        device_class=SensorDeviceClass.DURATION,
     ),
     "upsmode": SensorEntityDescription(
         key="upsmode",
@@ -411,7 +417,12 @@ async def async_setup_entry(
     available_resources: set[str] = {k.lower() for k, _ in coordinator.data.items()}
 
     entities = []
-    for resource in available_resources:
+
+    # "laststest" is a special sensor that only appears when the APC UPS daemon has done a
+    # periodical (or manual) self test since last daemon restart. It might not be available
+    # when we set up the integration, and we do not know if it would ever be available. Here we
+    # add it anyway and mark it as unknown initially.
+    for resource in available_resources | {LAST_S_TEST}:
         if resource not in SENSORS:
             _LOGGER.warning("Invalid resource from APCUPSd: %s", resource.upper())
             continue
@@ -467,6 +478,14 @@ class APCUPSdSensor(CoordinatorEntity[APCUPSdCoordinator], SensorEntity):
     def _update_attrs(self) -> None:
         """Update sensor attributes based on coordinator data."""
         key = self.entity_description.key.upper()
+        # For most sensors the key will always be available for each refresh. However, some sensors
+        # (e.g., "laststest") will only appear after certain event occurs (e.g., a self test is
+        # performed) and may disappear again after certain event. So we mark the state as "unknown"
+        # when it becomes unknown after such events.
+        if key not in self.coordinator.data:
+            self._attr_native_value = None
+            return
+
         self._attr_native_value, inferred_unit = infer_unit(self.coordinator.data[key])
         if not self.native_unit_of_measurement:
             self._attr_native_unit_of_measurement = inferred_unit
