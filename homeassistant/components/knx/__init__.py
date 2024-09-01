@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 import contextlib
 import logging
 from pathlib import Path
@@ -31,6 +30,7 @@ from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.reload import async_integration_yaml_config
 from homeassistant.helpers.storage import STORAGE_DIR
 from homeassistant.helpers.typing import ConfigType
@@ -62,7 +62,8 @@ from .const import (
     DATA_KNX_CONFIG,
     DOMAIN,
     KNX_ADDRESS,
-    SUPPORTED_PLATFORMS,
+    SUPPORTED_PLATFORMS_UI,
+    SUPPORTED_PLATFORMS_YAML,
     TELEGRAM_LOG_DEFAULT,
 )
 from .device import KNXInterfaceDevice
@@ -90,6 +91,7 @@ from .schema import (
     WeatherSchema,
 )
 from .services import register_knx_services
+from .storage.config_store import KNXConfigStore
 from .telegrams import STORAGE_KEY as TELEGRAMS_STORAGE_KEY, Telegrams
 from .websocket import register_panel
 
@@ -145,18 +147,10 @@ CONFIG_SCHEMA = vol.Schema(
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Start the KNX integration."""
     hass.data[DATA_HASS_CONFIG] = config
-    conf: ConfigType | None = config.get(DOMAIN)
-
-    if conf is None:
-        # If we have a config entry, setup is done by that config entry.
-        # If there is no config entry, this should fail.
-        return bool(hass.config_entries.async_entries(DOMAIN))
-
-    conf = dict(conf)
-    hass.data[DATA_KNX_CONFIG] = conf
+    if (conf := config.get(DOMAIN)) is not None:
+        hass.data[DATA_KNX_CONFIG] = dict(conf)
 
     register_knx_services(hass)
-
     return True
 
 
@@ -190,10 +184,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             knx_module.exposures.append(
                 create_knx_exposure(hass, knx_module.xknx, expose_config)
             )
-    # always forward sensor for system entities (telegram counter, etc.)
-    platforms = {platform for platform in SUPPORTED_PLATFORMS if platform in config}
-    platforms.add(Platform.SENSOR)
-    await hass.config_entries.async_forward_entry_setups(entry, platforms)
+    await hass.config_entries.async_forward_entry_setups(
+        entry,
+        {
+            Platform.SENSOR,  # always forward sensor for system entities (telegram counter, etc.)
+            *SUPPORTED_PLATFORMS_UI,  # forward all platforms that support UI entity management
+            *{  # forward yaml-only managed platforms on demand
+                platform for platform in SUPPORTED_PLATFORMS_YAML if platform in config
+            },
+        },
+    )
 
     # set up notify service for backwards compatibility - remove 2024.11
     if NotifySchema.PLATFORM in config:
@@ -216,19 +216,19 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     knx_module: KNXModule = hass.data[DOMAIN]
     for exposure in knx_module.exposures:
-        exposure.shutdown()
+        exposure.async_remove()
 
     unload_ok = await hass.config_entries.async_unload_platforms(
         entry,
-        [
+        {
             Platform.SENSOR,  # always unload system entities (telegram counter, etc.)
-            *[
+            *SUPPORTED_PLATFORMS_UI,  # unload all platforms that support UI entity management
+            *{  # unload yaml-only managed platforms if configured
                 platform
-                for platform in SUPPORTED_PLATFORMS
+                for platform in SUPPORTED_PLATFORMS_YAML
                 if platform in hass.data[DATA_KNX_CONFIG]
-                and platform is not Platform.SENSOR
-            ],
-        ],
+            },
+        },
     )
     if unload_ok:
         await knx_module.stop()
@@ -263,6 +263,22 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     await hass.async_add_executor_job(remove_files, storage_dir, knxkeys_filename)
 
 
+async def async_remove_config_entry_device(
+    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: DeviceEntry
+) -> bool:
+    """Remove a config entry from a device."""
+    knx_module: KNXModule = hass.data[DOMAIN]
+    if not device_entry.identifiers.isdisjoint(
+        knx_module.interface_device.device_info["identifiers"]
+    ):
+        # can not remove interface device
+        return False
+    for entity in knx_module.config_store.get_entity_entries():
+        if entity.device_id == device_entry.id:
+            await knx_module.config_store.delete_entity(entity.entity_id)
+    return True
+
+
 class KNXModule:
     """Representation of KNX Object."""
 
@@ -278,8 +294,10 @@ class KNXModule:
         self.entry = entry
 
         self.project = KNXProject(hass=hass, entry=entry)
+        self.config_store = KNXConfigStore(hass=hass, config_entry=entry)
 
         self.xknx = XKNX(
+            address_format=self.project.get_address_format(),
             connection_config=self.connection_config(),
             rate_limit=self.entry.data[CONF_KNX_RATE_LIMIT],
             state_updater=self.entry.data[CONF_KNX_STATE_UPDATER],
@@ -308,7 +326,8 @@ class KNXModule:
 
     async def start(self) -> None:
         """Start XKNX object. Connect to tunneling or Routing device."""
-        await self.project.load_project()
+        await self.project.load_project(self.xknx)
+        await self.config_store.load_data()
         await self.telegrams.load_history()
         await self.xknx.start()
 
@@ -412,13 +431,13 @@ class KNXModule:
             threaded=True,
         )
 
-    async def connection_state_changed_cb(self, state: XknxConnectionState) -> None:
+    def connection_state_changed_cb(self, state: XknxConnectionState) -> None:
         """Call invoked after a KNX connection state change was received."""
         self.connected = state == XknxConnectionState.CONNECTED
-        if tasks := [device.after_update() for device in self.xknx.devices]:
-            await asyncio.gather(*tasks)
+        for device in self.xknx.devices:
+            device.after_update()
 
-    async def telegram_received_cb(self, telegram: Telegram) -> None:
+    def telegram_received_cb(self, telegram: Telegram) -> None:
         """Call invoked after a KNX telegram was received."""
         # Not all telegrams have serializable data.
         data: int | tuple[int, ...] | None = None
@@ -477,10 +496,7 @@ class KNXModule:
                 transcoder := DPTBase.parse_transcoder(dpt)
             ):
                 self._address_filter_transcoder.update(
-                    {
-                        _filter: transcoder  # type: ignore[type-abstract]
-                        for _filter in _filters
-                    }
+                    {_filter: transcoder for _filter in _filters}
                 )
 
         return self.xknx.telegram_queue.register_telegram_received_cb(

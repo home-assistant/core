@@ -55,8 +55,13 @@ class TedeeLockEntity(TedeeEntity, LockEntity):
         super().__init__(lock, coordinator, "lock")
 
     @property
-    def is_locked(self) -> bool:
+    def is_locked(self) -> bool | None:
         """Return true if lock is locked."""
+        if self._lock.state in (
+            TedeeLockState.HALF_OPEN,
+            TedeeLockState.UNKNOWN,
+        ):
+            return None
         return self._lock.state == TedeeLockState.LOCKED
 
     @property
@@ -87,7 +92,11 @@ class TedeeLockEntity(TedeeEntity, LockEntity):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return super().available and self._lock.is_connected
+        return (
+            super().available
+            and self._lock.is_connected
+            and self._lock.state != TedeeLockState.UNCALIBRATED
+        )
 
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the door."""

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import cast
+from typing import Any, cast
 from urllib.parse import urlparse
 
 from pynetgear import DEFAULT_HOST, DEFAULT_PORT, DEFAULT_USER
@@ -67,7 +67,9 @@ class OptionsFlowHandler(OptionsFlow):
         """Init object."""
         self.config_entry = config_entry
 
-    async def async_step_init(self, user_input=None):
+    async def async_step_init(
+        self, user_input: dict[str, int] | None = None
+    ) -> ConfigFlowResult:
         """Manage the options."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
@@ -109,7 +111,11 @@ class NetgearFlowHandler(ConfigFlow, domain=DOMAIN):
         """Get the options flow."""
         return OptionsFlowHandler(config_entry)
 
-    async def _show_setup_form(self, user_input=None, errors=None):
+    async def _show_setup_form(
+        self,
+        user_input: dict[str, Any] | None = None,
+        errors: dict[str, str] | None = None,
+    ) -> ConfigFlowResult:
         """Show the setup form to the user."""
         if not user_input:
             user_input = {}
@@ -175,7 +181,9 @@ class NetgearFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_user()
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
         errors = {}
 

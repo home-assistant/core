@@ -5,6 +5,7 @@ from __future__ import annotations
 import datetime as dt
 import logging
 
+from reolink_aio.api import DUAL_LENS_MODELS
 from reolink_aio.enums import VodRequestType
 
 from homeassistant.components.camera import DOMAIN as CAM_DOMAIN, DynamicStreamSettings
@@ -173,16 +174,16 @@ class ReolinkVODMediaSource(MediaSource):
                 if len(ch_id) > 3:
                     ch = host.api.channel_for_uid(ch_id)
 
-                if (
-                    host.api.api_version("recReplay", int(ch)) < 1
-                    or not host.api.hdd_info
-                ):
+                if not host.api.supported(int(ch), "replay") or not host.api.hdd_info:
                     # playback stream not supported by this camera or no storage installed
                     continue
 
                 device_name = device.name
                 if device.name_by_user is not None:
                     device_name = device.name_by_user
+
+                if host.api.model in DUAL_LENS_MODELS:
+                    device_name = f"{device_name} lens {ch}"
 
                 children.append(
                     BrowseMediaSource(
@@ -277,12 +278,16 @@ class ReolinkVODMediaSource(MediaSource):
                 config_entry_id, channel, "sub"
             )
 
+        title = host.api.camera_name(channel)
+        if host.api.model in DUAL_LENS_MODELS:
+            title = f"{host.api.camera_name(channel)} lens {channel}"
+
         return BrowseMediaSource(
             domain=DOMAIN,
             identifier=f"RESs|{config_entry_id}|{channel}",
             media_class=MediaClass.CHANNEL,
             media_content_type=MediaType.PLAYLIST,
-            title=host.api.camera_name(channel),
+            title=title,
             can_play=False,
             can_expand=True,
             children=children,
@@ -324,12 +329,16 @@ class ReolinkVODMediaSource(MediaSource):
             for day in status.days
         ]
 
+        title = f"{host.api.camera_name(channel)} {res_name(stream)}"
+        if host.api.model in DUAL_LENS_MODELS:
+            title = f"{host.api.camera_name(channel)} lens {channel} {res_name(stream)}"
+
         return BrowseMediaSource(
             domain=DOMAIN,
             identifier=f"DAYS|{config_entry_id}|{channel}|{stream}",
             media_class=MediaClass.CHANNEL,
             media_content_type=MediaType.PLAYLIST,
-            title=f"{host.api.camera_name(channel)} {res_name(stream)}",
+            title=title,
             can_play=False,
             can_expand=True,
             children=children,
@@ -384,12 +393,18 @@ class ReolinkVODMediaSource(MediaSource):
                 )
             )
 
+        title = (
+            f"{host.api.camera_name(channel)} {res_name(stream)} {year}/{month}/{day}"
+        )
+        if host.api.model in DUAL_LENS_MODELS:
+            title = f"{host.api.camera_name(channel)} lens {channel} {res_name(stream)} {year}/{month}/{day}"
+
         return BrowseMediaSource(
             domain=DOMAIN,
             identifier=f"FILES|{config_entry_id}|{channel}|{stream}",
             media_class=MediaClass.CHANNEL,
             media_content_type=MediaType.PLAYLIST,
-            title=f"{host.api.camera_name(channel)} {res_name(stream)} {year}/{month}/{day}",
+            title=title,
             can_play=False,
             can_expand=True,
             children=children,

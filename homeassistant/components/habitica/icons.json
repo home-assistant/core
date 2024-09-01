@@ -1,5 +1,27 @@
 {
   "entity": {
+    "todo": {
+      "todos": {
+        "default": "mdi:checkbox-outline"
+      },
+      "dailys": {
+        "default": "mdi:calendar-month"
+      }
+    },
+    "button": {
+      "run_cron": {
+        "default": "mdi:weather-sunset"
+      },
+      "buy_health_potion": {
+        "default": "mdi:flask-round-bottom"
+      },
+      "allocate_all_stat_points": {
+        "default": "mdi:chart-box-outline"
+      },
+      "revive": {
+        "default": "mdi:grave-stone"
+      }
+    },
     "sensor": {
       "display_name": {
         "default": "mdi:account-circle"
@@ -42,10 +64,32 @@
           "wizard": "mdi:wizard-hat",
           "rogue": "mdi:ninja"
         }
+      },
+      "todos": {
+        "default": "mdi:checkbox-outline"
+      },
+      "dailys": {
+        "default": "mdi:calendar-month"
+      },
+      "habits": {
+        "default": "mdi:contrast-box"
+      },
+      "rewards": {
+        "default": "mdi:treasure-chest"
+      }
+    },
+    "switch": {
+      "sleep": {
+        "default": "mdi:sleep-off",
+        "state": {
+          "on": "mdi:sleep"
+        }
       }
     }
   },
   "services": {
-    "api_call": "mdi:console"
+    "api_call": {
+      "service": "mdi:console"
+    }
   }
 }

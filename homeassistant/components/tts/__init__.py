@@ -2,11 +2,10 @@
 
 from __future__ import annotations
 
-from abc import abstractmethod
 import asyncio
 from collections.abc import Mapping
 from datetime import datetime
-from functools import partial
+from functools import cached_property, partial
 import hashlib
 from http import HTTPStatus
 import io
@@ -138,15 +137,16 @@ def async_default_engine(hass: HomeAssistant) -> str | None:
     component: EntityComponent[TextToSpeechEntity] = hass.data[DOMAIN]
     manager: SpeechManager = hass.data[DATA_TTS_MANAGER]
 
-    if "cloud" in manager.providers:
-        return "cloud"
+    default_entity_id: str | None = None
 
-    entity = next(iter(component.entities), None)
+    for entity in component.entities:
+        if entity.platform and entity.platform.platform_name == "cloud":
+            return entity.entity_id
 
-    if entity is not None:
-        return entity.entity_id
+        if default_entity_id is None:
+            default_entity_id = entity.entity_id
 
-    return next(iter(manager.providers), None)
+    return default_entity_id or next(iter(manager.providers), None)
 
 
 @callback
@@ -373,11 +373,24 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return await component.async_unload_entry(entry)
 
 
-class TextToSpeechEntity(RestoreEntity):
+CACHED_PROPERTIES_WITH_ATTR_ = {
+    "default_language",
+    "default_options",
+    "supported_languages",
+    "supported_options",
+}
+
+
+class TextToSpeechEntity(RestoreEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     """Represent a single TTS engine."""
 
     _attr_should_poll = False
     __last_tts_loaded: str | None = None
+
+    _attr_default_language: str
+    _attr_default_options: Mapping[str, Any] | None = None
+    _attr_supported_languages: list[str]
+    _attr_supported_options: list[str] | None = None
 
     @property
     @final
@@ -387,25 +400,25 @@ class TextToSpeechEntity(RestoreEntity):
             return None
         return self.__last_tts_loaded
 
-    @property
-    @abstractmethod
+    @cached_property
     def supported_languages(self) -> list[str]:
         """Return a list of supported languages."""
+        return self._attr_supported_languages
 
-    @property
-    @abstractmethod
+    @cached_property
     def default_language(self) -> str:
         """Return the default language."""
+        return self._attr_default_language
 
-    @property
+    @cached_property
     def supported_options(self) -> list[str] | None:
         """Return a list of supported options like voice, emotions."""
-        return None
+        return self._attr_supported_options
 
-    @property
+    @cached_property
     def default_options(self) -> Mapping[str, Any] | None:
         """Return a mapping with the default options."""
-        return None
+        return self._attr_default_options
 
     @callback
     def async_get_supported_voices(self, language: str) -> list[Voice] | None:
@@ -415,6 +428,18 @@ class TextToSpeechEntity(RestoreEntity):
     async def async_internal_added_to_hass(self) -> None:
         """Call when the entity is added to hass."""
         await super().async_internal_added_to_hass()
+        try:
+            _ = self.default_language
+        except AttributeError as err:
+            raise AttributeError(
+                "TTS entities must either set the '_attr_default_language' attribute or override the 'default_language' property"
+            ) from err
+        try:
+            _ = self.supported_languages
+        except AttributeError as err:
+            raise AttributeError(
+                "TTS entities must either set the '_attr_supported_languages' attribute or override the 'supported_languages' property"
+            ) from err
         state = await self.async_get_last_state()
         if (
             state is not None
@@ -1061,6 +1086,7 @@ def websocket_list_engines(
     language = msg.get("language")
     providers = []
     provider_info: dict[str, Any]
+    entity_domains: set[str] = set()
 
     for entity in component.entities:
         provider_info = {
@@ -1072,15 +1098,20 @@ def websocket_list_engines(
                 language, entity.supported_languages, country
             )
         providers.append(provider_info)
+        if entity.platform:
+            entity_domains.add(entity.platform.platform_name)
     for engine_id, provider in manager.providers.items():
         provider_info = {
             "engine_id": engine_id,
+            "name": provider.name,
             "supported_languages": provider.supported_languages,
         }
         if language:
             provider_info["supported_languages"] = language_util.matches(
                 language, provider.supported_languages, country
             )
+        if engine_id in entity_domains:
+            provider_info["deprecated"] = True
         providers.append(provider_info)
 
     connection.send_message(
@@ -1123,6 +1154,8 @@ def websocket_get_engine(
         "engine_id": engine_id,
         "supported_languages": provider.supported_languages,
     }
+    if isinstance(provider, Provider):
+        provider_info["name"] = provider.name
 
     connection.send_message(
         websocket_api.result_message(msg["id"], {"provider": provider_info})

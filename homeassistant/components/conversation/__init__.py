@@ -191,6 +191,18 @@ def async_get_agent_info(
     return None
 
 
+async def async_prepare_agent(
+    hass: HomeAssistant, agent_id: str | None, language: str
+) -> None:
+    """Prepare given agent."""
+    agent = async_get_agent(hass, agent_id)
+
+    if agent is None:
+        raise ValueError("Invalid agent specified")
+
+    await agent.async_prepare(language)
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Register the process service."""
     entity_component: EntityComponent[ConversationEntity] = EntityComponent(

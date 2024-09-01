@@ -1,6 +1,52 @@
 # serializer version: 1
 # name: test_diagnostics
   dict({
+    'coordinator_data': dict({
+      'state': dict({
+        'current_temperature': dict({
+          'data_type': 0,
+          'desc': '',
+          'name': 'Room temp 1 actual value',
+          'unit': '&deg;C',
+          'value': '18.6',
+        }),
+        'hvac_action': dict({
+          'data_type': 1,
+          'desc': 'Raumtemp’begrenzung',
+          'name': 'Status heating circuit 1',
+          'unit': '',
+          'value': '122',
+        }),
+        'hvac_mode': dict({
+          'data_type': 1,
+          'desc': 'Komfort',
+          'name': 'Operating mode',
+          'unit': '',
+          'value': 'heat',
+        }),
+        'hvac_mode2': dict({
+          'data_type': 1,
+          'desc': 'Reduziert',
+          'name': 'Operating mode',
+          'unit': '',
+          'value': '2',
+        }),
+        'room1_thermostat_mode': dict({
+          'data_type': 1,
+          'desc': 'Kein Bedarf',
+          'name': 'Raumthermostat 1',
+          'unit': '',
+          'value': '0',
+        }),
+        'target_temperature': dict({
+          'data_type': 0,
+          'desc': '',
+          'name': 'Room temperature Comfort setpoint',
+          'unit': '&deg;C',
+          'value': '18.5',
+        }),
+      }),
+    }),
     'device': dict({
       'MAC': '00:80:41:19:69:90',
       'name': 'BSB-LAN',
@@ -30,48 +76,20 @@
         'value': 'RVS21.831F/127',
       }),
     }),
-    'state': dict({
-      'current_temperature': dict({
+    'static': dict({
+      'max_temp': dict({
         'data_type': 0,
         'desc': '',
-        'name': 'Room temp 1 actual value',
+        'name': 'Summer/winter changeover temp heat circuit 1',
         'unit': '&deg;C',
-        'value': '18.6',
+        'value': '20.0',
       }),
-      'hvac_action': dict({
-        'data_type': 1,
-        'desc': 'Raumtemp’begrenzung',
-        'name': 'Status heating circuit 1',
-        'unit': '',
-        'value': '122',
-      }),
-      'hvac_mode': dict({
-        'data_type': 1,
-        'desc': 'Komfort',
-        'name': 'Operating mode',
-        'unit': '',
-        'value': 'heat',
-      }),
-      'hvac_mode2': dict({
-        'data_type': 1,
-        'desc': 'Reduziert',
-        'name': 'Operating mode',
-        'unit': '',
-        'value': '2',
-      }),
-      'room1_thermostat_mode': dict({
-        'data_type': 1,
-        'desc': 'Kein Bedarf',
-        'name': 'Raumthermostat 1',
-        'unit': '',
-        'value': '0',
-      }),
-      'target_temperature': dict({
+      'min_temp': dict({
         'data_type': 0,
         'desc': '',
-        'name': 'Room temperature Comfort setpoint',
+        'name': 'Room temp frost protection setpoint',
         'unit': '&deg;C',
-        'value': '18.5',
+        'value': '8.0',
       }),
     }),
   })

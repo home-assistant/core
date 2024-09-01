@@ -32,13 +32,7 @@ from homeassistant.components.recorder.queries import (
     get_migration_changes,
     select_event_type_ids,
 )
-from homeassistant.components.recorder.tasks import (
-    EntityIDMigrationTask,
-    EntityIDPostMigrationTask,
-    EventsContextIDMigrationTask,
-    EventTypeIDMigrationTask,
-    StatesContextIDMigrationTask,
-)
+from homeassistant.components.recorder.tasks import EntityIDPostMigrationTask
 from homeassistant.components.recorder.util import (
     execute_stmt_lambda_element,
     session_scope,
@@ -48,6 +42,7 @@ import homeassistant.util.dt as dt_util
 from homeassistant.util.ulid import bytes_to_ulid, ulid_at_time, ulid_to_bytes
 
 from .common import (
+    MockMigrationTask,
     async_attach_db_engine,
     async_recorder_block_till_done,
     async_wait_recording_done,
@@ -116,7 +111,7 @@ def db_schema_32():
         patch.object(core, "States", old_db_schema.States),
         patch.object(core, "Events", old_db_schema.Events),
         patch.object(core, "StateAttributes", old_db_schema.StateAttributes),
-        patch.object(migration.EntityIDMigration, "task", core.RecorderTask),
+        patch.object(migration.EntityIDMigration, "task", MockMigrationTask),
         patch(CREATE_ENGINE_TARGET, new=_create_engine_test),
     ):
         yield
@@ -229,7 +224,8 @@ async def test_migrate_events_context_ids(
 
     with freeze_time(now):
         # This is a threadsafe way to add a task to the recorder
-        recorder_mock.queue_task(EventsContextIDMigrationTask())
+        migrator = migration.EventsContextIDMigration(None, None)
+        recorder_mock.queue_task(migrator.task(migrator))
         await _async_wait_migration_done(hass)
 
     def _object_as_dict(obj):
@@ -419,7 +415,8 @@ async def test_migrate_states_context_ids(
     await recorder_mock.async_add_executor_job(_insert_states)
 
     await async_wait_recording_done(hass)
-    recorder_mock.queue_task(StatesContextIDMigrationTask())
+    migrator = migration.StatesContextIDMigration(None, None)
+    recorder_mock.queue_task(migrator.task(migrator))
     await _async_wait_migration_done(hass)
 
     def _object_as_dict(obj):
@@ -567,7 +564,8 @@ async def test_migrate_event_type_ids(
 
     await async_wait_recording_done(hass)
     # This is a threadsafe way to add a task to the recorder
-    recorder_mock.queue_task(EventTypeIDMigrationTask())
+    migrator = migration.EventTypeIDMigration(None, None)
+    recorder_mock.queue_task(migrator.task(migrator))
     await _async_wait_migration_done(hass)
 
     def _fetch_migrated_events():
@@ -655,7 +653,8 @@ async def test_migrate_entity_ids(hass: HomeAssistant, recorder_mock: Recorder) 
 
     await _async_wait_migration_done(hass)
     # This is a threadsafe way to add a task to the recorder
-    recorder_mock.queue_task(EntityIDMigrationTask())
+    migrator = migration.EntityIDMigration(None, None)
+    recorder_mock.queue_task(migration.CommitBeforeMigrationTask(migrator))
     await _async_wait_migration_done(hass)
 
     def _fetch_migrated_states():
@@ -788,7 +787,8 @@ async def test_migrate_null_entity_ids(
 
     await _async_wait_migration_done(hass)
     # This is a threadsafe way to add a task to the recorder
-    recorder_mock.queue_task(EntityIDMigrationTask())
+    migrator = migration.EntityIDMigration(None, None)
+    recorder_mock.queue_task(migration.CommitBeforeMigrationTask(migrator))
     await _async_wait_migration_done(hass)
 
     def _fetch_migrated_states():
@@ -870,7 +870,8 @@ async def test_migrate_null_event_type_ids(
 
     await _async_wait_migration_done(hass)
     # This is a threadsafe way to add a task to the recorder
-    recorder_mock.queue_task(EventTypeIDMigrationTask())
+    migrator = migration.EventTypeIDMigration(None, None)
+    recorder_mock.queue_task(migrator.task(migrator))
     await _async_wait_migration_done(hass)
 
     def _fetch_migrated_events():
@@ -949,7 +950,7 @@ async def test_stats_timestamp_conversion_is_reentrant(
                 )
             )
 
-    def _insert_pre_timestamp_stat(date_time: datetime) -> None:
+    def _insert_pre_timestamp_stat(date_time: datetime.datetime) -> None:
         with session_scope(hass=hass) as session:
             session.add(
                 old_db_schema.StatisticsShortTerm(
@@ -964,7 +965,7 @@ async def test_stats_timestamp_conversion_is_reentrant(
                 )
             )
 
-    def _insert_post_timestamp_stat(date_time: datetime) -> None:
+    def _insert_post_timestamp_stat(date_time: datetime.datetime) -> None:
         with session_scope(hass=hass) as session:
             session.add(
                 db_schema.StatisticsShortTerm(
@@ -1106,7 +1107,7 @@ async def test_stats_timestamp_with_one_by_one(
                 )
             )
 
-    def _insert_pre_timestamp_stat(date_time: datetime) -> None:
+    def _insert_pre_timestamp_stat(date_time: datetime.datetime) -> None:
         with session_scope(hass=hass) as session:
             session.add_all(
                 (
@@ -1133,7 +1134,7 @@ async def test_stats_timestamp_with_one_by_one(
                 )
             )
 
-    def _insert_post_timestamp_stat(date_time: datetime) -> None:
+    def _insert_post_timestamp_stat(date_time: datetime.datetime) -> None:
         with session_scope(hass=hass) as session:
             session.add_all(
                 (
@@ -1332,7 +1333,7 @@ async def test_stats_timestamp_with_one_by_one_removes_duplicates(
                 )
             )
 
-    def _insert_pre_timestamp_stat(date_time: datetime) -> None:
+    def _insert_pre_timestamp_stat(date_time: datetime.datetime) -> None:
         with session_scope(hass=hass) as session:
             session.add_all(
                 (
@@ -1359,7 +1360,7 @@ async def test_stats_timestamp_with_one_by_one_removes_duplicates(
                 )
             )
 
-    def _insert_post_timestamp_stat(date_time: datetime) -> None:
+    def _insert_post_timestamp_stat(date_time: datetime.datetime) -> None:
         with session_scope(hass=hass) as session:
             session.add_all(
                 (

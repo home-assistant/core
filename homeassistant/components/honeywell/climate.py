@@ -42,6 +42,7 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.util.unit_conversion import TemperatureConverter
 
 from . import HoneywellData
 from .const import (
@@ -259,7 +260,9 @@ class HoneywellUSThermostat(ClimateEntity):
                     self._device.raw_ui_data["HeatLowerSetptLimit"],
                 ]
             )
-        return DEFAULT_MIN_TEMP
+        return TemperatureConverter.convert(
+            DEFAULT_MIN_TEMP, UnitOfTemperature.CELSIUS, self.temperature_unit
+        )
 
     @property
     def max_temp(self) -> float:
@@ -275,7 +278,9 @@ class HoneywellUSThermostat(ClimateEntity):
                     self._device.raw_ui_data["HeatUpperSetptLimit"],
                 ]
             )
-        return DEFAULT_MAX_TEMP
+        return TemperatureConverter.convert(
+            DEFAULT_MAX_TEMP, UnitOfTemperature.CELSIUS, self.temperature_unit
+        )
 
     @property
     def current_humidity(self) -> int | None:

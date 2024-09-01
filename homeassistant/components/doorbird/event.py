@@ -7,14 +7,14 @@ from homeassistant.components.event import (
     EventEntity,
     EventEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .device import DoorbirdEvent
 from .entity import DoorBirdEntity
-from .models import DoorBirdData
+from .models import DoorBirdConfigEntry, DoorBirdData
 
 EVENT_DESCRIPTIONS = {
     "doorbell": EventEntityDescription(
@@ -34,12 +34,11 @@ EVENT_DESCRIPTIONS = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: DoorBirdConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the DoorBird event platform."""
-    config_entry_id = config_entry.entry_id
-    door_bird_data: DoorBirdData = hass.data[DOMAIN][config_entry_id]
+    door_bird_data = config_entry.runtime_data
     async_add_entities(
         DoorBirdEventEntity(door_bird_data, doorbird_event, description)
         for doorbird_event in door_bird_data.door_station.event_descriptions
@@ -48,7 +47,7 @@ async def async_setup_entry(
 
 
 class DoorBirdEventEntity(DoorBirdEntity, EventEntity):
-    """A relay in a DoorBird device."""
+    """A doorbird event entity."""
 
     entity_description: EventEntityDescription
     _attr_has_entity_name = True
@@ -72,14 +71,15 @@ class DoorBirdEventEntity(DoorBirdEntity, EventEntity):
     async def async_added_to_hass(self) -> None:
         """Subscribe to device events."""
         self.async_on_remove(
-            self.hass.bus.async_listen(
+            async_dispatcher_connect(
+                self.hass,
                 f"{DOMAIN}_{self._doorbird_event.event}",
                 self._async_handle_event,
             )
         )
 
     @callback
-    def _async_handle_event(self, event: Event) -> None:
+    def _async_handle_event(self) -> None:
         """Handle a device event."""
         event_types = self.entity_description.event_types
         if TYPE_CHECKING:

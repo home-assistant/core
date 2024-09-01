@@ -14,11 +14,6 @@ DHCP: Final[list[dict[str, str | bool]]] = [
     },
     {
         "domain": "august",
-        "hostname": "yale-connect-plus",
-        "macaddress": "00177A*",
-    },
-    {
-        "domain": "august",
         "hostname": "connect",
         "macaddress": "D86162*",
     },
@@ -827,7 +822,7 @@ DHCP: Final[list[dict[str, str | bool]]] = [
     },
     {
         "domain": "tplink",
-        "hostname": "l5*",
+        "hostname": "l[59]*",
         "macaddress": "5CE931*",
     },
     {
@@ -837,8 +832,13 @@ DHCP: Final[list[dict[str, str | bool]]] = [
     },
     {
         "domain": "tplink",
-        "hostname": "l5*",
+        "hostname": "l[59]*",
         "macaddress": "5C628B*",
+    },
+    {
+        "domain": "tplink",
+        "hostname": "l[59]*",
+        "macaddress": "14EBB6*",
     },
     {
         "domain": "tplink",
@@ -1088,6 +1088,11 @@ DHCP: Final[list[dict[str, str | bool]]] = [
     {
         "domain": "wiz",
         "hostname": "wiz_*",
+    },
+    {
+        "domain": "yale",
+        "hostname": "yale-connect-plus",
+        "macaddress": "00177A*",
     },
     {
         "domain": "yeelight",

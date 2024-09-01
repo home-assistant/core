@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, patch
 from pushover_complete import BadAPIRequestError
 import pytest
 import requests_mock
+from urllib3.exceptions import MaxRetryError
 
 from homeassistant.components.pushover.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -90,6 +91,21 @@ async def test_async_setup_entry_failed_json_error(
     requests_mock.post(
         "https://api.pushover.net/1/users/validate.json", status_code=204
     )
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_async_setup_entry_failed_urrlib3_error(
+    hass: HomeAssistant, mock_pushover: MagicMock
+) -> None:
+    """Test pushover failed setup due to conn error."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_CONFIG,
+    )
+    entry.add_to_hass(hass)
+    mock_pushover.side_effect = MaxRetryError(MagicMock(), MagicMock())
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
     assert entry.state is ConfigEntryState.SETUP_RETRY

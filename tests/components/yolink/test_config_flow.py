@@ -172,15 +172,7 @@ async def test_reauthentication(
     )
     old_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "unique_id": old_entry.unique_id,
-            "entry_id": old_entry.entry_id,
-        },
-        data=old_entry.data,
-    )
+    result = await old_entry.start_reauth_flow(hass)
 
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1

@@ -107,13 +107,6 @@ class FeedReaderConfigFlow(ConfigFlow, domain=DOMAIN):
                     return self.abort_on_import_error(user_input[CONF_URL], "url_error")
                 return self.show_user_form(user_input, {"base": "url_error"})
 
-        if not feed.entries:
-            if self.context["source"] == SOURCE_IMPORT:
-                return self.abort_on_import_error(
-                    user_input[CONF_URL], "no_feed_entries"
-                )
-            return self.show_user_form(user_input, {"base": "no_feed_entries"})
-
         feed_title = feed["feed"]["title"]
 
         return self.async_create_entry(
@@ -122,10 +115,10 @@ class FeedReaderConfigFlow(ConfigFlow, domain=DOMAIN):
             options={CONF_MAX_ENTRIES: self._max_entries or DEFAULT_MAX_ENTRIES},
         )
 
-    async def async_step_import(self, user_input: dict[str, Any]) -> ConfigFlowResult:
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Handle an import flow."""
-        self._max_entries = user_input[CONF_MAX_ENTRIES]
-        return await self.async_step_user({CONF_URL: user_input[CONF_URL]})
+        self._max_entries = import_data[CONF_MAX_ENTRIES]
+        return await self.async_step_user({CONF_URL: import_data[CONF_URL]})
 
     async def async_step_reconfigure(
         self, _: dict[str, Any] | None = None
@@ -161,13 +154,6 @@ class FeedReaderConfigFlow(ConfigFlow, domain=DOMAIN):
                     step_id="reconfigure_confirm",
                     errors={"base": "url_error"},
                 )
-        if not feed.entries:
-            return self.show_user_form(
-                user_input=user_input,
-                description_placeholders={"name": self._config_entry.title},
-                step_id="reconfigure_confirm",
-                errors={"base": "no_feed_entries"},
-            )
 
         self.hass.config_entries.async_update_entry(self._config_entry, data=user_input)
         return self.async_abort(reason="reconfigure_successful")

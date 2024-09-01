@@ -197,9 +197,9 @@ class ESPHomeManager:
         if service.data_template:
             try:
                 data_template = {
-                    key: Template(value) for key, value in service.data_template.items()
+                    key: Template(value, hass)
+                    for key, value in service.data_template.items()
                 }
-                template.attach(hass, data_template)
                 service_data.update(
                     template.render_complex(data_template, service.variables)
                 )
@@ -329,6 +329,15 @@ class ESPHomeManager:
             entity_id, attribute, hass.states.get(entity_id)
         )
 
+    @callback
+    def async_on_state_request(
+        self, entity_id: str, attribute: str | None = None
+    ) -> None:
+        """Forward state for requested entity."""
+        self._send_home_assistant_state(
+            entity_id, attribute, self.hass.states.get(entity_id)
+        )
+
     def _handle_pipeline_finished(self) -> None:
         self.entry_data.async_set_assist_pipeline_state(False)
 
@@ -346,7 +355,7 @@ class ESPHomeManager:
     ) -> int | None:
         """Start a voice assistant pipeline."""
         if self.voice_assistant_pipeline is not None:
-            _LOGGER.warning("Voice assistant UDP server was not stopped")
+            _LOGGER.warning("Previous Voice assistant pipeline was not stopped")
             self.voice_assistant_pipeline.stop()
             self.voice_assistant_pipeline = None
 
@@ -526,7 +535,10 @@ class ESPHomeManager:
 
         cli.subscribe_states(entry_data.async_update_state)
         cli.subscribe_service_calls(self.async_on_service_call)
-        cli.subscribe_home_assistant_states(self.async_on_state_subscription)
+        cli.subscribe_home_assistant_states(
+            self.async_on_state_subscription,
+            self.async_on_state_request,
+        )
 
         entry_data.async_save_to_store()
         _async_check_firmware_version(hass, device_info, api_version)
@@ -654,12 +666,13 @@ def _async_setup_device_registry(
     if device_info.manufacturer:
         manufacturer = device_info.manufacturer
     model = device_info.model
-    hw_version = None
     if device_info.project_name:
         project_name = device_info.project_name.split(".")
         manufacturer = project_name[0]
         model = project_name[1]
-        hw_version = device_info.project_version
+        sw_version = (
+            f"{device_info.project_version} (ESPHome {device_info.esphome_version})"
+        )
 
     suggested_area = None
     if device_info.suggested_area:
@@ -674,7 +687,6 @@ def _async_setup_device_registry(
         manufacturer=manufacturer,
         model=model,
         sw_version=sw_version,
-        hw_version=hw_version,
         suggested_area=suggested_area,
     )
     return device_entry.id

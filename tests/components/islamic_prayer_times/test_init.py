@@ -6,8 +6,7 @@ from unittest.mock import patch
 from freezegun import freeze_time
 import pytest
 
-from homeassistant.components import islamic_prayer_times
-from homeassistant.components.islamic_prayer_times.const import CONF_CALC_METHOD
+from homeassistant.components.islamic_prayer_times.const import CONF_CALC_METHOD, DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
@@ -30,7 +29,7 @@ async def test_successful_config_entry(hass: HomeAssistant) -> None:
     """Test that Islamic Prayer Times is configured successfully."""
 
     entry = MockConfigEntry(
-        domain=islamic_prayer_times.DOMAIN,
+        domain=DOMAIN,
         data={},
     )
     entry.add_to_hass(hass)
@@ -48,7 +47,7 @@ async def test_successful_config_entry(hass: HomeAssistant) -> None:
 async def test_unload_entry(hass: HomeAssistant) -> None:
     """Test removing Islamic Prayer Times."""
     entry = MockConfigEntry(
-        domain=islamic_prayer_times.DOMAIN,
+        domain=DOMAIN,
         data={},
     )
     entry.add_to_hass(hass)
@@ -66,7 +65,7 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
 
 async def test_options_listener(hass: HomeAssistant) -> None:
     """Ensure updating options triggers a coordinator refresh."""
-    entry = MockConfigEntry(domain=islamic_prayer_times.DOMAIN, data={})
+    entry = MockConfigEntry(domain=DOMAIN, data={})
     entry.add_to_hass(hass)
 
     with (
@@ -110,13 +109,13 @@ async def test_migrate_unique_id(
     old_unique_id: str,
 ) -> None:
     """Test unique id migration."""
-    entry = MockConfigEntry(domain=islamic_prayer_times.DOMAIN, data={})
+    entry = MockConfigEntry(domain=DOMAIN, data={})
     entry.add_to_hass(hass)
 
     entity: er.RegistryEntry = entity_registry.async_get_or_create(
         suggested_object_id=object_id,
         domain=SENSOR_DOMAIN,
-        platform=islamic_prayer_times.DOMAIN,
+        platform=DOMAIN,
         unique_id=old_unique_id,
         config_entry=entry,
     )
@@ -140,7 +139,7 @@ async def test_migrate_unique_id(
 async def test_migration_from_1_1_to_1_2(hass: HomeAssistant) -> None:
     """Test migrating from version 1.1 to 1.2."""
     entry = MockConfigEntry(
-        domain=islamic_prayer_times.DOMAIN,
+        domain=DOMAIN,
         data={},
     )
     entry.add_to_hass(hass)
@@ -164,7 +163,7 @@ async def test_migration_from_1_1_to_1_2(hass: HomeAssistant) -> None:
 
 async def test_update_scheduling(hass: HomeAssistant) -> None:
     """Test that integration schedules update immediately after Islamic midnight."""
-    entry = MockConfigEntry(domain=islamic_prayer_times.DOMAIN, data={})
+    entry = MockConfigEntry(domain=DOMAIN, data={})
     entry.add_to_hass(hass)
 
     with (
