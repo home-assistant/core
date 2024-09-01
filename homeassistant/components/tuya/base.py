@@ -122,9 +122,6 @@ class ElectricityTypeData:
     def from_raw(cls, data: str) -> Self:
         """Decode base64 string and return a ElectricityTypeData object."""
         raw = base64.b64decode(data)
-        voltage = 0.0
-        electriccurrent = 0.0
-        power = 0.0
         if len(raw) < 8:
             return cls(electriccurrent=None, power=None, voltage=None)
         voltage = struct.unpack(">H", raw[0:2])[0] / 10.0
