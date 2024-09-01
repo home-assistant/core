@@ -1,11 +1,10 @@
 """Test the Google Photos config flow."""
 
 from collections.abc import Generator
+import http
 from typing import Any
 from unittest.mock import Mock, patch
 
-from googleapiclient.errors import HttpError
-from httplib2 import Response
 import pytest
 
 from homeassistant import config_entries
@@ -20,7 +19,7 @@ from homeassistant.helpers import config_entry_oauth2_flow
 
 from .conftest import EXPIRES_IN, FAKE_ACCESS_TOKEN, FAKE_REFRESH_TOKEN, USER_IDENTIFIER
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator
 
@@ -126,11 +125,17 @@ async def test_full_flow(
 @pytest.mark.usefixtures(
     "current_request_with_host",
     "setup_credentials",
+    "setup_api",
+)
+@pytest.mark.parametrize(
+    ("fixture_name", "api_http_status"),
+    [
+        ("api_not_enabled_response.json", http.HTTPStatus.FORBIDDEN),
+    ],
 )
 async def test_api_not_enabled(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
-    setup_api: Mock,
 ) -> None:
     """Check flow aborts if api is not enabled."""
     result = await hass.config_entries.flow.async_init(
@@ -160,11 +165,6 @@ async def test_api_not_enabled(
     assert resp.status == 200
     assert resp.headers["content-type"] == "text/html; charset=utf-8"
 
-    setup_api.return_value.mediaItems.return_value.list = Mock()
-    setup_api.return_value.mediaItems.return_value.list.return_value.execute.side_effect = HttpError(
-        Response({"status": "403"}),
-        bytes(load_fixture("google_photos/api_not_enabled_response.json"), "utf-8"),
-    )
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert result["type"] is FlowResultType.ABORT
@@ -207,7 +207,7 @@ async def test_general_exception(
     assert resp.headers["content-type"] == "text/html; charset=utf-8"
 
     with patch(
-        "homeassistant.components.google_photos.api.build",
+        "homeassistant.components.google_photos.config_flow.GooglePhotosLibraryApi.list_media_items",
         side_effect=Exception,
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"])

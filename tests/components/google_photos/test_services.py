@@ -3,15 +3,14 @@
 import http
 from unittest.mock import Mock, patch
 
-from googleapiclient.errors import HttpError
-from httplib2 import Response
 import pytest
 
-from homeassistant.components.google_photos.api import UPLOAD_API
 from homeassistant.components.google_photos.const import DOMAIN, READ_SCOPES
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+
+from .conftest import CREATE_MEDIA_ITEMS_URL, UPLOADS_URL
 
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -22,24 +21,27 @@ async def test_upload_service(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     aioclient_mock: AiohttpClientMocker,
-    setup_api: Mock,
 ) -> None:
     """Test service call to upload content."""
     assert hass.services.has_service(DOMAIN, "upload")
 
-    aioclient_mock.post(UPLOAD_API, text="some-upload-token")
-    setup_api.return_value.mediaItems.return_value.batchCreate.return_value.execute.return_value = {
-        "newMediaItemResults": [
-            {
-                "status": {
-                    "code": 200,
-                },
-                "mediaItem": {
-                    "id": "new-media-item-id-1",
-                },
-            }
-        ]
-    }
+    aioclient_mock.post(UPLOADS_URL, text="some-upload-token")
+    aioclient_mock.post(
+        CREATE_MEDIA_ITEMS_URL,
+        json={
+            "newMediaItemResults": [
+                {
+                    "uploadToken": "some-upload-token",
+                    "status": {
+                        "code": 200,
+                    },
+                    "mediaItem": {
+                        "id": "new-media-item-id-1",
+                    },
+                }
+            ]
+        },
+    )
 
     with (
         patch(
@@ -162,7 +164,7 @@ async def test_upload_service_upload_content_failure(
 ) -> None:
     """Test service call to upload content."""
 
-    aioclient_mock.post(UPLOAD_API, status=http.HTTPStatus.SERVICE_UNAVAILABLE)
+    aioclient_mock.post(UPLOADS_URL, status=http.HTTPStatus.SERVICE_UNAVAILABLE)
 
     with (
         patch(
@@ -193,14 +195,11 @@ async def test_upload_service_fails_create(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     aioclient_mock: AiohttpClientMocker,
-    setup_api: Mock,
 ) -> None:
     """Test service call to upload content."""
 
-    aioclient_mock.post(UPLOAD_API, text="some-upload-token")
-    setup_api.return_value.mediaItems.return_value.batchCreate.return_value.execute.side_effect = HttpError(
-        Response({"status": "403"}), b""
-    )
+    aioclient_mock.post(UPLOADS_URL, text="some-upload-token")
+    aioclient_mock.post(CREATE_MEDIA_ITEMS_URL, status=http.HTTPStatus.FORBIDDEN)
 
     with (
         patch(

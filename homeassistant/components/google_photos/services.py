@@ -6,9 +6,10 @@ import asyncio
 import mimetypes
 from pathlib import Path
 
+from google_photos_library_api.exceptions import GooglePhotosApiError
+from google_photos_library_api.model import NewMediaItem, SimpleMediaItem
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_FILENAME
 from homeassistant.core import (
     HomeAssistant,
@@ -19,14 +20,8 @@ from homeassistant.core import (
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 
-from . import api
 from .const import DOMAIN, UPLOAD_SCOPE
-
-type GooglePhotosConfigEntry = ConfigEntry[api.AsyncConfigEntryAuth]
-
-__all__ = [
-    "DOMAIN",
-]
+from .types import GooglePhotosConfigEntry
 
 CONF_CONFIG_ENTRY_ID = "config_entry_id"
 
@@ -98,11 +93,38 @@ def async_register_services(hass: HomeAssistant) -> None:
         )
         for mime_type, content in file_results:
             upload_tasks.append(client_api.upload_content(content, mime_type))
-        upload_tokens = await asyncio.gather(*upload_tasks)
-        media_ids = await client_api.create_media_items(upload_tokens)
+        try:
+            upload_results = await asyncio.gather(*upload_tasks)
+        except GooglePhotosApiError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="upload_error",
+                translation_placeholders={"message": str(err)},
+            ) from err
+        try:
+            upload_result = await client_api.create_media_items(
+                [
+                    NewMediaItem(
+                        SimpleMediaItem(upload_token=upload_result.upload_token)
+                    )
+                    for upload_result in upload_results
+                ]
+            )
+        except GooglePhotosApiError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="api_error",
+                translation_placeholders={"message": str(err)},
+            ) from err
         if call.return_response:
             return {
-                "media_items": [{"media_item_id": media_id for media_id in media_ids}]
+                "media_items": [
+                    {
+                        "media_item_id": item_result.media_item.id
+                        for item_result in upload_result.new_media_item_results
+                        if item_result.media_item and item_result.media_item.id
+                    }
+                ]
             }
         return None
 
