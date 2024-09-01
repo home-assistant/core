@@ -15,7 +15,7 @@ import tomllib
 from typing import Any
 
 from homeassistant.util.yaml.loader import load_yaml
-from script.hassfest.model import Integration
+from script.hassfest.model import Config, Integration
 
 # Requirements which can't be installed on all systems because they rely on additional
 # system packages. Requirements listed in EXCLUDED_REQUIREMENTS_ALL will be commented-out
@@ -130,12 +130,6 @@ hyperframe>=5.2.0
 # Ensure we run compatible with musllinux build env
 numpy==1.26.0
 
-# Prevent dependency conflicts between sisyphus-control and aioambient
-# until upper bounds for sisyphus-control have been updated
-# https://github.com/jkeljo/sisyphus-control/issues/6
-python-engineio>=3.13.1,<4.0
-python-socketio>=4.6.0,<5.0
-
 # Constrain multidict to avoid typing issues
 # https://github.com/home-assistant/core/pull/67046
 multidict>=6.0.2
@@ -178,9 +172,6 @@ websockets>=11.0.1
 # pysnmplib is no longer maintained and does not work with newer
 # python
 pysnmplib==1000000000.0.0
-# pysnmp is no longer maintained and does not work with newer
-# python
-pysnmp==1000000000.0.0
 
 # The get-mac package has been replaced with getmac. Installing get-mac alongside getmac
 # breaks getmac due to them both sharing the same python package name inside 'getmac'.
@@ -279,7 +270,9 @@ def gather_recursive_requirements(
         seen = set()
 
     seen.add(domain)
-    integration = Integration(Path(f"homeassistant/components/{domain}"))
+    integration = Integration(
+        Path(f"homeassistant/components/{domain}"), _get_hassfest_config()
+    )
     integration.load_manifest()
     reqs = {x for x in integration.requirements if x not in CONSTRAINT_BASE}
     for dep_domain in integration.dependencies:
@@ -345,7 +338,8 @@ def gather_requirements_from_manifests(
     errors: list[str], reqs: dict[str, list[str]]
 ) -> None:
     """Gather all of the requirements from manifests."""
-    integrations = Integration.load_dir(Path("homeassistant/components"))
+    config = _get_hassfest_config()
+    integrations = Integration.load_dir(config.core_integrations_path, config)
     for domain in sorted(integrations):
         integration = integrations[domain]
 
@@ -591,6 +585,17 @@ def main(validate: bool, ci: bool) -> int:
         Path(filename).write_text(content)
 
     return 0
+
+
+def _get_hassfest_config() -> Config:
+    """Get hassfest config."""
+    return Config(
+        root=Path(".").absolute(),
+        specific_integrations=None,
+        action="validate",
+        requirements=True,
+        core_integrations_path=Path("homeassistant/components"),
+    )
 
 
 if __name__ == "__main__":

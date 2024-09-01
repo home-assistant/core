@@ -10,7 +10,7 @@ from bring_api.exceptions import (
 import pytest
 
 from homeassistant.components.bring.const import DOMAIN
-from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -123,15 +123,7 @@ async def test_flow_reauth(
 
     bring_config_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": SOURCE_REAUTH,
-            "entry_id": bring_config_entry.entry_id,
-            "unique_id": bring_config_entry.unique_id,
-        },
-    )
-
+    result = await bring_config_entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
@@ -171,15 +163,7 @@ async def test_flow_reauth_error_and_recover(
 
     bring_config_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": SOURCE_REAUTH,
-            "entry_id": bring_config_entry.entry_id,
-            "unique_id": bring_config_entry.unique_id,
-        },
-    )
-
+    result = await bring_config_entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 

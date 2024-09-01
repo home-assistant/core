@@ -1,10 +1,10 @@
 """Test the Reolink config flow."""
 
-from datetime import timedelta
 import json
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, call
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from reolink_aio.exceptions import ApiError, CredentialsInvalidError, ReolinkError
 
@@ -25,7 +25,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.device_registry import format_mac
-from homeassistant.util.dt import utcnow
 
 from .conftest import (
     DHCP_FORMATTED_MAC,
@@ -95,6 +94,8 @@ async def test_config_flow_errors(
 
     reolink_connect.is_admin = False
     reolink_connect.user_level = "guest"
+    reolink_connect.unsubscribe.side_effect = ReolinkError("Test error")
+    reolink_connect.logout.side_effect = ReolinkError("Test error")
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
@@ -328,16 +329,7 @@ async def test_reauth(hass: HomeAssistant, mock_setup_entry: MagicMock) -> None:
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    result = await hass.config_entries.flow.async_init(
-        const.DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": config_entry.entry_id,
-            "title_placeholders": {"name": TEST_NVR_NAME},
-            "unique_id": format_mac(TEST_MAC),
-        },
-        data=config_entry.data,
-    )
+    result = await config_entry.start_reauth_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
@@ -439,6 +431,7 @@ async def test_dhcp_flow(hass: HomeAssistant, mock_setup_entry: MagicMock) -> No
 )
 async def test_dhcp_ip_update(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     reolink_connect_class: MagicMock,
     reolink_connect: MagicMock,
     last_update_success: bool,
@@ -471,10 +464,9 @@ async def test_dhcp_ip_update(
 
     if not last_update_success:
         # ensure the last_update_succes is False for the device_coordinator.
-        reolink_connect.get_states = AsyncMock(side_effect=ReolinkError("Test error"))
-        async_fire_time_changed(
-            hass, utcnow() + DEVICE_UPDATE_INTERVAL + timedelta(minutes=1)
-        )
+        reolink_connect.get_states.side_effect = ReolinkError("Test error")
+        freezer.tick(DEVICE_UPDATE_INTERVAL)
+        async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
     dhcp_data = dhcp.DhcpServiceInfo(

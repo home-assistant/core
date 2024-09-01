@@ -16,7 +16,7 @@ from homeassistant.components.tesla_fleet.const import (
     SCOPES,
     TOKEN_URL,
 )
-from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
@@ -57,7 +57,7 @@ async def test_full_flow(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    access_token,
+    access_token: str,
 ) -> None:
     """Check full flow."""
     result = await hass.config_entries.flow.async_init(
@@ -121,7 +121,7 @@ async def test_full_flow_user_cred(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    access_token,
+    access_token: str,
 ) -> None:
     """Check full flow."""
 
@@ -200,7 +200,7 @@ async def test_reauthentication(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    access_token,
+    access_token: str,
 ) -> None:
     """Test Tesla Fleet reauthentication."""
     old_entry = MockConfigEntry(
@@ -211,15 +211,7 @@ async def test_reauthentication(
     )
     old_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": SOURCE_REAUTH,
-            "unique_id": old_entry.unique_id,
-            "entry_id": old_entry.entry_id,
-        },
-        data=old_entry.data,
-    )
+    result = await old_entry.start_reauth_flow(hass)
 
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
@@ -261,21 +253,13 @@ async def test_reauth_account_mismatch(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    access_token,
+    access_token: str,
 ) -> None:
     """Test Tesla Fleet reauthentication with different account."""
     old_entry = MockConfigEntry(domain=DOMAIN, unique_id="baduid", version=1, data={})
     old_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": SOURCE_REAUTH,
-            "unique_id": old_entry.unique_id,
-            "entry_id": old_entry.entry_id,
-        },
-        data=old_entry.data,
-    )
+    result = await old_entry.start_reauth_flow(hass)
 
     flows = hass.config_entries.flow.async_progress()
     result = await hass.config_entries.flow.async_configure(flows[0]["flow_id"], {})
