@@ -3,7 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
-from pyblu import Status, SyncStatus
+from pyblu import Player, Status, SyncStatus
 import pytest
 
 from homeassistant.components.bluesound.const import DOMAIN
@@ -11,6 +11,7 @@ from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
+from tests.components.bluesound.utils import mock_long_poll
 
 
 @pytest.fixture
@@ -78,7 +79,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
+def config_entry(hass: HomeAssistant) -> MockConfigEntry:
     """Return a mocked config entry."""
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -94,7 +95,16 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_player(status: Status) -> Generator[AsyncMock]:
+async def setup_platform(
+    hass: HomeAssistant, config_entry: MockConfigEntry, player: Player
+) -> None:
+    """Set up the platform."""
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+
+@pytest.fixture
+def player(status: Status, sync_status: SyncStatus) -> Generator[AsyncMock, None, None]:
     """Mock the player."""
     with (
         patch(
@@ -107,26 +117,7 @@ def mock_player(status: Status) -> Generator[AsyncMock]:
     ):
         player = mock_player.return_value
         player.__aenter__.return_value = player
-        player.status.return_value = status
-        player.sync_status.return_value = SyncStatus(
-            etag="etag",
-            id="1.1.1.1:11000",
-            mac="00:11:22:33:44:55",
-            name="player-name",
-            image="invalid_url",
-            initialized=True,
-            brand="brand",
-            model="model",
-            model_name="model-name",
-            volume_db=0.5,
-            volume=50,
-            group=None,
-            master=None,
-            slaves=None,
-            zone=None,
-            zone_master=None,
-            zone_slave=None,
-            mute_volume_db=None,
-            mute_volume=None,
-        )
+
+        player.status.side_effect = mock_long_poll(status)
+        player.sync_status.side_effect = mock_long_poll(sync_status)
         yield player

@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock
 
+from pyblu import SyncStatus
 from pyblu.errors import PlayerUnreachableError
 
 from homeassistant.components.bluesound.const import DOMAIN
@@ -12,10 +13,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
+from tests.components.bluesound.utils import mock_long_poll
 
 
 async def test_user_flow_success(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_player: AsyncMock
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, player: AsyncMock
 ) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
@@ -41,7 +43,7 @@ async def test_user_flow_success(
 
 
 async def test_user_flow_cannot_connect(
-    hass: HomeAssistant, mock_player: AsyncMock, mock_setup_entry: AsyncMock
+    hass: HomeAssistant, player: AsyncMock, mock_setup_entry: AsyncMock, sync_status: SyncStatus
 ) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
@@ -49,7 +51,7 @@ async def test_user_flow_cannot_connect(
         context={"source": SOURCE_USER},
     )
 
-    mock_player.sync_status.side_effect = PlayerUnreachableError("Player not reachable")
+    player.sync_status.side_effect = PlayerUnreachableError("Player not reachable")
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
@@ -61,7 +63,7 @@ async def test_user_flow_cannot_connect(
     assert result["errors"] == {"base": "cannot_connect"}
     assert result["step_id"] == "user"
 
-    mock_player.sync_status.side_effect = None
+    player.sync_status.side_effect = mock_long_poll(sync_status)
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
@@ -81,8 +83,8 @@ async def test_user_flow_cannot_connect(
 
 async def test_user_flow_aleady_configured(
     hass: HomeAssistant,
-    mock_player: AsyncMock,
-    mock_config_entry: MockConfigEntry,
+    player: AsyncMock,
+    config_entry: MockConfigEntry,
 ) -> None:
     """Test we handle already configured."""
     result = await hass.config_entries.flow.async_init(
@@ -101,13 +103,13 @@ async def test_user_flow_aleady_configured(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
-    assert mock_config_entry.data[CONF_HOST] == "1.1.1.1"
+    assert config_entry.data[CONF_HOST] == "1.1.1.1"
 
-    mock_player.sync_status.assert_called_once()
+    player.sync_status.assert_called_once()
 
 
 async def test_import_flow_success(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_player: AsyncMock
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, player: AsyncMock
 ) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
@@ -122,14 +124,14 @@ async def test_import_flow_success(
     assert result["result"].unique_id == "00:11:22:33:44:55-11000"
 
     mock_setup_entry.assert_called_once()
-    mock_player.sync_status.assert_called_once()
+    player.sync_status.assert_called_once()
 
 
 async def test_import_flow_cannot_connect(
-    hass: HomeAssistant, mock_player: AsyncMock
+    hass: HomeAssistant, player: AsyncMock
 ) -> None:
     """Test we handle cannot connect error."""
-    mock_player.sync_status.side_effect = PlayerUnreachableError("Player not reachable")
+    player.sync_status.side_effect = PlayerUnreachableError("Player not reachable")
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_IMPORT},
@@ -139,13 +141,13 @@ async def test_import_flow_cannot_connect(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
 
-    mock_player.sync_status.assert_called_once()
+    player.sync_status.assert_called_once()
 
 
 async def test_import_flow_already_configured(
     hass: HomeAssistant,
-    mock_player: AsyncMock,
-    mock_config_entry: MockConfigEntry,
+    player: AsyncMock,
+    config_entry: MockConfigEntry,
 ) -> None:
     """Test we handle already configured."""
     result = await hass.config_entries.flow.async_init(
@@ -157,11 +159,11 @@ async def test_import_flow_already_configured(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
-    mock_player.sync_status.assert_called_once()
+    player.sync_status.assert_called_once()
 
 
 async def test_zeroconf_flow_success(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_player: AsyncMock
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, player: AsyncMock
 ) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
@@ -182,7 +184,7 @@ async def test_zeroconf_flow_success(
     assert result["step_id"] == "confirm"
 
     mock_setup_entry.assert_not_called()
-    mock_player.sync_status.assert_called_once()
+    player.sync_status.assert_called_once()
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={}
@@ -197,10 +199,10 @@ async def test_zeroconf_flow_success(
 
 
 async def test_zeroconf_flow_cannot_connect(
-    hass: HomeAssistant, mock_player: AsyncMock
+    hass: HomeAssistant, player: AsyncMock
 ) -> None:
     """Test we handle cannot connect error."""
-    mock_player.sync_status.side_effect = PlayerUnreachableError("Player not reachable")
+    player.sync_status.side_effect = PlayerUnreachableError("Player not reachable")
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
@@ -218,13 +220,13 @@ async def test_zeroconf_flow_cannot_connect(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
 
-    mock_player.sync_status.assert_called_once()
+    player.sync_status.assert_called_once()
 
 
 async def test_zeroconf_flow_already_configured(
     hass: HomeAssistant,
-    mock_player: AsyncMock,
-    mock_config_entry: MockConfigEntry,
+    player: AsyncMock,
+    config_entry: MockConfigEntry,
 ) -> None:
     """Test we handle already configured and update the host."""
     result = await hass.config_entries.flow.async_init(
@@ -244,6 +246,6 @@ async def test_zeroconf_flow_already_configured(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
-    assert mock_config_entry.data[CONF_HOST] == "1.1.1.1"
+    assert config_entry.data[CONF_HOST] == "1.1.1.1"
 
-    mock_player.sync_status.assert_called_once()
+    player.sync_status.assert_called_once()
