@@ -13,7 +13,7 @@ from homeassistant.core import HomeAssistant
 from .const import DOMAIN
 from .coordinator import ModernFormsDataUpdateCoordinator
 
-REDACT_CONFIG = {CONF_MAC}
+REDACT_CONFIG = {CONF_MAC, "mac_address"}
 
 
 async def async_get_config_entry_diagnostics(

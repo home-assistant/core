@@ -28,7 +28,7 @@
         'firmware_url': '',
         'firmware_version': '01.03.0025',
         'light_type': 'F6IN-120V-R1-30',
-        'mac_address': 'AA:BB:CC:DD:EE:FF',
+        'mac_address': '**REDACTED**',
         'main_mcu_firmware_version': '01.03.3008',
         'owner': 'someone@somewhere.com',
         'product_sku': '',
