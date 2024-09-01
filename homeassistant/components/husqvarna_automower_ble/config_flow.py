@@ -13,7 +13,6 @@ from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import BluetoothServiceInfo
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ADDRESS, CONF_CLIENT_ID
-from homeassistant.data_entry_flow import AbortFlow
 
 from .const import DOMAIN, LOGGER
 
@@ -79,9 +78,8 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
                 channel_id, self.address
             ).probe_gatts(device)
         except (BleakError, TimeoutError) as exception:
-            raise AbortFlow(
-                "cannot_connect", description_placeholders={"error": str(exception)}
-            ) from exception
+            LOGGER.exception("Failed to connect to device: %s", exception)
+            return self.async_abort(reason="cannot_connect")
 
         title = manufacturer + " " + device_type
 
