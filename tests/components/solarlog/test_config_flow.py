@@ -67,7 +67,7 @@ async def test_user(
 
     # tests with all provided
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_HOST: HOST, CONF_NAME: NAME, "extended_data": False}
+        result["flow_id"], {CONF_HOST: HOST, CONF_NAME: NAME, "extended_data": True}
     )
     await hass.async_block_till_done()
 
@@ -123,7 +123,7 @@ async def test_form_exceptions(
     assert result["data"]["extended_data"] is False
 
 
-async def test_abort_if_already_setup(hass: HomeAssistant, test_connect) -> None:
+async def test_abort_if_already_setup(hass: HomeAssistant, test_connect: None) -> None:
     """Test we abort if the device is already setup."""
     flow = init_config_flow(hass)
     MockConfigEntry(
