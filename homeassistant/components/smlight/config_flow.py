@@ -141,6 +141,7 @@ class SmlightConfigFlow(ConfigFlow, domain=DOMAIN):
         host = entry_data[CONF_HOST]
         self.context["title_placeholders"] = {
             "host": host,
+            "name": entry_data.get(CONF_USERNAME, "unknown"),
         }
         self.client = Api2(host, session=async_get_clientsession(self.hass))
         self.host = host
