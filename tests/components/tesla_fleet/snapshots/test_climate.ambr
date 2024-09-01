@@ -286,9 +286,6 @@
 # name: test_climate_noscope[no_service]
   'Entity climate.test_climate does not support this service.'
 # ---
-# name: test_climate_notemp[missing_temperature]
-  'Temperature is required for this action'
-# ---
 # name: test_climate_offline[climate.test_cabin_overheat_protection-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({

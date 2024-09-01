@@ -175,24 +175,6 @@ async def test_climate(
     state = hass.states.get(entity_id)
     assert state.state == HVACMode.COOL
 
-    # Call set temp without temperature
-    with pytest.raises(
-        ServiceValidationError, match="Temperature is required for this action"
-    ):
-        await hass.services.async_call(
-            CLIMATE_DOMAIN,
-            SERVICE_SET_TEMPERATURE,
-            {
-                ATTR_ENTITY_ID: [entity_id],
-                ATTR_TARGET_TEMP_HIGH: 30,
-                ATTR_TARGET_TEMP_LOW: 30,
-            },
-            blocking=True,
-        )
-    state = hass.states.get(entity_id)
-    assert state.attributes[ATTR_TEMPERATURE] == 40
-    assert state.state == HVACMode.COOL
-
     # Call set temp with invalid temperature
     with pytest.raises(
         ServiceValidationError,
@@ -383,7 +365,7 @@ async def test_climate_noscope(
     readonly_config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Tests that the climate entity is correct."""
+    """Tests with no command scopes."""
     await setup_platform(hass, readonly_config_entry, [Platform.CLIMATE])
     entity_id = "climate.test_climate"
 
@@ -406,25 +388,35 @@ async def test_climate_noscope(
     assert str(error.value) == snapshot(name="no_service")
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize(
+    ("entity_id", "high", "low"),
+    [
+        ("climate.test_climate", 16, 28),
+        ("climate.test_cabin_overheat_protection", 30, 40),
+    ],
+)
 async def test_climate_notemp(
     hass: HomeAssistant,
     normal_config_entry: MockConfigEntry,
-    snapshot: SnapshotAssertion,
+    entity_id: str,
+    high: int,
+    low: int,
 ) -> None:
-    """Tests that the climate entity is correct."""
+    """Tests that set temp fails without a temp attribute."""
 
     await setup_platform(hass, normal_config_entry, [Platform.CLIMATE])
-    entity_id = "climate.test_climate"
 
-    with pytest.raises(ServiceValidationError) as error:
+    with pytest.raises(
+        ServiceValidationError, match="Temperature is required for this action"
+    ):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_TEMPERATURE,
             {
                 ATTR_ENTITY_ID: [entity_id],
-                ATTR_TARGET_TEMP_HIGH: 25,
-                ATTR_TARGET_TEMP_LOW: 20,
+                ATTR_TARGET_TEMP_HIGH: high,
+                ATTR_TARGET_TEMP_LOW: low,
             },
             blocking=True,
         )
-    assert str(error.value) == snapshot(name="missing_temperature")
