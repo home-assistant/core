@@ -1,6 +1,7 @@
 """Common fixtures for the Bluesound tests."""
 
 from collections.abc import Generator
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
 from pyblu import Player, Status, SyncStatus
@@ -10,8 +11,9 @@ from homeassistant.components.bluesound.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 
+from .utils import ValueStore
+
 from tests.common import MockConfigEntry
-from tests.components.bluesound.utils import mock_long_poll
 
 
 @pytest.fixture
@@ -70,6 +72,20 @@ def status() -> Status:
 
 
 @pytest.fixture
+def status_store(hass: HomeAssistant, status: Status) -> ValueStore[Status]:
+    """Return a status store."""
+    return ValueStore(status)
+
+
+@pytest.fixture
+def sync_status_store(
+    hass: HomeAssistant, sync_status: SyncStatus
+) -> ValueStore[SyncStatus]:
+    """Return a sync status store."""
+    return ValueStore(sync_status)
+
+
+@pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
@@ -79,7 +95,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def config_entry(hass: HomeAssistant) -> MockConfigEntry:
+def config_entry() -> MockConfigEntry:
     """Return a mocked config entry."""
     return MockConfigEntry(
         domain=DOMAIN,
@@ -102,7 +118,9 @@ async def setup_config_entry(
 
 
 @pytest.fixture
-def player(status: Status, sync_status: SyncStatus) -> Generator[AsyncMock, None, None]:
+def player(
+    status_store: ValueStore[Status], sync_status_store: ValueStore[SyncStatus]
+) -> Generator[AsyncMock, None, None]:
     """Mock the player."""
     with (
         patch(
@@ -116,6 +134,7 @@ def player(status: Status, sync_status: SyncStatus) -> Generator[AsyncMock, None
         player = mock_player.return_value
         player.__aenter__.return_value = player
 
-        player.status.side_effect = mock_long_poll(status)
-        player.sync_status.side_effect = mock_long_poll(sync_status)
+        player.status.side_effect = status_store.long_polling_mock()
+        player.sync_status.side_effect = sync_status_store.long_polling_mock()
+
         yield player
