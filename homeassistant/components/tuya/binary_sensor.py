@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import json
 
 from tuya_sharing import CustomerDevice, Manager
 
@@ -18,7 +19,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import TuyaConfigEntry
 from .base import TuyaEntity
-from .const import TUYA_DISCOVERY_NEW, DPCode
+from .const import TUYA_DISCOVERY_NEW, DPCode, DPType
 
 
 @dataclass(frozen=True)
@@ -30,6 +31,10 @@ class TuyaBinarySensorEntityDescription(BinarySensorEntityDescription):
 
     # Value or values to consider binary sensor to be "on"
     on_value: bool | float | int | str | set[bool | float | int | str] = True
+
+    # Bitmap index of the fault key, if the key is DPCode.FAULT
+    # This is used to determine if a specific fault is active
+    fault_index: int | None = None
 
 
 # Commonly used sensors
@@ -362,6 +367,33 @@ async def async_setup_entry(
                             )
                         )
 
+            if DPCode.FAULT in device.status:
+                if DPCode.FAULT not in device.status_range:
+                    continue
+
+                fault_type = DPType(device.status_range[DPCode.FAULT].type)
+                if fault_type != DPType.BITMAP:
+                    continue
+
+                fault_values = json.loads(device.status_range[DPCode.FAULT].values)
+                if "label" not in fault_values:
+                    continue
+
+                fault_labels = fault_values["label"]
+                for fault_label in fault_labels:
+                    entity_description = TuyaBinarySensorEntityDescription(
+                        name=fault_label,
+                        translation_key=fault_label,
+                        key=DPCode.FAULT,
+                        fault_index=fault_labels.index(fault_label),
+                        device_class=BinarySensorDeviceClass.PROBLEM,
+                        entity_category=EntityCategory.DIAGNOSTIC,
+                    )
+                    entity = TuyaBinarySensorEntity(
+                        device, hass_data.manager, entity_description
+                    )
+                    entities.append(entity)
+
         async_add_entities(entities)
 
     async_discover_device([*hass_data.manager.device_map])
@@ -385,7 +417,9 @@ class TuyaBinarySensorEntity(TuyaEntity, BinarySensorEntity):
         """Init Tuya binary sensor."""
         super().__init__(device, device_manager)
         self.entity_description = description
-        self._attr_unique_id = f"{super().unique_id}{description.key}"
+        self._attr_unique_id = (
+            f"{super().unique_id}{description.key}{description.fault_key or ''}"
+        )
 
     @property
     def is_on(self) -> bool:
@@ -393,6 +427,19 @@ class TuyaBinarySensorEntity(TuyaEntity, BinarySensorEntity):
         dpcode = self.entity_description.dpcode or self.entity_description.key
         if dpcode not in self.device.status:
             return False
+
+        if dpcode == DPCode.FAULT:
+            if self.entity_description.fault_index is None:
+                return False
+
+            if not isinstance(self.device.status[dpcode], int):
+                return False
+
+            fault_bitmap = bin(self.device.status[dpcode]).zfill(8)
+            if len(fault_bitmap) < self.entity_description.fault_index:
+                return False
+
+            return fault_bitmap[self.entity_description.fault_index] == "1"
 
         if isinstance(self.entity_description.on_value, set):
             return self.device.status[dpcode] in self.entity_description.on_value
