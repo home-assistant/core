@@ -39,7 +39,7 @@ async def validate_input(hass: HomeAssistant, data: dict) -> dict[str, Any]:
     return {"title": tokenData["id"]}
 
 
-class TriggerCMDConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class TriggerCMDConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
     VERSION = 1
