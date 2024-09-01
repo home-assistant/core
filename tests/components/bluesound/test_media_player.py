@@ -1,8 +1,11 @@
 """Tests for the Bluesound Media Player platform."""
 
-from pyblu import Player
+from pyblu import Player, Status
 
+from homeassistant.components.media_player import MediaPlayerState
 from homeassistant.core import HomeAssistant
+
+from .utils import ValueStore
 
 
 async def test_pause(
@@ -10,8 +13,8 @@ async def test_pause(
 ) -> None:
     """Test the media player pause."""
     await hass.services.async_call(
-        "media_player",
         "media_pause",
+        "media_player",
         {"entity_id": "media_player.player_name"},
         blocking=True,
     )
@@ -87,3 +90,44 @@ async def test_volume_down(
     )
 
     player.volume.assert_called_once_with(9)
+
+
+async def test_attributes_set(
+    hass: HomeAssistant, setup_config_entry: None, player: Player
+) -> None:
+    """Test the media player attributes set."""
+    state = hass.states.get("media_player.player_name")
+    assert state.state == "playing"
+    assert state.attributes["volume_level"] == 0.1
+    assert state.attributes["is_volume_muted"] is False
+    assert state.attributes["media_content_type"] == "music"
+    assert state.attributes["media_position"] == 2
+    assert state.attributes["shuffle"] is False
+    assert state.attributes["master"] is False
+    assert state.attributes["friendly_name"] == "player-name"
+    assert state.attributes["media_title"] == "song"
+    assert state.attributes["media_artist"] == "artist"
+    assert state.attributes["media_album_name"] == "album"
+
+
+async def test_status_updated(
+    hass: HomeAssistant,
+    setup_config_entry: None,
+    player: Player,
+    status_store: ValueStore[Status],
+) -> None:
+    """Test the media player status updated."""
+    pre_state = hass.states.get("media_player.player_name")
+    assert pre_state.state == "playing"
+    assert pre_state.attributes["volume_level"] == 0.1
+
+    status = status_store.get()
+    status.state = "pause"
+    status.volume = 50
+    status_store.set(status)
+
+    await hass.async_block_till_done()
+
+    post_state = hass.states.get("media_player.player_name")
+    assert post_state.state == MediaPlayerState.PAUSED
+    assert post_state.attributes["volume_level"] == 0.5

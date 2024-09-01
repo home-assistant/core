@@ -4,7 +4,7 @@ from collections.abc import Generator
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
-from pyblu import Player, Status, SyncStatus
+from pyblu import Player, Status, SyncStatus, Input, Preset
 import pytest
 
 from homeassistant.components.bluesound.const import DOMAIN
@@ -51,9 +51,9 @@ def status() -> Status:
         service=None,
         state="play",
         shuffle=False,
-        album=None,
-        artist=None,
-        name=None,
+        album="album",
+        artist="artist",
+        name="song",
         image=None,
         volume=10,
         volume_db=22.3,
@@ -136,5 +136,14 @@ def player(
 
         player.status.side_effect = status_store.long_polling_mock()
         player.sync_status.side_effect = sync_status_store.long_polling_mock()
+
+        player.inputs.return_value = [
+            Input("1", "input1", "image1", "url1"),
+            Input("2", "input2", "image2", "url2"),
+        ]
+        player.presets.return_value = [
+            Preset("preset1", "1", "url1", "image1", None),
+            Preset("preset2", "2", "url2", "image2", None),
+        ]
 
         yield player
