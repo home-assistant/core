@@ -72,6 +72,9 @@
     },
     "charge_set_schedules": {
       "service": "mdi:calendar-clock"
+    },
+    "ac_set_schedules": {
+      "service": "mdi:calendar-clock"
     }
   }
 }

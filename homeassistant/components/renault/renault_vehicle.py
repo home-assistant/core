@@ -168,6 +168,18 @@ class RenaultVehicleProxy:
         return await self._vehicle.set_ac_start(temperature, when)
 
     @with_error_wrapping
+    async def get_hvac_settings(self) -> models.KamereonVehicleHvacSettingsData:
+        """Get vehicle hvac settings."""
+        return await self._vehicle.get_hvac_settings()
+
+    @with_error_wrapping
+    async def set_hvac_schedules(
+        self, schedules: list[models.HvacSchedule]
+    ) -> models.KamereonVehicleHvacScheduleActionData:
+        """Set vehicle hvac schedules."""
+        return await self._vehicle.set_hvac_schedules(schedules)
+
+    @with_error_wrapping
     async def get_charging_settings(self) -> models.KamereonVehicleChargingSettingsData:
         """Get vehicle charging settings."""
         return await self._vehicle.get_charging_settings()
