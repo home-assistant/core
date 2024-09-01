@@ -1,6 +1,7 @@
 """Tesla Fleet helper functions."""
 
 import asyncio
+from collections.abc import Awaitable
 from typing import Any
 
 from tesla_fleet_api.exceptions import TeslaFleetError
@@ -32,7 +33,7 @@ async def wake_up_vehicle(vehicle: TeslaFleetVehicleData) -> None:
                 await asyncio.sleep(times * 5)
 
 
-async def handle_command(command) -> dict[str, Any]:
+async def handle_command(command: Awaitable) -> dict[str, Any]:
     """Handle a command."""
     try:
         result = await command
@@ -46,7 +47,7 @@ async def handle_command(command) -> dict[str, Any]:
     return result
 
 
-async def handle_vehicle_command(command) -> bool:
+async def handle_vehicle_command(command: Awaitable) -> bool:
     """Handle a vehicle command."""
     result = await handle_command(command)
     if (response := result.get("response")) is None:
