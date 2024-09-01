@@ -13,8 +13,8 @@ async def test_pause(
 ) -> None:
     """Test the media player pause."""
     await hass.services.async_call(
-        "media_pause",
         "media_player",
+        "media_pause",
         {"entity_id": "media_player.player_name"},
         blocking=True,
     )
@@ -34,6 +34,34 @@ async def test_play(
     )
 
     player.play.assert_called_once()
+
+
+async def test_next_track(
+    hass: HomeAssistant, setup_config_entry: None, player: Player
+) -> None:
+    """Test the media player next track."""
+    await hass.services.async_call(
+        "media_player",
+        "media_next_track",
+        {"entity_id": "media_player.player_name"},
+        blocking=True,
+    )
+
+    player.skip.assert_called_once()
+
+
+async def test_previous_track(
+    hass: HomeAssistant, setup_config_entry: None, player: Player
+) -> None:
+    """Test the media player previous track."""
+    await hass.services.async_call(
+        "media_player",
+        "media_previous_track",
+        {"entity_id": "media_player.player_name"},
+        blocking=True,
+    )
+
+    player.back.assert_called_once()
 
 
 async def test_volume_set(
