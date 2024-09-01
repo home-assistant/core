@@ -19,7 +19,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import TuyaConfigEntry
 from .base import TuyaEntity
-from .const import TUYA_DISCOVERY_NEW, DPCode, DPType
+from .const import LOGGER, TUYA_DISCOVERY_NEW, DPCode, DPType
 
 
 @dataclass(frozen=True)
@@ -32,9 +32,9 @@ class TuyaBinarySensorEntityDescription(BinarySensorEntityDescription):
     # Value or values to consider binary sensor to be "on"
     on_value: bool | float | int | str | set[bool | float | int | str] = True
 
-    # Fault key and index, used to determine if a specific fault is active
+    # Fault key, and keys, used to determine if a specific fault is active
     fault_key: str | None = None
-    fault_index: int | None = None
+    fault_keys: set[str] | None = None
 
 
 # Commonly used sensors
@@ -386,7 +386,7 @@ async def async_setup_entry(
                         translation_key=fault_label,
                         key=DPCode.FAULT,
                         fault_key=fault_label,
-                        fault_index=fault_labels.index(fault_label),
+                        fault_keys=fault_labels,
                         device_class=BinarySensorDeviceClass.PROBLEM,
                         entity_category=EntityCategory.DIAGNOSTIC,
                     )
@@ -430,17 +430,32 @@ class TuyaBinarySensorEntity(TuyaEntity, BinarySensorEntity):
             return False
 
         if dpcode == DPCode.FAULT:
-            if self.entity_description.fault_index is None:
+            fault_key = self.entity_description.fault_key
+            if fault_key is None:
+                LOGGER.warning("Fault key not defined")
+                return False
+
+            fault_keys = self.entity_description.fault_keys
+            if fault_keys is None:
+                LOGGER.warning("Fault keys not defined")
+                return False
+
+            if fault_key not in fault_keys:
+                LOGGER.warning(
+                    "Fault key %s not found in fault keys %s",
+                    fault_key,
+                    fault_keys,
+                )
                 return False
 
             if not isinstance(self.device.status[dpcode], int):
+                LOGGER.warning(
+                    "Fault status is not an integer: %s", self.device.status[dpcode]
+                )
                 return False
 
-            fault_bitmap = bin(self.device.status[dpcode]).zfill(8)
-            if len(fault_bitmap) < self.entity_description.fault_index:
-                return False
-
-            return fault_bitmap[self.entity_description.fault_index] == "1"
+            fault_bitmap = bin(self.device.status[dpcode])[2:].zfill(len(fault_keys))
+            return fault_bitmap[fault_keys.index(fault_key)] == "1"
 
         if isinstance(self.entity_description.on_value, set):
             return self.device.status[dpcode] in self.entity_description.on_value
