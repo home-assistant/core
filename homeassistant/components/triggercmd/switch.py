@@ -59,10 +59,6 @@ class TRIGGERcmdSwitch(SwitchEntity):
         """Return True if hub is available."""
         return self._switch.hub.online
 
-    @property
-    def is_on(self) -> bool | None:
-        """Return true if switch is on."""
-        return self._attr_is_on
 
     async def async_turn_on(self, **kwargs):
         """Turn the switch on."""
