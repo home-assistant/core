@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import asdict
 from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.diagnostics import async_redact_data
@@ -26,7 +27,9 @@ async def async_get_config_entry_diagnostics(
     return {
         "config_entry": async_redact_data(entry.as_dict(), REDACT_CONFIG),
         "device": {
-            "info": coordinator.modern_forms.info,
-            "status": coordinator.modern_forms.status,
+            "info": async_redact_data(
+                asdict(coordinator.modern_forms.info), REDACT_CONFIG
+            ),
+            "status": asdict(coordinator.modern_forms.status),
         },
     }
