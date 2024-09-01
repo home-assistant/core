@@ -159,7 +159,6 @@ class TuyaEntity(Entity):
         """Return if the device is available."""
         return self.device.online
 
-
     @overload
     def find_dpcode(
         self,
@@ -226,9 +225,6 @@ class TuyaEntity(Entity):
                     ):
                         continue
                     return enum_type
-
-                if dpcode not in getattr(self.device, key):
-                    continue
 
                 if (
                     dptype == DPType.INTEGER
