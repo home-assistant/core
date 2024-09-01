@@ -15,7 +15,11 @@ from homeassistant.components.google_photos.const import DOMAIN, OAUTH2_SCOPES
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry, load_json_array_fixture
+from tests.common import (
+    MockConfigEntry,
+    load_json_array_fixture,
+    load_json_object_fixture,
+)
 
 USER_IDENTIFIER = "user-identifier-1"
 CONFIG_ENTRY_ID = "user-identifier-1"
@@ -32,13 +36,19 @@ def mock_expires_at() -> int:
     return time.time() + EXPIRES_IN
 
 
+@pytest.fixture(name="scopes")
+def mock_scopes() -> list[str]:
+    """Fixture to set scopes used during the config entry."""
+    return OAUTH2_SCOPES
+
+
 @pytest.fixture(name="token_entry")
-def mock_token_entry(expires_at: int) -> dict[str, Any]:
+def mock_token_entry(expires_at: int, scopes: list[str]) -> dict[str, Any]:
     """Fixture for OAuth 'token' data for a ConfigEntry."""
     return {
         "access_token": FAKE_ACCESS_TOKEN,
         "refresh_token": FAKE_REFRESH_TOKEN,
-        "scope": " ".join(OAUTH2_SCOPES),
+        "scope": " ".join(scopes),
         "type": "Bearer",
         "expires_at": expires_at,
         "expires_in": EXPIRES_IN,
@@ -113,18 +123,23 @@ def mock_setup_api(
             return mock
 
         mock.return_value.mediaItems.return_value.list = list_media_items
+        mock.return_value.mediaItems.return_value.search = list_media_items
 
         # Mock a point lookup by reading contents of the fixture above
-        def get_media_item(media_item_id: str, **kwargs: Any) -> Mock:
+        def get_media_item(mediaItemId: str, **kwargs: Any) -> Mock:
             for response in responses:
                 for media_item in response["mediaItems"]:
-                    if media_item["id"] == media_item_id:
+                    if media_item["id"] == mediaItemId:
                         mock = Mock()
                         mock.execute.return_value = media_item
                         return mock
             return None
 
         mock.return_value.mediaItems.return_value.get = get_media_item
+        mock.return_value.albums.return_value.list.return_value.execute.return_value = (
+            load_json_object_fixture("list_albums.json", DOMAIN)
+        )
+
         yield mock
 
 

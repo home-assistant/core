@@ -110,6 +110,7 @@ homeassistant.components.bitcoin.*
 homeassistant.components.blockchain.*
 homeassistant.components.blue_current.*
 homeassistant.components.blueprint.*
+homeassistant.components.bluesound.*
 homeassistant.components.bluetooth.*
 homeassistant.components.bluetooth_adapters.*
 homeassistant.components.bluetooth_tracker.*
@@ -410,6 +411,7 @@ homeassistant.components.slack.*
 homeassistant.components.sleepiq.*
 homeassistant.components.smhi.*
 homeassistant.components.snooz.*
+homeassistant.components.solarlog.*
 homeassistant.components.sonarr.*
 homeassistant.components.speedtestdotnet.*
 homeassistant.components.sql.*
