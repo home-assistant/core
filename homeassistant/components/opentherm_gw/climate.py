@@ -103,7 +103,6 @@ class OpenThermClimate(OpenThermEntity, ClimateEntity):
             self._attr_precision = options[CONF_READ_PRECISION]
         self._attr_target_temperature_step = options.get(CONF_SET_PRECISION)
         self.temporary_ovrd_mode = options.get(CONF_TEMPORARY_OVRD_MODE, True)
-        self._attr_unique_id = gw_hub.hub_id
 
     @callback
     def update_options(self, entry):
