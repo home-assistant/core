@@ -125,7 +125,7 @@ class ElectricityTypeData:
         voltage = 0.0
         electriccurrent = 0.0
         power = 0.0
-        if len(raw < 8):
+        if len(raw) < 8:
             return cls(
             electriccurrent=None, power=None, voltage=None
         )
