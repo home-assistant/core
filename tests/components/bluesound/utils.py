@@ -1,13 +1,15 @@
 """Utils for bluesound tests."""
 
 import asyncio
-from contextlib import suppress
-from typing import Any, Generic, TypeVar
-
-T = TypeVar("T")
+from typing import Protocol
 
 
-class ValueStore(Generic[T]):
+class Etag(Protocol):
+    """Etag protocol."""
+
+    etag: str
+
+class ValueStore[T: Etag]:
     """Store a value and notify all waiting when it changes."""
 
     def __init__(self, value: T) -> None:
@@ -34,10 +36,18 @@ class ValueStore(Generic[T]):
 
     def long_polling_mock(self):
         """Return a long-polling mock."""
+        last_etag = None
 
         async def mock(*args, **kwargs) -> T:
-            with suppress(TimeoutError):
-                await asyncio.wait_for(self.wait(), 0.1)
-            return self.get()
+            nonlocal last_etag
+            etag = kwargs.get("etag")
+            if etag is None or etag != last_etag:
+                last_etag = self.get().etag
+                return self.get()
+
+            value = await self.wait()
+            last_etag = value.etag
+
+            return value
 
         return mock

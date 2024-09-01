@@ -1,5 +1,7 @@
 """Tests for the Bluesound Media Player platform."""
 
+import asyncio
+import dataclasses
 from pyblu import Player, Status
 
 from homeassistant.components.media_player import MediaPlayerState
@@ -150,8 +152,7 @@ async def test_status_updated(
     assert pre_state.attributes["volume_level"] == 0.1
 
     status = status_store.get()
-    status.state = "pause"
-    status.volume = 50
+    status = dataclasses.replace(status, state="pause", volume=50, etag="changed")
     status_store.set(status)
 
     await hass.async_block_till_done()
