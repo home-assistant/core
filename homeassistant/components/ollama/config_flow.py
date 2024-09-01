@@ -33,7 +33,7 @@ from homeassistant.helpers.selector import (
     TextSelectorConfig,
     TextSelectorType,
 )
-from homeassistant.util.ssl import client_context
+from homeassistant.util.ssl import get_default_context
 
 from .const import (
     CONF_KEEP_ALIVE,
@@ -92,7 +92,9 @@ class OllamaConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
 
         try:
-            self.client = ollama.AsyncClient(host=self.url, verify=client_context())
+            self.client = ollama.AsyncClient(
+                host=self.url, verify=get_default_context()
+            )
             async with asyncio.timeout(DEFAULT_TIMEOUT):
                 response = await self.client.list()
 
