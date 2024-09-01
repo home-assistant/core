@@ -18,13 +18,11 @@ class HusqvarnaAutomowerBleEntity(CoordinatorEntity[HusqvarnaCoordinator]):
         """Initialize coordinator entity."""
         super().__init__(coordinator)
 
-        device_info = DeviceInfo(
+        self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{coordinator.address}_{coordinator.channel_id}")},
             manufacturer=MANUFACTURER,
-            model=coordinator.model,
+            model_id=coordinator.model,
         )
-
-        self._attr_device_info = device_info
 
     @property
     def available(self) -> bool:
