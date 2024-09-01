@@ -125,12 +125,13 @@ class ElectricityTypeData:
         voltage = 0.0
         electriccurrent = 0.0
         power = 0.0
-        try:
-            voltage = struct.unpack(">H", raw[0:2])[0] / 10.0
-            electriccurrent = struct.unpack(">L", b"\x00" + raw[2:5])[0] / 1000.0
-            power = struct.unpack(">L", b"\x00" + raw[5:8])[0] / 1000.0
-        except:
-            LOGGER.warning(f"Failed UNPACK: {data}")
+        if len(raw < 8):
+            return cls(
+            electriccurrent=None, power=None, voltage=None
+        )
+        voltage = struct.unpack(">H", raw[0:2])[0] / 10.0
+        electriccurrent = struct.unpack(">L", b"\x00" + raw[2:5])[0] / 1000.0
+        power = struct.unpack(">L", b"\x00" + raw[5:8])[0] / 1000.0
         return cls(
             electriccurrent=str(electriccurrent), power=str(power), voltage=str(voltage)
         )
