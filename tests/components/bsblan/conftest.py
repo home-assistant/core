@@ -39,8 +39,8 @@ def mock_setup_entry() -> Generator[AsyncMock]:
         yield mock_setup
 
 
-@pytest.fixture(params=["static.json", "static_F.json"])
-def mock_bsblan(request: pytest.FixtureRequest) -> Generator[MagicMock, None, None]:
+@pytest.fixture
+def mock_bsblan() -> Generator[MagicMock, None, None]:
     """Return a mocked BSBLAN client."""
     with (
         patch("homeassistant.components.bsblan.BSBLAN", autospec=True) as bsblan_mock,
@@ -53,16 +53,13 @@ def mock_bsblan(request: pytest.FixtureRequest) -> Generator[MagicMock, None, No
         )
         bsblan.state.return_value = State.from_json(load_fixture("state.json", DOMAIN))
 
-        bsblan.static_values.return_value = StaticState.from_json(
-            load_fixture(request.param, DOMAIN)
-        )
+        # Patch static values based on the test case
+        async def set_static_values(param):
+            bsblan.static_values.return_value = StaticState.from_json(
+                load_fixture(param, DOMAIN)
+            )
 
-        # Add a method to update the current_temperature dynamically
-        def set_current_temperature(value):
-            state = bsblan.state.return_value
-            state.current_temperature.value = value
-
-        bsblan.set_current_temperature = set_current_temperature
+        bsblan.set_static_values = set_static_values
 
         yield bsblan
 
