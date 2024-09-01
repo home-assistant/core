@@ -6,7 +6,7 @@
           "token": "token"
         },
         "data_description": {
-          "token": "Token from TRIGGERcmd instructions page"
+          "token": "The token from the TRIGGERcmd instructions page"
         }
       }
     },
