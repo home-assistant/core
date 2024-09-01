@@ -55,6 +55,22 @@ async def test_async_setup_auth_failed(
     assert entry.state is ConfigEntryState.NOT_LOADED
 
 
+async def test_async_setup_missing_credentials(
+    hass: HomeAssistant,
+    mock_config_entry_host: MockConfigEntry,
+    mock_smlight_client: MagicMock,
+) -> None:
+    """Test we trigger reauth when credentials are missing."""
+    mock_smlight_client.check_auth_needed.return_value = True
+
+    await setup_integration(hass, mock_config_entry_host)
+
+    progress = hass.config_entries.flow.async_progress()
+    assert len(progress) == 1
+    assert progress[0]["step_id"] == "reauth_confirm"
+    assert progress[0]["context"]["unique_id"] == "aa:bb:cc:dd:ee:ff"
+
+
 @pytest.mark.parametrize("error", [SmlightConnectionError, SmlightAuthError])
 async def test_update_failed(
     hass: HomeAssistant,
