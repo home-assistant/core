@@ -487,7 +487,7 @@ def initialize_bot(hass: HomeAssistant, p_config: dict) -> Bot:
             # Auth can actually be stuffed into the URL, but the docs have previously
             # indicated to put them here.
             auth = proxy_params.pop("username"), proxy_params.pop("password")
-            ir.async_create_issue(
+            ir.create_issue(
                 hass,
                 DOMAIN,
                 "proxy_params_auth_deprecation",
@@ -504,7 +504,7 @@ def initialize_bot(hass: HomeAssistant, p_config: dict) -> Bot:
                 learn_more_url="https://github.com/home-assistant/core/pull/112778",
             )
         else:
-            ir.async_create_issue(
+            ir.create_issue(
                 hass,
                 DOMAIN,
                 "proxy_params_deprecation",
