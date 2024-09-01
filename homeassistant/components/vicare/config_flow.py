@@ -100,9 +100,7 @@ class ViCareConfigFlow(ConfigFlow, domain=DOMAIN):
 
             token_path = get_token_path(self.hass, None)
             try:
-                await self.hass.async_add_executor_job(
-                    vicare_login, data, token_path
-                )
+                await self.hass.async_add_executor_job(vicare_login, data, token_path)
             except (PyViCareInvalidConfigurationError, PyViCareInvalidCredentialsError):
                 errors["base"] = "invalid_auth"
             else:
