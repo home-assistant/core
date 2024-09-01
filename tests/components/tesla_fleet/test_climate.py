@@ -57,6 +57,7 @@ async def test_climate_services(
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
     normal_config_entry: MockConfigEntry,
+    mock_request: AsyncMock,
 ) -> None:
     """Tests that the climate services work."""
 
@@ -128,6 +129,7 @@ async def test_climate_overheat_protection_services(
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
     normal_config_entry: MockConfigEntry,
+    mock_request: AsyncMock,
 ) -> None:
     """Tests that the climate overheat protection services work."""
 
@@ -321,6 +323,7 @@ async def test_asleep_or_offline(
     mock_vehicle_state: AsyncMock,
     freezer: FrozenDateTimeFactory,
     normal_config_entry: MockConfigEntry,
+    mock_request: AsyncMock,
 ) -> None:
     """Tests asleep is handled."""
 

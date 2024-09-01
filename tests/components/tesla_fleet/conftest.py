@@ -159,7 +159,7 @@ def mock_find_server() -> Generator[AsyncMock]:
         yield mock_find_server
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture
 def mock_request():
     """Mock all Tesla Fleet API requests."""
     with patch(
