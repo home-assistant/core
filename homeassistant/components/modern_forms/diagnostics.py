@@ -13,7 +13,8 @@ from homeassistant.core import HomeAssistant
 from .const import DOMAIN
 from .coordinator import ModernFormsDataUpdateCoordinator
 
-REDACT_CONFIG = {CONF_MAC, "mac_address"}
+REDACT_CONFIG = {CONF_MAC}
+REDACT_DEVICE_INFO = {"mac_address", "owner"}
 
 
 async def async_get_config_entry_diagnostics(
@@ -28,7 +29,7 @@ async def async_get_config_entry_diagnostics(
         "config_entry": async_redact_data(entry.as_dict(), REDACT_CONFIG),
         "device": {
             "info": async_redact_data(
-                asdict(coordinator.modern_forms.info), REDACT_CONFIG
+                asdict(coordinator.modern_forms.info), REDACT_DEVICE_INFO
             ),
             "status": asdict(coordinator.modern_forms.status),
         },

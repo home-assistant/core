@@ -30,7 +30,7 @@
         'light_type': 'F6IN-120V-R1-30',
         'mac_address': '**REDACTED**',
         'main_mcu_firmware_version': '01.03.3008',
-        'owner': 'someone@somewhere.com',
+        'owner': '**REDACTED**',
         'product_sku': '',
         'production_lot_number': '',
       }),
