@@ -46,12 +46,21 @@ async def test_climate(
     entity_registry: er.EntityRegistry,
     normal_config_entry: MockConfigEntry,
 ) -> None:
-    """Tests that the climate entity is correct."""
+    """Tests that the climate entities are correct."""
 
     await setup_platform(hass, normal_config_entry, [Platform.CLIMATE])
-
     assert_entities(hass, normal_config_entry.entry_id, entity_registry, snapshot)
 
+
+async def test_climate_services(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
+    normal_config_entry: MockConfigEntry,
+) -> None:
+    """Tests that the climate services work."""
+
+    await setup_platform(hass, normal_config_entry, [Platform.CLIMATE])
     entity_id = "climate.test_climate"
 
     # Turn On and Set Temp
@@ -112,6 +121,17 @@ async def test_climate(
     state = hass.states.get(entity_id)
     assert state.state == HVACMode.OFF
 
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_climate_overheat_protection_services(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
+    normal_config_entry: MockConfigEntry,
+) -> None:
+    """Tests that the climate overheat protection services work."""
+
+    await setup_platform(hass, normal_config_entry, [Platform.CLIMATE])
     entity_id = "climate.test_cabin_overheat_protection"
 
     # Turn On and Set Low
