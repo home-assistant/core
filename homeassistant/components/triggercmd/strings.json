@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "data": {
-          "token": "token"
+          "token": "[%key:common::config_flow::data::access_token%]"
         },
         "data_description": {
           "token": "The token from the TRIGGERcmd instructions page"

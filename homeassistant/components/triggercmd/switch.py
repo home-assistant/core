@@ -47,11 +47,11 @@ class TRIGGERcmdSwitch(SwitchEntity):
         self._attr_unique_id = f"{trigger.computer_id}.{trigger.trigger_id}"
         self._attr_name = trigger.trigger_id
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._switch.computer_id)},
-            name=str(self._switch.computer_id).capitalize(),
-            sw_version=self._switch.firmware_version,
-            model=self._switch.model,
-            manufacturer=self._switch.hub.manufacturer,
+            identifiers={(DOMAIN, trigger.computer_id)},
+            name=str(trigger.computer_id).capitalize(),
+            sw_version=trigger.firmware_version,
+            model=trigger.model,
+            manufacturer=trigger.hub.manufacturer,
         )
 
     @property
@@ -59,18 +59,17 @@ class TRIGGERcmdSwitch(SwitchEntity):
         """Return True if hub is available."""
         return self._switch.hub.online
 
-
     async def async_turn_on(self, **kwargs):
         """Turn the switch on."""
+        await self.trigger("on")
         self._attr_is_on = True
         self.async_write_ha_state()
-        await self.trigger("on")
 
     async def async_turn_off(self, **kwargs):
         """Turn the switch off."""
+        await self.trigger("off")
         self._attr_is_on = False
         self.async_write_ha_state()
-        await self.trigger("off")
 
     async def trigger(self, params: str):
         """Trigger the command."""

@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
-from triggercmd import ha
+from triggercmd import TRIGGERcmdConnectionError, ha
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import TOKEN
 
@@ -19,8 +20,14 @@ type TriggercmdConfigEntry = ConfigEntry[ha.Hub]
 
 async def async_setup_entry(hass: HomeAssistant, entry: TriggercmdConfigEntry) -> bool:
     """Set up TRIGGERcmd from a config entry."""
-    entry.runtime_data = ha.Hub(entry.data[TOKEN])
+    hub = ha.Hub(entry.data[TOKEN])
 
+    try:
+        await hub.connection_test()
+    except TRIGGERcmdConnectionError as exception:
+        raise ConfigEntryNotReady from exception
+
+    entry.runtime_data = hub
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
