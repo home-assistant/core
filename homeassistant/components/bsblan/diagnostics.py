@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
@@ -18,10 +19,15 @@ async def async_get_config_entry_diagnostics(
     data: BSBLanData = hass.data[DOMAIN][entry.entry_id]
 
     return {
-        "info": data.info.to_dict(),
-        "device": data.device.to_dict(),
+        "info": await data.info.to_dict()
+        if asyncio.iscoroutinefunction(data.info.to_dict)
+        else data.info.to_dict(),
+        "device": await data.device.to_dict()
+        if asyncio.iscoroutinefunction(data.device.to_dict)
+        else data.device.to_dict(),
         "coordinator_data": {
-            "state": data.coordinator.data.state.to_dict(),
+            "state": await data.coordinator.data.state.to_dict()
+            if asyncio.iscoroutinefunction(data.coordinator.data.state.to_dict)
+            else data.coordinator.data.state.to_dict(),
         },
-        "static": data.static.to_dict(),
     }
