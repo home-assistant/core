@@ -262,19 +262,10 @@
         "name": "Product version"
       },
       "operating_mode": {
-        "name": "Operating mode",
-        "state": {
-          "g": "Gateway",
-          "m": "Monitor"
-        }
+        "name": "Operating mode"
       },
       "hot_water_override_mode": {
-        "name": "Hot water override mode",
-        "state": {
-          "0": "Do not keep water warm",
-          "1": "Keep water warm",
-          "a": "Thermostat controlled"
-        }
+        "name": "Hot water override mode"
       },
       "firmware_version": {
         "name": "Firmware version"
@@ -286,58 +277,22 @@
         "name": "Clock speed"
       },
       "led_mode_n": {
-        "name": "LED {led_id} mode",
-        "state": {
-          "r": "OpenTherm receive",
-          "x": "OpenTherm transmit",
-          "t": "Thermostat traffic",
-          "b": "Boiler traffic",
-          "o": "Setpoint override active",
-          "f": "Flame on",
-          "h": "Central heating on",
-          "w": "Hot water on",
-          "c": "Comfort mode on",
-          "e": "Transmit error detected",
-          "m": "Boiler requires maintenance",
-          "p": "Thermostat raised power mode"
-        }
+        "name": "LED {led_id} mode"
       },
       "gpio_mode_n": {
-        "name": "GPIO {gpio_id} mode",
-        "state": {
-          "0": "Input",
-          "1": "Ground",
-          "2": "Vcc (5V)",
-          "3": "LED E",
-          "4": "LED F",
-          "5": "Trigger home mode",
-          "6": "Trigger away mode",
-          "7": "DS1820 sensor",
-          "8": "Hot water blocking"
-        }
+        "name": "GPIO {gpio_id} mode"
       },
       "setback_temperature": {
         "name": "Setback temperature"
       },
       "room_setpoint_override_mode": {
-        "name": "Room setpoint override mode",
-        "state": {
-          "c": "Permanent",
-          "n": "Inactive",
-          "t": "Temporary"
-        }
+        "name": "Room setpoint override mode"
       },
       "smart_power_mode": {
         "name": "Smart power mode"
       },
       "thermostat_detection_mode": {
-        "name": "Thermostat detection mode",
-        "state": {
-          "c": "Force Remeha Celcia 20",
-          "d": "Automatic",
-          "i": "Force Remeha iSense",
-          "s": "Force standard"
-        }
+        "name": "Thermostat detection mode"
       },
       "reference_voltage": {
         "name": "Reference voltage setting"

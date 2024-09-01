@@ -43,8 +43,6 @@ class OpenThermSensorEntityDescription(
 ):
     """Describes an opentherm_gw sensor entity."""
 
-    make_state_lowercase: bool = True
-
 
 SENSOR_DESCRIPTIONS: tuple[OpenThermSensorEntityDescription, ...] = (
     OpenThermSensorEntityDescription(
@@ -353,19 +351,16 @@ SENSOR_DESCRIPTIONS: tuple[OpenThermSensorEntityDescription, ...] = (
     OpenThermSensorEntityDescription(
         key=gw_vars.OTGW_ABOUT,
         translation_key="firmware_version",
-        make_state_lowercase=False,
         device_description=GATEWAY_DEVICE_DESCRIPTION,
     ),
     OpenThermSensorEntityDescription(
         key=gw_vars.OTGW_BUILD,
         translation_key="firmware_build",
-        make_state_lowercase=False,
         device_description=GATEWAY_DEVICE_DESCRIPTION,
     ),
     OpenThermSensorEntityDescription(
         key=gw_vars.OTGW_CLOCKMHZ,
         translation_key="clock_speed",
-        make_state_lowercase=False,
         device_description=GATEWAY_DEVICE_DESCRIPTION,
     ),
     OpenThermSensorEntityDescription(
@@ -433,7 +428,6 @@ SENSOR_DESCRIPTIONS: tuple[OpenThermSensorEntityDescription, ...] = (
     OpenThermSensorEntityDescription(
         key=gw_vars.OTGW_SMART_PWR,
         translation_key="smart_power_mode",
-        make_state_lowercase=False,
         device_description=GATEWAY_DEVICE_DESCRIPTION,
     ),
     OpenThermSensorEntityDescription(
@@ -904,10 +898,7 @@ class OpenThermSensor(OpenThermEntity, SensorEntity):
     @callback
     def receive_report(self, status: dict[OpenThermDataSource, dict]) -> None:
         """Handle status updates from the component."""
-        value = status[self.entity_description.device_description.data_source].get(
-            self.entity_description.key
-        )
-        if isinstance(value, str) and self.entity_description.make_state_lowercase:
-            value = value.lower()
-        self._attr_native_value = value
+        self._attr_native_value = status[
+            self.entity_description.device_description.data_source
+        ].get(self.entity_description.key)
         self.async_write_ha_state()
