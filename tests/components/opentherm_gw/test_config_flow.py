@@ -73,6 +73,7 @@ async def test_form_user(hass: HomeAssistant) -> None:
     assert len(mock_pyotgw_disconnect.mock_calls) == 1
 
 
+# Deprecated import from configuration.yaml, can be removed in 2025.4.0
 async def test_form_import(hass: HomeAssistant) -> None:
     """Test import from existing config."""
 
