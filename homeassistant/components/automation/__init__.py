@@ -322,8 +322,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         },
         trigger_service_handler,
     )
-    component.async_register_entity_service(SERVICE_TOGGLE, {}, "async_toggle")
-    component.async_register_entity_service(SERVICE_TURN_ON, {}, "async_turn_on")
+    component.async_register_entity_service(SERVICE_TOGGLE, None, "async_toggle")
+    component.async_register_entity_service(SERVICE_TURN_ON, None, "async_turn_on")
     component.async_register_entity_service(
         SERVICE_TURN_OFF,
         {vol.Optional(CONF_STOP_ACTIONS, default=DEFAULT_STOP_ACTIONS): cv.boolean},
@@ -991,15 +991,15 @@ async def _create_automation_entities(
 
         # Add trigger variables to variables
         variables = None
-        if CONF_TRIGGER_VARIABLES in config_block:
+        if CONF_TRIGGER_VARIABLES in config_block and CONF_VARIABLES in config_block:
             variables = ScriptVariables(
                 dict(config_block[CONF_TRIGGER_VARIABLES].as_dict())
             )
-        if CONF_VARIABLES in config_block:
-            if variables:
-                variables.variables.update(config_block[CONF_VARIABLES].as_dict())
-            else:
-                variables = config_block[CONF_VARIABLES]
+            variables.variables.update(config_block[CONF_VARIABLES].as_dict())
+        elif CONF_TRIGGER_VARIABLES in config_block:
+            variables = config_block[CONF_TRIGGER_VARIABLES]
+        elif CONF_VARIABLES in config_block:
+            variables = config_block[CONF_VARIABLES]
 
         entity = AutomationEntity(
             automation_id,

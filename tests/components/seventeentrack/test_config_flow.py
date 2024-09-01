@@ -2,7 +2,7 @@
 
 from unittest.mock import AsyncMock
 
-from py17track.errors import SeventeenTrackError
+from pyseventeentrack.errors import SeventeenTrackError
 import pytest
 
 from homeassistant import config_entries

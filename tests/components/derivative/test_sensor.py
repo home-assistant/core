@@ -3,12 +3,13 @@
 from datetime import timedelta
 from math import sin
 import random
+from typing import Any
 
 from freezegun import freeze_time
 
 from homeassistant.components.derivative.const import DOMAIN
 from homeassistant.const import UnitOfPower, UnitOfTime
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -49,7 +50,9 @@ async def test_state(hass: HomeAssistant) -> None:
     assert state.attributes.get("unit_of_measurement") == "kW"
 
 
-async def _setup_sensor(hass, config):
+async def _setup_sensor(
+    hass: HomeAssistant, config: dict[str, Any]
+) -> tuple[dict[str, Any], str]:
     default_config = {
         "platform": "derivative",
         "name": "power",
@@ -67,7 +70,13 @@ async def _setup_sensor(hass, config):
     return config, entity_id
 
 
-async def setup_tests(hass, config, times, values, expected_state):
+async def setup_tests(
+    hass: HomeAssistant,
+    config: dict[str, Any],
+    times: list[int],
+    values: list[float],
+    expected_state: float,
+) -> State:
     """Test derivative sensor state."""
     config, entity_id = await _setup_sensor(hass, config)
 

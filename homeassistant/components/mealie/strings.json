@@ -53,6 +53,23 @@
       "side": {
         "name": "Side"
       }
+    },
+    "sensor": {
+      "recipes": {
+        "name": "Recipes"
+      },
+      "users": {
+        "name": "Users"
+      },
+      "categories": {
+        "name": "Categories"
+      },
+      "tags": {
+        "name": "Tags"
+      },
+      "tools": {
+        "name": "Tools"
+      }
     }
   },
   "exceptions": {
@@ -139,6 +156,64 @@
           "name": "Include tags",
           "description": "Include tags from the website to the recipe."
         }
+      }
+    },
+    "set_random_mealplan": {
+      "name": "Set random mealplan",
+      "description": "Set a random mealplan for a specific date",
+      "fields": {
+        "config_entry_id": {
+          "name": "[%key:component::mealie::services::get_mealplan::fields::config_entry_id::name%]",
+          "description": "[%key:component::mealie::services::get_mealplan::fields::config_entry_id::description%]"
+        },
+        "date": {
+          "name": "Date",
+          "description": "The date to set the mealplan for."
+        },
+        "entry_type": {
+          "name": "Entry type",
+          "description": "The type of dish to randomize."
+        }
+      }
+    },
+    "set_mealplan": {
+      "name": "Set a mealplan",
+      "description": "Set a mealplan for a specific date",
+      "fields": {
+        "config_entry_id": {
+          "name": "[%key:component::mealie::services::get_mealplan::fields::config_entry_id::name%]",
+          "description": "[%key:component::mealie::services::get_mealplan::fields::config_entry_id::description%]"
+        },
+        "date": {
+          "name": "[%key:component::mealie::services::set_random_mealplan::fields::date::name%]",
+          "description": "[%key:component::mealie::services::set_random_mealplan::fields::date::description%]"
+        },
+        "entry_type": {
+          "name": "[%key:component::mealie::services::set_random_mealplan::fields::entry_type::name%]",
+          "description": "The type of dish to set the recipe to."
+        },
+        "recipe_id": {
+          "name": "[%key:component::mealie::services::get_recipe::fields::recipe_id::name%]",
+          "description": "[%key:component::mealie::services::get_recipe::fields::recipe_id::description%]"
+        },
+        "note_title": {
+          "name": "Meal note title",
+          "description": "Meal note title for when planning without recipe."
+        },
+        "note_text": {
+          "name": "Note text",
+          "description": "Meal note text for when planning without recipe."
+        }
+      }
+    }
+  },
+  "selector": {
+    "mealplan_entry_type": {
+      "options": {
+        "breakfast": "[%key:component::mealie::entity::calendar::breakfast::name%]",
+        "lunch": "[%key:component::mealie::entity::calendar::lunch::name%]",
+        "dinner": "[%key:component::mealie::entity::calendar::dinner::name%]",
+        "side": "[%key:component::mealie::entity::calendar::side::name%]"
       }
     }
   }

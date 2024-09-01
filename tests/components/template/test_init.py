@@ -7,9 +7,9 @@ import pytest
 
 from homeassistant import config
 from homeassistant.components.template import DOMAIN
+from homeassistant.const import SERVICE_RELOAD
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.reload import SERVICE_RELOAD
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -258,7 +258,7 @@ async def test_reload_sensors_that_reference_other_template_sensors(
     assert hass.states.get("sensor.test3").state == "2"
 
 
-async def async_yaml_patch_helper(hass, filename):
+async def async_yaml_patch_helper(hass: HomeAssistant, filename: str) -> None:
     """Help update configuration.yaml."""
     yaml_path = get_fixture_path(filename, "template")
     with patch.object(config, "YAML_CONFIG_FILE", yaml_path):
@@ -313,6 +313,32 @@ async def async_yaml_patch_helper(hass, filename):
                 "name": "My template",
             },
             {},
+        ),
+        (
+            {
+                "template_type": "number",
+                "name": "My template",
+                "state": "{{ 10 }}",
+                "min": "{{ 0 }}",
+                "max": "{{ 100 }}",
+                "step": "{{ 0.1 }}",
+                "set_value": {
+                    "action": "input_number.set_value",
+                    "target": {"entity_id": "input_number.test"},
+                    "data": {"value": "{{ value }}"},
+                },
+            },
+            {
+                "state": "{{ 11 }}",
+                "min": "{{ 0 }}",
+                "max": "{{ 100 }}",
+                "step": "{{ 0.1 }}",
+                "set_value": {
+                    "action": "input_number.set_value",
+                    "target": {"entity_id": "input_number.test"},
+                    "data": {"value": "{{ value }}"},
+                },
+            },
         ),
         (
             {

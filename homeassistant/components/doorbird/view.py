@@ -7,6 +7,7 @@ from http import HTTPStatus
 from aiohttp import web
 
 from homeassistant.components.http import KEY_HASS, HomeAssistantView
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import API_URL, DOMAIN
 from .util import get_door_station_by_token
@@ -24,19 +25,12 @@ class DoorBirdRequestView(HomeAssistantView):
         """Respond to requests from the device."""
         hass = request.app[KEY_HASS]
         token: str | None = request.query.get("token")
-        if (
-            token is None
-            or (door_station := get_door_station_by_token(hass, token)) is None
-        ):
+        if not token or not (door_station := get_door_station_by_token(hass, token)):
             return web.Response(
                 status=HTTPStatus.UNAUTHORIZED, text="Invalid token provided."
             )
 
-        if door_station:
-            event_data = door_station.get_event_data(event)
-        else:
-            event_data = {}
-
+        event_data = door_station.get_event_data(event)
         #
         # This integration uses a multiple different events.
         # It would be a major breaking change to change this to
@@ -45,5 +39,7 @@ class DoorBirdRequestView(HomeAssistantView):
         # Do not copy this pattern in the future
         # for any new integrations.
         #
-        hass.bus.async_fire(f"{DOMAIN}_{event}", event_data)
+        event_type = f"{DOMAIN}_{event}"
+        hass.bus.async_fire(event_type, event_data)
+        async_dispatcher_send(hass, event_type)
         return web.Response(text="OK")

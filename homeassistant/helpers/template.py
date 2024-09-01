@@ -10,7 +10,7 @@ from collections.abc import Callable, Generator, Iterable
 from contextlib import AbstractContextManager
 from contextvars import ContextVar
 from datetime import date, datetime, time, timedelta
-from functools import cache, lru_cache, partial, wraps
+from functools import cache, cached_property, lru_cache, partial, wraps
 import json
 import logging
 import math
@@ -149,6 +149,7 @@ CACHED_TEMPLATE_STATES = 512
 EVAL_CACHE_SIZE = 512
 
 MAX_CUSTOM_TEMPLATE_SIZE = 5 * 1024 * 1024
+MAX_TEMPLATE_OUTPUT = 256 * 1024  # 256KiB
 
 CACHED_TEMPLATE_LRU: LRU[State, TemplateState] = LRU(CACHED_TEMPLATE_STATES)
 CACHED_TEMPLATE_NO_COLLECT_LRU: LRU[State, TemplateState] = LRU(CACHED_TEMPLATE_STATES)
@@ -604,6 +605,11 @@ class Template:
         except Exception as err:
             raise TemplateError(err) from err
 
+        if len(render_result) > MAX_TEMPLATE_OUTPUT:
+            raise TemplateError(
+                f"Template output exceeded maximum size of {MAX_TEMPLATE_OUTPUT} characters"
+            )
+
         render_result = render_result.strip()
 
         if not parse_result or self.hass and self.hass.config.legacy_templates:
@@ -1022,7 +1028,7 @@ class TemplateStateBase(State):
             return self.state_with_unit
         raise KeyError
 
-    @property
+    @cached_property
     def entity_id(self) -> str:  # type: ignore[override]
         """Wrap State.entity_id.
 
@@ -2844,6 +2850,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["iif"] = iif
         self.globals["bool"] = forgiving_boolean
         self.globals["version"] = version
+        self.globals["zip"] = zip
         self.tests["is_number"] = is_number
         self.tests["list"] = _is_list
         self.tests["set"] = _is_set

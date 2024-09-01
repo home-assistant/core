@@ -14,6 +14,7 @@
           "light": "Light group",
           "lock": "Lock group",
           "media_player": "Media player group",
+          "notify": "Notify group",
           "sensor": "Sensor group",
           "switch": "Switch group"
         }
@@ -77,6 +78,14 @@
         }
       },
       "media_player": {
+        "title": "[%key:component::group::config::step::user::title%]",
+        "data": {
+          "entities": "[%key:component::group::config::step::binary_sensor::data::entities%]",
+          "hide_members": "[%key:component::group::config::step::binary_sensor::data::hide_members%]",
+          "name": "[%key:common::config_flow::data::name%]"
+        }
+      },
+      "notify": {
         "title": "[%key:component::group::config::step::user::title%]",
         "data": {
           "entities": "[%key:component::group::config::step::binary_sensor::data::entities%]",
@@ -151,6 +160,12 @@
         }
       },
       "media_player": {
+        "data": {
+          "entities": "[%key:component::group::config::step::binary_sensor::data::entities%]",
+          "hide_members": "[%key:component::group::config::step::binary_sensor::data::hide_members%]"
+        }
+      },
+      "notify": {
         "data": {
           "entities": "[%key:component::group::config::step::binary_sensor::data::entities%]",
           "hide_members": "[%key:component::group::config::step::binary_sensor::data::hide_members%]"

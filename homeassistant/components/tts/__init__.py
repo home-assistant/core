@@ -137,15 +137,16 @@ def async_default_engine(hass: HomeAssistant) -> str | None:
     component: EntityComponent[TextToSpeechEntity] = hass.data[DOMAIN]
     manager: SpeechManager = hass.data[DATA_TTS_MANAGER]
 
-    if "cloud" in manager.providers:
-        return "cloud"
+    default_entity_id: str | None = None
 
-    entity = next(iter(component.entities), None)
+    for entity in component.entities:
+        if entity.platform and entity.platform.platform_name == "cloud":
+            return entity.entity_id
 
-    if entity is not None:
-        return entity.entity_id
+        if default_entity_id is None:
+            default_entity_id = entity.entity_id
 
-    return next(iter(manager.providers), None)
+    return default_entity_id or next(iter(manager.providers), None)
 
 
 @callback
@@ -1085,6 +1086,7 @@ def websocket_list_engines(
     language = msg.get("language")
     providers = []
     provider_info: dict[str, Any]
+    entity_domains: set[str] = set()
 
     for entity in component.entities:
         provider_info = {
@@ -1096,15 +1098,20 @@ def websocket_list_engines(
                 language, entity.supported_languages, country
             )
         providers.append(provider_info)
+        if entity.platform:
+            entity_domains.add(entity.platform.platform_name)
     for engine_id, provider in manager.providers.items():
         provider_info = {
             "engine_id": engine_id,
+            "name": provider.name,
             "supported_languages": provider.supported_languages,
         }
         if language:
             provider_info["supported_languages"] = language_util.matches(
                 language, provider.supported_languages, country
             )
+        if engine_id in entity_domains:
+            provider_info["deprecated"] = True
         providers.append(provider_info)
 
     connection.send_message(
@@ -1147,6 +1154,8 @@ def websocket_get_engine(
         "engine_id": engine_id,
         "supported_languages": provider.supported_languages,
     }
+    if isinstance(provider, Provider):
+        provider_info["name"] = provider.name
 
     connection.send_message(
         websocket_api.result_message(msg["id"], {"provider": provider_info})
