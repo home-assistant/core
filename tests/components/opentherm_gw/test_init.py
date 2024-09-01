@@ -3,7 +3,6 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from pyotgw.vars import OTGW, OTGW_ABOUT
-import pytest
 
 from homeassistant import setup
 from homeassistant.components.opentherm_gw.const import (
@@ -33,8 +32,6 @@ MOCK_CONFIG_ENTRY = MockConfigEntry(
 )
 
 
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_device_registry_insert(
     hass: HomeAssistant, device_registry: dr.DeviceRegistry
 ) -> None:
@@ -43,10 +40,14 @@ async def test_device_registry_insert(
 
     with (
         patch(
-            "homeassistant.components.opentherm_gw.OpenThermGatewayHub.cleanup",
-            return_value=None,
+            "homeassistant.components.opentherm_gw.OpenThermGateway",
+            return_value=MagicMock(
+                connect=AsyncMock(return_value=MINIMAL_STATUS),
+                set_control_setpoint=AsyncMock(),
+                set_max_relative_mod=AsyncMock(),
+                disconnect=AsyncMock(),
+            ),
         ),
-        patch("pyotgw.OpenThermGateway.connect", return_value=MINIMAL_STATUS),
     ):
         await setup.async_setup_component(hass, DOMAIN, {})
 
@@ -55,11 +56,10 @@ async def test_device_registry_insert(
     gw_dev = device_registry.async_get_device(
         identifiers={(DOMAIN, f"{MOCK_GATEWAY_ID}-{OpenThermDeviceIdentifier.GATEWAY}")}
     )
+    assert gw_dev is not None
     assert gw_dev.sw_version == VERSION_OLD
 
 
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_device_registry_update(
     hass: HomeAssistant, device_registry: dr.DeviceRegistry
 ) -> None:
@@ -79,10 +79,14 @@ async def test_device_registry_update(
 
     with (
         patch(
-            "homeassistant.components.opentherm_gw.OpenThermGatewayHub.cleanup",
-            return_value=None,
+            "homeassistant.components.opentherm_gw.OpenThermGateway",
+            return_value=MagicMock(
+                connect=AsyncMock(return_value=MINIMAL_STATUS_UPD),
+                set_control_setpoint=AsyncMock(),
+                set_max_relative_mod=AsyncMock(),
+                disconnect=AsyncMock(),
+            ),
         ),
-        patch("pyotgw.OpenThermGateway.connect", return_value=MINIMAL_STATUS_UPD),
     ):
         await setup.async_setup_component(hass, DOMAIN, {})
 
