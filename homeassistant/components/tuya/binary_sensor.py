@@ -32,8 +32,8 @@ class TuyaBinarySensorEntityDescription(BinarySensorEntityDescription):
     # Value or values to consider binary sensor to be "on"
     on_value: bool | float | int | str | set[bool | float | int | str] = True
 
-    # Bitmap index of the fault key, if the key is DPCode.FAULT
-    # This is used to determine if a specific fault is active
+    # Fault key and index, used to determine if a specific fault is active
+    fault_key: str | None = None
     fault_index: int | None = None
 
 
@@ -385,6 +385,7 @@ async def async_setup_entry(
                         name=fault_label,
                         translation_key=fault_label,
                         key=DPCode.FAULT,
+                        fault_key=fault_label,
                         fault_index=fault_labels.index(fault_label),
                         device_class=BinarySensorDeviceClass.PROBLEM,
                         entity_category=EntityCategory.DIAGNOSTIC,
