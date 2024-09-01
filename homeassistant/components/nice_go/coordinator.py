@@ -35,6 +35,7 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+RECONNECT_ATTEMPTS = 3
 
 
 @dataclass
@@ -188,18 +189,20 @@ class NiceGOUpdateCoordinator(DataUpdateCoordinator[dict[str, NiceGODevice]]):
             "on_connection_lost", self.on_connection_lost
         )
 
-        for _ in range(3):
+        for attempt in range(RECONNECT_ATTEMPTS):
             if self.hass.is_stopping:
                 return
 
             try:
                 await self.api.connect(reconnect=True)
-            except ApiError:
+            except ApiError as e:
                 _LOGGER.exception("API error")
+                if attempt == RECONNECT_ATTEMPTS - 1:
+                    raise ConfigEntryNotReady from e
+            else:
+                return
 
             await asyncio.sleep(5)
-
-        raise ConfigEntryNotReady
 
     async def on_data(self, data: dict[str, Any]) -> None:
         """Handle incoming data from the websocket."""
