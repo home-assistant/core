@@ -929,7 +929,7 @@ hole==0.8.0
 holidays==0.55
 
 # homeassistant.components.frontend
-home-assistant-frontend==20240829.0
+home-assistant-frontend==20240902.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2024.8.29
@@ -2002,7 +2002,7 @@ reolink-aio==0.9.8
 rflink==0.0.66
 
 # homeassistant.components.ring
-ring-doorbell[listen]==0.9.0
+ring-doorbell[listen]==0.9.3
 
 # homeassistant.components.roku
 rokuecp==0.19.3
