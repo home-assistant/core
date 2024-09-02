@@ -81,6 +81,8 @@ class RingCam(RingEntity[RingDoorBell], Camera):
         history_data = self._device.last_history
         if history_data:
             self._last_event = history_data[0]
+            # will call async_update to update the attributes and get the
+            # video url from the api
             self.async_schedule_update_ha_state(True)
         else:
             self._last_event = None
@@ -183,7 +185,7 @@ class RingCam(RingEntity[RingDoorBell], Camera):
 
         await self._device.async_set_motion_detection(new_state)
         self._attr_motion_detection_enabled = new_state
-        self.async_schedule_update_ha_state(False)
+        self.async_write_ha_state()
 
     async def async_enable_motion_detection(self) -> None:
         """Enable motion detection in the camera."""
