@@ -19,7 +19,7 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-class IskraDataUpdateCoordinator(DataUpdateCoordinator):
+class IskraDataUpdateCoordinator(DataUpdateCoordinator[None]):
     """Class to manage fetching Iskra data."""
 
     def __init__(self, hass: HomeAssistant, device: Device) -> None:
