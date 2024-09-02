@@ -26,7 +26,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     ATTR_FREQUENCY,
@@ -207,7 +206,7 @@ async def async_setup_entry(
                 sensors.append(ATTR_PHASE3_CURRENT)
 
         entities += [
-            IskraSensor(coordinator, entry, description)
+            IskraSensor(coordinator, description)
             for description in SENSOR_TYPES
             if description.key in sensors
         ]
@@ -215,26 +214,21 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class IskraSensor(IskraEntity, CoordinatorEntity, SensorEntity):
+class IskraSensor(IskraEntity, SensorEntity):
     """Representation of a Sensor."""
 
     entity_description: IskraSensorEntityDescription
-    coordinator: IskraDataUpdateCoordinator
 
     def __init__(
         self,
         coordinator: IskraDataUpdateCoordinator,
-        config_entry: ConfigEntry,
         description: IskraSensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
-
-        self.coordinator = coordinator
         self.entity_description = description
         self._attr_unique_id = f"{coordinator.device.serial}_{description.key}"
         self._unique_id = self._attr_unique_id
-        IskraEntity.__init__(self, coordinator.device, config_entry)
-        CoordinatorEntity.__init__(self, coordinator, self._unique_id)
+        super().__init__(coordinator)
 
     @property
     def unique_id(self) -> str:
@@ -244,4 +238,4 @@ class IskraSensor(IskraEntity, CoordinatorEntity, SensorEntity):
     @property
     def native_value(self) -> float | None:
         """Return the state of the sensor."""
-        return self.entity_description.value_func(self.coordinator.device)
+        return self.entity_description.value_func(self._device)
