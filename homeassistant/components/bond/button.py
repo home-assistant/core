@@ -237,6 +237,20 @@ BUTTONS: tuple[BondButtonEntityDescription, ...] = (
         mutually_exclusive=Action.SET_POSITION,
         argument=STEP_SIZE,
     ),
+    BondButtonEntityDescription(
+        key=Action.OPEN_NEXT,
+        name="Open Next",
+        translation_key="open_next",
+        mutually_exclusive=None,
+        argument=None,
+    ),
+    BondButtonEntityDescription(
+        key=Action.CLOSE_NEXT,
+        name="Close Next",
+        translation_key="close_next",
+        mutually_exclusive=None,
+        argument=None,
+    ),
 )
 
 
