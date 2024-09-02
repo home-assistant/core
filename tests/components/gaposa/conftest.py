@@ -1,8 +1,30 @@
 """Common fixtures for the Gaposa tests."""
+
+import asyncio
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
+
+from homeassistant.core import HomeAssistant
+
+from tests.common import async_test_home_assistant
+
+
+@pytest.fixture
+async def hass():
+    """Return a HomeAssistant instance."""
+    async with async_test_home_assistant(asyncio.get_running_loop()) as hass:
+        yield hass
+
+
+@pytest.fixture(autouse=True)
+async def verify_cleanup(hass: HomeAssistant) -> None:
+    """Verify that the test has cleaned up resources correctly."""
+
+    yield
+
+    await hass.async_stop()
 
 
 @pytest.fixture
