@@ -39,7 +39,7 @@ async def _migrate_unique_ids(hass: HomeAssistant, entry: AcmedaConfigEntry) -> 
         entity_registry, entry.entry_id
     )
     for reg_entry in registry_entries:
-        if isinstance(reg_entry.unique_id, int):   # type: ignore[unreachable]
+        if isinstance(reg_entry.unique_id, int):  # type: ignore[unreachable]
             entity_registry.async_update_entity(
                 reg_entry.entity_id, new_unique_id=str(reg_entry.unique_id)
             )
