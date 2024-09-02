@@ -5,8 +5,10 @@
         "title": "[%key:common::config_flow::data::location%]",
         "description": "Fing agent setup",
         "data": {
-          "name": "Name",
-          "agent_ip": "Agent IP"
+          "name": "Agent name",
+          "agent_ip": "IP",
+          "agent_port": "Port",
+          "agent_key": "Auth key"
         }
       }
     },
@@ -23,8 +25,10 @@
         "title": "[%key:common::config_flow::data::location%]",
         "description": "Fing agent setup",
         "data": {
-          "name": "Name",
-          "agent_ip": "Agent IP"
+          "name": "Agent name",
+          "agent_ip": "Agent IP",
+          "agent_port": "Port",
+          "agent_key": "Auth key"
         }
       }
     }

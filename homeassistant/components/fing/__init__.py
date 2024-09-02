@@ -18,16 +18,23 @@ type FingConfigEntry = ConfigEntry[FingDataUpdateCoordinator]
 
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: FingConfigEntry) -> bool:
-    """Set up a skeleton component."""
-    _LOGGER.info(config_entry.entry_id)
+    """Set up the Fing component."""
     config_entry.async_on_unload(
         config_entry.add_update_listener(async_update_listener)
     )
 
-    await _setup_coordinator(hass, config_entry)
+    coordinator = FingDataUpdateCoordinator(hass, config_entry)
+    await coordinator.async_config_entry_first_refresh()
+
+    if coordinator.data.get_network_id() is None:
+        _LOGGER.warning(
+            "Skip setting up Fing integration; Received an empty NetworkId from the request - Check if the API version is the latest"
+        )
+        return False
+
+    config_entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
-    # Return boolean to indicate that initialization was successfully.
     return True
 
 
@@ -47,11 +54,3 @@ async def async_unload_entry(
 async def async_update_listener(hass: HomeAssistant, config_entry: FingConfigEntry):
     """Update component when options changed."""
     await hass.config_entries.async_reload(config_entry.entry_id)
-
-
-async def _setup_coordinator(hass: HomeAssistant, config_entry: FingConfigEntry):
-    """Initialize the coordinator."""
-
-    coordinator = FingDataUpdateCoordinator(hass, config_entry)
-    await coordinator.async_config_entry_first_refresh()
-    config_entry.runtime_data = coordinator
