@@ -12,6 +12,7 @@ from homeassistant.config_entries import ConfigEntry, ConfigFlowResult
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from .const import DOMAIN, LOGGER
+from .oauth import TeslaSystemImplementation
 
 
 class OAuth2FlowHandler(
@@ -26,6 +27,17 @@ class OAuth2FlowHandler(
     def logger(self) -> logging.Logger:
         """Return logger."""
         return LOGGER
+
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle a flow start."""
+        self.async_register_implementation(
+            self.hass,
+            TeslaSystemImplementation(self.hass),
+        )
+
+        return await super().async_step_user()
 
     async def async_oauth_create_entry(
         self,
@@ -71,5 +83,8 @@ class OAuth2FlowHandler(
     ) -> ConfigFlowResult:
         """Confirm reauth dialog."""
         if user_input is None:
-            return self.async_show_form(step_id="reauth_confirm")
+            return self.async_show_form(
+                step_id="reauth_confirm",
+                description_placeholders={"name": "Tesla Fleet"},
+            )
         return await self.async_step_user()

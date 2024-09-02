@@ -70,6 +70,7 @@ async def test_discovery_remote(
         {
             "current_activity": current_activity,
             "activity_list": activity_list,
+            "supported_features": 4,
         },
     )
     msg = await smart_home.async_handle_message(hass, get_default_config(hass), request)
@@ -790,22 +791,37 @@ async def test_report_remote_activity(hass: HomeAssistant) -> None:
     hass.states.async_set(
         "remote.unknown",
         "on",
-        {"current_activity": "UNKNOWN"},
+        {
+            "current_activity": "UNKNOWN",
+            "supported_features": 4,
+        },
     )
     hass.states.async_set(
         "remote.tv",
         "on",
-        {"current_activity": "TV", "activity_list": ["TV", "MUSIC", "DVD"]},
+        {
+            "current_activity": "TV",
+            "activity_list": ["TV", "MUSIC", "DVD"],
+            "supported_features": 4,
+        },
     )
     hass.states.async_set(
         "remote.music",
         "on",
-        {"current_activity": "MUSIC", "activity_list": ["TV", "MUSIC", "DVD"]},
+        {
+            "current_activity": "MUSIC",
+            "activity_list": ["TV", "MUSIC", "DVD"],
+            "supported_features": 4,
+        },
     )
     hass.states.async_set(
         "remote.dvd",
         "on",
-        {"current_activity": "DVD", "activity_list": ["TV", "MUSIC", "DVD"]},
+        {
+            "current_activity": "DVD",
+            "activity_list": ["TV", "MUSIC", "DVD"],
+            "supported_features": 4,
+        },
     )
 
     properties = await reported_properties(hass, "remote#unknown")

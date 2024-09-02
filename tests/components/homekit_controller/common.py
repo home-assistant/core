@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
@@ -12,6 +13,7 @@ from unittest import mock
 from aiohomekit.controller.abstract import AbstractDescription, AbstractPairing
 from aiohomekit.hkjson import loads as hkloads
 from aiohomekit.model import Accessories, AccessoriesState, Accessory
+from aiohomekit.model.services import Service
 from aiohomekit.testing import FakeController, FakePairing
 
 from homeassistant.components.device_automation import DeviceAutomationType
@@ -177,7 +179,7 @@ class Helper:
         return state
 
 
-async def time_changed(hass, seconds):
+async def time_changed(hass: HomeAssistant, seconds: int) -> None:
     """Trigger time changed."""
     next_update = dt_util.utcnow() + timedelta(seconds)
     async_fire_time_changed(hass, next_update)
@@ -193,7 +195,7 @@ async def setup_accessories_from_file(hass: HomeAssistant, path: str) -> Accesso
     return Accessories.from_list(accessories_json)
 
 
-async def setup_platform(hass):
+async def setup_platform(hass: HomeAssistant) -> FakeController:
     """Load the platform but with a fake Controller API."""
     config = {"discovery": {}}
 
@@ -205,7 +207,9 @@ async def setup_platform(hass):
     return await async_get_controller(hass)
 
 
-async def setup_test_accessories(hass, accessories, connection=None):
+async def setup_test_accessories(
+    hass: HomeAssistant, accessories: list[Accessory], connection: str | None = None
+) -> tuple[MockConfigEntry, AbstractPairing]:
     """Load a fake homekit device based on captured JSON profile."""
     fake_controller = await setup_platform(hass)
     return await setup_test_accessories_with_controller(
@@ -214,8 +218,11 @@ async def setup_test_accessories(hass, accessories, connection=None):
 
 
 async def setup_test_accessories_with_controller(
-    hass, accessories, fake_controller, connection=None
-):
+    hass: HomeAssistant,
+    accessories: list[Accessory],
+    fake_controller: FakeController,
+    connection: str | None = None,
+) -> tuple[MockConfigEntry, AbstractPairing]:
     """Load a fake homekit device based on captured JSON profile."""
 
     pairing_id = "00:00:00:00:00:00"
@@ -277,8 +284,13 @@ async def device_config_changed(hass: HomeAssistant, accessories: Accessories):
 
 
 async def setup_test_component(
-    hass, aid, setup_accessory, capitalize=False, suffix=None, connection=None
-):
+    hass: HomeAssistant,
+    aid: int,
+    setup_accessory: Callable[[Accessory], Service | None],
+    capitalize: bool = False,
+    suffix: str | None = None,
+    connection: str | None = None,
+) -> Helper:
     """Load a fake homekit accessory based on a homekit accessory model.
 
     If capitalize is True, property names will be in upper case.

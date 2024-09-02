@@ -104,13 +104,13 @@ async def async_setup_entry(
 
         platform.async_register_entity_service(
             SERVICE_START_REMOTE_CONTROL,
-            {},
+            None,
             MiroboVacuum.async_remote_control_start.__name__,
         )
 
         platform.async_register_entity_service(
             SERVICE_STOP_REMOTE_CONTROL,
-            {},
+            None,
             MiroboVacuum.async_remote_control_stop.__name__,
         )
 

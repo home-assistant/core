@@ -349,6 +349,9 @@ class DefaultAgent(ConversationEntity):
             }
             for entity in result.entities_list
         }
+        device_area = self._get_device_area(user_input.device_id)
+        if device_area:
+            slots["preferred_area_id"] = {"value": device_area.id}
         async_conversation_trace_append(
             ConversationTraceEventType.TOOL_CALL,
             {
@@ -917,17 +920,25 @@ class DefaultAgent(ConversationEntity):
         if not user_input.device_id:
             return None
 
-        devices = dr.async_get(self.hass)
-        device = devices.async_get(user_input.device_id)
-        if (device is None) or (device.area_id is None):
-            return None
-
-        areas = ar.async_get(self.hass)
-        device_area = areas.async_get_area(device.area_id)
+        device_area = self._get_device_area(user_input.device_id)
         if device_area is None:
             return None
 
         return {"area": {"value": device_area.name, "text": device_area.name}}
+
+    def _get_device_area(self, device_id: str | None) -> ar.AreaEntry | None:
+        """Return area object for given device identifier."""
+        if device_id is None:
+            return None
+
+        devices = dr.async_get(self.hass)
+        device = devices.async_get(device_id)
+        if (device is None) or (device.area_id is None):
+            return None
+
+        areas = ar.async_get(self.hass)
+
+        return areas.async_get_area(device.area_id)
 
     def _get_error_text(
         self,

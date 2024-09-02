@@ -26,7 +26,9 @@ class RadarrConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
     entry: RadarrConfigEntry | None = None
 
-    async def async_step_reauth(self, _: Mapping[str, Any]) -> ConfigFlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Handle configuration by re-auth."""
         self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
 
