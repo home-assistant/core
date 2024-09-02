@@ -836,6 +836,9 @@ google-api-python-client==2.71.0
 # homeassistant.components.google_pubsub
 google-cloud-pubsub==2.23.0
 
+# homeassistant.components.google_cloud
+google-cloud-texttospeech==2.17.2
+
 # homeassistant.components.google_generative_ai_conversation
 google-generativeai==0.7.2
 
@@ -1999,7 +2002,7 @@ reolink-aio==0.9.8
 rflink==0.0.66
 
 # homeassistant.components.ring
-ring-doorbell[listen]==0.9.0
+ring-doorbell[listen]==0.9.3
 
 # homeassistant.components.roku
 rokuecp==0.19.3

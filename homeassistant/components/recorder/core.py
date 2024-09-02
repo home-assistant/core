@@ -225,7 +225,6 @@ class Recorder(threading.Thread):
         self.event_session: Session | None = None
         self._get_session: Callable[[], Session] | None = None
         self._completed_first_database_setup: bool | None = None
-        self.async_migration_event = asyncio.Event()
         self.migration_in_progress = False
         self.migration_is_live = False
         self.use_legacy_events_index = False
@@ -934,11 +933,6 @@ class Recorder(threading.Thread):
 
         return False
 
-    @callback
-    def _async_migration_started(self) -> None:
-        """Set the migration started event."""
-        self.async_migration_event.set()
-
     def _migrate_schema_offline(
         self, schema_status: migration.SchemaValidationStatus
     ) -> tuple[bool, migration.SchemaValidationStatus]:
@@ -963,7 +957,6 @@ class Recorder(threading.Thread):
             "Database upgrade in progress",
             "recorder_database_migration",
         )
-        self.hass.add_job(self._async_migration_started)
         return self._migrate_schema(schema_status, True)
 
     def _migrate_schema(
