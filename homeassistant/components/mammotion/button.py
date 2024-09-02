@@ -1,7 +1,8 @@
 """Mammotion button sensor entities."""
 
-from collections.abc import Awaitable, Callable
+from collections.abc import Callable
 from dataclasses import dataclass
+from typing import Awaitable
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.core import HomeAssistant
@@ -27,6 +28,26 @@ BUTTON_SENSORS: tuple[MammotionButtonSensorEntityDescription, ...] = (
     MammotionButtonSensorEntityDescription(
         key="resync_rtk_dock",
         press_fn=lambda coordinator: coordinator.async_rtk_dock_location(),
+    ),
+    MammotionButtonSensorEntityDescription(
+        key="release_from_dock",
+        press_fn=lambda coordinator: coordinator.async_leave_dock(),
+    ),
+    MammotionButtonSensorEntityDescription(
+        key="emergency_nudge_forward",
+        press_fn=lambda coordinator: coordinator.async_move_forward(0.3),
+    ),
+    MammotionButtonSensorEntityDescription(
+        key="emergency_nudge_left",
+        press_fn=lambda coordinator: coordinator.async_move_left(0.3),
+    ),
+    MammotionButtonSensorEntityDescription(
+        key="emergency_nudge_right",
+        press_fn=lambda coordinator: coordinator.async_move_right(0.3),
+    ),
+    MammotionButtonSensorEntityDescription(
+        key="emergency_nudge_back",
+        press_fn=lambda coordinator: coordinator.async_move_back(0.3),
     ),
 )
 
