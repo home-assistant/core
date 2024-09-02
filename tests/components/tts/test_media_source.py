@@ -12,8 +12,8 @@ from homeassistant.setup import async_setup_component
 
 from .common import (
     DEFAULT_LANG,
-    MockProvider,
     MockTTSEntity,
+    MockTTSProvider,
     mock_config_entry_setup,
     mock_setup,
     retrieve_media,
@@ -28,7 +28,7 @@ class MSEntity(MockTTSEntity):
     get_tts_audio = MagicMock(return_value=("mp3", b""))
 
 
-class MSProvider(MockProvider):
+class MSProvider(MockTTSProvider):
     """Test speech API provider."""
 
     get_tts_audio = MagicMock(return_value=("mp3", b""))

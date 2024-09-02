@@ -101,11 +101,21 @@ from tests.typing import WebSocketGenerator
                 "min": "{{ 0 }}",
                 "max": "{{ 100 }}",
                 "step": "{{ 0.1 }}",
+                "set_value": {
+                    "action": "input_number.set_value",
+                    "target": {"entity_id": "input_number.test"},
+                    "data": {"value": "{{ value }}"},
+                },
             },
             {
                 "min": "{{ 0 }}",
                 "max": "{{ 100 }}",
                 "step": "{{ 0.1 }}",
+                "set_value": {
+                    "action": "input_number.set_value",
+                    "target": {"entity_id": "input_number.test"},
+                    "data": {"value": "{{ value }}"},
+                },
             },
             {},
         ),
@@ -444,11 +454,21 @@ def get_suggested(schema, key):
                 "min": "{{ 0 }}",
                 "max": "{{ 100 }}",
                 "step": "{{ 0.1 }}",
+                "set_value": {
+                    "action": "input_number.set_value",
+                    "target": {"entity_id": "input_number.test"},
+                    "data": {"value": "{{ value }}"},
+                },
             },
             {
                 "min": "{{ 0 }}",
                 "max": "{{ 100 }}",
                 "step": "{{ 0.1 }}",
+                "set_value": {
+                    "action": "input_number.set_value",
+                    "target": {"entity_id": "input_number.test"},
+                    "data": {"value": "{{ value }}"},
+                },
             },
             "state",
         ),
