@@ -25,7 +25,7 @@ ENV \
 ARG QEMU_CPU
 
 # Install uv
-RUN pip3 install uv=={uv}
+COPY --from=ghcr.io/astral-sh/uv:{uv} /uv /bin/uv
 
 WORKDIR /usr/src
 
