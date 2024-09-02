@@ -1,4 +1,4 @@
-"""Test Fyta diagnostics."""
+"""Test Solarlog diagnostics."""
 
 from unittest.mock import AsyncMock
 

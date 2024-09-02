@@ -1,4 +1,4 @@
-"""Provides diagnostics for Fyta."""
+"""Provides diagnostics for Solarlog."""
 
 from __future__ import annotations
 
