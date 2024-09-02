@@ -286,7 +286,7 @@ SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
-        value_fn=lambda data: cast(float, data),
+        value_fn=lambda data: cast(int, data),
         translation_key="humidity",
     ),
     AccuWeatherSensorDescription(
