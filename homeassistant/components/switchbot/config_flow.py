@@ -11,7 +11,6 @@ from switchbot import (
     SwitchbotApiError,
     SwitchbotAuthenticationError,
     SwitchbotLock,
-    SwitchbotModel,
     parse_advertisement_data,
 )
 import voluptuous as vol
@@ -48,6 +47,7 @@ from .const import (
     NON_CONNECTABLE_SUPPORTED_MODEL_TYPES,
     SUPPORTED_LOCK_MODELS,
     SUPPORTED_MODEL_TYPES,
+    SupportedModels,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -366,7 +366,7 @@ class SwitchbotOptionsFlowHandler(OptionsFlow):
                 ),
             ): int
         }
-        if self.config_entry.runtime_data.model == SwitchbotModel.LOCK_PRO:
+        if self.config_entry.data.get(CONF_SENSOR_TYPE) == SupportedModels.LOCK_PRO:
             options.update(
                 {
                     vol.Optional(
