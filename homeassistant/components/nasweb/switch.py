@@ -10,7 +10,6 @@ from webio_api import Output as NASwebOutput
 from webio_api.const import KEY_OUTPUTS
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -21,7 +20,7 @@ from homeassistant.helpers.update_coordinator import (
     BaseDataUpdateCoordinatorProtocol,
 )
 
-from . import DATA_NASWEB
+from . import DATA_NASWEB, NASwebConfigEntry
 from .const import DOMAIN, STATUS_UPDATE_MAX_TIME_INTERVAL
 from .nasweb_data import NASwebData
 
@@ -32,7 +31,7 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigEntry,
+    config: NASwebConfigEntry,
     async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:

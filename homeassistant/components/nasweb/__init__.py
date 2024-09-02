@@ -24,10 +24,11 @@ PLATFORMS: list[Platform] = [Platform.SWITCH]
 NASWEB_CONFIG_URL = "https://{host}/page"
 
 _LOGGER = logging.getLogger(__name__)
+type NASwebConfigEntry = ConfigEntry[NASwebCoordinator]
 DATA_NASWEB: HassKey[NASwebData] = HassKey(DOMAIN)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: NASwebConfigEntry) -> bool:
     """Set up NASweb from a config entry."""
 
     if DATA_NASWEB not in hass.data:
@@ -102,7 +103,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: NASwebConfigEntry) -> bool:
     """Unload a config entry."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         nasweb_data: NASwebData = hass.data[DATA_NASWEB]
