@@ -44,8 +44,10 @@ class HubSwitch(FliprEntity, SelectEntity):
     async def async_select_option(self, option: str) -> None:
         """Select new mode for Hub."""
         _LOGGER.debug("Changing mode of %s to %s", self.device_id, option)
-        self.hass.async_add_executor_job(
+        data = await self.hass.async_add_executor_job(
             self.coordinator.client.set_hub_mode,  # type: ignore[attr-defined]
             self.device_id,
             option,
         )
+        _LOGGER.debug("New hub infos are %s", data)
+        self.coordinator.async_set_updated_data(data)

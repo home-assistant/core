@@ -47,17 +47,21 @@ class HubSwitch(FliprEntity, SwitchEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the switch."""
         _LOGGER.debug("Switching off %s", self.device_id)
-        self.hass.async_add_executor_job(
+        data = await self.hass.async_add_executor_job(
             self.coordinator.client.set_hub_state,  # type: ignore[attr-defined]
             self.device_id,
             False,
         )
+        _LOGGER.debug("New hub infos are %s", data)
+        self.coordinator.async_set_updated_data(data)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
         _LOGGER.debug("Switching on %s", self.device_id)
-        self.hass.async_add_executor_job(
+        data = await self.hass.async_add_executor_job(
             self.coordinator.client.set_hub_state,  # type: ignore[attr-defined]
             self.device_id,
             True,
         )
+        _LOGGER.debug("New hub infos are %s", data)
+        self.coordinator.async_set_updated_data(data)
