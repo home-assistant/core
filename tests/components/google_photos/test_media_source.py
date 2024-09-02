@@ -7,7 +7,7 @@ from googleapiclient.errors import HttpError
 from httplib2 import Response
 import pytest
 
-from homeassistant.components.google_photos.const import DOMAIN
+from homeassistant.components.google_photos.const import DOMAIN, UPLOAD_SCOPE
 from homeassistant.components.media_source import (
     URI_SCHEME,
     BrowseError,
@@ -48,6 +48,32 @@ async def test_no_config_entries(
 
 @pytest.mark.usefixtures("setup_integration", "setup_api")
 @pytest.mark.parametrize(
+    ("scopes"),
+    [
+        [UPLOAD_SCOPE],
+    ],
+)
+async def test_no_read_scopes(
+    hass: HomeAssistant,
+) -> None:
+    """Test a media source with only write scopes configured so no media source exists."""
+    browse = await async_browse_media(hass, f"{URI_SCHEME}{DOMAIN}")
+    assert browse.domain == DOMAIN
+    assert browse.identifier is None
+    assert browse.title == "Google Photos"
+    assert not browse.children
+
+
+@pytest.mark.usefixtures("setup_integration", "setup_api")
+@pytest.mark.parametrize(
+    ("album_path", "expected_album_title"),
+    [
+        (f"{CONFIG_ENTRY_ID}/a/recent", "Recent Photos"),
+        (f"{CONFIG_ENTRY_ID}/a/favorites", "Favorite Photos"),
+        (f"{CONFIG_ENTRY_ID}/a/album-media-id-1", "Album title"),
+    ],
+)
+@pytest.mark.parametrize(
     ("fixture_name", "expected_results", "expected_medias"),
     [
         ("list_mediaitems_empty.json", [], []),
@@ -64,8 +90,10 @@ async def test_no_config_entries(
         ),
     ],
 )
-async def test_recent_items(
+async def test_browse_albums(
     hass: HomeAssistant,
+    album_path: str,
+    expected_album_title: str,
     expected_results: list[tuple[str, str]],
     expected_medias: list[tuple[str, str]],
 ) -> None:
@@ -83,14 +111,14 @@ async def test_recent_items(
     assert browse.identifier == CONFIG_ENTRY_ID
     assert browse.title == "Account Name"
     assert [(child.identifier, child.title) for child in browse.children] == [
-        (f"{CONFIG_ENTRY_ID}/a/recent", "Recent Photos")
+        (f"{CONFIG_ENTRY_ID}/a/recent", "Recent Photos"),
+        (f"{CONFIG_ENTRY_ID}/a/favorites", "Favorite Photos"),
+        (f"{CONFIG_ENTRY_ID}/a/album-media-id-1", "Album title"),
     ]
 
-    browse = await async_browse_media(
-        hass, f"{URI_SCHEME}{DOMAIN}/{CONFIG_ENTRY_ID}/a/recent"
-    )
+    browse = await async_browse_media(hass, f"{URI_SCHEME}{DOMAIN}/{album_path}")
     assert browse.domain == DOMAIN
-    assert browse.identifier == f"{CONFIG_ENTRY_ID}/a/recent"
+    assert browse.identifier == album_path
     assert browse.title == "Account Name"
     assert [
         (child.identifier, child.title) for child in browse.children
@@ -116,7 +144,25 @@ async def test_invalid_config_entry(hass: HomeAssistant) -> None:
 
 @pytest.mark.usefixtures("setup_integration", "setup_api")
 @pytest.mark.parametrize("fixture_name", ["list_mediaitems.json"])
-async def test_invalid_album_id(hass: HomeAssistant) -> None:
+async def test_browse_invalid_path(hass: HomeAssistant) -> None:
+    """Test browsing to a photo is not possible."""
+    browse = await async_browse_media(hass, f"{URI_SCHEME}{DOMAIN}")
+    assert browse.domain == DOMAIN
+    assert browse.identifier is None
+    assert browse.title == "Google Photos"
+    assert [(child.identifier, child.title) for child in browse.children] == [
+        (CONFIG_ENTRY_ID, "Account Name")
+    ]
+
+    with pytest.raises(BrowseError, match="Unsupported identifier"):
+        await async_browse_media(
+            hass, f"{URI_SCHEME}{DOMAIN}/{CONFIG_ENTRY_ID}/p/some-photo-id"
+        )
+
+
+@pytest.mark.usefixtures("setup_integration")
+@pytest.mark.parametrize("fixture_name", ["list_mediaitems.json"])
+async def test_invalid_album_id(hass: HomeAssistant, setup_api: Mock) -> None:
     """Test browsing to an album id that does not exist."""
     browse = await async_browse_media(hass, f"{URI_SCHEME}{DOMAIN}")
     assert browse.domain == DOMAIN
@@ -126,7 +172,12 @@ async def test_invalid_album_id(hass: HomeAssistant) -> None:
         (CONFIG_ENTRY_ID, "Account Name")
     ]
 
-    with pytest.raises(BrowseError, match="Unsupported album"):
+    setup_api.return_value.mediaItems.return_value.search = Mock()
+    setup_api.return_value.mediaItems.return_value.search.return_value.execute.side_effect = HttpError(
+        Response({"status": "404"}), b""
+    )
+
+    with pytest.raises(BrowseError, match="Error listing media items"):
         await async_browse_media(
             hass, f"{URI_SCHEME}{DOMAIN}/{CONFIG_ENTRY_ID}/a/invalid-album-id"
         )

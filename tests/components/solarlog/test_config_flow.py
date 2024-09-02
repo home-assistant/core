@@ -123,7 +123,7 @@ async def test_form_exceptions(
     assert result["data"]["extended_data"] is False
 
 
-async def test_abort_if_already_setup(hass: HomeAssistant, test_connect) -> None:
+async def test_abort_if_already_setup(hass: HomeAssistant, test_connect: None) -> None:
     """Test we abort if the device is already setup."""
     flow = init_config_flow(hass)
     MockConfigEntry(
