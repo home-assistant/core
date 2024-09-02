@@ -130,7 +130,7 @@ class MissingIntegrationFrame(HomeAssistantError):
 def report(
     what: str,
     *,
-    exclude_integrations: set | None = None,
+    exclude_integrations: set[str] | None = None,
     error_if_core: bool = True,
     error_if_integration: bool = False,
     level: int = logging.WARNING,
