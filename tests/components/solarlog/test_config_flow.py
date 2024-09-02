@@ -127,7 +127,7 @@ async def test_abort_if_already_setup(hass: HomeAssistant, test_connect: None) -
     """Test we abort if the device is already setup."""
 
     MockConfigEntry(
-        domain="solarlog", data={CONF_NAME: NAME, CONF_HOST: HOST}
+         domain=DOMAIN, data={CONF_NAME: NAME, CONF_HOST: HOST}
     ).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
