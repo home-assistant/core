@@ -46,7 +46,7 @@ jobs:
           python -m venv venv
           . venv/bin/activate
           python --version
-          pip install "$(grep '^uv' < requirements_test.txt)"
+          pip install "$(grep '^uv' < requirements.txt)"
           uv pip install -r requirements.txt
 
       - name: Get information
