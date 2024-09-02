@@ -5,7 +5,6 @@ from unittest.mock import patch
 import pytest
 from python_otbr_api import ActiveDataSet, tlv_parser
 
-from homeassistant.components import otbr
 from homeassistant.components.otbr import (
     silabs_multiprotocol as otbr_silabs_multiprotocol,
 )
@@ -127,10 +126,11 @@ async def test_async_change_channel_no_otbr(hass: HomeAssistant) -> None:
 
 
 async def test_async_change_channel_non_matching_url(
-    hass: HomeAssistant, otbr_config_entry_multipan
+    hass: HomeAssistant, otbr_config_entry_multipan: str
 ) -> None:
     """Test async_change_channel when otbr is not configured."""
-    hass.data[otbr.DATA_OTBR].url = OTBR_NON_MULTIPAN_URL
+    config_entry = hass.config_entries.async_get_entry(otbr_config_entry_multipan)
+    config_entry.runtime_data.url = OTBR_NON_MULTIPAN_URL
     with patch("python_otbr_api.OTBR.set_channel") as mock_set_channel:
         await otbr_silabs_multiprotocol.async_change_channel(hass, 16, delay=0)
     mock_set_channel.assert_not_awaited()
@@ -184,10 +184,11 @@ async def test_async_get_channel_no_otbr(hass: HomeAssistant) -> None:
 
 
 async def test_async_get_channel_non_matching_url(
-    hass: HomeAssistant, otbr_config_entry_multipan
+    hass: HomeAssistant, otbr_config_entry_multipan: str
 ) -> None:
     """Test async_change_channel when otbr is not configured."""
-    hass.data[otbr.DATA_OTBR].url = OTBR_NON_MULTIPAN_URL
+    config_entry = hass.config_entries.async_get_entry(otbr_config_entry_multipan)
+    config_entry.runtime_data.url = OTBR_NON_MULTIPAN_URL
     with patch("python_otbr_api.OTBR.get_active_dataset") as mock_get_active_dataset:
         assert await otbr_silabs_multiprotocol.async_get_channel(hass) is None
     mock_get_active_dataset.assert_not_awaited()
@@ -198,10 +199,11 @@ async def test_async_get_channel_non_matching_url(
     [(OTBR_MULTIPAN_URL, True), (OTBR_NON_MULTIPAN_URL, False)],
 )
 async def test_async_using_multipan(
-    hass: HomeAssistant, otbr_config_entry_multipan, url: str, expected: bool
+    hass: HomeAssistant, otbr_config_entry_multipan: str, url: str, expected: bool
 ) -> None:
     """Test async_change_channel when otbr is not configured."""
-    hass.data[otbr.DATA_OTBR].url = url
+    config_entry = hass.config_entries.async_get_entry(otbr_config_entry_multipan)
+    config_entry.runtime_data.url = url
 
     assert await otbr_silabs_multiprotocol.async_using_multipan(hass) is expected
 
@@ -213,8 +215,9 @@ async def test_async_using_multipan_no_otbr(hass: HomeAssistant) -> None:
 
 
 async def test_async_using_multipan_non_matching_url(
-    hass: HomeAssistant, otbr_config_entry_multipan
+    hass: HomeAssistant, otbr_config_entry_multipan: str
 ) -> None:
     """Test async_change_channel when otbr is not configured."""
-    hass.data[otbr.DATA_OTBR].url = OTBR_NON_MULTIPAN_URL
+    config_entry = hass.config_entries.async_get_entry(otbr_config_entry_multipan)
+    config_entry.runtime_data.url = OTBR_NON_MULTIPAN_URL
     assert await otbr_silabs_multiprotocol.async_using_multipan(hass) is False

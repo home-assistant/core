@@ -51,6 +51,18 @@ class ViCareNumberEntityDescription(NumberEntityDescription, ViCareRequiredKeysM
 
 DEVICE_ENTITY_DESCRIPTIONS: tuple[ViCareNumberEntityDescription, ...] = (
     ViCareNumberEntityDescription(
+        key="dhw_temperature",
+        translation_key="dhw_temperature",
+        entity_category=EntityCategory.CONFIG,
+        device_class=NumberDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        value_getter=lambda api: api.getDomesticHotWaterConfiguredTemperature(),
+        value_setter=lambda api, value: api.setDomesticHotWaterTemperature(value),
+        min_value_getter=lambda api: api.getDomesticHotWaterMinTemperature(),
+        max_value_getter=lambda api: api.getDomesticHotWaterMaxTemperature(),
+        native_step=1,
+    ),
+    ViCareNumberEntityDescription(
         key="dhw_secondary_temperature",
         translation_key="dhw_secondary_temperature",
         entity_category=EntityCategory.CONFIG,
@@ -235,8 +247,8 @@ def _build_entities(
 
     entities: list[ViCareNumber] = [
         ViCareNumber(
-            device.api,
             device.config,
+            device.api,
             description,
         )
         for device in device_list
@@ -247,8 +259,8 @@ def _build_entities(
     entities.extend(
         [
             ViCareNumber(
-                circuit,
                 device.config,
+                circuit,
                 description,
             )
             for device in device_list
@@ -283,8 +295,8 @@ class ViCareNumber(ViCareEntity, NumberEntity):
 
     def __init__(
         self,
-        api: PyViCareHeatingDeviceComponent,
         device_config: PyViCareDeviceConfig,
+        api: PyViCareDevice | PyViCareHeatingDeviceComponent,
         description: ViCareNumberEntityDescription,
     ) -> None:
         """Initialize the number."""

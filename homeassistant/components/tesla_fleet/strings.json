@@ -19,7 +19,7 @@
       },
       "reauth_confirm": {
         "title": "[%key:common::config_flow::title::reauth%]",
-        "description": "The Withings integration needs to re-authenticate your account"
+        "description": "The {name} integration needs to re-authenticate your account"
       }
     },
     "create_entry": {
