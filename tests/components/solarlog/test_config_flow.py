@@ -131,7 +131,7 @@ async def test_abort_if_already_setup(hass: HomeAssistant, test_connect: None) -
     ).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     await hass.async_block_till_done()
 
