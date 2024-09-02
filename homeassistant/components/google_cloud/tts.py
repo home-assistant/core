@@ -49,11 +49,11 @@ async def async_get_engine(
     hass: HomeAssistant,
     config: ConfigType,
     discovery_info: DiscoveryInfoType | None = None,
-) -> GoogleCloudTTSProvider | None:
+) -> Provider | None:
     """Set up Google Cloud TTS component."""
     if key_file := config.get(CONF_KEY_FILE):
         key_file = hass.config.path(key_file)
-        if not Path(hass.config.path(key_file)).is_file():
+        if not Path(key_file).is_file():
             _LOGGER.error("File %s doesn't exist", key_file)
             return None
     if key_file:
@@ -61,7 +61,7 @@ async def async_get_engine(
             key_file
         )
         if not hass.config_entries.async_entries(DOMAIN):
-            _LOGGER.info("Creating config entry by importing: %s", config)
+            _LOGGER.debug("Creating config entry by importing: %s", config)
             hass.async_create_task(
                 hass.config_entries.flow.async_init(
                     DOMAIN, context={"source": SOURCE_IMPORT}, data=config
@@ -229,7 +229,6 @@ class GoogleCloudTTSEntity(BaseGoogleCloudProvider, TextToSpeechEntity):
         self._attr_name = entry.title
         self._attr_device_info = dr.DeviceInfo(
             identifiers={(DOMAIN, entry.entry_id)},
-            name=entry.title,
             manufacturer="Google",
             model="Cloud",
             entry_type=dr.DeviceEntryType.SERVICE,

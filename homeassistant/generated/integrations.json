@@ -2229,7 +2229,8 @@
         "google_cloud": {
           "integration_type": "service",
           "config_flow": true,
-          "iot_class": "cloud_push"
+          "iot_class": "cloud_push",
+          "name": "Google Cloud Platform"
         },
         "google_domains": {
           "integration_type": "hub",
@@ -7291,7 +7292,6 @@
     "generic",
     "generic_hygrostat",
     "generic_thermostat",
-    "google_cloud",
     "google_travel_time",
     "group",
     "growatt_server",

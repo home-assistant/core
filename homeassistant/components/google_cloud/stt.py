@@ -59,7 +59,6 @@ class GoogleCloudSpeechToTextEntity(SpeechToTextEntity):
         self._attr_name = entry.title
         self._attr_device_info = dr.DeviceInfo(
             identifiers={(DOMAIN, entry.entry_id)},
-            name=entry.title,
             manufacturer="Google",
             model="Cloud",
             entry_type=dr.DeviceEntryType.SERVICE,
