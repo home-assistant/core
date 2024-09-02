@@ -1269,6 +1269,7 @@ class UnitOfSpeed(StrEnum):
     KILOMETERS_PER_HOUR = "km/h"
     KNOTS = "kn"
     MILES_PER_HOUR = "mph"
+    MILLIMETERS_PER_SECOND = "mm/s"
 
 
 _DEPRECATED_SPEED_FEET_PER_SECOND: Final = DeprecatedConstantEnum(

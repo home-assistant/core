@@ -350,7 +350,7 @@ class SensorDeviceClass(StrEnum):
     """Generic speed.
 
     Unit of measurement: `SPEED_*` units or `UnitOfVolumetricFlux`
-    - SI /metric: `mm/d`, `mm/h`, `m/s`, `km/h`
+    - SI /metric: `mm/d`, `mm/h`, `m/s`, `km/h`, `mm/s`
     - USCS / imperial: `in/d`, `in/h`, `ft/s`, `mph`
     - Nautical: `kn`
     - Beaufort: `Beaufort`
