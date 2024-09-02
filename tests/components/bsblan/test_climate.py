@@ -18,7 +18,7 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 import homeassistant.helpers.entity_registry as er
 
 from . import setup_with_selected_platforms
@@ -142,8 +142,9 @@ async def test_async_set_preset_mode(
         mock_hvac_mode.return_value = hvac_mode
 
         if expected_call is None:
-            with pytest.raises(HomeAssistantError, match="set_preset_mode_error"):
+            with pytest.raises(ServiceValidationError) as exc_info:
                 await climate_entity.async_set_preset_mode(preset_mode)
+            assert exc_info.value.translation_key == "set_preset_mode_error"
         else:
             with patch.object(climate_entity, "async_set_data") as mock_set_data:
                 await climate_entity.async_set_preset_mode(preset_mode)
