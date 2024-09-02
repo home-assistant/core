@@ -133,7 +133,6 @@ async def test_abort_if_already_setup(hass: HomeAssistant, test_connect: None) -
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
