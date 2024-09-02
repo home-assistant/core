@@ -7358,7 +7358,6 @@
     "generic",
     "generic_hygrostat",
     "generic_thermostat",
-    "google_cloud",
     "google_travel_time",
     "group",
     "growatt_server",
