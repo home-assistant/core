@@ -26,13 +26,13 @@
     },
     "binary_sensor": {
       "eco_friendly_mode": {
-        "name": "Eco Friendly"
+        "name": "Eco friendly"
       },
       "power_save_enabled": {
-        "name": "Power Saving Mode"
+        "name": "Power saving mode"
       },
       "remote_control_enabled": {
-        "name": "{location}Remote Start"
+        "name": "Remote start"
       },
       "rinse_refill": {
         "name": "Rinse refill needed"
