@@ -126,9 +126,9 @@ async def test_form_exceptions(
 async def test_abort_if_already_setup(hass: HomeAssistant, test_connect: None) -> None:
     """Test we abort if the device is already setup."""
 
-    MockConfigEntry(
-        domain=DOMAIN, data={CONF_NAME: NAME, CONF_HOST: HOST}
-    ).add_to_hass(hass)
+    MockConfigEntry(domain=DOMAIN, data={CONF_NAME: NAME, CONF_HOST: HOST}).add_to_hass(
+        hass
+    )
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
