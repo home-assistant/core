@@ -454,8 +454,17 @@ class TuyaBinarySensorEntity(TuyaEntity, BinarySensorEntity):
                 )
                 return False
 
+            # Tuya documentation on bitmaps:
+            # https://support.tuya.com/en/help/_detail/K9mc4euc6tq9i
+
+            # Suppose a product has four types of failure:
+            # * No fault: decimal - > 0, binary - > 0000;
+            # * The first kind of fault occurs: decimal - > 1; binary - > 0001;
+            # * The first and second faults occur at the same time: decimal - > 3; binary - > 0011;
+            # * All faults occur simultaneously: decimal - > 15; binary - > 1111;
             fault_bitmap = bin(self.device.status[dpcode])[2:].zfill(len(fault_keys))
-            return fault_bitmap[fault_keys.index(fault_key)] == "1"
+            fault_index = len(fault_keys) - fault_keys.index(fault_key) - 1
+            return fault_bitmap[fault_index] == "1"
 
         if isinstance(self.entity_description.on_value, set):
             return self.device.status[dpcode] in self.entity_description.on_value
