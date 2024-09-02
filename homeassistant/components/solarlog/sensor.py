@@ -86,28 +86,31 @@ SOLARLOG_SENSOR_TYPES: tuple[SolarLogCoordinatorSensorEntityDescription, ...] = 
         translation_key="yield_day",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
-        value_fn=lambda data: round(data.yield_day / 1000, 3),
+        suggested_display_precision=3,
+        value_fn=lambda data: data.yield_day / 1000,
     ),
     SolarLogCoordinatorSensorEntityDescription(
         key="yield_yesterday",
         translation_key="yield_yesterday",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
-        value_fn=lambda data: round(data.yield_yesterday / 1000, 3),
+        suggested_display_precision=3,
+        value_fn=lambda data: data.yield_yesterday / 1000,
     ),
     SolarLogCoordinatorSensorEntityDescription(
         key="yield_month",
         translation_key="yield_month",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
-        value_fn=lambda data: round(data.yield_month / 1000, 3),
+        suggested_display_precision=3,
+        value_fn=lambda data: data.yield_month / 1000,
     ),
     SolarLogCoordinatorSensorEntityDescription(
         key="yield_year",
         translation_key="yield_year",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
-        value_fn=lambda data: round(data.yield_year / 1000, 3),
+        value_fn=lambda data: data.yield_year / 1000,
     ),
     SolarLogCoordinatorSensorEntityDescription(
         key="yield_total",
@@ -115,7 +118,8 @@ SOLARLOG_SENSOR_TYPES: tuple[SolarLogCoordinatorSensorEntityDescription, ...] = 
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL,
-        value_fn=lambda data: round(data.yield_total / 1000, 3),
+        suggested_display_precision=3,
+        value_fn=lambda data: data.yield_total / 1000,
     ),
     SolarLogCoordinatorSensorEntityDescription(
         key="consumption_ac",
@@ -130,28 +134,32 @@ SOLARLOG_SENSOR_TYPES: tuple[SolarLogCoordinatorSensorEntityDescription, ...] = 
         translation_key="consumption_day",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
-        value_fn=lambda data: round(data.consumption_day / 1000, 3),
+        suggested_display_precision=3,
+        value_fn=lambda data: data.consumption_day / 1000,
     ),
     SolarLogCoordinatorSensorEntityDescription(
         key="consumption_yesterday",
         translation_key="consumption_yesterday",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
-        value_fn=lambda data: round(data.consumption_yesterday / 1000, 3),
+        suggested_display_precision=3,
+        value_fn=lambda data: data.consumption_yesterday / 1000,
     ),
     SolarLogCoordinatorSensorEntityDescription(
         key="consumption_month",
         translation_key="consumption_month",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
-        value_fn=lambda data: round(data.consumption_month / 1000, 3),
+        suggested_display_precision=3,
+        value_fn=lambda data: data.consumption_month / 1000,
     ),
     SolarLogCoordinatorSensorEntityDescription(
         key="consumption_year",
         translation_key="consumption_year",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
-        value_fn=lambda data: round(data.consumption_year / 1000, 3),
+        suggested_display_precision=3,
+        value_fn=lambda data: data.consumption_year / 1000,
     ),
     SolarLogCoordinatorSensorEntityDescription(
         key="consumption_total",
@@ -159,7 +167,8 @@ SOLARLOG_SENSOR_TYPES: tuple[SolarLogCoordinatorSensorEntityDescription, ...] = 
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL,
-        value_fn=lambda data: round(data.consumption_total / 1000, 3),
+        suggested_display_precision=3,
+        value_fn=lambda data: data.consumption_total / 1000,
     ),
     SolarLogCoordinatorSensorEntityDescription(
         key="self_consumption_year",
@@ -190,6 +199,7 @@ SOLARLOG_SENSOR_TYPES: tuple[SolarLogCoordinatorSensorEntityDescription, ...] = 
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.POWER_FACTOR,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
         value_fn=lambda data: data.capacity,
     ),
     SolarLogCoordinatorSensorEntityDescription(
@@ -198,6 +208,7 @@ SOLARLOG_SENSOR_TYPES: tuple[SolarLogCoordinatorSensorEntityDescription, ...] = 
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.POWER_FACTOR,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
         value_fn=lambda data: data.efficiency,
     ),
     SolarLogCoordinatorSensorEntityDescription(
@@ -214,6 +225,7 @@ SOLARLOG_SENSOR_TYPES: tuple[SolarLogCoordinatorSensorEntityDescription, ...] = 
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.POWER_FACTOR,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
         value_fn=lambda data: data.usage,
     ),
 )
@@ -232,9 +244,10 @@ INVERTER_SENSOR_TYPES: tuple[SolarLogInverterSensorEntityDescription, ...] = (
         translation_key="consumption_year",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
+        suggested_display_precision=3,
         value_fn=lambda inverter: None
         if inverter.consumption_year is None
-        else round(inverter.consumption_year / 1000, 3),
+        else inverter.consumption_year / 1000,
     ),
 )
 
