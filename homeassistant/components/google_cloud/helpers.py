@@ -151,7 +151,7 @@ def tts_options_schema(
     )
 
 
-def tts_platform_schema():
+def tts_platform_schema() -> vol.Schema:
     """Return schema for TTS platform."""
     return vol.Schema(
         {
@@ -177,4 +177,4 @@ def validate_service_account_info(info: Mapping[str, str]) -> None:
         ValueError: If the info is not in the expected format.
 
     """
-    Credentials.from_service_account_info(info)
+    Credentials.from_service_account_info(info)  # type:ignore[no-untyped-call]

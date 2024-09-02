@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from google.api_core.exceptions import GoogleAPIError, Unauthenticated
 from google.cloud import texttospeech
@@ -22,6 +22,7 @@ from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
     CONF_ENCODING,
@@ -44,7 +45,11 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORM_SCHEMA = TTS_PLATFORM_SCHEMA.extend(tts_platform_schema().schema)
 
 
-async def async_get_engine(hass, config, discovery_info=None):
+async def async_get_engine(
+    hass: HomeAssistant,
+    config: ConfigType,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> Provider | None:
     """Set up Google Cloud TTS component."""
     if key_file := config.get(CONF_KEY_FILE):
         key_file = hass.config.path(key_file)
@@ -118,8 +123,8 @@ class BaseGoogleCloudProvider:
         self,
         client: texttospeech.TextToSpeechAsyncClient,
         voices: dict[str, list[str]],
-        language,
-        options_schema,
+        language: str,
+        options_schema: vol.Schema,
     ) -> None:
         """Init Google Cloud TTS base provider."""
         self._client = client
@@ -128,24 +133,24 @@ class BaseGoogleCloudProvider:
         self._options_schema = options_schema
 
     @property
-    def supported_languages(self):
-        """Return list of supported languages."""
+    def supported_languages(self) -> list[str]:
+        """Return a list of supported languages."""
         return list(self._voices)
 
     @property
-    def default_language(self):
+    def default_language(self) -> str:
         """Return the default language."""
         return self._language
 
     @property
-    def supported_options(self):
+    def supported_options(self) -> list[str]:
         """Return a list of supported options."""
         return [option.schema for option in self._options_schema.schema]
 
     @property
-    def default_options(self):
+    def default_options(self) -> dict[str, Any]:
         """Return a dict including default options."""
-        return self._options_schema({})
+        return cast(dict[str, Any], self._options_schema({}))
 
     @callback
     def async_get_supported_voices(self, language: str) -> list[Voice] | None:
@@ -154,16 +159,25 @@ class BaseGoogleCloudProvider:
             return None
         return [Voice(voice, voice) for voice in voices]
 
-    async def _async_get_tts_audio(self, message, language, options):
-        """Load TTS from google."""
+    async def _async_get_tts_audio(
+        self,
+        message: str,
+        language: str,
+        options: dict[str, Any],
+    ) -> TtsAudioType:
+        """Load TTS from Google Cloud."""
         try:
             options = self._options_schema(options)
         except vol.Invalid as err:
             _LOGGER.error("Error: %s when validating options: %s", err, options)
             return None, None
 
-        encoding = texttospeech.AudioEncoding[options[CONF_ENCODING]]
-        gender = texttospeech.SsmlVoiceGender[options[CONF_GENDER]]
+        encoding: texttospeech.AudioEncoding = texttospeech.AudioEncoding[
+            options[CONF_ENCODING]
+        ]  # type: ignore[misc]
+        gender: texttospeech.SsmlVoiceGender | None = texttospeech.SsmlVoiceGender[
+            options[CONF_GENDER]
+        ]  # type: ignore[misc]
         voice = options[CONF_VOICE]
         if voice:
             gender = None
