@@ -159,7 +159,7 @@ def tts_options_schema(
     )
 
 
-def tts_platform_schema() -> vol.Schema:
+def tts_platform_schema():
     """Return schema for TTS platform."""
     return vol.Schema(
         {
