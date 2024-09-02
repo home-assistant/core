@@ -1,17 +1,16 @@
 """DataUpdateCoordinator for Fing integration."""
 
-import asyncio
 from datetime import timedelta
 import logging
 from typing import Self
-
-import requests
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import AGENT_IP, AGENT_SECRET, DOMAIN
+from .const import AGENT_IP, AGENT_KEY, AGENT_PORT, DOMAIN
+from .fing_api.fing import Fing
+from .fing_api.models import Device
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -19,18 +18,12 @@ _LOGGER = logging.getLogger(__name__)
 class FingDataFetcher:
     """Keep data from the Fing Agent."""
 
-    # def __init__(self, hass: HomeAssistant, config: MappingProxyType[str, Any]) -> None:
-    def __init__(self, hass: HomeAssistant, config: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, ip: str, port: int, key: str) -> None:
         """Initialize Fing entity data."""
         self._hass = hass
-        self._config = config.data
-
-        # temporary solution, should be None and retrieved from the fing unit
-        # if the retrieve fails should be throw an error
-        # also the commented out init is the one to use
-        self._network_id = config.entry_id
-
-        self._devices: dict[str, str] = {}
+        self._fing = Fing(ip, port, key)
+        self._network_id = None
+        self._devices: dict[str, Device] = {}
 
     def get_devices(self):
         """Return all the devices."""
@@ -43,17 +36,9 @@ class FingDataFetcher:
     async def fetch_data(self) -> Self:
         """Fecth data from Fing."""
 
-        # move fetch inside a library
-        ip = self._config[AGENT_IP]
-        secret = self._config[AGENT_SECRET]
-        url = f"http://{ip}:49090/1/devices?auth={secret}"
-        response = await asyncio.to_thread(requests.get, url)
-        for device in response.json()["devices"]:
-            if "mac" in device:
-                self._devices[device["mac"]] = device
-        self._network_id = response.json().get("networkId", None)
-
-        # END
+        response = await self._fing.get_devices()
+        self._network_id = response.network_id
+        self._devices = {device.mac: device for device in response.devices}
         return self
 
 
@@ -62,7 +47,12 @@ class FingDataUpdateCoordinator(DataUpdateCoordinator[FingDataFetcher]):
 
     def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
         """Initialize global Fing updater."""
-        self._fing_fetcher = FingDataFetcher(hass, config_entry)
+        self._fing_fetcher = FingDataFetcher(
+            hass,
+            config_entry.data[AGENT_IP],
+            int(config_entry.data.get(AGENT_PORT, "49090")),
+            config_entry.data[AGENT_KEY],
+        )
 
         # update_interval = timedelta(minutes=randrange(55, 65))
         update_interval = timedelta(seconds=5)

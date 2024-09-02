@@ -14,6 +14,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import FingConfigEntry
 from .coordinator import FingDataUpdateCoordinator
+from .fing_api.models import Device
 from .utils import get_icon_from_type
 
 
@@ -26,8 +27,8 @@ async def async_setup_entry(
 
     coordinator = config_entry.runtime_data
     new_entities = [
-        FingTrackedDevice(coordinator, mac, device)
-        for mac, device in coordinator.data.get_devices().items()
+        FingTrackedDevice(coordinator, device)
+        for device in coordinator.data.get_devices().values()
     ]
 
     await remove_old_entities(hass, config_entry, new_entities)
@@ -37,16 +38,14 @@ async def async_setup_entry(
 class FingTrackedDevice(CoordinatorEntity[FingDataUpdateCoordinator], ScannerEntity):
     """Represent a tracked device."""
 
-    def __init__(
-        self, coordinator: FingDataUpdateCoordinator, mac: str, device
-    ) -> None:
+    def __init__(self, coordinator: FingDataUpdateCoordinator, device: Device) -> None:
         """Set up FingDevice entity."""
         super().__init__(coordinator)
-        self._mac = mac
-        self._device = coordinator.data.get_devices()[mac]
+        self._mac = device.mac
+        self._device = coordinator.data.get_devices()[device.mac]
         self._network_id = coordinator.data.get_network_id()
         self._attr_has_entity_name = True
-        self._attr_name = self._device.get("name", None)
+        self._attr_name = self._device.name
 
     @property
     def mac_address(self) -> str:
@@ -61,27 +60,27 @@ class FingTrackedDevice(CoordinatorEntity[FingDataUpdateCoordinator], ScannerEnt
     @property
     def icon(self) -> str | None:
         """Return the icon."""
-        return get_icon_from_type(self._device.get("type", None))
+        return get_icon_from_type(self._device.type)
 
     @property
     def ip_address(self) -> str | None:
         """Return the primary ip address of the device."""
-        return self._device["ip"][0] if "ip" in self._device else None
+        return self._device.ip[0] if self._device.ip else None
 
     @property
     def extra_state_attributes(self) -> dict[str, str]:
         """Return the attributes."""
         attrs: dict[str, str] = {}
-        if "type" in self._device:
-            attrs["type"] = self._device["type"]
-        if "make" in self._device:
-            attrs["make"] = self._device["make"]
-        if "model" in self._device:
-            attrs["model"] = self._device["model"]
-        if "first_seen" in self._device:
-            attrs["first_seen"] = self._device["first_seen"]
-        if "last_changed" in self._device:
-            attrs["last_changed"] = self._device["last_changed"]
+        if self._device.type:
+            attrs["type"] = self._device.type
+        if self._device.make:
+            attrs["make"] = self._device.make
+        if self._device.model:
+            attrs["model"] = self._device.model
+        if self._device.first_seen:
+            attrs["first_seen"] = self._device.first_seen
+        if self._device.last_changed:
+            attrs["last_changed"] = self._device.last_changed
         return attrs
 
     @property
@@ -92,7 +91,7 @@ class FingTrackedDevice(CoordinatorEntity[FingDataUpdateCoordinator], ScannerEnt
     @property
     def is_connected(self) -> bool:
         """Return true if the device is connected to the network."""
-        return "state" in self._device and self._device["state"] == "UP"
+        return self._device.active
 
     @property
     def source_type(self) -> SourceType:
