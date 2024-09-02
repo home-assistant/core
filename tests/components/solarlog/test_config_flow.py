@@ -142,7 +142,6 @@ async def test_abort_if_already_setup(hass: HomeAssistant, test_connect: None) -
         result["flow_id"],
         {CONF_HOST: HOST, CONF_NAME: "solarlog_test_7_8_9", "extended_data": False},
     )
-    await hass.async_block_till_done()
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
