@@ -31,5 +31,13 @@
         }
       }
     }
+  },
+  "selector": {
+    "connection_type": {
+      "options": {
+        "http": "HTTP",
+        "serial": "Serial"
+      }
+    }
   }
 }

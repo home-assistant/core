@@ -22,7 +22,11 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def validate_projector(
-    hass: HomeAssistant, host, conn_type, check_power=True, check_powered_on=True
+    hass: HomeAssistant,
+    host: str,
+    conn_type: str,
+    check_power: bool = True,
+    check_powered_on: bool = True,
 ):
     """Validate the given projector host allows us to connect."""
     epson_proj = Projector(

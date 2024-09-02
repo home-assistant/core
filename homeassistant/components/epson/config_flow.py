@@ -6,14 +6,21 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
+from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
 
 from . import validate_projector
 from .const import CONF_CONNECTION_TYPE, DOMAIN, HTTP, SERIAL
 from .exceptions import CannotConnect, PoweredOff
 
+ALLOWED_CONNECTION_TYPE = [HTTP, SERIAL]
+
 DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_CONNECTION_TYPE, default=HTTP): vol.In([HTTP, SERIAL]),
+        vol.Required(CONF_CONNECTION_TYPE, default=HTTP): SelectSelector(
+            SelectSelectorConfig(
+                options=ALLOWED_CONNECTION_TYPE, translation_key="connection_type"
+            )
+        ),
         vol.Required(CONF_HOST): str,
         vol.Required(CONF_NAME, default=DOMAIN): str,
     }

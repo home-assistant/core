@@ -30,9 +30,8 @@ async def test_migrate_entry(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     # Check that is now has connection_type
-    updated_entry = hass.config_entries.async_get_entry(mock_entry.entry_id)
-    assert updated_entry
-    assert updated_entry.version == 1
-    assert updated_entry.minor_version == 2
-    assert updated_entry.data.get(CONF_CONNECTION_TYPE) == "http"
-    assert updated_entry.data.get(CONF_HOST) == "1.1.1.1"
+    assert mock_entry
+    assert mock_entry.version == 1
+    assert mock_entry.minor_version == 2
+    assert mock_entry.data.get(CONF_CONNECTION_TYPE) == "http"
+    assert mock_entry.data.get(CONF_HOST) == "1.1.1.1"
