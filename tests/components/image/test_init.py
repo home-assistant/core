@@ -18,6 +18,7 @@ from homeassistant.setup import async_setup_component
 
 from .conftest import (
     MockImageEntity,
+    MockImageEntityCapitalContentType,
     MockImageEntityInvalidContentType,
     MockImageNoStateEntity,
     MockImagePlatform,
@@ -136,6 +137,32 @@ async def test_no_valid_content_type(
     }
     resp = await client.get(f"/api/image_proxy/image.test?token={access_token}")
     assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR
+
+
+async def test_valid_but_capitalized_content_type(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
+    """Test invalid content type."""
+    mock_integration(hass, MockModule(domain="test"))
+    mock_platform(
+        hass, "test.image", MockImagePlatform([MockImageEntityCapitalContentType(hass)])
+    )
+    assert await async_setup_component(
+        hass, image.DOMAIN, {"image": {"platform": "test"}}
+    )
+    await hass.async_block_till_done()
+
+    client = await hass_client()
+
+    state = hass.states.get("image.test")
+    access_token = state.attributes["access_token"]
+    assert state.attributes == {
+        "access_token": access_token,
+        "entity_picture": f"/api/image_proxy/image.test?token={access_token}",
+        "friendly_name": "Test",
+    }
+    resp = await client.get(f"/api/image_proxy/image.test?token={access_token}")
+    assert resp.status == HTTPStatus.OK
 
 
 async def test_fetch_image_authenticated(
