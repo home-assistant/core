@@ -10,20 +10,11 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_NAME
-from homeassistant.core import HomeAssistant, callback
 from homeassistant.util import slugify
 
 from .const import DEFAULT_HOST, DEFAULT_NAME, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-
-
-@callback
-def solarlog_entries(hass: HomeAssistant) -> set[str]:
-    """Return the hosts already configured."""
-    return {
-        entry.data[CONF_HOST] for entry in hass.config_entries.async_entries(DOMAIN)
-    }
 
 
 class SolarLogConfigFlow(ConfigFlow, domain=DOMAIN):
