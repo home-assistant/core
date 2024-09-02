@@ -86,7 +86,7 @@ class RingLight(RingEntity[RingStickUpCam], LightEntity):
 
         self._attr_is_on = new_state == OnOffState.ON
         self._no_updates_until = dt_util.utcnow() + SKIP_UPDATES_DELAY
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on for 30 seconds."""
