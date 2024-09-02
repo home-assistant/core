@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import functools
 import operator
-from types import MappingProxyType
 from typing import Any
 
 from google.cloud import texttospeech
@@ -51,8 +50,9 @@ async def async_tts_voices(
 
 
 def tts_options_schema(
-    config_options: MappingProxyType[str, Any], voices: dict[str, list[str]]
-):
+    config_options: dict[str, Any],
+    voices: dict[str, list[str]],
+) -> vol.Schema:
     """Return schema for TTS options with default values from config or constants."""
     return vol.Schema(
         {
@@ -152,7 +152,7 @@ def tts_options_schema(
     )
 
 
-def tts_platform_schema():
+def tts_platform_schema() -> vol.Schema:
     """Return schema for TTS platform."""
     return vol.Schema(
         {
