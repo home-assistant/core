@@ -1,4 +1,5 @@
 """Gaposa cover entity."""
+
 from __future__ import annotations
 
 import asyncio
@@ -18,14 +19,19 @@ from homeassistant.components.cover import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import (
-    AddEntitiesCallback,
-    async_get_current_platform,
-)
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN, MOTION_DELAY
+from .const import (
+    COMMAND_DOWN,
+    COMMAND_STOP,
+    COMMAND_UP,
+    DOMAIN,
+    MOTION_DELAY,
+    STATE_DOWN,
+    STATE_UP,
+)
 from .coordinator import DataUpdateCoordinatorGaposa
 
 _LOGGER = logging.getLogger(__name__)
@@ -40,29 +46,31 @@ async def async_setup_entry(
     gaposa, coordinator = hass.data[DOMAIN][config_entry.entry_id]
 
     # Create a set to store the IDs of added entities
-    added_entities = set()
+    my_entities: dict[str, GaposaCover] = {}
 
     @callback
     def async_add_remove_entities():
         """Add or remove entities based on coordinator data."""
         new_entities = []
-        current_ids = set(coordinator.data.keys())
+        latest_ids = set(coordinator.data.keys())
 
         # Add new entities
         for motor_id, motor in coordinator.data.items():
-            if motor_id not in added_entities:
-                new_entities.append(GaposaCover(coordinator, motor_id, motor))
-                added_entities.add(motor_id)
+            if motor_id not in my_entities:
+                _LOGGER.debug("New cover entity %s: %s", motor_id, motor.name)
+                cover = GaposaCover(coordinator, motor_id, motor)
+                new_entities.append(cover)
+                my_entities[motor_id] = cover
 
         if new_entities:
             async_add_entities(new_entities)
 
         # Remove entities that no longer exist
-        platform = async_get_current_platform()
-        for entity in platform.entities.values():
-            if isinstance(entity, GaposaCover) and entity.id not in current_ids:
-                hass.async_create_task(entity.async_remove())
-                added_entities.remove(entity.id)
+        for motor_id, motor in list(my_entities.items()):
+            if motor_id not in latest_ids:
+                _LOGGER.debug("Removed cover entity %s: %s", motor_id, motor.name)
+                hass.async_create_task(motor.async_remove())
+                del my_entities[motor_id]
 
     # Initial entity setup
     async_add_remove_entities()
@@ -114,31 +122,10 @@ class GaposaCover(CoordinatorEntity, CoverEntity):
         # entity screens, and used to build the Entity ID that's used is automations etc.
         self._attr_name = self.motor.name
 
-    async def async_added_to_hass(self) -> None:
-        """Run when this Entity has been added to HA."""
-        await super().async_added_to_hass()
-        # Importantly for a push integration, the module that will be getting updates
-        # needs to notify HA of changes. The dummy device has a registercallback
-        # method, so to this we add the 'self.async_write_ha_state' method, to be
-        # called where ever there are changes.
-        # The call back registration is done once this entity is registered with HA
-        # (rather than in the __init__)
-        self.async_on_remove(
-            self.coordinator.async_add_listener(self._handle_coordinator_update)
-        )
-
     async def async_will_remove_from_hass(self) -> None:
         """Entity being removed from hass."""
         # The opposite of async_added_to_hass. Remove any registered call backs here.
         await super().async_will_remove_from_hass()
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        _LOGGER.info(
-            "_handle_coordinator_update for %s %s", self.motor.name, self.motor.state
-        )
-        self.async_write_ha_state()
 
     # Information about the devices that is partially visible in the UI.
     # The most critical thing here is to give this entity a name so it is displayed
@@ -170,7 +157,7 @@ class GaposaCover(CoordinatorEntity, CoverEntity):
         }
 
     # This property is important to let HA know if this entity is online or not.
-    # If an entity is offline (return False), the UI will refelect this.
+    # If an entity is offline (return False), the UI will reflect this.
     @property
     def available(self) -> bool:
         """Return True if roller and hub is available."""
@@ -190,26 +177,26 @@ class GaposaCover(CoordinatorEntity, CoverEntity):
         """Return if the cover is closed, same as position 0."""
         return (
             True
-            if self.motor.state == "DOWN"
+            if self.motor.state == STATE_DOWN
             else False
-            if self.motor.state == "UP"
+            if self.motor.state == STATE_UP
             else None
         )
 
     @property
     def is_closing(self) -> bool:
         """Return if the cover is closing or not."""
-        return self.is_moving and self.lastCommand == "DOWN"
+        return self.is_moving and self.lastCommand == COMMAND_DOWN
 
     @property
     def is_opening(self) -> bool:
         """Return if the cover is opening or not."""
-        return self.is_moving and self.lastCommand == "UP"
+        return self.is_moving and self.lastCommand == COMMAND_UP
 
     @property
     def is_moving(self) -> bool:
         """Return if the cover is moving or not."""
-        if self.lastCommandTime is not None and self.lastCommand != "STOP":
+        if self.lastCommandTime is not None and self.lastCommand != COMMAND_STOP:
             now = dt_util.utcnow()
             complete = self.lastCommandTime + timedelta(seconds=MOTION_DELAY)
             return now < complete
@@ -219,21 +206,21 @@ class GaposaCover(CoordinatorEntity, CoverEntity):
     # the cover to the desired position, or open and close it all the way.
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
-        self.lastCommand = "UP"
+        self.lastCommand = COMMAND_UP
         self.lastCommandTime = dt_util.utcnow()
         await self.motor.up(False)
         self.schedule_refresh_ha_after_motion()
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
-        self.lastCommand = "DOWN"
+        self.lastCommand = COMMAND_DOWN
         self.lastCommandTime = dt_util.utcnow()
         await self.motor.down(False)
         self.schedule_refresh_ha_after_motion()
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
-        self.lastCommand = "STOP"
+        self.lastCommand = COMMAND_STOP
         self.lastCommandTime = dt_util.utcnow()
         await self.motor.stop(False)
 
