@@ -91,7 +91,7 @@ def test_install(mock_sys, mock_popen, mock_env_copy, mock_venv) -> None:
     assert package.install_package(TEST_NEW_REQ, False)
     assert mock_popen.call_count == 2
     assert mock_popen.mock_calls[0] == call(
-        [mock_sys.executable, "-m", "pip", "install", "--quiet", TEST_NEW_REQ],
+        ["uv", "pip", "install", "--quiet", TEST_NEW_REQ],
         stdin=PIPE,
         stdout=PIPE,
         stderr=PIPE,
@@ -108,8 +108,7 @@ def test_install_upgrade(mock_sys, mock_popen, mock_env_copy, mock_venv) -> None
     assert mock_popen.call_count == 2
     assert mock_popen.mock_calls[0] == call(
         [
-            mock_sys.executable,
-            "-m",
+            "uv",
             "pip",
             "install",
             "--quiet",
@@ -133,8 +132,7 @@ def test_install_target(mock_sys, mock_popen, mock_env_copy, mock_venv) -> None:
     mock_venv.return_value = False
     mock_sys.platform = "linux"
     args = [
-        mock_sys.executable,
-        "-m",
+        "uv",
         "pip",
         "install",
         "--quiet",
@@ -177,8 +175,7 @@ def test_install_constraint(mock_sys, mock_popen, mock_env_copy, mock_venv) -> N
     assert mock_popen.call_count == 2
     assert mock_popen.mock_calls[0] == call(
         [
-            mock_sys.executable,
-            "-m",
+            "uv",
             "pip",
             "install",
             "--quiet",
