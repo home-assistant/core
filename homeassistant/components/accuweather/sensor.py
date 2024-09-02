@@ -327,6 +327,7 @@ SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
     AccuWeatherSensorDescription(
         key="UVIndex",
         state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
         native_unit_of_measurement=UV_INDEX,
         value_fn=lambda data: cast(int, data),
         attr_fn=lambda data: {ATTR_LEVEL: data["UVIndexText"]},
