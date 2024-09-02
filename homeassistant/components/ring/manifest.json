@@ -14,5 +14,5 @@
   "iot_class": "cloud_polling",
   "loggers": ["ring_doorbell"],
   "quality_scale": "silver",
-  "requirements": ["ring-doorbell[listen]==0.9.0"]
+  "requirements": ["ring-doorbell[listen]==0.9.3"]
 }
