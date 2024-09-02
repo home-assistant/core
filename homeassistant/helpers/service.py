@@ -1274,7 +1274,7 @@ def async_register_entity_service(
         report(
             (
                 "registers an entity service with a non entity service schema "
-                "which will stop working in HA Core 2025.10"
+                "which will stop working in HA Core 2025.9"
             ),
             error_if_core=False,
         )
