@@ -1843,18 +1843,6 @@ def post_schema_migration(
     which is blocked from being processed until the schema migration is
     complete.
     """
-    if old_version < 32 <= new_version:
-        # In version 31 we migrated all the time_fired, last_updated, and last_changed
-        # columns to be timestamps. In version 32 we need to wipe the old columns
-        # since they are no longer used and take up a significant amount of space.
-        assert instance.event_session is not None
-        assert instance.engine is not None
-        _wipe_old_string_time_columns(instance, instance.engine, instance.event_session)
-    if old_version < 35 <= new_version:
-        # In version 34 we migrated all the created, start, and last_reset
-        # columns to be timestamps. In version 35 we need to wipe the old columns
-        # since they are no longer used and take up a significant amount of space.
-        _wipe_old_string_statistics_columns(instance)
 
 
 def _wipe_old_string_statistics_columns(instance: Recorder) -> None:
