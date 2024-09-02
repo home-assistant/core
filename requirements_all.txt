@@ -895,7 +895,7 @@ fjaraskupan==2.3.0
 flexit_bacnet==2.2.1
 
 # homeassistant.components.flipr
-flipr-api==1.6.0
+flipr-api==1.6.1
 
 # homeassistant.components.flux_led
 flux-led==1.0.4
