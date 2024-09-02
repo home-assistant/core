@@ -125,40 +125,27 @@ async def test_form_exceptions(
 
 async def test_abort_if_already_setup(hass: HomeAssistant, test_connect: None) -> None:
     """Test we abort if the device is already setup."""
-    flow = init_config_flow(hass)
+
     MockConfigEntry(
         domain="solarlog", data={CONF_NAME: NAME, CONF_HOST: HOST}
     ).add_to_hass(hass)
 
-    # Should fail, same HOST different NAME (default)
-    result = await flow.async_step_user(
-        {CONF_HOST: HOST, CONF_NAME: "solarlog_test_7_8_9", "extended_data": False}
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {CONF_HOST: "already_configured"}
-
-    # Should fail, same HOST and NAME
-    result = await flow.async_step_user({CONF_HOST: HOST, CONF_NAME: NAME})
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {CONF_HOST: "already_configured"}
-
-    # SHOULD pass, diff HOST (without http://), different NAME
-    result = await flow.async_step_user(
-        {CONF_HOST: "2.2.2.2", CONF_NAME: "solarlog_test_7_8_9", "extended_data": False}
-    )
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "solarlog_test_7_8_9"
-    assert result["data"][CONF_HOST] == "http://2.2.2.2"
-
-    # SHOULD pass, diff HOST, same NAME
-    result = await flow.async_step_user(
-        {CONF_HOST: "http://2.2.2.2", CONF_NAME: NAME, "extended_data": False}
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     await hass.async_block_till_done()
 
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "solarlog_test_1_2_3"
-    assert result["data"][CONF_HOST] == "http://2.2.2.2"
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: HOST, CONF_NAME: "solarlog_test_7_8_9", "extended_data": False},
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
 
 
 async def test_reconfigure_flow(

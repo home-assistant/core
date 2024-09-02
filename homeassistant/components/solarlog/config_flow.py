@@ -36,12 +36,6 @@ class SolarLogConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self._errors: dict = {}
 
-    def _host_in_configuration_exists(self, host: str) -> bool:
-        """Return True if host exists in configuration."""
-        if host in solarlog_entries(self.hass):
-            return True
-        return False
-
     def _parse_url(self, host: str) -> str:
         """Return parsed host url."""
         url = urlparse(host, "http")
@@ -72,12 +66,13 @@ class SolarLogConfigFlow(ConfigFlow, domain=DOMAIN):
         """Step when user initializes a integration."""
         self._errors = {}
         if user_input is not None:
-            user_input[CONF_NAME] = slugify(user_input[CONF_NAME])
             user_input[CONF_HOST] = self._parse_url(user_input[CONF_HOST])
 
-            if self._host_in_configuration_exists(user_input[CONF_HOST]):
-                self._errors[CONF_HOST] = "already_configured"
-            elif await self._test_connection(user_input[CONF_HOST]):
+            self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
+
+            user_input[CONF_NAME] = slugify(user_input[CONF_NAME])
+
+            if await self._test_connection(user_input[CONF_HOST]):
                 return self.async_create_entry(
                     title=user_input[CONF_NAME], data=user_input
                 )
