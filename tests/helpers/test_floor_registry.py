@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import area_registry as ar, floor_registry as fr
 from homeassistant.util.dt import utcnow
 
-from tests.common import ANY, async_capture_events, flush_store
+from tests.common import async_capture_events, flush_store
 
 
 async def test_list_floors(floor_registry: fr.FloorRegistry) -> None:
@@ -43,7 +43,6 @@ async def test_create_floor(
         level=1,
         created_at=utcnow(),
         modified_at=utcnow(),
-        normalized_name=ANY,
     )
 
     assert len(floor_registry.floors) == 1
@@ -145,7 +144,6 @@ async def test_update_floor(
         level=None,
         created_at=created_at,
         modified_at=created_at,
-        normalized_name=ANY,
     )
     assert len(floor_registry.floors) == 1
 
@@ -169,7 +167,6 @@ async def test_update_floor(
         level=2,
         created_at=created_at,
         modified_at=modified_at,
-        normalized_name=ANY,
     )
 
     assert len(floor_registry.floors) == 1
