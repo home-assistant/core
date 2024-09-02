@@ -15,8 +15,9 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import DOMAIN, AirGradientConfigEntry
-from .coordinator import AirGradientConfigCoordinator
+from . import AirGradientConfigEntry
+from .const import DOMAIN
+from .coordinator import AirGradientCoordinator
 from .entity import AirGradientEntity
 
 
@@ -47,8 +48,8 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up AirGradient button entities based on a config entry."""
-    model = entry.runtime_data.measurement.data.model
-    coordinator = entry.runtime_data.config
+    coordinator = entry.runtime_data
+    model = coordinator.data.measures.model
 
     added_entities = False
 
@@ -57,7 +58,7 @@ async def async_setup_entry(
         nonlocal added_entities
 
         if (
-            coordinator.data.configuration_control is ConfigurationControl.LOCAL
+            coordinator.data.config.configuration_control is ConfigurationControl.LOCAL
             and not added_entities
         ):
             entities = [AirGradientButton(coordinator, CO2_CALIBRATION)]
@@ -67,7 +68,8 @@ async def async_setup_entry(
             async_add_entities(entities)
             added_entities = True
         elif (
-            coordinator.data.configuration_control is not ConfigurationControl.LOCAL
+            coordinator.data.config.configuration_control
+            is not ConfigurationControl.LOCAL
             and added_entities
         ):
             entity_registry = er.async_get(hass)
@@ -87,11 +89,10 @@ class AirGradientButton(AirGradientEntity, ButtonEntity):
     """Defines an AirGradient button."""
 
     entity_description: AirGradientButtonEntityDescription
-    coordinator: AirGradientConfigCoordinator
 
     def __init__(
         self,
-        coordinator: AirGradientConfigCoordinator,
+        coordinator: AirGradientCoordinator,
         description: AirGradientButtonEntityDescription,
     ) -> None:
         """Initialize airgradient button."""

@@ -19,7 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @callback
-def solarlog_entries(hass: HomeAssistant):
+def solarlog_entries(hass: HomeAssistant) -> set[str]:
     """Return the hosts already configured."""
     return {
         entry.data[CONF_HOST] for entry in hass.config_entries.async_entries(DOMAIN)
@@ -36,7 +36,7 @@ class SolarLogConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self._errors: dict = {}
 
-    def _host_in_configuration_exists(self, host) -> bool:
+    def _host_in_configuration_exists(self, host: str) -> bool:
         """Return True if host exists in configuration."""
         if host in solarlog_entries(self.hass):
             return True
@@ -50,7 +50,7 @@ class SolarLogConfigFlow(ConfigFlow, domain=DOMAIN):
         url = ParseResult("http", netloc, path, *url[3:])
         return url.geturl()
 
-    async def _test_connection(self, host):
+    async def _test_connection(self, host: str) -> bool:
         """Check if we can connect to the Solar-Log device."""
         solarlog = SolarLogConnector(host)
         try:
@@ -66,11 +66,12 @@ class SolarLogConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return True
 
-    async def async_step_user(self, user_input=None) -> ConfigFlowResult:
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Step when user initializes a integration."""
         self._errors = {}
         if user_input is not None:
-            # set some defaults in case we need to return to the form
             user_input[CONF_NAME] = slugify(user_input[CONF_NAME])
             user_input[CONF_HOST] = self._parse_url(user_input[CONF_HOST])
 
@@ -81,20 +82,14 @@ class SolarLogConfigFlow(ConfigFlow, domain=DOMAIN):
                     title=user_input[CONF_NAME], data=user_input
                 )
         else:
-            user_input = {}
-            user_input[CONF_NAME] = DEFAULT_NAME
-            user_input[CONF_HOST] = DEFAULT_HOST
+            user_input = {CONF_NAME: DEFAULT_NAME, CONF_HOST: DEFAULT_HOST}
 
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
                 {
-                    vol.Required(
-                        CONF_NAME, default=user_input.get(CONF_NAME, DEFAULT_NAME)
-                    ): str,
-                    vol.Required(
-                        CONF_HOST, default=user_input.get(CONF_HOST, DEFAULT_HOST)
-                    ): str,
+                    vol.Required(CONF_NAME, default=user_input[CONF_NAME]): str,
+                    vol.Required(CONF_HOST, default=user_input[CONF_HOST]): str,
                     vol.Required("extended_data", default=False): bool,
                 }
             ),
