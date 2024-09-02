@@ -21,25 +21,7 @@ class WebControlProGenericEntity(Entity):
         """Initialize the entity with destination channel."""
         super().__init__()
         self._dest = dest
-
-    async def async_update(self) -> None:
-        """Update the entity."""
-        await self._dest.refresh()
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique ID."""
-        return f"{self.__class__.__name__}_{self._dest.id}"
-
-    @property
-    def available(self) -> bool:
-        """Return if entity is available."""
-        return self._dest.available
-
-    @property
-    def device_info(self) -> DeviceInfo | None:
-        """Return device specific attributes."""
-        return DeviceInfo(
+        self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self.unique_id)},
             manufacturer=MANUFACTURER,
             model=self._dest.animationType.name,
@@ -49,3 +31,17 @@ class WebControlProGenericEntity(Entity):
             via_device=(DOMAIN, self._dest.host),
             configuration_url=f"http://{self._dest.host}/control",
         )
+
+    async def async_update(self) -> None:
+        """Update the entity."""
+        await self._dest.refresh()
+
+    @property
+    def unique_id(self) -> str:
+        """Return a unique ID."""
+        return f"dest_{self._dest.id}"
+
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return self._dest.available

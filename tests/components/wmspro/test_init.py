@@ -2,6 +2,8 @@
 
 from unittest.mock import AsyncMock
 
+import aiohttp
+
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
@@ -19,5 +21,21 @@ async def test_config_entry_device_config(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
     assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert len(mock_hub_ping.mock_calls) == 1
+    assert len(mock_hub_refresh.mock_calls) == 1
+
+
+async def test_config_entry_device_config_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_hub_ping: AsyncMock,
+    mock_hub_refresh: AsyncMock,
+) -> None:
+    """Test that a config entry will be retried due to ConfigEntryNotReady."""
+    mock_hub_refresh.side_effect = aiohttp.ClientError
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
     assert len(mock_hub_ping.mock_calls) == 1
     assert len(mock_hub_refresh.mock_calls) == 1

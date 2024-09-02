@@ -2,28 +2,36 @@
 
 from __future__ import annotations
 
+import aiohttp
 from wmspro.webcontrol import WebControlPro
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .config_flow import setup_and_verify
 from .const import DOMAIN, MANUFACTURER
 
 PLATFORMS: list[Platform] = [Platform.COVER]
 
-type WebControlProConfigEntry = ConfigEntry[WebControlPro]  # noqa: F821
+type WebControlProConfigEntry = ConfigEntry[WebControlPro]
 
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: WebControlProConfigEntry
 ) -> bool:
     """Set up wmspro from a config entry."""
-    hub = await setup_and_verify(hass, entry.data[CONF_HOST])
+    host = entry.data[CONF_HOST]
+    session = async_get_clientsession(hass)
+    hub = WebControlPro(host, session)
 
-    await hub.refresh()
+    try:
+        await hub.ping()
+        await hub.refresh()
+    except aiohttp.ClientError as err:
+        raise ConfigEntryNotReady(f"Error while connecting to {host}") from err
 
     entry.runtime_data = hub
 

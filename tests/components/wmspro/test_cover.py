@@ -29,7 +29,7 @@ async def test_cover_device(
 
     device_registry = dr.async_get(hass)
     device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, "WebControlProAwning_58717")}
+        identifiers={(DOMAIN, "dest_58717")}
     )
     assert device_entry is not None
     assert device_entry.manufacturer == MANUFACTURER

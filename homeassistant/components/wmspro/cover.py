@@ -11,10 +11,10 @@ from wmspro.const import (
 )
 
 from homeassistant.components.cover import ATTR_POSITION, CoverDeviceClass, CoverEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import WebControlProConfigEntry
 from .generic_entity import WebControlProGenericEntity
 
 SCAN_INTERVAL = timedelta(seconds=5)
@@ -23,7 +23,7 @@ PARALLEL_UPDATES = 1
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: WebControlProConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the WMS based covers from a config entry."""
