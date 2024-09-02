@@ -133,7 +133,7 @@ async def async_setup_device_coordinator(
     coordinator_list: list[DeviceDataUpdateCoordinator] = []
     for sub_id in device_sub_ids:
         coordinator = DeviceDataUpdateCoordinator(hass, device_api, sub_id=sub_id)
-        await coordinator.async_config_entry_first_refresh()
+        await coordinator.async_refresh()
 
         # Finally add a device coordinator into the result list.
         coordinator_list.append(coordinator)

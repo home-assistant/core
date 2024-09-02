@@ -416,7 +416,7 @@ amberelectric==1.1.1
 androidtv[async]==0.0.73
 
 # homeassistant.components.androidtv_remote
-androidtvremote2==0.1.1
+androidtvremote2==0.1.2
 
 # homeassistant.components.anova
 anova-wifi==0.17.0
@@ -777,7 +777,7 @@ freebox-api==1.1.0
 fritzconnection[qr]==1.13.2
 
 # homeassistant.components.fyta
-fyta_cli==0.6.3
+fyta_cli==0.6.6
 
 # homeassistant.components.google_translate
 gTTS==2.2.4
@@ -835,6 +835,9 @@ google-api-python-client==2.71.0
 
 # homeassistant.components.google_pubsub
 google-cloud-pubsub==2.23.0
+
+# homeassistant.components.google_cloud
+google-cloud-texttospeech==2.17.2
 
 # homeassistant.components.google_generative_ai_conversation
 google-generativeai==0.7.2
@@ -895,7 +898,7 @@ ha-philipsjs==3.2.2
 habitipy==0.3.1
 
 # homeassistant.components.bluetooth
-habluetooth==3.3.2
+habluetooth==3.4.0
 
 # homeassistant.components.cloud
 hass-nabucasa==0.81.1
@@ -926,7 +929,7 @@ hole==0.8.0
 holidays==0.55
 
 # homeassistant.components.frontend
-home-assistant-frontend==20240829.0
+home-assistant-frontend==20240902.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2024.8.29
@@ -1999,7 +2002,7 @@ reolink-aio==0.9.8
 rflink==0.0.66
 
 # homeassistant.components.ring
-ring-doorbell[listen]==0.9.0
+ring-doorbell[listen]==0.9.3
 
 # homeassistant.components.roku
 rokuecp==0.19.3
