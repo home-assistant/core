@@ -22,7 +22,7 @@ from nice_go import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -36,6 +36,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 RECONNECT_ATTEMPTS = 3
+RECONNECT_DELAY = 5
 
 
 @dataclass
@@ -189,20 +190,24 @@ class NiceGOUpdateCoordinator(DataUpdateCoordinator[dict[str, NiceGODevice]]):
             "on_connection_lost", self.on_connection_lost
         )
 
-        for attempt in range(RECONNECT_ATTEMPTS):
+        for _ in range(RECONNECT_ATTEMPTS):
             if self.hass.is_stopping:
                 return
 
             try:
                 await self.api.connect(reconnect=True)
-            except ApiError as e:
+            except ApiError:
                 _LOGGER.exception("API error")
-                if attempt == RECONNECT_ATTEMPTS - 1:
-                    raise ConfigEntryNotReady from e
             else:
                 return
 
-            await asyncio.sleep(5)
+            await asyncio.sleep(RECONNECT_DELAY)
+
+        self.async_set_update_error(
+            TimeoutError(
+                "Failed to connect to the websocket, reconnect attempts exhausted"
+            )
+        )
 
     async def on_data(self, data: dict[str, Any]) -> None:
         """Handle incoming data from the websocket."""

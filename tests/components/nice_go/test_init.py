@@ -351,3 +351,24 @@ async def test_no_connection_state(
     )
 
     assert hass.states.get("cover.test_garage_1").state == "unavailable"
+
+
+async def test_connection_attempts_exhausted(
+    hass: HomeAssistant,
+    mock_nice_go: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test connection attempts exhausted."""
+
+    mock_nice_go.connect.side_effect = ApiError
+
+    with (
+        patch("homeassistant.components.nice_go.coordinator.RECONNECT_ATTEMPTS", 1),
+        patch("homeassistant.components.nice_go.coordinator.RECONNECT_DELAY", 0),
+    ):
+        await setup_integration(hass, mock_config_entry, [Platform.COVER])
+
+    assert "API error" in caplog.text
+    assert "Error requesting Nice G.O. data" in caplog.text
