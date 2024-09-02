@@ -240,7 +240,7 @@ async def test_service_set_charge_schedule_multi(
 
 
 async def test_service_set_ac_schedule(
-    hass: HomeAssistant, config_entry: ConfigEntry
+    hass: HomeAssistant, config_entry: ConfigEntry, snapshot: SnapshotAssertion
 ) -> None:
     """Test that service invokes renault_api with correct data."""
     await hass.config_entries.async_setup(config_entry.entry_id)
@@ -273,11 +273,11 @@ async def test_service_set_ac_schedule(
         )
     assert len(mock_action.mock_calls) == 1
     mock_call_data: list[ChargeSchedule] = mock_action.mock_calls[0][1][0]
-    assert mock_action.mock_calls[0][1] == (mock_call_data,)
+    assert mock_call_data == snapshot
 
 
 async def test_service_set_ac_schedule_multi(
-    hass: HomeAssistant, config_entry: ConfigEntry
+    hass: HomeAssistant, config_entry: ConfigEntry, snapshot: SnapshotAssertion
 ) -> None:
     """Test that service invokes renault_api with correct data."""
     await hass.config_entries.async_setup(config_entry.entry_id)
@@ -322,7 +322,7 @@ async def test_service_set_ac_schedule_multi(
         )
     assert len(mock_action.mock_calls) == 1
     mock_call_data: list[HvacSchedule] = mock_action.mock_calls[0][1][0]
-    assert mock_action.mock_calls[0][1] == (mock_call_data,)
+    assert mock_call_data == snapshot
 
     # Schedule is activated now
     assert mock_call_data[2].activated is True
