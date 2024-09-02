@@ -156,15 +156,15 @@ class GooglePhotosMediaSource(MediaSource):
         entry = self._async_config_entry(identifier.config_entry_id)
         client = entry.runtime_data
         media_item = await client.get_media_item(media_item_id=identifier.media_id)
+        if not media_item.mime_type:
+            raise BrowseError("Could not determine mime type of media item")
         if media_item.media_metadata and (media_item.media_metadata.video is not None):
             url = _video_url(media_item)
-            mime_type = media_item.mime_type or "video/mp4"
         else:
             url = _media_url(media_item, LARGE_IMAGE_SIZE)
-            mime_type = media_item.mime_type or "image/jpeg"
         return PlayMedia(
             url=url,
-            mime_type=mime_type,
+            mime_type=media_item.mime_type,
         )
 
     async def async_browse_media(self, item: MediaSourceItem) -> BrowseMediaSource:
