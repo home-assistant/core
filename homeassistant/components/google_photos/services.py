@@ -42,7 +42,7 @@ UPLOAD_SERVICE_SCHEMA = vol.Schema(
 def _read_file_contents(
     hass: HomeAssistant, filenames: list[str]
 ) -> list[tuple[str, bytes]]:
-    """Read the mime type and contents from each filen."""
+    """Return the mime types and file contents for each file."""
     results = []
     for filename in filenames:
         if not hass.config.is_allowed_path(filename):
