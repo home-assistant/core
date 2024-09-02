@@ -42,7 +42,6 @@ orjson==3.10.7
 packaging>=23.1
 paho-mqtt==1.6.1
 Pillow==10.4.0
-pip>=21.3.1
 psutil-home-assistant==0.0.1
 PyJWT==2.9.0
 pymicro-vad==1.0.1
@@ -59,6 +58,7 @@ SQLAlchemy==2.0.31
 typing-extensions>=4.12.2,<5.0
 ulid-transform==1.0.2
 urllib3>=1.26.5,<2
+uv==0.2.27
 voluptuous-openapi==0.0.5
 voluptuous-serialize==2.6.0
 voluptuous==0.15.2
