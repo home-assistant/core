@@ -293,10 +293,15 @@ class GreeClimateEntity(GreeEntity, ClimateEntity):
 
         self.coordinator.device.horizontal_swing = HorizontalSwing.Center
         self.coordinator.device.vertical_swing = VerticalSwing.FixedMiddle
+
         if swing_mode in (SWING_BOTH, SWING_HORIZONTAL):
             self.coordinator.device.horizontal_swing = HorizontalSwing.FullSwing
+        if swing_mode in ("Left", "LeftCenter", "Center", "RightCenter", "Right"):
+            self.coordinator.device.horizontal_swing = HorizontalSwing[swing_mode]
         if swing_mode in (SWING_BOTH, SWING_VERTICAL):
             self.coordinator.device.vertical_swing = VerticalSwing.FullSwing
+        if swing_mode in ("FixedUpper", "FixedUpperMiddle", "FixedMiddle", "FixedLowerMiddle", "FixedLower"):
+            self.coordinator.device.vertical_swing = VerticalSwing[swing_mode]
 
         await self.coordinator.push_state_update()
         self.async_write_ha_state()
