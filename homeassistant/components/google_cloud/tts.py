@@ -53,7 +53,7 @@ async def async_get_engine(
     """Set up Google Cloud TTS component."""
     if key_file := config.get(CONF_KEY_FILE):
         key_file = hass.config.path(key_file)
-        if not Path(hass.config.path(key_file)).is_file():
+        if not Path(key_file).is_file():
             _LOGGER.error("File %s doesn't exist", key_file)
             return None
     if key_file:

@@ -24,5 +24,4 @@ async def test_config_auth_failed(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
     assert mock_config_entry.state == ConfigEntryState.SETUP_ERROR
-    mock_config_entry.async_get_active_flows(hass, {"reauth"})
     assert any(mock_config_entry.async_get_active_flows(hass, {"reauth"}))

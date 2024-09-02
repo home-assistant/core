@@ -173,7 +173,7 @@ class GoogleCloudOptionsFlowHandler(OptionsFlowWithConfigEntry):
     ) -> ConfigFlowResult:
         """Manage the options."""
         if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
+            return self.async_create_entry(data=user_input)
 
         service_account_info = self.config_entry.data[CONF_SERVICE_ACCOUNT_INFO]
         client: texttospeech.TextToSpeechAsyncClient = (
@@ -195,7 +195,9 @@ class GoogleCloudOptionsFlowHandler(OptionsFlowWithConfigEntry):
                             mode=SelectSelectorMode.DROPDOWN, options=list(voices)
                         )
                     ),
-                    **tts_options_schema(self.options, voices, True).schema,
+                    **tts_options_schema(
+                        self.options, voices, from_config_flow=True
+                    ).schema,
                 }
             ),
         )
