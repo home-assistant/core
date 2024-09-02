@@ -62,6 +62,6 @@ async def test_valve(
     assert matter_client.send_device_command.call_args == call(
         node_id=valve.node_id,
         endpoint_id=1,
-        command=clusters.ValveConfigurationAndControl.Commands.UOpen(),
+        command=clusters.ValveConfigurationAndControl.Commands.Open(),
     )
     matter_client.send_device_command.reset_mock()
