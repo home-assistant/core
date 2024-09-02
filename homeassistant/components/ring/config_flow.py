@@ -61,6 +61,8 @@ class RingConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
+            await self.async_set_unique_id(user_input[CONF_USERNAME])
+            self._abort_if_unique_id_configured()
             try:
                 token = await validate_input(self.hass, user_input)
             except Require2FA:
@@ -73,7 +75,6 @@ class RingConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                await self.async_set_unique_id(user_input[CONF_USERNAME])
                 return self.async_create_entry(
                     title=user_input[CONF_USERNAME],
                     data={CONF_USERNAME: user_input[CONF_USERNAME], CONF_TOKEN: token},
