@@ -1,4 +1,5 @@
 """Data update coordinator for the Gaposa integration."""
+
 from asyncio import timeout
 from collections.abc import Callable
 from datetime import timedelta
@@ -85,7 +86,11 @@ class DataUpdateCoordinatorGaposa(DataUpdateCoordinator):
 
         self.update_interval = timedelta(seconds=UPDATE_INTERVAL)
 
-        return self._get_data_from_devices()
+        data = self._get_data_from_devices()
+
+        self.logger.debug("Finished _async_update_data")
+
+        return data
 
     def _get_data_from_devices(self):
         # Coordinator data consists of a Dictionary of the controllable motors, with
