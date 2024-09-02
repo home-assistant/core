@@ -182,9 +182,12 @@ async def test_migrate_times(
 
         assert len(events_result) == 1
         assert events_result[0].time_fired_ts == now_timestamp
+        assert events_result[0].time_fired is None
         assert len(states_result) == 1
         assert states_result[0].last_changed_ts == one_second_past_timestamp
         assert states_result[0].last_updated_ts == now_timestamp
+        assert states_result[0].last_changed is None
+        assert states_result[0].last_updated is None
 
         def _get_events_index_names():
             with session_scope(hass=hass) as session:
