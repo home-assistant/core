@@ -3,11 +3,6 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from pymammotion.data.model.device import MowingDevice
-from pymammotion.data.model.enums import RTKStatus
-from pymammotion.utility.constant.device_constant import PosType, device_mode
-from pymammotion.utility.device_type import DeviceType
-
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -26,6 +21,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util.unit_conversion import SpeedConverter
+from pymammotion.data.model.device import MowingDevice
+from pymammotion.data.model.enums import RTKStatus
+from pymammotion.proto.luba_msg import ReportInfoData
+from pymammotion.utility.constant.device_constant import PosType, device_mode
+from pymammotion.utility.device_type import DeviceType
 
 from . import MammotionConfigEntry
 from .coordinator import MammotionDataUpdateCoordinator
@@ -162,6 +162,15 @@ SENSOR_TYPES: tuple[MammotionSensorEntityDescription, ...] = (
         value_fn=lambda mower_data: str(
             PosType(mower_data.location.position_type).name
         ),  # Note: This will not work for Luba2 & Yuka. Only for Luba1
+    ),
+    MammotionSensorEntityDescription(
+        key="work_area",
+        state_class=None,
+        device_class=SensorDeviceClass.ENUM,
+        native_unit_of_measurement=None,
+        value_fn=lambda mower_data: str(
+            mower_data.location.work_zone or "Not working"
+        ),
     ),
     # MammotionSensorEntityDescription(
     #     key="lawn_mower_position",

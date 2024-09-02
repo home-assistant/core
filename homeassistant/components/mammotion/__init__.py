@@ -27,7 +27,7 @@ PLATFORMS: list[Platform] = [
     Platform.BUTTON,
     Platform.SWITCH,
     Platform.NUMBER,
-    # Platform.SELECT
+    Platform.SELECT
 ]
 
 type MammotionConfigEntry = ConfigEntry[MammotionDataUpdateCoordinator]
@@ -59,7 +59,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: MammotionConfigEntry) ->
     await mammotion_coordinator.async_setup()
 
     # config_updates = {}
-    if CONF_AUTH_DATA not in entry.data:
+    if CONF_AUTH_DATA not in entry.data and mammotion_coordinator.manager.cloud_client:
         config_updates = {
             **entry.data,
             CONF_AUTH_DATA: mammotion_coordinator.manager.cloud_client.get_login_by_oauth_response(),
@@ -88,8 +88,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
-        if entry.runtime_data.manager.mqtt.is_connected:
-            await hass.async_add_executor_job(
-                entry.runtime_data.manager.mqtt.disconnect
-            )
+        if entry.runtime_data.manager.mqtt and entry.runtime_data.manager.mqtt.is_connected:
+            await hass.async_add_executor_job(entry.runtime_data.manager.mqtt.disconnect)
     return unload_ok
