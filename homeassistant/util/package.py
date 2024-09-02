@@ -94,12 +94,11 @@ def install_package(
 
     Return boolean if install successful.
     """
-    # Not using 'import pip; pip.main([])' because it breaks the logger
     _LOGGER.info("Attempting install of %s", package)
     env = os.environ.copy()
-    args = [sys.executable, "-m", "pip", "install", "--quiet", package]
+    args = ["uv", "pip", "install", "--quiet", package]
     if timeout:
-        args += ["--timeout", str(timeout)]
+        env["HTTP_TIMEOUT"] = str(timeout)
     if upgrade:
         args.append("--upgrade")
     if constraints is not None:
@@ -109,7 +108,7 @@ def install_package(
         # This only works if not running in venv
         args += ["--user"]
         env["PYTHONUSERBASE"] = os.path.abspath(target)
-    _LOGGER.debug("Running pip command: args=%s", args)
+    _LOGGER.debug("Running uv pip command: args=%s", args)
     with Popen(
         args,
         stdin=PIPE,
