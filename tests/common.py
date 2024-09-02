@@ -8,10 +8,12 @@ from collections.abc import (
     Callable,
     Coroutine,
     Generator,
+    Iterable,
+    Iterator,
     Mapping,
     Sequence,
 )
-from contextlib import asynccontextmanager, contextmanager
+from contextlib import asynccontextmanager, contextmanager, suppress
 from datetime import UTC, datetime, timedelta
 from enum import Enum
 import functools as ft
@@ -21,7 +23,6 @@ import json
 import logging
 import os
 import pathlib
-import threading
 import time
 from types import FrameType, ModuleType
 from typing import Any, Literal, NoReturn
@@ -30,6 +31,7 @@ from unittest.mock import AsyncMock, Mock, patch
 from aiohttp.test_utils import unused_port as get_test_instance_port  # noqa: F401
 import pytest
 from syrupy import SnapshotAssertion
+from typing_extensions import TypeVar
 import voluptuous as vol
 
 from homeassistant import auth, bootstrap, config_entries, loader
@@ -44,7 +46,7 @@ from homeassistant.components import device_automation, persistent_notification 
 from homeassistant.components.device_automation import (  # noqa: F401
     _async_get_device_automation_capabilities as async_get_device_automation_capabilities,
 )
-from homeassistant.config import async_process_component_config
+from homeassistant.config import IntegrationConfigInfo, async_process_component_config
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.const import (
     DEVICE_DEFAULT_NAME,
@@ -88,8 +90,13 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.json import JSONEncoder, _orjson_default_encoder, json_dumps
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util.async_ import run_callback_threadsafe
+from homeassistant.util.async_ import (
+    _SHUTDOWN_RUN_CALLBACK_THREADSAFE,
+    get_scheduled_timer_handles,
+    run_callback_threadsafe,
+)
 import homeassistant.util.dt as dt_util
+from homeassistant.util.event_type import EventType
 from homeassistant.util.json import (
     JsonArrayType,
     JsonObjectType,
@@ -106,6 +113,8 @@ import homeassistant.util.yaml.loader as yaml_loader
 from .testing_config.custom_components.test_constant_deprecation import (
     import_deprecated_constant,
 )
+
+_DataT = TypeVar("_DataT", bound=Mapping[str, Any], default=dict[str, Any])
 
 _LOGGER = logging.getLogger(__name__)
 INSTANCES = []
@@ -164,48 +173,6 @@ def get_test_config_dir(*add_path):
     return os.path.join(os.path.dirname(__file__), "testing_config", *add_path)
 
 
-@contextmanager
-def get_test_home_assistant() -> Generator[HomeAssistant]:
-    """Return a Home Assistant object pointing at test config directory."""
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    context_manager = async_test_home_assistant(loop)
-    hass = loop.run_until_complete(context_manager.__aenter__())
-
-    loop_stop_event = threading.Event()
-
-    def run_loop() -> None:
-        """Run event loop."""
-
-        loop._thread_ident = threading.get_ident()
-        hass.loop_thread_id = loop._thread_ident
-        loop.run_forever()
-        loop_stop_event.set()
-
-    orig_stop = hass.stop
-    hass._stopped = Mock(set=loop.stop)
-
-    def start_hass(*mocks: Any) -> None:
-        """Start hass."""
-        asyncio.run_coroutine_threadsafe(hass.async_start(), loop).result()
-
-    def stop_hass() -> None:
-        """Stop hass."""
-        orig_stop()
-        loop_stop_event.wait()
-
-    hass.start = start_hass
-    hass.stop = stop_hass
-
-    threading.Thread(name="LoopThread", target=run_loop, daemon=False).start()
-
-    try:
-        yield hass
-    finally:
-        loop.run_until_complete(context_manager.__aexit__(None, None, None))
-        loop.close()
-
-
 class StoreWithoutWriteLoad[_T: (Mapping[str, Any] | Sequence[Any])](storage.Store[_T]):
     """Fake store that does not write or load. Used for testing."""
 
@@ -228,6 +195,7 @@ async def async_test_home_assistant(
     event_loop: asyncio.AbstractEventLoop | None = None,
     load_registries: bool = True,
     config_dir: str | None = None,
+    initial_state: CoreState = CoreState.running,
 ) -> AsyncGenerator[HomeAssistant]:
     """Return a Home Assistant object pointing at test config dir."""
     hass = HomeAssistant(config_dir or get_test_config_dir())
@@ -355,7 +323,7 @@ async def async_test_home_assistant(
             await rs.async_load(hass)
         hass.data[bootstrap.DATA_REGISTRIES_LOADED] = None
 
-    hass.set_state(CoreState.running)
+    hass.set_state(initial_state)
 
     @callback
     def clear_instance(event):
@@ -370,6 +338,9 @@ async def async_test_home_assistant(
     finally:
         # Restore timezone, it is set when creating the hass object
         dt_util.set_default_time_zone(orig_tz)
+        # Remove loop shutdown indicator to not interfere with additional hass objects
+        with suppress(AttributeError):
+            delattr(hass.loop, _SHUTDOWN_RUN_CALLBACK_THREADSAFE)
 
 
 def async_mock_service(
@@ -413,14 +384,16 @@ mock_service = threadsafe_callback_factory(async_mock_service)
 
 
 @callback
-def async_mock_intent(hass, intent_typ):
+def async_mock_intent(hass: HomeAssistant, intent_typ: str) -> list[intent.Intent]:
     """Set up a fake intent handler."""
-    intents = []
+    intents: list[intent.Intent] = []
 
     class MockIntentHandler(intent.IntentHandler):
         intent_type = intent_typ
 
-        async def async_handle(self, intent_obj):
+        async def async_handle(
+            self, intent_obj: intent.Intent
+        ) -> intent.IntentResponse:
             """Handle the intent."""
             intents.append(intent_obj)
             return intent_obj.create_response()
@@ -519,7 +492,7 @@ def _async_fire_time_changed(
     hass: HomeAssistant, utc_datetime: datetime | None, fire_all: bool
 ) -> None:
     timestamp = dt_util.utc_to_timestamp(utc_datetime)
-    for task in list(hass.loop._scheduled):
+    for task in list(get_scheduled_timer_handles(hass.loop)):
         if not isinstance(task, asyncio.TimerHandle):
             continue
         if task.cancelled():
@@ -1133,7 +1106,12 @@ def assert_setup_component(count, domain=None):
     """
     config = {}
 
-    async def mock_psc(hass, config_input, integration, component=None):
+    async def mock_psc(
+        hass: HomeAssistant,
+        config_input: ConfigType,
+        integration: loader.Integration,
+        component: loader.ComponentProtocol | None = None,
+    ) -> IntegrationConfigInfo:
         """Mock the prepare_setup_component to capture config."""
         domain_input = integration.domain
         integration_config_info = await async_process_component_config(
@@ -1434,7 +1412,7 @@ async def get_system_health_info(hass: HomeAssistant, domain: str) -> dict[str, 
 
 
 @contextmanager
-def mock_config_flow(domain: str, config_flow: type[ConfigFlow]) -> None:
+def mock_config_flow(domain: str, config_flow: type[ConfigFlow]) -> Iterator[None]:
     """Mock a config flow handler."""
     original_handler = config_entries.HANDLERS.get(domain)
     config_entries.HANDLERS[domain] = config_flow
@@ -1502,12 +1480,14 @@ def mock_platform(
     module_cache[platform_path] = module or Mock()
 
 
-def async_capture_events(hass: HomeAssistant, event_name: str) -> list[Event]:
+def async_capture_events(
+    hass: HomeAssistant, event_name: EventType[_DataT] | str
+) -> list[Event[_DataT]]:
     """Create a helper that captures events."""
-    events = []
+    events: list[Event[_DataT]] = []
 
     @callback
-    def capture_events(event: Event) -> None:
+    def capture_events(event: Event[_DataT]) -> None:
         events.append(event)
 
     hass.bus.async_listen(event_name, capture_events)
@@ -1516,14 +1496,14 @@ def async_capture_events(hass: HomeAssistant, event_name: str) -> list[Event]:
 
 
 @callback
-def async_mock_signal(
-    hass: HomeAssistant, signal: SignalType[Any] | str
-) -> list[tuple[Any]]:
+def async_mock_signal[*_Ts](
+    hass: HomeAssistant, signal: SignalType[*_Ts] | str
+) -> list[tuple[*_Ts]]:
     """Catch all dispatches to a signal."""
-    calls = []
+    calls: list[tuple[*_Ts]] = []
 
     @callback
-    def mock_signal_handler(*args: Any) -> None:
+    def mock_signal_handler(*args: *_Ts) -> None:
         """Mock service call."""
         calls.append(args)
 
@@ -1723,7 +1703,7 @@ def extract_stack_to_frame(extract_stack: list[Mock]) -> FrameType:
 def setup_test_component_platform(
     hass: HomeAssistant,
     domain: str,
-    entities: Sequence[Entity],
+    entities: Iterable[Entity],
     from_config_entry: bool = False,
     built_in: bool = True,
 ) -> MockPlatform:

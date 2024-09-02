@@ -24,6 +24,9 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_STATE,
     CONF_UNIT_OF_MEASUREMENT,
+    CONF_URL,
+    CONF_VALUE_TEMPLATE,
+    CONF_VERIFY_SSL,
     Platform,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -37,8 +40,20 @@ from homeassistant.helpers.schema_config_entry_flow import (
 )
 
 from .binary_sensor import async_create_preview_binary_sensor
-from .const import CONF_PRESS, DOMAIN
+from .const import CONF_PRESS, CONF_TURN_OFF, CONF_TURN_ON, DOMAIN
+from .number import (
+    CONF_MAX,
+    CONF_MIN,
+    CONF_SET_VALUE,
+    CONF_STEP,
+    DEFAULT_MAX_VALUE,
+    DEFAULT_MIN_VALUE,
+    DEFAULT_STEP,
+    async_create_preview_number,
+)
+from .select import CONF_OPTIONS, CONF_SELECT_OPTION
 from .sensor import async_create_preview_sensor
+from .switch import async_create_preview_switch
 from .template_entity import TemplateEntity
 
 _SCHEMA_STATE: dict[vol.Marker, Any] = {
@@ -83,6 +98,33 @@ def generate_schema(domain: str, flow_type: str) -> vol.Schema:
                 )
             }
 
+    if domain == Platform.IMAGE:
+        schema |= {
+            vol.Required(CONF_URL): selector.TemplateSelector(),
+            vol.Optional(CONF_VERIFY_SSL, default=True): selector.BooleanSelector(),
+        }
+
+    if domain == Platform.NUMBER:
+        schema |= {
+            vol.Required(CONF_STATE): selector.TemplateSelector(),
+            vol.Required(
+                CONF_MIN, default=f"{{{{{DEFAULT_MIN_VALUE}}}}}"
+            ): selector.TemplateSelector(),
+            vol.Required(
+                CONF_MAX, default=f"{{{{{DEFAULT_MAX_VALUE}}}}}"
+            ): selector.TemplateSelector(),
+            vol.Required(
+                CONF_STEP, default=f"{{{{{DEFAULT_STEP}}}}}"
+            ): selector.TemplateSelector(),
+            vol.Optional(CONF_SET_VALUE): selector.ActionSelector(),
+        }
+
+    if domain == Platform.SELECT:
+        schema |= _SCHEMA_STATE | {
+            vol.Required(CONF_OPTIONS): selector.TemplateSelector(),
+            vol.Optional(CONF_SELECT_OPTION): selector.ActionSelector(),
+        }
+
     if domain == Platform.SENSOR:
         schema |= _SCHEMA_STATE | {
             vol.Optional(CONF_UNIT_OF_MEASUREMENT): selector.SelectSelector(
@@ -121,6 +163,13 @@ def generate_schema(domain: str, flow_type: str) -> vol.Schema:
                     sort=True,
                 ),
             ),
+        }
+
+    if domain == Platform.SWITCH:
+        schema |= {
+            vol.Optional(CONF_VALUE_TEMPLATE): selector.TemplateSelector(),
+            vol.Optional(CONF_TURN_ON): selector.ActionSelector(),
+            vol.Optional(CONF_TURN_OFF): selector.ActionSelector(),
         }
 
     schema[vol.Optional(CONF_DEVICE_ID)] = selector.DeviceSelector()
@@ -213,7 +262,11 @@ def validate_user_input(
 TEMPLATE_TYPES = [
     "binary_sensor",
     "button",
+    "image",
+    "number",
+    "select",
     "sensor",
+    "switch",
 ]
 
 CONFIG_FLOW = {
@@ -227,10 +280,28 @@ CONFIG_FLOW = {
         config_schema(Platform.BUTTON),
         validate_user_input=validate_user_input(Platform.BUTTON),
     ),
+    Platform.IMAGE: SchemaFlowFormStep(
+        config_schema(Platform.IMAGE),
+        validate_user_input=validate_user_input(Platform.IMAGE),
+    ),
+    Platform.NUMBER: SchemaFlowFormStep(
+        config_schema(Platform.NUMBER),
+        preview="template",
+        validate_user_input=validate_user_input(Platform.NUMBER),
+    ),
+    Platform.SELECT: SchemaFlowFormStep(
+        config_schema(Platform.SELECT),
+        validate_user_input=validate_user_input(Platform.SELECT),
+    ),
     Platform.SENSOR: SchemaFlowFormStep(
         config_schema(Platform.SENSOR),
         preview="template",
         validate_user_input=validate_user_input(Platform.SENSOR),
+    ),
+    Platform.SWITCH: SchemaFlowFormStep(
+        config_schema(Platform.SWITCH),
+        preview="template",
+        validate_user_input=validate_user_input(Platform.SWITCH),
     ),
 }
 
@@ -246,10 +317,28 @@ OPTIONS_FLOW = {
         options_schema(Platform.BUTTON),
         validate_user_input=validate_user_input(Platform.BUTTON),
     ),
+    Platform.IMAGE: SchemaFlowFormStep(
+        options_schema(Platform.IMAGE),
+        validate_user_input=validate_user_input(Platform.IMAGE),
+    ),
+    Platform.NUMBER: SchemaFlowFormStep(
+        options_schema(Platform.NUMBER),
+        preview="template",
+        validate_user_input=validate_user_input(Platform.NUMBER),
+    ),
+    Platform.SELECT: SchemaFlowFormStep(
+        options_schema(Platform.SELECT),
+        validate_user_input=validate_user_input(Platform.SELECT),
+    ),
     Platform.SENSOR: SchemaFlowFormStep(
         options_schema(Platform.SENSOR),
         preview="template",
         validate_user_input=validate_user_input(Platform.SENSOR),
+    ),
+    Platform.SWITCH: SchemaFlowFormStep(
+        options_schema(Platform.SWITCH),
+        preview="template",
+        validate_user_input=validate_user_input(Platform.SWITCH),
     ),
 }
 
@@ -258,7 +347,9 @@ CREATE_PREVIEW_ENTITY: dict[
     Callable[[HomeAssistant, str, dict[str, Any]], TemplateEntity],
 ] = {
     "binary_sensor": async_create_preview_binary_sensor,
+    "number": async_create_preview_number,
     "sensor": async_create_preview_sensor,
+    "switch": async_create_preview_switch,
 }
 
 

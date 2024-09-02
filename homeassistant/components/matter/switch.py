@@ -124,6 +124,7 @@ DISCOVERY_SCHEMAS = [
             device_types.Cooktop,
             device_types.Dishwasher,
             device_types.ExtractorHood,
+            device_types.Fan,
             device_types.HeatingCoolingUnit,
             device_types.LaundryDryer,
             device_types.LaundryWasher,

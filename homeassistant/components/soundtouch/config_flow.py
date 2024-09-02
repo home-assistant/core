@@ -1,6 +1,7 @@
 """Config flow for Bose SoundTouch integration."""
 
 import logging
+from typing import Any
 
 from libsoundtouch import soundtouch_device
 from requests import RequestException
@@ -21,12 +22,14 @@ class SoundtouchConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize a new SoundTouch config flow."""
-        self.host = None
+        self.host: str | None = None
         self.name = None
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
         errors = {}
 

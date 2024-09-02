@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from unittest.mock import MagicMock, patch
 
 from homeassistant.components.broadlink.const import DOMAIN
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
@@ -89,6 +90,16 @@ BROADLINK_DEVICES = {
         57,
         5,
     ),
+    "Guest room": (
+        "192.168.0.66",
+        "34ea34b61d2e",
+        "HY02/HY03",
+        "Hysen",
+        "HYS",
+        0x4EAD,
+        10024,
+        5,
+    ),
 }
 
 
@@ -105,20 +116,34 @@ class BroadlinkDevice:
     """Representation of a Broadlink device."""
 
     def __init__(
-        self, name, host, mac, model, manufacturer, type_, devtype, fwversion, timeout
-    ):
+        self,
+        name: str,
+        host: str,
+        mac: str,
+        model: str,
+        manufacturer: str,
+        type_: str,
+        devtype: int,
+        fwversion: int,
+        timeout: int,
+    ) -> None:
         """Initialize the device."""
-        self.name: str = name
-        self.host: str = host
-        self.mac: str = mac
-        self.model: str = model
-        self.manufacturer: str = manufacturer
-        self.type: str = type_
-        self.devtype: int = devtype
-        self.timeout: int = timeout
-        self.fwversion: int = fwversion
+        self.name = name
+        self.host = host
+        self.mac = mac
+        self.model = model
+        self.manufacturer = manufacturer
+        self.type = type_
+        self.devtype = devtype
+        self.timeout = timeout
+        self.fwversion = fwversion
 
-    async def setup_entry(self, hass, mock_api=None, mock_entry=None):
+    async def setup_entry(
+        self,
+        hass: HomeAssistant,
+        mock_api: MagicMock | None = None,
+        mock_entry: MockConfigEntry | None = None,
+    ) -> MockSetup:
         """Set up the device."""
         mock_api = mock_api or self.get_mock_api()
         mock_entry = mock_entry or self.get_mock_entry()

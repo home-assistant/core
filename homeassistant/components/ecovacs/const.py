@@ -21,6 +21,12 @@ SUPPORTED_LIFESPANS = (
     LifeSpan.ROUND_MOP,
 )
 
+LEGACY_SUPPORTED_LIFESPANS = (
+    "main_brush",
+    "side_brush",
+    "filter",
+)
+
 
 class InstanceMode(StrEnum):
     """Instance mode."""

@@ -157,8 +157,10 @@ def _entry_dict(entry: LabelEntry) -> dict[str, Any]:
     """Convert entry to API format."""
     return {
         "color": entry.color,
+        "created_at": entry.created_at.timestamp(),
         "description": entry.description,
         "icon": entry.icon,
         "label_id": entry.label_id,
         "name": entry.name,
+        "modified_at": entry.modified_at.timestamp(),
     }

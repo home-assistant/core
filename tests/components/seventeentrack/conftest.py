@@ -3,7 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
-from py17track.package import Package
+from pyseventeentrack.package import Package
 import pytest
 
 from homeassistant.components.seventeentrack.const import (

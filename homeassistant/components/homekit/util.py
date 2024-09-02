@@ -22,6 +22,7 @@ from homeassistant.components import (
     sensor,
 )
 from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
+from homeassistant.components.event import DOMAIN as EVENT_DOMAIN
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
 from homeassistant.components.media_player import (
     DOMAIN as MEDIA_PLAYER_DOMAIN,
@@ -106,7 +107,7 @@ from .const import (
     VIDEO_CODEC_H264_V4L2M2M,
     VIDEO_CODEC_LIBX264,
 )
-from .models import HomeKitEntryData
+from .models import HomeKitConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -167,9 +168,11 @@ CAMERA_SCHEMA = BASIC_INFO_SCHEMA.extend(
         vol.Optional(
             CONF_VIDEO_PACKET_SIZE, default=DEFAULT_VIDEO_PACKET_SIZE
         ): cv.positive_int,
-        vol.Optional(CONF_LINKED_MOTION_SENSOR): cv.entity_domain(binary_sensor.DOMAIN),
+        vol.Optional(CONF_LINKED_MOTION_SENSOR): cv.entity_domain(
+            [binary_sensor.DOMAIN, EVENT_DOMAIN]
+        ),
         vol.Optional(CONF_LINKED_DOORBELL_SENSOR): cv.entity_domain(
-            binary_sensor.DOMAIN
+            [binary_sensor.DOMAIN, EVENT_DOMAIN]
         ),
     }
 )
@@ -366,7 +369,8 @@ def async_show_setup_message(
     url.svg(buffer, scale=5, module_color="#000", background="#FFF")
     pairing_secret = secrets.token_hex(32)
 
-    entry_data: HomeKitEntryData = hass.data[DOMAIN][entry_id]
+    entry = cast(HomeKitConfigEntry, hass.config_entries.async_get_entry(entry_id))
+    entry_data = entry.runtime_data
 
     entry_data.pairing_qr = buffer.getvalue()
     entry_data.pairing_qr_secret = pairing_secret

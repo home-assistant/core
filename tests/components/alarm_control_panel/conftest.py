@@ -129,7 +129,7 @@ async def code_arm_required() -> bool:
 
 
 @pytest.fixture(name="supported_features")
-async def lock_supported_features() -> AlarmControlPanelEntityFeature:
+async def alarm_control_panel_supported_features() -> AlarmControlPanelEntityFeature:
     """Return the supported features for the test alarm control panel entity."""
     return (
         AlarmControlPanelEntityFeature.ARM_AWAY
@@ -142,7 +142,7 @@ async def lock_supported_features() -> AlarmControlPanelEntityFeature:
 
 
 @pytest.fixture(name="mock_alarm_control_panel_entity")
-async def setup_lock_platform_test_entity(
+async def setup_alarm_control_panel_platform_test_entity(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     code_format: CodeFormat | None,

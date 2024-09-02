@@ -2,6 +2,7 @@
   "domain": "mvglive",
   "name": "MVG",
   "codeowners": [],
+  "disabled": "This integration is disabled because it uses non-open source code to operate.",
   "documentation": "https://www.home-assistant.io/integrations/mvglive",
   "iot_class": "cloud_polling",
   "loggers": ["MVGLive"],

@@ -4,6 +4,7 @@ import datetime
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
+from pyipma.observation import Observation
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -43,7 +44,7 @@ TEST_CONFIG_HOURLY = {
 class MockBadLocation(MockLocation):
     """Mock Location with unresponsive api."""
 
-    async def observation(self, api):
+    async def observation(self, api) -> Observation | None:
         """Mock Observation."""
         return None
 

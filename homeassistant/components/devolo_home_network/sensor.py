@@ -31,6 +31,8 @@ from .const import (
 )
 from .entity import DevoloCoordinatorEntity
 
+PARALLEL_UPDATES = 1
+
 _CoordinatorDataT = TypeVar(
     "_CoordinatorDataT",
     bound=LogicalNetwork | DataRate | list[ConnectedStationInfo] | list[NeighborAPInfo],

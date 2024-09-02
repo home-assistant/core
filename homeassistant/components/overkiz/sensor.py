@@ -110,7 +110,7 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         name="Water consumption",
         icon="mdi:water",
         native_unit_of_measurement=UnitOfVolume.LITERS,
-        device_class=SensorDeviceClass.VOLUME,
+        device_class=SensorDeviceClass.WATER,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     OverkizSensorDescription(
