@@ -2230,7 +2230,7 @@
           "integration_type": "service",
           "config_flow": true,
           "iot_class": "cloud_push",
-          "name": "Google Cloud Platform"
+          "name": "Google Cloud"
         },
         "google_domains": {
           "integration_type": "hub",
