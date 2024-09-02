@@ -1,5 +1,6 @@
 """The tests for recorder platform migrating data from v30."""
 
+from collections.abc import Callable
 from datetime import timedelta
 import importlib
 import sys
@@ -25,29 +26,38 @@ from tests.common import async_test_home_assistant
 from tests.typing import RecorderInstanceGenerator
 
 CREATE_ENGINE_TARGET = "homeassistant.components.recorder.core.create_engine"
-SCHEMA_MODULE = "tests.components.recorder.db_schema_32"
+SCHEMA_MODULE_30 = "tests.components.recorder.db_schema_30"
+SCHEMA_MODULE_32 = "tests.components.recorder.db_schema_32"
 
 
-def _create_engine_test(*args, **kwargs):
+def _create_engine_test(schema_module: str) -> Callable:
     """Test version of create_engine that initializes with old schema.
 
     This simulates an existing db with the old schema.
     """
-    importlib.import_module(SCHEMA_MODULE)
-    old_db_schema = sys.modules[SCHEMA_MODULE]
-    engine = create_engine(*args, **kwargs)
-    old_db_schema.Base.metadata.create_all(engine)
-    with Session(engine) as session:
-        session.add(
-            recorder.db_schema.StatisticsRuns(start=statistics.get_start_time())
-        )
-        session.add(
-            recorder.db_schema.SchemaChanges(
-                schema_version=old_db_schema.SCHEMA_VERSION
+
+    def _create_engine_test(*args, **kwargs):
+        """Test version of create_engine that initializes with old schema.
+
+        This simulates an existing db with the old schema.
+        """
+        importlib.import_module(schema_module)
+        old_db_schema = sys.modules[schema_module]
+        engine = create_engine(*args, **kwargs)
+        old_db_schema.Base.metadata.create_all(engine)
+        with Session(engine) as session:
+            session.add(
+                recorder.db_schema.StatisticsRuns(start=statistics.get_start_time())
             )
-        )
-        session.commit()
-    return engine
+            session.add(
+                recorder.db_schema.SchemaChanges(
+                    schema_version=old_db_schema.SCHEMA_VERSION
+                )
+            )
+            session.commit()
+        return engine
+
+    return _create_engine_test
 
 
 @pytest.mark.parametrize("enable_migrate_context_ids", [True])
@@ -60,8 +70,8 @@ async def test_migrate_times(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test we can migrate times."""
-    importlib.import_module(SCHEMA_MODULE)
-    old_db_schema = sys.modules[SCHEMA_MODULE]
+    importlib.import_module(SCHEMA_MODULE_30)
+    old_db_schema = sys.modules[SCHEMA_MODULE_30]
     now = dt_util.utcnow()
     one_second_past = now - timedelta(seconds=1)
     now_timestamp = now.timestamp()
@@ -108,7 +118,7 @@ async def test_migrate_times(
         patch.object(core, "EventData", old_db_schema.EventData),
         patch.object(core, "States", old_db_schema.States),
         patch.object(core, "Events", old_db_schema.Events),
-        patch(CREATE_ENGINE_TARGET, new=_create_engine_test),
+        patch(CREATE_ENGINE_TARGET, new=_create_engine_test(SCHEMA_MODULE_30)),
         patch("homeassistant.components.recorder.Recorder._post_migrate_entity_ids"),
         patch(
             "homeassistant.components.recorder.migration.cleanup_legacy_states_event_ids"
@@ -216,8 +226,8 @@ async def test_migrate_can_resume_entity_id_post_migration(
     recorder_db_url: str,
 ) -> None:
     """Test we resume the entity id post migration after a restart."""
-    importlib.import_module(SCHEMA_MODULE)
-    old_db_schema = sys.modules[SCHEMA_MODULE]
+    importlib.import_module(SCHEMA_MODULE_32)
+    old_db_schema = sys.modules[SCHEMA_MODULE_32]
     now = dt_util.utcnow()
     one_second_past = now - timedelta(seconds=1)
     mock_state = State(
@@ -259,7 +269,7 @@ async def test_migrate_can_resume_entity_id_post_migration(
         patch.object(core, "EventData", old_db_schema.EventData),
         patch.object(core, "States", old_db_schema.States),
         patch.object(core, "Events", old_db_schema.Events),
-        patch(CREATE_ENGINE_TARGET, new=_create_engine_test),
+        patch(CREATE_ENGINE_TARGET, new=_create_engine_test(SCHEMA_MODULE_32)),
         patch("homeassistant.components.recorder.Recorder._post_migrate_entity_ids"),
         patch(
             "homeassistant.components.recorder.migration.cleanup_legacy_states_event_ids"
@@ -327,8 +337,8 @@ async def test_migrate_can_resume_ix_states_event_id_removed(
     This case tests the migration still happens if
     ix_states_event_id is removed from the states table.
     """
-    importlib.import_module(SCHEMA_MODULE)
-    old_db_schema = sys.modules[SCHEMA_MODULE]
+    importlib.import_module(SCHEMA_MODULE_32)
+    old_db_schema = sys.modules[SCHEMA_MODULE_32]
     now = dt_util.utcnow()
     one_second_past = now - timedelta(seconds=1)
     mock_state = State(
@@ -381,7 +391,7 @@ async def test_migrate_can_resume_ix_states_event_id_removed(
         patch.object(core, "EventData", old_db_schema.EventData),
         patch.object(core, "States", old_db_schema.States),
         patch.object(core, "Events", old_db_schema.Events),
-        patch(CREATE_ENGINE_TARGET, new=_create_engine_test),
+        patch(CREATE_ENGINE_TARGET, new=_create_engine_test(SCHEMA_MODULE_32)),
         patch("homeassistant.components.recorder.Recorder._post_migrate_entity_ids"),
         patch(
             "homeassistant.components.recorder.migration.cleanup_legacy_states_event_ids"
@@ -463,8 +473,8 @@ async def test_out_of_disk_space_while_rebuild_states_table(
     This case tests the migration still happens if
     ix_states_event_id is removed from the states table.
     """
-    importlib.import_module(SCHEMA_MODULE)
-    old_db_schema = sys.modules[SCHEMA_MODULE]
+    importlib.import_module(SCHEMA_MODULE_32)
+    old_db_schema = sys.modules[SCHEMA_MODULE_32]
     now = dt_util.utcnow()
     one_second_past = now - timedelta(seconds=1)
     mock_state = State(
@@ -517,7 +527,7 @@ async def test_out_of_disk_space_while_rebuild_states_table(
         patch.object(core, "EventData", old_db_schema.EventData),
         patch.object(core, "States", old_db_schema.States),
         patch.object(core, "Events", old_db_schema.Events),
-        patch(CREATE_ENGINE_TARGET, new=_create_engine_test),
+        patch(CREATE_ENGINE_TARGET, new=_create_engine_test(SCHEMA_MODULE_32)),
         patch("homeassistant.components.recorder.Recorder._post_migrate_entity_ids"),
         patch(
             "homeassistant.components.recorder.migration.cleanup_legacy_states_event_ids"
@@ -643,8 +653,8 @@ async def test_out_of_disk_space_while_removing_foreign_key(
     removed when migrating to schema version 46, inspecting the schema in
     cleanup_legacy_states_event_ids is not likely to fail.
     """
-    importlib.import_module(SCHEMA_MODULE)
-    old_db_schema = sys.modules[SCHEMA_MODULE]
+    importlib.import_module(SCHEMA_MODULE_32)
+    old_db_schema = sys.modules[SCHEMA_MODULE_32]
     now = dt_util.utcnow()
     one_second_past = now - timedelta(seconds=1)
     mock_state = State(
@@ -697,7 +707,7 @@ async def test_out_of_disk_space_while_removing_foreign_key(
         patch.object(core, "EventData", old_db_schema.EventData),
         patch.object(core, "States", old_db_schema.States),
         patch.object(core, "Events", old_db_schema.Events),
-        patch(CREATE_ENGINE_TARGET, new=_create_engine_test),
+        patch(CREATE_ENGINE_TARGET, new=_create_engine_test(SCHEMA_MODULE_32)),
         patch("homeassistant.components.recorder.Recorder._post_migrate_entity_ids"),
         patch(
             "homeassistant.components.recorder.migration.cleanup_legacy_states_event_ids"
