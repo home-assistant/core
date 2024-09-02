@@ -8,7 +8,6 @@ from serial import SerialException
 from homeassistant import config_entries
 from homeassistant.components.opentherm_gw.const import (
     CONF_FLOOR_TEMP,
-    CONF_PRECISION,
     CONF_READ_PRECISION,
     CONF_SET_PRECISION,
     CONF_TEMPORARY_OVRD_MODE,
@@ -202,58 +201,6 @@ async def test_form_connection_error(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
     assert len(mock_connect.mock_calls) == 1
-
-
-async def test_options_migration(hass: HomeAssistant) -> None:
-    """Test migration of precision option after update."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        title="Mock Gateway",
-        data={
-            CONF_NAME: "Test Entry 1",
-            CONF_DEVICE: "/dev/ttyUSB0",
-            CONF_ID: "test_entry_1",
-        },
-        options={
-            CONF_FLOOR_TEMP: True,
-            CONF_PRECISION: PRECISION_TENTHS,
-        },
-    )
-    entry.add_to_hass(hass)
-
-    with (
-        patch(
-            "homeassistant.components.opentherm_gw.OpenThermGatewayHub.connect_and_subscribe",
-            return_value=True,
-        ),
-        patch(
-            "homeassistant.components.opentherm_gw.async_setup",
-            return_value=True,
-        ),
-        patch(
-            "pyotgw.status.StatusManager._process_updates",
-            return_value=None,
-        ),
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-        result = await hass.config_entries.options.async_init(
-            entry.entry_id, context={"source": config_entries.SOURCE_USER}, data=None
-        )
-
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "init"
-
-        result = await hass.config_entries.options.async_configure(
-            result["flow_id"],
-            user_input={},
-        )
-
-        assert result["type"] is FlowResultType.CREATE_ENTRY
-        assert result["data"][CONF_READ_PRECISION] == PRECISION_TENTHS
-        assert result["data"][CONF_SET_PRECISION] == PRECISION_TENTHS
-        assert result["data"][CONF_FLOOR_TEMP] is True
 
 
 async def test_options_form(hass: HomeAssistant) -> None:
