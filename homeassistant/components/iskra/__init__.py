@@ -50,10 +50,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: IskraConfigEntry) -> boo
         )
     elif conf[CONF_PROTOCOL] == "rest_api":
         authentication = None
-        if conf.get(CONF_USERNAME) or conf.get(CONF_PASSWORD):
+        if (username := conf.get(CONF_USERNAME)) is not None and (password := conf.get(CONF_PASSWORD)):
             authentication = {
-                "username": conf[CONF_USERNAME],
-                "password": conf[CONF_PASSWORD],
+                "username": username,
+                "password": password,
             }
         adapter = RestAPI(ip_address=conf[CONF_HOST], authentication=authentication)
 
