@@ -71,9 +71,6 @@
       },
       "phase3_current": {
         "name": "Phase 3 current"
-      },
-      "frequency": {
-        "name": "Frequency"
       }
     }
   }
