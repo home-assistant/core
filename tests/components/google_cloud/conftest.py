@@ -12,7 +12,6 @@ from homeassistant.components.google_cloud.const import (
     CONF_SERVICE_ACCOUNT_INFO,
     DOMAIN,
 )
-from homeassistant.config_entries import ConfigEntryState
 
 from tests.common import MockConfigEntry
 
@@ -69,12 +68,11 @@ def mock_config_entry() -> MockConfigEntry:
         title="my Google Cloud title",
         domain=DOMAIN,
         data={CONF_SERVICE_ACCOUNT_INFO: VALID_SERVICE_ACCOUNT_INFO},
-        state=ConfigEntryState.NOT_LOADED,
     )
 
 
 @pytest.fixture
-def mock_api_tts() -> Generator[AsyncMock]:
+def mock_api_tts() -> AsyncMock:
     """Return a mocked TTS client."""
     mock_client = AsyncMock()
     mock_client.list_voices.return_value = cloud_tts.ListVoicesResponse(
@@ -84,14 +82,41 @@ def mock_api_tts() -> Generator[AsyncMock]:
             cloud_tts.Voice(language_codes=["el-GR"], name="el-GR-Standard-A"),
         ]
     )
+    return mock_client
+
+
+@pytest.fixture
+def mock_api_tts_from_service_account_info(
+    mock_api_tts: AsyncMock,
+) -> Generator[AsyncMock]:
+    """Return a mocked TTS client created with from_service_account_info."""
     with (
         patch(
             "google.cloud.texttospeech.TextToSpeechAsyncClient.from_service_account_info",
-            return_value=mock_client,
-        ),
-        patch(
-            "google.cloud.texttospeech.TextToSpeechAsyncClient.from_service_account_file",
-            return_value=mock_client,
+            return_value=mock_api_tts,
         ),
     ):
-        yield mock_client
+        yield mock_api_tts
+
+
+@pytest.fixture
+def mock_api_tts_from_service_account_file(
+    mock_api_tts: AsyncMock,
+) -> Generator[AsyncMock]:
+    """Return a mocked TTS client created with from_service_account_file."""
+    with (
+        patch(
+            "google.cloud.texttospeech.TextToSpeechAsyncClient.from_service_account_file",
+            return_value=mock_api_tts,
+        ),
+    ):
+        yield mock_api_tts
+
+
+@pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock]:
+    """Override async_setup_entry."""
+    with patch(
+        "homeassistant.components.google_cloud.async_setup_entry", return_value=True
+    ) as mock_setup_entry:
+        yield mock_setup_entry

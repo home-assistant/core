@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 import json
 import logging
 from typing import TYPE_CHECKING, Any, cast
@@ -18,7 +17,6 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
     OptionsFlowWithConfigEntry,
 )
-from homeassistant.const import CONF_NAME
 from homeassistant.core import callback
 from homeassistant.helpers.selector import (
     FileSelector,
@@ -55,11 +53,8 @@ class GoogleCloudConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
     _name: str | None = None
-
-    def __init__(self) -> None:
-        """Initialize a new GoogleCloudConfigFlow."""
-        self.entry: ConfigEntry | None = None
-        self.abort_reason: str | None = None
+    entry: ConfigEntry | None = None
+    abort_reason: str | None = None
 
     def _parse_uploaded_file(self, uploaded_file_id: str) -> dict[str, Any]:
         """Read and parse an uploaded JSON file."""
@@ -99,37 +94,6 @@ class GoogleCloudConfigFlow(ConfigFlow, domain=DOMAIN):
             },
         )
 
-    async def async_step_reauth(
-        self, entry_data: Mapping[str, Any]
-    ) -> ConfigFlowResult:
-        """Handle configuration by re-auth."""
-        self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
-        self.abort_reason = "reauth_successful"
-        return await self.async_step_reauth_confirm()
-
-    async def async_step_reauth_confirm(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Dialog that informs the user that reauth is required."""
-        if user_input is not None:
-            return await self.async_step_user()
-        if TYPE_CHECKING:
-            assert self.entry
-        return self.async_show_form(
-            step_id="reauth_confirm",
-            description_placeholders={CONF_NAME: self.entry.title},
-        )
-
-    async def async_step_reconfigure(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle a reconfiguration flow initialized by the user."""
-        self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
-        self.abort_reason = "reconfigure_successful"
-        if TYPE_CHECKING:
-            assert self.entry
-        return await self.async_step_user()
-
     async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Import Google Cloud configuration from YAML."""
 
@@ -149,7 +113,7 @@ class GoogleCloudConfigFlow(ConfigFlow, domain=DOMAIN):
             k: v for k, v in import_data.items() if k in tts_platform_schema().schema
         }
         options.pop(CONF_KEY_FILE)
-        _LOGGER.info("Creating imported config entry with options: %s", options)
+        _LOGGER.debug("Creating imported config entry with options: %s", options)
         return self.async_create_entry(
             title=TITLE,
             data={CONF_SERVICE_ACCOUNT_INFO: service_account_info},
@@ -184,20 +148,22 @@ class GoogleCloudOptionsFlowHandler(OptionsFlowWithConfigEntry):
         voices = await async_tts_voices(client)
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
-                {
-                    vol.Optional(
-                        CONF_LANG,
-                        description={"suggested_value": self.options.get(CONF_LANG)},
-                        default=DEFAULT_LANG,
-                    ): SelectSelector(
-                        SelectSelectorConfig(
-                            mode=SelectSelectorMode.DROPDOWN, options=list(voices)
-                        )
-                    ),
-                    **tts_options_schema(
-                        self.options, voices, from_config_flow=True
-                    ).schema,
-                }
+            data_schema=self.add_suggested_values_to_schema(
+                vol.Schema(
+                    {
+                        vol.Optional(
+                            CONF_LANG,
+                            default=DEFAULT_LANG,
+                        ): SelectSelector(
+                            SelectSelectorConfig(
+                                mode=SelectSelectorMode.DROPDOWN, options=list(voices)
+                            )
+                        ),
+                        **tts_options_schema(
+                            self.options, voices, from_config_flow=True
+                        ).schema,
+                    }
+                ),
+                self.options,
             ),
         )

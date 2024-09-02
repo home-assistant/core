@@ -6,18 +6,10 @@
         "data": {
           "uploaded_key_file": "Upload service account JSON file"
         }
-      },
-      "reauth_confirm": {
-        "title": "[%key:common::config_flow::title::reauth%]",
-        "description": "Invalid service account info. Please re-create it and re-upload it."
       }
     },
     "error": {
       "invalid_file": "Invalid service account JSON file"
-    },
-    "abort": {
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     }
   },
   "options": {
