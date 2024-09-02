@@ -13,6 +13,8 @@
     }
   },
   "services": {
-    "ptz": "mdi:pan"
+    "ptz": {
+      "service": "mdi:pan"
+    }
   }
 }

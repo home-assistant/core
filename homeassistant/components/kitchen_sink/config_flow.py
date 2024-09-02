@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Any
 
 import voluptuous as vol
@@ -41,11 +42,15 @@ class KitchenSinkConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_create_entry(title="Kitchen Sink", data=import_data)
 
-    async def async_step_reauth(self, data):
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Reauth step."""
         return await self.async_step_reauth_confirm()
 
-    async def async_step_reauth_confirm(self, user_input=None):
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Reauth confirm step."""
         if user_input is None:
             return self.async_show_form(step_id="reauth_confirm")

@@ -1761,39 +1761,6 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
             ],
         ),
     ],
-    "mailbox": [
-        ClassTypeHintMatch(
-            base_class="Mailbox",
-            matches=[
-                TypeHintMatch(
-                    function_name="media_type",
-                    return_type="str",
-                ),
-                TypeHintMatch(
-                    function_name="can_delete",
-                    return_type="bool",
-                ),
-                TypeHintMatch(
-                    function_name="has_media",
-                    return_type="bool",
-                ),
-                TypeHintMatch(
-                    function_name="async_get_media",
-                    arg_types={1: "str"},
-                    return_type="bytes",
-                ),
-                TypeHintMatch(
-                    function_name="async_get_messages",
-                    return_type="list[dict[str, Any]]",
-                ),
-                TypeHintMatch(
-                    function_name="async_delete",
-                    arg_types={1: "str"},
-                    return_type="bool",
-                ),
-            ],
-        ),
-    ],
     "media_player": [
         ClassTypeHintMatch(
             base_class="Entity",

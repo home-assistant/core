@@ -95,7 +95,9 @@ class LutronCasetaFlowHandler(ConfigFlow, domain=DOMAIN):
         """Handle a flow initialized by homekit discovery."""
         return await self.async_step_zeroconf(discovery_info)
 
-    async def async_step_link(self, user_input=None):
+    async def async_step_link(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle pairing with the hub."""
         errors = {}
         # Abort if existing entry with matching host exists.
@@ -198,7 +200,9 @@ class LutronCasetaFlowHandler(ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured()
         return self.async_create_entry(title=ENTRY_DEFAULT_TITLE, data=self.data)
 
-    async def async_step_import_failed(self, user_input=None):
+    async def async_step_import_failed(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Make failed import surfaced to user."""
         self.context["title_placeholders"] = {CONF_NAME: self.data[CONF_HOST]}
 
