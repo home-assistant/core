@@ -23,6 +23,23 @@
       "operation_power": {
         "name": "Power"
       }
+    },
+    "binary_sensor": {
+      "eco_friendly_mode": {
+        "name": "Eco Friendly"
+      },
+      "power_save_enabled": {
+        "name": "Power Saving Mode"
+      },
+      "remote_control_enabled": {
+        "name": "{location}Remote Start"
+      },
+      "rinse_refill": {
+        "name": "Rinse refill needed"
+      },
+      "sabbath_mode": {
+        "name": "Sabbath"
+      }
     }
   }
 }
