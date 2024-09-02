@@ -3,13 +3,9 @@
   "name": "iskra",
   "codeowners": ["@iskramis"],
   "config_flow": true,
-  "dependencies": [],
   "documentation": "https://www.home-assistant.io/integrations/iskra",
-  "homekit": {},
   "integration_type": "hub",
   "iot_class": "local_polling",
   "loggers": ["pyiskra"],
-  "requirements": ["pyiskra==0.1.5"],
-  "ssdp": [],
-  "zeroconf": []
+  "requirements": ["pyiskra==0.1.8"]
 }

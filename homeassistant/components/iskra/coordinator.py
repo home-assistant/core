@@ -12,7 +12,7 @@ from pyiskra.exceptions import (
 )
 
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
 
@@ -38,11 +38,6 @@ class IskraDataUpdateCoordinator(DataUpdateCoordinator):
         )
 
     @property
-    def available(self):
-        """Return True if entity is available."""
-        return self._is_available
-
-    @property
     def device(self):
         """Return the device."""
         return self._device
@@ -51,19 +46,19 @@ class IskraDataUpdateCoordinator(DataUpdateCoordinator):
         """Fetch data from Iskra device."""
         try:
             await self.device.update_status()
-            _LOGGER.info("Data updated for device %s", self.device.serial)
-            self._is_available = True
-        except DeviceTimeoutError:
-            self._is_available = False
-            _LOGGER.error("Timeout error for device %s", self.device.serial)
-        except DeviceConnectionError:
-            self._is_available = False
-            _LOGGER.error("Could not fetch data from device %s", self.device.serial)
-        except NotAuthorised:
-            self._is_available = False
-            _LOGGER.error(
-                "Not authorised to fetch data from device %s", self.device.serial
-            )
-        except InvalidResponseCode:
-            self._is_available = False
-            _LOGGER.error("Invalid response code from device %s", self.device.serial)
+        except DeviceTimeoutError as e:
+            raise UpdateFailed(
+                f"Timeout error occurred while updating data for device {self.device.serial}"
+            ) from e
+        except DeviceConnectionError as e:
+            raise UpdateFailed(
+                f"Connection error occurred while updating data for device {self.device.serial}"
+            ) from e
+        except NotAuthorised as e:
+            raise UpdateFailed(
+                f"Not authorised to fetch data from device {self.device.serial}"
+            ) from e
+        except InvalidResponseCode as e:
+            raise UpdateFailed(
+                f"Invalid response code from device {self.device.serial}"
+            ) from e

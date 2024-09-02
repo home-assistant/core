@@ -59,7 +59,9 @@ STEP_MODBUS_TCP_DATA_SCHEMA = vol.Schema(
 )
 
 
-async def test_rest_api_connection(host: str, authentication=None) -> BasicInfo:
+async def test_rest_api_connection(
+    host: str, authentication: dict[str, str] | None = None
+) -> BasicInfo:
     """Check if the RestAPI requires authentication."""
     rest_api = RestAPI(ip_address=host, authentication=authentication)
     try:
@@ -237,9 +239,9 @@ class IskraConfigFlowFlow(ConfigFlow, domain=DOMAIN):
         protocol: str,
         serial: str,
         model: str,
-        port,
-        address,
-        authentication,
+        port: int | None = None,
+        address: int | None = None,
+        authentication: dict[str, str] | None = None,
     ) -> ConfigFlowResult:
         """Create the config entry."""
 

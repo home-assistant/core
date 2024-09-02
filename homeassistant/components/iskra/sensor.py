@@ -44,7 +44,7 @@ from .const import (
     ATTR_TOTAL_REACTIVE_POWER,
 )
 from .coordinator import IskraDataUpdateCoordinator
-from .entity import IskraDevice
+from .entity import IskraEntity
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
@@ -52,16 +52,11 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass(frozen=True)
-class IskraRequiredKeysMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class IskraSensorEntityDescription(SensorEntityDescription):
+    """Describes Iskra sensor entity."""
 
     value_func: Callable[[Device], float | None]
-
-
-@dataclass(frozen=True)
-class IskraSensorEntityDescription(SensorEntityDescription, IskraRequiredKeysMixin):
-    """Describes Iskra sensor entity."""
 
 
 SENSOR_TYPES: tuple[IskraSensorEntityDescription, ...] = (
@@ -182,8 +177,9 @@ async def async_setup_entry(
     """Set up Iskra sensors based on config_entry."""
 
     # Device that uses the config entry.
-    base_device = entry.runtime_data.get("base_device")
-    coordinators = entry.runtime_data.get("coordinators")
+    coordinators = entry.runtime_data.coordinators
+
+    entities = []
 
     # Add sensors for each device.
     for coordinator in coordinators:
@@ -210,27 +206,25 @@ async def async_setup_entry(
                 sensors.append(ATTR_PHASE3_POWER)
                 sensors.append(ATTR_PHASE3_CURRENT)
 
-        entities = [
-            IskraSensor(coordinator, base_device, entry, description)
+        entities += [
+            IskraSensor(coordinator, entry, description)
             for description in SENSOR_TYPES
             if description.key in sensors
         ]
 
-        async_add_entities(entities)
+    async_add_entities(entities)
 
 
-class IskraSensor(IskraDevice, CoordinatorEntity, SensorEntity):
+class IskraSensor(IskraEntity, CoordinatorEntity, SensorEntity):
     """Representation of a Sensor."""
 
-    _attr_has_entity_name = True
     entity_description: IskraSensorEntityDescription
     coordinator: IskraDataUpdateCoordinator
 
     def __init__(
         self,
         coordinator: IskraDataUpdateCoordinator,
-        gateway,
-        config_entry,
+        config_entry: ConfigEntry,
         description: IskraSensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
@@ -239,7 +233,7 @@ class IskraSensor(IskraDevice, CoordinatorEntity, SensorEntity):
         self.entity_description = description
         self._attr_unique_id = f"{coordinator.device.serial}_{description.key}"
         self._unique_id = self._attr_unique_id
-        IskraDevice.__init__(self, coordinator.device, gateway, config_entry)
+        IskraEntity.__init__(self, coordinator.device, config_entry)
         CoordinatorEntity.__init__(self, coordinator, self._unique_id)
 
     @property
