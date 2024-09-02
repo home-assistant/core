@@ -276,7 +276,7 @@ aiolifx-effects==0.3.2
 aiolifx-themes==0.5.0
 
 # homeassistant.components.lifx
-aiolifx==1.0.8
+aiolifx==1.0.9
 
 # homeassistant.components.livisi
 aiolivisi==0.0.19
@@ -1103,7 +1103,7 @@ hole==0.8.0
 holidays==0.55
 
 # homeassistant.components.frontend
-home-assistant-frontend==20240829.0
+home-assistant-frontend==20240902.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2024.8.29

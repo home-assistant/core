@@ -153,22 +153,23 @@ class AreaRegistryItems(NormalizedNameBaseRegistryItems[AreaEntry]):
 
     def _index_entry(self, key: str, entry: AreaEntry) -> None:
         """Index an entry."""
+        super()._index_entry(key, entry)
         if entry.floor_id is not None:
             self._floors_index[entry.floor_id][key] = True
         for label in entry.labels:
             self._labels_index[label][key] = True
-        super()._index_entry(key, entry)
 
     def _unindex_entry(
         self, key: str, replacement_entry: AreaEntry | None = None
     ) -> None:
+        # always call base class before other indices
+        super()._unindex_entry(key, replacement_entry)
         entry = self.data[key]
         if labels := entry.labels:
             for label in labels:
                 self._unindex_entry_value(key, label, self._labels_index)
         if floor_id := entry.floor_id:
             self._unindex_entry_value(key, floor_id, self._floors_index)
-        return super()._unindex_entry(key, replacement_entry)
 
     def get_areas_for_label(self, label: str) -> list[AreaEntry]:
         """Get areas for label."""
