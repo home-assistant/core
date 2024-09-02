@@ -1,17 +1,16 @@
-from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
+from typing import Awaitable, Callable
 
+from homeassistant.components.select import SelectEntity, SelectEntityDescription
+from homeassistant.const import EntityCategory
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from pymammotion.data.model.mowing_modes import (
     BorderPatrolMode,
     CuttingMode,
     MowOrder,
     ObstacleLapsMode,
 )
-
-from homeassistant.components.select import SelectEntity, SelectEntityDescription
-from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import MammotionConfigEntry
 from .coordinator import MammotionDataUpdateCoordinator
@@ -24,33 +23,28 @@ class MammotionSelectEntityDescription(SelectEntityDescription):
 
     key: str
     options: list[str]
-    select_fn: Callable[[MammotionDataUpdateCoordinator, str], Awaitable[None]]
 
 
 SELECT_ENTITIES: tuple[MammotionSelectEntityDescription, ...] = (
     MammotionSelectEntityDescription(
         key="cutting_mode",
         entity_category=EntityCategory.CONFIG,
-        options=[mode.name for mode in CuttingMode],
-        select_fn=lambda coordinator, value: CuttingMode[value],
+        options=[mode.name for mode in CuttingMode]
     ),
     MammotionSelectEntityDescription(
         key="border_patrol_mode",
         entity_category=EntityCategory.CONFIG,
-        options=[mode.name for mode in BorderPatrolMode],
-        select_fn=lambda coordinator, value: BorderPatrolMode[value],
+        options=[mode.name for mode in BorderPatrolMode]
     ),
     MammotionSelectEntityDescription(
         key="obstacle_laps_mode",
         entity_category=EntityCategory.CONFIG,
-        options=[mode.name for mode in ObstacleLapsMode],
-        select_fn=lambda coordinator, value: ObstacleLapsMode[value],
+        options=[mode.name for mode in ObstacleLapsMode]
     ),
     MammotionSelectEntityDescription(
         key="mow_order",
         entity_category=EntityCategory.CONFIG,
-        options=[order.name for order in MowOrder],
-        select_fn=lambda coordinator, value: MowOrder[value],
+        options=[order.name for order in MowOrder]
     ),
 )
 
@@ -89,8 +83,4 @@ class MammotionSelectEntity(MammotionBaseEntity, SelectEntity):
         self.entity_description = entity_description
         self._attr_translation_key = entity_description.key
         self._attr_options = entity_description.options
-
-    async def async_select_option(self, option: str) -> None:
-        self._attr_current_option = option
-        await self.entity_description.select_fn(self.coordinator, option)
-        self.async_write_ha_state()
+        self._attr_current_option = entity_description.options[0]

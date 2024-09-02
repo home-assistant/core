@@ -15,7 +15,6 @@
       },
       "reconfigure": {
         "data": {
-          "device_name": "Device name e.g Luba-****, Yuka-**** which needs to be unique",
           "use_wifi": "Use Wi-fi",
           "account_name": "Mammotion email or account number",
           "password": "Mammotion account password"
@@ -23,13 +22,18 @@
       },
       "user": {
         "data": {
-          "device_name": "Device name e.g Luba-****, Yuka-**** which needs to be unique",
-          "address": "[%key:common::config_flow::data::device%]",
-          "use_wifi": "Use Wi-fi",
+          "address": "Device"
+        },
+        "description": "Select your mower"
+      },
+      "wifi": {
+        "data": {
+          "use_wifi": "Use Wi-fi (un-tick and submit to use bluetooth)",
           "account_name": "Mammotion email or account number",
           "password": "Mammotion account password"
         },
-        "description": "Setup your mower"
+        "title": "Connect to Wi-Fi",
+        "description": "Enter your Mammotion account email or id and password"
       }
     }
   },
@@ -92,73 +96,77 @@
       },
       "activity_mode": {
         "name": "Activity mode"
+      },
+      "work_area": {
+        "name": "Work area hash"
       }
     },
     "button": {
       "start_map_sync": {
         "name": "Sync maps"
       },
-      "resync_rtk_dock": {
-        "name": "Sync RTK and dock",
-        "description": "Syncs RTK and dock location for when you move them."
+       "resync_rtk_dock": {
+        "name": "Sync RTK and dock"
+      },
+      "release_from_dock": {
+        "name": "Undock"
+      },
+      "emergency_nudge_forward": {
+        "name": "Emergency nudge forward"
+      },
+       "emergency_nudge_left": {
+        "name": "Emergency nudge left"
+      },
+      "emergency_nudge_right": {
+        "name": "Emergency nudge right"
+      },
+      "emergency_nudge_back": {
+        "name": "Emergency nudge back"
       }
     },
     "switch": {
       "blades_on_off": {
-        "name": "Blades On/Off",
-        "description": "Turn the blades on or off."
+        "name": "Blades On/Off"
       },
       "mowing_on_off": {
-        "name": "Mowing On/Off",
-        "description": "Start or stop mowing."
+        "name": "Mowing On/Off"
       },
       "dump_grass_on_off": {
-        "name": "Dump Grass On/Off",
-        "description": "Enable or disable grass dumping."
+        "name": "Dump Grass On/Off"
       },
       "rain_detection_on_off": {
-        "name": "Rain Detection On/Off",
-        "description": "Turn rain detection on or off."
+        "name": "Rain Detection On/Off"
       },
       "side_led_on_off": {
-        "name": "Side LED On/Off",
-        "description": "Enable or disable the side LED."
+        "name": "Side LED On/Off"
       },
-      "perimeter_first_on_off": {
-        "name": "Perimeter First",
-        "description": "Perimeter first or lines/zigzag first mowing."
+       "perimeter_first_on_off": {
+        "name": "Perimeter First"
       }
     },
     "select": {
-      "cutting_mode": {
-        "name": "Cutting Mode",
-        "description": "Select the cutting mode for the mower."
+       "cutting_mode": {
+        "name": "Cutting Mode"
       },
       "border_patrol_mode": {
-        "name": "Border Patrol Mode",
-        "description": "Select the border patrol mode for the mower."
+        "name": "Border Patrol Mode"
       },
       "obstacle_laps_mode": {
-        "name": "Obstacle Laps Mode",
-        "description": "Select the obstacle laps mode for the mower."
+        "name": "Obstacle Laps Mode"
       },
       "mow_order": {
-        "name": "Mow Order",
-        "description": "Select the order in which the areas should be mowed."
+        "name": "Mow Order"
       }
     },
     "number": {
-      "start_progress": {
-        "name": "Start Progress",
-        "description": "Set the start progress percentage."
+       "start_progress": {
+        "name": "Start Progress"
       },
       "blade_height": {
-        "name": "Blade Height",
-        "description": "Adjust the height of the cutter in increments."
+        "name": "Blade Height"
       },
       "working_speed": {
-        "name": "Working Speed",
-        "description": "Set the working speed of the mower."
+        "name": "Working Speed"
       }
     },
     "device_tracker": {
