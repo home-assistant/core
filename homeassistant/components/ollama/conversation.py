@@ -26,9 +26,11 @@ from .const import (
     CONF_KEEP_ALIVE,
     CONF_MAX_HISTORY,
     CONF_MODEL,
+    CONF_NUM_CTX,
     CONF_PROMPT,
     DEFAULT_KEEP_ALIVE,
     DEFAULT_MAX_HISTORY,
+    DEFAULT_NUM_CTX,
     DOMAIN,
     MAX_HISTORY_SECONDS,
 )
@@ -263,6 +265,7 @@ class OllamaConversationEntity(
                     stream=False,
                     # keep_alive requires specifying unit. In this case, seconds
                     keep_alive=f"{settings.get(CONF_KEEP_ALIVE, DEFAULT_KEEP_ALIVE)}s",
+                    options={CONF_NUM_CTX: settings.get(CONF_NUM_CTX, DEFAULT_NUM_CTX)},
                 )
             except (ollama.RequestError, ollama.ResponseError) as err:
                 _LOGGER.error("Unexpected error talking to Ollama server: %s", err)
@@ -346,9 +349,5 @@ class OllamaConversationEntity(
         self, hass: HomeAssistant, entry: ConfigEntry
     ) -> None:
         """Handle options update."""
-        if entry.options.get(CONF_LLM_HASS_API):
-            self._attr_supported_features = (
-                conversation.ConversationEntityFeature.CONTROL
-            )
-        else:
-            self._attr_supported_features = conversation.ConversationEntityFeature(0)
+        # Reload as we update device info + entity name + supported features
+        await hass.config_entries.async_reload(entry.entry_id)

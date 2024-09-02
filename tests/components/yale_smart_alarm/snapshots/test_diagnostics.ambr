@@ -1,7 +1,7 @@
 # serializer version: 1
 # name: test_diagnostics
   dict({
-    'AUTH CHECK': dict({
+    'auth_check': dict({
       'agent': False,
       'dealer_group': 'yale',
       'dealer_id': '605',
@@ -16,7 +16,7 @@
       'user_id': '**REDACTED**',
       'xml_version': '2',
     }),
-    'CYCLE': dict({
+    'cycle': dict({
       'alarm_event_latest': None,
       'capture_latest': None,
       'device_status': list([
@@ -650,7 +650,7 @@
         'utc_event_time': None,
       }),
     }),
-    'DEVICES': list([
+    'devices': list([
       dict({
         'address': '**REDACTED**',
         'area': '1',
@@ -1249,7 +1249,7 @@
         'type_no': '40',
       }),
     ]),
-    'HISTORY': list([
+    'history': list([
       dict({
         'area': 1,
         'cid': '18180701000',
@@ -1391,14 +1391,14 @@
         'zone': 1,
       }),
     ]),
-    'MODE': list([
+    'mode': list([
       dict({
         'area': '1',
         'mode': 'disarm',
       }),
     ]),
-    'ONLINE': 'online',
-    'PANEL INFO': dict({
+    'online': 'online',
+    'panel_info': dict({
       'SMS_Balance': '50',
       'contact': '',
       'dealer_name': 'Poland',
@@ -1416,7 +1416,7 @@
       'zb_version': '4.1.2.6.2',
       'zw_version': '',
     }),
-    'STATUS': dict({
+    'status': dict({
       'acfail': 'main.normal',
       'battery': 'main.normal',
       'gsm_rssi': '0',

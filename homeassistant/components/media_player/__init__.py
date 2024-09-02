@@ -274,59 +274,59 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     await component.async_setup(config)
 
     component.async_register_entity_service(
-        SERVICE_TURN_ON, {}, "async_turn_on", [MediaPlayerEntityFeature.TURN_ON]
+        SERVICE_TURN_ON, None, "async_turn_on", [MediaPlayerEntityFeature.TURN_ON]
     )
     component.async_register_entity_service(
-        SERVICE_TURN_OFF, {}, "async_turn_off", [MediaPlayerEntityFeature.TURN_OFF]
+        SERVICE_TURN_OFF, None, "async_turn_off", [MediaPlayerEntityFeature.TURN_OFF]
     )
     component.async_register_entity_service(
         SERVICE_TOGGLE,
-        {},
+        None,
         "async_toggle",
         [MediaPlayerEntityFeature.TURN_OFF | MediaPlayerEntityFeature.TURN_ON],
     )
     component.async_register_entity_service(
         SERVICE_VOLUME_UP,
-        {},
+        None,
         "async_volume_up",
         [MediaPlayerEntityFeature.VOLUME_SET, MediaPlayerEntityFeature.VOLUME_STEP],
     )
     component.async_register_entity_service(
         SERVICE_VOLUME_DOWN,
-        {},
+        None,
         "async_volume_down",
         [MediaPlayerEntityFeature.VOLUME_SET, MediaPlayerEntityFeature.VOLUME_STEP],
     )
     component.async_register_entity_service(
         SERVICE_MEDIA_PLAY_PAUSE,
-        {},
+        None,
         "async_media_play_pause",
         [MediaPlayerEntityFeature.PLAY | MediaPlayerEntityFeature.PAUSE],
     )
     component.async_register_entity_service(
-        SERVICE_MEDIA_PLAY, {}, "async_media_play", [MediaPlayerEntityFeature.PLAY]
+        SERVICE_MEDIA_PLAY, None, "async_media_play", [MediaPlayerEntityFeature.PLAY]
     )
     component.async_register_entity_service(
-        SERVICE_MEDIA_PAUSE, {}, "async_media_pause", [MediaPlayerEntityFeature.PAUSE]
+        SERVICE_MEDIA_PAUSE, None, "async_media_pause", [MediaPlayerEntityFeature.PAUSE]
     )
     component.async_register_entity_service(
-        SERVICE_MEDIA_STOP, {}, "async_media_stop", [MediaPlayerEntityFeature.STOP]
+        SERVICE_MEDIA_STOP, None, "async_media_stop", [MediaPlayerEntityFeature.STOP]
     )
     component.async_register_entity_service(
         SERVICE_MEDIA_NEXT_TRACK,
-        {},
+        None,
         "async_media_next_track",
         [MediaPlayerEntityFeature.NEXT_TRACK],
     )
     component.async_register_entity_service(
         SERVICE_MEDIA_PREVIOUS_TRACK,
-        {},
+        None,
         "async_media_previous_track",
         [MediaPlayerEntityFeature.PREVIOUS_TRACK],
     )
     component.async_register_entity_service(
         SERVICE_CLEAR_PLAYLIST,
-        {},
+        None,
         "async_clear_playlist",
         [MediaPlayerEntityFeature.CLEAR_PLAYLIST],
     )
@@ -423,7 +423,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         [MediaPlayerEntityFeature.SHUFFLE_SET],
     )
     component.async_register_entity_service(
-        SERVICE_UNJOIN, {}, "async_unjoin_player", [MediaPlayerEntityFeature.GROUPING]
+        SERVICE_UNJOIN, None, "async_unjoin_player", [MediaPlayerEntityFeature.GROUPING]
     )
 
     component.async_register_entity_service(

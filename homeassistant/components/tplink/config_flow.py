@@ -410,9 +410,18 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
             self._discovered_device = await Discover.discover_single(
                 host, credentials=credentials
             )
-        except TimeoutError:
-            # Try connect() to legacy devices if discovery fails
-            self._discovered_device = await Device.connect(config=DeviceConfig(host))
+        except TimeoutError as ex:
+            # Try connect() to legacy devices if discovery fails. This is a
+            # fallback mechanism for legacy that can handle connections without
+            # discovery info but if it fails raise the original error which is
+            # applicable for newer devices.
+            try:
+                self._discovered_device = await Device.connect(
+                    config=DeviceConfig(host)
+                )
+            except Exception:  # noqa: BLE001
+                # Raise the original error instead of the fallback error
+                raise ex from ex
         else:
             if self._discovered_device.config.uses_http:
                 self._discovered_device.config.http_client = (

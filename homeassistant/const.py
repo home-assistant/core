@@ -23,7 +23,7 @@ if TYPE_CHECKING:
 
 APPLICATION_NAME: Final = "HomeAssistant"
 MAJOR_VERSION: Final = 2024
-MINOR_VERSION: Final = 9
+MINOR_VERSION: Final = 10
 PATCH_VERSION: Final = "0.dev0"
 __short_version__: Final = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__: Final = f"{__short_version__}.{PATCH_VERSION}"
@@ -60,7 +60,6 @@ class Platform(StrEnum):
     LAWN_MOWER = "lawn_mower"
     LIGHT = "light"
     LOCK = "lock"
-    MAILBOX = "mailbox"
     MEDIA_PLAYER = "media_player"
     NOTIFY = "notify"
     NUMBER = "number"
@@ -673,8 +672,19 @@ _DEPRECATED_POWER_BTU_PER_HOUR: Final = DeprecatedConstantEnum(
 )
 """Deprecated: please use UnitOfPower.BTU_PER_HOUR."""
 
+
 # Reactive power units
-POWER_VOLT_AMPERE_REACTIVE: Final = "var"
+class UnitOfReactivePower(StrEnum):
+    """Reactive power units."""
+
+    VOLT_AMPERE_REACTIVE = "var"
+
+
+_DEPRECATED_POWER_VOLT_AMPERE_REACTIVE: Final = DeprecatedConstantEnum(
+    UnitOfReactivePower.VOLT_AMPERE_REACTIVE,
+    "2025.9",
+)
+"""Deprecated: please use UnitOfReactivePower.VOLT_AMPERE_REACTIVE."""
 
 
 # Energy units

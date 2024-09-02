@@ -96,6 +96,7 @@ class DPCode(StrEnum):
     """
 
     AIR_QUALITY = "air_quality"
+    AIR_QUALITY_INDEX = "air_quality_index"
     ALARM_SWITCH = "alarm_switch"  # Alarm switch
     ALARM_TIME = "alarm_time"  # Alarm time
     ALARM_VOLUME = "alarm_volume"  # Alarm volume

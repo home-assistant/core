@@ -10,7 +10,7 @@ import pytest
 from pyvlx import PyVLXException
 
 from homeassistant.components.velux import DOMAIN
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -69,22 +69,8 @@ async def test_user_errors(
         assert result["errors"] == {"base": error_name}
 
 
-async def test_import_valid_config(hass: HomeAssistant) -> None:
-    """Test import initialized flow with valid config."""
-    with patch(PYVLX_CONFIG_FLOW_CLASS_PATH, autospec=True):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data=DUMMY_DATA,
-        )
-        assert result["type"] is FlowResultType.CREATE_ENTRY
-        assert result["title"] == DUMMY_DATA[CONF_HOST]
-        assert result["data"] == DUMMY_DATA
-
-
-@pytest.mark.parametrize("flow_source", [SOURCE_IMPORT, SOURCE_USER])
-async def test_flow_duplicate_entry(hass: HomeAssistant, flow_source: str) -> None:
-    """Test import initialized flow with a duplicate entry."""
+async def test_flow_duplicate_entry(hass: HomeAssistant) -> None:
+    """Test initialized flow with a duplicate entry."""
     with patch(PYVLX_CONFIG_FLOW_CLASS_PATH, autospec=True):
         conf_entry: MockConfigEntry = MockConfigEntry(
             domain=DOMAIN, title=DUMMY_DATA[CONF_HOST], data=DUMMY_DATA
@@ -94,26 +80,8 @@ async def test_flow_duplicate_entry(hass: HomeAssistant, flow_source: str) -> No
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": flow_source},
+            context={"source": SOURCE_USER},
             data=DUMMY_DATA,
         )
         assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "already_configured"
-
-
-@pytest.mark.parametrize(("error", "error_name"), error_types_to_test)
-async def test_import_errors(
-    hass: HomeAssistant, error: Exception, error_name: str
-) -> None:
-    """Test import initialized flow with exceptions."""
-    with patch(
-        PYVLX_CONFIG_FLOW_CONNECT_FUNCTION_PATH,
-        side_effect=error,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data=DUMMY_DATA,
-        )
-        assert result["type"] is FlowResultType.ABORT
-        assert result["reason"] == error_name

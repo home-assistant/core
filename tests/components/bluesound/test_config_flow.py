@@ -2,7 +2,7 @@
 
 from unittest.mock import AsyncMock
 
-from aiohttp import ClientConnectionError
+from pyblu.errors import PlayerUnreachableError
 
 from homeassistant.components.bluesound.const import DOMAIN
 from homeassistant.components.zeroconf import ZeroconfServiceInfo
@@ -41,7 +41,7 @@ async def test_user_flow_success(
 
 
 async def test_user_flow_cannot_connect(
-    hass: HomeAssistant, mock_player: AsyncMock
+    hass: HomeAssistant, mock_player: AsyncMock, mock_setup_entry: AsyncMock
 ) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
@@ -49,7 +49,7 @@ async def test_user_flow_cannot_connect(
         context={"source": SOURCE_USER},
     )
 
-    mock_player.sync_status.side_effect = ClientConnectionError
+    mock_player.sync_status.side_effect = PlayerUnreachableError("Player not reachable")
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
@@ -75,6 +75,8 @@ async def test_user_flow_cannot_connect(
         CONF_HOST: "1.1.1.1",
         CONF_PORT: 11000,
     }
+
+    mock_setup_entry.assert_called_once()
 
 
 async def test_user_flow_aleady_configured(
@@ -127,7 +129,7 @@ async def test_import_flow_cannot_connect(
     hass: HomeAssistant, mock_player: AsyncMock
 ) -> None:
     """Test we handle cannot connect error."""
-    mock_player.sync_status.side_effect = ClientConnectionError
+    mock_player.sync_status.side_effect = PlayerUnreachableError("Player not reachable")
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_IMPORT},
@@ -198,7 +200,7 @@ async def test_zeroconf_flow_cannot_connect(
     hass: HomeAssistant, mock_player: AsyncMock
 ) -> None:
     """Test we handle cannot connect error."""
-    mock_player.sync_status.side_effect = ClientConnectionError
+    mock_player.sync_status.side_effect = PlayerUnreachableError("Player not reachable")
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},

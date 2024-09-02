@@ -95,6 +95,7 @@ class ZHAFirmwareUpdateEntity(
         UpdateEntityFeature.INSTALL
         | UpdateEntityFeature.PROGRESS
         | UpdateEntityFeature.SPECIFIC_VERSION
+        | UpdateEntityFeature.RELEASE_NOTES
     )
 
     def __init__(self, entity_data: EntityData, **kwargs: Any) -> None:
@@ -143,6 +144,14 @@ class ZHAFirmwareUpdateEntity(
         """
         return self.entity_data.entity.release_summary
 
+    async def async_release_notes(self) -> str | None:
+        """Return full release notes.
+
+        This is suitable for a long changelog that does not fit in the release_summary
+        property. The returned string can contain markdown.
+        """
+        return self.entity_data.entity.release_notes
+
     @property
     def release_url(self) -> str | None:
         """URL to the full release notes of the latest version available."""
@@ -155,7 +164,7 @@ class ZHAFirmwareUpdateEntity(
     ) -> None:
         """Install an update."""
         try:
-            await self.entity_data.entity.async_install(version=version, backup=backup)
+            await self.entity_data.entity.async_install(version=version)
         except ZHAException as exc:
             raise HomeAssistantError(exc) from exc
         finally:
