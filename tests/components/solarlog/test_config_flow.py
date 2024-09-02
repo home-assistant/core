@@ -5,9 +5,9 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from solarlog_cli.solarlog_exceptions import SolarLogConnectionError, SolarLogError
 
-from homeassistant import config_entries
 from homeassistant.components.solarlog import config_flow
 from homeassistant.components.solarlog.const import DOMAIN
+from homeassistant.config_entries import SOURCE_RECONFIGURE, SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -21,7 +21,7 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     """Test we get the form."""
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
@@ -60,7 +60,7 @@ async def test_user(
 ) -> None:
     """Test user config."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
@@ -163,7 +163,7 @@ async def test_reconfigure_flow(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={
-            "source": config_entries.SOURCE_RECONFIGURE,
+            "source": SOURCE_RECONFIGURE,
             "entry_id": entry.entry_id,
         },
     )
