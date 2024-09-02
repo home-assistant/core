@@ -1,4 +1,5 @@
 """Platform for NASweb output."""
+
 from __future__ import annotations
 
 import logging
@@ -13,7 +14,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.entity_registry import EntityRegistry, async_get
+import homeassistant.helpers.entity_registry as er
 from homeassistant.helpers.typing import DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import (
     BaseCoordinatorEntity,
@@ -91,8 +92,8 @@ class RelaySwitch(SwitchEntity, BaseCoordinatorEntity):
             )
         if old_available and self._output.available is None and self.unique_id:
             _LOGGER.warning("Removing entity: %s", self)
-            er: EntityRegistry = async_get(self.hass)
-            er.async_remove(self.entity_id)
+            entity_registry = er.async_get(self.hass)
+            entity_registry.async_remove(self.entity_id)
             return
         self.async_write_ha_state()
 
