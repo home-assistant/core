@@ -68,17 +68,12 @@ async def test_rest_api_connection(
         basic_info = await rest_api.get_basic_info()
     except NotAuthorised as e:
         raise NotAuthorised from e
-    except DeviceConnectionError as e:
-        raise CannotConnect from e
-    except DeviceTimeoutError as e:
-        raise CannotConnect from e
-    except InvalidResponseCode as e:
+    except (DeviceConnectionError, DeviceTimeoutError, InvalidResponseCode) as e:
         raise CannotConnect from e
     except Exception as e:
         _LOGGER.error("Unexpected exception: %s", e)
         raise UnknownException from e
 
-    _LOGGER.info("REST API connection successful")
     return basic_info
 
 
@@ -91,17 +86,12 @@ async def test_modbus_connection(host: str, port: int, address: int) -> BasicInf
         basic_info = await modbus_api.get_basic_info()
     except NotAuthorised as e:
         raise NotAuthorised from e
-    except DeviceConnectionError as e:
-        raise CannotConnect from e
-    except DeviceTimeoutError as e:
-        raise CannotConnect from e
-    except InvalidResponseCode as e:
+    except (DeviceConnectionError, DeviceTimeoutError, InvalidResponseCode) as e:
         raise CannotConnect from e
     except Exception as e:
         _LOGGER.error("Unexpected exception: %s", e)
         raise UnknownException from e
 
-    _LOGGER.info("Modbus connection successful")
     return basic_info
 
 

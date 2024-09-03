@@ -16,34 +16,26 @@ class IskraEntity(CoordinatorEntity[IskraDataUpdateCoordinator]):
     def __init__(self, coordinator: IskraDataUpdateCoordinator) -> None:
         """Initialize the Iskra device."""
         super().__init__(coordinator)
-        self._device = coordinator.device
+        device = coordinator.device
+        gateway = device.parent_device
+        device_name = f"{device.serial}"
 
-        self._serial = self._device.serial
-        self._model = self._device.model
-        self._fw_version = self._device.fw_version
-        self._device_name = f"{self._serial}"
-        self._is_gateway = self._device.is_gateway
-        self._gateway = self._device.parent_device
-        self._device_id = self._serial
-
-        if self._gateway is not None:
+        if gateway is not None:
             self._attr_device_info = DeviceInfo(
-                connections={("IP", self._device_id)},
-                identifiers={(DOMAIN, self._device_id)},
+                identifiers={(DOMAIN, device.serial)},
                 manufacturer=MANUFACTURER,
-                model=self._model,
-                name=self._device_name,
-                sw_version=self._fw_version,
-                serial_number=self._serial,
-                via_device=(DOMAIN, self._gateway.serial),
+                model=device.model,
+                name=device_name,
+                sw_version=device.fw_version,
+                serial_number=device.serial,
+                via_device=(DOMAIN, gateway.serial),
             )
         else:
             self._attr_device_info = DeviceInfo(
-                connections={("IP", self._device_id)},
-                identifiers={(DOMAIN, self._device_id)},
+                identifiers={(DOMAIN, device.serial)},
                 manufacturer=MANUFACTURER,
-                model=self._model,
-                name=self._device_name,
-                sw_version=self._fw_version,
-                serial_number=self._serial,
+                model=device.model,
+                name=device_name,
+                sw_version=device.fw_version,
+                serial_number=device.serial,
             )

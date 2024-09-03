@@ -25,7 +25,6 @@ class IskraDataUpdateCoordinator(DataUpdateCoordinator[None]):
     def __init__(self, hass: HomeAssistant, device: Device) -> None:
         """Initialize."""
         self.device = device
-        self.name = device.serial
 
         update_interval = timedelta(seconds=60)
 

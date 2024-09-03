@@ -206,11 +206,13 @@ async def async_setup_entry(
                 sensors.append(ATTR_PHASE3_POWER)
                 sensors.append(ATTR_PHASE3_CURRENT)
 
-        entities += [
-            IskraSensor(coordinator, description)
-            for description in SENSOR_TYPES
-            if description.key in sensors
-        ]
+        entities.extend(
+            [
+                IskraSensor(coordinator, description)
+                for description in SENSOR_TYPES
+                if description.key in sensors
+            ]
+        )
 
     async_add_entities(entities)
 
@@ -227,6 +229,7 @@ class IskraSensor(IskraEntity, SensorEntity):
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
+        self._device = coordinator.device
         self.entity_description = description
         self._attr_unique_id = f"{coordinator.device.serial}_{description.key}"
 
