@@ -2137,50 +2137,6 @@ def post_migrate_entity_ids(instance: Recorder) -> bool:
     return is_done
 
 
-@retryable_database_job("cleanup_legacy_event_ids")
-def cleanup_legacy_states_event_ids(instance: Recorder) -> bool:
-    """Remove old event_id index from states.
-
-    We used to link states to events using the event_id column but we no
-    longer store state changed events in the events table.
-
-    If all old states have been purged and existing states are in the new
-    format we can drop the index since it can take up ~10MB per 1M rows.
-    """
-    session_maker = instance.get_session
-    _LOGGER.debug("Cleanup legacy entity_ids")
-    with session_scope(session=session_maker()) as session:
-        result = session.execute(has_used_states_event_ids()).scalar()
-        # In the future we may migrate existing states to the new format
-        # but in practice very few of these still exist in production and
-        # removing the index is the likely all that needs to happen.
-        all_gone = not result
-
-    if all_gone:
-        # Only drop the index if there are no more event_ids in the states table
-        # ex all NULL
-        assert instance.engine is not None, "engine should never be None"
-        if instance.dialect_name == SupportedDialect.SQLITE:
-            # SQLite does not support dropping foreign key constraints
-            # so we have to rebuild the table
-            fk_remove_ok = rebuild_sqlite_table(session_maker, instance.engine, States)
-        else:
-            try:
-                _drop_foreign_key_constraints(
-                    session_maker, instance.engine, TABLE_STATES, "event_id"
-                )
-            except (InternalError, OperationalError):
-                fk_remove_ok = False
-            else:
-                fk_remove_ok = True
-        if fk_remove_ok:
-            _drop_index(session_maker, "states", LEGACY_STATES_EVENT_ID_INDEX)
-            instance.use_legacy_events_index = False
-            _mark_migration_done(session, EventIDPostMigration)
-
-    return True
-
-
 def _initialize_database(session: Session) -> bool:
     """Initialize a new database.
 
@@ -2635,9 +2591,50 @@ class EventIDPostMigration(BaseRunTimeMigration):
     migration_version = 2
 
     @staticmethod
+    @retryable_database_job("cleanup_legacy_event_ids")
     def migrate_data(instance: Recorder) -> bool:
-        """Migrate some data, returns True if migration is completed."""
-        return cleanup_legacy_states_event_ids(instance)
+        """Remove old event_id index from states, returns True if completed.
+
+        We used to link states to events using the event_id column but we no
+        longer store state changed events in the events table.
+
+        If all old states have been purged and existing states are in the new
+        format we can drop the index since it can take up ~10MB per 1M rows.
+        """
+        session_maker = instance.get_session
+        _LOGGER.debug("Cleanup legacy entity_ids")
+        with session_scope(session=session_maker()) as session:
+            result = session.execute(has_used_states_event_ids()).scalar()
+            # In the future we may migrate existing states to the new format
+            # but in practice very few of these still exist in production and
+            # removing the index is the likely all that needs to happen.
+            all_gone = not result
+
+        if all_gone:
+            # Only drop the index if there are no more event_ids in the states table
+            # ex all NULL
+            assert instance.engine is not None, "engine should never be None"
+            if instance.dialect_name == SupportedDialect.SQLITE:
+                # SQLite does not support dropping foreign key constraints
+                # so we have to rebuild the table
+                fk_remove_ok = rebuild_sqlite_table(
+                    session_maker, instance.engine, States
+                )
+            else:
+                try:
+                    _drop_foreign_key_constraints(
+                        session_maker, instance.engine, TABLE_STATES, "event_id"
+                    )
+                except (InternalError, OperationalError):
+                    fk_remove_ok = False
+                else:
+                    fk_remove_ok = True
+            if fk_remove_ok:
+                _drop_index(session_maker, "states", LEGACY_STATES_EVENT_ID_INDEX)
+                instance.use_legacy_events_index = False
+                _mark_migration_done(session, EventIDPostMigration)
+
+        return True
 
     @staticmethod
     def _legacy_event_id_foreign_key_exists(instance: Recorder) -> bool:
