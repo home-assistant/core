@@ -217,17 +217,15 @@ class GooglePhotosMediaSource(MediaSource):
                 raise BrowseError(f"Error listing albums: {err}") from err
 
             source.children.extend(
-                [
-                    _build_album(
-                        album.title,
-                        PhotosIdentifier.album(
-                            identifier.config_entry_id,
-                            album.id,
-                        ),
-                        _cover_photo_url(album, THUMBNAIL_SIZE),
-                    )
-                    for album in albums
-                ]
+                _build_album(
+                    album.title,
+                    PhotosIdentifier.album(
+                        identifier.config_entry_id,
+                        album.id,
+                    ),
+                    _cover_photo_url(album, THUMBNAIL_SIZE),
+                )
+                for album in albums
             )
             return source
 
