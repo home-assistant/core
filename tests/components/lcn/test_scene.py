@@ -14,10 +14,12 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .conftest import MockModuleConnection
+from .conftest import MockConfigEntry, MockModuleConnection, MockPchkConnectionManager
 
 
-async def test_setup_lcn_scene(hass: HomeAssistant, lcn_connection) -> None:
+async def test_setup_lcn_scene(
+    hass: HomeAssistant, lcn_connection: MockPchkConnectionManager
+) -> None:
     """Test the setup of switch."""
     for entity_id in (
         "scene.romantic",
@@ -29,7 +31,10 @@ async def test_setup_lcn_scene(hass: HomeAssistant, lcn_connection) -> None:
 
 
 async def test_entity_attributes(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry, entry, lcn_connection
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    entry: MockConfigEntry,
+    lcn_connection: MockPchkConnectionManager,
 ) -> None:
     """Test the attributes of an entity."""
     entity = entity_registry.async_get("scene.romantic")
@@ -47,7 +52,7 @@ async def test_entity_attributes(
 
 @patch.object(MockModuleConnection, "activate_scene")
 async def test_scene_activate(
-    activate_scene, hass: HomeAssistant, lcn_connection
+    activate_scene, hass: HomeAssistant, lcn_connection: MockPchkConnectionManager
 ) -> None:
     """Test the scene is activated."""
     await hass.services.async_call(
@@ -56,7 +61,6 @@ async def test_scene_activate(
         {ATTR_ENTITY_ID: "scene.romantic"},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     state = hass.states.get("scene.romantic")
     assert state is not None
@@ -66,7 +70,11 @@ async def test_scene_activate(
     )
 
 
-async def test_unload_config_entry(hass: HomeAssistant, entry, lcn_connection) -> None:
+async def test_unload_config_entry(
+    hass: HomeAssistant,
+    entry: MockConfigEntry,
+    lcn_connection: MockPchkConnectionManager,
+) -> None:
     """Test the scene is removed when the config entry is unloaded."""
     await hass.config_entries.async_forward_entry_unload(entry, DOMAIN_SCENE)
     assert hass.states.get("scene.romantic").state == STATE_UNAVAILABLE
