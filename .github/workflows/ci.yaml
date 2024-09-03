@@ -434,7 +434,6 @@ jobs:
     runs-on: ubuntu-24.04
     needs:
       - info
-      - pre-commit
     strategy:
       fail-fast: false
       matrix:
