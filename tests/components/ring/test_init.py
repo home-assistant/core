@@ -186,7 +186,7 @@ async def test_error_on_global_update(
 
     assert log_msg in caplog.text
 
-    assert mock_config_entry.entry_id in hass.data[DOMAIN]
+    assert hass.config_entries.async_get_entry(mock_config_entry.entry_id)
 
 
 @pytest.mark.parametrize(
@@ -226,7 +226,7 @@ async def test_error_on_device_update(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert log_msg in caplog.text
-    assert mock_config_entry.entry_id in hass.data[DOMAIN]
+    assert hass.config_entries.async_get_entry(mock_config_entry.entry_id)
 
 
 async def test_issue_deprecated_service_ring_update(
