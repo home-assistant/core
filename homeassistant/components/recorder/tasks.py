@@ -334,19 +334,6 @@ class AdjustLRUSizeTask(RecorderTask):
 
 
 @dataclass(slots=True)
-class EntityIDPostMigrationTask(RecorderTask):
-    """An object to insert into the recorder queue to cleanup after entity_ids migration."""
-
-    def run(self, instance: Recorder) -> None:
-        """Run entity_id post migration task."""
-        if (
-            not instance._post_migrate_entity_ids()  # noqa: SLF001
-        ):
-            # Schedule a new migration task if this one didn't finish
-            instance.queue_task(EntityIDPostMigrationTask())
-
-
-@dataclass(slots=True)
 class RefreshEventTypesTask(RecorderTask):
     """An object to insert into the recorder queue to refresh event types."""
 
