@@ -33,15 +33,6 @@ class ViCareEntity(Entity):
             component if component else device
         )
         self._attr_unique_id = f"{identifier}-{unique_id_suffix}"
-    ) -> None:
-        """Initialize the entity."""
-        gatewaySerial = device_config.getConfig().serial
-        deviceSerial = device.getSerial()
-        identifier = f"{gatewaySerial}_{deviceSerial}"
-        self._api: PyViCareDevice | PyViCareHeatingDeviceComponent = (
-            component if component else device
-        )
-        self._attr_unique_id = f"{identifier}-{unique_id_suffix}"
         if component:
             self._attr_unique_id += f"-{component.id}"
 
