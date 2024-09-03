@@ -79,7 +79,7 @@ async def async_setup_platform(
 class SourceAdapter:
     """Adapter to allow sources and their flows to be used as sensors."""
 
-    source_type: Literal["grid", "gas", "water"]
+    source_type: Literal["grid", "gas", "water", "custom"]
     flow_type: Literal["flow_from", "flow_to", None]
     stat_energy_key: Literal["stat_energy_from", "stat_energy_to"]
     total_money_key: Literal["stat_cost", "stat_compensation"]
@@ -114,6 +114,14 @@ SOURCE_ADAPTERS: Final = (
     ),
     SourceAdapter(
         "water",
+        None,
+        "stat_energy_from",
+        "stat_cost",
+        "Cost",
+        "cost",
+    ),
+    SourceAdapter(
+        "custom",
         None,
         "stat_energy_from",
         "stat_cost",
@@ -282,6 +290,10 @@ class EnergyCostSensor(SensorEntity):
             else:
                 default_price_unit = UnitOfVolume.GALLONS
 
+        elif self._adapter.source_type == "custom":
+            valid_units = None
+            default_price_unit = None
+
         energy_state = self.hass.states.get(
             cast(str, self._config[self._adapter.stat_energy_key])
         )
@@ -337,7 +349,7 @@ class EnergyCostSensor(SensorEntity):
 
             # For backwards compatibility we don't validate the unit of the price
             # If it is not valid, we assume it's our default price unit.
-            if energy_price_unit not in valid_units:
+            if valid_units and energy_price_unit not in valid_units:
                 energy_price_unit = default_price_unit
 
         else:
@@ -351,7 +363,7 @@ class EnergyCostSensor(SensorEntity):
 
         energy_unit: str | None = energy_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
 
-        if energy_unit is None or energy_unit not in valid_units:
+        if energy_unit is None or (valid_units and energy_unit not in valid_units):
             if not self._wrong_unit_reported:
                 self._wrong_unit_reported = True
                 _LOGGER.warning(

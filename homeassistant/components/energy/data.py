@@ -121,12 +121,24 @@ class WaterSourceType(TypedDict):
     number_energy_price: float | None  # Price for energy ($/m³)
 
 
+class CustomSourceType(TypedDict):
+    """Dictionary holding the source of a custom consumption type."""
+
+    type: Literal["custom"]
+    custom_type: str
+    stat_energy_from: str
+    stat_cost: str | None
+    entity_energy_price: str | None
+    number_energy_price: float | None
+
+
 type SourceType = (
     GridSourceType
     | SolarSourceType
     | BatterySourceType
     | GasSourceType
     | WaterSourceType
+    | CustomSourceType
 )
 
 
@@ -257,6 +269,16 @@ WATER_SOURCE_SCHEMA = vol.Schema(
         vol.Optional("number_energy_price"): vol.Any(vol.Coerce(float), None),
     }
 )
+CUSTOM_SOURCE_SCHEMA = vol.Schema(
+    {
+        vol.Required("type"): "custom",
+        vol.Required("custom_type"): str,
+        vol.Required("stat_energy_from"): str,
+        vol.Optional("stat_cost"): vol.Any(str, None),
+        vol.Optional("entity_energy_price"): vol.Any(str, None),
+        vol.Optional("number_energy_price"): vol.Any(vol.Coerce(float), None),
+    }
+)
 
 
 def check_type_limits(value: list[SourceType]) -> list[SourceType]:
@@ -280,6 +302,7 @@ ENERGY_SOURCE_SCHEMA = vol.All(
                     "battery": BATTERY_SOURCE_SCHEMA,
                     "gas": GAS_SOURCE_SCHEMA,
                     "water": WATER_SOURCE_SCHEMA,
+                    "custom": CUSTOM_SOURCE_SCHEMA,
                 },
             )
         ]
