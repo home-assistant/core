@@ -933,6 +933,23 @@ async def async_service_temperature_set(
     entity: ClimateEntity, service_call: ServiceCall
 ) -> None:
     """Handle set temperature service."""
+    if (
+        ATTR_TEMPERATURE in service_call.data
+        and not entity.supported_features & ClimateEntityFeature.TARGET_TEMPERATURE
+    ):
+        raise ServiceValidationError(
+            translation_domain=DOMAIN, translation_key="not_supported_temp_feature"
+        )
+    if (
+        ATTR_TARGET_TEMP_LOW in service_call.data
+        and not entity.supported_features
+        & ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+    ):
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="not_supported_temp_range_feature",
+        )
+
     hass = entity.hass
     kwargs = {}
     min_temp = entity.min_temp

@@ -242,6 +242,71 @@ def test_deprecated_current_constants(
     )
 
 
+async def test_temperature_features_is_valid(
+    hass: HomeAssistant,
+    register_test_integration: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test correct features for setting temperature."""
+
+    class MockClimateTempEntity(MockClimateEntity):
+        @property
+        def supported_features(self) -> int:
+            """Return supported features."""
+            return ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+
+    class MockClimateTempRangeEntity(MockClimateEntity):
+        @property
+        def supported_features(self) -> int:
+            """Return supported features."""
+            return ClimateEntityFeature.TARGET_TEMPERATURE
+
+    climate_temp_entity = MockClimateTempEntity(
+        name="test", entity_id="climate.test_temp"
+    )
+    climate_temp_range_entity = MockClimateTempRangeEntity(
+        name="test", entity_id="climate.test_range"
+    )
+
+    setup_test_component_platform(
+        hass,
+        DOMAIN,
+        entities=[climate_temp_entity, climate_temp_range_entity],
+        from_config_entry=True,
+    )
+    await hass.config_entries.async_setup(register_test_integration.entry_id)
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {
+            "entity_id": "climate.test_temp",
+            "temperature": 20,
+        },
+        blocking=True,
+    )
+    assert (
+        "MockClimateTempEntity set_temperature action was used with temperature but the entity does not "
+        "implement the ClimateEntityFeature.TARGET_TEMPERATURE feature. Please"
+    ) in caplog.text
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {
+            "entity_id": "climate.test_range",
+            "target_temp_low": 20,
+            "target_temp_high": 25,
+        },
+        blocking=True,
+    )
+    assert (
+        "MockClimateTempRangeEntity set_temperature action was used with target_temp_low but the entity does not "
+        "implement the ClimateEntityFeature.TARGET_TEMPERATURE_RANGE feature. Please"
+    ) in caplog.text
+
+
 async def test_mode_validation(
     hass: HomeAssistant,
     register_test_integration: MockConfigEntry,
