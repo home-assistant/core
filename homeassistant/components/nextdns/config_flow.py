@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from aiohttp.client_exceptions import ClientConnectorError
 from nextdns import ApiError, InvalidApiKeyError, NextDns
@@ -36,7 +36,7 @@ class NextDnsFlowHandler(ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self.nextdns: NextDns
         self.api_key: str
-        self.entry: ConfigEntry
+        self.entry: ConfigEntry | None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -97,8 +97,7 @@ class NextDnsFlowHandler(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle configuration by re-auth."""
-        if entry := self.hass.config_entries.async_get_entry(self.context["entry_id"]):
-            self.entry = entry
+        self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -117,6 +116,9 @@ class NextDnsFlowHandler(ConfigFlow, domain=DOMAIN):
             except Exception:  # noqa: BLE001
                 errors["base"] = "unknown"
             else:
+                if TYPE_CHECKING:
+                    assert self.entry is not None
+
                 return self.async_update_reload_and_abort(
                     self.entry, data={**self.entry.data, **user_input}
                 )
