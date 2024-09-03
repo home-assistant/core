@@ -14,8 +14,6 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from . import PROFILES, init_integration
 
-from tests.common import MockConfigEntry
-
 
 async def test_form_create_entry(hass: HomeAssistant) -> None:
     """Test that the user step works."""
@@ -107,13 +105,8 @@ async def test_form_already_configured(hass: HomeAssistant) -> None:
 
 async def test_reauth_successful(hass: HomeAssistant) -> None:
     """Test starting a reauthentication flow."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        title="Fake Profile",
-        unique_id="xyz12",
-        data={CONF_API_KEY: "fake_api_key", CONF_PROFILE_ID: "xyz12"},
-    )
-    entry.add_to_hass(hass)
+    entry = await init_integration(hass)
+
     result = await entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
@@ -147,13 +140,8 @@ async def test_reauth_errors(
     hass: HomeAssistant, exc: Exception, base_error: str
 ) -> None:
     """Test reauthentication flow with errors."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        title="Fake Profile",
-        unique_id="xyz12",
-        data={CONF_API_KEY: "fake_api_key", CONF_PROFILE_ID: "xyz12"},
-    )
-    entry.add_to_hass(hass)
+    entry = await init_integration(hass)
+
     result = await entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
