@@ -219,6 +219,7 @@ async def test_migrate_times(
         await hass.async_stop()
 
 
+@pytest.mark.parametrize("enable_migrate_entity_ids", [True])
 @pytest.mark.parametrize("persistent_database", [True])
 @pytest.mark.usefixtures("hass_storage")  # Prevent test hass from writing to storage
 async def test_migrate_can_resume_entity_id_post_migration(
