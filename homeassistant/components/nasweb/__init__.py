@@ -62,8 +62,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: NASwebConfigEntry) -> bo
         coordinator = NASwebCoordinator(
             hass, webio_api, name=f"NASweb[{webio_api.get_name()}]"
         )
-        nasweb_data.entries_coordinators[entry.entry_id] = coordinator
-        nasweb_data.notify_coordinator.add_coordinator(webio_serial, coordinator)
+        entry.runtime_data = coordinator
+        nasweb_data.notify_coordinator.add_coordinator(webio_serial, entry.runtime_data)
 
         webhook_url = nasweb_data.get_webhook_url(hass)
         if not await webio_api.status_subscription(webhook_url, True):
@@ -107,9 +107,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: NASwebConfigEntry) -> b
     """Unload a config entry."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         nasweb_data: NASwebData = hass.data[DATA_NASWEB]
-        coordinator: NASwebCoordinator = nasweb_data.entries_coordinators.pop(
-            entry.entry_id
-        )
+        coordinator: NASwebCoordinator = entry.runtime_data
         webhook_url = nasweb_data.get_webhook_url(hass)
         if webhook_url is not None:
             await coordinator.webio_api.status_subscription(webhook_url, False)

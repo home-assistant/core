@@ -14,7 +14,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.network import get_url
 
 from .const import DOMAIN, WEBHOOK_URL
-from .coordinator import NASwebCoordinator, NotificationCoordinator
+from .coordinator import NotificationCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,7 +27,6 @@ class NASwebData:
         default_factory=NotificationCoordinator
     )
     webhook_id = ""
-    entries_coordinators: dict[str, NASwebCoordinator] = field(default_factory=dict)
 
     def is_initialized(self) -> bool:
         """Return True if instance was initialized and is ready for use."""
