@@ -88,6 +88,8 @@
     }
   },
   "services": {
-    "api_call": "mdi:console"
+    "api_call": {
+      "service": "mdi:console"
+    }
   }
 }

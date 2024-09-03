@@ -172,6 +172,10 @@
           "description": "Enable or disable including grouped rooms."
         }
       }
+    },
+    "get_queue": {
+      "name": "Get queue",
+      "description": "Returns the contents of the queue."
     }
   },
   "exceptions": {
@@ -180,6 +184,9 @@
     },
     "invalid_sonos_playlist": {
       "message": "Could not find Sonos playlist: {name}"
+    },
+    "announce_media_error": {
+      "message": "Announcing clip {media_id} failed {response}"
     }
   }
 }

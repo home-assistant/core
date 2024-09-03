@@ -3,6 +3,8 @@
 from typing import Any
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant.components.knx import DOMAIN, KNX_ADDRESS, SwitchSchema
 from homeassistant.components.knx.project import STORAGE_KEY as KNX_PROJECT_STORAGE_KEY
 from homeassistant.const import CONF_NAME
@@ -355,3 +357,28 @@ async def test_knx_subscribe_telegrams_command_project(
     )
     assert res["event"]["direction"] == "Incoming"
     assert res["event"]["timestamp"] is not None
+
+
+@pytest.mark.parametrize(
+    "endpoint",
+    [
+        "knx/info",  # sync ws-command
+        "knx/get_knx_project",  # async ws-command
+    ],
+)
+async def test_websocket_when_config_entry_unloaded(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    hass_ws_client: WebSocketGenerator,
+    endpoint: str,
+) -> None:
+    """Test websocket connection when config entry is unloaded."""
+    await knx.setup_integration({})
+    await hass.config_entries.async_unload(knx.mock_config_entry.entry_id)
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id({"type": endpoint})
+    res = await client.receive_json()
+    assert not res["success"]
+    assert res["error"]["code"] == "home_assistant_error"
+    assert res["error"]["message"] == "KNX integration not loaded."

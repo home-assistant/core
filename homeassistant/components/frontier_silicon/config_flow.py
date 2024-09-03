@@ -172,9 +172,11 @@ class FrontierSiliconConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="confirm", description_placeholders={"name": self._name}
         )
 
-    async def async_step_reauth(self, config: Mapping[str, Any]) -> ConfigFlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Perform reauth upon an API authentication error."""
-        self._webfsapi_url = config[CONF_WEBFSAPI_URL]
+        self._webfsapi_url = entry_data[CONF_WEBFSAPI_URL]
 
         self._reauth_entry = self.hass.config_entries.async_get_entry(
             self.context["entry_id"]

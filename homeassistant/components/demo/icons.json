@@ -75,6 +75,8 @@
     }
   },
   "services": {
-    "randomize_device_tracker_data": "mdi:dice-multiple"
+    "randomize_device_tracker_data": {
+      "service": "mdi:dice-multiple"
+    }
   }
 }
