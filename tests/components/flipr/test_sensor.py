@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 from flipr_api.exceptions import FliprError
 
-from homeassistant.components.flipr.const import CONF_FLIPR_ID, DOMAIN
+from homeassistant.components.flipr.const import DOMAIN
 from homeassistant.components.sensor import ATTR_STATE_CLASS, SensorStateClass
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
@@ -37,12 +37,12 @@ MOCK_FLIPR_MEASURE = {
 async def test_sensors(hass: HomeAssistant, entity_registry: er.EntityRegistry) -> None:
     """Test the creation and values of the Flipr sensors."""
     entry = MockConfigEntry(
+        version=2,
         domain=DOMAIN,
         unique_id="test_entry_unique_id",
         data={
             CONF_EMAIL: "toto@toto.com",
             CONF_PASSWORD: "myPassword",
-            CONF_FLIPR_ID: "myfliprid",
         },
     )
 
@@ -101,12 +101,12 @@ async def test_error_flipr_api_sensors(
 ) -> None:
     """Test the Flipr sensors error."""
     entry = MockConfigEntry(
+        version=2,
         domain=DOMAIN,
         unique_id="test_entry_unique_id",
         data={
             CONF_EMAIL: "toto@toto.com",
             CONF_PASSWORD: "myPassword",
-            CONF_FLIPR_ID: "myfliprid",
         },
     )
 

@@ -3,7 +3,7 @@
 from datetime import datetime
 from unittest.mock import patch
 
-from homeassistant.components.flipr.const import CONF_FLIPR_ID, DOMAIN
+from homeassistant.components.flipr.const import DOMAIN
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -27,12 +27,12 @@ MOCK_FLIPR_MEASURE = {
 async def test_sensors(hass: HomeAssistant, entity_registry: er.EntityRegistry) -> None:
     """Test the creation and values of the Flipr binary sensors."""
     entry = MockConfigEntry(
+        version=2,
         domain=DOMAIN,
         unique_id="test_entry_unique_id",
         data={
             CONF_EMAIL: "toto@toto.com",
             CONF_PASSWORD: "myPassword",
-            CONF_FLIPR_ID: "myfliprid",
         },
     )
 

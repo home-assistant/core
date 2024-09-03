@@ -2,7 +2,7 @@
 
 from unittest.mock import patch
 
-from homeassistant.components.flipr.const import CONF_FLIPR_ID, DOMAIN
+from homeassistant.components.flipr.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
@@ -17,7 +17,6 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
         data={
             CONF_EMAIL: "dummylogin",
             CONF_PASSWORD: "dummypass",
-            CONF_FLIPR_ID: "FLIP1",
         },
         unique_id="123456",
     )
