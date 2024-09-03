@@ -1,8 +1,7 @@
 """Test the Opentherm Gateway config flow."""
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
-from pyotgw.vars import OTGW, OTGW_ABOUT
 from serial import SerialException
 
 from homeassistant import config_entries
@@ -25,10 +24,12 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
-MINIMAL_STATUS = {OTGW: {OTGW_ABOUT: "OpenTherm Gateway 4.2.5"}}
 
-
-async def test_form_user(hass: HomeAssistant) -> None:
+async def test_form_user(
+    hass: HomeAssistant,
+    mock_pyotgw: MagicMock,
+    mock_setup_entry: AsyncMock,
+) -> None:
     """Test we get the form."""
 
     result = await hass.config_entries.flow.async_init(
@@ -37,28 +38,10 @@ async def test_form_user(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
-    with (
-        patch(
-            "homeassistant.components.opentherm_gw.config_flow.pyotgw.OpenThermGateway",
-            return_value=MagicMock(
-                connect=AsyncMock(return_value=MINIMAL_STATUS),
-                disconnect=AsyncMock(),
-            ),
-        ) as gateway,
-        patch(
-            "homeassistant.components.opentherm_gw.OpenThermGateway",
-            return_value=MagicMock(
-                connect=AsyncMock(return_value=MINIMAL_STATUS),
-                set_control_setpoint=AsyncMock(),
-                set_max_relative_mod=AsyncMock(),
-                disconnect=AsyncMock(),
-            ),
-        ),
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_NAME: "Test Entry 1", CONF_DEVICE: "/dev/ttyUSB0"}
-        )
-        await hass.async_block_till_done()
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_NAME: "Test Entry 1", CONF_DEVICE: "/dev/ttyUSB0"}
+    )
+    await hass.async_block_till_done()
 
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Test Entry 1"
@@ -67,36 +50,21 @@ async def test_form_user(hass: HomeAssistant) -> None:
         CONF_DEVICE: "/dev/ttyUSB0",
         CONF_ID: "test_entry_1",
     }
-    assert gateway.return_value.connect.await_count == 1
-    assert gateway.return_value.disconnect.await_count == 1
+    assert mock_pyotgw.return_value.connect.await_count == 1
+    assert mock_pyotgw.return_value.disconnect.await_count == 1
 
 
-async def test_form_import(hass: HomeAssistant) -> None:
+async def test_form_import(
+    hass: HomeAssistant,
+    mock_pyotgw: MagicMock,
+    mock_setup_entry: AsyncMock,
+) -> None:
     """Test import from existing config."""
-
-    with (
-        patch(
-            "homeassistant.components.opentherm_gw.config_flow.pyotgw.OpenThermGateway",
-            return_value=MagicMock(
-                connect=AsyncMock(return_value=MINIMAL_STATUS),
-                disconnect=AsyncMock(),
-            ),
-        ) as gateway,
-        patch(
-            "homeassistant.components.opentherm_gw.OpenThermGateway",
-            return_value=MagicMock(
-                connect=AsyncMock(return_value=MINIMAL_STATUS),
-                set_control_setpoint=AsyncMock(),
-                set_max_relative_mod=AsyncMock(),
-                disconnect=AsyncMock(),
-            ),
-        ),
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data={CONF_ID: "legacy_gateway", CONF_DEVICE: "/dev/ttyUSB1"},
-        )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_IMPORT},
+        data={CONF_ID: "legacy_gateway", CONF_DEVICE: "/dev/ttyUSB1"},
+    )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "legacy_gateway"
@@ -105,11 +73,15 @@ async def test_form_import(hass: HomeAssistant) -> None:
         CONF_DEVICE: "/dev/ttyUSB1",
         CONF_ID: "legacy_gateway",
     }
-    assert gateway.return_value.connect.await_count == 1
-    assert gateway.return_value.disconnect.await_count == 1
+    assert mock_pyotgw.return_value.connect.await_count == 1
+    assert mock_pyotgw.return_value.disconnect.await_count == 1
 
 
-async def test_form_duplicate_entries(hass: HomeAssistant) -> None:
+async def test_form_duplicate_entries(
+    hass: HomeAssistant,
+    mock_pyotgw: MagicMock,
+    mock_setup_entry: AsyncMock,
+) -> None:
     """Test duplicate device or id errors."""
     flow1 = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -121,90 +93,76 @@ async def test_form_duplicate_entries(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with (
-        patch(
-            "homeassistant.components.opentherm_gw.config_flow.pyotgw.OpenThermGateway",
-            return_value=MagicMock(
-                connect=AsyncMock(return_value=MINIMAL_STATUS),
-                disconnect=AsyncMock(),
-            ),
-        ) as gateway,
-        patch(
-            "homeassistant.components.opentherm_gw.OpenThermGateway",
-            return_value=MagicMock(
-                connect=AsyncMock(return_value=MINIMAL_STATUS),
-                set_control_setpoint=AsyncMock(),
-                set_max_relative_mod=AsyncMock(),
-                disconnect=AsyncMock(),
-            ),
-        ),
-    ):
-        result1 = await hass.config_entries.flow.async_configure(
-            flow1["flow_id"], {CONF_NAME: "Test Entry 1", CONF_DEVICE: "/dev/ttyUSB0"}
-        )
-        result2 = await hass.config_entries.flow.async_configure(
-            flow2["flow_id"], {CONF_NAME: "Test Entry 1", CONF_DEVICE: "/dev/ttyUSB1"}
-        )
-        result3 = await hass.config_entries.flow.async_configure(
-            flow3["flow_id"], {CONF_NAME: "Test Entry 2", CONF_DEVICE: "/dev/ttyUSB0"}
-        )
+    result1 = await hass.config_entries.flow.async_configure(
+        flow1["flow_id"], {CONF_NAME: "Test Entry 1", CONF_DEVICE: "/dev/ttyUSB0"}
+    )
     assert result1["type"] is FlowResultType.CREATE_ENTRY
+
+    result2 = await hass.config_entries.flow.async_configure(
+        flow2["flow_id"], {CONF_NAME: "Test Entry 1", CONF_DEVICE: "/dev/ttyUSB1"}
+    )
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "id_exists"}
+
+    result3 = await hass.config_entries.flow.async_configure(
+        flow3["flow_id"], {CONF_NAME: "Test Entry 2", CONF_DEVICE: "/dev/ttyUSB0"}
+    )
     assert result3["type"] is FlowResultType.FORM
     assert result3["errors"] == {"base": "already_configured"}
-    assert gateway.return_value.connect.await_count == 1
-    assert gateway.return_value.disconnect.await_count == 1
+
+    assert mock_pyotgw.return_value.connect.await_count == 1
+    assert mock_pyotgw.return_value.disconnect.await_count == 1
 
 
-async def test_form_connection_timeout(hass: HomeAssistant) -> None:
+async def test_form_connection_timeout(
+    hass: HomeAssistant,
+    mock_pyotgw: MagicMock,
+    mock_setup_entry: AsyncMock,
+) -> None:
     """Test we handle connection timeout."""
-    result = await hass.config_entries.flow.async_init(
+    flow = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with (
-        patch(
-            "homeassistant.components.opentherm_gw.config_flow.pyotgw.OpenThermGateway",
-            return_value=MagicMock(
-                connect=AsyncMock(side_effect=(TimeoutError)),
-            ),
-        ) as gateway,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_NAME: "Test Entry 1", CONF_DEVICE: "socket://192.0.2.254:1234"},
-        )
+    mock_pyotgw.return_value.connect.side_effect = TimeoutError
 
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"base": "timeout_connect"}
-    assert gateway.return_value.connect.await_count == 1
+    result = await hass.config_entries.flow.async_configure(
+        flow["flow_id"],
+        {CONF_NAME: "Test Entry 1", CONF_DEVICE: "socket://192.0.2.254:1234"},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "timeout_connect"}
+
+    assert mock_pyotgw.return_value.connect.await_count == 1
 
 
-async def test_form_connection_error(hass: HomeAssistant) -> None:
+async def test_form_connection_error(
+    hass: HomeAssistant,
+    mock_pyotgw: MagicMock,
+    mock_setup_entry: AsyncMock,
+) -> None:
     """Test we handle serial connection error."""
-    result = await hass.config_entries.flow.async_init(
+    flow = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with (
-        patch(
-            "homeassistant.components.opentherm_gw.config_flow.pyotgw.OpenThermGateway",
-            return_value=MagicMock(
-                connect=AsyncMock(side_effect=(SerialException)),
-            ),
-        ) as gateway,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_NAME: "Test Entry 1", CONF_DEVICE: "/dev/ttyUSB0"}
-        )
+    mock_pyotgw.return_value.connect.side_effect = SerialException
 
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"base": "cannot_connect"}
-    assert gateway.return_value.connect.await_count == 1
+    result = await hass.config_entries.flow.async_configure(
+        flow["flow_id"], {CONF_NAME: "Test Entry 1", CONF_DEVICE: "/dev/ttyUSB0"}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
+    assert mock_pyotgw.return_value.connect.await_count == 1
 
 
-async def test_options_form(hass: HomeAssistant) -> None:
+async def test_options_form(
+    hass: HomeAssistant,
+    mock_pyotgw: MagicMock,
+    mock_setup_entry: AsyncMock,
+) -> None:
     """Test the options form."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -218,29 +176,17 @@ async def test_options_form(hass: HomeAssistant) -> None:
     )
     entry.add_to_hass(hass)
 
-    with (
-        patch(
-            "homeassistant.components.opentherm_gw.OpenThermGateway",
-            return_value=MagicMock(
-                connect=AsyncMock(return_value=MINIMAL_STATUS),
-                set_control_setpoint=AsyncMock(),
-                set_max_relative_mod=AsyncMock(),
-                disconnect=AsyncMock(),
-            ),
-        ),
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
-
+    await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    result = await hass.config_entries.options.async_init(
+    flow = await hass.config_entries.options.async_init(
         entry.entry_id, context={"source": "test"}, data=None
     )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "init"
+    assert flow["type"] is FlowResultType.FORM
+    assert flow["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
+        flow["flow_id"],
         user_input={
             CONF_FLOOR_TEMP: True,
             CONF_READ_PRECISION: PRECISION_HALVES,
@@ -255,12 +201,12 @@ async def test_options_form(hass: HomeAssistant) -> None:
     assert result["data"][CONF_TEMPORARY_OVRD_MODE] is True
     assert result["data"][CONF_FLOOR_TEMP] is True
 
-    result = await hass.config_entries.options.async_init(
+    flow = await hass.config_entries.options.async_init(
         entry.entry_id, context={"source": "test"}, data=None
     )
 
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={CONF_READ_PRECISION: 0}
+        flow["flow_id"], user_input={CONF_READ_PRECISION: 0}
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -269,12 +215,12 @@ async def test_options_form(hass: HomeAssistant) -> None:
     assert result["data"][CONF_TEMPORARY_OVRD_MODE] is True
     assert result["data"][CONF_FLOOR_TEMP] is True
 
-    result = await hass.config_entries.options.async_init(
+    flow = await hass.config_entries.options.async_init(
         entry.entry_id, context={"source": "test"}, data=None
     )
 
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
+        flow["flow_id"],
         user_input={
             CONF_FLOOR_TEMP: False,
             CONF_READ_PRECISION: PRECISION_TENTHS,
