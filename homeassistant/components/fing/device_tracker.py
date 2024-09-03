@@ -1,5 +1,7 @@
 """Platform for Device tracker integration."""
 
+from fing_agent_api.models import Device
+
 from homeassistant.components.device_tracker import ScannerEntity, SourceType
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
@@ -8,7 +10,6 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import FingConfigEntry
 from .coordinator import FingDataUpdateCoordinator
-from .fing_api.models import Device
 from .utils import get_icon_from_type
 
 
