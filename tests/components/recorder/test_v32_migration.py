@@ -69,7 +69,7 @@ async def test_migrate_times(
     async_test_recorder: RecorderInstanceGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test we can migrate times."""
+    """Test we can migrate times in the events and states tables."""
     importlib.import_module(SCHEMA_MODULE_30)
     old_db_schema = sys.modules[SCHEMA_MODULE_30]
     now = dt_util.utcnow()
