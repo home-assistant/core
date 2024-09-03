@@ -60,17 +60,17 @@ async def async_setup_coordinators(
     """Set up coordinators and register devices."""
     # Get a list of ha bridge.
     try:
-        ha_bridge_list = await async_get_ha_bridge_list(thinq_api)
+        bridge_list = await async_get_ha_bridge_list(thinq_api)
     except ThinQAPIException as exc:
         raise ConfigEntryNotReady(exc.message) from exc
 
-    if not ha_bridge_list:
+    if not bridge_list:
         return
 
     # Setup coordinator per device.
     task_list = [
-        hass.async_create_task(async_setup_device_coordinator(hass, ha_bridge))
-        for ha_bridge in ha_bridge_list
+        hass.async_create_task(async_setup_device_coordinator(hass, bridge))
+        for bridge in bridge_list
     ]
     task_result = await asyncio.gather(*task_list)
     for coordinator in task_result:
