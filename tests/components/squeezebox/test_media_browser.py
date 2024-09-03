@@ -4,11 +4,19 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from homeassistant.components.media_player import MediaType
+from homeassistant.components.media_player import (
+    ATTR_MEDIA_CONTENT_ID,
+    ATTR_MEDIA_CONTENT_TYPE,
+    DOMAIN as MEDIA_PLAYER_DOMAIN,
+    SERVICE_PLAY_MEDIA,
+    BrowseError,
+    MediaType,
+)
 from homeassistant.components.squeezebox.browse_media import (
     LIBRARY,
     MEDIA_TYPE_TO_SQUEEZEBOX,
 )
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -152,12 +160,12 @@ async def test_play_browse_item(
 ) -> None:
     """Test play browse item."""
     await hass.services.async_call(
-        "media_player",
-        "play_media",
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_PLAY_MEDIA,
         {
-            "entity_id": "media_player.test_player",
-            "media_content_id": "1234",
-            "media_content_type": "album",
+            ATTR_ENTITY_ID: "media_player.test_player",
+            ATTR_MEDIA_CONTENT_ID: "1234",
+            ATTR_MEDIA_CONTENT_TYPE: "album",
         },
     )
 
@@ -166,15 +174,17 @@ async def test_play_browse_item_nonexistent(
     hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
     """Test trying to play an item that doesn't exist."""
-    await hass.services.async_call(
-        "media_player",
-        "play_media",
-        {
-            "entity_id": "media_player.test_player",
-            "media_content_id": "0",
-            "media_content_type": "album",
-        },
-    )
+    with pytest.raises(BrowseError):
+        await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN,
+            SERVICE_PLAY_MEDIA,
+            {
+                ATTR_ENTITY_ID: "media_player.test_player",
+                ATTR_MEDIA_CONTENT_ID: "0",
+                ATTR_MEDIA_CONTENT_TYPE: "album",
+            },
+            blocking=True,
+        )
 
 
 async def test_play_browse_item_bad_category(
@@ -182,12 +192,14 @@ async def test_play_browse_item_bad_category(
     config_entry: MockConfigEntry,
 ) -> None:
     """Test trying to play an item whose category doesn't exist."""
-    await hass.services.async_call(
-        "media_player",
-        "play_media",
-        {
-            "entity_id": "media_player.test_player",
-            "media_content_id": "1234",
-            "media_content_type": "bad_category",
-        },
-    )
+    with pytest.raises(BrowseError):
+        await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN,
+            SERVICE_PLAY_MEDIA,
+            {
+                ATTR_ENTITY_ID: "media_player.test_player",
+                ATTR_MEDIA_CONTENT_ID: "1234",
+                ATTR_MEDIA_CONTENT_TYPE: "bad_category",
+            },
+            blocking=True,
+        )

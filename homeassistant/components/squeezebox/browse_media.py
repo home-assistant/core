@@ -214,10 +214,12 @@ async def generate_playlist(player, payload):
     media_id = payload["search_id"]
 
     if media_type not in SQUEEZEBOX_ID_BY_TYPE:
-        return None
+        raise BrowseError(f"Media type not supported: {media_type}")
 
     browse_id = (SQUEEZEBOX_ID_BY_TYPE[media_type], media_id)
     result = await player.async_browse(
         "titles", limit=BROWSE_LIMIT, browse_id=browse_id
     )
-    return result.get("items") if result else None
+    if result and "items" in result:
+        return result["items"]
+    raise BrowseError(f"Media not found: {media_type} / {media_id}")
