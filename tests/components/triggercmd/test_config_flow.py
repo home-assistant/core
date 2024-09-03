@@ -32,7 +32,7 @@ async def test_config_flow_user_invalid_token(
 
     assert result["step_id"] == "user"
     assert result["errors"] == {}
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
 
     with patch(
         "homeassistant.components.triggercmd.async_setup_entry",
