@@ -6281,3 +6281,20 @@ def test_unzip(hass: HomeAssistant, col, expected) -> None:
         ).async_render({"col": col})
         == expected
     )
+
+
+def test_warn_no_hass(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -> None:
+    """Test deprecation warning when instantiating Template without hass."""
+
+    message = "Detected code that creates a template object without passing hass"
+    template.Template("blah")
+    assert message in caplog.text
+    caplog.clear()
+
+    template.Template("blah", None)
+    assert message in caplog.text
+    caplog.clear()
+
+    template.Template("blah", hass)
+    assert message not in caplog.text
+    caplog.clear()
