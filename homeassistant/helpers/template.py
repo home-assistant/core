@@ -508,8 +508,20 @@ class Template:
 
     def __init__(self, template: str, hass: HomeAssistant | None = None) -> None:
         """Instantiate a template."""
+        # pylint: disable-next=import-outside-toplevel
+        from .frame import report
+
         if not isinstance(template, str):
             raise TypeError("Expected template to be a string")
+
+        if not hass:
+            report(
+                (
+                    "creates a template object without passing hass, "
+                    "which will stop working in HA Core 2025.10"
+                ),
+                error_if_core=False,
+            )
 
         self.template: str = template.strip()
         self._compiled_code: CodeType | None = None
