@@ -224,9 +224,7 @@ def media_source_content_filter(item: BrowseMedia) -> bool:
     return item.media_content_type.startswith("audio/")
 
 
-async def generate_playlist(
-    player: Player, payload: dict[str, str]
-) -> dict[str, Any] | None:
+async def generate_playlist(player: Player, payload: dict[str, str]) -> list | None:
     """Generate playlist from browsing payload."""
     media_type = payload["search_type"]
     media_id = payload["search_id"]
@@ -238,11 +236,7 @@ async def generate_playlist(
     result = await player.async_browse(
         "titles", limit=BROWSE_LIMIT, browse_id=browse_id
     )
-<<<<<<< HEAD
-    items: dict[str, Any] | None = result.get("items")
-    return items
-=======
     if result and "items" in result:
-        return result["items"]
+        items: list = result["items"]
+        return items
     raise BrowseError(f"Media not found: {media_type} / {media_id}")
->>>>>>> a32e266bad (Apply suggestions from code review)
