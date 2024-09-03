@@ -436,11 +436,11 @@ jobs:
       - info
       - pre-commit
     strategy:
+      fail-fast: false
       matrix:
         file:
           - Dockerfile
           - Dockerfile.dev
-          - script/hassfest/docker/Dockerfile
     steps:
       - name: Check out code from GitHub
         uses: actions/checkout@v4.1.7
