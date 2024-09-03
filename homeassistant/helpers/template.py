@@ -507,7 +507,11 @@ class Template:
     )
 
     def __init__(self, template: str, hass: HomeAssistant | None = None) -> None:
-        """Instantiate a template."""
+        """Instantiate a template.
+
+        Note: A valid hass instance should always be passed in. The hass parameter
+        will be non optional in Home Assistant Core 2025.10.
+        """
         # pylint: disable-next=import-outside-toplevel
         from .frame import report
 
