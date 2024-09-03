@@ -4,7 +4,6 @@ from unittest.mock import MagicMock
 
 from pyotgw.vars import OTGW, OTGW_ABOUT
 
-from homeassistant import setup
 from homeassistant.components.opentherm_gw.const import (
     DOMAIN,
     OpenThermDeviceIdentifier,
@@ -40,8 +39,7 @@ async def test_device_registry_insert(
     """Test that the device registry is initialized correctly."""
     MOCK_CONFIG_ENTRY.add_to_hass(hass)
 
-    await setup.async_setup_component(hass, DOMAIN, {})
-
+    await hass.config_entries.async_setup(MOCK_CONFIG_ENTRY.entry_id)
     await hass.async_block_till_done()
 
     gw_dev = device_registry.async_get_device(
@@ -72,9 +70,9 @@ async def test_device_registry_update(
 
     mock_pyotgw.return_value.connect.return_value = MINIMAL_STATUS_UPD
 
-    await setup.async_setup_component(hass, DOMAIN, {})
-
+    await hass.config_entries.async_setup(MOCK_CONFIG_ENTRY.entry_id)
     await hass.async_block_till_done()
+
     gw_dev = device_registry.async_get_device(
         identifiers={(DOMAIN, f"{MOCK_GATEWAY_ID}-{OpenThermDeviceIdentifier.GATEWAY}")}
     )
@@ -102,7 +100,7 @@ async def test_device_migration(
         sw_version=VERSION_TEST,
     )
 
-    await setup.async_setup_component(hass, DOMAIN, {})
+    await hass.config_entries.async_setup(MOCK_CONFIG_ENTRY.entry_id)
     await hass.async_block_till_done()
 
     assert (
@@ -148,8 +146,7 @@ async def test_climate_entity_migration(
         unique_id=MOCK_CONFIG_ENTRY.data[CONF_ID],
     )
 
-    await setup.async_setup_component(hass, DOMAIN, {})
-
+    await hass.config_entries.async_setup(MOCK_CONFIG_ENTRY.entry_id)
     await hass.async_block_till_done()
 
     updated_entry = entity_registry.async_get(entry.entity_id)
