@@ -34,11 +34,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "onkyo"
 
-MEDIA_PLAYER_ENTITIES_KEY = DOMAIN + ".media_player_entities"
-
-DATA_MP_ENTITIES: HassKey[list[dict[str, OnkyoMediaPlayer]]] = HassKey(
-    MEDIA_PLAYER_ENTITIES_KEY
-)
+DATA_MP_ENTITIES: HassKey[list[dict[str, OnkyoMediaPlayer]]] = HassKey(DOMAIN)
 
 CONF_SOURCES = "sources"
 CONF_MAX_VOLUME = "max_volume"
