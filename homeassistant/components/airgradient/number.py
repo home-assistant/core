@@ -18,7 +18,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import AirGradientConfigEntry
 from .const import DOMAIN
-from .coordinator import AirGradientConfigCoordinator
+from .coordinator import AirGradientCoordinator
 from .entity import AirGradientEntity
 
 
@@ -62,8 +62,8 @@ async def async_setup_entry(
 ) -> None:
     """Set up AirGradient number entities based on a config entry."""
 
-    model = entry.runtime_data.measurement.data.model
-    coordinator = entry.runtime_data.config
+    coordinator = entry.runtime_data
+    model = coordinator.data.measures.model
 
     added_entities = False
 
@@ -72,7 +72,7 @@ async def async_setup_entry(
         nonlocal added_entities
 
         if (
-            coordinator.data.configuration_control is ConfigurationControl.LOCAL
+            coordinator.data.config.configuration_control is ConfigurationControl.LOCAL
             and not added_entities
         ):
             entities = []
@@ -84,7 +84,8 @@ async def async_setup_entry(
             async_add_entities(entities)
             added_entities = True
         elif (
-            coordinator.data.configuration_control is not ConfigurationControl.LOCAL
+            coordinator.data.config.configuration_control
+            is not ConfigurationControl.LOCAL
             and added_entities
         ):
             entity_registry = er.async_get(hass)
@@ -104,11 +105,10 @@ class AirGradientNumber(AirGradientEntity, NumberEntity):
     """Defines an AirGradient number entity."""
 
     entity_description: AirGradientNumberEntityDescription
-    coordinator: AirGradientConfigCoordinator
 
     def __init__(
         self,
-        coordinator: AirGradientConfigCoordinator,
+        coordinator: AirGradientCoordinator,
         description: AirGradientNumberEntityDescription,
     ) -> None:
         """Initialize AirGradient number."""
@@ -119,7 +119,7 @@ class AirGradientNumber(AirGradientEntity, NumberEntity):
     @property
     def native_value(self) -> int | None:
         """Return the state of the number."""
-        return self.entity_description.value_fn(self.coordinator.data)
+        return self.entity_description.value_fn(self.coordinator.data.config)
 
     async def async_set_native_value(self, value: float) -> None:
         """Set the selected value."""

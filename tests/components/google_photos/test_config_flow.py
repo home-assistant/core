@@ -4,8 +4,7 @@ from collections.abc import Generator
 from typing import Any
 from unittest.mock import Mock, patch
 
-from googleapiclient.errors import HttpError
-from httplib2 import Response
+from google_photos_library_api.exceptions import GooglePhotosApiError
 import pytest
 
 from homeassistant import config_entries
@@ -20,7 +19,7 @@ from homeassistant.helpers import config_entry_oauth2_flow
 
 from .conftest import EXPIRES_IN, FAKE_ACCESS_TOKEN, FAKE_REFRESH_TOKEN, USER_IDENTIFIER
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator
 
@@ -35,6 +34,16 @@ def mock_setup_entry() -> Generator[Mock, None, None]:
         "homeassistant.components.google_photos.async_setup_entry", return_value=True
     ) as mock_setup:
         yield mock_setup
+
+
+@pytest.fixture(autouse=True)
+def mock_patch_api(mock_api: Mock) -> Generator[None, None, None]:
+    """Fixture to patch the config flow api."""
+    with patch(
+        "homeassistant.components.google_photos.config_flow.GooglePhotosLibraryApi",
+        return_value=mock_api,
+    ):
+        yield
 
 
 @pytest.fixture(name="updated_token_entry", autouse=True)
@@ -60,7 +69,7 @@ def mock_token_request(
     )
 
 
-@pytest.mark.usefixtures("current_request_with_host", "setup_api")
+@pytest.mark.usefixtures("current_request_with_host", "mock_api")
 @pytest.mark.parametrize("fixture_name", ["list_mediaitems.json"])
 async def test_full_flow(
     hass: HomeAssistant,
@@ -84,6 +93,8 @@ async def test_full_flow(
         "&redirect_uri=https://example.com/auth/external/callback"
         f"&state={state}"
         "&scope=https://www.googleapis.com/auth/photoslibrary.readonly"
+        "+https://www.googleapis.com/auth/photoslibrary.readonly.appcreateddata"
+        "+https://www.googleapis.com/auth/photoslibrary.appendonly"
         "+https://www.googleapis.com/auth/userinfo.profile"
         "&access_type=offline&prompt=consent"
     )
@@ -111,6 +122,8 @@ async def test_full_flow(
             "type": "Bearer",
             "scope": (
                 "https://www.googleapis.com/auth/photoslibrary.readonly"
+                " https://www.googleapis.com/auth/photoslibrary.readonly.appcreateddata"
+                " https://www.googleapis.com/auth/photoslibrary.appendonly"
                 " https://www.googleapis.com/auth/userinfo.profile"
             ),
         },
@@ -122,11 +135,17 @@ async def test_full_flow(
 @pytest.mark.usefixtures(
     "current_request_with_host",
     "setup_credentials",
+    "mock_api",
+)
+@pytest.mark.parametrize(
+    "api_error",
+    [
+        GooglePhotosApiError("some error"),
+    ],
 )
 async def test_api_not_enabled(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
-    setup_api: Mock,
 ) -> None:
     """Check flow aborts if api is not enabled."""
     result = await hass.config_entries.flow.async_init(
@@ -145,6 +164,8 @@ async def test_api_not_enabled(
         "&redirect_uri=https://example.com/auth/external/callback"
         f"&state={state}"
         "&scope=https://www.googleapis.com/auth/photoslibrary.readonly"
+        "+https://www.googleapis.com/auth/photoslibrary.readonly.appcreateddata"
+        "+https://www.googleapis.com/auth/photoslibrary.appendonly"
         "+https://www.googleapis.com/auth/userinfo.profile"
         "&access_type=offline&prompt=consent"
     )
@@ -154,24 +175,18 @@ async def test_api_not_enabled(
     assert resp.status == 200
     assert resp.headers["content-type"] == "text/html; charset=utf-8"
 
-    setup_api.return_value.mediaItems.return_value.list = Mock()
-    setup_api.return_value.mediaItems.return_value.list.return_value.execute.side_effect = HttpError(
-        Response({"status": "403"}),
-        bytes(load_fixture("google_photos/api_not_enabled_response.json"), "utf-8"),
-    )
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "access_not_configured"
-    assert result["description_placeholders"]["message"].endswith(
-        "Google Photos API has not been used in project 0 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/library/photoslibrary.googleapis.com/overview?project=0 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry."
-    )
+    assert result["description_placeholders"]["message"].endswith("some error")
 
 
 @pytest.mark.usefixtures("current_request_with_host", "setup_credentials")
 async def test_general_exception(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
+    mock_api: Mock,
 ) -> None:
     """Check flow aborts if exception happens."""
     result = await hass.config_entries.flow.async_init(
@@ -189,6 +204,8 @@ async def test_general_exception(
         "&redirect_uri=https://example.com/auth/external/callback"
         f"&state={state}"
         "&scope=https://www.googleapis.com/auth/photoslibrary.readonly"
+        "+https://www.googleapis.com/auth/photoslibrary.readonly.appcreateddata"
+        "+https://www.googleapis.com/auth/photoslibrary.appendonly"
         "+https://www.googleapis.com/auth/userinfo.profile"
         "&access_type=offline&prompt=consent"
     )
@@ -198,17 +215,15 @@ async def test_general_exception(
     assert resp.status == 200
     assert resp.headers["content-type"] == "text/html; charset=utf-8"
 
-    with patch(
-        "homeassistant.components.google_photos.api.build",
-        side_effect=Exception,
-    ):
-        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    mock_api.list_media_items.side_effect = Exception
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "unknown"
 
 
-@pytest.mark.usefixtures("current_request_with_host", "setup_api", "setup_integration")
+@pytest.mark.usefixtures("current_request_with_host", "mock_api", "setup_integration")
 @pytest.mark.parametrize("fixture_name", ["list_mediaitems.json"])
 @pytest.mark.parametrize(
     "updated_token_entry",
@@ -274,6 +289,8 @@ async def test_reauth(
         "&redirect_uri=https://example.com/auth/external/callback"
         f"&state={state}"
         "&scope=https://www.googleapis.com/auth/photoslibrary.readonly"
+        "+https://www.googleapis.com/auth/photoslibrary.readonly.appcreateddata"
+        "+https://www.googleapis.com/auth/photoslibrary.appendonly"
         "+https://www.googleapis.com/auth/userinfo.profile"
         "&access_type=offline&prompt=consent"
     )
@@ -305,6 +322,8 @@ async def test_reauth(
             "type": "Bearer",
             "scope": (
                 "https://www.googleapis.com/auth/photoslibrary.readonly"
+                " https://www.googleapis.com/auth/photoslibrary.readonly.appcreateddata"
+                " https://www.googleapis.com/auth/photoslibrary.appendonly"
                 " https://www.googleapis.com/auth/userinfo.profile"
             ),
         },

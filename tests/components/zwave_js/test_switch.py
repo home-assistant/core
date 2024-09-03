@@ -286,7 +286,11 @@ async def test_config_parameter_switch(
     client.async_send_command.side_effect = FailedZWaveCommand("test", 1, "test")
 
     # Test turning off error raises proper exception
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
             DOMAIN, SERVICE_TURN_OFF, {"entity_id": switch_entity_id}, blocking=True
         )
+
+    assert str(err.value) == (
+        "Unable to set value 32-112-0-20: zwave_error: Z-Wave error 1 - test"
+    )

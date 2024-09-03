@@ -14,6 +14,7 @@ from .coordinator import (
     TeslaFleetEnergySiteLiveCoordinator,
     TeslaFleetVehicleDataCoordinator,
 )
+from .helpers import wake_up_vehicle
 from .models import TeslaFleetEnergyData, TeslaFleetVehicleData
 
 
@@ -27,6 +28,7 @@ class TeslaFleetEntity(
     """Parent class for all TeslaFleet entities."""
 
     _attr_has_entity_name = True
+    read_only: bool
 
     def __init__(
         self,
@@ -99,6 +101,10 @@ class TeslaFleetVehicleEntity(TeslaFleetEntity):
     def _value(self) -> Any | None:
         """Return a specific value from coordinator data."""
         return self.coordinator.data.get(self.key)
+
+    async def wake_up_if_asleep(self) -> None:
+        """Wake up the vehicle if its asleep."""
+        await wake_up_vehicle(self.vehicle)
 
 
 class TeslaFleetEnergyLiveEntity(TeslaFleetEntity):

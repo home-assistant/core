@@ -18,12 +18,56 @@
       "user_rejected_authorize": "[%key:common::config_flow::abort::oauth2_user_rejected_authorize%]",
       "access_not_configured": "Unable to access the Google API:\n\n{message}",
       "unknown": "[%key:common::config_flow::error::unknown%]",
+      "wrong_account": "Wrong account: Please authenticate with the right account.",
       "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
       "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
       "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]"
     },
     "create_entry": {
       "default": "[%key:common::config_flow::create_entry::authenticated%]"
+    }
+  },
+  "exceptions": {
+    "integration_not_found": {
+      "message": "Integration \"{target}\" not found in registry."
+    },
+    "not_loaded": {
+      "message": "{target} is not loaded."
+    },
+    "no_access_to_path": {
+      "message": "Cannot read {filename}, no access to path; `allowlist_external_dirs` may need to be adjusted in `configuration.yaml`"
+    },
+    "filename_does_not_exist": {
+      "message": "`{filename}` does not exist"
+    },
+    "filename_is_not_image": {
+      "message": "`{filename}` is not an image"
+    },
+    "missing_upload_permission": {
+      "message": "Home Assistnt was not granted permission to upload to Google Photos"
+    },
+    "upload_error": {
+      "message": "Failed to upload content: {message}"
+    },
+    "api_error": {
+      "message": "Google Photos API responded with error: {message}"
+    }
+  },
+  "services": {
+    "upload": {
+      "name": "Upload media",
+      "description": "Upload images or videos to Google Photos.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Integration Id",
+          "description": "The Google Photos integration id."
+        },
+        "filename": {
+          "name": "Filename",
+          "description": "Path to the image or video to upload.",
+          "example": "/config/www/image.jpg"
+        }
+      }
     }
   }
 }

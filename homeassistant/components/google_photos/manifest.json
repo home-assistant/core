@@ -6,5 +6,6 @@
   "dependencies": ["application_credentials"],
   "documentation": "https://www.home-assistant.io/integrations/google_photos",
   "iot_class": "cloud_polling",
-  "requirements": ["google-api-python-client==2.71.0"]
+  "loggers": ["google_photos_library_api"],
+  "requirements": ["google-photos-library-api==0.8.0"]
 }
