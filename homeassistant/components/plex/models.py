@@ -1,6 +1,7 @@
 """Models to represent various Plex objects used in the integration."""
 
 import logging
+import re
 
 from homeassistant.components.media_player import MediaType
 from homeassistant.helpers.template import result_as_boolean
@@ -43,6 +44,14 @@ class PlexSession:
         self.media_artist = None
         self.media_track = None
 
+        # Metadata
+        self.media_codec = None
+        self.media_codec_long = None
+        self.media_filename = None
+        self.media_tmdb_id = None
+        self.media_edition_title = None
+        self.media_year = None
+
         # Only available on sessions
         self.player = next(iter(session.players), None)
         self.device_product = self.player.product
@@ -62,6 +71,49 @@ class PlexSession:
         """Return representation of the session."""
         return f"<{self.session_key}:{self.sensor_title}>"
 
+    def update_audio_codec(self, media):
+        """Update audio codec information."""
+        if media_item := next(iter(media.media), None):
+            for stream in media_item.parts[0].streams:
+                if stream.streamType == 2:  # 2 is the audio stream
+                    self.media_codec = stream.displayTitle
+                    self.media_codec_long = stream.extendedDisplayTitle
+                    break
+
+    def update_tmdb_id(self, media):
+        """Update TMDB ID."""
+        for guid in media.guids:
+            if tmdb_match := re.search(r"(?:themoviedb|tmdb)://(\d+)", guid.id):
+                self.media_tmdb_id = tmdb_match.group(1)
+                return
+        self.media_tmdb_id = None
+
+    def get_edition_name(self, media):
+        """Get the edition name from metadata or filename."""
+        edition = getattr(media, "editionTitle", "")
+        if edition:
+            _LOGGER.debug("Found edition title in metadata")
+            return edition
+
+        if self.media_filename:
+            _LOGGER.debug(
+                "Attempting to extract edition from filename %s", self.media_filename
+            )
+            edition_mapping = {
+                "extended": "Extended",
+                "unrated": "Unrated",
+                "theatrical": "Theatrical",
+                "ultimate": "Ultimate",
+                "director": "Director",
+                "criterion": "Criterion",
+            }
+
+            for key, value in edition_mapping.items():
+                if key in self.media_filename.lower():
+                    return value
+
+        return ""
+
     def update_media(self, media):
         """Update attributes from a media object."""
         self.media_content_id = media.ratingKey
@@ -72,6 +124,15 @@ class PlexSession:
 
         if media.duration:
             self.media_duration = int(media.duration / 1000)
+
+        self.media_year = getattr(media, "year", None)
+
+        if media_item := next(iter(media.media), None):
+            self.media_filename = media_item.parts[0].file if media_item.parts else None
+
+        self.media_edition_title = self.get_edition_name(media)
+        self.update_audio_codec(media)
+        self.update_tmdb_id(media)
 
         if media.librarySectionID in SPECIAL_SECTIONS:
             self.media_library_title = SPECIAL_SECTIONS[media.librarySectionID]
@@ -103,8 +164,6 @@ class PlexSession:
             )
         elif media.type == "movie":
             self.media_content_type = MediaType.MOVIE
-            if media.year is not None and media.title is not None:
-                self.media_title += f" ({media.year!s})"
             self.sensor_title = self.media_title
         elif media.type == "track":
             self.media_content_type = MediaType.MUSIC

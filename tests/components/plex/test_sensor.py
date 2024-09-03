@@ -8,7 +8,10 @@ import pytest
 import requests.exceptions
 import requests_mock
 
-from homeassistant.components.plex.const import PLEX_UPDATE_LIBRARY_SIGNAL
+from homeassistant.components.plex.const import (
+    PLEX_UPDATE_LIBRARY_SIGNAL,
+    PLEX_UPDATE_SENSOR_SIGNAL,
+)
 from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
@@ -266,3 +269,147 @@ async def test_library_sensor_values(
     assert library_music_sensor.attributes["albums"] == 1
     assert library_music_sensor.attributes["last_added_item"] == "Artist - Album (2021)"
     assert library_music_sensor.attributes["last_added_timestamp"] == str(TIMESTAMP)
+
+
+async def test_plex_sensors_no_sessions(
+    hass: HomeAssistant,
+    setup_plex_server,
+    requests_mock: requests_mock.Mocker,
+    empty_payload,
+) -> None:
+    """Test the Plex sensors when there are no active sessions."""
+    mock_plex_server = await setup_plex_server()
+    await wait_for_debouncer(hass)
+
+    # Use the empty_payload fixture to simulate no active sessions
+    requests_mock.get("/status/sessions", text=empty_payload)
+
+    # Trigger an update
+    async_dispatcher_send(
+        hass,
+        PLEX_UPDATE_SENSOR_SIGNAL.format(mock_plex_server.machine_identifier),
+    )
+    await hass.async_block_till_done()
+
+    # Define expected states for each sensor
+    expected_states = {
+        "year": STATE_UNAVAILABLE,
+        "title": STATE_UNAVAILABLE,
+        "filename": STATE_UNAVAILABLE,
+        "codec": STATE_UNAVAILABLE,
+        "codec_long": STATE_UNAVAILABLE,
+        "tmdb_id": STATE_UNAVAILABLE,
+        "edition_title": STATE_UNAVAILABLE,
+    }
+
+    # Test each sensor
+    for sensor_name, expected_state in expected_states.items():
+        sensor = hass.states.get(f"sensor.plex_{sensor_name}")
+        assert sensor, f"Sensor 'sensor.plex_{sensor_name}' not found"
+        assert (
+            sensor.state == expected_state
+        ), f"Expected {sensor_name} to be {expected_state}, but it was {sensor.state} with {requests_mock.last_request.text} and payload is {empty_payload}"
+
+
+@pytest.mark.parametrize(
+    "session_fixture",
+    [
+        "session_photo",
+        "session_transient",
+        "session_live_tv",
+    ],
+)
+async def test_plex_sensors_special_sessions(
+    hass: HomeAssistant,
+    setup_plex_server,
+    requests_mock: requests_mock.Mocker,
+    session_fixture: pytest.FixtureRequest,
+    request: pytest.FixtureRequest,
+) -> None:
+    """Test the Plex sensors with various types of special sessions."""
+    mock_plex_server = await setup_plex_server()
+    await wait_for_debouncer(hass)
+
+    # Use the parameterized session fixture
+    session_xml = request.getfixturevalue(session_fixture)
+    requests_mock.get("/status/sessions", text=session_xml)
+
+    # Trigger an update
+    async_dispatcher_send(
+        hass,
+        PLEX_UPDATE_SENSOR_SIGNAL.format(mock_plex_server.machine_identifier),
+    )
+    await hass.async_block_till_done()
+
+    # Check that sensors are updated appropriately for each session type
+    # You may need to adjust these assertions based on the expected behavior for each session type
+    for sensor_name in (
+        "year",
+        "title",
+        "filename",
+        "codec",
+        "codec_long",
+        "tmdb_id",
+        "edition_title",
+    ):
+        sensor = hass.states.get(f"sensor.plex_{sensor_name}")
+        assert sensor
+        assert sensor.state is not None
+
+
+async def test_plex_sensors_values(
+    hass: HomeAssistant,
+    setup_plex_server,
+    requests_mock: requests_mock.Mocker,
+    session_base,
+) -> None:
+    """Test the Plex sensors."""
+    mock_plex_server = await setup_plex_server()
+    await wait_for_debouncer(hass)
+
+    # Use the session_base fixture
+    requests_mock.get("/status/sessions", text=session_base)
+
+    # Trigger an update
+    async_dispatcher_send(
+        hass,
+        PLEX_UPDATE_SENSOR_SIGNAL.format(mock_plex_server.machine_identifier),
+    )
+    await hass.async_block_till_done()
+
+    # Test year sensor
+    year_sensor = hass.states.get("sensor.plex_year")
+    assert year_sensor
+    assert year_sensor.state == "2000"
+
+    # Test title sensor
+    title_sensor = hass.states.get("sensor.plex_title")
+    assert title_sensor
+    assert title_sensor.state == "Movie 1"
+
+    # Test filename sensor
+    filename_sensor = hass.states.get("sensor.plex_filename")
+    assert filename_sensor
+    assert filename_sensor.state is not None
+
+    # Test codec sensor
+    codec_sensor = hass.states.get("sensor.plex_codec")
+    assert codec_sensor
+    assert codec_sensor.state == "English (DTS 5.1)"
+
+    # Test codec long sensor
+    codec_long_sensor = hass.states.get("sensor.plex_codec_long")
+    assert codec_long_sensor
+    assert codec_long_sensor.state == "DTS 5.1 @ 1536 kbps (English)"
+
+    # Test TMDB ID sensor
+    tmdb_sensor = hass.states.get("sensor.plex_tmdb_id")
+    assert tmdb_sensor
+    assert tmdb_sensor.state == "12345"
+
+    # Test edition title sensor
+    edition_sensor = hass.states.get("sensor.plex_edition_title")
+    assert edition_sensor
+    assert (
+        edition_sensor.state == "Extended"
+    )  # will extract from filename which is the most common situation

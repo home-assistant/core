@@ -57,7 +57,16 @@ async def async_setup_entry(
     """Set up Plex sensor from a config entry."""
     server_id = config_entry.data[CONF_SERVER_IDENTIFIER]
     plexserver = get_plex_server(hass, server_id)
-    sensors: list[SensorEntity] = [PlexSensor(hass, plexserver)]
+    sensors: list[SensorEntity] = [
+        PlexSensor(hass, plexserver),
+        PlexYearSensor(hass, plexserver),
+        PlexTitleSensor(hass, plexserver),
+        PlexFilenameSensor(hass, plexserver),
+        PlexCodecSensor(hass, plexserver),
+        PlexCodecLongSensor(hass, plexserver),
+        PlexTmdbSensor(hass, plexserver),
+        PlexEditionSensor(hass, plexserver),
+    ]
 
     def create_library_sensors():
         """Create Plex library sensors with sync calls."""
@@ -68,6 +77,143 @@ async def async_setup_entry(
 
     await hass.async_add_executor_job(create_library_sensors)
     async_add_entities(sensors)
+
+
+class PlexMediaSensor(SensorEntity):
+    """Base class for Plex media sensors."""
+
+    _attr_should_poll = False
+
+    def __init__(self, hass, plex_server, attr_name):
+        """Initialize the sensor."""
+        self.hass = hass
+        self._server = plex_server
+        self._attr_name = f"Plex {attr_name.replace('_', ' ').title()}"
+        self._attr_unique_id = f"{plex_server.machine_identifier}_{attr_name}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self._server.machine_identifier)},
+            manufacturer="Plex",
+            model="Plex Media Server",
+            name=self._server.friendly_name,
+            sw_version=self._server.version,
+            configuration_url=f"{self._server.url_in_use}/web",
+        )
+        self.async_refresh_sensor = Debouncer(
+            hass,
+            _LOGGER,
+            cooldown=3,
+            immediate=False,
+            function=self._async_refresh_sensor,
+        ).async_call
+
+    async def async_added_to_hass(self) -> None:
+        """Run when about to be added to hass."""
+        server_id = self._server.machine_identifier
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                PLEX_UPDATE_SENSOR_SIGNAL.format(server_id),
+                self.async_refresh_sensor,
+            )
+        )
+
+    async def _async_refresh_sensor(self) -> None:
+        """Refresh sensor state."""
+        _LOGGER.debug("Refreshing sensor [%s]", self.unique_id)
+        self.async_write_ha_state()
+
+    @property
+    def available(self):
+        """Return sensor availability."""
+        return bool(self._server.active_sessions)
+
+    @property
+    def native_value(self):
+        """Return the state of the sensor."""
+        if not self._server.active_sessions:
+            return None
+        return self._get_state()
+
+    def _get_state(self):
+        """Get the state value when there are active sessions."""
+        raise NotImplementedError
+
+
+class PlexYearSensor(PlexMediaSensor):
+    """Sensor for Plex media year."""
+
+    def __init__(self, hass, plex_server):
+        """Initialize the sensor."""
+        super().__init__(hass, plex_server, "year")
+
+    def _get_state(self):
+        return next(iter(self._server.active_sessions.values())).media_year
+
+
+class PlexTitleSensor(PlexMediaSensor):
+    """Sensor for Plex media title."""
+
+    def __init__(self, hass, plex_server):
+        """Initialize the sensor."""
+        super().__init__(hass, plex_server, "title")
+
+    def _get_state(self):
+        return next(iter(self._server.active_sessions.values())).media_title
+
+
+class PlexFilenameSensor(PlexMediaSensor):
+    """Sensor for Plex media filename."""
+
+    def __init__(self, hass, plex_server):
+        """Initialize the sensor."""
+        super().__init__(hass, plex_server, "filename")
+
+    def _get_state(self):
+        return next(iter(self._server.active_sessions.values())).media_filename
+
+
+class PlexCodecSensor(PlexMediaSensor):
+    """Sensor for Plex media codec."""
+
+    def __init__(self, hass, plex_server):
+        """Initialize the sensor."""
+        super().__init__(hass, plex_server, "codec")
+
+    def _get_state(self):
+        return next(iter(self._server.active_sessions.values())).media_codec
+
+
+class PlexCodecLongSensor(PlexMediaSensor):
+    """Sensor for Plex media codec (long version)."""
+
+    def __init__(self, hass, plex_server):
+        """Initialize the sensor."""
+        super().__init__(hass, plex_server, "codec_long")
+
+    def _get_state(self):
+        return next(iter(self._server.active_sessions.values())).media_codec_long
+
+
+class PlexTmdbSensor(PlexMediaSensor):
+    """Sensor for Plex media TMDB ID."""
+
+    def __init__(self, hass, plex_server):
+        """Initialize the sensor."""
+        super().__init__(hass, plex_server, "tmdb_id")
+
+    def _get_state(self):
+        return next(iter(self._server.active_sessions.values())).media_tmdb_id
+
+
+class PlexEditionSensor(PlexMediaSensor):
+    """Sensor for Plex media edition."""
+
+    def __init__(self, hass, plex_server):
+        """Initialize the sensor."""
+        super().__init__(hass, plex_server, "edition_title")
+
+    def _get_state(self):
+        return next(iter(self._server.active_sessions.values())).media_edition_title
 
 
 class PlexSensor(SensorEntity):
