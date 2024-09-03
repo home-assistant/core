@@ -239,7 +239,6 @@ async def test_account_configured(
         result["flow_id"],
         {"username": "foo@bar.com", "password": "test-password"},
     )
-    await hass.async_block_till_done()
 
     assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "already_configured"
