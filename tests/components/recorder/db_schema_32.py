@@ -224,7 +224,7 @@ class Events(Base):  # type: ignore[misc,valid-type]
     data_id = Column(Integer, ForeignKey("event_data.data_id"), index=True)
     context_id_bin = Column(
         LargeBinary(CONTEXT_ID_BIN_MAX_LENGTH)
-    )  # *** Not originally in v3v320, only added for recorder to startup ok
+    )  # *** Not originally in v32, only added for recorder to startup ok
     context_user_id_bin = Column(
         LargeBinary(CONTEXT_ID_BIN_MAX_LENGTH)
     )  # *** Not originally in v32, only added for recorder to startup ok
@@ -565,6 +565,7 @@ class StatisticsBase:
 
     id = Column(Integer, Identity(), primary_key=True)
     created = Column(DATETIME_TYPE, default=dt_util.utcnow)
+    # *** Not originally in v32, only added for recorder to startup ok
     created_ts = Column(TIMESTAMP_TYPE, default=time.time)
     metadata_id = Column(
         Integer,
@@ -572,11 +573,13 @@ class StatisticsBase:
         index=True,
     )
     start = Column(DATETIME_TYPE, index=True)
+    # *** Not originally in v32, only added for recorder to startup ok
     start_ts = Column(TIMESTAMP_TYPE, index=True)
     mean = Column(DOUBLE_TYPE)
     min = Column(DOUBLE_TYPE)
     max = Column(DOUBLE_TYPE)
     last_reset = Column(DATETIME_TYPE)
+    # *** Not originally in v32, only added for recorder to startup ok
     last_reset_ts = Column(TIMESTAMP_TYPE)
     state = Column(DOUBLE_TYPE)
     sum = Column(DOUBLE_TYPE)

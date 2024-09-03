@@ -482,8 +482,10 @@ async def test_message_history_unlimited(
             "ollama.AsyncClient.chat",
             return_value={"message": {"role": "assistant", "content": "test response"}},
         ),
-        patch.object(mock_config_entry, "options", {ollama.CONF_MAX_HISTORY: 0}),
     ):
+        hass.config_entries.async_update_entry(
+            mock_config_entry, options={ollama.CONF_MAX_HISTORY: 0}
+        )
         for i in range(100):
             result = await conversation.async_converse(
                 hass,
@@ -578,3 +580,34 @@ async def test_conversation_agent_with_assist(
         state.attributes[ATTR_SUPPORTED_FEATURES]
         == conversation.ConversationEntityFeature.CONTROL
     )
+
+
+@pytest.mark.parametrize(
+    ("mock_config_entry_options", "expected_options"),
+    [
+        ({}, {"num_ctx": 8192}),
+        ({"num_ctx": 16384}, {"num_ctx": 16384}),
+    ],
+)
+async def test_options(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component,
+    expected_options: dict[str, Any],
+) -> None:
+    """Test that options are passed correctly to ollama client."""
+    with patch(
+        "ollama.AsyncClient.chat",
+        return_value={"message": {"role": "assistant", "content": "test response"}},
+    ) as mock_chat:
+        await conversation.async_converse(
+            hass,
+            "test message",
+            None,
+            Context(),
+            agent_id="conversation.mock_title",
+        )
+
+        assert mock_chat.call_count == 1
+        args = mock_chat.call_args.kwargs
+        assert args.get("options") == expected_options

@@ -99,14 +99,8 @@ from .queries import (
     migrate_single_short_term_statistics_row_to_timestamp,
     migrate_single_statistics_row_to_timestamp,
 )
-from .statistics import get_start_time
-from .tasks import (
-    CommitTask,
-    EntityIDPostMigrationTask,
-    PostSchemaMigrationTask,
-    RecorderTask,
-    StatisticsTimestampMigrationCleanupTask,
-)
+from .statistics import cleanup_statistics_timestamp_migration, get_start_time
+from .tasks import EntityIDPostMigrationTask, RecorderTask
 from .util import (
     database_job_retry_wrapper,
     execute_stmt_lambda_element,
@@ -128,6 +122,11 @@ MIGRATION_NOTE_OFFLINE = (
     "Home Assistant will not start until the upgrade is completed. Please be patient "
     "and do not turn off or restart Home Assistant while the upgrade is in progress!"
 )
+MIGRATION_NOTE_MINUTES = (
+    "Note: this may take several minutes on large databases and slow machines. "
+    "Please be patient!"
+)
+MIGRATION_NOTE_WHILE = "This will take a while; please be patient!"
 
 _EMPTY_ENTITY_ID = "missing.entity_id"
 _EMPTY_EVENT_TYPE = "missing_event_type"
@@ -345,13 +344,6 @@ def migrate_schema_live(
         states_correct_db_schema(instance, schema_errors)
         events_correct_db_schema(instance, schema_errors)
 
-    start_version = schema_status.start_version
-    if start_version != SCHEMA_VERSION:
-        instance.queue_task(PostSchemaMigrationTask(start_version, SCHEMA_VERSION))
-        # Make sure the post schema migration task is committed in case
-        # the next task does not have commit_before = True
-        instance.queue_task(CommitTask())
-
     return schema_status
 
 
@@ -373,11 +365,10 @@ def _create_index(
     index = index_list[0]
     _LOGGER.debug("Creating %s index", index_name)
     _LOGGER.warning(
-        "Adding index `%s` to table `%s`. Note: this can take several "
-        "minutes on large databases and slow machines. Please "
-        "be patient!",
+        "Adding index `%s` to table `%s`. %s",
         index_name,
         table_name,
+        MIGRATION_NOTE_MINUTES,
     )
     with session_scope(session=session_maker()) as session:
         try:
@@ -422,11 +413,10 @@ def _drop_index(
     DO NOT USE THIS FUNCTION IN ANY OPERATION THAT TAKES USER INPUT.
     """
     _LOGGER.warning(
-        "Dropping index `%s` from table `%s`. Note: this can take several "
-        "minutes on large databases and slow machines. Please "
-        "be patient!",
+        "Dropping index `%s` from table `%s`. %s",
         index_name,
         table_name,
+        MIGRATION_NOTE_MINUTES,
     )
     index_to_drop: str | None = None
     with session_scope(session=session_maker()) as session:
@@ -472,13 +462,10 @@ def _add_columns(
 ) -> None:
     """Add columns to a table."""
     _LOGGER.warning(
-        (
-            "Adding columns %s to table %s. Note: this can take several "
-            "minutes on large databases and slow machines. Please "
-            "be patient!"
-        ),
+        "Adding columns %s to table %s. %s",
         ", ".join(column.split(" ")[0] for column in columns_def),
         table_name,
+        MIGRATION_NOTE_MINUTES,
     )
 
     columns_def = [f"ADD {col_def}" for col_def in columns_def]
@@ -534,13 +521,10 @@ def _modify_columns(
         return
 
     _LOGGER.warning(
-        (
-            "Modifying columns %s in table %s. Note: this can take several "
-            "minutes on large databases and slow machines. Please "
-            "be patient!"
-        ),
+        "Modifying columns %s in table %s. %s",
         ", ".join(column.split(" ")[0] for column in columns_def),
         table_name,
+        MIGRATION_NOTE_MINUTES,
     )
 
     if engine.dialect.name == SupportedDialect.POSTGRESQL:
@@ -693,6 +677,18 @@ def _restore_foreign_key_constraints(
                 break
         else:
             _LOGGER.info("Did not find a matching constraint for %s.%s", table, column)
+            continue
+
+        inspector = sqlalchemy.inspect(engine)
+        if any(
+            foreign_key["name"] and foreign_key["constrained_columns"] == [column]
+            for foreign_key in inspector.get_foreign_keys(table)
+        ):
+            _LOGGER.info(
+                "The database already has a matching constraint for %s.%s",
+                table,
+                column,
+            )
             continue
 
         if TYPE_CHECKING:
@@ -1405,6 +1401,12 @@ class _SchemaVersion32Migrator(_SchemaVersionMigrator, target_version=32):
         _drop_index(self.session_maker, "events", "ix_events_event_type_time_fired")
         _drop_index(self.session_maker, "states", "ix_states_last_updated")
         _drop_index(self.session_maker, "events", "ix_events_time_fired")
+        with session_scope(session=self.session_maker()) as session:
+            # In version 31 we migrated all the time_fired, last_updated, and last_changed
+            # columns to be timestamps. In version 32 we need to wipe the old columns
+            # since they are no longer used and take up a significant amount of space.
+            assert self.instance.engine is not None, "engine should never be None"
+            _wipe_old_string_time_columns(self.instance, self.instance.engine, session)
 
 
 class _SchemaVersion33Migrator(_SchemaVersionMigrator, target_version=33):
@@ -1482,6 +1484,12 @@ class _SchemaVersion35Migrator(_SchemaVersionMigrator, target_version=35):
         )
         # ix_statistics_start and ix_statistics_statistic_id_start are still used
         # for the post migration cleanup and can be removed in a future version.
+
+        # In version 34 we migrated all the created, start, and last_reset
+        # columns to be timestamps. In version 35 we need to wipe the old columns
+        # since they are no longer used and take up a significant amount of space.
+        while not cleanup_statistics_timestamp_migration(self.instance):
+            pass
 
 
 class _SchemaVersion36Migrator(_SchemaVersionMigrator, target_version=36):
@@ -1769,10 +1777,9 @@ def _migrate_statistics_columns_to_timestamp_removing_duplicates(
     except IntegrityError as ex:
         _LOGGER.error(
             "Statistics table contains duplicate entries: %s; "
-            "Cleaning up duplicates and trying again; "
-            "This will take a while; "
-            "Please be patient!",
+            "Cleaning up duplicates and trying again; %s",
             ex,
+            MIGRATION_NOTE_WHILE,
         )
         # There may be duplicated statistics entries, delete duplicates
         # and try again
@@ -1800,10 +1807,9 @@ def _correct_table_character_set_and_collation(
     """Correct issues detected by validate_db_schema."""
     # Attempt to convert the table to utf8mb4
     _LOGGER.warning(
-        "Updating character set and collation of table %s to utf8mb4. "
-        "Note: this can take several minutes on large databases and slow "
-        "machines. Please be patient!",
+        "Updating character set and collation of table %s to utf8mb4. %s",
         table,
+        MIGRATION_NOTE_MINUTES,
     )
     with (
         contextlib.suppress(SQLAlchemyError),
@@ -1819,40 +1825,6 @@ def _correct_table_character_set_and_collation(
                 f"COLLATE {MYSQL_COLLATE}, LOCK=EXCLUSIVE"
             )
         )
-
-
-def post_schema_migration(
-    instance: Recorder,
-    old_version: int,
-    new_version: int,
-) -> None:
-    """Post schema migration.
-
-    Run any housekeeping tasks after the schema migration has completed.
-
-    Post schema migration is run after the schema migration has completed
-    and the queue has been processed to ensure that we reduce the memory
-    pressure since events are held in memory until the queue is processed
-    which is blocked from being processed until the schema migration is
-    complete.
-    """
-    if old_version < 32 <= new_version:
-        # In version 31 we migrated all the time_fired, last_updated, and last_changed
-        # columns to be timestamps. In version 32 we need to wipe the old columns
-        # since they are no longer used and take up a significant amount of space.
-        assert instance.event_session is not None
-        assert instance.engine is not None
-        _wipe_old_string_time_columns(instance, instance.engine, instance.event_session)
-    if old_version < 35 <= new_version:
-        # In version 34 we migrated all the created, start, and last_reset
-        # columns to be timestamps. In version 35 we need to wipe the old columns
-        # since they are no longer used and take up a significant amount of space.
-        _wipe_old_string_statistics_columns(instance)
-
-
-def _wipe_old_string_statistics_columns(instance: Recorder) -> None:
-    """Wipe old string statistics columns to save space."""
-    instance.queue_task(StatisticsTimestampMigrationCleanupTask())
 
 
 @database_job_retry_wrapper("Wipe old string time columns", 3)
@@ -2724,10 +2696,7 @@ def rebuild_sqlite_table(
     orig_name = table_table.name
     temp_name = f"{table_table.name}_temp_{int(time())}"
 
-    _LOGGER.warning(
-        "Rebuilding SQLite table %s; This will take a while; Please be patient!",
-        orig_name,
-    )
+    _LOGGER.warning("Rebuilding SQLite table %s; %s", orig_name, MIGRATION_NOTE_WHILE)
 
     try:
         # 12 step SQLite table rebuild

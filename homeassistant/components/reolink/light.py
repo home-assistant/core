@@ -108,8 +108,7 @@ class ReolinkLightEntity(ReolinkChannelCoordinatorEntity, LightEntity):
     @property
     def brightness(self) -> int | None:
         """Return the brightness of this light between 0.255."""
-        if self.entity_description.get_brightness_fn is None:
-            return None
+        assert self.entity_description.get_brightness_fn is not None
 
         bright_pct = self.entity_description.get_brightness_fn(
             self._host.api, self._channel

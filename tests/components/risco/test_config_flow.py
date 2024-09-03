@@ -154,14 +154,12 @@ async def test_form_cloud_already_exists(hass: HomeAssistant) -> None:
     assert result3["reason"] == "already_configured"
 
 
-async def test_form_reauth(hass: HomeAssistant, cloud_config_entry) -> None:
+async def test_form_reauth(
+    hass: HomeAssistant, cloud_config_entry: MockConfigEntry
+) -> None:
     """Test reauthenticate."""
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_REAUTH},
-        data=cloud_config_entry.data,
-    )
+    result = await cloud_config_entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
@@ -194,15 +192,11 @@ async def test_form_reauth(hass: HomeAssistant, cloud_config_entry) -> None:
 
 
 async def test_form_reauth_with_new_username(
-    hass: HomeAssistant, cloud_config_entry
+    hass: HomeAssistant, cloud_config_entry: MockConfigEntry
 ) -> None:
     """Test reauthenticate with new username."""
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_REAUTH},
-        data=cloud_config_entry.data,
-    )
+    result = await cloud_config_entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
