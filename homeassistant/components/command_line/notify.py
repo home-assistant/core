@@ -67,6 +67,8 @@ class CommandLineNotificationService(BaseNotificationService):
         if rendered_args != args:
             command = f"{prog} {rendered_args}"
 
+        LOGGER.debug("Running command: %s, with message: %s", command, message)
+
         with subprocess.Popen(  # noqa: S602 # shell by design
             command,
             universal_newlines=True,
