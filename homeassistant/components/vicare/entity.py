@@ -2,6 +2,9 @@
 
 from PyViCare.PyViCareDevice import Device as PyViCareDevice
 from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
+from PyViCare.PyViCareHeatingDevice import (
+    HeatingDeviceWithComponent as PyViCareHeatingDeviceComponent,
+)
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
@@ -16,21 +19,24 @@ class ViCareEntity(Entity):
 
     def __init__(
         self,
+        unique_id_suffix: str,
         device_config: PyViCareDeviceConfig,
         device: PyViCareDevice,
-        unique_id_suffix: str,
+        component: PyViCareHeatingDeviceComponent | None = None,
     ) -> None:
         """Initialize the entity."""
-        self._api = device
+        self._api: PyViCareDevice | PyViCareHeatingDeviceComponent = (
+            component if component else device
+        )
 
         self._attr_unique_id = f"{device_config.getConfig().serial}-{unique_id_suffix}"
         # valid for compressors, circuits, burners (HeatingDeviceWithComponent)
-        if hasattr(device, "id"):
-            self._attr_unique_id += f"-{device.id}"
+        if component:
+            self._attr_unique_id += f"-{component.id}"
 
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, device_config.getConfig().serial)},
-            serial_number=device_config.getConfig().serial,
+            serial_number=device.getSerial(),
             name=device_config.getModel(),
             manufacturer="Viessmann",
             model=device_config.getModel(),
