@@ -30,12 +30,6 @@ PLATFORM_SCHEMA = CAMERA_PLATFORM_SCHEMA.extend(
     }
 )
 
-CAMERA_SERVICE_UPDATE_FILE_PATH = vol.Schema(
-    {
-        vol.Required(CONF_FILE_PATH): cv.string,
-    }
-)
-
 
 def check_file_path_access(file_path: str) -> bool:
     """Check that filepath given is readable."""
@@ -56,7 +50,9 @@ async def async_setup_platform(
     platform = entity_platform.async_get_current_platform()
     platform.async_register_entity_service(
         SERVICE_UPDATE_FILE_PATH,
-        CAMERA_SERVICE_UPDATE_FILE_PATH,
+        {
+            vol.Required(CONF_FILE_PATH): cv.string,
+        },
         "update_file_path",
     )
 
