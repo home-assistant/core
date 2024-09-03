@@ -2,56 +2,13 @@
 # name: test_diagnostics
   dict({
     'device': dict({
+      '_calibration_type': None,
+      '_connection_type': 'disconnected',
+      '_end_position_info': None,
+      '_position': None,
+      '_tilt': None,
       'blind_type': 'Roller blind',
-      'callbacks': dict({
-        '_battery_callbacks': list([
-          'BatterySensor.async_update_battery',
-        ]),
-        '_calibration_callbacks': list([
-        ]),
-        '_connection_callbacks': list([
-          'async_callback',
-        ]),
-        '_disabled_connection_callbacks': list([
-        ]),
-        '_end_position_callbacks': list([
-        ]),
-        '_feedback_callbacks': list([
-        ]),
-        '_position_callbacks': list([
-          'PositionCover.async_update_position',
-        ]),
-        '_running_callbacks': list([
-          'PositionCover.async_update_running',
-        ]),
-        '_signal_strength_callbacks': list([
-          'async_callback',
-        ]),
-        '_speed_callbacks': list([
-          'SpeedSelect.async_update_speed',
-        ]),
-        '_status_callbacks': list([
-        ]),
-      }),
-      'connection': dict({
-        '_connect_status_query_time': None,
-        '_connection_type': 'disconnected',
-        '_custom_setting_disconnect_time': None,
-        '_disconnect_time': None,
-        '_permanent_connection': False,
-        'has_ble_device': True,
-        'has_bleak_client': False,
-        'has_disconnect_timer': False,
-        'is_set_received_end_position_info_event': False,
-        'rssi': None,
-      }),
       'display_name': 'Motionblind cccc',
-      'states': dict({
-        '_calibration_type': None,
-        '_end_position_info': None,
-        '_position': None,
-        '_tilt': None,
-      }),
       'timezone': None,
     }),
     'entry': dict({
