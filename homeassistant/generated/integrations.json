@@ -2387,6 +2387,12 @@
         }
       }
     },
+    "gpm": {
+      "name": "GPM",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "gpsd": {
       "name": "GPSD",
       "integration_type": "hub",

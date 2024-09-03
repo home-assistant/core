@@ -15,6 +15,9 @@ Adax-local==0.1.5
 # homeassistant.components.doorbird
 DoorBirdPy==3.0.2
 
+# homeassistant.components.gpm
+GitPython==3.1.43
+
 # homeassistant.components.homekit
 HAP-python==4.9.1
 
