@@ -473,3 +473,6 @@ async def test_send_command_invalid_command(hass: HomeAssistant) -> None:
     with pytest.raises(HassioAPIError):
         # relative path
         await hassio.send_command("test/../bad")
+    with pytest.raises(HassioAPIError):
+        # relative path with percent encoding
+        await hassio.send_command("test/%2E%2E/bad")
