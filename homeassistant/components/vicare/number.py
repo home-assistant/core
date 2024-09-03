@@ -249,30 +249,26 @@ def _build_entities(
     for device in device_list:
         # add device entities
         entities.extend(
-            [
-                ViCareNumber(
-                    device.config,
-                    device.api,
-                    None,
-                    description,
-                )
-                for description in DEVICE_ENTITY_DESCRIPTIONS
-                if is_supported(description.key, description, device.api)
-            ]
+            ViCareNumber(
+                device.config,
+                device.api,
+                None,
+                description,
+            )
+            for description in DEVICE_ENTITY_DESCRIPTIONS
+            if is_supported(description.key, description, device.api)
         )
         # add component entities
         entities.extend(
-            [
-                ViCareNumber(
-                    device.config,
-                    device.api,
-                    circuit,
-                    description,
-                )
-                for circuit in get_circuits(device.api)
-                for description in CIRCUIT_ENTITY_DESCRIPTIONS
-                if is_supported(description.key, description, circuit)
-            ]
+            ViCareNumber(
+                device.config,
+                device.api,
+                circuit,
+                description,
+            )
+            for circuit in get_circuits(device.api)
+            for description in CIRCUIT_ENTITY_DESCRIPTIONS
+            if is_supported(description.key, description, circuit)
         )
     return entities
 
