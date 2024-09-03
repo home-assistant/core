@@ -715,8 +715,19 @@ def template(value: Any | None) -> template_helper.Template:
         raise vol.Invalid("template value is None")
     if isinstance(value, (list, dict, template_helper.Template)):
         raise vol.Invalid("template value should be a string")
+    if not (hass := _async_get_hass_or_none()):
+        # pylint: disable-next=import-outside-toplevel
+        from .frame import report
 
-    template_value = template_helper.Template(str(value), _async_get_hass_or_none())
+        report(
+            (
+                "validates schema outside the event loop, "
+                "which will stop working in HA Core 2025.10"
+            ),
+            error_if_core=False,
+        )
+
+    template_value = template_helper.Template(str(value), hass)
 
     try:
         template_value.ensure_valid()
@@ -733,8 +744,19 @@ def dynamic_template(value: Any | None) -> template_helper.Template:
         raise vol.Invalid("template value should be a string")
     if not template_helper.is_template_string(str(value)):
         raise vol.Invalid("template value does not contain a dynamic template")
+    if not (hass := _async_get_hass_or_none()):
+        # pylint: disable-next=import-outside-toplevel
+        from .frame import report
 
-    template_value = template_helper.Template(str(value), _async_get_hass_or_none())
+        report(
+            (
+                "validates schema outside the event loop, "
+                "which will stop working in HA Core 2025.10"
+            ),
+            error_if_core=False,
+        )
+
+    template_value = template_helper.Template(str(value), hass)
 
     try:
         template_value.ensure_valid()
