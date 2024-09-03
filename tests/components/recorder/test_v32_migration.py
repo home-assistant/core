@@ -113,6 +113,7 @@ async def test_migrate_times(
         patch.object(migration.StatesContextIDMigration, "migrate_data"),
         patch.object(migration.EventTypeIDMigration, "migrate_data"),
         patch.object(migration.EntityIDMigration, "migrate_data"),
+        patch.object(migration.EventIDPostMigration, "migrate_data"),
         patch.object(core, "StatesMeta", old_db_schema.StatesMeta),
         patch.object(core, "EventTypes", old_db_schema.EventTypes),
         patch.object(core, "EventData", old_db_schema.EventData),
@@ -120,9 +121,6 @@ async def test_migrate_times(
         patch.object(core, "Events", old_db_schema.Events),
         patch(CREATE_ENGINE_TARGET, new=_create_engine_test(SCHEMA_MODULE_30)),
         patch("homeassistant.components.recorder.Recorder._post_migrate_entity_ids"),
-        patch(
-            "homeassistant.components.recorder.migration.cleanup_legacy_states_event_ids"
-        ),
     ):
         async with (
             async_test_home_assistant() as hass,
@@ -264,9 +262,8 @@ async def test_migrate_can_resume_entity_id_post_migration(
 
     with (
         patch.object(recorder, "db_schema", old_db_schema),
-        patch.object(
-            recorder.migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION
-        ),
+        patch.object(migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION),
+        patch.object(migration.EventIDPostMigration, "migrate_data"),
         patch.object(core, "StatesMeta", old_db_schema.StatesMeta),
         patch.object(core, "EventTypes", old_db_schema.EventTypes),
         patch.object(core, "EventData", old_db_schema.EventData),
@@ -274,9 +271,6 @@ async def test_migrate_can_resume_entity_id_post_migration(
         patch.object(core, "Events", old_db_schema.Events),
         patch(CREATE_ENGINE_TARGET, new=_create_engine_test(SCHEMA_MODULE_32)),
         patch("homeassistant.components.recorder.Recorder._post_migrate_entity_ids"),
-        patch(
-            "homeassistant.components.recorder.migration.cleanup_legacy_states_event_ids"
-        ),
     ):
         async with (
             async_test_home_assistant() as hass,
@@ -386,9 +380,8 @@ async def test_migrate_can_resume_ix_states_event_id_removed(
 
     with (
         patch.object(recorder, "db_schema", old_db_schema),
-        patch.object(
-            recorder.migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION
-        ),
+        patch.object(migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION),
+        patch.object(migration.EventIDPostMigration, "migrate_data"),
         patch.object(core, "StatesMeta", old_db_schema.StatesMeta),
         patch.object(core, "EventTypes", old_db_schema.EventTypes),
         patch.object(core, "EventData", old_db_schema.EventData),
@@ -396,9 +389,6 @@ async def test_migrate_can_resume_ix_states_event_id_removed(
         patch.object(core, "Events", old_db_schema.Events),
         patch(CREATE_ENGINE_TARGET, new=_create_engine_test(SCHEMA_MODULE_32)),
         patch("homeassistant.components.recorder.Recorder._post_migrate_entity_ids"),
-        patch(
-            "homeassistant.components.recorder.migration.cleanup_legacy_states_event_ids"
-        ),
     ):
         async with (
             async_test_home_assistant() as hass,
@@ -522,9 +512,8 @@ async def test_out_of_disk_space_while_rebuild_states_table(
 
     with (
         patch.object(recorder, "db_schema", old_db_schema),
-        patch.object(
-            recorder.migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION
-        ),
+        patch.object(migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION),
+        patch.object(migration.EventIDPostMigration, "migrate_data"),
         patch.object(core, "StatesMeta", old_db_schema.StatesMeta),
         patch.object(core, "EventTypes", old_db_schema.EventTypes),
         patch.object(core, "EventData", old_db_schema.EventData),
@@ -532,9 +521,6 @@ async def test_out_of_disk_space_while_rebuild_states_table(
         patch.object(core, "Events", old_db_schema.Events),
         patch(CREATE_ENGINE_TARGET, new=_create_engine_test(SCHEMA_MODULE_32)),
         patch("homeassistant.components.recorder.Recorder._post_migrate_entity_ids"),
-        patch(
-            "homeassistant.components.recorder.migration.cleanup_legacy_states_event_ids"
-        ),
     ):
         async with (
             async_test_home_assistant() as hass,
@@ -654,7 +640,7 @@ async def test_out_of_disk_space_while_removing_foreign_key(
 
     Note that the test is somewhat forced; the states.event_id foreign key constraint is
     removed when migrating to schema version 46, inspecting the schema in
-    cleanup_legacy_states_event_ids is not likely to fail.
+    EventIDPostMigration.migrate_data, is not likely to fail.
     """
     importlib.import_module(SCHEMA_MODULE_32)
     old_db_schema = sys.modules[SCHEMA_MODULE_32]
@@ -702,9 +688,8 @@ async def test_out_of_disk_space_while_removing_foreign_key(
 
     with (
         patch.object(recorder, "db_schema", old_db_schema),
-        patch.object(
-            recorder.migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION
-        ),
+        patch.object(migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION),
+        patch.object(migration.EventIDPostMigration, "migrate_data"),
         patch.object(core, "StatesMeta", old_db_schema.StatesMeta),
         patch.object(core, "EventTypes", old_db_schema.EventTypes),
         patch.object(core, "EventData", old_db_schema.EventData),
@@ -712,9 +697,6 @@ async def test_out_of_disk_space_while_removing_foreign_key(
         patch.object(core, "Events", old_db_schema.Events),
         patch(CREATE_ENGINE_TARGET, new=_create_engine_test(SCHEMA_MODULE_32)),
         patch("homeassistant.components.recorder.Recorder._post_migrate_entity_ids"),
-        patch(
-            "homeassistant.components.recorder.migration.cleanup_legacy_states_event_ids"
-        ),
     ):
         async with (
             async_test_home_assistant() as hass,
