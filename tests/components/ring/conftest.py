@@ -138,7 +138,7 @@ async def mock_added_config_entry(
 
 
 @pytest.fixture(autouse=True)
-def mock_listener(request):
+def mock_listener():
     """Fixture to mock the push client connect and disconnect."""
 
     f = _FakeRingListener()
@@ -151,7 +151,7 @@ def mock_listener(request):
 class _FakeRingListener:
     """Test class to replace the ring_doorbell event listener for testing."""
 
-    def __init__(self, *_, **__):
+    def __init__(self, *_, **__) -> None:
         self._callbacks = {}
         self._subscription_counter = 1
         self.started = False
