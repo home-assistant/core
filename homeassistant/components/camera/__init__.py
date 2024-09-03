@@ -204,6 +204,7 @@ class WebRtcConfiguration:
     rtc_configuration: RtcConfiguration | None = None
     audio_direction: TransportDirection = TransportDirection.RECVONLY
     video_direction: TransportDirection = TransportDirection.RECVONLY
+    create_data_channel: bool = True
 
 
 @bind_hass

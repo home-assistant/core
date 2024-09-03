@@ -114,6 +114,7 @@ class RingCam(RingEntity[RingDoorBell], Camera):
         return WebRtcConfiguration(
             rtc_configuration=rtc_configuration,
             audio_direction=WebRtcConfiguration.TransportDirection.SENDRECV,
+            create_data_channel=False,
         )
 
     async def async_handle_web_rtc_close(self) -> None:
