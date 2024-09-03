@@ -18,7 +18,6 @@ from .common import (
 )
 
 
-# Tessie
 @pytest.fixture(autouse=True)
 def mock_get_state():
     """Mock get_state function."""
