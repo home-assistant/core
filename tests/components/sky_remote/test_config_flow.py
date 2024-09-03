@@ -14,7 +14,7 @@ from tests.common import MockConfigEntry
 
 
 async def test_user_flow(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, sample_config
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, sample_config, mock_remote_control
 ) -> None:
     """Test we can setup an entry."""
 
@@ -43,7 +43,9 @@ def get_suggested_value(schema, key):
     return next(x for x in schema.schema if x == key).description["suggested_value"]
 
 
-async def test_reconfigure_flow(hass: HomeAssistant, sample_config) -> None:
+async def test_reconfigure_flow(
+    hass: HomeAssistant, sample_config, mock_remote_control
+) -> None:
     """Test we can reconfigure an entry."""
 
     entry = MockConfigEntry(

@@ -8,5 +8,5 @@
   "integration_type": "device",
   "iot_class": "assumed_state",
   "loggers": [],
-  "requirements": ["skyboxremote==0.0.4"]
+  "requirements": ["skyboxremote==0.0.5"]
 }

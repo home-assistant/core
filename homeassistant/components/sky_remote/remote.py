@@ -4,14 +4,13 @@ from collections.abc import Iterable
 import logging
 from typing import Any
 
-from skyboxremote import RemoteControl
-
 from homeassistant.components.remote import RemoteEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import RemoteControl
 from .const import CONF_LEGACY_CONTROL_PORT
 
 _LOGGER = logging.getLogger(__name__)

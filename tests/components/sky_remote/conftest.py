@@ -1,10 +1,12 @@
 """Test helpers."""
 
+import asyncio
 from collections.abc import Generator
 from typing import Any
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+import skyboxremote
 
 from homeassistant.components.sky_remote.const import CONF_LEGACY_CONTROL_PORT
 from homeassistant.const import CONF_HOST, CONF_NAME
@@ -32,3 +34,31 @@ def mock_setup_entry() -> Generator[AsyncMock]:
         return_value=True,
     ) as mock_setup_entry:
         yield mock_setup_entry
+
+
+@pytest.fixture
+def mock_remote_control() -> Generator[MagicMock]:
+    """Mock skyboxremote library."""
+    with patch(
+        "homeassistant.components.sky_remote.RemoteControl"
+    ) as mock_remote_control:
+        instance_mock = MagicMock()
+        mock_remote_control.return_value = instance_mock
+        return_val = asyncio.Future()
+        return_val.set_result(True)
+        instance_mock.check_connectable.return_value = return_val
+
+        yield mock_remote_control
+
+
+@pytest.fixture
+def mock_remote_control_unconnectable() -> Generator[MagicMock]:
+    """Mock skyboxremote library."""
+    with patch(
+        "homeassistant.components.sky_remote.RemoteControl"
+    ) as mock_remote_control:
+        instance_mock = MagicMock()
+        mock_remote_control.return_value = instance_mock
+        instance_mock.check_connectable.side_effect = skyboxremote.SkyBoxConnectionError
+
+        yield mock_remote_control
