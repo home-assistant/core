@@ -599,7 +599,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'dhw_temperature',
-    'unique_id': 'gateway0-dhw_temperature',
+    'unique_id': 'gateway0_deviceSerialVitodens300W-dhw_temperature',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
