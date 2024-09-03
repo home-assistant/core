@@ -37,25 +37,3 @@ class SkyRemoteConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
         return self.async_show_form(step_id="user", data_schema=vol.Schema(DATA_SCHEMA))
-
-    async def async_step_reconfigure(
-        self, user_input: dict[str, Any] | None = None
-    ) -> config_entries.ConfigFlowResult:
-        """Handle the reconfiguration."""
-
-        entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
-        assert entry is not None
-        if user_input is not None:
-            return self.async_update_reload_and_abort(
-                entry,
-                data=user_input,
-                title=user_input["name"],
-                reason="reconfigure_successful",
-            )
-
-        return self.async_show_form(
-            step_id="reconfigure",
-            data_schema=self.add_suggested_values_to_schema(
-                vol.Schema(DATA_SCHEMA), entry.data
-            ),
-        )
