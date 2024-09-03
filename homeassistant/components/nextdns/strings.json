@@ -10,6 +10,11 @@
         "data": {
           "profile": "Profile"
         }
+      },
+      "reauth_confirm": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        }
       }
     },
     "error": {
@@ -18,7 +23,8 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
-      "already_configured": "This NextDNS profile is already configured."
+      "already_configured": "This NextDNS profile is already configured.",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
   },
   "system_health": {
