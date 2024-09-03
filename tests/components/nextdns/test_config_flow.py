@@ -129,8 +129,8 @@ async def test_reauth_successful(hass: HomeAssistant) -> None:
             user_input={CONF_API_KEY: "new_api_key"},
         )
 
-        assert result["type"] is FlowResultType.ABORT
-        assert result["reason"] == "reauth_successful"
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
 
 
 @pytest.mark.parametrize(
@@ -166,4 +166,4 @@ async def test_reauth_errors(
             user_input={CONF_API_KEY: "new_api_key"},
         )
 
-        assert result["errors"] == {"base": base_error}
+    assert result["errors"] == {"base": base_error}
