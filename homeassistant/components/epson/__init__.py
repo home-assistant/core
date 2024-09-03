@@ -13,7 +13,7 @@ from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CONF_CONNECTION_TYPE, DOMAIN
+from .const import CONF_CONNECTION_TYPE, DOMAIN, HTTP
 from .exceptions import CannotConnect, PoweredOff
 
 PLATFORMS = [Platform.MEDIA_PLAYER]
@@ -84,7 +84,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
 
     if config_entry.version == 1 and config_entry.minor_version == 1:
         new_data = {**config_entry.data}
-        new_data[CONF_CONNECTION_TYPE] = "http"
+        new_data[CONF_CONNECTION_TYPE] = HTTP
 
         hass.config_entries.async_update_entry(
             config_entry, data=new_data, version=1, minor_version=2
