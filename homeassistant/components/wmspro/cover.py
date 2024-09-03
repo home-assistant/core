@@ -33,7 +33,7 @@ async def async_setup_entry(
     for dest in hub.dests.values():
         await dest.refresh()
         if dest.action(WMS_WebControl_pro_API_actionDescription.AwningDrive):
-            entities.append(WebControlProAwning(dest))
+            entities.append(WebControlProAwning(config_entry.entry_id, dest))
 
     async_add_entities(entities)
 

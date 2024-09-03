@@ -13,6 +13,7 @@ from homeassistant.components import dhcp
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.device_registry import format_mac
 
 from .const import DOMAIN, SUGGESTED_HOST
 
@@ -53,13 +54,15 @@ class WebControlProConfigFlow(ConfigFlow, domain=DOMAIN):
                     return self.async_create_entry(title=host, data=user_input)
 
         if self.source == dhcp.DOMAIN:
-            placeholders = {CONF_HOST: self.init_data.hostname}
+            await self.async_set_unique_id(format_mac(self.init_data.macaddress))
+            data_values = {CONF_HOST: self.init_data.hostname}
+            self._abort_if_unique_id_configured(updates=data_values)
         else:
-            placeholders = {CONF_HOST: SUGGESTED_HOST}
+            data_values = {CONF_HOST: SUGGESTED_HOST}
 
-        self.context["title_placeholders"] = placeholders
+        self.context["title_placeholders"] = data_values
         data_schema = self.add_suggested_values_to_schema(
-            STEP_USER_DATA_SCHEMA, placeholders
+            STEP_USER_DATA_SCHEMA, data_values
         )
 
         return self.async_show_form(

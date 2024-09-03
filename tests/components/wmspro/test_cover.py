@@ -28,9 +28,7 @@ async def test_cover_device(
     assert len(mock_hub_status_prod_awning.mock_calls) == 2
 
     device_registry = dr.async_get(hass)
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, "dest_58717")}
-    )
+    device_entry = device_registry.async_get_device(identifiers={(DOMAIN, "58717")})
     assert device_entry is not None
     assert device_entry.manufacturer == MANUFACTURER
     assert device_entry.name == "Markise"

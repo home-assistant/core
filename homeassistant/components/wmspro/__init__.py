@@ -38,9 +38,8 @@ async def async_setup_entry(
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, hub.host)},
+        identifiers={(DOMAIN, entry.entry_id)},
         manufacturer=MANUFACTURER,
-        name=entry.title,
         model="WMS WebControl pro",
         configuration_url=f"http://{hub.host}/system",
     )
