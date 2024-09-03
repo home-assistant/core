@@ -238,5 +238,11 @@ async def generate_playlist(
     result = await player.async_browse(
         "titles", limit=BROWSE_LIMIT, browse_id=browse_id
     )
+<<<<<<< HEAD
     items: dict[str, Any] | None = result.get("items")
     return items
+=======
+    if result and "items" in result:
+        return result["items"]
+    raise BrowseError(f"Media not found: {media_type} / {media_id}")
+>>>>>>> a32e266bad (Apply suggestions from code review)

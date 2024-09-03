@@ -5,16 +5,12 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-<<<<<<< HEAD
 from homeassistant.components.media_player import MediaType
 from homeassistant.components.squeezebox import const
 from homeassistant.components.squeezebox.browse_media import (
     MEDIA_TYPE_TO_SQUEEZEBOX,
     SQUEEZEBOX_ID_BY_TYPE,
 )
-=======
-from homeassistant.components.squeezebox import const
->>>>>>> 3d3e5699d7 (Improve unit tests)
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import format_mac
@@ -53,7 +49,6 @@ def config_entry(hass: HomeAssistant) -> MockConfigEntry:
     return config_entry
 
 
-<<<<<<< HEAD
 async def mock_async_browse(
     media_type: MediaType, limit: int, browse_id: tuple | None = None
 ) -> dict | None:
@@ -119,8 +114,6 @@ async def mock_async_browse(
     return None
 
 
-=======
->>>>>>> 3d3e5699d7 (Improve unit tests)
 @pytest.fixture
 def lms() -> MagicMock:
     """Mock a Lyrion Media Server with one mock player attached."""
@@ -129,15 +122,12 @@ def lms() -> MagicMock:
     player.player_id = TEST_MAC
     player.name = "Test Player"
     player.power = False
-<<<<<<< HEAD
     player.async_browse = AsyncMock(side_effect=mock_async_browse)
     player.async_load_playlist = AsyncMock()
     player.async_update = AsyncMock()
     player.generate_image_url_from_track_id = MagicMock(
         return_value="http://lms.internal:9000/html/images/favorites.png"
     )
-=======
->>>>>>> 3d3e5699d7 (Improve unit tests)
     lms.async_get_players = AsyncMock(return_value=[player])
     lms.async_query = AsyncMock(return_value={"uuid": format_mac(TEST_MAC)})
     return lms
