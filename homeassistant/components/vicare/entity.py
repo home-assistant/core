@@ -19,10 +19,10 @@ class ViCareEntity(Entity):
 
     def __init__(
         self,
+        unique_id_suffix: str,
         device_config: PyViCareDeviceConfig,
         device: PyViCareDevice,
-        component: PyViCareHeatingDeviceComponent | None,
-        unique_id_suffix: str,
+        component: PyViCareHeatingDeviceComponent | None = None,
     ) -> None:
         """Initialize the entity."""
         self._api: PyViCareDevice | PyViCareHeatingDeviceComponent = (

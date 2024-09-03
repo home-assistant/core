@@ -250,10 +250,9 @@ def _build_entities(
         # add device entities
         entities.extend(
             ViCareNumber(
+                description,
                 device.config,
                 device.api,
-                None,
-                description,
             )
             for description in DEVICE_ENTITY_DESCRIPTIONS
             if is_supported(description.key, description, device.api)
@@ -261,10 +260,10 @@ def _build_entities(
         # add component entities
         entities.extend(
             ViCareNumber(
+                description,
                 device.config,
                 device.api,
                 circuit,
-                description,
             )
             for circuit in get_circuits(device.api)
             for description in CIRCUIT_ENTITY_DESCRIPTIONS
@@ -296,13 +295,13 @@ class ViCareNumber(ViCareEntity, NumberEntity):
 
     def __init__(
         self,
+        description: ViCareNumberEntityDescription,
         device_config: PyViCareDeviceConfig,
         device: PyViCareDevice,
-        component: PyViCareHeatingDeviceComponent | None,
-        description: ViCareNumberEntityDescription,
+        component: PyViCareHeatingDeviceComponent | None = None,
     ) -> None:
         """Initialize the number."""
-        super().__init__(device_config, device, component, description.key)
+        super().__init__(description.key, device_config, device, component)
         self.entity_description = description
 
     @property

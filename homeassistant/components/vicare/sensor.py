@@ -867,10 +867,9 @@ def _build_entities(
         # add device entities
         entities.extend(
             ViCareSensor(
+                description,
                 device.config,
                 device.api,
-                None,
-                description,
             )
             for description in GLOBAL_SENSORS
             if is_supported(description.key, description, device.api)
@@ -883,10 +882,10 @@ def _build_entities(
         ):
             entities.extend(
                 ViCareSensor(
+                    description,
                     device.config,
                     device.api,
                     component,
-                    description,
                 )
                 for component in component_list
                 for description in entity_description_list
@@ -920,13 +919,13 @@ class ViCareSensor(ViCareEntity, SensorEntity):
 
     def __init__(
         self,
+        description: ViCareSensorEntityDescription,
         device_config: PyViCareDeviceConfig,
         device: PyViCareDevice,
-        component: PyViCareHeatingDeviceComponent | None,
-        description: ViCareSensorEntityDescription,
+        component: PyViCareHeatingDeviceComponent | None = None,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(device_config, device, component, description.key)
+        super().__init__(description.key, device_config, device, component)
         self.entity_description = description
 
     @property
