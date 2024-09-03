@@ -27,6 +27,7 @@ from homeassistant.components.climate.const import (
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
     SERVICE_SET_FAN_MODE,
+    SERVICE_SET_HVAC_MODE,
     SERVICE_SET_PRESET_MODE,
     SERVICE_SET_SWING_MODE,
     SERVICE_SET_TEMPERATURE,
@@ -237,10 +238,10 @@ def test_deprecated_current_constants(
     )
 
 
-async def test_preset_mode_validation(
+async def test_mode_validation(
     hass: HomeAssistant, register_test_integration: MockConfigEntry
 ) -> None:
-    """Test mode validation for fan, swing and preset."""
+    """Test mode validation for hvac_mode, fan, swing and preset."""
     climate_entity = MockClimateEntity(name="test", entity_id="climate.test")
 
     setup_test_component_platform(
@@ -250,6 +251,7 @@ async def test_preset_mode_validation(
     await hass.async_block_till_done()
 
     state = hass.states.get("climate.test")
+    assert state.state == "heat"
     assert state.attributes.get(ATTR_PRESET_MODE) == "home"
     assert state.attributes.get(ATTR_FAN_MODE) == "auto"
     assert state.attributes.get(ATTR_SWING_MODE) == "auto"
@@ -285,6 +287,24 @@ async def test_preset_mode_validation(
     assert state.attributes.get(ATTR_PRESET_MODE) == "away"
     assert state.attributes.get(ATTR_FAN_MODE) == "off"
     assert state.attributes.get(ATTR_SWING_MODE) == "off"
+
+    with pytest.raises(
+        ServiceValidationError,
+        match="Hvac mode auto is not valid. Valid hvac modes are: off, heat",
+    ) as exc:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_HVAC_MODE,
+            {
+                "entity_id": "climate.test",
+                "hvac_mode": "auto",
+            },
+            blocking=True,
+        )
+    assert (
+        str(exc.value) == "Hvac mode auto is not valid. Valid hvac modes are: off, heat"
+    )
+    assert exc.value.translation_key == "not_valid_hvac_mode"
 
     with pytest.raises(
         ServiceValidationError,
