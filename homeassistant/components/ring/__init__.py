@@ -31,7 +31,10 @@ class RingData:
     notifications_coordinator: RingNotificationsCoordinator
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+type RingConfigEntry = ConfigEntry[RingData]
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: RingConfigEntry) -> bool:
     """Set up a config entry."""
 
     def token_updater(token: dict[str, Any]) -> None:
@@ -56,7 +59,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await devices_coordinator.async_config_entry_first_refresh()
     await notifications_coordinator.async_config_entry_first_refresh()
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = RingData(
+    entry.runtime_data = RingData(
         api=ring,
         devices=ring.devices(),
         devices_coordinator=devices_coordinator,
@@ -86,11 +89,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             severity=IssueSeverity.WARNING,
             translation_key="deprecated_service_ring_update",
         )
-
-        for info in hass.data[DOMAIN].values():
-            ring_data = cast(RingData, info)
-            await ring_data.devices_coordinator.async_refresh()
-            await ring_data.notifications_coordinator.async_refresh()
+        for loaded_entry in hass.config_entries.async_loaded_entries(DOMAIN):
+            await loaded_entry.runtime_data.devices_coordinator.async_refresh()
+            await loaded_entry.runtime_data.notifications_coordinator.async_refresh()
 
     # register service
     hass.services.async_register(DOMAIN, "update", async_refresh_all)
@@ -100,18 +101,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload Ring entry."""
-    if not await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        return False
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
-    hass.data[DOMAIN].pop(entry.entry_id)
+    if len(hass.config_entries.async_loaded_entries(DOMAIN)) == 1:
+        # This is the last loaded entry, clean up service
+        hass.services.async_remove(DOMAIN, "update")
 
-    if len(hass.data[DOMAIN]) != 0:
-        return True
-
-    # Last entry unloaded, clean up service
-    hass.services.async_remove(DOMAIN, "update")
-
-    return True
+    return unload_ok
 
 
 async def async_remove_config_entry_device(

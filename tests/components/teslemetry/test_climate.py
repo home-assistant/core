@@ -1,6 +1,6 @@
 """Test the Teslemetry climate platform."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -371,12 +371,21 @@ async def test_asleep_or_offline(
 
 async def test_climate_noscope(
     hass: HomeAssistant,
-    mock_metadata,
+    snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
+    mock_metadata: AsyncMock,
 ) -> None:
     """Tests that the climate entity is correct."""
     mock_metadata.return_value = METADATA_NOSCOPE
 
-    await setup_platform(hass, [Platform.CLIMATE])
+    entry = await setup_platform(hass, [Platform.CLIMATE])
+
+    entity_entries = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
+
+    assert entity_entries
+    for entity_entry in entity_entries:
+        assert entity_entry == snapshot(name=f"{entity_entry.entity_id}-entry")
+
     entity_id = "climate.test_climate"
 
     with pytest.raises(ServiceValidationError):

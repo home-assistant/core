@@ -148,7 +148,7 @@ class ViCareClimate(ViCareEntity, ClimateEntity):
         circuit: PyViCareHeatingCircuit,
     ) -> None:
         """Initialize the climate device."""
-        super().__init__(device_config, device, circuit, self._attr_translation_key)
+        super().__init__(self._attr_translation_key, device_config, device, circuit)
         self._device = device
         self._attributes: dict[str, Any] = {}
         self._attributes["vicare_programs"] = self._api.getPrograms()

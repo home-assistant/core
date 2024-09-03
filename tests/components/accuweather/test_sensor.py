@@ -148,6 +148,7 @@ async def test_manual_update_entity(
     assert mock_accuweather_client.async_get_current_conditions.call_count == 2
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensor_imperial_units(
     hass: HomeAssistant, mock_accuweather_client: AsyncMock
 ) -> None:

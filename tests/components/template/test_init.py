@@ -322,12 +322,22 @@ async def async_yaml_patch_helper(hass: HomeAssistant, filename: str) -> None:
                 "min": "{{ 0 }}",
                 "max": "{{ 100 }}",
                 "step": "{{ 0.1 }}",
+                "set_value": {
+                    "action": "input_number.set_value",
+                    "target": {"entity_id": "input_number.test"},
+                    "data": {"value": "{{ value }}"},
+                },
             },
             {
                 "state": "{{ 11 }}",
                 "min": "{{ 0 }}",
                 "max": "{{ 100 }}",
                 "step": "{{ 0.1 }}",
+                "set_value": {
+                    "action": "input_number.set_value",
+                    "target": {"entity_id": "input_number.test"},
+                    "data": {"value": "{{ value }}"},
+                },
             },
         ),
         (

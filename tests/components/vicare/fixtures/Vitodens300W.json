@@ -4,23 +4,6 @@
       "apiVersion": 1,
       "commands": {},
       "deviceId": "0",
-      "feature": "device.messages.errors.raw",
-      "gatewayId": "################",
-      "isEnabled": true,
-      "isReady": true,
-      "properties": {
-        "entries": {
-          "type": "array",
-          "value": []
-        }
-      },
-      "timestamp": "2024-07-30T20:03:40.073Z",
-      "uri": "https://api.viessmann.com/iot/v1/features/installations/#######/gateways/################/devices/0/features/device.messages.errors.raw"
-    },
-    {
-      "apiVersion": 1,
-      "commands": {},
-      "deviceId": "0",
       "feature": "device.serial",
       "gatewayId": "################",
       "isEnabled": true,

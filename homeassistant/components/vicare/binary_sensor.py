@@ -114,16 +114,13 @@ def _build_entities(
     for device in device_list:
         # add device entities
         entities.extend(
-            [
-                ViCareBinarySensor(
-                    device.config,
-                    device.api,
-                    None,
-                    description,
-                )
-                for description in GLOBAL_SENSORS
-                if is_supported(description.key, description, device.api)
-            ]
+            ViCareBinarySensor(
+                description,
+                device.config,
+                device.api,
+            )
+            for description in GLOBAL_SENSORS
+            if is_supported(description.key, description, device.api)
         )
         # add component entities
         for component_list, entity_description_list in (
@@ -132,17 +129,15 @@ def _build_entities(
             (get_compressors(device.api), COMPRESSOR_SENSORS),
         ):
             entities.extend(
-                [
-                    ViCareBinarySensor(
-                        device.config,
-                        device.api,
-                        component,
-                        description,
-                    )
-                    for component in component_list
-                    for description in entity_description_list
-                    if is_supported(description.key, description, component)
-                ]
+                ViCareBinarySensor(
+                    description,
+                    device.config,
+                    device.api,
+                    component,
+                )
+                for component in component_list
+                for description in entity_description_list
+                if is_supported(description.key, description, component)
             )
     return entities
 
@@ -170,13 +165,13 @@ class ViCareBinarySensor(ViCareEntity, BinarySensorEntity):
 
     def __init__(
         self,
+        description: ViCareBinarySensorEntityDescription,
         device_config: PyViCareDeviceConfig,
         device: PyViCareDevice,
-        component: PyViCareHeatingDeviceComponent,
-        description: ViCareBinarySensorEntityDescription,
+        component: PyViCareHeatingDeviceComponent | None = None,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(device_config, device, component, description.key)
+        super().__init__(description.key, device_config, device, component)
         self.entity_description = description
 
     @property

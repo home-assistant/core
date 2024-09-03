@@ -34,7 +34,11 @@
     }
   },
   "services": {
-    "override_schedule": "mdi:debug-step-over",
-    "override_schedule_work_area": "mdi:land-fields"
+    "override_schedule": {
+      "service": "mdi:debug-step-over"
+    },
+    "override_schedule_work_area": {
+      "service": "mdi:land-fields"
+    }
   }
 }

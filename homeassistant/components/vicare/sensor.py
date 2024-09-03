@@ -747,7 +747,6 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
     ),
 )
 
-
 CIRCUIT_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
     ViCareSensorEntityDescription(
         key="supply_temperature",
@@ -867,16 +866,13 @@ def _build_entities(
     for device in device_list:
         # add device entities
         entities.extend(
-            [
-                ViCareSensor(
-                    device.config,
-                    device.api,
-                    None,
-                    description,
-                )
-                for description in GLOBAL_SENSORS
-                if is_supported(description.key, description, device.api)
-            ]
+            ViCareSensor(
+                description,
+                device.config,
+                device.api,
+            )
+            for description in GLOBAL_SENSORS
+            if is_supported(description.key, description, device.api)
         )
         # add component entities
         for component_list, entity_description_list in (
@@ -885,17 +881,15 @@ def _build_entities(
             (get_compressors(device.api), COMPRESSOR_SENSORS),
         ):
             entities.extend(
-                [
-                    ViCareSensor(
-                        device.config,
-                        device.api,
-                        component,
-                        description,
-                    )
-                    for component in component_list
-                    for description in entity_description_list
-                    if is_supported(description.key, description, component)
-                ]
+                ViCareSensor(
+                    description,
+                    device.config,
+                    device.api,
+                    component,
+                )
+                for component in component_list
+                for description in entity_description_list
+                if is_supported(description.key, description, component)
             )
     return entities
 
@@ -912,7 +906,9 @@ async def async_setup_entry(
         await hass.async_add_executor_job(
             _build_entities,
             device_list,
-        )
+        ),
+        # run update to have device_class set depending on unit_of_measurement
+        True,
     )
 
 
@@ -923,16 +919,14 @@ class ViCareSensor(ViCareEntity, SensorEntity):
 
     def __init__(
         self,
+        description: ViCareSensorEntityDescription,
         device_config: PyViCareDeviceConfig,
         device: PyViCareDevice,
-        component: PyViCareHeatingDeviceComponent | None,
-        description: ViCareSensorEntityDescription,
+        component: PyViCareHeatingDeviceComponent | None = None,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(device_config, device, component, description.key)
+        super().__init__(description.key, device_config, device, component)
         self.entity_description = description
-        # run update to have device_class set depending on unit_of_measurement
-        self.update()
 
     @property
     def available(self) -> bool:
