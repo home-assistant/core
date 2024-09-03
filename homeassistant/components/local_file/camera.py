@@ -19,7 +19,7 @@ from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import DEFAULT_NAME, DOMAIN, SERVICE_UPDATE_FILE_PATH
+from .const import DEFAULT_NAME, SERVICE_UPDATE_FILE_PATH
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -95,11 +95,7 @@ class LocalFile(Camera):
         if not await self.hass.async_add_executor_job(
             check_file_path_access, file_path
         ):
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="file_path_not_accessible",
-                translation_placeholders={"file_path": file_path},
-            )
+            raise ServiceValidationError(f"Path {file_path} is not accessible")
         self._file_path = file_path
         self.schedule_update_ha_state()
 
