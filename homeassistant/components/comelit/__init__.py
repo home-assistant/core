@@ -20,6 +20,8 @@ BRIDGE_PLATFORMS = [
 VEDO_PLATFORMS = [
     Platform.ALARM_CONTROL_PANEL,
     Platform.SENSOR,
+    Platform.SWITCH,
+    Platform.BINARY_SENSOR,
 ]
 
 
