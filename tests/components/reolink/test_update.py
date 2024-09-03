@@ -122,6 +122,10 @@ async def test_update_firm(
         )
 
     # test _async_update_future
+    reolink_connect.camera_sw_version.return_value = "v3.3.0.226_23031644"
+    reolink_connect.firmware_update_available.return_value = False
     freezer.tick(POLL_AFTER_INSTALL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == STATE_OFF
