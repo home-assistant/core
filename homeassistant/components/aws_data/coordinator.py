@@ -1,8 +1,10 @@
 """Define AWS Data DataUpdateCoordinator."""
 
+from abc import abstractmethod
 from datetime import timedelta
 from logging import Logger
-from typing import Any
+from statistics import fmean
+from typing import Any, override
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -11,9 +13,16 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from .client import AWSDataClient
 from .const import (
     _LOGGER,
+    CONST_ACCOUNT,
     CONST_ACCOUNT_ID,
+    CONST_AWS_REGION,
+    CONST_FILTER,
+    CONST_SERVICE_NAME,
+    CONST_SERVICE_REASON,
     DOMAIN,
+    DOMAIN_DATA,
     EC2_METRIC_STATISTIC,
+    S3_METRIC_STATISTIC,
     SERVICE_CE,
     SERVICE_EC2,
     SERVICE_S3,
@@ -52,6 +61,7 @@ class AwsDataRegionCoordinator(DataUpdateCoordinator[dict]):
             name=name,
             update_interval=update_interval,
         )
+        self._metrics: dict[str, Any] = {}
 
     def _cloudWatchMetric(
         self, namespace: str, metric: str, unit: str, Dimensions: list
@@ -70,6 +80,25 @@ class AwsDataRegionCoordinator(DataUpdateCoordinator[dict]):
                 "Unit": unit,
             },
         }
+
+    def filter_data(self, service: str, reason: str = "Exclude") -> list:
+        """Filter from Configuration File."""
+        hass_data = self.hass.data.get(DOMAIN_DATA, {})
+        current_account = self._user_data[USER_INPUT_DATA][CONST_ACCOUNT_ID]
+        filters = []
+
+        for filt in hass_data.get(CONST_FILTER, []):
+            if (
+                current_account == filt.get(CONST_ACCOUNT)
+                and filt.get(CONST_SERVICE_NAME, "") == service
+                and filt.get(CONST_SERVICE_REASON, "Exclude") == reason
+            ):
+                filters.extend(filt["id"])
+        return filters
+
+    @abstractmethod
+    def get_metric(self, service_id: str, metric: str) -> float | str:
+        """Abstract Method to get Coordinator data."""
 
 
 class AwsDataEC2ServicesCoordinator(AwsDataRegionCoordinator):
@@ -95,11 +124,26 @@ class AwsDataEC2ServicesCoordinator(AwsDataRegionCoordinator):
             update_interval=update_interval,
         )
 
+    @override
+    def get_metric(self, service_id: str, metric: str) -> float | str:
+        """EC2 Metric Retrieval."""
+        service = self._metrics[SERVICE_EC2].get(service_id, {"Metrics": {}})
+        metrics = service.get("Metrics", {})
+        stats = metrics.get(metric, {})
+        avg = fmean(stats.get("Values", [0.0]))
+        for item in EC2_METRIC_STATISTIC:
+            if metric == item["metric"] and item["unit"] == "Bytes":
+                avg *= 8
+
+        return avg
+
     async def _ec2_data(self) -> dict[str, Any]:
         """Retrieve EC2 Metric Data."""
 
         instances: dict[str, Any] = {}
         volume_filter: dict[str, Any] = {}
+        filter_data_exc = self.filter_data(SERVICE_EC2)
+        filter_data_inc = self.filter_data(SERVICE_EC2, reason="Include")
         for reg in self._regions:
             ec2 = await self._awsAPI.serviceCall(
                 SERVICE_EC2,
@@ -116,38 +160,44 @@ class AwsDataEC2ServicesCoordinator(AwsDataRegionCoordinator):
                 },
                 region=reg,
             )
-            if "Reservations" in ec2:
-                for result in ec2["Reservations"]:
-                    for inst in result["Instances"]:
+            for result in ec2.get("Reservations", []):
+                for inst in result.get("Instances", []):
+
+                    def filt(inst=inst) -> bool:
+                        if inst["InstanceId"] not in filter_data_exc and (
+                            not filter_data_inc or inst["InstanceId"] in filter_data_inc
+                        ):
+                            return True
+                        return False
+
+                    if filt():
                         instances[inst["InstanceId"]] = {
                             "KeyName": inst["KeyName"],
-                            "Region": reg,
+                            CONST_AWS_REGION: reg,
                             "State": inst["State"],
                             "Placement": inst["Placement"],
                             "BlockDeviceMappings": inst["BlockDeviceMappings"],
                             "Volumes": {},
                             "Metrics": {},
                         }
-
             volumes = await self._awsAPI.serviceCall(
                 SERVICE_EC2, "ec2_storage_list", data=volume_filter
             )
-            if "Volumes" in volumes:
-                for vol in volumes["Volumes"]:
-                    for attach in vol["Attachments"]:
-                        if attach["InstanceId"] in instances:
-                            instances[attach["InstanceId"]]["Volumes"][
-                                vol["VolumeId"]
-                            ] = {
-                                "VolumeType": vol["VolumeType"],
-                                "Iops": vol["Iops"],
-                                "State": vol["State"],
-                                "Size": vol["Size"],
-                            }
-            for inst in instances.items():
+            for vol in volumes.get("Volumes", []):
+                for attach in vol.get("Attachments", []):
+                    if attach["InstanceId"] in instances:
+                        instances[attach["InstanceId"]]["Volumes"][vol["VolumeId"]] = {
+                            "VolumeType": vol["VolumeType"],
+                            "Iops": vol["Iops"],
+                            "State": vol["State"],
+                            "Size": vol["Size"],
+                        }
+
+            for inst, data in instances.items():
                 metrics = await self._awsAPI.serviceCall(
                     "cloudwatch",
                     "CloudWatch_Metrics",
+                    region=data[CONST_AWS_REGION],
                     data=[
                         self._cloudWatchMetric(
                             "AWS/EC2",
@@ -158,9 +208,8 @@ class AwsDataEC2ServicesCoordinator(AwsDataRegionCoordinator):
                         for metric_st in EC2_METRIC_STATISTIC
                     ],
                 )
-
                 if "MetricDataResults" in metrics:
-                    instances[inst]["Metrics"] = {
+                    data["Metrics"] = {
                         metric["Label"]: {
                             "Timestamps": metric["Timestamps"],
                             "Values": metric["Values"],
@@ -172,8 +221,8 @@ class AwsDataEC2ServicesCoordinator(AwsDataRegionCoordinator):
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Update data from AWS client library."""
-
-        return {SERVICE_EC2: await self._ec2_data()}
+        self._metrics = {SERVICE_EC2: await self._ec2_data()}
+        return self._metrics
 
 
 class AwsDataS3ServicesCoordinator(AwsDataRegionCoordinator):
@@ -199,34 +248,58 @@ class AwsDataS3ServicesCoordinator(AwsDataRegionCoordinator):
             update_interval=update_interval,
         )
 
+    @override
+    def get_metric(self, service_id: str, metric: str) -> float | str:
+        """S3 Metric Retrieval."""
+        service = self._metrics[SERVICE_S3].get(service_id, {"Metrics": {}})
+
+        value = float(service["Metrics"].get(metric, 0.0))
+        for item in S3_METRIC_STATISTIC:
+            if metric == item["metric"] and item["unit"] == "Bytes":
+                value *= 8
+        return value
+
     async def _s3_data(self):
         """Retrieve S3 Metric Data."""
         s3 = {}
+        filter_data_exc = self.filter_data(SERVICE_S3)
+        filter_data_inc = self.filter_data(SERVICE_S3, reason="Include")
         for reg in self._regions:
             s3_list = await self._awsAPI.serviceCall(SERVICE_S3, "s3_list", region=reg)
-            if "Buckets" in s3_list:
-                for bucket in s3_list["Buckets"]:
+            for bucket in s3_list.get("Buckets", []):
+
+                def filt(bucket=bucket) -> bool:
+                    if bucket["Name"] not in filter_data_exc and (
+                        not filter_data_inc or bucket["Name"] in filter_data_inc
+                    ):
+                        return True
+                    return False
+
+                if filt():
                     s3[bucket["Name"]] = {
                         "Name": bucket["Name"],
                         "CreationDate": bucket["CreationDate"],
-                        "Region": reg,
+                        CONST_AWS_REGION: reg,
                         "Metrics": {},
                     }
-            for bucket in s3.items():
+
+            for bucket, data in s3.items():
                 s3_size = await self._awsAPI.serviceCall(
                     SERVICE_S3,
                     "bucket_size",
                     region=reg,
-                    data={"Bucket": s3[bucket]["Name"], "Region": s3[bucket]["Region"]},
+                    data={
+                        "Bucket": bucket,
+                        "Region": data[CONST_AWS_REGION],
+                    },
                 )
-                s3[bucket]["Metrics"] = s3_size
-
+                data["Metrics"] = s3_size
         return s3
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Update data from AWS client library."""
-
-        return {SERVICE_S3: await self._s3_data()}
+        self._metrics = {SERVICE_S3: await self._s3_data()}
+        return self._metrics
 
 
 class AwsDataCEServicesCoordinator(AwsDataRegionCoordinator):
@@ -252,18 +325,24 @@ class AwsDataCEServicesCoordinator(AwsDataRegionCoordinator):
             update_interval=update_interval,
         )
 
+    @override
+    def get_metric(self, service_id: str, metric: str) -> float | str:
+        """Cost Explorer Metric Retrieval."""
+        service = self._metrics[SERVICE_CE].get(service_id, {"Metrics": {}})
+        return float(service["Metrics"].get(metric, 0.0))
+
     async def _ce_data(self):
-        """Retrieve S3 Metric Data."""
+        """Retrieve Cost Explorer Metric Data."""
         ce_cost = await self._awsAPI.serviceCall(
             SERVICE_CE, "Cost", data={"Start": self.update_interval}
         )
         total_cost = 0.0
-        if "ResultsByTime" in ce_cost:
-            for cost in ce_cost["ResultsByTime"]:
-                total_cost += float(cost["Total"]["AmortizedCost"]["Amount"])
-        return {SERVICE_CE: total_cost}
+        for cost in ce_cost.get("ResultsByTime", []):
+            total_cost += float(cost["Total"]["AmortizedCost"]["Amount"])
+
+        return {"monthly_cost": total_cost}
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Update data from AWS client library."""
-
-        return {SERVICE_CE: await self._ce_data()}
+        self._metrics = {SERVICE_CE: {"Global": {"Metrics": await self._ce_data()}}}
+        return self._metrics

@@ -2,17 +2,10 @@
 
 import asyncio
 from collections.abc import Callable
-<<<<<<< HEAD
-
-from botocore.client import BaseClient
-from botocore.config import Config
-from botocore.session import Session
-=======
 from typing import Any
 
 import boto3
 from botocore.config import Config
->>>>>>> 833ac3afab (Setup Coordinates)
 
 
 class awsBaseAPI:
@@ -48,29 +41,13 @@ class awsBaseAPI:
 
     def _asyncClient(self, serviceName: str, conf: Config | None = None):
         """Generate AWS Client Class."""
-<<<<<<< HEAD
-        return Session().create_client(
-=======
         return boto3.client(
->>>>>>> 833ac3afab (Setup Coordinates)
             serviceName,
             aws_access_key_id=self._key_id,
             aws_secret_access_key=self._key_secret,
             config=self._defaultConfig.merge(conf),
         )
 
-<<<<<<< HEAD
-    async def serviceCall(self, client: BaseClient, func: str, callback: Callable):
-        """Service call in async task."""
-        loop = asyncio.get_event_loop()
-        return await loop.run_in_executor(
-            None, self._asyncServiceCall, client, func, callback
-        )
-
-    def _asyncServiceCall(self, client: BaseClient, func: str, callback: Callable):
-        """Call callback for calling services functions."""
-        return callback(client, func)
-=======
     async def serviceCall(
         self,
         client: boto3.client,
@@ -93,4 +70,3 @@ class awsBaseAPI:
     ):
         """Call callback for calling services functions."""
         return callback(client, func, data)
->>>>>>> 833ac3afab (Setup Coordinates)

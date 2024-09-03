@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "title": "Add Service Monitor of AWS Data",
-        "description": "Set up AWS Region Monitor for Services.",
+        "description": "Please View Permissions Before Setup.",
         "data": {
           "aws_key": "AWS Client Key ID",
           "aws_secret": "AWS Client Key Secret"
@@ -14,33 +14,23 @@
         "description": "Set up AWS Region Monitor for Services.",
         "data": {
           "aws_region": "AWS Region",
-          "aws_region_str": "AWS Region",
           "aws_services": "Supported Services",
           "aws_scan_regions": "Monitor All Regions.",
-          "aws_general_region": "Add General Region"
+          "aws_ce_select": "Monitor Cost Explorer"
         },
         "data_description": {
-<<<<<<< HEAD
-          "aws_region": "Separated by comma (,)",
-          "aws_region_str": "Choose multiples from list",
-=======
-          "aws_region_str": "Separated by comma (,)",
-          "aws_region": "Choose multiples from list",
->>>>>>> 833ac3afab (Setup Coordinates)
+          "aws_region": "{region_text}",
           "aws_services": "Available services for monitoring",
-          "aws_general_region": "Gets only cost. Multiple Entries for different accounts.",
-          "aws_scan_regions": "Account Read Permisions Required."
+          "aws_scan_regions": "Account Read Permisions Required.",
+          "aws_ce_select": "Cost Explorer Permissions Required"
         }
       }
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "access_denied": "No Permissions To Service",
-<<<<<<< HEAD
-=======
-      "unauthorized_operation": "Specific Operation Has No Permissions",
->>>>>>> 833ac3afab (Setup Coordinates)
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "AccessDeniedException": "{error_message}",
+      "UnauthorizedOperation": "{error_message}",
+      "InvalidClientTokenId": "{error_message}",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {

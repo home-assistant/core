@@ -2,17 +2,17 @@
 
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .coordinator import AwsDataEC2ServicesCoordinator
+from .coordinator import AwsDataRegionCoordinator
 
 
-class AwsDataEC2RegionEntity(CoordinatorEntity[AwsDataEC2ServicesCoordinator]):
+class AwsDataEntity(CoordinatorEntity[AwsDataRegionCoordinator]):
     """Defines an AWS EC2 entity."""
 
     _attr_has_entity_name = True
 
     def __init__(
         self,
-        coordinator: AwsDataEC2ServicesCoordinator,
+        coordinator: AwsDataRegionCoordinator,
     ) -> None:
         """Initialize the AWS EC2 entity."""
         super().__init__(coordinator)

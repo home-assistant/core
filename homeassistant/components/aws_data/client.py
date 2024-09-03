@@ -2,14 +2,10 @@
 
 from __future__ import annotations
 
-<<<<<<< HEAD
-from botocore.client import BaseClient
-=======
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
 import boto3
->>>>>>> 833ac3afab (Setup Coordinates)
 from botocore.config import Config
 from botocore.exceptions import ClientError
 
@@ -37,17 +33,12 @@ class AWSDataClient:
         return self._api.getAccountID()
 
     async def serviceCall(
-<<<<<<< HEAD
-        self, serviceName: str, operation: str, region: str | None = None
-    ):
-=======
         self,
         serviceName: str,
         operation: str,
         region: str | None = None,
         data: dict | list | None = None,
     ) -> dict[str, Any]:
->>>>>>> 833ac3afab (Setup Coordinates)
         """Service function call for supported services.
 
         Runs under separate async task to not block main loop.
@@ -58,36 +49,6 @@ class AWSDataClient:
         )
 
         return await self._api.serviceCall(
-<<<<<<< HEAD
-            client=client, func=operation, callback=self._callback
-        )
-
-    def _callback(self, client: BaseClient, func: str):
-        """Client callback for supported operations."""
-        data = {}
-        try:
-            if func == "id":
-                data = client.get_caller_identity()
-
-            if func == "list_regions":
-                data = client.list_regions(
-                    MaxResults=50,
-                    RegionOptStatusContains=["ENABLED", "ENABLED_BY_DEFAULT"],
-                )
-            if func == "ec2_compute":
-                _LOGGER.warning("Not Supported Yet")
-
-            if func == "ec2_networkOut":
-                _LOGGER.warning("Not Supported Yet")
-                # data = self._ec2(region=region)
-
-            client.close()
-        except ClientError as e:
-            _LOGGER.warning("Invalid Credentials: %s", e.response)
-            return e.response
-
-        return data
-=======
             client=client, func=operation, callback=self._callback, data=data
         )
 
@@ -126,13 +87,13 @@ class AWSDataClient:
                         isTruncated = objects["IsTruncated"]
                         if "NextContinuationToken" in objects:
                             continuation_token = objects["NextContinuationToken"]
-                        yield from objects["Contents"]
+                        yield from objects.get("Contents", [])
 
                 for cont in contents():
                     obj_count += 1
                     size += cont["Size"]
 
-                result = {"Size": size, "Objects": obj_count}
+                result = {"s3_size": size, "s3_objects": obj_count}
             if func == "CloudWatch_Metrics":
                 result = client.get_metric_data(
                     MetricDataQueries=data,
@@ -141,36 +102,32 @@ class AWSDataClient:
                 )
 
             if func == "Cost":
-                start_time = datetime.now(UTC)
+                current_time = datetime.now(UTC)
+                start_time: datetime = datetime.strptime(
+                    f"{current_time.year}-{current_time.month}-1", "%Y-%m-%d"
+                )
+                if current_time.day == 1:
+                    start_time = start_time - timedelta(days=1)
                 result = client.get_cost_and_usage(
                     TimePeriod={
-                        "Start": start_time.strftime("%Y-%m-01"),
-                        "End": datetime.now(UTC).strftime("%Y-%m-%d"),
+                        "Start": start_time.strftime("%Y-%m-%d"),
+                        "End": current_time.strftime("%Y-%m-%d"),
                     },
-                    Granularity="DAILY",
+                    Granularity="MONTHLY",
                     Metrics=["AmortizedCost"],
                 )
             client.close()
         except ClientError as e:
-            _LOGGER.warning("Invalid Credentials: %s", e.response)
+            _LOGGER.warning("API Error Call: %s", e.response)
             result = e.response
-        _LOGGER.warning(result)
         return result
 
     @staticmethod
     def error(result: dict) -> dict:
         """Handle Errors."""
         errors: dict[str, str] = {}
-        if "Error" in result:
-            errors["base"] = "unknown"
-            if result["Error"]["Code"] == "AccessDeniedException":
-                errors["base"] = "access_denied"
-                return errors
-            if result["Error"]["Code"] == "InvalidClientTokenId":
-                errors["base"] = "invalid_auth"
-                return errors
-            if result["Error"]["Code"] == "UnauthorizedOperation":
-                errors["base"] = "unauthorized_operation"
-
+        error = result.get("Error", {})
+        if error:
+            errors["base"] = error.get("Code", "unknown")
+            errors["message"] = error.get("Message", "Generic")
         return errors
->>>>>>> 833ac3afab (Setup Coordinates)
