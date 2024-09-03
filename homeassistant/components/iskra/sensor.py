@@ -15,7 +15,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     UnitOfApparentPower,
     UnitOfElectricCurrent,
@@ -27,6 +26,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import IskraConfigEntry
 from .const import (
     ATTR_FREQUENCY,
     ATTR_PHASE1_CURRENT,
@@ -171,19 +171,20 @@ SENSOR_TYPES: tuple[IskraSensorEntityDescription, ...] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: IskraConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Iskra sensors based on config_entry."""
 
     # Device that uses the config entry.
-    coordinators = entry.runtime_data.coordinators
+    coordinators = entry.runtime_data
 
     entities = []
 
     # Add sensors for each device.
     for coordinator in coordinators:
         device = coordinator.device
-        await coordinator.async_config_entry_first_refresh()
         sensors = []
 
         # Add measurement sensors.
@@ -225,15 +226,9 @@ class IskraSensor(IskraEntity, SensorEntity):
         description: IskraSensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
+        super().__init__(coordinator)
         self.entity_description = description
         self._attr_unique_id = f"{coordinator.device.serial}_{description.key}"
-        self._unique_id = self._attr_unique_id
-        super().__init__(coordinator)
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique ID."""
-        return self._unique_id
 
     @property
     def native_value(self) -> float | None:

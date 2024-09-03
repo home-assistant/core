@@ -24,9 +24,8 @@ class IskraDataUpdateCoordinator(DataUpdateCoordinator[None]):
 
     def __init__(self, hass: HomeAssistant, device: Device) -> None:
         """Initialize."""
-        self._device = device
+        self.device = device
         self.name = device.serial
-        self._is_available = False
 
         update_interval = timedelta(seconds=60)
 
@@ -36,11 +35,6 @@ class IskraDataUpdateCoordinator(DataUpdateCoordinator[None]):
             name=DOMAIN,
             update_interval=update_interval,
         )
-
-    @property
-    def device(self):
-        """Return the device."""
-        return self._device
 
     async def _async_update_data(self):
         """Fetch data from Iskra device."""

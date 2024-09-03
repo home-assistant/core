@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 from datetime import timedelta
 import logging
 
@@ -27,21 +26,10 @@ from homeassistant.helpers import device_registry as dr
 from .const import DOMAIN, MANUFACTURER
 from .coordinator import IskraDataUpdateCoordinator
 
-
-@dataclass
-class IskraRuntimeData:
-    """IskraRuntimeData class represents the runtime data for the Iskra component.
-
-    It holds a list of coordinators.
-    """
-
-    coordinators: list[IskraDataUpdateCoordinator]
-
-
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 
-type IskraConfigEntry = ConfigEntry[Device]
+type IskraConfigEntry = ConfigEntry[list[IskraDataUpdateCoordinator]]
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 TIME_TILL_UNAVAILABLE = timedelta(minutes=5)
@@ -65,7 +53,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: IskraConfigEntry) -> boo
         authentication = None
         if (username := conf.get(CONF_USERNAME)) is not None and (
             password := conf.get(CONF_PASSWORD)
-        ):
+        ) is not None:
             authentication = {
                 "username": username,
                 "password": password,
@@ -105,7 +93,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: IskraConfigEntry) -> boo
     else:
         coordinators = [IskraDataUpdateCoordinator(hass, base_device)]
 
-    entry.runtime_data = IskraRuntimeData(coordinators)
+    for coordinator in coordinators:
+        await coordinator.async_config_entry_first_refresh()
+
+    entry.runtime_data = coordinators
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
