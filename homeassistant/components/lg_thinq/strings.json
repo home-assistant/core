@@ -32,7 +32,7 @@
         "name": "Power saving mode"
       },
       "remote_control_enabled": {
-        "name": "Remote start"
+        "name": "{location}Remote start"
       },
       "rinse_refill": {
         "name": "Rinse refill needed"
