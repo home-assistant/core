@@ -434,6 +434,10 @@ jobs:
     runs-on: ubuntu-24.04
     needs:
       - info
+    if: |
+      github.event.inputs.pylint-only != 'true'
+      && github.event.inputs.mypy-only != 'true'
+      && github.event.inputs.audit-licenses-only != 'true'
     strategy:
       fail-fast: false
       matrix:
