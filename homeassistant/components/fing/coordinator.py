@@ -4,13 +4,14 @@ from datetime import timedelta
 import logging
 from typing import Self
 
+from fing_agent_api import FingAgent
+from fing_agent_api.models import Device
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import AGENT_IP, AGENT_KEY, AGENT_PORT, DOMAIN
-from .fing_api.fing import Fing
-from .fing_api.models import Device
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -21,7 +22,7 @@ class FingDataFetcher:
     def __init__(self, hass: HomeAssistant, ip: str, port: int, key: str) -> None:
         """Initialize Fing entity data."""
         self._hass = hass
-        self._fing = Fing(ip, port, key)
+        self._fing = FingAgent(ip, port, key)
         self._network_id = None
         self._devices: dict[str, Device] = {}
 

@@ -3,20 +3,15 @@
 import asyncio
 from typing import Any
 
+from fing_agent_api import FingAgent
 import httpx
 import voluptuous as vol
 
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-    OptionsFlowWithConfigEntry,
-)
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 
 from .const import AGENT_IP, AGENT_KEY, AGENT_PORT, DOMAIN
-from .fing_api.fing import Fing
 
 
 def _get_data_schema(
@@ -46,7 +41,9 @@ def _get_data_schema(
 
 async def _verify_connection(user_input: dict[str, Any]) -> bool:
     """Verify the user data."""
-    fing_api = Fing(user_input[AGENT_IP], user_input[AGENT_PORT], user_input[AGENT_KEY])
+    fing_api = FingAgent(
+        user_input[AGENT_IP], user_input[AGENT_PORT], user_input[AGENT_KEY]
+    )
     response = await fing_api.get_devices()
     return response.network_id is not None
 
@@ -148,32 +145,4 @@ class FingConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_create_entry(
             title=self._user_input[CONF_NAME], data=self._user_input
-        )
-
-    # @staticmethod
-    # @callback
-    # def async_get_options_flow(
-    #     config_entry: ConfigEntry,
-    # ) -> OptionsFlow:
-    #     """Get the options flow for Met."""
-    #     return FingOptionsFlow(config_entry)
-
-
-class FingOptionsFlow(OptionsFlowWithConfigEntry):
-    """Options flow."""
-
-    async def async_step_init(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Configure options."""
-
-        if user_input is not None:
-            self.hass.config_entries.async_update_entry(
-                self._config_entry, title=user_input[CONF_NAME], data=user_input
-            )
-            return self.async_create_entry(title="", data={})
-
-        return self.async_show_form(
-            step_id="init",
-            data_schema=_get_data_schema(self.hass, config_entry=self._config_entry),
         )
