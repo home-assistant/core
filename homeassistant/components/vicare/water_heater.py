@@ -113,7 +113,7 @@ class ViCareWater(ViCareEntity, WaterHeaterEntity):
         circuit: PyViCareHeatingCircuit,
     ) -> None:
         """Initialize the DHW water_heater device."""
-        super().__init__(device_config, device, circuit.id)
+        super().__init__(circuit.id, device_config, device)
         self._circuit = circuit
         self._attributes: dict[str, Any] = {}
 
