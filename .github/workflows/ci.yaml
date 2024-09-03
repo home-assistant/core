@@ -429,17 +429,26 @@ jobs:
           . venv/bin/activate
           pre-commit run --show-diff-on-failure --hook-stage manual codespell --all-files
 
+  lint-hadolint:
+    name: Check Dockerfiles
+    runs-on: ubuntu-24.04
+    needs:
+      - info
+      - pre-commit
+    strategy:
+      matrix:
+        file:
+          - Dockerfile
+          - Dockerfile.dev
+          - script/hassfest/docker/Dockerfile
+    steps:
       - name: Register hadolint problem matcher
         run: |
           echo "::add-matcher::.github/workflows/matchers/hadolint.json"
-      - name: Check Dockerfile
-        uses: docker://hadolint/hadolint:v1.18.2
+      - name: Check ${{ matrix.file }}
+        uses: docker://hadolint/hadolint:v2.12.0
         with:
-          args: hadolint Dockerfile
-      - name: Check Dockerfile.dev
-        uses: docker://hadolint/hadolint:v1.18.2
-        with:
-          args: hadolint Dockerfile.dev
+          args: hadolint ${{ matrix.file }}
 
   base:
     name: Prepare dependencies
