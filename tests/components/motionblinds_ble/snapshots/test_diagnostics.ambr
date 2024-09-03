@@ -2,13 +2,12 @@
 # name: test_diagnostics
   dict({
     'device': dict({
-      '_calibration_type': None,
-      '_connection_type': 'disconnected',
-      '_end_position_info': None,
-      '_position': None,
-      '_tilt': None,
       'blind_type': 'Roller blind',
-      'display_name': 'Motionblind cccc',
+      'calibration_type': None,
+      'connection_type': 'disconnected',
+      'end_position_info': None,
+      'position': None,
+      'tilt': None,
       'timezone': None,
     }),
     'entry': dict({

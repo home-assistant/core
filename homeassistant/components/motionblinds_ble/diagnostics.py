@@ -34,22 +34,18 @@ async def async_get_config_entry_diagnostics(
             "entry": entry.as_dict(),
             "device": {
                 "blind_type": device.blind_type.value,
-                "display_name": device.display_name,
                 "timezone": device.timezone,
-                "_connection_type": device._connection_type.value,  # noqa: SLF001
-                "_end_position_info": None
+                "position": device._position,  # noqa: SLF001
+                "tilt": device._tilt,  # noqa: SLF001
+                "calibration_type": device._calibration_type.value  # noqa: SLF001
+                if device._calibration_type  # noqa: SLF001
+                else None,
+                "connection_type": device._connection_type.value,  # noqa: SLF001
+                "end_position_info": None
                 if not device._end_position_info  # noqa: SLF001
                 else {
                     "end_positions": device._end_position_info.end_positions.value,  # noqa: SLF001
                     "favorite": device._end_position_info.favorite_position,  # noqa: SLF001
-                },
-                **{
-                    attr: getattr(device, attr)
-                    for attr in (
-                        "_position",
-                        "_tilt",
-                        "_calibration_type",
-                    )
                 },
             },
         },
