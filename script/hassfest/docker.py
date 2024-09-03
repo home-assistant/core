@@ -82,7 +82,7 @@ WORKDIR "/github/workspace"
 COPY . /usr/src/homeassistant
 
 # Uv is only needed during build
-RUN --mount=from=ghcr.io/astral-sh/uv,source=/uv,target=/bin/uv \
+RUN --mount=from=ghcr.io/astral-sh/uv:{uv},source=/uv,target=/bin/uv \
     # Required for PyTurboJPEG
     apk add --no-cache libturbojpeg \
     && uv pip install \
