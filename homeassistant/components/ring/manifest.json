@@ -13,6 +13,6 @@
   "documentation": "https://www.home-assistant.io/integrations/ring",
   "iot_class": "cloud_polling",
   "loggers": ["ring_doorbell"],
-  "quality_scale": "silver",
+  "quality_scale": "gold",
   "requirements": ["ring-doorbell[listen]==0.9.3"]
 }
