@@ -1,10 +1,10 @@
 """Test the Google Photos config flow."""
 
 from collections.abc import Generator
-import http
 from typing import Any
 from unittest.mock import Mock, patch
 
+from google_photos_library_api.exceptions import GooglePhotosApiError
 import pytest
 
 from homeassistant import config_entries
@@ -36,6 +36,16 @@ def mock_setup_entry() -> Generator[Mock, None, None]:
         yield mock_setup
 
 
+@pytest.fixture(autouse=True)
+def mock_patch_api(mock_api: Mock) -> Generator[None, None, None]:
+    """Fixture to patch the config flow api."""
+    with patch(
+        "homeassistant.components.google_photos.config_flow.GooglePhotosLibraryApi",
+        return_value=mock_api,
+    ):
+        yield
+
+
 @pytest.fixture(name="updated_token_entry", autouse=True)
 def mock_updated_token_entry() -> dict[str, Any]:
     """Fixture to provide any test specific overrides to token data from the oauth token endpoint."""
@@ -59,7 +69,7 @@ def mock_token_request(
     )
 
 
-@pytest.mark.usefixtures("current_request_with_host", "setup_api")
+@pytest.mark.usefixtures("current_request_with_host", "mock_api")
 @pytest.mark.parametrize("fixture_name", ["list_mediaitems.json"])
 async def test_full_flow(
     hass: HomeAssistant,
@@ -125,12 +135,12 @@ async def test_full_flow(
 @pytest.mark.usefixtures(
     "current_request_with_host",
     "setup_credentials",
-    "setup_api",
+    "mock_api",
 )
 @pytest.mark.parametrize(
-    ("fixture_name", "api_http_status"),
+    "api_error",
     [
-        ("api_not_enabled_response.json", http.HTTPStatus.FORBIDDEN),
+        GooglePhotosApiError("some error"),
     ],
 )
 async def test_api_not_enabled(
@@ -169,15 +179,14 @@ async def test_api_not_enabled(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "access_not_configured"
-    assert result["description_placeholders"]["message"].endswith(
-        "Google Photos API has not been used in project 0 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/library/photoslibrary.googleapis.com/overview?project=0 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry."
-    )
+    assert result["description_placeholders"]["message"].endswith("some error")
 
 
 @pytest.mark.usefixtures("current_request_with_host", "setup_credentials")
 async def test_general_exception(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
+    mock_api: Mock,
 ) -> None:
     """Check flow aborts if exception happens."""
     result = await hass.config_entries.flow.async_init(
@@ -206,17 +215,15 @@ async def test_general_exception(
     assert resp.status == 200
     assert resp.headers["content-type"] == "text/html; charset=utf-8"
 
-    with patch(
-        "homeassistant.components.google_photos.config_flow.GooglePhotosLibraryApi.list_media_items",
-        side_effect=Exception,
-    ):
-        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    mock_api.list_media_items.side_effect = Exception
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "unknown"
 
 
-@pytest.mark.usefixtures("current_request_with_host", "setup_api", "setup_integration")
+@pytest.mark.usefixtures("current_request_with_host", "mock_api", "setup_integration")
 @pytest.mark.parametrize("fixture_name", ["list_mediaitems.json"])
 @pytest.mark.parametrize(
     "updated_token_entry",

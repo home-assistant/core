@@ -1,12 +1,18 @@
 """Test fixtures for Google Photos."""
 
-from collections.abc import Awaitable, Callable, Generator
-import http
-import re
+from collections.abc import AsyncGenerator, Awaitable, Callable, Generator
 import time
 from typing import Any
-from unittest.mock import Mock
+from unittest.mock import AsyncMock, Mock, patch
 
+from google_photos_library_api.api import GooglePhotosLibraryApi
+from google_photos_library_api.model import (
+    Album,
+    ListAlbumResult,
+    ListMediaItemResult,
+    MediaItem,
+    UserInfoResult,
+)
 import pytest
 
 from homeassistant.components.application_credentials import (
@@ -22,7 +28,6 @@ from tests.common import (
     load_json_array_fixture,
     load_json_object_fixture,
 )
-from tests.test_util.aiohttp import AiohttpClientMocker, AiohttpClientMockResponse
 
 USER_IDENTIFIER = "user-identifier-1"
 CONFIG_ENTRY_ID = "user-identifier-1"
@@ -109,76 +114,83 @@ def mock_user_identifier() -> str | None:
     return USER_IDENTIFIER
 
 
-@pytest.fixture(name="api_http_status")
-def mock_api_http_status() -> http.HTTPStatus:
+@pytest.fixture(name="api_error")
+def mock_api_error() -> Exception | None:
     """Provide a json fixture file to load for list media item api responses."""
-    return http.HTTPStatus.OK
+    return None
 
 
-@pytest.fixture(name="setup_api")
-def mock_setup_api(
-    aioclient_mock: AiohttpClientMocker,
+@pytest.fixture(name="mock_api")
+def mock_client_api(
     fixture_name: str,
     user_identifier: str,
-    api_http_status: http.HTTPStatus,
+    api_error: Exception,
 ) -> Generator[Mock, None, None]:
     """Set up fake Google Photos API responses from fixtures."""
-
-    aioclient_mock.get(
-        USERINFO_URL,
-        json={
-            "id": user_identifier,
-            "name": "Test Name",
-            "email": "test.name@gmail.com",
-        },
+    mock_api = AsyncMock(GooglePhotosLibraryApi, autospec=True)
+    mock_api.get_user_info.return_value = UserInfoResult(
+        id=user_identifier,
+        name="Test Name",
+        email="test.name@gmail.com",
     )
+
     responses = load_json_array_fixture(fixture_name, DOMAIN) if fixture_name else []
-    for response in responses or [{}]:
-        aioclient_mock.get(
-            MEDIA_ITEMS_URL,
-            json=response,
-            status=api_http_status,
-        )
-        aioclient_mock.post(
-            f"{MEDIA_ITEMS_URL}:search",
-            json=response,
-            status=api_http_status,
-        )
+
+    async def list_media_items(
+        *args: Any,
+    ) -> AsyncGenerator[ListMediaItemResult, None, None]:
+        for response in responses:
+            mock_list_media_items = Mock(ListMediaItemResult)
+            mock_list_media_items.media_items = [
+                MediaItem.from_dict(media_item) for media_item in response["mediaItems"]
+            ]
+            yield mock_list_media_items
+
+    mock_api.list_media_items.return_value.__aiter__ = list_media_items
+    mock_api.list_media_items.return_value.__anext__ = list_media_items
+    mock_api.list_media_items.side_effect = api_error
 
     # Mock a point lookup by reading contents of the fixture above
-    async def get_media_item(
-        method: str, url: Any, *kwargs: Any
-    ) -> AiohttpClientMockResponse:
-        media_item_id = url.path.split("/")[-1]
-        json_result: dict[str, Any] | None = None
+    async def get_media_item(media_item_id: str, **kwargs: Any) -> Mock:
         for response in responses:
             for media_item in response["mediaItems"]:
                 if media_item["id"] == media_item_id:
-                    json_result = media_item
-                    break
-        return AiohttpClientMockResponse(
-            method=method, url=url, json=json_result, status=api_http_status
-        )
+                    return MediaItem.from_dict(media_item)
+        return None
 
-    aioclient_mock.get(
-        re.compile(f"{MEDIA_ITEMS_URL}/.*"),
-        side_effect=get_media_item,
-    )
-    aioclient_mock.get(
-        ALBUMS_URL,
-        json=load_json_object_fixture("list_albums.json", DOMAIN),
-        status=api_http_status,
-    )
+    mock_api.get_media_item = get_media_item
+
+    # Emulate an async iterator for returning pages of response objects. We just
+    # return a single page.
+
+    async def list_albums(
+        *args: Any, **kwargs: Any
+    ) -> AsyncGenerator[ListAlbumResult, None, None]:
+        mock_list_album_result = Mock(ListAlbumResult)
+        mock_list_album_result.albums = [
+            Album.from_dict(album)
+            for album in load_json_object_fixture("list_albums.json", DOMAIN)["albums"]
+        ]
+        yield mock_list_album_result
+
+    mock_api.list_albums.return_value.__aiter__ = list_albums
+    mock_api.list_albums.return_value.__anext__ = list_albums
+    mock_api.list_albums.side_effect = api_error
+    return mock_api
 
 
 @pytest.fixture(name="setup_integration")
 async def mock_setup_integration(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    aioclient_mock: AiohttpClientMocker,
+    mock_api: Mock,
 ) -> Callable[[], Awaitable[bool]]:
     """Fixture to set up the integration."""
     config_entry.add_to_hass(hass)
 
-    await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
+    with patch(
+        "homeassistant.components.google_photos.GooglePhotosLibraryApi",
+        return_value=mock_api,
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
