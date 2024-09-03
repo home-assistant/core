@@ -750,10 +750,9 @@ class ZWaveMeterSensor(ZWaveNumericSensor):
                 CommandClass.METER, "reset", *args, wait_for_result=False
             )
         except BaseZwaveJSServerError as err:
-            LOGGER.error(
-                "Failed to reset meters on node %s endpoint %s: %s", node, endpoint, err
-            )
-            raise HomeAssistantError from err
+            raise HomeAssistantError(
+                f"Failed to reset meters on node {node} endpoint {endpoint}: {err}"
+            ) from err
         LOGGER.debug(
             "Meters on node %s endpoint %s reset with the following options: %s",
             node,

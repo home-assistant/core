@@ -522,13 +522,18 @@ async def test_reset_meter(
         "test", 1, "test"
     )
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
             DOMAIN,
             SERVICE_RESET_METER,
             {ATTR_ENTITY_ID: METER_ENERGY_SENSOR},
             blocking=True,
         )
+
+    assert str(err.value) == (
+        "Failed to reset meters on node Node(node_id=102) endpoint 0: "
+        "zwave_error: Z-Wave error 1 - test"
+    )
 
 
 async def test_meter_attributes(
