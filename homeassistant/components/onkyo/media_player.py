@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-from dataclasses import dataclass
 import logging
 from typing import Any
 
@@ -29,6 +28,8 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.hass_dict import HassKey
+
+from .receiver import Receiver, ReceiverInfo
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -143,16 +144,6 @@ ONKYO_SELECT_OUTPUT_SCHEMA = vol.Schema(
 SERVICE_SELECT_HDMI_OUTPUT = "onkyo_select_hdmi_output"
 
 
-@dataclass
-class ReceiverInfo:
-    """Onkyo Receiver information."""
-
-    host: str
-    port: int
-    model_name: str
-    identifier: str
-
-
 async def async_register_services(hass: HomeAssistant) -> None:
     """Register Onkyo services."""
 
@@ -189,7 +180,7 @@ async def async_setup_platform(
     """Set up the Onkyo platform."""
     await async_register_services(hass)
 
-    receivers: dict[str, pyeiscp.Connection] = {}  # indexed by host
+    receivers: dict[str, Receiver] = {}  # indexed by host
     all_entities = hass.data.setdefault(DATA_MP_ENTITIES, [])
 
     host = config.get(CONF_HOST)
@@ -234,31 +225,34 @@ async def async_setup_platform(
             """Receiver (re)connected."""
             receiver = receivers[origin]
             _LOGGER.debug(
-                "Receiver (re)connected: %s (%s)", receiver.name, receiver.host
+                "Receiver (re)connected: %s (%s)", receiver.name, receiver.conn.host
             )
 
             for entity in entities.values():
                 entity.backfill_state()
 
         _LOGGER.debug("Creating receiver: %s (%s)", info.model_name, info.host)
-        receiver = await pyeiscp.Connection.create(
+        connection = await pyeiscp.Connection.create(
             host=info.host,
             port=info.port,
             update_callback=async_onkyo_update_callback,
             connect_callback=async_onkyo_connect_callback,
         )
 
-        receiver.model_name = info.model_name
-        receiver.identifier = info.identifier
-        receiver.name = name or info.model_name
-        receiver.discovered = discovered
+        receiver = Receiver(
+            conn=connection,
+            model_name=info.model_name,
+            identifier=info.identifier,
+            name=name or info.model_name,
+            discovered=discovered,
+        )
 
-        receivers[receiver.host] = receiver
+        receivers[connection.host] = receiver
 
         # Discover what zones are available for the receiver by querying the power.
         # If we get a response for the specific zone, it means it is available.
         for zone in ZONES:
-            receiver.query_property(zone, "power")
+            receiver.conn.query_property(zone, "power")
 
         # Add the main zone to entities, since it is always active.
         _LOGGER.debug("Adding Main Zone on %s", receiver.name)
@@ -306,7 +300,7 @@ async def async_setup_platform(
     @callback
     def close_receiver(_event):
         for receiver in receivers.values():
-            receiver.close()
+            receiver.conn.close()
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, close_receiver)
 
@@ -323,7 +317,7 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
 
     def __init__(
         self,
-        receiver: pyeiscp.Connection,
+        receiver: Receiver,
         sources: dict[str, str],
         zone: str,
         max_volume: int,
@@ -369,12 +363,12 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
     @callback
     def _update_receiver(self, propname: str, value: Any) -> None:
         """Update a property in the receiver."""
-        self._receiver.update_property(self._zone, propname, value)
+        self._receiver.conn.update_property(self._zone, propname, value)
 
     @callback
     def _query_receiver(self, propname: str) -> None:
         """Cause the receiver to send an update about a property."""
-        self._receiver.query_property(self._zone, propname)
+        self._receiver.conn.query_property(self._zone, propname)
 
     async def async_turn_on(self) -> None:
         """Turn the media player on."""
