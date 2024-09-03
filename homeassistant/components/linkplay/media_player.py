@@ -48,6 +48,17 @@ SOURCE_MAP: dict[PlayingMode, str] = {
     PlayingMode.XLR: "XLR",
     PlayingMode.HDMI: "HDMI",
     PlayingMode.OPTICAL_2: "Optical 2",
+    PlayingMode.EXTERN_BLUETOOTH: "External Bluetooth",
+    PlayingMode.PHONO: "Phono",
+    PlayingMode.ARC: "ARC",
+    PlayingMode.COAXIAL_2: "Coaxial 2",
+    PlayingMode.TF_CARD_1: "SD Card 1",
+    PlayingMode.TF_CARD_2: "SD Card 2",
+    PlayingMode.CD: "CD",
+    PlayingMode.DAB: "DAB Radio",
+    PlayingMode.FM: "FM Radio",
+    PlayingMode.RCA: "RCA",
+    PlayingMode.UDISK: "USB",
 }
 
 SOURCE_MAP_INV: dict[str, PlayingMode] = {v: k for k, v in SOURCE_MAP.items()}
