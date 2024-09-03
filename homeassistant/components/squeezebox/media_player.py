@@ -314,14 +314,14 @@ class SqueezeBoxEntity(MediaPlayerEntity):
         return MediaType.MUSIC
 
     @property
-    def media_duration(self) -> int | None:
+    def media_duration(self) -> int:
         """Duration of current playing media in seconds."""
-        return int(self._player.duration)
+        return int(self._player.duration) if self._player.duration else 0
 
     @property
-    def media_position(self) -> int | None:
+    def media_position(self) -> int:
         """Position of current playing media in seconds."""
-        return int(self._player.time)
+        return int(self._player.time) if self._player.time else 0
 
     @property
     def media_position_updated_at(self) -> datetime | None:
