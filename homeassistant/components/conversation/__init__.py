@@ -214,15 +214,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         hass, entity_component, config.get(DOMAIN, {}).get("intents", {})
     )
 
-    # Temporary migration. We can remove this in 2024.10
-    from homeassistant.components.assist_pipeline import (  # pylint: disable=import-outside-toplevel
-        async_migrate_engine,
-    )
-
-    async_migrate_engine(
-        hass, "conversation", OLD_HOME_ASSISTANT_AGENT, HOME_ASSISTANT_AGENT
-    )
-
     async def handle_process(service: ServiceCall) -> ServiceResponse:
         """Parse text into commands."""
         text = service.data[ATTR_TEXT]
