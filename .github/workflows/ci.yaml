@@ -430,7 +430,7 @@ jobs:
           pre-commit run --show-diff-on-failure --hook-stage manual codespell --all-files
 
   lint-hadolint:
-    name: Check Dockerfiles
+    name: Check ${{ matrix.file }}
     runs-on: ubuntu-24.04
     needs:
       - info
@@ -442,6 +442,8 @@ jobs:
           - Dockerfile.dev
           - script/hassfest/docker/Dockerfile
     steps:
+      - name: Check out code from GitHub
+        uses: actions/checkout@v4.1.7
       - name: Register hadolint problem matcher
         run: |
           echo "::add-matcher::.github/workflows/matchers/hadolint.json"
