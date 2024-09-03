@@ -6,9 +6,17 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.const import CONF_HOST, CONF_NAME
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.selector import selector
 
-from .const import DOMAIN, SKY_REMOTE_CONFIG_SCHEMA
+from .const import CONF_LEGACY_CONTROL_PORT, DOMAIN
+
+DATA_SCHEMA = {
+    vol.Required(CONF_HOST): cv.string,
+    vol.Required(CONF_NAME): cv.string,
+    vol.Optional(CONF_LEGACY_CONTROL_PORT, default=False): selector({"boolean": None}),
+}
 
 
 class SkyRemoteConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -16,10 +24,6 @@ class SkyRemoteConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
     MINOR_VERSION = 1
-    DATA_SCHEMA: dict[Any, Any] = {
-        **SKY_REMOTE_CONFIG_SCHEMA,
-        "legacy_port": selector({"boolean": None}),
-    }
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -32,9 +36,7 @@ class SkyRemoteConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 data=user_input,
             )
 
-        return self.async_show_form(
-            step_id="user", data_schema=vol.Schema(self.DATA_SCHEMA)
-        )
+        return self.async_show_form(step_id="user", data_schema=vol.Schema(DATA_SCHEMA))
 
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
@@ -54,6 +56,6 @@ class SkyRemoteConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="reconfigure",
             data_schema=self.add_suggested_values_to_schema(
-                vol.Schema(self.DATA_SCHEMA), entry.data
+                vol.Schema(DATA_SCHEMA), entry.data
             ),
         )
