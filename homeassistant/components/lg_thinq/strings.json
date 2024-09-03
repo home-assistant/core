@@ -32,13 +32,220 @@
         "name": "Power saving mode"
       },
       "remote_control_enabled": {
-        "name": "Remote start"
+        "name": "{location}Remote start"
       },
       "rinse_refill": {
         "name": "Rinse refill needed"
       },
       "sabbath_mode": {
         "name": "Sabbath"
+      }
+    },
+    "sensor": {
+      "error": {
+        "name": "Error"
+      },
+      "notification": {
+        "name": "Notification"
+      },
+      "pm1": {
+        "name": "PM1.0"
+      },
+      "pm2": {
+        "name": "PM2.5"
+      },
+      "pm10": {
+        "name": "PM10"
+      },
+      "odor": {
+        "name": "Odor",
+        "state": {
+          "1": "Weak",
+          "2": "Normal",
+          "3": "Strong",
+          "4": "Very strong"
+        }
+      },
+      "humidity": {
+        "name": "Humidity"
+      },
+      "current_humidity": {
+        "name": "Current humidity"
+      },
+      "current_temperature": {
+        "name": "Current temperature"
+      },
+      "temperature": {
+        "name": "Temperature"
+      },
+      "total_pollution": {
+        "name": "Overall air quality",
+        "state": {
+          "0": "Sensor power-off state",
+          "1": "Good",
+          "2": "Moderate",
+          "3": "Unhealthy",
+          "4": "Poor"
+        }
+      },
+      "monitoring_enabled": {
+        "name": "Air quality sensor"
+      },
+      "growth_mode": {
+        "name": "{location}Mode"
+      },
+      "wind_volume": {
+        "name": "{location}Wind speed"
+      },
+      "brightness": {
+        "name": "{location}Lighting intensity"
+      },
+      "duration": {
+        "name": "{location}Lighting duration"
+      },
+      "day_target_temperature": {
+        "name": "{location}Day growth temperature"
+      },
+      "night_target_temperature": {
+        "name": "{location}Night growth temperature"
+      },
+      "temperature_state": {
+        "name": "{location}Temperature"
+      },
+      "current_state": {
+        "name": "{location}Current status"
+      },
+      "detergent_setting": {
+        "name": "{location}Default detergent"
+      },
+      "door_state": {
+        "name": "Door open"
+      },
+      "fresh_air_filter": {
+        "name": "Fresh air filter"
+      },
+      "filter_lifetime": {
+        "name": "Filter remaining"
+      },
+      "used_time": {
+        "name": "Water filter used"
+      },
+      "current_job_mode": {
+        "name": "Operating mode"
+      },
+      "current_job_mode_stick_cleaner": {
+        "name": "Operating mode"
+      },
+      "personalization_mode": {
+        "name": "Personal mode"
+      },
+      "current_dish_washing_course": {
+        "name": "Current cycle"
+      },
+      "rinse_level": {
+        "name": "Rinse aid dispenser level"
+      },
+      "softening_level": {
+        "name": "Softening level"
+      },
+      "machine_clean_reminder": {
+        "name": "Machine clean reminder"
+      },
+      "signal_level": {
+        "name": "Chime sound"
+      },
+      "clean_light_reminder": {
+        "name": "Clean indicator light"
+      },
+      "cock_state": {
+        "name": "UVnano"
+      },
+      "sterilizing_state": {
+        "name": "High-temp sterilization"
+      },
+      "water_type": {
+        "name": "Type"
+      },
+      "target_temperature": {
+        "name": "{location}Temperature"
+      },
+      "one_touch_filter": {
+        "name": "Fresh air filter"
+      },
+      "operation_mode": {
+        "name": "Power"
+      },
+      "elapsed_day_state": {
+        "name": "Brewing period"
+      },
+      "elapsed_day_total": {
+        "name": "Brewing duration"
+      },
+      "recipe_name": {
+        "name": "Homebrew recipe"
+      },
+      "wort_info": {
+        "name": "Wort"
+      },
+      "yeast_info": {
+        "name": "Yeast"
+      },
+      "hop_oil_info": {
+        "name": "Hops"
+      },
+      "flavor_info": {
+        "name": "Flavor"
+      },
+      "beer_remain": {
+        "name": "Recipe progress"
+      },
+      "battery_level": {
+        "name": "Battery"
+      },
+      "battery_percent": {
+        "name": "Battery"
+      },
+      "relative_to_start": {
+        "name": "{location}Schedule turn-on"
+      },
+      "relative_to_start_wm": {
+        "name": "{location}Delay starts in"
+      },
+      "relative_to_stop": {
+        "name": "{location}Schedule turn-off"
+      },
+      "relative_to_stop_wm": {
+        "name": "{location}Delay ends in"
+      },
+      "sleep_timer_relative_to_stop": {
+        "name": "{location}Sleep timer"
+      },
+      "absolute_to_start": {
+        "name": "{location}Schedule turn-on"
+      },
+      "absolute_to_stop": {
+        "name": "{location}Schedule turn-off"
+      },
+      "remain": {
+        "name": "{location}Remaining time"
+      },
+      "running": {
+        "name": "{location}Running time"
+      },
+      "total": {
+        "name": "{location}Total time"
+      },
+      "target": {
+        "name": "{location}Cook time"
+      },
+      "light_start": {
+        "name": "{location}Lights on time"
+      },
+      "light_end": {
+        "name": "{location}Lights off time"
+      },
+      "power_level": {
+        "name": "{location}Power level"
       }
     }
   }

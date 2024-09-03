@@ -21,6 +21,200 @@
       "sabbath_mode": {
         "default": "mdi:food-off-outline"
       }
+    },
+    "sensor": {
+      "error": {
+        "default": "mdi:alert-circle-outline"
+      },
+      "notification": {
+        "default": "mdi:message-badge-outline"
+      },
+      "pm1": {
+        "default": "mdi:molecule"
+      },
+      "pm2": {
+        "default": "mdi:molecule"
+      },
+      "pm10": {
+        "default": "mdi:molecule"
+      },
+      "odor": {
+        "default": "mdi:scent"
+      },
+      "humidity": {
+        "default": "mdi:water-percent"
+      },
+      "current_humidity": {
+        "default": "mdi:water-percent"
+      },
+      "current_temperature": {
+        "default": "mdi:thermometer"
+      },
+      "temperature": {
+        "default": "mdi:thermometer"
+      },
+      "total_pollution": {
+        "default": "mdi:air-filter"
+      },
+      "monitoring_enabled": {
+        "default": "mdi:monitor-eye"
+      },
+      "growth_mode": {
+        "default": "mdi:sprout-outline"
+      },
+      "wind_volume": {
+        "default": "mdi:wind-power-outline"
+      },
+      "brightness": {
+        "default": "mdi:tune-vertical-variant"
+      },
+      "duration": {
+        "default": "mdi:tune-vertical-variant"
+      },
+      "day_target_temperature": {
+        "default": "mdi:thermometer"
+      },
+      "night_target_temperature": {
+        "default": "mdi:thermometer"
+      },
+      "temperature_state": {
+        "default": "mdi:thermometer"
+      },
+      "current_state": {
+        "default": "mdi:list-status"
+      },
+      "detergent_setting": {
+        "default": "mdi:tune-vertical-variant"
+      },
+      "door_state": {
+        "default": "mdi:door"
+      },
+      "fresh_air_filter": {
+        "default": "mdi:air-filter"
+      },
+      "filter_lifetime": {
+        "default": "mdi:air-filter"
+      },
+      "used_time": {
+        "default": "mdi:air-filter"
+      },
+      "current_job_mode": {
+        "default": "mdi:dots-circle"
+      },
+      "current_job_mode_stick_cleaner": {
+        "default": "mdi:dots-circle"
+      },
+      "personalization_mode": {
+        "default": "mdi:dots-circle"
+      },
+      "current_dish_washing_course": {
+        "default": "mdi:format-list-checks"
+      },
+      "rinse_level": {
+        "default": "mdi:tune-vertical-variant"
+      },
+      "softening_level": {
+        "default": "mdi:tune-vertical-variant"
+      },
+      "machine_clean_reminder": {
+        "default": "mdi:tune-vertical-variant"
+      },
+      "signal_level": {
+        "default": "mdi:tune-vertical-variant"
+      },
+      "clean_light_reminder": {
+        "default": "mdi:tune-vertical-variant"
+      },
+      "cock_state": {
+        "default": "mdi:air-filter"
+      },
+      "sterilizing_state": {
+        "default": "mdi:water-alert-outline"
+      },
+      "water_type": {
+        "default": "mdi:water"
+      },
+      "target_temperature": {
+        "default": "mdi:thermometer"
+      },
+      "one_touch_filter": {
+        "default": "mdi:air-filter"
+      },
+      "operation_mode": {
+        "default": "mdi:power"
+      },
+      "elapsed_day_state": {
+        "default": "mdi:calendar-range-outline"
+      },
+      "elapsed_day_total": {
+        "default": "mdi:calendar-range-outline"
+      },
+      "recipe_name": {
+        "default": "mdi:information-box-outline"
+      },
+      "wort_info": {
+        "default": "mdi:information-box-outline"
+      },
+      "yeast_info": {
+        "default": "mdi:information-box-outline"
+      },
+      "hop_oil_info": {
+        "default": "mdi:information-box-outline"
+      },
+      "flavor_info": {
+        "default": "mdi:information-box-outline"
+      },
+      "beer_remain": {
+        "default": "mdi:glass-mug-variant"
+      },
+      "battery_level": {
+        "default": "mdi:battery-medium"
+      },
+      "battery_percent": {
+        "default": "mdi:battery-medium"
+      },
+      "relative_to_start": {
+        "default": "mdi:clock-time-three-outline"
+      },
+      "relative_to_start_wm": {
+        "default": "mdi:clock-time-three-outline"
+      },
+      "relative_to_stop": {
+        "default": "mdi:clock-time-three-outline"
+      },
+      "relative_to_stop_wm": {
+        "default": "mdi:clock-time-three-outline"
+      },
+      "sleep_timer_relative_to_stop": {
+        "default": "mdi:bed-clock"
+      },
+      "absolute_to_start": {
+        "default": "mdi:clock-time-three-outline"
+      },
+      "absolute_to_stop": {
+        "default": "mdi:clock-time-three-outline"
+      },
+      "remain": {
+        "default": "mdi:timer-sand"
+      },
+      "running": {
+        "default": "mdi:timer-play-outline"
+      },
+      "total": {
+        "default": "mdi:timer-play-outline"
+      },
+      "target": {
+        "default": "mdi:clock-time-three-outline"
+      },
+      "light_start": {
+        "default": "mdi:clock-time-three-outline"
+      },
+      "light_end": {
+        "default": "mdi:clock-time-three-outline"
+      },
+      "power_level": {
+        "default": "mdi:radiator"
+      }
     }
   }
 }

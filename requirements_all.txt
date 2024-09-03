@@ -2790,7 +2790,7 @@ thermoworks-smoke==0.1.8
 thingspeak==1.0.0
 
 # homeassistant.components.lg_thinq
-thinqconnect==0.9.5
+thinqconnect==0.9.6
 
 # homeassistant.components.tikteck
 tikteck==0.4
