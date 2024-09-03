@@ -6547,3 +6547,20 @@ async def test_merge_response_with_incorrect_response(hass: HomeAssistant) -> No
     tpl = template.Template(_template, hass)
     with pytest.raises(TemplateError, match="TypeError: Response is not a dictionary"):
         tpl.async_render()
+
+
+def test_warn_no_hass(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -> None:
+    """Test deprecation warning when instantiating Template without hass."""
+
+    message = "Detected code that creates a template object without passing hass"
+    template.Template("blah")
+    assert message in caplog.text
+    caplog.clear()
+
+    template.Template("blah", None)
+    assert message in caplog.text
+    caplog.clear()
+
+    template.Template("blah", hass)
+    assert message not in caplog.text
+    caplog.clear()
