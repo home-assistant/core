@@ -568,14 +568,13 @@ class HassIO:
 
         This method is a coroutine.
         """
-        url = f"http://{self._ip}{command}"
         joined_url = self._base_url.join(URL(command))
         # This check is to make sure the normalized URL string
         # is the same as the URL string that was passed in. If
         # they are different, then the passed in command URL
         # contained characters that were removed by the normalization
         # such as ../../../../etc/passwd
-        if url != str(joined_url):
+        if joined_url.raw_path != command:
             _LOGGER.error("Invalid request %s", command)
             raise HassioAPIError
 
