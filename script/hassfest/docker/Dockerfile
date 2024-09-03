@@ -3,10 +3,6 @@
 # To update, run python3 -m script.hassfest -p docker
 FROM python:alpine
 
-ENV \
-    UV_SYSTEM_PYTHON=true \
-    UV_EXTRA_INDEX_URL="https://wheels.home-assistant.io/musllinux-index/"
-
 SHELL ["/bin/sh", "-o", "pipefail", "-c"]
 ENTRYPOINT ["/usr/src/homeassistant/script/hassfest/docker/entrypoint.sh"]
 WORKDIR "/github/workspace"
@@ -20,6 +16,8 @@ RUN --mount=from=ghcr.io/astral-sh/uv:0.2.27,source=/uv,target=/bin/uv \
     && uv pip install \
         --no-build \
         --no-cache \
+        --system \
+        --extra-index-url "https://wheels.home-assistant.io/musllinux-index/" \
         -c /usr/src/homeassistant/homeassistant/package_constraints.txt \
         -r /usr/src/homeassistant/requirements.txt \
         stdlib-list==0.10.0 pipdeptree==2.23.1 tqdm==4.66.4 ruff==0.6.2 \
