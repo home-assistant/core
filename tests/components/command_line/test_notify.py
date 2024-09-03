@@ -100,6 +100,37 @@ async def test_command_line_output(hass: HomeAssistant) -> None:
         assert message == await hass.async_add_executor_job(Path(filename).read_text)
 
 
+async def test_command_template(hass: HomeAssistant) -> None:
+    """Test the command line output using template as command."""
+
+    with tempfile.TemporaryDirectory() as tempdirname:
+        filename = os.path.join(tempdirname, "message.txt")
+        message = "one, two, testing, testing"
+        hass.states.async_set("sensor.test_state", filename)
+        await setup.async_setup_component(
+            hass,
+            DOMAIN,
+            {
+                "command_line": [
+                    {
+                        "notify": {
+                            "command": "cat > {{ states.sensor.test_state.state }}",
+                            "name": "Test3",
+                        }
+                    }
+                ]
+            },
+        )
+        await hass.async_block_till_done()
+
+        assert hass.services.has_service(NOTIFY_DOMAIN, "test3")
+
+        await hass.services.async_call(
+            NOTIFY_DOMAIN, "test3", {"message": message}, blocking=True
+        )
+        assert message == await hass.async_add_executor_job(Path(filename).read_text)
+
+
 @pytest.mark.parametrize(
     "get_config",
     [
