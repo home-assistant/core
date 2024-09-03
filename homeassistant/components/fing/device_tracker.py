@@ -1,14 +1,8 @@
 """Platform for Device tracker integration."""
 
-# See cover.py for more details.
-# Note how both entities for each roller sensor (battry and illuminance) are added at
-# the same time to the same list. This way only a single async_add_devices call is
-# required.
-from collections.abc import Sequence
-
 from homeassistant.components.device_tracker import ScannerEntity, SourceType
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -24,15 +18,44 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Add sensors for passed config_entry in HA."""
-
     coordinator = config_entry.runtime_data
-    new_entities = [
-        FingTrackedDevice(coordinator, device)
-        for device in coordinator.data.get_devices().values()
-    ]
+    tracked_devices: list[FingTrackedDevice] = []
 
-    await remove_old_entities(hass, config_entry, new_entities)
-    async_add_entities(new_entities)
+    entity_registry = er.async_get(hass)
+
+    @callback
+    def add_entities() -> None:
+        new_entities = [
+            FingTrackedDevice(coordinator, device)
+            for device in coordinator.data.get_devices().values()
+        ]
+
+        new_ent_unique_ids = {entity.unique_id for entity in new_entities}
+        prev_ent_unique_ids = {entity.unique_id for entity in tracked_devices}
+
+        entities_to_remove = [
+            entity
+            for entity in tracked_devices
+            if entity.unique_id not in new_ent_unique_ids
+        ]
+
+        entities_to_add = [
+            entity
+            for entity in new_entities
+            if entity.unique_id not in prev_ent_unique_ids
+        ]
+
+        # Removes all the entities that are no more tracked by the agent
+        for entity in entities_to_remove:
+            entity_registry.async_remove(entity.entity_id)
+            tracked_devices.remove(entity)
+
+        # Adds all the new entities tracked by the agent
+        async_add_entities(entities_to_add)
+        tracked_devices.extend(entities_to_add)
+
+    add_entities()
+    config_entry.async_on_unload(coordinator.async_add_listener(add_entities))
 
 
 class FingTrackedDevice(CoordinatorEntity[FingDataUpdateCoordinator], ScannerEntity):
@@ -101,33 +124,7 @@ class FingTrackedDevice(CoordinatorEntity[FingDataUpdateCoordinator], ScannerEnt
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        self._device = self.coordinator.data.get_devices()[self._mac]
-        self.async_write_ha_state()
-
-
-async def remove_old_entities(
-    hass: HomeAssistant,
-    config_entry: FingConfigEntry,
-    new_entities: Sequence[FingTrackedDevice],
-):
-    """Remove all the old entities."""
-
-    device_reg = dr.async_get(hass)
-    entity_registry = er.async_get(hass)
-    instantiated_entities = entity_registry.entities.get_entries_for_config_entry_id(
-        config_entry.entry_id
-    )
-
-    new_entities_ids = {entity.unique_id for entity in new_entities}
-    entities_to_remove = [
-        entity
-        for entity in instantiated_entities
-        if entity.unique_id not in new_entities_ids
-    ]
-
-    for entity in entities_to_remove:
-        entity_registry.async_remove(entity.entity_id)
-        if entity.device_id is not None:
-            device_reg.async_update_device(
-                entity.device_id, remove_config_entry_id=config_entry.entry_id
-            )
+        updated_device_data = self.coordinator.data.get_devices().get(self._mac)
+        if updated_device_data is not None:
+            self._device = updated_device_data
+            self.async_write_ha_state()
