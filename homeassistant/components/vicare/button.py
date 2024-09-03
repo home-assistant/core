@@ -54,9 +54,9 @@ def _build_entities(
 
     return [
         ViCareButton(
+            description,
             device.config,
             device.api,
-            description,
         )
         for device in device_list
         for description in BUTTON_DESCRIPTIONS
@@ -87,12 +87,12 @@ class ViCareButton(ViCareEntity, ButtonEntity):
 
     def __init__(
         self,
+        description: ViCareButtonEntityDescription,
         device_config: PyViCareDeviceConfig,
         device: PyViCareDevice,
-        description: ViCareButtonEntityDescription,
     ) -> None:
         """Initialize the button."""
-        super().__init__(device_config, device, description.key)
+        super().__init__(description.key, device_config, device)
         self.entity_description = description
 
     def press(self) -> None:
