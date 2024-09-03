@@ -2016,6 +2016,9 @@ pyzerproc==0.4.8
 # homeassistant.components.qbittorrent
 qbittorrent-api==2024.2.59
 
+# homeassistant.components.qbus
+qbusmqttapi==0.2.0
+
 # homeassistant.components.qingping
 qingping-ble==0.10.0
 

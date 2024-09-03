@@ -52,6 +52,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
             )
         ):
             return self.async_abort(reason="invalid_discovery_info")
+
         existing_entry = await self.async_set_unique_id(
             f"{self._drop_discovery.hub_id}_{self._drop_discovery.device_id}"
         )

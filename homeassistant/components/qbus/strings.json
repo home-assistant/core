@@ -1,0 +1,26 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "Controller already configured",
+      "not_supported": "Configuration for QBUS is through MQTT discovery."
+    },
+    "step": {
+      "user": {
+        "title": "Add controller",
+        "description": "The QBUSMQTT addon is required for this to work",
+        "data": {
+          "ctd_serial": "Controller serial number"
+        }
+      }
+    },
+    "error": {
+      "no_controller": "No controllers were found."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {}
+    },
+    "error": {}
+  }
+}
