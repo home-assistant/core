@@ -8,7 +8,7 @@ import contextlib
 from dataclasses import dataclass, replace as dataclass_replace
 from datetime import timedelta
 import logging
-from time import sleep, time
+from time import time
 from typing import TYPE_CHECKING, Any, cast, final
 from uuid import UUID
 
@@ -102,7 +102,6 @@ from .queries import (
 from .statistics import cleanup_statistics_timestamp_migration, get_start_time
 from .tasks import RecorderTask
 from .util import (
-    _is_retryable_error,
     database_job_retry_wrapper,
     execute_stmt_lambda_element,
     get_index_by_name,
@@ -2230,28 +2229,8 @@ class BaseRunTimeMigration(ABC):
         else:
             self.migration_done(instance, session)
 
+    @retryable_database_job("meep", method=True)
     def migrate_data(self, instance: Recorder) -> bool:
-        """Migrate some data, returns True if migration is completed."""
-        try:
-            return self._migrate_data(instance)
-        except OperationalError as err:
-            if _is_retryable_error(instance, err):
-                assert isinstance(err.orig, BaseException)  # noqa: PT017
-                _LOGGER.info(
-                    "%s; %s not completed, retrying",
-                    err.orig.args[1],
-                    self.__class__.__name__,
-                )
-                sleep(instance.db_retry_wait)
-                # Failed with retryable error
-                return False
-
-            _LOGGER.warning("Error executing %s: %s", self.__class__.__name__, err)
-
-        # Failed with permanent error
-        return True
-
-    def _migrate_data(self, instance: Recorder) -> bool:
         """Migrate some data, returns True if migration is completed."""
         status = self.migrate_data_impl(instance)
         if status.migration_done:
