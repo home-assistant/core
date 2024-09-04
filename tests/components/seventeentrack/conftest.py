@@ -40,6 +40,8 @@ NEW_SUMMARY_DATA = {
     "Returned": 1,
 }
 
+ARCHIVE_PACKAGE_NUMBER = "123"
+
 VALID_CONFIG = {
     CONF_USERNAME: "test",
     CONF_PASSWORD: "test",

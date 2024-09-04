@@ -16,7 +16,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 
 from . import init_integration
-from .conftest import get_package
+from .conftest import ARCHIVE_PACKAGE_NUMBER, get_package
 
 from tests.common import MockConfigEntry
 
@@ -127,7 +127,7 @@ async def test_archive_package(
     mock_config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Ensure service returns all packages when non provided."""
+    """Ensure service archives package."""
     await _mock_packages(mock_seventeentrack)
     await init_integration(hass, mock_config_entry)
     await hass.services.async_call(
@@ -135,12 +135,12 @@ async def test_archive_package(
         SERVICE_ARCHIVE_PACKAGE,
         {
             "config_entry_id": mock_config_entry.entry_id,
-            "package_tracking_number": "123",
+            "package_tracking_number": ARCHIVE_PACKAGE_NUMBER,
         },
         blocking=True,
     )
     mock_seventeentrack.return_value.profile.archive_package.assert_called_once_with(
-        "123"
+        ARCHIVE_PACKAGE_NUMBER
     )
 
 
