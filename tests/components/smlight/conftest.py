@@ -39,14 +39,14 @@ def platforms() -> list[Platform]:
 
 
 @pytest.fixture(autouse=True)
-async def mock_patch_platforms(platforms: list[str]) -> AsyncGenerator[None, None]:
+async def mock_patch_platforms(platforms: list[str]) -> AsyncGenerator[None]:
     """Fixture to set up platforms for tests."""
     with patch(f"homeassistant.components.{DOMAIN}.PLATFORMS", platforms):
         yield
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.smlight.async_setup_entry", return_value=True

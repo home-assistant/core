@@ -28,7 +28,7 @@ CLIENT_SECRET = "5678"
 
 
 @pytest.fixture(name="mock_setup")
-def mock_setup_entry() -> Generator[Mock, None, None]:
+def mock_setup_entry() -> Generator[Mock]:
     """Fixture to mock out integration setup."""
     with patch(
         "homeassistant.components.google_photos.async_setup_entry", return_value=True
@@ -37,7 +37,7 @@ def mock_setup_entry() -> Generator[Mock, None, None]:
 
 
 @pytest.fixture(autouse=True)
-def mock_patch_api(mock_api: Mock) -> Generator[None, None, None]:
+def mock_patch_api(mock_api: Mock) -> Generator[None]:
     """Fixture to patch the config flow api."""
     with patch(
         "homeassistant.components.google_photos.config_flow.GooglePhotosLibraryApi",
