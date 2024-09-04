@@ -2,7 +2,7 @@
 
 from collections.abc import Generator
 from itertools import chain
-from unittest.mock import AsyncMock, Mock, PropertyMock, create_autospec, patch
+from unittest.mock import AsyncMock, Mock, create_autospec, patch
 
 import pytest
 import ring_doorbell
@@ -144,7 +144,5 @@ def mock_ring_event_listener_class():
     with patch(
         "homeassistant.components.ring.coordinator.RingEventListener", autospec=True
     ) as mock_ring_listener:
-        p = PropertyMock()
-        p.return_value = True
-        type(mock_ring_listener.return_value).started = p
+        mock_ring_listener.return_value.started = True
         yield mock_ring_listener

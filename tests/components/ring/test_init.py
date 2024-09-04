@@ -1,7 +1,5 @@
 """The tests for the Ring component."""
 
-from unittest.mock import PropertyMock
-
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from ring_doorbell import AuthenticationError, RingError, RingTimeout
@@ -456,9 +454,7 @@ async def test_no_listen_start(
     )
     mock_ring_event_listener_class.do_not_start = True
 
-    p = PropertyMock()
-    p.return_value = False
-    type(mock_ring_event_listener_class.return_value).started = p
+    mock_ring_event_listener_class.return_value.started = False
 
     mock_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_entry.entry_id)
