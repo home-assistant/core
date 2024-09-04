@@ -86,6 +86,7 @@ jobs:
         with:
           name: env_file
           path: ./.env_file
+          include-hidden-files: true
           overwrite: true
 
       - name: Upload requirements_diff

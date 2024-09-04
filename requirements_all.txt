@@ -930,7 +930,7 @@ fyta_cli==0.6.6
 gTTS==2.2.4
 
 # homeassistant.components.gardena_bluetooth
-gardena-bluetooth==1.4.2
+gardena-bluetooth==1.4.3
 
 # homeassistant.components.google_assistant_sdk
 gassist-text==0.0.11
@@ -1105,7 +1105,7 @@ hole==0.8.0
 
 # homeassistant.components.holiday
 # homeassistant.components.workday
-holidays==0.55
+holidays==0.56
 
 # homeassistant.components.frontend
 home-assistant-frontend==20240903.1
@@ -2991,7 +2991,7 @@ yalexs-ble==2.4.3
 
 # homeassistant.components.august
 # homeassistant.components.yale
-yalexs==8.6.2
+yalexs==8.6.3
 
 # homeassistant.components.yeelight
 yeelight==0.7.14
