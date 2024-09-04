@@ -232,6 +232,45 @@ async def test_play_media_library(
         )
 
 
+@pytest.mark.parametrize(
+    ("media_content_type", "media_content_id", "message"),
+    [
+        (
+            "artist",
+            "A:ALBUM/UnknowAlbum",
+            "Could not find media in library: A:ALBUM/UnknowAlbum",
+        ),
+        (
+            "UnknownContent",
+            "A:ALBUM/UnknowAlbum",
+            "Sonos does not support media content type: UnknownContent",
+        ),
+    ],
+)
+async def test_play_media_library_content_error(
+    hass: HomeAssistant,
+    async_autosetup_sonos,
+    media_content_type,
+    media_content_id,
+    message,
+) -> None:
+    """Test playing local library errors on content and content type."""
+    with pytest.raises(
+        ServiceValidationError,
+        match=message,
+    ):
+        await hass.services.async_call(
+            MP_DOMAIN,
+            SERVICE_PLAY_MEDIA,
+            {
+                ATTR_ENTITY_ID: "media_player.zone_a",
+                ATTR_MEDIA_CONTENT_TYPE: media_content_type,
+                ATTR_MEDIA_CONTENT_ID: media_content_id,
+            },
+            blocking=True,
+        )
+
+
 _track_url = "S://192.168.42.100/music/iTunes/The%20Beatles/A%20Hard%20Day%2fs%I%20Should%20Have%20Known%20Better.mp3"
 
 
