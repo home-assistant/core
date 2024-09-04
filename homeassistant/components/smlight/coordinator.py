@@ -57,8 +57,7 @@ class SmDataUpdateCoordinator(DataUpdateCoordinator[SmData]):
                     raise ConfigEntryAuthFailed from err
             else:
                 # Auth required but no credentials available
-                self.config_entry.async_start_reauth(self.hass)
-                return
+                raise ConfigEntryAuthFailed
 
         info = await self.client.get_info()
         self.unique_id = format_mac(info.MAC)
