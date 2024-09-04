@@ -634,7 +634,7 @@ TEST_DATA = [
         {
             "entity_id": "sensor.ikea_starkvind_filter_time",
             "websocket_event": {"state": {"filterruntime": 100000}},
-            "next_state": "100000",
+            "next_state": "1.15740740740741",
         },
     ),
 ]

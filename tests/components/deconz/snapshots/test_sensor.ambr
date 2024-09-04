@@ -1558,31 +1558,37 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfTime.DAYS: 'd'>,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
-    'original_name': 'IKEA Starkvind Filter Time',
+    'original_name': 'IKEA Starkvind Filter time',
     'platform': 'deconz',
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '0c:43:14:ff:fe:6c:20:12-01-fc7d-air_purifier_filter_run_time',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    'unit_of_measurement': <UnitOfTime.DAYS: 'd'>,
   })
 # ---
 # name: test_sensors[config_entry_options0-sensor_payload21-expected21][sensor.ikea_starkvind_filter_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
-      'friendly_name': 'IKEA Starkvind Filter Time',
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+      'friendly_name': 'IKEA Starkvind Filter time',
+      'unit_of_measurement': <UnitOfTime.DAYS: 'd'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.ikea_starkvind_filter_time',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '73405',
+    'state': '0.849594907407407',
   })
 # ---
 # name: test_sensors[config_entry_options0-sensor_payload21-expected21][sensor.ikea_starkvind_filter_time_left-entry]
