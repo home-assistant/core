@@ -763,6 +763,13 @@ def batch_cleanup_entity_ids() -> StatementLambdaElement:
     )
 
 
+def has_used_states_entity_ids() -> StatementLambdaElement:
+    """Check if there are used entity_ids in the states table."""
+    return lambda_stmt(
+        lambda: select(States.state_id).filter(States.entity_id.isnot(None)).limit(1)
+    )
+
+
 def has_used_states_event_ids() -> StatementLambdaElement:
     """Check if there are used event_ids in the states table."""
     return lambda_stmt(

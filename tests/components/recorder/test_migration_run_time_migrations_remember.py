@@ -174,3 +174,6 @@ async def test_migration_changes_prevent_trying_to_migrate_again(
 
     for task in tasks:
         assert not isinstance(task, MigrationTask)
+        if not isinstance(task, MigrationTask):
+            continue
+        assert not isinstance(task.commit_before, migration.StatesContextIDMigration)
