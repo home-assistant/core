@@ -9,6 +9,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_TYPE, CONF_URL
+from homeassistant.helpers.issue_registry import async_create_issue
 
 from ._manager import GPMError, RepositoryManager, RepositoryType
 from .const import DOMAIN, PATH_CLONE_BASEDIR, PATH_INSTALL_BASEDIR
@@ -60,6 +61,7 @@ class GPMConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             else:
                 create_restart_issue(
+                    async_create_issue,
                     self.hass,
                     action="install",
                     component_name=manager.component_name,

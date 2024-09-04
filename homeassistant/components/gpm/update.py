@@ -9,6 +9,7 @@ from homeassistant.components.update import UpdateEntity, UpdateEntityFeature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.issue_registry import create_issue
 
 from . import GPMConfigEntry
 from ._manager import GPMError, RepositoryManager, RepositoryType
@@ -71,6 +72,10 @@ class GPMUpdateEntity(UpdateEntity):
             self.manager.checkout(to_install)
         except GPMError as e:
             raise HomeAssistantError(e) from e
+
         create_restart_issue(
-            self.hass, action="update", component_name=cast(str, self.name)
+            create_issue,
+            self.hass,
+            action="update",
+            component_name=cast(str, self.name),
         )
