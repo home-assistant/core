@@ -6,7 +6,7 @@ import pytest
 from reolink_aio.exceptions import ReolinkError
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
-from homeassistant.components.reolink.button import ATTR_SPEED
+from homeassistant.components.reolink.button import ATTR_SPEED, SERVICE_PTZ_MOVE
 from homeassistant.components.reolink.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, Platform
@@ -64,7 +64,7 @@ async def test_ptz_move_service(
 
     await hass.services.async_call(
         DOMAIN,
-        "ptz_move",
+        SERVICE_PTZ_MOVE,
         {ATTR_ENTITY_ID: entity_id, ATTR_SPEED: 5},
         blocking=True,
     )
@@ -74,7 +74,7 @@ async def test_ptz_move_service(
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             DOMAIN,
-            "ptz_move",
+            SERVICE_PTZ_MOVE,
             {ATTR_ENTITY_ID: entity_id, ATTR_SPEED: 5},
             blocking=True,
         )
