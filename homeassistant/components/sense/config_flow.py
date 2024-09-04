@@ -3,7 +3,7 @@
 from collections.abc import Mapping
 from functools import partial
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from sense_energy import (
     ASyncSenseable,
@@ -34,9 +34,10 @@ class SenseConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    _gateway: ASyncSenseable
+
     def __init__(self) -> None:
         """Init Config ."""
-        self._gateway: ASyncSenseable | None = None
         self._auth_data: dict[str, Any] = {}
 
     async def validate_input(self, data: Mapping[str, Any]) -> None:
@@ -58,14 +59,12 @@ class SenseConfigFlow(ConfigFlow, domain=DOMAIN):
                 client_session=client_session,
             )
         )
-        if TYPE_CHECKING:
-            assert self._gateway
         self._gateway.rate_limit = ACTIVE_UPDATE_RATE
         await self._gateway.authenticate(
             self._auth_data[CONF_EMAIL], self._auth_data[CONF_PASSWORD]
         )
 
-    async def create_entry_from_data(self):
+    async def create_entry_from_data(self) -> ConfigFlowResult:
         """Create the entry from the config data."""
         self._auth_data["access_token"] = self._gateway.sense_access_token
         self._auth_data["user_id"] = self._gateway.sense_user_id
@@ -99,7 +98,9 @@ class SenseConfigFlow(ConfigFlow, domain=DOMAIN):
             return await self.create_entry_from_data()
         return None
 
-    async def async_step_validation(self, user_input=None):
+    async def async_step_validation(
+        self, user_input: dict[str, str] | None = None
+    ) -> ConfigFlowResult:
         """Handle validation (2fa) step."""
         errors = {}
         if user_input:
