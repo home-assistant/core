@@ -4,6 +4,7 @@ from datetime import timedelta
 from http import HTTPStatus
 from ipaddress import ip_network
 import logging
+from typing import Any
 from unittest.mock import Mock, patch
 
 from aiohttp import BasicAuth, web
@@ -15,9 +16,7 @@ import yarl
 from homeassistant.auth.const import GROUP_ID_READ_ONLY
 from homeassistant.auth.models import User
 from homeassistant.auth.providers import trusted_networks
-from homeassistant.auth.providers.legacy_api_password import (
-    LegacyApiPasswordAuthProvider,
-)
+from homeassistant.auth.providers.homeassistant import HassAuthProvider
 from homeassistant.components import websocket_api
 from homeassistant.components.http import KEY_HASS
 from homeassistant.components.http.auth import (
@@ -65,7 +64,7 @@ PRIVATE_ADDRESSES = [
 ]
 
 
-async def mock_handler(request):
+async def mock_handler(request: web.Request) -> web.Response:
     """Return if request was authenticated."""
     if not request[KEY_AUTHENTICATED]:
         raise HTTPUnauthorized
@@ -76,16 +75,8 @@ async def mock_handler(request):
     return web.json_response(data={"user_id": user_id})
 
 
-async def get_legacy_user(auth):
-    """Get the user in legacy_api_password auth provider."""
-    provider = auth.get_auth_provider("legacy_api_password", None)
-    return await auth.async_get_or_create_user(
-        await provider.async_get_or_create_credentials({})
-    )
-
-
 @pytest.fixture
-def app(hass):
+def app(hass: HomeAssistant) -> web.Application:
     """Fixture to set up a web.Application."""
     app = web.Application()
     app[KEY_HASS] = hass
@@ -95,7 +86,7 @@ def app(hass):
 
 
 @pytest.fixture
-def app2(hass):
+def app2(hass: HomeAssistant) -> web.Application:
     """Fixture to set up a web.Application without real_ip middleware."""
     app = web.Application()
     app[KEY_HASS] = hass
@@ -104,7 +95,9 @@ def app2(hass):
 
 
 @pytest.fixture
-def trusted_networks_auth(hass):
+def trusted_networks_auth(
+    hass: HomeAssistant,
+) -> trusted_networks.TrustedNetworksAuthProvider:
     """Load trusted networks auth provider."""
     prv = trusted_networks.TrustedNetworksAuthProvider(
         hass,
@@ -124,9 +117,9 @@ async def test_auth_middleware_loaded_by_default(hass: HomeAssistant) -> None:
 
 
 async def test_cant_access_with_password_in_header(
-    app,
+    app: web.Application,
     aiohttp_client: ClientSessionGenerator,
-    legacy_auth: LegacyApiPasswordAuthProvider,
+    local_auth: HassAuthProvider,
     hass: HomeAssistant,
 ) -> None:
     """Test access with password in header."""
@@ -141,9 +134,9 @@ async def test_cant_access_with_password_in_header(
 
 
 async def test_cant_access_with_password_in_query(
-    app,
+    app: web.Application,
     aiohttp_client: ClientSessionGenerator,
-    legacy_auth: LegacyApiPasswordAuthProvider,
+    local_auth: HassAuthProvider,
     hass: HomeAssistant,
 ) -> None:
     """Test access with password in URL."""
@@ -161,10 +154,10 @@ async def test_cant_access_with_password_in_query(
 
 
 async def test_basic_auth_does_not_work(
-    app,
+    app: web.Application,
     aiohttp_client: ClientSessionGenerator,
     hass: HomeAssistant,
-    legacy_auth: LegacyApiPasswordAuthProvider,
+    local_auth: HassAuthProvider,
 ) -> None:
     """Test access with basic authentication."""
     await async_setup_auth(hass, app)
@@ -185,8 +178,8 @@ async def test_basic_auth_does_not_work(
 
 async def test_cannot_access_with_trusted_ip(
     hass: HomeAssistant,
-    app2,
-    trusted_networks_auth,
+    app2: web.Application,
+    trusted_networks_auth: trusted_networks.TrustedNetworksAuthProvider,
     aiohttp_client: ClientSessionGenerator,
     hass_owner_user: MockUser,
 ) -> None:
@@ -213,7 +206,7 @@ async def test_cannot_access_with_trusted_ip(
 
 async def test_auth_active_access_with_access_token_in_header(
     hass: HomeAssistant,
-    app,
+    app: web.Application,
     aiohttp_client: ClientSessionGenerator,
     hass_access_token: str,
 ) -> None:
@@ -249,8 +242,8 @@ async def test_auth_active_access_with_access_token_in_header(
 
 async def test_auth_active_access_with_trusted_ip(
     hass: HomeAssistant,
-    app2,
-    trusted_networks_auth,
+    app2: web.Application,
+    trusted_networks_auth: trusted_networks.TrustedNetworksAuthProvider,
     aiohttp_client: ClientSessionGenerator,
     hass_owner_user: MockUser,
 ) -> None:
@@ -276,9 +269,9 @@ async def test_auth_active_access_with_trusted_ip(
 
 
 async def test_auth_legacy_support_api_password_cannot_access(
-    app,
+    app: web.Application,
     aiohttp_client: ClientSessionGenerator,
-    legacy_auth: LegacyApiPasswordAuthProvider,
+    local_auth: HassAuthProvider,
     hass: HomeAssistant,
 ) -> None:
     """Test access using api_password if auth.support_legacy."""
@@ -297,7 +290,7 @@ async def test_auth_legacy_support_api_password_cannot_access(
 
 async def test_auth_access_signed_path_with_refresh_token(
     hass: HomeAssistant,
-    app,
+    app: web.Application,
     aiohttp_client: ClientSessionGenerator,
     hass_access_token: str,
 ) -> None:
@@ -342,7 +335,7 @@ async def test_auth_access_signed_path_with_refresh_token(
 
 async def test_auth_access_signed_path_with_query_param(
     hass: HomeAssistant,
-    app,
+    app: web.Application,
     aiohttp_client: ClientSessionGenerator,
     hass_access_token: str,
 ) -> None:
@@ -372,7 +365,7 @@ async def test_auth_access_signed_path_with_query_param(
 
 async def test_auth_access_signed_path_with_query_param_order(
     hass: HomeAssistant,
-    app,
+    app: web.Application,
     aiohttp_client: ClientSessionGenerator,
     hass_access_token: str,
 ) -> None:
@@ -413,7 +406,7 @@ async def test_auth_access_signed_path_with_query_param_order(
 
 async def test_auth_access_signed_path_with_query_param_safe_param(
     hass: HomeAssistant,
-    app,
+    app: web.Application,
     aiohttp_client: ClientSessionGenerator,
     hass_access_token: str,
 ) -> None:
@@ -450,7 +443,7 @@ async def test_auth_access_signed_path_with_query_param_safe_param(
 )
 async def test_auth_access_signed_path_with_query_param_tamper(
     hass: HomeAssistant,
-    app,
+    app: web.Application,
     aiohttp_client: ClientSessionGenerator,
     hass_access_token: str,
     base_url: str,
@@ -476,7 +469,7 @@ async def test_auth_access_signed_path_with_query_param_tamper(
 
 async def test_auth_access_signed_path_via_websocket(
     hass: HomeAssistant,
-    app,
+    app: web.Application,
     hass_ws_client: WebSocketGenerator,
     hass_read_only_access_token: str,
 ) -> None:
@@ -484,7 +477,11 @@ async def test_auth_access_signed_path_via_websocket(
 
     @websocket_api.websocket_command({"type": "diagnostics/list"})
     @callback
-    def get_signed_path(hass, connection, msg):
+    def get_signed_path(
+        hass: HomeAssistant,
+        connection: websocket_api.ActiveConnection,
+        msg: dict[str, Any],
+    ) -> None:
         connection.send_result(
             msg["id"], {"path": async_sign_path(hass, "/", timedelta(seconds=5))}
         )
@@ -514,7 +511,7 @@ async def test_auth_access_signed_path_via_websocket(
 
 async def test_auth_access_signed_path_with_http(
     hass: HomeAssistant,
-    app,
+    app: web.Application,
     aiohttp_client: ClientSessionGenerator,
     hass_access_token: str,
 ) -> None:
@@ -549,7 +546,7 @@ async def test_auth_access_signed_path_with_http(
 
 
 async def test_auth_access_signed_path_with_content_user(
-    hass: HomeAssistant, app, aiohttp_client: ClientSessionGenerator
+    hass: HomeAssistant, app: web.Application, aiohttp_client: ClientSessionGenerator
 ) -> None:
     """Test access signed url uses content user."""
     await async_setup_auth(hass, app)
@@ -566,7 +563,7 @@ async def test_auth_access_signed_path_with_content_user(
 
 async def test_local_only_user_rejected(
     hass: HomeAssistant,
-    app,
+    app: web.Application,
     aiohttp_client: ClientSessionGenerator,
     hass_access_token: str,
 ) -> None:
@@ -589,7 +586,9 @@ async def test_local_only_user_rejected(
         assert req.status == HTTPStatus.UNAUTHORIZED
 
 
-async def test_async_user_not_allowed_do_auth(hass: HomeAssistant, app) -> None:
+async def test_async_user_not_allowed_do_auth(
+    hass: HomeAssistant, app: web.Application
+) -> None:
     """Test for not allowing auth."""
     user = await hass.auth.async_create_user("Hello")
     user.is_active = False

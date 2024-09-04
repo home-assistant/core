@@ -6,13 +6,16 @@ import pytest
 from samsungtvws.async_remote import SamsungTVWSAsyncRemote
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.media_player import DOMAIN, MediaPlayerEntityFeature
+from homeassistant.components.media_player import (
+    DOMAIN as MP_DOMAIN,
+    MediaPlayerEntityFeature,
+)
 from homeassistant.components.samsungtv.const import (
     CONF_MANUFACTURER,
     CONF_SESSION_ID,
     CONF_SSDP_MAIN_TV_AGENT_LOCATION,
     CONF_SSDP_RENDERING_CONTROL_LOCATION,
-    DOMAIN as SAMSUNGTV_DOMAIN,
+    DOMAIN,
     LEGACY_PORT,
     METHOD_LEGACY,
     METHOD_WEBSOCKET,
@@ -47,7 +50,7 @@ from .const import (
 
 from tests.common import MockConfigEntry
 
-ENTITY_ID = f"{DOMAIN}.fake_name"
+ENTITY_ID = f"{MP_DOMAIN}.fake_name"
 MOCK_CONFIG = {
     CONF_HOST: "fake_host",
     CONF_NAME: "fake_name",
@@ -71,7 +74,7 @@ async def test_setup(hass: HomeAssistant) -> None:
 
     # test host and port
     await hass.services.async_call(
-        DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID}, True
+        MP_DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID}, True
     )
 
 
@@ -94,7 +97,7 @@ async def test_setup_without_port_device_offline(hass: HomeAssistant) -> None:
     ):
         await setup_samsungtv_entry(hass, MOCK_CONFIG)
 
-    config_entries_domain = hass.config_entries.async_entries(SAMSUNGTV_DOMAIN)
+    config_entries_domain = hass.config_entries.async_entries(DOMAIN)
     assert len(config_entries_domain) == 1
     assert config_entries_domain[0].state is ConfigEntryState.SETUP_RETRY
 
@@ -104,7 +107,7 @@ async def test_setup_without_port_device_online(hass: HomeAssistant) -> None:
     """Test import from yaml when the device is online."""
     await setup_samsungtv_entry(hass, MOCK_CONFIG)
 
-    config_entries_domain = hass.config_entries.async_entries(SAMSUNGTV_DOMAIN)
+    config_entries_domain = hass.config_entries.async_entries(DOMAIN)
     assert len(config_entries_domain) == 1
     assert config_entries_domain[0].data[CONF_MAC] == "aa:bb:aa:aa:aa:aa"
 
@@ -183,7 +186,7 @@ async def test_update_imported_legacy_without_method(hass: HomeAssistant) -> Non
         hass, {CONF_HOST: "fake_host", CONF_MANUFACTURER: "Samsung"}
     )
 
-    entries = hass.config_entries.async_entries(SAMSUNGTV_DOMAIN)
+    entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
     assert entries[0].data[CONF_METHOD] == METHOD_LEGACY
     assert entries[0].data[CONF_PORT] == LEGACY_PORT
@@ -214,7 +217,7 @@ async def test_incorrectly_formatted_mac_fixed(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-        config_entries = hass.config_entries.async_entries(SAMSUNGTV_DOMAIN)
+        config_entries = hass.config_entries.async_entries(DOMAIN)
         assert len(config_entries) == 1
         assert config_entries[0].data[CONF_MAC] == "aa:bb:aa:aa:aa:aa"
 
@@ -229,7 +232,7 @@ async def test_cleanup_mac(
     Reverted due to device registry collisions in #119249 / #119082
     """
     entry = MockConfigEntry(
-        domain=SAMSUNGTV_DOMAIN,
+        domain=DOMAIN,
         data=MOCK_ENTRY_WS_WITH_MAC,
         entry_id="123456",
         unique_id="any",

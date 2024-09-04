@@ -5,7 +5,13 @@ from __future__ import annotations
 import asyncio
 from typing import Any
 
-from aioesphomeapi import DeviceInfo as ESPHomeDeviceInfo, EntityInfo
+from aioesphomeapi import (
+    DeviceInfo as ESPHomeDeviceInfo,
+    EntityInfo,
+    UpdateCommand,
+    UpdateInfo,
+    UpdateState,
+)
 
 from homeassistant.components.update import (
     UpdateDeviceClass,
@@ -19,10 +25,17 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util.enum import try_parse_enum
 
 from .coordinator import ESPHomeDashboardCoordinator
 from .dashboard import async_get_dashboard
 from .domain_data import DomainData
+from .entity import (
+    EsphomeEntity,
+    convert_api_error_ha_error,
+    esphome_state_property,
+    platform_async_setup_entry,
+)
 from .entry_data import RuntimeEntryData
 
 KEY_UPDATE_LOCK = "esphome_update_lock"
@@ -36,6 +49,15 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up ESPHome update based on a config entry."""
+    await platform_async_setup_entry(
+        hass,
+        entry,
+        async_add_entities,
+        info_type=UpdateInfo,
+        entity_type=ESPHomeUpdateEntity,
+        state_type=UpdateState,
+    )
+
     if (dashboard := async_get_dashboard(hass)) is None:
         return
     entry_data = DomainData.get(hass).get_entry_data(entry)
@@ -54,7 +76,7 @@ async def async_setup_entry(
             unsub()
         unsubs.clear()
 
-        async_add_entities([ESPHomeUpdateEntity(entry_data, dashboard)])
+        async_add_entities([ESPHomeDashboardUpdateEntity(entry_data, dashboard)])
 
     if entry_data.available and dashboard.last_update_success:
         _async_setup_update_entity()
@@ -66,7 +88,9 @@ async def async_setup_entry(
     ]
 
 
-class ESPHomeUpdateEntity(CoordinatorEntity[ESPHomeDashboardCoordinator], UpdateEntity):
+class ESPHomeDashboardUpdateEntity(
+    CoordinatorEntity[ESPHomeDashboardCoordinator], UpdateEntity
+):
     """Defines an ESPHome update entity."""
 
     _attr_has_entity_name = True
@@ -74,6 +98,7 @@ class ESPHomeUpdateEntity(CoordinatorEntity[ESPHomeDashboardCoordinator], Update
     _attr_title = "ESPHome"
     _attr_name = "Firmware"
     _attr_release_url = "https://esphome.io/changelog/"
+    _attr_entity_registry_enabled_default = False
 
     def __init__(
         self, entry_data: RuntimeEntryData, coordinator: ESPHomeDashboardCoordinator
@@ -179,3 +204,71 @@ class ESPHomeUpdateEntity(CoordinatorEntity[ESPHomeDashboardCoordinator], Update
                     )
             finally:
                 await self.coordinator.async_request_refresh()
+
+
+class ESPHomeUpdateEntity(EsphomeEntity[UpdateInfo, UpdateState], UpdateEntity):
+    """A update implementation for esphome."""
+
+    _attr_supported_features = (
+        UpdateEntityFeature.INSTALL | UpdateEntityFeature.PROGRESS
+    )
+
+    @callback
+    def _on_static_info_update(self, static_info: EntityInfo) -> None:
+        """Set attrs from static info."""
+        super()._on_static_info_update(static_info)
+        static_info = self._static_info
+        self._attr_device_class = try_parse_enum(
+            UpdateDeviceClass, static_info.device_class
+        )
+
+    @property
+    @esphome_state_property
+    def installed_version(self) -> str | None:
+        """Return the installed version."""
+        return self._state.current_version
+
+    @property
+    @esphome_state_property
+    def in_progress(self) -> bool | int | None:
+        """Return if the update is in progress."""
+        if self._state.has_progress:
+            return int(self._state.progress)
+        return self._state.in_progress
+
+    @property
+    @esphome_state_property
+    def latest_version(self) -> str | None:
+        """Return the latest version."""
+        return self._state.latest_version
+
+    @property
+    @esphome_state_property
+    def release_summary(self) -> str | None:
+        """Return the release summary."""
+        return self._state.release_summary
+
+    @property
+    @esphome_state_property
+    def release_url(self) -> str | None:
+        """Return the release URL."""
+        return self._state.release_url
+
+    @property
+    @esphome_state_property
+    def title(self) -> str | None:
+        """Return the title of the update."""
+        return self._state.title
+
+    @convert_api_error_ha_error
+    async def async_update(self) -> None:
+        """Command device to check for update."""
+        if self.available:
+            self._client.update_command(key=self._key, command=UpdateCommand.CHECK)
+
+    @convert_api_error_ha_error
+    async def async_install(
+        self, version: str | None, backup: bool, **kwargs: Any
+    ) -> None:
+        """Command device to install update."""
+        self._client.update_command(key=self._key, command=UpdateCommand.INSTALL)

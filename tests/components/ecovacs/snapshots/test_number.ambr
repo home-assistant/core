@@ -1,4 +1,115 @@
 # serializer version: 1
+# name: test_number_entities[5xu9h3][number.goat_g1_cut_direction:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 180,
+      'min': 0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.goat_g1_cut_direction',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Cut direction',
+    'platform': 'ecovacs',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'cut_direction',
+    'unique_id': '8516fbb1-17f1-4194-0000000_cut_direction',
+    'unit_of_measurement': '°',
+  })
+# ---
+# name: test_number_entities[5xu9h3][number.goat_g1_cut_direction:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Goat G1 Cut direction',
+      'max': 180,
+      'min': 0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1.0,
+      'unit_of_measurement': '°',
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.goat_g1_cut_direction',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '45',
+  })
+# ---
+# name: test_number_entities[5xu9h3][number.goat_g1_volume:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 11,
+      'min': 0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.goat_g1_volume',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Volume',
+    'platform': 'ecovacs',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'volume',
+    'unique_id': '8516fbb1-17f1-4194-0000000_volume',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_number_entities[5xu9h3][number.goat_g1_volume:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Goat G1 Volume',
+      'max': 11,
+      'min': 0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.goat_g1_volume',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3',
+  })
+# ---
 # name: test_number_entities[yna5x1][number.ozmo_950_volume:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': set({

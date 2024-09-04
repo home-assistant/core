@@ -10,7 +10,7 @@ from typing import Any
 
 from google.ai import generativelanguage_v1beta
 from google.api_core.client_options import ClientOptions
-from google.api_core.exceptions import ClientError, GoogleAPICallError
+from google.api_core.exceptions import ClientError, GoogleAPIError
 import google.generativeai as genai
 import voluptuous as vol
 
@@ -97,7 +97,7 @@ class GoogleGenerativeAIConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 await validate_input(self.hass, user_input)
-            except GoogleAPICallError as err:
+            except GoogleAPIError as err:
                 if isinstance(err, ClientError) and err.reason == "API_KEY_INVALID":
                     errors["base"] = "invalid_auth"
                 else:

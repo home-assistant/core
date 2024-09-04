@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Generator
 from copy import deepcopy
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -37,7 +38,7 @@ def mock_products():
 
 
 @pytest.fixture(autouse=True)
-def mock_vehicle_data():
+def mock_vehicle_data() -> Generator[AsyncMock]:
     """Mock Tesla Fleet API Vehicle Specific vehicle_data method."""
     with patch(
         "homeassistant.components.teslemetry.VehicleSpecific.vehicle_data",
@@ -57,7 +58,7 @@ def mock_wake_up():
 
 
 @pytest.fixture(autouse=True)
-def mock_vehicle():
+def mock_vehicle() -> Generator[AsyncMock]:
     """Mock Tesla Fleet API Vehicle Specific vehicle method."""
     with patch(
         "homeassistant.components.teslemetry.VehicleSpecific.vehicle",

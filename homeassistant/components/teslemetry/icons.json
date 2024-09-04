@@ -129,7 +129,6 @@
           "off": "mdi:car-seat"
         }
       },
-
       "components_customer_preferred_export_rule": {
         "default": "mdi:transmission-tower",
         "state": {
@@ -256,6 +255,26 @@
       "vehicle_state_valet_mode": {
         "default": "mdi:speedometer-slow"
       }
+    }
+  },
+  "services": {
+    "navigation_gps_request": {
+      "service": "mdi:crosshairs-gps"
+    },
+    "set_scheduled_charging": {
+      "service": "mdi:timeline-clock-outline"
+    },
+    "set_scheduled_departure": {
+      "service": "mdi:home-clock"
+    },
+    "speed_limit": {
+      "service": "mdi:car-speed-limiter"
+    },
+    "valet_mode": {
+      "service": "mdi:speedometer-slow"
+    },
+    "time_of_use": {
+      "service": "mdi:clock-time-eight-outline"
     }
   }
 }

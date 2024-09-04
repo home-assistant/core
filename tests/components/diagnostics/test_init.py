@@ -19,7 +19,7 @@ from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
 @pytest.fixture(autouse=True)
-async def mock_diagnostics_integration(hass):
+async def mock_diagnostics_integration(hass: HomeAssistant) -> None:
     """Mock a diagnostics integration."""
     hass.config.components.add("fake_integration")
     mock_platform(

@@ -20,8 +20,8 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_FLOOR_ID,
     ATTR_LABEL_ID,
+    CONF_ACTION,
     CONF_ENTITY_ID,
-    CONF_SERVICE,
     CONF_SERVICE_DATA,
     CONF_SERVICE_DATA_TEMPLATE,
     CONF_SERVICE_TEMPLATE,
@@ -33,6 +33,7 @@ from homeassistant.core import (
     Context,
     EntityServiceResponse,
     HassJob,
+    HassJobType,
     HomeAssistant,
     ServiceCall,
     ServiceResponse,
@@ -63,7 +64,7 @@ from . import (
 )
 from .group import expand_entity_ids
 from .selector import TargetSelector
-from .typing import ConfigType, TemplateVarsType
+from .typing import ConfigType, TemplateVarsType, VolDictType, VolSchemaType
 
 if TYPE_CHECKING:
     from .entity import Entity
@@ -179,10 +180,19 @@ _FIELD_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
+_SECTION_SCHEMA = vol.Schema(
+    {
+        vol.Required("fields"): vol.Schema({str: _FIELD_SCHEMA}),
+    },
+    extra=vol.ALLOW_EXTRA,
+)
+
 _SERVICE_SCHEMA = vol.Schema(
     {
         vol.Optional("target"): vol.Any(TargetSelector.CONFIG_SCHEMA, None),
-        vol.Optional("fields"): vol.Schema({str: _FIELD_SCHEMA}),
+        vol.Optional("fields"): vol.Schema(
+            {str: vol.Any(_SECTION_SCHEMA, _FIELD_SCHEMA)}
+        ),
     },
     extra=vol.ALLOW_EXTRA,
 )
@@ -349,14 +359,13 @@ def async_prepare_call_from_config(
                 f"Invalid config for calling service: {ex}"
             ) from ex
 
-    if CONF_SERVICE in config:
-        domain_service = config[CONF_SERVICE]
+    if CONF_ACTION in config:
+        domain_service = config[CONF_ACTION]
     else:
         domain_service = config[CONF_SERVICE_TEMPLATE]
 
     if isinstance(domain_service, template.Template):
         try:
-            domain_service.hass = hass
             domain_service = domain_service.async_render(variables)
             domain_service = cv.service(domain_service)
         except TemplateError as ex:
@@ -375,10 +384,8 @@ def async_prepare_call_from_config(
         conf = config[CONF_TARGET]
         try:
             if isinstance(conf, template.Template):
-                conf.hass = hass
                 target.update(conf.async_render(variables))
             else:
-                template.attach(hass, conf)
                 target.update(template.render_complex(conf, variables))
 
             if CONF_ENTITY_ID in target:
@@ -404,7 +411,6 @@ def async_prepare_call_from_config(
         if conf not in config:
             continue
         try:
-            template.attach(hass, config[conf])
             render = template.render_complex(config[conf], variables)
             if not isinstance(render, dict):
                 raise HomeAssistantError(
@@ -1100,7 +1106,7 @@ def async_register_admin_service(
     domain: str,
     service: str,
     service_func: Callable[[ServiceCall], Awaitable[None] | None],
-    schema: vol.Schema = vol.Schema({}, extra=vol.PREVENT_EXTRA),
+    schema: VolSchemaType = vol.Schema({}, extra=vol.PREVENT_EXTRA),
 ) -> None:
     """Register a service that requires admin access."""
     hass.services.async_register(
@@ -1235,3 +1241,55 @@ class ReloadServiceHelper[_T]:
                 self._service_running = False
                 self._pending_reload_targets -= reload_targets
                 self._service_condition.notify_all()
+
+
+@callback
+def async_register_entity_service(
+    hass: HomeAssistant,
+    domain: str,
+    name: str,
+    *,
+    entities: dict[str, Entity],
+    func: str | Callable[..., Any],
+    job_type: HassJobType | None,
+    required_features: Iterable[int] | None = None,
+    schema: VolDictType | VolSchemaType | None,
+    supports_response: SupportsResponse = SupportsResponse.NONE,
+) -> None:
+    """Help registering an entity service.
+
+    This is called by EntityComponent.async_register_entity_service and
+    EntityPlatform.async_register_entity_service and should not be called
+    directly by integrations.
+    """
+    if schema is None or isinstance(schema, dict):
+        schema = cv.make_entity_service_schema(schema)
+    elif not cv.is_entity_service_schema(schema):
+        # pylint: disable-next=import-outside-toplevel
+        from .frame import report
+
+        report(
+            (
+                "registers an entity service with a non entity service schema "
+                "which will stop working in HA Core 2025.9"
+            ),
+            error_if_core=False,
+        )
+
+    service_func: str | HassJob[..., Any]
+    service_func = func if isinstance(func, str) else HassJob(func)
+
+    hass.services.async_register(
+        domain,
+        name,
+        partial(
+            entity_service_call,
+            hass,
+            entities,
+            service_func,
+            required_features=required_features,
+        ),
+        schema,
+        supports_response,
+        job_type=job_type,
+    )

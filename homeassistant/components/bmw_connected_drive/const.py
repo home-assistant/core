@@ -3,7 +3,6 @@
 from homeassistant.const import UnitOfLength, UnitOfVolume
 
 DOMAIN = "bmw_connected_drive"
-ATTRIBUTION = "Data provided by MyBMW"
 
 ATTR_DIRECTION = "direction"
 ATTR_VIN = "vin"

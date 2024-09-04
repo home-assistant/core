@@ -9,7 +9,7 @@ import voluptuous as vol
 
 from homeassistant.components.alarm_control_panel import (
     ENTITY_ID_FORMAT,
-    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as ALARM_CONTROL_PANEL_PLATFORM_SCHEMA,
     AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
     CodeFormat,
@@ -94,7 +94,7 @@ ALARM_CONTROL_PANEL_SCHEMA = vol.Schema(
     }
 )
 
-PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = ALARM_CONTROL_PANEL_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_ALARM_CONTROL_PANELS): cv.schema_with_slug_keys(
             ALARM_CONTROL_PANEL_SCHEMA
@@ -108,7 +108,7 @@ async def _async_create_entities(hass, config):
     alarm_control_panels = []
 
     for object_id, entity_config in config[CONF_ALARM_CONTROL_PANELS].items():
-        entity_config = rewrite_common_legacy_to_modern_conf(entity_config)
+        entity_config = rewrite_common_legacy_to_modern_conf(hass, entity_config)
         unique_id = entity_config.get(CONF_UNIQUE_ID)
 
         alarm_control_panels.append(

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from functools import partial
 from typing import Any
 
 from aioesphomeapi import (
@@ -23,34 +24,16 @@ from homeassistant.components.media_player import (
     MediaType,
     async_process_play_media_url,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.core import callback
 
 from .entity import (
     EsphomeEntity,
     convert_api_error_ha_error,
+    esphome_float_state_property,
     esphome_state_property,
     platform_async_setup_entry,
 )
 from .enum_mapper import EsphomeEnumMapper
-
-
-async def async_setup_entry(
-    hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
-) -> None:
-    """Set up esphome media players based on a config entry."""
-    await platform_async_setup_entry(
-        hass,
-        entry,
-        async_add_entities,
-        info_type=MediaPlayerInfo,
-        entity_type=EsphomeMediaPlayer,
-        state_type=MediaPlayerEntityState,
-    )
-
 
 _STATES: EsphomeEnumMapper[EspMediaPlayerState, MediaPlayerState] = EsphomeEnumMapper(
     {
@@ -97,7 +80,7 @@ class EsphomeMediaPlayer(
         return self._state.muted
 
     @property
-    @esphome_state_property
+    @esphome_float_state_property
     def volume_level(self) -> float | None:
         """Volume level of the media player (0..1)."""
         return self._state.volume
@@ -159,3 +142,11 @@ class EsphomeMediaPlayer(
             self._key,
             command=MediaPlayerCommand.MUTE if mute else MediaPlayerCommand.UNMUTE,
         )
+
+
+async_setup_entry = partial(
+    platform_async_setup_entry,
+    info_type=MediaPlayerInfo,
+    entity_type=EsphomeMediaPlayer,
+    state_type=MediaPlayerEntityState,
+)

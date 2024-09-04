@@ -49,7 +49,7 @@ async def test_default_ding_chime_can_be_played(
     await hass.async_block_till_done()
 
     downstairs_chime_mock = mock_ring_devices.get_device(123456)
-    downstairs_chime_mock.test_sound.assert_called_once_with(kind="ding")
+    downstairs_chime_mock.async_test_sound.assert_called_once_with(kind="ding")
 
     state = hass.states.get("siren.downstairs_siren")
     assert state.state == "unknown"
@@ -71,7 +71,7 @@ async def test_turn_on_plays_default_chime(
     await hass.async_block_till_done()
 
     downstairs_chime_mock = mock_ring_devices.get_device(123456)
-    downstairs_chime_mock.test_sound.assert_called_once_with(kind="ding")
+    downstairs_chime_mock.async_test_sound.assert_called_once_with(kind="ding")
 
     state = hass.states.get("siren.downstairs_siren")
     assert state.state == "unknown"
@@ -95,7 +95,7 @@ async def test_explicit_ding_chime_can_be_played(
     await hass.async_block_till_done()
 
     downstairs_chime_mock = mock_ring_devices.get_device(123456)
-    downstairs_chime_mock.test_sound.assert_called_once_with(kind="ding")
+    downstairs_chime_mock.async_test_sound.assert_called_once_with(kind="ding")
 
     state = hass.states.get("siren.downstairs_siren")
     assert state.state == "unknown"
@@ -117,7 +117,7 @@ async def test_motion_chime_can_be_played(
     await hass.async_block_till_done()
 
     downstairs_chime_mock = mock_ring_devices.get_device(123456)
-    downstairs_chime_mock.test_sound.assert_called_once_with(kind="motion")
+    downstairs_chime_mock.async_test_sound.assert_called_once_with(kind="motion")
 
     state = hass.states.get("siren.downstairs_siren")
     assert state.state == "unknown"
@@ -146,7 +146,7 @@ async def test_siren_errors_when_turned_on(
     assert not any(config_entry.async_get_active_flows(hass, {SOURCE_REAUTH}))
 
     downstairs_chime_mock = mock_ring_devices.get_device(123456)
-    downstairs_chime_mock.test_sound.side_effect = exception_type
+    downstairs_chime_mock.async_test_sound.side_effect = exception_type
 
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
@@ -155,7 +155,8 @@ async def test_siren_errors_when_turned_on(
             {"entity_id": "siren.downstairs_siren", "tone": "motion"},
             blocking=True,
         )
-    downstairs_chime_mock.test_sound.assert_called_once_with(kind="motion")
+    downstairs_chime_mock.async_test_sound.assert_called_once_with(kind="motion")
+    await hass.async_block_till_done()
     assert (
         any(
             flow

@@ -1,9 +1,9 @@
 """Test fixtures for buienradar2."""
 
+from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from typing_extensions import Generator
 
 
 @pytest.fixture

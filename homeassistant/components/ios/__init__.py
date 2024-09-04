@@ -29,6 +29,7 @@ from .const import (
     CONF_ACTION_NAME,
     CONF_ACTION_SHOW_IN_CARPLAY,
     CONF_ACTION_SHOW_IN_WATCH,
+    CONF_ACTION_USE_CUSTOM_COLORS,
     CONF_ACTIONS,
     DOMAIN,
 )
@@ -152,6 +153,7 @@ ACTION_SCHEMA = vol.Schema(
         },
         vol.Optional(CONF_ACTION_SHOW_IN_CARPLAY): cv.boolean,
         vol.Optional(CONF_ACTION_SHOW_IN_WATCH): cv.boolean,
+        vol.Optional(CONF_ACTION_USE_CUSTOM_COLORS): cv.boolean,
     },
 )
 

@@ -1,12 +1,13 @@
 """Services for ScreenLogic integration."""
 
 import logging
+from typing import cast
 
 from screenlogicpy import ScreenLogicError
 from screenlogicpy.device_const.system import EQUIPMENT_FLAG
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import (
@@ -29,6 +30,7 @@ from .const import (
     SUPPORTED_COLOR_MODES,
 )
 from .coordinator import ScreenlogicDataUpdateCoordinator
+from .types import ScreenLogicConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -103,8 +105,9 @@ def async_load_screenlogic_services(hass: HomeAssistant):
 
         coordinators: list[ScreenlogicDataUpdateCoordinator] = []
         for entry_id in entry_ids:
-            config_entry: ConfigEntry | None = hass.config_entries.async_get_entry(
-                entry_id
+            config_entry = cast(
+                ScreenLogicConfigEntry | None,
+                hass.config_entries.async_get_entry(entry_id),
             )
             if not config_entry:
                 raise ServiceValidationError(
@@ -121,7 +124,7 @@ def async_load_screenlogic_services(hass: HomeAssistant):
                     f"Failed to call service '{service_call.service}'. Config entry "
                     f"'{entry_id}' not loaded"
                 )
-            coordinators.append(hass.data[DOMAIN][entry_id])
+            coordinators.append(config_entry.runtime_data)
 
         return coordinators
 

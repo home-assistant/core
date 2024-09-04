@@ -5,7 +5,6 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
     UnitOfElectricPotential,
@@ -18,6 +17,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import SenseConfigEntry
 from .const import (
     ACTIVE_NAME,
     ACTIVE_TYPE,
@@ -34,11 +34,7 @@ from .const import (
     PRODUCTION_NAME,
     PRODUCTION_PCT_ID,
     PRODUCTION_PCT_NAME,
-    SENSE_DATA,
     SENSE_DEVICE_UPDATE,
-    SENSE_DEVICES_DATA,
-    SENSE_DISCOVERED_DEVICES_DATA,
-    SENSE_TRENDS_COORDINATOR,
     SOLAR_POWERED_ID,
     SOLAR_POWERED_NAME,
     TO_GRID_ID,
@@ -87,26 +83,23 @@ def sense_to_mdi(sense_icon):
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: SenseConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Sense sensor."""
-    base_data = hass.data[DOMAIN][config_entry.entry_id]
-    data = base_data[SENSE_DATA]
-    sense_devices_data = base_data[SENSE_DEVICES_DATA]
-    trends_coordinator = base_data[SENSE_TRENDS_COORDINATOR]
+    data = config_entry.runtime_data.data
+    trends_coordinator = config_entry.runtime_data.trends
 
     # Request only in case it takes longer
     # than 60s
     await trends_coordinator.async_request_refresh()
 
     sense_monitor_id = data.sense_monitor_id
-    sense_devices = hass.data[DOMAIN][config_entry.entry_id][
-        SENSE_DISCOVERED_DEVICES_DATA
-    ]
+    sense_devices = config_entry.runtime_data.discovered
+    device_data = config_entry.runtime_data.device_data
 
     entities: list[SensorEntity] = [
-        SenseEnergyDevice(sense_devices_data, device, sense_monitor_id)
+        SenseEnergyDevice(device_data, device, sense_monitor_id)
         for device in sense_devices
         if device["tags"]["DeviceListAllowed"] == "true"
     ]

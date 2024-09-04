@@ -1,9 +1,9 @@
 """Fixtures for JVC Projector integration."""
 
+from collections.abc import Generator
 from unittest.mock import MagicMock, patch
 
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.jvc_projector.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT

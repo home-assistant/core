@@ -20,7 +20,7 @@ except ImportError:
 
 
 RE_ASCII = re.compile(r"\033\[[^m]*m")
-Error = namedtuple("Error", ["file", "line", "col", "msg", "skip"])
+Error = namedtuple("Error", ["file", "line", "col", "msg", "skip"])  # noqa: PYI024
 
 PASS = "green"
 FAIL = "bold_red"

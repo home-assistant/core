@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
+from collections.abc import Generator
 from dataclasses import asdict, dataclass, field
 from enum import StrEnum
 from typing import TYPE_CHECKING, Any, cast
 
 from awesomeversion import AwesomeVersion
-from typing_extensions import Generator
 from zwave_js_server.const import (
     CURRENT_STATE_PROPERTY,
     CURRENT_VALUE_PROPERTY,
@@ -27,7 +27,10 @@ from zwave_js_server.const.command_class.lock import (
     DOOR_STATUS_PROPERTY,
     LOCKED_PROPERTY,
 )
-from zwave_js_server.const.command_class.meter import VALUE_PROPERTY
+from zwave_js_server.const.command_class.meter import (
+    RESET_PROPERTY as RESET_METER_PROPERTY,
+    VALUE_PROPERTY,
+)
 from zwave_js_server.const.command_class.protection import LOCAL_PROPERTY, RF_PROPERTY
 from zwave_js_server.const.command_class.sound_switch import (
     DEFAULT_TONE_ID_PROPERTY,
@@ -233,6 +236,12 @@ SWITCH_MULTILEVEL_TARGET_VALUE_SCHEMA = ZWaveValueDiscoverySchema(
 
 SWITCH_BINARY_CURRENT_VALUE_SCHEMA = ZWaveValueDiscoverySchema(
     command_class={CommandClass.SWITCH_BINARY}, property={CURRENT_VALUE_PROPERTY}
+)
+
+COLOR_SWITCH_CURRENT_VALUE_SCHEMA = ZWaveValueDiscoverySchema(
+    command_class={CommandClass.SWITCH_COLOR},
+    property={CURRENT_COLOR_PROPERTY},
+    property_key={None},
 )
 
 SIREN_TONE_SCHEMA = ZWaveValueDiscoverySchema(
@@ -576,6 +585,15 @@ DISCOVERY_SCHEMAS = [
         ),
         entity_registry_enabled_default=False,
     ),
+    # ZVIDAR Z-CM-V01 (SmartWings/Deyi WM25L/V Z-Wave Motor for Roller Shade)
+    ZWaveDiscoverySchema(
+        platform=Platform.COVER,
+        hint="shade",
+        manufacturer_id={0x045A},
+        product_id={0x0507},
+        product_type={0x0904},
+        primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
+    ),
     # Vision Security ZL7432 In Wall Dual Relay Switch
     ZWaveDiscoverySchema(
         platform=Platform.SWITCH,
@@ -748,33 +766,6 @@ DISCOVERY_SCHEMAS = [
                 66: "Siren ONLY",
                 99: "Siren & Strobe FULL Alarm",
             },
-        ),
-    ),
-    # HomeSeer HSM-200 v1
-    ZWaveDiscoverySchema(
-        platform=Platform.LIGHT,
-        hint="black_is_off",
-        manufacturer_id={0x001E},
-        product_id={0x0001},
-        product_type={0x0004},
-        primary_value=ZWaveValueDiscoverySchema(
-            command_class={CommandClass.SWITCH_COLOR},
-            property={CURRENT_COLOR_PROPERTY},
-            property_key={None},
-        ),
-        absent_values=[SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA],
-    ),
-    # Logic Group ZDB5100
-    ZWaveDiscoverySchema(
-        platform=Platform.LIGHT,
-        hint="black_is_off",
-        manufacturer_id={0x0234},
-        product_id={0x0121},
-        product_type={0x0003},
-        primary_value=ZWaveValueDiscoverySchema(
-            command_class={CommandClass.SWITCH_COLOR},
-            property={CURRENT_COLOR_PROPERTY},
-            property_key={None},
         ),
     ),
     # ====== START OF GENERIC MAPPING SCHEMAS =======
@@ -1002,10 +993,11 @@ DISCOVERY_SCHEMAS = [
         ),
         entity_category=EntityCategory.CONFIG,
     ),
-    # binary switches
+    # binary switches without color support
     ZWaveDiscoverySchema(
         platform=Platform.SWITCH,
         primary_value=SWITCH_BINARY_CURRENT_VALUE_SCHEMA,
+        absent_values=[COLOR_SWITCH_CURRENT_VALUE_SCHEMA],
     ),
     # switch for Indicator CC
     ZWaveDiscoverySchema(
@@ -1099,11 +1091,30 @@ DISCOVERY_SCHEMAS = [
     # catch any device with multilevel CC as light
     # NOTE: keep this at the bottom of the discovery scheme,
     # to handle all others that need the multilevel CC first
+    #
+    # Colored light (legacy device) that can only be controlled through Color Switch CC.
+    ZWaveDiscoverySchema(
+        platform=Platform.LIGHT,
+        hint="color_onoff",
+        primary_value=COLOR_SWITCH_CURRENT_VALUE_SCHEMA,
+        absent_values=[
+            SWITCH_BINARY_CURRENT_VALUE_SCHEMA,
+            SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
+        ],
+    ),
+    # Colored light that can be turned on or off with the Binary Switch CC.
+    ZWaveDiscoverySchema(
+        platform=Platform.LIGHT,
+        hint="color_onoff",
+        primary_value=SWITCH_BINARY_CURRENT_VALUE_SCHEMA,
+        required_values=[COLOR_SWITCH_CURRENT_VALUE_SCHEMA],
+    ),
+    # Dimmable light with or without color support.
     ZWaveDiscoverySchema(
         platform=Platform.LIGHT,
         primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
     ),
-    # light for Basic CC
+    # light for Basic CC with target
     ZWaveDiscoverySchema(
         platform=Platform.LIGHT,
         primary_value=ZWaveValueDiscoverySchema(
@@ -1113,9 +1124,24 @@ DISCOVERY_SCHEMAS = [
         ),
         required_values=[
             ZWaveValueDiscoverySchema(
-                command_class={
-                    CommandClass.BASIC,
-                },
+                command_class={CommandClass.BASIC},
+                type={ValueType.NUMBER},
+                property={TARGET_VALUE_PROPERTY},
+            )
+        ],
+    ),
+    # sensor for Basic CC without target
+    ZWaveDiscoverySchema(
+        platform=Platform.SENSOR,
+        hint="numeric_sensor",
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.BASIC},
+            type={ValueType.NUMBER},
+            property={CURRENT_VALUE_PROPERTY},
+        ),
+        absent_values=[
+            ZWaveValueDiscoverySchema(
+                command_class={CommandClass.BASIC},
                 type={ValueType.NUMBER},
                 property={TARGET_VALUE_PROPERTY},
             )
@@ -1179,6 +1205,18 @@ DISCOVERY_SCHEMAS = [
         primary_value=ZWaveValueDiscoverySchema(
             stateful=False,
         ),
+    ),
+    # button
+    # Meter CC idle
+    ZWaveDiscoverySchema(
+        platform=Platform.BUTTON,
+        hint="meter reset",
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.METER},
+            property={RESET_METER_PROPERTY},
+            type={ValueType.BOOLEAN},
+        ),
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
 ]
 

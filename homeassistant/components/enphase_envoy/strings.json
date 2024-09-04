@@ -36,6 +36,16 @@
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
   },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Envoy {serial} {host} options",
+        "data": {
+          "diagnostics_include_fixtures": "Include test fixture data in diagnostic report. Use when requested to provide test data for troubleshooting or development activies. With this option enabled the diagnostic report may take more time to download. When report is created best disable this option again."
+        }
+      }
+    }
+  },
   "entity": {
     "binary_sensor": {
       "communicating": {

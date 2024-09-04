@@ -1,5 +1,6 @@
 """Common fixutres with default mocks as well as common test helper methods."""
 
+from collections.abc import Generator
 from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -7,7 +8,6 @@ import pytest
 from Tami4EdgeAPI.device import Device
 from Tami4EdgeAPI.device_metadata import DeviceMetadata
 from Tami4EdgeAPI.water_quality import UV, Filter, WaterQuality
-from typing_extensions import Generator
 
 from homeassistant.components.tami4.const import CONF_REFRESH_TOKEN, DOMAIN
 from homeassistant.core import HomeAssistant
@@ -46,6 +46,31 @@ def mock__get_devices_metadata(request: pytest.FixtureRequest) -> Generator[None
     device_metadata = DeviceMetadata(
         id=1,
         name="Drink Water",
+        connected=True,
+        psn="psn",
+        type="type",
+        device_firmware="v1.1",
+    )
+
+    with patch(
+        "Tami4EdgeAPI.Tami4EdgeAPI.Tami4EdgeAPI._get_devices_metadata",
+        return_value=[device_metadata],
+        side_effect=side_effect,
+    ):
+        yield
+
+
+@pytest.fixture
+def mock__get_devices_metadata_no_name(
+    request: pytest.FixtureRequest,
+) -> Generator[None]:
+    """Fixture to mock _get_devices which makes a call to the API."""
+
+    side_effect = getattr(request, "param", None)
+
+    device_metadata = DeviceMetadata(
+        id=1,
+        name=None,
         connected=True,
         psn="psn",
         type="type",

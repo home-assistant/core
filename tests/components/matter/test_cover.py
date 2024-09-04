@@ -27,11 +27,11 @@ from .common import (
 @pytest.mark.parametrize(
     ("fixture", "entity_id"),
     [
-        ("window-covering_lift", "cover.mock_lift_window_covering"),
-        ("window-covering_pa-lift", "cover.longan_link_wncv_da01"),
-        ("window-covering_tilt", "cover.mock_tilt_window_covering"),
-        ("window-covering_pa-tilt", "cover.mock_pa_tilt_window_covering"),
-        ("window-covering_full", "cover.mock_full_window_covering"),
+        ("window-covering_lift", "cover.mock_lift_window_covering_cover"),
+        ("window-covering_pa-lift", "cover.longan_link_wncv_da01_cover"),
+        ("window-covering_tilt", "cover.mock_tilt_window_covering_cover"),
+        ("window-covering_pa-tilt", "cover.mock_pa_tilt_window_covering_cover"),
+        ("window-covering_full", "cover.mock_full_window_covering_cover"),
     ],
 )
 async def test_cover(
@@ -105,9 +105,9 @@ async def test_cover(
 @pytest.mark.parametrize(
     ("fixture", "entity_id"),
     [
-        ("window-covering_lift", "cover.mock_lift_window_covering"),
-        ("window-covering_pa-lift", "cover.longan_link_wncv_da01"),
-        ("window-covering_full", "cover.mock_full_window_covering"),
+        ("window-covering_lift", "cover.mock_lift_window_covering_cover"),
+        ("window-covering_pa-lift", "cover.longan_link_wncv_da01_cover"),
+        ("window-covering_full", "cover.mock_full_window_covering_cover"),
     ],
 )
 async def test_cover_lift(
@@ -162,7 +162,7 @@ async def test_cover_lift(
 @pytest.mark.parametrize(
     ("fixture", "entity_id"),
     [
-        ("window-covering_lift", "cover.mock_lift_window_covering"),
+        ("window-covering_lift", "cover.mock_lift_window_covering_cover"),
     ],
 )
 async def test_cover_lift_only(
@@ -207,7 +207,7 @@ async def test_cover_lift_only(
 @pytest.mark.parametrize(
     ("fixture", "entity_id"),
     [
-        ("window-covering_pa-lift", "cover.longan_link_wncv_da01"),
+        ("window-covering_pa-lift", "cover.longan_link_wncv_da01_cover"),
     ],
 )
 async def test_cover_position_aware_lift(
@@ -259,9 +259,9 @@ async def test_cover_position_aware_lift(
 @pytest.mark.parametrize(
     ("fixture", "entity_id"),
     [
-        ("window-covering_tilt", "cover.mock_tilt_window_covering"),
-        ("window-covering_pa-tilt", "cover.mock_pa_tilt_window_covering"),
-        ("window-covering_full", "cover.mock_full_window_covering"),
+        ("window-covering_tilt", "cover.mock_tilt_window_covering_cover"),
+        ("window-covering_pa-tilt", "cover.mock_pa_tilt_window_covering_cover"),
+        ("window-covering_full", "cover.mock_full_window_covering_cover"),
     ],
 )
 async def test_cover_tilt(
@@ -317,7 +317,7 @@ async def test_cover_tilt(
 @pytest.mark.parametrize(
     ("fixture", "entity_id"),
     [
-        ("window-covering_tilt", "cover.mock_tilt_window_covering"),
+        ("window-covering_tilt", "cover.mock_tilt_window_covering_cover"),
     ],
 )
 async def test_cover_tilt_only(
@@ -360,7 +360,7 @@ async def test_cover_tilt_only(
 @pytest.mark.parametrize(
     ("fixture", "entity_id"),
     [
-        ("window-covering_pa-tilt", "cover.mock_pa_tilt_window_covering"),
+        ("window-covering_pa-tilt", "cover.mock_pa_tilt_window_covering_cover"),
     ],
 )
 async def test_cover_position_aware_tilt(
@@ -410,7 +410,7 @@ async def test_cover_full_features(
         "window-covering_full",
         matter_client,
     )
-    entity_id = "cover.mock_full_window_covering"
+    entity_id = "cover.mock_full_window_covering_cover"
 
     state = hass.states.get(entity_id)
     assert state

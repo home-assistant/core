@@ -1,12 +1,12 @@
 """Tests for ScreenLogic integration service calls."""
 
+from collections.abc import AsyncGenerator
 from typing import Any
 from unittest.mock import DEFAULT, AsyncMock, patch
 
 import pytest
 from screenlogicpy import ScreenLogicGateway
 from screenlogicpy.device_const.system import COLOR_MODE
-from typing_extensions import AsyncGenerator
 
 from homeassistant.components.screenlogic import DOMAIN
 from homeassistant.components.screenlogic.const import (

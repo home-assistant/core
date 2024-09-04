@@ -54,6 +54,55 @@
     'state': '1259.0279593584',
   })
 # ---
+# name: test_all_sensors[sensor.home_controller_daily_active_watering_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.home_controller_daily_active_watering_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'Daily active watering time',
+    'platform': 'hydrawise',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'daily_active_water_time',
+    'unique_id': '52496_daily_active_water_time',
+    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+  })
+# ---
+# name: test_all_sensors[sensor.home_controller_daily_active_watering_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by hydrawise.com',
+      'device_class': 'duration',
+      'friendly_name': 'Home Controller Daily active watering time',
+      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.home_controller_daily_active_watering_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '123.0',
+  })
+# ---
 # name: test_all_sensors[sensor.home_controller_daily_inactive_water_use-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -219,6 +268,55 @@
     'state': '454.6279552584',
   })
 # ---
+# name: test_all_sensors[sensor.zone_one_daily_active_watering_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.zone_one_daily_active_watering_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'Daily active watering time',
+    'platform': 'hydrawise',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'daily_active_water_time',
+    'unique_id': '5965394_daily_active_water_time',
+    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+  })
+# ---
+# name: test_all_sensors[sensor.zone_one_daily_active_watering_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by hydrawise.com',
+      'device_class': 'duration',
+      'friendly_name': 'Zone One Daily active watering time',
+      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.zone_one_daily_active_watering_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '123.0',
+  })
+# ---
 # name: test_all_sensors[sensor.zone_one_next_cycle-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -267,7 +365,7 @@
     'state': '2023-10-04T19:49:57+00:00',
   })
 # ---
-# name: test_all_sensors[sensor.zone_one_watering_time-entry]
+# name: test_all_sensors[sensor.zone_one_remaining_watering_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -279,7 +377,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.zone_one_watering_time',
+    'entity_id': 'sensor.zone_one_remaining_watering_time',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -291,7 +389,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Watering time',
+    'original_name': 'Remaining watering time',
     'platform': 'hydrawise',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -300,15 +398,15 @@
     'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
   })
 # ---
-# name: test_all_sensors[sensor.zone_one_watering_time-state]
+# name: test_all_sensors[sensor.zone_one_remaining_watering_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by hydrawise.com',
-      'friendly_name': 'Zone One Watering time',
+      'friendly_name': 'Zone One Remaining watering time',
       'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.zone_one_watering_time',
+    'entity_id': 'sensor.zone_one_remaining_watering_time',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -371,6 +469,55 @@
     'state': '0.0',
   })
 # ---
+# name: test_all_sensors[sensor.zone_two_daily_active_watering_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.zone_two_daily_active_watering_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'Daily active watering time',
+    'platform': 'hydrawise',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'daily_active_water_time',
+    'unique_id': '5965395_daily_active_water_time',
+    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+  })
+# ---
+# name: test_all_sensors[sensor.zone_two_daily_active_watering_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by hydrawise.com',
+      'device_class': 'duration',
+      'friendly_name': 'Zone Two Daily active watering time',
+      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.zone_two_daily_active_watering_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
 # name: test_all_sensors[sensor.zone_two_next_cycle-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -419,7 +566,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_all_sensors[sensor.zone_two_watering_time-entry]
+# name: test_all_sensors[sensor.zone_two_remaining_watering_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -431,7 +578,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.zone_two_watering_time',
+    'entity_id': 'sensor.zone_two_remaining_watering_time',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -443,7 +590,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Watering time',
+    'original_name': 'Remaining watering time',
     'platform': 'hydrawise',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -452,15 +599,15 @@
     'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
   })
 # ---
-# name: test_all_sensors[sensor.zone_two_watering_time-state]
+# name: test_all_sensors[sensor.zone_two_remaining_watering_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by hydrawise.com',
-      'friendly_name': 'Zone Two Watering time',
+      'friendly_name': 'Zone Two Remaining watering time',
       'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.zone_two_watering_time',
+    'entity_id': 'sensor.zone_two_remaining_watering_time',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

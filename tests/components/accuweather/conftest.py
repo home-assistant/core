@@ -1,9 +1,9 @@
 """Common fixtures for the AccuWeather tests."""
 
+from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.accuweather.const import DOMAIN
 

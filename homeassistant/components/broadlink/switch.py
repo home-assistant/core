@@ -10,7 +10,7 @@ from broadlink.exceptions import BroadlinkException
 import voluptuous as vol
 
 from homeassistant.components.switch import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as SWITCH_PLATFORM_SCHEMA,
     SwitchDeviceClass,
     SwitchEntity,
 )
@@ -56,7 +56,7 @@ PLATFORM_SCHEMA = vol.All(
     cv.deprecated(CONF_SLOTS),
     cv.deprecated(CONF_TIMEOUT),
     cv.deprecated(CONF_TYPE),
-    PLATFORM_SCHEMA.extend(
+    SWITCH_PLATFORM_SCHEMA.extend(
         {
             vol.Required(CONF_MAC): mac_address,
             vol.Optional(CONF_HOST): cv.string,

@@ -70,7 +70,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: RadarrConfigEntry) -> bo
         status=StatusDataUpdateCoordinator(hass, host_configuration, radarr),
     )
     for field in fields(data):
-        await getattr(data, field.name).async_config_entry_first_refresh()
+        coordinator: RadarrDataUpdateCoordinator = getattr(data, field.name)
+        # Movie update can take a while depending on Radarr database size
+        if field.name == "movie":
+            entry.async_create_background_task(
+                hass,
+                coordinator.async_config_entry_first_refresh(),
+                "radarr.movie-coordinator-first-refresh",
+            )
+            continue
+        await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = data
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

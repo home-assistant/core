@@ -45,6 +45,13 @@ ENTITIES: tuple[LaMarzoccoBinarySensorEntityDescription, ...] = (
         available_fn=lambda device: device.websocket_connected,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
+    LaMarzoccoBinarySensorEntityDescription(
+        key="backflush_enabled",
+        translation_key="backflush_enabled",
+        device_class=BinarySensorDeviceClass.RUNNING,
+        is_on_fn=lambda config: config.backflush_enabled,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
 )
 
 

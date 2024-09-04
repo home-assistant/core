@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock
 
 from syrupy import SnapshotAssertion
 
-from homeassistant.components.airgradient import DOMAIN
+from homeassistant.components.airgradient.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
@@ -16,7 +16,7 @@ from tests.common import MockConfigEntry
 async def test_device_info(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
-    mock_airgradient_client: AsyncMock,
+    airgradient_devices: AsyncMock,
     mock_config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
 ) -> None:

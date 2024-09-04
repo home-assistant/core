@@ -7,6 +7,7 @@ import asyncio
 from collections.abc import Awaitable, Callable, Coroutine, Iterable
 from dataclasses import dataclass
 from functools import partial
+from hashlib import md5
 from itertools import groupby
 import logging
 from operator import attrgetter
@@ -18,15 +19,16 @@ from voluptuous.humanize import humanize_error
 
 from homeassistant.components import websocket_api
 from homeassistant.const import CONF_ID
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util import slugify
 
 from . import entity_registry
 from .entity import Entity
 from .entity_component import EntityComponent
+from .json import json_bytes
 from .storage import Store
-from .typing import ConfigType
+from .typing import ConfigType, VolDictType
 
 STORAGE_VERSION = 1
 SAVE_DELAY = 10
@@ -50,6 +52,7 @@ class CollectionChange:
     change_type: str
     item_id: str
     item: Any
+    item_hash: str | None = None
 
 
 type ChangeListener = Callable[
@@ -273,7 +276,9 @@ class StorageCollection[_ItemT, _StoreT: SerializedStorageCollection](
 
         await self.notify_changes(
             [
-                CollectionChange(CHANGE_ADDED, item[CONF_ID], item)
+                CollectionChange(
+                    CHANGE_ADDED, item[CONF_ID], item, self._hash_item(item)
+                )
                 for item in raw_storage["items"]
             ]
         )
@@ -313,7 +318,16 @@ class StorageCollection[_ItemT, _StoreT: SerializedStorageCollection](
         item = self._create_item(item_id, validated_data)
         self.data[item_id] = item
         self._async_schedule_save()
-        await self.notify_changes([CollectionChange(CHANGE_ADDED, item_id, item)])
+        await self.notify_changes(
+            [
+                CollectionChange(
+                    CHANGE_ADDED,
+                    item_id,
+                    item,
+                    self._hash_item(self._serialize_item(item_id, item)),
+                )
+            ]
+        )
         return item
 
     async def async_update_item(self, item_id: str, updates: dict) -> _ItemT:
@@ -331,7 +345,16 @@ class StorageCollection[_ItemT, _StoreT: SerializedStorageCollection](
         self.data[item_id] = updated
         self._async_schedule_save()
 
-        await self.notify_changes([CollectionChange(CHANGE_UPDATED, item_id, updated)])
+        await self.notify_changes(
+            [
+                CollectionChange(
+                    CHANGE_UPDATED,
+                    item_id,
+                    updated,
+                    self._hash_item(self._serialize_item(item_id, updated)),
+                )
+            ]
+        )
 
         return self.data[item_id]
 
@@ -364,6 +387,10 @@ class StorageCollection[_ItemT, _StoreT: SerializedStorageCollection](
     @callback
     def _data_to_save(self) -> _StoreT:
         """Return JSON-compatible date for storing to file."""
+
+    def _hash_item(self, item: dict) -> str:
+        """Return a hash of the item."""
+        return md5(json_bytes(item)).hexdigest()
 
 
 class DictStorageCollection(StorageCollection[dict, SerializedStorageCollection]):
@@ -464,6 +491,10 @@ class _CollectionLifeCycle(Generic[_EntityT]):
 
     async def _update_entity(self, change_set: CollectionChange) -> None:
         if entity := self.entities.get(change_set.item_id):
+            if change_set.item_hash:
+                self.ent_reg.async_update_entity_options(
+                    entity.entity_id, "collection", {"hash": change_set.item_hash}
+                )
             await entity.async_update_config(change_set.item)
 
     async def _collection_changed(self, change_set: Iterable[CollectionChange]) -> None:
@@ -515,8 +546,8 @@ class StorageCollectionWebsocket[_StorageCollectionT: StorageCollection]:
         storage_collection: _StorageCollectionT,
         api_prefix: str,
         model_name: str,
-        create_schema: dict,
-        update_schema: dict,
+        create_schema: VolDictType,
+        update_schema: VolDictType,
     ) -> None:
         """Initialize a websocket CRUD."""
         self.storage_collection = storage_collection
@@ -524,6 +555,9 @@ class StorageCollectionWebsocket[_StorageCollectionT: StorageCollection]:
         self.model_name = model_name
         self.create_schema = create_schema
         self.update_schema = update_schema
+
+        self._remove_subscription: CALLBACK_TYPE | None = None
+        self._subscribers: set[tuple[websocket_api.ActiveConnection, int]] = set()
 
         assert self.api_prefix[-1] != "/", "API prefix should not end in /"
 
@@ -533,12 +567,7 @@ class StorageCollectionWebsocket[_StorageCollectionT: StorageCollection]:
         return f"{self.model_name}_id"
 
     @callback
-    def async_setup(
-        self,
-        hass: HomeAssistant,
-        *,
-        create_create: bool = True,
-    ) -> None:
+    def async_setup(self, hass: HomeAssistant) -> None:
         """Set up the websocket commands."""
         websocket_api.async_register_command(
             hass,
@@ -549,20 +578,28 @@ class StorageCollectionWebsocket[_StorageCollectionT: StorageCollection]:
             ),
         )
 
-        if create_create:
-            websocket_api.async_register_command(
-                hass,
-                f"{self.api_prefix}/create",
-                websocket_api.require_admin(
-                    websocket_api.async_response(self.ws_create_item)
-                ),
-                websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
-                    {
-                        **self.create_schema,
-                        vol.Required("type"): f"{self.api_prefix}/create",
-                    }
-                ),
-            )
+        websocket_api.async_register_command(
+            hass,
+            f"{self.api_prefix}/create",
+            websocket_api.require_admin(
+                websocket_api.async_response(self.ws_create_item)
+            ),
+            websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
+                {
+                    **self.create_schema,
+                    vol.Required("type"): f"{self.api_prefix}/create",
+                }
+            ),
+        )
+
+        websocket_api.async_register_command(
+            hass,
+            f"{self.api_prefix}/subscribe",
+            self._ws_subscribe,
+            websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
+                {vol.Required("type"): f"{self.api_prefix}/subscribe"}
+            ),
+        )
 
         websocket_api.async_register_command(
             hass,
@@ -618,6 +655,56 @@ class StorageCollectionWebsocket[_StorageCollectionT: StorageCollection]:
             )
         except ValueError as err:
             connection.send_error(msg["id"], websocket_api.ERR_INVALID_FORMAT, str(err))
+
+    @callback
+    def _ws_subscribe(
+        self, hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+    ) -> None:
+        """Subscribe to collection updates."""
+
+        async def async_change_listener(
+            change_set: Iterable[CollectionChange],
+        ) -> None:
+            json_msg = [
+                {
+                    "change_type": change.change_type,
+                    self.item_id_key: change.item_id,
+                    "item": change.item,
+                }
+                for change in change_set
+            ]
+            for conn, msg_id in self._subscribers:
+                conn.send_message(websocket_api.event_message(msg_id, json_msg))
+
+        if not self._subscribers:
+            self._remove_subscription = (
+                self.storage_collection.async_add_change_set_listener(
+                    async_change_listener
+                )
+            )
+
+        self._subscribers.add((connection, msg["id"]))
+
+        @callback
+        def cancel_subscription() -> None:
+            self._subscribers.remove((connection, msg["id"]))
+            if not self._subscribers and self._remove_subscription:
+                self._remove_subscription()
+                self._remove_subscription = None
+
+        connection.subscriptions[msg["id"]] = cancel_subscription
+
+        connection.send_message(websocket_api.result_message(msg["id"]))
+
+        json_msg = [
+            {
+                "change_type": CHANGE_ADDED,
+                self.item_id_key: item_id,
+                "item": item,
+            }
+            for item_id, item in self.storage_collection.data.items()
+        ]
+        connection.send_message(websocket_api.event_message(msg["id"], json_msg))
 
     async def ws_update_item(
         self, hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict

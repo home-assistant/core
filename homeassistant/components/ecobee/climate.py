@@ -36,10 +36,17 @@ from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.util.unit_conversion import TemperatureConverter
 
 from . import EcobeeData
-from .const import _LOGGER, DOMAIN, ECOBEE_MODEL_TO_NAME, MANUFACTURER
+from .const import (
+    _LOGGER,
+    DOMAIN,
+    ECOBEE_AUX_HEAT_ONLY,
+    ECOBEE_MODEL_TO_NAME,
+    MANUFACTURER,
+)
 from .util import ecobee_date, ecobee_time, is_indefinite_hold
 
 ATTR_COOL_TEMP = "cool_temp"
@@ -69,9 +76,6 @@ DEFAULT_MIN_HUMIDITY = 15
 DEFAULT_MAX_HUMIDITY = 50
 HUMIDIFIER_MANUAL_MODE = "manual"
 
-ECOBEE_AUX_HEAT_ONLY = "auxHeatOnly"
-
-
 # Order matters, because for reverse mapping we don't want to map HEAT to AUX
 ECOBEE_HVAC_TO_HASS = collections.OrderedDict(
     [
@@ -79,9 +83,13 @@ ECOBEE_HVAC_TO_HASS = collections.OrderedDict(
         ("cool", HVACMode.COOL),
         ("auto", HVACMode.HEAT_COOL),
         ("off", HVACMode.OFF),
-        ("auxHeatOnly", HVACMode.HEAT),
+        (ECOBEE_AUX_HEAT_ONLY, HVACMode.HEAT),
     ]
 )
+# Reverse key/value pair, drop auxHeatOnly as it doesn't map to specific HASS mode
+HASS_TO_ECOBEE_HVAC = {
+    v: k for k, v in ECOBEE_HVAC_TO_HASS.items() if k != ECOBEE_AUX_HEAT_ONLY
+}
 
 ECOBEE_HVAC_ACTION_TO_HASS = {
     # Map to None if we do not know how to represent.
@@ -570,17 +578,39 @@ class Thermostat(ClimateEntity):
         """Return true if aux heater."""
         return self.settings["hvacMode"] == ECOBEE_AUX_HEAT_ONLY
 
-    def turn_aux_heat_on(self) -> None:
+    async def async_turn_aux_heat_on(self) -> None:
         """Turn auxiliary heater on."""
+        async_create_issue(
+            self.hass,
+            DOMAIN,
+            "migrate_aux_heat",
+            breaks_in_ha_version="2024.10.0",
+            is_fixable=True,
+            is_persistent=True,
+            translation_key="migrate_aux_heat",
+            severity=IssueSeverity.WARNING,
+        )
         _LOGGER.debug("Setting HVAC mode to auxHeatOnly to turn on aux heat")
         self._last_hvac_mode_before_aux_heat = self.hvac_mode
-        self.data.ecobee.set_hvac_mode(self.thermostat_index, ECOBEE_AUX_HEAT_ONLY)
+        await self.hass.async_add_executor_job(
+            self.data.ecobee.set_hvac_mode, self.thermostat_index, ECOBEE_AUX_HEAT_ONLY
+        )
         self.update_without_throttle = True
 
-    def turn_aux_heat_off(self) -> None:
+    async def async_turn_aux_heat_off(self) -> None:
         """Turn auxiliary heater off."""
+        async_create_issue(
+            self.hass,
+            DOMAIN,
+            "migrate_aux_heat",
+            breaks_in_ha_version="2024.10.0",
+            is_fixable=True,
+            is_persistent=True,
+            translation_key="migrate_aux_heat",
+            severity=IssueSeverity.WARNING,
+        )
         _LOGGER.debug("Setting HVAC mode to last mode to disable aux heat")
-        self.set_hvac_mode(self._last_hvac_mode_before_aux_heat)
+        await self.async_set_hvac_mode(self._last_hvac_mode_before_aux_heat)
         self.update_without_throttle = True
 
     def set_preset_mode(self, preset_mode: str) -> None:
@@ -740,9 +770,7 @@ class Thermostat(ClimateEntity):
 
     def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set HVAC mode (auto, auxHeatOnly, cool, heat, off)."""
-        ecobee_value = next(
-            (k for k, v in ECOBEE_HVAC_TO_HASS.items() if v == hvac_mode), None
-        )
+        ecobee_value = HASS_TO_ECOBEE_HVAC.get(hvac_mode)
         if ecobee_value is None:
             _LOGGER.error("Invalid mode for set_hvac_mode: %s", hvac_mode)
             return

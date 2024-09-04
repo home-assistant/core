@@ -3,6 +3,8 @@
 Call init before using it in your tests to ensure clean test data.
 """
 
+from typing import Any, Literal
+
 from homeassistant.components.light import ColorMode, LightEntity
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
@@ -67,13 +69,12 @@ class MockLight(MockToggleEntity, LightEntity):
 
     def __init__(
         self,
-        name,
-        state,
-        unique_id=None,
+        name: str | None,
+        state: Literal["on", "off"] | None,
         supported_color_modes: set[ColorMode] | None = None,
     ) -> None:
         """Initialize the mock light."""
-        super().__init__(name, state, unique_id)
+        super().__init__(name, state)
         if supported_color_modes is None:
             supported_color_modes = {ColorMode.ONOFF}
         self._attr_supported_color_modes = supported_color_modes
@@ -82,7 +83,7 @@ class MockLight(MockToggleEntity, LightEntity):
             color_mode = next(iter(supported_color_modes))
         self._attr_color_mode = color_mode
 
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         super().turn_on(**kwargs)
         for key, value in kwargs.items():

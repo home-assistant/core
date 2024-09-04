@@ -6,6 +6,7 @@ from typing import Any
 
 from blebox_uniapi.box import Box
 import blebox_uniapi.cover
+from blebox_uniapi.cover import BleboxCoverState
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
@@ -28,19 +29,18 @@ BLEBOX_TO_COVER_DEVICE_CLASSES = {
     "shutter": CoverDeviceClass.SHUTTER,
 }
 
-
 BLEBOX_TO_HASS_COVER_STATES = {
     None: None,
-    0: STATE_CLOSING,  # moving down
-    1: STATE_OPENING,  # moving up
-    2: STATE_OPEN,  # manually stopped
-    3: STATE_CLOSED,  # lower limit
-    4: STATE_OPEN,  # upper limit / open
-    # gateController
-    5: STATE_OPEN,  # overload
-    6: STATE_OPEN,  # motor failure
-    # 7 is not used
-    8: STATE_OPEN,  # safety stop
+    # all blebox covers
+    BleboxCoverState.MOVING_DOWN: STATE_CLOSING,
+    BleboxCoverState.MOVING_UP: STATE_OPENING,
+    BleboxCoverState.MANUALLY_STOPPED: STATE_OPEN,
+    BleboxCoverState.LOWER_LIMIT_REACHED: STATE_CLOSED,
+    BleboxCoverState.UPPER_LIMIT_REACHED: STATE_OPEN,
+    # extra states of gateController product
+    BleboxCoverState.OVERLOAD: STATE_OPEN,
+    BleboxCoverState.MOTOR_FAILURE: STATE_OPEN,
+    BleboxCoverState.SAFETY_STOP: STATE_OPEN,
 }
 
 
@@ -64,14 +64,20 @@ class BleBoxCoverEntity(BleBoxEntity[blebox_uniapi.cover.Cover], CoverEntity):
         """Initialize a BleBox cover feature."""
         super().__init__(feature)
         self._attr_device_class = BLEBOX_TO_COVER_DEVICE_CLASSES[feature.device_class]
-        position = CoverEntityFeature.SET_POSITION if feature.is_slider else 0
-        stop = CoverEntityFeature.STOP if feature.has_stop else 0
         self._attr_supported_features = (
-            position | stop | CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
+            CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
         )
+        if feature.is_slider:
+            self._attr_supported_features |= CoverEntityFeature.SET_POSITION
+
+        if feature.has_stop:
+            self._attr_supported_features |= CoverEntityFeature.STOP
+
         if feature.has_tilt:
-            self._attr_supported_features = (
-                self._attr_supported_features | CoverEntityFeature.SET_TILT_POSITION
+            self._attr_supported_features |= (
+                CoverEntityFeature.SET_TILT_POSITION
+                | CoverEntityFeature.OPEN_TILT
+                | CoverEntityFeature.CLOSE_TILT
             )
 
     @property
@@ -105,16 +111,24 @@ class BleBoxCoverEntity(BleBoxEntity[blebox_uniapi.cover.Cover], CoverEntity):
         return self._is_state(STATE_CLOSED)
 
     async def async_open_cover(self, **kwargs: Any) -> None:
-        """Open the cover position."""
+        """Fully open the cover position."""
         await self._feature.async_open()
 
     async def async_close_cover(self, **kwargs: Any) -> None:
-        """Close the cover position."""
+        """Fully close the cover position."""
         await self._feature.async_close()
+
+    async def async_open_cover_tilt(self, **kwargs: Any) -> None:
+        """Fully open the cover tilt."""
+        await self._feature.async_set_tilt_position(0)
+
+    async def async_close_cover_tilt(self, **kwargs: Any) -> None:
+        """Fully close the cover tilt."""
+        # note: values are reversed
+        await self._feature.async_set_tilt_position(100)
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Set the cover position."""
-
         position = kwargs[ATTR_POSITION]
         await self._feature.async_set_position(100 - position)
 
@@ -124,7 +138,6 @@ class BleBoxCoverEntity(BleBoxEntity[blebox_uniapi.cover.Cover], CoverEntity):
 
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Set the tilt position."""
-
         position = kwargs[ATTR_TILT_POSITION]
         await self._feature.async_set_tilt_position(100 - position)
 

@@ -24,6 +24,7 @@ from homeassistant.core import Context, HomeAssistant, State, SupportsResponse, 
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.loader import async_get_integration
 from homeassistant.setup import async_setup_component
 from homeassistant.util.json import json_loads
@@ -919,7 +920,7 @@ async def test_subscribe_entities_with_unserializable_state(
     class CannotSerializeMe:
         """Cannot serialize this."""
 
-        def __init__(self):
+        def __init__(self) -> None:
             """Init cannot serialize this."""
 
     hass.states.async_set("light.permitted", "off", {"color": "red"})
@@ -1252,6 +1253,54 @@ async def test_subscribe_unsubscribe_entities_specific_entities(
             "light.permitted": {
                 "+": {
                     "a": {"color": "blue"},
+                    "c": ANY,
+                    "lc": ANY,
+                    "s": "on",
+                }
+            }
+        }
+    }
+
+
+async def test_subscribe_unsubscribe_entities_with_filter(
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+    hass_admin_user: MockUser,
+) -> None:
+    """Test subscribe/unsubscribe entities with an entity filter."""
+    hass.states.async_set("switch.not_included", "off")
+    hass.states.async_set("light.include", "off")
+    await websocket_client.send_json(
+        {"id": 7, "type": "subscribe_entities", "include": {"domains": ["light"]}}
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 7
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 7
+    assert msg["type"] == "event"
+    assert msg["event"] == {
+        "a": {
+            "light.include": {
+                "a": {},
+                "c": ANY,
+                "lc": ANY,
+                "s": "off",
+            }
+        }
+    }
+    hass.states.async_set("switch.not_included", "on")
+    hass.states.async_set("light.include", "on")
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 7
+    assert msg["type"] == "event"
+    assert msg["event"] == {
+        "c": {
+            "light.include": {
+                "+": {
                     "c": ANY,
                     "lc": ANY,
                     "s": "on",
@@ -2391,7 +2440,7 @@ async def test_execute_script_complex_response(
             "type": "execute_script",
             "sequence": [
                 {
-                    "service": "calendar.list_events",
+                    "service": "calendar.get_events",
                     "data": {"duration": {"hours": 24, "minutes": 0, "seconds": 0}},
                     "target": {"entity_id": "calendar.calendar_1"},
                     "response_variable": "service_result",
@@ -2405,15 +2454,17 @@ async def test_execute_script_complex_response(
     assert msg_no_var["type"] == const.TYPE_RESULT
     assert msg_no_var["success"]
     assert msg_no_var["result"]["response"] == {
-        "events": [
-            {
-                "start": ANY,
-                "end": ANY,
-                "summary": "Future Event",
-                "description": "Future Description",
-                "location": "Future Location",
-            }
-        ]
+        "calendar.calendar_1": {
+            "events": [
+                {
+                    "start": ANY,
+                    "end": ANY,
+                    "summary": "Future Event",
+                    "description": "Future Description",
+                    "location": "Future Location",
+                }
+            ]
+        }
     }
 
 
@@ -2812,3 +2863,54 @@ async def test_integration_descriptions(
 
     assert response["success"]
     assert response["result"]
+
+
+async def test_subscribe_entities_chained_state_change(
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+    hass_admin_user: MockUser,
+) -> None:
+    """Test chaining state changed events.
+
+    Ensure the websocket sends the off state after
+    the on state.
+    """
+
+    @callback
+    def auto_off_listener(event):
+        hass.states.async_set("light.permitted", "off")
+
+    async_track_state_change_event(hass, ["light.permitted"], auto_off_listener)
+
+    await websocket_client.send_json({"id": 7, "type": "subscribe_entities"})
+
+    data = await websocket_client.receive_str()
+    msg = json_loads(data)
+    assert msg["id"] == 7
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+
+    data = await websocket_client.receive_str()
+    msg = json_loads(data)
+    assert msg["id"] == 7
+    assert msg["type"] == "event"
+    assert msg["event"] == {"a": {}}
+
+    hass.states.async_set("light.permitted", "on")
+    data = await websocket_client.receive_str()
+    msg = json_loads(data)
+    assert msg["id"] == 7
+    assert msg["type"] == "event"
+    assert msg["event"] == {
+        "a": {"light.permitted": {"a": {}, "c": ANY, "lc": ANY, "s": "on"}}
+    }
+    data = await websocket_client.receive_str()
+    msg = json_loads(data)
+    assert msg["id"] == 7
+    assert msg["type"] == "event"
+    assert msg["event"] == {
+        "c": {"light.permitted": {"+": {"c": ANY, "lc": ANY, "s": "off"}}}
+    }
+
+    await websocket_client.close()
+    await hass.async_block_till_done()

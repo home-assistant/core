@@ -121,6 +121,7 @@ class Airtouch5ClimateEntity(ClimateEntity, Airtouch5Entity):
     """Base class for Airtouch5 Climate Entities."""
 
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_translation_key = DOMAIN
     _attr_target_temperature_step = 1
     _attr_name = None
     _enable_turn_on_off_backwards_compatibility = False

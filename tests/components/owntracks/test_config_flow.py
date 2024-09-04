@@ -51,7 +51,7 @@ def mock_not_supports_encryption():
         yield
 
 
-async def init_config_flow(hass):
+async def init_config_flow(hass: HomeAssistant) -> config_flow.OwnTracksFlow:
     """Init a configuration flow."""
     await async_process_ha_core_config(
         hass,

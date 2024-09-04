@@ -81,11 +81,9 @@ async def async_setup_entry(
         if entity_description.supported(reolink_data.host.api, channel)
     ]
     entities.extend(
-        [
-            ReolinkHostUpdateEntity(reolink_data, entity_description)
-            for entity_description in HOST_UPDATE_ENTITIES
-            if entity_description.supported(reolink_data.host.api)
-        ]
+        ReolinkHostUpdateEntity(reolink_data, entity_description)
+        for entity_description in HOST_UPDATE_ENTITIES
+        if entity_description.supported(reolink_data.host.api)
     )
     async_add_entities(entities)
 
@@ -139,8 +137,7 @@ class ReolinkUpdateEntity(
     async def async_release_notes(self) -> str | None:
         """Return the release notes."""
         new_firmware = self._host.api.firmware_update_available(self._channel)
-        if not isinstance(new_firmware, NewSoftwareVersion):
-            return None
+        assert isinstance(new_firmware, NewSoftwareVersion)
 
         return (
             "If the install button fails, download this"
@@ -231,8 +228,7 @@ class ReolinkHostUpdateEntity(
     async def async_release_notes(self) -> str | None:
         """Return the release notes."""
         new_firmware = self._host.api.firmware_update_available()
-        if not isinstance(new_firmware, NewSoftwareVersion):
-            return None
+        assert isinstance(new_firmware, NewSoftwareVersion)
 
         return (
             "If the install button fails, download this"

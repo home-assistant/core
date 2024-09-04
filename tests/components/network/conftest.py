@@ -1,9 +1,9 @@
 """Tests for the Network Configuration integration."""
 
+from collections.abc import Generator
 from unittest.mock import _patch
 
 import pytest
-from typing_extensions import Generator
 
 
 @pytest.fixture(autouse=True)

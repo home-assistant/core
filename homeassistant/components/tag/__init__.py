@@ -18,7 +18,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.storage import Store
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, VolDictType
 from homeassistant.util import slugify
 import homeassistant.util.dt as dt_util
 from homeassistant.util.hass_dict import HassKey
@@ -35,7 +35,7 @@ STORAGE_VERSION_MINOR = 3
 
 TAG_DATA: HassKey[TagStorageCollection] = HassKey(DOMAIN)
 
-CREATE_FIELDS = {
+CREATE_FIELDS: VolDictType = {
     vol.Optional(TAG_ID): cv.string,
     vol.Optional(CONF_NAME): vol.All(str, vol.Length(min=1)),
     vol.Optional("description"): cv.string,
@@ -43,7 +43,7 @@ CREATE_FIELDS = {
     vol.Optional(DEVICE_ID): cv.string,
 }
 
-UPDATE_FIELDS = {
+UPDATE_FIELDS: VolDictType = {
     vol.Optional(CONF_NAME): vol.All(str, vol.Length(min=1)),
     vol.Optional("description"): cv.string,
     vol.Optional(LAST_SCANNED): cv.datetime,
@@ -192,8 +192,8 @@ class TagDictStorageCollectionWebsocket(
         storage_collection: TagStorageCollection,
         api_prefix: str,
         model_name: str,
-        create_schema: ConfigType,
-        update_schema: ConfigType,
+        create_schema: VolDictType,
+        update_schema: VolDictType,
     ) -> None:
         """Initialize a websocket for tag."""
         super().__init__(
@@ -364,7 +364,6 @@ class TagEntity(Entity):
     """Representation of a Tag entity."""
 
     _unrecorded_attributes = frozenset({TAG_ID})
-    _attr_translation_key = DOMAIN
     _attr_should_poll = False
 
     def __init__(

@@ -12,7 +12,7 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_HS_COLOR,
     ATTR_WHITE,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as LIGHT_PLATFORM_SCHEMA,
     ColorMode,
     LightEntity,
 )
@@ -27,7 +27,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DEVICE_SCHEMA = vol.Schema({vol.Optional(CONF_NAME): cv.string})
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = LIGHT_PLATFORM_SCHEMA.extend(
     {vol.Optional(CONF_DEVICES, default={}): {cv.string: DEVICE_SCHEMA}}
 )
 

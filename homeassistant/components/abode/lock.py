@@ -3,7 +3,6 @@
 from typing import Any
 
 from jaraco.abode.devices.lock import Lock
-from jaraco.abode.helpers.constants import TYPE_LOCK
 
 from homeassistant.components.lock import LockEntity
 from homeassistant.config_entries import ConfigEntry
@@ -23,7 +22,7 @@ async def async_setup_entry(
 
     async_add_entities(
         AbodeLock(data, device)
-        for device in data.abode.get_devices(generic_type=TYPE_LOCK)
+        for device in data.abode.get_devices(generic_type="lock")
     )
 
 

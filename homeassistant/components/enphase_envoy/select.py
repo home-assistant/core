@@ -12,13 +12,12 @@ from pyenphase.models.dry_contacts import DryContactAction, DryContactMode
 from pyenphase.models.tariff import EnvoyStorageMode, EnvoyStorageSettings
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .coordinator import EnphaseUpdateCoordinator
+from .coordinator import EnphaseConfigEntry, EnphaseUpdateCoordinator
 from .entity import EnvoyBaseEntity
 
 
@@ -126,11 +125,11 @@ STORAGE_MODE_ENTITY = EnvoyStorageSettingsSelectEntityDescription(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: EnphaseConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Enphase Envoy select platform."""
-    coordinator: EnphaseUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
     envoy_data = coordinator.envoy.data
     assert envoy_data is not None
     entities: list[SelectEntity] = []
@@ -144,6 +143,7 @@ async def async_setup_entry(
         envoy_data.tariff
         and envoy_data.tariff.storage_settings
         and coordinator.envoy.supported_features & SupportedFeatures.ENCHARGE
+        and coordinator.envoy.supported_features & SupportedFeatures.ENPOWER
     ):
         entities.append(
             EnvoyStorageSettingsSelectEntity(coordinator, STORAGE_MODE_ENTITY)

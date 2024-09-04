@@ -185,7 +185,6 @@ class JsonValidator:
     "hass_config", [{mqtt.DOMAIN: {light.DOMAIN: {"schema": "json", "name": "test"}}}]
 )
 async def test_fail_setup_if_no_command_topic(
-    hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
@@ -204,7 +203,6 @@ async def test_fail_setup_if_no_command_topic(
     ],
 )
 async def test_fail_setup_if_color_mode_deprecated(
-    hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
@@ -233,7 +231,6 @@ async def test_fail_setup_if_color_mode_deprecated(
     ids=["color_temp", "hs", "rgb", "xy", "color_temp, rgb"],
 )
 async def test_warning_if_color_mode_flags_are_used(
-    hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
     color_modes: tuple[str, ...],
@@ -316,7 +313,6 @@ async def test_warning_on_discovery_if_color_mode_flags_are_used(
     ids=["color_temp"],
 )
 async def test_warning_if_color_mode_option_flag_is_used(
-    hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
@@ -393,7 +389,6 @@ async def test_warning_on_discovery_if_color_mode_option_flag_is_used(
     ],
 )
 async def test_fail_setup_if_color_modes_invalid(
-    hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
     error: str,
@@ -421,8 +416,7 @@ async def test_fail_setup_if_color_modes_invalid(
     ],
 )
 async def test_single_color_mode(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test setup with single color_mode."""
     await mqtt_mock_entry()
@@ -448,8 +442,7 @@ async def test_single_color_mode(
 
 @pytest.mark.parametrize("hass_config", [COLOR_MODES_CONFIG])
 async def test_turn_on_with_unknown_color_mode_optimistic(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test setup and turn with unknown color_mode in optimistic mode."""
     await mqtt_mock_entry()
@@ -486,8 +479,7 @@ async def test_turn_on_with_unknown_color_mode_optimistic(
     ],
 )
 async def test_controlling_state_with_unknown_color_mode(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test setup and turn with unknown color_mode in optimistic mode."""
     await mqtt_mock_entry()
@@ -2374,11 +2366,7 @@ async def test_update_with_json_attrs_not_dict(
 ) -> None:
     """Test attributes get extracted from a JSON result."""
     await help_test_update_with_json_attrs_not_dict(
-        hass,
-        mqtt_mock_entry,
-        caplog,
-        light.DOMAIN,
-        DEFAULT_CONFIG,
+        hass, mqtt_mock_entry, caplog, light.DOMAIN, DEFAULT_CONFIG
     )
 
 
@@ -2389,26 +2377,16 @@ async def test_update_with_json_attrs_bad_json(
 ) -> None:
     """Test attributes get extracted from a JSON result."""
     await help_test_update_with_json_attrs_bad_json(
-        hass,
-        mqtt_mock_entry,
-        caplog,
-        light.DOMAIN,
-        DEFAULT_CONFIG,
+        hass, mqtt_mock_entry, caplog, light.DOMAIN, DEFAULT_CONFIG
     )
 
 
 async def test_discovery_update_attr(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test update of discovered MQTTAttributes."""
     await help_test_discovery_update_attr(
-        hass,
-        mqtt_mock_entry,
-        caplog,
-        light.DOMAIN,
-        DEFAULT_CONFIG,
+        hass, mqtt_mock_entry, light.DOMAIN, DEFAULT_CONFIG
     )
 
 
@@ -2445,25 +2423,15 @@ async def test_unique_id(
 
 
 async def test_discovery_removal(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test removal of discovered mqtt_json lights."""
     data = '{ "name": "test", "schema": "json", "command_topic": "test_topic" }'
-    await help_test_discovery_removal(
-        hass,
-        mqtt_mock_entry,
-        caplog,
-        light.DOMAIN,
-        data,
-    )
+    await help_test_discovery_removal(hass, mqtt_mock_entry, light.DOMAIN, data)
 
 
 async def test_discovery_update_light(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test update of discovered light."""
     config1 = {
@@ -2479,19 +2447,12 @@ async def test_discovery_update_light(
         "command_topic": "test_topic",
     }
     await help_test_discovery_update(
-        hass,
-        mqtt_mock_entry,
-        caplog,
-        light.DOMAIN,
-        config1,
-        config2,
+        hass, mqtt_mock_entry, light.DOMAIN, config1, config2
     )
 
 
 async def test_discovery_update_unchanged_light(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test update of discovered light."""
     data1 = (
@@ -2504,20 +2465,13 @@ async def test_discovery_update_unchanged_light(
         "homeassistant.components.mqtt.light.schema_json.MqttLightJson.discovery_update"
     ) as discovery_update:
         await help_test_discovery_update_unchanged(
-            hass,
-            mqtt_mock_entry,
-            caplog,
-            light.DOMAIN,
-            data1,
-            discovery_update,
+            hass, mqtt_mock_entry, light.DOMAIN, data1, discovery_update
         )
 
 
 @pytest.mark.no_fail_on_log_exception
 async def test_discovery_broken(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test handling of bad discovery message."""
     data1 = '{ "name": "Beer" }'
@@ -2527,14 +2481,7 @@ async def test_discovery_broken(
         '  "state_topic": "test_topic",'
         '  "command_topic": "test_topic" }'
     )
-    await help_test_discovery_broken(
-        hass,
-        mqtt_mock_entry,
-        caplog,
-        light.DOMAIN,
-        data1,
-        data2,
-    )
+    await help_test_discovery_broken(hass, mqtt_mock_entry, light.DOMAIN, data1, data2)
 
 
 async def test_entity_device_info_with_connection(
@@ -2703,8 +2650,7 @@ async def test_publishing_with_custom_encoding(
 
 
 async def test_reloadable(
-    hass: HomeAssistant,
-    mqtt_client_mock: MqttMockPahoClient,
+    hass: HomeAssistant, mqtt_client_mock: MqttMockPahoClient
 ) -> None:
     """Test reloading the MQTT platform."""
     domain = light.DOMAIN

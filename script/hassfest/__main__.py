@@ -14,7 +14,6 @@ from . import (
     codeowners,
     config_flow,
     config_schema,
-    coverage,
     dependencies,
     dhcp,
     docker,
@@ -53,7 +52,6 @@ INTEGRATION_PLUGINS = [
     config_flow,  # This needs to run last, after translations are processed
 ]
 HASS_PLUGINS = [
-    coverage,
     docker,
     mypy_config,
     metadata,
@@ -109,6 +107,12 @@ def get_config() -> Config:
         default=ALL_PLUGIN_NAMES,
         help="Comma-separate list of plugins to run. Valid plugin names: %(default)s",
     )
+    parser.add_argument(
+        "--core-integrations-path",
+        type=pathlib.Path,
+        default=pathlib.Path("homeassistant/components"),
+        help="Path to core integrations",
+    )
     parsed = parser.parse_args()
 
     if parsed.action is None:
@@ -131,6 +135,7 @@ def get_config() -> Config:
         action=parsed.action,
         requirements=parsed.requirements,
         plugins=set(parsed.plugins),
+        core_integrations_path=parsed.core_integrations_path,
     )
 
 
@@ -148,12 +153,12 @@ def main() -> int:
         integrations = {}
 
         for int_path in config.specific_integrations:
-            integration = Integration(int_path)
+            integration = Integration(int_path, config)
             integration.load_manifest()
             integrations[integration.domain] = integration
 
     else:
-        integrations = Integration.load_dir(pathlib.Path("homeassistant/components"))
+        integrations = Integration.load_dir(config.core_integrations_path, config)
         plugins += HASS_PLUGINS
 
     for plugin in plugins:

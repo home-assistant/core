@@ -27,6 +27,7 @@ from homeassistant.const import CONF_DEVICE_ID, CONF_HOST, CONF_MAC, CONF_TYPE, 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import IntegrationError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers.typing import VolDictType
 
 from .const import (
     CONF_BROWSE_UNFILTERED,
@@ -382,7 +383,7 @@ class DlnaDmrOptionsFlowHandler(OptionsFlow):
             if not errors:
                 return self.async_create_entry(title="", data=options)
 
-        fields = {}
+        fields: VolDictType = {}
 
         def _add_with_suggestion(key: str, validator: Callable | type[bool]) -> None:
             """Add a field to with a suggested value.

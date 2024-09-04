@@ -23,8 +23,10 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import TessieConfigEntry
 from .const import DOMAIN, TessieChargeCableLockStates
-from .coordinator import TessieStateUpdateCoordinator
 from .entity import TessieEntity
+from .models import TessieVehicleData
+
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
@@ -35,7 +37,7 @@ async def async_setup_entry(
     """Set up the Tessie sensor platform from a config entry."""
     data = entry.runtime_data
 
-    entities = [
+    entities: list[TessieEntity] = [
         klass(vehicle)
         for klass in (TessieLockEntity, TessieCableLockEntity)
         for vehicle in data.vehicles
@@ -82,10 +84,10 @@ class TessieLockEntity(TessieEntity, LockEntity):
 
     def __init__(
         self,
-        coordinator: TessieStateUpdateCoordinator,
+        vehicle: TessieVehicleData,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator, "vehicle_state_locked")
+        super().__init__(vehicle, "vehicle_state_locked")
 
     @property
     def is_locked(self) -> bool | None:
@@ -110,10 +112,10 @@ class TessieSpeedLimitEntity(TessieEntity, LockEntity):
 
     def __init__(
         self,
-        coordinator: TessieStateUpdateCoordinator,
+        vehicle: TessieVehicleData,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator, "vehicle_state_speed_limit_mode_active")
+        super().__init__(vehicle, "vehicle_state_speed_limit_mode_active")
 
     @property
     def is_locked(self) -> bool | None:
@@ -160,10 +162,10 @@ class TessieCableLockEntity(TessieEntity, LockEntity):
 
     def __init__(
         self,
-        coordinator: TessieStateUpdateCoordinator,
+        vehicle: TessieVehicleData,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator, "charge_state_charge_port_latch")
+        super().__init__(vehicle, "charge_state_charge_port_latch")
 
     @property
     def is_locked(self) -> bool | None:

@@ -8,7 +8,10 @@ import logging
 import requests
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+    SensorEntity,
+)
 from homeassistant.const import CONF_API_KEY, CONF_BASE, CONF_NAME, CONF_QUOTE
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -24,7 +27,7 @@ DEFAULT_NAME = "CurrencyLayer Sensor"
 
 SCAN_INTERVAL = timedelta(hours=4)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_API_KEY): cv.string,
         vol.Required(CONF_QUOTE): vol.All(cv.ensure_list, [cv.string]),
@@ -105,7 +108,7 @@ class CurrencylayerData:
         try:
             result = requests.get(self._resource, params=self._parameters, timeout=10)
             if "error" in result.json():
-                raise ValueError(result.json()["error"]["info"])
+                raise ValueError(result.json()["error"]["info"])  # noqa: TRY301
             self.data = result.json()["quotes"]
             _LOGGER.debug("Currencylayer data updated: %s", result.json()["timestamp"])
         except ValueError as err:

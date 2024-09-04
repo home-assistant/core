@@ -10,7 +10,7 @@
     }),
     dict({
       'data': dict({
-        'engine': 'test',
+        'engine': 'stt.mock_stt',
         'metadata': dict({
           'bit_rate': <AudioBitRates.BITRATE_16: 16>,
           'channel': <AudioChannels.CHANNEL_MONO: 1>,
@@ -301,7 +301,7 @@
     }),
     dict({
       'data': dict({
-        'engine': 'test',
+        'engine': 'stt.mock_stt',
         'metadata': dict({
           'bit_rate': <AudioBitRates.BITRATE_16: 16>,
           'channel': <AudioChannels.CHANNEL_MONO: 1>,

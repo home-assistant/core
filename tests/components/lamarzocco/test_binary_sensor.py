@@ -18,6 +18,7 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 
 BINARY_SENSORS = (
     "brewing_active",
+    "backflush_active",
     "water_tank_empty",
 )
 

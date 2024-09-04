@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from contextlib import contextmanager
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 from aiolifx.aiolifx import Light
@@ -25,7 +26,7 @@ DEFAULT_ENTRY_TITLE = LABEL
 class MockMessage:
     """Mock a lifx message."""
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs: Any) -> None:
         """Init message."""
         self.target_addr = SERIAL
         self.count = 9
@@ -37,7 +38,7 @@ class MockMessage:
 class MockFailingLifxCommand:
     """Mock a lifx command that fails."""
 
-    def __init__(self, bulb, **kwargs):
+    def __init__(self, bulb, **kwargs: Any) -> None:
         """Init command."""
         self.bulb = bulb
         self.calls = []
@@ -60,7 +61,7 @@ class MockLifxCommand:
         """Return name."""
         return "mock_lifx_command"
 
-    def __init__(self, bulb, **kwargs):
+    def __init__(self, bulb, **kwargs: Any) -> None:
         """Init command."""
         self.bulb = bulb
         self.calls = []
@@ -172,6 +173,19 @@ def _mocked_tile() -> Light:
     bulb.effect = {"effect": "OFF"}
     bulb.get_tile_effect = MockLifxCommand(bulb)
     bulb.set_tile_effect = MockLifxCommand(bulb)
+    bulb.get64 = MockLifxCommand(bulb)
+    bulb.get_device_chain = MockLifxCommand(bulb)
+    return bulb
+
+
+def _mocked_ceiling() -> Light:
+    bulb = _mocked_bulb()
+    bulb.product = 176  # LIFX Ceiling
+    bulb.effect = {"effect": "OFF"}
+    bulb.get_tile_effect = MockLifxCommand(bulb)
+    bulb.set_tile_effect = MockLifxCommand(bulb)
+    bulb.get64 = MockLifxCommand(bulb)
+    bulb.get_device_chain = MockLifxCommand(bulb)
     return bulb
 
 
@@ -199,7 +213,7 @@ def _patch_device(device: Light | None = None, no_device: bool = False):
     class MockLifxConnecton:
         """Mock lifx discovery."""
 
-        def __init__(self, *args, **kwargs):
+        def __init__(self, *args: Any, **kwargs: Any) -> None:
             """Init connection."""
             if no_device:
                 self.device = _mocked_failing_bulb()
@@ -227,7 +241,7 @@ def _patch_discovery(device: Light | None = None, no_device: bool = False):
     class MockLifxDiscovery:
         """Mock lifx discovery."""
 
-        def __init__(self, *args, **kwargs):
+        def __init__(self, *args: Any, **kwargs: Any) -> None:
             """Init discovery."""
             if no_device:
                 self.lights = {}
@@ -263,7 +277,7 @@ def _patch_config_flow_try_connect(
     class MockLifxConnection:
         """Mock lifx discovery."""
 
-        def __init__(self, *args, **kwargs):
+        def __init__(self, *args: Any, **kwargs: Any) -> None:
             """Init connection."""
             if no_device:
                 self.device = _mocked_failing_bulb()

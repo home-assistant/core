@@ -1,0 +1,47 @@
+# serializer version: 1
+# name: test_config_flow_preview_success[missing_entity_id]
+  dict({
+    'attributes': dict({
+      'friendly_name': '',
+    }),
+    'state': 'unavailable',
+  })
+# ---
+# name: test_config_flow_preview_success[missing_upper_lower]
+  dict({
+    'attributes': dict({
+      'friendly_name': 'Test Sensor',
+    }),
+    'state': 'unavailable',
+  })
+# ---
+# name: test_config_flow_preview_success[success]
+  dict({
+    'attributes': dict({
+      'entity_id': 'sensor.test_monitored',
+      'friendly_name': 'Test Sensor',
+      'hysteresis': 0.0,
+      'lower': 20.0,
+      'position': 'below',
+      'sensor_value': 16.0,
+      'type': 'lower',
+      'upper': None,
+    }),
+    'state': 'on',
+  })
+# ---
+# name: test_options_flow_preview
+  dict({
+    'attributes': dict({
+      'entity_id': 'sensor.test_monitored',
+      'friendly_name': 'Test Sensor',
+      'hysteresis': 0.0,
+      'lower': 20.0,
+      'position': 'below',
+      'sensor_value': 16.0,
+      'type': 'lower',
+      'upper': None,
+    }),
+    'state': 'on',
+  })
+# ---

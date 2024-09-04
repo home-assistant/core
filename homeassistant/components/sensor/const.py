@@ -14,10 +14,10 @@ from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     LIGHT_LUX,
     PERCENTAGE,
-    POWER_VOLT_AMPERE_REACTIVE,
     SIGNAL_STRENGTH_DECIBELS,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     UnitOfApparentPower,
+    UnitOfConductivity,
     UnitOfDataRate,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
@@ -30,6 +30,7 @@ from homeassistant.const import (
     UnitOfPower,
     UnitOfPrecipitationDepth,
     UnitOfPressure,
+    UnitOfReactivePower,
     UnitOfSoundPressure,
     UnitOfSpeed,
     UnitOfTemperature,
@@ -46,6 +47,7 @@ from homeassistant.helpers.deprecation import (
 )
 from homeassistant.util.unit_conversion import (
     BaseUnitConverter,
+    ConductivityConverter,
     DataRateConverter,
     DistanceConverter,
     DurationConverter,
@@ -135,6 +137,12 @@ class SensorDeviceClass(StrEnum):
     """Carbon Dioxide gas concentration.
 
     Unit of measurement: `ppm` (parts per million)
+    """
+
+    CONDUCTIVITY = "conductivity"
+    """Conductivity.
+
+    Unit of measurement: `S/cm`, `mS/cm`, `µS/cm`
     """
 
     CURRENT = "current"
@@ -485,6 +493,7 @@ STATE_CLASSES: Final[list[str]] = [cls.value for cls in SensorStateClass]
 
 UNIT_CONVERTERS: dict[SensorDeviceClass | str | None, type[BaseUnitConverter]] = {
     SensorDeviceClass.ATMOSPHERIC_PRESSURE: PressureConverter,
+    SensorDeviceClass.CONDUCTIVITY: ConductivityConverter,
     SensorDeviceClass.CURRENT: ElectricCurrentConverter,
     SensorDeviceClass.DATA_RATE: DataRateConverter,
     SensorDeviceClass.DATA_SIZE: InformationConverter,
@@ -517,6 +526,7 @@ DEVICE_CLASS_UNITS: dict[SensorDeviceClass, set[type[StrEnum] | str | None]] = {
     SensorDeviceClass.BATTERY: {PERCENTAGE},
     SensorDeviceClass.CO: {CONCENTRATION_PARTS_PER_MILLION},
     SensorDeviceClass.CO2: {CONCENTRATION_PARTS_PER_MILLION},
+    SensorDeviceClass.CONDUCTIVITY: set(UnitOfConductivity),
     SensorDeviceClass.CURRENT: set(UnitOfElectricCurrent),
     SensorDeviceClass.DATA_RATE: set(UnitOfDataRate),
     SensorDeviceClass.DATA_SIZE: set(UnitOfInformation),
@@ -553,7 +563,7 @@ DEVICE_CLASS_UNITS: dict[SensorDeviceClass, set[type[StrEnum] | str | None]] = {
     SensorDeviceClass.PRECIPITATION: set(UnitOfPrecipitationDepth),
     SensorDeviceClass.PRECIPITATION_INTENSITY: set(UnitOfVolumetricFlux),
     SensorDeviceClass.PRESSURE: set(UnitOfPressure),
-    SensorDeviceClass.REACTIVE_POWER: {POWER_VOLT_AMPERE_REACTIVE},
+    SensorDeviceClass.REACTIVE_POWER: {UnitOfReactivePower.VOLT_AMPERE_REACTIVE},
     SensorDeviceClass.SIGNAL_STRENGTH: {
         SIGNAL_STRENGTH_DECIBELS,
         SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
@@ -591,6 +601,7 @@ DEVICE_CLASS_STATE_CLASSES: dict[SensorDeviceClass, set[SensorStateClass]] = {
     SensorDeviceClass.BATTERY: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.CO: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.CO2: {SensorStateClass.MEASUREMENT},
+    SensorDeviceClass.CONDUCTIVITY: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.CURRENT: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.DATA_RATE: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.DATA_SIZE: set(SensorStateClass),

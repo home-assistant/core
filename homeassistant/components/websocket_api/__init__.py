@@ -4,11 +4,9 @@ from __future__ import annotations
 
 from typing import Final, cast
 
-import voluptuous as vol
-
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, VolSchemaType
 from homeassistant.loader import bind_hass
 
 from . import commands, connection, const, decorators, http, messages  # noqa: F401
@@ -55,7 +53,7 @@ def async_register_command(
     hass: HomeAssistant,
     command_or_handler: str | const.WebSocketCommandHandler,
     handler: const.WebSocketCommandHandler | None = None,
-    schema: vol.Schema | None = None,
+    schema: VolSchemaType | None = None,
 ) -> None:
     """Register a websocket command."""
     if handler is None:

@@ -133,14 +133,9 @@ class ResourceStorageCollectionWebsocket(collection.DictStorageCollectionWebsock
     """Class to expose storage collection management over websocket."""
 
     @callback
-    def async_setup(
-        self,
-        hass: HomeAssistant,
-        *,
-        create_create: bool = True,
-    ) -> None:
+    def async_setup(self, hass: HomeAssistant) -> None:
         """Set up the websocket commands."""
-        super().async_setup(hass, create_create=create_create)
+        super().async_setup(hass)
 
         # Register lovelace/resources for backwards compatibility, remove in
         # Home Assistant Core 2025.1

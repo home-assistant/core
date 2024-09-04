@@ -20,7 +20,10 @@ from pysnmp.proto.rfc1902 import Opaque
 from pysnmp.proto.rfc1905 import NoSuchObject
 import voluptuous as vol
 
-from homeassistant.components.sensor import CONF_STATE_CLASS, PLATFORM_SCHEMA
+from homeassistant.components.sensor import (
+    CONF_STATE_CLASS,
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+)
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_HOST,
@@ -83,7 +86,7 @@ TRIGGER_ENTITY_OPTIONS = (
     CONF_UNIT_OF_MEASUREMENT,
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_BASEOID): cv.string,
         vol.Optional(CONF_ACCEPT_ERRORS, default=False): cv.boolean,
@@ -171,8 +174,6 @@ async def async_setup_platform(
         trigger_entity_config[key] = config[key]
 
     value_template: Template | None = config.get(CONF_VALUE_TEMPLATE)
-    if value_template is not None:
-        value_template.hass = hass
 
     data = SnmpData(request_args, baseoid, accept_errors, default_value)
     async_add_entities([SnmpSensor(hass, data, trigger_entity_config, value_template)])

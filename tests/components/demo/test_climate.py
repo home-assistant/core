@@ -1,5 +1,6 @@
 """The tests for the demo climate component."""
 
+from collections.abc import Generator
 from unittest.mock import patch
 
 import pytest
@@ -50,7 +51,7 @@ ENTITY_HEATPUMP = "climate.heatpump"
 
 
 @pytest.fixture
-async def climate_only() -> None:
+def climate_only() -> Generator[None]:
     """Enable only the climate platform."""
     with patch(
         "homeassistant.components.demo.COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM",
@@ -60,7 +61,7 @@ async def climate_only() -> None:
 
 
 @pytest.fixture(autouse=True)
-async def setup_demo_climate(hass, climate_only):
+async def setup_demo_climate(hass: HomeAssistant, climate_only: None) -> None:
     """Initialize setup demo climate."""
     hass.config.units = METRIC_SYSTEM
     assert await async_setup_component(hass, DOMAIN, {"climate": {"platform": "demo"}})

@@ -1,10 +1,10 @@
 """Define test fixtures for AirVisual Pro."""
 
+from collections.abc import AsyncGenerator, Generator
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
-from typing_extensions import AsyncGenerator, Generator
 
 from homeassistant.components.airvisual_pro.const import DOMAIN
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD

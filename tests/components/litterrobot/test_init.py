@@ -41,8 +41,6 @@ async def test_unload_entry(hass: HomeAssistant, mock_account: MagicMock) -> Non
     getattr(mock_account.robots[0], "start_cleaning").assert_called_once()
 
     assert await hass.config_entries.async_unload(entry.entry_id)
-    await hass.async_block_till_done()
-    assert hass.data[litterrobot.DOMAIN] == {}
 
 
 @pytest.mark.parametrize(

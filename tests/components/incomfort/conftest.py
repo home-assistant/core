@@ -1,11 +1,11 @@
 """Fixtures for Intergas InComfort integration."""
 
+from collections.abc import Generator
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from incomfortclient import DisplayCode
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.incomfort import DOMAIN
 from homeassistant.config_entries import ConfigEntry
@@ -77,10 +77,9 @@ def mock_room_status() -> dict[str, Any]:
 
 @pytest.fixture
 def mock_incomfort(
-    hass: HomeAssistant,
     mock_heater_status: dict[str, Any],
     mock_room_status: dict[str, Any],
-) -> Generator[MagicMock, None]:
+) -> Generator[MagicMock]:
     """Mock the InComfort gateway client."""
 
     class MockRoom:

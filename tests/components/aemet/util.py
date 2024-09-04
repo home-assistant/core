@@ -68,6 +68,7 @@ async def async_init_integration(hass: HomeAssistant):
             CONF_NAME: "AEMET",
         },
         entry_id="7442b231f139e813fc1939281123f220",
+        unique_id="40.30403754--3.72935236",
     )
     config_entry.add_to_hass(hass)
 
