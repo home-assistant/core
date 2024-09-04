@@ -22,5 +22,17 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     }
+  },
+  "services": {
+    "preset": {
+      "name": "Preset",
+      "description": "Play the preset number on the device.",
+      "fields": {
+        "preset": {
+          "name": "Preset number",
+          "description": "The preset number on the device to play."
+        }
+      }
+    }
   }
 }

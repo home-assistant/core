@@ -20,14 +20,15 @@ from homeassistant.components.media_player import (
     MediaType,
     RepeatMode,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_platform, service
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import utcnow
 
 from . import LinkPlayConfigEntry
-from .const import DOMAIN
+from .const import ATTR_PRESET, DOMAIN, SERVICE_PRESET, SERVICE_PRESET_SCHEMA
 from .utils import get_info_from_project
 
 _LOGGER = logging.getLogger(__name__)
@@ -113,6 +114,32 @@ async def async_setup_entry(
 ) -> None:
     """Set up a media player from a config entry."""
 
+    # register services
+    platform = entity_platform.async_get_current_platform()
+
+    @service.verify_domain_control(hass, DOMAIN)
+    async def async_service_handle(service_call: ServiceCall) -> None:
+        """Handle dispatched services."""
+        assert platform is not None
+        entities = await platform.async_extract_from_service(service_call)
+
+        if not entities:
+            return
+
+        bridge = None
+        for entity in entities:
+            assert isinstance(entity, LinkPlayMediaPlayerEntity)
+            if entity.entity_id == service_call.data[ATTR_ENTITY_ID]:
+                bridge = entity
+
+        if bridge is not None and service_call.service == SERVICE_PRESET:
+            await bridge.async_play_preset(service_call.data[ATTR_PRESET])
+
+    hass.services.async_register(
+        DOMAIN, SERVICE_PRESET, async_service_handle, SERVICE_PRESET_SCHEMA
+    )
+
+    # add entities
     async_add_entities([LinkPlayMediaPlayerEntity(entry.runtime_data.bridge)])
 
 
@@ -237,6 +264,11 @@ class LinkPlayMediaPlayerEntity(MediaPlayerEntity):
             self.hass, media_id, self.entity_id
         )
         await self._bridge.player.play(media.url)
+
+    @exception_wrap
+    async def async_play_preset(self, preset_number: int) -> None:
+        """Play preset number."""
+        await self._bridge.player.play_preset(preset_number)
 
     def _update_properties(self) -> None:
         """Update the properties of the media player."""
