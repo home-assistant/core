@@ -75,7 +75,7 @@ class HassIOIngress(HomeAssistantView):
         base_path = f"/ingress/{token}/"
 
         try:
-            target_url = self._url.join(URL(f"{base_path}{quote(path)}"))
+            target_url = self._url.with_path(f"{base_path}{quote(path)}", encoded=True)
         except ValueError as err:
             raise HTTPBadRequest from err
 
