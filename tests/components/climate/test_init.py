@@ -110,6 +110,9 @@ class MockClimateEntity(MockEntity, ClimateEntity):
     _attr_swing_mode = "auto"
     _attr_swing_modes = ["auto", "off"]
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_target_temperature = 20
+    _attr_target_temperature_high = 25
+    _attr_target_temperature_low = 15
 
     @property
     def hvac_mode(self) -> HVACMode:
@@ -142,6 +145,14 @@ class MockClimateEntity(MockEntity, ClimateEntity):
     def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         self._attr_hvac_mode = hvac_mode
+
+    def set_temperature(self, **kwargs: Any) -> None:
+        """Set new target temperature."""
+        if ATTR_TEMPERATURE in kwargs:
+            self._attr_target_temperature = kwargs[ATTR_TEMPERATURE]
+        if ATTR_TARGET_TEMP_HIGH in kwargs:
+            self._attr_target_temperature_high = kwargs[ATTR_TARGET_TEMP_HIGH]
+            self._attr_target_temperature_low = kwargs[ATTR_TARGET_TEMP_LOW]
 
 
 class MockClimateEntityTestMethods(MockClimateEntity):

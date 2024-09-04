@@ -269,12 +269,6 @@
     },
     "temp_out_of_range": {
       "message": "Provided temperature {check_temp} is not valid. Accepted range is {min_temp} to {max_temp}."
-    },
-    "not_supported_temp_feature": {
-      "message": "The entity does not support to set target temperature, only to set a range."
-    },
-    "not_supported_temp_range_feature": {
-      "message": "The entity does not support to set target temperature range, only to set a single temperature."
     }
   }
 }
