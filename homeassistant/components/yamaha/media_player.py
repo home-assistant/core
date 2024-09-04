@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import contextlib
 import logging
 from typing import Any
 
@@ -130,34 +129,7 @@ def _discovery(config_info):
             zones.extend(recv.zone_controllers())
     else:
         _LOGGER.debug("Config Zones")
-        zones = None
-
-        # Fix for upstream issues in rxv.find() with some hardware.
-        with contextlib.suppress(AttributeError, ValueError):
-            for recv in rxv.find(DISCOVER_TIMEOUT):
-                _LOGGER.debug(
-                    "Found Serial %s %s %s",
-                    recv.serial_number,
-                    recv.ctrl_url,
-                    recv.zone,
-                )
-                if recv.ctrl_url == config_info.ctrl_url:
-                    _LOGGER.debug(
-                        "Config Zones Matched Serial %s: %s",
-                        recv.ctrl_url,
-                        recv.serial_number,
-                    )
-                    zones = rxv.RXV(
-                        config_info.ctrl_url,
-                        friendly_name=config_info.name,
-                        serial_number=recv.serial_number,
-                        model_name=recv.model_name,
-                    ).zone_controllers()
-                    break
-
-        if not zones:
-            _LOGGER.debug("Config Zones Fallback")
-            zones = rxv.RXV(config_info.ctrl_url, config_info.name).zone_controllers()
+        zones = rxv.RXV(config_info.ctrl_url, config_info.name).zone_controllers()
 
     _LOGGER.debug("Returned _discover zones: %s", zones)
     return zones
