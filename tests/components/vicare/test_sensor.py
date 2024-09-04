@@ -36,7 +36,7 @@ async def test_all_entities(
 @pytest.mark.parametrize(
     "entity_id",
     [
-        "room_temperature"
+        "room_temperature",
         "room_humidity",
     ],
 )
@@ -47,4 +47,4 @@ async def test_sensors(
     entity_id: str,
 ) -> None:
     """Test the ViCare binary sensor."""
-    # assert hass.states.get(f"binary_sensor.model0_{entity_id}") == snapshot
+    assert hass.states.get(f"binary_sensor.model0_{entity_id}") == snapshot
