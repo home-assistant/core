@@ -7,9 +7,6 @@ on:
       - dev
     types:
       - labeled
-      - opened
-      - reopened
-      - synchronize
       - unlabeled
 
 permissions: {}
