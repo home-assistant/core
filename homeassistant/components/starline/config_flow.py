@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 from starline import StarlineAuth
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 
@@ -52,7 +54,9 @@ class StarlineFlowHandler(ConfigFlow, domain=DOMAIN):
 
         self._auth = StarlineAuth()
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
         return await self.async_step_auth_app(user_input)
 

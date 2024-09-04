@@ -1,17 +1,43 @@
 {
   "services": {
-    "output_abs": "mdi:brightness-auto",
-    "output_rel": "mdi:brightness-7",
-    "output_toggle": "mdi:toggle-switch",
-    "relays": "mdi:light-switch-off",
-    "led": "mdi:led-on",
-    "var_abs": "mdi:wrench",
-    "var_reset": "mdi:reload",
-    "var_rel": "mdi:wrench",
-    "lock_regulator": "mdi:lock",
-    "send_keys": "mdi:alarm-panel",
-    "lock_keys": "mdi:lock",
-    "dyn_text": "mdi:form-textbox",
-    "pck": "mdi:package-variant-closed"
+    "output_abs": {
+      "service": "mdi:brightness-auto"
+    },
+    "output_rel": {
+      "service": "mdi:brightness-7"
+    },
+    "output_toggle": {
+      "service": "mdi:toggle-switch"
+    },
+    "relays": {
+      "service": "mdi:light-switch-off"
+    },
+    "led": {
+      "service": "mdi:led-on"
+    },
+    "var_abs": {
+      "service": "mdi:wrench"
+    },
+    "var_reset": {
+      "service": "mdi:reload"
+    },
+    "var_rel": {
+      "service": "mdi:wrench"
+    },
+    "lock_regulator": {
+      "service": "mdi:lock"
+    },
+    "send_keys": {
+      "service": "mdi:alarm-panel"
+    },
+    "lock_keys": {
+      "service": "mdi:lock"
+    },
+    "dyn_text": {
+      "service": "mdi:form-textbox"
+    },
+    "pck": {
+      "service": "mdi:package-variant-closed"
+    }
   }
 }

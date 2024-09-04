@@ -46,6 +46,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.service_info.mqtt import ReceivePayloadType
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, VolSchemaType
 from homeassistant.util.unit_conversion import TemperatureConverter
@@ -84,7 +85,6 @@ from .models import (
     MqttValueTemplate,
     PublishPayloadType,
     ReceiveMessage,
-    ReceivePayloadType,
 )
 from .schemas import MQTT_ENTITY_COMMON_SCHEMA
 from .util import valid_publish_topic, valid_subscribe_topic
@@ -92,13 +92,6 @@ from .util import valid_publish_topic, valid_subscribe_topic
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "MQTT HVAC"
-
-# Options CONF_AUX_COMMAND_TOPIC, CONF_AUX_STATE_TOPIC
-# and CONF_AUX_STATE_TEMPLATE were deprecated in HA Core 2023.9
-# Support was removed in HA Core 2024.3
-CONF_AUX_COMMAND_TOPIC = "aux_command_topic"
-CONF_AUX_STATE_TEMPLATE = "aux_state_template"
-CONF_AUX_STATE_TOPIC = "aux_state_topic"
 
 CONF_FAN_MODE_COMMAND_TEMPLATE = "fan_mode_command_template"
 CONF_FAN_MODE_COMMAND_TOPIC = "fan_mode_command_topic"
@@ -113,10 +106,6 @@ CONF_HUMIDITY_STATE_TOPIC = "target_humidity_state_topic"
 CONF_HUMIDITY_MAX = "max_humidity"
 CONF_HUMIDITY_MIN = "min_humidity"
 
-# Support for CONF_POWER_STATE_TOPIC and CONF_POWER_STATE_TEMPLATE
-# was removed in HA Core 2023.8
-CONF_POWER_STATE_TEMPLATE = "power_state_template"
-CONF_POWER_STATE_TOPIC = "power_state_topic"
 CONF_PRESET_MODE_STATE_TOPIC = "preset_mode_state_topic"
 CONF_PRESET_MODE_COMMAND_TOPIC = "preset_mode_command_topic"
 CONF_PRESET_MODE_VALUE_TEMPLATE = "preset_mode_value_template"
@@ -201,7 +190,6 @@ TOPIC_KEYS = (
     CONF_MODE_COMMAND_TOPIC,
     CONF_MODE_STATE_TOPIC,
     CONF_POWER_COMMAND_TOPIC,
-    CONF_POWER_STATE_TOPIC,
     CONF_PRESET_MODE_COMMAND_TOPIC,
     CONF_PRESET_MODE_STATE_TOPIC,
     CONF_SWING_MODE_COMMAND_TOPIC,
@@ -295,8 +283,6 @@ _PLATFORM_SCHEMA_BASE = MQTT_BASE_SCHEMA.extend(
         vol.Optional(CONF_PAYLOAD_OFF, default="OFF"): cv.string,
         vol.Optional(CONF_POWER_COMMAND_TOPIC): valid_publish_topic,
         vol.Optional(CONF_POWER_COMMAND_TEMPLATE): cv.template,
-        vol.Optional(CONF_POWER_STATE_TEMPLATE): cv.template,
-        vol.Optional(CONF_POWER_STATE_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_PRECISION): vol.In(
             [PRECISION_TENTHS, PRECISION_HALVES, PRECISION_WHOLE]
         ),
@@ -343,16 +329,6 @@ _PLATFORM_SCHEMA_BASE = MQTT_BASE_SCHEMA.extend(
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
 PLATFORM_SCHEMA_MODERN = vol.All(
-    # Support for CONF_POWER_STATE_TOPIC and CONF_POWER_STATE_TEMPLATE
-    # was removed in HA Core 2023.8
-    cv.removed(CONF_POWER_STATE_TEMPLATE),
-    cv.removed(CONF_POWER_STATE_TOPIC),
-    # Options CONF_AUX_COMMAND_TOPIC, CONF_AUX_STATE_TOPIC
-    # and CONF_AUX_STATE_TEMPLATE were deprecated in HA Core 2023.9
-    # Support was removed in HA Core 2024.3
-    cv.removed(CONF_AUX_COMMAND_TOPIC),
-    cv.removed(CONF_AUX_STATE_TEMPLATE),
-    cv.removed(CONF_AUX_STATE_TOPIC),
     _PLATFORM_SCHEMA_BASE,
     valid_preset_mode_configuration,
     valid_humidity_range_configuration,
@@ -363,10 +339,6 @@ _DISCOVERY_SCHEMA_BASE = _PLATFORM_SCHEMA_BASE.extend({}, extra=vol.REMOVE_EXTRA
 
 DISCOVERY_SCHEMA = vol.All(
     _DISCOVERY_SCHEMA_BASE,
-    # Support for CONF_POWER_STATE_TOPIC and CONF_POWER_STATE_TEMPLATE
-    # was removed in HA Core 2023.8
-    cv.removed(CONF_POWER_STATE_TEMPLATE),
-    cv.removed(CONF_POWER_STATE_TOPIC),
     valid_preset_mode_configuration,
     valid_humidity_range_configuration,
     valid_humidity_state_configuration,

@@ -167,7 +167,7 @@ def gen_data_entry_schema(
                 vol.Optional("data_description"): {str: translation_value_validator},
                 vol.Optional("menu_options"): {str: translation_value_validator},
                 vol.Optional("submit"): translation_value_validator,
-                vol.Optional("section"): {
+                vol.Optional("sections"): {
                     str: {
                         vol.Optional("data"): {str: translation_value_validator},
                         vol.Optional("description"): translation_value_validator,

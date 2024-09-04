@@ -160,17 +160,10 @@ async def test_form_already_exists(hass: HomeAssistant, config_entry) -> None:
     assert result2["reason"] == "already_configured"
 
 
-async def test_form_reauth(hass: HomeAssistant, config_entry) -> None:
+async def test_form_reauth(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
     """Test reauthentication."""
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": config_entry.entry_id,
-        },
-        data=config_entry.data,
-    )
+    result = await config_entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
 
@@ -203,17 +196,12 @@ async def test_form_reauth(hass: HomeAssistant, config_entry) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_reauth_with_new_account(hass: HomeAssistant, config_entry) -> None:
+async def test_form_reauth_with_new_account(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
     """Test reauthentication with new account."""
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": config_entry.entry_id,
-        },
-        data=config_entry.data,
-    )
+    result = await config_entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
 

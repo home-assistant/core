@@ -160,7 +160,7 @@ async def async_resolve_media(
     if target_media_player is UNDEFINED:
         report(
             "calls media_source.async_resolve_media without passing an entity_id",
-            {DOMAIN},
+            exclude_integrations={DOMAIN},
         )
         target_media_player = None
 

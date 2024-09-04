@@ -49,7 +49,7 @@ from homeassistant.util import (
 )
 from homeassistant.util.limited_size_dict import LimitedSizeDict
 
-from .audio_enhancer import AudioEnhancer, EnhancedAudioChunk, MicroVadEnhancer
+from .audio_enhancer import AudioEnhancer, EnhancedAudioChunk, MicroVadSpeexEnhancer
 from .const import (
     BYTES_PER_CHUNK,
     CONF_DEBUG_RECORDING_DIR,
@@ -589,7 +589,7 @@ class PipelineRun:
         # Initialize with audio settings
         if self.audio_settings.needs_processor and (self.audio_enhancer is None):
             # Default audio enhancer
-            self.audio_enhancer = MicroVadEnhancer(
+            self.audio_enhancer = MicroVadSpeexEnhancer(
                 self.audio_settings.auto_gain_dbfs,
                 self.audio_settings.noise_suppression_level,
                 self.audio_settings.is_vad_enabled,
