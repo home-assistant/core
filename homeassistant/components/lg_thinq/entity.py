@@ -33,14 +33,14 @@ class ThinQEntity(CoordinatorEntity[DeviceDataUpdateCoordinator]):
         self,
         coordinator: DeviceDataUpdateCoordinator,
         entity_description: EntityDescription,
-        idx: str,
+        property_id: str,
     ) -> None:
         """Initialize an entity."""
         super().__init__(coordinator)
 
         self.entity_description = entity_description
-        self.idx = idx
-        self.location = self.coordinator.api.get_location_for_idx(self.idx)
+        self.property_id = property_id
+        self.location = self.coordinator.api.get_location_for_idx(self.property_id)
 
         self._attr_device_info = dr.DeviceInfo(
             identifiers={(DOMAIN, coordinator.unique_id)},
@@ -48,16 +48,13 @@ class ThinQEntity(CoordinatorEntity[DeviceDataUpdateCoordinator]):
             model=coordinator.api.device.model_name,
             name=coordinator.device_name,
         )
-        self._attr_unique_id = f"{coordinator.unique_id}_{self.idx}"
-        self._attr_translation_placeholders = {
-            "location": (
-                ""
-                if self.location is None
-                or self.location in (Location.MAIN, Location.OVEN, coordinator.sub_id)
-                else self.location
-            )
-        }
-        if self._attr_translation_placeholders["location"]:
+        self._attr_unique_id = f"{coordinator.unique_id}_{self.property_id}"
+        if self.location is not None and self.location in (
+            Location.MAIN,
+            Location.OVEN,
+            coordinator.sub_id,
+        ):
+            self._attr_translation_placeholders = {"location": self.location}
             self._attr_translation_key = (
                 f"{entity_description.translation_key}_for_location"
             )
@@ -65,7 +62,7 @@ class ThinQEntity(CoordinatorEntity[DeviceDataUpdateCoordinator]):
     @property
     def data(self) -> PropertyState:
         """Return the state data of entity."""
-        return self.coordinator.data.get(self.idx, EMPTY_STATE)
+        return self.coordinator.data.get(self.property_id, EMPTY_STATE)
 
     def _update_status(self) -> None:
         """Update status itself.

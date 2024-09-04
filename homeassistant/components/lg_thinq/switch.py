@@ -68,8 +68,8 @@ async def async_setup_entry(
         ) is not None:
             for description in descriptions:
                 entities.extend(
-                    ThinQSwitchEntity(coordinator, description, idx)
-                    for idx in coordinator.api.get_active_idx(description.key)
+                    ThinQSwitchEntity(coordinator, description, property_id)
+                    for property_id in coordinator.api.get_active_idx(description.key)
                 )
 
     if entities:
@@ -88,7 +88,7 @@ class ThinQSwitchEntity(ThinQEntity, SwitchEntity):
         _LOGGER.debug(
             "[%s:%s] update status: %s",
             self.coordinator.device_name,
-            self.idx,
+            self.property_id,
             self.data.is_on,
         )
         self._attr_is_on = self.data.is_on
@@ -96,9 +96,9 @@ class ThinQSwitchEntity(ThinQEntity, SwitchEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
         _LOGGER.debug("[%s] async_turn_on", self.name)
-        await self.async_call_api(self.coordinator.api.async_turn_on(self.idx))
+        await self.async_call_api(self.coordinator.api.async_turn_on(self.property_id))
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the switch."""
         _LOGGER.debug("[%s] async_turn_off", self.name)
-        await self.async_call_api(self.coordinator.api.async_turn_off(self.idx))
+        await self.async_call_api(self.coordinator.api.async_turn_off(self.property_id))

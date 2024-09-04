@@ -90,8 +90,8 @@ async def async_setup_entry(
         ) is not None:
             for description in descriptions:
                 entities.extend(
-                    ThinQBinarySensorEntity(coordinator, description, idx)
-                    for idx in coordinator.api.get_active_idx(description.key)
+                    ThinQBinarySensorEntity(coordinator, description, property_id)
+                    for property_id in coordinator.api.get_active_idx(description.key)
                 )
 
     if entities:
@@ -108,7 +108,7 @@ class ThinQBinarySensorEntity(ThinQEntity, BinarySensorEntity):
         _LOGGER.debug(
             "[%s:%s] update status: %s",
             self.coordinator.device_name,
-            self.idx,
+            self.property_id,
             self.data.is_on,
         )
         self._attr_is_on = self.data.is_on
