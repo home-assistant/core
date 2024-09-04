@@ -25,6 +25,24 @@ MOCK_FLIPR_MEASURE = {
     "battery": 95.0,
 }
 
+MOCK_HUB_STATE_ON = {
+    "state": True,
+    "mode": "planning",
+    "planning": "dummyplanningid",
+}
+
+MOCK_HUB_STATE_OFF = {
+    "state": False,
+    "mode": "manual",
+    "planning": "dummyplanningid",
+}
+
+MOCK_HUB_MODE_MANUAL = {
+    "state": False,
+    "mode": "manual",
+    "planning": "dummyplanningid",
+}
+
 
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
@@ -89,5 +107,11 @@ def mock_flipr_client() -> Generator[AsyncMock]:
         client.search_all_ids.return_value = {"flipr": ["myfliprid"], "hub": []}
 
         client.get_pool_measure_latest.return_value = MOCK_FLIPR_MEASURE
+
+        client.get_hub_state.return_value = MOCK_HUB_STATE_ON
+
+        client.set_hub_state.return_value = MOCK_HUB_STATE_ON
+
+        client.set_hub_mode.return_value = MOCK_HUB_MODE_MANUAL
 
         yield client
