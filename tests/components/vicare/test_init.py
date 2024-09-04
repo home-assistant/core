@@ -5,12 +5,47 @@ from unittest.mock import patch
 from homeassistant.components.vicare.const import DOMAIN
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import MODULE
 from .conftest import Fixture, MockPyViCare
 
 from tests.common import MockConfigEntry
+
+
+# Device migration test can be removed in 2025.3.0
+async def test_device_migration(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that the device registry is updated correctly."""
+    fixtures: list[Fixture] = [Fixture({"type:boiler"}, "vicare/Vitodens300W.json")]
+    with (
+        patch(f"{MODULE}.vicare_login", return_value=MockPyViCare(fixtures)),
+        patch(f"{MODULE}.PLATFORMS", [Platform.CLIMATE]),
+    ):
+        mock_config_entry.add_to_hass(hass)
+
+        device_registry.async_get_or_create(
+            config_entry_id=mock_config_entry.entry_id,
+            identifiers={
+                (DOMAIN, "gateway0"),
+            },
+        )
+
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+        await hass.async_block_till_done()
+
+    assert device_registry.async_get_device(identifiers={(DOMAIN, "gateway0")}) is None
+
+    assert (
+        device_registry.async_get_device(
+            identifiers={(DOMAIN, "gateway0_deviceSerialVitodens300W")}
+        )
+        is not None
+    )
 
 
 # Entity migration test can be removed in 2025.3.0
