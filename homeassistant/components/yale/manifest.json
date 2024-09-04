@@ -13,5 +13,5 @@
   "documentation": "https://www.home-assistant.io/integrations/yale",
   "iot_class": "cloud_push",
   "loggers": ["socketio", "engineio", "yalexs"],
-  "requirements": ["yalexs==8.5.5", "yalexs-ble==2.4.3"]
+  "requirements": ["yalexs==8.6.3", "yalexs-ble==2.4.3"]
 }

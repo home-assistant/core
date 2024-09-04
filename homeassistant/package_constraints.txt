@@ -27,12 +27,12 @@ dbus-fast==2.24.0
 fnv-hash-fast==1.0.2
 ha-av==10.1.1
 ha-ffmpeg==3.2.0
-habluetooth==3.3.2
+habluetooth==3.4.0
 hass-nabucasa==0.81.1
 hassil==1.7.4
 home-assistant-bluetooth==1.12.2
-home-assistant-frontend==20240829.0
-home-assistant-intents==2024.8.29
+home-assistant-frontend==20240904.0
+home-assistant-intents==2024.9.4
 httpx==0.27.0
 ifaddr==0.2.0
 Jinja2==3.1.4
@@ -62,7 +62,7 @@ urllib3>=1.26.5,<2
 voluptuous-openapi==0.0.5
 voluptuous-serialize==2.6.0
 voluptuous==0.15.2
-yarl==1.9.4
+yarl==1.9.8
 zeroconf==0.133.0
 
 # Constrain pycryptodome to avoid vulnerability

@@ -19,9 +19,9 @@ pytestmark = [
 
 
 @pytest.fixture
-def platforms() -> Platform | list[Platform]:
+def platforms() -> list[Platform]:
     """Platforms, which should be loaded during the test."""
-    return Platform.SENSOR
+    return [Platform.SENSOR]
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

@@ -12,7 +12,7 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_UNIT_SYSTEM,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
@@ -26,7 +26,7 @@ from .const import (
 
 
 @callback
-def configured_instances(hass):
+def configured_instances(hass: HomeAssistant) -> set[str]:
     """Return a set of configured GeoNet NZ Volcano instances."""
     return {
         f"{entry.data[CONF_LATITUDE]}, {entry.data[CONF_LONGITUDE]}"
