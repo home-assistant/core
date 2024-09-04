@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 import json
 import logging
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from mozart_api import __version__ as MOZART_API_VERSION
 from mozart_api.exceptions import ApiException
@@ -405,7 +405,7 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
             Platform.MEDIA_PLAYER, DOMAIN, unique_id
         )
 
-    def _get_beolink_jid(self, entity_id: str) -> str | None:
+    def _get_beolink_jid(self, entity_id: str) -> str:
         """Get beolink JID from entity_id."""
 
         entity_registry = er.async_get(self.hass)
@@ -413,18 +413,23 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
         # Check for valid bang_olufsen media_player entity
         entity_entry = entity_registry.async_get(entity_id)
 
-        try:
-            assert entity_entry
-            assert entity_entry.domain == Platform.MEDIA_PLAYER
-            assert entity_entry.platform == DOMAIN
-            assert entity_entry.config_entry_id is not None
-        except AssertionError:
-            return None
+        if (
+            entity_entry is None
+            or entity_entry.domain != Platform.MEDIA_PLAYER
+            or entity_entry.platform != DOMAIN
+            or entity_entry.config_entry_id is None
+        ):
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_grouping_entity",
+                translation_placeholders={"entity_id": entity_id},
+            )
 
         config_entry = self.hass.config_entries.async_get_entry(
             entity_entry.config_entry_id
         )
-        assert config_entry
+        if TYPE_CHECKING:
+            assert config_entry
 
         # Return JID
         return cast(str, config_entry.data[CONF_BEOLINK_JID])
@@ -779,27 +784,15 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
         """Create a Beolink session with defined group members."""
 
         # Use the touch to join if no entities have been defined
-        # Touch to join will make the device connect to any other currently-playing Beolink compatible B&O device.
+        # Touch to join will make the device connect to any other currently-playing
+        # Beolink compatible B&O device.
         # Repeated presses / calls will cycle between compatible playing devices.
         if len(group_members) == 0:
             await self._async_beolink_join()
             return
 
-        jids = []
         # Get JID for each group member
-        for group_member in group_members:
-            # Check if an invalid entity
-            if (jid := self._get_beolink_jid(group_member)) is None:
-                raise ServiceValidationError(
-                    translation_domain=DOMAIN,
-                    translation_key="missing_beolink_jid",
-                    translation_placeholders={
-                        "group_member": group_member,
-                    },
-                )
-
-            jids.append(jid)
-
+        jids = [self._get_beolink_jid(group_member) for group_member in group_members]
         await self._async_beolink_expand(jids)
 
     async def async_unjoin_player(self) -> None:

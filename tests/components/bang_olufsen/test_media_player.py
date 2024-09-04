@@ -1269,7 +1269,7 @@ async def test_async_join_players(
             BangOlufsenSource.TIDAL,
             [TEST_MEDIA_PLAYER_ENTITY_ID_3],
             pytest.raises(ServiceValidationError),
-            "missing_beolink_jid",
+            "invalid_grouping_entity",
         ),
     ],
 )
