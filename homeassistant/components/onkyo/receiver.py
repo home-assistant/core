@@ -24,6 +24,7 @@ class Receiver:
     identifier: str
     name: str
     discovered: bool
+    first_connect: bool = True
 
 
 @dataclass

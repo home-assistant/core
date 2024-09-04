@@ -44,7 +44,7 @@ CONF_RECEIVER_MAX_VOLUME = "receiver_max_volume"
 DEFAULT_NAME = "Onkyo Receiver"
 SUPPORTED_MAX_VOLUME = 100
 DEFAULT_RECEIVER_MAX_VOLUME = 80
-ZONES = {"zone2": "Zone 2", "zone3": "Zone 3", "zone4": "Zone 4"}
+ZONES = {"main": "Main", "zone2": "Zone 2", "zone3": "Zone 3", "zone4": "Zone 4"}
 
 SUPPORT_ONKYO_WO_VOLUME = (
     MediaPlayerEntityFeature.TURN_ON
@@ -228,8 +228,17 @@ async def async_setup_platform(
                 "Receiver (re)connected: %s (%s)", receiver.name, receiver.conn.host
             )
 
-            for entity in entities.values():
-                entity.backfill_state()
+            # Discover what zones are available for the receiver by querying the power.
+            # If we get a response for the specific zone, it means it is available.
+            for zone in ZONES:
+                receiver.conn.query_property(zone, "power")
+
+            if not receiver.first_connect:
+                for entity in entities.values():
+                    if entity.enabled:
+                        entity.backfill_state()
+            else:
+                receiver.first_connect = False
 
         _LOGGER.debug("Creating receiver: %s (%s)", info.model_name, info.host)
         connection = await pyeiscp.Connection.create(
@@ -237,6 +246,7 @@ async def async_setup_platform(
             port=info.port,
             update_callback=async_onkyo_update_callback,
             connect_callback=async_onkyo_connect_callback,
+            auto_connect=False,
         )
 
         receiver = Receiver(
@@ -249,18 +259,7 @@ async def async_setup_platform(
 
         receivers[connection.host] = receiver
 
-        # Discover what zones are available for the receiver by querying the power.
-        # If we get a response for the specific zone, it means it is available.
-        for zone in ZONES:
-            receiver.conn.query_property(zone, "power")
-
-        # Add the main zone to entities, since it is always active.
-        _LOGGER.debug("Adding Main Zone on %s", receiver.name)
-        main_entity = OnkyoMediaPlayer(
-            receiver, sources, "main", max_volume, receiver_max_volume
-        )
-        entities["main"] = main_entity
-        async_add_entities([main_entity])
+        await receiver.conn.connect()
 
     if host is not None:
         if host in KNOWN_HOSTS:
