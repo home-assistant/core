@@ -26,9 +26,9 @@ from .const import (
     SERVICE_CE,
     SERVICE_EC2,
     SERVICE_S3,
-    USER_INPUT_DATA,
-    USER_INPUT_ID,
-    USER_INPUT_SECRET,
+    U_ID,
+    U_SECRET,
+    USER_INPUT,
 )
 
 
@@ -51,9 +51,9 @@ class AwsDataRegionCoordinator(DataUpdateCoordinator[dict]):
         self._services = services
         self._user_data = entry.data
         self._awsAPI: AWSDataClient = AWSDataClient(
-            self._user_data[USER_INPUT_DATA][USER_INPUT_ID],
-            self._user_data[USER_INPUT_DATA][USER_INPUT_SECRET],
-            self._user_data[USER_INPUT_DATA][CONST_ACCOUNT_ID],
+            self._user_data[USER_INPUT][U_ID],
+            self._user_data[USER_INPUT][U_SECRET],
+            self._user_data[USER_INPUT][CONST_ACCOUNT_ID],
         )
         super().__init__(
             hass=hass,
@@ -84,7 +84,7 @@ class AwsDataRegionCoordinator(DataUpdateCoordinator[dict]):
     def filter_data(self, service: str, reason: str = "Exclude") -> list:
         """Filter from Configuration File."""
         hass_data = self.hass.data.get(DOMAIN_DATA, {})
-        current_account = self._user_data[USER_INPUT_DATA][CONST_ACCOUNT_ID]
+        current_account = self._user_data[USER_INPUT][CONST_ACCOUNT_ID]
         filters = []
 
         for filt in hass_data.get(CONST_FILTER, []):
@@ -141,7 +141,6 @@ class AwsDataEC2ServicesCoordinator(AwsDataRegionCoordinator):
         """Retrieve EC2 Metric Data."""
 
         instances: dict[str, Any] = {}
-        volume_filter: dict[str, Any] = {}
         filter_data_exc = self.filter_data(SERVICE_EC2)
         filter_data_inc = self.filter_data(SERVICE_EC2, reason="Include")
         for reg in self._regions:
@@ -176,21 +175,7 @@ class AwsDataEC2ServicesCoordinator(AwsDataRegionCoordinator):
                             CONST_AWS_REGION: reg,
                             "State": inst["State"],
                             "Placement": inst["Placement"],
-                            "BlockDeviceMappings": inst["BlockDeviceMappings"],
-                            "Volumes": {},
                             "Metrics": {},
-                        }
-            volumes = await self._awsAPI.serviceCall(
-                SERVICE_EC2, "ec2_storage_list", data=volume_filter
-            )
-            for vol in volumes.get("Volumes", []):
-                for attach in vol.get("Attachments", []):
-                    if attach["InstanceId"] in instances:
-                        instances[attach["InstanceId"]]["Volumes"][vol["VolumeId"]] = {
-                            "VolumeType": vol["VolumeType"],
-                            "Iops": vol["Iops"],
-                            "State": vol["State"],
-                            "Size": vol["Size"],
                         }
 
             for inst, data in instances.items():

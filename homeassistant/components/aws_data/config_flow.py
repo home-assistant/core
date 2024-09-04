@@ -31,11 +31,11 @@ from .const import (
     CONST_SCAN_REGIONS,
     DOMAIN,
     SUPPORTED_SERVICES,
-    USER_INPUT_DATA,
-    USER_INPUT_ID,
-    USER_INPUT_REGIONS,
-    USER_INPUT_SECRET,
-    USER_INPUT_SERVICES,
+    U_ID,
+    U_REGIONS,
+    U_SECRET,
+    U_SERVICES,
+    USER_INPUT,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -68,27 +68,21 @@ class AWSDataConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
 
         errors: dict[str, str] = {}
+        self.USER_DATA: dict[str, Any] = {}
+        self.USER_DATA[USER_INPUT] = {}
         if user_input is not None:
             awsAPI: AWSDataClient = AWSDataClient(
                 user_input[CONST_AWS_KEY], user_input[CONST_AWS_SECRET]
             )
             result = await awsAPI.serviceCall(serviceName="sts", operation="id")
-
             errors = AWSDataClient.error(result=result)
-            self.USER_DATA: dict[str, Any] = {}
             if not errors:
                 self.USER_DATA[API_DATA] = awsAPI
-                self.USER_DATA[USER_INPUT_DATA] = {}
-                self.USER_DATA[USER_INPUT_DATA][USER_INPUT_ID] = user_input[
-                    CONST_AWS_KEY
-                ]
-                self.USER_DATA[USER_INPUT_DATA][USER_INPUT_SECRET] = user_input[
-                    CONST_AWS_SECRET
-                ]
-                if "Account" in result:
-                    self.USER_DATA[USER_INPUT_DATA][CONST_ACCOUNT_ID] = result.get(
-                        "Account", CONST_GENERIC_ID
-                    )
+                self.USER_DATA[USER_INPUT][U_ID] = user_input[CONST_AWS_KEY]
+                self.USER_DATA[USER_INPUT][U_SECRET] = user_input[CONST_AWS_SECRET]
+                self.USER_DATA[USER_INPUT][CONST_ACCOUNT_ID] = result.get(
+                    "Account", CONST_GENERIC_ID
+                )
                 return await self.async_step_service()
 
         error_message = errors.get("message", "")
@@ -103,11 +97,9 @@ class AWSDataConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Select Service And Region Step."""
-        errors: dict[str, str] = {}
 
+        errors: dict[str, str] = {}
         awsAPI: AWSDataClient = self.USER_DATA[API_DATA]
-        user_id = self.USER_DATA[USER_INPUT_DATA][USER_INPUT_ID]
-        account_id = self.USER_DATA[USER_INPUT_DATA][CONST_ACCOUNT_ID]
         if user_input is None:
             regions_list = await awsAPI.serviceCall(
                 serviceName="account", operation="list_regions"
@@ -121,8 +113,9 @@ class AWSDataConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.warning("Region List is not Produced: %s", error_message)
 
         if user_input is not None:
+            user_id = self.USER_DATA[USER_INPUT][U_ID]
+            account_id = self.USER_DATA[USER_INPUT][CONST_ACCOUNT_ID]
             entryID = f"{DOMAIN}_{sha256(user_id.encode("utf-8")).hexdigest()}"
-            entry_title = f"AWS Account {account_id}"
             region_input = user_input.get(CONST_AWS_REGION, [])
             scan_all = (
                 user_input.get(CONST_SCAN_REGIONS, False)
@@ -139,45 +132,38 @@ class AWSDataConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
             )
 
-            self.USER_DATA[USER_INPUT_DATA][USER_INPUT_SERVICES] = user_input[
-                CONST_AWS_SERVICES
-            ]
-            self.USER_DATA[USER_INPUT_DATA][CONST_CE_SELECT] = user_input[
+            self.USER_DATA[USER_INPUT][U_SERVICES] = user_input[CONST_AWS_SERVICES]
+            self.USER_DATA[USER_INPUT][CONST_CE_SELECT] = user_input[CONST_CE_SELECT]
+            self.USER_DATA[USER_INPUT][U_REGIONS] = region_choice
+            self.USER_DATA[USER_INPUT][CONST_SCAN_REGIONS] = scan_all
+            if (region_choice and user_input[CONST_AWS_SERVICES]) or user_input[
                 CONST_CE_SELECT
-            ]
-            self.USER_DATA[USER_INPUT_DATA][USER_INPUT_REGIONS] = region_choice
-            self.USER_DATA[USER_INPUT_DATA][CONST_SCAN_REGIONS] = scan_all
-            if (
-                region_choice
-                and user_input[CONST_AWS_SERVICES]
-                or user_input[CONST_CE_SELECT]
-            ):
+            ]:
                 self.USER_DATA[API_DATA] = None
                 currentEntries = self._async_current_entries()
                 for entr in currentEntries:
                     if entr.unique_id == entryID:
-                        data = entr.data
-                        self.USER_DATA[USER_INPUT_DATA][USER_INPUT_REGIONS].extend(
+                        self.USER_DATA[USER_INPUT][U_REGIONS].extend(
                             reg
-                            for reg in data[USER_INPUT_DATA][USER_INPUT_REGIONS]
-                            if reg
-                            not in self.USER_DATA[USER_INPUT_DATA][USER_INPUT_REGIONS]
+                            for reg in entr.data[USER_INPUT][U_REGIONS]
+                            if reg not in self.USER_DATA[USER_INPUT][U_REGIONS]
                         )
-                        self.USER_DATA[USER_INPUT_DATA][USER_INPUT_SERVICES].extend(
+                        self.USER_DATA[USER_INPUT][U_SERVICES].extend(
                             serv
-                            for serv in data[USER_INPUT_DATA][USER_INPUT_SERVICES]
-                            if serv
-                            not in self.USER_DATA[USER_INPUT_DATA][USER_INPUT_SERVICES]
+                            for serv in entr.data[USER_INPUT][U_SERVICES]
+                            if serv not in self.USER_DATA[USER_INPUT][U_SERVICES]
                         )
                         return self.async_update_reload_and_abort(
                             entr,
                             unique_id=entryID,
-                            title=entry_title,
+                            title=f"AWS Account {account_id}",
                             data=self.USER_DATA,
                             reason="Updating Existing Entry",
                         )
                 await self.async_set_unique_id(entryID)
-                return self.async_create_entry(title=entry_title, data=self.USER_DATA)
+                return self.async_create_entry(
+                    title=f"AWS Account {account_id}", data=self.USER_DATA
+                )
 
         region_text = (
             "Separated by comma (,)"

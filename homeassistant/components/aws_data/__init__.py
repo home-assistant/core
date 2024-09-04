@@ -30,9 +30,9 @@ from .const import (
     SERVICE_CE,
     SERVICE_EC2,
     SERVICE_S3,
-    USER_INPUT_DATA,
-    USER_INPUT_REGIONS,
-    USER_INPUT_SERVICES,
+    U_REGIONS,
+    U_SERVICES,
+    USER_INPUT,
 )
 from .coordinator import (
     AwsDataCEServicesCoordinator,
@@ -94,8 +94,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up AWS Data from a config entry."""
 
     user_data = dict(entry.data)
-    selected_regions = user_data[USER_INPUT_DATA][USER_INPUT_REGIONS]
-    services = user_data[USER_INPUT_DATA][USER_INPUT_SERVICES]
+    selected_regions = user_data[USER_INPUT][U_REGIONS]
+    services = user_data[USER_INPUT][U_SERVICES]
     store_coord: dict[str, Any] = {}
 
     intervals = {}
@@ -129,7 +129,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
         await s3_coordinator.async_config_entry_first_refresh()
 
-    if user_data[USER_INPUT_DATA][CONST_CE_SELECT]:
+    if user_data[USER_INPUT][CONST_CE_SELECT]:
         ce_interval = intervals.get(SERVICE_S3, {})
         store_coord[SERVICE_CE] = ce_coordinator = AwsDataCEServicesCoordinator(
             hass,
