@@ -87,9 +87,10 @@ class ThinQEntity(CoordinatorEntity[DeviceDataUpdateCoordinator]):
         try:
             await target
         except ThinQAPIException as exc:
-            self.coordinator.refresh_status()
             raise ServiceValidationError(
                 exc.message,
                 translation_domain=DOMAIN,
                 translation_key=exc.code,
             ) from exc
+        finally:
+            await self.coordinator.async_request_refresh()

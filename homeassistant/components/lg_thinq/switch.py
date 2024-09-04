@@ -19,7 +19,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import ThinqConfigEntry
 from .entity import ThinQEntity
 
-DEVIE_TYPE_SWITCH_MAP: dict[DeviceType, tuple[SwitchEntityDescription, ...]] = {
+DEVICE_TYPE_SWITCH_MAP: dict[DeviceType, tuple[SwitchEntityDescription, ...]] = {
     DeviceType.AIR_PURIFIER_FAN: (
         SwitchEntityDescription(
             key=ThinQProperty.AIR_FAN_OPERATION_MODE, translation_key="operation_power"
@@ -62,7 +62,7 @@ async def async_setup_entry(
     entities: list[ThinQSwitchEntity] = []
     for coordinator in entry.runtime_data.values():
         if (
-            descriptions := DEVIE_TYPE_SWITCH_MAP.get(
+            descriptions := DEVICE_TYPE_SWITCH_MAP.get(
                 coordinator.api.device.device_type
             )
         ) is not None:
