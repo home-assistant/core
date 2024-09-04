@@ -48,7 +48,20 @@ async def test_button(
             blocking=True,
         )
 
-    reolink_connect.set_ptz_command.side_effect = None
+
+async def test_ptz_move_service(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    reolink_connect: MagicMock,
+) -> None:
+    """Test ptz_move entity service using PTZ button entity."""
+    with patch("homeassistant.components.reolink.PLATFORMS", [Platform.BUTTON]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    entity_id = f"{Platform.BUTTON}.{TEST_NVR_NAME}_ptz_up"
+
     await hass.services.async_call(
         DOMAIN,
         "ptz_move",
