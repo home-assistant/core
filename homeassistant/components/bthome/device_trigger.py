@@ -67,7 +67,7 @@ def get_event_classes_by_device_id(hass: HomeAssistant, device_id: str) -> list[
         for entry_id in device.config_entries
     ]
     bthome_config_entry = next(
-        iter(entry for entry in config_entries if entry and entry.domain == DOMAIN),
+        entry for entry in config_entries if entry and entry.domain == DOMAIN
     )
     return bthome_config_entry.data.get(CONF_DISCOVERED_EVENT_CLASSES, [])
 
