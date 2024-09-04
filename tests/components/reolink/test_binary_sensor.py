@@ -4,7 +4,8 @@ from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 
-from homeassistant.components.reolink import DEVICE_UPDATE_INTERVAL, const
+from homeassistant.components.reolink import DEVICE_UPDATE_INTERVAL
+from homeassistant.components.reolink.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
@@ -45,7 +46,7 @@ async def test_motion_sensor(
     # test webhook callback
     reolink_connect.motion_detected.return_value = True
     reolink_connect.ONVIF_event_callback.return_value = [0]
-    webhook_id = f"{const.DOMAIN}_{TEST_UID.replace(':', '')}_ONVIF"
+    webhook_id = f"{DOMAIN}_{TEST_UID.replace(':', '')}_ONVIF"
     client = await hass_client_no_auth()
     await client.post(f"/api/webhook/{webhook_id}", data="test_data")
 

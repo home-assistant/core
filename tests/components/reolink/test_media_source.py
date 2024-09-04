@@ -14,9 +14,8 @@ from homeassistant.components.media_source import (
     async_resolve_media,
 )
 from homeassistant.components.media_source.error import Unresolvable
-from homeassistant.components.reolink import const
 from homeassistant.components.reolink.config_flow import DEFAULT_PROTOCOL
-from homeassistant.components.reolink.const import DOMAIN
+from homeassistant.components.reolink.const import CONF_USE_HTTPS, DOMAIN
 from homeassistant.components.stream import DOMAIN as MEDIA_STREAM_DOMAIN
 from homeassistant.const import (
     CONF_HOST,
@@ -321,14 +320,14 @@ async def test_browsing_not_loaded(
 
     reolink_connect.get_host_data.side_effect = ReolinkError("Test error")
     config_entry2 = MockConfigEntry(
-        domain=const.DOMAIN,
+        domain=DOMAIN,
         unique_id=format_mac(TEST_MAC2),
         data={
             CONF_HOST: TEST_HOST2,
             CONF_USERNAME: TEST_USERNAME2,
             CONF_PASSWORD: TEST_PASSWORD2,
             CONF_PORT: TEST_PORT,
-            const.CONF_USE_HTTPS: TEST_USE_HTTPS,
+            CONF_USE_HTTPS: TEST_USE_HTTPS,
         },
         options={
             CONF_PROTOCOL: DEFAULT_PROTOCOL,

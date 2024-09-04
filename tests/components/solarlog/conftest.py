@@ -1,10 +1,10 @@
 """Test helpers."""
 
 from collections.abc import Generator
-from datetime import UTC, datetime
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from solarlog_cli.solarlog_models import InverterData, SolarlogData
 
 from homeassistant.components.solarlog.const import DOMAIN as SOLARLOG_DOMAIN
 from homeassistant.const import CONF_HOST, CONF_NAME
@@ -12,6 +12,19 @@ from homeassistant.const import CONF_HOST, CONF_NAME
 from .const import HOST, NAME
 
 from tests.common import MockConfigEntry, load_json_object_fixture
+
+DEVICE_LIST = {
+    0: InverterData(name="Inverter 1", enabled=True),
+    1: InverterData(name="Inverter 2", enabled=True),
+}
+INVERTER_DATA = {
+    0: InverterData(
+        name="Inverter 1", enabled=True, consumption_year=354687, current_power=5
+    ),
+    1: InverterData(
+        name="Inverter 2", enabled=True, consumption_year=354, current_power=6
+    ),
+}
 
 
 @pytest.fixture
@@ -34,28 +47,18 @@ def mock_config_entry() -> MockConfigEntry:
 def mock_solarlog_connector():
     """Build a fixture for the SolarLog API that connects successfully and returns one device."""
 
+    data = SolarlogData.from_dict(
+        load_json_object_fixture("solarlog_data.json", SOLARLOG_DOMAIN)
+    )
+    data.inverter_data = INVERTER_DATA
+
     mock_solarlog_api = AsyncMock()
-    mock_solarlog_api.test_connection = AsyncMock(return_value=True)
-
-    data = {
-        "devices": {
-            0: {"consumption_total": 354687, "current_power": 5},
-        }
-    }
-    data |= load_json_object_fixture("solarlog_data.json", SOLARLOG_DOMAIN)
-    data["last_updated"] = datetime.fromisoformat(data["last_updated"]).astimezone(UTC)
-
+    mock_solarlog_api.test_connection.return_value = True
     mock_solarlog_api.update_data.return_value = data
-    mock_solarlog_api.device_list.return_value = {
-        0: {"name": "Inverter 1"},
-        1: {"name": "Inverter 2"},
-    }
+    mock_solarlog_api.update_device_list.return_value = INVERTER_DATA
+    mock_solarlog_api.update_inverter_data.return_value = INVERTER_DATA
     mock_solarlog_api.device_name = {0: "Inverter 1", 1: "Inverter 2"}.get
-    mock_solarlog_api.client.get_device_list.return_value = {
-        0: {"name": "Inverter 1"},
-        1: {"name": "Inverter 2"},
-    }
-    mock_solarlog_api.client.close = AsyncMock(return_value=None)
+    mock_solarlog_api.device_enabled = {0: True, 1: False}.get
 
     with (
         patch(

@@ -5,7 +5,6 @@ from dataclasses import dataclass
 import pyotgw.vars as gw_vars
 
 from homeassistant.components.sensor import (
-    ENTITY_ID_FORMAT,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -15,6 +14,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_ID,
     PERCENTAGE,
+    EntityCategory,
     UnitOfPower,
     UnitOfPressure,
     UnitOfTemperature,
@@ -22,11 +22,16 @@ from homeassistant.const import (
     UnitOfVolumeFlowRate,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import OpenThermGatewayHub
-from .const import DATA_GATEWAYS, DATA_OPENTHERM_GW
+from .const import (
+    BOILER_DEVICE_DESCRIPTION,
+    DATA_GATEWAYS,
+    DATA_OPENTHERM_GW,
+    GATEWAY_DEVICE_DESCRIPTION,
+    THERMOSTAT_DEVICE_DESCRIPTION,
+    OpenThermDataSource,
+)
 from .entity import OpenThermEntity, OpenThermEntityDescription
 
 SENSOR_FLOAT_SUGGESTED_DISPLAY_PRECISION = 1
@@ -36,584 +41,833 @@ SENSOR_FLOAT_SUGGESTED_DISPLAY_PRECISION = 1
 class OpenThermSensorEntityDescription(
     SensorEntityDescription, OpenThermEntityDescription
 ):
-    """Describes opentherm_gw sensor entity."""
+    """Describes an opentherm_gw sensor entity."""
 
 
-SENSOR_INFO: tuple[tuple[list[str], OpenThermSensorEntityDescription], ...] = (
-    (
-        [gw_vars.BOILER, gw_vars.THERMOSTAT],
-        OpenThermSensorEntityDescription(
-            key=gw_vars.DATA_CONTROL_SETPOINT,
-            friendly_name_format="Control Setpoint {}",
-            device_class=SensorDeviceClass.TEMPERATURE,
-            state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-            suggested_display_precision=SENSOR_FLOAT_SUGGESTED_DISPLAY_PRECISION,
-        ),
+SENSOR_DESCRIPTIONS: tuple[OpenThermSensorEntityDescription, ...] = (
+    OpenThermSensorEntityDescription(
+        key=gw_vars.DATA_CONTROL_SETPOINT,
+        translation_key="control_setpoint_n",
+        translation_placeholders={"circuit_number": "1"},
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        suggested_display_precision=SENSOR_FLOAT_SUGGESTED_DISPLAY_PRECISION,
+        device_description=BOILER_DEVICE_DESCRIPTION,
     ),
-    (
-        [gw_vars.BOILER, gw_vars.THERMOSTAT],
-        OpenThermSensorEntityDescription(
-            key=gw_vars.DATA_MASTER_MEMBERID,
-            friendly_name_format="Thermostat Member ID {}",
-        ),
+    OpenThermSensorEntityDescription(
+        key=gw_vars.DATA_CONTROL_SETPOINT_2,
+        translation_key="control_setpoint_n",
+        translation_placeholders={"circuit_number": "2"},
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        suggested_display_precision=SENSOR_FLOAT_SUGGESTED_DISPLAY_PRECISION,
+        device_description=BOILER_DEVICE_DESCRIPTION,
     ),
-    (
-        [gw_vars.BOILER, gw_vars.THERMOSTAT],
-        OpenThermSensorEntityDescription(
-            key=gw_vars.DATA_SLAVE_MEMBERID,
-            friendly_name_format="Boiler Member ID {}",
-        ),
+    OpenThermSensorEntityDescription(
+        key=gw_vars.DATA_SLAVE_MEMBERID,
+        translation_key="manufacturer_id",
+        device_description=BOILER_DEVICE_DESCRIPTION,
     ),
-    (
-        [gw_vars.BOILER, gw_vars.THERMOSTAT],
-        OpenThermSensorEntityDescription(
-            key=gw_vars.DATA_SLAVE_OEM_FAULT,
-            friendly_name_format="Boiler OEM Fault Code {}",
-        ),
+    OpenThermSensorEntityDescription(
+        key=gw_vars.DATA_SLAVE_OEM_FAULT,
+        translation_key="oem_fault_code",
+        device_description=BOILER_DEVICE_DESCRIPTION,
     ),
-    (
-        [gw_vars.BOILER, gw_vars.THERMOSTAT],
-        OpenThermSensorEntityDescription(
-            key=gw_vars.DATA_COOLING_CONTROL,
-            friendly_name_format="Cooling Control Signal {}",
-            state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=PERCENTAGE,
-            suggested_display_precision=SENSOR_FLOAT_SUGGESTED_DISPLAY_PRECISION,
-        ),
+    OpenThermSensorEntityDescription(
+        key=gw_vars.DATA_COOLING_CONTROL,
+        translation_key="cooling_control",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=PERCENTAGE,
+        suggested_display_precision=SENSOR_FLOAT_SUGGESTED_DISPLAY_PRECISION,
+        device_description=BOILER_DEVICE_DESCRIPTION,
     ),
-    (
-        [gw_vars.BOILER, gw_vars.THERMOSTAT],
-        OpenThermSensorEntityDescription(
-            key=gw_vars.DATA_CONTROL_SETPOINT_2,
-            friendly_name_format="Control Setpoint 2 {}",
-            device_class=SensorDeviceClass.TEMPERATURE,
-            state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-            suggested_display_precision=SENSOR_FLOAT_SUGGESTED_DISPLAY_PRECISION,
-        ),
+    OpenThermSensorEntityDescription(
+        key=gw_vars.DATA_SLAVE_MAX_RELATIVE_MOD,
+        translation_key="max_relative_mod_level",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=PERCENTAGE,
+        suggested_display_precision=SENSOR_FLOAT_SUGGESTED_DISPLAY_PRECISION,
+        device_description=BOILER_DEVICE_DESCRIPTION,
     ),
-    (
-        [gw_vars.BOILER, gw_vars.THERMOSTAT],
-        OpenThermSensorEntityDescription(
-            key=gw_vars.DATA_ROOM_SETPOINT_OVRD,
-            friendly_name_format="Room Setpoint Override {}",
-            device_class=SensorDeviceClass.TEMPERATURE,
-            state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-            suggested_display_precision=SENSOR_FLOAT_SUGGESTED_DISPLAY_PRECISION,
-        ),
+    OpenThermSensorEntityDescription(
+        key=gw_vars.DATA_SLAVE_MAX_CAPACITY,
+        translation_key="max_capacity",
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.POWER,
+        native_unit_of_measurement=UnitOfPower.KILO_WATT,
+        device_description=BOILER_DEVICE_DESCRIPTION,
     ),
-    (
-        [gw_vars.BOILER, gw_vars.THERMOSTAT],
-        OpenThermSensorEntityDescription(
-            key=gw_vars.DATA_SLAVE_MAX_RELATIVE_MOD,
-            friendly_name_format="Boiler Maximum Relative Modulation {}",
-            state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=PERCENTAGE,
-            suggested_display_precision=SENSOR_FLOAT_SUGGESTED_DISPLAY_PRECISION,
-        ),
+    OpenThermSensorEntityDescription(
+        key=gw_vars.DATA_SLAVE_MIN_MOD_LEVEL,
+        translation_key="min_mod_level",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=PERCENTAGE,
+        device_description=BOILER_DEVICE_DESCRIPTION,
     ),
-    (
-        [gw_vars.BOILER, gw_vars.THERMOSTAT],
-        OpenThermSensorEntityDescription(
-            key=gw_vars.DATA_SLAVE_MAX_CAPACITY,
-            friendly_name_format="Boiler Maximum Capacity {}",
-            state_class=SensorStateClass.MEASUREMENT,
-            device_class=SensorDeviceClass.POWER,
-            native_unit_of_measurement=UnitOfPower.KILO_WATT,
-        ),
+    OpenThermSensorEntityDescription(
+        key=gw_vars.DATA_REL_MOD_LEVEL,
+        translation_key="relative_mod_level",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=PERCENTAGE,
+        suggested_display_precision=SENSOR_FLOAT_SUGGESTED_DISPLAY_PRECISION,
+        device_description=BOILER_DEVICE_DESCRIPTION,
     ),
-    (
-        [gw_vars.BOILER, gw_vars.THERMOSTAT],
-        OpenThermSensorEntityDescription(
-            key=gw_vars.DATA_SLAVE_MIN_MOD_LEVEL,
-            friendly_name_format="Boiler Minimum Modulation Level {}",
-            state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=PERCENTAGE,
-        ),
+    OpenThermSensorEntityDescription(
+        key=gw_vars.DATA_CH_WATER_PRESS,
+        translation_key="central_heating_pressure",
+        device_class=SensorDeviceClass.PRESSURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfPressure.BAR,
+        suggested_display_precision=SENSOR_FLOAT_SUGGESTED_DISPLAY_PRECISION,
+        device_description=BOILER_DEVICE_DESCRIPTION,
     ),
-    (
-        [gw_vars.BOILER, gw_vars.THERMOSTAT],
-        OpenThermSensorEntityDescription(
-            key=gw_vars.DATA_ROOM_SETPOINT,
-            friendly_name_format="Room Setpoint {}",
-            device_class=SensorDeviceClass.TEMPERATURE,
-            state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-            suggested_display_precision=SENSOR_FLOAT_SUGGESTED_DISPLAY_PRECISION,
-        ),
+    OpenThermSensorEntityDescription(
+        key=gw_vars.DATA_DHW_FLOW_RATE,
+        translation_key="hot_water_flow_rate",
+        device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
+        suggested_display_precision=SENSOR_FLOAT_SUGGESTED_DISPLAY_PRECISION,
+        device_description=BOILER_DEVICE_DESCRIPTION,
     ),
-    (
-        [gw_vars.BOILER, gw_vars.THERMOSTAT],
-        OpenThermSensorEntityDescription(
-            key=gw_vars.DATA_REL_MOD_LEVEL,
-            friendly_name_format="Relative Modulation Level {}",
-            state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=PERCENTAGE,
-            suggested_display_precision=SENSOR_FLOAT_SUGGESTED_DISPLAY_PRECISION,
-        ),
+    OpenThermSensorEntityDescription(
+        key=gw_vars.DATA_CH_WATER_TEMP,
+        translation_key="central_heating_temperature_n",
+        translation_placeholders={"circuit_number": "1"},
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        suggested_display_precision=SENSOR_FLOAT_SUGGESTED_DISPLAY_PRECISION,
+        device_description=BOILER_DEVICE_DESCRIPTION,
     ),
-    (
-        [gw_vars.BOILER, gw_vars.THERMOSTAT],
-        OpenThermSensorEntityDescription(
-            key=gw_vars.DATA_CH_WATER_PRESS,
-            friendly_name_format="Central Heating Water Pressure {}",
-            device_class=SensorDeviceClass.PRESSURE,
-            state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=UnitOfPressure.BAR,
-            suggested_display_precision=SENSOR_FLOAT_SUGGESTED_DISPLAY_PRECISION,
-        ),
+    OpenThermSensorEntityDescription(
+        key=gw_vars.DATA_CH_WATER_TEMP_2,
+        translation_key="central_heating_temperature_n",
+        translation_placeholders={"circuit_number": "2"},
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        suggested_display_precision=SENSOR_FLOAT_SUGGESTED_DISPLAY_PRECISION,
+        device_description=BOILER_DEVICE_DESCRIPTION,
     ),
-    (
-        [gw_vars.BOILER, gw_vars.THERMOSTAT],
-        OpenThermSensorEntityDescription(
-            key=gw_vars.DATA_DHW_FLOW_RATE,
-            friendly_name_format="Hot Water Flow Rate {}",
-            device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
-            state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
-            suggested_display_precision=SENSOR_FLOAT_SUGGESTED_DISPLAY_PRECISION,
-        ),
+    OpenThermSensorEntityDescription(
+        key=gw_vars.DATA_DHW_TEMP,
+        translation_key="hot_water_temperature_n",
+        translation_placeholders={"circuit_number": "1"},
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        suggested_display_precision=SENSOR_FLOAT_SUGGESTED_DISPLAY_PRECISION,
+        device_description=BOILER_DEVICE_DESCRIPTION,
     ),
-    (
-        [gw_vars.BOILER, gw_vars.THERMOSTAT],
-        OpenThermSensorEntityDescription(
-            key=gw_vars.DATA_ROOM_SETPOINT_2,
-            friendly_name_format="Room Setpoint 2 {}",
-            device_class=SensorDeviceClass.TEMPERATURE,
-            state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-            suggested_display_precision=SENSOR_FLOAT_SUGGESTED_DISPLAY_PRECISION,
-        ),
+    OpenThermSensorEntityDescription(
+        key=gw_vars.DATA_DHW_TEMP_2,
+        translation_key="hot_water_temperature_n",
+        translation_placeholders={"circuit_number": "2"},
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        suggested_display_precision=SENSOR_FLOAT_SUGGESTED_DISPLAY_PRECISION,
+        device_description=BOILER_DEVICE_DESCRIPTION,
     ),
-    (
-        [gw_vars.BOILER, gw_vars.THERMOSTAT],
-        OpenThermSensorEntityDescription(
-            key=gw_vars.DATA_ROOM_TEMP,
-            friendly_name_format="Room Temperature {}",
-            device_class=SensorDeviceClass.TEMPERATURE,
-            state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-            suggested_display_precision=SENSOR_FLOAT_SUGGESTED_DISPLAY_PRECISION,
-        ),
+    OpenThermSensorEntityDescription(
+        key=gw_vars.DATA_RETURN_WATER_TEMP,
+        translation_key="return_water_temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        suggested_display_precision=SENSOR_FLOAT_SUGGESTED_DISPLAY_PRECISION,
+        device_description=BOILER_DEVICE_DESCRIPTION,
     ),
-    (
-        [gw_vars.BOILER, gw_vars.THERMOSTAT],
-        OpenThermSensorEntityDescription(
-            key=gw_vars.DATA_CH_WATER_TEMP,
-            friendly_name_format="Central Heating Water Temperature {}",
-            device_class=SensorDeviceClass.TEMPERATURE,
-            state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-            suggested_display_precision=SENSOR_FLOAT_SUGGESTED_DISPLAY_PRECISION,
-        ),
+    OpenThermSensorEntityDescription(
+        key=gw_vars.DATA_SOLAR_STORAGE_TEMP,
+        translation_key="solar_storage_temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        suggested_display_precision=SENSOR_FLOAT_SUGGESTED_DISPLAY_PRECISION,
+        device_description=BOILER_DEVICE_DESCRIPTION,
     ),
-    (
-        [gw_vars.BOILER, gw_vars.THERMOSTAT],
-        OpenThermSensorEntityDescription(
-            key=gw_vars.DATA_DHW_TEMP,
-            friendly_name_format="Hot Water Temperature {}",
-            device_class=SensorDeviceClass.TEMPERATURE,
-            state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-            suggested_display_precision=SENSOR_FLOAT_SUGGESTED_DISPLAY_PRECISION,
-        ),
+    OpenThermSensorEntityDescription(
+        key=gw_vars.DATA_SOLAR_COLL_TEMP,
+        translation_key="solar_collector_temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        suggested_display_precision=SENSOR_FLOAT_SUGGESTED_DISPLAY_PRECISION,
+        device_description=BOILER_DEVICE_DESCRIPTION,
     ),
-    (
-        [gw_vars.BOILER, gw_vars.THERMOSTAT],
-        OpenThermSensorEntityDescription(
-            key=gw_vars.DATA_OUTSIDE_TEMP,
-            friendly_name_format="Outside Temperature {}",
-            device_class=SensorDeviceClass.TEMPERATURE,
-            state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-            suggested_display_precision=SENSOR_FLOAT_SUGGESTED_DISPLAY_PRECISION,
-        ),
+    OpenThermSensorEntityDescription(
+        key=gw_vars.DATA_EXHAUST_TEMP,
+        translation_key="exhaust_temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_description=BOILER_DEVICE_DESCRIPTION,
     ),
-    (
-        [gw_vars.BOILER, gw_vars.THERMOSTAT],
-        OpenThermSensorEntityDescription(
-            key=gw_vars.DATA_RETURN_WATER_TEMP,
-            friendly_name_format="Return Water Temperature {}",
-            device_class=SensorDeviceClass.TEMPERATURE,
-            state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-            suggested_display_precision=SENSOR_FLOAT_SUGGESTED_DISPLAY_PRECISION,
-        ),
+    OpenThermSensorEntityDescription(
+        key=gw_vars.DATA_SLAVE_DHW_MAX_SETP,
+        translation_key="max_hot_water_setpoint_upper",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_description=BOILER_DEVICE_DESCRIPTION,
     ),
-    (
-        [gw_vars.BOILER, gw_vars.THERMOSTAT],
-        OpenThermSensorEntityDescription(
-            key=gw_vars.DATA_SOLAR_STORAGE_TEMP,
-            friendly_name_format="Solar Storage Temperature {}",
-            device_class=SensorDeviceClass.TEMPERATURE,
-            state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-            suggested_display_precision=SENSOR_FLOAT_SUGGESTED_DISPLAY_PRECISION,
-        ),
+    OpenThermSensorEntityDescription(
+        key=gw_vars.DATA_SLAVE_DHW_MIN_SETP,
+        translation_key="max_hot_water_setpoint_lower",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_description=BOILER_DEVICE_DESCRIPTION,
     ),
-    (
-        [gw_vars.BOILER, gw_vars.THERMOSTAT],
-        OpenThermSensorEntityDescription(
-            key=gw_vars.DATA_SOLAR_COLL_TEMP,
-            friendly_name_format="Solar Collector Temperature {}",
-            device_class=SensorDeviceClass.TEMPERATURE,
-            state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-            suggested_display_precision=SENSOR_FLOAT_SUGGESTED_DISPLAY_PRECISION,
-        ),
+    OpenThermSensorEntityDescription(
+        key=gw_vars.DATA_SLAVE_CH_MAX_SETP,
+        translation_key="max_central_heating_setpoint_upper",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_description=BOILER_DEVICE_DESCRIPTION,
     ),
-    (
-        [gw_vars.BOILER, gw_vars.THERMOSTAT],
-        OpenThermSensorEntityDescription(
-            key=gw_vars.DATA_CH_WATER_TEMP_2,
-            friendly_name_format="Central Heating 2 Water Temperature {}",
-            device_class=SensorDeviceClass.TEMPERATURE,
-            state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-            suggested_display_precision=SENSOR_FLOAT_SUGGESTED_DISPLAY_PRECISION,
-        ),
+    OpenThermSensorEntityDescription(
+        key=gw_vars.DATA_SLAVE_CH_MIN_SETP,
+        translation_key="max_central_heating_setpoint_lower",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_description=BOILER_DEVICE_DESCRIPTION,
     ),
-    (
-        [gw_vars.BOILER, gw_vars.THERMOSTAT],
-        OpenThermSensorEntityDescription(
-            key=gw_vars.DATA_DHW_TEMP_2,
-            friendly_name_format="Hot Water 2 Temperature {}",
-            device_class=SensorDeviceClass.TEMPERATURE,
-            state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-            suggested_display_precision=SENSOR_FLOAT_SUGGESTED_DISPLAY_PRECISION,
-        ),
+    OpenThermSensorEntityDescription(
+        key=gw_vars.DATA_DHW_SETPOINT,
+        translation_key="hot_water_setpoint",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        suggested_display_precision=SENSOR_FLOAT_SUGGESTED_DISPLAY_PRECISION,
+        device_description=BOILER_DEVICE_DESCRIPTION,
     ),
-    (
-        [gw_vars.BOILER, gw_vars.THERMOSTAT],
-        OpenThermSensorEntityDescription(
-            key=gw_vars.DATA_EXHAUST_TEMP,
-            friendly_name_format="Exhaust Temperature {}",
-            device_class=SensorDeviceClass.TEMPERATURE,
-            state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        ),
+    OpenThermSensorEntityDescription(
+        key=gw_vars.DATA_MAX_CH_SETPOINT,
+        translation_key="max_central_heating_setpoint",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        suggested_display_precision=SENSOR_FLOAT_SUGGESTED_DISPLAY_PRECISION,
+        device_description=BOILER_DEVICE_DESCRIPTION,
     ),
-    (
-        [gw_vars.BOILER, gw_vars.THERMOSTAT],
-        OpenThermSensorEntityDescription(
-            key=gw_vars.DATA_SLAVE_DHW_MAX_SETP,
-            friendly_name_format="Hot Water Maximum Setpoint {}",
-            device_class=SensorDeviceClass.TEMPERATURE,
-            state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        ),
+    OpenThermSensorEntityDescription(
+        key=gw_vars.DATA_OEM_DIAG,
+        translation_key="oem_diagnostic_code",
+        device_description=BOILER_DEVICE_DESCRIPTION,
     ),
-    (
-        [gw_vars.BOILER, gw_vars.THERMOSTAT],
-        OpenThermSensorEntityDescription(
-            key=gw_vars.DATA_SLAVE_DHW_MIN_SETP,
-            friendly_name_format="Hot Water Minimum Setpoint {}",
-            device_class=SensorDeviceClass.TEMPERATURE,
-            state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        ),
+    OpenThermSensorEntityDescription(
+        key=gw_vars.DATA_TOTAL_BURNER_STARTS,
+        translation_key="total_burner_starts",
+        state_class=SensorStateClass.TOTAL,
+        native_unit_of_measurement="starts",
+        device_description=BOILER_DEVICE_DESCRIPTION,
     ),
-    (
-        [gw_vars.BOILER, gw_vars.THERMOSTAT],
-        OpenThermSensorEntityDescription(
-            key=gw_vars.DATA_SLAVE_CH_MAX_SETP,
-            friendly_name_format="Boiler Maximum Central Heating Setpoint {}",
-            device_class=SensorDeviceClass.TEMPERATURE,
-            state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        ),
+    OpenThermSensorEntityDescription(
+        key=gw_vars.DATA_CH_PUMP_STARTS,
+        translation_key="central_heating_pump_starts",
+        state_class=SensorStateClass.TOTAL,
+        native_unit_of_measurement="starts",
+        device_description=BOILER_DEVICE_DESCRIPTION,
     ),
-    (
-        [gw_vars.BOILER, gw_vars.THERMOSTAT],
-        OpenThermSensorEntityDescription(
-            key=gw_vars.DATA_SLAVE_CH_MIN_SETP,
-            friendly_name_format="Boiler Minimum Central Heating Setpoint {}",
-            device_class=SensorDeviceClass.TEMPERATURE,
-            state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        ),
+    OpenThermSensorEntityDescription(
+        key=gw_vars.DATA_DHW_PUMP_STARTS,
+        translation_key="hot_water_pump_starts",
+        state_class=SensorStateClass.TOTAL,
+        native_unit_of_measurement="starts",
+        device_description=BOILER_DEVICE_DESCRIPTION,
     ),
-    (
-        [gw_vars.BOILER, gw_vars.THERMOSTAT],
-        OpenThermSensorEntityDescription(
-            key=gw_vars.DATA_DHW_SETPOINT,
-            friendly_name_format="Hot Water Setpoint {}",
-            device_class=SensorDeviceClass.TEMPERATURE,
-            state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-            suggested_display_precision=SENSOR_FLOAT_SUGGESTED_DISPLAY_PRECISION,
-        ),
+    OpenThermSensorEntityDescription(
+        key=gw_vars.DATA_DHW_BURNER_STARTS,
+        translation_key="hot_water_burner_starts",
+        state_class=SensorStateClass.TOTAL,
+        native_unit_of_measurement="starts",
+        device_description=BOILER_DEVICE_DESCRIPTION,
     ),
-    (
-        [gw_vars.BOILER, gw_vars.THERMOSTAT],
-        OpenThermSensorEntityDescription(
-            key=gw_vars.DATA_MAX_CH_SETPOINT,
-            friendly_name_format="Maximum Central Heating Setpoint {}",
-            device_class=SensorDeviceClass.TEMPERATURE,
-            state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-            suggested_display_precision=SENSOR_FLOAT_SUGGESTED_DISPLAY_PRECISION,
-        ),
+    OpenThermSensorEntityDescription(
+        key=gw_vars.DATA_TOTAL_BURNER_HOURS,
+        translation_key="total_burner_hours",
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.TOTAL,
+        native_unit_of_measurement=UnitOfTime.HOURS,
+        device_description=BOILER_DEVICE_DESCRIPTION,
     ),
-    (
-        [gw_vars.BOILER, gw_vars.THERMOSTAT],
-        OpenThermSensorEntityDescription(
-            key=gw_vars.DATA_OEM_DIAG,
-            friendly_name_format="OEM Diagnostic Code {}",
-        ),
+    OpenThermSensorEntityDescription(
+        key=gw_vars.DATA_CH_PUMP_HOURS,
+        translation_key="central_heating_pump_hours",
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.TOTAL,
+        native_unit_of_measurement=UnitOfTime.HOURS,
+        device_description=BOILER_DEVICE_DESCRIPTION,
     ),
-    (
-        [gw_vars.BOILER, gw_vars.THERMOSTAT],
-        OpenThermSensorEntityDescription(
-            key=gw_vars.DATA_TOTAL_BURNER_STARTS,
-            friendly_name_format="Total Burner Starts {}",
-            state_class=SensorStateClass.TOTAL,
-            native_unit_of_measurement="starts",
-        ),
+    OpenThermSensorEntityDescription(
+        key=gw_vars.DATA_DHW_PUMP_HOURS,
+        translation_key="hot_water_pump_hours",
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.TOTAL,
+        native_unit_of_measurement=UnitOfTime.HOURS,
+        device_description=BOILER_DEVICE_DESCRIPTION,
     ),
-    (
-        [gw_vars.BOILER, gw_vars.THERMOSTAT],
-        OpenThermSensorEntityDescription(
-            key=gw_vars.DATA_CH_PUMP_STARTS,
-            friendly_name_format="Central Heating Pump Starts {}",
-            state_class=SensorStateClass.TOTAL,
-            native_unit_of_measurement="starts",
-        ),
+    OpenThermSensorEntityDescription(
+        key=gw_vars.DATA_DHW_BURNER_HOURS,
+        translation_key="hot_water_burner_hours",
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.TOTAL,
+        native_unit_of_measurement=UnitOfTime.HOURS,
+        device_description=BOILER_DEVICE_DESCRIPTION,
     ),
-    (
-        [gw_vars.BOILER, gw_vars.THERMOSTAT],
-        OpenThermSensorEntityDescription(
-            key=gw_vars.DATA_DHW_PUMP_STARTS,
-            friendly_name_format="Hot Water Pump Starts {}",
-            state_class=SensorStateClass.TOTAL,
-            native_unit_of_measurement="starts",
-        ),
+    OpenThermSensorEntityDescription(
+        key=gw_vars.DATA_SLAVE_OT_VERSION,
+        translation_key="opentherm_version",
+        suggested_display_precision=SENSOR_FLOAT_SUGGESTED_DISPLAY_PRECISION,
+        device_description=BOILER_DEVICE_DESCRIPTION,
     ),
-    (
-        [gw_vars.BOILER, gw_vars.THERMOSTAT],
-        OpenThermSensorEntityDescription(
-            key=gw_vars.DATA_DHW_BURNER_STARTS,
-            friendly_name_format="Hot Water Burner Starts {}",
-            state_class=SensorStateClass.TOTAL,
-            native_unit_of_measurement="starts",
-        ),
+    OpenThermSensorEntityDescription(
+        key=gw_vars.DATA_SLAVE_PRODUCT_TYPE,
+        translation_key="product_type",
+        device_description=BOILER_DEVICE_DESCRIPTION,
     ),
-    (
-        [gw_vars.BOILER, gw_vars.THERMOSTAT],
-        OpenThermSensorEntityDescription(
-            key=gw_vars.DATA_TOTAL_BURNER_HOURS,
-            friendly_name_format="Total Burner Hours {}",
-            device_class=SensorDeviceClass.DURATION,
-            state_class=SensorStateClass.TOTAL,
-            native_unit_of_measurement=UnitOfTime.HOURS,
-        ),
+    OpenThermSensorEntityDescription(
+        key=gw_vars.DATA_SLAVE_PRODUCT_VERSION,
+        translation_key="product_version",
+        device_description=BOILER_DEVICE_DESCRIPTION,
     ),
-    (
-        [gw_vars.BOILER, gw_vars.THERMOSTAT],
-        OpenThermSensorEntityDescription(
-            key=gw_vars.DATA_CH_PUMP_HOURS,
-            friendly_name_format="Central Heating Pump Hours {}",
-            device_class=SensorDeviceClass.DURATION,
-            state_class=SensorStateClass.TOTAL,
-            native_unit_of_measurement=UnitOfTime.HOURS,
-        ),
+    OpenThermSensorEntityDescription(
+        key=gw_vars.OTGW_MODE,
+        translation_key="operating_mode",
+        device_description=GATEWAY_DEVICE_DESCRIPTION,
     ),
-    (
-        [gw_vars.BOILER, gw_vars.THERMOSTAT],
-        OpenThermSensorEntityDescription(
-            key=gw_vars.DATA_DHW_PUMP_HOURS,
-            friendly_name_format="Hot Water Pump Hours {}",
-            device_class=SensorDeviceClass.DURATION,
-            state_class=SensorStateClass.TOTAL,
-            native_unit_of_measurement=UnitOfTime.HOURS,
-        ),
+    OpenThermSensorEntityDescription(
+        key=gw_vars.OTGW_DHW_OVRD,
+        translation_key="hot_water_override_mode",
+        device_description=GATEWAY_DEVICE_DESCRIPTION,
     ),
-    (
-        [gw_vars.BOILER, gw_vars.THERMOSTAT],
-        OpenThermSensorEntityDescription(
-            key=gw_vars.DATA_DHW_BURNER_HOURS,
-            friendly_name_format="Hot Water Burner Hours {}",
-            device_class=SensorDeviceClass.DURATION,
-            state_class=SensorStateClass.TOTAL,
-            native_unit_of_measurement=UnitOfTime.HOURS,
-        ),
+    OpenThermSensorEntityDescription(
+        key=gw_vars.OTGW_ABOUT,
+        translation_key="firmware_version",
+        device_description=GATEWAY_DEVICE_DESCRIPTION,
     ),
-    (
-        [gw_vars.BOILER, gw_vars.THERMOSTAT],
-        OpenThermSensorEntityDescription(
-            key=gw_vars.DATA_MASTER_OT_VERSION,
-            friendly_name_format="Thermostat OpenTherm Version {}",
-            suggested_display_precision=SENSOR_FLOAT_SUGGESTED_DISPLAY_PRECISION,
-        ),
+    OpenThermSensorEntityDescription(
+        key=gw_vars.OTGW_BUILD,
+        translation_key="firmware_build",
+        device_description=GATEWAY_DEVICE_DESCRIPTION,
     ),
-    (
-        [gw_vars.BOILER, gw_vars.THERMOSTAT],
-        OpenThermSensorEntityDescription(
-            key=gw_vars.DATA_SLAVE_OT_VERSION,
-            friendly_name_format="Boiler OpenTherm Version {}",
-            suggested_display_precision=SENSOR_FLOAT_SUGGESTED_DISPLAY_PRECISION,
-        ),
+    OpenThermSensorEntityDescription(
+        key=gw_vars.OTGW_CLOCKMHZ,
+        translation_key="clock_speed",
+        device_description=GATEWAY_DEVICE_DESCRIPTION,
     ),
-    (
-        [gw_vars.BOILER, gw_vars.THERMOSTAT],
-        OpenThermSensorEntityDescription(
-            key=gw_vars.DATA_MASTER_PRODUCT_TYPE,
-            friendly_name_format="Thermostat Product Type {}",
-        ),
+    OpenThermSensorEntityDescription(
+        key=gw_vars.OTGW_LED_A,
+        translation_key="led_mode_n",
+        translation_placeholders={"led_id": "A"},
+        device_description=GATEWAY_DEVICE_DESCRIPTION,
     ),
-    (
-        [gw_vars.BOILER, gw_vars.THERMOSTAT],
-        OpenThermSensorEntityDescription(
-            key=gw_vars.DATA_MASTER_PRODUCT_VERSION,
-            friendly_name_format="Thermostat Product Version {}",
-        ),
+    OpenThermSensorEntityDescription(
+        key=gw_vars.OTGW_LED_B,
+        translation_key="led_mode_n",
+        translation_placeholders={"led_id": "B"},
+        device_description=GATEWAY_DEVICE_DESCRIPTION,
     ),
-    (
-        [gw_vars.BOILER, gw_vars.THERMOSTAT],
-        OpenThermSensorEntityDescription(
-            key=gw_vars.DATA_SLAVE_PRODUCT_TYPE,
-            friendly_name_format="Boiler Product Type {}",
-        ),
+    OpenThermSensorEntityDescription(
+        key=gw_vars.OTGW_LED_C,
+        translation_key="led_mode_n",
+        translation_placeholders={"led_id": "C"},
+        device_description=GATEWAY_DEVICE_DESCRIPTION,
     ),
-    (
-        [gw_vars.BOILER, gw_vars.THERMOSTAT],
-        OpenThermSensorEntityDescription(
-            key=gw_vars.DATA_SLAVE_PRODUCT_VERSION,
-            friendly_name_format="Boiler Product Version {}",
-        ),
+    OpenThermSensorEntityDescription(
+        key=gw_vars.OTGW_LED_D,
+        translation_key="led_mode_n",
+        translation_placeholders={"led_id": "D"},
+        device_description=GATEWAY_DEVICE_DESCRIPTION,
     ),
-    (
-        [gw_vars.OTGW],
-        OpenThermSensorEntityDescription(
-            key=gw_vars.OTGW_MODE,
-            friendly_name_format="Gateway/Monitor Mode {}",
-        ),
+    OpenThermSensorEntityDescription(
+        key=gw_vars.OTGW_LED_E,
+        translation_key="led_mode_n",
+        translation_placeholders={"led_id": "E"},
+        device_description=GATEWAY_DEVICE_DESCRIPTION,
     ),
-    (
-        [gw_vars.OTGW],
-        OpenThermSensorEntityDescription(
-            key=gw_vars.OTGW_DHW_OVRD,
-            friendly_name_format="Gateway Hot Water Override Mode {}",
-        ),
+    OpenThermSensorEntityDescription(
+        key=gw_vars.OTGW_LED_F,
+        translation_key="led_mode_n",
+        translation_placeholders={"led_id": "F"},
+        device_description=GATEWAY_DEVICE_DESCRIPTION,
     ),
-    (
-        [gw_vars.OTGW],
-        OpenThermSensorEntityDescription(
-            key=gw_vars.OTGW_ABOUT,
-            friendly_name_format="Gateway Firmware Version {}",
-        ),
+    OpenThermSensorEntityDescription(
+        key=gw_vars.OTGW_GPIO_A,
+        translation_key="gpio_mode_n",
+        translation_placeholders={"gpio_id": "A"},
+        device_description=GATEWAY_DEVICE_DESCRIPTION,
     ),
-    (
-        [gw_vars.OTGW],
-        OpenThermSensorEntityDescription(
-            key=gw_vars.OTGW_BUILD,
-            friendly_name_format="Gateway Firmware Build {}",
-        ),
+    OpenThermSensorEntityDescription(
+        key=gw_vars.OTGW_GPIO_B,
+        translation_key="gpio_mode_n",
+        translation_placeholders={"gpio_id": "B"},
+        device_description=GATEWAY_DEVICE_DESCRIPTION,
     ),
-    (
-        [gw_vars.OTGW],
-        OpenThermSensorEntityDescription(
-            key=gw_vars.OTGW_CLOCKMHZ,
-            friendly_name_format="Gateway Clock Speed {}",
-        ),
+    OpenThermSensorEntityDescription(
+        key=gw_vars.OTGW_SB_TEMP,
+        translation_key="setback_temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        suggested_display_precision=SENSOR_FLOAT_SUGGESTED_DISPLAY_PRECISION,
+        device_description=GATEWAY_DEVICE_DESCRIPTION,
     ),
-    (
-        [gw_vars.OTGW],
-        OpenThermSensorEntityDescription(
-            key=gw_vars.OTGW_LED_A,
-            friendly_name_format="Gateway LED A Mode {}",
-        ),
+    OpenThermSensorEntityDescription(
+        key=gw_vars.OTGW_SETP_OVRD_MODE,
+        translation_key="room_setpoint_override_mode",
+        device_description=GATEWAY_DEVICE_DESCRIPTION,
     ),
-    (
-        [gw_vars.OTGW],
-        OpenThermSensorEntityDescription(
-            key=gw_vars.OTGW_LED_B,
-            friendly_name_format="Gateway LED B Mode {}",
-        ),
+    OpenThermSensorEntityDescription(
+        key=gw_vars.OTGW_SMART_PWR,
+        translation_key="smart_power_mode",
+        device_description=GATEWAY_DEVICE_DESCRIPTION,
     ),
-    (
-        [gw_vars.OTGW],
-        OpenThermSensorEntityDescription(
-            key=gw_vars.OTGW_LED_C,
-            friendly_name_format="Gateway LED C Mode {}",
-        ),
+    OpenThermSensorEntityDescription(
+        key=gw_vars.OTGW_THRM_DETECT,
+        translation_key="thermostat_detection_mode",
+        device_description=GATEWAY_DEVICE_DESCRIPTION,
     ),
-    (
-        [gw_vars.OTGW],
-        OpenThermSensorEntityDescription(
-            key=gw_vars.OTGW_LED_D,
-            friendly_name_format="Gateway LED D Mode {}",
-        ),
+    OpenThermSensorEntityDescription(
+        key=gw_vars.OTGW_VREF,
+        translation_key="reference_voltage",
+        device_description=GATEWAY_DEVICE_DESCRIPTION,
     ),
-    (
-        [gw_vars.OTGW],
-        OpenThermSensorEntityDescription(
-            key=gw_vars.OTGW_LED_E,
-            friendly_name_format="Gateway LED E Mode {}",
-        ),
+    OpenThermSensorEntityDescription(
+        key=gw_vars.DATA_MASTER_MEMBERID,
+        translation_key="manufacturer_id",
+        device_description=THERMOSTAT_DEVICE_DESCRIPTION,
     ),
-    (
-        [gw_vars.OTGW],
-        OpenThermSensorEntityDescription(
-            key=gw_vars.OTGW_LED_F,
-            friendly_name_format="Gateway LED F Mode {}",
-        ),
+    OpenThermSensorEntityDescription(
+        key=gw_vars.DATA_ROOM_SETPOINT_OVRD,
+        translation_key="room_setpoint_override",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        suggested_display_precision=SENSOR_FLOAT_SUGGESTED_DISPLAY_PRECISION,
+        device_description=THERMOSTAT_DEVICE_DESCRIPTION,
     ),
-    (
-        [gw_vars.OTGW],
-        OpenThermSensorEntityDescription(
-            key=gw_vars.OTGW_GPIO_A,
-            friendly_name_format="Gateway GPIO A Mode {}",
-        ),
+    OpenThermSensorEntityDescription(
+        key=gw_vars.DATA_ROOM_SETPOINT,
+        translation_key="room_setpoint_n",
+        translation_placeholders={"setpoint_id": "1"},
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        suggested_display_precision=SENSOR_FLOAT_SUGGESTED_DISPLAY_PRECISION,
+        device_description=THERMOSTAT_DEVICE_DESCRIPTION,
     ),
-    (
-        [gw_vars.OTGW],
-        OpenThermSensorEntityDescription(
-            key=gw_vars.OTGW_GPIO_B,
-            friendly_name_format="Gateway GPIO B Mode {}",
-        ),
+    OpenThermSensorEntityDescription(
+        key=gw_vars.DATA_ROOM_SETPOINT_2,
+        translation_key="room_setpoint_n",
+        translation_placeholders={"setpoint_id": "2"},
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        suggested_display_precision=SENSOR_FLOAT_SUGGESTED_DISPLAY_PRECISION,
+        device_description=THERMOSTAT_DEVICE_DESCRIPTION,
     ),
-    (
-        [gw_vars.OTGW],
-        OpenThermSensorEntityDescription(
-            key=gw_vars.OTGW_SB_TEMP,
-            friendly_name_format="Gateway Setback Temperature {}",
-            device_class=SensorDeviceClass.TEMPERATURE,
-            state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-            suggested_display_precision=SENSOR_FLOAT_SUGGESTED_DISPLAY_PRECISION,
-        ),
+    OpenThermSensorEntityDescription(
+        key=gw_vars.DATA_ROOM_TEMP,
+        translation_key="room_temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        suggested_display_precision=SENSOR_FLOAT_SUGGESTED_DISPLAY_PRECISION,
+        device_description=THERMOSTAT_DEVICE_DESCRIPTION,
     ),
-    (
-        [gw_vars.OTGW],
-        OpenThermSensorEntityDescription(
-            key=gw_vars.OTGW_SETP_OVRD_MODE,
-            friendly_name_format="Gateway Room Setpoint Override Mode {}",
-        ),
+    OpenThermSensorEntityDescription(
+        key=gw_vars.DATA_OUTSIDE_TEMP,
+        translation_key="outside_temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        suggested_display_precision=SENSOR_FLOAT_SUGGESTED_DISPLAY_PRECISION,
+        device_description=THERMOSTAT_DEVICE_DESCRIPTION,
     ),
-    (
-        [gw_vars.OTGW],
-        OpenThermSensorEntityDescription(
-            key=gw_vars.OTGW_SMART_PWR,
-            friendly_name_format="Gateway Smart Power Mode {}",
-        ),
+    OpenThermSensorEntityDescription(
+        key=gw_vars.DATA_MASTER_OT_VERSION,
+        translation_key="opentherm_version",
+        suggested_display_precision=SENSOR_FLOAT_SUGGESTED_DISPLAY_PRECISION,
+        device_description=THERMOSTAT_DEVICE_DESCRIPTION,
     ),
-    (
-        [gw_vars.OTGW],
-        OpenThermSensorEntityDescription(
-            key=gw_vars.OTGW_THRM_DETECT,
-            friendly_name_format="Gateway Thermostat Detection {}",
-        ),
+    OpenThermSensorEntityDescription(
+        key=gw_vars.DATA_MASTER_PRODUCT_TYPE,
+        translation_key="product_type",
+        device_description=THERMOSTAT_DEVICE_DESCRIPTION,
     ),
-    (
-        [gw_vars.OTGW],
-        OpenThermSensorEntityDescription(
-            key=gw_vars.OTGW_VREF,
-            friendly_name_format="Gateway Reference Voltage Setting {}",
-        ),
+    OpenThermSensorEntityDescription(
+        key=gw_vars.DATA_MASTER_PRODUCT_VERSION,
+        translation_key="product_version",
+        device_description=THERMOSTAT_DEVICE_DESCRIPTION,
+    ),
+    OpenThermSensorEntityDescription(
+        key=gw_vars.DATA_CONTROL_SETPOINT,
+        translation_key="control_setpoint_n",
+        translation_placeholders={"circuit_number": "1"},
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        suggested_display_precision=SENSOR_FLOAT_SUGGESTED_DISPLAY_PRECISION,
+        device_description=THERMOSTAT_DEVICE_DESCRIPTION,
+    ),
+    OpenThermSensorEntityDescription(
+        key=gw_vars.DATA_CONTROL_SETPOINT_2,
+        translation_key="control_setpoint_n",
+        translation_placeholders={"circuit_number": "2"},
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        suggested_display_precision=SENSOR_FLOAT_SUGGESTED_DISPLAY_PRECISION,
+        device_description=THERMOSTAT_DEVICE_DESCRIPTION,
+    ),
+    OpenThermSensorEntityDescription(
+        key=gw_vars.DATA_SLAVE_MEMBERID,
+        translation_key="manufacturer_id",
+        device_description=THERMOSTAT_DEVICE_DESCRIPTION,
+    ),
+    OpenThermSensorEntityDescription(
+        key=gw_vars.DATA_SLAVE_OEM_FAULT,
+        translation_key="oem_fault_code",
+        device_description=THERMOSTAT_DEVICE_DESCRIPTION,
+    ),
+    OpenThermSensorEntityDescription(
+        key=gw_vars.DATA_COOLING_CONTROL,
+        translation_key="cooling_control",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=PERCENTAGE,
+        suggested_display_precision=SENSOR_FLOAT_SUGGESTED_DISPLAY_PRECISION,
+        device_description=THERMOSTAT_DEVICE_DESCRIPTION,
+    ),
+    OpenThermSensorEntityDescription(
+        key=gw_vars.DATA_SLAVE_MAX_RELATIVE_MOD,
+        translation_key="max_relative_mod_level",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=PERCENTAGE,
+        suggested_display_precision=SENSOR_FLOAT_SUGGESTED_DISPLAY_PRECISION,
+        device_description=THERMOSTAT_DEVICE_DESCRIPTION,
+    ),
+    OpenThermSensorEntityDescription(
+        key=gw_vars.DATA_SLAVE_MAX_CAPACITY,
+        translation_key="max_capacity",
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.POWER,
+        native_unit_of_measurement=UnitOfPower.KILO_WATT,
+        device_description=THERMOSTAT_DEVICE_DESCRIPTION,
+    ),
+    OpenThermSensorEntityDescription(
+        key=gw_vars.DATA_SLAVE_MIN_MOD_LEVEL,
+        translation_key="min_mod_level",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=PERCENTAGE,
+        device_description=THERMOSTAT_DEVICE_DESCRIPTION,
+    ),
+    OpenThermSensorEntityDescription(
+        key=gw_vars.DATA_REL_MOD_LEVEL,
+        translation_key="relative_mod_level",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=PERCENTAGE,
+        suggested_display_precision=SENSOR_FLOAT_SUGGESTED_DISPLAY_PRECISION,
+        device_description=THERMOSTAT_DEVICE_DESCRIPTION,
+    ),
+    OpenThermSensorEntityDescription(
+        key=gw_vars.DATA_CH_WATER_PRESS,
+        translation_key="central_heating_pressure",
+        device_class=SensorDeviceClass.PRESSURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfPressure.BAR,
+        suggested_display_precision=SENSOR_FLOAT_SUGGESTED_DISPLAY_PRECISION,
+        device_description=THERMOSTAT_DEVICE_DESCRIPTION,
+    ),
+    OpenThermSensorEntityDescription(
+        key=gw_vars.DATA_DHW_FLOW_RATE,
+        translation_key="hot_water_flow_rate",
+        device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
+        suggested_display_precision=SENSOR_FLOAT_SUGGESTED_DISPLAY_PRECISION,
+        device_description=THERMOSTAT_DEVICE_DESCRIPTION,
+    ),
+    OpenThermSensorEntityDescription(
+        key=gw_vars.DATA_CH_WATER_TEMP,
+        translation_key="central_heating_temperature_n",
+        translation_placeholders={"circuit_number": "1"},
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        suggested_display_precision=SENSOR_FLOAT_SUGGESTED_DISPLAY_PRECISION,
+        device_description=THERMOSTAT_DEVICE_DESCRIPTION,
+    ),
+    OpenThermSensorEntityDescription(
+        key=gw_vars.DATA_CH_WATER_TEMP_2,
+        translation_key="central_heating_temperature_n",
+        translation_placeholders={"circuit_number": "2"},
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        suggested_display_precision=SENSOR_FLOAT_SUGGESTED_DISPLAY_PRECISION,
+        device_description=THERMOSTAT_DEVICE_DESCRIPTION,
+    ),
+    OpenThermSensorEntityDescription(
+        key=gw_vars.DATA_DHW_TEMP,
+        translation_key="hot_water_temperature_n",
+        translation_placeholders={"circuit_number": "1"},
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        suggested_display_precision=SENSOR_FLOAT_SUGGESTED_DISPLAY_PRECISION,
+        device_description=THERMOSTAT_DEVICE_DESCRIPTION,
+    ),
+    OpenThermSensorEntityDescription(
+        key=gw_vars.DATA_DHW_TEMP_2,
+        translation_key="hot_water_temperature_n",
+        translation_placeholders={"circuit_number": "2"},
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        suggested_display_precision=SENSOR_FLOAT_SUGGESTED_DISPLAY_PRECISION,
+        device_description=THERMOSTAT_DEVICE_DESCRIPTION,
+    ),
+    OpenThermSensorEntityDescription(
+        key=gw_vars.DATA_RETURN_WATER_TEMP,
+        translation_key="return_water_temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        suggested_display_precision=SENSOR_FLOAT_SUGGESTED_DISPLAY_PRECISION,
+        device_description=THERMOSTAT_DEVICE_DESCRIPTION,
+    ),
+    OpenThermSensorEntityDescription(
+        key=gw_vars.DATA_SOLAR_STORAGE_TEMP,
+        translation_key="solar_storage_temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        suggested_display_precision=SENSOR_FLOAT_SUGGESTED_DISPLAY_PRECISION,
+        device_description=THERMOSTAT_DEVICE_DESCRIPTION,
+    ),
+    OpenThermSensorEntityDescription(
+        key=gw_vars.DATA_SOLAR_COLL_TEMP,
+        translation_key="solar_collector_temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        suggested_display_precision=SENSOR_FLOAT_SUGGESTED_DISPLAY_PRECISION,
+        device_description=THERMOSTAT_DEVICE_DESCRIPTION,
+    ),
+    OpenThermSensorEntityDescription(
+        key=gw_vars.DATA_EXHAUST_TEMP,
+        translation_key="exhaust_temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_description=THERMOSTAT_DEVICE_DESCRIPTION,
+    ),
+    OpenThermSensorEntityDescription(
+        key=gw_vars.DATA_SLAVE_DHW_MAX_SETP,
+        translation_key="max_hot_water_setpoint_upper",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_description=THERMOSTAT_DEVICE_DESCRIPTION,
+    ),
+    OpenThermSensorEntityDescription(
+        key=gw_vars.DATA_SLAVE_DHW_MIN_SETP,
+        translation_key="max_hot_water_setpoint_lower",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_description=THERMOSTAT_DEVICE_DESCRIPTION,
+    ),
+    OpenThermSensorEntityDescription(
+        key=gw_vars.DATA_SLAVE_CH_MAX_SETP,
+        translation_key="max_central_heating_setpoint_upper",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_description=THERMOSTAT_DEVICE_DESCRIPTION,
+    ),
+    OpenThermSensorEntityDescription(
+        key=gw_vars.DATA_SLAVE_CH_MIN_SETP,
+        translation_key="max_central_heating_setpoint_lower",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_description=THERMOSTAT_DEVICE_DESCRIPTION,
+    ),
+    OpenThermSensorEntityDescription(
+        key=gw_vars.DATA_DHW_SETPOINT,
+        translation_key="hot_water_setpoint",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        suggested_display_precision=SENSOR_FLOAT_SUGGESTED_DISPLAY_PRECISION,
+        device_description=THERMOSTAT_DEVICE_DESCRIPTION,
+    ),
+    OpenThermSensorEntityDescription(
+        key=gw_vars.DATA_MAX_CH_SETPOINT,
+        translation_key="max_central_heating_setpoint",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        suggested_display_precision=SENSOR_FLOAT_SUGGESTED_DISPLAY_PRECISION,
+        device_description=THERMOSTAT_DEVICE_DESCRIPTION,
+    ),
+    OpenThermSensorEntityDescription(
+        key=gw_vars.DATA_OEM_DIAG,
+        translation_key="oem_diagnostic_code",
+        device_description=THERMOSTAT_DEVICE_DESCRIPTION,
+    ),
+    OpenThermSensorEntityDescription(
+        key=gw_vars.DATA_TOTAL_BURNER_STARTS,
+        translation_key="total_burner_starts",
+        state_class=SensorStateClass.TOTAL,
+        native_unit_of_measurement="starts",
+        device_description=THERMOSTAT_DEVICE_DESCRIPTION,
+    ),
+    OpenThermSensorEntityDescription(
+        key=gw_vars.DATA_CH_PUMP_STARTS,
+        translation_key="central_heating_pump_starts",
+        state_class=SensorStateClass.TOTAL,
+        native_unit_of_measurement="starts",
+        device_description=THERMOSTAT_DEVICE_DESCRIPTION,
+    ),
+    OpenThermSensorEntityDescription(
+        key=gw_vars.DATA_DHW_PUMP_STARTS,
+        translation_key="hot_water_pump_starts",
+        state_class=SensorStateClass.TOTAL,
+        native_unit_of_measurement="starts",
+        device_description=THERMOSTAT_DEVICE_DESCRIPTION,
+    ),
+    OpenThermSensorEntityDescription(
+        key=gw_vars.DATA_DHW_BURNER_STARTS,
+        translation_key="hot_water_burner_starts",
+        state_class=SensorStateClass.TOTAL,
+        native_unit_of_measurement="starts",
+        device_description=THERMOSTAT_DEVICE_DESCRIPTION,
+    ),
+    OpenThermSensorEntityDescription(
+        key=gw_vars.DATA_TOTAL_BURNER_HOURS,
+        translation_key="total_burner_hours",
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.TOTAL,
+        native_unit_of_measurement=UnitOfTime.HOURS,
+        device_description=THERMOSTAT_DEVICE_DESCRIPTION,
+    ),
+    OpenThermSensorEntityDescription(
+        key=gw_vars.DATA_CH_PUMP_HOURS,
+        translation_key="central_heating_pump_hours",
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.TOTAL,
+        native_unit_of_measurement=UnitOfTime.HOURS,
+        device_description=THERMOSTAT_DEVICE_DESCRIPTION,
+    ),
+    OpenThermSensorEntityDescription(
+        key=gw_vars.DATA_DHW_PUMP_HOURS,
+        translation_key="hot_water_pump_hours",
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.TOTAL,
+        native_unit_of_measurement=UnitOfTime.HOURS,
+        device_description=THERMOSTAT_DEVICE_DESCRIPTION,
+    ),
+    OpenThermSensorEntityDescription(
+        key=gw_vars.DATA_DHW_BURNER_HOURS,
+        translation_key="hot_water_burner_hours",
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.TOTAL,
+        native_unit_of_measurement=UnitOfTime.HOURS,
+        device_description=THERMOSTAT_DEVICE_DESCRIPTION,
+    ),
+    OpenThermSensorEntityDescription(
+        key=gw_vars.DATA_SLAVE_OT_VERSION,
+        translation_key="opentherm_version",
+        suggested_display_precision=SENSOR_FLOAT_SUGGESTED_DISPLAY_PRECISION,
+        device_description=THERMOSTAT_DEVICE_DESCRIPTION,
+    ),
+    OpenThermSensorEntityDescription(
+        key=gw_vars.DATA_SLAVE_PRODUCT_TYPE,
+        translation_key="product_type",
+        device_description=THERMOSTAT_DEVICE_DESCRIPTION,
+    ),
+    OpenThermSensorEntityDescription(
+        key=gw_vars.DATA_SLAVE_PRODUCT_VERSION,
+        translation_key="product_version",
+        device_description=THERMOSTAT_DEVICE_DESCRIPTION,
+    ),
+    OpenThermSensorEntityDescription(
+        key=gw_vars.DATA_MASTER_MEMBERID,
+        translation_key="manufacturer_id",
+        device_description=BOILER_DEVICE_DESCRIPTION,
+    ),
+    OpenThermSensorEntityDescription(
+        key=gw_vars.DATA_ROOM_SETPOINT_OVRD,
+        translation_key="room_setpoint_override",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        suggested_display_precision=SENSOR_FLOAT_SUGGESTED_DISPLAY_PRECISION,
+        device_description=BOILER_DEVICE_DESCRIPTION,
+    ),
+    OpenThermSensorEntityDescription(
+        key=gw_vars.DATA_ROOM_SETPOINT,
+        translation_key="room_setpoint_n",
+        translation_placeholders={"setpoint_id": "1"},
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        suggested_display_precision=SENSOR_FLOAT_SUGGESTED_DISPLAY_PRECISION,
+        device_description=BOILER_DEVICE_DESCRIPTION,
+    ),
+    OpenThermSensorEntityDescription(
+        key=gw_vars.DATA_ROOM_SETPOINT_2,
+        translation_key="room_setpoint_n",
+        translation_placeholders={"setpoint_id": "2"},
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        suggested_display_precision=SENSOR_FLOAT_SUGGESTED_DISPLAY_PRECISION,
+        device_description=BOILER_DEVICE_DESCRIPTION,
+    ),
+    OpenThermSensorEntityDescription(
+        key=gw_vars.DATA_ROOM_TEMP,
+        translation_key="room_temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        suggested_display_precision=SENSOR_FLOAT_SUGGESTED_DISPLAY_PRECISION,
+        device_description=BOILER_DEVICE_DESCRIPTION,
+    ),
+    OpenThermSensorEntityDescription(
+        key=gw_vars.DATA_OUTSIDE_TEMP,
+        translation_key="outside_temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        suggested_display_precision=SENSOR_FLOAT_SUGGESTED_DISPLAY_PRECISION,
+        device_description=BOILER_DEVICE_DESCRIPTION,
+    ),
+    OpenThermSensorEntityDescription(
+        key=gw_vars.DATA_MASTER_OT_VERSION,
+        translation_key="opentherm_version",
+        suggested_display_precision=SENSOR_FLOAT_SUGGESTED_DISPLAY_PRECISION,
+        device_description=BOILER_DEVICE_DESCRIPTION,
+    ),
+    OpenThermSensorEntityDescription(
+        key=gw_vars.DATA_MASTER_PRODUCT_TYPE,
+        translation_key="product_type",
+        device_description=BOILER_DEVICE_DESCRIPTION,
+    ),
+    OpenThermSensorEntityDescription(
+        key=gw_vars.DATA_MASTER_PRODUCT_VERSION,
+        translation_key="product_version",
+        device_description=BOILER_DEVICE_DESCRIPTION,
     ),
 )
 
@@ -629,37 +883,22 @@ async def async_setup_entry(
     async_add_entities(
         OpenThermSensor(
             gw_hub,
-            source,
             description,
         )
-        for sources, description in SENSOR_INFO
-        for source in sources
+        for description in SENSOR_DESCRIPTIONS
     )
 
 
 class OpenThermSensor(OpenThermEntity, SensorEntity):
-    """Representation of an OpenTherm Gateway sensor."""
+    """Representation of an OpenTherm sensor."""
 
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
     entity_description: OpenThermSensorEntityDescription
 
-    def __init__(
-        self,
-        gw_hub: OpenThermGatewayHub,
-        source: str,
-        description: OpenThermSensorEntityDescription,
-    ) -> None:
-        """Initialize the OpenTherm Gateway sensor."""
-        self.entity_id = async_generate_entity_id(
-            ENTITY_ID_FORMAT,
-            f"{description.key}_{source}_{gw_hub.hub_id}",
-            hass=gw_hub.hass,
-        )
-        super().__init__(gw_hub, source, description)
-
     @callback
-    def receive_report(self, status: dict[str, dict]) -> None:
+    def receive_report(self, status: dict[OpenThermDataSource, dict]) -> None:
         """Handle status updates from the component."""
-        self._attr_available = self._gateway.connected
-        value = status[self._source].get(self.entity_description.key)
-        self._attr_native_value = value
+        self._attr_native_value = status[
+            self.entity_description.device_description.data_source
+        ].get(self.entity_description.key)
         self.async_write_ha_state()

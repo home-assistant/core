@@ -671,10 +671,12 @@ def test_template(hass: HomeAssistant) -> None:
         "Hello",
         "{{ beer }}",
         "{% if 1 == 1 %}Hello{% else %}World{% endif %}",
-        # Function added as an extension by Home Assistant
+        # Function 'expand' added as an extension by Home Assistant
         "{{ expand('group.foo')|map(attribute='entity_id')|list }}",
-        # Filter added as an extension by Home Assistant
+        # Filter 'expand' added as an extension by Home Assistant
         "{{ ['group.foo']|expand|map(attribute='entity_id')|list }}",
+        # Non existing function 'no_such_function' is not detected by Jinja2
+        "{{ no_such_function('group.foo')|map(attribute='entity_id')|list }}",
     )
     for value in options:
         schema(value)
@@ -700,8 +702,11 @@ async def test_template_no_hass(hass: HomeAssistant) -> None:
         "Hello",
         "{{ beer }}",
         "{% if 1 == 1 %}Hello{% else %}World{% endif %}",
-        # Function added as an extension by Home Assistant
+        # Function 'expand' added as an extension by Home Assistant, no error
+        # because non existing functions are not detected by Jinja2
         "{{ expand('group.foo')|map(attribute='entity_id')|list }}",
+        # Non existing function 'no_such_function' is not detected by Jinja2
+        "{{ no_such_function('group.foo')|map(attribute='entity_id')|list }}",
     )
     for value in options:
         await hass.async_add_executor_job(schema, value)
@@ -725,10 +730,12 @@ def test_dynamic_template(hass: HomeAssistant) -> None:
     options = (
         "{{ beer }}",
         "{% if 1 == 1 %}Hello{% else %}World{% endif %}",
-        # Function added as an extension by Home Assistant
+        # Function 'expand' added as an extension by Home Assistant
         "{{ expand('group.foo')|map(attribute='entity_id')|list }}",
-        # Filter added as an extension by Home Assistant
+        # Filter 'expand' added as an extension by Home Assistant
         "{{ ['group.foo']|expand|map(attribute='entity_id')|list }}",
+        # Non existing function 'no_such_function' is not detected by Jinja2
+        "{{ no_such_function('group.foo')|map(attribute='entity_id')|list }}",
     )
     for value in options:
         schema(value)
@@ -754,8 +761,11 @@ async def test_dynamic_template_no_hass(hass: HomeAssistant) -> None:
     options = (
         "{{ beer }}",
         "{% if 1 == 1 %}Hello{% else %}World{% endif %}",
-        # Function added as an extension by Home Assistant
+        # Function 'expand' added as an extension by Home Assistant, no error
+        # because non existing functions are not detected by Jinja2
         "{{ expand('group.foo')|map(attribute='entity_id')|list }}",
+        # Non existing function 'no_such_function' is not detected by Jinja2
+        "{{ no_such_function('group.foo')|map(attribute='entity_id')|list }}",
     )
     for value in options:
         await hass.async_add_executor_job(schema, value)

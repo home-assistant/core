@@ -6,8 +6,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from reolink_aio.api import Chime
 
-from homeassistant.components.reolink import const
 from homeassistant.components.reolink.config_flow import DEFAULT_PROTOCOL
+from homeassistant.components.reolink.const import CONF_USE_HTTPS, DOMAIN
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -35,6 +35,7 @@ TEST_PORT = 1234
 TEST_NVR_NAME = "test_reolink_name"
 TEST_CAM_NAME = "test_reolink_cam"
 TEST_NVR_NAME2 = "test2_reolink_name"
+TEST_CAM_NAME = "test_reolink_cam"
 TEST_USE_HTTPS = True
 TEST_HOST_MODEL = "RLN8-410"
 TEST_ITEM_NUMBER = "P000"
@@ -136,14 +137,14 @@ def reolink_platforms() -> Generator[None]:
 def config_entry(hass: HomeAssistant) -> MockConfigEntry:
     """Add the reolink mock config entry to hass."""
     config_entry = MockConfigEntry(
-        domain=const.DOMAIN,
+        domain=DOMAIN,
         unique_id=format_mac(TEST_MAC),
         data={
             CONF_HOST: TEST_HOST,
             CONF_USERNAME: TEST_USERNAME,
             CONF_PASSWORD: TEST_PASSWORD,
             CONF_PORT: TEST_PORT,
-            const.CONF_USE_HTTPS: TEST_USE_HTTPS,
+            CONF_USE_HTTPS: TEST_USE_HTTPS,
         },
         options={
             CONF_PROTOCOL: DEFAULT_PROTOCOL,

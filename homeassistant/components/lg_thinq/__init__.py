@@ -6,6 +6,7 @@ import asyncio
 import logging
 
 from thinqconnect import ThinQApi, ThinQAPIException
+from thinqconnect.integration import async_get_ha_bridge_list
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_COUNTRY, Platform
@@ -19,13 +20,15 @@ from .coordinator import DeviceDataUpdateCoordinator, async_setup_device_coordin
 
 type ThinqConfigEntry = ConfigEntry[dict[str, DeviceDataUpdateCoordinator]]
 
-PLATFORMS = [Platform.SWITCH]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.SWITCH]
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ThinqConfigEntry) -> bool:
     """Set up an entry."""
+    entry.runtime_data = {}
+
     access_token = entry.data[CONF_ACCESS_TOKEN]
     client_id = entry.data[CONF_CONNECT_CLIENT_ID]
     country_code = entry.data[CONF_COUNTRY]
@@ -55,29 +58,22 @@ async def async_setup_coordinators(
     thinq_api: ThinQApi,
 ) -> None:
     """Set up coordinators and register devices."""
-    entry.runtime_data = {}
-
-    # Get a device list from the server.
+    # Get a list of ha bridge.
     try:
-        device_list = await thinq_api.async_get_device_list()
+        bridge_list = await async_get_ha_bridge_list(thinq_api)
     except ThinQAPIException as exc:
         raise ConfigEntryNotReady(exc.message) from exc
 
-    if not device_list:
+    if not bridge_list:
         return
 
     # Setup coordinator per device.
-    coordinator_list: list[DeviceDataUpdateCoordinator] = []
     task_list = [
-        hass.async_create_task(async_setup_device_coordinator(hass, thinq_api, device))
-        for device in device_list
+        hass.async_create_task(async_setup_device_coordinator(hass, bridge))
+        for bridge in bridge_list
     ]
     task_result = await asyncio.gather(*task_list)
-    for coordinators in task_result:
-        if coordinators:
-            coordinator_list += coordinators
-
-    for coordinator in coordinator_list:
+    for coordinator in task_result:
         entry.runtime_data[coordinator.unique_id] = coordinator
 
 

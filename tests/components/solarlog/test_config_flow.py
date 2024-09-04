@@ -5,9 +5,9 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from solarlog_cli.solarlog_exceptions import SolarLogConnectionError, SolarLogError
 
-from homeassistant import config_entries
 from homeassistant.components.solarlog import config_flow
 from homeassistant.components.solarlog.const import DOMAIN
+from homeassistant.config_entries import SOURCE_RECONFIGURE, SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -21,7 +21,7 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     """Test we get the form."""
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
@@ -60,7 +60,7 @@ async def test_user(
 ) -> None:
     """Test user config."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
@@ -123,42 +123,27 @@ async def test_form_exceptions(
     assert result["data"]["extended_data"] is False
 
 
-async def test_abort_if_already_setup(hass: HomeAssistant, test_connect) -> None:
+async def test_abort_if_already_setup(hass: HomeAssistant, test_connect: None) -> None:
     """Test we abort if the device is already setup."""
-    flow = init_config_flow(hass)
-    MockConfigEntry(
-        domain="solarlog", data={CONF_NAME: NAME, CONF_HOST: HOST}
-    ).add_to_hass(hass)
 
-    # Should fail, same HOST different NAME (default)
-    result = await flow.async_step_user(
-        {CONF_HOST: HOST, CONF_NAME: "solarlog_test_7_8_9", "extended_data": False}
+    MockConfigEntry(domain=DOMAIN, data={CONF_NAME: NAME, CONF_HOST: HOST}).add_to_hass(
+        hass
     )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {CONF_HOST: "already_configured"}
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
 
-    # Should fail, same HOST and NAME
-    result = await flow.async_step_user({CONF_HOST: HOST, CONF_NAME: NAME})
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {CONF_HOST: "already_configured"}
-
-    # SHOULD pass, diff HOST (without http://), different NAME
-    result = await flow.async_step_user(
-        {CONF_HOST: "2.2.2.2", CONF_NAME: "solarlog_test_7_8_9", "extended_data": False}
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: HOST, CONF_NAME: "solarlog_test_7_8_9", "extended_data": False},
     )
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "solarlog_test_7_8_9"
-    assert result["data"][CONF_HOST] == "http://2.2.2.2"
-
-    # SHOULD pass, diff HOST, same NAME
-    result = await flow.async_step_user(
-        {CONF_HOST: "http://2.2.2.2", CONF_NAME: NAME, "extended_data": False}
-    )
-    await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "solarlog_test_1_2_3"
-    assert result["data"][CONF_HOST] == "http://2.2.2.2"
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
 
 
 async def test_reconfigure_flow(
@@ -178,7 +163,7 @@ async def test_reconfigure_flow(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={
-            "source": config_entries.SOURCE_RECONFIGURE,
+            "source": SOURCE_RECONFIGURE,
             "entry_id": entry.entry_id,
         },
     )

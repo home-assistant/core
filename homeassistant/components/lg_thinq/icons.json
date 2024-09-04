@@ -4,6 +4,26 @@
       "operation_power": {
         "default": "mdi:power"
       }
+    },
+    "binary_sensor": {
+      "eco_friendly_mode": {
+        "default": "mdi:sprout"
+      },
+      "power_save_enabled": {
+        "default": "mdi:meter-electric"
+      },
+      "remote_control_enabled": {
+        "default": "mdi:remote"
+      },
+      "remote_control_enabled_for_location": {
+        "default": "mdi:remote"
+      },
+      "rinse_refill": {
+        "default": "mdi:tune-vertical-variant"
+      },
+      "sabbath_mode": {
+        "default": "mdi:food-off-outline"
+      }
     }
   }
 }
