@@ -49,19 +49,23 @@ async def async_create_fix_flow(
 
 
 def create_restart_issue(
-    fn: Callable, hass: HomeAssistant, action: str, component_name: str
+    fn: Callable,
+    hass: HomeAssistant,
+    action: str,
+    name: str,
+    issue_domain: str | None = None,
 ) -> None:
     """Create an issue to inform the user that a restart is required."""
     data: dict[str, str | int | float | None] = {
         "action": action,
-        "name": component_name,
+        "name": name,
     }
     fn(
         hass=hass,
         domain=DOMAIN,
-        issue_id=f"restart_required.{component_name}",
+        issue_id=f"restart_required.{name}",
         is_fixable=True,
-        issue_domain=component_name,
+        issue_domain=issue_domain or name,
         severity=IssueSeverity.WARNING,
         translation_key="restart_required",
         translation_placeholders=data,

@@ -12,7 +12,12 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.issue_registry import create_issue
 
 from . import GPMConfigEntry
-from ._manager import GPMError, RepositoryManager, RepositoryType, UpdateStrategy
+from ._manager import (
+    GPMError,
+    IntegrationRepositoryManager,
+    RepositoryManager,
+    UpdateStrategy,
+)
 from .const import DOMAIN, GIT_SHORT_HASH_LEN
 from .repairs import create_restart_issue
 
@@ -41,6 +46,7 @@ class GPMUpdateEntity(UpdateEntity):
     def __init__(self, manager: RepositoryManager) -> None:  # noqa: D107
         self.manager = manager
         self._first_update = True
+        self._component_name: str | None = None
 
     def update(self) -> None:
         """Update state."""
@@ -49,8 +55,11 @@ class GPMUpdateEntity(UpdateEntity):
             self._first_update = False
         else:
             self.manager.fetch()
-        self._attr_unique_id = f"{DOMAIN}_{self.manager.component_name}"
-        self._attr_name = self.manager.component_name
+        self._attr_unique_id = f"{DOMAIN}_{self.manager.slug}"
+        self._attr_name = self.manager.slug
+
+        if isinstance(self.manager, IntegrationRepositoryManager):
+            self._component_name = self.manager.component_name
 
         current = self.manager.get_current_version()
         latest = self.manager.get_latest_version()
@@ -64,8 +73,8 @@ class GPMUpdateEntity(UpdateEntity):
     @property
     def entity_picture(self) -> str | None:
         """Return the entity picture to use in the frontend."""
-        if self.manager.type == RepositoryType.INTEGRATION:
-            return f"https://brands.home-assistant.io/_/{self.name}/icon.png"
+        if self._component_name:
+            return f"https://brands.home-assistant.io/_/{self._component_name}/icon.png"
         return None
 
     def install(self, version: str | None, backup: bool, **kwargs: Any) -> None:
@@ -84,5 +93,6 @@ class GPMUpdateEntity(UpdateEntity):
             create_issue,
             self.hass,
             action="update",
-            component_name=cast(str, self.name),
+            name=cast(str, self.name),
+            issue_domain=self._component_name,
         )

@@ -11,6 +11,7 @@
       }
     },
     "error": {
+      "invalid_structure": "GIT repository has invalid structure. See logs for details.",
       "install_failed": "Unable to install GIT repository. See logs for details.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },

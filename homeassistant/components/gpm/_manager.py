@@ -3,6 +3,7 @@
 When we speak about "version" in this file, we mean either a tag or a commit hash.
 """
 
+from abc import abstractmethod
 from collections.abc import Callable, Iterable
 from enum import StrEnum, auto
 import functools
@@ -13,6 +14,12 @@ from typing import Any
 
 from awesomeversion import AwesomeVersion
 from git import GitCommandError, Repo
+
+from .const import (
+    PATH_CLONE_BASEDIR,
+    PATH_INTEGRATION_INSTALL_BASEDIR,
+    PATH_RESOURCE_INSTALL_BASEDIR,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,13 +50,11 @@ class RepositoryManager:
     def __init__(
         self,
         url: str,
-        type: RepositoryType,
         clone_basedir: Path | str,
         install_basedir: Path | str,
         update_strategy: UpdateStrategy = UpdateStrategy.LATEST_TAG,
     ) -> None:
         self.url = url
-        self.type = type
         self.clone_basedir = Path(clone_basedir)
         self.install_basedir = Path(install_basedir)
         self.update_strategy = update_strategy
@@ -70,18 +75,15 @@ class RepositoryManager:
         @functools.wraps(func)
         def wrapper(self: "RepositoryManager", *args: Any, **kwargs: Any) -> Any:
             if not self.is_cloned:
-                raise NotClonedError
+                raise NotClonedError(self.slug)
             return func(self, *args, **kwargs)
 
         return wrapper
 
     @property
+    @abstractmethod
     def is_installed(self) -> bool:
         """Return True if the GIT repo is installed."""
-        try:
-            return self.install_symlink.exists()
-        except OSError:
-            return False
 
     @staticmethod
     def ensure_installed(func: Callable[..., Any]) -> Callable[..., Any]:  # noqa: N805
@@ -90,7 +92,7 @@ class RepositoryManager:
         @functools.wraps(func)
         def wrapper(self: "RepositoryManager", *args: Any, **kwargs: Any) -> Any:
             if not self.is_installed:
-                raise NotInstalledError
+                raise NotInstalledError(self.slug)
             return func(self, *args, **kwargs)
 
         return wrapper
@@ -158,27 +160,14 @@ class RepositoryManager:
         self._repo.git.checkout(ref)
 
     @ensure_cloned
+    @abstractmethod
     def install(self) -> None:
         """Install the GIT repo."""
-        if self.type == RepositoryType.INTEGRATION:
-            self._install_integration()
-        elif self.type == RepositoryType.RESOURCE:
-            raise NotImplementedError("Resource installation is not implemented yet.")
-
-    def _install_integration(self) -> None:
-        """Install the GIT repo as a HA integration."""
-        _LOGGER.info("Installing %s to %s", self.component_dir, self.install_symlink)
-        Path(self.install_symlink.parent).mkdir(parents=True, exist_ok=True)
-        try:
-            self.install_symlink.symlink_to(self.component_dir.resolve())
-        except FileExistsError:
-            raise AlreadyInstalledError(self.install_symlink) from None
 
     @ensure_installed
+    @abstractmethod
     def uninstall(self) -> None:
         """Uninstall the GIT repo."""
-        _LOGGER.info("Uninstalling %s", self.install_symlink)
-        self.install_symlink.unlink()
 
     @ensure_cloned
     def remove(self) -> None:
@@ -220,26 +209,111 @@ class RepositoryManager:
         """Return the working directory of the GIT repo."""
         return self.clone_basedir / Path(self.slug)
 
+
+class IntegrationRepositoryManager(RepositoryManager):
+    """Manage GIT repo as a HA integration."""
+
+    def __init__(
+        self,
+        url: str,
+        clone_basedir: Path | str = PATH_CLONE_BASEDIR,
+        install_basedir: Path | str = PATH_INTEGRATION_INSTALL_BASEDIR,
+        update_strategy: UpdateStrategy = UpdateStrategy.LATEST_TAG,
+    ) -> None:
+        super().__init__(
+            url,
+            clone_basedir,
+            install_basedir,
+            update_strategy,
+        )
+
+    @RepositoryManager.ensure_cloned
+    def install(self) -> None:
+        """Install the GIT repo as a HA integration."""
+        _LOGGER.info("Installing %s to %s", self.component_dir, self.install_symlink)
+        Path(self.install_symlink.parent).mkdir(parents=True, exist_ok=True)
+        try:
+            self.install_symlink.symlink_to(self.component_dir.resolve())
+        except FileExistsError:
+            raise AlreadyInstalledError(self.install_symlink) from None
+
+    @RepositoryManager.ensure_installed
+    def uninstall(self) -> None:
+        """Uninstall the GIT repo."""
+        _LOGGER.info("Uninstalling %s", self.install_symlink)
+        self.install_symlink.unlink()
+
+    @property
+    def is_installed(self) -> bool:
+        """Return True if the GIT repo is installed."""
+        try:
+            return self.install_symlink.exists()
+        except (OSError, NotClonedError, InvalidStructure):
+            return False
+
     @functools.cached_property
-    @ensure_cloned
+    @RepositoryManager.ensure_cloned
     def component_dir(self) -> Path:
         """Return the directory of HA integration within the GIT repo."""
-        custom_components = list(Path(self.working_dir / "custom_components").iterdir())
+        try:
+            custom_components = list(
+                Path(self.working_dir / "custom_components").iterdir()
+            )
+        except FileNotFoundError:
+            raise InvalidStructure(
+                "No `custom_components` directory found", self.working_dir
+            ) from None
         if len(custom_components) != 1:
-            raise ValueError(
-                "Exactly one `custom_components` subdirectory is expected."
+            raise InvalidStructure(
+                "Exactly one `custom_components` subdirectory is expected",
+                self.working_dir,
             )
         return custom_components[0]
 
     @functools.cached_property
+    @RepositoryManager.ensure_cloned
     def component_name(self) -> str:
         """Return the name of HA integration within the GIT repo."""
         return self.component_dir.name
 
     @functools.cached_property
+    @RepositoryManager.ensure_cloned
     def install_symlink(self) -> Path:
         """Return the path to symlink which is used to install HA integration."""
         return self.install_basedir / self.component_name
+
+
+class ResourceRepositoryManager(RepositoryManager):
+    """Manage GIT repo as a HA resource."""
+
+    def __init__(
+        self,
+        url: str,
+        clone_basedir: Path | str = PATH_CLONE_BASEDIR,
+        install_basedir: Path | str = PATH_RESOURCE_INSTALL_BASEDIR,
+        update_strategy: UpdateStrategy = UpdateStrategy.LATEST_TAG,
+    ) -> None:
+        super().__init__(
+            url,
+            clone_basedir,
+            install_basedir,
+            update_strategy,
+        )
+
+    @RepositoryManager.ensure_cloned
+    def install(self) -> None:
+        """Install the GIT repo as a HA resource."""
+        raise NotImplementedError
+
+    @RepositoryManager.ensure_installed
+    def uninstall(self) -> None:
+        """Uninstall the GIT repo."""
+        raise NotImplementedError
+
+    @property
+    def is_installed(self) -> bool:
+        """Return True if the GIT repo is installed."""
+        raise NotImplementedError
 
 
 class GPMError(Exception):
@@ -249,6 +323,23 @@ class GPMError(Exception):
 class NotClonedError(GPMError):
     """Raised when the GIT repo is not cloned."""
 
+    def __init__(self, slug: str) -> None:
+        self.slug = slug
+
+    def __str__(self) -> str:
+        return f"`{self.slug}` is not cloned"
+
+
+class InvalidStructure(GPMError):
+    """Raised when the GIT repo has invalid structure."""
+
+    def __init__(self, message: str, working_dir: Path) -> None:
+        self.message = message
+        self.working_dir = working_dir
+
+    def __str__(self) -> str:
+        return f"{self.message} in `{self.working_dir}`"
+
 
 class AlreadyClonedError(GPMError):
     """Raised when the GIT repo is already cloned."""
@@ -257,7 +348,7 @@ class AlreadyClonedError(GPMError):
         self.working_dir = working_dir
 
     def __str__(self) -> str:
-        return f"{self.working_dir} already contains a GIT repository"
+        return f"`{self.working_dir}` already contains a GIT repository"
 
 
 class CloneError(GPMError):
@@ -268,11 +359,17 @@ class CloneError(GPMError):
         self.working_dir = working_dir
 
     def __str__(self) -> str:
-        return f"Cannot clone {self.url} to {self.working_dir}"
+        return f"Cannot clone `{self.url}` to `{self.working_dir}`"
 
 
 class NotInstalledError(GPMError):
     """Raised when the GIT repo is not installed."""
+
+    def __init__(self, slug: str) -> None:
+        self.slug = slug
+
+    def __str__(self) -> str:
+        return f"`{self.slug}` is not installed"
 
 
 class AlreadyInstalledError(GPMError):
@@ -282,4 +379,4 @@ class AlreadyInstalledError(GPMError):
         self.install_symlink = install_symlink
 
     def __str__(self) -> str:
-        return f"{self.install_symlink} already exists"
+        return f"`{self.install_symlink}` already exists"
