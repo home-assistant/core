@@ -26,7 +26,7 @@ async def test_binary_sensor(
             return_value=FAKE_QUERY_RESPONSE,
         ),
     ):
-        entry = await setup_mocked_integration(hass)
+        await setup_mocked_integration(hass)
     state = hass.states.get("binary_sensor.fakelib_library_rescan")
 
     assert state is not None
