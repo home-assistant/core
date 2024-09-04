@@ -5,9 +5,11 @@ from __future__ import annotations
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_TYPE, CONF_URL, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.issue_registry import async_create_issue
 
 from ._manager import RepositoryManager, RepositoryType, UpdateStrategy
 from .const import CONF_UPDATE_STRATEGY, PATH_CLONE_BASEDIR, PATH_INSTALL_BASEDIR
+from .repairs import create_restart_issue
 
 PLATFORMS: list[Platform] = [Platform.UPDATE]
 
@@ -34,6 +36,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: GPMConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: GPMConfigEntry) -> bool:
     """Unload a config entry."""
+    manager = entry.runtime_data
+    create_restart_issue(
+        async_create_issue,
+        hass,
+        action="uninstall",
+        component_name=manager.component_name,
+    )
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
