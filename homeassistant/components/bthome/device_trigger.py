@@ -67,10 +67,8 @@ async def async_validate_trigger_config(
         for entry_id in device.config_entries
     ]
     bthome_config_entry = next(
-        iter(entry for entry in config_entries if entry and entry.domain == DOMAIN),
-        None,
+        iter(entry for entry in config_entries if entry and entry.domain == DOMAIN)
     )
-    assert bthome_config_entry is not None
     event_classes: list[str] = bthome_config_entry.data.get(
         CONF_DISCOVERED_EVENT_CLASSES, []
     )
