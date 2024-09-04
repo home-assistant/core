@@ -46,7 +46,8 @@
           "published_at": { "name": "Published at" }
         }
       },
-      "subscribers": { "name": "Subscribers" }
+      "subscribers": { "name": "Subscribers" },
+      "views": { "name": "Views" }
     }
   }
 }

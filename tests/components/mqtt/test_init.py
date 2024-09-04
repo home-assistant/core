@@ -77,11 +77,6 @@ class _DebugInfo(TypedDict):
     config: _DebugDeviceInfo
 
 
-@pytest.fixture(autouse=True)
-def mock_storage(hass_storage: dict[str, Any]) -> None:
-    """Autouse hass_storage for the TestCase tests."""
-
-
 async def test_command_template_value(hass: HomeAssistant) -> None:
     """Test the rendering of MQTT command template."""
 

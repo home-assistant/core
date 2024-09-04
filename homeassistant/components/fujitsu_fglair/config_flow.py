@@ -70,7 +70,7 @@ class FGLairConfigFlow(ConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_configured()
 
             errors = await self._async_validate_credentials(user_input)
-            if len(errors) == 0:
+            if not errors:
                 return self.async_create_entry(
                     title=f"FGLair ({user_input[CONF_USERNAME]})",
                     data=user_input,
