@@ -1,4 +1,5 @@
 """Entity object for shared properties of Refoss entities."""
+
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -17,11 +18,6 @@ class RefossEntity(CoordinatorEntity[RefossDataUpdateCoordinator]):
 
         mac = coordinator.device.mac
         self.channel_id = channel
-        if channel == 0:
-            self._attr_name = None
-        else:
-            self._attr_name = str(channel)
-
         self._attr_unique_id = f"{mac}_{channel}"
         self._attr_device_info = DeviceInfo(
             connections={(CONNECTION_NETWORK_MAC, mac)},

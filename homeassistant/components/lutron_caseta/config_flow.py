@@ -1,20 +1,21 @@
 """Config flow for Lutron Caseta."""
+
 from __future__ import annotations
 
 import asyncio
 import logging
 import os
 import ssl
+from typing import Any
 
 from pylutron_caseta.pairing import PAIR_CA, PAIR_CERT, PAIR_KEY, async_pair
 from pylutron_caseta.smartbridge import Smartbridge
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.components import zeroconf
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
 
 from .const import (
     ABORT_REASON_CANNOT_CONNECT,
@@ -45,19 +46,21 @@ DATA_SCHEMA_USER = vol.Schema({vol.Required(CONF_HOST): str})
 TLS_ASSET_TEMPLATE = "lutron_caseta-{}-{}.pem"
 
 
-class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class LutronCasetaFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle Lutron Caseta config flow."""
 
     VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize a Lutron Caseta flow."""
-        self.data = {}
-        self.lutron_id = None
+        self.data: dict[str, Any] = {}
+        self.lutron_id: str | None = None
         self.tls_assets_validated = False
         self.attempted_tls_validation = False
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
         if user_input is not None:
             self.data[CONF_HOST] = user_input[CONF_HOST]
@@ -67,7 +70,7 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_zeroconf(
         self, discovery_info: zeroconf.ZeroconfServiceInfo
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by zeroconf discovery."""
         hostname = discovery_info.hostname
         if hostname is None or not hostname.lower().startswith("lutron-"):
@@ -88,11 +91,13 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_homekit(
         self, discovery_info: zeroconf.ZeroconfServiceInfo
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by homekit discovery."""
         return await self.async_step_zeroconf(discovery_info)
 
-    async def async_step_link(self, user_input=None):
+    async def async_step_link(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle pairing with the hub."""
         errors = {}
         # Abort if existing entry with matching host exists.
@@ -117,7 +122,7 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             assets = None
             try:
                 assets = await async_pair(self.data[CONF_HOST])
-            except (asyncio.TimeoutError, OSError):
+            except (TimeoutError, OSError):
                 errors["base"] = "cannot_connect"
 
             if not errors:
@@ -163,21 +168,21 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         for asset_key, conf_key in FILE_MAPPING.items():
             self.data[conf_key] = TLS_ASSET_TEMPLATE.format(self.bridge_id, asset_key)
 
-    async def async_step_import(self, import_info):
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Import a new Caseta bridge as a config entry.
 
         This flow is triggered by `async_setup`.
         """
-        host = import_info[CONF_HOST]
+        host = import_data[CONF_HOST]
         # Store the imported config for other steps in this flow to access.
         self.data[CONF_HOST] = host
 
         # Abort if existing entry with matching host exists.
         self._async_abort_entries_match({CONF_HOST: self.data[CONF_HOST]})
 
-        self.data[CONF_KEYFILE] = import_info[CONF_KEYFILE]
-        self.data[CONF_CERTFILE] = import_info[CONF_CERTFILE]
-        self.data[CONF_CA_CERTS] = import_info[CONF_CA_CERTS]
+        self.data[CONF_KEYFILE] = import_data[CONF_KEYFILE]
+        self.data[CONF_CERTFILE] = import_data[CONF_CERTFILE]
+        self.data[CONF_CA_CERTS] = import_data[CONF_CA_CERTS]
 
         if not (lutron_id := await self.async_get_lutron_id()):
             # Ultimately we won't have a dedicated step for import failure, but
@@ -195,7 +200,9 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured()
         return self.async_create_entry(title=ENTRY_DEFAULT_TITLE, data=self.data)
 
-    async def async_step_import_failed(self, user_input=None):
+    async def async_step_import_failed(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Make failed import surfaced to user."""
         self.context["title_placeholders"] = {CONF_NAME: self.data[CONF_HOST]}
 
@@ -227,7 +234,7 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         try:
             async with asyncio.timeout(BRIDGE_TIMEOUT):
                 await bridge.connect()
-        except asyncio.TimeoutError:
+        except TimeoutError:
             _LOGGER.error(
                 "Timeout while trying to connect to bridge at %s",
                 self.data[CONF_HOST],

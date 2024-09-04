@@ -18,10 +18,14 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Renault',
       'model': 'Captur ii',
+      'model_id': None,
       'name': 'REG-NUMBER',
       'name_by_user': None,
+      'primary_config_entry': <ANY>,
       'serial_number': None,
       'suggested_area': None,
       'sw_version': 'XJB1SU',
@@ -49,11 +53,13 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
       'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
-      'original_icon': 'mdi:sign-direction',
+      'original_icon': None,
       'original_name': 'Mileage',
       'platform': 'renault',
       'previous_unique_id': None,
@@ -80,11 +86,13 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
       'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
-      'original_icon': 'mdi:gas-station',
+      'original_icon': None,
       'original_name': 'Fuel autonomy',
       'platform': 'renault',
       'previous_unique_id': None,
@@ -111,11 +119,13 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
       'original_device_class': <SensorDeviceClass.VOLUME: 'volume'>,
-      'original_icon': 'mdi:fuel',
+      'original_icon': None,
       'original_name': 'Fuel quantity',
       'platform': 'renault',
       'previous_unique_id': None,
@@ -140,6 +150,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -169,6 +181,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -198,6 +212,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -219,13 +235,13 @@
       'attributes': ReadOnlyDict({
         'device_class': 'distance',
         'friendly_name': 'REG-NUMBER Mileage',
-        'icon': 'mdi:sign-direction',
         'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
         'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
       }),
       'context': <ANY>,
       'entity_id': 'sensor.reg_number_mileage',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'unknown',
     }),
@@ -233,13 +249,13 @@
       'attributes': ReadOnlyDict({
         'device_class': 'distance',
         'friendly_name': 'REG-NUMBER Fuel autonomy',
-        'icon': 'mdi:gas-station',
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
         'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
       }),
       'context': <ANY>,
       'entity_id': 'sensor.reg_number_fuel_autonomy',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'unknown',
     }),
@@ -247,13 +263,13 @@
       'attributes': ReadOnlyDict({
         'device_class': 'volume',
         'friendly_name': 'REG-NUMBER Fuel quantity',
-        'icon': 'mdi:fuel',
         'state_class': <SensorStateClass.TOTAL: 'total'>,
         'unit_of_measurement': <UnitOfVolume.LITERS: 'L'>,
       }),
       'context': <ANY>,
       'entity_id': 'sensor.reg_number_fuel_quantity',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'unknown',
     }),
@@ -265,6 +281,7 @@
       'context': <ANY>,
       'entity_id': 'sensor.reg_number_last_location_activity',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'unknown',
     }),
@@ -275,6 +292,7 @@
       'context': <ANY>,
       'entity_id': 'sensor.reg_number_remote_engine_start',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'unknown',
     }),
@@ -285,6 +303,7 @@
       'context': <ANY>,
       'entity_id': 'sensor.reg_number_remote_engine_start_code',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'unknown',
     }),
@@ -309,10 +328,14 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Renault',
       'model': 'Captur ii',
+      'model_id': None,
       'name': 'REG-NUMBER',
       'name_by_user': None,
+      'primary_config_entry': <ANY>,
       'serial_number': None,
       'suggested_area': None,
       'sw_version': 'XJB1SU',
@@ -340,6 +363,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -380,11 +405,13 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
       'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-      'original_icon': 'mdi:flash-off',
+      'original_icon': None,
       'original_name': 'Charge state',
       'platform': 'renault',
       'previous_unique_id': None,
@@ -411,11 +438,13 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
       'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
-      'original_icon': 'mdi:timer',
+      'original_icon': None,
       'original_name': 'Charging remaining time',
       'platform': 'renault',
       'previous_unique_id': None,
@@ -442,6 +471,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -478,11 +509,13 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
       'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-      'original_icon': 'mdi:power-plug-off',
+      'original_icon': None,
       'original_name': 'Plug state',
       'platform': 'renault',
       'previous_unique_id': None,
@@ -509,11 +542,13 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
       'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
-      'original_icon': 'mdi:ev-station',
+      'original_icon': None,
       'original_name': 'Battery autonomy',
       'platform': 'renault',
       'previous_unique_id': None,
@@ -540,6 +575,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -571,6 +608,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -600,6 +639,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -631,11 +672,13 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
       'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
-      'original_icon': 'mdi:sign-direction',
+      'original_icon': None,
       'original_name': 'Mileage',
       'platform': 'renault',
       'previous_unique_id': None,
@@ -662,11 +705,13 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
       'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
-      'original_icon': 'mdi:gas-station',
+      'original_icon': None,
       'original_name': 'Fuel autonomy',
       'platform': 'renault',
       'previous_unique_id': None,
@@ -693,11 +738,13 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
       'original_device_class': <SensorDeviceClass.VOLUME: 'volume'>,
-      'original_icon': 'mdi:fuel',
+      'original_icon': None,
       'original_name': 'Fuel quantity',
       'platform': 'renault',
       'previous_unique_id': None,
@@ -722,6 +769,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -751,6 +800,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -780,6 +831,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -807,6 +860,7 @@
       'context': <ANY>,
       'entity_id': 'sensor.reg_number_battery',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'unknown',
     }),
@@ -814,7 +868,6 @@
       'attributes': ReadOnlyDict({
         'device_class': 'enum',
         'friendly_name': 'REG-NUMBER Charge state',
-        'icon': 'mdi:flash-off',
         'options': list([
           'not_in_charge',
           'waiting_for_a_planned_charge',
@@ -829,6 +882,7 @@
       'context': <ANY>,
       'entity_id': 'sensor.reg_number_charge_state',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'unknown',
     }),
@@ -836,13 +890,13 @@
       'attributes': ReadOnlyDict({
         'device_class': 'duration',
         'friendly_name': 'REG-NUMBER Charging remaining time',
-        'icon': 'mdi:timer',
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
         'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
       }),
       'context': <ANY>,
       'entity_id': 'sensor.reg_number_charging_remaining_time',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'unknown',
     }),
@@ -856,6 +910,7 @@
       'context': <ANY>,
       'entity_id': 'sensor.reg_number_admissible_charging_power',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'unknown',
     }),
@@ -863,7 +918,6 @@
       'attributes': ReadOnlyDict({
         'device_class': 'enum',
         'friendly_name': 'REG-NUMBER Plug state',
-        'icon': 'mdi:power-plug-off',
         'options': list([
           'unplugged',
           'plugged',
@@ -874,6 +928,7 @@
       'context': <ANY>,
       'entity_id': 'sensor.reg_number_plug_state',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'unknown',
     }),
@@ -881,13 +936,13 @@
       'attributes': ReadOnlyDict({
         'device_class': 'distance',
         'friendly_name': 'REG-NUMBER Battery autonomy',
-        'icon': 'mdi:ev-station',
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
         'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
       }),
       'context': <ANY>,
       'entity_id': 'sensor.reg_number_battery_autonomy',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'unknown',
     }),
@@ -901,6 +956,7 @@
       'context': <ANY>,
       'entity_id': 'sensor.reg_number_battery_available_energy',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'unknown',
     }),
@@ -914,6 +970,7 @@
       'context': <ANY>,
       'entity_id': 'sensor.reg_number_battery_temperature',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'unknown',
     }),
@@ -925,6 +982,7 @@
       'context': <ANY>,
       'entity_id': 'sensor.reg_number_last_battery_activity',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'unknown',
     }),
@@ -932,13 +990,13 @@
       'attributes': ReadOnlyDict({
         'device_class': 'distance',
         'friendly_name': 'REG-NUMBER Mileage',
-        'icon': 'mdi:sign-direction',
         'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
         'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
       }),
       'context': <ANY>,
       'entity_id': 'sensor.reg_number_mileage',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'unknown',
     }),
@@ -946,13 +1004,13 @@
       'attributes': ReadOnlyDict({
         'device_class': 'distance',
         'friendly_name': 'REG-NUMBER Fuel autonomy',
-        'icon': 'mdi:gas-station',
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
         'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
       }),
       'context': <ANY>,
       'entity_id': 'sensor.reg_number_fuel_autonomy',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'unknown',
     }),
@@ -960,13 +1018,13 @@
       'attributes': ReadOnlyDict({
         'device_class': 'volume',
         'friendly_name': 'REG-NUMBER Fuel quantity',
-        'icon': 'mdi:fuel',
         'state_class': <SensorStateClass.TOTAL: 'total'>,
         'unit_of_measurement': <UnitOfVolume.LITERS: 'L'>,
       }),
       'context': <ANY>,
       'entity_id': 'sensor.reg_number_fuel_quantity',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'unknown',
     }),
@@ -978,6 +1036,7 @@
       'context': <ANY>,
       'entity_id': 'sensor.reg_number_last_location_activity',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'unknown',
     }),
@@ -988,6 +1047,7 @@
       'context': <ANY>,
       'entity_id': 'sensor.reg_number_remote_engine_start',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'unknown',
     }),
@@ -998,6 +1058,7 @@
       'context': <ANY>,
       'entity_id': 'sensor.reg_number_remote_engine_start_code',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'unknown',
     }),
@@ -1022,10 +1083,14 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Renault',
       'model': 'Zoe',
+      'model_id': None,
       'name': 'REG-NUMBER',
       'name_by_user': None,
+      'primary_config_entry': <ANY>,
       'serial_number': None,
       'suggested_area': None,
       'sw_version': 'X101VE',
@@ -1053,6 +1118,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -1093,11 +1160,13 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
       'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-      'original_icon': 'mdi:flash-off',
+      'original_icon': None,
       'original_name': 'Charge state',
       'platform': 'renault',
       'previous_unique_id': None,
@@ -1124,11 +1193,13 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
       'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
-      'original_icon': 'mdi:timer',
+      'original_icon': None,
       'original_name': 'Charging remaining time',
       'platform': 'renault',
       'previous_unique_id': None,
@@ -1155,6 +1226,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -1191,11 +1264,13 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
       'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-      'original_icon': 'mdi:power-plug-off',
+      'original_icon': None,
       'original_name': 'Plug state',
       'platform': 'renault',
       'previous_unique_id': None,
@@ -1222,11 +1297,13 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
       'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
-      'original_icon': 'mdi:ev-station',
+      'original_icon': None,
       'original_name': 'Battery autonomy',
       'platform': 'renault',
       'previous_unique_id': None,
@@ -1253,6 +1330,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -1284,6 +1363,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -1313,6 +1394,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -1344,11 +1427,13 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
       'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
-      'original_icon': 'mdi:sign-direction',
+      'original_icon': None,
       'original_name': 'Mileage',
       'platform': 'renault',
       'previous_unique_id': None,
@@ -1375,6 +1460,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -1404,6 +1491,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -1433,6 +1522,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -1462,6 +1553,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -1491,6 +1584,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -1518,6 +1613,7 @@
       'context': <ANY>,
       'entity_id': 'sensor.reg_number_battery',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'unknown',
     }),
@@ -1525,7 +1621,6 @@
       'attributes': ReadOnlyDict({
         'device_class': 'enum',
         'friendly_name': 'REG-NUMBER Charge state',
-        'icon': 'mdi:flash-off',
         'options': list([
           'not_in_charge',
           'waiting_for_a_planned_charge',
@@ -1540,6 +1635,7 @@
       'context': <ANY>,
       'entity_id': 'sensor.reg_number_charge_state',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'unknown',
     }),
@@ -1547,13 +1643,13 @@
       'attributes': ReadOnlyDict({
         'device_class': 'duration',
         'friendly_name': 'REG-NUMBER Charging remaining time',
-        'icon': 'mdi:timer',
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
         'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
       }),
       'context': <ANY>,
       'entity_id': 'sensor.reg_number_charging_remaining_time',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'unknown',
     }),
@@ -1567,6 +1663,7 @@
       'context': <ANY>,
       'entity_id': 'sensor.reg_number_charging_power',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'unknown',
     }),
@@ -1574,7 +1671,6 @@
       'attributes': ReadOnlyDict({
         'device_class': 'enum',
         'friendly_name': 'REG-NUMBER Plug state',
-        'icon': 'mdi:power-plug-off',
         'options': list([
           'unplugged',
           'plugged',
@@ -1585,6 +1681,7 @@
       'context': <ANY>,
       'entity_id': 'sensor.reg_number_plug_state',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'unknown',
     }),
@@ -1592,13 +1689,13 @@
       'attributes': ReadOnlyDict({
         'device_class': 'distance',
         'friendly_name': 'REG-NUMBER Battery autonomy',
-        'icon': 'mdi:ev-station',
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
         'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
       }),
       'context': <ANY>,
       'entity_id': 'sensor.reg_number_battery_autonomy',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'unknown',
     }),
@@ -1612,6 +1709,7 @@
       'context': <ANY>,
       'entity_id': 'sensor.reg_number_battery_available_energy',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'unknown',
     }),
@@ -1625,6 +1723,7 @@
       'context': <ANY>,
       'entity_id': 'sensor.reg_number_battery_temperature',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'unknown',
     }),
@@ -1636,6 +1735,7 @@
       'context': <ANY>,
       'entity_id': 'sensor.reg_number_last_battery_activity',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'unknown',
     }),
@@ -1643,13 +1743,13 @@
       'attributes': ReadOnlyDict({
         'device_class': 'distance',
         'friendly_name': 'REG-NUMBER Mileage',
-        'icon': 'mdi:sign-direction',
         'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
         'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
       }),
       'context': <ANY>,
       'entity_id': 'sensor.reg_number_mileage',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'unknown',
     }),
@@ -1663,6 +1763,7 @@
       'context': <ANY>,
       'entity_id': 'sensor.reg_number_outside_temperature',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'unknown',
     }),
@@ -1674,6 +1775,7 @@
       'context': <ANY>,
       'entity_id': 'sensor.reg_number_hvac_soc_threshold',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'unknown',
     }),
@@ -1685,6 +1787,7 @@
       'context': <ANY>,
       'entity_id': 'sensor.reg_number_last_hvac_activity',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'unknown',
     }),
@@ -1695,6 +1798,7 @@
       'context': <ANY>,
       'entity_id': 'sensor.reg_number_remote_engine_start',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'unknown',
     }),
@@ -1705,6 +1809,7 @@
       'context': <ANY>,
       'entity_id': 'sensor.reg_number_remote_engine_start_code',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'unknown',
     }),
@@ -1729,10 +1834,14 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Renault',
       'model': 'Zoe',
+      'model_id': None,
       'name': 'REG-NUMBER',
       'name_by_user': None,
+      'primary_config_entry': <ANY>,
       'serial_number': None,
       'suggested_area': None,
       'sw_version': 'X102VE',
@@ -1760,6 +1869,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -1800,11 +1911,13 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
       'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-      'original_icon': 'mdi:flash-off',
+      'original_icon': None,
       'original_name': 'Charge state',
       'platform': 'renault',
       'previous_unique_id': None,
@@ -1831,11 +1944,13 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
       'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
-      'original_icon': 'mdi:timer',
+      'original_icon': None,
       'original_name': 'Charging remaining time',
       'platform': 'renault',
       'previous_unique_id': None,
@@ -1862,6 +1977,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -1898,11 +2015,13 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
       'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-      'original_icon': 'mdi:power-plug-off',
+      'original_icon': None,
       'original_name': 'Plug state',
       'platform': 'renault',
       'previous_unique_id': None,
@@ -1929,11 +2048,13 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
       'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
-      'original_icon': 'mdi:ev-station',
+      'original_icon': None,
       'original_name': 'Battery autonomy',
       'platform': 'renault',
       'previous_unique_id': None,
@@ -1960,6 +2081,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -1991,6 +2114,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -2020,6 +2145,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -2051,11 +2178,13 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
       'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
-      'original_icon': 'mdi:sign-direction',
+      'original_icon': None,
       'original_name': 'Mileage',
       'platform': 'renault',
       'previous_unique_id': None,
@@ -2082,6 +2211,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -2111,6 +2242,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -2140,6 +2273,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -2169,6 +2304,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -2198,6 +2335,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -2227,6 +2366,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -2254,6 +2395,7 @@
       'context': <ANY>,
       'entity_id': 'sensor.reg_number_battery',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'unknown',
     }),
@@ -2261,7 +2403,6 @@
       'attributes': ReadOnlyDict({
         'device_class': 'enum',
         'friendly_name': 'REG-NUMBER Charge state',
-        'icon': 'mdi:flash-off',
         'options': list([
           'not_in_charge',
           'waiting_for_a_planned_charge',
@@ -2276,6 +2417,7 @@
       'context': <ANY>,
       'entity_id': 'sensor.reg_number_charge_state',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'unknown',
     }),
@@ -2283,13 +2425,13 @@
       'attributes': ReadOnlyDict({
         'device_class': 'duration',
         'friendly_name': 'REG-NUMBER Charging remaining time',
-        'icon': 'mdi:timer',
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
         'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
       }),
       'context': <ANY>,
       'entity_id': 'sensor.reg_number_charging_remaining_time',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'unknown',
     }),
@@ -2303,6 +2445,7 @@
       'context': <ANY>,
       'entity_id': 'sensor.reg_number_admissible_charging_power',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'unknown',
     }),
@@ -2310,7 +2453,6 @@
       'attributes': ReadOnlyDict({
         'device_class': 'enum',
         'friendly_name': 'REG-NUMBER Plug state',
-        'icon': 'mdi:power-plug-off',
         'options': list([
           'unplugged',
           'plugged',
@@ -2321,6 +2463,7 @@
       'context': <ANY>,
       'entity_id': 'sensor.reg_number_plug_state',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'unknown',
     }),
@@ -2328,13 +2471,13 @@
       'attributes': ReadOnlyDict({
         'device_class': 'distance',
         'friendly_name': 'REG-NUMBER Battery autonomy',
-        'icon': 'mdi:ev-station',
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
         'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
       }),
       'context': <ANY>,
       'entity_id': 'sensor.reg_number_battery_autonomy',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'unknown',
     }),
@@ -2348,6 +2491,7 @@
       'context': <ANY>,
       'entity_id': 'sensor.reg_number_battery_available_energy',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'unknown',
     }),
@@ -2361,6 +2505,7 @@
       'context': <ANY>,
       'entity_id': 'sensor.reg_number_battery_temperature',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'unknown',
     }),
@@ -2372,6 +2517,7 @@
       'context': <ANY>,
       'entity_id': 'sensor.reg_number_last_battery_activity',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'unknown',
     }),
@@ -2379,13 +2525,13 @@
       'attributes': ReadOnlyDict({
         'device_class': 'distance',
         'friendly_name': 'REG-NUMBER Mileage',
-        'icon': 'mdi:sign-direction',
         'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
         'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
       }),
       'context': <ANY>,
       'entity_id': 'sensor.reg_number_mileage',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'unknown',
     }),
@@ -2399,6 +2545,7 @@
       'context': <ANY>,
       'entity_id': 'sensor.reg_number_outside_temperature',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'unknown',
     }),
@@ -2410,6 +2557,7 @@
       'context': <ANY>,
       'entity_id': 'sensor.reg_number_hvac_soc_threshold',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'unknown',
     }),
@@ -2421,6 +2569,7 @@
       'context': <ANY>,
       'entity_id': 'sensor.reg_number_last_hvac_activity',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'unknown',
     }),
@@ -2432,6 +2581,7 @@
       'context': <ANY>,
       'entity_id': 'sensor.reg_number_last_location_activity',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'unknown',
     }),
@@ -2442,6 +2592,7 @@
       'context': <ANY>,
       'entity_id': 'sensor.reg_number_remote_engine_start',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'unknown',
     }),
@@ -2452,6 +2603,7 @@
       'context': <ANY>,
       'entity_id': 'sensor.reg_number_remote_engine_start_code',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'unknown',
     }),
@@ -2476,10 +2628,14 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Renault',
       'model': 'Captur ii',
+      'model_id': None,
       'name': 'REG-NUMBER',
       'name_by_user': None,
+      'primary_config_entry': <ANY>,
       'serial_number': None,
       'suggested_area': None,
       'sw_version': 'XJB1SU',
@@ -2507,11 +2663,13 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
       'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
-      'original_icon': 'mdi:sign-direction',
+      'original_icon': None,
       'original_name': 'Mileage',
       'platform': 'renault',
       'previous_unique_id': None,
@@ -2538,11 +2696,13 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
       'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
-      'original_icon': 'mdi:gas-station',
+      'original_icon': None,
       'original_name': 'Fuel autonomy',
       'platform': 'renault',
       'previous_unique_id': None,
@@ -2569,11 +2729,13 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
       'original_device_class': <SensorDeviceClass.VOLUME: 'volume'>,
-      'original_icon': 'mdi:fuel',
+      'original_icon': None,
       'original_name': 'Fuel quantity',
       'platform': 'renault',
       'previous_unique_id': None,
@@ -2598,6 +2760,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -2627,6 +2791,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -2656,6 +2822,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -2677,13 +2845,13 @@
       'attributes': ReadOnlyDict({
         'device_class': 'distance',
         'friendly_name': 'REG-NUMBER Mileage',
-        'icon': 'mdi:sign-direction',
         'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
         'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
       }),
       'context': <ANY>,
       'entity_id': 'sensor.reg_number_mileage',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': '5567',
     }),
@@ -2691,13 +2859,13 @@
       'attributes': ReadOnlyDict({
         'device_class': 'distance',
         'friendly_name': 'REG-NUMBER Fuel autonomy',
-        'icon': 'mdi:gas-station',
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
         'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
       }),
       'context': <ANY>,
       'entity_id': 'sensor.reg_number_fuel_autonomy',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': '35',
     }),
@@ -2705,13 +2873,13 @@
       'attributes': ReadOnlyDict({
         'device_class': 'volume',
         'friendly_name': 'REG-NUMBER Fuel quantity',
-        'icon': 'mdi:fuel',
         'state_class': <SensorStateClass.TOTAL: 'total'>,
         'unit_of_measurement': <UnitOfVolume.LITERS: 'L'>,
       }),
       'context': <ANY>,
       'entity_id': 'sensor.reg_number_fuel_quantity',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': '3',
     }),
@@ -2723,6 +2891,7 @@
       'context': <ANY>,
       'entity_id': 'sensor.reg_number_last_location_activity',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': '2020-02-18T16:58:38+00:00',
     }),
@@ -2733,6 +2902,7 @@
       'context': <ANY>,
       'entity_id': 'sensor.reg_number_remote_engine_start',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'Stopped, ready for RES',
     }),
@@ -2743,6 +2913,7 @@
       'context': <ANY>,
       'entity_id': 'sensor.reg_number_remote_engine_start_code',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': '10',
     }),
@@ -2767,10 +2938,14 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Renault',
       'model': 'Captur ii',
+      'model_id': None,
       'name': 'REG-NUMBER',
       'name_by_user': None,
+      'primary_config_entry': <ANY>,
       'serial_number': None,
       'suggested_area': None,
       'sw_version': 'XJB1SU',
@@ -2798,6 +2973,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -2838,11 +3015,13 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
       'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-      'original_icon': 'mdi:flash',
+      'original_icon': None,
       'original_name': 'Charge state',
       'platform': 'renault',
       'previous_unique_id': None,
@@ -2869,11 +3048,13 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
       'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
-      'original_icon': 'mdi:timer',
+      'original_icon': None,
       'original_name': 'Charging remaining time',
       'platform': 'renault',
       'previous_unique_id': None,
@@ -2900,6 +3081,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -2936,11 +3119,13 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
       'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-      'original_icon': 'mdi:power-plug',
+      'original_icon': None,
       'original_name': 'Plug state',
       'platform': 'renault',
       'previous_unique_id': None,
@@ -2967,11 +3152,13 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
       'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
-      'original_icon': 'mdi:ev-station',
+      'original_icon': None,
       'original_name': 'Battery autonomy',
       'platform': 'renault',
       'previous_unique_id': None,
@@ -2998,6 +3185,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -3029,6 +3218,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -3058,6 +3249,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -3089,11 +3282,13 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
       'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
-      'original_icon': 'mdi:sign-direction',
+      'original_icon': None,
       'original_name': 'Mileage',
       'platform': 'renault',
       'previous_unique_id': None,
@@ -3120,11 +3315,13 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
       'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
-      'original_icon': 'mdi:gas-station',
+      'original_icon': None,
       'original_name': 'Fuel autonomy',
       'platform': 'renault',
       'previous_unique_id': None,
@@ -3151,11 +3348,13 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
       'original_device_class': <SensorDeviceClass.VOLUME: 'volume'>,
-      'original_icon': 'mdi:fuel',
+      'original_icon': None,
       'original_name': 'Fuel quantity',
       'platform': 'renault',
       'previous_unique_id': None,
@@ -3180,6 +3379,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -3209,6 +3410,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -3238,6 +3441,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -3265,6 +3470,7 @@
       'context': <ANY>,
       'entity_id': 'sensor.reg_number_battery',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': '60',
     }),
@@ -3272,7 +3478,6 @@
       'attributes': ReadOnlyDict({
         'device_class': 'enum',
         'friendly_name': 'REG-NUMBER Charge state',
-        'icon': 'mdi:flash',
         'options': list([
           'not_in_charge',
           'waiting_for_a_planned_charge',
@@ -3287,6 +3492,7 @@
       'context': <ANY>,
       'entity_id': 'sensor.reg_number_charge_state',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'charge_in_progress',
     }),
@@ -3294,13 +3500,13 @@
       'attributes': ReadOnlyDict({
         'device_class': 'duration',
         'friendly_name': 'REG-NUMBER Charging remaining time',
-        'icon': 'mdi:timer',
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
         'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
       }),
       'context': <ANY>,
       'entity_id': 'sensor.reg_number_charging_remaining_time',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': '145',
     }),
@@ -3314,6 +3520,7 @@
       'context': <ANY>,
       'entity_id': 'sensor.reg_number_admissible_charging_power',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': '27.0',
     }),
@@ -3321,7 +3528,6 @@
       'attributes': ReadOnlyDict({
         'device_class': 'enum',
         'friendly_name': 'REG-NUMBER Plug state',
-        'icon': 'mdi:power-plug',
         'options': list([
           'unplugged',
           'plugged',
@@ -3332,6 +3538,7 @@
       'context': <ANY>,
       'entity_id': 'sensor.reg_number_plug_state',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'plugged',
     }),
@@ -3339,13 +3546,13 @@
       'attributes': ReadOnlyDict({
         'device_class': 'distance',
         'friendly_name': 'REG-NUMBER Battery autonomy',
-        'icon': 'mdi:ev-station',
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
         'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
       }),
       'context': <ANY>,
       'entity_id': 'sensor.reg_number_battery_autonomy',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': '141',
     }),
@@ -3359,6 +3566,7 @@
       'context': <ANY>,
       'entity_id': 'sensor.reg_number_battery_available_energy',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': '31',
     }),
@@ -3372,6 +3580,7 @@
       'context': <ANY>,
       'entity_id': 'sensor.reg_number_battery_temperature',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': '20',
     }),
@@ -3383,6 +3592,7 @@
       'context': <ANY>,
       'entity_id': 'sensor.reg_number_last_battery_activity',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': '2020-01-12T21:40:16+00:00',
     }),
@@ -3390,13 +3600,13 @@
       'attributes': ReadOnlyDict({
         'device_class': 'distance',
         'friendly_name': 'REG-NUMBER Mileage',
-        'icon': 'mdi:sign-direction',
         'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
         'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
       }),
       'context': <ANY>,
       'entity_id': 'sensor.reg_number_mileage',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': '5567',
     }),
@@ -3404,13 +3614,13 @@
       'attributes': ReadOnlyDict({
         'device_class': 'distance',
         'friendly_name': 'REG-NUMBER Fuel autonomy',
-        'icon': 'mdi:gas-station',
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
         'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
       }),
       'context': <ANY>,
       'entity_id': 'sensor.reg_number_fuel_autonomy',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': '35',
     }),
@@ -3418,13 +3628,13 @@
       'attributes': ReadOnlyDict({
         'device_class': 'volume',
         'friendly_name': 'REG-NUMBER Fuel quantity',
-        'icon': 'mdi:fuel',
         'state_class': <SensorStateClass.TOTAL: 'total'>,
         'unit_of_measurement': <UnitOfVolume.LITERS: 'L'>,
       }),
       'context': <ANY>,
       'entity_id': 'sensor.reg_number_fuel_quantity',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': '3',
     }),
@@ -3436,6 +3646,7 @@
       'context': <ANY>,
       'entity_id': 'sensor.reg_number_last_location_activity',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': '2020-02-18T16:58:38+00:00',
     }),
@@ -3446,6 +3657,7 @@
       'context': <ANY>,
       'entity_id': 'sensor.reg_number_remote_engine_start',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'Stopped, ready for RES',
     }),
@@ -3456,6 +3668,7 @@
       'context': <ANY>,
       'entity_id': 'sensor.reg_number_remote_engine_start_code',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': '10',
     }),
@@ -3480,10 +3693,14 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Renault',
       'model': 'Zoe',
+      'model_id': None,
       'name': 'REG-NUMBER',
       'name_by_user': None,
+      'primary_config_entry': <ANY>,
       'serial_number': None,
       'suggested_area': None,
       'sw_version': 'X101VE',
@@ -3511,6 +3728,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -3551,11 +3770,13 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
       'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-      'original_icon': 'mdi:flash',
+      'original_icon': None,
       'original_name': 'Charge state',
       'platform': 'renault',
       'previous_unique_id': None,
@@ -3582,11 +3803,13 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
       'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
-      'original_icon': 'mdi:timer',
+      'original_icon': None,
       'original_name': 'Charging remaining time',
       'platform': 'renault',
       'previous_unique_id': None,
@@ -3613,6 +3836,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -3649,11 +3874,13 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
       'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-      'original_icon': 'mdi:power-plug',
+      'original_icon': None,
       'original_name': 'Plug state',
       'platform': 'renault',
       'previous_unique_id': None,
@@ -3680,11 +3907,13 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
       'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
-      'original_icon': 'mdi:ev-station',
+      'original_icon': None,
       'original_name': 'Battery autonomy',
       'platform': 'renault',
       'previous_unique_id': None,
@@ -3711,6 +3940,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -3742,6 +3973,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -3771,6 +4004,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -3802,11 +4037,13 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
       'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
-      'original_icon': 'mdi:sign-direction',
+      'original_icon': None,
       'original_name': 'Mileage',
       'platform': 'renault',
       'previous_unique_id': None,
@@ -3833,6 +4070,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -3862,6 +4101,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -3891,6 +4132,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -3920,6 +4163,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -3949,6 +4194,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -3976,6 +4223,7 @@
       'context': <ANY>,
       'entity_id': 'sensor.reg_number_battery',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': '60',
     }),
@@ -3983,7 +4231,6 @@
       'attributes': ReadOnlyDict({
         'device_class': 'enum',
         'friendly_name': 'REG-NUMBER Charge state',
-        'icon': 'mdi:flash',
         'options': list([
           'not_in_charge',
           'waiting_for_a_planned_charge',
@@ -3998,6 +4245,7 @@
       'context': <ANY>,
       'entity_id': 'sensor.reg_number_charge_state',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'charge_in_progress',
     }),
@@ -4005,13 +4253,13 @@
       'attributes': ReadOnlyDict({
         'device_class': 'duration',
         'friendly_name': 'REG-NUMBER Charging remaining time',
-        'icon': 'mdi:timer',
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
         'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
       }),
       'context': <ANY>,
       'entity_id': 'sensor.reg_number_charging_remaining_time',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': '145',
     }),
@@ -4025,6 +4273,7 @@
       'context': <ANY>,
       'entity_id': 'sensor.reg_number_charging_power',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': '0.027',
     }),
@@ -4032,7 +4281,6 @@
       'attributes': ReadOnlyDict({
         'device_class': 'enum',
         'friendly_name': 'REG-NUMBER Plug state',
-        'icon': 'mdi:power-plug',
         'options': list([
           'unplugged',
           'plugged',
@@ -4043,6 +4291,7 @@
       'context': <ANY>,
       'entity_id': 'sensor.reg_number_plug_state',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'plugged',
     }),
@@ -4050,13 +4299,13 @@
       'attributes': ReadOnlyDict({
         'device_class': 'distance',
         'friendly_name': 'REG-NUMBER Battery autonomy',
-        'icon': 'mdi:ev-station',
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
         'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
       }),
       'context': <ANY>,
       'entity_id': 'sensor.reg_number_battery_autonomy',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': '141',
     }),
@@ -4070,6 +4319,7 @@
       'context': <ANY>,
       'entity_id': 'sensor.reg_number_battery_available_energy',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': '31',
     }),
@@ -4083,6 +4333,7 @@
       'context': <ANY>,
       'entity_id': 'sensor.reg_number_battery_temperature',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': '20',
     }),
@@ -4094,6 +4345,7 @@
       'context': <ANY>,
       'entity_id': 'sensor.reg_number_last_battery_activity',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': '2020-01-12T21:40:16+00:00',
     }),
@@ -4101,13 +4353,13 @@
       'attributes': ReadOnlyDict({
         'device_class': 'distance',
         'friendly_name': 'REG-NUMBER Mileage',
-        'icon': 'mdi:sign-direction',
         'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
         'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
       }),
       'context': <ANY>,
       'entity_id': 'sensor.reg_number_mileage',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': '49114',
     }),
@@ -4121,6 +4373,7 @@
       'context': <ANY>,
       'entity_id': 'sensor.reg_number_outside_temperature',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': '8.0',
     }),
@@ -4132,6 +4385,7 @@
       'context': <ANY>,
       'entity_id': 'sensor.reg_number_hvac_soc_threshold',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'unknown',
     }),
@@ -4143,6 +4397,7 @@
       'context': <ANY>,
       'entity_id': 'sensor.reg_number_last_hvac_activity',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'unknown',
     }),
@@ -4153,6 +4408,7 @@
       'context': <ANY>,
       'entity_id': 'sensor.reg_number_remote_engine_start',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'unknown',
     }),
@@ -4163,6 +4419,7 @@
       'context': <ANY>,
       'entity_id': 'sensor.reg_number_remote_engine_start_code',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'unknown',
     }),
@@ -4187,10 +4444,14 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Renault',
       'model': 'Zoe',
+      'model_id': None,
       'name': 'REG-NUMBER',
       'name_by_user': None,
+      'primary_config_entry': <ANY>,
       'serial_number': None,
       'suggested_area': None,
       'sw_version': 'X102VE',
@@ -4218,6 +4479,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -4258,11 +4521,13 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
       'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-      'original_icon': 'mdi:flash-off',
+      'original_icon': None,
       'original_name': 'Charge state',
       'platform': 'renault',
       'previous_unique_id': None,
@@ -4289,11 +4554,13 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
       'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
-      'original_icon': 'mdi:timer',
+      'original_icon': None,
       'original_name': 'Charging remaining time',
       'platform': 'renault',
       'previous_unique_id': None,
@@ -4320,6 +4587,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -4356,11 +4625,13 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
       'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-      'original_icon': 'mdi:power-plug-off',
+      'original_icon': None,
       'original_name': 'Plug state',
       'platform': 'renault',
       'previous_unique_id': None,
@@ -4387,11 +4658,13 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
       'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
-      'original_icon': 'mdi:ev-station',
+      'original_icon': None,
       'original_name': 'Battery autonomy',
       'platform': 'renault',
       'previous_unique_id': None,
@@ -4418,6 +4691,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -4449,6 +4724,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -4478,6 +4755,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -4509,11 +4788,13 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
       'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
-      'original_icon': 'mdi:sign-direction',
+      'original_icon': None,
       'original_name': 'Mileage',
       'platform': 'renault',
       'previous_unique_id': None,
@@ -4540,6 +4821,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -4569,6 +4852,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -4598,6 +4883,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -4627,6 +4914,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -4656,6 +4945,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -4685,6 +4976,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -4712,6 +5005,7 @@
       'context': <ANY>,
       'entity_id': 'sensor.reg_number_battery',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': '50',
     }),
@@ -4719,7 +5013,6 @@
       'attributes': ReadOnlyDict({
         'device_class': 'enum',
         'friendly_name': 'REG-NUMBER Charge state',
-        'icon': 'mdi:flash-off',
         'options': list([
           'not_in_charge',
           'waiting_for_a_planned_charge',
@@ -4734,6 +5027,7 @@
       'context': <ANY>,
       'entity_id': 'sensor.reg_number_charge_state',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'charge_error',
     }),
@@ -4741,13 +5035,13 @@
       'attributes': ReadOnlyDict({
         'device_class': 'duration',
         'friendly_name': 'REG-NUMBER Charging remaining time',
-        'icon': 'mdi:timer',
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
         'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
       }),
       'context': <ANY>,
       'entity_id': 'sensor.reg_number_charging_remaining_time',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'unknown',
     }),
@@ -4761,6 +5055,7 @@
       'context': <ANY>,
       'entity_id': 'sensor.reg_number_admissible_charging_power',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'unknown',
     }),
@@ -4768,7 +5063,6 @@
       'attributes': ReadOnlyDict({
         'device_class': 'enum',
         'friendly_name': 'REG-NUMBER Plug state',
-        'icon': 'mdi:power-plug-off',
         'options': list([
           'unplugged',
           'plugged',
@@ -4779,6 +5073,7 @@
       'context': <ANY>,
       'entity_id': 'sensor.reg_number_plug_state',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'unplugged',
     }),
@@ -4786,13 +5081,13 @@
       'attributes': ReadOnlyDict({
         'device_class': 'distance',
         'friendly_name': 'REG-NUMBER Battery autonomy',
-        'icon': 'mdi:ev-station',
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
         'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
       }),
       'context': <ANY>,
       'entity_id': 'sensor.reg_number_battery_autonomy',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': '128',
     }),
@@ -4806,6 +5101,7 @@
       'context': <ANY>,
       'entity_id': 'sensor.reg_number_battery_available_energy',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': '0',
     }),
@@ -4819,6 +5115,7 @@
       'context': <ANY>,
       'entity_id': 'sensor.reg_number_battery_temperature',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'unknown',
     }),
@@ -4830,6 +5127,7 @@
       'context': <ANY>,
       'entity_id': 'sensor.reg_number_last_battery_activity',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': '2020-11-17T08:06:48+00:00',
     }),
@@ -4837,13 +5135,13 @@
       'attributes': ReadOnlyDict({
         'device_class': 'distance',
         'friendly_name': 'REG-NUMBER Mileage',
-        'icon': 'mdi:sign-direction',
         'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
         'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
       }),
       'context': <ANY>,
       'entity_id': 'sensor.reg_number_mileage',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': '49114',
     }),
@@ -4857,6 +5155,7 @@
       'context': <ANY>,
       'entity_id': 'sensor.reg_number_outside_temperature',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'unknown',
     }),
@@ -4868,6 +5167,7 @@
       'context': <ANY>,
       'entity_id': 'sensor.reg_number_hvac_soc_threshold',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': '30.0',
     }),
@@ -4879,6 +5179,7 @@
       'context': <ANY>,
       'entity_id': 'sensor.reg_number_last_hvac_activity',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': '2020-12-03T00:00:00+00:00',
     }),
@@ -4890,6 +5191,7 @@
       'context': <ANY>,
       'entity_id': 'sensor.reg_number_last_location_activity',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': '2020-02-18T16:58:38+00:00',
     }),
@@ -4900,6 +5202,7 @@
       'context': <ANY>,
       'entity_id': 'sensor.reg_number_remote_engine_start',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'Stopped, ready for RES',
     }),
@@ -4910,6 +5213,7 @@
       'context': <ANY>,
       'entity_id': 'sensor.reg_number_remote_engine_start_code',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': '10',
     }),

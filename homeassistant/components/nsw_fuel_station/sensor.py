@@ -1,11 +1,15 @@
 """Sensor platform to display the current fuel prices at a NSW fuel station."""
+
 from __future__ import annotations
 
 import logging
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+    SensorEntity,
+)
 from homeassistant.const import CURRENCY_CENT, UnitOfVolume
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -40,7 +44,7 @@ CONF_ALLOWED_FUEL_TYPES = [
 ]
 CONF_DEFAULT_FUEL_TYPES = ["E10", "U91"]
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_STATION_ID): cv.positive_int,
         vol.Optional(CONF_FUEL_TYPES, default=CONF_DEFAULT_FUEL_TYPES): vol.All(

@@ -1,361 +1,229 @@
 """Test the IntelliFire config flow."""
-from unittest.mock import AsyncMock, MagicMock, patch
 
-from intellifire4py.exceptions import LoginException
+from unittest.mock import AsyncMock
+
+from intellifire4py.exceptions import LoginError
 
 from homeassistant import config_entries
 from homeassistant.components import dhcp
-from homeassistant.components.intellifire.config_flow import MANUAL_ENTRY_STRING
-from homeassistant.components.intellifire.const import CONF_USER_ID, DOMAIN
-from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.components.intellifire.const import CONF_SERIAL, DOMAIN
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-from .conftest import mock_api_connection_error
 
 from tests.common import MockConfigEntry
 
 
-@patch.multiple(
-    "homeassistant.components.intellifire.config_flow.IntellifireAPICloud",
-    login=AsyncMock(),
-    get_user_id=MagicMock(return_value="intellifire"),
-    get_fireplace_api_key=MagicMock(return_value="key"),
-)
-async def test_no_discovery(
+async def test_standard_config_with_single_fireplace(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
-    mock_intellifire_config_flow: MagicMock,
+    mock_apis_single_fp,
 ) -> None:
-    """Test we should get the manual discovery form - because no discovered fireplaces."""
-    with patch(
-        "homeassistant.components.intellifire.config_flow.AsyncUDPFireplaceFinder.search_fireplace",
-        return_value=[],
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}
-        )
-    assert result["type"] == FlowResultType.FORM
-    assert result["errors"] == {}
-    assert result["step_id"] == "manual_device_entry"
-
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_HOST: "1.1.1.1",
-        },
-    )
-    await hass.async_block_till_done()
-
-    assert result2["type"] == FlowResultType.FORM
-    assert result2["step_id"] == "api_config"
-
-    result3 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_USERNAME: "test", CONF_PASSWORD: "AROONIE"},
-    )
-    await hass.async_block_till_done()
-
-    assert result3["type"] == FlowResultType.CREATE_ENTRY
-    assert result3["title"] == "Fireplace 12345"
-    assert result3["data"] == {
-        CONF_HOST: "1.1.1.1",
-        CONF_USERNAME: "test",
-        CONF_PASSWORD: "AROONIE",
-        CONF_API_KEY: "key",
-        CONF_USER_ID: "intellifire",
-    }
-    assert len(mock_setup_entry.mock_calls) == 1
-
-
-@patch.multiple(
-    "homeassistant.components.intellifire.config_flow.IntellifireAPICloud",
-    login=AsyncMock(side_effect=mock_api_connection_error()),
-    get_user_id=MagicMock(return_value="intellifire"),
-    get_fireplace_api_key=MagicMock(return_value="key"),
-)
-async def test_single_discovery(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_intellifire_config_flow: MagicMock,
-) -> None:
-    """Test single fireplace UDP discovery."""
-    with patch(
-        "homeassistant.components.intellifire.config_flow.AsyncUDPFireplaceFinder.search_fireplace",
-        return_value=["192.168.1.69"],
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}
-        )
-
-    await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_HOST: "192.168.1.69"}
-    )
-    await hass.async_block_till_done()
-    result3 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_USERNAME: "test", CONF_PASSWORD: "AROONIE"},
-    )
-    await hass.async_block_till_done()
-    assert result3["type"] == FlowResultType.FORM
-    assert result3["errors"] == {"base": "iftapi_connect"}
-
-
-@patch.multiple(
-    "homeassistant.components.intellifire.config_flow.IntellifireAPICloud",
-    login=AsyncMock(side_effect=LoginException),
-    get_user_id=MagicMock(return_value="intellifire"),
-    get_fireplace_api_key=MagicMock(return_value="key"),
-)
-async def test_single_discovery_loign_error(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_intellifire_config_flow: MagicMock,
-) -> None:
-    """Test single fireplace UDP discovery."""
-    with patch(
-        "homeassistant.components.intellifire.config_flow.AsyncUDPFireplaceFinder.search_fireplace",
-        return_value=["192.168.1.69"],
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}
-        )
-
-    await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_HOST: "192.168.1.69"}
-    )
-    await hass.async_block_till_done()
-    result3 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_USERNAME: "test", CONF_PASSWORD: "AROONIE"},
-    )
-    await hass.async_block_till_done()
-    assert result3["type"] == FlowResultType.FORM
-    assert result3["errors"] == {"base": "api_error"}
-
-
-async def test_manual_entry(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_intellifire_config_flow: MagicMock,
-) -> None:
-    """Test for multiple Fireplace discovery - involving a pick_device step."""
-    with patch(
-        "homeassistant.components.intellifire.config_flow.AsyncUDPFireplaceFinder.search_fireplace",
-        return_value=["192.168.1.69", "192.168.1.33", "192.168.169"],
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}
-        )
-
-    assert result["step_id"] == "pick_device"
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={CONF_HOST: MANUAL_ENTRY_STRING}
-    )
-
-    await hass.async_block_till_done()
-    assert result2["step_id"] == "manual_device_entry"
-
-
-async def test_multi_discovery(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_intellifire_config_flow: MagicMock,
-) -> None:
-    """Test for multiple fireplace discovery - involving a pick_device step."""
-    with patch(
-        "homeassistant.components.intellifire.config_flow.AsyncUDPFireplaceFinder.search_fireplace",
-        return_value=["192.168.1.69", "192.168.1.33", "192.168.169"],
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}
-        )
-
-    assert result["step_id"] == "pick_device"
-    await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={CONF_HOST: "192.168.1.33"}
-    )
-    await hass.async_block_till_done()
-    assert result["step_id"] == "pick_device"
-
-
-async def test_multi_discovery_cannot_connect(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_intellifire_config_flow: MagicMock,
-) -> None:
-    """Test for multiple fireplace discovery - involving a pick_device step."""
-    with patch(
-        "homeassistant.components.intellifire.config_flow.AsyncUDPFireplaceFinder.search_fireplace",
-        return_value=["192.168.1.69", "192.168.1.33", "192.168.169"],
-    ):
-        mock_intellifire_config_flow.poll.side_effect = ConnectionError
-
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}
-        )
-        assert result["type"] == FlowResultType.FORM
-        assert result["step_id"] == "pick_device"
-
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={CONF_HOST: "192.168.1.33"}
-        )
-        await hass.async_block_till_done()
-        assert result2["type"] == FlowResultType.FORM
-        assert result2["errors"] == {"base": "cannot_connect"}
-
-
-async def test_form_cannot_connect_manual_entry(
-    hass: HomeAssistant,
-    mock_intellifire_config_flow: MagicMock,
-    mock_fireplace_finder_single: AsyncMock,
-) -> None:
-    """Test we handle cannot connect error."""
-    mock_intellifire_config_flow.poll.side_effect = ConnectionError
+    """Test standard flow with a user who has only a single fireplace."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "manual_device_entry"
+    assert result["errors"] == {}
+    assert result["step_id"] == "cloud_api"
 
-    result2 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {
-            CONF_HOST: "1.1.1.1",
-        },
+        {CONF_USERNAME: "donJulio", CONF_PASSWORD: "Tequila0FD00m"},
     )
+    # For a single fireplace we just create it
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        "ip_address": "192.168.2.108",
+        "api_key": "B5C4DA27AAEF31D1FB21AFF9BFA6BCD2",
+        "serial": "3FB284769E4736F30C8973A7ED358123",
+        "auth_cookie": "B984F21A6378560019F8A1CDE41B6782",
+        "web_client_id": "FA2B1C3045601234D0AE17D72F8E975",
+        "user_id": "52C3F9E8B9D3AC99F8E4D12345678901FE9A2BC7D85F7654E28BF98BCD123456",
+        "username": "grumpypanda@china.cn",
+        "password": "you-stole-my-pandas",
+    }
 
-    assert result2["type"] == FlowResultType.FORM
-    assert result2["errors"] == {"base": "cannot_connect"}
 
-
-async def test_picker_already_discovered(
+async def test_standard_config_with_pre_configured_fireplace(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
-    mock_intellifire_config_flow: MagicMock,
+    mock_config_entry_current,
+    mock_apis_single_fp,
 ) -> None:
-    """Test single fireplace UDP discovery."""
-
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            "host": "192.168.1.3",
-        },
-        title="Fireplace",
-        unique_id=44444,
-    )
-    entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.intellifire.config_flow.AsyncUDPFireplaceFinder.search_fireplace",
-        return_value=["192.168.1.3"],
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}
-        )
-        await hass.async_block_till_done()
-
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_HOST: "192.168.1.4",
-        },
-    )
-    assert result2["type"] == FlowResultType.FORM
-    assert len(mock_setup_entry.mock_calls) == 0
-
-
-@patch.multiple(
-    "homeassistant.components.intellifire.config_flow.IntellifireAPICloud",
-    login=AsyncMock(),
-    get_user_id=MagicMock(return_value="intellifire"),
-    get_fireplace_api_key=MagicMock(return_value="key"),
-)
-async def test_reauth_flow(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_intellifire_config_flow: MagicMock,
-) -> None:
-    """Test the reauth flow."""
-
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            "host": "192.168.1.3",
-        },
-        title="Fireplace 1234",
-        version=1,
-        unique_id="4444",
-    )
-    entry.add_to_hass(hass)
+    """What if we try to configure an already configured fireplace."""
+    # Configure an existing entry
+    mock_config_entry_current.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": "reauth",
-            "unique_id": entry.unique_id,
-            "entry_id": entry.entry_id,
-        },
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] == {}
+    assert result["step_id"] == "cloud_api"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_USERNAME: "donJulio", CONF_PASSWORD: "Tequila0FD00m"},
+    )
+
+    # For a single fireplace we just create it
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "no_available_devices"
+
+
+async def test_standard_config_with_single_fireplace_and_bad_credentials(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_apis_single_fp,
+) -> None:
+    """Test bad credentials on a login."""
+    mock_local_interface, mock_cloud_interface, mock_fp = mock_apis_single_fp
+    # Set login error
+    mock_cloud_interface.login_with_credentials.side_effect = LoginError
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {}
+    assert result["step_id"] == "cloud_api"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_USERNAME: "donJulio", CONF_PASSWORD: "Tequila0FD00m"},
+    )
+
+    # Erase the error
+    mock_cloud_interface.login_with_credentials.side_effect = None
 
     assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "api_config"
-
-    result3 = await hass.config_entries.flow.async_configure(
+    assert result["errors"] == {"base": "api_error"}
+    assert result["step_id"] == "cloud_api"
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_USERNAME: "test", CONF_PASSWORD: "AROONIE"},
+        {CONF_USERNAME: "donJulio", CONF_PASSWORD: "Tequila0FD00m"},
     )
-    await hass.async_block_till_done()
-    assert result3["type"] == FlowResultType.ABORT
-    assert entry.data[CONF_PASSWORD] == "AROONIE"
-    assert entry.data[CONF_USERNAME] == "test"
+    # For a single fireplace we just create it
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        "ip_address": "192.168.2.108",
+        "api_key": "B5C4DA27AAEF31D1FB21AFF9BFA6BCD2",
+        "serial": "3FB284769E4736F30C8973A7ED358123",
+        "auth_cookie": "B984F21A6378560019F8A1CDE41B6782",
+        "web_client_id": "FA2B1C3045601234D0AE17D72F8E975",
+        "user_id": "52C3F9E8B9D3AC99F8E4D12345678901FE9A2BC7D85F7654E28BF98BCD123456",
+        "username": "grumpypanda@china.cn",
+        "password": "you-stole-my-pandas",
+    }
+
+
+async def test_standard_config_with_multiple_fireplace(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_apis_multifp,
+) -> None:
+    """Test multi-fireplace user who must be very rich."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] == {}
+    assert result["step_id"] == "cloud_api"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_USERNAME: "donJulio", CONF_PASSWORD: "Tequila0FD00m"},
+    )
+    # When we have multiple fireplaces we get to pick a serial
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "pick_cloud_device"
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_SERIAL: "4GC295860E5837G40D9974B7FD459234"},
+    )
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        "ip_address": "192.168.2.109",
+        "api_key": "D4C5EB28BBFF41E1FB21AFF9BFA6CD34",
+        "serial": "4GC295860E5837G40D9974B7FD459234",
+        "auth_cookie": "B984F21A6378560019F8A1CDE41B6782",
+        "web_client_id": "FA2B1C3045601234D0AE17D72F8E975",
+        "user_id": "52C3F9E8B9D3AC99F8E4D12345678901FE9A2BC7D85F7654E28BF98BCD123456",
+        "username": "grumpypanda@china.cn",
+        "password": "you-stole-my-pandas",
+    }
 
 
 async def test_dhcp_discovery_intellifire_device(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
-    mock_intellifire_config_flow: MagicMock,
+    mock_apis_multifp,
 ) -> None:
     """Test successful DHCP Discovery."""
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_DHCP},
         data=dhcp.DhcpServiceInfo(
             ip="1.1.1.1",
-            macaddress="AA:BB:CC:DD:EE:FF",
+            macaddress="aabbcceeddff",
             hostname="zentrios-Test",
         ),
     )
     assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "dhcp_confirm"
-    result2 = await hass.config_entries.flow.async_configure(result["flow_id"])
-    assert result2["type"] == FlowResultType.FORM
-    assert result2["step_id"] == "dhcp_confirm"
-    result3 = await hass.config_entries.flow.async_configure(
-        result2["flow_id"], user_input={}
+    assert result["step_id"] == "cloud_api"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_USERNAME: "donJulio", CONF_PASSWORD: "Tequila0FD00m"},
     )
-    assert result3["title"] == "Fireplace 12345"
-    assert result3["data"] == {"host": "1.1.1.1"}
+    assert result["type"] == FlowResultType.CREATE_ENTRY
 
 
 async def test_dhcp_discovery_non_intellifire_device(
     hass: HomeAssistant,
-    mock_intellifire_config_flow: MagicMock,
     mock_setup_entry: AsyncMock,
+    mock_apis_multifp,
 ) -> None:
-    """Test failed DHCP Discovery."""
+    """Test successful DHCP Discovery of a non intellifire device.."""
 
-    mock_intellifire_config_flow.poll.side_effect = ConnectionError
+    # Patch poll with an exception
+    mock_local_interface, mock_cloud_interface, mock_fp = mock_apis_multifp
+    mock_local_interface.poll.side_effect = ConnectionError
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_DHCP},
         data=dhcp.DhcpServiceInfo(
             ip="1.1.1.1",
-            macaddress="AA:BB:CC:DD:EE:FF",
+            macaddress="aabbcceeddff",
             hostname="zentrios-Evil",
         ),
     )
-
-    assert result["type"] == "abort"
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "not_intellifire_device"
+    # Test is finished - the DHCP scanner detected a hostname that "might" be an IntelliFire device, but it was not.
+
+
+async def test_reauth_flow(
+    hass: HomeAssistant,
+    mock_config_entry_current: MockConfigEntry,
+    mock_apis_single_fp,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test reauth."""
+
+    mock_config_entry_current.add_to_hass(hass)
+    result = await mock_config_entry_current.start_reauth_flow(hass)
+    assert result["type"] == FlowResultType.FORM
+    result["step_id"] = "cloud_api"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_USERNAME: "donJulio", CONF_PASSWORD: "Tequila0FD00m"},
+    )
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"

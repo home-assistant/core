@@ -1,4 +1,5 @@
 """Auth provider that validates credentials via an external command."""
+
 from __future__ import annotations
 
 import asyncio
@@ -10,10 +11,9 @@ from typing import Any, cast
 import voluptuous as vol
 
 from homeassistant.const import CONF_COMMAND
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 
-from ..models import Credentials, UserMeta
+from ..models import AuthFlowResult, Credentials, UserMeta
 from . import AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS, AuthProvider, LoginFlow
 
 CONF_ARGS = "args"
@@ -138,7 +138,7 @@ class CommandLineLoginFlow(LoginFlow):
 
     async def async_step_init(
         self, user_input: dict[str, str] | None = None
-    ) -> FlowResult:
+    ) -> AuthFlowResult:
         """Handle the step of the form."""
         errors = {}
 

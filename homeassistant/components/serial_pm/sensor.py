@@ -1,4 +1,5 @@
 """Support for particulate matter sensors connected to a serial port."""
+
 from __future__ import annotations
 
 import logging
@@ -6,7 +7,10 @@ import logging
 from pmsensor import serial_pm as pm
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+    SensorEntity,
+)
 from homeassistant.const import CONCENTRATION_MICROGRAMS_PER_CUBIC_METER, CONF_NAME
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -18,7 +22,7 @@ _LOGGER = logging.getLogger(__name__)
 CONF_BRAND = "brand"
 CONF_SERIAL_DEVICE = "serial_device"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_BRAND): cv.string,
         vol.Required(CONF_SERIAL_DEVICE): cv.string,

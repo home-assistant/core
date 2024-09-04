@@ -1,9 +1,8 @@
 """Tests for the La Marzocco Update Entities."""
 
-
 from unittest.mock import MagicMock
 
-from lmcloud.const import LaMarzoccoUpdateableComponent
+from lmcloud.const import FirmwareType
 import pytest
 from syrupy import SnapshotAssertion
 
@@ -19,8 +18,8 @@ pytestmark = pytest.mark.usefixtures("init_integration")
 @pytest.mark.parametrize(
     ("entity_name", "component"),
     [
-        ("machine_firmware", LaMarzoccoUpdateableComponent.MACHINE),
-        ("gateway_firmware", LaMarzoccoUpdateableComponent.GATEWAY),
+        ("machine_firmware", FirmwareType.MACHINE),
+        ("gateway_firmware", FirmwareType.GATEWAY),
     ],
 )
 async def test_update_entites(
@@ -29,7 +28,7 @@ async def test_update_entites(
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
     entity_name: str,
-    component: LaMarzoccoUpdateableComponent,
+    component: FirmwareType,
 ) -> None:
     """Test the La Marzocco update entities."""
 

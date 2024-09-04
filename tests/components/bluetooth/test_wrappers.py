@@ -1,6 +1,8 @@
 """Tests for the Bluetooth integration."""
+
 from __future__ import annotations
 
+from collections.abc import Iterator
 from contextlib import contextmanager
 from unittest.mock import patch
 
@@ -20,13 +22,13 @@ from homeassistant.components.bluetooth import (
     HaBluetoothConnector,
     HomeAssistantBluetoothManager,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 
 from . import _get_manager, generate_advertisement_data, generate_ble_device
 
 
 @contextmanager
-def mock_shutdown(manager: HomeAssistantBluetoothManager) -> None:
+def mock_shutdown(manager: HomeAssistantBluetoothManager) -> Iterator[None]:
     """Mock shutdown of the HomeAssistantBluetoothManager."""
     manager.shutdown = True
     yield
@@ -71,7 +73,7 @@ class FakeScanner(BaseHaRemoteScanner):
 class BaseFakeBleakClient:
     """Base class for fake bleak clients."""
 
-    def __init__(self, address_or_ble_device: BLEDevice | str, **kwargs):
+    def __init__(self, address_or_ble_device: BLEDevice | str, **kwargs) -> None:
         """Initialize the fake bleak client."""
         self._device_path = "/dev/test"
         self._device = address_or_ble_device
@@ -106,7 +108,7 @@ class FakeBleakClientRaisesOnConnect(BaseFakeBleakClient):
 
     async def connect(self, *args, **kwargs):
         """Connect."""
-        raise Exception("Test exception")
+        raise ConnectionError("Test exception")
 
 
 def _generate_ble_device_and_adv_data(
@@ -162,7 +164,11 @@ def mock_platform_client_that_raises_on_connect_fixture():
         yield
 
 
-def _generate_scanners_with_fake_devices(hass):
+def _generate_scanners_with_fake_devices(
+    hass: HomeAssistant,
+) -> tuple[
+    dict[str, tuple[BLEDevice, AdvertisementData]], CALLBACK_TYPE, CALLBACK_TYPE
+]:
     """Generate scanners with fake devices."""
     manager = _get_manager()
     hci0_device_advs = {}
@@ -193,10 +199,9 @@ def _generate_scanners_with_fake_devices(hass):
     return hci0_device_advs, cancel_hci0, cancel_hci1
 
 
+@pytest.mark.usefixtures("enable_bluetooth", "two_adapters")
 async def test_test_switch_adapters_when_out_of_slots(
     hass: HomeAssistant,
-    two_adapters: None,
-    enable_bluetooth: None,
     install_bleak_catcher,
     mock_platform_client,
 ) -> None:
@@ -206,11 +211,12 @@ async def test_test_switch_adapters_when_out_of_slots(
         hass
     )
     # hci0 has 2 slots, hci1 has 1 slot
-    with patch.object(
-        manager.slot_manager, "release_slot"
-    ) as release_slot_mock, patch.object(
-        manager.slot_manager, "allocate_slot", return_value=True
-    ) as allocate_slot_mock:
+    with (
+        patch.object(manager.slot_manager, "release_slot") as release_slot_mock,
+        patch.object(
+            manager.slot_manager, "allocate_slot", return_value=True
+        ) as allocate_slot_mock,
+    ):
         ble_device = hci0_device_advs["00:00:00:00:00:01"][0]
         client = bleak.BleakClient(ble_device)
         assert await client.connect() is True
@@ -218,11 +224,12 @@ async def test_test_switch_adapters_when_out_of_slots(
         assert release_slot_mock.call_count == 0
 
     # All adapters are out of slots
-    with patch.object(
-        manager.slot_manager, "release_slot"
-    ) as release_slot_mock, patch.object(
-        manager.slot_manager, "allocate_slot", return_value=False
-    ) as allocate_slot_mock:
+    with (
+        patch.object(manager.slot_manager, "release_slot") as release_slot_mock,
+        patch.object(
+            manager.slot_manager, "allocate_slot", return_value=False
+        ) as allocate_slot_mock,
+    ):
         ble_device = hci0_device_advs["00:00:00:00:00:02"][0]
         client = bleak.BleakClient(ble_device)
         with pytest.raises(bleak.exc.BleakError):
@@ -236,24 +243,24 @@ async def test_test_switch_adapters_when_out_of_slots(
             return True
         return False
 
-    with patch.object(
-        manager.slot_manager, "release_slot"
-    ) as release_slot_mock, patch.object(
-        manager.slot_manager, "allocate_slot", _allocate_slot_mock
-    ) as allocate_slot_mock:
+    with (
+        patch.object(manager.slot_manager, "release_slot") as release_slot_mock,
+        patch.object(
+            manager.slot_manager, "allocate_slot", _allocate_slot_mock
+        ) as allocate_slot_mock,
+    ):
         ble_device = hci0_device_advs["00:00:00:00:00:03"][0]
         client = bleak.BleakClient(ble_device)
-        await client.connect() is True
+        assert await client.connect() is True
         assert release_slot_mock.call_count == 0
 
     cancel_hci0()
     cancel_hci1()
 
 
+@pytest.mark.usefixtures("enable_bluetooth", "two_adapters")
 async def test_release_slot_on_connect_failure(
     hass: HomeAssistant,
-    two_adapters: None,
-    enable_bluetooth: None,
     install_bleak_catcher,
     mock_platform_client_that_fails_to_connect,
 ) -> None:
@@ -263,11 +270,12 @@ async def test_release_slot_on_connect_failure(
         hass
     )
     # hci0 has 2 slots, hci1 has 1 slot
-    with patch.object(
-        manager.slot_manager, "release_slot"
-    ) as release_slot_mock, patch.object(
-        manager.slot_manager, "allocate_slot", return_value=True
-    ) as allocate_slot_mock:
+    with (
+        patch.object(manager.slot_manager, "release_slot") as release_slot_mock,
+        patch.object(
+            manager.slot_manager, "allocate_slot", return_value=True
+        ) as allocate_slot_mock,
+    ):
         ble_device = hci0_device_advs["00:00:00:00:00:01"][0]
         client = bleak.BleakClient(ble_device)
         assert await client.connect() is False
@@ -278,10 +286,9 @@ async def test_release_slot_on_connect_failure(
     cancel_hci1()
 
 
+@pytest.mark.usefixtures("enable_bluetooth", "two_adapters")
 async def test_release_slot_on_connect_exception(
     hass: HomeAssistant,
-    two_adapters: None,
-    enable_bluetooth: None,
     install_bleak_catcher,
     mock_platform_client_that_raises_on_connect,
 ) -> None:
@@ -291,15 +298,17 @@ async def test_release_slot_on_connect_exception(
         hass
     )
     # hci0 has 2 slots, hci1 has 1 slot
-    with patch.object(
-        manager.slot_manager, "release_slot"
-    ) as release_slot_mock, patch.object(
-        manager.slot_manager, "allocate_slot", return_value=True
-    ) as allocate_slot_mock:
+    with (
+        patch.object(manager.slot_manager, "release_slot") as release_slot_mock,
+        patch.object(
+            manager.slot_manager, "allocate_slot", return_value=True
+        ) as allocate_slot_mock,
+    ):
         ble_device = hci0_device_advs["00:00:00:00:00:01"][0]
         client = bleak.BleakClient(ble_device)
-        with pytest.raises(Exception):
-            assert await client.connect() is False
+        with pytest.raises(ConnectionError) as exc_info:
+            await client.connect()
+        assert str(exc_info.value) == "Test exception"
         assert allocate_slot_mock.call_count == 1
         assert release_slot_mock.call_count == 1
 
@@ -307,10 +316,9 @@ async def test_release_slot_on_connect_exception(
     cancel_hci1()
 
 
+@pytest.mark.usefixtures("enable_bluetooth", "two_adapters")
 async def test_we_switch_adapters_on_failure(
     hass: HomeAssistant,
-    two_adapters: None,
-    enable_bluetooth: None,
     install_bleak_catcher,
 ) -> None:
     """Ensure we try the next best adapter after a failure."""
@@ -367,17 +375,16 @@ async def test_we_switch_adapters_on_failure(
     cancel_hci1()
 
 
+@pytest.mark.usefixtures("enable_bluetooth", "two_adapters")
 async def test_passing_subclassed_str_as_address(
     hass: HomeAssistant,
-    two_adapters: None,
-    enable_bluetooth: None,
     install_bleak_catcher,
 ) -> None:
     """Ensure the client wrapper can handle a subclassed str as the address."""
     _, cancel_hci0, cancel_hci1 = _generate_scanners_with_fake_devices(hass)
 
     class SubclassedStr(str):
-        pass
+        __slots__ = ()
 
     address = SubclassedStr("00:00:00:00:00:01")
     client = bleak.BleakClient(address)
@@ -399,10 +406,9 @@ async def test_passing_subclassed_str_as_address(
     cancel_hci1()
 
 
+@pytest.mark.usefixtures("enable_bluetooth", "two_adapters")
 async def test_raise_after_shutdown(
     hass: HomeAssistant,
-    two_adapters: None,
-    enable_bluetooth: None,
     install_bleak_catcher,
     mock_platform_client_that_raises_on_connect,
 ) -> None:

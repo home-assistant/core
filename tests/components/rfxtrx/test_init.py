@@ -1,25 +1,27 @@
 """The tests for the Rfxtrx component."""
+
 from __future__ import annotations
 
-from unittest.mock import ANY, call, patch
+from unittest.mock import ANY, call
 
 import RFXtrx as rfxtrxmod
 
-from homeassistant.components.rfxtrx import DOMAIN
 from homeassistant.components.rfxtrx.const import EVENT_RFXTRX_EVENT
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
-from .conftest import create_rfx_test_cfg, setup_rfx_test_cfg
+from .conftest import setup_rfx_test_cfg
 
-from tests.common import MockConfigEntry
 from tests.typing import WebSocketGenerator
 
 SOME_PROTOCOLS = ["ac", "arc"]
 
 
-async def test_fire_event(hass: HomeAssistant, rfxtrx) -> None:
+async def test_fire_event(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry, rfxtrx
+) -> None:
     """Test fire event."""
     await setup_rfx_test_cfg(
         hass,
@@ -30,8 +32,6 @@ async def test_fire_event(hass: HomeAssistant, rfxtrx) -> None:
             "0716000100900970": {},
         },
     )
-
-    device_registry: dr.DeviceRegistry = dr.async_get(hass)
 
     calls = []
 
@@ -92,7 +92,9 @@ async def test_send(hass: HomeAssistant, rfxtrx) -> None:
 
 
 async def test_ws_device_remove(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test removing a device through device registry."""
     assert await async_setup_component(hass, "config", {})
@@ -105,54 +107,109 @@ async def test_ws_device_remove(
         },
     )
 
-    device_reg = dr.async_get(hass)
-
-    device_entry = device_reg.async_get_device(identifiers={("rfxtrx", *device_id)})
+    device_entry = device_registry.async_get_device(
+        identifiers={("rfxtrx", *device_id)}
+    )
     assert device_entry
 
     # Ask to remove existing device
     client = await hass_ws_client(hass)
-    await client.send_json(
-        {
-            "id": 5,
-            "type": "config/device_registry/remove_config_entry",
-            "config_entry_id": mock_entry.entry_id,
-            "device_id": device_entry.id,
-        }
-    )
-    response = await client.receive_json()
+    response = await client.remove_device(device_entry.id, mock_entry.entry_id)
     assert response["success"]
 
     # Verify device entry is removed
-    assert device_reg.async_get_device(identifiers={("rfxtrx", *device_id)}) is None
+    assert (
+        device_registry.async_get_device(identifiers={("rfxtrx", *device_id)}) is None
+    )
 
     # Verify that the config entry has removed the device
     assert mock_entry.data["devices"] == {}
 
 
-async def test_connect(hass: HomeAssistant) -> None:
+async def test_connect(
+    rfxtrx, connect_mock, transport_mock, hass: HomeAssistant
+) -> None:
     """Test that we attempt to connect to the device."""
-    entry_data = create_rfx_test_cfg(device="/dev/ttyUSBfake")
-    mock_entry = MockConfigEntry(domain="rfxtrx", unique_id=DOMAIN, data=entry_data)
 
-    mock_entry.add_to_hass(hass)
+    config_entry = await setup_rfx_test_cfg(hass, device="/dev/ttyUSBfake")
+    transport_mock.assert_called_once_with("/dev/ttyUSBfake")
+    connect_mock.assert_called_once_with(transport_mock.return_value, ANY, modes=ANY)
+    rfxtrx.connect.assert_called_once_with(ANY)
 
-    with patch.object(rfxtrxmod, "Connect") as connect:
-        await hass.config_entries.async_setup(mock_entry.entry_id)
-        await hass.async_block_till_done()
-
-    connect.assert_called_once_with("/dev/ttyUSBfake", ANY, modes=ANY)
+    assert config_entry.state is ConfigEntryState.LOADED
 
 
-async def test_connect_with_protocols(hass: HomeAssistant) -> None:
+async def test_connect_network(
+    rfxtrx, connect_mock, transport_mock, hass: HomeAssistant
+) -> None:
+    """Test that we attempt to connect to the device."""
+
+    config_entry = await setup_rfx_test_cfg(hass, host="localhost", port=1234)
+    transport_mock.assert_called_once_with(("localhost", 1234))
+    connect_mock.assert_called_once_with(transport_mock.return_value, ANY, modes=ANY)
+    rfxtrx.connect.assert_called_once_with(ANY)
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+
+async def test_connect_with_protocols(
+    rfxtrx, connect_mock, transport_mock, hass: HomeAssistant
+) -> None:
     """Test that we attempt to set protocols."""
-    entry_data = create_rfx_test_cfg(device="/dev/ttyUSBfake", protocols=SOME_PROTOCOLS)
-    mock_entry = MockConfigEntry(domain="rfxtrx", unique_id=DOMAIN, data=entry_data)
+    config_entry = await setup_rfx_test_cfg(
+        hass, device="/dev/ttyUSBfake", protocols=SOME_PROTOCOLS
+    )
+    transport_mock.assert_called_once_with("/dev/ttyUSBfake")
+    connect_mock.assert_called_once_with(
+        transport_mock.return_value, ANY, modes=SOME_PROTOCOLS
+    )
+    rfxtrx.connect.assert_called_once_with(ANY)
 
-    mock_entry.add_to_hass(hass)
+    assert config_entry.state is ConfigEntryState.LOADED
 
-    with patch.object(rfxtrxmod, "Connect") as connect:
-        await hass.config_entries.async_setup(mock_entry.entry_id)
-        await hass.async_block_till_done()
 
-    connect.assert_called_once_with("/dev/ttyUSBfake", ANY, modes=SOME_PROTOCOLS)
+async def test_connect_timeout(
+    rfxtrx, connect_mock, transport_mock, hass: HomeAssistant
+) -> None:
+    """Test that we attempt to connect to the device."""
+
+    rfxtrx.connect.side_effect = TimeoutError
+
+    config_entry = await setup_rfx_test_cfg(hass, device="/dev/ttyUSBfake")
+    transport_mock.assert_called_once_with("/dev/ttyUSBfake")
+    connect_mock.assert_called_once_with(transport_mock.return_value, ANY, modes=ANY)
+    rfxtrx.connect.assert_called_once_with(ANY)
+
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_connect_failed(
+    rfxtrx, connect_mock, transport_mock, hass: HomeAssistant
+) -> None:
+    """Test that we attempt to connect to the device."""
+
+    rfxtrx.connect.side_effect = rfxtrxmod.RFXtrxTransportError
+
+    config_entry = await setup_rfx_test_cfg(hass, device="/dev/ttyUSBfake")
+    transport_mock.assert_called_once_with("/dev/ttyUSBfake")
+    connect_mock.assert_called_once_with(transport_mock.return_value, ANY, modes=ANY)
+    rfxtrx.connect.assert_called_once_with(ANY)
+
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_reconnect(rfxtrx, hass: HomeAssistant) -> None:
+    """Test that we reconnect on connection loss."""
+    config_entry = await setup_rfx_test_cfg(hass, device="/dev/ttyUSBfake")
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    rfxtrx.connect.call_count = 1
+
+    await hass.async_add_executor_job(
+        rfxtrx.event_callback,
+        rfxtrxmod.ConnectionLost(),
+    )
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    rfxtrx.connect.call_count = 2

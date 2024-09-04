@@ -21,13 +21,13 @@
           "encoding": "Character encoding"
         },
         "data_description": {
-          "resource": "The URL to the website that contains the value",
-          "authentication": "Type of the HTTP authentication. Either basic or digest",
-          "verify_ssl": "Enables/disables verification of SSL/TLS certificate, for example if it is self-signed",
-          "headers": "Headers to use for the web request",
-          "timeout": "Timeout for connection to website",
-          "encoding": "Character encoding to use. Defaults to UTF-8",
-          "payload": "Payload to use when method is POST"
+          "resource": "The URL to the website that contains the value.",
+          "authentication": "Type of the HTTP authentication. Either basic or digest.",
+          "verify_ssl": "Enables/disables verification of SSL/TLS certificate, for example if it is self-signed.",
+          "headers": "Headers to use for the web request.",
+          "timeout": "Timeout for connection to website.",
+          "encoding": "Character encoding to use. Defaults to UTF-8.",
+          "payload": "Payload to use when method is POST."
         }
       },
       "sensor": {
@@ -36,19 +36,21 @@
           "attribute": "Attribute",
           "index": "Index",
           "select": "Select",
-          "value_template": "Value Template",
-          "device_class": "Device Class",
-          "state_class": "State Class",
-          "unit_of_measurement": "Unit of Measurement"
+          "value_template": "Value template",
+          "availability": "Availability template",
+          "device_class": "Device class",
+          "state_class": "State class",
+          "unit_of_measurement": "Unit of measurement"
         },
         "data_description": {
-          "select": "Defines what tag to search for. Check Beautifulsoup CSS selectors for details",
-          "attribute": "Get value of an attribute on the selected tag",
-          "index": "Defines which of the elements returned by the CSS selector to use",
-          "value_template": "Defines a template to get the state of the sensor",
-          "device_class": "The type/class of the sensor to set the icon in the frontend",
-          "state_class": "The state_class of the sensor",
-          "unit_of_measurement": "Choose temperature measurement or create your own"
+          "select": "Defines what tag to search for. Check Beautifulsoup CSS selectors for details.",
+          "attribute": "Get value of an attribute on the selected tag.",
+          "index": "Defines which of the elements returned by the CSS selector to use.",
+          "value_template": "Defines a template to get the state of the sensor.",
+          "availability": "Defines a template to get the availability of the sensor.",
+          "device_class": "The type/class of the sensor to set the icon in the frontend.",
+          "state_class": "The state_class of the sensor.",
+          "unit_of_measurement": "Choose unit of measurement or create your own."
         }
       }
     }
@@ -70,6 +72,7 @@
           "index": "[%key:component::scrape::config::step::sensor::data::index%]",
           "select": "[%key:component::scrape::config::step::sensor::data::select%]",
           "value_template": "[%key:component::scrape::config::step::sensor::data::value_template%]",
+          "availability": "[%key:component::scrape::config::step::sensor::data::availability%]",
           "device_class": "[%key:component::scrape::config::step::sensor::data::device_class%]",
           "state_class": "[%key:component::scrape::config::step::sensor::data::state_class%]",
           "unit_of_measurement": "[%key:component::scrape::config::step::sensor::data::unit_of_measurement%]"
@@ -79,6 +82,7 @@
           "attribute": "[%key:component::scrape::config::step::sensor::data_description::attribute%]",
           "index": "[%key:component::scrape::config::step::sensor::data_description::index%]",
           "value_template": "[%key:component::scrape::config::step::sensor::data_description::value_template%]",
+          "availability": "[%key:component::scrape::config::step::sensor::data_description::availability%]",
           "device_class": "[%key:component::scrape::config::step::sensor::data_description::device_class%]",
           "state_class": "[%key:component::scrape::config::step::sensor::data_description::state_class%]",
           "unit_of_measurement": "[%key:component::scrape::config::step::sensor::data_description::unit_of_measurement%]"
@@ -91,6 +95,7 @@
           "index": "[%key:component::scrape::config::step::sensor::data::index%]",
           "select": "[%key:component::scrape::config::step::sensor::data::select%]",
           "value_template": "[%key:component::scrape::config::step::sensor::data::value_template%]",
+          "availability": "[%key:component::scrape::config::step::sensor::data::availability%]",
           "device_class": "[%key:component::scrape::config::step::sensor::data::device_class%]",
           "state_class": "[%key:component::scrape::config::step::sensor::data::state_class%]",
           "unit_of_measurement": "[%key:component::scrape::config::step::sensor::data::unit_of_measurement%]"
@@ -100,6 +105,7 @@
           "attribute": "[%key:component::scrape::config::step::sensor::data_description::attribute%]",
           "index": "[%key:component::scrape::config::step::sensor::data_description::index%]",
           "value_template": "[%key:component::scrape::config::step::sensor::data_description::value_template%]",
+          "availability": "[%key:component::scrape::config::step::sensor::data_description::availability%]",
           "device_class": "[%key:component::scrape::config::step::sensor::data_description::device_class%]",
           "state_class": "[%key:component::scrape::config::step::sensor::data_description::state_class%]",
           "unit_of_measurement": "[%key:component::scrape::config::step::sensor::data_description::unit_of_measurement%]"
@@ -133,18 +139,19 @@
   "selector": {
     "device_class": {
       "options": {
-        "date": "[%key:component::sensor::entity_component::date::name%]",
-        "duration": "[%key:component::sensor::entity_component::duration::name%]",
         "apparent_power": "[%key:component::sensor::entity_component::apparent_power::name%]",
         "aqi": "[%key:component::sensor::entity_component::aqi::name%]",
         "atmospheric_pressure": "[%key:component::sensor::entity_component::atmospheric_pressure::name%]",
         "battery": "[%key:component::sensor::entity_component::battery::name%]",
-        "carbon_monoxide": "[%key:component::sensor::entity_component::carbon_monoxide::name%]",
         "carbon_dioxide": "[%key:component::sensor::entity_component::carbon_dioxide::name%]",
+        "carbon_monoxide": "[%key:component::sensor::entity_component::carbon_monoxide::name%]",
+        "conductivity": "[%key:component::sensor::entity_component::conductivity::name%]",
         "current": "[%key:component::sensor::entity_component::current::name%]",
         "data_rate": "[%key:component::sensor::entity_component::data_rate::name%]",
         "data_size": "[%key:component::sensor::entity_component::data_size::name%]",
+        "date": "[%key:component::sensor::entity_component::date::name%]",
         "distance": "[%key:component::sensor::entity_component::distance::name%]",
+        "duration": "[%key:component::sensor::entity_component::duration::name%]",
         "energy": "[%key:component::sensor::entity_component::energy::name%]",
         "energy_storage": "[%key:component::sensor::entity_component::energy_storage::name%]",
         "frequency": "[%key:component::sensor::entity_component::frequency::name%]",
@@ -162,8 +169,8 @@
         "pm1": "[%key:component::sensor::entity_component::pm1::name%]",
         "pm10": "[%key:component::sensor::entity_component::pm10::name%]",
         "pm25": "[%key:component::sensor::entity_component::pm25::name%]",
-        "power_factor": "[%key:component::sensor::entity_component::power_factor::name%]",
         "power": "[%key:component::sensor::entity_component::power::name%]",
+        "power_factor": "[%key:component::sensor::entity_component::power_factor::name%]",
         "precipitation": "[%key:component::sensor::entity_component::precipitation::name%]",
         "precipitation_intensity": "[%key:component::sensor::entity_component::precipitation_intensity::name%]",
         "pressure": "[%key:component::sensor::entity_component::pressure::name%]",
@@ -178,6 +185,7 @@
         "volatile_organic_compounds_parts": "[%key:component::sensor::entity_component::volatile_organic_compounds::name%]",
         "voltage": "[%key:component::sensor::entity_component::voltage::name%]",
         "volume": "[%key:component::sensor::entity_component::volume::name%]",
+        "volume_flow_rate": "[%key:component::sensor::entity_component::volume_flow_rate::name%]",
         "volume_storage": "[%key:component::sensor::entity_component::volume_storage::name%]",
         "water": "[%key:component::sensor::entity_component::water::name%]",
         "weight": "[%key:component::sensor::entity_component::weight::name%]",

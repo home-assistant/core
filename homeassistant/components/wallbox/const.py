@@ -1,4 +1,5 @@
 """Constants for the Wallbox integration."""
+
 from enum import StrEnum
 
 DOMAIN = "wallbox"
@@ -21,11 +22,15 @@ CHARGER_CURRENCY_KEY = "currency"
 CHARGER_DATA_KEY = "config_data"
 CHARGER_DEPOT_PRICE_KEY = "depot_price"
 CHARGER_ENERGY_PRICE_KEY = "energy_price"
+CHARGER_FEATURES_KEY = "features"
 CHARGER_SERIAL_NUMBER_KEY = "serial_number"
 CHARGER_PART_NUMBER_KEY = "part_number"
+CHARGER_PLAN_KEY = "plan"
+CHARGER_POWER_BOOST_KEY = "POWER_BOOST"
 CHARGER_SOFTWARE_KEY = "software"
 CHARGER_MAX_AVAILABLE_POWER_KEY = "max_available_power"
 CHARGER_MAX_CHARGING_CURRENT_KEY = "max_charging_current"
+CHARGER_MAX_ICP_CURRENT_KEY = "icp_max_current"
 CHARGER_PAUSE_RESUME_KEY = "paused"
 CHARGER_LOCKED_UNLOCKED_KEY = "locked"
 CHARGER_NAME_KEY = "name"

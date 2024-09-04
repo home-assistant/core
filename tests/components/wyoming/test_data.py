@@ -1,9 +1,11 @@
 """Test tts."""
+
 from __future__ import annotations
 
 from unittest.mock import patch
 
 from syrupy.assertion import SnapshotAssertion
+from wyoming.info import Info
 
 from homeassistant.components.wyoming.data import WyomingService, load_wyoming_info
 from homeassistant.core import HomeAssistant
@@ -27,10 +29,13 @@ async def test_load_info_oserror(hass: HomeAssistant) -> None:
     """Test loading info and error raising."""
     mock_client = MockAsyncTcpClient([STT_INFO.event()])
 
-    with patch(
-        "homeassistant.components.wyoming.data.AsyncTcpClient",
-        mock_client,
-    ), patch.object(mock_client, "read_event", side_effect=OSError("Boom!")):
+    with (
+        patch(
+            "homeassistant.components.wyoming.data.AsyncTcpClient",
+            mock_client,
+        ),
+        patch.object(mock_client, "read_event", side_effect=OSError("Boom!")),
+    ):
         info = await load_wyoming_info(
             "localhost",
             1234,
@@ -75,3 +80,21 @@ async def test_service_name(hass: HomeAssistant) -> None:
         service = await WyomingService.create("localhost", 1234)
         assert service is not None
         assert service.get_name() == SATELLITE_INFO.satellite.name
+
+
+async def test_satellite_with_wake_word(hass: HomeAssistant) -> None:
+    """Test that wake word info with satellite doesn't overwrite the service name."""
+    # Info for local wake word detection
+    satellite_info = Info(
+        satellite=SATELLITE_INFO.satellite,
+        wake=WAKE_WORD_INFO.wake,
+    )
+
+    with patch(
+        "homeassistant.components.wyoming.data.AsyncTcpClient",
+        MockAsyncTcpClient([satellite_info.event()]),
+    ):
+        service = await WyomingService.create("localhost", 1234)
+        assert service is not None
+        assert service.get_name() == satellite_info.satellite.name
+        assert not service.platforms

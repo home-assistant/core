@@ -1,4 +1,5 @@
 """Support for collecting data from the ARWN project."""
+
 from __future__ import annotations
 
 import logging

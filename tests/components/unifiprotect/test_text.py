@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from unittest.mock import AsyncMock, Mock
 
-from pyunifiprotect.data import Camera, DoorbellMessageType, LCDMessage
+from uiprotect.data import Camera, DoorbellMessageType, LCDMessage
 
 from homeassistant.components.unifiprotect.const import DEFAULT_ATTRIBUTION
 from homeassistant.components.unifiprotect.text import CAMERA
@@ -37,7 +37,10 @@ async def test_text_camera_remove(
 
 
 async def test_text_camera_setup(
-    hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
 ) -> None:
     """Test text entity setup for camera devices."""
 
@@ -46,8 +49,6 @@ async def test_text_camera_setup(
     )
     await init_entry(hass, ufp, [doorbell])
     assert_entity_counts(hass, Platform.TEXT, 1, 1)
-
-    entity_registry = er.async_get(hass)
 
     description = CAMERA[0]
     unique_id, entity_id = ids_from_device_description(

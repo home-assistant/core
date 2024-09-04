@@ -1,0 +1,39 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "headphones_connected": {
+        "default": "mdi:headphones"
+      },
+      "supports_airplay": {
+        "default": "mdi:cast-variant"
+      },
+      "supports_ethernet": {
+        "default": "mdi:ethernet"
+      },
+      "supports_find_remote": {
+        "default": "mdi:remote"
+      }
+    },
+    "select": {
+      "application": {
+        "default": "mdi:application"
+      },
+      "channel": {
+        "default": "mdi:television"
+      }
+    },
+    "sensor": {
+      "active_app": {
+        "default": "mdi:application"
+      },
+      "active_app_id": {
+        "default": "mdi:application-cog"
+      }
+    }
+  },
+  "services": {
+    "search": {
+      "service": "mdi:magnify"
+    }
+  }
+}

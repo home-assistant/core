@@ -1,4 +1,5 @@
 """Support for Speedtest.net internet speed testing sensor."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -11,7 +12,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfDataRate, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
@@ -19,6 +19,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import SpeedTestConfigEntry
 from .const import (
     ATTR_BYTES_RECEIVED,
     ATTR_BYTES_SENT,
@@ -28,7 +29,6 @@ from .const import (
     ATTRIBUTION,
     DEFAULT_NAME,
     DOMAIN,
-    ICON,
 )
 from .coordinator import SpeedTestDataCoordinator
 
@@ -69,11 +69,11 @@ SENSOR_TYPES: tuple[SpeedtestSensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: SpeedTestConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Speedtestdotnet sensors."""
-    speedtest_coordinator = hass.data[DOMAIN]
+    speedtest_coordinator = config_entry.runtime_data
     async_add_entities(
         SpeedtestSensor(speedtest_coordinator, description)
         for description in SENSOR_TYPES
@@ -86,7 +86,6 @@ class SpeedtestSensor(CoordinatorEntity[SpeedTestDataCoordinator], SensorEntity)
     entity_description: SpeedtestSensorEntityDescription
     _attr_attribution = ATTRIBUTION
     _attr_has_entity_name = True
-    _attr_icon = ICON
 
     def __init__(
         self,

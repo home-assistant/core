@@ -1,4 +1,5 @@
 """Provides functionality to interact with image processing services."""
+
 from __future__ import annotations
 
 import asyncio
@@ -9,7 +10,7 @@ from typing import Any, Final, TypedDict, final
 
 import voluptuous as vol
 
-from homeassistant.components.camera import Image
+from homeassistant.components.camera import async_get_image
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_NAME,
@@ -164,7 +165,7 @@ class ImageProcessingEntity(Entity):
 
     def process_image(self, image: bytes) -> None:
         """Process image."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def async_process_image(self, image: bytes) -> None:
         """Process image."""
@@ -175,13 +176,16 @@ class ImageProcessingEntity(Entity):
 
         This method is a coroutine.
         """
-        camera = self.hass.components.camera
+        if self.camera_entity is None:
+            _LOGGER.error(
+                "No camera entity id was set by the image processing entity",
+            )
+            return
 
         try:
-            image: Image = await camera.async_get_image(
-                self.camera_entity, timeout=self.timeout
+            image = await async_get_image(
+                self.hass, self.camera_entity, timeout=self.timeout
             )
-
         except HomeAssistantError as err:
             _LOGGER.error("Error on receive image from entity: %s", err)
             return
@@ -262,7 +266,7 @@ class ImageProcessingFaceEntity(ImageProcessingEntity):
                 continue
 
             face.update({ATTR_ENTITY_ID: self.entity_id})
-            self.hass.bus.async_fire(EVENT_DETECT_FACE, face)  # type: ignore[arg-type]
+            self.hass.bus.async_fire(EVENT_DETECT_FACE, face)
 
         # Update entity store
         self.faces = faces

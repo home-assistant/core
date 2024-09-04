@@ -1,4 +1,5 @@
 """Tests for the Wemo switch entity."""
+
 import pytest
 import pywemo
 
@@ -102,7 +103,7 @@ async def test_switch_update_entity(
 async def test_available_after_update(
     hass: HomeAssistant, pywemo_registry, pywemo_device, wemo_entity
 ) -> None:
-    """Test the avaliability when an On call fails and after an update."""
+    """Test the availability when an On call fails and after an update."""
     pywemo_device.on.side_effect = pywemo.exceptions.ActionException
     pywemo_device.get_state.return_value = 1
     await entity_test_helpers.test_avaliable_after_update(

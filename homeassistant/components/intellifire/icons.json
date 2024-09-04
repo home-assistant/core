@@ -1,0 +1,45 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "flame": {
+        "default": "mdi:fire"
+      },
+      "timer_on": {
+        "default": "mdi:camera-timer"
+      },
+      "pilot_light_on": {
+        "default": "mdi:fire-alert"
+      },
+      "thermostat_on": {
+        "default": "mdi:home-thermometer-outline"
+      },
+      "fan_delay_error": {
+        "default": "mdi:fan-alert"
+      },
+      "fan_error": {
+        "default": "mdi:fan-alert"
+      }
+    },
+    "number": {
+      "flame_control": {
+        "default": "mdi:arrow-expand-vertical"
+      }
+    },
+    "sensor": {
+      "flame_height": {
+        "default": "mdi:fire-circle"
+      },
+      "fan_speed": {
+        "default": "mdi:fan"
+      },
+      "timer_end_timestamp": {
+        "default": "mdi:timer-sand"
+      }
+    },
+    "switch": {
+      "pilot_light": {
+        "default": "mdi:fire-alert"
+      }
+    }
+  }
+}

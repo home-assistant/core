@@ -1,4 +1,5 @@
 """Support for interface with a Gree climate systems."""
+
 from __future__ import annotations
 
 import logging
@@ -41,7 +42,6 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .bridge import DeviceDataUpdateCoordinator
 from .const import (
     COORDINATORS,
     DISPATCH_DEVICE_DISCOVERED,
@@ -50,6 +50,7 @@ from .const import (
     FAN_MEDIUM_LOW,
     TARGET_TEMPERATURE_STEP,
 )
+from .coordinator import DeviceDataUpdateCoordinator
 from .entity import GreeEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -113,6 +114,8 @@ class GreeClimateEntity(GreeEntity, ClimateEntity):
         | ClimateEntityFeature.FAN_MODE
         | ClimateEntityFeature.PRESET_MODE
         | ClimateEntityFeature.SWING_MODE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
     )
     _attr_target_temperature_step = TARGET_TEMPERATURE_STEP
     _attr_hvac_modes = [*HVAC_MODES_REVERSE, HVACMode.OFF]
@@ -120,20 +123,15 @@ class GreeClimateEntity(GreeEntity, ClimateEntity):
     _attr_fan_modes = [*FAN_MODES_REVERSE]
     _attr_swing_modes = SWING_MODES
     _attr_name = None
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_min_temp = TEMP_MIN
+    _attr_max_temp = TEMP_MAX
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, coordinator: DeviceDataUpdateCoordinator) -> None:
         """Initialize the Gree device."""
         super().__init__(coordinator)
         self._attr_unique_id = coordinator.device.device_info.mac
-        units = self.coordinator.device.temperature_units
-        if units == TemperatureUnits.C:
-            self._attr_temperature_unit = UnitOfTemperature.CELSIUS
-            self._attr_min_temp = TEMP_MIN
-            self._attr_max_temp = TEMP_MAX
-        else:
-            self._attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
-            self._attr_min_temp = TEMP_MIN_F
-            self._attr_max_temp = TEMP_MAX_F
 
     @property
     def current_temperature(self) -> float:
@@ -160,7 +158,7 @@ class GreeClimateEntity(GreeEntity, ClimateEntity):
             self._attr_name,
         )
 
-        self.coordinator.device.target_temperature = round(temperature)
+        self.coordinator.device.target_temperature = temperature
         await self.coordinator.push_state_update()
         self.async_write_ha_state()
 
@@ -302,3 +300,25 @@ class GreeClimateEntity(GreeEntity, ClimateEntity):
 
         await self.coordinator.push_state_update()
         self.async_write_ha_state()
+
+    def _handle_coordinator_update(self) -> None:
+        """Update the state of the entity."""
+        units = self.coordinator.device.temperature_units
+        if (
+            units == TemperatureUnits.C
+            and self._attr_temperature_unit != UnitOfTemperature.CELSIUS
+        ):
+            _LOGGER.debug("Setting temperature unit to Celsius")
+            self._attr_temperature_unit = UnitOfTemperature.CELSIUS
+            self._attr_min_temp = TEMP_MIN
+            self._attr_max_temp = TEMP_MAX
+        elif (
+            units == TemperatureUnits.F
+            and self._attr_temperature_unit != UnitOfTemperature.FAHRENHEIT
+        ):
+            _LOGGER.debug("Setting temperature unit to Fahrenheit")
+            self._attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
+            self._attr_min_temp = TEMP_MIN_F
+            self._attr_max_temp = TEMP_MAX_F
+
+        super()._handle_coordinator_update()

@@ -1,14 +1,13 @@
 """Support for controlling projector via the PJLink protocol."""
-from __future__ import annotations
 
-import socket
+from __future__ import annotations
 
 from pypjlink import MUTE_AUDIO, Projector
 from pypjlink.projector import ProjectorError
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as MEDIA_PLAYER_PLATFORM_SCHEMA,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
@@ -23,7 +22,7 @@ from .const import CONF_ENCODING, DEFAULT_ENCODING, DEFAULT_PORT, DOMAIN
 
 ERR_PROJECTOR_UNAVAILABLE = "projector unavailable"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
@@ -116,7 +115,7 @@ class PjLinkDevice(MediaPlayerEntity):
         try:
             projector = Projector.from_address(self._host, self._port)
             projector.authenticate(self._password)
-        except (socket.timeout, OSError) as err:
+        except (TimeoutError, OSError) as err:
             self._attr_available = False
             raise ProjectorError(ERR_PROJECTOR_UNAVAILABLE) from err
 

@@ -1,4 +1,5 @@
 """Support for Rabbit Air fan entity."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -48,7 +49,13 @@ async def async_setup_entry(
 class RabbitAirFanEntity(RabbitAirBaseEntity, FanEntity):
     """Fan control functions of the Rabbit Air air purifier."""
 
-    _attr_supported_features = FanEntityFeature.PRESET_MODE | FanEntityFeature.SET_SPEED
+    _attr_supported_features = (
+        FanEntityFeature.PRESET_MODE
+        | FanEntityFeature.SET_SPEED
+        | FanEntityFeature.TURN_ON
+        | FanEntityFeature.TURN_OFF
+    )
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self,

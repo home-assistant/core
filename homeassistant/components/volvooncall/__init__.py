@@ -168,7 +168,7 @@ class VolvoData:
             raise InvalidAuth from exc
 
 
-class VolvoUpdateCoordinator(DataUpdateCoordinator[None]):
+class VolvoUpdateCoordinator(DataUpdateCoordinator[None]):  # pylint: disable=hass-enforce-coordinator-module
     """Volvo coordinator."""
 
     def __init__(self, hass: HomeAssistant, volvo_data: VolvoData) -> None:

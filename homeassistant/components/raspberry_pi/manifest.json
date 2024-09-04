@@ -1,9 +1,10 @@
 {
   "domain": "raspberry_pi",
   "name": "Raspberry Pi",
+  "after_dependencies": ["hassio"],
   "codeowners": ["@home-assistant/core"],
   "config_flow": false,
-  "dependencies": ["hardware", "hassio"],
+  "dependencies": ["hardware"],
   "documentation": "https://www.home-assistant.io/integrations/raspberry_pi",
   "integration_type": "hardware"
 }

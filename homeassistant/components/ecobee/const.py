@@ -1,4 +1,5 @@
 """Constants for the ecobee integration."""
+
 import logging
 
 from homeassistant.components.weather import (
@@ -45,12 +46,16 @@ PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.CLIMATE,
     Platform.HUMIDIFIER,
+    Platform.NOTIFY,
     Platform.NUMBER,
     Platform.SENSOR,
+    Platform.SWITCH,
     Platform.WEATHER,
 ]
 
 MANUFACTURER = "ecobee"
+
+ECOBEE_AUX_HEAT_ONLY = "auxHeatOnly"
 
 # Translates ecobee API weatherSymbol to Home Assistant usable names
 # https://www.ecobee.com/home/developer/api/documentation/v1/objects/WeatherForecast.shtml

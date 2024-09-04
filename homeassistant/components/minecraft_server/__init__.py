@@ -1,4 +1,5 @@
 """The Minecraft Server integration."""
+
 from __future__ import annotations
 
 import logging
@@ -14,7 +15,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryError
+from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.device_registry as dr
 import homeassistant.helpers.entity_registry as er
 
@@ -41,9 +42,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         await api.async_initialize()
     except MinecraftServerAddressError as error:
-        raise ConfigEntryError(
-            f"Server address in configuration entry is invalid: {error}"
-        ) from error
+        raise ConfigEntryNotReady(f"Initialization failed: {error}") from error
 
     # Create coordinator instance.
     coordinator = MinecraftServerCoordinator(hass, entry.data[CONF_NAME], api)
@@ -86,9 +85,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
 
         # Migrate config entry.
         _LOGGER.debug("Migrating config entry. Resetting unique ID: %s", old_unique_id)
-        config_entry.unique_id = None
-        config_entry.version = 2
-        hass.config_entries.async_update_entry(config_entry)
+        hass.config_entries.async_update_entry(config_entry, unique_id=None, version=2)
 
         # Migrate device.
         await _async_migrate_device_identifiers(hass, config_entry, old_unique_id)
@@ -124,10 +121,9 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
 
             try:
                 await api.async_initialize()
-            except MinecraftServerAddressError as error:
+            except MinecraftServerAddressError:
                 _LOGGER.exception(
-                    "Can't migrate configuration entry due to error while parsing server address, try again later: %s",
-                    error,
+                    "Can't migrate configuration entry due to error while parsing server address, try again later"
                 )
                 return False
 
@@ -142,8 +138,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         new_data[CONF_ADDRESS] = address
         del new_data[CONF_HOST]
         del new_data[CONF_PORT]
-        config_entry.version = 3
-        hass.config_entries.async_update_entry(config_entry, data=new_data)
+        hass.config_entries.async_update_entry(config_entry, data=new_data, version=3)
 
         _LOGGER.debug("Migration to version 3 successful")
 

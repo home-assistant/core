@@ -30,10 +30,14 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Maxim Integrated',
       'model': 'DS2405',
+      'model_id': None,
       'name': '05.111111111111',
       'name_by_user': None,
+      'primary_config_entry': <ANY>,
       'serial_number': None,
       'suggested_area': None,
       'sw_version': None,
@@ -68,10 +72,14 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Maxim Integrated',
       'model': 'DS18S20',
+      'model_id': None,
       'name': '10.111111111111',
       'name_by_user': None,
+      'primary_config_entry': <ANY>,
       'serial_number': None,
       'suggested_area': None,
       'sw_version': None,
@@ -106,10 +114,14 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Maxim Integrated',
       'model': 'DS2406',
+      'model_id': None,
       'name': '12.111111111111',
       'name_by_user': None,
+      'primary_config_entry': <ANY>,
       'serial_number': None,
       'suggested_area': None,
       'sw_version': None,
@@ -135,6 +147,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -144,7 +158,7 @@
       'platform': 'onewire',
       'previous_unique_id': None,
       'supported_features': 0,
-      'translation_key': 'sensed_a',
+      'translation_key': 'sensed_id',
       'unique_id': '/12.111111111111/sensed.A',
       'unit_of_measurement': None,
     }),
@@ -164,6 +178,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -173,7 +189,7 @@
       'platform': 'onewire',
       'previous_unique_id': None,
       'supported_features': 0,
-      'translation_key': 'sensed_b',
+      'translation_key': 'sensed_id',
       'unique_id': '/12.111111111111/sensed.B',
       'unit_of_measurement': None,
     }),
@@ -190,6 +206,7 @@
       'context': <ANY>,
       'entity_id': 'binary_sensor.12_111111111111_sensed_a',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'on',
     }),
@@ -202,9 +219,22 @@
       'context': <ANY>,
       'entity_id': 'binary_sensor.12_111111111111_sensed_b',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'off',
     }),
+  ])
+# ---
+# name: test_binary_sensors[16.111111111111]
+  list([
+  ])
+# ---
+# name: test_binary_sensors[16.111111111111].1
+  list([
+  ])
+# ---
+# name: test_binary_sensors[16.111111111111].2
+  list([
   ])
 # ---
 # name: test_binary_sensors[1D.111111111111]
@@ -226,10 +256,14 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Maxim Integrated',
       'model': 'DS2423',
+      'model_id': None,
       'name': '1D.111111111111',
       'name_by_user': None,
+      'primary_config_entry': <ANY>,
       'serial_number': None,
       'suggested_area': None,
       'sw_version': None,
@@ -264,10 +298,14 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Maxim Integrated',
       'model': 'DS2409',
+      'model_id': None,
       'name': '1F.111111111111',
       'name_by_user': None,
+      'primary_config_entry': <ANY>,
       'serial_number': None,
       'suggested_area': None,
       'sw_version': None,
@@ -290,10 +328,14 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Maxim Integrated',
       'model': 'DS2423',
+      'model_id': None,
       'name': '1D.111111111111',
       'name_by_user': None,
+      'primary_config_entry': <ANY>,
       'serial_number': None,
       'suggested_area': None,
       'sw_version': None,
@@ -328,10 +370,14 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Maxim Integrated',
       'model': 'DS1822',
+      'model_id': None,
       'name': '22.111111111111',
       'name_by_user': None,
+      'primary_config_entry': <ANY>,
       'serial_number': None,
       'suggested_area': None,
       'sw_version': None,
@@ -366,10 +412,14 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Maxim Integrated',
       'model': 'DS2438',
+      'model_id': None,
       'name': '26.111111111111',
       'name_by_user': None,
+      'primary_config_entry': <ANY>,
       'serial_number': None,
       'suggested_area': None,
       'sw_version': None,
@@ -404,10 +454,14 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Maxim Integrated',
       'model': 'DS18B20',
+      'model_id': None,
       'name': '28.111111111111',
       'name_by_user': None,
+      'primary_config_entry': <ANY>,
       'serial_number': None,
       'suggested_area': None,
       'sw_version': None,
@@ -442,10 +496,14 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Maxim Integrated',
       'model': 'DS18B20',
+      'model_id': None,
       'name': '28.222222222222',
       'name_by_user': None,
+      'primary_config_entry': <ANY>,
       'serial_number': None,
       'suggested_area': None,
       'sw_version': None,
@@ -480,10 +538,14 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Maxim Integrated',
       'model': 'DS18B20',
+      'model_id': None,
       'name': '28.222222222223',
       'name_by_user': None,
+      'primary_config_entry': <ANY>,
       'serial_number': None,
       'suggested_area': None,
       'sw_version': None,
@@ -518,10 +580,14 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Maxim Integrated',
       'model': 'DS2408',
+      'model_id': None,
       'name': '29.111111111111',
       'name_by_user': None,
+      'primary_config_entry': <ANY>,
       'serial_number': None,
       'suggested_area': None,
       'sw_version': None,
@@ -547,6 +613,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -556,7 +624,7 @@
       'platform': 'onewire',
       'previous_unique_id': None,
       'supported_features': 0,
-      'translation_key': 'sensed_0',
+      'translation_key': 'sensed_id',
       'unique_id': '/29.111111111111/sensed.0',
       'unit_of_measurement': None,
     }),
@@ -576,6 +644,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -585,7 +655,7 @@
       'platform': 'onewire',
       'previous_unique_id': None,
       'supported_features': 0,
-      'translation_key': 'sensed_1',
+      'translation_key': 'sensed_id',
       'unique_id': '/29.111111111111/sensed.1',
       'unit_of_measurement': None,
     }),
@@ -605,6 +675,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -614,7 +686,7 @@
       'platform': 'onewire',
       'previous_unique_id': None,
       'supported_features': 0,
-      'translation_key': 'sensed_2',
+      'translation_key': 'sensed_id',
       'unique_id': '/29.111111111111/sensed.2',
       'unit_of_measurement': None,
     }),
@@ -634,6 +706,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -643,7 +717,7 @@
       'platform': 'onewire',
       'previous_unique_id': None,
       'supported_features': 0,
-      'translation_key': 'sensed_3',
+      'translation_key': 'sensed_id',
       'unique_id': '/29.111111111111/sensed.3',
       'unit_of_measurement': None,
     }),
@@ -663,6 +737,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -672,7 +748,7 @@
       'platform': 'onewire',
       'previous_unique_id': None,
       'supported_features': 0,
-      'translation_key': 'sensed_4',
+      'translation_key': 'sensed_id',
       'unique_id': '/29.111111111111/sensed.4',
       'unit_of_measurement': None,
     }),
@@ -692,6 +768,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -701,7 +779,7 @@
       'platform': 'onewire',
       'previous_unique_id': None,
       'supported_features': 0,
-      'translation_key': 'sensed_5',
+      'translation_key': 'sensed_id',
       'unique_id': '/29.111111111111/sensed.5',
       'unit_of_measurement': None,
     }),
@@ -721,6 +799,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -730,7 +810,7 @@
       'platform': 'onewire',
       'previous_unique_id': None,
       'supported_features': 0,
-      'translation_key': 'sensed_6',
+      'translation_key': 'sensed_id',
       'unique_id': '/29.111111111111/sensed.6',
       'unit_of_measurement': None,
     }),
@@ -750,6 +830,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -759,7 +841,7 @@
       'platform': 'onewire',
       'previous_unique_id': None,
       'supported_features': 0,
-      'translation_key': 'sensed_7',
+      'translation_key': 'sensed_id',
       'unique_id': '/29.111111111111/sensed.7',
       'unit_of_measurement': None,
     }),
@@ -776,6 +858,7 @@
       'context': <ANY>,
       'entity_id': 'binary_sensor.29_111111111111_sensed_0',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'on',
     }),
@@ -788,6 +871,7 @@
       'context': <ANY>,
       'entity_id': 'binary_sensor.29_111111111111_sensed_1',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'off',
     }),
@@ -800,6 +884,7 @@
       'context': <ANY>,
       'entity_id': 'binary_sensor.29_111111111111_sensed_2',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'off',
     }),
@@ -807,13 +892,14 @@
       'attributes': ReadOnlyDict({
         'device_file': '/29.111111111111/sensed.3',
         'friendly_name': '29.111111111111 Sensed 3',
-        'raw_value': 0.0,
+        'raw_value': None,
       }),
       'context': <ANY>,
       'entity_id': 'binary_sensor.29_111111111111_sensed_3',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
-      'state': 'off',
+      'state': 'unknown',
     }),
     StateSnapshot({
       'attributes': ReadOnlyDict({
@@ -824,6 +910,7 @@
       'context': <ANY>,
       'entity_id': 'binary_sensor.29_111111111111_sensed_4',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'off',
     }),
@@ -836,6 +923,7 @@
       'context': <ANY>,
       'entity_id': 'binary_sensor.29_111111111111_sensed_5',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'off',
     }),
@@ -848,6 +936,7 @@
       'context': <ANY>,
       'entity_id': 'binary_sensor.29_111111111111_sensed_6',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'off',
     }),
@@ -860,6 +949,7 @@
       'context': <ANY>,
       'entity_id': 'binary_sensor.29_111111111111_sensed_7',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'off',
     }),
@@ -884,10 +974,14 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Maxim Integrated',
       'model': 'DS2760',
+      'model_id': None,
       'name': '30.111111111111',
       'name_by_user': None,
+      'primary_config_entry': <ANY>,
       'serial_number': None,
       'suggested_area': None,
       'sw_version': None,
@@ -922,10 +1016,14 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Maxim Integrated',
       'model': 'DS2413',
+      'model_id': None,
       'name': '3A.111111111111',
       'name_by_user': None,
+      'primary_config_entry': <ANY>,
       'serial_number': None,
       'suggested_area': None,
       'sw_version': None,
@@ -951,6 +1049,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -960,7 +1060,7 @@
       'platform': 'onewire',
       'previous_unique_id': None,
       'supported_features': 0,
-      'translation_key': 'sensed_a',
+      'translation_key': 'sensed_id',
       'unique_id': '/3A.111111111111/sensed.A',
       'unit_of_measurement': None,
     }),
@@ -980,6 +1080,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -989,7 +1091,7 @@
       'platform': 'onewire',
       'previous_unique_id': None,
       'supported_features': 0,
-      'translation_key': 'sensed_b',
+      'translation_key': 'sensed_id',
       'unique_id': '/3A.111111111111/sensed.B',
       'unit_of_measurement': None,
     }),
@@ -1006,6 +1108,7 @@
       'context': <ANY>,
       'entity_id': 'binary_sensor.3a_111111111111_sensed_a',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'on',
     }),
@@ -1018,6 +1121,7 @@
       'context': <ANY>,
       'entity_id': 'binary_sensor.3a_111111111111_sensed_b',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'off',
     }),
@@ -1042,10 +1146,14 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Maxim Integrated',
       'model': 'DS1825',
+      'model_id': None,
       'name': '3B.111111111111',
       'name_by_user': None,
+      'primary_config_entry': <ANY>,
       'serial_number': None,
       'suggested_area': None,
       'sw_version': None,
@@ -1080,10 +1188,14 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Maxim Integrated',
       'model': 'DS28EA00',
+      'model_id': None,
       'name': '42.111111111111',
       'name_by_user': None,
+      'primary_config_entry': <ANY>,
       'serial_number': None,
       'suggested_area': None,
       'sw_version': None,
@@ -1118,10 +1230,14 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Embedded Data Systems',
       'model': 'EDS0068',
+      'model_id': None,
       'name': '7E.111111111111',
       'name_by_user': None,
+      'primary_config_entry': <ANY>,
       'serial_number': None,
       'suggested_area': None,
       'sw_version': None,
@@ -1156,10 +1272,14 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Embedded Data Systems',
       'model': 'EDS0066',
+      'model_id': None,
       'name': '7E.222222222222',
       'name_by_user': None,
+      'primary_config_entry': <ANY>,
       'serial_number': None,
       'suggested_area': None,
       'sw_version': None,
@@ -1172,6 +1292,48 @@
   ])
 # ---
 # name: test_binary_sensors[7E.222222222222].2
+  list([
+  ])
+# ---
+# name: test_binary_sensors[A6.111111111111]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'onewire',
+          'A6.111111111111',
+        ),
+      }),
+      'is_new': False,
+      'labels': set({
+      }),
+      'manufacturer': 'Maxim Integrated',
+      'model': 'DS2438',
+      'model_id': None,
+      'name': 'A6.111111111111',
+      'name_by_user': None,
+      'primary_config_entry': <ANY>,
+      'serial_number': None,
+      'suggested_area': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
+# name: test_binary_sensors[A6.111111111111].1
+  list([
+  ])
+# ---
+# name: test_binary_sensors[A6.111111111111].2
   list([
   ])
 # ---
@@ -1194,10 +1356,14 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Hobby Boards',
       'model': 'HobbyBoards_EF',
+      'model_id': None,
       'name': 'EF.111111111111',
       'name_by_user': None,
+      'primary_config_entry': <ANY>,
       'serial_number': None,
       'suggested_area': None,
       'sw_version': None,
@@ -1232,10 +1398,14 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Hobby Boards',
       'model': 'HB_MOISTURE_METER',
+      'model_id': None,
       'name': 'EF.111111111112',
       'name_by_user': None,
+      'primary_config_entry': <ANY>,
       'serial_number': None,
       'suggested_area': None,
       'sw_version': None,
@@ -1270,10 +1440,14 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Hobby Boards',
       'model': 'HB_HUB',
+      'model_id': None,
       'name': 'EF.111111111113',
       'name_by_user': None,
+      'primary_config_entry': <ANY>,
       'serial_number': None,
       'suggested_area': None,
       'sw_version': None,
@@ -1299,6 +1473,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -1308,7 +1484,7 @@
       'platform': 'onewire',
       'previous_unique_id': None,
       'supported_features': 0,
-      'translation_key': 'hub_short_0',
+      'translation_key': 'hub_short_id',
       'unique_id': '/EF.111111111113/hub/short.0',
       'unit_of_measurement': None,
     }),
@@ -1328,6 +1504,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -1337,7 +1515,7 @@
       'platform': 'onewire',
       'previous_unique_id': None,
       'supported_features': 0,
-      'translation_key': 'hub_short_1',
+      'translation_key': 'hub_short_id',
       'unique_id': '/EF.111111111113/hub/short.1',
       'unit_of_measurement': None,
     }),
@@ -1357,6 +1535,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -1366,7 +1546,7 @@
       'platform': 'onewire',
       'previous_unique_id': None,
       'supported_features': 0,
-      'translation_key': 'hub_short_2',
+      'translation_key': 'hub_short_id',
       'unique_id': '/EF.111111111113/hub/short.2',
       'unit_of_measurement': None,
     }),
@@ -1386,6 +1566,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -1395,7 +1577,7 @@
       'platform': 'onewire',
       'previous_unique_id': None,
       'supported_features': 0,
-      'translation_key': 'hub_short_3',
+      'translation_key': 'hub_short_id',
       'unique_id': '/EF.111111111113/hub/short.3',
       'unit_of_measurement': None,
     }),
@@ -1413,6 +1595,7 @@
       'context': <ANY>,
       'entity_id': 'binary_sensor.ef_111111111113_hub_short_on_branch_0',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'on',
     }),
@@ -1426,6 +1609,7 @@
       'context': <ANY>,
       'entity_id': 'binary_sensor.ef_111111111113_hub_short_on_branch_1',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'off',
     }),
@@ -1439,6 +1623,7 @@
       'context': <ANY>,
       'entity_id': 'binary_sensor.ef_111111111113_hub_short_on_branch_2',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'on',
     }),
@@ -1452,6 +1637,7 @@
       'context': <ANY>,
       'entity_id': 'binary_sensor.ef_111111111113_hub_short_on_branch_3',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'off',
     }),

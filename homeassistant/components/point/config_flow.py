@@ -1,13 +1,15 @@
 """Config flow for Minut Point."""
+
 import asyncio
 from collections import OrderedDict
 import logging
+from typing import Any
 
 from pypoint import PointSession
 import voluptuous as vol
 
-from homeassistant import config_entries
-from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.http import KEY_HASS, HomeAssistantView
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -40,7 +42,7 @@ def register_flow_implementation(hass, domain, client_id, client_secret):
     }
 
 
-class PointFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class PointFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
     VERSION = 1
@@ -58,7 +60,9 @@ class PointFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_auth()
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle a flow start."""
         flows = self.hass.data.get(DATA_FLOW_IMPL, {})
 
@@ -95,9 +99,9 @@ class PointFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         try:
             async with asyncio.timeout(10):
                 url = await self._get_authorization_url()
-        except asyncio.TimeoutError:
+        except TimeoutError:
             return self.async_abort(reason="authorize_url_timeout")
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Unexpected error generating auth url")
             return self.async_abort(reason="unknown_authorize_url_generation")
         return self.async_show_form(
@@ -179,7 +183,7 @@ class MinutAuthCallbackView(HomeAssistantView):
     @staticmethod
     async def get(request):
         """Receive authorization code."""
-        hass = request.app["hass"]
+        hass = request.app[KEY_HASS]
         if "code" in request.query:
             hass.async_create_task(
                 hass.config_entries.flow.async_init(

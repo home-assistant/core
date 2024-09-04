@@ -1,17 +1,16 @@
 """Voluptuous schemas for the KNX integration."""
+
 from __future__ import annotations
 
 from abc import ABC
 from collections import OrderedDict
-from collections.abc import Callable
-import ipaddress
-from typing import Any, ClassVar, Final
+from typing import ClassVar, Final
 
 import voluptuous as vol
 from xknx.devices.climate import SetpointShiftMode
-from xknx.dpt import DPTBase, DPTNumeric, DPTString
-from xknx.exceptions import ConversionError, CouldNotParseAddress, CouldNotParseTelegram
-from xknx.telegram.address import IndividualAddress, parse_device_group_address
+from xknx.dpt import DPTBase, DPTNumeric
+from xknx.dpt.dpt_20 import HVACControllerMode, HVACOperationMode
+from xknx.exceptions import ConversionError, CouldNotParseTelegram
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA as BINARY_SENSOR_DEVICE_CLASSES_SCHEMA,
@@ -39,6 +38,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PAYLOAD,
     CONF_TYPE,
+    CONF_VALUE_TEMPLATE,
     Platform,
 )
 import homeassistant.helpers.config_validation as cv
@@ -52,88 +52,24 @@ from .const import (
     CONF_RESPOND_TO_READ,
     CONF_STATE_ADDRESS,
     CONF_SYNC_STATE,
-    CONTROLLER_MODES,
     KNX_ADDRESS,
-    PRESET_MODES,
     ColorTempModes,
 )
-
-##################
-# KNX VALIDATORS
-##################
-
-
-def dpt_subclass_validator(dpt_base_class: type[DPTBase]) -> Callable[[Any], str | int]:
-    """Validate that value is parsable as given sensor type."""
-
-    def dpt_value_validator(value: Any) -> str | int:
-        """Validate that value is parsable as sensor type."""
-        if (
-            isinstance(value, (str, int))
-            and dpt_base_class.parse_transcoder(value) is not None
-        ):
-            return value
-        raise vol.Invalid(
-            f"type '{value}' is not a valid DPT identifier for"
-            f" {dpt_base_class.__name__}."
-        )
-
-    return dpt_value_validator
-
-
-numeric_type_validator = dpt_subclass_validator(DPTNumeric)  # type: ignore[type-abstract]
-sensor_type_validator = dpt_subclass_validator(DPTBase)  # type: ignore[type-abstract]
-string_type_validator = dpt_subclass_validator(DPTString)
-
-
-def ga_validator(value: Any) -> str | int:
-    """Validate that value is parsable as GroupAddress or InternalGroupAddress."""
-    if isinstance(value, (str, int)):
-        try:
-            parse_device_group_address(value)
-            return value
-        except CouldNotParseAddress:
-            pass
-    raise vol.Invalid(
-        f"value '{value}' is not a valid KNX group address '<main>/<middle>/<sub>',"
-        " '<main>/<sub>' or '<free>' (eg.'1/2/3', '9/234', '123'), nor xknx internal"
-        " address 'i-<string>'."
-    )
-
-
-ga_list_validator = vol.All(
-    cv.ensure_list,
-    [ga_validator],
-    vol.IsTrue("value must be a group address or a list containing group addresses"),
-)
-
-ia_validator = vol.Any(
-    vol.All(str, str.strip, cv.matches_regex(IndividualAddress.ADDRESS_RE.pattern)),
-    vol.All(vol.Coerce(int), vol.Range(min=1, max=65535)),
-    msg=(
-        "value does not match pattern for KNX individual address"
-        " '<area>.<line>.<device>' (eg.'1.1.100')"
-    ),
+from .validation import (
+    backwards_compatible_xknx_climate_enum_member,
+    dpt_base_type_validator,
+    ga_list_validator,
+    ga_validator,
+    numeric_type_validator,
+    sensor_type_validator,
+    string_type_validator,
+    sync_state_validator,
 )
 
 
-def ip_v4_validator(value: Any, multicast: bool | None = None) -> str:
-    """Validate that value is parsable as IPv4 address.
-
-    Optionally check if address is in a reserved multicast block or is explicitly not.
-    """
-    try:
-        address = ipaddress.IPv4Address(value)
-    except ipaddress.AddressValueError as ex:
-        raise vol.Invalid(f"value '{value}' is not a valid IPv4 address: {ex}") from ex
-    if multicast is not None and address.is_multicast != multicast:
-        raise vol.Invalid(
-            f"value '{value}' is not a valid IPv4"
-            f" {'multicast' if multicast else 'unicast'} address"
-        )
-    return str(address)
-
-
+##################
+# KNX SUB VALIDATORS
+##################
 def number_limit_sub_validator(entity_config: OrderedDict) -> OrderedDict:
     """Validate a number entity configurations dependent on configured value type."""
     value_type = entity_config[CONF_TYPE]
@@ -227,12 +163,6 @@ def select_options_sub_validator(entity_config: OrderedDict) -> OrderedDict:
     return entity_config
 
 
-sync_state_validator = vol.Any(
-    vol.All(vol.Coerce(int), vol.Range(min=2, max=1440)),
-    cv.boolean,
-    cv.matches_regex(r"^(init|expire|every)( \d*)?$"),
-)
-
 #########
 # EVENT
 #########
@@ -244,7 +174,7 @@ class EventSchema:
     KNX_EVENT_FILTER_SCHEMA = vol.Schema(
         {
             vol.Required(KNX_ADDRESS): vol.All(cv.ensure_list, [cv.string]),
-            vol.Optional(CONF_TYPE): sensor_type_validator,
+            vol.Optional(CONF_TYPE): dpt_base_type_validator,
         }
     )
 
@@ -264,7 +194,7 @@ class KNXPlatformSchema(ABC):
     """Voluptuous schema for KNX platform entity configuration."""
 
     PLATFORM: ClassVar[Platform | str]
-    ENTITY_SCHEMA: ClassVar[vol.Schema]
+    ENTITY_SCHEMA: ClassVar[vol.Schema | vol.All | vol.Any]
 
     @classmethod
     def platform_node(cls) -> dict[vol.Optional, vol.All]:
@@ -480,10 +410,12 @@ class ClimateSchema(KNXPlatformSchema):
                     CONF_ON_OFF_INVERT, default=DEFAULT_ON_OFF_INVERT
                 ): cv.boolean,
                 vol.Optional(CONF_OPERATION_MODES): vol.All(
-                    cv.ensure_list, [vol.In(PRESET_MODES)]
+                    cv.ensure_list,
+                    [backwards_compatible_xknx_climate_enum_member(HVACOperationMode)],
                 ),
                 vol.Optional(CONF_CONTROLLER_MODES): vol.All(
-                    cv.ensure_list, [vol.In(CONTROLLER_MODES)]
+                    cv.ensure_list,
+                    [backwards_compatible_xknx_climate_enum_member(HVACControllerMode)],
                 ),
                 vol.Optional(
                     CONF_DEFAULT_CONTROLLER_MODE, default=HVACMode.HEAT
@@ -520,18 +452,6 @@ class CoverSchema(KNXPlatformSchema):
     ENTITY_SCHEMA = vol.All(
         vol.Schema(
             {
-                vol.Required(
-                    vol.Any(CONF_MOVE_LONG_ADDRESS, CONF_POSITION_ADDRESS),
-                    msg=(
-                        f"At least one of '{CONF_MOVE_LONG_ADDRESS}' or"
-                        f" '{CONF_POSITION_ADDRESS}' is required."
-                    ),
-                ): object,
-            },
-            extra=vol.ALLOW_EXTRA,
-        ),
-        vol.Schema(
-            {
                 vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
                 vol.Optional(CONF_MOVE_LONG_ADDRESS): ga_list_validator,
                 vol.Optional(CONF_MOVE_SHORT_ADDRESS): ga_list_validator,
@@ -552,6 +472,20 @@ class CoverSchema(KNXPlatformSchema):
                 vol.Optional(CONF_DEVICE_CLASS): COVER_DEVICE_CLASSES_SCHEMA,
                 vol.Optional(CONF_ENTITY_CATEGORY): ENTITY_CATEGORIES_SCHEMA,
             }
+        ),
+        vol.Any(
+            vol.Schema(
+                {vol.Required(CONF_MOVE_LONG_ADDRESS): object},
+                extra=vol.ALLOW_EXTRA,
+            ),
+            vol.Schema(
+                {vol.Required(CONF_POSITION_ADDRESS): object},
+                extra=vol.ALLOW_EXTRA,
+            ),
+            msg=(
+                f"At least one of '{CONF_MOVE_LONG_ADDRESS}' or"
+                f" '{CONF_POSITION_ADDRESS}' is required."
+            ),
         ),
     )
 
@@ -604,11 +538,10 @@ class ExposeSchema(KNXPlatformSchema):
     CONF_KNX_EXPOSE_BINARY = "binary"
     CONF_KNX_EXPOSE_COOLDOWN = "cooldown"
     CONF_KNX_EXPOSE_DEFAULT = "default"
-    EXPOSE_TIME_TYPES: Final = [
-        "time",
-        "date",
-        "datetime",
-    ]
+    CONF_TIME = "time"
+    CONF_DATE = "date"
+    CONF_DATETIME = "datetime"
+    EXPOSE_TIME_TYPES: Final = [CONF_TIME, CONF_DATE, CONF_DATETIME]
 
     EXPOSE_TIME_SCHEMA = vol.Schema(
         {
@@ -629,6 +562,7 @@ class ExposeSchema(KNXPlatformSchema):
             vol.Required(CONF_ENTITY_ID): cv.entity_id,
             vol.Optional(CONF_KNX_EXPOSE_ATTRIBUTE): cv.string,
             vol.Optional(CONF_KNX_EXPOSE_DEFAULT): cv.match_all,
+            vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
         }
     )
     ENTITY_SCHEMA = vol.Any(EXPOSE_SENSOR_SCHEMA, EXPOSE_TIME_SCHEMA)
@@ -820,6 +754,7 @@ class NotifySchema(KNXPlatformSchema):
             vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
             vol.Optional(CONF_TYPE, default="latin_1"): string_type_validator,
             vol.Required(KNX_ADDRESS): ga_validator,
+            vol.Optional(CONF_ENTITY_CATEGORY): ENTITY_CATEGORIES_SCHEMA,
         }
     )
 

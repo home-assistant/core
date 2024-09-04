@@ -1,4 +1,5 @@
 """Support for tracking the online status of a UPS."""
+
 from __future__ import annotations
 
 import logging
@@ -13,13 +14,15 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import DOMAIN, APCUPSdCoordinator
+from .const import DOMAIN
+from .coordinator import APCUPSdCoordinator
+
+PARALLEL_UPDATES = 0
 
 _LOGGER = logging.getLogger(__name__)
 _DESCRIPTION = BinarySensorEntityDescription(
     key="statflag",
-    name="UPS Online Status",
-    icon="mdi:heart",
+    translation_key="online_status",
 )
 # The bit in STATFLAG that indicates the online status of the APC UPS.
 _VALUE_ONLINE_MASK: Final = 0b1000
@@ -44,6 +47,8 @@ async def async_setup_entry(
 class OnlineStatus(CoordinatorEntity[APCUPSdCoordinator], BinarySensorEntity):
     """Representation of a UPS online status."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         coordinator: APCUPSdCoordinator,
@@ -53,7 +58,7 @@ class OnlineStatus(CoordinatorEntity[APCUPSdCoordinator], BinarySensorEntity):
         super().__init__(coordinator, context=description.key.upper())
 
         # Set up unique id and device info if serial number is available.
-        if (serial_no := coordinator.ups_serial_no) is not None:
+        if (serial_no := coordinator.data.serial_no) is not None:
             self._attr_unique_id = f"{serial_no}_{description.key}"
         self.entity_description = description
         self._attr_device_info = coordinator.device_info
@@ -63,4 +68,8 @@ class OnlineStatus(CoordinatorEntity[APCUPSdCoordinator], BinarySensorEntity):
         """Returns true if the UPS is online."""
         # Check if ONLINE bit is set in STATFLAG.
         key = self.entity_description.key.upper()
-        return int(self.coordinator.data[key], 16) & _VALUE_ONLINE_MASK != 0
+        # The daemon could either report just a hex ("0x05000008"), or a hex with a "Status Flag"
+        # suffix ("0x05000008 Status Flag") in older versions.
+        # Here we trim the suffix if it exists to support both.
+        flag = self.coordinator.data[key].removesuffix(" Status Flag")
+        return int(flag, 16) & _VALUE_ONLINE_MASK != 0

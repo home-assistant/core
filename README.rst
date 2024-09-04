@@ -7,6 +7,8 @@ Check out `home-assistant.io <https://home-assistant.io>`__ for `a
 demo <https://demo.home-assistant.io>`__, `installation instructions <https://home-assistant.io/getting-started/>`__,
 `tutorials <https://home-assistant.io/getting-started/automation/>`__ and `documentation <https://home-assistant.io/docs/>`__.
 
+This is a project of the `Open Home Foundation <https://www.openhomefoundation.org/>`__.
+
 |screenshot-states|
 
 Featured integrations
@@ -22,7 +24,7 @@ of a component, check the `Home Assistant help section <https://home-assistant.i
 
 .. |Chat Status| image:: https://img.shields.io/discord/330944238910963714.svg
    :target: https://www.home-assistant.io/join-chat/
-.. |screenshot-states| image:: https://raw.githubusercontent.com/home-assistant/core/master/docs/screenshots.png
+.. |screenshot-states| image:: https://raw.githubusercontent.com/home-assistant/core/dev/.github/assets/screenshot-states.png
    :target: https://demo.home-assistant.io
-.. |screenshot-integrations| image:: https://raw.githubusercontent.com/home-assistant/core/dev/docs/screenshot-integrations.png
+.. |screenshot-integrations| image:: https://raw.githubusercontent.com/home-assistant/core/dev/.github/assets/screenshot-integrations.png
    :target: https://home-assistant.io/integrations/

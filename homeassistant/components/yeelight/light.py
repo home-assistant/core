@@ -1,11 +1,11 @@
 """Light platform support for yeelight."""
+
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Callable, Coroutine
 import logging
 import math
-from typing import Any, Concatenate, ParamSpec, TypeVar
+from typing import Any, Concatenate
 
 import voluptuous as vol
 import yeelight
@@ -38,6 +38,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
+from homeassistant.helpers.typing import VolDictType
 import homeassistant.util.color as color_util
 from homeassistant.util.color import (
     color_temperature_kelvin_to_mired as kelvin_to_mired,
@@ -66,10 +67,6 @@ from .const import (
 )
 from .device import YeelightDevice
 from .entity import YeelightEntity
-
-_YeelightBaseLightT = TypeVar("_YeelightBaseLightT", bound="YeelightBaseLight")
-_R = TypeVar("_R")
-_P = ParamSpec("_P")
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -174,22 +171,22 @@ EFFECTS_MAP = {
 
 VALID_BRIGHTNESS = vol.All(vol.Coerce(int), vol.Range(min=1, max=100))
 
-SERVICE_SCHEMA_SET_MODE = {
+SERVICE_SCHEMA_SET_MODE: VolDictType = {
     vol.Required(ATTR_MODE): vol.In([mode.name.lower() for mode in PowerMode])
 }
 
-SERVICE_SCHEMA_SET_MUSIC_MODE = {vol.Required(ATTR_MODE_MUSIC): cv.boolean}
+SERVICE_SCHEMA_SET_MUSIC_MODE: VolDictType = {vol.Required(ATTR_MODE_MUSIC): cv.boolean}
 
 SERVICE_SCHEMA_START_FLOW = YEELIGHT_FLOW_TRANSITION_SCHEMA
 
-SERVICE_SCHEMA_SET_COLOR_SCENE = {
+SERVICE_SCHEMA_SET_COLOR_SCENE: VolDictType = {
     vol.Required(ATTR_RGB_COLOR): vol.All(
         vol.Coerce(tuple), vol.ExactSequence((cv.byte, cv.byte, cv.byte))
     ),
     vol.Required(ATTR_BRIGHTNESS): VALID_BRIGHTNESS,
 }
 
-SERVICE_SCHEMA_SET_HSV_SCENE = {
+SERVICE_SCHEMA_SET_HSV_SCENE: VolDictType = {
     vol.Required(ATTR_HS_COLOR): vol.All(
         vol.Coerce(tuple),
         vol.ExactSequence(
@@ -202,14 +199,14 @@ SERVICE_SCHEMA_SET_HSV_SCENE = {
     vol.Required(ATTR_BRIGHTNESS): VALID_BRIGHTNESS,
 }
 
-SERVICE_SCHEMA_SET_COLOR_TEMP_SCENE = {
+SERVICE_SCHEMA_SET_COLOR_TEMP_SCENE: VolDictType = {
     vol.Required(ATTR_KELVIN): vol.All(vol.Coerce(int), vol.Range(min=1700, max=6500)),
     vol.Required(ATTR_BRIGHTNESS): VALID_BRIGHTNESS,
 }
 
 SERVICE_SCHEMA_SET_COLOR_FLOW_SCENE = YEELIGHT_FLOW_TRANSITION_SCHEMA
 
-SERVICE_SCHEMA_SET_AUTO_DELAY_OFF_SCENE = {
+SERVICE_SCHEMA_SET_AUTO_DELAY_OFF_SCENE: VolDictType = {
     vol.Required(ATTR_MINUTES): vol.All(vol.Coerce(int), vol.Range(min=1, max=60)),
     vol.Required(ATTR_BRIGHTNESS): VALID_BRIGHTNESS,
 }
@@ -243,7 +240,7 @@ def _parse_custom_effects(effects_config) -> dict[str, dict[str, Any]]:
     return effects
 
 
-def _async_cmd(
+def _async_cmd[_YeelightBaseLightT: YeelightBaseLight, **_P, _R](
     func: Callable[Concatenate[_YeelightBaseLightT, _P], Coroutine[Any, Any, _R]],
 ) -> Callable[Concatenate[_YeelightBaseLightT, _P], Coroutine[Any, Any, _R | None]]:
     """Define a wrapper to catch exceptions from the bulb."""
@@ -255,7 +252,7 @@ def _async_cmd(
             try:
                 _LOGGER.debug("Calling %s with %s %s", func, args, kwargs)
                 return await func(self, *args, **kwargs)
-            except asyncio.TimeoutError as ex:
+            except TimeoutError as ex:
                 # The wifi likely dropped, so we want to retry once since
                 # python-yeelight will auto reconnect
                 if attempts == 0:
@@ -1002,7 +999,6 @@ class YeelightNightLightMode(YeelightBaseLight):
     """Representation of a Yeelight when in nightlight mode."""
 
     _attr_color_mode = ColorMode.BRIGHTNESS
-    _attr_icon = "mdi:weather-night"
     _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
     _attr_translation_key = "nightlight"
 

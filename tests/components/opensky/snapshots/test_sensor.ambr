@@ -4,13 +4,13 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Information provided by the OpenSky Network (https://opensky-network.org)',
       'friendly_name': 'OpenSky',
-      'icon': 'mdi:airplane',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'flights',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.opensky',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2',
   })
@@ -20,13 +20,13 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Information provided by the OpenSky Network (https://opensky-network.org)',
       'friendly_name': 'OpenSky',
-      'icon': 'mdi:airplane',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'flights',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.opensky',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1',
   })

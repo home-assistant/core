@@ -1,7 +1,9 @@
 """Code to set up a device tracker platform using a config entry."""
+
 from __future__ import annotations
 
 import asyncio
+from functools import cached_property
 from typing import final
 
 from homeassistant.components import zone
@@ -17,7 +19,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import (
+    DeviceInfo,
+    EventDeviceRegistryUpdatedData,
+)
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
@@ -49,28 +54,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         LOGGER, DOMAIN, hass
     )
     component.register_shutdown()
-
-    # Clean up old devices created by device tracker entities in the past.
-    # Can be removed after 2022.6
-    ent_reg = er.async_get(hass)
-    dev_reg = dr.async_get(hass)
-
-    devices_with_trackers = set()
-    devices_with_non_trackers = set()
-
-    for entity in ent_reg.entities.values():
-        if entity.device_id is None:
-            continue
-
-        if entity.domain == DOMAIN:
-            devices_with_trackers.add(entity.device_id)
-        else:
-            devices_with_non_trackers.add(entity.device_id)
-
-    for device_id in devices_with_trackers - devices_with_non_trackers:
-        for entity in er.async_entries_for_device(ent_reg, device_id, True):
-            ent_reg.async_update_entity(entity.entity_id, device_id=None)
-        dev_reg.async_remove_device(device_id)
 
     return await component.async_setup_entry(entry)
 
@@ -122,7 +105,7 @@ def _async_register_mac(
     data = hass.data[data_key] = {mac: (domain, unique_id)}
 
     @callback
-    def handle_device_event(ev: Event) -> None:
+    def handle_device_event(ev: Event[EventDeviceRegistryUpdatedData]) -> None:
         """Enable the online status entity for the mac of a newly created device."""
         # Only for new devices
         if ev.data["action"] != "create":
@@ -132,6 +115,7 @@ def _async_register_mac(
         device_entry = dev_reg.async_get(ev.data["device_id"])
 
         if device_entry is None:
+            # This should not happen, since the device was just created.
             return
 
         # Check if device has a mac
@@ -153,8 +137,7 @@ def _async_register_mac(
         if (entity_id := ent_reg.async_get_entity_id(DOMAIN, *unique_id)) is None:
             return
 
-        if (entity_entry := ent_reg.async_get(entity_id)) is None:
-            return
+        entity_entry = ent_reg.entities[entity_id]
 
         # Make sure entity has a config entry and was disabled by the
         # default disable logic in the integration and new entities
@@ -177,9 +160,7 @@ def _async_register_mac(
         # Enable entity
         ent_reg.async_update_entity(entity_id, disabled_by=None)
 
-    hass.bus.async_listen(
-        dr.EVENT_DEVICE_REGISTRY_UPDATED, handle_device_event, run_immediately=True
-    )
+    hass.bus.async_listen(dr.EVENT_DEVICE_REGISTRY_UPDATED, handle_device_event)
 
 
 class BaseTrackerEntity(Entity):
@@ -188,7 +169,7 @@ class BaseTrackerEntity(Entity):
     _attr_device_info: None = None
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
-    @property
+    @cached_property
     def battery_level(self) -> int | None:
         """Return the battery level of the device.
 
@@ -215,7 +196,7 @@ class BaseTrackerEntity(Entity):
 class TrackerEntity(BaseTrackerEntity):
     """Base class for a tracked device."""
 
-    @property
+    @cached_property
     def should_poll(self) -> bool:
         """No polling for entities that have location pushed."""
         return False
@@ -225,7 +206,7 @@ class TrackerEntity(BaseTrackerEntity):
         """All updates need to be written to the state machine if we're not polling."""
         return not self.should_poll
 
-    @property
+    @cached_property
     def location_accuracy(self) -> int:
         """Return the location accuracy of the device.
 
@@ -233,20 +214,20 @@ class TrackerEntity(BaseTrackerEntity):
         """
         return 0
 
-    @property
+    @cached_property
     def location_name(self) -> str | None:
         """Return a location name for the current location of the device."""
         return None
 
-    @property
+    @cached_property
     def latitude(self) -> float | None:
         """Return latitude value of the device."""
-        raise NotImplementedError
+        return None
 
-    @property
+    @cached_property
     def longitude(self) -> float | None:
         """Return longitude value of the device."""
-        raise NotImplementedError
+        return None
 
     @property
     def state(self) -> str | None:
@@ -286,17 +267,17 @@ class TrackerEntity(BaseTrackerEntity):
 class ScannerEntity(BaseTrackerEntity):
     """Base class for a tracked device that is on a scanned network."""
 
-    @property
+    @cached_property
     def ip_address(self) -> str | None:
         """Return the primary ip address of the device."""
         return None
 
-    @property
+    @cached_property
     def mac_address(self) -> str | None:
         """Return the mac address of the device."""
         return None
 
-    @property
+    @cached_property
     def hostname(self) -> str | None:
         """Return hostname of the device."""
         return None

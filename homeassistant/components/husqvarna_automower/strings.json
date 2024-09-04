@@ -1,0 +1,323 @@
+{
+  "config": {
+    "step": {
+      "reauth_confirm": {
+        "title": "[%key:common::config_flow::title::reauth%]",
+        "description": "The Husqvarna Automower integration needs to re-authenticate your account"
+      },
+      "missing_scope": {
+        "title": "Your account is missing some API connections",
+        "description": "For the best experience with this integration both the `Authentication API` and the `Automower Connect API` should be connected. Please make sure that both of them are connected to your account in the [Husqvarna Developer Portal]({application_url})."
+      },
+      "pick_implementation": {
+        "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
+      }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
+      "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
+      "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
+      "missing_credentials": "[%key:common::config_flow::abort::oauth2_missing_credentials%]",
+      "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
+      "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
+      "user_rejected_authorize": "[%key:common::config_flow::abort::oauth2_user_rejected_authorize%]",
+      "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
+      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "wrong_account": "You can only reauthenticate this entry with the same Husqvarna account.",
+      "missing_amc_scope": "The `Authentication API` and the `Automower Connect API` are not connected to your application in the Husqvarna Developer Portal."
+    },
+    "create_entry": {
+      "default": "[%key:common::config_flow::create_entry::authenticated%]"
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "leaving_dock": {
+        "name": "Leaving dock"
+      },
+      "returning_to_dock": {
+        "name": "Returning to dock"
+      }
+    },
+    "button": {
+      "confirm_error": {
+        "name": "Confirm error"
+      }
+    },
+    "number": {
+      "cutting_height": {
+        "name": "Cutting height"
+      },
+      "my_lawn_cutting_height": {
+        "name": "My lawn cutting height "
+      },
+      "work_area_cutting_height": {
+        "name": "{work_area} cutting height"
+      }
+    },
+    "select": {
+      "headlight_mode": {
+        "name": "Headlight mode",
+        "state": {
+          "always_on": "Always on",
+          "always_off": "Always off",
+          "evening_only": "Evening only",
+          "evening_and_night": "Evening and night"
+        }
+      }
+    },
+    "sensor": {
+      "error": {
+        "name": "Error",
+        "state": {
+          "alarm_mower_in_motion": "Alarm! Mower in motion",
+          "alarm_mower_lifted": "Alarm! Mower lifted",
+          "alarm_mower_stopped": "Alarm! Mower stopped",
+          "alarm_mower_switched_off": "Alarm! Mower switched off",
+          "alarm_mower_tilted": "Alarm! Mower tilted",
+          "alarm_outside_geofence": "Alarm! Outside geofence",
+          "angular_sensor_problem": "Angular sensor problem",
+          "battery_problem": "Battery problem",
+          "battery_restriction_due_to_ambient_temperature": "Battery restriction due to ambient temperature",
+          "can_error": "CAN error",
+          "charging_current_too_high": "Charging current too high",
+          "charging_station_blocked": "Charging station blocked",
+          "charging_system_problem": "Charging system problem",
+          "collision_sensor_defect": "Collision sensor defect",
+          "collision_sensor_error": "Collision sensor error",
+          "collision_sensor_problem_front": "Front collision sensor problem",
+          "collision_sensor_problem_rear": "Rear collision sensor problem",
+          "com_board_not_available": "Com board not available",
+          "communication_circuit_board_sw_must_be_updated": "Communication circuit board software must be updated",
+          "complex_working_area": "Complex working area",
+          "connection_changed": "Connection changed",
+          "connection_not_changed": "Connection NOT changed",
+          "connectivity_problem": "Connectivity problem",
+          "connectivity_settings_restored": "Connectivity settings restored",
+          "cutting_drive_motor_1_defect": "Cutting drive motor 1 defect",
+          "cutting_drive_motor_2_defect": "Cutting drive motor 2 defect",
+          "cutting_drive_motor_3_defect": "Cutting drive motor 3 defect",
+          "cutting_height_blocked": "Cutting height blocked",
+          "cutting_height_problem": "Cutting height problem",
+          "cutting_height_problem_curr": "Cutting height problem, curr",
+          "cutting_height_problem_dir": "Cutting height problem, dir",
+          "cutting_height_problem_drive": "Cutting height problem, drive",
+          "cutting_motor_problem": "Cutting motor problem",
+          "cutting_stopped_slope_too_steep": "Cutting stopped - slope too steep",
+          "cutting_system_blocked": "Cutting system blocked",
+          "cutting_system_imbalance_warning": "Cutting system imbalance",
+          "cutting_system_major_imbalance": "Cutting system major imbalance",
+          "destination_not_reachable": "Destination not reachable",
+          "difficult_finding_home": "Difficult finding home",
+          "docking_sensor_defect": "Docking sensor defect",
+          "electronic_problem": "Electronic problem",
+          "empty_battery": "Empty battery",
+          "folding_cutting_deck_sensor_defect": "Folding cutting deck sensor defect",
+          "folding_sensor_activated": "Folding sensor activated",
+          "geofence_problem": "Geofence problem",
+          "gps_navigation_problem": "GPS navigation problem",
+          "guide_1_not_found": "Guide 1 not found",
+          "guide_2_not_found": "Guide 2 not found",
+          "guide_3_not_found": "Guide 3 not found",
+          "guide_calibration_accomplished": "Guide calibration accomplished",
+          "guide_calibration_failed": "Guide calibration failed",
+          "high_charging_power_loss": "High charging power loss",
+          "high_internal_power_loss": "High internal power loss",
+          "high_internal_temperature": "High internal temperature",
+          "internal_voltage_error": "Internal voltage error",
+          "invalid_battery_combination_invalid_combination_of_different_battery_types": "Invalid battery combination - Invalid combination of different battery types.",
+          "invalid_sub_device_combination": "Invalid sub-device combination",
+          "invalid_system_configuration": "Invalid system configuration",
+          "left_brush_motor_overloaded": "Left brush motor overloaded",
+          "lift_sensor_defect": "Lift Sensor defect",
+          "lifted": "Lifted",
+          "limited_cutting_height_range": "Limited cutting height range",
+          "loop_sensor_defect": "Loop sensor defect",
+          "loop_sensor_problem_front": "Front loop sensor problem",
+          "loop_sensor_problem_left": "Left loop sensor problem",
+          "loop_sensor_problem_rear": "Rear loop sensor problem",
+          "loop_sensor_problem_right": "Right loop sensor problem",
+          "low_battery": "Low battery",
+          "memory_circuit_problem": "Memory circuit problem",
+          "mower_lifted": "Mower lifted",
+          "mower_tilted": "Mower tilted",
+          "no_accurate_position_from_satellites": "No accurate position from satellites",
+          "no_confirmed_position": "No confirmed position",
+          "no_drive": "No drive",
+          "no_error": "No error",
+          "no_loop_signal": "No loop signal",
+          "no_power_in_charging_station": "No power in charging station",
+          "no_response_from_charger": "No response from charger",
+          "outside_working_area": "Outside working area",
+          "poor_signal_quality": "Poor signal quality",
+          "reference_station_communication_problem": "Reference station communication problem",
+          "right_brush_motor_overloaded": "Right brush motor overloaded",
+          "safety_function_faulty": "Safety function faulty",
+          "settings_restored": "Settings restored",
+          "sim_card_locked": "SIM card locked",
+          "sim_card_not_found": "SIM card not found",
+          "sim_card_requires_pin": "SIM card requires PIN",
+          "slipped_mower_has_slipped_situation_not_solved_with_moving_pattern": "Slipped - Mower has Slipped. Situation not solved with moving pattern",
+          "slope_too_steep": "Slope too steep",
+          "sms_could_not_be_sent": "SMS could not be sent",
+          "stop_button_problem": "STOP button problem",
+          "stuck_in_charging_station": "Stuck in charging station",
+          "switch_cord_problem": "Switch cord problem",
+          "temporary_battery_problem": "Temporary battery problem",
+          "tilt_sensor_problem": "Tilt sensor problem",
+          "too_high_discharge_current": "Discharge current too high",
+          "too_high_internal_current": "Internal current too high",
+          "trapped": "Trapped",
+          "ultrasonic_problem": "Ultrasonic problem",
+          "ultrasonic_sensor_1_defect": "Ultrasonic Sensor 1 defect",
+          "ultrasonic_sensor_2_defect": "Ultrasonic Sensor 2 defect",
+          "ultrasonic_sensor_3_defect": "Ultrasonic Sensor 3 defect",
+          "ultrasonic_sensor_4_defect": "Ultrasonic Sensor 4 defect",
+          "unexpected_cutting_height_adj": "Unexpected cutting height adjustment",
+          "unexpected_error": "Unexpected error",
+          "upside_down": "Upside down",
+          "weak_gps_signal": "Weak GPS signal",
+          "wheel_drive_problem_left": "Left wheel drive problem",
+          "wheel_drive_problem_rear_left": "Rear left wheel drive problem",
+          "wheel_drive_problem_rear_right": "Rear right wheel drive problem",
+          "wheel_drive_problem_right": "Right wheel drive problem",
+          "wheel_motor_blocked_left": "Left wheel motor blocked",
+          "wheel_motor_blocked_rear_left": "Rear left wheel motor blocked",
+          "wheel_motor_blocked_rear_right": "Rear right wheel motor blocked",
+          "wheel_motor_blocked_right": "Right wheel motor blocked",
+          "wheel_motor_overloaded_left": "Left wheel motor overloaded",
+          "wheel_motor_overloaded_rear_left": "Rear left wheel motor overloaded",
+          "wheel_motor_overloaded_rear_right": "Rear right wheel motor overloaded",
+          "wheel_motor_overloaded_right": "Right wheel motor overloaded",
+          "work_area_not_valid": "Work area not valid",
+          "wrong_loop_signal": "Wrong loop signal",
+          "wrong_pin_code": "Wrong PIN code",
+          "zone_generator_problem": "Zone generator problem"
+        }
+      },
+      "number_of_charging_cycles": {
+        "name": "Number of charging cycles"
+      },
+      "number_of_collisions": {
+        "name": "Number of collisions"
+      },
+      "cutting_blade_usage_time": {
+        "name": "Cutting blade usage time"
+      },
+      "restricted_reason": {
+        "name": "Restricted reason",
+        "state": {
+          "none": "No restrictions",
+          "week_schedule": "Week schedule",
+          "park_override": "Park override",
+          "sensor": "Weather timer",
+          "daily_limit": "Daily limit",
+          "fota": "Firmware Over-the-Air update running",
+          "frost": "Frost",
+          "all_work_areas_completed": "All work areas completed",
+          "external": "External",
+          "not_applicable": "Not applicable"
+        }
+      },
+      "total_charging_time": {
+        "name": "Total charging time"
+      },
+      "total_cutting_time": {
+        "name": "Total cutting time"
+      },
+      "total_running_time": {
+        "name": "Total running time"
+      },
+      "total_searching_time": {
+        "name": "Total searching time"
+      },
+      "total_drive_distance": {
+        "name": "Total drive distance"
+      },
+      "next_start_timestamp": {
+        "name": "Next start"
+      },
+      "mode": {
+        "name": "Mode",
+        "state": {
+          "main_area": "Main area",
+          "secondary_area": "Secondary area",
+          "home": "Home",
+          "demo": "Demo"
+        }
+      },
+      "work_area": {
+        "name": "Work area",
+        "state": {
+          "my_lawn": "My lawn",
+          "no_work_area_active": "No work area active"
+        },
+        "state_attributes": {
+          "work_area_id_assignment": {
+            "name": "Work area ID assignment"
+          }
+        }
+      }
+    },
+    "switch": {
+      "enable_schedule": {
+        "name": "Enable schedule"
+      },
+      "stay_out_zones": {
+        "name": "Avoid {stay_out_zone}"
+      }
+    }
+  },
+  "exceptions": {
+    "command_send_failed": {
+      "message": "Failed to send command: {exception}"
+    },
+    "work_areas_not_supported": {
+      "message": "This mower does not support work areas."
+    },
+    "work_area_not_existing": {
+      "message": "The selected work area does not exist."
+    }
+  },
+  "selector": {
+    "override_modes": {
+      "options": {
+        "mow": "Mow",
+        "park": "Park"
+      }
+    }
+  },
+  "services": {
+    "override_schedule": {
+      "name": "Override schedule",
+      "description": "Override the schedule to either mow or park for a duration of time.",
+      "fields": {
+        "duration": {
+          "name": "Duration",
+          "description": "Minimum: 1 minute, maximum: 42 days, seconds will be ignored."
+        },
+        "override_mode": {
+          "name": "Override mode",
+          "description": "With which action the schedule should be overridden."
+        }
+      }
+    },
+    "override_schedule_work_area": {
+      "name": "Override schedule work area",
+      "description": "Override the schedule of the mower for a duration of time in the selected work area.",
+      "fields": {
+        "duration": {
+          "name": "[%key:component::husqvarna_automower::services::override_schedule::fields::duration::name%]",
+          "description": "[%key:component::husqvarna_automower::services::override_schedule::fields::duration::description%]"
+        },
+        "work_area_id": {
+          "name": "Work area ID",
+          "description": "In which work area the mower should mow."
+        }
+      }
+    }
+  }
+}

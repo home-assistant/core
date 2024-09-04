@@ -1,4 +1,5 @@
 """Climate platform for Tessie integration."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -11,29 +12,32 @@ from tessie_api import (
 )
 
 from homeassistant.components.climate import (
+    ATTR_HVAC_MODE,
     ClimateEntity,
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_HALVES, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, TessieClimateKeeper
-from .coordinator import TessieStateUpdateCoordinator
+from . import TessieConfigEntry
+from .const import TessieClimateKeeper
 from .entity import TessieEntity
+from .models import TessieVehicleData
+
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: TessieConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Tessie Climate platform from a config entry."""
-    data = hass.data[DOMAIN][entry.entry_id]
+    data = entry.runtime_data
 
-    async_add_entities(
-        TessieClimateEntity(vehicle.state_coordinator) for vehicle in data
-    )
+    async_add_entities(TessieClimateEntity(vehicle) for vehicle in data.vehicles)
 
 
 class TessieClimateEntity(TessieEntity, ClimateEntity):
@@ -45,7 +49,10 @@ class TessieClimateEntity(TessieEntity, ClimateEntity):
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_hvac_modes = [HVACMode.HEAT_COOL, HVACMode.OFF]
     _attr_supported_features = (
-        ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
+        ClimateEntityFeature.TURN_ON
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.PRESET_MODE
     )
     _attr_preset_modes: list = [
         TessieClimateKeeper.OFF,
@@ -53,13 +60,14 @@ class TessieClimateEntity(TessieEntity, ClimateEntity):
         TessieClimateKeeper.DOG,
         TessieClimateKeeper.CAMP,
     ]
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self,
-        coordinator: TessieStateUpdateCoordinator,
+        vehicle: TessieVehicleData,
     ) -> None:
         """Initialize the Climate entity."""
-        super().__init__(coordinator, "primary")
+        super().__init__(vehicle, "primary")
 
     @property
     def hvac_mode(self) -> HVACMode | None:
@@ -108,9 +116,12 @@ class TessieClimateEntity(TessieEntity, ClimateEntity):
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set the climate temperature."""
-        temp = kwargs[ATTR_TEMPERATURE]
-        await self.run(set_temperature, temperature=temp)
-        self.set(("climate_state_driver_temp_setting", temp))
+        if mode := kwargs.get(ATTR_HVAC_MODE):
+            await self.async_set_hvac_mode(mode)
+
+        if temp := kwargs.get(ATTR_TEMPERATURE):
+            await self.run(set_temperature, temperature=temp)
+            self.set(("climate_state_driver_temp_setting", temp))
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the climate mode and state."""

@@ -1,4 +1,5 @@
 """UniFi Protect Integration views."""
+
 from __future__ import annotations
 
 from datetime import datetime
@@ -8,15 +9,14 @@ from typing import Any
 from urllib.parse import urlencode
 
 from aiohttp import web
-from pyunifiprotect.data import Camera, Event
-from pyunifiprotect.exceptions import ClientError
+from uiprotect.data import Camera, Event
+from uiprotect.exceptions import ClientError
 
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from .const import DOMAIN
-from .data import ProtectData
+from .data import ProtectData, async_get_data_for_entry_id, async_get_data_for_nvr_id
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -51,14 +51,12 @@ def async_generate_event_video_url(event: Event) -> str:
         raise ValueError("Event is ongoing")
 
     url_format = VideoProxyView.url or "{nvr_id}/{camera_id}/{start}/{end}"
-    url = url_format.format(
+    return url_format.format(
         nvr_id=event.api.bootstrap.nvr.id,
         camera_id=event.camera_id,
         start=event.start.replace(microsecond=0).isoformat(),
         end=event.end.replace(microsecond=0).isoformat(),
     )
-
-    return url
 
 
 @callback
@@ -100,18 +98,13 @@ class ProtectProxyView(HomeAssistantView):
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize a thumbnail proxy view."""
         self.hass = hass
-        self.data = hass.data[DOMAIN]
 
-    def _get_data_or_404(self, nvr_id: str) -> ProtectData | web.Response:
-        all_data: list[ProtectData] = []
-
-        for entry_id, data in self.data.items():
-            if isinstance(data, ProtectData):
-                if nvr_id == entry_id:
-                    return data
-                if data.api.bootstrap.nvr.id == nvr_id:
-                    return data
-                all_data.append(data)
+    def _get_data_or_404(self, nvr_id_or_entry_id: str) -> ProtectData | web.Response:
+        if data := (
+            async_get_data_for_nvr_id(self.hass, nvr_id_or_entry_id)
+            or async_get_data_for_entry_id(self.hass, nvr_id_or_entry_id)
+        ):
+            return data
         return _404("Invalid NVR ID")
 
 

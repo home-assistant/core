@@ -3,11 +3,11 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'home-assistant.io Admin',
-      'icon': 'mdi:account-star',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.home_assistant_io_admin',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'admin@example.com',
   })
@@ -29,11 +29,13 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:account-star',
+    'original_icon': None,
     'original_name': 'Admin',
     'platform': 'whois',
     'previous_unique_id': None,
@@ -61,10 +63,14 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': None,
     'model': None,
+    'model_id': None,
     'name': 'home-assistant.io',
     'name_by_user': None,
+    'primary_config_entry': <ANY>,
     'serial_number': None,
     'suggested_area': None,
     'sw_version': None,
@@ -80,6 +86,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.home_assistant_io_created',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2019-01-01T00:00:00+00:00',
   })
@@ -101,6 +108,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -133,10 +142,14 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': None,
     'model': None,
+    'model_id': None,
     'name': 'home-assistant.io',
     'name_by_user': None,
+    'primary_config_entry': <ANY>,
     'serial_number': None,
     'suggested_area': None,
     'sw_version': None,
@@ -148,7 +161,6 @@
     'attributes': ReadOnlyDict({
       'expires': '2023-01-01T00:00:00',
       'friendly_name': 'home-assistant.io Days until expiration',
-      'icon': 'mdi:calendar-clock',
       'name_servers': 'ns1.example.com ns2.example.com',
       'registrar': 'My Registrar',
       'unit_of_measurement': <UnitOfTime.DAYS: 'd'>,
@@ -157,6 +169,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.home_assistant_io_days_until_expiration',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '364',
   })
@@ -178,11 +191,13 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:calendar-clock',
+    'original_icon': None,
     'original_name': 'Days until expiration',
     'platform': 'whois',
     'previous_unique_id': None,
@@ -210,10 +225,14 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': None,
     'model': None,
+    'model_id': None,
     'name': 'home-assistant.io',
     'name_by_user': None,
+    'primary_config_entry': <ANY>,
     'serial_number': None,
     'suggested_area': None,
     'sw_version': None,
@@ -229,6 +248,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.home_assistant_io_expires',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2023-01-01T00:00:00+00:00',
   })
@@ -250,6 +270,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -282,10 +304,14 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': None,
     'model': None,
+    'model_id': None,
     'name': 'home-assistant.io',
     'name_by_user': None,
+    'primary_config_entry': <ANY>,
     'serial_number': None,
     'suggested_area': None,
     'sw_version': None,
@@ -301,6 +327,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.home_assistant_io_last_updated',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2021-12-31T23:00:00+00:00',
   })
@@ -322,6 +349,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -354,10 +383,14 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': None,
     'model': None,
+    'model_id': None,
     'name': 'home-assistant.io',
     'name_by_user': None,
+    'primary_config_entry': <ANY>,
     'serial_number': None,
     'suggested_area': None,
     'sw_version': None,
@@ -368,11 +401,11 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'home-assistant.io Owner',
-      'icon': 'mdi:account',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.home_assistant_io_owner',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'owner@example.com',
   })
@@ -394,11 +427,13 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:account',
+    'original_icon': None,
     'original_name': 'Owner',
     'platform': 'whois',
     'previous_unique_id': None,
@@ -426,10 +461,14 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': None,
     'model': None,
+    'model_id': None,
     'name': 'home-assistant.io',
     'name_by_user': None,
+    'primary_config_entry': <ANY>,
     'serial_number': None,
     'suggested_area': None,
     'sw_version': None,
@@ -440,11 +479,11 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'home-assistant.io Registrant',
-      'icon': 'mdi:account-edit',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.home_assistant_io_registrant',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'registrant@example.com',
   })
@@ -466,11 +505,13 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:account-edit',
+    'original_icon': None,
     'original_name': 'Registrant',
     'platform': 'whois',
     'previous_unique_id': None,
@@ -498,10 +539,14 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': None,
     'model': None,
+    'model_id': None,
     'name': 'home-assistant.io',
     'name_by_user': None,
+    'primary_config_entry': <ANY>,
     'serial_number': None,
     'suggested_area': None,
     'sw_version': None,
@@ -512,11 +557,11 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'home-assistant.io Registrar',
-      'icon': 'mdi:store',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.home_assistant_io_registrar',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'My Registrar',
   })
@@ -538,11 +583,13 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:store',
+    'original_icon': None,
     'original_name': 'Registrar',
     'platform': 'whois',
     'previous_unique_id': None,
@@ -570,10 +617,14 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': None,
     'model': None,
+    'model_id': None,
     'name': 'home-assistant.io',
     'name_by_user': None,
+    'primary_config_entry': <ANY>,
     'serial_number': None,
     'suggested_area': None,
     'sw_version': None,
@@ -584,11 +635,11 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'home-assistant.io Reseller',
-      'icon': 'mdi:store',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.home_assistant_io_reseller',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'Top Domains, Low Prices',
   })
@@ -610,11 +661,13 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:store',
+    'original_icon': None,
     'original_name': 'Reseller',
     'platform': 'whois',
     'previous_unique_id': None,
@@ -642,10 +695,14 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': None,
     'model': None,
+    'model_id': None,
     'name': 'home-assistant.io',
     'name_by_user': None,
+    'primary_config_entry': <ANY>,
     'serial_number': None,
     'suggested_area': None,
     'sw_version': None,
@@ -661,6 +718,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.home_assistant_io_last_updated',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2021-12-31T23:00:00+00:00',
   })
@@ -682,6 +740,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),

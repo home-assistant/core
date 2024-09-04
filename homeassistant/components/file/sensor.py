@@ -1,4 +1,5 @@
 """Support for sensor value(s) stored in local files."""
+
 from __future__ import annotations
 
 import logging
@@ -7,7 +8,11 @@ import os
 from file_read_backwards import FileReadBackwards
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+    SensorEntity,
+)
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_FILE_PATH,
     CONF_NAME,
@@ -15,22 +20,20 @@ from homeassistant.const import (
     CONF_VALUE_TEMPLATE,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+from .const import DEFAULT_NAME, FILE_ICON
+
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = "File"
-
-ICON = "mdi:file"
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_FILE_PATH): cv.isfile,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+        vol.Optional(CONF_VALUE_TEMPLATE): cv.string,
         vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
     }
 )
@@ -42,28 +45,44 @@ async def async_setup_platform(
     async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
+    """Set up the file sensor from YAML.
+
+    The YAML platform config is automatically
+    imported to a config entry, this method can be removed
+    when YAML support is removed.
+    """
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the file sensor."""
+    config = dict(entry.data)
+    options = dict(entry.options)
     file_path: str = config[CONF_FILE_PATH]
-    name: str = config[CONF_NAME]
-    unit: str | None = config.get(CONF_UNIT_OF_MEASUREMENT)
-    value_template: Template | None = config.get(CONF_VALUE_TEMPLATE)
+    unique_id: str = entry.entry_id
+    name: str = config.get(CONF_NAME, DEFAULT_NAME)
+    unit: str | None = options.get(CONF_UNIT_OF_MEASUREMENT)
+    value_template: Template | None = None
 
-    if value_template is not None:
-        value_template.hass = hass
+    if CONF_VALUE_TEMPLATE in options:
+        value_template = Template(options[CONF_VALUE_TEMPLATE], hass)
 
-    if hass.config.is_allowed_path(file_path):
-        async_add_entities([FileSensor(name, file_path, unit, value_template)], True)
-    else:
-        _LOGGER.error("'%s' is not an allowed directory", file_path)
+    async_add_entities(
+        [FileSensor(unique_id, name, file_path, unit, value_template)], True
+    )
 
 
 class FileSensor(SensorEntity):
     """Implementation of a file sensor."""
 
-    _attr_icon = ICON
+    _attr_icon = FILE_ICON
 
     def __init__(
         self,
+        unique_id: str,
         name: str,
         file_path: str,
         unit_of_measurement: str | None,
@@ -74,6 +93,7 @@ class FileSensor(SensorEntity):
         self._file_path = file_path
         self._attr_native_unit_of_measurement = unit_of_measurement
         self._val_tpl = value_template
+        self._attr_unique_id = unique_id
 
     def update(self) -> None:
         """Get the latest entry from a file and updates the state."""

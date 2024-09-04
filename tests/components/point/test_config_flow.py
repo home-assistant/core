@@ -1,16 +1,18 @@
 """Tests for the Point config flow."""
-import asyncio
+
 from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from homeassistant import data_entry_flow
 from homeassistant.components.point import DOMAIN, config_flow
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 
-def init_config_flow(hass, side_effect=None):
+def init_config_flow(
+    hass: HomeAssistant, side_effect: type[Exception] | None = None
+) -> config_flow.PointFlowHandler:
     """Init a configuration flow."""
     config_flow.register_flow_implementation(hass, DOMAIN, "id", "secret")
     flow = config_flow.PointFlowHandler()
@@ -22,7 +24,7 @@ def init_config_flow(hass, side_effect=None):
 
 
 @pytest.fixture
-def is_authorized():
+def is_authorized() -> bool:
     """Set PointSession authorized."""
     return True
 
@@ -49,7 +51,7 @@ async def test_abort_if_no_implementation_registered(hass: HomeAssistant) -> Non
     flow.hass = hass
 
     result = await flow.async_step_user()
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_flows"
 
 
@@ -59,12 +61,12 @@ async def test_abort_if_already_setup(hass: HomeAssistant) -> None:
 
     with patch.object(hass.config_entries, "async_entries", return_value=[{}]):
         result = await flow.async_step_user()
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_setup"
 
     with patch.object(hass.config_entries, "async_entries", return_value=[{}]):
         result = await flow.async_step_import()
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_setup"
 
 
@@ -74,18 +76,18 @@ async def test_full_flow_implementation(hass: HomeAssistant, mock_pypoint) -> No
     flow = init_config_flow(hass)
 
     result = await flow.async_step_user()
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     result = await flow.async_step_user({"flow_impl": "test"})
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "auth"
     assert result["description_placeholders"] == {
         "authorization_url": "https://example.com"
     }
 
     result = await flow.async_step_code("123ABC")
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"]["refresh_args"] == {
         CONF_CLIENT_ID: "id",
         CONF_CLIENT_SECRET: "secret",
@@ -99,7 +101,7 @@ async def test_step_import(hass: HomeAssistant, mock_pypoint) -> None:
     flow = init_config_flow(hass)
 
     result = await flow.async_step_import()
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "auth"
 
 
@@ -111,7 +113,7 @@ async def test_wrong_code_flow_implementation(
     flow = init_config_flow(hass)
 
     result = await flow.async_step_code("123ABC")
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "auth_error"
 
 
@@ -120,16 +122,16 @@ async def test_not_pick_implementation_if_only_one(hass: HomeAssistant) -> None:
     flow = init_config_flow(hass)
 
     result = await flow.async_step_user()
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "auth"
 
 
 async def test_abort_if_timeout_generating_auth_url(hass: HomeAssistant) -> None:
     """Test we abort if generating authorize url fails."""
-    flow = init_config_flow(hass, side_effect=asyncio.TimeoutError)
+    flow = init_config_flow(hass, side_effect=TimeoutError)
 
     result = await flow.async_step_user()
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "authorize_url_timeout"
 
 
@@ -138,7 +140,7 @@ async def test_abort_if_exception_generating_auth_url(hass: HomeAssistant) -> No
     flow = init_config_flow(hass, side_effect=ValueError)
 
     result = await flow.async_step_user()
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "unknown_authorize_url_generation"
 
 
@@ -147,5 +149,5 @@ async def test_abort_no_code(hass: HomeAssistant) -> None:
     flow = init_config_flow(hass)
 
     result = await flow.async_step_code()
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_code"

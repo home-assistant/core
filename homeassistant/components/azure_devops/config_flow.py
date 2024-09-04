@@ -1,4 +1,5 @@
 """Config flow to configure the Azure DevOps integration."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -8,8 +9,8 @@ from aioazuredevops.client import DevOpsClient
 import aiohttp
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_ORG, CONF_PAT, CONF_PROJECT, DOMAIN
 
@@ -27,7 +28,7 @@ class AzureDevOpsFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def _show_setup_form(
         self, errors: dict[str, str] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Show the setup form to the user."""
         return self.async_show_form(
             step_id="user",
@@ -41,7 +42,7 @@ class AzureDevOpsFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors or {},
         )
 
-    async def _show_reauth_form(self, errors: dict[str, str]) -> FlowResult:
+    async def _show_reauth_form(self, errors: dict[str, str]) -> ConfigFlowResult:
         """Show the reauth form to the user."""
         return self.async_show_form(
             step_id="reauth",
@@ -56,7 +57,8 @@ class AzureDevOpsFlowHandler(ConfigFlow, domain=DOMAIN):
         """Check the setup of the flow."""
         errors: dict[str, str] = {}
 
-        client = DevOpsClient()
+        aiohttp_session = async_get_clientsession(self.hass)
+        client = DevOpsClient(session=aiohttp_session)
 
         try:
             if self._pat is not None:
@@ -75,7 +77,7 @@ class AzureDevOpsFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, str] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
         if user_input is None:
             return await self._show_setup_form()
@@ -92,7 +94,9 @@ class AzureDevOpsFlowHandler(ConfigFlow, domain=DOMAIN):
             return await self._show_setup_form(errors)
         return self._async_create_entry()
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Handle configuration by re-auth."""
         if entry_data.get(CONF_ORG) and entry_data.get(CONF_PROJECT):
             self._organization = entry_data[CONF_ORG]
@@ -121,7 +125,7 @@ class AzureDevOpsFlowHandler(ConfigFlow, domain=DOMAIN):
         )
         return self.async_abort(reason="reauth_successful")
 
-    def _async_create_entry(self) -> FlowResult:
+    def _async_create_entry(self) -> ConfigFlowResult:
         """Handle create entry."""
         return self.async_create_entry(
             title=f"{self._organization}/{self._project}",

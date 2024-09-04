@@ -1,8 +1,8 @@
 """Support for APCUPSd via its Network Information Server (NIS)."""
+
 from __future__ import annotations
 
 import asyncio
-from collections import OrderedDict
 from datetime import timedelta
 import logging
 from typing import Final
@@ -19,14 +19,35 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
 )
 
-from .const import DOMAIN
+from .const import CONNECTION_TIMEOUT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 UPDATE_INTERVAL: Final = timedelta(seconds=60)
 REQUEST_REFRESH_COOLDOWN: Final = 5
 
 
-class APCUPSdCoordinator(DataUpdateCoordinator[OrderedDict[str, str]]):
+class APCUPSdData(dict[str, str]):
+    """Store data about an APCUPSd and provide a few helper methods for easier accesses."""
+
+    @property
+    def name(self) -> str | None:
+        """Return the name of the UPS, if available."""
+        return self.get("UPSNAME")
+
+    @property
+    def model(self) -> str | None:
+        """Return the model of the UPS, if available."""
+        # Different UPS models may report slightly different keys for model, here we
+        # try them all.
+        return self.get("APCMODEL") or self.get("MODEL")
+
+    @property
+    def serial_no(self) -> str | None:
+        """Return the unique serial number of the UPS, if available."""
+        return self.get("SERIALNO")
+
+
+class APCUPSdCoordinator(DataUpdateCoordinator[APCUPSdData]):
     """Store and coordinate the data retrieved from APCUPSd for all sensors.
 
     For each entity to use, acts as the single point responsible for fetching
@@ -53,45 +74,26 @@ class APCUPSdCoordinator(DataUpdateCoordinator[OrderedDict[str, str]]):
         self._port = port
 
     @property
-    def ups_name(self) -> str | None:
-        """Return the name of the UPS, if available."""
-        return self.data.get("UPSNAME")
-
-    @property
-    def ups_model(self) -> str | None:
-        """Return the model of the UPS, if available."""
-        # Different UPS models may report slightly different keys for model, here we
-        # try them all.
-        for model_key in ("APCMODEL", "MODEL"):
-            if model_key in self.data:
-                return self.data[model_key]
-        return None
-
-    @property
-    def ups_serial_no(self) -> str | None:
-        """Return the unique serial number of the UPS, if available."""
-        return self.data.get("SERIALNO")
-
-    @property
     def device_info(self) -> DeviceInfo:
         """Return the DeviceInfo of this APC UPS, if serial number is available."""
         return DeviceInfo(
-            identifiers={(DOMAIN, self.ups_serial_no or self.config_entry.entry_id)},
-            model=self.ups_model,
+            identifiers={(DOMAIN, self.data.serial_no or self.config_entry.entry_id)},
+            model=self.data.model,
             manufacturer="APC",
-            name=self.ups_name if self.ups_name else "APC UPS",
+            name=self.data.name or "APC UPS",
             hw_version=self.data.get("FIRMWARE"),
             sw_version=self.data.get("VERSION"),
         )
 
-    async def _async_update_data(self) -> OrderedDict[str, str]:
+    async def _async_update_data(self) -> APCUPSdData:
         """Fetch the latest status from APCUPSd.
 
         Note that the result dict uses upper case for each resource, where our
         integration uses lower cases as keys internally.
         """
-        async with asyncio.timeout(10):
+        async with asyncio.timeout(CONNECTION_TIMEOUT):
             try:
-                return await aioapcaccess.request_status(self._host, self._port)
+                data = await aioapcaccess.request_status(self._host, self._port)
+                return APCUPSdData(data)
             except (OSError, asyncio.IncompleteReadError) as error:
                 raise UpdateFailed(error) from error

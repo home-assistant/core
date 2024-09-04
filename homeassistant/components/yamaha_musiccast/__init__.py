@@ -1,4 +1,5 @@
 """The MusicCast integration."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -104,7 +105,7 @@ async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-class MusicCastDataUpdateCoordinator(DataUpdateCoordinator[MusicCastData]):
+class MusicCastDataUpdateCoordinator(DataUpdateCoordinator[MusicCastData]):  # pylint: disable=hass-enforce-coordinator-module
     """Class to manage fetching data from the API."""
 
     def __init__(self, hass: HomeAssistant, client: MusicCastDevice) -> None:
@@ -119,7 +120,7 @@ class MusicCastDataUpdateCoordinator(DataUpdateCoordinator[MusicCastData]):
         try:
             await self.musiccast.fetch()
         except MusicCastConnectionException as exception:
-            raise UpdateFailed() from exception
+            raise UpdateFailed from exception
         return self.musiccast.data
 
 

@@ -1,4 +1,5 @@
 """Support for Homekit Alarm Control Panel."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -70,7 +71,6 @@ async def async_setup_entry(
 class HomeKitAlarmControlPanelEntity(HomeKitEntity, AlarmControlPanelEntity):
     """Representation of a Homekit Alarm Control Panel."""
 
-    _attr_icon = "mdi:security"
     _attr_supported_features = (
         AlarmControlPanelEntityFeature.ARM_HOME
         | AlarmControlPanelEntityFeature.ARM_AWAY

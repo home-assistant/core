@@ -1,8 +1,8 @@
 """Permissions for Home Assistant."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import Any
 
 import voluptuous as vol
 
@@ -63,7 +63,7 @@ class PolicyPermissions(AbstractPermissions):
         """Return a function that can test entity access."""
         return compile_entities(self._policy.get(CAT_ENTITIES), self._perm_lookup)
 
-    def __eq__(self, other: Any) -> bool:
+    def __eq__(self, other: object) -> bool:
         """Equals check."""
         return isinstance(other, PolicyPermissions) and other._policy == self._policy
 

@@ -1,4 +1,5 @@
 """Provides the Fully Kiosk Browser DataUpdateCoordinator."""
+
 import asyncio
 from typing import Any, cast
 

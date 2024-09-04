@@ -1,4 +1,5 @@
 """Support for LaMetric switches."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
@@ -32,7 +33,6 @@ SWITCHES = [
     LaMetricSwitchEntityDescription(
         key="bluetooth",
         translation_key="bluetooth",
-        icon="mdi:bluetooth",
         entity_category=EntityCategory.CONFIG,
         available_fn=lambda device: device.bluetooth.available,
         is_on_fn=lambda device: device.bluetooth.active,

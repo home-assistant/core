@@ -23,7 +23,7 @@
       'pref_disable_polling': False,
       'source': 'user',
       'title': 'Mock Title',
-      'unique_id': 'aa:bb:cc:dd:ee',
+      'unique_id': 'aa:bb:cc:dd:ee:ff',
       'version': 1,
     }),
     'device': dict({
@@ -35,7 +35,7 @@
       }),
       'info': dict({
         'fw_version': 'TestFirmwareVersion',
-        'mac': 'aa:bb:cc:dd:ee',
+        'mac': 'aa:bb:cc:dd:ee:ff',
         'manufacturer': 'TestManufacturer',
         'model': 'TestModel',
         'serial_number': 'ABCDEFGHIJK',

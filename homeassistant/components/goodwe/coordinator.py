@@ -1,4 +1,5 @@
 """Update coordinator for Goodwe."""
+
 from __future__ import annotations
 
 import logging

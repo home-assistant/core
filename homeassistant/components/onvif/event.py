@@ -1,4 +1,5 @@
 """ONVIF event abstraction."""
+
 from __future__ import annotations
 
 import asyncio
@@ -32,7 +33,7 @@ from .parsers import PARSERS
 # entities for them.
 UNHANDLED_TOPICS: set[str] = {"tns1:MediaControl/VideoEncoderConfiguration"}
 
-SUBSCRIPTION_ERRORS = (Fault, asyncio.TimeoutError, TransportError)
+SUBSCRIPTION_ERRORS = (Fault, TimeoutError, TransportError)
 CREATE_ERRORS = (ONVIFError, Fault, RequestError, XMLParseError, ValidationError)
 SET_SYNCHRONIZATION_POINT_ERRORS = (*SUBSCRIPTION_ERRORS, TypeError)
 UNSUBSCRIBE_ERRORS = (XMLParseError, *SUBSCRIPTION_ERRORS)
@@ -159,7 +160,7 @@ class EventManager:
             #
             # Our parser expects the topic to be
             # tns1:RuleEngine/CellMotionDetector/Motion
-            topic = msg.Topic._value_1.rstrip("/.")  # pylint: disable=protected-access
+            topic = msg.Topic._value_1.rstrip("/.")  # noqa: SLF001
 
             if not (parser := PARSERS.get(topic)):
                 if topic not in UNHANDLED_TOPICS:

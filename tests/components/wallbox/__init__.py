@@ -14,18 +14,22 @@ from homeassistant.components.wallbox.const import (
     CHARGER_CURRENT_VERSION_KEY,
     CHARGER_DATA_KEY,
     CHARGER_ENERGY_PRICE_KEY,
+    CHARGER_FEATURES_KEY,
     CHARGER_LOCKED_UNLOCKED_KEY,
     CHARGER_MAX_AVAILABLE_POWER_KEY,
     CHARGER_MAX_CHARGING_CURRENT_KEY,
+    CHARGER_MAX_ICP_CURRENT_KEY,
     CHARGER_NAME_KEY,
     CHARGER_PART_NUMBER_KEY,
+    CHARGER_PLAN_KEY,
+    CHARGER_POWER_BOOST_KEY,
     CHARGER_SERIAL_NUMBER_KEY,
     CHARGER_SOFTWARE_KEY,
     CHARGER_STATUS_ID_KEY,
 )
 from homeassistant.core import HomeAssistant
 
-from .const import ERROR, STATUS, TTL, USER_ID
+from .const import ERROR, REFRESH_TOKEN_TTL, STATUS, TTL, USER_ID
 
 from tests.common import MockConfigEntry
 
@@ -45,6 +49,8 @@ test_response = {
         CHARGER_PART_NUMBER_KEY: "PLP1-0-2-4-9-002-E",
         CHARGER_SOFTWARE_KEY: {CHARGER_CURRENT_VERSION_KEY: "5.5.10"},
         CHARGER_CURRENCY_KEY: {"code": "EUR/kWh"},
+        CHARGER_MAX_ICP_CURRENT_KEY: 20,
+        CHARGER_PLAN_KEY: {CHARGER_FEATURES_KEY: [CHARGER_POWER_BOOST_KEY]},
     },
 }
 
@@ -64,6 +70,8 @@ test_response_bidir = {
         CHARGER_PART_NUMBER_KEY: "QSP1-0-2-4-9-002-E",
         CHARGER_SOFTWARE_KEY: {CHARGER_CURRENT_VERSION_KEY: "5.5.10"},
         CHARGER_CURRENCY_KEY: {"code": "EUR/kWh"},
+        CHARGER_MAX_ICP_CURRENT_KEY: 20,
+        CHARGER_PLAN_KEY: {CHARGER_FEATURES_KEY: [CHARGER_POWER_BOOST_KEY]},
     },
 }
 
@@ -72,8 +80,10 @@ authorisation_response = {
     "data": {
         "attributes": {
             "token": "fakekeyhere",
+            "refresh_token": "refresh_fakekeyhere",
             USER_ID: 12345,
             TTL: 145656758,
+            REFRESH_TOKEN_TTL: 145756758,
             ERROR: "false",
             STATUS: 200,
         }
@@ -85,8 +95,10 @@ authorisation_response_unauthorised = {
     "data": {
         "attributes": {
             "token": "fakekeyhere",
+            "refresh_token": "refresh_fakekeyhere",
             USER_ID: 12345,
             TTL: 145656758,
+            REFRESH_TOKEN_TTL: 145756758,
             ERROR: "false",
             STATUS: 404,
         }

@@ -1,0 +1,15 @@
+{
+  "entity_component": {
+    "_": {
+      "default": "mdi:account",
+      "state": {
+        "not_home": "mdi:account-arrow-right"
+      }
+    }
+  },
+  "services": {
+    "see": {
+      "service": "mdi:account-eye"
+    }
+  }
+}

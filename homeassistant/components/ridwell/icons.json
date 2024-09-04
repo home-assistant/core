@@ -1,0 +1,14 @@
+{
+  "entity": {
+    "calendar": {
+      "calendar": {
+        "default": "mdi:delete-empty"
+      }
+    },
+    "switch": {
+      "opt_in": {
+        "default": "mdi:calendar-check"
+      }
+    }
+  }
+}

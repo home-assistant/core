@@ -16,7 +16,7 @@
       'pref_disable_new_entities': False,
       'pref_disable_polling': False,
       'source': 'user',
-      'title': 'Pentair DD-EE-FF',
+      'title': 'Pentair: DD-EE-FF',
       'unique_id': 'aa:bb:cc:dd:ee:ff',
       'version': 1,
     }),

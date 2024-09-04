@@ -1,4 +1,5 @@
 """Define constants for the GDACS integration."""
+
 from datetime import timedelta
 
 from aio_georss_gdacs.consts import EVENT_TYPE_MAP

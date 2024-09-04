@@ -1,4 +1,5 @@
 """Show the amount of records in a user's Discogs collection."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -9,7 +10,7 @@ import discogs_client
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorEntity,
     SensorEntityDescription,
 )
@@ -57,7 +58,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
 )
 SENSOR_KEYS: list[str] = [desc.key for desc in SENSOR_TYPES]
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_TOKEN): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,

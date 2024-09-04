@@ -1,5 +1,7 @@
 """Support for hive water heaters."""
+
 from datetime import timedelta
+from typing import Any
 
 import voluptuous as vol
 
@@ -48,11 +50,8 @@ async def async_setup_entry(
 
     hive = hass.data[DOMAIN][entry.entry_id]
     devices = hive.session.deviceList.get("water_heater")
-    entities = []
     if devices:
-        for dev in devices:
-            entities.append(HiveWaterHeater(hive, dev))
-    async_add_entities(entities, True)
+        async_add_entities((HiveWaterHeater(hive, dev) for dev in devices), True)
 
     platform = entity_platform.async_get_current_platform()
 
@@ -78,12 +77,12 @@ class HiveWaterHeater(HiveEntity, WaterHeaterEntity):
     _attr_operation_list = SUPPORT_WATER_HEATER
 
     @refresh_system
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on hotwater."""
         await self.hive.hotwater.setMode(self.device, "MANUAL")
 
     @refresh_system
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn on hotwater."""
         await self.hive.hotwater.setMode(self.device, "OFF")
 
@@ -94,7 +93,7 @@ class HiveWaterHeater(HiveEntity, WaterHeaterEntity):
         await self.hive.hotwater.setMode(self.device, new_mode)
 
     @refresh_system
-    async def async_hot_water_boost(self, time_period, on_off):
+    async def async_hot_water_boost(self, time_period: int, on_off: str) -> None:
         """Handle the service call."""
         if on_off == "on":
             await self.hive.hotwater.setBoostOn(self.device, time_period)

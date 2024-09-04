@@ -1,4 +1,5 @@
 """The tests for the simulated sensor."""
+
 from homeassistant.components.simulated.sensor import (
     CONF_AMP,
     CONF_FWHM,
@@ -15,13 +16,17 @@ from homeassistant.components.simulated.sensor import (
     DEFAULT_PHASE,
     DEFAULT_RELATIVE_TO_EPOCH,
     DEFAULT_SEED,
+    DOMAIN,
 )
 from homeassistant.const import CONF_FRIENDLY_NAME
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 
-async def test_simulated_sensor_default_config(hass: HomeAssistant) -> None:
+async def test_simulated_sensor_default_config(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
     """Test default config."""
     config = {"sensor": {"platform": "simulated"}}
     assert await async_setup_component(hass, "sensor", config)
@@ -39,3 +44,7 @@ async def test_simulated_sensor_default_config(hass: HomeAssistant) -> None:
     assert state.attributes.get(CONF_FWHM) == DEFAULT_FWHM
     assert state.attributes.get(CONF_SEED) == DEFAULT_SEED
     assert state.attributes.get(CONF_RELATIVE_TO_EPOCH) == DEFAULT_RELATIVE_TO_EPOCH
+
+    issue = issue_registry.async_get_issue(DOMAIN, DOMAIN)
+    assert issue.issue_id == DOMAIN
+    assert issue.translation_key == "simulated_deprecation"

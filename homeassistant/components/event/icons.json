@@ -1,0 +1,16 @@
+{
+  "entity_component": {
+    "_": {
+      "default": "mdi:eye-check"
+    },
+    "button": {
+      "default": "mdi:gesture-tap-button"
+    },
+    "doorbell": {
+      "default": "mdi:doorbell"
+    },
+    "motion": {
+      "default": "mdi:motion-sensor"
+    }
+  }
+}

@@ -1,30 +1,33 @@
 """Support for Zigbee Home Automation devices."""
-import asyncio
+
 import contextlib
-import copy
 import logging
-import os
-import re
+from zoneinfo import ZoneInfo
 
 import voluptuous as vol
-from zhaquirks import setup as setup_quirks
+from zha.application.const import BAUD_RATES, RadioType
+from zha.application.gateway import Gateway
+from zha.application.helpers import ZHAData
+from zha.zigbee.device import get_device_automation_triggers
 from zigpy.config import CONF_DATABASE, CONF_DEVICE, CONF_DEVICE_PATH
 from zigpy.exceptions import NetworkSettingsInconsistent, TransientConnectionError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_TYPE, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import Event, HomeAssistant
+from homeassistant.const import (
+    CONF_TYPE,
+    EVENT_CORE_CONFIG_UPDATE,
+    EVENT_HOMEASSISTANT_STOP,
+    Platform,
+)
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.storage import STORAGE_DIR
 from homeassistant.helpers.typing import ConfigType
 
 from . import repairs, websocket_api
-from .core import ZHAGateway
-from .core.const import (
-    BAUD_RATES,
+from .const import (
     CONF_BAUDRATE,
     CONF_CUSTOM_QUIRKS_PATH,
     CONF_DEVICE_CONFIG,
@@ -35,13 +38,14 @@ from .core.const import (
     CONF_ZIGPY,
     DATA_ZHA,
     DOMAIN,
-    PLATFORMS,
-    SIGNAL_ADD_ENTITIES,
-    RadioType,
 )
-from .core.device import get_device_automation_triggers
-from .core.discovery import GROUP_PROBE
-from .core.helpers import ZHAData, get_zha_data
+from .helpers import (
+    SIGNAL_ADD_ENTITIES,
+    HAZHAData,
+    ZHAGatewayProxy,
+    create_zha_config,
+    get_zha_data,
+)
 from .radio_manager import ZhaRadioManager
 from .repairs.network_settings_inconsistent import warn_on_inconsistent_network_settings
 from .repairs.wrong_silabs_firmware import (
@@ -76,6 +80,25 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
+PLATFORMS = (
+    Platform.ALARM_CONTROL_PANEL,
+    Platform.BINARY_SENSOR,
+    Platform.BUTTON,
+    Platform.CLIMATE,
+    Platform.COVER,
+    Platform.DEVICE_TRACKER,
+    Platform.FAN,
+    Platform.LIGHT,
+    Platform.LOCK,
+    Platform.NUMBER,
+    Platform.SELECT,
+    Platform.SENSOR,
+    Platform.SIREN,
+    Platform.SWITCH,
+    Platform.UPDATE,
+)
+
+
 # Zigbee definitions
 CENTICELSIUS = "C-100"
 
@@ -85,24 +108,10 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up ZHA from config."""
-    zha_data = ZHAData()
-    zha_data.yaml_config = config.get(DOMAIN, {})
-    hass.data[DATA_ZHA] = zha_data
+    ha_zha_data = HAZHAData(yaml_config=config.get(DOMAIN, {}))
+    hass.data[DATA_ZHA] = ha_zha_data
 
     return True
-
-
-def _clean_serial_port_path(path: str) -> str:
-    """Clean the serial port path, applying corrections where necessary."""
-
-    if path.startswith("socket://"):
-        path = path.strip()
-
-    # Removes extraneous brackets from IP addresses (they don't parse in CPython 3.11.4)
-    if re.match(r"^socket://\[\d+\.\d+\.\d+\.\d+\]:\d+$", path):
-        path = path.replace("[", "").replace("]", "")
-
-    return path
 
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
@@ -110,33 +119,11 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     Will automatically load components to support devices found on the network.
     """
+    ha_zha_data: HAZHAData = get_zha_data(hass)
+    ha_zha_data.config_entry = config_entry
+    zha_lib_data: ZHAData = create_zha_config(hass, ha_zha_data)
 
-    # Remove brackets around IP addresses, this no longer works in CPython 3.11.4
-    # This will be removed in 2023.11.0
-    path = config_entry.data[CONF_DEVICE][CONF_DEVICE_PATH]
-    cleaned_path = _clean_serial_port_path(path)
-    data = copy.deepcopy(dict(config_entry.data))
-
-    if path != cleaned_path:
-        _LOGGER.debug("Cleaned serial port path %r -> %r", path, cleaned_path)
-        data[CONF_DEVICE][CONF_DEVICE_PATH] = cleaned_path
-        hass.config_entries.async_update_entry(config_entry, data=data)
-
-    zha_data = get_zha_data(hass)
-
-    if zha_data.yaml_config.get(CONF_ENABLE_QUIRKS, True):
-        setup_quirks(
-            custom_quirks_path=zha_data.yaml_config.get(CONF_CUSTOM_QUIRKS_PATH)
-        )
-
-    # temporary code to remove the ZHA storage file from disk.
-    # this will be removed in 2022.10.0
-    storage_path = hass.config.path(STORAGE_DIR, "zha.storage")
-    if os.path.isfile(storage_path):
-        _LOGGER.debug("removing ZHA storage file")
-        await hass.async_add_executor_job(os.remove, storage_path)
-    else:
-        _LOGGER.debug("ZHA storage file does not exist or was already removed")
+    zha_gateway = await Gateway.async_from_config(zha_lib_data)
 
     # Load and cache device trigger information early
     device_registry = dr.async_get(hass)
@@ -152,19 +139,16 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
             if dev_entry is None:
                 continue
 
-            zha_data.device_trigger_cache[dev_entry.id] = (
+            zha_lib_data.device_trigger_cache[dev_entry.id] = (
                 str(dev.ieee),
                 get_device_automation_triggers(dev),
             )
+        ha_zha_data.device_trigger_cache = zha_lib_data.device_trigger_cache
 
-    _LOGGER.debug("Trigger cache: %s", zha_data.device_trigger_cache)
+    _LOGGER.debug("Trigger cache: %s", zha_lib_data.device_trigger_cache)
 
     try:
-        zha_gateway = await ZHAGateway.async_from_config(
-            hass=hass,
-            config=zha_data.yaml_config,
-            config_entry=config_entry,
-        )
+        await zha_gateway.async_initialize()
     except NetworkSettingsInconsistent as exc:
         await warn_on_inconsistent_network_settings(
             hass,
@@ -196,6 +180,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     repairs.async_delete_blocking_issues(hass)
 
+    ha_zha_data.gateway_proxy = ZHAGatewayProxy(hass, config_entry, zha_gateway)
+
     manufacturer = zha_gateway.state.node_info.manufacturer
     model = zha_gateway.state.node_info.model
 
@@ -216,13 +202,24 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     websocket_api.async_load_api(hass)
 
     async def async_shutdown(_: Event) -> None:
-        await zha_gateway.shutdown()
+        """Handle shutdown tasks."""
+        assert ha_zha_data.gateway_proxy is not None
+        await ha_zha_data.gateway_proxy.shutdown()
 
     config_entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_shutdown)
     )
 
-    await zha_gateway.async_initialize_devices_and_entities()
+    @callback
+    def update_config(event: Event) -> None:
+        """Handle Core config update."""
+        zha_gateway.config.local_timezone = ZoneInfo(hass.config.time_zone)
+
+    config_entry.async_on_unload(
+        hass.bus.async_listen(EVENT_CORE_CONFIG_UPDATE, update_config)
+    )
+
+    await ha_zha_data.gateway_proxy.async_initialize_devices_and_entities()
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
     async_dispatcher_send(hass, SIGNAL_ADD_ENTITIES)
     return True
@@ -230,11 +227,12 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
 async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload ZHA config entry."""
-    zha_data = get_zha_data(hass)
+    ha_zha_data = get_zha_data(hass)
+    ha_zha_data.config_entry = None
 
-    if zha_data.gateway is not None:
-        await zha_data.gateway.shutdown()
-        zha_data.gateway = None
+    if ha_zha_data.gateway_proxy is not None:
+        await ha_zha_data.gateway_proxy.shutdown()
+        ha_zha_data.gateway_proxy = None
 
     # clean up any remaining entity metadata
     # (entities that have been discovered but not yet added to HA)
@@ -242,20 +240,11 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     # be in when we get here in failure cases
     with contextlib.suppress(KeyError):
         for platform in PLATFORMS:
-            del zha_data.platforms[platform]
+            del ha_zha_data.platforms[platform]
 
-    GROUP_PROBE.cleanup()
     websocket_api.async_unload_api(hass)
 
-    # our components don't have unload methods so no need to look at return values
-    await asyncio.gather(
-        *(
-            hass.config_entries.async_forward_entry_unload(config_entry, platform)
-            for platform in PLATFORMS
-        )
-    )
-
-    return True
+    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
 
 
 async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
@@ -272,8 +261,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         if data[CONF_RADIO_TYPE] != RadioType.deconz and baudrate in BAUD_RATES:
             data[CONF_DEVICE][CONF_BAUDRATE] = baudrate
 
-        config_entry.version = 2
-        hass.config_entries.async_update_entry(config_entry, data=data)
+        hass.config_entries.async_update_entry(config_entry, data=data, version=2)
 
     if config_entry.version == 2:
         data = {**config_entry.data}
@@ -281,8 +269,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         if data[CONF_RADIO_TYPE] == "ti_cc":
             data[CONF_RADIO_TYPE] = "znp"
 
-        config_entry.version = 3
-        hass.config_entries.async_update_entry(config_entry, data=data)
+        hass.config_entries.async_update_entry(config_entry, data=data, version=3)
 
     if config_entry.version == 3:
         data = {**config_entry.data}
@@ -299,8 +286,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         if not data[CONF_DEVICE].get(CONF_FLOW_CONTROL):
             data[CONF_DEVICE][CONF_FLOW_CONTROL] = None
 
-        config_entry.version = 4
-        hass.config_entries.async_update_entry(config_entry, data=data)
+        hass.config_entries.async_update_entry(config_entry, data=data, version=4)
 
     _LOGGER.info("Migration to version %s successful", config_entry.version)
     return True

@@ -5,10 +5,6 @@ ATTR_RESOURCES_LIST = "resources_list"
 
 DOMAIN = "fivem"
 
-ICON_PLAYERS_MAX = "mdi:account-multiple"
-ICON_PLAYERS_ONLINE = "mdi:account-multiple"
-ICON_RESOURCES = "mdi:playlist-check"
-
 MANUFACTURER = "Cfx.re"
 
 NAME_PLAYERS_MAX = "Players Max"

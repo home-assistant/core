@@ -24,9 +24,10 @@ All outgoing telegrams are pushed to an assertion queue. Assert them in order th
   Asserts that no telegram was sent (assertion queue is empty).
 - `knx.assert_telegram_count(count: int)`
   Asserts that `count` telegrams were sent.
-- `knx.assert_read(group_address: str)`
+- `knx.assert_read(group_address: str,  response: int | tuple[int, ...] | None = None)`
   Asserts that a GroupValueRead telegram was sent to `group_address`.
   The telegram will be removed from the assertion queue.
+  Optionally inject incoming GroupValueResponse telegram after reception to clear the value reader waiting task. This can also be done manually with `knx.receive_response`.
 - `knx.assert_response(group_address: str, payload: int | tuple[int, ...])`
   Asserts that a GroupValueResponse telegram with `payload` was sent to `group_address`.
   The telegram will be removed from the assertion queue.

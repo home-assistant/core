@@ -1,4 +1,5 @@
 """Constants for the devolo_home_control integration."""
+
 import re
 
 from homeassistant.const import Platform

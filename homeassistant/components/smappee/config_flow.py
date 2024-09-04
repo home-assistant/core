@@ -1,12 +1,14 @@
 """Config flow for Smappee."""
+
 import logging
+from typing import Any
 
 from pysmappee import helper, mqtt
 import voluptuous as vol
 
 from homeassistant.components import zeroconf
+from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_IP_ADDRESS
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from . import api
@@ -39,7 +41,7 @@ class SmappeeFlowHandler(
 
     async def async_step_zeroconf(
         self, discovery_info: zeroconf.ZeroconfServiceInfo
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
 
         if not discovery_info.hostname.startswith(SUPPORTED_LOCAL_DEVICES):
@@ -67,9 +69,11 @@ class SmappeeFlowHandler(
 
         return await self.async_step_zeroconf_confirm()
 
-    async def async_step_zeroconf_confirm(self, user_input=None):
+    async def async_step_zeroconf_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Confirm zeroconf flow."""
-        errors = {}
+        errors: dict[str, str] = {}
 
         # Check if already configured (cloud)
         if self.is_cloud_device_already_added():
@@ -105,7 +109,9 @@ class SmappeeFlowHandler(
             data={CONF_IP_ADDRESS: ip_address, CONF_SERIALNUMBER: serial_number},
         )
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
 
         # If there is a CLOUD entry already, abort a new LOCAL entry
@@ -114,7 +120,9 @@ class SmappeeFlowHandler(
 
         return await self.async_step_environment()
 
-    async def async_step_environment(self, user_input=None):
+    async def async_step_environment(
+        self, user_input: dict[str, str] | None = None
+    ) -> ConfigFlowResult:
         """Decide environment, cloud or local."""
         if user_input is None:
             return self.async_show_form(
@@ -140,7 +148,9 @@ class SmappeeFlowHandler(
 
         return await self.async_step_pick_implementation()
 
-    async def async_step_local(self, user_input=None):
+    async def async_step_local(
+        self, user_input: dict[str, str] | None = None
+    ) -> ConfigFlowResult:
         """Handle local flow."""
         if user_input is None:
             return self.async_show_form(

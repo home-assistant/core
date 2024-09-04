@@ -1,22 +1,21 @@
 """Component providing HA switch support for Ring Door Bell/Chimes."""
+
 from datetime import timedelta
 import logging
 from typing import Any
 
-import requests
+from ring_doorbell import RingStickUpCam
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.dt as dt_util
 
-from .const import DOMAIN, RING_DEVICES
-from .entity import RingEntityMixin
+from . import RingConfigEntry
+from .coordinator import RingDataCoordinator
+from .entity import RingEntity, exception_wrap
 
 _LOGGER = logging.getLogger(__name__)
-
-SIREN_ICON = "mdi:alarm-bell"
 
 
 # It takes a few seconds for the API to correctly return an update indicating
@@ -29,26 +28,28 @@ SKIP_UPDATES_DELAY = timedelta(seconds=5)
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    entry: RingConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Create the switches for the Ring devices."""
-    devices = hass.data[DOMAIN][config_entry.entry_id][RING_DEVICES]
-    switches = []
+    ring_data = entry.runtime_data
+    devices_coordinator = ring_data.devices_coordinator
 
-    for device in devices["stickup_cams"]:
-        if device.has_capability("siren"):
-            switches.append(SirenSwitch(config_entry.entry_id, device))
+    async_add_entities(
+        SirenSwitch(device, devices_coordinator)
+        for device in ring_data.devices.stickup_cams
+        if device.has_capability("siren")
+    )
 
-    async_add_entities(switches)
 
-
-class BaseRingSwitch(RingEntityMixin, SwitchEntity):
+class BaseRingSwitch(RingEntity[RingStickUpCam], SwitchEntity):
     """Represents a switch for controlling an aspect of a ring device."""
 
-    def __init__(self, config_entry_id, device, device_type):
+    def __init__(
+        self, device: RingStickUpCam, coordinator: RingDataCoordinator, device_type: str
+    ) -> None:
         """Initialize the switch."""
-        super().__init__(config_entry_id, device)
+        super().__init__(device, coordinator)
         self._device_type = device_type
         self._attr_unique_id = f"{self._device.id}-{self._device_type}"
 
@@ -57,39 +58,39 @@ class SirenSwitch(BaseRingSwitch):
     """Creates a switch to turn the ring cameras siren on and off."""
 
     _attr_translation_key = "siren"
-    _attr_icon = SIREN_ICON
 
-    def __init__(self, config_entry_id, device):
+    def __init__(
+        self, device: RingStickUpCam, coordinator: RingDataCoordinator
+    ) -> None:
         """Initialize the switch for a device with a siren."""
-        super().__init__(config_entry_id, device, "siren")
+        super().__init__(device, coordinator, "siren")
         self._no_updates_until = dt_util.utcnow()
         self._attr_is_on = device.siren > 0
 
     @callback
-    def _update_callback(self):
+    def _handle_coordinator_update(self) -> None:
         """Call update method."""
         if self._no_updates_until > dt_util.utcnow():
             return
+        device = self._get_coordinator_data().get_stickup_cam(
+            self._device.device_api_id
+        )
+        self._attr_is_on = device.siren > 0
+        super()._handle_coordinator_update()
 
-        self._attr_is_on = self._device.siren > 0
-        self.async_write_ha_state()
-
-    def _set_switch(self, new_state):
+    @exception_wrap
+    async def _async_set_switch(self, new_state: int) -> None:
         """Update switch state, and causes Home Assistant to correctly update."""
-        try:
-            self._device.siren = new_state
-        except requests.Timeout:
-            _LOGGER.error("Time out setting %s siren to %s", self.entity_id, new_state)
-            return
+        await self._device.async_set_siren(new_state)
 
         self._attr_is_on = new_state > 0
         self._no_updates_until = dt_util.utcnow() + SKIP_UPDATES_DELAY
-        self.schedule_update_ha_state()
+        self.async_write_ha_state()
 
-    def turn_on(self, **kwargs: Any) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the siren on for 30 seconds."""
-        self._set_switch(1)
+        await self._async_set_switch(1)
 
-    def turn_off(self, **kwargs: Any) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the siren off."""
-        self._set_switch(0)
+        await self._async_set_switch(0)

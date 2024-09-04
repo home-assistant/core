@@ -1,9 +1,13 @@
 """Component to allow running Python scripts."""
+
 import datetime
 import glob
 import logging
+from numbers import Number
+import operator
 import os
 import time
+from typing import Any
 
 from RestrictedPython import (
     compile_restricted_exec,
@@ -104,13 +108,13 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-def discover_scripts(hass):
+def discover_scripts(hass: HomeAssistant) -> None:
     """Discover python scripts in folder."""
     path = hass.config.path(FOLDER)
 
     if not os.path.isdir(path):
         _LOGGER.warning("Folder %s not found in configuration folder", FOLDER)
-        return False
+        return
 
     def python_script_service_handler(call: ServiceCall) -> ServiceResponse:
         """Handle python script service calls."""
@@ -146,6 +150,36 @@ def discover_scripts(hass):
         async_set_service_schema(hass, DOMAIN, name, service_desc)
 
 
+IOPERATOR_TO_OPERATOR = {
+    "%=": operator.mod,
+    "&=": operator.and_,
+    "**=": operator.pow,
+    "*=": operator.mul,
+    "+=": operator.add,
+    "-=": operator.sub,
+    "//=": operator.floordiv,
+    "/=": operator.truediv,
+    "<<=": operator.lshift,
+    ">>=": operator.rshift,
+    "@=": operator.matmul,
+    "^=": operator.xor,
+    "|=": operator.or_,
+}
+
+
+def guarded_inplacevar(op: str, target: Any, operand: Any) -> Any:
+    """Implement augmented-assign (+=, -=, etc.) operators for restricted code.
+
+    See RestrictedPython's `visit_AugAssign` for details.
+    """
+    if not isinstance(target, (list, Number, str)):
+        raise ScriptError(f"The {op!r} operation is not allowed on a {type(target)}")
+    op_fun = IOPERATOR_TO_OPERATOR.get(op)
+    if not op_fun:
+        raise ScriptError(f"The {op!r} operation is not allowed")
+    return op_fun(target, operand)
+
+
 @bind_hass
 def execute_script(hass, name, data=None, return_response=False):
     """Execute a script."""
@@ -166,7 +200,7 @@ def execute(hass, filename, source, data=None, return_response=False):
         _LOGGER.error(
             "Error loading script %s: %s", filename, ", ".join(compiled.errors)
         )
-        return
+        return None
 
     if compiled.warnings:
         _LOGGER.warning(
@@ -223,6 +257,7 @@ def execute(hass, filename, source, data=None, return_response=False):
         "_getitem_": default_guarded_getitem,
         "_iter_unpack_sequence_": guarded_iter_unpack_sequence,
         "_unpack_sequence_": guarded_unpack_sequence,
+        "_inplacevar_": guarded_inplacevar,
         "hass": hass,
         "data": data or {},
         "logger": logger,
@@ -242,7 +277,7 @@ def execute(hass, filename, source, data=None, return_response=False):
         if not isinstance(restricted_globals["output"], dict):
             output_type = type(restricted_globals["output"])
             restricted_globals["output"] = {}
-            raise ScriptError(
+            raise ScriptError(  # noqa: TRY301
                 f"Expected `output` to be a dictionary, was {output_type}"
             )
     except ScriptError as err:
@@ -250,12 +285,12 @@ def execute(hass, filename, source, data=None, return_response=False):
             raise ServiceValidationError(f"Error executing script: {err}") from err
         logger.error("Error executing script: %s", err)
         return None
-    except Exception as err:  # pylint: disable=broad-except
+    except Exception as err:
         if return_response:
             raise HomeAssistantError(
                 f"Error executing script ({type(err).__name__}): {err}"
             ) from err
-        logger.exception("Error executing script: %s", err)
+        logger.exception("Error executing script")
         return None
 
     return restricted_globals["output"]

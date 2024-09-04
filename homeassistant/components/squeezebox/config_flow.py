@@ -1,19 +1,23 @@
-"""Config flow for Logitech Squeezebox integration."""
+"""Config flow for Squeezebox integration."""
+
+from __future__ import annotations
+
 import asyncio
 from http import HTTPStatus
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from pysqueezebox import Server, async_discover
 import voluptuous as vol
 
-from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import dhcp
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
+from homeassistant.data_entry_flow import AbortFlow
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
-from homeassistant.helpers.entity_registry import async_get
 
 from .const import CONF_HTTPS, DEFAULT_PORT, DOMAIN
 
@@ -22,9 +26,11 @@ _LOGGER = logging.getLogger(__name__)
 TIMEOUT = 5
 
 
-def _base_schema(discovery_info=None):
+def _base_schema(
+    discovery_info: dict[str, Any] | None = None,
+) -> vol.Schema:
     """Generate base schema."""
-    base_schema = {}
+    base_schema: dict[Any, Any] = {}
     if discovery_info and CONF_HOST in discovery_info:
         base_schema.update(
             {
@@ -61,22 +67,22 @@ def _base_schema(discovery_info=None):
     return vol.Schema(base_schema)
 
 
-class SqueezeboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for Logitech Squeezebox."""
+class SqueezeboxConfigFlow(ConfigFlow, domain=DOMAIN):
+    """Handle a config flow for Squeezebox."""
 
     VERSION = 1
 
     def __init__(self) -> None:
         """Initialize an instance of the squeezebox config flow."""
         self.data_schema = _base_schema()
-        self.discovery_info = None
+        self.discovery_info: dict[str, Any] | None = None
 
-    async def _discover(self, uuid=None):
+    async def _discover(self, uuid: str | None = None) -> None:
         """Discover an unconfigured LMS server."""
         self.discovery_info = None
         discovery_event = asyncio.Event()
 
-        def _discovery_callback(server):
+        def _discovery_callback(server: Server) -> None:
             if server.uuid:
                 # ignore already configured uuids
                 for entry in self._async_current_entries():
@@ -100,7 +106,7 @@ class SqueezeboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # update with suggested values from discovery
         self.data_schema = _base_schema(self.discovery_info)
 
-    async def _validate_input(self, data):
+    async def _validate_input(self, data: dict[str, Any]) -> str | None:
         """Validate the user input allows us to connect.
 
         Retrieve unique id and abort if already configured.
@@ -120,14 +126,18 @@ class SqueezeboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 if server.http_status == HTTPStatus.UNAUTHORIZED:
                     return "invalid_auth"
                 return "cannot_connect"
-        except Exception:  # pylint: disable=broad-except
+        except Exception:  # noqa: BLE001
             return "unknown"
 
         if "uuid" in status:
             await self.async_set_unique_id(status["uuid"])
             self._abort_if_unique_id_configured()
 
-    async def async_step_user(self, user_input=None):
+        return None
+
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
         errors = {}
         if user_input and CONF_HOST in user_input:
@@ -140,7 +150,7 @@ class SqueezeboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             async with asyncio.timeout(TIMEOUT):
                 await self._discover()
             return await self.async_step_edit()
-        except asyncio.TimeoutError:
+        except TimeoutError:
             errors["base"] = "no_server_found"
 
         # display the form
@@ -150,7 +160,9 @@ class SqueezeboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_edit(self, user_input=None):
+    async def async_step_edit(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Edit a discovered or manually inputted server."""
         errors = {}
         if user_input:
@@ -165,7 +177,9 @@ class SqueezeboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="edit", data_schema=self.data_schema, errors=errors
         )
 
-    async def async_step_integration_discovery(self, discovery_info):
+    async def async_step_integration_discovery(
+        self, discovery_info: dict[str, Any]
+    ) -> ConfigFlowResult:
         """Handle discovery of a server."""
         _LOGGER.debug("Reached server discovery flow with info: %s", discovery_info)
         if "uuid" in discovery_info:
@@ -187,7 +201,7 @@ class SqueezeboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_dhcp(
         self, discovery_info: dhcp.DhcpServiceInfo
-    ) -> data_entry_flow.FlowResult:
+    ) -> ConfigFlowResult:
         """Handle dhcp discovery of a Squeezebox player."""
         _LOGGER.debug(
             "Reached dhcp discovery of a player with info: %s", discovery_info
@@ -197,14 +211,14 @@ class SqueezeboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         _LOGGER.debug("Configuring dhcp player with unique id: %s", self.unique_id)
 
-        registry = async_get(self.hass)
+        registry = er.async_get(self.hass)
 
         if TYPE_CHECKING:
             assert self.unique_id
         # if we have detected this player, do nothing. if not, there must be a server out there for us to configure, so start the normal user flow (which tries to autodetect server)
         if registry.async_get_entity_id(MP_DOMAIN, DOMAIN, self.unique_id) is not None:
             # this player is already known, so do nothing other than mark as configured
-            raise data_entry_flow.AbortFlow("already_configured")
+            raise AbortFlow("already_configured")
 
         # if the player is unknown, then we likely need to configure its server
         return await self.async_step_user()

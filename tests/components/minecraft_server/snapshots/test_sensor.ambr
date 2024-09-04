@@ -3,12 +3,12 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Minecraft Server Latency',
-      'icon': 'mdi:signal',
       'unit_of_measurement': <UnitOfTime.MILLISECONDS: 'ms'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.minecraft_server_latency',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '5',
   })
@@ -17,12 +17,12 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Minecraft Server Players online',
-      'icon': 'mdi:account-multiple',
       'unit_of_measurement': 'players',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.minecraft_server_players_online',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '3',
   })
@@ -31,12 +31,12 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Minecraft Server Players max',
-      'icon': 'mdi:account-multiple',
       'unit_of_measurement': 'players',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.minecraft_server_players_max',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '10',
   })
@@ -45,11 +45,11 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Minecraft Server World message',
-      'icon': 'mdi:minecraft',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.minecraft_server_world_message',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'Dummy MOTD',
   })
@@ -58,11 +58,11 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Minecraft Server Version',
-      'icon': 'mdi:numeric',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.minecraft_server_version',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'Dummy Version',
   })
@@ -71,11 +71,11 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Minecraft Server Protocol version',
-      'icon': 'mdi:numeric',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.minecraft_server_protocol_version',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '123',
   })
@@ -84,11 +84,11 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Minecraft Server Map name',
-      'icon': 'mdi:map',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.minecraft_server_map_name',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'Dummy Map Name',
   })
@@ -97,11 +97,11 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Minecraft Server Game mode',
-      'icon': 'mdi:cog',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.minecraft_server_game_mode',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'Dummy Game Mode',
   })
@@ -110,11 +110,11 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Minecraft Server Edition',
-      'icon': 'mdi:minecraft',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.minecraft_server_edition',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'MCPE',
   })
@@ -123,12 +123,12 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Minecraft Server Latency',
-      'icon': 'mdi:signal',
       'unit_of_measurement': <UnitOfTime.MILLISECONDS: 'ms'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.minecraft_server_latency',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '5',
   })
@@ -137,7 +137,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Minecraft Server Players online',
-      'icon': 'mdi:account-multiple',
       'players_list': list([
         'Player 1',
         'Player 2',
@@ -148,6 +147,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.minecraft_server_players_online',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '3',
   })
@@ -156,12 +156,12 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Minecraft Server Players max',
-      'icon': 'mdi:account-multiple',
       'unit_of_measurement': 'players',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.minecraft_server_players_max',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '10',
   })
@@ -170,11 +170,11 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Minecraft Server World message',
-      'icon': 'mdi:minecraft',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.minecraft_server_world_message',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'Dummy MOTD',
   })
@@ -183,11 +183,11 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Minecraft Server Version',
-      'icon': 'mdi:numeric',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.minecraft_server_version',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'Dummy Version',
   })
@@ -196,11 +196,11 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Minecraft Server Protocol version',
-      'icon': 'mdi:numeric',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.minecraft_server_protocol_version',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '123',
   })
@@ -209,12 +209,12 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Minecraft Server Latency',
-      'icon': 'mdi:signal',
       'unit_of_measurement': <UnitOfTime.MILLISECONDS: 'ms'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.minecraft_server_latency',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '5',
   })
@@ -223,12 +223,12 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Minecraft Server Players online',
-      'icon': 'mdi:account-multiple',
       'unit_of_measurement': 'players',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.minecraft_server_players_online',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '3',
   })
@@ -237,12 +237,12 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Minecraft Server Players max',
-      'icon': 'mdi:account-multiple',
       'unit_of_measurement': 'players',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.minecraft_server_players_max',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '10',
   })
@@ -251,11 +251,11 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Minecraft Server World message',
-      'icon': 'mdi:minecraft',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.minecraft_server_world_message',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'Dummy MOTD',
   })
@@ -264,11 +264,11 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Minecraft Server Version',
-      'icon': 'mdi:numeric',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.minecraft_server_version',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'Dummy Version',
   })
@@ -277,11 +277,11 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Minecraft Server Protocol version',
-      'icon': 'mdi:numeric',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.minecraft_server_protocol_version',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '123',
   })
@@ -290,11 +290,11 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Minecraft Server Map name',
-      'icon': 'mdi:map',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.minecraft_server_map_name',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'Dummy Map Name',
   })
@@ -303,11 +303,11 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Minecraft Server Game mode',
-      'icon': 'mdi:cog',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.minecraft_server_game_mode',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'Dummy Game Mode',
   })
@@ -316,11 +316,11 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Minecraft Server Edition',
-      'icon': 'mdi:minecraft',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.minecraft_server_edition',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'MCPE',
   })
@@ -329,12 +329,12 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Minecraft Server Latency',
-      'icon': 'mdi:signal',
       'unit_of_measurement': <UnitOfTime.MILLISECONDS: 'ms'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.minecraft_server_latency',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '5',
   })
@@ -343,7 +343,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Minecraft Server Players online',
-      'icon': 'mdi:account-multiple',
       'players_list': list([
         'Player 1',
         'Player 2',
@@ -354,6 +353,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.minecraft_server_players_online',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '3',
   })
@@ -362,12 +362,12 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Minecraft Server Players max',
-      'icon': 'mdi:account-multiple',
       'unit_of_measurement': 'players',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.minecraft_server_players_max',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '10',
   })
@@ -376,11 +376,11 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Minecraft Server World message',
-      'icon': 'mdi:minecraft',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.minecraft_server_world_message',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'Dummy MOTD',
   })
@@ -389,11 +389,11 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Minecraft Server Version',
-      'icon': 'mdi:numeric',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.minecraft_server_version',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'Dummy Version',
   })
@@ -402,11 +402,11 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Minecraft Server Protocol version',
-      'icon': 'mdi:numeric',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.minecraft_server_protocol_version',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '123',
   })

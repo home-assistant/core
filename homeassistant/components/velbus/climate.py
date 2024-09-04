@@ -1,4 +1,5 @@
 """Support for Velbus thermostat."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -41,6 +42,7 @@ class VelbusClimate(VelbusEntity, ClimateEntity):
     _attr_hvac_mode = HVACMode.HEAT
     _attr_hvac_modes = [HVACMode.HEAT]
     _attr_preset_modes = list(PRESET_MODES)
+    _enable_turn_on_off_backwards_compatibility = False
 
     @property
     def target_temperature(self) -> float | None:

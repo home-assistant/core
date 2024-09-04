@@ -30,7 +30,7 @@ class MockSwitchLinc(SwitchedLightingControl_SwitchLinc02):
 class MockDevices:
     """Mock devices class."""
 
-    def __init__(self, connected=True):
+    def __init__(self, connected=True) -> None:
         """Init the MockDevices class."""
         self._devices = {}
         self.modem = None
@@ -85,7 +85,7 @@ class MockDevices:
             )
 
             for device in [
-                self._devices[addr] for addr in [addr1, addr2, addr3, addr4, addr5]
+                self._devices[addr] for addr in (addr1, addr2, addr3, addr4, addr5)
             ]:
                 device.async_read_config = AsyncMock()
                 device.aldb.async_write = AsyncMock()
@@ -105,7 +105,7 @@ class MockDevices:
                 )
 
             for device in [
-                self._devices[addr] for addr in [addr2, addr3, addr4, addr5]
+                self._devices[addr] for addr in (addr2, addr3, addr4, addr5)
             ]:
                 device.async_status = AsyncMock()
             self._devices[addr1].async_status = AsyncMock(side_effect=AttributeError)

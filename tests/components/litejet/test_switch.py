@@ -1,4 +1,5 @@
 """The tests for the litejet component."""
+
 from homeassistant.components import switch
 from homeassistant.const import (
     ATTR_ENTITY_ID,

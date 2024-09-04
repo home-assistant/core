@@ -1,4 +1,5 @@
 """YoLink Thermostat."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -62,6 +63,7 @@ class YoLinkClimateEntity(YoLinkEntity, ClimateEntity):
     """YoLink Climate Entity."""
 
     _attr_name = None
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self,
@@ -75,6 +77,7 @@ class YoLinkClimateEntity(YoLinkEntity, ClimateEntity):
         self._attr_fan_modes = [FAN_ON, FAN_AUTO]
         self._attr_min_temp = -10
         self._attr_max_temp = 50
+        self._attr_hvac_mode = None
         self._attr_hvac_modes = [
             HVACMode.COOL,
             HVACMode.HEAT,
@@ -86,6 +89,8 @@ class YoLinkClimateEntity(YoLinkEntity, ClimateEntity):
             ClimateEntityFeature.FAN_MODE
             | ClimateEntityFeature.PRESET_MODE
             | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+            | ClimateEntityFeature.TURN_OFF
+            | ClimateEntityFeature.TURN_ON
         )
 
     @callback

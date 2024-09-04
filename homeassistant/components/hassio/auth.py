@@ -1,4 +1,5 @@
 """Implement the auth feature from Hass.io for Add-ons."""
+
 from http import HTTPStatus
 from ipaddress import ip_address
 import logging
@@ -10,7 +11,7 @@ import voluptuous as vol
 
 from homeassistant.auth.models import User
 from homeassistant.auth.providers import homeassistant as auth_ha
-from homeassistant.components.http import KEY_HASS_USER, HomeAssistantView
+from homeassistant.components.http import KEY_HASS, KEY_HASS_USER, HomeAssistantView
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
@@ -47,12 +48,12 @@ class HassIOBaseAuth(HomeAssistantView):
             hassio_ip
         ):
             _LOGGER.error("Invalid auth request from %s", request.remote)
-            raise HTTPUnauthorized()
+            raise HTTPUnauthorized
 
         # Check caller token
         if request[KEY_HASS_USER].id != self.user.id:
             _LOGGER.error("Invalid auth request from %s", request[KEY_HASS_USER].name)
-            raise HTTPUnauthorized()
+            raise HTTPUnauthorized
 
 
 class HassIOAuth(HassIOBaseAuth):
@@ -74,14 +75,14 @@ class HassIOAuth(HassIOBaseAuth):
     async def post(self, request: web.Request, data: dict[str, str]) -> web.Response:
         """Handle auth requests."""
         self._check_access(request)
-        provider = auth_ha.async_get_provider(request.app["hass"])
+        provider = auth_ha.async_get_provider(request.app[KEY_HASS])
 
         try:
             await provider.async_validate_login(
                 data[ATTR_USERNAME], data[ATTR_PASSWORD]
             )
         except auth_ha.InvalidAuth:
-            raise HTTPNotFound() from None
+            raise HTTPNotFound from None
 
         return web.Response(status=HTTPStatus.OK)
 
@@ -104,13 +105,13 @@ class HassIOPasswordReset(HassIOBaseAuth):
     async def post(self, request: web.Request, data: dict[str, str]) -> web.Response:
         """Handle password reset requests."""
         self._check_access(request)
-        provider = auth_ha.async_get_provider(request.app["hass"])
+        provider = auth_ha.async_get_provider(request.app[KEY_HASS])
 
         try:
             await provider.async_change_password(
                 data[ATTR_USERNAME], data[ATTR_PASSWORD]
             )
         except auth_ha.InvalidUser as err:
-            raise HTTPNotFound() from err
+            raise HTTPNotFound from err
 
         return web.Response(status=HTTPStatus.OK)

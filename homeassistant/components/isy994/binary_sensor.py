@@ -1,4 +1,5 @@
 """Support for ISY binary sensors."""
+
 from __future__ import annotations
 
 from datetime import datetime, timedelta
@@ -446,7 +447,7 @@ class ISYBinarySensorHeartbeat(ISYNodeEntity, BinarySensorEntity, RestoreEntity)
 
         self._node.control_events.subscribe(self._heartbeat_node_control_handler)
 
-        # Start the timer on bootup, so we can change from UNKNOWN to OFF
+        # Start the timer on boot-up, so we can change from UNKNOWN to OFF
         self._restart_timer()
 
         if (last_state := await self.async_get_last_state()) is not None:

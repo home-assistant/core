@@ -1,4 +1,5 @@
 """Test Home Assistant util methods."""
+
 from datetime import datetime, timedelta
 from unittest.mock import MagicMock, patch
 
@@ -53,8 +54,8 @@ def test_slugify() -> None:
     assert util.slugify("影師嗎") == "ying_shi_ma"
     assert util.slugify("けいふぉんと") == "keihuonto"
     assert util.slugify("$") == "unknown"
-    assert util.slugify("Ⓐ") == "unknown"
-    assert util.slugify("ⓑ") == "unknown"
+    assert util.slugify("Ⓐ") == "a"
+    assert util.slugify("ⓑ") == "b"
     assert util.slugify("$$$") == "unknown"
     assert util.slugify("$something") == "something"
     assert util.slugify("") == ""

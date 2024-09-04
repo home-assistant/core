@@ -1,4 +1,5 @@
 """Test the LIFX sensor platform."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -44,9 +45,11 @@ async def test_rssi_sensor(
     )
     config_entry.add_to_hass(hass)
     bulb = _mocked_bulb()
-    with _patch_discovery(device=bulb), _patch_config_flow_try_connect(
-        device=bulb
-    ), _patch_device(device=bulb):
+    with (
+        _patch_discovery(device=bulb),
+        _patch_config_flow_try_connect(device=bulb),
+        _patch_device(device=bulb),
+    ):
         await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
         await hass.async_block_till_done()
 
@@ -59,12 +62,14 @@ async def test_rssi_sensor(
 
     # Test enabling entity
     updated_entry = entity_registry.async_update_entity(
-        entry.entity_id, **{"disabled_by": None}
+        entry.entity_id, disabled_by=None
     )
 
-    with _patch_discovery(device=bulb), _patch_config_flow_try_connect(
-        device=bulb
-    ), _patch_device(device=bulb):
+    with (
+        _patch_discovery(device=bulb),
+        _patch_config_flow_try_connect(device=bulb),
+        _patch_device(device=bulb),
+    ):
         await hass.config_entries.async_reload(config_entry.entry_id)
         await hass.async_block_till_done()
 
@@ -96,9 +101,11 @@ async def test_rssi_sensor_old_firmware(
     )
     config_entry.add_to_hass(hass)
     bulb = _mocked_bulb_old_firmware()
-    with _patch_discovery(device=bulb), _patch_config_flow_try_connect(
-        device=bulb
-    ), _patch_device(device=bulb):
+    with (
+        _patch_discovery(device=bulb),
+        _patch_config_flow_try_connect(device=bulb),
+        _patch_device(device=bulb),
+    ):
         await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
         await hass.async_block_till_done()
 
@@ -111,12 +118,14 @@ async def test_rssi_sensor_old_firmware(
 
     # Test enabling entity
     updated_entry = entity_registry.async_update_entity(
-        entry.entity_id, **{"disabled_by": None}
+        entry.entity_id, disabled_by=None
     )
 
-    with _patch_discovery(device=bulb), _patch_config_flow_try_connect(
-        device=bulb
-    ), _patch_device(device=bulb):
+    with (
+        _patch_discovery(device=bulb),
+        _patch_config_flow_try_connect(device=bulb),
+        _patch_device(device=bulb),
+    ):
         await hass.config_entries.async_reload(config_entry.entry_id)
         await hass.async_block_till_done()
 

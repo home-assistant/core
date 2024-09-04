@@ -1,8 +1,10 @@
 """Support for LG webOS Smart TV."""
+
 from __future__ import annotations
 
 from contextlib import suppress
 import logging
+from typing import NamedTuple
 
 from aiowebostv import WebOsClient, WebOsTvPairError
 import voluptuous as vol
@@ -38,9 +40,17 @@ from .const import (
     WEBOSTV_EXCEPTIONS,
 )
 
-CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 CALL_SCHEMA = vol.Schema({vol.Required(ATTR_ENTITY_ID): cv.comp_entity_ids})
+
+
+class ServiceMethodDetails(NamedTuple):
+    """Details for SERVICE_TO_METHOD mapping."""
+
+    method: str
+    schema: vol.Schema
+
 
 BUTTON_SCHEMA = CALL_SCHEMA.extend({vol.Required(ATTR_BUTTON): cv.string})
 
@@ -51,12 +61,14 @@ COMMAND_SCHEMA = CALL_SCHEMA.extend(
 SOUND_OUTPUT_SCHEMA = CALL_SCHEMA.extend({vol.Required(ATTR_SOUND_OUTPUT): cv.string})
 
 SERVICE_TO_METHOD = {
-    SERVICE_BUTTON: {"method": "async_button", "schema": BUTTON_SCHEMA},
-    SERVICE_COMMAND: {"method": "async_command", "schema": COMMAND_SCHEMA},
-    SERVICE_SELECT_SOUND_OUTPUT: {
-        "method": "async_select_sound_output",
-        "schema": SOUND_OUTPUT_SCHEMA,
-    },
+    SERVICE_BUTTON: ServiceMethodDetails(method="async_button", schema=BUTTON_SCHEMA),
+    SERVICE_COMMAND: ServiceMethodDetails(
+        method="async_command", schema=COMMAND_SCHEMA
+    ),
+    SERVICE_SELECT_SOUND_OUTPUT: ServiceMethodDetails(
+        method="async_select_sound_output",
+        schema=SOUND_OUTPUT_SCHEMA,
+    ),
 }
 
 _LOGGER = logging.getLogger(__name__)
@@ -91,13 +103,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     async def async_service_handler(service: ServiceCall) -> None:
         method = SERVICE_TO_METHOD[service.service]
         data = service.data.copy()
-        data["method"] = method["method"]
+        data["method"] = method.method
         async_dispatcher_send(hass, DOMAIN, data)
 
     for service, method in SERVICE_TO_METHOD.items():
-        schema = method["schema"]
         hass.services.async_register(
-            DOMAIN, service, async_service_handler, schema=schema
+            DOMAIN, service, async_service_handler, schema=method.schema
         )
 
     hass.data[DOMAIN][DATA_CONFIG_ENTRY][entry.entry_id] = client

@@ -1,8 +1,12 @@
 """KNX Websocket Tests."""
+
 from typing import Any
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant.components.knx import DOMAIN, KNX_ADDRESS, SwitchSchema
+from homeassistant.components.knx.project import STORAGE_KEY as KNX_PROJECT_STORAGE_KEY
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 
@@ -13,7 +17,7 @@ from tests.typing import WebSocketGenerator
 
 async def test_knx_info_command(
     hass: HomeAssistant, knx: KNXTestKit, hass_ws_client: WebSocketGenerator
-):
+) -> None:
     """Test knx/info command."""
     await knx.setup_integration({})
     client = await hass_ws_client(hass)
@@ -32,7 +36,7 @@ async def test_knx_info_command_with_project(
     knx: KNXTestKit,
     hass_ws_client: WebSocketGenerator,
     load_knxproj: None,
-):
+) -> None:
     """Test knx/info command with loaded project."""
     await knx.setup_integration({})
     client = await hass_ws_client(hass)
@@ -54,7 +58,7 @@ async def test_knx_project_file_process(
     knx: KNXTestKit,
     hass_ws_client: WebSocketGenerator,
     hass_storage: dict[str, Any],
-):
+) -> None:
     """Test knx/project_file_process command for storing and loading new data."""
     _file_id = "1234"
     _password = "pw-test"
@@ -72,11 +76,12 @@ async def test_knx_project_file_process(
             "password": _password,
         }
     )
-    with patch(
-        "homeassistant.components.knx.project.process_uploaded_file",
-    ) as file_upload_mock, patch(
-        "xknxproject.XKNXProj.parse", return_value=_parse_result
-    ) as parse_mock:
+    with (
+        patch(
+            "homeassistant.components.knx.project.process_uploaded_file",
+        ) as file_upload_mock,
+        patch("xknxproject.XKNXProj.parse", return_value=_parse_result) as parse_mock,
+    ):
         file_upload_mock.return_value.__enter__.return_value = ""
         res = await client.receive_json()
 
@@ -85,13 +90,14 @@ async def test_knx_project_file_process(
 
     assert res["success"], res
     assert hass.data[DOMAIN].project.loaded
+    assert hass_storage[KNX_PROJECT_STORAGE_KEY]["data"] == _parse_result
 
 
 async def test_knx_project_file_process_error(
     hass: HomeAssistant,
     knx: KNXTestKit,
     hass_ws_client: WebSocketGenerator,
-):
+) -> None:
     """Test knx/project_file_process exception handling."""
     await knx.setup_integration({})
     client = await hass_ws_client(hass)
@@ -105,11 +111,12 @@ async def test_knx_project_file_process_error(
             "password": "",
         }
     )
-    with patch(
-        "homeassistant.components.knx.project.process_uploaded_file",
-    ) as file_upload_mock, patch(
-        "xknxproject.XKNXProj.parse", side_effect=ValueError
-    ) as parse_mock:
+    with (
+        patch(
+            "homeassistant.components.knx.project.process_uploaded_file",
+        ) as file_upload_mock,
+        patch("xknxproject.XKNXProj.parse", side_effect=ValueError) as parse_mock,
+    ):
         file_upload_mock.return_value.__enter__.return_value = ""
         res = await client.receive_json()
         parse_mock.assert_called_once_with()
@@ -123,19 +130,20 @@ async def test_knx_project_file_remove(
     knx: KNXTestKit,
     hass_ws_client: WebSocketGenerator,
     load_knxproj: None,
-):
+    hass_storage: dict[str, Any],
+) -> None:
     """Test knx/project_file_remove command."""
     await knx.setup_integration({})
+    assert hass_storage[KNX_PROJECT_STORAGE_KEY]
     client = await hass_ws_client(hass)
     assert hass.data[DOMAIN].project.loaded
 
     await client.send_json({"id": 6, "type": "knx/project_file_remove"})
-    with patch("homeassistant.helpers.storage.Store.async_remove") as remove_mock:
-        res = await client.receive_json()
-        remove_mock.assert_called_once_with()
+    res = await client.receive_json()
 
     assert res["success"], res
     assert not hass.data[DOMAIN].project.loaded
+    assert not hass_storage.get(KNX_PROJECT_STORAGE_KEY)
 
 
 async def test_knx_get_project(
@@ -143,7 +151,7 @@ async def test_knx_get_project(
     knx: KNXTestKit,
     hass_ws_client: WebSocketGenerator,
     load_knxproj: None,
-):
+) -> None:
     """Test retrieval of kxnproject from store."""
     await knx.setup_integration({})
     client = await hass_ws_client(hass)
@@ -158,7 +166,7 @@ async def test_knx_get_project(
 
 async def test_knx_group_monitor_info_command(
     hass: HomeAssistant, knx: KNXTestKit, hass_ws_client: WebSocketGenerator
-):
+) -> None:
     """Test knx/group_monitor_info command."""
     await knx.setup_integration({})
     client = await hass_ws_client(hass)
@@ -173,7 +181,7 @@ async def test_knx_group_monitor_info_command(
 
 async def test_knx_subscribe_telegrams_command_recent_telegrams(
     hass: HomeAssistant, knx: KNXTestKit, hass_ws_client: WebSocketGenerator
-):
+) -> None:
     """Test knx/subscribe_telegrams command sending recent telegrams."""
     await knx.setup_integration(
         {
@@ -221,7 +229,7 @@ async def test_knx_subscribe_telegrams_command_recent_telegrams(
 
 async def test_knx_subscribe_telegrams_command_no_project(
     hass: HomeAssistant, knx: KNXTestKit, hass_ws_client: WebSocketGenerator
-):
+) -> None:
     """Test knx/subscribe_telegrams command without project data."""
     await knx.setup_integration(
         {
@@ -296,7 +304,7 @@ async def test_knx_subscribe_telegrams_command_project(
     knx: KNXTestKit,
     hass_ws_client: WebSocketGenerator,
     load_knxproj: None,
-):
+) -> None:
     """Test knx/subscribe_telegrams command with project data."""
     await knx.setup_integration({})
     client = await hass_ws_client(hass)
@@ -340,7 +348,7 @@ async def test_knx_subscribe_telegrams_command_project(
     assert res["event"]["destination"] == "0/1/1"
     assert res["event"]["destination_name"] == "percent"
     assert res["event"]["payload"] == 1
-    assert res["event"]["value"] == "Error decoding value"
+    assert res["event"]["value"] is None
     assert res["event"]["telegramtype"] == "GroupValueWrite"
     assert res["event"]["source"] == "1.1.6"
     assert (
@@ -349,3 +357,28 @@ async def test_knx_subscribe_telegrams_command_project(
     )
     assert res["event"]["direction"] == "Incoming"
     assert res["event"]["timestamp"] is not None
+
+
+@pytest.mark.parametrize(
+    "endpoint",
+    [
+        "knx/info",  # sync ws-command
+        "knx/get_knx_project",  # async ws-command
+    ],
+)
+async def test_websocket_when_config_entry_unloaded(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    hass_ws_client: WebSocketGenerator,
+    endpoint: str,
+) -> None:
+    """Test websocket connection when config entry is unloaded."""
+    await knx.setup_integration({})
+    await hass.config_entries.async_unload(knx.mock_config_entry.entry_id)
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id({"type": endpoint})
+    res = await client.receive_json()
+    assert not res["success"]
+    assert res["error"]["code"] == "home_assistant_error"
+    assert res["error"]["message"] == "KNX integration not loaded."

@@ -1,4 +1,5 @@
 """Support for Hitachi DHW."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -86,9 +87,10 @@ class HitachiDHW(OverkizEntity, WaterHeaterEntity):
         """Set new target operation mode."""
         # Turn water heater off
         if operation_mode == OverkizCommandParam.OFF:
-            return await self.executor.async_execute_command(
+            await self.executor.async_execute_command(
                 OverkizCommand.SET_CONTROL_DHW, OverkizCommandParam.STOP
             )
+            return
 
         # Turn water heater on, when off
         if self.current_operation == OverkizCommandParam.OFF:

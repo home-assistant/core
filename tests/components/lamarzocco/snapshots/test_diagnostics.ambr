@@ -1,0 +1,109 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'config': dict({
+      'backflush_enabled': False,
+      'boilers': dict({
+        'CoffeeBoiler1': dict({
+          'current_temperature': 96.5,
+          'enabled': True,
+          'target_temperature': 95,
+        }),
+        'SteamBoiler': dict({
+          'current_temperature': 123.80000305175781,
+          'enabled': True,
+          'target_temperature': 123.9000015258789,
+        }),
+      }),
+      'brew_active': False,
+      'brew_active_duration': 0,
+      'dose_hot_water': 8,
+      'doses': dict({
+        '1': 135,
+        '2': 97,
+        '3': 108,
+        '4': 121,
+      }),
+      'plumbed_in': True,
+      'prebrew_configuration': dict({
+        '1': dict({
+          'off_time': 1,
+          'on_time': 0.5,
+        }),
+        '2': dict({
+          'off_time': 1,
+          'on_time': 0.5,
+        }),
+        '3': dict({
+          'off_time': 3.299999952316284,
+          'on_time': 3.299999952316284,
+        }),
+        '4': dict({
+          'off_time': 2,
+          'on_time': 2,
+        }),
+      }),
+      'prebrew_mode': 'TypeB',
+      'smart_standby': dict({
+        'enabled': True,
+        'minutes': 10,
+        'mode': 'LastBrewing',
+      }),
+      'turned_on': True,
+      'wake_up_sleep_entries': dict({
+        'Os2OswX': dict({
+          'days': list([
+            'monday',
+            'tuesday',
+            'wednesday',
+            'thursday',
+            'friday',
+            'saturday',
+            'sunday',
+          ]),
+          'enabled': True,
+          'entry_id': 'Os2OswX',
+          'steam': True,
+          'time_off': '24:0',
+          'time_on': '22:0',
+        }),
+        'aXFz5bJ': dict({
+          'days': list([
+            'sunday',
+          ]),
+          'enabled': True,
+          'entry_id': 'aXFz5bJ',
+          'steam': True,
+          'time_off': '7:30',
+          'time_on': '7:0',
+        }),
+      }),
+      'water_contact': True,
+    }),
+    'firmware': list([
+      dict({
+        'machine': dict({
+          'current_version': '1.40',
+          'latest_version': '1.55',
+        }),
+      }),
+      dict({
+        'gateway': dict({
+          'current_version': 'v3.1-rc4',
+          'latest_version': 'v3.5-rc3',
+        }),
+      }),
+    ]),
+    'model': 'GS3 AV',
+    'statistics': dict({
+      'continous': 2252,
+      'drink_stats': dict({
+        '1': 1047,
+        '2': 560,
+        '3': 468,
+        '4': 312,
+      }),
+      'total_flushes': 1740,
+    }),
+  })
+# ---

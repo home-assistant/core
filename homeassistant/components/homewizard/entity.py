@@ -1,4 +1,5 @@
 """Base entity for the HomeWizard integration."""
+
 from __future__ import annotations
 
 from homeassistant.const import ATTR_CONNECTIONS, ATTR_IDENTIFIERS
@@ -20,7 +21,10 @@ class HomeWizardEntity(CoordinatorEntity[HWEnergyDeviceUpdateCoordinator]):
         self._attr_device_info = DeviceInfo(
             manufacturer="HomeWizard",
             sw_version=coordinator.data.device.firmware_version,
-            model=coordinator.data.device.product_type,
+            model_id=coordinator.data.device.product_type,
+            model=coordinator.data.device.product.name
+            if coordinator.data.device.product
+            else None,
         )
 
         if (serial_number := coordinator.data.device.serial) is not None:

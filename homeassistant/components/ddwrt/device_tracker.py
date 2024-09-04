@@ -1,4 +1,5 @@
 """Support for DD-WRT routers."""
+
 from __future__ import annotations
 
 from http import HTTPStatus
@@ -10,7 +11,7 @@ import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
     DOMAIN,
-    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
     DeviceScanner,
 )
 from homeassistant.const import (
@@ -34,7 +35,7 @@ DEFAULT_VERIFY_SSL = True
 CONF_WIRELESS_ONLY = "wireless_only"
 DEFAULT_WIRELESS_ONLY = True
 
-PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
@@ -97,7 +98,7 @@ class DdWrtDeviceScanner(DeviceScanner):
             elements = cleaned_str.split(",")
             num_clients = int(len(elements) / 5)
             self.mac2name = {}
-            for idx in range(0, num_clients):
+            for idx in range(num_clients):
                 # The data is a single array
                 # every 5 elements represents one host, the MAC
                 # is the third element and the name is the first.
@@ -151,7 +152,7 @@ class DdWrtDeviceScanner(DeviceScanner):
             )
         except requests.exceptions.Timeout:
             _LOGGER.exception("Connection to the router timed out")
-            return
+            return None
         if response.status_code == HTTPStatus.OK:
             return _parse_ddwrt_response(response.text)
         if response.status_code == HTTPStatus.UNAUTHORIZED:
@@ -159,8 +160,9 @@ class DdWrtDeviceScanner(DeviceScanner):
             _LOGGER.exception(
                 "Failed to authenticate, check your username and password"
             )
-            return
+            return None
         _LOGGER.error("Invalid response from DD-WRT: %s", response)
+        return None
 
 
 def _parse_ddwrt_response(data_str):

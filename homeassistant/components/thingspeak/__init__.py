@@ -1,4 +1,5 @@
 """Support for submitting data to Thingspeak."""
+
 import logging
 
 from requests.exceptions import RequestException

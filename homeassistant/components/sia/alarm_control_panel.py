@@ -1,4 +1,5 @@
 """Module for SIA Alarm Control Panels."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -63,8 +64,8 @@ ENTITY_DESCRIPTION_ALARM = SIAAlarmControlPanelEntityDescription(
         "OS": STATE_ALARM_DISARMED,
         "NC": STATE_ALARM_ARMED_NIGHT,
         "NL": STATE_ALARM_ARMED_NIGHT,
-        "NE": STATE_ALARM_ARMED_CUSTOM_BYPASS,
-        "NF": STATE_ALARM_ARMED_CUSTOM_BYPASS,
+        "NE": STATE_ALARM_ARMED_NIGHT,
+        "NF": STATE_ALARM_ARMED_NIGHT,
         "BR": PREVIOUS_STATE,
     },
 )

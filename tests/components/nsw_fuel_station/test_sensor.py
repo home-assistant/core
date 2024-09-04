@@ -1,4 +1,5 @@
 """The tests for the NSW Fuel Station sensor platform."""
+
 from unittest.mock import patch
 
 from nsw_fuel import FuelCheckError
@@ -22,7 +23,9 @@ VALID_CONFIG_EXPECTED_ENTITY_IDS = ["my_fake_station_p95", "my_fake_station_e10"
 class MockPrice:
     """Mock Price implementation."""
 
-    def __init__(self, price, fuel_type, last_updated, price_unit, station_code):
+    def __init__(
+        self, price, fuel_type, last_updated, price_unit, station_code
+    ) -> None:
         """Initialize a mock price instance."""
         self.price = price
         self.fuel_type = fuel_type
@@ -34,7 +37,7 @@ class MockPrice:
 class MockStation:
     """Mock Station implementation."""
 
-    def __init__(self, name, code):
+    def __init__(self, name, code) -> None:
         """Initialize a mock Station instance."""
         self.name = name
         self.code = code
@@ -43,7 +46,7 @@ class MockStation:
 class MockGetFuelPricesResponse:
     """Mock GetFuelPricesResponse implementation."""
 
-    def __init__(self, prices, stations):
+    def __init__(self, prices, stations) -> None:
         """Initialize a mock GetFuelPricesResponse instance."""
         self.prices = prices
         self.stations = stations
@@ -89,7 +92,7 @@ async def test_setup(get_fuel_prices, hass: HomeAssistant) -> None:
 
 def raise_fuel_check_error():
     """Raise fuel check error for testing error cases."""
-    raise FuelCheckError()
+    raise FuelCheckError
 
 
 @patch(

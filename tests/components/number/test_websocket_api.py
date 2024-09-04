@@ -1,4 +1,5 @@
 """Test the number websocket API."""
+
 from homeassistant.components.number.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component

@@ -1,20 +1,27 @@
 """Test the cloud component."""
+
 from collections.abc import Callable, Coroutine
 from typing import Any
 from unittest.mock import MagicMock, patch
 
-from hass_nabucasa import Cloud
 import pytest
 
-from homeassistant.components import cloud
 from homeassistant.components.cloud import (
+    CloudConnectionState,
     CloudNotAvailable,
     CloudNotConnected,
     async_get_or_create_cloudhook,
+    async_listen_connection_change,
+    async_remote_ui_url,
 )
-from homeassistant.components.cloud.const import DOMAIN, PREF_CLOUDHOOKS
+from homeassistant.components.cloud.const import (
+    DATA_CLOUD,
+    DOMAIN,
+    MODE_DEV,
+    PREF_CLOUDHOOKS,
+)
 from homeassistant.components.cloud.prefs import STORAGE_KEY
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import CONF_MODE, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import Unauthorized
 from homeassistant.setup import async_setup_component
@@ -31,7 +38,7 @@ async def test_constructor_loads_info_from_config(hass: HomeAssistant) -> None:
             {
                 "http": {},
                 "cloud": {
-                    cloud.CONF_MODE: cloud.MODE_DEV,
+                    CONF_MODE: MODE_DEV,
                     "cognito_client_id": "test-cognito_client_id",
                     "user_pool_id": "test-user_pool_id",
                     "region": "test-region",
@@ -46,8 +53,8 @@ async def test_constructor_loads_info_from_config(hass: HomeAssistant) -> None:
         )
         assert result
 
-    cl = hass.data["cloud"]
-    assert cl.mode == cloud.MODE_DEV
+    cl = hass.data[DATA_CLOUD]
+    assert cl.mode == MODE_DEV
     assert cl.cognito_client_id == "test-cognito_client_id"
     assert cl.user_pool_id == "test-user_pool_id"
     assert cl.region == "test-region"
@@ -60,23 +67,26 @@ async def test_constructor_loads_info_from_config(hass: HomeAssistant) -> None:
     assert cl.remotestate_server == "test-remotestate-server"
 
 
+@pytest.mark.usefixtures("mock_cloud_fixture")
 async def test_remote_services(
-    hass: HomeAssistant, mock_cloud_fixture, hass_read_only_user: MockUser
+    hass: HomeAssistant, hass_read_only_user: MockUser
 ) -> None:
     """Setup cloud component and test services."""
-    cloud = hass.data[DOMAIN]
+    cloud = hass.data[DATA_CLOUD]
 
     assert hass.services.has_service(DOMAIN, "remote_connect")
     assert hass.services.has_service(DOMAIN, "remote_disconnect")
 
     with patch("hass_nabucasa.remote.RemoteUI.connect") as mock_connect:
         await hass.services.async_call(DOMAIN, "remote_connect", blocking=True)
+        await hass.async_block_till_done()
 
     assert mock_connect.called
     assert cloud.client.remote_autostart
 
     with patch("hass_nabucasa.remote.RemoteUI.disconnect") as mock_disconnect:
         await hass.services.async_call(DOMAIN, "remote_disconnect", blocking=True)
+        await hass.async_block_till_done()
 
     assert mock_disconnect.called
     assert not cloud.client.remote_autostart
@@ -84,8 +94,9 @@ async def test_remote_services(
     # Test admin access required
     non_admin_context = Context(user_id=hass_read_only_user.id)
 
-    with patch("hass_nabucasa.remote.RemoteUI.connect") as mock_connect, pytest.raises(
-        Unauthorized
+    with (
+        patch("hass_nabucasa.remote.RemoteUI.connect") as mock_connect,
+        pytest.raises(Unauthorized),
     ):
         await hass.services.async_call(
             DOMAIN, "remote_connect", blocking=True, context=non_admin_context
@@ -93,9 +104,10 @@ async def test_remote_services(
 
     assert mock_connect.called is False
 
-    with patch(
-        "hass_nabucasa.remote.RemoteUI.disconnect"
-    ) as mock_disconnect, pytest.raises(Unauthorized):
+    with (
+        patch("hass_nabucasa.remote.RemoteUI.disconnect") as mock_disconnect,
+        pytest.raises(Unauthorized),
+    ):
         await hass.services.async_call(
             DOMAIN, "remote_disconnect", blocking=True, context=non_admin_context
         )
@@ -103,8 +115,9 @@ async def test_remote_services(
     assert mock_disconnect.called is False
 
 
-async def test_startup_shutdown_events(hass: HomeAssistant, mock_cloud_fixture) -> None:
-    """Test if the cloud will start on startup event."""
+@pytest.mark.usefixtures("mock_cloud_fixture")
+async def test_shutdown_event(hass: HomeAssistant) -> None:
+    """Test if the cloud will stop on shutdown event."""
     with patch("hass_nabucasa.Cloud.stop") as mock_stop:
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
         await hass.async_block_till_done()
@@ -125,7 +138,7 @@ async def test_setup_existing_cloud_user(
             {
                 "http": {},
                 "cloud": {
-                    cloud.CONF_MODE: cloud.MODE_DEV,
+                    CONF_MODE: MODE_DEV,
                     "cognito_client_id": "test-cognito_client_id",
                     "user_pool_id": "test-user_pool_id",
                     "region": "test-region",
@@ -138,9 +151,10 @@ async def test_setup_existing_cloud_user(
     assert hass_storage[STORAGE_KEY]["data"]["cloud_user"] == user.id
 
 
-async def test_on_connect(hass: HomeAssistant, mock_cloud_fixture) -> None:
+@pytest.mark.usefixtures("mock_cloud_fixture")
+async def test_on_connect(hass: HomeAssistant) -> None:
     """Test cloud on connect triggers."""
-    cl: Cloud[cloud.client.CloudClient] = hass.data["cloud"]
+    cl = hass.data[DATA_CLOUD]
 
     assert len(cl.iot._on_connect) == 3
 
@@ -152,7 +166,7 @@ async def test_on_connect(hass: HomeAssistant, mock_cloud_fixture) -> None:
         nonlocal cloud_states
         cloud_states.append(cloud_state)
 
-    cloud.async_listen_connection_change(hass, handle_state)
+    async_listen_connection_change(hass, handle_state)
 
     assert "async_setup" in str(cl.iot._on_connect[-1])
     await cl.iot._on_connect[-1]()
@@ -174,12 +188,12 @@ async def test_on_connect(hass: HomeAssistant, mock_cloud_fixture) -> None:
     assert len(mock_load.mock_calls) == 0
 
     assert len(cloud_states) == 1
-    assert cloud_states[-1] == cloud.CloudConnectionState.CLOUD_CONNECTED
+    assert cloud_states[-1] == CloudConnectionState.CLOUD_CONNECTED
 
     await cl.iot._on_connect[-1]()
     await hass.async_block_till_done()
     assert len(cloud_states) == 2
-    assert cloud_states[-1] == cloud.CloudConnectionState.CLOUD_CONNECTED
+    assert cloud_states[-1] == CloudConnectionState.CLOUD_CONNECTED
 
     assert len(cl.iot._on_disconnect) == 2
     assert "async_setup" in str(cl.iot._on_disconnect[-1])
@@ -187,39 +201,40 @@ async def test_on_connect(hass: HomeAssistant, mock_cloud_fixture) -> None:
     await hass.async_block_till_done()
 
     assert len(cloud_states) == 3
-    assert cloud_states[-1] == cloud.CloudConnectionState.CLOUD_DISCONNECTED
+    assert cloud_states[-1] == CloudConnectionState.CLOUD_DISCONNECTED
 
     await cl.iot._on_disconnect[-1]()
     await hass.async_block_till_done()
     assert len(cloud_states) == 4
-    assert cloud_states[-1] == cloud.CloudConnectionState.CLOUD_DISCONNECTED
+    assert cloud_states[-1] == CloudConnectionState.CLOUD_DISCONNECTED
 
 
-async def test_remote_ui_url(hass: HomeAssistant, mock_cloud_fixture) -> None:
+@pytest.mark.usefixtures("mock_cloud_fixture")
+async def test_remote_ui_url(hass: HomeAssistant) -> None:
     """Test getting remote ui url."""
-    cl = hass.data["cloud"]
+    cl = hass.data[DATA_CLOUD]
 
     # Not logged in
-    with pytest.raises(cloud.CloudNotAvailable):
-        cloud.async_remote_ui_url(hass)
+    with pytest.raises(CloudNotAvailable):
+        async_remote_ui_url(hass)
 
-    with patch.object(cloud, "async_is_logged_in", return_value=True):
+    with patch("homeassistant.components.cloud.async_is_logged_in", return_value=True):
         # Remote not enabled
-        with pytest.raises(cloud.CloudNotAvailable):
-            cloud.async_remote_ui_url(hass)
+        with pytest.raises(CloudNotAvailable):
+            async_remote_ui_url(hass)
 
         with patch.object(cl.remote, "connect"):
             await cl.client.prefs.async_update(remote_enabled=True)
             await hass.async_block_till_done()
 
         # No instance domain
-        with pytest.raises(cloud.CloudNotAvailable):
-            cloud.async_remote_ui_url(hass)
+        with pytest.raises(CloudNotAvailable):
+            async_remote_ui_url(hass)
 
         # Remote finished initializing
         cl.client.prefs._prefs["remote_domain"] = "example.com"
 
-        assert cloud.async_remote_ui_url(hass) == "https://example.com"
+        assert async_remote_ui_url(hass) == "https://example.com"
 
 
 async def test_async_get_or_create_cloudhook(

@@ -1,6 +1,5 @@
 """Test ESPHome selects."""
 
-
 from unittest.mock import call
 
 from aioesphomeapi import APIClient, SelectInfo, SelectState

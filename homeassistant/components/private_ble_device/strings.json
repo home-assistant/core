@@ -1,6 +1,6 @@
 {
   "config": {
-    "flow_title": "[%key:component::bluetooth::config::flow_title%]",
+    "flow_title": "{name}",
     "step": {
       "user": {
         "description": "What is the IRK (Identity Resolving Key) of the BLE device you want to track?",

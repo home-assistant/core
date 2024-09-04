@@ -1,4 +1,5 @@
 """The Steamist integration."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -14,7 +15,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DISCOVER_SCAN_TIMEOUT, DISCOVERY, DOMAIN, STARTUP_SCAN_TIMEOUT
+from .const import DISCOVER_SCAN_TIMEOUT, DISCOVERY, DOMAIN
 from .coordinator import SteamistDataUpdateCoordinator
 from .discovery import (
     async_discover_device,
@@ -32,14 +33,16 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the steamist component."""
     domain_data = hass.data.setdefault(DOMAIN, {})
-    domain_data[DISCOVERY] = await async_discover_devices(hass, STARTUP_SCAN_TIMEOUT)
+    domain_data[DISCOVERY] = []
 
     async def _async_discovery(*_: Any) -> None:
         async_trigger_discovery(
             hass, await async_discover_devices(hass, DISCOVER_SCAN_TIMEOUT)
         )
 
-    async_trigger_discovery(hass, domain_data[DISCOVERY])
+    hass.async_create_background_task(
+        _async_discovery(), "steamist-discovery", eager_start=True
+    )
     async_track_time_interval(hass, _async_discovery, DISCOVERY_INTERVAL)
     return True
 

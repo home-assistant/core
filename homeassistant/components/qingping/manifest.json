@@ -15,10 +15,10 @@
       "connectable": false
     }
   ],
-  "codeowners": ["@bdraco", "@skgsergio"],
+  "codeowners": ["@bdraco"],
   "config_flow": true,
   "dependencies": ["bluetooth_adapters"],
   "documentation": "https://www.home-assistant.io/integrations/qingping",
   "iot_class": "local_push",
-  "requirements": ["qingping-ble==0.9.0"]
+  "requirements": ["qingping-ble==0.10.0"]
 }

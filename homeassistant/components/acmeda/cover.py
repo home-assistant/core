@@ -1,4 +1,5 @@
 """Support for Acmeda Roller Blinds."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -8,24 +9,23 @@ from homeassistant.components.cover import (
     CoverEntity,
     CoverEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import AcmedaConfigEntry
 from .base import AcmedaBase
-from .const import ACMEDA_HUB_UPDATE, DOMAIN
+from .const import ACMEDA_HUB_UPDATE
 from .helpers import async_add_acmeda_entities
-from .hub import PulseHub
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: AcmedaConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Acmeda Rollers from a config entry."""
-    hub: PulseHub = hass.data[DOMAIN][config_entry.entry_id]
+    hub = config_entry.runtime_data
 
     current: set[int] = set()
 

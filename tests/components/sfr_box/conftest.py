@@ -1,4 +1,5 @@
 """Provide common SFR Box fixtures."""
+
 from collections.abc import Generator
 import json
 from unittest.mock import AsyncMock, patch
@@ -15,7 +16,7 @@ from tests.common import MockConfigEntry, load_fixture
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.sfr_box.async_setup_entry", return_value=True
@@ -58,7 +59,7 @@ def get_config_entry_with_auth(hass: HomeAssistant) -> ConfigEntry:
 
 
 @pytest.fixture
-def dsl_get_info() -> Generator[DslInfo, None, None]:
+def dsl_get_info() -> Generator[DslInfo]:
     """Fixture for SFRBox.dsl_get_info."""
     dsl_info = DslInfo(**json.loads(load_fixture("dsl_getInfo.json", DOMAIN)))
     with patch(
@@ -69,7 +70,7 @@ def dsl_get_info() -> Generator[DslInfo, None, None]:
 
 
 @pytest.fixture
-def ftth_get_info() -> Generator[FtthInfo, None, None]:
+def ftth_get_info() -> Generator[FtthInfo]:
     """Fixture for SFRBox.ftth_get_info."""
     info = FtthInfo(**json.loads(load_fixture("ftth_getInfo.json", DOMAIN)))
     with patch(
@@ -80,7 +81,7 @@ def ftth_get_info() -> Generator[FtthInfo, None, None]:
 
 
 @pytest.fixture
-def system_get_info() -> Generator[SystemInfo, None, None]:
+def system_get_info() -> Generator[SystemInfo]:
     """Fixture for SFRBox.system_get_info."""
     info = SystemInfo(**json.loads(load_fixture("system_getInfo.json", DOMAIN)))
     with patch(
@@ -91,7 +92,7 @@ def system_get_info() -> Generator[SystemInfo, None, None]:
 
 
 @pytest.fixture
-def wan_get_info() -> Generator[WanInfo, None, None]:
+def wan_get_info() -> Generator[WanInfo]:
     """Fixture for SFRBox.wan_get_info."""
     info = WanInfo(**json.loads(load_fixture("wan_getInfo.json", DOMAIN)))
     with patch(

@@ -1,10 +1,12 @@
 """Reads vehicle status from StarLine API."""
+
 from __future__ import annotations
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -29,52 +31,57 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         translation_key="battery",
         device_class=SensorDeviceClass.VOLTAGE,
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="balance",
         translation_key="balance",
-        icon="mdi:cash-multiple",
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="ctemp",
         translation_key="interior_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="etemp",
         translation_key="engine_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="gsm_lvl",
         translation_key="gsm_signal",
         native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="fuel",
         translation_key="fuel",
-        icon="mdi:fuel",
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="errors",
         translation_key="errors",
-        icon="mdi:alert-octagon",
+        native_unit_of_measurement="errors",
         entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="mileage",
         translation_key="mileage",
         native_unit_of_measurement=UnitOfLength.KILOMETERS,
         device_class=SensorDeviceClass.DISTANCE,
-        icon="mdi:counter",
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     SensorEntityDescription(
         key="gps_count",
         translation_key="gps_count",
-        icon="mdi:satellite-variant",
         native_unit_of_measurement="satellites",
+        state_class=SensorStateClass.MEASUREMENT,
     ),
 )
 
@@ -139,7 +146,7 @@ class StarlineSensor(StarlineEntity, SensorEntity):
         if self._key == "mileage" and self._device.mileage:
             return self._device.mileage.get("val")
         if self._key == "gps_count" and self._device.position:
-            return self._device.position["sat_qty"]
+            return self._device.position.get("sat_qty")
         return None
 
     @property

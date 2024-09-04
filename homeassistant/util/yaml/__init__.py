@@ -1,4 +1,5 @@
 """YAML utility functions."""
+
 from .const import SECRET_YAML
 from .dumper import dump, save_yaml
 from .input import UndefinedSubstitution, extract_inputs, substitute

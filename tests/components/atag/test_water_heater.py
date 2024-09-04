@@ -1,4 +1,5 @@
 """Tests for the Atag water heater platform."""
+
 from unittest.mock import patch
 
 from homeassistant.components.atag import DOMAIN

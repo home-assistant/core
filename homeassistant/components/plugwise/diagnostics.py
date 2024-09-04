@@ -1,20 +1,19 @@
 """Diagnostics support for Plugwise."""
+
 from __future__ import annotations
 
 from typing import Any
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN
-from .coordinator import PlugwiseDataUpdateCoordinator
+from . import PlugwiseConfigEntry
 
 
 async def async_get_config_entry_diagnostics(
-    hass: HomeAssistant, entry: ConfigEntry
+    hass: HomeAssistant, entry: PlugwiseConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    coordinator: PlugwiseDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     return {
         "gateway": coordinator.data.gateway,
         "devices": coordinator.data.devices,

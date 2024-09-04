@@ -1,4 +1,5 @@
 """Config flow for FiveM integration."""
+
 from __future__ import annotations
 
 import logging
@@ -7,9 +8,8 @@ from typing import Any
 from fivem import FiveM, FiveMServerOfflineError
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
-from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
 
 from .const import DOMAIN
@@ -37,14 +37,14 @@ async def validate_input(data: dict[str, Any]) -> None:
         raise InvalidGameNameError
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class FiveMConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for FiveM."""
 
     VERSION = 1
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         if user_input is None:
             return self.async_show_form(
@@ -59,7 +59,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors["base"] = "cannot_connect"
         except InvalidGameNameError:
             errors["base"] = "invalid_game_name"
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:

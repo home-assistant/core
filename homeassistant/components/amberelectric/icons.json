@@ -1,0 +1,26 @@
+{
+  "entity": {
+    "sensor": {
+      "general": {
+        "default": "mdi:transmission-tower"
+      },
+      "controlled_load": {
+        "default": "mdi:clock-outline"
+      },
+      "feed_in": {
+        "default": "mdi:solar-power"
+      },
+      "renewables": {
+        "default": "mdi:solar-power"
+      }
+    },
+    "binary_sensor": {
+      "demand_window": {
+        "default": "mdi:meter-electric",
+        "state": {
+          "off": "mdi:meter-electric-outline"
+        }
+      }
+    }
+  }
+}

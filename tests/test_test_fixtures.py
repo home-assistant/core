@@ -1,4 +1,5 @@
 """Test test fixture configuration."""
+
 from http import HTTPStatus
 import socket
 
@@ -19,7 +20,8 @@ def test_sockets_disabled() -> None:
         socket.socket()
 
 
-def test_sockets_enabled(socket_enabled) -> None:
+@pytest.mark.usefixtures("socket_enabled")
+def test_sockets_enabled() -> None:
     """Test we can't connect to an address different from 127.0.0.1."""
     mysocket = socket.socket()
     with pytest.raises(pytest_socket.SocketConnectBlockedError):

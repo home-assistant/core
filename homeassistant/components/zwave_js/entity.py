@@ -1,4 +1,5 @@
 """Generic Z-Wave Entity Class."""
+
 from __future__ import annotations
 
 from collections.abc import Sequence
@@ -202,7 +203,7 @@ class ZWaveBaseEntity(Entity):
                 property_key=primary_value.property_key,
             )
             in self.info.node.values
-            for endpoint_idx in range(0, primary_value.endpoint)
+            for endpoint_idx in range(primary_value.endpoint)
         ):
             name += f" ({primary_value.endpoint})"
 
@@ -334,5 +335,6 @@ class ZWaveBaseEntity(Entity):
                 value, new_value, options=options, wait_for_result=wait_for_result
             )
         except BaseZwaveJSServerError as err:
-            LOGGER.error("Unable to set value %s: %s", value.value_id, err)
-            raise HomeAssistantError from err
+            raise HomeAssistantError(
+                f"Unable to set value {value.value_id}: {err}"
+            ) from err

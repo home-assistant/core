@@ -1,4 +1,5 @@
 """Platform for Roth Touchline floor heating controller."""
+
 from __future__ import annotations
 
 from typing import Any, NamedTuple
@@ -7,7 +8,7 @@ from pytouchline import PyTouchline
 import voluptuous as vol
 
 from homeassistant.components.climate import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as CLIMATE_PLATFORM_SCHEMA,
     ClimateEntity,
     ClimateEntityFeature,
     HVACMode,
@@ -40,7 +41,7 @@ TOUCHLINE_HA_PRESETS = {
     for preset, settings in PRESET_MODES.items()
 }
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({vol.Required(CONF_HOST): cv.string})
+PLATFORM_SCHEMA = CLIMATE_PLATFORM_SCHEMA.extend({vol.Required(CONF_HOST): cv.string})
 
 
 def setup_platform(
@@ -54,10 +55,10 @@ def setup_platform(
     host = config[CONF_HOST]
     py_touchline = PyTouchline()
     number_of_devices = int(py_touchline.get_number_of_devices(host))
-    devices = []
-    for device_id in range(0, number_of_devices):
-        devices.append(Touchline(PyTouchline(device_id)))
-    add_entities(devices, True)
+    add_entities(
+        (Touchline(PyTouchline(device_id)) for device_id in range(number_of_devices)),
+        True,
+    )
 
 
 class Touchline(ClimateEntity):
@@ -69,6 +70,7 @@ class Touchline(ClimateEntity):
         ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
     )
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, touchline_thermostat):
         """Initialize the Touchline device."""

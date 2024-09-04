@@ -1,4 +1,5 @@
 """Demo platform that offers fake air quality data."""
+
 from __future__ import annotations
 
 from homeassistant.components.air_quality import AirQualityEntity

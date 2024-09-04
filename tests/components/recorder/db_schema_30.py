@@ -3,12 +3,12 @@
 This file contains the model definitions for schema version 30.
 It is used to test the schema migration logic.
 """
+
 from __future__ import annotations
 
 from collections.abc import Callable
 from datetime import datetime, timedelta
 import logging
-import time
 from typing import Any, Self, TypedDict, cast, overload
 
 import ciso8601
@@ -32,6 +32,7 @@ from sqlalchemy import (
     type_coerce,
 )
 from sqlalchemy.dialects import mysql, oracle, postgresql, sqlite
+from sqlalchemy.engine.interfaces import Dialect
 from sqlalchemy.orm import aliased, declarative_base, relationship
 from sqlalchemy.orm.session import Session
 
@@ -108,7 +109,7 @@ STATES_CONTEXT_ID_BIN_INDEX = "ix_states_context_id_bin"
 class FAST_PYSQLITE_DATETIME(sqlite.DATETIME):  # type: ignore[misc]
     """Use ciso8601 to parse datetimes instead of sqlalchemy built-in regex."""
 
-    def result_processor(self, dialect, coltype):  # type: ignore[no-untyped-def]
+    def result_processor(self, dialect: Dialect, coltype: Any) -> Callable | None:
         """Offload the datetime parsing to ciso8601."""
         return lambda value: None if value is None else ciso8601.parse_datetime(value)
 
@@ -374,9 +375,12 @@ class States(Base):  # type: ignore[misc,valid-type]
     last_changed_ts = Column(
         TIMESTAMP_TYPE
     )  # *** Not originally in v30, only added for recorder to startup ok
+    last_reported_ts = Column(
+        TIMESTAMP_TYPE
+    )  # *** Not originally in v30, only added for recorder to startup ok
     last_updated = Column(DATETIME_TYPE, default=dt_util.utcnow, index=True)
     last_updated_ts = Column(
-        TIMESTAMP_TYPE, default=time.time, index=True
+        TIMESTAMP_TYPE, index=True
     )  # *** Not originally in v30, only added for recorder to startup ok
     old_state_id = Column(Integer, ForeignKey("states.state_id"), index=True)
     attributes_id = Column(
@@ -737,13 +741,11 @@ OLD_STATE = aliased(States, name="old_state")
 
 
 @overload
-def process_timestamp(ts: None) -> None:
-    ...
+def process_timestamp(ts: None) -> None: ...
 
 
 @overload
-def process_timestamp(ts: datetime) -> datetime:
-    ...
+def process_timestamp(ts: datetime) -> datetime: ...
 
 
 def process_timestamp(ts: datetime | None) -> datetime | None:

@@ -1,10 +1,11 @@
 """Config flow to configure the Venstar integration."""
+
 from typing import Any
 
 from venstarcolortouch import VenstarColorTouch
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -13,9 +14,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.typing import ConfigType
 
 from .const import _LOGGER, DOMAIN, VENSTAR_TIMEOUT
 
@@ -54,7 +53,7 @@ class VenstarConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Create config entry. Show the setup form to the user."""
         errors = {}
 
@@ -65,7 +64,7 @@ class VenstarConfigFlow(ConfigFlow, domain=DOMAIN):
                 title = await validate_input(self.hass, user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:  # noqa: BLE001
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
@@ -85,7 +84,7 @@ class VenstarConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_import(self, import_data: ConfigType) -> FlowResult:
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Import entry from configuration.yaml."""
         self._async_abort_entries_match({CONF_HOST: import_data[CONF_HOST]})
         return await self.async_step_user(

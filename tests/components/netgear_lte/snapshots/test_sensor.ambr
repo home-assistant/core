@@ -3,11 +3,11 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Netgear LM1200 Cell ID',
-      'icon': 'mdi:radio-tower',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.netgear_lm1200_cell_id',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '12345678',
   })
@@ -16,11 +16,11 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Netgear LM1200 Connection text',
-      'icon': 'mdi:radio-tower',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.netgear_lm1200_connection_text',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '4G',
   })
@@ -29,11 +29,11 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Netgear LM1200 Connection type',
-      'icon': 'mdi:ip',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.netgear_lm1200_connection_type',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'IPv4AndIPv6',
   })
@@ -42,11 +42,11 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Netgear LM1200 Current band',
-      'icon': 'mdi:radio-tower',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.netgear_lm1200_current_band',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'LTE B4',
   })
@@ -60,6 +60,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.netgear_lm1200_radio_quality',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '52',
   })
@@ -68,11 +69,11 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Netgear LM1200 Register network display',
-      'icon': 'mdi:web',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.netgear_lm1200_register_network_display',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'T-Mobile',
   })
@@ -87,6 +88,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.netgear_lm1200_rx_level',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '-113',
   })
@@ -95,11 +97,11 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Netgear LM1200 Service type',
-      'icon': 'mdi:radio-tower',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.netgear_lm1200_service_type',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'LTE',
   })
@@ -108,12 +110,12 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Netgear LM1200 SMS',
-      'icon': 'mdi:message-processing',
       'unit_of_measurement': 'unread',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.netgear_lm1200_sms',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1',
   })
@@ -122,12 +124,12 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Netgear LM1200 SMS total',
-      'icon': 'mdi:message-processing',
       'unit_of_measurement': 'messages',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.netgear_lm1200_sms_total',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1',
   })
@@ -142,6 +144,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.netgear_lm1200_tx_level',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '4',
   })
@@ -150,11 +153,11 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Netgear LM1200 Upstream',
-      'icon': 'mdi:ip-network',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.netgear_lm1200_upstream',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'LTE',
   })
@@ -169,6 +172,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.netgear_lm1200_usage',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '40.5162000656128',
   })

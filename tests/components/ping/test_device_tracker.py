@@ -1,4 +1,5 @@
 """Test the binary sensor platform of ping."""
+
 from collections.abc import Generator
 from datetime import timedelta
 from unittest.mock import patch
@@ -7,19 +8,14 @@ from freezegun.api import FrozenDateTimeFactory
 from icmplib import Host
 import pytest
 
-from homeassistant.components.device_tracker import legacy
-from homeassistant.components.ping.const import DOMAIN
-from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
-from homeassistant.helpers import entity_registry as er, issue_registry as ir
-from homeassistant.setup import async_setup_component
-from homeassistant.util.yaml import dump
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry, async_fire_time_changed, patch_yaml_files
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.fixture
-def entity_registry_enabled_by_default() -> Generator[None, None, None]:
+def entity_registry_enabled_by_default() -> Generator[None]:
     """Test fixture that ensures ping device_tracker entities are enabled in the registry."""
     with patch(
         "homeassistant.components.ping.device_tracker.PingDeviceTracker.entity_registry_enabled_default",
@@ -84,66 +80,12 @@ async def test_setup_and_update(
     assert state.state == "home"
 
 
-async def test_import_issue_creation(
-    hass: HomeAssistant,
-    issue_registry: ir.IssueRegistry,
-):
-    """Test if import issue is raised."""
-
-    await async_setup_component(
-        hass,
-        "device_tracker",
-        {"device_tracker": {"platform": "ping", "hosts": {"test": "10.10.10.10"}}},
-    )
-    await hass.async_block_till_done()
-
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
-    await hass.async_block_till_done()
-
-    issue = issue_registry.async_get_issue(
-        HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
-    )
-    assert issue
-
-
-async def test_import_delete_known_devices(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-):
-    """Test if import deletes known devices."""
-    yaml_devices = {
-        "test": {
-            "hide_if_away": True,
-            "mac": "00:11:22:33:44:55",
-            "name": "Test name",
-            "picture": "/local/test.png",
-            "track": True,
-        },
-    }
-    files = {legacy.YAML_DEVICES: dump(yaml_devices)}
-
-    with patch_yaml_files(files, True), patch(
-        "homeassistant.components.ping.device_tracker.remove_device_from_config"
-    ) as remove_device_from_config:
-        await async_setup_component(
-            hass,
-            "device_tracker",
-            {"device_tracker": {"platform": "ping", "hosts": {"test": "10.10.10.10"}}},
-        )
-        await hass.async_block_till_done()
-
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
-        await hass.async_block_till_done()
-
-        assert len(remove_device_from_config.mock_calls) == 1
-
-
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "setup_integration")
 async def test_reload_not_triggering_home(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     config_entry: MockConfigEntry,
-):
+) -> None:
     """Test if reload/restart does not trigger home when device is unavailable."""
     assert hass.states.get("device_tracker.10_10_10_10").state == "home"
 

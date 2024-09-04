@@ -1,0 +1,17 @@
+{
+  "entity": {
+    "sensor": {
+      "packages": {
+        "default": "mdi:package-variant-closed"
+      }
+    }
+  },
+  "services": {
+    "add_tracking": {
+      "service": "mdi:package-variant-plus"
+    },
+    "remove_tracking": {
+      "service": "mdi:package-variant-minus"
+    }
+  }
+}

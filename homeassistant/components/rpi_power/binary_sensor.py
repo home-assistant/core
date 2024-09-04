@@ -2,6 +2,7 @@
 
 Minimal Kernel needed is 4.14+
 """
+
 import logging
 
 from rpi_bad_power import UnderVoltage, new_under_voltage

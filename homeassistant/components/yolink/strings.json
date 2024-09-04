@@ -37,6 +37,11 @@
       "button_4_long_press": "Button_4 (long press)"
     }
   },
+  "exceptions": {
+    "invalid_config_entry": {
+      "message": "Config entry not found or not loaded!"
+    }
+  },
   "entity": {
     "switch": {
       "usb_ports": { "name": "USB ports" },
@@ -46,6 +51,12 @@
       "plug_4": { "name": "Plug 4" }
     },
     "sensor": {
+      "current_power": {
+        "name": "Current power"
+      },
+      "power_consumption": {
+        "name": "Power consumption"
+      },
       "power_failure_alarm": {
         "name": "Power failure alarm",
         "state": {
@@ -68,11 +79,19 @@
           "enabled": "[%key:common::state::enabled%]",
           "disabled": "[%key:common::state::disabled%]"
         }
+      },
+      "water_meter_reading": {
+        "name": "Water meter reading"
       }
     },
     "number": {
       "config_volume": {
         "name": "Volume"
+      }
+    },
+    "valve": {
+      "meter_valve_state": {
+        "name": "Valve state"
       }
     }
   },

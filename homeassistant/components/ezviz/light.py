@@ -1,4 +1,5 @@
 """Support for EZVIZ light entity."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -35,8 +36,8 @@ async def async_setup_entry(
     async_add_entities(
         EzvizLight(coordinator, camera)
         for camera in coordinator.data
-        for capibility, value in coordinator.data[camera]["supportExt"].items()
-        if capibility == str(SupportExt.SupportAlarmLight.value)
+        for capability, value in coordinator.data[camera]["supportExt"].items()
+        if capability == str(SupportExt.SupportAlarmLight.value)
         if value == "1"
     )
 

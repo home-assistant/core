@@ -10,6 +10,9 @@
         }
       }
     },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+    },
     "error": {
       "cannot_connect": "Failed to connect to server. Please check the address and try again. If a port was provided, it must be within a valid range. If you are running a Minecraft Java Edition server, ensure that it is at least version 1.7."
     }

@@ -5,5 +5,5 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/v2c",
   "iot_class": "local_polling",
-  "requirements": ["pytrydan==0.4.0"]
+  "requirements": ["pytrydan==0.8.0"]
 }

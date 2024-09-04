@@ -1,50 +1,52 @@
 """Component providing HA Siren support for Ring Chimes."""
+
 import logging
 from typing import Any
 
-from ring_doorbell.const import CHIME_TEST_SOUND_KINDS, KIND_DING
+from ring_doorbell import RingChime, RingEventKind
 
 from homeassistant.components.siren import ATTR_TONE, SirenEntity, SirenEntityFeature
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, RING_DEVICES
-from .entity import RingEntityMixin
+from . import RingConfigEntry
+from .coordinator import RingDataCoordinator
+from .entity import RingEntity, exception_wrap
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    entry: RingConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Create the sirens for the Ring devices."""
-    devices = hass.data[DOMAIN][config_entry.entry_id][RING_DEVICES]
-    sirens = []
+    ring_data = entry.runtime_data
+    devices_coordinator = ring_data.devices_coordinator
 
-    for device in devices["chimes"]:
-        sirens.append(RingChimeSiren(config_entry, device))
+    async_add_entities(
+        RingChimeSiren(device, devices_coordinator)
+        for device in ring_data.devices.chimes
+    )
 
-    async_add_entities(sirens)
 
-
-class RingChimeSiren(RingEntityMixin, SirenEntity):
+class RingChimeSiren(RingEntity[RingChime], SirenEntity):
     """Creates a siren to play the test chimes of a Chime device."""
 
-    _attr_available_tones = CHIME_TEST_SOUND_KINDS
+    _attr_available_tones = [RingEventKind.DING.value, RingEventKind.MOTION.value]
     _attr_supported_features = SirenEntityFeature.TURN_ON | SirenEntityFeature.TONES
     _attr_translation_key = "siren"
 
-    def __init__(self, config_entry: ConfigEntry, device) -> None:
+    def __init__(self, device: RingChime, coordinator: RingDataCoordinator) -> None:
         """Initialize a Ring Chime siren."""
-        super().__init__(config_entry.entry_id, device)
+        super().__init__(device, coordinator)
         # Entity class attributes
         self._attr_unique_id = f"{self._device.id}-siren"
 
-    def turn_on(self, **kwargs: Any) -> None:
+    @exception_wrap
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Play the test sound on a Ring Chime device."""
-        tone = kwargs.get(ATTR_TONE) or KIND_DING
+        tone = kwargs.get(ATTR_TONE) or RingEventKind.DING.value
 
-        self._device.test_sound(kind=tone)
+        await self._device.async_test_sound(kind=tone)

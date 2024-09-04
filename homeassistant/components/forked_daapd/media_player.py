@@ -1,4 +1,5 @@
 """Support forked_daapd media player."""
+
 from __future__ import annotations
 
 import asyncio
@@ -105,10 +106,9 @@ async def async_setup_entry(
 
     @callback
     def async_add_zones(api, outputs):
-        zone_entities = []
-        for output in outputs:
-            zone_entities.append(ForkedDaapdZone(api, output, config_entry.entry_id))
-        async_add_entities(zone_entities, False)
+        async_add_entities(
+            ForkedDaapdZone(api, output, config_entry.entry_id) for output in outputs
+        )
 
     remove_add_zones_listener = async_dispatcher_connect(
         hass, SIGNAL_ADD_ZONES.format(config_entry.entry_id), async_add_zones
@@ -127,9 +127,9 @@ async def async_setup_entry(
     forked_daapd_updater = ForkedDaapdUpdater(
         hass, forked_daapd_api, config_entry.entry_id
     )
-    hass.data[DOMAIN][config_entry.entry_id][
-        HASS_DATA_UPDATER_KEY
-    ] = forked_daapd_updater
+    hass.data[DOMAIN][config_entry.entry_id][HASS_DATA_UPDATER_KEY] = (
+        forked_daapd_updater
+    )
     await forked_daapd_updater.async_init()
 
 
@@ -432,17 +432,16 @@ class ForkedDaapdMaster(MediaPlayerEntity):
         # restore state
         await self.api.set_volume(volume=self._last_volume * 100)
         if self._last_outputs:
-            futures: list[asyncio.Task[int]] = []
-            for output in self._last_outputs:
-                futures.append(
-                    asyncio.create_task(
-                        self.api.change_output(
-                            output["id"],
-                            selected=output["selected"],
-                            volume=output["volume"],
-                        )
+            futures: list[asyncio.Task[int]] = [
+                asyncio.create_task(
+                    self.api.change_output(
+                        output["id"],
+                        selected=output["selected"],
+                        volume=output["volume"],
                     )
                 )
+                for output in self._last_outputs
+            ]
             await asyncio.wait(futures)
         else:  # enable all outputs
             await self.api.set_enabled_outputs(
@@ -650,15 +649,14 @@ class ForkedDaapdMaster(MediaPlayerEntity):
         self._last_outputs = self._outputs
         if self._outputs:
             await self.api.set_volume(volume=self._tts_volume * 100)
-            futures = []
-            for output in self._outputs:
-                futures.append(
-                    asyncio.create_task(
-                        self.api.change_output(
-                            output["id"], selected=True, volume=self._tts_volume * 100
-                        )
+            futures = [
+                asyncio.create_task(
+                    self.api.change_output(
+                        output["id"], selected=True, volume=self._tts_volume * 100
                     )
                 )
+                for output in self._outputs
+            ]
             await asyncio.wait(futures)
 
     async def _pause_and_wait_for_callback(self):
@@ -668,7 +666,7 @@ class ForkedDaapdMaster(MediaPlayerEntity):
         try:
             async with asyncio.timeout(CALLBACK_TIMEOUT):
                 await self._paused_event.wait()  # wait for paused
-        except asyncio.TimeoutError:
+        except TimeoutError:
             self._pause_requested = False
         self._paused_event.clear()
 
@@ -701,7 +699,8 @@ class ForkedDaapdMaster(MediaPlayerEntity):
             return
 
         if kwargs.get(ATTR_MEDIA_ANNOUNCE):
-            return await self._async_announce(media_id)
+            await self._async_announce(media_id)
+            return
 
         # if kwargs[ATTR_MEDIA_ENQUEUE] is None, we assume MediaPlayerEnqueue.REPLACE
         # if kwargs[ATTR_MEDIA_ENQUEUE] is True, we assume MediaPlayerEnqueue.ADD
@@ -711,11 +710,12 @@ class ForkedDaapdMaster(MediaPlayerEntity):
             ATTR_MEDIA_ENQUEUE, MediaPlayerEnqueue.REPLACE
         )
         if enqueue in {True, MediaPlayerEnqueue.ADD, MediaPlayerEnqueue.REPLACE}:
-            return await self.api.add_to_queue(
+            await self.api.add_to_queue(
                 uris=media_id,
                 playback="start",
                 clear=enqueue == MediaPlayerEnqueue.REPLACE,
             )
+            return
 
         current_position = next(
             (
@@ -726,13 +726,14 @@ class ForkedDaapdMaster(MediaPlayerEntity):
             0,
         )
         if enqueue == MediaPlayerEnqueue.NEXT:
-            return await self.api.add_to_queue(
+            await self.api.add_to_queue(
                 uris=media_id,
                 playback="start",
                 position=current_position + 1,
             )
+            return
         # enqueue == MediaPlayerEnqueue.PLAY
-        return await self.api.add_to_queue(
+        await self.api.add_to_queue(
             uris=media_id,
             playback="start",
             position=current_position,
@@ -764,7 +765,7 @@ class ForkedDaapdMaster(MediaPlayerEntity):
             async with asyncio.timeout(TTS_TIMEOUT):
                 await self._tts_playing_event.wait()
             # we have started TTS, now wait for completion
-        except asyncio.TimeoutError:
+        except TimeoutError:
             self._tts_requested = False
             _LOGGER.warning("TTS request timed out")
         await asyncio.sleep(
@@ -826,12 +827,13 @@ class ForkedDaapdMaster(MediaPlayerEntity):
             return self._source[:-7]
         return ""
 
-    async def _pipe_call(self, pipe_name, base_function_name):
-        if self._pipe_control_api.get(pipe_name):
-            return await getattr(
-                self._pipe_control_api[pipe_name],
+    async def _pipe_call(self, pipe_name, base_function_name) -> None:
+        if pipe := self._pipe_control_api.get(pipe_name):
+            await getattr(
+                pipe,
                 PIPE_FUNCTION_MAP[pipe_name][base_function_name],
             )()
+            return
         _LOGGER.warning("No pipe control available for %s", pipe_name)
 
     async def async_browse_media(
@@ -958,9 +960,9 @@ class ForkedDaapdUpdater:
         if not {"outputs", "volume"}.isdisjoint(update_types):  # update outputs
             if outputs := await self._api.get_request("outputs"):
                 outputs = outputs["outputs"]
-                update_events[
-                    "outputs"
-                ] = asyncio.Event()  # only for master, zones should ignore
+                update_events["outputs"] = (
+                    asyncio.Event()
+                )  # only for master, zones should ignore
                 async_dispatcher_send(
                     self.hass,
                     SIGNAL_UPDATE_OUTPUTS.format(self._entry_id),

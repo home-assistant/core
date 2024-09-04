@@ -1,15 +1,11 @@
 """Tests for the IPP sensor platform."""
+
 from unittest.mock import AsyncMock
 
 import pytest
 
 from homeassistant.components.sensor import ATTR_OPTIONS
-from homeassistant.const import (
-    ATTR_ICON,
-    ATTR_UNIT_OF_MEASUREMENT,
-    PERCENTAGE,
-    EntityCategory,
-)
+from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, PERCENTAGE, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -26,7 +22,6 @@ async def test_sensors(
     """Test the creation and values of the IPP sensors."""
     state = hass.states.get("sensor.test_ha_1000_series")
     assert state
-    assert state.attributes.get(ATTR_ICON) == "mdi:printer"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
     assert state.attributes.get(ATTR_OPTIONS) == ["idle", "printing", "stopped"]
 
@@ -36,37 +31,31 @@ async def test_sensors(
 
     state = hass.states.get("sensor.test_ha_1000_series_black_ink")
     assert state
-    assert state.attributes.get(ATTR_ICON) == "mdi:water"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is PERCENTAGE
     assert state.state == "58"
 
     state = hass.states.get("sensor.test_ha_1000_series_photo_black_ink")
     assert state
-    assert state.attributes.get(ATTR_ICON) == "mdi:water"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is PERCENTAGE
     assert state.state == "98"
 
     state = hass.states.get("sensor.test_ha_1000_series_cyan_ink")
     assert state
-    assert state.attributes.get(ATTR_ICON) == "mdi:water"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is PERCENTAGE
     assert state.state == "91"
 
     state = hass.states.get("sensor.test_ha_1000_series_yellow_ink")
     assert state
-    assert state.attributes.get(ATTR_ICON) == "mdi:water"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is PERCENTAGE
     assert state.state == "95"
 
     state = hass.states.get("sensor.test_ha_1000_series_magenta_ink")
     assert state
-    assert state.attributes.get(ATTR_ICON) == "mdi:water"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is PERCENTAGE
     assert state.state == "73"
 
     state = hass.states.get("sensor.test_ha_1000_series_uptime")
     assert state
-    assert state.attributes.get(ATTR_ICON) == "mdi:clock-outline"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
     assert state.state == "2019-11-11T09:10:02+00:00"
 
@@ -99,8 +88,8 @@ async def test_missing_entry_unique_id(
     mock_ipp: AsyncMock,
 ) -> None:
     """Test the unique_id of IPP sensor when printer is missing identifiers."""
-    mock_config_entry.unique_id = None
     mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(mock_config_entry, unique_id=None)
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()

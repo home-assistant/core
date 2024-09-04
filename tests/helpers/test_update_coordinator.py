@@ -1,6 +1,6 @@
 """Tests for the update coordinator."""
-import asyncio
-from datetime import timedelta
+
+from datetime import datetime, timedelta
 import logging
 from unittest.mock import AsyncMock, Mock, patch
 import urllib.error
@@ -12,8 +12,12 @@ import requests
 
 from homeassistant import config_entries
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import CoreState, HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.core import CoreState, HomeAssistant, callback
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
 from homeassistant.helpers import update_coordinator
 from homeassistant.util.dt import utcnow
 
@@ -22,7 +26,7 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 _LOGGER = logging.getLogger(__name__)
 
 KNOWN_ERRORS: list[tuple[Exception, type[Exception], str]] = [
-    (asyncio.TimeoutError(), asyncio.TimeoutError, "Timeout fetching test data"),
+    (TimeoutError(), TimeoutError, "Timeout fetching test data"),
     (
         requests.exceptions.Timeout(),
         requests.exceptions.Timeout,
@@ -63,14 +67,13 @@ def get_crd(
         calls += 1
         return calls
 
-    crd = update_coordinator.DataUpdateCoordinator[int](
+    return update_coordinator.DataUpdateCoordinator[int](
         hass,
         _LOGGER,
         name="test",
         update_method=refresh,
         update_interval=update_interval,
     )
-    return crd
 
 
 DEFAULT_UPDATE_INTERVAL = timedelta(seconds=10)
@@ -506,7 +509,7 @@ async def test_stop_refresh_on_ha_stop(
 
     # Fire Home Assistant stop event
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
-    hass.state = CoreState.stopping
+    hass.set_state(CoreState.stopping)
     await hass.async_block_till_done()
 
     # Make sure no update with subscriber after stop event
@@ -526,11 +529,19 @@ async def test_stop_refresh_on_ha_stop(
 
 @pytest.mark.parametrize(
     "err_msg",
-    KNOWN_ERRORS,
+    [
+        *KNOWN_ERRORS,
+        (Exception(), Exception, "Unknown exception"),
+    ],
+)
+@pytest.mark.parametrize(
+    "method",
+    ["update_method", "setup_method"],
 )
 async def test_async_config_entry_first_refresh_failure(
     err_msg: tuple[Exception, type[Exception], str],
     crd: update_coordinator.DataUpdateCoordinator[int],
+    method: str,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test async_config_entry_first_refresh raises ConfigEntryNotReady on failure.
@@ -539,9 +550,42 @@ async def test_async_config_entry_first_refresh_failure(
     will be caught by config_entries.async_setup which will log it with
     a decreasing level of logging once the first message is logged.
     """
-    crd.update_method = AsyncMock(side_effect=err_msg[0])
+    setattr(crd, method, AsyncMock(side_effect=err_msg[0]))
 
     with pytest.raises(ConfigEntryNotReady):
+        await crd.async_config_entry_first_refresh()
+
+    assert crd.last_update_success is False
+    assert isinstance(crd.last_exception, err_msg[1])
+    assert err_msg[2] not in caplog.text
+
+
+@pytest.mark.parametrize(
+    "err_msg",
+    [
+        (ConfigEntryError(), ConfigEntryError, "Config entry error"),
+        (ConfigEntryAuthFailed(), ConfigEntryAuthFailed, "Config entry error"),
+    ],
+)
+@pytest.mark.parametrize(
+    "method",
+    ["update_method", "setup_method"],
+)
+async def test_async_config_entry_first_refresh_failure_passed_through(
+    err_msg: tuple[Exception, type[Exception], str],
+    crd: update_coordinator.DataUpdateCoordinator[int],
+    method: str,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test async_config_entry_first_refresh passes through ConfigEntryError & ConfigEntryAuthFailed.
+
+    Verify we do not log the exception since it
+    will be caught by config_entries.async_setup which will log it with
+    a decreasing level of logging once the first message is logged.
+    """
+    setattr(crd, method, AsyncMock(side_effect=err_msg[0]))
+
+    with pytest.raises(err_msg[1]):
         await crd.async_config_entry_first_refresh()
 
     assert crd.last_update_success is False
@@ -553,9 +597,12 @@ async def test_async_config_entry_first_refresh_success(
     crd: update_coordinator.DataUpdateCoordinator[int], caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test first refresh successfully."""
+
+    crd.setup_method = AsyncMock()
     await crd.async_config_entry_first_refresh()
 
     assert crd.last_update_success is True
+    crd.setup_method.assert_called_once()
 
 
 async def test_not_schedule_refresh_if_system_option_disable_polling(
@@ -716,3 +763,35 @@ async def test_always_callback_when_always_update_is_true(
     update_callback.reset_mock()
 
     remove_callbacks()
+
+
+async def test_timestamp_date_update_coordinator(hass: HomeAssistant) -> None:
+    """Test last_update_success_time is set before calling listeners."""
+    last_update_success_times: list[datetime | None] = []
+
+    async def refresh() -> int:
+        return 1
+
+    crd = update_coordinator.TimestampDataUpdateCoordinator[int](
+        hass,
+        _LOGGER,
+        name="test",
+        update_method=refresh,
+        update_interval=timedelta(seconds=10),
+    )
+
+    @callback
+    def listener():
+        last_update_success_times.append(crd.last_update_success_time)
+
+    unsub = crd.async_add_listener(listener)
+
+    await crd.async_refresh()
+
+    assert len(last_update_success_times) == 1
+    # Ensure the time is set before the listener is called
+    assert last_update_success_times != [None]
+
+    unsub()
+    await crd.async_refresh()
+    assert len(last_update_success_times) == 1

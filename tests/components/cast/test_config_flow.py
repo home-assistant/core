@@ -1,35 +1,39 @@
 """Tests for the Cast config flow."""
+
 from unittest.mock import ANY, patch
 
 import pytest
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.components import cast
 from homeassistant.components.cast.home_assistant_cast import CAST_USER_NAME
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
 
 async def test_creating_entry_sets_up_media_player(hass: HomeAssistant) -> None:
     """Test setting up Cast loads the media player."""
-    with patch(
-        "homeassistant.components.cast.media_player.async_setup_entry",
-        return_value=True,
-    ) as mock_setup, patch(
-        "pychromecast.discovery.discover_chromecasts", return_value=(True, None)
-    ), patch(
-        "pychromecast.discovery.stop_discovery",
+    with (
+        patch(
+            "homeassistant.components.cast.media_player.async_setup_entry",
+            return_value=True,
+        ) as mock_setup,
+        patch("pychromecast.discovery.discover_chromecasts", return_value=(True, None)),
+        patch(
+            "pychromecast.discovery.stop_discovery",
+        ),
     ):
         result = await hass.config_entries.flow.async_init(
             cast.DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
 
         # Confirmation form
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
 
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+        assert result["type"] is FlowResultType.CREATE_ENTRY
 
         await hass.async_block_till_done()
 
@@ -51,7 +55,7 @@ async def test_single_instance(hass: HomeAssistant, source) -> None:
     result = await hass.config_entries.flow.async_init(
         "cast", context={"source": source}
     )
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"
 
 
@@ -60,13 +64,13 @@ async def test_user_setup(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         "cast", context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
     users = await hass.auth.async_get_users()
     assert next(user for user in users if user.name == CAST_USER_NAME)
-    assert result["type"] == "create_entry"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].data == {
         "ignore_cec": [],
         "known_hosts": [],
@@ -80,7 +84,7 @@ async def test_user_setup_options(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         "cast", context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"known_hosts": "192.168.0.1,  ,  192.168.0.2 "}
@@ -88,7 +92,7 @@ async def test_user_setup_options(hass: HomeAssistant) -> None:
 
     users = await hass.auth.async_get_users()
     assert next(user for user in users if user.name == CAST_USER_NAME)
-    assert result["type"] == "create_entry"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].data == {
         "ignore_cec": [],
         "known_hosts": ["192.168.0.1", "192.168.0.2"],
@@ -102,13 +106,13 @@ async def test_zeroconf_setup(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         "cast", context={"source": config_entries.SOURCE_ZEROCONF}
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
     users = await hass.auth.async_get_users()
     assert next(user for user in users if user.name == CAST_USER_NAME)
-    assert result["type"] == "create_entry"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].data == {
         "ignore_cec": [],
         "known_hosts": [],
@@ -128,7 +132,7 @@ async def test_zeroconf_setup_onboarding(hass: HomeAssistant) -> None:
 
     users = await hass.auth.async_get_users()
     assert next(user for user in users if user.name == CAST_USER_NAME)
-    assert result["type"] == "create_entry"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].data == {
         "ignore_cec": [],
         "known_hosts": [],
@@ -144,6 +148,7 @@ def get_suggested(schema, key):
             if k.description is None or "suggested_value" not in k.description:
                 return None
             return k.description["suggested_value"]
+    return None
 
 
 @pytest.mark.parametrize(
@@ -191,7 +196,7 @@ async def test_option_flow(hass: HomeAssistant, parameter_data) -> None:
 
     # Test ignore_cec and uuid options are hidden if advanced options are disabled
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "basic_options"
     data_schema = result["data_schema"].schema
     assert set(data_schema) == {"known_hosts"}
@@ -202,7 +207,7 @@ async def test_option_flow(hass: HomeAssistant, parameter_data) -> None:
     result = await hass.config_entries.options.async_init(
         config_entry.entry_id, context=context
     )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "basic_options"
     data_schema = result["data_schema"].schema
     for other_param in basic_parameters:
@@ -219,7 +224,7 @@ async def test_option_flow(hass: HomeAssistant, parameter_data) -> None:
         result["flow_id"],
         user_input=user_input_dict,
     )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "advanced_options"
     for other_param in basic_parameters:
         if other_param == parameter:
@@ -244,8 +249,8 @@ async def test_option_flow(hass: HomeAssistant, parameter_data) -> None:
         result["flow_id"],
         user_input=user_input_dict,
     )
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert result["data"] is None
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {}
     for other_param in advanced_parameters:
         if other_param == parameter:
             continue
@@ -258,8 +263,8 @@ async def test_option_flow(hass: HomeAssistant, parameter_data) -> None:
         result["flow_id"],
         user_input={"known_hosts": ""},
     )
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert result["data"] is None
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {}
     expected_data = {**orig_data, "known_hosts": []}
     if parameter in advanced_parameters:
         expected_data[parameter] = updated
@@ -274,8 +279,8 @@ async def test_known_hosts(hass: HomeAssistant, castbrowser_mock) -> None:
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"known_hosts": "192.168.0.1, 192.168.0.2"}
     )
-    assert result["type"] == "create_entry"
-    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    await hass.async_block_till_done(wait_background_tasks=True)
     config_entry = hass.config_entries.async_entries("cast")[0]
 
     assert castbrowser_mock.return_value.start_discovery.call_count == 1
@@ -288,7 +293,7 @@ async def test_known_hosts(hass: HomeAssistant, castbrowser_mock) -> None:
         user_input={"known_hosts": "192.168.0.11, 192.168.0.12"},
     )
 
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     castbrowser_mock.return_value.start_discovery.assert_not_called()
     castbrowser_mock.assert_not_called()

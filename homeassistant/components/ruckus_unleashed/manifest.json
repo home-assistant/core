@@ -6,6 +6,6 @@
   "documentation": "https://www.home-assistant.io/integrations/ruckus_unleashed",
   "integration_type": "hub",
   "iot_class": "local_polling",
-  "loggers": ["aioruckus", "xmltodict"],
-  "requirements": ["aioruckus==0.34"]
+  "loggers": ["aioruckus"],
+  "requirements": ["aioruckus==0.41"]
 }

@@ -42,8 +42,21 @@
       }
     }
   },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "title": "Update Configuration",
+          "use_bluetooth": "Use Bluetooth"
+        }
+      }
+    }
+  },
   "entity": {
     "binary_sensor": {
+      "backflush_enabled": {
+        "name": "Backflush active"
+      },
       "brew_active": {
         "name": "Brewing active"
       },
@@ -56,9 +69,35 @@
         "name": "Start backflush"
       }
     },
+    "calendar": {
+      "auto_on_off_schedule": {
+        "name": "Auto on/off schedule ({id})"
+      }
+    },
     "number": {
       "coffee_temp": {
         "name": "Coffee target temperature"
+      },
+      "dose_key": {
+        "name": "Dose Key {key}"
+      },
+      "prebrew_on": {
+        "name": "Prebrew on time"
+      },
+      "prebrew_on_key": {
+        "name": "Prebrew on time Key {key}"
+      },
+      "prebrew_off": {
+        "name": "Prebrew off time"
+      },
+      "prebrew_off_key": {
+        "name": "Prebrew off time Key {key}"
+      },
+      "preinfusion_off": {
+        "name": "Preinfusion time"
+      },
+      "preinfusion_off_key": {
+        "name": "Preinfusion time Key {key}"
       },
       "steam_temp": {
         "name": "Steam target temperature"
@@ -104,7 +143,7 @@
     },
     "switch": {
       "auto_on_off": {
-        "name": "Auto on/off"
+        "name": "Auto on/off ({id})"
       },
       "steam_boiler": {
         "name": "Steam boiler"
@@ -117,6 +156,12 @@
       "gateway_firmware": {
         "name": "Gateway firmware"
       }
+    }
+  },
+  "issues": {
+    "unsupported_gateway_firmware": {
+      "title": "Unsupported gateway firmware",
+      "description": "Gateway firmware {gateway_version} is no longer supported by this integration, please update."
     }
   }
 }

@@ -1,6 +1,8 @@
 """Tests for the lifx integration config flow."""
+
 from ipaddress import ip_address
 import socket
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -17,9 +19,9 @@ from homeassistant.setup import async_setup_component
 
 from . import (
     DEFAULT_ENTRY_TITLE,
+    DHCP_FORMATTED_MAC,
     IP_ADDRESS,
     LABEL,
-    MAC_ADDRESS,
     MODULE,
     SERIAL,
     _mocked_bulb,
@@ -40,13 +42,13 @@ async def test_discovery(hass: HomeAssistant) -> None:
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
         await hass.async_block_till_done()
-        assert result["type"] == "form"
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "user"
         assert not result["errors"]
 
         result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
         await hass.async_block_till_done()
-        assert result2["type"] == "form"
+        assert result2["type"] is FlowResultType.FORM
         assert result2["step_id"] == "pick_device"
         assert not result2["errors"]
 
@@ -54,28 +56,29 @@ async def test_discovery(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
-        assert result["type"] == "form"
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "user"
         assert not result["errors"]
 
         result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
         await hass.async_block_till_done()
-        assert result2["type"] == "form"
+        assert result2["type"] is FlowResultType.FORM
         assert result2["step_id"] == "pick_device"
         assert not result2["errors"]
 
-    with _patch_discovery(), _patch_config_flow_try_connect(), patch(
-        f"{MODULE}.async_setup", return_value=True
-    ) as mock_setup, patch(
-        f"{MODULE}.async_setup_entry", return_value=True
-    ) as mock_setup_entry:
+    with (
+        _patch_discovery(),
+        _patch_config_flow_try_connect(),
+        patch(f"{MODULE}.async_setup", return_value=True) as mock_setup,
+        patch(f"{MODULE}.async_setup_entry", return_value=True) as mock_setup_entry,
+    ):
         result3 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_DEVICE: SERIAL},
         )
         await hass.async_block_till_done()
 
-    assert result3["type"] == "create_entry"
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == DEFAULT_ENTRY_TITLE
     assert result3["data"] == {CONF_HOST: IP_ADDRESS}
     mock_setup.assert_called_once()
@@ -85,7 +88,7 @@ async def test_discovery(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert not result["errors"]
 
@@ -93,7 +96,7 @@ async def test_discovery(hass: HomeAssistant) -> None:
         result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
         await hass.async_block_till_done()
 
-    assert result2["type"] == "abort"
+    assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "no_devices_found"
 
 
@@ -104,13 +107,13 @@ async def test_discovery_but_cannot_connect(hass: HomeAssistant) -> None:
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
         await hass.async_block_till_done()
-        assert result["type"] == "form"
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "user"
         assert not result["errors"]
 
         result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
         await hass.async_block_till_done()
-        assert result2["type"] == "form"
+        assert result2["type"] is FlowResultType.FORM
         assert result2["step_id"] == "pick_device"
         assert not result2["errors"]
 
@@ -120,7 +123,7 @@ async def test_discovery_but_cannot_connect(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result3["type"] == "abort"
+    assert result3["type"] is FlowResultType.ABORT
     assert result3["reason"] == "cannot_connect"
 
 
@@ -138,7 +141,7 @@ async def test_discovery_with_existing_device_present(hass: HomeAssistant) -> No
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert not result["errors"]
 
@@ -146,7 +149,7 @@ async def test_discovery_with_existing_device_present(hass: HomeAssistant) -> No
         result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
         await hass.async_block_till_done()
 
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "pick_device"
     assert not result2["errors"]
 
@@ -155,7 +158,7 @@ async def test_discovery_with_existing_device_present(hass: HomeAssistant) -> No
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert not result["errors"]
 
@@ -163,17 +166,19 @@ async def test_discovery_with_existing_device_present(hass: HomeAssistant) -> No
         result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
         await hass.async_block_till_done()
 
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "pick_device"
     assert not result2["errors"]
 
-    with _patch_discovery(), _patch_config_flow_try_connect(), patch(
-        f"{MODULE}.async_setup_entry", return_value=True
-    ) as mock_setup_entry:
+    with (
+        _patch_discovery(),
+        _patch_config_flow_try_connect(),
+        patch(f"{MODULE}.async_setup_entry", return_value=True) as mock_setup_entry,
+    ):
         result3 = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_DEVICE: SERIAL}
         )
-        assert result3["type"] == "create_entry"
+        assert result3["type"] is FlowResultType.CREATE_ENTRY
         assert result3["title"] == DEFAULT_ENTRY_TITLE
         assert result3["data"] == {
             CONF_HOST: IP_ADDRESS,
@@ -186,7 +191,7 @@ async def test_discovery_with_existing_device_present(hass: HomeAssistant) -> No
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert not result["errors"]
 
@@ -194,7 +199,7 @@ async def test_discovery_with_existing_device_present(hass: HomeAssistant) -> No
         result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
         await hass.async_block_till_done()
 
-    assert result2["type"] == "abort"
+    assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "no_devices_found"
 
 
@@ -204,13 +209,14 @@ async def test_discovery_no_device(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with _patch_discovery(no_device=True), _patch_config_flow_try_connect(
-        no_device=True
+    with (
+        _patch_discovery(no_device=True),
+        _patch_config_flow_try_connect(no_device=True),
     ):
         result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
         await hass.async_block_till_done()
 
-    assert result2["type"] == "abort"
+    assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "no_devices_found"
 
 
@@ -219,32 +225,36 @@ async def test_manual(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert not result["errors"]
 
     # Cannot connect (timeout)
-    with _patch_discovery(no_device=True), _patch_config_flow_try_connect(
-        no_device=True
+    with (
+        _patch_discovery(no_device=True),
+        _patch_config_flow_try_connect(no_device=True),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_HOST: IP_ADDRESS}
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "user"
     assert result2["errors"] == {"base": "cannot_connect"}
 
     # Success
-    with _patch_discovery(), _patch_config_flow_try_connect(), patch(
-        f"{MODULE}.async_setup", return_value=True
-    ), patch(f"{MODULE}.async_setup_entry", return_value=True):
+    with (
+        _patch_discovery(),
+        _patch_config_flow_try_connect(),
+        patch(f"{MODULE}.async_setup", return_value=True),
+        patch(f"{MODULE}.async_setup_entry", return_value=True),
+    ):
         result4 = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_HOST: IP_ADDRESS}
         )
         await hass.async_block_till_done()
-    assert result4["type"] == "create_entry"
+    assert result4["type"] is FlowResultType.CREATE_ENTRY
     assert result4["title"] == DEFAULT_ENTRY_TITLE
     assert result4["data"] == {
         CONF_HOST: IP_ADDRESS,
@@ -254,15 +264,16 @@ async def test_manual(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    with _patch_discovery(no_device=True), _patch_config_flow_try_connect(
-        no_device=True
+    with (
+        _patch_discovery(no_device=True),
+        _patch_config_flow_try_connect(no_device=True),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_HOST: IP_ADDRESS}
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == "abort"
+    assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "already_configured"
 
 
@@ -271,35 +282,38 @@ async def test_manual_dns_error(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert not result["errors"]
 
     class MockLifxConnectonDnsError:
         """Mock lifx discovery."""
 
-        def __init__(self, *args, **kwargs):
+        def __init__(self, *args: Any, **kwargs: Any) -> None:
             """Init connection."""
             self.device = _mocked_failing_bulb()
 
         async def async_setup(self):
             """Mock setup."""
-            raise socket.gaierror()
+            raise socket.gaierror
 
         def async_stop(self):
             """Mock teardown."""
 
     # Cannot connect due to dns error
-    with _patch_discovery(no_device=True), patch(
-        "homeassistant.components.lifx.config_flow.LIFXConnection",
-        MockLifxConnectonDnsError,
+    with (
+        _patch_discovery(no_device=True),
+        patch(
+            "homeassistant.components.lifx.config_flow.LIFXConnection",
+            MockLifxConnectonDnsError,
+        ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_HOST: "does.not.resolve"}
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "user"
     assert result2["errors"] == {"base": "cannot_connect"}
 
@@ -309,19 +323,22 @@ async def test_manual_no_capabilities(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert not result["errors"]
 
-    with _patch_discovery(no_device=True), _patch_config_flow_try_connect(), patch(
-        f"{MODULE}.async_setup", return_value=True
-    ), patch(f"{MODULE}.async_setup_entry", return_value=True):
+    with (
+        _patch_discovery(no_device=True),
+        _patch_config_flow_try_connect(),
+        patch(f"{MODULE}.async_setup", return_value=True),
+        patch(f"{MODULE}.async_setup_entry", return_value=True),
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_HOST: IP_ADDRESS}
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == "create_entry"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         CONF_HOST: IP_ADDRESS,
     }
@@ -337,7 +354,7 @@ async def test_discovered_by_discovery_and_dhcp(hass: HomeAssistant) -> None:
             data={CONF_HOST: IP_ADDRESS, CONF_SERIAL: SERIAL},
         )
         await hass.async_block_till_done()
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
 
     with _patch_discovery(), _patch_config_flow_try_connect():
@@ -345,11 +362,11 @@ async def test_discovered_by_discovery_and_dhcp(hass: HomeAssistant) -> None:
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
             data=dhcp.DhcpServiceInfo(
-                ip=IP_ADDRESS, macaddress=MAC_ADDRESS, hostname=LABEL
+                ip=IP_ADDRESS, macaddress=DHCP_FORMATTED_MAC, hostname=LABEL
             ),
         )
         await hass.async_block_till_done()
-    assert result2["type"] == FlowResultType.ABORT
+    assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "already_in_progress"
 
     with _patch_discovery(), _patch_config_flow_try_connect():
@@ -357,25 +374,26 @@ async def test_discovered_by_discovery_and_dhcp(hass: HomeAssistant) -> None:
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
             data=dhcp.DhcpServiceInfo(
-                ip=IP_ADDRESS, macaddress="00:00:00:00:00:00", hostname="mock_hostname"
+                ip=IP_ADDRESS, macaddress="000000000000", hostname="mock_hostname"
             ),
         )
         await hass.async_block_till_done()
-    assert result3["type"] == FlowResultType.ABORT
+    assert result3["type"] is FlowResultType.ABORT
     assert result3["reason"] == "already_in_progress"
 
-    with _patch_discovery(no_device=True), _patch_config_flow_try_connect(
-        no_device=True
+    with (
+        _patch_discovery(no_device=True),
+        _patch_config_flow_try_connect(no_device=True),
     ):
         result3 = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
             data=dhcp.DhcpServiceInfo(
-                ip="1.2.3.5", macaddress="00:00:00:00:00:01", hostname="mock_hostname"
+                ip="1.2.3.5", macaddress="000000000001", hostname="mock_hostname"
             ),
         )
         await hass.async_block_till_done()
-    assert result3["type"] == FlowResultType.ABORT
+    assert result3["type"] is FlowResultType.ABORT
     assert result3["reason"] == "cannot_connect"
 
 
@@ -384,7 +402,9 @@ async def test_discovered_by_discovery_and_dhcp(hass: HomeAssistant) -> None:
     [
         (
             config_entries.SOURCE_DHCP,
-            dhcp.DhcpServiceInfo(ip=IP_ADDRESS, macaddress=MAC_ADDRESS, hostname=LABEL),
+            dhcp.DhcpServiceInfo(
+                ip=IP_ADDRESS, macaddress=DHCP_FORMATTED_MAC, hostname=LABEL
+            ),
         ),
         (
             config_entries.SOURCE_HOMEKIT,
@@ -415,18 +435,21 @@ async def test_discovered_by_dhcp_or_discovery(
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
 
-    with _patch_discovery(), _patch_config_flow_try_connect(), patch(
-        f"{MODULE}.async_setup", return_value=True
-    ) as mock_async_setup, patch(
-        f"{MODULE}.async_setup_entry", return_value=True
-    ) as mock_async_setup_entry:
+    with (
+        _patch_discovery(),
+        _patch_config_flow_try_connect(),
+        patch(f"{MODULE}.async_setup", return_value=True) as mock_async_setup,
+        patch(
+            f"{MODULE}.async_setup_entry", return_value=True
+        ) as mock_async_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
         await hass.async_block_till_done()
 
-    assert result2["type"] == "create_entry"
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["data"] == {
         CONF_HOST: IP_ADDRESS,
     }
@@ -439,7 +462,9 @@ async def test_discovered_by_dhcp_or_discovery(
     [
         (
             config_entries.SOURCE_DHCP,
-            dhcp.DhcpServiceInfo(ip=IP_ADDRESS, macaddress=MAC_ADDRESS, hostname=LABEL),
+            dhcp.DhcpServiceInfo(
+                ip=IP_ADDRESS, macaddress=DHCP_FORMATTED_MAC, hostname=LABEL
+            ),
         ),
         (
             config_entries.SOURCE_HOMEKIT,
@@ -464,14 +489,15 @@ async def test_discovered_by_dhcp_or_discovery_failed_to_get_device(
 ) -> None:
     """Test we abort if we cannot get the unique id when discovered from dhcp."""
 
-    with _patch_discovery(no_device=True), _patch_config_flow_try_connect(
-        no_device=True
+    with (
+        _patch_discovery(no_device=True),
+        _patch_config_flow_try_connect(no_device=True),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": source}, data=data
         )
         await hass.async_block_till_done()
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
 
 
@@ -480,7 +506,9 @@ async def test_discovered_by_dhcp_or_discovery_failed_to_get_device(
     [
         (
             config_entries.SOURCE_DHCP,
-            dhcp.DhcpServiceInfo(ip=IP_ADDRESS, macaddress=MAC_ADDRESS, hostname=LABEL),
+            dhcp.DhcpServiceInfo(
+                ip=IP_ADDRESS, macaddress=DHCP_FORMATTED_MAC, hostname=LABEL
+            ),
         ),
         (
             config_entries.SOURCE_HOMEKIT,
@@ -511,7 +539,7 @@ async def test_discovered_by_dhcp_or_homekit_updates_ip(
             data=data,
         )
         await hass.async_block_till_done()
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert config_entry.data[CONF_HOST] == IP_ADDRESS
 
@@ -521,18 +549,19 @@ async def test_refuse_relays(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert not result["errors"]
 
-    with _patch_discovery(device=_mocked_relay()), _patch_config_flow_try_connect(
-        device=_mocked_relay()
+    with (
+        _patch_discovery(device=_mocked_relay()),
+        _patch_config_flow_try_connect(device=_mocked_relay()),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_HOST: IP_ADDRESS}
         )
         await hass.async_block_till_done()
-    assert result2["type"] == "form"
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
@@ -546,7 +575,7 @@ async def test_suggested_area(
     class MockLifxCommandGetGroup:
         """Mock the get_group method that gets the group name from the bulb."""
 
-        def __init__(self, bulb, **kwargs):
+        def __init__(self, bulb, **kwargs: Any) -> None:
             """Init command."""
             self.bulb = bulb
             self.lifx_group = kwargs.get("lifx_group")
@@ -565,9 +594,11 @@ async def test_suggested_area(
     bulb.group = None
     bulb.get_group = MockLifxCommandGetGroup(bulb, lifx_group="My LIFX Group")
 
-    with _patch_discovery(device=bulb), _patch_config_flow_try_connect(
-        device=bulb
-    ), _patch_device(device=bulb):
+    with (
+        _patch_discovery(device=bulb),
+        _patch_config_flow_try_connect(device=bulb),
+        _patch_device(device=bulb),
+    ):
         await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
         await hass.async_block_till_done()
 

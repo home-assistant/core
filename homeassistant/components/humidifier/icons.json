@@ -1,0 +1,52 @@
+{
+  "entity_component": {
+    "_": {
+      "default": "mdi:air-humidifier",
+      "state": {
+        "off": "mdi:air-humidifier-off"
+      },
+      "state_attributes": {
+        "action": {
+          "default": "mdi:circle-medium",
+          "state": {
+            "drying": "mdi:arrow-down-bold",
+            "humidifying": "mdi:arrow-up-bold",
+            "idle": "mdi:clock-outline",
+            "off": "mdi:power"
+          }
+        },
+        "mode": {
+          "default": "mdi:circle-medium",
+          "state": {
+            "auto": "mdi:refresh-auto",
+            "away": "mdi:account-arrow-right",
+            "baby": "mdi:baby-carriage",
+            "boost": "mdi:rocket-launch",
+            "comfort": "mdi:sofa",
+            "eco": "mdi:leaf",
+            "home": "mdi:home",
+            "normal": "mdi:water-percent",
+            "sleep": "mdi:power-sleep"
+          }
+        }
+      }
+    }
+  },
+  "services": {
+    "set_humidity": {
+      "service": "mdi:water-percent"
+    },
+    "set_mode": {
+      "service": "mdi:air-humidifier"
+    },
+    "toggle": {
+      "service": "mdi:air-humidifier"
+    },
+    "turn_off": {
+      "service": "mdi:air-humidifier-off"
+    },
+    "turn_on": {
+      "service": "mdi:air-humidifier"
+    }
+  }
+}

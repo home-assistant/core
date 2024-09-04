@@ -8,5 +8,5 @@
   "iot_class": "cloud_polling",
   "loggers": ["aio_geojson_geonetnz_quakes"],
   "quality_scale": "platinum",
-  "requirements": ["aio-geojson-geonetnz-quakes==0.15"]
+  "requirements": ["aio-geojson-geonetnz-quakes==0.16"]
 }

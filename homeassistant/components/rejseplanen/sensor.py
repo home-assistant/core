@@ -3,6 +3,7 @@
 For more info on the API see:
 https://help.rejseplanen.dk/hc/en-us/articles/214174465-Rejseplanen-s-API
 """
+
 from __future__ import annotations
 
 from contextlib import suppress
@@ -13,7 +14,10 @@ from operator import itemgetter
 import rjpl
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+    SensorEntity,
+)
 from homeassistant.const import CONF_NAME, UnitOfTime
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -50,7 +54,7 @@ BUS_TYPES = ["BUS", "EXB", "TB"]
 TRAIN_TYPES = ["LET", "S", "REG", "IC", "LYN", "TOG"]
 METRO_TYPES = ["M"]
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_STOP_ID): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -238,9 +242,9 @@ class PublicTransportData:
                 }
 
                 if real_time_date is not None and real_time_time is not None:
-                    departure_data[
-                        ATTR_REAL_TIME_AT
-                    ] = f"{real_time_date} {real_time_time}"
+                    departure_data[ATTR_REAL_TIME_AT] = (
+                        f"{real_time_date} {real_time_time}"
+                    )
                 if item.get("rtTrack") is not None:
                     departure_data[ATTR_TRACK] = item.get("rtTrack")
 

@@ -1,4 +1,5 @@
 """The tests for the TCP binary sensor platform."""
+
 from datetime import timedelta
 from unittest.mock import call, patch
 
@@ -21,11 +22,12 @@ TEST_ENTITY = "binary_sensor.test_name"
 @pytest.fixture(name="mock_socket")
 def mock_socket_fixture():
     """Mock the socket."""
-    with patch(
-        "homeassistant.components.tcp.common.socket.socket"
-    ) as mock_socket, patch(
-        "homeassistant.components.tcp.common.select.select",
-        return_value=(True, False, False),
+    with (
+        patch("homeassistant.components.tcp.common.socket.socket") as mock_socket,
+        patch(
+            "homeassistant.components.tcp.common.select.select",
+            return_value=(True, False, False),
+        ),
     ):
         # yield the return value of the socket context manager
         yield mock_socket.return_value.__enter__.return_value
@@ -77,7 +79,7 @@ async def test_state(hass: HomeAssistant, mock_socket, now) -> None:
     mock_socket.recv.return_value = b"on"
 
     async_fire_time_changed(hass, now + timedelta(seconds=45))
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get(TEST_ENTITY)
 

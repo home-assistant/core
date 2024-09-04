@@ -1,7 +1,9 @@
 """The sensor tests for the powerwall platform."""
+
 from datetime import timedelta
 from unittest.mock import Mock, patch
 
+import pytest
 from tesla_powerwall import MetersAggregatesResponse
 from tesla_powerwall.error import MissingAttributeError
 
@@ -24,25 +26,26 @@ from .mocks import MOCK_GATEWAY_DIN, _mock_powerwall_with_fixtures
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
-async def test_sensors(
-    hass: HomeAssistant, entity_registry_enabled_by_default: None
-) -> None:
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_sensors(hass: HomeAssistant, device_registry: dr.DeviceRegistry) -> None:
     """Test creation of the sensors."""
 
     mock_powerwall = await _mock_powerwall_with_fixtures(hass)
 
     config_entry = MockConfigEntry(domain=DOMAIN, data={CONF_IP_ADDRESS: "1.2.3.4"})
     config_entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.powerwall.config_flow.Powerwall",
-        return_value=mock_powerwall,
-    ), patch(
-        "homeassistant.components.powerwall.Powerwall", return_value=mock_powerwall
+    with (
+        patch(
+            "homeassistant.components.powerwall.config_flow.Powerwall",
+            return_value=mock_powerwall,
+        ),
+        patch(
+            "homeassistant.components.powerwall.Powerwall", return_value=mock_powerwall
+        ),
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    device_registry = dr.async_get(hass)
     reg_device = device_registry.async_get_device(
         identifiers={("powerwall", MOCK_GATEWAY_DIN)},
     )
@@ -132,6 +135,65 @@ async def test_sensors(
     assert hass.states.get("sensor.mysite_load_frequency").state == STATE_UNKNOWN
     assert hass.states.get("sensor.mysite_backup_reserve").state == STATE_UNKNOWN
 
+    assert (
+        float(hass.states.get("sensor.mysite_tg0123456789ab_battery_capacity").state)
+        == 14.715
+    )
+    assert (
+        float(hass.states.get("sensor.mysite_tg0123456789ab_battery_voltage").state)
+        == 245.7
+    )
+    assert (
+        float(hass.states.get("sensor.mysite_tg0123456789ab_frequency").state) == 50.0
+    )
+    assert float(hass.states.get("sensor.mysite_tg0123456789ab_current").state) == 0.3
+    assert int(hass.states.get("sensor.mysite_tg0123456789ab_power").state) == -100
+    assert (
+        float(hass.states.get("sensor.mysite_tg0123456789ab_battery_export").state)
+        == 2358.235
+    )
+    assert (
+        float(hass.states.get("sensor.mysite_tg0123456789ab_battery_import").state)
+        == 2693.355
+    )
+    assert (
+        float(hass.states.get("sensor.mysite_tg0123456789ab_battery_remaining").state)
+        == 14.715
+    )
+    assert (
+        str(hass.states.get("sensor.mysite_tg0123456789ab_grid_state").state)
+        == "grid_compliant"
+    )
+    assert (
+        float(hass.states.get("sensor.mysite_tg9876543210ba_battery_capacity").state)
+        == 15.137
+    )
+    assert (
+        float(hass.states.get("sensor.mysite_tg9876543210ba_battery_voltage").state)
+        == 245.6
+    )
+    assert (
+        float(hass.states.get("sensor.mysite_tg9876543210ba_frequency").state) == 50.0
+    )
+    assert float(hass.states.get("sensor.mysite_tg9876543210ba_current").state) == 0.1
+    assert int(hass.states.get("sensor.mysite_tg9876543210ba_power").state) == -100
+    assert (
+        float(hass.states.get("sensor.mysite_tg9876543210ba_battery_export").state)
+        == 509.907
+    )
+    assert (
+        float(hass.states.get("sensor.mysite_tg9876543210ba_battery_import").state)
+        == 610.483
+    )
+    assert (
+        float(hass.states.get("sensor.mysite_tg9876543210ba_battery_remaining").state)
+        == 15.137
+    )
+    assert (
+        str(hass.states.get("sensor.mysite_tg9876543210ba_grid_state").state)
+        == "grid_compliant"
+    )
+
 
 async def test_sensor_backup_reserve_unavailable(hass: HomeAssistant) -> None:
     """Confirm that backup reserve sensor is not added if data is unavailable from the device."""
@@ -143,11 +205,14 @@ async def test_sensor_backup_reserve_unavailable(hass: HomeAssistant) -> None:
 
     config_entry = MockConfigEntry(domain=DOMAIN, data={CONF_IP_ADDRESS: "1.2.3.4"})
     config_entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.powerwall.config_flow.Powerwall",
-        return_value=mock_powerwall,
-    ), patch(
-        "homeassistant.components.powerwall.Powerwall", return_value=mock_powerwall
+    with (
+        patch(
+            "homeassistant.components.powerwall.config_flow.Powerwall",
+            return_value=mock_powerwall,
+        ),
+        patch(
+            "homeassistant.components.powerwall.Powerwall", return_value=mock_powerwall
+        ),
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -163,11 +228,14 @@ async def test_sensors_with_empty_meters(hass: HomeAssistant) -> None:
 
     config_entry = MockConfigEntry(domain=DOMAIN, data={CONF_IP_ADDRESS: "1.2.3.4"})
     config_entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.powerwall.config_flow.Powerwall",
-        return_value=mock_powerwall,
-    ), patch(
-        "homeassistant.components.powerwall.Powerwall", return_value=mock_powerwall
+    with (
+        patch(
+            "homeassistant.components.powerwall.config_flow.Powerwall",
+            return_value=mock_powerwall,
+        ),
+        patch(
+            "homeassistant.components.powerwall.Powerwall", return_value=mock_powerwall
+        ),
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -175,12 +243,13 @@ async def test_sensors_with_empty_meters(hass: HomeAssistant) -> None:
     assert hass.states.get("sensor.mysite_solar_power") is None
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_unique_id_migrate(
-    hass: HomeAssistant, entity_registry_enabled_by_default: None
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test we can migrate unique ids of the sensors."""
-    device_registry = dr.async_get(hass)
-    ent_reg = er.async_get(hass)
     config_entry = MockConfigEntry(domain=DOMAIN, data={CONF_IP_ADDRESS: "1.2.3.4"})
     config_entry.add_to_hass(hass)
 
@@ -192,7 +261,7 @@ async def test_unique_id_migrate(
         identifiers={("powerwall", old_unique_id)},
         manufacturer="Tesla",
     )
-    old_mysite_load_power_entity = ent_reg.async_get_or_create(
+    old_mysite_load_power_entity = entity_registry.async_get_or_create(
         "sensor",
         DOMAIN,
         unique_id=f"{old_unique_id}_load_instant_power",
@@ -201,11 +270,14 @@ async def test_unique_id_migrate(
     )
     assert old_mysite_load_power_entity.entity_id == "sensor.mysite_load_power"
 
-    with patch(
-        "homeassistant.components.powerwall.config_flow.Powerwall",
-        return_value=mock_powerwall,
-    ), patch(
-        "homeassistant.components.powerwall.Powerwall", return_value=mock_powerwall
+    with (
+        patch(
+            "homeassistant.components.powerwall.config_flow.Powerwall",
+            return_value=mock_powerwall,
+        ),
+        patch(
+            "homeassistant.components.powerwall.Powerwall", return_value=mock_powerwall
+        ),
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -220,13 +292,13 @@ async def test_unique_id_migrate(
     assert reg_device is not None
 
     assert (
-        ent_reg.async_get_entity_id(
+        entity_registry.async_get_entity_id(
             "sensor", DOMAIN, f"{old_unique_id}_load_instant_power"
         )
         is None
     )
     assert (
-        ent_reg.async_get_entity_id(
+        entity_registry.async_get_entity_id(
             "sensor", DOMAIN, f"{new_unique_id}_load_instant_power"
         )
         is not None

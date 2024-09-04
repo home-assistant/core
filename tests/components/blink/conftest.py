@@ -1,4 +1,5 @@
 """Fixtures for the Blink integration tests."""
+
 from unittest.mock import AsyncMock, MagicMock, create_autospec, patch
 from uuid import uuid4
 
@@ -45,6 +46,7 @@ def camera() -> MagicMock:
     mock_blink_camera.motion_detected = False
     mock_blink_camera.wifi_strength = 2.1
     mock_blink_camera.camera_type = "lotus"
+    mock_blink_camera.version = "123"
     mock_blink_camera.attributes = CAMERA_ATTRIBUTES
     return mock_blink_camera
 
@@ -58,6 +60,7 @@ def blink_api_fixture(camera) -> MagicMock:
     mock_blink_api.refresh = AsyncMock(return_value=True)
     mock_blink_api.sync = MagicMock(return_value=True)
     mock_blink_api.cameras = {camera.name: camera}
+    mock_blink_api.request_homescreen = AsyncMock(return_value=True)
 
     with patch("homeassistant.components.blink.Blink") as class_mock:
         class_mock.return_value = mock_blink_api

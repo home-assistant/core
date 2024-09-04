@@ -1,4 +1,5 @@
 """The test for the sensibo entity."""
+
 from __future__ import annotations
 
 from unittest.mock import patch
@@ -20,24 +21,26 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 
 async def test_entity(
-    hass: HomeAssistant, load_int: ConfigEntry, get_data: SensiboData
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    load_int: ConfigEntry,
+    get_data: SensiboData,
 ) -> None:
     """Test the Sensibo climate."""
 
     state1 = hass.states.get("climate.hallway")
     assert state1
 
-    dr_reg = dr.async_get(hass)
-    dr_entries = dr.async_entries_for_config_entry(dr_reg, load_int.entry_id)
+    dr_entries = dr.async_entries_for_config_entry(device_registry, load_int.entry_id)
     dr_entry: dr.DeviceEntry
     for dr_entry in dr_entries:
         if dr_entry.name == "Hallway":
             assert dr_entry.identifiers == {("sensibo", "ABC999111")}
             device_id = dr_entry.id
 
-    er_reg = er.async_get(hass)
     er_entries = er.async_entries_for_device(
-        er_reg, device_id, include_disabled_entities=True
+        entity_registry, device_id, include_disabled_entities=True
     )
     er_entry: er.RegistryEntry
     for er_entry in er_entries:
@@ -72,10 +75,13 @@ async def test_entity_failed_service_calls(
     state = hass.states.get("climate.hallway")
     assert state.attributes["fan_mode"] == "low"
 
-    with patch(
-        "homeassistant.components.sensibo.util.SensiboClient.async_set_ac_state_property",
-        side_effect=p_error,
-    ), pytest.raises(HomeAssistantError):
+    with (
+        patch(
+            "homeassistant.components.sensibo.util.SensiboClient.async_set_ac_state_property",
+            side_effect=p_error,
+        ),
+        pytest.raises(HomeAssistantError),
+    ):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_FAN_MODE,

@@ -21,14 +21,29 @@
   },
   "entity": {
     "sensor": {
+      "grid_voltage": {
+        "name": "Grid voltage"
+      },
+      "grid_current": {
+        "name": "Grid current"
+      },
       "alarm": {
         "name": "Alarm status"
       },
       "power_output": {
         "name": "Power output"
       },
+      "i_leak_dcdc": {
+        "name": "DC-DC leak current"
+      },
+      "i_leak_inverter": {
+        "name": "Inverter leak current"
+      },
       "total_energy": {
         "name": "Total energy"
+      },
+      "r_iso": {
+        "name": "Isolation resistance"
       }
     }
   }

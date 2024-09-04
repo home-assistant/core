@@ -1,4 +1,5 @@
 """Support for inkbird ble sensors."""
+
 from __future__ import annotations
 
 from inkbird_ble import DeviceClass, DeviceKey, SensorUpdate, Units
@@ -113,7 +114,9 @@ async def async_setup_entry(
 
 
 class INKBIRDBluetoothSensorEntity(
-    PassiveBluetoothProcessorEntity[PassiveBluetoothDataProcessor[float | int | None]],
+    PassiveBluetoothProcessorEntity[
+        PassiveBluetoothDataProcessor[float | int | None, SensorUpdate]
+    ],
     SensorEntity,
 ):
     """Representation of a inkbird ble sensor."""

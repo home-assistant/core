@@ -1,4 +1,5 @@
 """Constants for the Frontier Silicon Media Player integration."""
+
 DOMAIN = "frontier_silicon"
 
 CONF_WEBFSAPI_URL = "webfsapi_url"

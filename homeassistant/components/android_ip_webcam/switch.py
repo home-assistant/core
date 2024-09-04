@@ -1,4 +1,5 @@
 """Support for Android IP Webcam settings."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
@@ -18,98 +19,91 @@ from .coordinator import AndroidIPCamDataUpdateCoordinator
 from .entity import AndroidIPCamBaseEntity
 
 
-@dataclass(frozen=True)
-class AndroidIPWebcamSwitchEntityDescriptionMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class AndroidIPWebcamSwitchEntityDescription(SwitchEntityDescription):
+    """Entity description class for Android IP Webcam switches."""
 
     on_func: Callable[[PyDroidIPCam], Coroutine[Any, Any, bool]]
     off_func: Callable[[PyDroidIPCam], Coroutine[Any, Any, bool]]
 
 
-@dataclass(frozen=True)
-class AndroidIPWebcamSwitchEntityDescription(
-    SwitchEntityDescription, AndroidIPWebcamSwitchEntityDescriptionMixin
-):
-    """Entity description class for Android IP Webcam switches."""
-
-
 SWITCH_TYPES: tuple[AndroidIPWebcamSwitchEntityDescription, ...] = (
     AndroidIPWebcamSwitchEntityDescription(
         key="exposure_lock",
+        translation_key="exposure_lock",
         name="Exposure lock",
-        icon="mdi:camera",
         entity_category=EntityCategory.CONFIG,
         on_func=lambda ipcam: ipcam.change_setting("exposure_lock", True),
         off_func=lambda ipcam: ipcam.change_setting("exposure_lock", False),
     ),
     AndroidIPWebcamSwitchEntityDescription(
         key="ffc",
+        translation_key="ffc",
         name="Front-facing camera",
-        icon="mdi:camera-front-variant",
         entity_category=EntityCategory.CONFIG,
         on_func=lambda ipcam: ipcam.change_setting("ffc", True),
         off_func=lambda ipcam: ipcam.change_setting("ffc", False),
     ),
     AndroidIPWebcamSwitchEntityDescription(
         key="focus",
+        translation_key="focus",
         name="Focus",
-        icon="mdi:image-filter-center-focus",
         entity_category=EntityCategory.CONFIG,
         on_func=lambda ipcam: ipcam.focus(activate=True),
         off_func=lambda ipcam: ipcam.focus(activate=False),
     ),
     AndroidIPWebcamSwitchEntityDescription(
         key="gps_active",
+        translation_key="gps_active",
         name="GPS active",
-        icon="mdi:crosshairs-gps",
         entity_category=EntityCategory.CONFIG,
         on_func=lambda ipcam: ipcam.change_setting("gps_active", True),
         off_func=lambda ipcam: ipcam.change_setting("gps_active", False),
     ),
     AndroidIPWebcamSwitchEntityDescription(
         key="motion_detect",
+        translation_key="motion_detect",
         name="Motion detection",
-        icon="mdi:flash",
         entity_category=EntityCategory.CONFIG,
         on_func=lambda ipcam: ipcam.change_setting("motion_detect", True),
         off_func=lambda ipcam: ipcam.change_setting("motion_detect", False),
     ),
     AndroidIPWebcamSwitchEntityDescription(
         key="night_vision",
+        translation_key="night_vision",
         name="Night vision",
-        icon="mdi:weather-night",
         entity_category=EntityCategory.CONFIG,
         on_func=lambda ipcam: ipcam.change_setting("night_vision", True),
         off_func=lambda ipcam: ipcam.change_setting("night_vision", False),
     ),
     AndroidIPWebcamSwitchEntityDescription(
         key="overlay",
+        translation_key="overlay",
         name="Overlay",
-        icon="mdi:monitor",
         entity_category=EntityCategory.CONFIG,
         on_func=lambda ipcam: ipcam.change_setting("overlay", True),
         off_func=lambda ipcam: ipcam.change_setting("overlay", False),
     ),
     AndroidIPWebcamSwitchEntityDescription(
         key="torch",
+        translation_key="torch",
         name="Torch",
-        icon="mdi:white-balance-sunny",
         entity_category=EntityCategory.CONFIG,
         on_func=lambda ipcam: ipcam.torch(activate=True),
         off_func=lambda ipcam: ipcam.torch(activate=False),
     ),
     AndroidIPWebcamSwitchEntityDescription(
         key="whitebalance_lock",
+        translation_key="whitebalance_lock",
         name="White balance lock",
-        icon="mdi:white-balance-auto",
         entity_category=EntityCategory.CONFIG,
         on_func=lambda ipcam: ipcam.change_setting("whitebalance_lock", True),
         off_func=lambda ipcam: ipcam.change_setting("whitebalance_lock", False),
     ),
     AndroidIPWebcamSwitchEntityDescription(
         key="video_recording",
+        translation_key="video_recording",
         name="Video recording",
-        icon="mdi:record-rec",
         entity_category=EntityCategory.CONFIG,
         on_func=lambda ipcam: ipcam.record(record=True),
         off_func=lambda ipcam: ipcam.record(record=False),

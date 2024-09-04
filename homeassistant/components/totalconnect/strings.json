@@ -49,5 +49,32 @@
       "name": "Arm home instant",
       "description": "Arms Home with zero entry delay."
     }
+  },
+  "entity": {
+    "alarm_control_panel": {
+      "partition": {
+        "name": "Partition {partition_id}"
+      }
+    },
+    "binary_sensor": {
+      "police": {
+        "name": "Police emergency",
+        "state": {
+          "off": "No emergency",
+          "on": "Police emergency"
+        }
+      }
+    },
+    "button": {
+      "clear_bypass": {
+        "name": "Clear bypass"
+      },
+      "bypass_all": {
+        "name": "Bypass all"
+      },
+      "bypass": {
+        "name": "Bypass"
+      }
+    }
   }
 }

@@ -1,4 +1,5 @@
 """Support for System health ."""
+
 from __future__ import annotations
 
 import asyncio
@@ -70,7 +71,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def _register_system_health_platform(
+@callback
+def _register_system_health_platform(
     hass: HomeAssistant, integration_domain: str, platform: SystemHealthProtocol
 ) -> None:
     """Register a system health platform."""
@@ -85,9 +87,9 @@ async def get_integration_info(
         assert registration.info_callback
         async with asyncio.timeout(INFO_CALLBACK_TIMEOUT):
             data = await registration.info_callback(hass)
-    except asyncio.TimeoutError:
+    except TimeoutError:
         data = {"error": {"type": "failed", "error": "timeout"}}
-    except Exception:  # pylint: disable=broad-except
+    except Exception:
         _LOGGER.exception("Error fetching info")
         data = {"error": {"type": "failed", "error": "unknown"}}
 
@@ -125,6 +127,7 @@ async def handle_info(
                 for registration in registrations.values()
             )
         ),
+        strict=False,
     ):
         for key, value in domain_data["info"].items():
             if asyncio.iscoroutine(value):
@@ -232,12 +235,13 @@ async def async_check_can_reach_url(
     session = aiohttp_client.async_get_clientsession(hass)
 
     try:
-        await session.get(url, timeout=5)
-        return "ok"
+        await session.get(url, timeout=aiohttp.ClientTimeout(total=5))
     except aiohttp.ClientError:
         data = {"type": "failed", "error": "unreachable"}
-    except asyncio.TimeoutError:
+    except TimeoutError:
         data = {"type": "failed", "error": "timeout"}
+    else:
+        return "ok"
     if more_info is not None:
         data["more_info"] = more_info
     return data
