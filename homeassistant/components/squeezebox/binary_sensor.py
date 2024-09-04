@@ -1,4 +1,4 @@
-"""Platform for sensor integration."""
+"""Binary sensor platform for Squeezebox integration."""
 
 from __future__ import annotations
 
