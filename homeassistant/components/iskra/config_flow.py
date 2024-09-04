@@ -52,9 +52,12 @@ STEP_AUTHENTICATION_DATA_SCHEMA = vol.Schema(
     }
 )
 
+# CONF_ADDRESS validation is done later in code, as if ranges are set in voluptuous it turns into a slider
 STEP_MODBUS_TCP_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_PORT, default=10001): int,
+        vol.Required(CONF_PORT, default=10001): vol.All(
+            vol.Coerce(int), vol.Range(min=0, max=65535)
+        ),
         vol.Required(CONF_ADDRESS, default=33): int,
     }
 )
@@ -188,14 +191,17 @@ class IskraConfigFlowFlow(ConfigFlow, domain=DOMAIN):
 
         # If there's user_input, check the connection.
         if user_input is not None:
-            try:
-                device_info = await test_modbus_connection(self.host, user_input)
+            if user_input[CONF_ADDRESS] not in range(1, 256):
+                errors["base"] = "address_range"
+            else:
+                try:
+                    device_info = await test_modbus_connection(self.host, user_input)
 
-            # If the connection failed, show an error.
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
-            except UnknownException:
-                errors["base"] = "unknown"
+                # If the connection failed, show an error.
+                except CannotConnect:
+                    errors["base"] = "cannot_connect"
+                except UnknownException:
+                    errors["base"] = "unknown"
 
             # If the connection was successful, create the device.
             if not errors:
