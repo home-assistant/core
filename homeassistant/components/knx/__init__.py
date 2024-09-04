@@ -297,6 +297,7 @@ class KNXModule:
         self.config_store = KNXConfigStore(hass=hass, config_entry=entry)
 
         self.xknx = XKNX(
+            address_format=self.project.get_address_format(),
             connection_config=self.connection_config(),
             rate_limit=self.entry.data[CONF_KNX_RATE_LIMIT],
             state_updater=self.entry.data[CONF_KNX_STATE_UPDATER],

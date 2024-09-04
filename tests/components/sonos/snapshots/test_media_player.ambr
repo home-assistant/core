@@ -56,3 +56,21 @@
     'state': 'idle',
   })
 # ---
+# name: test_media_get_queue
+  dict({
+    'media_player.zone_a': list([
+      dict({
+        'media_album_name': 'Abbey Road',
+        'media_artist': 'The Beatles',
+        'media_content_id': 'x-file-cifs://192.168.42.10/music/The%20Beatles/Abbey%20Road/03%20Something.mp3',
+        'media_title': 'Something',
+      }),
+      dict({
+        'media_album_name': 'Abbey Road',
+        'media_artist': 'The Beatles',
+        'media_content_id': 'x-file-cifs://192.168.42.10/music/The%20Beatles/Abbey%20Road/01%20Come%20Together.mp3',
+        'media_title': 'Come Together',
+      }),
+    ]),
+  })
+# ---
