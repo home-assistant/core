@@ -37,11 +37,7 @@ from .const import (
 
 SERVICE_ADD_PACKAGES_SCHEMA: Final = vol.Schema(
     {
-        vol.Required(ATTR_CONFIG_ENTRY_ID): selector.ConfigEntrySelector(
-            {
-                "integration": DOMAIN,
-            }
-        ),
+        vol.Required(ATTR_CONFIG_ENTRY_ID): cv.string,
         vol.Optional(ATTR_PACKAGE_STATE): selector.SelectSelector(
             selector.SelectSelectorConfig(
                 multiple=True,
@@ -58,11 +54,7 @@ SERVICE_ADD_PACKAGES_SCHEMA: Final = vol.Schema(
 
 SERVICE_ARCHIVE_PACKAGE_SCHEMA: Final = vol.Schema(
     {
-        vol.Required(ATTR_CONFIG_ENTRY_ID): selector.ConfigEntrySelector(
-            {
-                "integration": DOMAIN,
-            }
-        ),
+        vol.Required(ATTR_CONFIG_ENTRY_ID): cv.string,
         vol.Required(ATTR_PACKAGE_TRACKING_NUMBER): cv.string,
     }
 )
