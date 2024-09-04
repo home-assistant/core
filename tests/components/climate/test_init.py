@@ -139,6 +139,10 @@ class MockClimateEntity(MockEntity, ClimateEntity):
         """Set swing mode."""
         self._attr_swing_mode = swing_mode
 
+    def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
+        """Set new target hvac mode."""
+        self._attr_hvac_mode = hvac_mode
+
 
 class MockClimateEntityTestMethods(MockClimateEntity):
     """Mock Climate device."""
@@ -239,7 +243,9 @@ def test_deprecated_current_constants(
 
 
 async def test_mode_validation(
-    hass: HomeAssistant, register_test_integration: MockConfigEntry
+    hass: HomeAssistant,
+    register_test_integration: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test mode validation for hvac_mode, fan, swing and preset."""
     climate_entity = MockClimateEntity(name="test", entity_id="climate.test")
@@ -288,23 +294,21 @@ async def test_mode_validation(
     assert state.attributes.get(ATTR_FAN_MODE) == "off"
     assert state.attributes.get(ATTR_SWING_MODE) == "off"
 
-    with pytest.raises(
-        ServiceValidationError,
-        match="Hvac mode auto is not valid. Valid hvac modes are: off, heat",
-    ) as exc:
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_SET_HVAC_MODE,
-            {
-                "entity_id": "climate.test",
-                "hvac_mode": "auto",
-            },
-            blocking=True,
-        )
-    assert (
-        str(exc.value) == "Hvac mode auto is not valid. Valid hvac modes are: off, heat"
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {
+            "entity_id": "climate.test",
+            "hvac_mode": "auto",
+        },
+        blocking=True,
     )
-    assert exc.value.translation_key == "not_valid_hvac_mode"
+
+    assert (
+        "MockClimateEntity sets the hvac_mode auto which is not valid "
+        "for this entity with modes: off, heat. This will stop working "
+        "in 2025.3 and raise an error instead. Please" in caplog.text
+    )
 
     with pytest.raises(
         ServiceValidationError,
