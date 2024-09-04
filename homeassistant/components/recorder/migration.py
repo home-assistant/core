@@ -100,7 +100,7 @@ from .queries import (
     migrate_single_statistics_row_to_timestamp,
 )
 from .statistics import cleanup_statistics_timestamp_migration, get_start_time
-from .tasks import EntityIDPostMigrationTask, RecorderTask
+from .tasks import RecorderTask
 from .util import (
     database_job_retry_wrapper,
     execute_stmt_lambda_element,
@@ -2137,50 +2137,6 @@ def post_migrate_entity_ids(instance: Recorder) -> bool:
     return is_done
 
 
-@retryable_database_job("cleanup_legacy_event_ids")
-def cleanup_legacy_states_event_ids(instance: Recorder) -> bool:
-    """Remove old event_id index from states.
-
-    We used to link states to events using the event_id column but we no
-    longer store state changed events in the events table.
-
-    If all old states have been purged and existing states are in the new
-    format we can drop the index since it can take up ~10MB per 1M rows.
-    """
-    session_maker = instance.get_session
-    _LOGGER.debug("Cleanup legacy entity_ids")
-    with session_scope(session=session_maker()) as session:
-        result = session.execute(has_used_states_event_ids()).scalar()
-        # In the future we may migrate existing states to the new format
-        # but in practice very few of these still exist in production and
-        # removing the index is the likely all that needs to happen.
-        all_gone = not result
-
-    if all_gone:
-        # Only drop the index if there are no more event_ids in the states table
-        # ex all NULL
-        assert instance.engine is not None, "engine should never be None"
-        if instance.dialect_name == SupportedDialect.SQLITE:
-            # SQLite does not support dropping foreign key constraints
-            # so we have to rebuild the table
-            fk_remove_ok = rebuild_sqlite_table(session_maker, instance.engine, States)
-        else:
-            try:
-                _drop_foreign_key_constraints(
-                    session_maker, instance.engine, TABLE_STATES, "event_id"
-                )
-            except (InternalError, OperationalError):
-                fk_remove_ok = False
-            else:
-                fk_remove_ok = True
-        if fk_remove_ok:
-            _drop_index(session_maker, "states", LEGACY_STATES_EVENT_ID_INDEX)
-            instance.use_legacy_events_index = False
-            _mark_migration_done(session, EventIDPostMigration)
-
-    return True
-
-
 def _initialize_database(session: Session) -> bool:
     """Initialize a new database.
 
@@ -2235,8 +2191,6 @@ class MigrationTask(RecorderTask):
         if not self.migrator.migrate_data(instance):
             # Schedule a new migration task if this one didn't finish
             instance.queue_task(MigrationTask(self.migrator))
-        else:
-            self.migrator.migration_done(instance, None)
 
 
 @dataclass(slots=True)
@@ -2257,6 +2211,7 @@ class NeedsMigrateResult:
 class BaseRunTimeMigration(ABC):
     """Base class for run time migrations."""
 
+    index_to_drop: tuple[str, str] | None = None
     required_schema_version = 0
     migration_version = 1
     migration_id: str
@@ -2274,10 +2229,28 @@ class BaseRunTimeMigration(ABC):
         else:
             self.migration_done(instance, session)
 
+    def migrate_data(self, instance: Recorder) -> bool:
+        """Migrate some data, returns True if migration is completed."""
+        if result := self.migrate_data_impl(instance):
+            if self.index_to_drop is not None:
+                self._remove_index(instance, self.index_to_drop)
+            self.migration_done(instance, None)
+        return result
+
     @staticmethod
     @abstractmethod
-    def migrate_data(instance: Recorder) -> bool:
+    def migrate_data_impl(instance: Recorder) -> bool:
         """Migrate some data, returns True if migration is completed."""
+
+    @staticmethod
+    @database_job_retry_wrapper("remove index")
+    def _remove_index(instance: Recorder, index_to_drop: tuple[str, str]) -> None:
+        """Remove indices.
+
+        Called when migration is completed.
+        """
+        table, index = index_to_drop
+        _drop_index(instance.get_session, table, index)
 
     def migration_done(self, instance: Recorder, session: Session | None) -> None:
         """Will be called after migrate returns True or if migration is not needed."""
@@ -2304,8 +2277,14 @@ class BaseRunTimeMigration(ABC):
             # The migration changes table indicates that the migration has been done
             return False
         # We do not know if the migration is done from the
-        # migration changes table so we must check the data
+        # migration changes table so we must check the index and data
         # This is the slow path
+        if (
+            self.index_to_drop is not None
+            and get_index_by_name(session, self.index_to_drop[0], self.index_to_drop[1])
+            is not None
+        ):
+            return True
         needs_migrate = self.needs_migrate_impl(instance, session)
         if needs_migrate.migration_done:
             _mark_migration_done(session, self.__class__)
@@ -2334,10 +2313,11 @@ class StatesContextIDMigration(BaseRunTimeMigrationWithQuery):
 
     required_schema_version = CONTEXT_ID_AS_BINARY_SCHEMA_VERSION
     migration_id = "state_context_id_as_binary"
+    index_to_drop = ("states", "ix_states_context_id")
 
     @staticmethod
     @retryable_database_job("migrate states context_ids to binary format")
-    def migrate_data(instance: Recorder) -> bool:
+    def migrate_data_impl(instance: Recorder) -> bool:
         """Migrate states context_ids to use binary format, return True if completed."""
         _to_bytes = _context_id_to_bytes
         session_maker = instance.get_session
@@ -2367,9 +2347,6 @@ class StatesContextIDMigration(BaseRunTimeMigrationWithQuery):
             if is_done := not states:
                 _mark_migration_done(session, StatesContextIDMigration)
 
-        if is_done:
-            _drop_index(session_maker, "states", "ix_states_context_id")
-
         _LOGGER.debug("Migrating states context_ids to binary format: done=%s", is_done)
         return is_done
 
@@ -2383,10 +2360,11 @@ class EventsContextIDMigration(BaseRunTimeMigrationWithQuery):
 
     required_schema_version = CONTEXT_ID_AS_BINARY_SCHEMA_VERSION
     migration_id = "event_context_id_as_binary"
+    index_to_drop = ("events", "ix_events_context_id")
 
     @staticmethod
     @retryable_database_job("migrate events context_ids to binary format")
-    def migrate_data(instance: Recorder) -> bool:
+    def migrate_data_impl(instance: Recorder) -> bool:
         """Migrate events context_ids to use binary format, return True if completed."""
         _to_bytes = _context_id_to_bytes
         session_maker = instance.get_session
@@ -2416,9 +2394,6 @@ class EventsContextIDMigration(BaseRunTimeMigrationWithQuery):
             if is_done := not events:
                 _mark_migration_done(session, EventsContextIDMigration)
 
-        if is_done:
-            _drop_index(session_maker, "events", "ix_events_context_id")
-
         _LOGGER.debug("Migrating events context_ids to binary format: done=%s", is_done)
         return is_done
 
@@ -2439,7 +2414,7 @@ class EventTypeIDMigration(BaseRunTimeMigrationWithQuery):
 
     @staticmethod
     @retryable_database_job("migrate events event_types to event_type_ids")
-    def migrate_data(instance: Recorder) -> bool:
+    def migrate_data_impl(instance: Recorder) -> bool:
         """Migrate event_type to event_type_ids, return True if completed."""
         session_maker = instance.get_session
         _LOGGER.debug("Migrating event_types")
@@ -2522,7 +2497,7 @@ class EntityIDMigration(BaseRunTimeMigrationWithQuery):
 
     @staticmethod
     @retryable_database_job("migrate states entity_ids to states_meta")
-    def migrate_data(instance: Recorder) -> bool:
+    def migrate_data_impl(instance: Recorder) -> bool:
         """Migrate entity_ids to states_meta, return True if completed.
 
         We do this in two steps because we need the history queries to work
@@ -2635,9 +2610,50 @@ class EventIDPostMigration(BaseRunTimeMigration):
     migration_version = 2
 
     @staticmethod
-    def migrate_data(instance: Recorder) -> bool:
-        """Migrate some data, returns True if migration is completed."""
-        return cleanup_legacy_states_event_ids(instance)
+    @retryable_database_job("cleanup_legacy_event_ids")
+    def migrate_data_impl(instance: Recorder) -> bool:
+        """Remove old event_id index from states, returns True if completed.
+
+        We used to link states to events using the event_id column but we no
+        longer store state changed events in the events table.
+
+        If all old states have been purged and existing states are in the new
+        format we can drop the index since it can take up ~10MB per 1M rows.
+        """
+        session_maker = instance.get_session
+        _LOGGER.debug("Cleanup legacy entity_ids")
+        with session_scope(session=session_maker()) as session:
+            result = session.execute(has_used_states_event_ids()).scalar()
+            # In the future we may migrate existing states to the new format
+            # but in practice very few of these still exist in production and
+            # removing the index is the likely all that needs to happen.
+            all_gone = not result
+
+        if all_gone:
+            # Only drop the index if there are no more event_ids in the states table
+            # ex all NULL
+            assert instance.engine is not None, "engine should never be None"
+            if instance.dialect_name == SupportedDialect.SQLITE:
+                # SQLite does not support dropping foreign key constraints
+                # so we have to rebuild the table
+                fk_remove_ok = rebuild_sqlite_table(
+                    session_maker, instance.engine, States
+                )
+            else:
+                try:
+                    _drop_foreign_key_constraints(
+                        session_maker, instance.engine, TABLE_STATES, "event_id"
+                    )
+                except (InternalError, OperationalError):
+                    fk_remove_ok = False
+                else:
+                    fk_remove_ok = True
+            if fk_remove_ok:
+                _drop_index(session_maker, "states", LEGACY_STATES_EVENT_ID_INDEX)
+                instance.use_legacy_events_index = False
+                _mark_migration_done(session, EventIDPostMigration)
+
+        return True
 
     @staticmethod
     def _legacy_event_id_foreign_key_exists(instance: Recorder) -> bool:
@@ -2668,6 +2684,17 @@ class EventIDPostMigration(BaseRunTimeMigration):
             instance.use_legacy_events_index = True
             return NeedsMigrateResult(needs_migrate=True, migration_done=False)
         return NeedsMigrateResult(needs_migrate=False, migration_done=True)
+
+
+@dataclass(slots=True)
+class EntityIDPostMigrationTask(RecorderTask):
+    """An object to insert into the recorder queue to cleanup after entity_ids migration."""
+
+    def run(self, instance: Recorder) -> None:
+        """Run entity_id post migration task."""
+        if not post_migrate_entity_ids(instance):
+            # Schedule a new migration task if this one didn't finish
+            instance.queue_task(EntityIDPostMigrationTask())
 
 
 def _mark_migration_done(

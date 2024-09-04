@@ -13,8 +13,8 @@ from homeassistant.components.reolink import (
     DEVICE_UPDATE_INTERVAL,
     FIRMWARE_UPDATE_INTERVAL,
     NUM_CRED_ERRORS,
-    const,
 )
+from homeassistant.components.reolink.const import DOMAIN
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_OFF, STATE_UNAVAILABLE, Platform
@@ -140,7 +140,7 @@ async def test_credential_error_three(
 
     reolink_connect.get_states.side_effect = CredentialsInvalidError("Test error")
 
-    issue_id = f"config_entry_reauth_{const.DOMAIN}_{config_entry.entry_id}"
+    issue_id = f"config_entry_reauth_{DOMAIN}_{config_entry.entry_id}"
     for _ in range(NUM_CRED_ERRORS):
         assert (HOMEASSISTANT_DOMAIN, issue_id) not in issue_registry.issues
         freezer.tick(DEVICE_UPDATE_INTERVAL)
@@ -414,14 +414,14 @@ async def test_migrate_entity_ids(
     reolink_connect.supported = mock_supported
 
     dev_entry = device_registry.async_get_or_create(
-        identifiers={(const.DOMAIN, original_dev_id)},
+        identifiers={(DOMAIN, original_dev_id)},
         config_entry_id=config_entry.entry_id,
         disabled_by=None,
     )
 
     entity_registry.async_get_or_create(
         domain=domain,
-        platform=const.DOMAIN,
+        platform=DOMAIN,
         unique_id=original_id,
         config_entry=config_entry,
         suggested_object_id=original_id,
@@ -429,16 +429,13 @@ async def test_migrate_entity_ids(
         device_id=dev_entry.id,
     )
 
-    assert entity_registry.async_get_entity_id(domain, const.DOMAIN, original_id)
-    assert entity_registry.async_get_entity_id(domain, const.DOMAIN, new_id) is None
+    assert entity_registry.async_get_entity_id(domain, DOMAIN, original_id)
+    assert entity_registry.async_get_entity_id(domain, DOMAIN, new_id) is None
 
-    assert device_registry.async_get_device(
-        identifiers={(const.DOMAIN, original_dev_id)}
-    )
+    assert device_registry.async_get_device(identifiers={(DOMAIN, original_dev_id)})
     if new_dev_id != original_dev_id:
         assert (
-            device_registry.async_get_device(identifiers={(const.DOMAIN, new_dev_id)})
-            is None
+            device_registry.async_get_device(identifiers={(DOMAIN, new_dev_id)}) is None
         )
 
     # setup CH 0 and host entities/device
@@ -446,19 +443,15 @@ async def test_migrate_entity_ids(
         assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert (
-        entity_registry.async_get_entity_id(domain, const.DOMAIN, original_id) is None
-    )
-    assert entity_registry.async_get_entity_id(domain, const.DOMAIN, new_id)
+    assert entity_registry.async_get_entity_id(domain, DOMAIN, original_id) is None
+    assert entity_registry.async_get_entity_id(domain, DOMAIN, new_id)
 
     if new_dev_id != original_dev_id:
         assert (
-            device_registry.async_get_device(
-                identifiers={(const.DOMAIN, original_dev_id)}
-            )
+            device_registry.async_get_device(identifiers={(DOMAIN, original_dev_id)})
             is None
         )
-    assert device_registry.async_get_device(identifiers={(const.DOMAIN, new_dev_id)})
+    assert device_registry.async_get_device(identifiers={(DOMAIN, new_dev_id)})
 
 
 async def test_no_repair_issue(
@@ -472,11 +465,11 @@ async def test_no_repair_issue(
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert (const.DOMAIN, "https_webhook") not in issue_registry.issues
-    assert (const.DOMAIN, "webhook_url") not in issue_registry.issues
-    assert (const.DOMAIN, "enable_port") not in issue_registry.issues
-    assert (const.DOMAIN, "firmware_update") not in issue_registry.issues
-    assert (const.DOMAIN, "ssl") not in issue_registry.issues
+    assert (DOMAIN, "https_webhook") not in issue_registry.issues
+    assert (DOMAIN, "webhook_url") not in issue_registry.issues
+    assert (DOMAIN, "enable_port") not in issue_registry.issues
+    assert (DOMAIN, "firmware_update") not in issue_registry.issues
+    assert (DOMAIN, "ssl") not in issue_registry.issues
 
 
 async def test_https_repair_issue(
@@ -503,7 +496,7 @@ async def test_https_repair_issue(
         assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert (const.DOMAIN, "https_webhook") in issue_registry.issues
+    assert (DOMAIN, "https_webhook") in issue_registry.issues
 
 
 async def test_ssl_repair_issue(
@@ -533,7 +526,7 @@ async def test_ssl_repair_issue(
         assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert (const.DOMAIN, "ssl") in issue_registry.issues
+    assert (DOMAIN, "ssl") in issue_registry.issues
 
 
 @pytest.mark.parametrize("protocol", ["rtsp", "rtmp"])
@@ -553,7 +546,7 @@ async def test_port_repair_issue(
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert (const.DOMAIN, "enable_port") in issue_registry.issues
+    assert (DOMAIN, "enable_port") in issue_registry.issues
 
 
 async def test_webhook_repair_issue(
@@ -576,7 +569,7 @@ async def test_webhook_repair_issue(
         assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert (const.DOMAIN, "webhook_url") in issue_registry.issues
+    assert (DOMAIN, "webhook_url") in issue_registry.issues
 
 
 async def test_firmware_repair_issue(
@@ -590,4 +583,4 @@ async def test_firmware_repair_issue(
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert (const.DOMAIN, "firmware_update_host") in issue_registry.issues
+    assert (DOMAIN, "firmware_update_host") in issue_registry.issues
