@@ -23,8 +23,8 @@ if TYPE_CHECKING:
 
 APPLICATION_NAME: Final = "HomeAssistant"
 MAJOR_VERSION: Final = 2024
-MINOR_VERSION: Final = 8
-PATCH_VERSION: Final = "3"
+MINOR_VERSION: Final = 9
+PATCH_VERSION: Final = "0"
 __short_version__: Final = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__: Final = f"{__short_version__}.{PATCH_VERSION}"
 REQUIRED_PYTHON_VER: Final[tuple[int, int, int]] = (3, 12, 0)
@@ -60,7 +60,6 @@ class Platform(StrEnum):
     LAWN_MOWER = "lawn_mower"
     LIGHT = "light"
     LOCK = "lock"
-    MAILBOX = "mailbox"
     MEDIA_PLAYER = "media_player"
     NOTIFY = "notify"
     NUMBER = "number"
@@ -222,6 +221,7 @@ CONF_METHOD: Final = "method"
 CONF_MINIMUM: Final = "minimum"
 CONF_MODE: Final = "mode"
 CONF_MODEL: Final = "model"
+CONF_MODEL_ID: Final = "model_id"
 CONF_MONITORED_CONDITIONS: Final = "monitored_conditions"
 CONF_MONITORED_VARIABLES: Final = "monitored_variables"
 CONF_NAME: Final = "name"
@@ -565,6 +565,7 @@ ATTR_CONNECTIONS: Final = "connections"
 ATTR_DEFAULT_NAME: Final = "default_name"
 ATTR_MANUFACTURER: Final = "manufacturer"
 ATTR_MODEL: Final = "model"
+ATTR_MODEL_ID: Final = "model_id"
 ATTR_SERIAL_NUMBER: Final = "serial_number"
 ATTR_SUGGESTED_AREA: Final = "suggested_area"
 ATTR_SW_VERSION: Final = "sw_version"
@@ -671,8 +672,19 @@ _DEPRECATED_POWER_BTU_PER_HOUR: Final = DeprecatedConstantEnum(
 )
 """Deprecated: please use UnitOfPower.BTU_PER_HOUR."""
 
+
 # Reactive power units
-POWER_VOLT_AMPERE_REACTIVE: Final = "var"
+class UnitOfReactivePower(StrEnum):
+    """Reactive power units."""
+
+    VOLT_AMPERE_REACTIVE = "var"
+
+
+_DEPRECATED_POWER_VOLT_AMPERE_REACTIVE: Final = DeprecatedConstantEnum(
+    UnitOfReactivePower.VOLT_AMPERE_REACTIVE,
+    "2025.9",
+)
+"""Deprecated: please use UnitOfReactivePower.VOLT_AMPERE_REACTIVE."""
 
 
 # Energy units

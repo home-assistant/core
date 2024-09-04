@@ -160,14 +160,7 @@ async def test_reauth_success(hass: HomeAssistant) -> None:
     entry = MockConfigEntry(domain=transmission.DOMAIN, data=MOCK_CONFIG_DATA)
     entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        transmission.DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": entry.entry_id,
-        },
-        data=MOCK_CONFIG_DATA,
-    )
+    result = await entry.start_reauth_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
@@ -197,14 +190,7 @@ async def test_reauth_failed(hass: HomeAssistant, mock_api: MagicMock) -> None:
     )
     entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        transmission.DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": entry.entry_id,
-        },
-        data=MOCK_CONFIG_DATA,
-    )
+    result = await entry.start_reauth_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
@@ -232,14 +218,7 @@ async def test_reauth_failed_connection_error(
     )
     entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        transmission.DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": entry.entry_id,
-        },
-        data=MOCK_CONFIG_DATA,
-    )
+    result = await entry.start_reauth_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"

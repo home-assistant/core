@@ -10,6 +10,8 @@ from homeassistant.components.blink import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+from tests.common import MockConfigEntry
+
 
 async def test_form(hass: HomeAssistant) -> None:
     """Test we get the form."""
@@ -292,10 +294,11 @@ async def test_form_unknown_error(hass: HomeAssistant) -> None:
 
 async def test_reauth_shows_user_step(hass: HomeAssistant) -> None:
     """Test reauth shows the user form."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_REAUTH},
+    mock_entry = MockConfigEntry(
+        domain=DOMAIN,
         data={"username": "blink@example.com", "password": "invalid_password"},
     )
+    mock_entry.add_to_hass(hass)
+    result = await mock_entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"

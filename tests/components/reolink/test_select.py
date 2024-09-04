@@ -1,8 +1,8 @@
 """Test the Reolink select platform."""
 
-from datetime import timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from reolink_aio.api import Chime
 from reolink_aio.exceptions import InvalidParameterError, ReolinkError
@@ -19,7 +19,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
-from homeassistant.util.dt import utcnow
 
 from .conftest import TEST_NVR_NAME
 
@@ -28,22 +27,20 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 
 async def test_floodlight_mode_select(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     config_entry: MockConfigEntry,
     reolink_connect: MagicMock,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test select entity with floodlight_mode."""
-    reolink_connect.whiteled_mode.return_value = 1
-    reolink_connect.whiteled_mode_list.return_value = ["off", "auto"]
     with patch("homeassistant.components.reolink.PLATFORMS", [Platform.SELECT]):
-        assert await hass.config_entries.async_setup(config_entry.entry_id) is True
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.LOADED
 
     entity_id = f"{Platform.SELECT}.{TEST_NVR_NAME}_floodlight_mode"
-    assert hass.states.is_state(entity_id, "auto")
+    assert hass.states.get(entity_id).state == "auto"
 
-    reolink_connect.set_whiteled = AsyncMock()
     await hass.services.async_call(
         SELECT_DOMAIN,
         SERVICE_SELECT_OPTION,
@@ -52,7 +49,7 @@ async def test_floodlight_mode_select(
     )
     reolink_connect.set_whiteled.assert_called_once()
 
-    reolink_connect.set_whiteled = AsyncMock(side_effect=ReolinkError("Test error"))
+    reolink_connect.set_whiteled.side_effect = ReolinkError("Test error")
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             SELECT_DOMAIN,
@@ -61,9 +58,7 @@ async def test_floodlight_mode_select(
             blocking=True,
         )
 
-    reolink_connect.set_whiteled = AsyncMock(
-        side_effect=InvalidParameterError("Test error")
-    )
+    reolink_connect.set_whiteled.side_effect = InvalidParameterError("Test error")
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             SELECT_DOMAIN,
@@ -71,6 +66,13 @@ async def test_floodlight_mode_select(
             {ATTR_ENTITY_ID: entity_id, "option": "off"},
             blocking=True,
         )
+
+    reolink_connect.whiteled_mode.return_value = -99  # invalid value
+    freezer.tick(DEVICE_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == STATE_UNKNOWN
 
 
 async def test_play_quick_reply_message(
@@ -82,14 +84,13 @@ async def test_play_quick_reply_message(
     """Test select play_quick_reply_message entity."""
     reolink_connect.quick_reply_dict.return_value = {0: "off", 1: "test message"}
     with patch("homeassistant.components.reolink.PLATFORMS", [Platform.SELECT]):
-        assert await hass.config_entries.async_setup(config_entry.entry_id) is True
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.LOADED
 
     entity_id = f"{Platform.SELECT}.{TEST_NVR_NAME}_play_quick_reply_message"
-    assert hass.states.is_state(entity_id, STATE_UNKNOWN)
+    assert hass.states.get(entity_id).state == STATE_UNKNOWN
 
-    reolink_connect.play_quick_reply = AsyncMock()
     await hass.services.async_call(
         SELECT_DOMAIN,
         SERVICE_SELECT_OPTION,
@@ -101,46 +102,33 @@ async def test_play_quick_reply_message(
 
 async def test_chime_select(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     config_entry: MockConfigEntry,
     reolink_connect: MagicMock,
+    test_chime: Chime,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test chime select entity."""
-    TEST_CHIME = Chime(
-        host=reolink_connect,
-        dev_id=12345678,
-        channel=0,
-    )
-    TEST_CHIME.name = "Test chime"
-    TEST_CHIME.volume = 3
-    TEST_CHIME.led_state = True
-    TEST_CHIME.event_info = {
-        "md": {"switch": 0, "musicId": 0},
-        "people": {"switch": 0, "musicId": 1},
-        "visitor": {"switch": 1, "musicId": 2},
-    }
-
-    reolink_connect.chime_list = [TEST_CHIME]
-
     with patch("homeassistant.components.reolink.PLATFORMS", [Platform.SELECT]):
-        assert await hass.config_entries.async_setup(config_entry.entry_id) is True
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.LOADED
 
     entity_id = f"{Platform.SELECT}.test_chime_visitor_ringtone"
-    assert hass.states.is_state(entity_id, "pianokey")
+    assert hass.states.get(entity_id).state == "pianokey"
 
-    TEST_CHIME.set_tone = AsyncMock()
+    # Test selecting chime ringtone option
+    test_chime.set_tone = AsyncMock()
     await hass.services.async_call(
         SELECT_DOMAIN,
         SERVICE_SELECT_OPTION,
         {ATTR_ENTITY_ID: entity_id, "option": "off"},
         blocking=True,
     )
-    TEST_CHIME.set_tone.assert_called_once()
+    test_chime.set_tone.assert_called_once()
 
-    TEST_CHIME.set_tone = AsyncMock(side_effect=ReolinkError("Test error"))
+    test_chime.set_tone.side_effect = ReolinkError("Test error")
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             SELECT_DOMAIN,
@@ -149,7 +137,7 @@ async def test_chime_select(
             blocking=True,
         )
 
-    TEST_CHIME.set_tone = AsyncMock(side_effect=InvalidParameterError("Test error"))
+    test_chime.set_tone.side_effect = InvalidParameterError("Test error")
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             SELECT_DOMAIN,
@@ -158,10 +146,10 @@ async def test_chime_select(
             blocking=True,
         )
 
-    TEST_CHIME.event_info = {}
-    async_fire_time_changed(
-        hass, utcnow() + DEVICE_UPDATE_INTERVAL + timedelta(seconds=30)
-    )
+    # Test unavailable
+    test_chime.event_info = {}
+    freezer.tick(DEVICE_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert hass.states.is_state(entity_id, STATE_UNKNOWN)
+    assert hass.states.get(entity_id).state == STATE_UNKNOWN

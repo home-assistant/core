@@ -156,19 +156,19 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     component.async_register_entity_service(
         SERVICE_TURN_ON,
-        {},
+        None,
         "async_turn_on",
         [ClimateEntityFeature.TURN_ON],
     )
     component.async_register_entity_service(
         SERVICE_TURN_OFF,
-        {},
+        None,
         "async_turn_off",
         [ClimateEntityFeature.TURN_OFF],
     )
     component.async_register_entity_service(
         SERVICE_TOGGLE,
-        {},
+        None,
         "async_toggle",
         [ClimateEntityFeature.TURN_OFF, ClimateEntityFeature.TURN_ON],
     )

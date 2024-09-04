@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 from urllib.parse import urlparse
 
 from songpal import Device, SongpalException
@@ -36,7 +37,9 @@ class SongpalConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize the flow."""
         self.conf: SongpalConfig | None = None
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
         if user_input is None:
             return self.async_show_form(
@@ -123,10 +126,10 @@ class SongpalConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_init()
 
-    async def async_step_import(self, user_input=None):
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Import a config entry."""
-        name = user_input.get(CONF_NAME)
-        endpoint = user_input.get(CONF_ENDPOINT)
+        name = import_data.get(CONF_NAME)
+        endpoint = import_data.get(CONF_ENDPOINT)
         parsed_url = urlparse(endpoint)
 
         # Try to connect to test the endpoint
@@ -143,4 +146,4 @@ class SongpalConfigFlow(ConfigFlow, domain=DOMAIN):
 
         self.conf = SongpalConfig(name, parsed_url.hostname, endpoint)
 
-        return await self.async_step_init(user_input)
+        return await self.async_step_init(import_data)

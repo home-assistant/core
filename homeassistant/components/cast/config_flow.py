@@ -29,11 +29,11 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize flow."""
-        self._ignore_cec = set()
-        self._known_hosts = set()
-        self._wanted_uuid = set()
+        self._ignore_cec = set[str]()
+        self._known_hosts = set[str]()
+        self._wanted_uuid = set[str]()
 
     @staticmethod
     @callback
@@ -43,7 +43,9 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         """Get the options flow for this handler."""
         return CastOptionsFlowHandler(config_entry)
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")

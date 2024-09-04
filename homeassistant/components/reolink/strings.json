@@ -50,6 +50,14 @@
       }
     }
   },
+  "exceptions": {
+    "service_entry_ex": {
+      "message": "Reolink {service_name} error: config entry not found or not loaded"
+    },
+    "service_not_chime": {
+      "message": "Reolink play_chime error: {device_name} is not a chime"
+    }
+  },
   "issues": {
     "https_webhook": {
       "title": "Reolink webhook URL uses HTTPS (SSL)",
@@ -85,6 +93,36 @@
           "name": "Speed",
           "description": "PTZ move speed."
         }
+      }
+    },
+    "play_chime": {
+      "name": "Play chime",
+      "description": "Play a ringtone on a chime.",
+      "fields": {
+        "device_id": {
+          "name": "Target chime",
+          "description": "The chime to play the ringtone on."
+        },
+        "ringtone": {
+          "name": "Ringtone",
+          "description": "Ringtone to play."
+        }
+      }
+    }
+  },
+  "selector": {
+    "ringtone": {
+      "options": {
+        "citybird": "[%key:component::reolink::entity::select::motion_tone::state::citybird%]",
+        "originaltune": "[%key:component::reolink::entity::select::motion_tone::state::originaltune%]",
+        "pianokey": "[%key:component::reolink::entity::select::motion_tone::state::pianokey%]",
+        "loop": "[%key:component::reolink::entity::select::motion_tone::state::loop%]",
+        "attraction": "[%key:component::reolink::entity::select::motion_tone::state::attraction%]",
+        "hophop": "[%key:component::reolink::entity::select::motion_tone::state::hophop%]",
+        "goodday": "[%key:component::reolink::entity::select::motion_tone::state::goodday%]",
+        "operetta": "[%key:component::reolink::entity::select::motion_tone::state::operetta%]",
+        "moonlight": "[%key:component::reolink::entity::select::motion_tone::state::moonlight%]",
+        "waybackhome": "[%key:component::reolink::entity::select::motion_tone::state::waybackhome%]"
       }
     }
   },

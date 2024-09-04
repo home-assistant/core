@@ -63,7 +63,9 @@ class OctoPrintConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle a config flow for OctoPrint."""
         self._sessions: list[aiohttp.ClientSession] = []
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         # When coming back from the progress steps, the user_input is stored in the
         # instance variable instead of being passed in
@@ -158,9 +160,9 @@ class OctoPrintConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle api fetch failure."""
         return self.async_abort(reason="auth_failed")
 
-    async def async_step_import(self, user_input):
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Handle import."""
-        return await self.async_step_user(user_input)
+        return await self.async_step_user(import_data)
 
     async def async_step_zeroconf(
         self, discovery_info: zeroconf.ZeroconfServiceInfo
@@ -213,13 +215,15 @@ class OctoPrintConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_user()
 
-    async def async_step_reauth(self, config: Mapping[str, Any]) -> ConfigFlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Handle reauthorization request from Octoprint."""
-        self._reauth_data = dict(config)
+        self._reauth_data = dict(entry_data)
 
         self.context.update(
             {
-                "title_placeholders": {CONF_HOST: config[CONF_HOST]},
+                "title_placeholders": {CONF_HOST: entry_data[CONF_HOST]},
             }
         )
 

@@ -58,7 +58,6 @@ from .model import RainMachineEntityDescription
 
 DEFAULT_SSL = True
 
-CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,

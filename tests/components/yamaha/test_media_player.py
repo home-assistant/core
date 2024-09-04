@@ -25,7 +25,7 @@ def _create_zone_mock(name, url):
 class FakeYamahaDevice:
     """A fake Yamaha device."""
 
-    def __init__(self, ctrl_url, name, zones=None):
+    def __init__(self, ctrl_url, name, zones=None) -> None:
         """Initialize the fake Yamaha device."""
         self.ctrl_url = ctrl_url
         self.name = name
