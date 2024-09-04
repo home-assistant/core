@@ -12,7 +12,7 @@ from homeassistant.const import CONF_API_KEY, CONF_PROFILE_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from . import PROFILES, init_integration
+from . import PROFILES, init_integration, mock_nextdns
 
 
 async def test_form_create_entry(hass: HomeAssistant) -> None:
@@ -116,6 +116,7 @@ async def test_reauth_successful(hass: HomeAssistant) -> None:
             "homeassistant.components.nextdns.NextDns.get_profiles",
             return_value=PROFILES,
         ),
+        mock_nextdns(),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
