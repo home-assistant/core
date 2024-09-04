@@ -9,6 +9,7 @@ from homeassistant.core import HomeAssistant
 from .coordinator import SmDataUpdateCoordinator
 
 PLATFORMS: list[Platform] = [
+    Platform.BUTTON,
     Platform.SENSOR,
 ]
 type SmConfigEntry = ConfigEntry[SmDataUpdateCoordinator]
