@@ -40,6 +40,7 @@ class ThinQEntity(CoordinatorEntity[DeviceDataUpdateCoordinator]):
 
         self.entity_description = entity_description
         self.idx = idx
+        self.location = self.coordinator.api.get_location_for_idx(self.idx)
 
         self._attr_device_info = dr.DeviceInfo(
             identifiers={(DOMAIN, coordinator.unique_id)},
@@ -53,9 +54,13 @@ class ThinQEntity(CoordinatorEntity[DeviceDataUpdateCoordinator]):
                 ""
                 if self.location is None
                 or self.location in (Location.MAIN, Location.OVEN, coordinator.sub_id)
-                else f"{self.location} "
+                else self.location
             )
         }
+        if self._attr_translation_placeholders["location"]:
+            self._attr_translation_key = (
+                f"{entity_description.translation_key}_for_location"
+            )
 
         # Update initial status.
         self._update_status()
@@ -64,11 +69,6 @@ class ThinQEntity(CoordinatorEntity[DeviceDataUpdateCoordinator]):
     def data(self) -> PropertyState:
         """Return the state data of entity."""
         return self.coordinator.data.get(self.idx, EMPTY_STATE)
-
-    @property
-    def location(self) -> str | None:
-        """Return the location of entity."""
-        return self.coordinator.api.get_location_for_idx(self.idx)
 
     def _update_status(self) -> None:
         """Update status itself.

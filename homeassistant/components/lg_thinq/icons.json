@@ -15,6 +15,9 @@
       "remote_control_enabled": {
         "default": "mdi:remote"
       },
+      "remote_control_enabled_for_location": {
+        "default": "mdi:remote"
+      },
       "rinse_refill": {
         "default": "mdi:tune-vertical-variant"
       },
