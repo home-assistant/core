@@ -68,9 +68,6 @@
     "set_temperature": {
       "service": "mdi:thermometer"
     },
-    "set_aux_heat": {
-      "service": "mdi:radiator"
-    },
     "set_preset_mode": {
       "service": "mdi:sofa"
     },

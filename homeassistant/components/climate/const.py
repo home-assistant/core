@@ -117,7 +117,6 @@ _DEPRECATED_CURRENT_HVAC_FAN = DeprecatedConstantEnum(HVACAction.FAN, "2025.1")
 CURRENT_HVAC_ACTIONS = [cls.value for cls in HVACAction]
 
 
-ATTR_AUX_HEAT = "aux_heat"
 ATTR_CURRENT_HUMIDITY = "current_humidity"
 ATTR_CURRENT_TEMPERATURE = "current_temperature"
 ATTR_FAN_MODES = "fan_modes"
@@ -145,7 +144,6 @@ DEFAULT_MAX_HUMIDITY = 99
 
 DOMAIN = "climate"
 
-SERVICE_SET_AUX_HEAT = "set_aux_heat"
 SERVICE_SET_FAN_MODE = "set_fan_mode"
 SERVICE_SET_PRESET_MODE = "set_preset_mode"
 SERVICE_SET_HUMIDITY = "set_humidity"
@@ -163,7 +161,6 @@ class ClimateEntityFeature(IntFlag):
     FAN_MODE = 8
     PRESET_MODE = 16
     SWING_MODE = 32
-    AUX_HEAT = 64
     TURN_OFF = 128
     TURN_ON = 256
 
@@ -187,9 +184,6 @@ _DEPRECATED_SUPPORT_PRESET_MODE = DeprecatedConstantEnum(
 )
 _DEPRECATED_SUPPORT_SWING_MODE = DeprecatedConstantEnum(
     ClimateEntityFeature.SWING_MODE, "2025.1"
-)
-_DEPRECATED_SUPPORT_AUX_HEAT = DeprecatedConstantEnum(
-    ClimateEntityFeature.AUX_HEAT, "2025.1"
 )
 
 # These can be removed if no deprecated constant are in this module anymore

@@ -1,17 +1,5 @@
 # Describes the format for available climate services
 
-set_aux_heat:
-  target:
-    entity:
-      domain: climate
-      supported_features:
-        - climate.ClimateEntityFeature.AUX_HEAT
-  fields:
-    aux_heat:
-      required: true
-      selector:
-        boolean:
-
 set_preset_mode:
   target:
     entity:
