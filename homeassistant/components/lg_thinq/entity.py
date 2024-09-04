@@ -62,9 +62,6 @@ class ThinQEntity(CoordinatorEntity[DeviceDataUpdateCoordinator]):
                 f"{entity_description.translation_key}_for_location"
             )
 
-        # Update initial status.
-        self._update_status()
-
     @property
     def data(self) -> PropertyState:
         """Return the state data of entity."""
@@ -81,6 +78,11 @@ class ThinQEntity(CoordinatorEntity[DeviceDataUpdateCoordinator]):
         """Handle updated data from the coordinator."""
         self._update_status()
         self.async_write_ha_state()
+
+    async def async_added_to_hass(self) -> None:
+        """Call when entity is added to hass."""
+        await super().async_added_to_hass()
+        self._handle_coordinator_update()
 
     async def async_call_api(self, target: Coroutine[Any, Any, Any]) -> None:
         """Call the given api and handle exception."""
