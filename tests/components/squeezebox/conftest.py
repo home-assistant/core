@@ -188,7 +188,7 @@ def player() -> MagicMock:
     )
     player.async_toggle_pause = AsyncMock(
         side_effect=lambda: setattr(
-            player, "mode", "play" if player.mode == "pause" else "pause"
+            player, "mode", "play" if player.mode != "play" else "pause"
         )
     )
     player.async_update = AsyncMock()
