@@ -572,9 +572,25 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
     # Irrigator
     # https://developer.tuya.com/en/docs/iot/categoryggq?id=Kaiuz1qib7z0k
     "ggq": BATTERY_SENSORS,
-    # Water Detector
+    # Water Detector - Rain Sensor RB-SRAIN01
     # https://developer.tuya.com/en/docs/iot/categorysj?id=Kaiuz3iub2sli
-    "sj": BATTERY_SENSORS,
+    "sj": (
+        TuyaSensorEntityDescription(
+            key=DPCode.RAIN_SENSOR_VOL,
+            translation_key="rain_sensor_vol",
+            device_class=SensorDeviceClass.VOLTAGE,
+            state_class=SensorStateClass.MEASUREMENT,
+            native_unit_of_measurement=UnitOfElectricPotential.MILIVOLT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.LIGHT_INTENSITY,
+            translation_key="light_intensity",
+            device_class=SensorDeviceClass.VOLTAGE,
+            state_class=SensorStateClass.MEASUREMENT,
+            native_unit_of_measurement=UnitOfElectricPotential.MILIVOLT,
+        ),
+        *BATTERY_SENSORS,
+    ),
     # Emergency Button
     # https://developer.tuya.com/en/docs/iot/categorysos?id=Kaiuz3oi6agjy
     "sos": BATTERY_SENSORS,
