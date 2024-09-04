@@ -100,7 +100,7 @@ from .queries import (
     migrate_single_statistics_row_to_timestamp,
 )
 from .statistics import cleanup_statistics_timestamp_migration, get_start_time
-from .tasks import EntityIDPostMigrationTask, RecorderTask
+from .tasks import RecorderTask
 from .util import (
     database_job_retry_wrapper,
     execute_stmt_lambda_element,
@@ -2684,6 +2684,17 @@ class EventIDPostMigration(BaseRunTimeMigration):
             instance.use_legacy_events_index = True
             return NeedsMigrateResult(needs_migrate=True, migration_done=False)
         return NeedsMigrateResult(needs_migrate=False, migration_done=True)
+
+
+@dataclass(slots=True)
+class EntityIDPostMigrationTask(RecorderTask):
+    """An object to insert into the recorder queue to cleanup after entity_ids migration."""
+
+    def run(self, instance: Recorder) -> None:
+        """Run entity_id post migration task."""
+        if not post_migrate_entity_ids(instance):
+            # Schedule a new migration task if this one didn't finish
+            instance.queue_task(EntityIDPostMigrationTask())
 
 
 def _mark_migration_done(
