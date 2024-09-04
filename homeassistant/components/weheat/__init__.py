@@ -30,11 +30,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: WeheatConfigEntry) -> bo
     token = session.token["access_token"]
     entry.runtime_data = []
 
-    LOGGER.info("Getting pump info %s ", entry)
-
     # fetch a list of the heat pumps the entry can access
     for pump_info in await HeatPumpDiscovery.discover_active(API_URL, token):
-        LOGGER.info("Found pump %s", pump_info)
+        LOGGER.debug("Adding %s", pump_info)
         # for each pump, add a coordinator
         new_coordinator = WeheatDataUpdateCoordinator(
             hass=hass, session=session, heat_pump=pump_info

@@ -14,7 +14,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
     LocalOAuth2Implementation,
 )
 
-from .const import LOGGER, OAUTH2_AUTHORIZE, OAUTH2_TOKEN
+from .const import OAUTH2_AUTHORIZE, OAUTH2_TOKEN
 
 
 class WeheatOAuth2Implementation(LocalOAuth2Implementation):
@@ -29,10 +29,7 @@ class WeheatOAuth2Implementation(LocalOAuth2Implementation):
         if self.client_secret is not None:
             data["client_secret"] = self.client_secret
 
-        LOGGER.info("Token request data: %s", data)
-
         resp = await session.post(self.token_url, data=data)
-        LOGGER.info("Token response: %s", resp.status)
         if resp.status >= 400:
             try:
                 error_response = await resp.json()

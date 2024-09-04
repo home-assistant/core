@@ -1,6 +1,6 @@
 """Test the Weheat config flow."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -14,7 +14,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.setup import async_setup_component
 
-from .const import CLIENT_ID, CLIENT_SECRET
+from .const import CLIENT_ID, CLIENT_SECRET, USER_UUID_1
 
 from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator
@@ -49,12 +49,18 @@ async def test_full_flow(
         patch(
             "homeassistant.components.weheat.async_setup_entry", return_value=True
         ) as mock_setup,
+        patch(
+            "homeassistant.components.weheat.config_flow.get_user_id_from_token",
+            new_callable=AsyncMock,
+        ) as mock_weheat,
     ):
+        mock_weheat.return_value = USER_UUID_1
         await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert len(mock_setup.mock_calls) == 1
+    assert len(mock_weheat.mock_calls) == 1
 
 
 async def handle_oath(hass, hass_client_no_auth, aioclient_mock, result):
