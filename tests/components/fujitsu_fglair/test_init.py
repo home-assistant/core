@@ -9,6 +9,7 @@ import pytest
 from homeassistant.components.fujitsu_fglair.const import (
     API_REFRESH,
     API_TIMEOUT,
+    CONF_REGION,
     DOMAIN,
     FGLAIR_APP_CREDENTIALS,
 )
@@ -41,24 +42,27 @@ async def test_auth_failure(
     assert hass.states.get(entity_id(mock_devices[1])).state == STATE_UNAVAILABLE
 
 
-async def test_auth_europe(
+@pytest.mark.parametrize(
+    "mock_config_entry", FGLAIR_APP_CREDENTIALS.keys(), indirect=True
+)
+async def test_auth_regions(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     mock_ayla_api: AsyncMock,
-    mock_config_entry_europe: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
     mock_devices: list[AsyncMock],
 ) -> None:
     """Test that we use the correct credentials if europe is selected."""
     with patch(
         "homeassistant.components.fujitsu_fglair.new_ayla_api", return_value=AsyncMock()
     ) as new_ayla_api_patch:
-        await setup_integration(hass, mock_config_entry_europe)
+        await setup_integration(hass, mock_config_entry)
         new_ayla_api_patch.assert_called_once_with(
             TEST_USERNAME,
             TEST_PASSWORD,
-            FGLAIR_APP_CREDENTIALS["EU"][0],
-            FGLAIR_APP_CREDENTIALS["EU"][1],
-            europe=True,
+            FGLAIR_APP_CREDENTIALS[mock_config_entry.data[CONF_REGION]][0],
+            FGLAIR_APP_CREDENTIALS[mock_config_entry.data[CONF_REGION]][1],
+            europe=mock_config_entry.data[CONF_REGION] == "EU",
             websession=aiohttp_client.async_get_clientsession(hass),
             timeout=API_TIMEOUT,
         )

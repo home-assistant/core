@@ -9,9 +9,17 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from homeassistant.helpers import aiohttp_client
+from homeassistant.helpers import aiohttp_client, selector
 
-from .const import API_TIMEOUT, CONF_EUROPE, DOMAIN, FGLAIR_APP_CREDENTIALS
+from .const import (
+    API_TIMEOUT,
+    CONF_REGION,
+    CONF_REGION_CHINA,
+    CONF_REGION_DEFAULT,
+    CONF_REGION_EUROPE,
+    DOMAIN,
+    FGLAIR_APP_CREDENTIALS,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -20,7 +28,17 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_USERNAME): str,
         vol.Required(CONF_PASSWORD): str,
-        vol.Required(CONF_EUROPE): bool,
+        vol.Required(CONF_REGION): selector.selector(
+            {
+                "select": {
+                    "options": [
+                        CONF_REGION_DEFAULT,
+                        CONF_REGION_EUROPE,
+                        CONF_REGION_CHINA,
+                    ]
+                }
+            }
+        ),
     }
 )
 STEP_REAUTH_DATA_SCHEMA = vol.Schema(
@@ -39,15 +57,13 @@ class FGLairConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any]
     ) -> dict[str, str]:
         errors: dict[str, str] = {}
-        app_id, app_secret = FGLAIR_APP_CREDENTIALS[
-            "EU" if user_input[CONF_EUROPE] else "default"
-        ]
+        app_id, app_secret = FGLAIR_APP_CREDENTIALS[user_input[CONF_REGION]]
         api = new_ayla_api(
             user_input[CONF_USERNAME],
             user_input[CONF_PASSWORD],
             app_id,
             app_secret,
-            europe=user_input[CONF_EUROPE],
+            europe=user_input[CONF_REGION] == CONF_REGION_EUROPE["value"],
             websession=aiohttp_client.async_get_clientsession(self.hass),
             timeout=API_TIMEOUT,
         )
