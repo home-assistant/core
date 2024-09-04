@@ -12,8 +12,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.issue_registry import create_issue
 
 from . import GPMConfigEntry
-from ._manager import GPMError, RepositoryManager, RepositoryType
-from .const import DOMAIN
+from ._manager import GPMError, RepositoryManager, RepositoryType, UpdateStrategy
+from .const import DOMAIN, GIT_SHORT_HASH_LEN
 from .repairs import create_restart_issue
 
 SCAN_INTERVAL = timedelta(hours=3)
@@ -51,8 +51,15 @@ class GPMUpdateEntity(UpdateEntity):
             self.manager.fetch()
         self._attr_unique_id = f"{DOMAIN}_{self.manager.component_name}"
         self._attr_name = self.manager.component_name
-        self._attr_installed_version = self.manager.get_current_version()
-        self._attr_latest_version = self.manager.get_latest_version()
+
+        current = self.manager.get_current_version()
+        latest = self.manager.get_latest_version()
+        if self.manager.update_strategy == UpdateStrategy.LATEST_COMMIT:
+            self._attr_installed_version = current[:GIT_SHORT_HASH_LEN]
+            self._attr_latest_version = latest[:GIT_SHORT_HASH_LEN]
+        else:
+            self._attr_installed_version = current
+            self._attr_latest_version = latest
 
     @property
     def entity_picture(self) -> str | None:
