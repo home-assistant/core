@@ -27,10 +27,12 @@ async def async_get_config_entry_diagnostics(
     return {
         "info": async_redact_data(config_entry.data, TO_REDACT),
         "service": {
-            "status": status_info.status,
-            "total": status_info.total,
-            "last_update": status_info.last_update,
-            "last_update_successful": status_info.last_update_successful,
-            "last_timestamp": status_info.last_timestamp,
+            "status": status_info.status if status_info else "",
+            "total": status_info.total if status_info else "",
+            "last_update": status_info.last_update if status_info else "",
+            "last_update_successful": status_info.last_update_successful
+            if status_info
+            else "",
+            "last_timestamp": status_info.last_timestamp if status_info else "",
         },
     }
