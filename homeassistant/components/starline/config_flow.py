@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 from starline import StarlineAuth
 import voluptuous as vol
 
@@ -31,11 +33,6 @@ class StarlineFlowHandler(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    _app_code: str
-    _app_token: str
-    _captcha_image: str
-    _captcha_sid: str
-
     def __init__(self) -> None:
         """Initialize flow."""
         self._app_id: str | None = None
@@ -44,63 +41,59 @@ class StarlineFlowHandler(ConfigFlow, domain=DOMAIN):
         self._password: str | None = None
         self._mfa_code: str | None = None
 
+        self._app_code = None
+        self._app_token = None
         self._user_slid = None
         self._user_id = None
         self._slnet_token = None
         self._slnet_token_expires = None
-        self._captcha_code: str | None = None
+        self._captcha_image = None
+        self._captcha_sid = None
+        self._captcha_code = None
         self._phone_number = None
 
         self._auth = StarlineAuth()
 
     async def async_step_user(
-        self, user_input: dict[str, str] | None = None
+        self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
         return await self.async_step_auth_app(user_input)
 
-    async def async_step_auth_app(
-        self, user_input: dict[str, str] | None = None
-    ) -> ConfigFlowResult:
+    async def async_step_auth_app(self, user_input=None, error=None):
         """Authenticate application step."""
         if user_input is not None:
             self._app_id = user_input[CONF_APP_ID]
             self._app_secret = user_input[CONF_APP_SECRET]
-            return await self._async_authenticate_app()
-        return self._async_form_auth_app()
+            return await self._async_authenticate_app(error)
+        return self._async_form_auth_app(error)
 
-    async def async_step_auth_user(
-        self, user_input: dict[str, str] | None = None
-    ) -> ConfigFlowResult:
+    async def async_step_auth_user(self, user_input=None, error=None):
         """Authenticate user step."""
         if user_input is not None:
             self._username = user_input[CONF_USERNAME]
             self._password = user_input[CONF_PASSWORD]
-            return await self._async_authenticate_user()
-        return self._async_form_auth_user()
+            return await self._async_authenticate_user(error)
+        return self._async_form_auth_user(error)
 
-    async def async_step_auth_mfa(
-        self, user_input: dict[str, str] | None = None
-    ) -> ConfigFlowResult:
+    async def async_step_auth_mfa(self, user_input=None, error=None):
         """Authenticate mfa step."""
         if user_input is not None:
             self._mfa_code = user_input[CONF_MFA_CODE]
-            return await self._async_authenticate_user()
-        return self._async_form_auth_mfa()
+            return await self._async_authenticate_user(error)
+        return self._async_form_auth_mfa(error)
 
-    async def async_step_auth_captcha(
-        self, user_input: dict[str, str] | None = None
-    ) -> ConfigFlowResult:
+    async def async_step_auth_captcha(self, user_input=None, error=None):
         """Captcha verification step."""
         if user_input is not None:
             self._captcha_code = user_input[CONF_CAPTCHA_CODE]
-            return await self._async_authenticate_user()
-        return self._async_form_auth_captcha()
+            return await self._async_authenticate_user(error)
+        return self._async_form_auth_captcha(error)
 
     @callback
-    def _async_form_auth_app(self, error: str | None = None) -> ConfigFlowResult:
+    def _async_form_auth_app(self, error=None):
         """Authenticate application form."""
-        errors: dict[str, str] = {}
+        errors = {}
         if error is not None:
             errors["base"] = error
 
@@ -120,7 +113,7 @@ class StarlineFlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
     @callback
-    def _async_form_auth_user(self, error: str | None = None) -> ConfigFlowResult:
+    def _async_form_auth_user(self, error=None):
         """Authenticate user form."""
         errors = {}
         if error is not None:
@@ -142,7 +135,7 @@ class StarlineFlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
     @callback
-    def _async_form_auth_mfa(self, error: str | None = None) -> ConfigFlowResult:
+    def _async_form_auth_mfa(self, error=None):
         """Authenticate mfa form."""
         errors = {}
         if error is not None:
@@ -162,7 +155,7 @@ class StarlineFlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
     @callback
-    def _async_form_auth_captcha(self, error: str | None = None) -> ConfigFlowResult:
+    def _async_form_auth_captcha(self, error=None):
         """Captcha verification form."""
         errors = {}
         if error is not None:
@@ -183,9 +176,7 @@ class StarlineFlowHandler(ConfigFlow, domain=DOMAIN):
             },
         )
 
-    async def _async_authenticate_app(
-        self, error: str | None = None
-    ) -> ConfigFlowResult:
+    async def _async_authenticate_app(self, error=None):
         """Authenticate application."""
         try:
             self._app_code = await self.hass.async_add_executor_job(
@@ -199,9 +190,7 @@ class StarlineFlowHandler(ConfigFlow, domain=DOMAIN):
             _LOGGER.error("Error auth StarLine: %s", err)
             return self._async_form_auth_app(ERROR_AUTH_APP)
 
-    async def _async_authenticate_user(
-        self, error: str | None = None
-    ) -> ConfigFlowResult:
+    async def _async_authenticate_user(self, error=None):
         """Authenticate user."""
         try:
             state, data = await self.hass.async_add_executor_job(
@@ -234,7 +223,7 @@ class StarlineFlowHandler(ConfigFlow, domain=DOMAIN):
             _LOGGER.error("Error auth user: %s", err)
             return self._async_form_auth_user(ERROR_AUTH_USER)
 
-    async def _async_get_entry(self) -> ConfigFlowResult:
+    async def _async_get_entry(self):
         """Create entry."""
         (
             self._slnet_token,
