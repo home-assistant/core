@@ -27,11 +27,25 @@ async def test_climate_entity_migration(
     ):
         mock_config_entry.add_to_hass(hass)
 
-        entry = entity_registry.async_get_or_create(
+        entry1 = entity_registry.async_get_or_create(
             domain=Platform.CLIMATE,
             platform=DOMAIN,
             config_entry=mock_config_entry,
             unique_id="gateway0-0",
+            translation_key="heating",
+        )
+        entry2 = entity_registry.async_get_or_create(
+            domain=Platform.CLIMATE,
+            platform=DOMAIN,
+            config_entry=mock_config_entry,
+            unique_id="gateway0_deviceSerialVitodens300W-heating-1",
+            translation_key="heating",
+        )
+        entry3 = entity_registry.async_get_or_create(
+            domain=Platform.CLIMATE,
+            platform=DOMAIN,
+            config_entry=mock_config_entry,
+            unique_id="gateway1-0",
             translation_key="heating",
         )
 
@@ -40,6 +54,11 @@ async def test_climate_entity_migration(
         await hass.async_block_till_done()
 
     assert (
-        entity_registry.async_get(entry.entity_id).unique_id
+        entity_registry.async_get(entry1.entity_id).unique_id
         == "gateway0_deviceSerialVitodens300W-heating-0"
     )
+    assert (
+        entity_registry.async_get(entry2.entity_id).unique_id
+        == "gateway0_deviceSerialVitodens300W-heating-1"
+    )
+    assert entity_registry.async_get(entry3.entity_id).unique_id == "gateway1-0"
