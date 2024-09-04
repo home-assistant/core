@@ -15,7 +15,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import WebControlProConfigEntry
-from .generic_entity import WebControlProGenericEntity
+from .entity import WebControlProGenericEntity
 
 SCAN_INTERVAL = timedelta(seconds=5)
 PARALLEL_UPDATES = 1
@@ -31,9 +31,8 @@ async def async_setup_entry(
 
     entities: list[WebControlProGenericEntity] = []
     for dest in hub.dests.values():
-        await dest.refresh()
         if dest.action(WMS_WebControl_pro_API_actionDescription.AwningDrive):
-            entities.append(WebControlProAwning(config_entry.entry_id, dest))
+            entities.append(WebControlProAwning(config_entry.entry_id, dest))  # noqa: PERF401
 
     async_add_entities(entities)
 

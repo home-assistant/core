@@ -37,6 +37,7 @@ class WebControlProConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
+            self._async_abort_entries_match(user_input)
             host = user_input[CONF_HOST]
             session = async_get_clientsession(self.hass)
             hub = WebControlPro(host, session)

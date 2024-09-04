@@ -29,7 +29,6 @@ async def async_setup_entry(
 
     try:
         await hub.ping()
-        await hub.refresh()
     except aiohttp.ClientError as err:
         raise ConfigEntryNotReady(f"Error while connecting to {host}") from err
 
@@ -43,6 +42,13 @@ async def async_setup_entry(
         model="WMS WebControl pro",
         configuration_url=f"http://{hub.host}/system",
     )
+
+    try:
+        await hub.refresh()
+        for dest in hub.dests.values():
+            await dest.refresh()
+    except aiohttp.ClientError as err:
+        raise ConfigEntryNotReady(f"Error while refreshing from {host}") from err
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

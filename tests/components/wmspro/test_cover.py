@@ -3,10 +3,18 @@
 from unittest.mock import AsyncMock, patch
 
 from homeassistant.components.wmspro.const import DOMAIN, MANUFACTURER
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    SERVICE_CLOSE_COVER,
+    SERVICE_OPEN_COVER,
+    SERVICE_SET_COVER_POSITION,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
+
+from .conftest import setup_config_entry
 
 from tests.common import MockConfigEntry
 
@@ -19,10 +27,7 @@ async def test_cover_device(
     mock_hub_status_prod_awning: AsyncMock,
 ) -> None:
     """Test that a cover device is created correctly."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert await setup_config_entry(hass, mock_config_entry)
     assert len(mock_hub_ping.mock_calls) == 1
     assert len(mock_hub_configuration_prod.mock_calls) == 1
     assert len(mock_hub_status_prod_awning.mock_calls) == 2
@@ -43,10 +48,7 @@ async def test_cover_update(
     mock_hub_status_prod_awning: AsyncMock,
 ) -> None:
     """Test that a cover entity is created and updated correctly."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert await setup_config_entry(hass, mock_config_entry)
     assert len(mock_hub_ping.mock_calls) == 1
     assert len(mock_hub_configuration_prod.mock_calls) == 1
     assert len(mock_hub_status_prod_awning.mock_calls) == 2
@@ -57,7 +59,10 @@ async def test_cover_update(
 
     await async_setup_component(hass, "homeassistant", {})
     await hass.services.async_call(
-        "homeassistant", "update_entity", {"entity_id": entity.entity_id}, blocking=True
+        "homeassistant",
+        "update_entity",
+        {ATTR_ENTITY_ID: entity.entity_id},
+        blocking=True,
     )
 
     assert len(mock_hub_status_prod_awning.mock_calls) == 3
@@ -72,10 +77,7 @@ async def test_cover_close_and_open(
     mock_action_call: AsyncMock,
 ) -> None:
     """Test that a cover entity is opened and closed correctly."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert await setup_config_entry(hass, mock_config_entry)
     assert len(mock_hub_ping.mock_calls) == 1
     assert len(mock_hub_configuration_prod.mock_calls) == 1
     assert len(mock_hub_status_prod_awning.mock_calls) >= 1
@@ -91,9 +93,12 @@ async def test_cover_close_and_open(
     ):
         before = len(mock_hub_status_prod_awning.mock_calls)
 
-        await async_setup_component(hass, "cover", {})
+        await async_setup_component(hass, Platform.COVER, {})
         await hass.services.async_call(
-            "cover", "close_cover", {"entity_id": entity.entity_id}, blocking=True
+            Platform.COVER,
+            SERVICE_CLOSE_COVER,
+            {ATTR_ENTITY_ID: entity.entity_id},
+            blocking=True,
         )
 
         entity = hass.states.get("cover.markise")
@@ -108,9 +113,12 @@ async def test_cover_close_and_open(
     ):
         before = len(mock_hub_status_prod_awning.mock_calls)
 
-        await async_setup_component(hass, "cover", {})
+        await async_setup_component(hass, Platform.COVER, {})
         await hass.services.async_call(
-            "cover", "open_cover", {"entity_id": entity.entity_id}, blocking=True
+            Platform.COVER,
+            SERVICE_OPEN_COVER,
+            {"entity_id": entity.entity_id},
+            blocking=True,
         )
 
         entity = hass.states.get("cover.markise")
@@ -129,10 +137,7 @@ async def test_cover_move(
     mock_action_call: AsyncMock,
 ) -> None:
     """Test that a cover entity is moved and closed correctly."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert await setup_config_entry(hass, mock_config_entry)
     assert len(mock_hub_ping.mock_calls) == 1
     assert len(mock_hub_configuration_prod.mock_calls) == 1
     assert len(mock_hub_status_prod_awning.mock_calls) >= 1
@@ -148,11 +153,11 @@ async def test_cover_move(
     ):
         before = len(mock_hub_status_prod_awning.mock_calls)
 
-        await async_setup_component(hass, "cover", {})
+        await async_setup_component(hass, Platform.COVER, {})
         await hass.services.async_call(
-            "cover",
-            "set_cover_position",
-            {"entity_id": entity.entity_id, "position": 50},
+            Platform.COVER,
+            SERVICE_SET_COVER_POSITION,
+            {ATTR_ENTITY_ID: entity.entity_id, "position": 50},
             blocking=True,
         )
 
@@ -172,10 +177,7 @@ async def test_cover_move_and_stop(
     mock_action_call: AsyncMock,
 ) -> None:
     """Test that a cover entity is moved and closed correctly."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert await setup_config_entry(hass, mock_config_entry)
     assert len(mock_hub_ping.mock_calls) == 1
     assert len(mock_hub_configuration_prod.mock_calls) == 1
     assert len(mock_hub_status_prod_awning.mock_calls) >= 1
@@ -191,11 +193,11 @@ async def test_cover_move_and_stop(
     ):
         before = len(mock_hub_status_prod_awning.mock_calls)
 
-        await async_setup_component(hass, "cover", {})
+        await async_setup_component(hass, Platform.COVER, {})
         await hass.services.async_call(
-            "cover",
+            Platform.COVER,
             "set_cover_position",
-            {"entity_id": entity.entity_id, "position": 80},
+            {ATTR_ENTITY_ID: entity.entity_id, "position": 80},
             blocking=True,
         )
 
@@ -211,9 +213,12 @@ async def test_cover_move_and_stop(
     ):
         before = len(mock_hub_status_prod_awning.mock_calls)
 
-        await async_setup_component(hass, "cover", {})
+        await async_setup_component(hass, Platform.COVER, {})
         await hass.services.async_call(
-            "cover", "stop_cover", {"entity_id": entity.entity_id}, blocking=True
+            Platform.COVER,
+            "stop_cover",
+            {ATTR_ENTITY_ID: entity.entity_id},
+            blocking=True,
         )
 
         entity = hass.states.get("cover.markise")
