@@ -35,7 +35,7 @@ class IskraDataUpdateCoordinator(DataUpdateCoordinator[None]):
             update_interval=update_interval,
         )
 
-    async def _async_update_data(self):
+    async def _async_update_data(self) -> None:
         """Fetch data from Iskra device."""
         try:
             await self.device.update_status()
