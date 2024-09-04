@@ -53,9 +53,7 @@ class LMSStatusDataUpdateCoordinator(DataUpdateCoordinator):
         # rescan bool are we rescanning alter poll not present if false
         data[STATUS_SENSOR_RESCAN] = STATUS_SENSOR_RESCAN in data
         # needsrestart bool pending lms plugin updates not present if false
-        data[STATUS_SENSOR_NEEDSRESTART] = (
-            STATUS_SENSOR_NEEDSRESTART in data
-        )
+        data[STATUS_SENSOR_NEEDSRESTART] = STATUS_SENSOR_NEEDSRESTART in data
 
         _LOGGER.debug("Processed serverstatus %s=%s", self.lms.name, data)
         return data
