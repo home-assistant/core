@@ -10,16 +10,14 @@ import time
 from typing import Any
 
 from aiohttp.web import Request, Response
-from webio_api import Output as NASwebOutput, WebioAPI
+from webio_api import WebioAPI
 from webio_api.const import KEY_DEVICE_SERIAL, KEY_OUTPUTS, KEY_TYPE, TYPE_STATUS_UPDATE
 
-from homeassistant.const import Platform
 from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
 from homeassistant.helpers import event
-from homeassistant.helpers.entity_platform import async_get_platforms
 from homeassistant.helpers.update_coordinator import BaseDataUpdateCoordinatorProtocol
 
-from .const import DOMAIN, STATUS_UPDATE_MAX_TIME_INTERVAL
+from .const import STATUS_UPDATE_MAX_TIME_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -172,28 +170,6 @@ class NASwebCoordinator(BaseDataUpdateCoordinatorProtocol):
 
     async def process_status_update(self, new_status: dict) -> None:
         """Process status update from NASweb."""
-        new_objects = self.webio_api.update_device_status(new_status)
-        new_outputs = new_objects[KEY_OUTPUTS]
-        if len(new_outputs) > 0:
-            await self._add_switch_entities(new_outputs)
-        self.async_set_updated_data(self.data)
-
-    async def _add_switch_entities(self, switches: list[NASwebOutput]) -> None:
-        # pylint: disable=import-outside-toplevel
-        from .switch import RelaySwitch
-
-        new_switch_entities: list[RelaySwitch] = []
-        for nasweb_output in switches:
-            if not isinstance(nasweb_output, NASwebOutput):
-                _LOGGER.error("Cannot create RelaySwitch without NASwebOutput")
-                continue
-            relay_switch = RelaySwitch(self, nasweb_output)
-            new_switch_entities.append(relay_switch)
-        integration_platforms = async_get_platforms(self._hass, DOMAIN)
-        switch_platform = None
-        for p in integration_platforms:
-            if p.domain == Platform.SWITCH:
-                switch_platform = p
-                break
-        if switch_platform is not None:
-            await switch_platform.async_add_entities(new_switch_entities)
+        self.webio_api.update_device_status(new_status)
+        new_data = {KEY_OUTPUTS: self.webio_api.outputs}
+        self.async_set_updated_data(new_data)

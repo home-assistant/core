@@ -7,9 +7,8 @@ import time
 from typing import Any
 
 from webio_api import Output as NASwebOutput
-from webio_api.const import KEY_OUTPUTS
 
-from homeassistant.components.switch import SwitchEntity
+from homeassistant.components.switch import DOMAIN as DOMAIN_SWITCH, SwitchEntity
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -22,10 +21,18 @@ from homeassistant.helpers.update_coordinator import (
 
 from . import NASwebConfigEntry
 from .const import DOMAIN, STATUS_UPDATE_MAX_TIME_INTERVAL
+from .coordinator import NASwebCoordinator
 
 OUTPUT_TRANSLATION_KEY = "switch_output"
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def _get_output(coordinator: NASwebCoordinator, index: int) -> NASwebOutput | None:
+    for out in coordinator.webio_api.outputs:
+        if out.index == index:
+            return out
+    return None
 
 
 async def async_setup_entry(
@@ -36,15 +43,39 @@ async def async_setup_entry(
 ) -> None:
     """Set up switch platform."""
     coordinator = config.runtime_data
-    nasweb_outputs = coordinator.data[KEY_OUTPUTS]
-    entities: list[RelaySwitch] = []
-    for out in nasweb_outputs:
-        if not isinstance(out, NASwebOutput):
-            _LOGGER.error("Cannot create RelaySwitch entity without NASwebOutput")
-            continue
-        new_output = RelaySwitch(coordinator, out)
-        entities.append(new_output)
-    async_add_entities(entities)
+    current_outputs: set[int] = set()
+
+    @callback
+    def _check_entities() -> None:
+        nonlocal current_outputs
+        received_outputs: set[int] = {
+            out.index for out in coordinator.webio_api.outputs
+        }
+        added: set[int] = {i for i in received_outputs if i not in current_outputs}
+        removed: set[int] = {i for i in current_outputs if i not in received_outputs}
+        entities_to_add: list[RelaySwitch] = []
+        for index in added:
+            webio_output = _get_output(coordinator, index)
+            if not isinstance(webio_output, NASwebOutput):
+                _LOGGER.error("Cannot create RelaySwitch entity without NASwebOutput")
+                continue
+            new_output = RelaySwitch(coordinator, webio_output)
+            entities_to_add.append(new_output)
+            current_outputs.add(index)
+        async_add_entities(entities_to_add)
+        entity_registry = er.async_get(hass)
+        for index in removed:
+            unique_id = f"{DOMAIN}.{coordinator.webio_api.get_serial_number()}.relay_switch.{index}"
+            if entity_id := entity_registry.async_get_entity_id(
+                DOMAIN_SWITCH, DOMAIN, unique_id
+            ):
+                entity_registry.async_remove(entity_id)
+                current_outputs.remove(index)
+            else:
+                _LOGGER.warning("Failed to remove old output: no entity_id")
+
+    coordinator.async_add_listener(_check_entities)
+    _check_entities()
 
 
 class RelaySwitch(SwitchEntity, BaseCoordinatorEntity):
@@ -77,7 +108,6 @@ class RelaySwitch(SwitchEntity, BaseCoordinatorEntity):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        old_available = self.available
         self._attr_is_on = self._output.state
         if (
             self.coordinator.last_update is None
@@ -88,11 +118,6 @@ class RelaySwitch(SwitchEntity, BaseCoordinatorEntity):
             self._attr_available = (
                 self._output.available if self._output.available is not None else False
             )
-        if old_available and self._output.available is None and self.unique_id:
-            _LOGGER.warning("Removing entity: %s", self)
-            entity_registry = er.async_get(self.hass)
-            entity_registry.async_remove(self.entity_id)
-            return
         self.async_write_ha_state()
 
     async def async_update(self) -> None:
