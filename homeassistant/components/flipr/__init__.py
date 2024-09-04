@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant
 from .const import CONF_ENTRY_FLIPR_COORDINATORS, CONF_ENTRY_HUB_COORDINATORS, DOMAIN
 from .coordinator import FliprDataUpdateCoordinator, HubDataUpdateCoordinator
 
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.SELECT, Platform.SENSOR, Platform.SWITCH]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR, Platform.SWITCH]
 
 _LOGGER = logging.getLogger(__name__)
 

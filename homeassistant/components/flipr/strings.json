@@ -15,9 +15,6 @@
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "unknown": "[%key:common::config_flow::error::unknown%]",
       "no_flipr_id_found": "No flipr or hub associated to your account for now. You should verify it is working with the Flipr's mobile app first."
-    },
-    "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
   },
   "entity": {
@@ -46,16 +43,6 @@
     "switch": {
       "hub_state": {
         "name": "state"
-      }
-    },
-    "select": {
-      "hub_mode": {
-        "name": "mode",
-        "state": {
-          "auto": "Automatic",
-          "manual": "Manual",
-          "planning": "Planning"
-        }
       }
     }
   }
