@@ -46,6 +46,5 @@ async def test_restart_button(
         },
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     mock_pyotgw.return_value.set_mode.assert_awaited_once_with(OTGW_MODE_RESET)
