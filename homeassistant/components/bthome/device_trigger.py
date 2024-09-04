@@ -54,7 +54,7 @@ TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
 def get_event_classes_by_device_id(hass: HomeAssistant, device_id: str) -> list[str]:
     """Get the supported event classes for a device.
 
-    Events for BT Home BLE devices are dynamically discovered
+    Events for BTHome BLE devices are dynamically discovered
     and stored in the device config entry when they are first seen.
     """
     device_registry = dr.async_get(hass)
