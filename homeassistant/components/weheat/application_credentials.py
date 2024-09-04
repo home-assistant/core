@@ -6,6 +6,12 @@ from typing import cast
 from aiohttp import ClientError
 
 from homeassistant.components.application_credentials import ClientCredential
+from homeassistant.const import (
+    CONF_CLIENT_ID,
+    CONF_CLIENT_SECRET,
+    CONF_ERROR,
+    STATE_UNKNOWN,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -14,7 +20,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
     LocalOAuth2Implementation,
 )
 
-from .const import OAUTH2_AUTHORIZE, OAUTH2_TOKEN
+from .const import ERROR_DESCRIPTION, OAUTH2_AUTHORIZE, OAUTH2_TOKEN
 
 
 class WeheatOAuth2Implementation(LocalOAuth2Implementation):
@@ -24,10 +30,10 @@ class WeheatOAuth2Implementation(LocalOAuth2Implementation):
         """Make a token request."""
         session = async_get_clientsession(self.hass)
 
-        data["client_id"] = self.client_id
+        data[CONF_CLIENT_ID] = self.client_id
 
         if self.client_secret is not None:
-            data["client_secret"] = self.client_secret
+            data[CONF_CLIENT_SECRET] = self.client_secret
 
         resp = await session.post(self.token_url, data=data)
         if resp.status >= 400:
@@ -35,8 +41,8 @@ class WeheatOAuth2Implementation(LocalOAuth2Implementation):
                 error_response = await resp.json()
             except (ClientError, JSONDecodeError):
                 error_response = {}
-            error_code = error_response.get("error", "unknown")
-            error_description = error_response.get("error_description", "unknown error")
+            error_code = error_response.get(CONF_ERROR, STATE_UNKNOWN)
+            error_description = error_response.get(ERROR_DESCRIPTION, STATE_UNKNOWN)
 
             # Raise a ConfigEntryAuthFailed as the sessions is no longer valid
             raise ConfigEntryAuthFailed(

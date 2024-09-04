@@ -3,7 +3,7 @@
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
+from .const import DOMAIN, MANUFACTURER
 from .coordinator import WeheatDataUpdateCoordinator
 
 
@@ -22,6 +22,6 @@ class WeheatEntity(CoordinatorEntity[WeheatDataUpdateCoordinator]):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, coordinator.heatpump_id)},
             name=coordinator.readable_name,
-            manufacturer="Weheat",
+            manufacturer=MANUFACTURER,
             model=coordinator.model,
         )

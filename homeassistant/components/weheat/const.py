@@ -3,8 +3,9 @@
 from logging import Logger, getLogger
 
 DOMAIN = "weheat"
-
+MANUFACTURER = "Weheat"
 ENTRY_TITLE = "Weheat cloud"
+ERROR_DESCRIPTION = "error_description"
 
 OAUTH2_AUTHORIZE = (
     "https://auth.weheat.nl/auth/realms/Weheat/protocol/openid-connect/auth/"

@@ -2,7 +2,6 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from decimal import Decimal
 
 from weheat.abstractions.heat_pump import HeatPump
 
@@ -12,11 +11,12 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfPower
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
 
+from . import WeheatConfigEntry
 from .const import DISPLAY_PRECISION_COP, DISPLAY_PRECISION_WATTS
 from .coordinator import WeheatDataUpdateCoordinator
 from .entity import WeheatEntity
@@ -26,7 +26,7 @@ from .entity import WeheatEntity
 class WeHeatSensorEntityDescription(SensorEntityDescription):
     """Describes Weheat sensor entity."""
 
-    value_fn: Callable[[HeatPump], Decimal]
+    value_fn: Callable[[HeatPump], StateType]
 
 
 SENSORS = [
@@ -59,13 +59,13 @@ SENSORS = [
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: WeheatConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the sensors for weheat heat pump."""
     async_add_entities(
-        WeheatHeatPumpSensor(
-            coordinator=coordinator, entity_description=entity_description
-        )
+        WeheatHeatPumpSensor(coordinator, entity_description)
         for entity_description in SENSORS
         for coordinator in entry.runtime_data
     )
@@ -90,6 +90,6 @@ class WeheatHeatPumpSensor(WeheatEntity, SensorEntity):
         self._attr_unique_id = f"{coordinator.heatpump_id}_{entity_description.key}"
 
     @property
-    def native_value(self) -> Decimal | None:
+    def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data)

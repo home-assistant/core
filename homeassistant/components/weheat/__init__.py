@@ -5,7 +5,7 @@ from __future__ import annotations
 from weheat.abstractions.discovery import HeatPumpDiscovery
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.const import CONF_ACCESS_TOKEN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.config_entry_oauth2_flow import (
     OAuth2Session,
@@ -17,7 +17,6 @@ from .coordinator import WeheatDataUpdateCoordinator
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
-
 type WeheatConfigEntry = ConfigEntry[list[WeheatDataUpdateCoordinator]]
 
 
@@ -27,16 +26,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: WeheatConfigEntry) -> bo
 
     session = OAuth2Session(hass, entry, implementation)
 
-    token = session.token["access_token"]
+    token = session.token[CONF_ACCESS_TOKEN]
     entry.runtime_data = []
 
     # fetch a list of the heat pumps the entry can access
     for pump_info in await HeatPumpDiscovery.discover_active(API_URL, token):
         LOGGER.debug("Adding %s", pump_info)
         # for each pump, add a coordinator
-        new_coordinator = WeheatDataUpdateCoordinator(
-            hass=hass, session=session, heat_pump=pump_info
-        )
+        new_coordinator = WeheatDataUpdateCoordinator(hass, session, pump_info)
 
         await new_coordinator.async_config_entry_first_refresh()
 

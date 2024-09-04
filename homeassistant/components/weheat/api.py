@@ -3,6 +3,7 @@
 from aiohttp import ClientSession
 from weheat.abstractions import AbstractAuth
 
+from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
 
 from .const import API_URL
@@ -25,4 +26,4 @@ class AsyncConfigEntryAuth(AbstractAuth):
         if not self._oauth_session.valid_token:
             await self._oauth_session.async_ensure_token_valid()
 
-        return self._oauth_session.token["access_token"]
+        return self._oauth_session.token[CONF_ACCESS_TOKEN]
