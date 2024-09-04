@@ -13,7 +13,7 @@ from .conftest import Fixture, MockPyViCare
 from tests.common import MockConfigEntry
 
 
-# Device migration test can be removed in 2025.3.0
+# Device migration test can be removed in 2025.4.0
 async def test_device_migration(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -48,7 +48,7 @@ async def test_device_migration(
     )
 
 
-# Entity migration test can be removed in 2025.3.0
+# Entity migration test can be removed in 2025.4.0
 async def test_climate_entity_migration(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,

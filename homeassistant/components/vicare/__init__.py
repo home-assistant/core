@@ -50,9 +50,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryAuthFailed("Authentication failed") from err
 
     for device in hass.data[DOMAIN][entry.entry_id][DEVICE_LIST]:
-        # Migration can be removed in 2025.3.0
+        # Migration can be removed in 2025.4.0
         await async_migrate_devices(hass, entry, device)
-        # Migration can be removed in 2025.3.0
+        # Migration can be removed in 2025.4.0
         await async_migrate_entities(hass, entry, device)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
