@@ -10,7 +10,6 @@ from typing import Any
 
 from pyenphase import Envoy, EnvoyError, EnvoyTokenAuth
 
-from homeassistant.components import persistent_notification
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
@@ -173,15 +172,6 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     "Envoy firmware changed from: %s to: %s, reloading enphase envoy integration",
                     current_firmware,
                     new_firmware,
-                )
-                persistent_notification.async_create(
-                    self.hass,
-                    title="Envoy firmware changed",
-                    message=(
-                        f"{self.name} firmware changed from: "
-                        f"{current_firmware} to: {new_firmware}, reloading integration"
-                    ),
-                    notification_id=NOTIFICATION_ID,
                 )
                 # reload the integration to get all established again
                 self.hass.async_create_task(
