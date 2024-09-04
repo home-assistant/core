@@ -79,6 +79,6 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             entry, data=new_data, title=new_title, version=2
         )
 
-    _LOGGER.info("Migration of flipr config to version %s successful", entry.version)
+        _LOGGER.info("Migration of flipr config to version 2 successful")
 
     return True
