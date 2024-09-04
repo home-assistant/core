@@ -50,11 +50,12 @@ class LMSStatusDataUpdateCoordinator(DataUpdateCoordinator):
     def _prepare_status_data(self, data: dict) -> dict:
         """Sensors that need the data changing for HA presentation."""
 
-        # rescan bool are we rescanning alter poll not always present
-        data[STATUS_SENSOR_RESCAN] = STATUS_SENSOR_RESCAN in data and True or False
-        # needsrestart bool plugin updates... not always present
+        # rescan bool are we rescanning alter poll not present if false
+        data[STATUS_SENSOR_RESCAN] = STATUS_SENSOR_RESCAN in data
+        # needsrestart bool pending lms plugin updates not present if false
         data[STATUS_SENSOR_NEEDSRESTART] = (
-            STATUS_SENSOR_NEEDSRESTART in data and True or False
+            STATUS_SENSOR_NEEDSRESTART in data
         )
+
         _LOGGER.debug("Processed serverstatus %s=%s", self.lms.name, data)
         return data
