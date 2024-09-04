@@ -42,7 +42,7 @@
       "message": "An error occurred while attempting to play {media_type}: {error_message}."
     },
     "invalid_grouping_entity": {
-      "message": "Entity with id: {entity_id} can't be added to the Beolink session. Is the entity a Bang & Olufsen media_player entity?"
+      "message": "Entity with id: {entity_id} can't be added to the Beolink session. Is the entity a Bang & Olufsen media_player?"
     }
   }
 }
