@@ -2,9 +2,23 @@
 
 from typing import Any
 
-from ayla_iot_unofficial.fujitsu_hvac import Capability, FujitsuHVAC
+from ayla_iot_unofficial.fujitsu_hvac import (
+    Capability,
+    FanSpeed,
+    FujitsuHVAC,
+    OpMode,
+    SwingMode,
+)
 
 from homeassistant.components.climate import (
+    FAN_AUTO,
+    FAN_HIGH,
+    FAN_LOW,
+    FAN_MEDIUM,
+    SWING_BOTH,
+    SWING_HORIZONTAL,
+    SWING_OFF,
+    SWING_VERTICAL,
     ClimateEntity,
     ClimateEntityFeature,
     HVACMode,
@@ -16,16 +30,34 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import FGLairConfigEntry
-from .const import (
-    DOMAIN,
-    FUJI_TO_HA_FAN,
-    FUJI_TO_HA_HVAC,
-    FUJI_TO_HA_SWING,
-    HA_TO_FUJI_FAN,
-    HA_TO_FUJI_HVAC,
-    HA_TO_FUJI_SWING,
-)
+from .const import DOMAIN
 from .coordinator import FGLairCoordinator
+
+HA_TO_FUJI_FAN = {
+    FAN_LOW: FanSpeed.LOW,
+    FAN_MEDIUM: FanSpeed.MEDIUM,
+    FAN_HIGH: FanSpeed.HIGH,
+    FAN_AUTO: FanSpeed.AUTO,
+}
+FUJI_TO_HA_FAN = {value: key for key, value in HA_TO_FUJI_FAN.items()}
+
+HA_TO_FUJI_HVAC = {
+    HVACMode.OFF: OpMode.OFF,
+    HVACMode.HEAT: OpMode.HEAT,
+    HVACMode.COOL: OpMode.COOL,
+    HVACMode.HEAT_COOL: OpMode.AUTO,
+    HVACMode.DRY: OpMode.DRY,
+    HVACMode.FAN_ONLY: OpMode.FAN,
+}
+FUJI_TO_HA_HVAC = {value: key for key, value in HA_TO_FUJI_HVAC.items()}
+
+HA_TO_FUJI_SWING = {
+    SWING_OFF: SwingMode.OFF,
+    SWING_VERTICAL: SwingMode.SWING_VERTICAL,
+    SWING_HORIZONTAL: SwingMode.SWING_HORIZONTAL,
+    SWING_BOTH: SwingMode.SWING_BOTH,
+}
+FUJI_TO_HA_SWING = {value: key for key, value in HA_TO_FUJI_SWING.items()}
 
 
 async def async_setup_entry(

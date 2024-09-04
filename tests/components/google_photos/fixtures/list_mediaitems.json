@@ -1,0 +1,35 @@
+[
+  {
+    "mediaItems": [
+      {
+        "id": "id1",
+        "description": "some-descripton",
+        "productUrl": "http://example.com/id1",
+        "baseUrl": "http://img.example.com/id1",
+        "mimeType": "image/jpeg",
+        "mediaMetadata": {
+          "creationTime": "2014-10-02T15:01:23Z",
+          "width": 1600,
+          "height": 768
+        },
+        "filename": "example1.jpg"
+      },
+      {
+        "id": "id2",
+        "description": "some-descripton",
+        "productUrl": "http://example.com/id2",
+        "baseUrl": "http://img.example.com/id2",
+        "mimeType": "video/mp4",
+        "mediaMetadata": {
+          "creationTime": "2014-10-02T16:01:23Z",
+          "width": 1600,
+          "height": 768,
+          "video": {
+            "cameraMake": "Pixel"
+          }
+        },
+        "filename": "example2.mp4"
+      }
+    ]
+  }
+]

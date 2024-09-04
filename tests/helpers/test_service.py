@@ -39,7 +39,6 @@ from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
     service,
-    template,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.loader import async_get_integration
@@ -564,9 +563,6 @@ async def test_not_mutate_input(hass: HomeAssistant) -> None:
     # Validate both the original and the copy
     config = cv.SERVICE_SCHEMA(config)
     orig = cv.SERVICE_SCHEMA(orig)
-
-    # Only change after call is each template getting hass attached
-    template.attach(hass, orig)
 
     await service.async_call_from_config(hass, config, validate_config=False)
     assert orig == config

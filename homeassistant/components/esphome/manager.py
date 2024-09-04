@@ -329,6 +329,15 @@ class ESPHomeManager:
             entity_id, attribute, hass.states.get(entity_id)
         )
 
+    @callback
+    def async_on_state_request(
+        self, entity_id: str, attribute: str | None = None
+    ) -> None:
+        """Forward state for requested entity."""
+        self._send_home_assistant_state(
+            entity_id, attribute, self.hass.states.get(entity_id)
+        )
+
     def _handle_pipeline_finished(self) -> None:
         self.entry_data.async_set_assist_pipeline_state(False)
 
@@ -526,7 +535,10 @@ class ESPHomeManager:
 
         cli.subscribe_states(entry_data.async_update_state)
         cli.subscribe_service_calls(self.async_on_service_call)
-        cli.subscribe_home_assistant_states(self.async_on_state_subscription)
+        cli.subscribe_home_assistant_states(
+            self.async_on_state_subscription,
+            self.async_on_state_request,
+        )
 
         entry_data.async_save_to_store()
         _async_check_firmware_version(hass, device_info, api_version)

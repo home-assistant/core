@@ -4938,3 +4938,43 @@ async def test_async_track_state_report_event(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     assert len(tracker_called) == 2
     unsub()
+
+
+async def test_async_track_template_no_hass_deprecated(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test async_track_template with a template without hass is deprecated."""
+    message = (
+        "Detected code that calls async_track_template_result with template without "
+        "hass, which will stop working in HA Core 2025.10. Please report this issue."
+    )
+
+    async_track_template(hass, Template("blah"), lambda x, y, z: None)
+    assert message in caplog.text
+    caplog.clear()
+
+    async_track_template(hass, Template("blah", hass), lambda x, y, z: None)
+    assert message not in caplog.text
+    caplog.clear()
+
+
+async def test_async_track_template_result_no_hass_deprecated(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test async_track_template_result with a template without hass is deprecated."""
+    message = (
+        "Detected code that calls async_track_template_result with template without "
+        "hass, which will stop working in HA Core 2025.10. Please report this issue."
+    )
+
+    async_track_template_result(
+        hass, [TrackTemplate(Template("blah"), None)], lambda x, y, z: None
+    )
+    assert message in caplog.text
+    caplog.clear()
+
+    async_track_template_result(
+        hass, [TrackTemplate(Template("blah", hass), None)], lambda x, y, z: None
+    )
+    assert message not in caplog.text
+    caplog.clear()

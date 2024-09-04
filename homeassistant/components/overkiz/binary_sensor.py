@@ -115,14 +115,24 @@ BINARY_SENSOR_DESCRIPTIONS: list[OverkizBinarySensorDescription] = [
     OverkizBinarySensorDescription(
         key=OverkizState.MODBUSLINK_DHW_ABSENCE_MODE,
         name="Absence mode",
-        value_fn=lambda state: state
-        in (OverkizCommandParam.ON, OverkizCommandParam.PROG),
+        value_fn=(
+            lambda state: state in (OverkizCommandParam.ON, OverkizCommandParam.PROG)
+        ),
     ),
     OverkizBinarySensorDescription(
         key=OverkizState.MODBUSLINK_DHW_BOOST_MODE,
         name="Boost mode",
-        value_fn=lambda state: state
-        in (OverkizCommandParam.ON, OverkizCommandParam.PROG),
+        value_fn=(
+            lambda state: state in (OverkizCommandParam.ON, OverkizCommandParam.PROG)
+        ),
+    ),
+    OverkizBinarySensorDescription(
+        key=OverkizState.MODBUSLINK_DHW_MODE,
+        name="Manual mode",
+        value_fn=(
+            lambda state: state
+            in (OverkizCommandParam.MANUAL, OverkizCommandParam.MANUAL_ECO_INACTIVE)
+        ),
     ),
 ]
 

@@ -83,11 +83,11 @@ class HomematicipCloudFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(step_id="link", errors=errors)
 
-    async def async_step_import(self, import_info: dict[str, str]) -> ConfigFlowResult:
+    async def async_step_import(self, import_data: dict[str, str]) -> ConfigFlowResult:
         """Import a new access point as a config entry."""
-        hapid = import_info[HMIPC_HAPID].replace("-", "").upper()
-        authtoken = import_info[HMIPC_AUTHTOKEN]
-        name = import_info[HMIPC_NAME]
+        hapid = import_data[HMIPC_HAPID].replace("-", "").upper()
+        authtoken = import_data[HMIPC_AUTHTOKEN]
+        name = import_data[HMIPC_NAME]
 
         await self.async_set_unique_id(hapid)
         self._abort_if_unique_id_configured()
