@@ -21,7 +21,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up Switchbot lock based on a config entry."""
     force_nightlatch = entry.options.get(CONF_LOCK_NIGHTLATCH, DEFAULT_LOCK_NIGHTLATCH)
-    async_add_entities([(SwitchBotLock(entry.runtime_data, force_nightlatch))])
+    async_add_entities([SwitchBotLock(entry.runtime_data, force_nightlatch)])
 
 
 # noinspection PyAbstractClass
