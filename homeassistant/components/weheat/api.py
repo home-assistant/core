@@ -1,11 +1,9 @@
 """API for Weheat bound to Home Assistant OAuth."""
 
-# import my_pypi_package
-
 from aiohttp import ClientSession
 from weheat.abstractions import AbstractAuth
 
-from homeassistant.helpers import config_entry_oauth2_flow
+from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
 
 from .const import API_URL
 
@@ -16,7 +14,7 @@ class AsyncConfigEntryAuth(AbstractAuth):
     def __init__(
         self,
         websession: ClientSession,
-        oauth_session: config_entry_oauth2_flow.OAuth2Session,
+        oauth_session: OAuth2Session,
     ) -> None:
         """Initialize Weheat auth."""
         super().__init__(websession, host=API_URL)

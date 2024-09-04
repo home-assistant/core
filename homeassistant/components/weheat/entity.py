@@ -20,8 +20,8 @@ class WeheatEntity(CoordinatorEntity[WeheatDataUpdateCoordinator]):
         super().__init__(coordinator)
 
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self.coordinator.heatpump_id)},
-            name=self.coordinator.readable_name,
+            identifiers={(DOMAIN, coordinator.heatpump_id)},
+            name=coordinator.readable_name,
             manufacturer="Weheat",
-            model=self.coordinator.model,
+            model=coordinator.model,
         )

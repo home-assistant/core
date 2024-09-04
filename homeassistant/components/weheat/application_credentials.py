@@ -14,7 +14,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
     LocalOAuth2Implementation,
 )
 
-from .const import OAUTH2_AUTHORIZE, OAUTH2_TOKEN
+from .const import LOGGER, OAUTH2_AUTHORIZE, OAUTH2_TOKEN
 
 
 class WeheatOAuth2Implementation(LocalOAuth2Implementation):
@@ -29,7 +29,10 @@ class WeheatOAuth2Implementation(LocalOAuth2Implementation):
         if self.client_secret is not None:
             data["client_secret"] = self.client_secret
 
+        LOGGER.info("Token request data: %s", data)
+
         resp = await session.post(self.token_url, data=data)
+        LOGGER.info("Token response: %s", resp.status)
         if resp.status >= 400:
             try:
                 error_response = await resp.json()
@@ -40,7 +43,7 @@ class WeheatOAuth2Implementation(LocalOAuth2Implementation):
 
             # Raise a ConfigEntryAuthFailed as the sessions is no longer valid
             raise ConfigEntryAuthFailed(
-                f"Token request for {self.domain} failed ({error_code}): {error_description}"
+                f"Token request for {self.domain} failed ({resp.status}:{error_code}): {error_description}"
             )
         resp.raise_for_status()
         return cast(dict, await resp.json())

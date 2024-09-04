@@ -2,56 +2,47 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-
 from weheat.abstractions.discovery import HeatPumpDiscovery
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_entry_oauth2_flow
+from homeassistant.helpers.config_entry_oauth2_flow import (
+    OAuth2Session,
+    async_get_config_entry_implementation,
+)
 
-from .const import HEAT_PUMP_INFO
+from .const import API_URL, LOGGER
 from .coordinator import WeheatDataUpdateCoordinator
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 
-@dataclass
-class WeheatData:
-    """Data for Weheat integration."""
-
-    coordinator: WeheatDataUpdateCoordinator
-
-
-type WeheatConfigEntry = ConfigEntry[WeheatData]
+type WeheatConfigEntry = ConfigEntry[list[WeheatDataUpdateCoordinator]]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: WeheatConfigEntry) -> bool:
     """Set up Weheat from a config entry."""
-    implementation = (
-        await config_entry_oauth2_flow.async_get_config_entry_implementation(
-            hass, entry
+    implementation = await async_get_config_entry_implementation(hass, entry)
+
+    session = OAuth2Session(hass, entry, implementation)
+
+    token = session.token["access_token"]
+    entry.runtime_data = []
+
+    LOGGER.info("Getting pump info %s ", entry)
+
+    # fetch a list of the heat pumps the entry can access
+    for pump_info in await HeatPumpDiscovery.discover_active(API_URL, token):
+        LOGGER.info("Found pump %s", pump_info)
+        # for each pump, add a coordinator
+        new_coordinator = WeheatDataUpdateCoordinator(
+            hass=hass, session=session, heat_pump=pump_info
         )
-    )
 
-    session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
+        await new_coordinator.async_config_entry_first_refresh()
 
-    # Unpack the heat pump info from a dict if it is not already HeatPumpInfo
-    heat_pump_info = entry.data[HEAT_PUMP_INFO]
-
-    if isinstance(heat_pump_info, dict):
-        heat_pump_info = HeatPumpDiscovery.HeatPumpInfo(**heat_pump_info)
-
-    coordinator = WeheatDataUpdateCoordinator(
-        hass=hass,
-        session=session,
-        heat_pump=heat_pump_info,
-    )
-
-    entry.runtime_data = WeheatData(coordinator=coordinator)
-
-    await coordinator.async_config_entry_first_refresh()
+        entry.runtime_data.append(new_coordinator)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

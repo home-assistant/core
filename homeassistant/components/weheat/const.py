@@ -4,7 +4,7 @@ from logging import Logger, getLogger
 
 DOMAIN = "weheat"
 
-HEAT_PUMP_INFO = "heat_pump_info"
+ENTRY_TITLE = "Weheat cloud"
 
 OAUTH2_AUTHORIZE = (
     "https://auth.weheat.nl/auth/realms/Weheat/protocol/openid-connect/auth/"
