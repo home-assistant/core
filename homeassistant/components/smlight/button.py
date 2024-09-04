@@ -29,7 +29,6 @@ _LOGGER = logging.getLogger(__name__)
 class SmButtonDescription(ButtonEntityDescription):
     """Class to describe a Button entity."""
 
-    entity_category = EntityCategory.CONFIG
     press_fn: Callable[[CmdWrapper], Awaitable[None]]
 
 
@@ -69,6 +68,7 @@ class SmButton(SmEntity, ButtonEntity):
     """Defines a SLZB-06 button."""
 
     entity_description: SmButtonDescription
+    _attr_entity_category = EntityCategory.CONFIG
 
     def __init__(
         self,
