@@ -220,11 +220,10 @@ class IskraSensor(IskraEntity, SensorEntity):
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
-        self._device = coordinator.device
         self.entity_description = description
         self._attr_unique_id = f"{coordinator.device.serial}_{description.key}"
 
     @property
     def native_value(self) -> float | None:
         """Return the state of the sensor."""
-        return self.entity_description.value_func(self._device)
+        return self.entity_description.value_func(self.device)

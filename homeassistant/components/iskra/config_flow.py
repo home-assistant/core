@@ -228,20 +228,12 @@ class IskraConfigFlowFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Create the config entry."""
 
-        serial = device_info.serial
-        model = device_info.model
-
-        if not self.unique_id:
-            await self.async_set_unique_id(serial)
+        await self.async_set_unique_id(device_info.serial)
         self._abort_if_unique_id_configured()
 
         return self.async_create_entry(
-            title=f"{model} {serial}",
-            data={
-                CONF_HOST: host,
-                CONF_PROTOCOL: protocol,
-                **user_input
-            },
+            title=device_info.model,
+            data={CONF_HOST: host, CONF_PROTOCOL: protocol, **user_input},
         )
 
 

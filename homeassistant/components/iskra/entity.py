@@ -15,25 +15,24 @@ class IskraEntity(CoordinatorEntity[IskraDataUpdateCoordinator]):
     def __init__(self, coordinator: IskraDataUpdateCoordinator) -> None:
         """Initialize the Iskra device."""
         super().__init__(coordinator)
-        device = coordinator.device
-        gateway = device.parent_device
+        self.device = coordinator.device
+        gateway = self.device.parent_device
 
         if gateway is not None:
             self._attr_device_info = DeviceInfo(
-                identifiers={(DOMAIN, device.serial)},
+                identifiers={(DOMAIN, self.device.serial)},
                 manufacturer=MANUFACTURER,
-                model=device.model,
-                name=device.serial,
-                sw_version=device.fw_version,
-                serial_number=device.serial,
+                model=self.device.model,
+                name=self.device.model,
+                sw_version=self.device.fw_version,
+                serial_number=self.device.serial,
                 via_device=(DOMAIN, gateway.serial),
             )
         else:
             self._attr_device_info = DeviceInfo(
-                identifiers={(DOMAIN, device.serial)},
+                identifiers={(DOMAIN, self.device.serial)},
                 manufacturer=MANUFACTURER,
-                model=device.model,
-                name=device.serial,
-                sw_version=device.fw_version,
-                serial_number=device.serial,
+                model=self.device.model,
+                sw_version=self.device.fw_version,
+                serial_number=self.device.serial,
             )

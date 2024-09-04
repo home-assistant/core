@@ -73,7 +73,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: IskraConfigEntry) -> boo
             config_entry_id=entry.entry_id,
             identifiers={(DOMAIN, base_device.serial)},
             manufacturer=MANUFACTURER,
-            name=base_device.serial,
+            name=base_device.model,
             model=base_device.model,
             sw_version=base_device.fw_version,
         )
