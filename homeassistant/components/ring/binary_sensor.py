@@ -45,20 +45,18 @@ BINARY_SENSOR_TYPES: tuple[RingBinarySensorEntityDescription, ...] = (
         key=KIND_DING,
         translation_key=KIND_DING,
         device_class=BinarySensorDeviceClass.OCCUPANCY,
-        entity_registry_enabled_default=True,
         capability=RingCapability.DING,
         deprecated_info=DeprecatedInfo(
-            new_platform=Platform.EVENT, breaks_in_ha_version="2025.3.0"
+            new_platform=Platform.EVENT, breaks_in_ha_version="2025.4.0"
         ),
     ),
     RingBinarySensorEntityDescription(
         key=KIND_MOTION,
         translation_key=KIND_MOTION,
         device_class=BinarySensorDeviceClass.MOTION,
-        entity_registry_enabled_default=True,
         capability=RingCapability.MOTION_DETECTION,
         deprecated_info=DeprecatedInfo(
-            new_platform=Platform.EVENT, breaks_in_ha_version="2025.3.0"
+            new_platform=Platform.EVENT, breaks_in_ha_version="2025.4.0"
         ),
     ),
 )
@@ -73,7 +71,7 @@ async def async_setup_entry(
     ring_data = entry.runtime_data
     listen_coordinator = ring_data.listen_coordinator
 
-    entities = [
+    async_add_entities(
         RingBinarySensor(device, listen_coordinator, description)
         for description in BINARY_SENSOR_TYPES
         for device in ring_data.devices.all_devices
@@ -84,8 +82,7 @@ async def async_setup_entry(
             f"{device.id}-{description.key}",
             description,
         )
-    ]
-    async_add_entities(entities)
+    )
 
 
 class RingBinarySensor(
@@ -109,9 +106,6 @@ class RingBinarySensor(
         )
         self.entity_description = description
         self._attr_unique_id = f"{device.id}-{description.key}"
-        self._attr_entity_registry_enabled_default = (
-            description.entity_registry_enabled_default
-        )
         self._attr_is_on = False
         self._active_alert: RingEvent | None = None
         self._cancel_callback: TimerHandle | None = None

@@ -188,7 +188,7 @@ SENSOR_TYPES: tuple[RingSensorEntityDescription[Any], ...] = (
         else None,
         exists_fn=lambda device: device.has_capability(RingCapability.HISTORY),
         deprecated_info=DeprecatedInfo(
-            new_platform=Platform.EVENT, breaks_in_ha_version="2025.3.0"
+            new_platform=Platform.EVENT, breaks_in_ha_version="2025.4.0"
         ),
     ),
     RingSensorEntityDescription[RingGeneric](
@@ -207,7 +207,7 @@ SENSOR_TYPES: tuple[RingSensorEntityDescription[Any], ...] = (
         else None,
         exists_fn=lambda device: device.has_capability(RingCapability.HISTORY),
         deprecated_info=DeprecatedInfo(
-            new_platform=Platform.EVENT, breaks_in_ha_version="2025.3.0"
+            new_platform=Platform.EVENT, breaks_in_ha_version="2025.4.0"
         ),
     ),
     RingSensorEntityDescription[RingDoorBell | RingChime](

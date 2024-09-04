@@ -32,7 +32,6 @@ EVENT_DESCRIPTIONS: tuple[RingEventEntityDescription, ...] = (
         translation_key=KIND_DING,
         device_class=EventDeviceClass.DOORBELL,
         event_types=[KIND_DING],
-        entity_registry_enabled_default=True,
         capability=RingCapability.DING,
     ),
     RingEventEntityDescription(
@@ -40,7 +39,6 @@ EVENT_DESCRIPTIONS: tuple[RingEventEntityDescription, ...] = (
         translation_key=KIND_MOTION,
         device_class=EventDeviceClass.MOTION,
         event_types=[KIND_MOTION],
-        entity_registry_enabled_default=True,
         capability=RingCapability.MOTION_DETECTION,
     ),
     RingEventEntityDescription(
@@ -48,7 +46,6 @@ EVENT_DESCRIPTIONS: tuple[RingEventEntityDescription, ...] = (
         translation_key=KIND_INTERCOM_UNLOCK,
         device_class=EventDeviceClass.BUTTON,
         event_types=[KIND_INTERCOM_UNLOCK],
-        entity_registry_enabled_default=True,
         capability=RingCapability.OPEN,
     ),
 )
@@ -59,22 +56,20 @@ async def async_setup_entry(
     entry: RingConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up a sensor for a Ring device."""
+    """Set up events for a Ring device."""
     ring_data = entry.runtime_data
     listen_coordinator = ring_data.listen_coordinator
 
-    entities = [
+    async_add_entities(
         RingEvent(device, listen_coordinator, description)
         for description in EVENT_DESCRIPTIONS
         for device in ring_data.devices.all_devices
         if device.has_capability(description.capability)
-    ]
-
-    async_add_entities(entities)
+    )
 
 
 class RingEvent(RingBaseEntity[RingListenCoordinator, RingDeviceT], EventEntity):
-    """A sensor implementation for Ring device."""
+    """An event implementation for Ring device."""
 
     entity_description: RingEventEntityDescription[RingDeviceT]
 
@@ -84,13 +79,10 @@ class RingEvent(RingBaseEntity[RingListenCoordinator, RingDeviceT], EventEntity)
         coordinator: RingListenCoordinator,
         description: RingEventEntityDescription[RingDeviceT],
     ) -> None:
-        """Initialize a sensor for Ring device."""
+        """Initialize a event entity for Ring device."""
         super().__init__(device, coordinator)
         self.entity_description = description
         self._attr_unique_id = f"{device.id}-{description.key}"
-        self._attr_entity_registry_enabled_default = (
-            description.entity_registry_enabled_default
-        )
 
     @callback
     def _async_handle_event(self, event: str) -> None:

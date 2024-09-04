@@ -21,7 +21,7 @@ async def setup_platform(hass: HomeAssistant, platform: Platform) -> None:
     await hass.async_block_till_done(wait_background_tasks=True)
 
 
-async def setup_automation(hass: HomeAssistant, alias: str, entity_id: str):
+async def setup_automation(hass: HomeAssistant, alias: str, entity_id: str) -> None:
     """Set up an automation for tests."""
     assert await async_setup_component(
         hass,
