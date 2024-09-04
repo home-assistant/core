@@ -30,7 +30,7 @@ class NASwebData:
 
     def is_initialized(self) -> bool:
         """Return True if instance was initialized and is ready for use."""
-        return len(self.webhook_id) > 0
+        return bool(self.webhook_id)
 
     def can_be_deinitialized(self) -> bool:
         """Return whether this instance can be deinitialized."""

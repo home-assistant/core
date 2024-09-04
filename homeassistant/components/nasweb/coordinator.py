@@ -1,4 +1,5 @@
 """Message routing coordinators for handling NASweb push notifications."""
+
 from __future__ import annotations
 
 import asyncio
@@ -50,13 +51,12 @@ class NotificationCoordinator:
         if nasweb_coordinator is None:
             _LOGGER.error("Cannot check connection. No device match serial number")
             return False
-        counter = 0
-        _LOGGER.debug("Checking connection with: %s", serial)
-        while not nasweb_coordinator.is_connection_confirmed() and counter < 10:
-            await asyncio.sleep(1)
-            counter += 1
+        for counter in range(10):
             _LOGGER.debug("Checking connection with: %s (%s)", serial, counter)
-        return nasweb_coordinator.is_connection_confirmed()
+            if nasweb_coordinator.is_connection_confirmed():
+                return True
+            await asyncio.sleep(1)
+        return False
 
     async def handle_webhook_request(
         self, hass: HomeAssistant, webhook_id: str, request: Request
