@@ -81,9 +81,13 @@ class SmartTubConfigFlow(ConfigFlow, domain=DOMAIN):
         )
         return await self.async_step_reauth_confirm()
 
-    async def async_step_reauth_confirm(self, user_input=None):
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, str] | None = None
+    ) -> ConfigFlowResult:
         """Dialog that informs the user that reauth is required."""
         if user_input is None:
+            if TYPE_CHECKING:
+                assert self._reauth_input is not None
             # same as DATA_SCHEMA but with default email
             data_schema = vol.Schema(
                 {
