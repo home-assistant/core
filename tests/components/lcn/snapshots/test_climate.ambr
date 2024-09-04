@@ -1,0 +1,76 @@
+# serializer version: 1
+# name: test_entity_attributes[climate.climate1-original_name]
+  'Climate1'
+# ---
+# name: test_entity_state[climate.climate1-current_temperature]
+  None
+# ---
+# name: test_entity_state[climate.climate1-hvac_modes]
+  set({
+    <HVACMode.HEAT: 'heat'>,
+    <HVACMode.OFF: 'off'>,
+  })
+# ---
+# name: test_entity_state[climate.climate1-max_temp]
+  40.0
+# ---
+# name: test_entity_state[climate.climate1-min_temp]
+  0.0
+# ---
+# name: test_entity_state[climate.climate1-supported_features]
+  <ClimateEntityFeature: 385>
+# ---
+# name: test_entity_state[climate.climate1-temperature]
+  None
+# ---
+# name: test_pushed_current_temperature_status_change[climate.climate1-current-temperature]
+  25.5
+# ---
+# name: test_pushed_current_temperature_status_change[climate.climate1-state]
+  'heat'
+# ---
+# name: test_pushed_current_temperature_status_change[climate.climate1-temperature]
+  None
+# ---
+# name: test_pushed_lock_status_change[climate.climate1-current-temperature]
+  None
+# ---
+# name: test_pushed_lock_status_change[climate.climate1-state]
+  'off'
+# ---
+# name: test_pushed_lock_status_change[climate.climate1-temperature]
+  None
+# ---
+# name: test_pushed_setpoint_status_change[climate.climate1-current-temperature]
+  None
+# ---
+# name: test_pushed_setpoint_status_change[climate.climate1-state]
+  'heat'
+# ---
+# name: test_pushed_setpoint_status_change[climate.climate1-temperature]
+  25.5
+# ---
+# name: test_pushed_wrong_input[climate.climate1-current-temperature]
+  None
+# ---
+# name: test_pushed_wrong_input[climate.climate1-temperature]
+  None
+# ---
+# name: test_set_hvac_mode_heat[climate.climate1-state]
+  'heat'
+# ---
+# name: test_set_hvac_mode_off[climate.climate1-state]
+  'off'
+# ---
+# name: test_set_temperature[climate.climate1-state]
+  'heat'
+# ---
+# name: test_set_temperature[climate.climate1-temperature]
+  25.5
+# ---
+# name: test_setup_lcn_climate[climate.climate1-state]
+  'heat'
+# ---
+# name: test_unload_config_entry[climate.climate1-state]
+  'unavailable'
+# ---

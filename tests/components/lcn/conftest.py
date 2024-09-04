@@ -100,7 +100,8 @@ def create_config_entry_myhome() -> MockConfigEntry:
 
 @pytest.fixture(name="lcn_connection")
 async def init_integration(
-    hass: HomeAssistant, entry: MockConfigEntry
+    hass: HomeAssistant,
+    entry: MockConfigEntry,
 ) -> AsyncGenerator[MockPchkConnectionManager]:
     """Set up the LCN integration in Home Assistant."""
     hass.http = Mock()  # needs to be mocked as hass.http.register_static_path is called when registering the frontend
