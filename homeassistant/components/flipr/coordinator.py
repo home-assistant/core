@@ -49,18 +49,3 @@ class FliprDataUpdateCoordinator(BaseDataUpdateCoordinator):
             raise UpdateFailed(error) from error
 
         return data
-
-
-class HubDataUpdateCoordinator(BaseDataUpdateCoordinator):
-    """Class to hold Flipr hub data retrieval."""
-
-    async def _async_update_data(self):
-        """Fetch data from API endpoint."""
-        try:
-            data = await self.hass.async_add_executor_job(
-                self.client.get_hub_state, self.device_id
-            )
-        except FliprError as error:
-            raise UpdateFailed(error) from error
-
-        return data

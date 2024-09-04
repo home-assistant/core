@@ -8,10 +8,10 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
 
-from .const import CONF_ENTRY_FLIPR_COORDINATORS, CONF_ENTRY_HUB_COORDINATORS, DOMAIN
-from .coordinator import FliprDataUpdateCoordinator, HubDataUpdateCoordinator
+from .const import CONF_ENTRY_FLIPR_COORDINATORS, DOMAIN
+from .coordinator import FliprDataUpdateCoordinator
 
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR, Platform.SWITCH]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,13 +38,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         flipr_coordinators.append(flipr_coordinator)
     hass.data[DOMAIN][CONF_ENTRY_FLIPR_COORDINATORS] = flipr_coordinators
 
-    hub_coordinators = []
-    for hub_id in ids["hub"]:
-        hub_coordinator = HubDataUpdateCoordinator(hass, entry, hub_id)
-        await hub_coordinator.async_config_entry_first_refresh()
-        hub_coordinators.append(hub_coordinator)
-    hass.data[DOMAIN][CONF_ENTRY_HUB_COORDINATORS] = hub_coordinators
-
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
@@ -56,7 +49,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     if unload_ok:
         hass.data[DOMAIN].pop(CONF_ENTRY_FLIPR_COORDINATORS)
-        hass.data[DOMAIN].pop(CONF_ENTRY_HUB_COORDINATORS)
 
     return unload_ok
 
