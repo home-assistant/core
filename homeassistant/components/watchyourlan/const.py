@@ -2,4 +2,4 @@
 
 DOMAIN = "watchyourlan"
 
-UPDATE_FREQUENCY = 60
+UPDATE_FREQUENCY = 5

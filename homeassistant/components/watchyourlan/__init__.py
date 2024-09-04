@@ -4,7 +4,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL, Platform
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN
+from .const import DOMAIN, UPDATE_FREQUENCY
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -12,7 +12,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})
 
     # Load the update interval from options if available
-    update_interval = entry.options.get("update_interval", 5)
+    update_interval = entry.options.get("update_interval", UPDATE_FREQUENCY)
 
     # Store the config entry data in hass.data for use by platforms
     hass.data[DOMAIN][entry.entry_id] = {
