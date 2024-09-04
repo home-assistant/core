@@ -8,7 +8,6 @@ from typing import Any, Final, NotRequired, TypedDict
 import pytest
 
 from homeassistant.components.evohome import (
-    CONF_PASSWORD,
     CONF_USERNAME,
     DOMAIN,
     STORAGE_KEY,
@@ -56,11 +55,6 @@ ACCESS_TOKEN_EXP_DTM, ACCESS_TOKEN_EXP_STR = dt_pair(dt_util.now() + timedelta(h
 USERNAME_DIFF: Final = f"not_{USERNAME}"
 USERNAME_SAME: Final = USERNAME
 
-TEST_CONFIG: Final = {
-    CONF_USERNAME: USERNAME_SAME,
-    CONF_PASSWORD: "password",
-}
-
 TEST_DATA: Final[dict[str, _TokenStoreT]] = {
     "sans_session_id": {
         SZ_USERNAME: USERNAME_SAME,
@@ -93,13 +87,14 @@ DOMAIN_STORAGE_BASE: Final = {
 async def test_auth_tokens_null(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
+    evo_config: dict[str, str],
     idx: str,
 ) -> None:
     """Test loading/saving authentication tokens when no cached tokens in the store."""
 
     hass_storage[DOMAIN] = DOMAIN_STORAGE_BASE | {"data": TEST_DATA_NULL[idx]}
 
-    mock_client = await setup_evohome(hass, TEST_CONFIG)
+    mock_client = await setup_evohome(hass, evo_config, install="minimal")
 
     # Confirm client was instantiated without tokens, as cache was empty...
     assert SZ_REFRESH_TOKEN not in mock_client.call_args.kwargs
@@ -120,13 +115,16 @@ async def test_auth_tokens_null(
 
 @pytest.mark.parametrize("idx", TEST_DATA)
 async def test_auth_tokens_same(
-    hass: HomeAssistant, hass_storage: dict[str, Any], idx: str
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    evo_config: dict[str, str],
+    idx: str,
 ) -> None:
     """Test loading/saving authentication tokens when matching username."""
 
     hass_storage[DOMAIN] = DOMAIN_STORAGE_BASE | {"data": TEST_DATA[idx]}
 
-    mock_client = await setup_evohome(hass, TEST_CONFIG)
+    mock_client = await setup_evohome(hass, evo_config, install="minimal")
 
     # Confirm client was instantiated with the cached tokens...
     assert mock_client.call_args.kwargs[SZ_REFRESH_TOKEN] == REFRESH_TOKEN
@@ -146,7 +144,10 @@ async def test_auth_tokens_same(
 
 @pytest.mark.parametrize("idx", TEST_DATA)
 async def test_auth_tokens_past(
-    hass: HomeAssistant, hass_storage: dict[str, Any], idx: str
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    evo_config: dict[str, str],
+    idx: str,
 ) -> None:
     """Test loading/saving authentication tokens with matching username, but expired."""
 
@@ -158,7 +159,7 @@ async def test_auth_tokens_past(
 
     hass_storage[DOMAIN] = DOMAIN_STORAGE_BASE | {"data": test_data}
 
-    mock_client = await setup_evohome(hass, TEST_CONFIG)
+    mock_client = await setup_evohome(hass, evo_config, install="minimal")
 
     # Confirm client was instantiated with the cached tokens...
     assert mock_client.call_args.kwargs[SZ_REFRESH_TOKEN] == REFRESH_TOKEN
@@ -181,14 +182,17 @@ async def test_auth_tokens_past(
 
 @pytest.mark.parametrize("idx", TEST_DATA)
 async def test_auth_tokens_diff(
-    hass: HomeAssistant, hass_storage: dict[str, Any], idx: str
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    evo_config: dict[str, str],
+    idx: str,
 ) -> None:
     """Test loading/saving authentication tokens when unmatched username."""
 
     hass_storage[DOMAIN] = DOMAIN_STORAGE_BASE | {"data": TEST_DATA[idx]}
 
     mock_client = await setup_evohome(
-        hass, TEST_CONFIG | {CONF_USERNAME: USERNAME_DIFF}
+        hass, evo_config | {CONF_USERNAME: USERNAME_DIFF}, install="minimal"
     )
 
     # Confirm client was instantiated without tokens, as username was different...

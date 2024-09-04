@@ -220,3 +220,25 @@ async def test_reauth_error(
         "token": "new-foobar",
     }
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_account_configured(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_added_config_entry: Mock,
+) -> None:
+    """Test that user cannot configure the same account twice."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {}
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"username": "foo@bar.com", "password": "test-password"},
+    )
+
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "already_configured"

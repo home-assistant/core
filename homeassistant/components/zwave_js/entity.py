@@ -335,5 +335,6 @@ class ZWaveBaseEntity(Entity):
                 value, new_value, options=options, wait_for_result=wait_for_result
             )
         except BaseZwaveJSServerError as err:
-            LOGGER.error("Unable to set value %s: %s", value.value_id, err)
-            raise HomeAssistantError from err
+            raise HomeAssistantError(
+                f"Unable to set value {value.value_id}: {err}"
+            ) from err

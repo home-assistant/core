@@ -1,5 +1,10 @@
 """Constants for the opentherm_gw integration."""
 
+from dataclasses import dataclass
+from enum import StrEnum
+
+from pyotgw import vars as gw_vars
+
 ATTR_GW_ID = "gateway_id"
 ATTR_LEVEL = "level"
 ATTR_DHW_OVRD = "dhw_override"
@@ -33,3 +38,41 @@ SERVICE_SET_MAX_MOD = "set_max_modulation"
 SERVICE_SET_OAT = "set_outside_temperature"
 SERVICE_SET_SB_TEMP = "set_setback_temperature"
 SERVICE_SEND_TRANSP_CMD = "send_transparent_command"
+
+
+class OpenThermDataSource(StrEnum):
+    """List valid OpenTherm data sources."""
+
+    BOILER = gw_vars.BOILER
+    GATEWAY = gw_vars.OTGW
+    THERMOSTAT = gw_vars.THERMOSTAT
+
+
+class OpenThermDeviceIdentifier(StrEnum):
+    """List valid OpenTherm device identifiers."""
+
+    BOILER = "boiler"
+    GATEWAY = "gateway"
+    THERMOSTAT = "thermostat"
+
+
+@dataclass(frozen=True, kw_only=True)
+class OpenThermDeviceDescription:
+    """Describe OpenTherm device properties."""
+
+    data_source: OpenThermDataSource
+    device_identifier: OpenThermDeviceIdentifier
+
+
+BOILER_DEVICE_DESCRIPTION = OpenThermDeviceDescription(
+    data_source=OpenThermDataSource.BOILER,
+    device_identifier=OpenThermDeviceIdentifier.BOILER,
+)
+GATEWAY_DEVICE_DESCRIPTION = OpenThermDeviceDescription(
+    data_source=OpenThermDataSource.GATEWAY,
+    device_identifier=OpenThermDeviceIdentifier.GATEWAY,
+)
+THERMOSTAT_DEVICE_DESCRIPTION = OpenThermDeviceDescription(
+    data_source=OpenThermDataSource.THERMOSTAT,
+    device_identifier=OpenThermDeviceIdentifier.THERMOSTAT,
+)

@@ -32,9 +32,9 @@ from homeassistant.components.recorder.queries import (
     get_migration_changes,
     select_event_type_ids,
 )
-from homeassistant.components.recorder.tasks import EntityIDPostMigrationTask
 from homeassistant.components.recorder.util import (
     execute_stmt_lambda_element,
+    get_index_by_name,
     session_scope,
 )
 from homeassistant.core import HomeAssistant
@@ -48,6 +48,7 @@ from .common import (
     async_wait_recording_done,
 )
 
+from tests.common import async_test_home_assistant
 from tests.typing import RecorderInstanceGenerator
 
 CREATE_ENGINE_TARGET = "homeassistant.components.recorder.core.create_engine"
@@ -94,7 +95,7 @@ def _create_engine_test(*args, **kwargs):
     return engine
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture
 def db_schema_32():
     """Fixture to initialize the db with the old schema."""
     importlib.import_module(SCHEMA_MODULE)
@@ -118,6 +119,7 @@ def db_schema_32():
 
 
 @pytest.mark.parametrize("enable_migrate_context_ids", [True])
+@pytest.mark.usefixtures("db_schema_32")
 async def test_migrate_events_context_ids(
     hass: HomeAssistant, recorder_mock: Recorder
 ) -> None:
@@ -331,8 +333,13 @@ async def test_migrate_events_context_ids(
         == migration.EventsContextIDMigration.migration_version
     )
 
+    # Check the index which will be removed by the migrator no longer exists
+    with session_scope(hass=hass) as session:
+        assert get_index_by_name(session, "states", "ix_states_context_id") is None
+
 
 @pytest.mark.parametrize("enable_migrate_context_ids", [True])
+@pytest.mark.usefixtures("db_schema_32")
 async def test_migrate_states_context_ids(
     hass: HomeAssistant, recorder_mock: Recorder
 ) -> None:
@@ -528,8 +535,13 @@ async def test_migrate_states_context_ids(
         == migration.StatesContextIDMigration.migration_version
     )
 
+    # Check the index which will be removed by the migrator no longer exists
+    with session_scope(hass=hass) as session:
+        assert get_index_by_name(session, "states", "ix_states_context_id") is None
+
 
 @pytest.mark.parametrize("enable_migrate_event_type_ids", [True])
+@pytest.mark.usefixtures("db_schema_32")
 async def test_migrate_event_type_ids(
     hass: HomeAssistant, recorder_mock: Recorder
 ) -> None:
@@ -621,6 +633,7 @@ async def test_migrate_event_type_ids(
 
 
 @pytest.mark.parametrize("enable_migrate_entity_ids", [True])
+@pytest.mark.usefixtures("db_schema_32")
 async def test_migrate_entity_ids(hass: HomeAssistant, recorder_mock: Recorder) -> None:
     """Test we can migrate entity_ids to the StatesMeta table."""
     await async_wait_recording_done(hass)
@@ -697,6 +710,7 @@ async def test_migrate_entity_ids(hass: HomeAssistant, recorder_mock: Recorder) 
 
 
 @pytest.mark.parametrize("enable_migrate_entity_ids", [True])
+@pytest.mark.usefixtures("db_schema_32")
 async def test_post_migrate_entity_ids(
     hass: HomeAssistant, recorder_mock: Recorder
 ) -> None:
@@ -731,7 +745,7 @@ async def test_post_migrate_entity_ids(
 
     await _async_wait_migration_done(hass)
     # This is a threadsafe way to add a task to the recorder
-    recorder_mock.queue_task(EntityIDPostMigrationTask())
+    recorder_mock.queue_task(migration.EntityIDPostMigrationTask())
     await _async_wait_migration_done(hass)
 
     def _fetch_migrated_states():
@@ -750,6 +764,7 @@ async def test_post_migrate_entity_ids(
 
 
 @pytest.mark.parametrize("enable_migrate_entity_ids", [True])
+@pytest.mark.usefixtures("db_schema_32")
 async def test_migrate_null_entity_ids(
     hass: HomeAssistant, recorder_mock: Recorder
 ) -> None:
@@ -833,6 +848,7 @@ async def test_migrate_null_entity_ids(
 
 
 @pytest.mark.parametrize("enable_migrate_event_type_ids", [True])
+@pytest.mark.usefixtures("db_schema_32")
 async def test_migrate_null_event_type_ids(
     hass: HomeAssistant, recorder_mock: Recorder
 ) -> None:
@@ -918,6 +934,7 @@ async def test_migrate_null_event_type_ids(
     )
 
 
+@pytest.mark.usefixtures("db_schema_32")
 async def test_stats_timestamp_conversion_is_reentrant(
     hass: HomeAssistant, recorder_mock: Recorder
 ) -> None:
@@ -1070,6 +1087,7 @@ async def test_stats_timestamp_conversion_is_reentrant(
     ]
 
 
+@pytest.mark.usefixtures("db_schema_32")
 async def test_stats_timestamp_with_one_by_one(
     hass: HomeAssistant, recorder_mock: Recorder
 ) -> None:
@@ -1289,6 +1307,7 @@ async def test_stats_timestamp_with_one_by_one(
     ]
 
 
+@pytest.mark.usefixtures("db_schema_32")
 async def test_stats_timestamp_with_one_by_one_removes_duplicates(
     hass: HomeAssistant, recorder_mock: Recorder
 ) -> None:
@@ -1483,3 +1502,158 @@ async def test_stats_timestamp_with_one_by_one_removes_duplicates(
             "sum": None,
         },
     ]
+
+
+@pytest.mark.parametrize("persistent_database", [True])
+@pytest.mark.usefixtures("hass_storage")  # Prevent test hass from writing to storage
+async def test_migrate_times(
+    async_test_recorder: RecorderInstanceGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test we can migrate times in the statistics tables."""
+    importlib.import_module(SCHEMA_MODULE)
+    old_db_schema = sys.modules[SCHEMA_MODULE]
+    now = dt_util.utcnow()
+    now_timestamp = now.timestamp()
+
+    statistics_kwargs = {
+        "created": now,
+        "mean": 0,
+        "metadata_id": 1,
+        "min": 0,
+        "max": 0,
+        "last_reset": now,
+        "start": now,
+        "state": 0,
+        "sum": 0,
+    }
+    mock_metadata = old_db_schema.StatisticMetaData(
+        has_mean=False,
+        has_sum=False,
+        name="Test",
+        source="sensor",
+        statistic_id="sensor.test",
+        unit_of_measurement="cats",
+    )
+    number_of_migrations = 5
+
+    def _get_index_names(table):
+        with session_scope(hass=hass) as session:
+            return inspect(session.connection()).get_indexes(table)
+
+    with (
+        patch.object(recorder, "db_schema", old_db_schema),
+        patch.object(migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION),
+        patch(CREATE_ENGINE_TARGET, new=_create_engine_test),
+    ):
+        async with (
+            async_test_home_assistant() as hass,
+            async_test_recorder(hass) as instance,
+        ):
+            await hass.async_block_till_done()
+            await async_wait_recording_done(hass)
+            await async_wait_recording_done(hass)
+
+            def _add_data():
+                with session_scope(hass=hass) as session:
+                    session.add(old_db_schema.StatisticsMeta.from_meta(mock_metadata))
+                with session_scope(hass=hass) as session:
+                    session.add(old_db_schema.Statistics(**statistics_kwargs))
+                    session.add(old_db_schema.StatisticsShortTerm(**statistics_kwargs))
+
+            await instance.async_add_executor_job(_add_data)
+            await hass.async_block_till_done()
+            await instance.async_block_till_done()
+
+            statistics_indexes = await instance.async_add_executor_job(
+                _get_index_names, "statistics"
+            )
+            statistics_short_term_indexes = await instance.async_add_executor_job(
+                _get_index_names, "statistics_short_term"
+            )
+            statistics_index_names = {index["name"] for index in statistics_indexes}
+            statistics_short_term_index_names = {
+                index["name"] for index in statistics_short_term_indexes
+            }
+
+            await hass.async_stop()
+            await hass.async_block_till_done()
+
+    assert "ix_statistics_statistic_id_start" in statistics_index_names
+    assert (
+        "ix_statistics_short_term_statistic_id_start"
+        in statistics_short_term_index_names
+    )
+
+    # Test that the times are migrated during migration from schema 32
+    async with (
+        async_test_home_assistant() as hass,
+        async_test_recorder(hass) as instance,
+    ):
+        await hass.async_block_till_done()
+
+        # We need to wait for all the migration tasks to complete
+        # before we can check the database.
+        for _ in range(number_of_migrations):
+            await instance.async_block_till_done()
+            await async_wait_recording_done(hass)
+
+        def _get_test_data_from_db():
+            with session_scope(hass=hass) as session:
+                statistics_result = list(
+                    session.query(recorder.db_schema.Statistics)
+                    .join(
+                        recorder.db_schema.StatisticsMeta,
+                        recorder.db_schema.Statistics.metadata_id
+                        == recorder.db_schema.StatisticsMeta.id,
+                    )
+                    .where(
+                        recorder.db_schema.StatisticsMeta.statistic_id == "sensor.test"
+                    )
+                )
+                statistics_short_term_result = list(
+                    session.query(recorder.db_schema.StatisticsShortTerm)
+                    .join(
+                        recorder.db_schema.StatisticsMeta,
+                        recorder.db_schema.StatisticsShortTerm.metadata_id
+                        == recorder.db_schema.StatisticsMeta.id,
+                    )
+                    .where(
+                        recorder.db_schema.StatisticsMeta.statistic_id == "sensor.test"
+                    )
+                )
+                session.expunge_all()
+                return statistics_result, statistics_short_term_result
+
+        (
+            statistics_result,
+            statistics_short_term_result,
+        ) = await instance.async_add_executor_job(_get_test_data_from_db)
+
+        for results in (statistics_result, statistics_short_term_result):
+            assert len(results) == 1
+            assert results[0].created is None
+            assert results[0].created_ts == now_timestamp
+            assert results[0].last_reset is None
+            assert results[0].last_reset_ts == now_timestamp
+            assert results[0].start is None
+            assert results[0].start_ts == now_timestamp
+
+        statistics_indexes = await instance.async_add_executor_job(
+            _get_index_names, "statistics"
+        )
+        statistics_short_term_indexes = await instance.async_add_executor_job(
+            _get_index_names, "statistics_short_term"
+        )
+        statistics_index_names = {index["name"] for index in statistics_indexes}
+        statistics_short_term_index_names = {
+            index["name"] for index in statistics_short_term_indexes
+        }
+
+        assert "ix_statistics_statistic_id_start" not in statistics_index_names
+        assert (
+            "ix_statistics_short_term_statistic_id_start"
+            not in statistics_short_term_index_names
+        )
+
+        await hass.async_stop()

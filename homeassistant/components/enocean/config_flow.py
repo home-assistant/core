@@ -43,12 +43,14 @@ class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_detect()
 
-    async def async_step_detect(self, user_input=None):
+    async def async_step_detect(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Propose a list of detected dongles."""
         errors = {}
         if user_input is not None:
             if user_input[CONF_DEVICE] == self.MANUAL_PATH_VALUE:
-                return await self.async_step_manual(None)
+                return await self.async_step_manual()
             if await self.validate_enocean_conf(user_input):
                 return self.create_enocean_entry(user_input)
             errors = {CONF_DEVICE: ERROR_INVALID_DONGLE_PATH}
@@ -64,7 +66,9 @@ class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_manual(self, user_input=None):
+    async def async_step_manual(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Request manual USB dongle path."""
         default_value = None
         errors = {}

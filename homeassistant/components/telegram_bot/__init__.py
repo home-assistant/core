@@ -41,6 +41,7 @@ from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_loaded_integration
+from homeassistant.util.ssl import get_default_context, get_default_no_verify_context
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -378,7 +379,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     for p_config in domain_config:
         # Each platform config gets its own bot
-        bot = initialize_bot(hass, p_config)
+        bot = await hass.async_add_executor_job(initialize_bot, hass, p_config)
         p_type: str = p_config[CONF_PLATFORM]
 
         platform = platforms[p_type]
@@ -486,7 +487,7 @@ def initialize_bot(hass: HomeAssistant, p_config: dict) -> Bot:
             # Auth can actually be stuffed into the URL, but the docs have previously
             # indicated to put them here.
             auth = proxy_params.pop("username"), proxy_params.pop("password")
-            ir.async_create_issue(
+            ir.create_issue(
                 hass,
                 DOMAIN,
                 "proxy_params_auth_deprecation",
@@ -503,7 +504,7 @@ def initialize_bot(hass: HomeAssistant, p_config: dict) -> Bot:
                 learn_more_url="https://github.com/home-assistant/core/pull/112778",
             )
         else:
-            ir.async_create_issue(
+            ir.create_issue(
                 hass,
                 DOMAIN,
                 "proxy_params_deprecation",
@@ -852,7 +853,11 @@ class TelegramNotificationService:
             username=kwargs.get(ATTR_USERNAME),
             password=kwargs.get(ATTR_PASSWORD),
             authentication=kwargs.get(ATTR_AUTHENTICATION),
-            verify_ssl=kwargs.get(ATTR_VERIFY_SSL),
+            verify_ssl=(
+                get_default_context()
+                if kwargs.get(ATTR_VERIFY_SSL, False)
+                else get_default_no_verify_context()
+            ),
         )
 
         if file_content:
