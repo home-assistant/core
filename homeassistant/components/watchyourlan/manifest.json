@@ -1,0 +1,13 @@
+{
+  "domain": "watchyourlan",
+  "name": "WatchYourLAN",
+  "codeowners": ["@drwahl"],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://www.home-assistant.io/integrations/watchyourlan",
+  "homekit": {},
+  "iot_class": "local_polling",
+  "requirements": [],
+  "ssdp": [],
+  "zeroconf": []
+}

@@ -6878,6 +6878,12 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "watchyourlan": {
+      "name": "WatchYourLAN",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "waterfurnace": {
       "name": "WaterFurnace",
       "integration_type": "hub",
