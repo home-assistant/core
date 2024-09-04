@@ -15,7 +15,7 @@ from .const import PQ_MODEL, SERIAL, SG_MODEL
 class MockBasicInfo:
     """Mock BasicInfo class."""
 
-    def __init__(self, model):
+    def __init__(self, model) -> None:
         """Initialize the mock class."""
         self.serial = SERIAL
         self.model = model
