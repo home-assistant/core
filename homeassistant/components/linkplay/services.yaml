@@ -1,7 +1,8 @@
 preset:
   target:
     entity:
-      domain: linkplay
+      integration: linkplay
+      domain: media_player
   fields:
     preset:
       example: 1
