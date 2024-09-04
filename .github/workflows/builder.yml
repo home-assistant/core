@@ -316,6 +316,7 @@ jobs:
       packages: write
       id-token: write
     strategy:
+      fail-fast: false
       matrix:
         registry: ["ghcr.io/home-assistant", "docker.io/homeassistant"]
     steps:
