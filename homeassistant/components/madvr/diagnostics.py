@@ -21,5 +21,5 @@ async def async_get_config_entry_diagnostics(
 
     return {
         "config_entry": async_redact_data(config_entry.as_dict(), TO_REDACT),
-        "madVR_data": data,
+        "madvr_data": data,
     }
