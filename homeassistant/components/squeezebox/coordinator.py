@@ -33,7 +33,7 @@ class LMSStatusDataUpdateCoordinator(DataUpdateCoordinator):
         )
         self.lms = lms
 
-    async def _async_update_data(self):
+    async def _async_update_data(self) -> dict:
         """Fetch data fromn LMS status call.
 
         Then we process only a subset to make then nice for HA
