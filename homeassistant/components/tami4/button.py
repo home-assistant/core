@@ -57,7 +57,8 @@ async def async_setup_entry(
             api=api,
             entity_description=Tami4EdgeDrinkButtonEntityDescription(
                 key=drink.id,
-                name=drink.name,
+                translation_key="drink_button",
+                translation_placeholders={"drink_name": drink.name},
                 press_fn=lambda api, drink: api.prepare_drink(drink),
             ),
             drink=drink,
