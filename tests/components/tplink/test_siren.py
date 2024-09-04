@@ -11,12 +11,11 @@ from homeassistant.components.siren import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, Platform
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import (
-    DEVICE_ID,
     _mocked_device,
     _mocked_feature,
     setup_platform_for_device,
@@ -50,23 +49,6 @@ async def mocked_hub(hass: HomeAssistant) -> Device:
         features=features,
         device_type=Device.Type.Hub,
     )
-
-
-async def test_siren(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    entity_registry: er.EntityRegistry,
-    mocked_hub: Device,
-) -> None:
-    """Test initialization."""
-    await setup_platform_for_device(hass, mock_config_entry, Platform.SIREN, mocked_hub)
-
-    entity = entity_registry.async_get(ENTITY_ID)
-    assert entity
-    assert entity.unique_id == f"{DEVICE_ID}_siren"
-
-    state = hass.states.get(ENTITY_ID)
-    assert state.state == STATE_OFF
 
 
 async def test_states(

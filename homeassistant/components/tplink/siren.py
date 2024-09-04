@@ -32,7 +32,6 @@ async def async_setup_entry(
 class TPLinkSirenEntity(CoordinatedTPLinkEntity, SirenEntity):
     """Representation of a tplink hub alarm."""
 
-    _attr_has_entity_name = True
     _attr_name = None
     _attr_supported_features = SirenEntityFeature.TURN_OFF | SirenEntityFeature.TURN_ON
 
@@ -62,7 +61,3 @@ class TPLinkSirenEntity(CoordinatedTPLinkEntity, SirenEntity):
     def _async_update_attrs(self) -> None:
         """Update the entity's attributes."""
         self._attr_is_on = self._alarm_active.value
-
-    def _get_unique_id(self) -> str:
-        """Return unique id."""
-        return f"{self._device.device_id}_siren"
