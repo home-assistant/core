@@ -7,6 +7,9 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
+from homeassistant.components.device_automation.exceptions import (
+    InvalidDeviceAutomationConfig,
+)
 from homeassistant.components.homeassistant.triggers import event as event_trigger
 from homeassistant.const import (
     CONF_DEVICE_ID,
@@ -43,33 +46,46 @@ TRIGGERS_BY_EVENT_CLASS = {
     EVENT_CLASS_DIMMER: {"rotate_left", "rotate_right"},
 }
 
-SCHEMA_BY_EVENT_CLASS = {
-    EVENT_CLASS_BUTTON: DEVICE_TRIGGER_BASE_SCHEMA.extend(
-        {
-            vol.Required(CONF_TYPE): vol.In([EVENT_CLASS_BUTTON]),
-            vol.Required(CONF_SUBTYPE): vol.In(
-                TRIGGERS_BY_EVENT_CLASS[EVENT_CLASS_BUTTON]
-            ),
-        }
-    ),
-    EVENT_CLASS_DIMMER: DEVICE_TRIGGER_BASE_SCHEMA.extend(
-        {
-            vol.Required(CONF_TYPE): vol.In([EVENT_CLASS_DIMMER]),
-            vol.Required(CONF_SUBTYPE): vol.In(
-                TRIGGERS_BY_EVENT_CLASS[EVENT_CLASS_DIMMER]
-            ),
-        }
-    ),
-}
+TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
+    {vol.Required(CONF_TYPE): str, vol.Required(CONF_SUBTYPE): str}
+)
 
 
 async def async_validate_trigger_config(
     hass: HomeAssistant, config: ConfigType
 ) -> ConfigType:
     """Validate trigger config."""
-    return SCHEMA_BY_EVENT_CLASS.get(config[CONF_TYPE], DEVICE_TRIGGER_BASE_SCHEMA)(  # type: ignore[no-any-return]
-        config
+    config = TRIGGER_SCHEMA(config)
+    event_class = config[CONF_TYPE]
+    event_type = config[CONF_SUBTYPE]
+
+    device_registry = dr.async_get(hass)
+    device = device_registry.async_get(config[CONF_DEVICE_ID])
+    assert device is not None
+    config_entries = [
+        hass.config_entries.async_get_entry(entry_id)
+        for entry_id in device.config_entries
+    ]
+    bthome_config_entry = next(
+        iter(entry for entry in config_entries if entry and entry.domain == DOMAIN)
     )
+    event_classes: list[str] = bthome_config_entry.data.get(
+        CONF_DISCOVERED_EVENT_CLASSES, []
+    )
+
+    if event_class not in event_classes:
+        raise InvalidDeviceAutomationConfig(
+            f"BTHome trigger {event_class} is not valid for device "
+            f"{device} ({config[CONF_DEVICE_ID]})"
+        )
+
+    if event_type not in TRIGGERS_BY_EVENT_CLASS.get(event_class.split("_")[0], ()):
+        raise InvalidDeviceAutomationConfig(
+            f"BTHome trigger {event_type} is not valid for device "
+            f"{device} ({config[CONF_DEVICE_ID]})"
+        )
+
+    return config
 
 
 async def async_get_triggers(
