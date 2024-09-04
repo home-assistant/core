@@ -1,7 +1,7 @@
 """application_credentials platform the Weheat integration."""
 
 from json import JSONDecodeError
-from typing import cast
+from typing import Any, cast
 
 from aiohttp import ClientError
 
@@ -20,11 +20,16 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
     LocalOAuth2Implementation,
 )
 
-from .const import ERROR_DESCRIPTION, OAUTH2_AUTHORIZE, OAUTH2_TOKEN
+from .const import API_SCOPE, ERROR_DESCRIPTION, OAUTH2_AUTHORIZE, OAUTH2_TOKEN
 
 
 class WeheatOAuth2Implementation(LocalOAuth2Implementation):
     """Weheat variant of LocalOAuth2Implementation to support a keycloak specific error message."""
+
+    @property
+    def extra_authorize_data(self) -> dict[str, Any]:
+        """Extra data that needs to be appended to the authorize url."""
+        return {"scope": API_SCOPE}
 
     async def _token_request(self, data: dict) -> dict:
         """Make a token request."""
