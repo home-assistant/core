@@ -97,15 +97,15 @@ async def mock_vicare_room_sensors(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> AsyncGenerator[MockConfigEntry, None]:
     """Return a mocked ViCare API representing multiple room sensor devices."""
-    fixtures: list[Fixture] = [Fixture({"type:climateSensor"}, "vicare/RoomSensor1.json"),Fixture({"type:climateSensor"}, "vicare/RoomSensor2.json")]
+    fixtures: list[Fixture] = [
+        Fixture({"type:climateSensor"}, "vicare/RoomSensor1.json"),
+        Fixture({"type:climateSensor"}, "vicare/RoomSensor2.json"),
+    ]
     with patch(
         f"{MODULE}.vicare_login",
         return_value=MockPyViCare(fixtures),
     ):
-        mock_config_entry.add_to_hass(hass)
-
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+        await setup_integration(hass, mock_config_entry)
 
         yield mock_config_entry
 
