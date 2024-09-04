@@ -46,8 +46,7 @@ async def async_setup_entry(
     """Perform the setup for Tami4Edge."""
 
     api: Tami4EdgeAPI = hass.data[DOMAIN][entry.entry_id][API]
-
-    async_add_entities([Tami4EdgeButton(api, BOIL_WATER_BUTTON)])
+    buttons: list[Tami4EdgeBaseEntity] = [Tami4EdgeButton(api, BOIL_WATER_BUTTON)]
 
     device = await hass.async_add_executor_job(api.get_device)
     drinks = device.drinks
@@ -65,7 +64,10 @@ async def async_setup_entry(
         )
         for drink in drinks
     ]
-    async_add_entities(drink_buttons)
+
+    buttons.extend(drink_buttons)
+
+    async_add_entities(buttons)
 
 
 class Tami4EdgeButton(Tami4EdgeBaseEntity, ButtonEntity):
