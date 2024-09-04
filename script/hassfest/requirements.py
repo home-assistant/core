@@ -59,7 +59,7 @@ def validate_requirements_format(integration: Integration) -> bool:
     start_errors = len(integration.errors)
 
     for req in integration.requirements:
-        if integration.core and " " in req:
+        if " " in req:
             integration.add_error(
                 "requirements",
                 f'Requirement "{req}" contains a space',
