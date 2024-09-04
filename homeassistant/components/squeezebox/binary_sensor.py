@@ -51,4 +51,4 @@ class ServerStatusBinarySensor(LMSStatusEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """LMS Status directly from coordinator data."""
-        return self.coordinator.data[self.entity_description.key]
+        return bool(self.coordinator.data[self.entity_description.key])
