@@ -58,7 +58,6 @@ SERVICE_CALL_METHOD = "call_method"
 SERVICE_CALL_QUERY = "call_query"
 
 ATTR_QUERY_RESULT = "query_result"
-ATTR_SYNC_GROUP = "sync_group"
 
 SIGNAL_PLAYER_REDISCOVERED = "squeezebox_player_rediscovered"
 
@@ -73,7 +72,6 @@ ATTR_OTHER_PLAYER = "other_player"
 
 ATTR_TO_PROPERTY = [
     ATTR_QUERY_RESULT,
-    ATTR_SYNC_GROUP,
 ]
 
 SQUEEZEBOX_MODE = {
