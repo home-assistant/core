@@ -11,7 +11,7 @@ from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResu
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers import aiohttp_client
 
-from .const import API_TIMEOUT, CONF_EUROPE, DOMAIN, FGLAIR_APP_ID, FGLAIR_APP_SECRET
+from .const import API_TIMEOUT, CONF_EUROPE, DOMAIN, FGLAIR_APP_CREDENTIALS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,11 +39,14 @@ class FGLairConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any]
     ) -> dict[str, str]:
         errors: dict[str, str] = {}
+        app_id, app_secret = FGLAIR_APP_CREDENTIALS[
+            "EU" if user_input[CONF_EUROPE] else "default"
+        ]
         api = new_ayla_api(
             user_input[CONF_USERNAME],
             user_input[CONF_PASSWORD],
-            FGLAIR_APP_ID,
-            FGLAIR_APP_SECRET,
+            app_id,
+            app_secret,
             europe=user_input[CONF_EUROPE],
             websession=aiohttp_client.async_get_clientsession(self.hass),
             timeout=API_TIMEOUT,

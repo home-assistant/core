@@ -70,6 +70,20 @@ def mock_config_entry() -> MockConfigEntry:
     )
 
 
+@pytest.fixture
+def mock_config_entry_europe() -> MockConfigEntry:
+    """Return a regular config entry."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=TEST_USERNAME,
+        data={
+            CONF_USERNAME: TEST_USERNAME,
+            CONF_PASSWORD: TEST_PASSWORD,
+            CONF_EUROPE: True,
+        },
+    )
+
+
 def _create_device(serial_number: str) -> AsyncMock:
     dev = AsyncMock(spec=FujitsuHVAC)
     dev.device_serial_number = serial_number

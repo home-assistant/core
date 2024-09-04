@@ -1,17 +1,23 @@
 """Test the initialization of fujitsu_fglair entities."""
 
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 from ayla_iot_unofficial import AylaAuthError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant.components.fujitsu_fglair.const import API_REFRESH, DOMAIN
+from homeassistant.components.fujitsu_fglair.const import (
+    API_REFRESH,
+    API_TIMEOUT,
+    DOMAIN,
+    FGLAIR_APP_CREDENTIALS,
+)
 from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import aiohttp_client, entity_registry as er
 
 from . import entity_id, setup_integration
+from .conftest import TEST_PASSWORD, TEST_USERNAME
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -33,6 +39,29 @@ async def test_auth_failure(
 
     assert hass.states.get(entity_id(mock_devices[0])).state == STATE_UNAVAILABLE
     assert hass.states.get(entity_id(mock_devices[1])).state == STATE_UNAVAILABLE
+
+
+async def test_auth_europe(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_ayla_api: AsyncMock,
+    mock_config_entry_europe: MockConfigEntry,
+    mock_devices: list[AsyncMock],
+) -> None:
+    """Test that we use the correct credentials if europe is selected."""
+    with patch(
+        "homeassistant.components.fujitsu_fglair.new_ayla_api", return_value=AsyncMock()
+    ) as new_ayla_api_patch:
+        await setup_integration(hass, mock_config_entry_europe)
+        new_ayla_api_patch.assert_called_once_with(
+            TEST_USERNAME,
+            TEST_PASSWORD,
+            FGLAIR_APP_CREDENTIALS["EU"][0],
+            FGLAIR_APP_CREDENTIALS["EU"][1],
+            europe=True,
+            websession=aiohttp_client.async_get_clientsession(hass),
+            timeout=API_TIMEOUT,
+        )
 
 
 async def test_device_auth_failure(

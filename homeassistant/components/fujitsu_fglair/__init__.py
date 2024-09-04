@@ -11,7 +11,7 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
 
-from .const import API_TIMEOUT, CONF_EUROPE, FGLAIR_APP_ID, FGLAIR_APP_SECRET
+from .const import API_TIMEOUT, CONF_EUROPE, FGLAIR_APP_CREDENTIALS
 from .coordinator import FGLairCoordinator
 
 PLATFORMS: list[Platform] = [Platform.CLIMATE]
@@ -21,11 +21,14 @@ type FGLairConfigEntry = ConfigEntry[FGLairCoordinator]
 
 async def async_setup_entry(hass: HomeAssistant, entry: FGLairConfigEntry) -> bool:
     """Set up Fujitsu HVAC (based on Ayla IOT) from a config entry."""
+    app_id, app_secret = FGLAIR_APP_CREDENTIALS[
+        "EU" if entry.data[CONF_EUROPE] else "default"
+    ]
     api = new_ayla_api(
         entry.data[CONF_USERNAME],
         entry.data[CONF_PASSWORD],
-        FGLAIR_APP_ID,
-        FGLAIR_APP_SECRET,
+        app_id,
+        app_secret,
         europe=entry.data[CONF_EUROPE],
         websession=aiohttp_client.async_get_clientsession(hass),
         timeout=API_TIMEOUT,
