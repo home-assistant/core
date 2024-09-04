@@ -2,9 +2,6 @@
 
 from __future__ import annotations
 
-from datetime import timedelta
-import logging
-
 from pyiskra.adapters import Modbus, RestAPI
 from pyiskra.devices import Device
 from pyiskra.exceptions import DeviceConnectionError, DeviceNotSupported, NotAuthorised
@@ -30,11 +27,6 @@ PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 
 type IskraConfigEntry = ConfigEntry[list[IskraDataUpdateCoordinator]]
-
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
-TIME_TILL_UNAVAILABLE = timedelta(minutes=5)
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: IskraConfigEntry) -> bool:
@@ -81,7 +73,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: IskraConfigEntry) -> boo
             config_entry_id=entry.entry_id,
             identifiers={(DOMAIN, base_device.serial)},
             manufacturer=MANUFACTURER,
-            name=f"{base_device.serial}",
+            name=base_device.serial,
             model=base_device.model,
             sw_version=base_device.fw_version,
         )

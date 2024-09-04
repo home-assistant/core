@@ -23,5 +23,3 @@ ATTR_PHASE3_CURRENT = "phase3_current"
 
 # Frequency
 ATTR_FREQUENCY = "frequency"
-
-TIMEOUT = 60

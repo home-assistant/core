@@ -39,6 +39,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
             selector.SelectSelectorConfig(
                 options=["rest_api", "modbus_tcp"],
                 mode=selector.SelectSelectorMode.LIST,
+                translation_key="protocol",
             ),
         ),
     }
@@ -59,11 +60,10 @@ STEP_MODBUS_TCP_DATA_SCHEMA = vol.Schema(
 )
 
 
-async def test_rest_api_connection(
-    host: str, authentication: dict[str, str] | None = None
-) -> BasicInfo:
+async def test_rest_api_connection(host: str, user_input: dict[str, Any]) -> BasicInfo:
     """Check if the RestAPI requires authentication."""
-    rest_api = RestAPI(ip_address=host, authentication=authentication)
+
+    rest_api = RestAPI(ip_address=host, authentication=user_input)
     try:
         basic_info = await rest_api.get_basic_info()
     except NotAuthorised as e:
@@ -77,11 +77,16 @@ async def test_rest_api_connection(
     return basic_info
 
 
-async def test_modbus_connection(host: str, port: int, address: int) -> BasicInfo:
+async def test_modbus_connection(host: str, user_input: dict[str, Any]) -> BasicInfo:
     """Test the Modbus connection."""
+
     modbus_api = Modbus(
-        ip_address=host, protocol="tcp", port=port, modbus_address=address
+        ip_address=host,
+        protocol="tcp",
+        port=user_input[CONF_PORT],
+        modbus_address=user_input[CONF_ADDRESS],
     )
+
     try:
         basic_info = await modbus_api.get_basic_info()
     except NotAuthorised as e:
@@ -113,7 +118,7 @@ class IskraConfigFlowFlow(ConfigFlow, domain=DOMAIN):
             if self.protocol == "rest_api":
                 # Check if authentication is required.
                 try:
-                    device_info = await test_rest_api_connection(self.host)
+                    device_info = await test_rest_api_connection(self.host, user_input)
                 except CannotConnect:
                     errors["base"] = "cannot_connect"
                 except NotAuthorised:
@@ -128,11 +133,8 @@ class IskraConfigFlowFlow(ConfigFlow, domain=DOMAIN):
                     return await self._create_entry(
                         host=self.host,
                         protocol=self.protocol,
-                        serial=device_info.serial,
-                        model=device_info.model,
-                        port=None,
-                        address=None,
-                        authentication=None,
+                        device_info=device_info,
+                        user_input=user_input,
                     )
 
             if self.protocol == "modbus_tcp":
@@ -151,12 +153,8 @@ class IskraConfigFlowFlow(ConfigFlow, domain=DOMAIN):
         """Handle the authentication step."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            authentication = {
-                "username": user_input[CONF_USERNAME],
-                "password": user_input[CONF_PASSWORD],
-            }
             try:
-                device_info = await test_rest_api_connection(self.host, authentication)
+                device_info = await test_rest_api_connection(self.host, user_input)
             # If the connection failed, abort.
             except CannotConnect:
                 errors["base"] = "cannot_connect"
@@ -171,11 +169,8 @@ class IskraConfigFlowFlow(ConfigFlow, domain=DOMAIN):
                 return await self._create_entry(
                     self.host,
                     self.protocol,
-                    serial=device_info.serial,
-                    model=device_info.model,
-                    port=None,
-                    address=None,
-                    authentication=authentication,
+                    device_info=device_info,
+                    user_input=user_input,
                 )
 
         # If there's no user_input or there was an error, show the authentication form again.
@@ -194,9 +189,7 @@ class IskraConfigFlowFlow(ConfigFlow, domain=DOMAIN):
         # If there's user_input, check the connection.
         if user_input is not None:
             try:
-                device_info = await test_modbus_connection(
-                    self.host, user_input[CONF_PORT], user_input[CONF_ADDRESS]
-                )
+                device_info = await test_modbus_connection(self.host, user_input)
 
             # If the connection failed, show an error.
             except CannotConnect:
@@ -209,11 +202,8 @@ class IskraConfigFlowFlow(ConfigFlow, domain=DOMAIN):
                 return await self._create_entry(
                     host=self.host,
                     protocol=self.protocol,
-                    serial=device_info.serial,
-                    model=device_info.model,
-                    port=user_input[CONF_PORT],
-                    address=user_input[CONF_ADDRESS],
-                    authentication=None,
+                    device_info=device_info,
+                    user_input=user_input,
                 )
 
         # If there's no user_input or there was an error, show the modbus form again.
@@ -227,13 +217,13 @@ class IskraConfigFlowFlow(ConfigFlow, domain=DOMAIN):
         self,
         host: str,
         protocol: str,
-        serial: str,
-        model: str,
-        port: int | None = None,
-        address: int | None = None,
-        authentication: dict[str, str] | None = None,
+        device_info: BasicInfo,
+        user_input: dict[str, Any],
     ) -> ConfigFlowResult:
         """Create the config entry."""
+
+        serial = device_info.serial
+        model = device_info.model
 
         if not self.unique_id:
             await self.async_set_unique_id(serial)
@@ -244,14 +234,10 @@ class IskraConfigFlowFlow(ConfigFlow, domain=DOMAIN):
             data={
                 CONF_HOST: host,
                 CONF_PROTOCOL: protocol,
-                CONF_PORT: port,
-                CONF_ADDRESS: address,
-                CONF_USERNAME: (
-                    authentication.get("username") if authentication else None
-                ),
-                CONF_PASSWORD: (
-                    authentication.get("password") if authentication else None
-                ),
+                CONF_PORT: user_input.get(CONF_PORT),
+                CONF_ADDRESS: user_input.get(CONF_ADDRESS),
+                CONF_USERNAME: user_input.get(CONF_USERNAME),
+                CONF_PASSWORD: user_input.get(CONF_PASSWORD),
             },
         )
 

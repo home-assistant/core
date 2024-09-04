@@ -10,7 +10,6 @@ from .coordinator import IskraDataUpdateCoordinator
 class IskraEntity(CoordinatorEntity[IskraDataUpdateCoordinator]):
     """Representation a base Iskra device."""
 
-    _attr_should_poll = True
     _attr_has_entity_name = True
 
     def __init__(self, coordinator: IskraDataUpdateCoordinator) -> None:
@@ -18,14 +17,13 @@ class IskraEntity(CoordinatorEntity[IskraDataUpdateCoordinator]):
         super().__init__(coordinator)
         device = coordinator.device
         gateway = device.parent_device
-        device_name = f"{device.serial}"
 
         if gateway is not None:
             self._attr_device_info = DeviceInfo(
                 identifiers={(DOMAIN, device.serial)},
                 manufacturer=MANUFACTURER,
                 model=device.model,
-                name=device_name,
+                name=device.serial,
                 sw_version=device.fw_version,
                 serial_number=device.serial,
                 via_device=(DOMAIN, gateway.serial),
@@ -35,7 +33,7 @@ class IskraEntity(CoordinatorEntity[IskraDataUpdateCoordinator]):
                 identifiers={(DOMAIN, device.serial)},
                 manufacturer=MANUFACTURER,
                 model=device.model,
-                name=device_name,
+                name=device.serial,
                 sw_version=device.fw_version,
                 serial_number=device.serial,
             )

@@ -4,8 +4,6 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import timedelta
-import logging
 
 from pyiskra.devices import Device
 
@@ -44,11 +42,6 @@ from .const import (
 )
 from .coordinator import IskraDataUpdateCoordinator
 from .entity import IskraEntity
-
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
-
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -180,7 +173,7 @@ async def async_setup_entry(
     # Device that uses the config entry.
     coordinators = entry.runtime_data
 
-    entities = []
+    entities: list[IskraSensor] = []
 
     # Add sensors for each device.
     for coordinator in coordinators:
@@ -207,11 +200,9 @@ async def async_setup_entry(
                 sensors.append(ATTR_PHASE3_CURRENT)
 
         entities.extend(
-            [
-                IskraSensor(coordinator, description)
-                for description in SENSOR_TYPES
-                if description.key in sensors
-            ]
+            IskraSensor(coordinator, description)
+            for description in SENSOR_TYPES
+            if description.key in sensors
         )
 
     async_add_entities(entities)

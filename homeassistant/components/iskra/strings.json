@@ -5,33 +5,41 @@
         "title": "Configure Iskra Device",
         "description": "Enter the IP address of your Iskra Device and select protocol.",
         "data": {
-          "host": "Host"
+          "host": "[%key:common::config_flow::data::host%]"
         }
       },
       "authentication": {
         "title": "Configure Rest API Credentials",
         "description": "Enter username and password",
         "data": {
-          "username": "Username",
-          "password": "Password"
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
         }
       },
       "modbus_tcp": {
         "title": "Configure Modbus TCP",
         "description": "Enter Modbus TCP port and device's Modbus address.",
         "data": {
-          "port": "Port",
+          "port": "[%key:common::config_flow::data::port%]",
           "address": "Modbus address"
         }
       }
     },
     "error": {
-      "cannot_connect": "Failed to connect to the device",
-      "invalid_auth": "Invalid authentication",
-      "unknown": "Unexpected error"
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
-      "already_configured": "Device is already configured"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "selector": {
+    "protocol": {
+      "options": {
+        "rest_api": "Rest API",
+        "modbus_tcp": "Modbus TCP"
+      }
     }
   },
   "entity": {
