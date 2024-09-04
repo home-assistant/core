@@ -51,7 +51,7 @@ async def async_setup_entry(
     device = await hass.async_add_executor_job(api.get_device)
     drinks = device.drinks
 
-    drink_buttons = [
+    buttons.extend(
         Tami4EdgeDrinkButton(
             api=api,
             entity_description=Tami4EdgeDrinkButtonEntityDescription(
@@ -63,9 +63,7 @@ async def async_setup_entry(
             drink=drink,
         )
         for drink in drinks
-    ]
-
-    buttons.extend(drink_buttons)
+    )
 
     async_add_entities(buttons)
 
