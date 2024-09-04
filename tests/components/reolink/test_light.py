@@ -94,6 +94,8 @@ async def test_light_turn_off(
             blocking=True,
         )
 
+    reolink_connect.set_whiteled.side_effect = None
+
 
 async def test_light_turn_on(
     hass: HomeAssistant,
@@ -144,3 +146,5 @@ async def test_light_turn_on(
             {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: 51},
             blocking=True,
         )
+
+    reolink_connect.set_whiteled.side_effect = None
