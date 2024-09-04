@@ -56,18 +56,9 @@ class ComelitVedoBinarySensorEntity(
         # because no serial number or mac is available
         self._attr_unique_id = f"{config_entry_entry_id}-presence-{zone.index}"
         self._attr_device_info = coordinator.platform_device_info(zone, "zone")
-
-    @property
-    def _zone_object(self) -> ComelitVedoZoneObject:
-        """Zone object."""
-        return self.coordinator.data[ALARM_ZONES][self._zone.index]
+        self._attr_device_class = BinarySensorDeviceClass.MOTION
 
     @property
     def is_on(self) -> bool:
         """Presence detected."""
-        return self._zone_object.status_api == "0001"
-
-    @property
-    def device_class(self) -> BinarySensorDeviceClass:
-        """Type."""
-        return BinarySensorDeviceClass.MOTION
+        return self.coordinator.data[ALARM_ZONES][self._zone.index].status_api == "0001"
