@@ -45,7 +45,7 @@ BINARY_SENSOR_TYPES: tuple[RingBinarySensorEntityDescription, ...] = (
         key=KIND_DING,
         translation_key=KIND_DING,
         device_class=BinarySensorDeviceClass.OCCUPANCY,
-        entity_registry_enabled_default=False,
+        entity_registry_enabled_default=True,
         capability=RingCapability.DING,
         deprecated_info=DeprecatedInfo(
             new_platform=Platform.EVENT, breaks_in_ha_version="2025.3.0"
@@ -55,7 +55,7 @@ BINARY_SENSOR_TYPES: tuple[RingBinarySensorEntityDescription, ...] = (
         key=KIND_MOTION,
         translation_key=KIND_MOTION,
         device_class=BinarySensorDeviceClass.MOTION,
-        entity_registry_enabled_default=False,
+        entity_registry_enabled_default=True,
         capability=RingCapability.MOTION_DETECTION,
         deprecated_info=DeprecatedInfo(
             new_platform=Platform.EVENT, breaks_in_ha_version="2025.3.0"
@@ -122,7 +122,7 @@ class RingBinarySensor(
         self._attr_is_on = True
         self._active_alert = alert
         loop = self.hass.loop
-        when = loop.time() + 60  # alert.expires_in
+        when = loop.time() + alert.expires_in
         if self._cancel_callback:
             self._cancel_callback.cancel()
         self._cancel_callback = loop.call_at(when, self._async_cancel_event)

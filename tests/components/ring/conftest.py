@@ -2,7 +2,7 @@
 
 from collections.abc import Generator
 from itertools import chain
-from unittest.mock import AsyncMock, Mock, create_autospec, patch
+from unittest.mock import AsyncMock, Mock, PropertyMock, create_autospec, patch
 
 import pytest
 import ring_doorbell
@@ -138,42 +138,13 @@ async def mock_added_config_entry(
 
 
 @pytest.fixture(autouse=True)
-def mock_listener():
-    """Fixture to mock the push client connect and disconnect."""
+def mock_ring_event_listener_class():
+    """Fixture to mock the ring event listener."""
 
-    f = _FakeRingListener()
     with patch(
-        "homeassistant.components.ring.coordinator.RingEventListener", return_value=f
-    ):
-        yield f
-
-
-class _FakeRingListener:
-    """Test class to replace the ring_doorbell event listener for testing."""
-
-    def __init__(self, *_, **__) -> None:
-        self._callbacks = {}
-        self._subscription_counter = 1
-        self.started = False
-        self.do_not_start = False
-
-    async def start(self, *_, **__):
-        if self.do_not_start:
-            return False
-        self.started = True
-        return True
-
-    async def stop(self, *_, **__):
-        self.started = False
-
-    def add_notification_callback(self, callback):
-        self._callbacks[self._subscription_counter] = callback
-        self._subscription_counter += 1
-        return self._subscription_counter
-
-    def remove_notification_callback(self, subscription_id):
-        del self._callbacks[subscription_id]
-
-    def notify(self, ring_event: ring_doorbell.RingEvent):
-        for callback in self._callbacks.values():
-            callback(ring_event)
+        "homeassistant.components.ring.coordinator.RingEventListener", autospec=True
+    ) as mock_ring_listener:
+        p = PropertyMock()
+        p.return_value = True
+        type(mock_ring_listener.return_value).started = p
+        yield mock_ring_listener

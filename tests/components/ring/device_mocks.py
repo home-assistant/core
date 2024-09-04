@@ -29,6 +29,9 @@ INTERCOM_HISTORY = load_json_value_fixture("intercom_history.json", DOMAIN)
 DOORBOT_HEALTH = load_json_value_fixture("doorbot_health_attrs.json", DOMAIN)
 CHIME_HEALTH = load_json_value_fixture("chime_health_attrs.json", DOMAIN)
 
+FRONT_DOOR_DEVICE_ID = 987654
+INGRESS_DEVICE_ID = 185036587
+
 
 def get_mock_devices():
     """Return list of mock devices keyed by device_type."""
@@ -65,6 +68,7 @@ DEVICE_CAPABILITIES = {
         RingCapability.VOLUME,
         RingCapability.MOTION_DETECTION,
         RingCapability.VIDEO,
+        RingCapability.DING,
         RingCapability.HISTORY,
     ],
     RingStickUpCam: [
@@ -77,7 +81,7 @@ DEVICE_CAPABILITIES = {
         RingCapability.LIGHT,
     ],
     RingChime: [RingCapability.VOLUME],
-    RingOther: [RingCapability.OPEN, RingCapability.HISTORY],
+    RingOther: [RingCapability.OPEN, RingCapability.HISTORY, RingCapability.DING],
 }
 
 

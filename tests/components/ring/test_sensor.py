@@ -1,6 +1,7 @@
 """The tests for the Ring sensor platform."""
 
 import logging
+from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -132,7 +133,11 @@ async def test_history_sensor(
     expected_value,
 ) -> None:
     """Test the Ring sensors."""
-    await setup_platform(hass, "sensor")
+    with patch(
+        "homeassistant.components.ring.sensor.async_check_create_deprecated",
+        return_value=True,
+    ):
+        await setup_platform(hass, "sensor")
 
     entity_id = f"sensor.{device_name}_{sensor_name}"
     sensor_state = hass.states.get(entity_id)

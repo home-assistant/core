@@ -1,5 +1,7 @@
 """The tests for the Ring component."""
 
+from unittest.mock import PropertyMock
+
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from ring_doorbell import AuthenticationError, RingError, RingTimeout
@@ -8,7 +10,7 @@ from homeassistant.components import ring
 from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.ring import DOMAIN
-from homeassistant.components.ring.const import SCAN_INTERVAL
+from homeassistant.components.ring.const import CONF_LISTEN_CREDENTIALS, SCAN_INTERVAL
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import CONF_TOKEN, CONF_USERNAME
 from homeassistant.core import HomeAssistant
@@ -415,10 +417,35 @@ async def test_token_updated(
     assert mock_config_entry.data[CONF_TOKEN] == {"access_token": "new-mock-token"}
 
 
+async def test_listen_token_updated(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_ring_client,
+    mock_ring_event_listener_class,
+) -> None:
+    """Test that the listener token value is updated in the config entry.
+
+    This simulates the api calling the callback.
+    """
+    mock_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    assert mock_ring_event_listener_class.call_count == 1
+    token_updater = mock_ring_event_listener_class.call_args.args[2]
+
+    assert mock_config_entry.data.get(CONF_LISTEN_CREDENTIALS) is None
+    token_updater({"listen_access_token": "mock-token"})
+    assert mock_config_entry.data.get(CONF_LISTEN_CREDENTIALS) == {
+        "listen_access_token": "mock-token"
+    }
+
+
 async def test_no_listen_start(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
-    mock_listener,
+    mock_ring_event_listener_class,
     mock_ring_client,
 ) -> None:
     """Test behaviour if listener doesn't start."""
@@ -427,7 +454,11 @@ async def test_no_listen_start(
         version=1,
         data={"username": "foo", "token": {}},
     )
-    mock_listener.do_not_start = True
+    mock_ring_event_listener_class.do_not_start = True
+
+    p = PropertyMock()
+    p.return_value = False
+    type(mock_ring_event_listener_class.return_value).started = p
 
     mock_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_entry.entry_id)
