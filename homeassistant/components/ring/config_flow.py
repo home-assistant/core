@@ -17,6 +17,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_2FA, DOMAIN
 
@@ -31,7 +32,10 @@ STEP_REAUTH_DATA_SCHEMA = vol.Schema({vol.Required(CONF_PASSWORD): str})
 async def validate_input(hass: HomeAssistant, data: dict[str, str]) -> dict[str, Any]:
     """Validate the user input allows us to connect."""
 
-    auth = Auth(f"{APPLICATION_NAME}/{ha_version}")
+    auth = Auth(
+        f"{APPLICATION_NAME}/{ha_version}",
+        http_client_session=async_get_clientsession(hass),
+    )
 
     try:
         token = await auth.async_fetch_token(
@@ -61,6 +65,8 @@ class RingConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
+            await self.async_set_unique_id(user_input[CONF_USERNAME])
+            self._abort_if_unique_id_configured()
             try:
                 token = await validate_input(self.hass, user_input)
             except Require2FA:
@@ -73,7 +79,6 @@ class RingConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                await self.async_set_unique_id(user_input[CONF_USERNAME])
                 return self.async_create_entry(
                     title=user_input[CONF_USERNAME],
                     data={CONF_USERNAME: user_input[CONF_USERNAME], CONF_TOKEN: token},

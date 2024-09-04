@@ -88,6 +88,27 @@
       },
       "6ghz_temperature": {
         "name": "6GHz Temperature"
+      },
+      "cpu_usage": {
+        "name": "CPU usage"
+      },
+      "cpu_core_usage": {
+        "name": "CPU core {core_id} usage"
+      },
+      "memory_usage": {
+        "name": "Memory usage"
+      },
+      "memory_free": {
+        "name": "Memory free"
+      },
+      "memory_used": {
+        "name": "Memory used"
+      },
+      "last_boot": {
+        "name": "Last boot"
+      },
+      "uptime": {
+        "name": "Uptime"
       }
     }
   },

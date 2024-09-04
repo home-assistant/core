@@ -82,14 +82,15 @@ jobs:
           ) > .env_file
 
       - name: Upload env_file
-        uses: actions/upload-artifact@v4.3.6
+        uses: actions/upload-artifact@v4.4.0
         with:
           name: env_file
           path: ./.env_file
+          include-hidden-files: true
           overwrite: true
 
       - name: Upload requirements_diff
-        uses: actions/upload-artifact@v4.3.6
+        uses: actions/upload-artifact@v4.4.0
         with:
           name: requirements_diff
           path: ./requirements_diff.txt
@@ -101,7 +102,7 @@ jobs:
           python -m script.gen_requirements_all ci
 
       - name: Upload requirements_all_wheels
-        uses: actions/upload-artifact@v4.3.6
+        uses: actions/upload-artifact@v4.4.0
         with:
           name: requirements_all_wheels
           path: ./requirements_all_wheels_*.txt

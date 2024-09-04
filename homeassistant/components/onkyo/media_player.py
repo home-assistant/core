@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-from dataclasses import dataclass
 import logging
 from typing import Any
 
@@ -11,7 +10,7 @@ import pyeiscp
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    DOMAIN,
+    DOMAIN as MEDIA_PLAYER_DOMAIN,
     PLATFORM_SCHEMA as MEDIA_PLAYER_PLATFORM_SCHEMA,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
@@ -28,8 +27,15 @@ from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.util.hass_dict import HassKey
+
+from .receiver import Receiver, ReceiverInfo
 
 _LOGGER = logging.getLogger(__name__)
+
+DOMAIN = "onkyo"
+
+DATA_MP_ENTITIES: HassKey[list[dict[str, OnkyoMediaPlayer]]] = HassKey(DOMAIN)
 
 CONF_SOURCES = "sources"
 CONF_MAX_VOLUME = "max_volume"
@@ -138,14 +144,31 @@ ONKYO_SELECT_OUTPUT_SCHEMA = vol.Schema(
 SERVICE_SELECT_HDMI_OUTPUT = "onkyo_select_hdmi_output"
 
 
-@dataclass
-class ReceiverInfo:
-    """Onkyo Receiver information."""
+async def async_register_services(hass: HomeAssistant) -> None:
+    """Register Onkyo services."""
 
-    host: str
-    port: int
-    model_name: str
-    identifier: str
+    async def async_service_handle(service: ServiceCall) -> None:
+        """Handle for services."""
+        entity_ids = service.data[ATTR_ENTITY_ID]
+
+        targets: list[OnkyoMediaPlayer] = []
+        for receiver_entities in hass.data[DATA_MP_ENTITIES]:
+            targets.extend(
+                entity
+                for entity in receiver_entities.values()
+                if entity.entity_id in entity_ids
+            )
+
+        for target in targets:
+            if service.service == SERVICE_SELECT_HDMI_OUTPUT:
+                await target.async_select_output(service.data[ATTR_HDMI_OUTPUT])
+
+    hass.services.async_register(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_SELECT_HDMI_OUTPUT,
+        async_service_handle,
+        schema=ONKYO_SELECT_OUTPUT_SCHEMA,
+    )
 
 
 async def async_setup_platform(
@@ -155,29 +178,10 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Onkyo platform."""
-    receivers: dict[str, pyeiscp.Connection] = {}  # indexed by host
-    entities: dict[str, dict[str, OnkyoMediaPlayer]] = {}  # indexed by host and zone
+    await async_register_services(hass)
 
-    async def async_service_handle(service: ServiceCall) -> None:
-        """Handle for services."""
-        entity_ids = service.data[ATTR_ENTITY_ID]
-        targets = [
-            entity
-            for h in entities.values()
-            for entity in h.values()
-            if entity.entity_id in entity_ids
-        ]
-
-        for target in targets:
-            if service.service == SERVICE_SELECT_HDMI_OUTPUT:
-                await target.async_select_output(service.data[ATTR_HDMI_OUTPUT])
-
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_SELECT_HDMI_OUTPUT,
-        async_service_handle,
-        schema=ONKYO_SELECT_OUTPUT_SCHEMA,
-    )
+    receivers: dict[str, Receiver] = {}  # indexed by host
+    all_entities = hass.data.setdefault(DATA_MP_ENTITIES, [])
 
     host = config.get(CONF_HOST)
     name = config.get(CONF_NAME)
@@ -188,6 +192,9 @@ async def async_setup_platform(
     async def async_setup_receiver(
         info: ReceiverInfo, discovered: bool, name: str | None
     ) -> None:
+        entities: dict[str, OnkyoMediaPlayer] = {}
+        all_entities.append(entities)
+
         @callback
         def async_onkyo_update_callback(
             message: tuple[str, str, Any], origin: str
@@ -199,7 +206,7 @@ async def async_setup_platform(
             )
 
             zone, _, value = message
-            entity = entities[origin].get(zone)
+            entity = entities.get(zone)
             if entity is not None:
                 if entity.enabled:
                     entity.process_update(message)
@@ -210,7 +217,7 @@ async def async_setup_platform(
                 zone_entity = OnkyoMediaPlayer(
                     receiver, sources, zone, max_volume, receiver_max_volume
                 )
-                entities[origin][zone] = zone_entity
+                entities[zone] = zone_entity
                 async_add_entities([zone_entity])
 
         @callback
@@ -218,40 +225,41 @@ async def async_setup_platform(
             """Receiver (re)connected."""
             receiver = receivers[origin]
             _LOGGER.debug(
-                "Receiver (re)connected: %s (%s)", receiver.name, receiver.host
+                "Receiver (re)connected: %s (%s)", receiver.name, receiver.conn.host
             )
 
-            for entity in entities[origin].values():
+            for entity in entities.values():
                 entity.backfill_state()
 
         _LOGGER.debug("Creating receiver: %s (%s)", info.model_name, info.host)
-        receiver = await pyeiscp.Connection.create(
+        connection = await pyeiscp.Connection.create(
             host=info.host,
             port=info.port,
             update_callback=async_onkyo_update_callback,
             connect_callback=async_onkyo_connect_callback,
         )
 
-        receiver.model_name = info.model_name
-        receiver.identifier = info.identifier
-        receiver.name = name or info.model_name
-        receiver.discovered = discovered
+        receiver = Receiver(
+            conn=connection,
+            model_name=info.model_name,
+            identifier=info.identifier,
+            name=name or info.model_name,
+            discovered=discovered,
+        )
 
-        # Store the receiver object and create a dictionary to store its entities.
-        receivers[receiver.host] = receiver
-        entities[receiver.host] = {}
+        receivers[connection.host] = receiver
 
         # Discover what zones are available for the receiver by querying the power.
         # If we get a response for the specific zone, it means it is available.
         for zone in ZONES:
-            receiver.query_property(zone, "power")
+            receiver.conn.query_property(zone, "power")
 
         # Add the main zone to entities, since it is always active.
         _LOGGER.debug("Adding Main Zone on %s", receiver.name)
         main_entity = OnkyoMediaPlayer(
             receiver, sources, "main", max_volume, receiver_max_volume
         )
-        entities[receiver.host]["main"] = main_entity
+        entities["main"] = main_entity
         async_add_entities([main_entity])
 
     if host is not None:
@@ -292,7 +300,7 @@ async def async_setup_platform(
     @callback
     def close_receiver(_event):
         for receiver in receivers.values():
-            receiver.close()
+            receiver.conn.close()
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, close_receiver)
 
@@ -309,7 +317,7 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
 
     def __init__(
         self,
-        receiver: pyeiscp.Connection,
+        receiver: Receiver,
         sources: dict[str, str],
         zone: str,
         max_volume: int,
@@ -355,12 +363,12 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
     @callback
     def _update_receiver(self, propname: str, value: Any) -> None:
         """Update a property in the receiver."""
-        self._receiver.update_property(self._zone, propname, value)
+        self._receiver.conn.update_property(self._zone, propname, value)
 
     @callback
     def _query_receiver(self, propname: str) -> None:
         """Cause the receiver to send an update about a property."""
-        self._receiver.query_property(self._zone, propname)
+        self._receiver.conn.query_property(self._zone, propname)
 
     async def async_turn_on(self) -> None:
         """Turn the media player on."""
