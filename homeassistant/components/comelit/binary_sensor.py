@@ -27,12 +27,10 @@ async def async_setup_entry(
 
     coordinator: ComelitVedoSystem = hass.data[DOMAIN][config_entry.entry_id]
 
-    entities: list[ComelitVedoBinarySensorEntity] = []
-    entities.extend(
+    async_add_entities(
         ComelitVedoBinarySensorEntity(coordinator, device, config_entry.entry_id)
         for device in coordinator.data[ALARM_ZONES].values()
     )
-    async_add_entities(entities)
 
 
 class ComelitVedoBinarySensorEntity(
@@ -41,6 +39,7 @@ class ComelitVedoBinarySensorEntity(
     """Sensor device."""
 
     _attr_has_entity_name = True
+    _attr_device_class = BinarySensorDeviceClass.MOTION
 
     def __init__(
         self,
@@ -56,7 +55,6 @@ class ComelitVedoBinarySensorEntity(
         # because no serial number or mac is available
         self._attr_unique_id = f"{config_entry_entry_id}-presence-{zone.index}"
         self._attr_device_info = coordinator.platform_device_info(zone, "zone")
-        self._attr_device_class = BinarySensorDeviceClass.MOTION
 
     @property
     def is_on(self) -> bool:
