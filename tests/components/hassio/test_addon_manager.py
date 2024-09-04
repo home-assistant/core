@@ -738,9 +738,10 @@ async def test_create_backup_error(
     )
 
 
+@pytest.mark.usefixtures("addon_installed")
+@pytest.mark.parametrize("set_addon_options_side_effect", [None])
 async def test_schedule_install_setup_addon(
     addon_manager: AddonManager,
-    addon_installed: AsyncMock,
     install_addon: AsyncMock,
     set_addon_options: AsyncMock,
     start_addon: AsyncMock,
@@ -915,11 +916,10 @@ async def test_schedule_install_setup_addon_logs_error(
     assert start_addon.call_count == start_addon_calls
 
 
+@pytest.mark.usefixtures("addon_installed")
+@pytest.mark.parametrize("set_addon_options_side_effect", [None])
 async def test_schedule_setup_addon(
-    addon_manager: AddonManager,
-    addon_installed: AsyncMock,
-    set_addon_options: AsyncMock,
-    start_addon: AsyncMock,
+    addon_manager: AddonManager, set_addon_options: AsyncMock, start_addon: AsyncMock
 ) -> None:
     """Test schedule setup addon."""
     start_task = addon_manager.async_schedule_setup_addon({"test_key": "test"})

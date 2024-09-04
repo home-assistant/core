@@ -383,6 +383,7 @@ class TibberSensorElPrice(TibberSensor):
             "off_peak_1": None,
             "peak": None,
             "off_peak_2": None,
+            "intraday_price_ranking": None,
         }
         self._attr_icon = ICON
         self._attr_unique_id = self._tibber_home.home_id
@@ -411,8 +412,9 @@ class TibberSensorElPrice(TibberSensor):
             return
 
         res = self._tibber_home.current_price_data()
-        self._attr_native_value, price_level, self._last_updated = res
+        self._attr_native_value, price_level, self._last_updated, price_rank = res
         self._attr_extra_state_attributes["price_level"] = price_level
+        self._attr_extra_state_attributes["intraday_price_ranking"] = price_rank
 
         attrs = self._tibber_home.current_attributes()
         self._attr_extra_state_attributes.update(attrs)

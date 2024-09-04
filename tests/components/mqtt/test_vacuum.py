@@ -2,7 +2,6 @@
 
 from copy import deepcopy
 import json
-import logging
 from typing import Any
 from unittest.mock import patch
 
@@ -100,32 +99,6 @@ CONFIG_ALL_SERVICES = help_custom_config(
         },
     ),
 )
-
-
-async def test_warning_schema_option(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test the warning on use of deprecated schema option."""
-    await mqtt_mock_entry()
-    # Send discovery message with deprecated schema option
-    async_fire_mqtt_message(
-        hass,
-        f"homeassistant/{vacuum.DOMAIN}/bla/config",
-        '{"name": "test", "schema": "state", "o": {"name": "Bla2MQTT", "sw": "0.99", "url":"https://example.com/support"}}',
-    )
-    await hass.async_block_till_done()
-    await hass.async_block_till_done(wait_background_tasks=True)
-
-    state = hass.states.get("vacuum.test")
-    # We do not fail if the schema option is still in the payload, but we log an error
-    assert state is not None
-    with caplog.at_level(logging.WARNING):
-        assert (
-            "The 'schema' option has been removed, "
-            "please remove it from your configuration" in caplog.text
-        )
 
 
 @pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])

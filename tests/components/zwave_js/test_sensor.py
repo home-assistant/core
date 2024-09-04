@@ -23,6 +23,10 @@ from homeassistant.components.zwave_js.const import (
     SERVICE_RESET_METER,
 )
 from homeassistant.components.zwave_js.helpers import get_valueless_base_unique_id
+from homeassistant.components.zwave_js.sensor import (
+    CONTROLLER_STATISTICS_KEY_MAP,
+    NODE_STATISTICS_KEY_MAP,
+)
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
@@ -54,6 +58,8 @@ from .common import (
     POWER_SENSOR,
     VOLTAGE_SENSOR,
 )
+
+from tests.common import MockConfigEntry
 
 
 async def test_numeric_sensor(
@@ -522,13 +528,18 @@ async def test_reset_meter(
         "test", 1, "test"
     )
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
             DOMAIN,
             SERVICE_RESET_METER,
             {ATTR_ENTITY_ID: METER_ENERGY_SENSOR},
             blocking=True,
         )
+
+    assert str(err.value) == (
+        "Failed to reset meters on node Node(node_id=102) endpoint 0: "
+        "zwave_error: Z-Wave error 1 - test"
+    )
 
 
 async def test_meter_attributes(
@@ -749,6 +760,54 @@ NODE_STATISTICS_SUFFIXES_UNKNOWN = {
     "round_trip_time": 6,
     "rssi": 7,
 }
+
+
+async def test_statistics_sensors_migration(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    zp3111_state,
+    client,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test statistics migration sensor."""
+    node = Node(client, copy.deepcopy(zp3111_state))
+    client.driver.controller.nodes[node.node_id] = node
+
+    entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
+    entry.add_to_hass(hass)
+
+    controller_base_unique_id = f"{client.driver.controller.home_id}.1.statistics"
+    node_base_unique_id = f"{client.driver.controller.home_id}.22.statistics"
+
+    # Create entity registry records for the old statistics keys
+    for base_unique_id, key_map in (
+        (controller_base_unique_id, CONTROLLER_STATISTICS_KEY_MAP),
+        (node_base_unique_id, NODE_STATISTICS_KEY_MAP),
+    ):
+        # old key
+        for key in key_map.values():
+            entity_registry.async_get_or_create(
+                "sensor", DOMAIN, f"{base_unique_id}_{key}"
+            )
+
+    # Set up integration
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Validate that entity unique ID's have changed
+    for base_unique_id, key_map in (
+        (controller_base_unique_id, CONTROLLER_STATISTICS_KEY_MAP),
+        (node_base_unique_id, NODE_STATISTICS_KEY_MAP),
+    ):
+        for new_key, old_key in key_map.items():
+            # If the key has changed, the old entity should not exist
+            if new_key != old_key:
+                assert not entity_registry.async_get_entity_id(
+                    "sensor", DOMAIN, f"{base_unique_id}_{old_key}"
+                )
+            assert entity_registry.async_get_entity_id(
+                "sensor", DOMAIN, f"{base_unique_id}_{new_key}"
+            )
 
 
 async def test_statistics_sensors_no_last_seen(

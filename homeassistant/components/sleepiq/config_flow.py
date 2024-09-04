@@ -28,22 +28,20 @@ class SleepIQFlowHandler(ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self._reauth_entry: ConfigEntry | None = None
 
-    async def async_step_import(
-        self, import_config: dict[str, Any]
-    ) -> ConfigFlowResult:
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Import a SleepIQ account as a config entry.
 
         This flow is triggered by 'async_setup' for configured accounts.
         """
-        await self.async_set_unique_id(import_config[CONF_USERNAME].lower())
+        await self.async_set_unique_id(import_data[CONF_USERNAME].lower())
         self._abort_if_unique_id_configured()
 
-        if error := await try_connection(self.hass, import_config):
+        if error := await try_connection(self.hass, import_data):
             _LOGGER.error("Could not authenticate with SleepIQ server: %s", error)
             return self.async_abort(reason=error)
 
         return self.async_create_entry(
-            title=import_config[CONF_USERNAME], data=import_config
+            title=import_data[CONF_USERNAME], data=import_data
         )
 
     async def async_step_user(
