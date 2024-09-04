@@ -52,7 +52,7 @@ SENSORS_TYPE_LOAD_AVG = "sensors_load_avg"
 SENSORS_TYPE_RATES = "sensors_rates"
 SENSORS_TYPE_TEMPERATURES = "sensors_temperatures"
 
-WrtDevice = namedtuple("WrtDevice", ["ip", "name", "connected_to"])
+WrtDevice = namedtuple("WrtDevice", ["ip", "name", "connected_to"])  # noqa: PYI024
 
 _LOGGER = logging.getLogger(__name__)
 

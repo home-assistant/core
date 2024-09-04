@@ -109,7 +109,11 @@
     }
   },
   "services": {
-    "sequence_effect": "mdi:playlist-play",
-    "random_effect": "mdi:shuffle-variant"
+    "sequence_effect": {
+      "service": "mdi:playlist-play"
+    },
+    "random_effect": {
+      "service": "mdi:shuffle-variant"
+    }
   }
 }

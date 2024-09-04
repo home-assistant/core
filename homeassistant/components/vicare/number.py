@@ -233,30 +233,30 @@ def _build_entities(
 ) -> list[ViCareNumber]:
     """Create ViCare number entities for a device."""
 
-    entities: list[ViCareNumber] = [
-        ViCareNumber(
-            device.api,
-            device.config,
-            description,
-        )
-        for device in device_list
-        for description in DEVICE_ENTITY_DESCRIPTIONS
-        if is_supported(description.key, description, device.api)
-    ]
-
-    entities.extend(
-        [
+    entities: list[ViCareNumber] = []
+    for device in device_list:
+        # add device entities
+        entities.extend(
             ViCareNumber(
-                circuit,
-                device.config,
                 description,
+                device.config,
+                device.api,
             )
-            for device in device_list
+            for description in DEVICE_ENTITY_DESCRIPTIONS
+            if is_supported(description.key, description, device.api)
+        )
+        # add component entities
+        entities.extend(
+            ViCareNumber(
+                description,
+                device.config,
+                device.api,
+                circuit,
+            )
             for circuit in get_circuits(device.api)
             for description in CIRCUIT_ENTITY_DESCRIPTIONS
             if is_supported(description.key, description, circuit)
-        ]
-    )
+        )
     return entities
 
 
@@ -283,12 +283,13 @@ class ViCareNumber(ViCareEntity, NumberEntity):
 
     def __init__(
         self,
-        api: PyViCareHeatingDeviceComponent,
-        device_config: PyViCareDeviceConfig,
         description: ViCareNumberEntityDescription,
+        device_config: PyViCareDeviceConfig,
+        device: PyViCareDevice,
+        component: PyViCareHeatingDeviceComponent | None = None,
     ) -> None:
         """Initialize the number."""
-        super().__init__(device_config, api, description.key)
+        super().__init__(description.key, device_config, device, component)
         self.entity_description = description
 
     @property

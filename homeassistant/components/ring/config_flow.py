@@ -17,6 +17,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_2FA, DOMAIN
 
@@ -31,11 +32,13 @@ STEP_REAUTH_DATA_SCHEMA = vol.Schema({vol.Required(CONF_PASSWORD): str})
 async def validate_input(hass: HomeAssistant, data: dict[str, str]) -> dict[str, Any]:
     """Validate the user input allows us to connect."""
 
-    auth = Auth(f"{APPLICATION_NAME}/{ha_version}")
+    auth = Auth(
+        f"{APPLICATION_NAME}/{ha_version}",
+        http_client_session=async_get_clientsession(hass),
+    )
 
     try:
-        token = await hass.async_add_executor_job(
-            auth.fetch_token,
+        token = await auth.async_fetch_token(
             data[CONF_USERNAME],
             data[CONF_PASSWORD],
             data.get(CONF_2FA),

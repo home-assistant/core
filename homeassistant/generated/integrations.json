@@ -309,6 +309,12 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
+    "anthropic": {
+      "name": "Anthropic Conversation",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "anwb_energie": {
       "name": "ANWB Energie",
       "integration_type": "virtual",
@@ -408,7 +414,7 @@
       "iot_class": "local_polling"
     },
     "aquacell": {
-      "name": "Aquacell",
+      "name": "AquaCell",
       "integration_type": "device",
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -449,6 +455,11 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "artsound": {
+      "name": "ArtSound",
+      "integration_type": "virtual",
+      "supported_by": "linkplay"
+    },
     "aruba": {
       "name": "Aruba",
       "integrations": {
@@ -483,23 +494,6 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_polling"
-    },
-    "asterisk": {
-      "name": "Asterisk",
-      "integrations": {
-        "asterisk_cdr": {
-          "integration_type": "hub",
-          "config_flow": false,
-          "iot_class": "local_polling",
-          "name": "Asterisk Call Detail Records"
-        },
-        "asterisk_mbox": {
-          "integration_type": "hub",
-          "config_flow": false,
-          "iot_class": "local_push",
-          "name": "Asterisk Voicemail"
-        }
-      }
     },
     "asuswrt": {
       "name": "ASUSWRT",
@@ -2060,10 +2054,22 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
-    "fujitsu_anywair": {
-      "name": "Fujitsu anywAIR",
-      "integration_type": "virtual",
-      "supported_by": "advantage_air"
+    "fujitsu": {
+      "name": "Fujitsu",
+      "integrations": {
+        "fujitsu_anywair": {
+          "integration_type": "virtual",
+          "config_flow": false,
+          "supported_by": "advantage_air",
+          "name": "Fujitsu anywAIR"
+        },
+        "fujitsu_fglair": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "cloud_polling",
+          "name": "FGLair"
+        }
+      }
     },
     "fully_kiosk": {
       "name": "Fully Kiosk Browser",
@@ -3172,7 +3178,7 @@
     "lcn": {
       "name": "LCN",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "local_push"
     },
     "ld2410_ble": {
@@ -3350,12 +3356,6 @@
       "config_flow": false,
       "iot_class": "cloud_push"
     },
-    "logi_circle": {
-      "name": "Logi Circle",
-      "integration_type": "hub",
-      "config_flow": true,
-      "iot_class": "cloud_polling"
-    },
     "logitech": {
       "name": "Logitech",
       "integrations": {
@@ -3459,12 +3459,6 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_push"
-    },
-    "manual": {
-      "name": "Manual Alarm Control Panel",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "calculated"
     },
     "marantz": {
       "name": "Marantz",
@@ -4046,6 +4040,12 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_polling"
+    },
+    "nice_go": {
+      "name": "Nice G.O.",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_push"
     },
     "nightscout": {
       "name": "Nightscout",
@@ -5134,6 +5134,23 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
+    "roth": {
+      "name": "Roth",
+      "integrations": {
+        "touchline": {
+          "integration_type": "hub",
+          "config_flow": false,
+          "iot_class": "local_polling",
+          "name": "Roth Touchline"
+        },
+        "touchline_sl": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "cloud_polling",
+          "name": "Roth Touchline SL"
+        }
+      }
+    },
     "rova": {
       "name": "ROVA",
       "integration_type": "hub",
@@ -5587,6 +5604,12 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_polling"
+    },
+    "smlight": {
+      "name": "SMLIGHT SLZB",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
     },
     "sms": {
       "name": "SMS notifications via GSM-modem",
@@ -6291,12 +6314,6 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
-    "touchline": {
-      "name": "Roth Touchline",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "local_polling"
-    },
     "tplink": {
       "name": "TP-Link",
       "integrations": {
@@ -6988,8 +7005,14 @@
         "yale_home": {
           "integration_type": "virtual",
           "config_flow": false,
-          "supported_by": "august",
+          "supported_by": "yale",
           "name": "Yale Home"
+        },
+        "yale": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "cloud_push",
+          "name": "Yale"
         }
       }
     },
@@ -7228,6 +7251,12 @@
       "integration_type": "helper",
       "config_flow": true,
       "iot_class": "local_push"
+    },
+    "manual": {
+      "name": "Manual Alarm Control Panel",
+      "integration_type": "helper",
+      "config_flow": false,
+      "iot_class": "calculated"
     },
     "min_max": {
       "integration_type": "helper",
