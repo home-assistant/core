@@ -32,9 +32,9 @@ from homeassistant.components.recorder.queries import (
     get_migration_changes,
     select_event_type_ids,
 )
-from homeassistant.components.recorder.tasks import EntityIDPostMigrationTask
 from homeassistant.components.recorder.util import (
     execute_stmt_lambda_element,
+    get_index_by_name,
     session_scope,
 )
 from homeassistant.core import HomeAssistant
@@ -333,6 +333,10 @@ async def test_migrate_events_context_ids(
         == migration.EventsContextIDMigration.migration_version
     )
 
+    # Check the index which will be removed by the migrator no longer exists
+    with session_scope(hass=hass) as session:
+        assert get_index_by_name(session, "states", "ix_states_context_id") is None
+
 
 @pytest.mark.parametrize("enable_migrate_context_ids", [True])
 @pytest.mark.usefixtures("db_schema_32")
@@ -530,6 +534,10 @@ async def test_migrate_states_context_ids(
         migration_changes[migration.StatesContextIDMigration.migration_id]
         == migration.StatesContextIDMigration.migration_version
     )
+
+    # Check the index which will be removed by the migrator no longer exists
+    with session_scope(hass=hass) as session:
+        assert get_index_by_name(session, "states", "ix_states_context_id") is None
 
 
 @pytest.mark.parametrize("enable_migrate_event_type_ids", [True])
@@ -737,7 +745,7 @@ async def test_post_migrate_entity_ids(
 
     await _async_wait_migration_done(hass)
     # This is a threadsafe way to add a task to the recorder
-    recorder_mock.queue_task(EntityIDPostMigrationTask())
+    recorder_mock.queue_task(migration.EntityIDPostMigrationTask())
     await _async_wait_migration_done(hass)
 
     def _fetch_migrated_states():

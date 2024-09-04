@@ -10,20 +10,11 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_NAME
-from homeassistant.core import HomeAssistant, callback
 from homeassistant.util import slugify
 
 from .const import DEFAULT_HOST, DEFAULT_NAME, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-
-
-@callback
-def solarlog_entries(hass: HomeAssistant) -> set[str]:
-    """Return the hosts already configured."""
-    return {
-        entry.data[CONF_HOST] for entry in hass.config_entries.async_entries(DOMAIN)
-    }
 
 
 class SolarLogConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -35,12 +26,6 @@ class SolarLogConfigFlow(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize the config flow."""
         self._errors: dict = {}
-
-    def _host_in_configuration_exists(self, host: str) -> bool:
-        """Return True if host exists in configuration."""
-        if host in solarlog_entries(self.hass):
-            return True
-        return False
 
     def _parse_url(self, host: str) -> str:
         """Return parsed host url."""
@@ -72,12 +57,13 @@ class SolarLogConfigFlow(ConfigFlow, domain=DOMAIN):
         """Step when user initializes a integration."""
         self._errors = {}
         if user_input is not None:
-            user_input[CONF_NAME] = slugify(user_input[CONF_NAME])
             user_input[CONF_HOST] = self._parse_url(user_input[CONF_HOST])
 
-            if self._host_in_configuration_exists(user_input[CONF_HOST]):
-                self._errors[CONF_HOST] = "already_configured"
-            elif await self._test_connection(user_input[CONF_HOST]):
+            self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
+
+            user_input[CONF_NAME] = slugify(user_input[CONF_NAME])
+
+            if await self._test_connection(user_input[CONF_HOST]):
                 return self.async_create_entry(
                     title=user_input[CONF_NAME], data=user_input
                 )

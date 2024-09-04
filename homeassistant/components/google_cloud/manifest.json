@@ -7,5 +7,8 @@
   "documentation": "https://www.home-assistant.io/integrations/google_cloud",
   "integration_type": "service",
   "iot_class": "cloud_push",
-  "requirements": ["google-cloud-texttospeech==2.17.2"]
+  "requirements": [
+    "google-cloud-texttospeech==2.17.2",
+    "google-cloud-speech==2.27.0"
+  ]
 }

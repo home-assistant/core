@@ -6,3 +6,6 @@
 !script/
 script/hassfest/docker/
 !script/hassfest/docker/entrypoint.sh
+
+# Temporary files
+**/__pycache__
