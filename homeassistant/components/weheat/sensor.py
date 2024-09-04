@@ -11,13 +11,18 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import UnitOfPower
+from homeassistant.const import UnitOfPower, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from . import WeheatConfigEntry
-from .const import DISPLAY_PRECISION_COP, DISPLAY_PRECISION_WATTS
+from .const import (
+    DISPLAY_PRECISION_COP,
+    DISPLAY_PRECISION_WATER_TEMP,
+    DISPLAY_PRECISION_WATTS,
+    SENSOR_DHW_KEY,
+)
 from .coordinator import WeheatDataUpdateCoordinator
 from .entity import WeheatEntity
 
@@ -55,6 +60,67 @@ SENSORS = [
         suggested_display_precision=DISPLAY_PRECISION_COP,
         value_fn=lambda status: status.cop,
     ),
+    WeHeatSensorEntityDescription(
+        translation_key="water_inlet_temperature",
+        key="water_inlet_temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=DISPLAY_PRECISION_WATER_TEMP,
+        value_fn=lambda status: status.water_inlet_temperature,
+    ),
+    WeHeatSensorEntityDescription(
+        translation_key="water_outlet_temperature",
+        key="water_outlet_temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=DISPLAY_PRECISION_WATER_TEMP,
+        value_fn=lambda status: status.water_outlet_temperature,
+    ),
+    WeHeatSensorEntityDescription(
+        translation_key="ch_inlet_temperature",
+        key="ch_inlet_temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=DISPLAY_PRECISION_WATER_TEMP,
+        value_fn=lambda status: status.water_house_in_temperature,
+    ),
+    WeHeatSensorEntityDescription(
+        translation_key="outside_temperature",
+        key="outside_temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=DISPLAY_PRECISION_WATER_TEMP,
+        value_fn=lambda status: status.air_inlet_temperature,
+    ),
+    WeHeatSensorEntityDescription(
+        translation_key="dhw_top_temperature",
+        key="dhw_top_temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=DISPLAY_PRECISION_WATER_TEMP,
+        value_fn=lambda status: status.dhw_top_temperature,
+    ),
+    WeHeatSensorEntityDescription(
+        translation_key="dhw_bottom_temperature",
+        key="dhw_bottom_temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=DISPLAY_PRECISION_WATER_TEMP,
+        value_fn=lambda status: status.dhw_bottom_temperature,
+    ),
+    WeHeatSensorEntityDescription(
+        translation_key="heat_pump_state",
+        key="heat_pump_state",
+        device_class=SensorDeviceClass.ENUM,
+        options=[s.name.lower() for s in HeatPump.State],
+        value_fn=lambda status: status.heat_pump_state.name.lower(),
+    ),
 ]
 
 
@@ -68,6 +134,9 @@ async def async_setup_entry(
         WeheatHeatPumpSensor(coordinator, entity_description)
         for entity_description in SENSORS
         for coordinator in entry.runtime_data
+        if SENSOR_DHW_KEY
+        not in entity_description.key  # only add Domestic Hot water (DHW) related sensors if the install has a DHW vessel
+        or coordinator.heat_pump_info.has_dhw
     )
 
 
