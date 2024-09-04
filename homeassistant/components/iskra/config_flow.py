@@ -25,7 +25,14 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import selector
+from homeassistant.helpers.selector import (
+    NumberSelector,
+    NumberSelectorConfig,
+    NumberSelectorMode,
+    SelectSelector,
+    SelectSelectorConfig,
+    SelectSelectorMode,
+)
 
 from .const import DOMAIN
 
@@ -35,10 +42,10 @@ _LOGGER = logging.getLogger(__name__)
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): str,
-        vol.Required(CONF_PROTOCOL, default="rest_api"): selector.SelectSelector(
-            selector.SelectSelectorConfig(
+        vol.Required(CONF_PROTOCOL, default="rest_api"): SelectSelector(
+            SelectSelectorConfig(
                 options=["rest_api", "modbus_tcp"],
-                mode=selector.SelectSelectorMode.LIST,
+                mode=SelectSelectorMode.LIST,
                 translation_key="protocol",
             ),
         ),
@@ -58,7 +65,9 @@ STEP_MODBUS_TCP_DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_PORT, default=10001): vol.All(
             vol.Coerce(int), vol.Range(min=0, max=65535)
         ),
-        vol.Required(CONF_ADDRESS, default=33): int,
+        vol.Required(CONF_ADDRESS, default=33): NumberSelector(
+            NumberSelectorConfig(min=1, max=255, mode=NumberSelectorMode.BOX)
+        ),
     }
 )
 
@@ -82,7 +91,6 @@ async def test_rest_api_connection(host: str, user_input: dict[str, Any]) -> Bas
 
 async def test_modbus_connection(host: str, user_input: dict[str, Any]) -> BasicInfo:
     """Test the Modbus connection."""
-
     modbus_api = Modbus(
         ip_address=host,
         protocol="tcp",
@@ -191,17 +199,17 @@ class IskraConfigFlowFlow(ConfigFlow, domain=DOMAIN):
 
         # If there's user_input, check the connection.
         if user_input is not None:
-            if user_input[CONF_ADDRESS] not in range(1, 256):
-                errors["base"] = "address_range"
-            else:
-                try:
-                    device_info = await test_modbus_connection(self.host, user_input)
+            # convert to integer
+            user_input[CONF_ADDRESS] = int(user_input[CONF_ADDRESS])
 
-                # If the connection failed, show an error.
-                except CannotConnect:
-                    errors["base"] = "cannot_connect"
-                except UnknownException:
-                    errors["base"] = "unknown"
+            try:
+                device_info = await test_modbus_connection(self.host, user_input)
+
+            # If the connection failed, show an error.
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            except UnknownException:
+                errors["base"] = "unknown"
 
             # If the connection was successful, create the device.
             if not errors:

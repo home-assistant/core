@@ -6,6 +6,9 @@
         "description": "Enter the IP address of your Iskra Device and select protocol.",
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "Hostname or IP address of your Iskra device."
         }
       },
       "authentication": {
@@ -22,11 +25,14 @@
         "data": {
           "port": "[%key:common::config_flow::data::port%]",
           "address": "Modbus address"
+        },
+        "data_description": {
+          "port": "Port number can be found in the device's settings menu.",
+          "address": "Modbus address can be found in the device's settings menu."
         }
       }
     },
     "error": {
-      "address_range": "Modbus address must be in 0-255 range",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
