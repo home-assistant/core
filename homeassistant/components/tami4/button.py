@@ -28,7 +28,7 @@ class Tami4EdgeButtonEntityDescription(ButtonEntityDescription):
 
 @dataclass(frozen=True, kw_only=True)
 class Tami4EdgeDrinkButtonEntityDescription(ButtonEntityDescription):
-    """A class that describes Tami4Edge button entities."""
+    """A class that describes Tami4Edge Drink button entities."""
 
     press_fn: Callable[[Tami4EdgeAPI, Drink], None]
 
@@ -46,20 +46,25 @@ async def async_setup_entry(
     """Perform the setup for Tami4Edge."""
 
     api: Tami4EdgeAPI = hass.data[DOMAIN][entry.entry_id][API]
+
+    async_add_entities([Tami4EdgeButton(api, BOIL_WATER_BUTTON)])
+
     device = await hass.async_add_executor_job(api.get_device)
     drinks = device.drinks
 
-    drink_buttons = []
-    for drink in drinks:
-        drink_button = Tami4EdgeDrinkButtonEntityDescription(
-            key=drink.id,
-            name=drink.name,
-            press_fn=lambda api, drink: api.prepare_drink(drink),
+    drink_buttons = [
+        Tami4EdgeDrinkButton(
+            api=api,
+            entity_description=Tami4EdgeDrinkButtonEntityDescription(
+                key=drink.id,
+                name=drink.name,
+                press_fn=lambda api, drink: api.prepare_drink(drink),
+            ),
+            drink=drink,
         )
-        drink_buttons.append(Tami4EdgeDrinkButton(api, drink_button, drink))
-
+        for drink in drinks
+    ]
     async_add_entities(drink_buttons)
-    async_add_entities([Tami4EdgeButton(api, BOIL_WATER_BUTTON)])
 
 
 class Tami4EdgeButton(Tami4EdgeBaseEntity, ButtonEntity):
