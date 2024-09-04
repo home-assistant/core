@@ -372,11 +372,6 @@ class SqueezeBoxEntity(MediaPlayerEntity):
         ]
 
     @property
-    def sync_group(self) -> list[str]:
-        """List players we are synced with. Deprecated."""
-        return self.group_members
-
-    @property
     def query_result(self) -> dict | bool:
         """Return the result from the call_query service."""
         return self._query_result
