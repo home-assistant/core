@@ -240,10 +240,7 @@ class IskraConfigFlowFlow(ConfigFlow, domain=DOMAIN):
             data={
                 CONF_HOST: host,
                 CONF_PROTOCOL: protocol,
-                CONF_PORT: user_input.get(CONF_PORT),
-                CONF_ADDRESS: user_input.get(CONF_ADDRESS),
-                CONF_USERNAME: user_input.get(CONF_USERNAME),
-                CONF_PASSWORD: user_input.get(CONF_PASSWORD),
+                **user_input
             },
         )
 
