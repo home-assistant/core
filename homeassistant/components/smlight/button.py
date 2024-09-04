@@ -48,6 +48,7 @@ BUTTONS: Final = [
     SmButtonDescription(
         key="zigbee_flash_mode",
         translation_key="zigbee_flash_mode",
+        entity_registry_enabled_default=False,
         press_fn=lambda cmd: cmd.zb_bootloader(),
     ),
 ]

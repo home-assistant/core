@@ -28,6 +28,7 @@ def platforms() -> Platform | list[Platform]:
         ("zigbee_restart", "zb_restart"),
     ],
 )
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_buttons(
     hass: HomeAssistant,
     entity_id: str,
@@ -58,3 +59,19 @@ async def test_buttons(
 
     assert len(mock_method.mock_calls) == 1
     mock_method.assert_called_with()
+
+
+@pytest.mark.usefixtures("mock_smlight_client")
+async def test_disabled_by_default_button(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the disabled by default flash mode button."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert not hass.states.get("button.mock_title_zigbee_flash_mode")
+
+    assert (entry := entity_registry.async_get("button.mock_title_zigbee_flash_mode"))
+    assert entry.disabled
+    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
