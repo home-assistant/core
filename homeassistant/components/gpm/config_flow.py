@@ -10,9 +10,15 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_TYPE, CONF_URL
 from homeassistant.helpers.issue_registry import async_create_issue
+from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
 
-from ._manager import GPMError, RepositoryManager, RepositoryType
-from .const import DOMAIN, PATH_CLONE_BASEDIR, PATH_INSTALL_BASEDIR
+from ._manager import GPMError, RepositoryManager, RepositoryType, UpdateStrategy
+from .const import (
+    CONF_UPDATE_STRATEGY,
+    DOMAIN,
+    PATH_CLONE_BASEDIR,
+    PATH_INSTALL_BASEDIR,
+)
 from .repairs import create_restart_issue
 
 _LOGGER = logging.getLogger(__name__)
@@ -20,8 +26,19 @@ _LOGGER = logging.getLogger(__name__)
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_URL): str,
-        vol.Required(CONF_TYPE, default=RepositoryType.INTEGRATION): vol.In(
-            (RepositoryType.INTEGRATION, RepositoryType.RESOURCE)
+        vol.Required(CONF_TYPE, default=RepositoryType.INTEGRATION): SelectSelector(
+            SelectSelectorConfig(
+                options=list(map(str, RepositoryType)),
+                translation_key=CONF_TYPE,
+            )
+        ),
+        vol.Required(
+            CONF_UPDATE_STRATEGY, default=UpdateStrategy.LATEST_TAG
+        ): SelectSelector(
+            SelectSelectorConfig(
+                options=list(map(str, UpdateStrategy)),
+                translation_key=CONF_UPDATE_STRATEGY,
+            )
         ),
     }
 )
@@ -43,6 +60,7 @@ class GPMConfigFlow(ConfigFlow, domain=DOMAIN):
                 RepositoryType(user_input[CONF_TYPE]),
                 self.hass.config.path(PATH_CLONE_BASEDIR),
                 self.hass.config.path(PATH_INSTALL_BASEDIR),
+                UpdateStrategy(user_input[CONF_UPDATE_STRATEGY]),
             )
             await self.async_set_unique_id(manager.slug)
             self._abort_if_unique_id_configured()
@@ -69,8 +87,9 @@ class GPMConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(
                     title=manager.slug,
                     data={
-                        "url": user_input[CONF_URL],
-                        "type": user_input[CONF_TYPE],
+                        CONF_URL: user_input[CONF_URL],
+                        CONF_TYPE: user_input[CONF_TYPE],
+                        CONF_UPDATE_STRATEGY: user_input[CONF_UPDATE_STRATEGY],
                     },
                 )
 

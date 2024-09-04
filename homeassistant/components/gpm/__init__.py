@@ -6,8 +6,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_TYPE, CONF_URL, Platform
 from homeassistant.core import HomeAssistant
 
-from ._manager import RepositoryManager, RepositoryType
-from .const import PATH_CLONE_BASEDIR, PATH_INSTALL_BASEDIR
+from ._manager import RepositoryManager, RepositoryType, UpdateStrategy
+from .const import CONF_UPDATE_STRATEGY, PATH_CLONE_BASEDIR, PATH_INSTALL_BASEDIR
 
 PLATFORMS: list[Platform] = [Platform.UPDATE]
 
@@ -21,6 +21,7 @@ def _get_manager(hass: HomeAssistant, entry: GPMConfigEntry) -> RepositoryManage
         RepositoryType(entry.data[CONF_TYPE]),
         hass.config.path(PATH_CLONE_BASEDIR),
         hass.config.path(PATH_INSTALL_BASEDIR),
+        UpdateStrategy(entry.data[CONF_UPDATE_STRATEGY]),
     )
 
 

@@ -4,7 +4,7 @@ When we speak about "version" in this file, we mean either a tag or a commit has
 """
 
 from collections.abc import Callable, Iterable
-from enum import StrEnum
+from enum import StrEnum, auto
 import functools
 import logging
 from pathlib import Path
@@ -20,20 +20,20 @@ _LOGGER = logging.getLogger(__name__)
 class RepositoryType(StrEnum):
     """Type of GIT repo."""
 
-    INTEGRATION = "integration"
-    RESOURCE = "resource"
+    INTEGRATION = auto()
+    RESOURCE = auto()
 
 
 class UpdateStrategy(StrEnum):
     """Determines strategy for how to pick new versions to install."""
 
-    LATEST_TAG = "latest_tag"
+    LATEST_TAG = auto()
     """Install the latest stable tag."""
 
-    LATEST_UNSTABLE_TAG = "latest_unstable_tag"
-    """Install the latest tag, including dev, alpha, beta and release candidate versions."""
+    LATEST_UNSTABLE_TAG = auto()
+    """Install the latest tag, including dev, alpha, beta and RC versions."""
 
-    LATEST_COMMIT = "latest_commit"
+    LATEST_COMMIT = auto()
     """Install the latest commit from default branch."""
 
 
@@ -68,7 +68,7 @@ class RepositoryManager:
         """Ensure that the GIT repo is cloned."""
 
         @functools.wraps(func)
-        def wrapper(self: RepositoryManager, *args: Any, **kwargs: Any) -> Any:
+        def wrapper(self: "RepositoryManager", *args: Any, **kwargs: Any) -> Any:
             if not self.is_cloned:
                 raise NotClonedError
             return func(self, *args, **kwargs)
@@ -88,7 +88,7 @@ class RepositoryManager:
         """Ensure that the GIT repo is installed as a package."""
 
         @functools.wraps(func)
-        def wrapper(self: RepositoryManager, *args: Any, **kwargs: Any) -> Any:
+        def wrapper(self: "RepositoryManager", *args: Any, **kwargs: Any) -> Any:
             if not self.is_installed:
                 raise NotInstalledError
             return func(self, *args, **kwargs)
@@ -110,7 +110,7 @@ class RepositoryManager:
 
         Given the list of tags, determine the latest version according to the semantic versioning.
         Invalid versions are always ignored.
-        If `only_stable` is True, alpha, beta, dev, and release candidate versions are ignored.
+        If `only_stable` is True, alpha, beta, dev, and RC versions are ignored.
         If no semantically valid versions are found, return None.
         """
         tags = map(str, self._repo.tags)
@@ -138,6 +138,7 @@ class RepositoryManager:
     @ensure_cloned
     def get_latest_version(self) -> str:
         """Return the latest version."""
+        latest_tag = None
         if self.update_strategy == UpdateStrategy.LATEST_TAG:
             latest_tag = self._get_latest_tag()
         if self.update_strategy == UpdateStrategy.LATEST_UNSTABLE_TAG:

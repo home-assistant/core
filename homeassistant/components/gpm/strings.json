@@ -5,7 +5,8 @@
         "title": "Fill in GIT repository details",
         "data": {
           "url": "[%key:common::config_flow::data::url%]",
-          "type": "Type"
+          "type": "Repository type",
+          "update_strategy": "Update strategy"
         }
       }
     },
@@ -15,6 +16,21 @@
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "selector": {
+    "type": {
+      "options": {
+        "repository": "Repository",
+        "integration": "Integration"
+      }
+    },
+    "update_strategy": {
+      "options": {
+        "latest_tag": "Latest tag",
+        "latest_unstable_tag": "Latest unstable tag (including dev, alpha, beta, RC versions)",
+        "latest_commit": "Latest commit"
+      }
     }
   },
   "issues": {
