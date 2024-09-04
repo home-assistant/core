@@ -6,6 +6,7 @@ import pytest
 import requests_mock
 
 from homeassistant.components.input_number import ATTR_VALUE, SERVICE_SET_VALUE
+from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
 from homeassistant.components.wallbox import InvalidAuth
 from homeassistant.components.wallbox.const import (
     CHARGER_ENERGY_PRICE_KEY,
@@ -236,12 +237,12 @@ async def test_wallbox_number_class_icp_energy(
 
         mock_request.post(
             "https://api.wall-box.com/chargers/config/12345",
-            json=json.loads(json.dumps({CHARGER_MAX_ICP_CURRENT_KEY: 10})),
+            json={CHARGER_MAX_ICP_CURRENT_KEY: 10},
             status_code=200,
         )
 
         await hass.services.async_call(
-            "number",
+            NUMBER_DOMAIN,
             SERVICE_SET_VALUE,
             {
                 ATTR_ENTITY_ID: MOCK_NUMBER_ENTITY_ICP_CURRENT_ID,
@@ -267,13 +268,13 @@ async def test_wallbox_number_class_icp_energy_auth_error(
         )
         mock_request.post(
             "https://api.wall-box.com/chargers/config/12345",
-            json=json.loads(json.dumps({CHARGER_MAX_ICP_CURRENT_KEY: 10})),
+            json={CHARGER_MAX_ICP_CURRENT_KEY: 10},
             status_code=403,
         )
 
         with pytest.raises(InvalidAuth):
             await hass.services.async_call(
-                "number",
+                NUMBER_DOMAIN,
                 SERVICE_SET_VALUE,
                 {
                     ATTR_ENTITY_ID: MOCK_NUMBER_ENTITY_ICP_CURRENT_ID,
@@ -299,13 +300,13 @@ async def test_wallbox_number_class_icp_energy_connection_error(
         )
         mock_request.post(
             "https://api.wall-box.com/chargers/config/12345",
-            json=json.loads(json.dumps({CHARGER_MAX_ICP_CURRENT_KEY: 10})),
+            json={CHARGER_MAX_ICP_CURRENT_KEY: 10},
             status_code=404,
         )
 
         with pytest.raises(ConnectionError):
             await hass.services.async_call(
-                "number",
+                NUMBER_DOMAIN,
                 SERVICE_SET_VALUE,
                 {
                     ATTR_ENTITY_ID: MOCK_NUMBER_ENTITY_ICP_CURRENT_ID,
