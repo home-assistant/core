@@ -1,4 +1,5 @@
 """Config flow for WeatherflowCloud integration."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -8,7 +9,7 @@ from aiohttp import ClientResponseError
 import voluptuous as vol
 from weatherflow4py.api import WeatherFlowRestAPI
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_TOKEN
 
 from .const import DOMAIN
@@ -26,15 +27,21 @@ async def _validate_api_token(api_token: str) -> dict[str, Any]:
     return {}
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class WeatherFlowCloudConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for WeatherFlowCloud."""
 
     VERSION = 1
 
     async def async_step_reauth(
-        self, user_input: Mapping[str, Any]
-    ) -> config_entries.ConfigFlowResult:
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Handle a flow for reauth."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle a flow initiated by reauthentication."""
         errors = {}
 
         if user_input is not None:
@@ -49,17 +56,18 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         existing_entry,
                         data={CONF_API_TOKEN: api_token},
                         reason="reauth_successful",
+                        reload_even_if_entry_is_unchanged=False,
                     )
 
         return self.async_show_form(
-            step_id="reauth",
+            step_id="reauth_confirm",
             data_schema=vol.Schema({vol.Required(CONF_API_TOKEN): str}),
             errors=errors,
         )
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> config_entries.ConfigFlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
         errors = {}
 

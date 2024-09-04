@@ -1,4 +1,5 @@
 """Test the number entity for HomeWizard."""
+
 from unittest.mock import MagicMock
 
 from homewizard_energy.errors import DisabledError, RequestError
@@ -21,7 +22,7 @@ pytestmark = [
 ]
 
 
-@pytest.mark.parametrize("device_fixture", ["HWE-SKT"])
+@pytest.mark.parametrize("device_fixture", ["HWE-SKT-11", "HWE-SKT-21"])
 async def test_number_entities(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,

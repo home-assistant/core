@@ -19,9 +19,9 @@ from homeassistant.helpers import entity_registry as er
 TEST_PLATFORM = Platform.SWITCH
 pytestmark = pytest.mark.parametrize("platforms", [(TEST_PLATFORM,)])
 
-ENTITY_ID = "switch.f730_cu_3x400v_temporary_lux"
-ENTITY_FRIENDLY_NAME = "F730 CU 3x400V Tempo­rary lux"
-ENTITY_UID = "batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-50004"
+ENTITY_ID = "switch.gotham_city_temporary_lux"
+ENTITY_FRIENDLY_NAME = "Gotham City Tempo\xadrary lux"
+ENTITY_UID = "robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-50004"
 
 
 async def test_entity_registry(
@@ -47,7 +47,6 @@ async def test_attributes(
     assert state.state == STATE_OFF
     assert state.attributes == {
         "friendly_name": ENTITY_FRIENDLY_NAME,
-        "icon": "mdi:water-alert-outline",
     }
 
 
@@ -87,11 +86,26 @@ async def test_api_failure(
     service: str,
 ) -> None:
     """Test handling of exception from API."""
+    mock_myuplink_client.async_set_device_points.side_effect = ClientError
 
     with pytest.raises(HomeAssistantError):
-        mock_myuplink_client.async_set_device_points.side_effect = ClientError
         await hass.services.async_call(
             TEST_PLATFORM, service, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
         )
-        await hass.async_block_till_done()
-        mock_myuplink_client.async_set_device_points.assert_called_once()
+    mock_myuplink_client.async_set_device_points.assert_called_once()
+
+
+@pytest.mark.parametrize(
+    "load_device_points_file",
+    ["device_points_nibe_smo20.json"],
+)
+async def test_entity_registry_smo20(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_myuplink_client: MagicMock,
+    setup_platform: None,
+) -> None:
+    """Test that the entities are registered in the entity registry."""
+
+    entry = entity_registry.async_get(ENTITY_ID)
+    assert entry.unique_id == ENTITY_UID

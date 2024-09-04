@@ -1,8 +1,8 @@
 """Support for Hue binary sensors."""
+
 from __future__ import annotations
 
 from functools import partial
-from typing import TypeAlias
 
 from aiohue.v2 import HueBridgeV2
 from aiohue.v2.controllers.config import (
@@ -36,10 +36,8 @@ from ..bridge import HueBridge
 from ..const import DOMAIN
 from .entity import HueBaseEntity
 
-SensorType: TypeAlias = (
-    CameraMotion | Contact | Motion | EntertainmentConfiguration | Tamper
-)
-ControllerType: TypeAlias = (
+type SensorType = CameraMotion | Contact | Motion | EntertainmentConfiguration | Tamper
+type ControllerType = (
     CameraMotionController
     | ContactController
     | MotionController

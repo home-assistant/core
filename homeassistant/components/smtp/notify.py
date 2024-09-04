@@ -1,4 +1,5 @@
 """Mail (SMTP) notification service."""
+
 from __future__ import annotations
 
 from email.mime.application import MIMEApplication
@@ -18,7 +19,7 @@ from homeassistant.components.notify import (
     ATTR_TARGET,
     ATTR_TITLE,
     ATTR_TITLE_DEFAULT,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA,
     BaseNotificationService,
 )
 from homeassistant.const import (
@@ -59,7 +60,7 @@ PLATFORMS = [Platform.NOTIFY]
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_RECIPIENT): vol.All(cv.ensure_list, [vol.Email()]),
         vol.Required(CONF_SENDER): vol.Email(),
@@ -263,10 +264,6 @@ def _attach_file(hass, atch_name, content_id=""):
             file_name = os.path.basename(atch_name)
             url = "https://www.home-assistant.io/docs/configuration/basic/"
             raise ServiceValidationError(
-                f"Cannot send email with attachment '{file_name}' "
-                f"from directory '{file_path}' which is not secure to load data from. "
-                f"Only folders added to `{allow_list}` are accessible. "
-                f"See {url} for more information.",
                 translation_domain=DOMAIN,
                 translation_key="remote_path_not_allowed",
                 translation_placeholders={
@@ -290,9 +287,9 @@ def _attach_file(hass, atch_name, content_id=""):
             atch_name,
         )
         attachment = MIMEApplication(file_bytes, Name=os.path.basename(atch_name))
-        attachment[
-            "Content-Disposition"
-        ] = f'attachment; filename="{os.path.basename(atch_name)}"'
+        attachment["Content-Disposition"] = (
+            f'attachment; filename="{os.path.basename(atch_name)}"'
+        )
     else:
         if content_id:
             attachment.add_header("Content-ID", f"<{content_id}>")

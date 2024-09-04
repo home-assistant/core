@@ -1,4 +1,5 @@
 """Test the myStrom config flow."""
+
 from unittest.mock import AsyncMock, patch
 
 from pymystrom.exceptions import MyStromConnectionError
@@ -21,7 +22,7 @@ async def test_form_combined(hass: HomeAssistant, mock_setup_entry: AsyncMock) -
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
@@ -37,7 +38,7 @@ async def test_form_combined(hass: HomeAssistant, mock_setup_entry: AsyncMock) -
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "myStrom Device"
     assert result2["data"] == {"host": "1.1.1.1"}
 
@@ -49,7 +50,7 @@ async def test_form_duplicates(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
@@ -65,7 +66,7 @@ async def test_form_duplicates(
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.ABORT
+    assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "already_configured"
 
     mock_session.assert_called_once()
@@ -77,7 +78,7 @@ async def test_wong_answer_from_device(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
     with patch(
@@ -92,7 +93,7 @@ async def test_wong_answer_from_device(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "user"
     assert result2["errors"] == {"base": "cannot_connect"}
 
@@ -107,6 +108,6 @@ async def test_wong_answer_from_device(hass: HomeAssistant) -> None:
             },
         )
         await hass.async_block_till_done()
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "myStrom Device"
     assert result2["data"] == {"host": "1.1.1.1"}

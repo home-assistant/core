@@ -1,4 +1,5 @@
 """Tests for the flux_led integration."""
+
 from __future__ import annotations
 
 import asyncio
@@ -240,12 +241,15 @@ def _patch_discovery(device=None, no_device=False):
 
     @contextmanager
     def _patcher():
-        with patch(
-            "homeassistant.components.flux_led.discovery.AIOBulbScanner.async_scan",
-            new=_discovery,
-        ), patch(
-            "homeassistant.components.flux_led.discovery.AIOBulbScanner.getBulbInfo",
-            return_value=[] if no_device else [device or FLUX_DISCOVERY],
+        with (
+            patch(
+                "homeassistant.components.flux_led.discovery.AIOBulbScanner.async_scan",
+                new=_discovery,
+            ),
+            patch(
+                "homeassistant.components.flux_led.discovery.AIOBulbScanner.getBulbInfo",
+                return_value=[] if no_device else [device or FLUX_DISCOVERY],
+            ),
         ):
             yield
 

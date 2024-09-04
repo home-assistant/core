@@ -1,4 +1,5 @@
 """Tests for the sensors provided by the Luftdaten integration."""
+
 from homeassistant.components.luftdaten.const import DOMAIN
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,

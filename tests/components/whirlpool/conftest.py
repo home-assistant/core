@@ -1,4 +1,5 @@
 """Fixtures for the Whirlpool Sixth Sense integration tests."""
+
 from unittest import mock
 from unittest.mock import AsyncMock, MagicMock
 
@@ -15,10 +16,23 @@ MOCK_SAID4 = "said4"
 
 @pytest.fixture(
     name="region",
-    params=[("EU", Region.EU, Brand.Whirlpool), ("US", Region.US, Brand.Maytag)],
+    params=[("EU", Region.EU), ("US", Region.US)],
 )
-def fixture_region(request):
+def fixture_region(request: pytest.FixtureRequest) -> tuple[str, Region]:
     """Return a region for input."""
+    return request.param
+
+
+@pytest.fixture(
+    name="brand",
+    params=[
+        ("Whirlpool", Brand.Whirlpool),
+        ("KitchenAid", Brand.KitchenAid),
+        ("Maytag", Brand.Maytag),
+    ],
+)
+def fixture_brand(request: pytest.FixtureRequest) -> tuple[str, Brand]:
+    """Return a brand for input."""
     return request.param
 
 
@@ -130,6 +144,8 @@ def side_effect_function(*args, **kwargs):
         return "0"
     if args[0] == "WashCavity_OpStatusBulkDispense1Level":
         return "3"
+
+    return None
 
 
 def get_sensor_mock(said):

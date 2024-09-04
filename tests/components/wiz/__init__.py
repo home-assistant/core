@@ -1,9 +1,10 @@
 """Tests for the WiZ Platform integration."""
 
-from collections.abc import Callable
-from contextlib import contextmanager
+from collections.abc import Callable, Generator
+from contextlib import _GeneratorContextManager, contextmanager
 from copy import deepcopy
 import json
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from pywizlight import SCENES, BulbType, PilotParser, wizlight
@@ -194,7 +195,11 @@ async def setup_integration(hass: HomeAssistant) -> MockConfigEntry:
     return entry
 
 
-def _mocked_wizlight(device, extended_white_range, bulb_type) -> wizlight:
+def _mocked_wizlight(
+    device: dict[str, Any] | None,
+    extended_white_range: list[int] | None,
+    bulb_type: BulbType | None,
+) -> wizlight:
     bulb = MagicMock(auto_spec=wizlight, name="Mocked wizlight")
 
     async def _save_setup_callback(callback: Callable) -> None:
@@ -228,22 +233,29 @@ def _mocked_wizlight(device, extended_white_range, bulb_type) -> wizlight:
     return bulb
 
 
-def _patch_wizlight(device=None, extended_white_range=None, bulb_type=None):
+def _patch_wizlight(
+    device: dict[str, Any] | None = None,
+    extended_white_range: list[int] | None = None,
+    bulb_type: BulbType | None = None,
+) -> _GeneratorContextManager:
     @contextmanager
-    def _patcher():
+    def _patcher() -> Generator[None]:
         bulb = device or _mocked_wizlight(device, extended_white_range, bulb_type)
-        with patch("homeassistant.components.wiz.wizlight", return_value=bulb), patch(
-            "homeassistant.components.wiz.config_flow.wizlight",
-            return_value=bulb,
+        with (
+            patch("homeassistant.components.wiz.wizlight", return_value=bulb),
+            patch(
+                "homeassistant.components.wiz.config_flow.wizlight",
+                return_value=bulb,
+            ),
         ):
             yield
 
     return _patcher()
 
 
-def _patch_discovery():
+def _patch_discovery() -> _GeneratorContextManager[None]:
     @contextmanager
-    def _patcher():
+    def _patcher() -> Generator[None]:
         with patch(
             "homeassistant.components.wiz.discovery.find_wizlights",
             return_value=[DiscoveredBulb(FAKE_IP, FAKE_MAC)],
@@ -254,8 +266,12 @@ def _patch_discovery():
 
 
 async def async_setup_integration(
-    hass, wizlight=None, device=None, extended_white_range=None, bulb_type=None
-):
+    hass: HomeAssistant,
+    wizlight: wizlight | None = None,
+    device: dict[str, Any] | None = None,
+    extended_white_range: list[int] | None = None,
+    bulb_type: BulbType | None = None,
+) -> tuple[wizlight, MockConfigEntry]:
     """Set up the integration with a mock device."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -270,7 +286,9 @@ async def async_setup_integration(
     return bulb, entry
 
 
-async def async_push_update(hass, device, params):
+async def async_push_update(
+    hass: HomeAssistant, device: wizlight, params: dict[str, Any]
+) -> None:
     """Push an update to the device."""
     device.state = PilotParser(params)
     device.status = params.get("state")

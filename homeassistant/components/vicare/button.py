@@ -1,4 +1,5 @@
 """Viessmann ViCare button device."""
+
 from __future__ import annotations
 
 from contextlib import suppress
@@ -39,7 +40,6 @@ BUTTON_DESCRIPTIONS: tuple[ViCareButtonEntityDescription, ...] = (
     ViCareButtonEntityDescription(
         key="activate_onetimecharge",
         translation_key="activate_onetimecharge",
-        icon="mdi:shower-head",
         entity_category=EntityCategory.CONFIG,
         value_getter=lambda api: api.getOneTimeCharge(),
         value_setter=lambda api: api.activateOneTimeCharge(),
@@ -54,9 +54,9 @@ def _build_entities(
 
     return [
         ViCareButton(
-            device.api,
-            device.config,
             description,
+            device.config,
+            device.api,
         )
         for device in device_list
         for description in BUTTON_DESCRIPTIONS
@@ -87,12 +87,12 @@ class ViCareButton(ViCareEntity, ButtonEntity):
 
     def __init__(
         self,
-        api: PyViCareDevice,
-        device_config: PyViCareDeviceConfig,
         description: ViCareButtonEntityDescription,
+        device_config: PyViCareDeviceConfig,
+        device: PyViCareDevice,
     ) -> None:
         """Initialize the button."""
-        super().__init__(device_config, api, description.key)
+        super().__init__(description.key, device_config, device)
         self.entity_description = description
 
     def press(self) -> None:

@@ -1,4 +1,5 @@
 """The tests for the Tasmota binary sensor platform."""
+
 import copy
 from datetime import timedelta
 import json

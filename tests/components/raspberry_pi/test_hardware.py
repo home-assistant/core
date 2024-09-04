@@ -1,4 +1,5 @@
 """Test the Raspberry Pi hardware platform."""
+
 from unittest.mock import patch
 
 import pytest
@@ -18,6 +19,7 @@ async def test_hardware_info(
     """Test we can get the board info."""
     mock_integration(hass, MockModule("hassio"))
     await async_setup_component(hass, HASSIO_DOMAIN, {})
+    await hass.async_block_till_done()
 
     # Setup the config entry
     config_entry = MockConfigEntry(
@@ -70,6 +72,7 @@ async def test_hardware_info_fail(
     """Test async_info raises if os_info is not as expected."""
     mock_integration(hass, MockModule("hassio"))
     await async_setup_component(hass, HASSIO_DOMAIN, {})
+    await hass.async_block_till_done()
 
     # Setup the config entry
     config_entry = MockConfigEntry(

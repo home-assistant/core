@@ -1,58 +1,15 @@
 """Controller for sharing Omada API coordinators between platforms."""
 
 from tplink_omada_client import OmadaSiteClient
-from tplink_omada_client.devices import (
-    OmadaGateway,
-    OmadaSwitch,
-    OmadaSwitchPortDetails,
-)
+from tplink_omada_client.devices import OmadaSwitch
 
 from homeassistant.core import HomeAssistant
 
-from .coordinator import OmadaCoordinator
-
-POLL_SWITCH_PORT = 300
-POLL_GATEWAY = 300
-
-
-class OmadaSwitchPortCoordinator(OmadaCoordinator[OmadaSwitchPortDetails]):  # pylint: disable=hass-enforce-coordinator-module
-    """Coordinator for getting details about ports on a switch."""
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        omada_client: OmadaSiteClient,
-        network_switch: OmadaSwitch,
-    ) -> None:
-        """Initialize my coordinator."""
-        super().__init__(
-            hass, omada_client, f"{network_switch.name} Ports", POLL_SWITCH_PORT
-        )
-        self._network_switch = network_switch
-
-    async def poll_update(self) -> dict[str, OmadaSwitchPortDetails]:
-        """Poll a switch's current state."""
-        ports = await self.omada_client.get_switch_ports(self._network_switch)
-        return {p.port_id: p for p in ports}
-
-
-class OmadaGatewayCoordinator(OmadaCoordinator[OmadaGateway]):  # pylint: disable=hass-enforce-coordinator-module
-    """Coordinator for getting details about the site's gateway."""
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        omada_client: OmadaSiteClient,
-        mac: str,
-    ) -> None:
-        """Initialize my coordinator."""
-        super().__init__(hass, omada_client, "Gateway", POLL_GATEWAY)
-        self.mac = mac
-
-    async def poll_update(self) -> dict[str, OmadaGateway]:
-        """Poll a the gateway's current state."""
-        gateway = await self.omada_client.get_gateway(self.mac)
-        return {self.mac: gateway}
+from .coordinator import (
+    OmadaClientsCoordinator,
+    OmadaGatewayCoordinator,
+    OmadaSwitchPortCoordinator,
+)
 
 
 class OmadaSiteController:
@@ -60,6 +17,7 @@ class OmadaSiteController:
 
     _gateway_coordinator: OmadaGatewayCoordinator | None = None
     _initialized_gateway_coordinator = False
+    _clients_coordinator: OmadaClientsCoordinator | None = None
 
     def __init__(self, hass: HomeAssistant, omada_client: OmadaSiteClient) -> None:
         """Create the controller."""
@@ -98,3 +56,12 @@ class OmadaSiteController:
             )
 
         return self._gateway_coordinator
+
+    def get_clients_coordinator(self) -> OmadaClientsCoordinator:
+        """Get coordinator for site's clients."""
+        if not self._clients_coordinator:
+            self._clients_coordinator = OmadaClientsCoordinator(
+                self._hass, self._omada_client
+            )
+
+        return self._clients_coordinator

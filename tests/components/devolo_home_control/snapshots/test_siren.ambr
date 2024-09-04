@@ -11,6 +11,7 @@
     'context': <ANY>,
     'entity_id': 'siren.test',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
@@ -64,6 +65,7 @@
     'context': <ANY>,
     'entity_id': 'siren.test',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
@@ -117,6 +119,7 @@
     'context': <ANY>,
     'entity_id': 'siren.test',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })

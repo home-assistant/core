@@ -1,13 +1,15 @@
 """Config flow for Ukraine Alarm."""
+
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 import aiohttp
 from uasiren.client import Client
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_NAME, CONF_REGION
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -21,12 +23,14 @@ class UkraineAlarmConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize a new UkraineAlarmConfigFlow."""
         self.states = None
-        self.selected_region = None
+        self.selected_region: dict[str, Any] | None = None
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
 
         if len(self._async_current_entries()) == 5:
@@ -90,7 +94,11 @@ class UkraineAlarmConfigFlow(ConfigFlow, domain=DOMAIN):
             ):
                 self.selected_region = _find(source, user_input[CONF_REGION])
 
-                if next_step and self.selected_region["regionChildIds"]:
+                if (
+                    next_step
+                    and self.selected_region
+                    and self.selected_region["regionChildIds"]
+                ):
                     return await getattr(self, f"async_step_{next_step}")()
 
             return await self._async_finish_flow()
@@ -132,17 +140,5 @@ def _find(regions, region_id):
 
 
 def _make_regions_object(regions):
-    regions_list = []
-    for region in regions:
-        regions_list.append(
-            {
-                "id": region["regionId"],
-                "name": region["regionName"],
-            }
-        )
-    regions_list = sorted(regions_list, key=lambda region: region["name"].lower())
-    regions_object = {}
-    for region in regions_list:
-        regions_object[region["id"]] = region["name"]
-
-    return regions_object
+    regions = sorted(regions, key=lambda region: region["regionName"].lower())
+    return {region["regionId"]: region["regionName"] for region in regions}

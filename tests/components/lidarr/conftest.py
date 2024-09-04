@@ -1,4 +1,5 @@
 """Configure pytest for Lidarr tests."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable, Generator
@@ -31,7 +32,7 @@ MOCK_INPUT = {CONF_URL: URL, CONF_VERIFY_SSL: False}
 
 CONF_DATA = MOCK_INPUT | {CONF_API_KEY: API_KEY}
 
-ComponentSetup = Callable[[], Awaitable[None]]
+type ComponentSetup = Callable[[], Awaitable[None]]
 
 
 def mock_error(
@@ -131,7 +132,7 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
 async def mock_setup_integration(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-) -> Generator[ComponentSetup, None, None]:
+) -> Generator[ComponentSetup]:
     """Set up the lidarr integration in Home Assistant."""
     config_entry.add_to_hass(hass)
 

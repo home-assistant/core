@@ -1,4 +1,5 @@
 """Track recorder run history."""
+
 from __future__ import annotations
 
 import bisect

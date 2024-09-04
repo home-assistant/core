@@ -1,4 +1,5 @@
 """Tests for the Roku integration."""
+
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from rokuecp import RokuConnectionError

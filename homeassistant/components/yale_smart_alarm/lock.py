@@ -1,18 +1,18 @@
 """Lock for Yale Alarm."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.lock import LockEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_CODE
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import YaleConfigEntry
 from .const import (
     CONF_LOCK_CODE_DIGITS,
-    COORDINATOR,
     DEFAULT_LOCK_CODE_DIGITS,
     DOMAIN,
     YALE_ALL_ERRORS,
@@ -22,13 +22,11 @@ from .entity import YaleEntity
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant, entry: YaleConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the Yale lock entry."""
 
-    coordinator: YaleDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
-        COORDINATOR
-    ]
+    coordinator = entry.runtime_data
     code_format = entry.options.get(CONF_LOCK_CODE_DIGITS, DEFAULT_LOCK_CODE_DIGITS)
 
     async_add_entities(
@@ -63,23 +61,27 @@ class YaleDoorlock(YaleEntity, LockEntity):
         """Set lock."""
         if TYPE_CHECKING:
             assert self.coordinator.yale, "Connection to API is missing"
+        if command == "unlocked" and not code:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="no_code",
+            )
 
         try:
             get_lock = await self.hass.async_add_executor_job(
                 self.coordinator.yale.lock_api.get, self.lock_name
             )
-            if command == "locked":
+            if get_lock and command == "locked":
                 lock_state = await self.hass.async_add_executor_job(
                     self.coordinator.yale.lock_api.close_lock,
                     get_lock,
                 )
-            if command == "unlocked":
+            if code and get_lock and command == "unlocked":
                 lock_state = await self.hass.async_add_executor_job(
                     self.coordinator.yale.lock_api.open_lock, get_lock, code
                 )
         except YALE_ALL_ERRORS as error:
             raise HomeAssistantError(
-                f"Could not set lock for {self.lock_name}: {error}",
                 translation_domain=DOMAIN,
                 translation_key="set_lock",
                 translation_placeholders={
@@ -93,7 +95,6 @@ class YaleDoorlock(YaleEntity, LockEntity):
             self.async_write_ha_state()
             return
         raise HomeAssistantError(
-            "Could not set lock, check system ready for lock",
             translation_domain=DOMAIN,
             translation_key="could_not_change_lock",
         )

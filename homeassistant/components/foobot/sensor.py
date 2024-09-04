@@ -1,4 +1,5 @@
 """Support for the Foobot indoor air quality monitor."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -10,6 +11,7 @@ from foobot_async import FoobotClient
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -26,9 +28,8 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
@@ -85,7 +86,7 @@ PARALLEL_UPDATES = 1
 
 TIMEOUT = 10
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_TOKEN): cv.string, vol.Required(CONF_USERNAME): cv.string}
 )
 

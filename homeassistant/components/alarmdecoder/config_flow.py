@@ -1,4 +1,5 @@
 """Config flow for AlarmDecoder."""
+
 from __future__ import annotations
 
 import logging
@@ -127,7 +128,7 @@ class AlarmDecoderFlowHandler(ConfigFlow, domain=DOMAIN):
                 )
             except NoDeviceError:
                 errors["base"] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception during AlarmDecoder setup")
                 errors["base"] = "unknown"
 

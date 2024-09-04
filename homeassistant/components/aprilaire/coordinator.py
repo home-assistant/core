@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
 import logging
-from typing import Any, Optional
+from typing import Any
 
 import pyaprilaire.client
 from pyaprilaire.const import MODELS, Attribute, FunctionalDomain
@@ -155,7 +155,7 @@ class AprilaireCoordinator(BaseDataUpdateCoordinatorProtocol):
 
         return self.create_device_name(self.data)
 
-    def create_device_name(self, data: Optional[dict[str, Any]]) -> str:
+    def create_device_name(self, data: dict[str, Any] | None) -> str:
         """Create the name of the thermostat."""
 
         name = data.get(Attribute.NAME) if data else None

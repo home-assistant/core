@@ -1,4 +1,5 @@
 """Support for the QNAP QSW binary sensors."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass, replace
@@ -82,14 +83,14 @@ async def async_setup_entry(
     """Add QNAP QSW binary sensors from a config_entry."""
     coordinator: QswDataCoordinator = hass.data[DOMAIN][entry.entry_id][QSW_COORD_DATA]
 
-    entities: list[QswBinarySensor] = []
-
-    for description in BINARY_SENSOR_TYPES:
+    entities: list[QswBinarySensor] = [
+        QswBinarySensor(coordinator, description, entry)
+        for description in BINARY_SENSOR_TYPES
         if (
             description.key in coordinator.data
             and description.subkey in coordinator.data[description.key]
-        ):
-            entities.append(QswBinarySensor(coordinator, description, entry))
+        )
+    ]
 
     for description in LACP_PORT_BINARY_SENSOR_TYPES:
         if (

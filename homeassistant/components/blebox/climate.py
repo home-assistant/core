@@ -1,4 +1,5 @@
 """BleBox climate entity."""
+
 from datetime import timedelta
 from typing import Any
 

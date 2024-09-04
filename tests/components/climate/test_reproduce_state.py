@@ -1,8 +1,8 @@
 """The tests for reproduction of state."""
+
 import pytest
 
 from homeassistant.components.climate import (
-    ATTR_AUX_HEAT,
     ATTR_FAN_MODE,
     ATTR_HUMIDITY,
     ATTR_PRESET_MODE,
@@ -10,7 +10,6 @@ from homeassistant.components.climate import (
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
     DOMAIN,
-    SERVICE_SET_AUX_HEAT,
     SERVICE_SET_FAN_MODE,
     SERVICE_SET_HUMIDITY,
     SERVICE_SET_HVAC_MODE,
@@ -95,7 +94,6 @@ async def test_state_with_context(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     ("service", "attribute"),
     [
-        (SERVICE_SET_AUX_HEAT, ATTR_AUX_HEAT),
         (SERVICE_SET_PRESET_MODE, ATTR_PRESET_MODE),
         (SERVICE_SET_SWING_MODE, ATTR_SWING_MODE),
         (SERVICE_SET_FAN_MODE, ATTR_FAN_MODE),

@@ -1,0 +1,3359 @@
+# serializer version: 1
+# name: test_switch[switch.fake_profile_ai_driven_threat_detection-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.fake_profile_ai_driven_threat_detection',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'AI-Driven threat detection',
+    'platform': 'nextdns',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'ai_threat_detection',
+    'unique_id': 'xyz12_ai_threat_detection',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch[switch.fake_profile_ai_driven_threat_detection-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Fake Profile AI-Driven threat detection',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.fake_profile_ai_driven_threat_detection',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch[switch.fake_profile_allow_affiliate_tracking_links-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.fake_profile_allow_affiliate_tracking_links',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Allow affiliate & tracking links',
+    'platform': 'nextdns',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'allow_affiliate',
+    'unique_id': 'xyz12_allow_affiliate',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch[switch.fake_profile_allow_affiliate_tracking_links-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Fake Profile Allow affiliate & tracking links',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.fake_profile_allow_affiliate_tracking_links',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch[switch.fake_profile_anonymized_edns_client_subnet-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.fake_profile_anonymized_edns_client_subnet',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Anonymized EDNS client subnet',
+    'platform': 'nextdns',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'anonymized_ecs',
+    'unique_id': 'xyz12_anonymized_ecs',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch[switch.fake_profile_anonymized_edns_client_subnet-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Fake Profile Anonymized EDNS client subnet',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.fake_profile_anonymized_edns_client_subnet',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch[switch.fake_profile_block_9gag-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.fake_profile_block_9gag',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Block 9GAG',
+    'platform': 'nextdns',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'block_9gag',
+    'unique_id': 'xyz12_block_9gag',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch[switch.fake_profile_block_9gag-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Fake Profile Block 9GAG',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.fake_profile_block_9gag',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch[switch.fake_profile_block_amazon-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.fake_profile_block_amazon',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Block Amazon',
+    'platform': 'nextdns',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'block_amazon',
+    'unique_id': 'xyz12_block_amazon',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch[switch.fake_profile_block_amazon-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Fake Profile Block Amazon',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.fake_profile_block_amazon',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch[switch.fake_profile_block_bereal-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.fake_profile_block_bereal',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Block BeReal',
+    'platform': 'nextdns',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'block_bereal',
+    'unique_id': 'xyz12_block_bereal',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch[switch.fake_profile_block_bereal-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Fake Profile Block BeReal',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.fake_profile_block_bereal',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch[switch.fake_profile_block_blizzard-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.fake_profile_block_blizzard',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Block Blizzard',
+    'platform': 'nextdns',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'block_blizzard',
+    'unique_id': 'xyz12_block_blizzard',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch[switch.fake_profile_block_blizzard-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Fake Profile Block Blizzard',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.fake_profile_block_blizzard',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch[switch.fake_profile_block_bypass_methods-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.fake_profile_block_bypass_methods',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Block bypass methods',
+    'platform': 'nextdns',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'block_bypass_methods',
+    'unique_id': 'xyz12_block_bypass_methods',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch[switch.fake_profile_block_bypass_methods-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Fake Profile Block bypass methods',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.fake_profile_block_bypass_methods',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch[switch.fake_profile_block_chatgpt-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.fake_profile_block_chatgpt',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Block ChatGPT',
+    'platform': 'nextdns',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'block_chatgpt',
+    'unique_id': 'xyz12_block_chatgpt',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch[switch.fake_profile_block_chatgpt-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Fake Profile Block ChatGPT',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.fake_profile_block_chatgpt',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch[switch.fake_profile_block_child_sexual_abuse_material-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.fake_profile_block_child_sexual_abuse_material',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Block child sexual abuse material',
+    'platform': 'nextdns',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'block_csam',
+    'unique_id': 'xyz12_block_csam',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch[switch.fake_profile_block_child_sexual_abuse_material-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Fake Profile Block child sexual abuse material',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.fake_profile_block_child_sexual_abuse_material',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch[switch.fake_profile_block_dailymotion-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.fake_profile_block_dailymotion',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Block Dailymotion',
+    'platform': 'nextdns',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'block_dailymotion',
+    'unique_id': 'xyz12_block_dailymotion',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch[switch.fake_profile_block_dailymotion-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Fake Profile Block Dailymotion',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.fake_profile_block_dailymotion',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch[switch.fake_profile_block_dating-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.fake_profile_block_dating',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Block dating',
+    'platform': 'nextdns',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'block_dating',
+    'unique_id': 'xyz12_block_dating',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch[switch.fake_profile_block_dating-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Fake Profile Block dating',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.fake_profile_block_dating',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch[switch.fake_profile_block_discord-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.fake_profile_block_discord',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Block Discord',
+    'platform': 'nextdns',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'block_discord',
+    'unique_id': 'xyz12_block_discord',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch[switch.fake_profile_block_discord-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Fake Profile Block Discord',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.fake_profile_block_discord',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch[switch.fake_profile_block_disguised_third_party_trackers-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.fake_profile_block_disguised_third_party_trackers',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Block disguised third-party trackers',
+    'platform': 'nextdns',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'block_disguised_trackers',
+    'unique_id': 'xyz12_block_disguised_trackers',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch[switch.fake_profile_block_disguised_third_party_trackers-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Fake Profile Block disguised third-party trackers',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.fake_profile_block_disguised_third_party_trackers',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch[switch.fake_profile_block_disney_plus-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.fake_profile_block_disney_plus',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Block Disney Plus',
+    'platform': 'nextdns',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'block_disneyplus',
+    'unique_id': 'xyz12_block_disneyplus',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch[switch.fake_profile_block_disney_plus-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Fake Profile Block Disney Plus',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.fake_profile_block_disney_plus',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch[switch.fake_profile_block_dynamic_dns_hostnames-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.fake_profile_block_dynamic_dns_hostnames',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Block dynamic DNS hostnames',
+    'platform': 'nextdns',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'block_ddns',
+    'unique_id': 'xyz12_block_ddns',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch[switch.fake_profile_block_dynamic_dns_hostnames-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Fake Profile Block dynamic DNS hostnames',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.fake_profile_block_dynamic_dns_hostnames',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch[switch.fake_profile_block_ebay-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.fake_profile_block_ebay',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Block eBay',
+    'platform': 'nextdns',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'block_ebay',
+    'unique_id': 'xyz12_block_ebay',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch[switch.fake_profile_block_ebay-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Fake Profile Block eBay',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.fake_profile_block_ebay',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch[switch.fake_profile_block_facebook-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.fake_profile_block_facebook',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Block Facebook',
+    'platform': 'nextdns',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'block_facebook',
+    'unique_id': 'xyz12_block_facebook',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch[switch.fake_profile_block_facebook-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Fake Profile Block Facebook',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.fake_profile_block_facebook',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch[switch.fake_profile_block_fortnite-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.fake_profile_block_fortnite',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Block Fortnite',
+    'platform': 'nextdns',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'block_fortnite',
+    'unique_id': 'xyz12_block_fortnite',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch[switch.fake_profile_block_fortnite-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Fake Profile Block Fortnite',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.fake_profile_block_fortnite',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch[switch.fake_profile_block_gambling-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.fake_profile_block_gambling',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Block gambling',
+    'platform': 'nextdns',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'block_gambling',
+    'unique_id': 'xyz12_block_gambling',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch[switch.fake_profile_block_gambling-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Fake Profile Block gambling',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.fake_profile_block_gambling',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch[switch.fake_profile_block_google_chat-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.fake_profile_block_google_chat',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Block Google Chat',
+    'platform': 'nextdns',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'block_google_chat',
+    'unique_id': 'xyz12_block_google_chat',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch[switch.fake_profile_block_google_chat-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Fake Profile Block Google Chat',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.fake_profile_block_google_chat',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch[switch.fake_profile_block_hbo_max-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.fake_profile_block_hbo_max',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Block HBO Max',
+    'platform': 'nextdns',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'block_hbomax',
+    'unique_id': 'xyz12_block_hbomax',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch[switch.fake_profile_block_hbo_max-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Fake Profile Block HBO Max',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.fake_profile_block_hbo_max',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch[switch.fake_profile_block_hulu-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.fake_profile_block_hulu',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Block Hulu',
+    'platform': 'nextdns',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'xyz12_block_hulu',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch[switch.fake_profile_block_hulu-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Fake Profile Block Hulu',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.fake_profile_block_hulu',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch[switch.fake_profile_block_imgur-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.fake_profile_block_imgur',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Block Imgur',
+    'platform': 'nextdns',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'block_imgur',
+    'unique_id': 'xyz12_block_imgur',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch[switch.fake_profile_block_imgur-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Fake Profile Block Imgur',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.fake_profile_block_imgur',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch[switch.fake_profile_block_instagram-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.fake_profile_block_instagram',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Block Instagram',
+    'platform': 'nextdns',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'block_instagram',
+    'unique_id': 'xyz12_block_instagram',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch[switch.fake_profile_block_instagram-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Fake Profile Block Instagram',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.fake_profile_block_instagram',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch[switch.fake_profile_block_league_of_legends-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.fake_profile_block_league_of_legends',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Block League of Legends',
+    'platform': 'nextdns',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'block_leagueoflegends',
+    'unique_id': 'xyz12_block_leagueoflegends',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch[switch.fake_profile_block_league_of_legends-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Fake Profile Block League of Legends',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.fake_profile_block_league_of_legends',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch[switch.fake_profile_block_mastodon-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.fake_profile_block_mastodon',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Block Mastodon',
+    'platform': 'nextdns',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'block_mastodon',
+    'unique_id': 'xyz12_block_mastodon',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch[switch.fake_profile_block_mastodon-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Fake Profile Block Mastodon',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.fake_profile_block_mastodon',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch[switch.fake_profile_block_messenger-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.fake_profile_block_messenger',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Block Messenger',
+    'platform': 'nextdns',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'block_messenger',
+    'unique_id': 'xyz12_block_messenger',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch[switch.fake_profile_block_messenger-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Fake Profile Block Messenger',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.fake_profile_block_messenger',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch[switch.fake_profile_block_minecraft-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.fake_profile_block_minecraft',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Block Minecraft',
+    'platform': 'nextdns',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'block_minecraft',
+    'unique_id': 'xyz12_block_minecraft',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch[switch.fake_profile_block_minecraft-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Fake Profile Block Minecraft',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.fake_profile_block_minecraft',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch[switch.fake_profile_block_netflix-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.fake_profile_block_netflix',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Block Netflix',
+    'platform': 'nextdns',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'block_netflix',
+    'unique_id': 'xyz12_block_netflix',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch[switch.fake_profile_block_netflix-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Fake Profile Block Netflix',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.fake_profile_block_netflix',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch[switch.fake_profile_block_newly_registered_domains-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.fake_profile_block_newly_registered_domains',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Block newly registered domains',
+    'platform': 'nextdns',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'block_nrd',
+    'unique_id': 'xyz12_block_nrd',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch[switch.fake_profile_block_newly_registered_domains-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Fake Profile Block newly registered domains',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.fake_profile_block_newly_registered_domains',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch[switch.fake_profile_block_online_gaming-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.fake_profile_block_online_gaming',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Block online gaming',
+    'platform': 'nextdns',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'block_online_gaming',
+    'unique_id': 'xyz12_block_online_gaming',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch[switch.fake_profile_block_online_gaming-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Fake Profile Block online gaming',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.fake_profile_block_online_gaming',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch[switch.fake_profile_block_page-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.fake_profile_block_page',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Block page',
+    'platform': 'nextdns',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'block_page',
+    'unique_id': 'xyz12_block_page',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch[switch.fake_profile_block_page-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Fake Profile Block page',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.fake_profile_block_page',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_switch[switch.fake_profile_block_parked_domains-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.fake_profile_block_parked_domains',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Block parked domains',
+    'platform': 'nextdns',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'block_parked_domains',
+    'unique_id': 'xyz12_block_parked_domains',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch[switch.fake_profile_block_parked_domains-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Fake Profile Block parked domains',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.fake_profile_block_parked_domains',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch[switch.fake_profile_block_pinterest-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.fake_profile_block_pinterest',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Block Pinterest',
+    'platform': 'nextdns',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'block_pinterest',
+    'unique_id': 'xyz12_block_pinterest',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch[switch.fake_profile_block_pinterest-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Fake Profile Block Pinterest',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.fake_profile_block_pinterest',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch[switch.fake_profile_block_piracy-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.fake_profile_block_piracy',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Block piracy',
+    'platform': 'nextdns',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'block_piracy',
+    'unique_id': 'xyz12_block_piracy',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch[switch.fake_profile_block_piracy-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Fake Profile Block piracy',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.fake_profile_block_piracy',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch[switch.fake_profile_block_playstation_network-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.fake_profile_block_playstation_network',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Block PlayStation Network',
+    'platform': 'nextdns',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'block_playstation_network',
+    'unique_id': 'xyz12_block_playstation_network',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch[switch.fake_profile_block_playstation_network-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Fake Profile Block PlayStation Network',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.fake_profile_block_playstation_network',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch[switch.fake_profile_block_porn-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.fake_profile_block_porn',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Block porn',
+    'platform': 'nextdns',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'block_porn',
+    'unique_id': 'xyz12_block_porn',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch[switch.fake_profile_block_porn-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Fake Profile Block porn',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.fake_profile_block_porn',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch[switch.fake_profile_block_prime_video-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.fake_profile_block_prime_video',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Block Prime Video',
+    'platform': 'nextdns',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'block_primevideo',
+    'unique_id': 'xyz12_block_primevideo',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch[switch.fake_profile_block_prime_video-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Fake Profile Block Prime Video',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.fake_profile_block_prime_video',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch[switch.fake_profile_block_reddit-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.fake_profile_block_reddit',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Block Reddit',
+    'platform': 'nextdns',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'block_reddit',
+    'unique_id': 'xyz12_block_reddit',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch[switch.fake_profile_block_reddit-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Fake Profile Block Reddit',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.fake_profile_block_reddit',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch[switch.fake_profile_block_roblox-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.fake_profile_block_roblox',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Block Roblox',
+    'platform': 'nextdns',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'block_roblox',
+    'unique_id': 'xyz12_block_roblox',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch[switch.fake_profile_block_roblox-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Fake Profile Block Roblox',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.fake_profile_block_roblox',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch[switch.fake_profile_block_signal-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.fake_profile_block_signal',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Block Signal',
+    'platform': 'nextdns',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'block_signal',
+    'unique_id': 'xyz12_block_signal',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch[switch.fake_profile_block_signal-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Fake Profile Block Signal',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.fake_profile_block_signal',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch[switch.fake_profile_block_skype-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.fake_profile_block_skype',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Block Skype',
+    'platform': 'nextdns',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'block_skype',
+    'unique_id': 'xyz12_block_skype',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch[switch.fake_profile_block_skype-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Fake Profile Block Skype',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.fake_profile_block_skype',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch[switch.fake_profile_block_snapchat-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.fake_profile_block_snapchat',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Block Snapchat',
+    'platform': 'nextdns',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'block_snapchat',
+    'unique_id': 'xyz12_block_snapchat',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch[switch.fake_profile_block_snapchat-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Fake Profile Block Snapchat',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.fake_profile_block_snapchat',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch[switch.fake_profile_block_social_networks-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.fake_profile_block_social_networks',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Block social networks',
+    'platform': 'nextdns',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'block_social_networks',
+    'unique_id': 'xyz12_block_social_networks',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch[switch.fake_profile_block_social_networks-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Fake Profile Block social networks',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.fake_profile_block_social_networks',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch[switch.fake_profile_block_spotify-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.fake_profile_block_spotify',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Block Spotify',
+    'platform': 'nextdns',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'block_spotify',
+    'unique_id': 'xyz12_block_spotify',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch[switch.fake_profile_block_spotify-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Fake Profile Block Spotify',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.fake_profile_block_spotify',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch[switch.fake_profile_block_steam-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.fake_profile_block_steam',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Block Steam',
+    'platform': 'nextdns',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'block_steam',
+    'unique_id': 'xyz12_block_steam',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch[switch.fake_profile_block_steam-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Fake Profile Block Steam',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.fake_profile_block_steam',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch[switch.fake_profile_block_telegram-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.fake_profile_block_telegram',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Block Telegram',
+    'platform': 'nextdns',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'block_telegram',
+    'unique_id': 'xyz12_block_telegram',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch[switch.fake_profile_block_telegram-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Fake Profile Block Telegram',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.fake_profile_block_telegram',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch[switch.fake_profile_block_tiktok-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.fake_profile_block_tiktok',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Block TikTok',
+    'platform': 'nextdns',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'block_tiktok',
+    'unique_id': 'xyz12_block_tiktok',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch[switch.fake_profile_block_tiktok-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Fake Profile Block TikTok',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.fake_profile_block_tiktok',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch[switch.fake_profile_block_tinder-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.fake_profile_block_tinder',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Block Tinder',
+    'platform': 'nextdns',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'block_tinder',
+    'unique_id': 'xyz12_block_tinder',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch[switch.fake_profile_block_tinder-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Fake Profile Block Tinder',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.fake_profile_block_tinder',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch[switch.fake_profile_block_tumblr-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.fake_profile_block_tumblr',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Block Tumblr',
+    'platform': 'nextdns',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'block_tumblr',
+    'unique_id': 'xyz12_block_tumblr',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch[switch.fake_profile_block_tumblr-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Fake Profile Block Tumblr',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.fake_profile_block_tumblr',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch[switch.fake_profile_block_twitch-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.fake_profile_block_twitch',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Block Twitch',
+    'platform': 'nextdns',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'block_twitch',
+    'unique_id': 'xyz12_block_twitch',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch[switch.fake_profile_block_twitch-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Fake Profile Block Twitch',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.fake_profile_block_twitch',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch[switch.fake_profile_block_video_streaming-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.fake_profile_block_video_streaming',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Block video streaming',
+    'platform': 'nextdns',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'block_video_streaming',
+    'unique_id': 'xyz12_block_video_streaming',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch[switch.fake_profile_block_video_streaming-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Fake Profile Block video streaming',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.fake_profile_block_video_streaming',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch[switch.fake_profile_block_vimeo-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.fake_profile_block_vimeo',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Block Vimeo',
+    'platform': 'nextdns',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'block_vimeo',
+    'unique_id': 'xyz12_block_vimeo',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch[switch.fake_profile_block_vimeo-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Fake Profile Block Vimeo',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.fake_profile_block_vimeo',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch[switch.fake_profile_block_vk-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.fake_profile_block_vk',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Block VK',
+    'platform': 'nextdns',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'block_vk',
+    'unique_id': 'xyz12_block_vk',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch[switch.fake_profile_block_vk-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Fake Profile Block VK',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.fake_profile_block_vk',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch[switch.fake_profile_block_whatsapp-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.fake_profile_block_whatsapp',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Block WhatsApp',
+    'platform': 'nextdns',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'block_whatsapp',
+    'unique_id': 'xyz12_block_whatsapp',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch[switch.fake_profile_block_whatsapp-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Fake Profile Block WhatsApp',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.fake_profile_block_whatsapp',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch[switch.fake_profile_block_x_formerly_twitter-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.fake_profile_block_x_formerly_twitter',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Block X (formerly Twitter)',
+    'platform': 'nextdns',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'block_twitter',
+    'unique_id': 'xyz12_block_twitter',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch[switch.fake_profile_block_x_formerly_twitter-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Fake Profile Block X (formerly Twitter)',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.fake_profile_block_x_formerly_twitter',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch[switch.fake_profile_block_xbox_live-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.fake_profile_block_xbox_live',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Block Xbox Live',
+    'platform': 'nextdns',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'block_xboxlive',
+    'unique_id': 'xyz12_block_xboxlive',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch[switch.fake_profile_block_xbox_live-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Fake Profile Block Xbox Live',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.fake_profile_block_xbox_live',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch[switch.fake_profile_block_youtube-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.fake_profile_block_youtube',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Block YouTube',
+    'platform': 'nextdns',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'block_youtube',
+    'unique_id': 'xyz12_block_youtube',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch[switch.fake_profile_block_youtube-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Fake Profile Block YouTube',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.fake_profile_block_youtube',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch[switch.fake_profile_block_zoom-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.fake_profile_block_zoom',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Block Zoom',
+    'platform': 'nextdns',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'block_zoom',
+    'unique_id': 'xyz12_block_zoom',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch[switch.fake_profile_block_zoom-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Fake Profile Block Zoom',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.fake_profile_block_zoom',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch[switch.fake_profile_cache_boost-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.fake_profile_cache_boost',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Cache boost',
+    'platform': 'nextdns',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'cache_boost',
+    'unique_id': 'xyz12_cache_boost',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch[switch.fake_profile_cache_boost-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Fake Profile Cache boost',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.fake_profile_cache_boost',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch[switch.fake_profile_cname_flattening-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.fake_profile_cname_flattening',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'CNAME flattening',
+    'platform': 'nextdns',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'cname_flattening',
+    'unique_id': 'xyz12_cname_flattening',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch[switch.fake_profile_cname_flattening-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Fake Profile CNAME flattening',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.fake_profile_cname_flattening',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch[switch.fake_profile_cryptojacking_protection-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.fake_profile_cryptojacking_protection',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Cryptojacking protection',
+    'platform': 'nextdns',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'cryptojacking_protection',
+    'unique_id': 'xyz12_cryptojacking_protection',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch[switch.fake_profile_cryptojacking_protection-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Fake Profile Cryptojacking protection',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.fake_profile_cryptojacking_protection',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch[switch.fake_profile_dns_rebinding_protection-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.fake_profile_dns_rebinding_protection',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'DNS rebinding protection',
+    'platform': 'nextdns',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'dns_rebinding_protection',
+    'unique_id': 'xyz12_dns_rebinding_protection',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch[switch.fake_profile_dns_rebinding_protection-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Fake Profile DNS rebinding protection',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.fake_profile_dns_rebinding_protection',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch[switch.fake_profile_domain_generation_algorithms_protection-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.fake_profile_domain_generation_algorithms_protection',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Domain generation algorithms protection',
+    'platform': 'nextdns',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'dga_protection',
+    'unique_id': 'xyz12_dga_protection',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch[switch.fake_profile_domain_generation_algorithms_protection-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Fake Profile Domain generation algorithms protection',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.fake_profile_domain_generation_algorithms_protection',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch[switch.fake_profile_force_safesearch-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.fake_profile_force_safesearch',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Force SafeSearch',
+    'platform': 'nextdns',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'safesearch',
+    'unique_id': 'xyz12_safesearch',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch[switch.fake_profile_force_safesearch-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Fake Profile Force SafeSearch',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.fake_profile_force_safesearch',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_switch[switch.fake_profile_force_youtube_restricted_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.fake_profile_force_youtube_restricted_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Force YouTube restricted mode',
+    'platform': 'nextdns',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'youtube_restricted_mode',
+    'unique_id': 'xyz12_youtube_restricted_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch[switch.fake_profile_force_youtube_restricted_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Fake Profile Force YouTube restricted mode',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.fake_profile_force_youtube_restricted_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_switch[switch.fake_profile_google_safe_browsing-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.fake_profile_google_safe_browsing',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Google safe browsing',
+    'platform': 'nextdns',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'google_safe_browsing',
+    'unique_id': 'xyz12_google_safe_browsing',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch[switch.fake_profile_google_safe_browsing-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Fake Profile Google safe browsing',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.fake_profile_google_safe_browsing',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_switch[switch.fake_profile_idn_homograph_attacks_protection-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.fake_profile_idn_homograph_attacks_protection',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'IDN homograph attacks protection',
+    'platform': 'nextdns',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'idn_homograph_attacks_protection',
+    'unique_id': 'xyz12_idn_homograph_attacks_protection',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch[switch.fake_profile_idn_homograph_attacks_protection-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Fake Profile IDN homograph attacks protection',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.fake_profile_idn_homograph_attacks_protection',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch[switch.fake_profile_logs-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.fake_profile_logs',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Logs',
+    'platform': 'nextdns',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'logs',
+    'unique_id': 'xyz12_logs',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch[switch.fake_profile_logs-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Fake Profile Logs',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.fake_profile_logs',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch[switch.fake_profile_threat_intelligence_feeds-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.fake_profile_threat_intelligence_feeds',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Threat intelligence feeds',
+    'platform': 'nextdns',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'threat_intelligence_feeds',
+    'unique_id': 'xyz12_threat_intelligence_feeds',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch[switch.fake_profile_threat_intelligence_feeds-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Fake Profile Threat intelligence feeds',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.fake_profile_threat_intelligence_feeds',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch[switch.fake_profile_typosquatting_protection-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.fake_profile_typosquatting_protection',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Typosquatting protection',
+    'platform': 'nextdns',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'typosquatting_protection',
+    'unique_id': 'xyz12_typosquatting_protection',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch[switch.fake_profile_typosquatting_protection-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Fake Profile Typosquatting protection',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.fake_profile_typosquatting_protection',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch[switch.fake_profile_web3-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.fake_profile_web3',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Web3',
+    'platform': 'nextdns',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'web3',
+    'unique_id': 'xyz12_web3',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch[switch.fake_profile_web3-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Fake Profile Web3',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.fake_profile_web3',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---

@@ -44,7 +44,9 @@ async def async_setup_entry(
     """Set up the local calendar platform."""
     store = hass.data[DOMAIN][config_entry.entry_id]
     ics = await store.async_load()
-    calendar = IcsCalendarStream.calendar_from_ics(ics)
+    calendar: Calendar = await hass.async_add_executor_job(
+        IcsCalendarStream.calendar_from_ics, ics
+    )
     calendar.prodid = PRODID
 
     name = config_entry.data[CONF_CALENDAR_NAME]

@@ -1,4 +1,5 @@
 """Idasen Desk integration cover platform."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -65,7 +66,7 @@ class IdasenDeskCover(CoordinatorEntity[IdasenDeskCoordinator], CoverEntity):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return self._desk.is_connected is True
+        return super().available and self._desk.is_connected is True
 
     @property
     def is_closed(self) -> bool:

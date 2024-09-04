@@ -1,4 +1,5 @@
 """The tests for the Air Quality component."""
+
 import pytest
 
 from homeassistant.components.air_quality import ATTR_N2O, ATTR_OZONE, ATTR_PM_10

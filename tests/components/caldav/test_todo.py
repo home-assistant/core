@@ -1,4 +1,5 @@
 """The tests for the webdav todo component."""
+
 from datetime import UTC, date, datetime
 from typing import Any
 from unittest.mock import MagicMock, Mock
@@ -7,8 +8,17 @@ from caldav.lib.error import DAVError, NotFoundError
 from caldav.objects import Todo
 import pytest
 
-from homeassistant.components.todo import DOMAIN as TODO_DOMAIN
-from homeassistant.const import Platform
+from homeassistant.components.todo import (
+    ATTR_DESCRIPTION,
+    ATTR_DUE_DATE,
+    ATTR_DUE_DATETIME,
+    ATTR_ITEM,
+    ATTR_RENAME,
+    ATTR_STATUS,
+    DOMAIN as TODO_DOMAIN,
+    TodoServices,
+)
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
@@ -90,9 +100,9 @@ def platforms() -> list[Platform]:
 
 
 @pytest.fixture(autouse=True)
-def set_tz(hass: HomeAssistant) -> None:
+async def set_tz(hass: HomeAssistant) -> None:
     """Fixture to set timezone with fixed offset year round."""
-    hass.config.set_time_zone("America/Regina")
+    await hass.config.async_set_time_zone("America/Regina")
 
 
 @pytest.fixture(name="todos")
@@ -225,12 +235,12 @@ async def test_supported_components(
             RESULT_ITEM,
         ),
         (
-            {"due_date": "2023-11-18"},
+            {ATTR_DUE_DATE: "2023-11-18"},
             {"status": "NEEDS-ACTION", "summary": "Cheese", "due": date(2023, 11, 18)},
             {**RESULT_ITEM, "due": "2023-11-18"},
         ),
         (
-            {"due_datetime": "2023-11-18T08:30:00-06:00"},
+            {ATTR_DUE_DATETIME: "2023-11-18T08:30:00-06:00"},
             {
                 "status": "NEEDS-ACTION",
                 "summary": "Cheese",
@@ -239,7 +249,7 @@ async def test_supported_components(
             {**RESULT_ITEM, "due": "2023-11-18T08:30:00-06:00"},
         ),
         (
-            {"description": "Make sure to get Swiss"},
+            {ATTR_DESCRIPTION: "Make sure to get Swiss"},
             {
                 "status": "NEEDS-ACTION",
                 "summary": "Cheese",
@@ -277,9 +287,9 @@ async def test_add_item(
 
     await hass.services.async_call(
         TODO_DOMAIN,
-        "add_item",
-        {"item": "Cheese", **item_data},
-        target={"entity_id": TEST_ENTITY},
+        TodoServices.ADD_ITEM,
+        {ATTR_ITEM: "Cheese", **item_data},
+        target={ATTR_ENTITY_ID: TEST_ENTITY},
         blocking=True,
     )
 
@@ -305,9 +315,9 @@ async def test_add_item_failure(
     with pytest.raises(HomeAssistantError, match="CalDAV save error"):
         await hass.services.async_call(
             TODO_DOMAIN,
-            "add_item",
-            {"item": "Cheese"},
-            target={"entity_id": TEST_ENTITY},
+            TodoServices.ADD_ITEM,
+            {ATTR_ITEM: "Cheese"},
+            target={ATTR_ENTITY_ID: TEST_ENTITY},
             blocking=True,
         )
 
@@ -316,7 +326,7 @@ async def test_add_item_failure(
     ("update_data", "expected_ics", "expected_state", "expected_item"),
     [
         (
-            {"rename": "Swiss Cheese"},
+            {ATTR_RENAME: "Swiss Cheese"},
             [
                 "DESCRIPTION:Any kind will do",
                 "DUE;VALUE=DATE:20171126",
@@ -333,7 +343,7 @@ async def test_add_item_failure(
             },
         ),
         (
-            {"status": "needs_action"},
+            {ATTR_STATUS: "needs_action"},
             [
                 "DESCRIPTION:Any kind will do",
                 "DUE;VALUE=DATE:20171126",
@@ -350,7 +360,7 @@ async def test_add_item_failure(
             },
         ),
         (
-            {"status": "completed"},
+            {ATTR_STATUS: "completed"},
             [
                 "DESCRIPTION:Any kind will do",
                 "DUE;VALUE=DATE:20171126",
@@ -367,7 +377,7 @@ async def test_add_item_failure(
             },
         ),
         (
-            {"rename": "Swiss Cheese", "status": "needs_action"},
+            {ATTR_RENAME: "Swiss Cheese", ATTR_STATUS: "needs_action"},
             [
                 "DESCRIPTION:Any kind will do",
                 "DUE;VALUE=DATE:20171126",
@@ -384,7 +394,7 @@ async def test_add_item_failure(
             },
         ),
         (
-            {"due_date": "2023-11-18"},
+            {ATTR_DUE_DATE: "2023-11-18"},
             [
                 "DESCRIPTION:Any kind will do",
                 "DUE;VALUE=DATE:20231118",
@@ -401,7 +411,7 @@ async def test_add_item_failure(
             },
         ),
         (
-            {"due_datetime": "2023-11-18T08:30:00-06:00"},
+            {ATTR_DUE_DATETIME: "2023-11-18T08:30:00-06:00"},
             [
                 "DESCRIPTION:Any kind will do",
                 "DUE;TZID=America/Regina:20231118T083000",
@@ -418,7 +428,7 @@ async def test_add_item_failure(
             },
         ),
         (
-            {"due_datetime": None},
+            {ATTR_DUE_DATETIME: None},
             [
                 "DESCRIPTION:Any kind will do",
                 "STATUS:NEEDS-ACTION",
@@ -433,7 +443,7 @@ async def test_add_item_failure(
             },
         ),
         (
-            {"description": "Make sure to get Swiss"},
+            {ATTR_DESCRIPTION: "Make sure to get Swiss"},
             [
                 "DESCRIPTION:Make sure to get Swiss",
                 "DUE;VALUE=DATE:20171126",
@@ -450,7 +460,7 @@ async def test_add_item_failure(
             },
         ),
         (
-            {"description": None},
+            {ATTR_DESCRIPTION: None},
             ["DUE;VALUE=DATE:20171126", "STATUS:NEEDS-ACTION", "SUMMARY:Cheese"],
             "1",
             {
@@ -500,12 +510,12 @@ async def test_update_item(
 
     await hass.services.async_call(
         TODO_DOMAIN,
-        "update_item",
+        TodoServices.UPDATE_ITEM,
         {
-            "item": "Cheese",
+            ATTR_ITEM: "Cheese",
             **update_data,
         },
-        target={"entity_id": TEST_ENTITY},
+        target={ATTR_ENTITY_ID: TEST_ENTITY},
         blocking=True,
     )
 
@@ -519,9 +529,9 @@ async def test_update_item(
 
     result = await hass.services.async_call(
         TODO_DOMAIN,
-        "get_items",
+        TodoServices.GET_ITEMS,
         {},
-        target={"entity_id": TEST_ENTITY},
+        target={ATTR_ENTITY_ID: TEST_ENTITY},
         blocking=True,
         return_response=True,
     )
@@ -547,12 +557,12 @@ async def test_update_item_failure(
     with pytest.raises(HomeAssistantError, match="CalDAV save error"):
         await hass.services.async_call(
             TODO_DOMAIN,
-            "update_item",
+            TodoServices.UPDATE_ITEM,
             {
-                "item": "Cheese",
-                "status": "completed",
+                ATTR_ITEM: "Cheese",
+                ATTR_STATUS: "completed",
             },
-            target={"entity_id": TEST_ENTITY},
+            target={ATTR_ENTITY_ID: TEST_ENTITY},
             blocking=True,
         )
 
@@ -581,12 +591,12 @@ async def test_update_item_lookup_failure(
     with pytest.raises(HomeAssistantError, match=match):
         await hass.services.async_call(
             TODO_DOMAIN,
-            "update_item",
+            TodoServices.UPDATE_ITEM,
             {
-                "item": "Cheese",
-                "status": "completed",
+                ATTR_ITEM: "Cheese",
+                ATTR_STATUS: "completed",
             },
-            target={"entity_id": TEST_ENTITY},
+            target={ATTR_ENTITY_ID: TEST_ENTITY},
             blocking=True,
         )
 
@@ -623,7 +633,7 @@ async def test_remove_item(
     assert state.state == "1"
 
     def lookup(uid: str) -> Mock:
-        assert uid == "2" or uid == "3"
+        assert uid in ("2", "3")
         if uid == "2":
             return item1
         return item2
@@ -634,9 +644,9 @@ async def test_remove_item(
 
     await hass.services.async_call(
         TODO_DOMAIN,
-        "remove_item",
-        {"item": uids_to_delete},
-        target={"entity_id": TEST_ENTITY},
+        TodoServices.REMOVE_ITEM,
+        {ATTR_ITEM: uids_to_delete},
+        target={ATTR_ENTITY_ID: TEST_ENTITY},
         blocking=True,
     )
 
@@ -667,9 +677,9 @@ async def test_remove_item_lookup_failure(
     with pytest.raises(HomeAssistantError, match=match):
         await hass.services.async_call(
             TODO_DOMAIN,
-            "remove_item",
-            {"item": "Cheese"},
-            target={"entity_id": TEST_ENTITY},
+            TodoServices.REMOVE_ITEM,
+            {ATTR_ITEM: "Cheese"},
+            target={ATTR_ENTITY_ID: TEST_ENTITY},
             blocking=True,
         )
 
@@ -696,9 +706,9 @@ async def test_remove_item_failure(
     with pytest.raises(HomeAssistantError, match="CalDAV delete error"):
         await hass.services.async_call(
             TODO_DOMAIN,
-            "remove_item",
-            {"item": "Cheese"},
-            target={"entity_id": TEST_ENTITY},
+            TodoServices.REMOVE_ITEM,
+            {ATTR_ITEM: "Cheese"},
+            target={ATTR_ENTITY_ID: TEST_ENTITY},
             blocking=True,
         )
 
@@ -724,9 +734,9 @@ async def test_remove_item_not_found(
     with pytest.raises(HomeAssistantError, match="Could not find"):
         await hass.services.async_call(
             TODO_DOMAIN,
-            "remove_item",
-            {"item": "Cheese"},
-            target={"entity_id": TEST_ENTITY},
+            TodoServices.REMOVE_ITEM,
+            {ATTR_ITEM: "Cheese"},
+            target={ATTR_ENTITY_ID: TEST_ENTITY},
             blocking=True,
         )
 
@@ -778,12 +788,12 @@ async def test_subscribe(
     ]
     await hass.services.async_call(
         TODO_DOMAIN,
-        "update_item",
+        TodoServices.UPDATE_ITEM,
         {
-            "item": "Cheese",
-            "rename": "Milk",
+            ATTR_ITEM: "Cheese",
+            ATTR_RENAME: "Milk",
         },
-        target={"entity_id": TEST_ENTITY},
+        target={ATTR_ENTITY_ID: TEST_ENTITY},
         blocking=True,
     )
 

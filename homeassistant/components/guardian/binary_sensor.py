@@ -1,4 +1,5 @@
 """Binary sensors for the Elexa Guardian integration."""
+
 from __future__ import annotations
 
 from collections.abc import Callable

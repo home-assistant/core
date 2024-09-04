@@ -1,4 +1,5 @@
 """Blueprint models."""
+
 from __future__ import annotations
 
 import asyncio
@@ -20,7 +21,7 @@ from homeassistant.const import (
     CONF_PATH,
     __version__,
 )
-from homeassistant.core import DOMAIN as HA_DOMAIN, HomeAssistant, callback
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util import yaml
 
@@ -77,7 +78,7 @@ class Blueprint:
 
         self.domain = data_domain
 
-        missing = yaml.extract_inputs(data) - set(data[CONF_BLUEPRINT][CONF_INPUT])
+        missing = yaml.extract_inputs(data) - set(self.inputs)
 
         if missing:
             raise InvalidBlueprint(
@@ -94,8 +95,14 @@ class Blueprint:
 
     @property
     def inputs(self) -> dict[str, Any]:
-        """Return blueprint inputs."""
-        return self.data[CONF_BLUEPRINT][CONF_INPUT]  # type: ignore[no-any-return]
+        """Return flattened blueprint inputs."""
+        inputs = {}
+        for key, value in self.data[CONF_BLUEPRINT][CONF_INPUT].items():
+            if value and CONF_INPUT in value:
+                inputs.update(dict(value[CONF_INPUT]))
+            else:
+                inputs[key] = value
+        return inputs
 
     @property
     def metadata(self) -> dict[str, Any]:
@@ -365,7 +372,7 @@ class DomainBlueprints:
 
             shutil.copytree(
                 integration.file_path / BLUEPRINT_FOLDER,
-                self.blueprint_folder / HA_DOMAIN,
+                self.blueprint_folder / HOMEASSISTANT_DOMAIN,
             )
 
         await self.hass.async_add_executor_job(populate)

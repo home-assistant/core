@@ -310,5 +310,31 @@
     "bleName": "R23:E63C",
     "shadeGroupIds": [],
     "shade_api_class": "ShadeDualOverlappedTilt180"
+  },
+  {
+    "batteryStatus": null,
+    "bleName": "AUR:881C",
+    "capabilities": 11,
+    "firmware": {
+      "build": 400,
+      "revision": 3,
+      "subRevision": 0
+    },
+    "id": 109,
+    "motion": null,
+    "name": "Q2VudGVy",
+    "positions": {
+      "light": null,
+      "primary": null,
+      "secondary": null,
+      "tilt": null,
+      "velocity": null
+    },
+    "powerType": 12,
+    "ptName": "Center",
+    "roomId": 9,
+    "shadeGroupIds": [],
+    "type": 95,
+    "shade_api_class": "ShadeDualOverlappedIlluminated"
   }
 ]

@@ -13,7 +13,7 @@
           "region": "Shark IQ uses different services in the EU.  Select your region to connect to the correct service for your account."
         }
       },
-      "reauth": {
+      "reauth_confirm": {
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]",
@@ -38,6 +38,23 @@
       "options": {
         "europe": "Europe",
         "elsewhere": "Everywhere Else"
+      }
+    }
+  },
+  "exceptions": {
+    "invalid_room": {
+      "message": "The room {room} is unavailable to your vacuum. Make sure all rooms match the Shark App, including capitalization."
+    }
+  },
+  "services": {
+    "clean_room": {
+      "name": "Clean Room",
+      "description": "Cleans a specific user-defined room or set of rooms.",
+      "fields": {
+        "rooms": {
+          "name": "Rooms",
+          "description": "List of rooms to clean"
+        }
       }
     }
   }

@@ -1,9 +1,8 @@
 """Services for the Netgear LTE integration."""
-from typing import TYPE_CHECKING
 
+from eternalegypt.eternalegypt import Modem
 import voluptuous as vol
 
-from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv
 
@@ -17,9 +16,6 @@ from .const import (
     FAILOVER_MODES,
     LOGGER,
 )
-
-if TYPE_CHECKING:
-    from . import LTEData, ModemData
 
 SERVICE_DELETE_SMS = "delete_sms"
 SERVICE_SET_OPTION = "set_option"
@@ -49,31 +45,29 @@ CONNECT_LTE_SCHEMA = vol.Schema({vol.Optional(ATTR_HOST): cv.string})
 DISCONNECT_LTE_SCHEMA = vol.Schema({vol.Optional(ATTR_HOST): cv.string})
 
 
-async def async_setup_services(hass: HomeAssistant) -> None:
+async def async_setup_services(hass: HomeAssistant, modem: Modem) -> None:
     """Set up services for Netgear LTE integration."""
 
     async def service_handler(call: ServiceCall) -> None:
         """Apply a service."""
         host = call.data.get(ATTR_HOST)
-        data: LTEData = hass.data[DOMAIN]
-        modem_data: ModemData = data.get_modem_data({CONF_HOST: host})
 
-        if not modem_data:
+        if not modem.token:
             LOGGER.error("%s: host %s unavailable", call.service, host)
             return
 
         if call.service == SERVICE_DELETE_SMS:
             for sms_id in call.data[ATTR_SMS_ID]:
-                await modem_data.modem.delete_sms(sms_id)
+                await modem.delete_sms(sms_id)
         elif call.service == SERVICE_SET_OPTION:
             if failover := call.data.get(ATTR_FAILOVER):
-                await modem_data.modem.set_failover_mode(failover)
+                await modem.set_failover_mode(failover)
             if autoconnect := call.data.get(ATTR_AUTOCONNECT):
-                await modem_data.modem.set_autoconnect_mode(autoconnect)
+                await modem.set_autoconnect_mode(autoconnect)
         elif call.service == SERVICE_CONNECT_LTE:
-            await modem_data.modem.connect_lte()
+            await modem.connect_lte()
         elif call.service == SERVICE_DISCONNECT_LTE:
-            await modem_data.modem.disconnect_lte()
+            await modem.disconnect_lte()
 
     service_schemas = {
         SERVICE_DELETE_SMS: DELETE_SMS_SCHEMA,

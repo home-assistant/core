@@ -1,4 +1,5 @@
 """Support for Vallox date platform."""
+
 from __future__ import annotations
 
 from datetime import date
@@ -11,8 +12,9 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import ValloxDataUpdateCoordinator, ValloxEntity
+from . import ValloxEntity
 from .const import DOMAIN
+from .coordinator import ValloxDataUpdateCoordinator
 
 
 class ValloxFilterChangeDateEntity(ValloxEntity, DateEntity):
@@ -20,7 +22,6 @@ class ValloxFilterChangeDateEntity(ValloxEntity, DateEntity):
 
     _attr_entity_category = EntityCategory.CONFIG
     _attr_translation_key = "filter_change_date"
-    _attr_icon = "mdi:air-filter"
 
     def __init__(
         self,

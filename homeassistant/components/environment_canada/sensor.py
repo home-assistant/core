@@ -1,4 +1,5 @@
 """Support for the Environment Canada weather service."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -18,7 +19,6 @@ from homeassistant.const import (
     PERCENTAGE,
     UV_INDEX,
     UnitOfLength,
-    UnitOfPrecipitationDepth,
     UnitOfPressure,
     UnitOfSpeed,
     UnitOfTemperature,
@@ -33,19 +33,11 @@ from .const import ATTR_STATION, DOMAIN
 ATTR_TIME = "alert time"
 
 
-@dataclass(frozen=True)
-class ECSensorEntityDescriptionMixin:
-    """Mixin for required keys."""
-
-    value_fn: Callable[[Any], Any]
-
-
-@dataclass(frozen=True)
-class ECSensorEntityDescription(
-    SensorEntityDescription, ECSensorEntityDescriptionMixin
-):
+@dataclass(frozen=True, kw_only=True)
+class ECSensorEntityDescription(SensorEntityDescription):
     """Describes Environment Canada sensor entity."""
 
+    value_fn: Callable[[Any], Any]
     transform: Callable[[Any], Any] | None = None
 
 
@@ -120,14 +112,6 @@ SENSOR_TYPES: tuple[ECSensorEntityDescription, ...] = (
         translation_key="pop",
         native_unit_of_measurement=PERCENTAGE,
         value_fn=lambda data: data.conditions.get("pop", {}).get("value"),
-    ),
-    ECSensorEntityDescription(
-        key="precip_yesterday",
-        translation_key="precip_yesterday",
-        device_class=SensorDeviceClass.PRECIPITATION,
-        native_unit_of_measurement=UnitOfPrecipitationDepth.MILLIMETERS,
-        state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda data: data.conditions.get("precip_yesterday", {}).get("value"),
     ),
     ECSensorEntityDescription(
         key="pressure",

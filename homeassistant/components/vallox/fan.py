@@ -1,4 +1,5 @@
 """Support for the Vallox ventilation unit fan."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -13,7 +14,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import ValloxDataUpdateCoordinator, ValloxEntity
+from . import ValloxEntity
 from .const import (
     DOMAIN,
     METRIC_KEY_MODE,
@@ -25,6 +26,7 @@ from .const import (
     PRESET_MODE_TO_VALLOX_PROFILE_SETTABLE,
     VALLOX_PROFILE_TO_PRESET_MODE_REPORTABLE,
 )
+from .coordinator import ValloxDataUpdateCoordinator
 
 
 class ExtraStateAttributeDetails(NamedTuple):
@@ -75,7 +77,13 @@ class ValloxFanEntity(ValloxEntity, FanEntity):
     """Representation of the fan."""
 
     _attr_name = None
-    _attr_supported_features = FanEntityFeature.PRESET_MODE | FanEntityFeature.SET_SPEED
+    _attr_supported_features = (
+        FanEntityFeature.PRESET_MODE
+        | FanEntityFeature.SET_SPEED
+        | FanEntityFeature.TURN_OFF
+        | FanEntityFeature.TURN_ON
+    )
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self,

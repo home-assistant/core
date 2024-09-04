@@ -1,4 +1,5 @@
 """Sensor platform for motionEye."""
+
 from __future__ import annotations
 
 import logging

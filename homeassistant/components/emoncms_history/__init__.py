@@ -1,4 +1,5 @@
 """Support for sending data to Emoncms."""
+
 from datetime import timedelta
 from http import HTTPStatus
 import logging
@@ -85,8 +86,8 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 continue
 
         if payload_dict:
-            payload = "{%s}" % ",".join(
-                f"{key}:{val}" for key, val in payload_dict.items()
+            payload = "{{{}}}".format(
+                ",".join(f"{key}:{val}" for key, val in payload_dict.items())
             )
 
             send_data(

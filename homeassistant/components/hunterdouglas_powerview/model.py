@@ -1,4 +1,5 @@
 """Define Hunter Douglas data models."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -8,7 +9,11 @@ from aiopvapi.resources.room import Room
 from aiopvapi.resources.scene import Scene
 from aiopvapi.resources.shade import BaseShade
 
+from homeassistant.config_entries import ConfigEntry
+
 from .coordinator import PowerviewShadeUpdateCoordinator
+
+type PowerviewConfigEntry = ConfigEntry[PowerviewEntryData]
 
 
 @dataclass

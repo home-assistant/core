@@ -1,4 +1,5 @@
 """Offer API to configure Home Assistant auth."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -120,7 +121,7 @@ async def websocket_update(
     if not (user := await hass.auth.async_get_user(msg.pop("user_id"))):
         connection.send_message(
             websocket_api.error_message(
-                msg["id"], websocket_api.const.ERR_NOT_FOUND, "User not found"
+                msg["id"], websocket_api.ERR_NOT_FOUND, "User not found"
             )
         )
         return

@@ -1,4 +1,5 @@
 """Support for voltage, power & energy sensors for VeSync outlets."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -35,18 +36,11 @@ from .const import DEV_TYPE_TO_HA, DOMAIN, SKU_TO_BASE_DEVICE, VS_DISCOVERY, VS_
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass(frozen=True)
-class VeSyncSensorEntityDescriptionMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class VeSyncSensorEntityDescription(SensorEntityDescription):
+    """Describe VeSync sensor entity."""
 
     value_fn: Callable[[VeSyncAirBypass | VeSyncOutlet | VeSyncSwitch], StateType]
-
-
-@dataclass(frozen=True)
-class VeSyncSensorEntityDescription(
-    SensorEntityDescription, VeSyncSensorEntityDescriptionMixin
-):
-    """Describe VeSync sensor entity."""
 
     exists_fn: Callable[[VeSyncAirBypass | VeSyncOutlet | VeSyncSwitch], bool] = (
         lambda _: True
@@ -78,6 +72,7 @@ FILTER_LIFE_SUPPORTED = [
     "Core300S",
     "Core400S",
     "Core600S",
+    "EverestAir",
     "Vital100S",
     "Vital200S",
 ]
@@ -89,7 +84,14 @@ AIR_QUALITY_SUPPORTED = [
     "Vital100S",
     "Vital200S",
 ]
-PM25_SUPPORTED = ["Core300S", "Core400S", "Core600S", "Vital100S", "Vital200S"]
+PM25_SUPPORTED = [
+    "Core300S",
+    "Core400S",
+    "Core600S",
+    "EverestAir",
+    "Vital100S",
+    "Vital200S",
+]
 
 SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
     VeSyncSensorEntityDescription(
@@ -200,12 +202,15 @@ async def async_setup_entry(
 @callback
 def _setup_entities(devices, async_add_entities):
     """Check if device is online and add entity."""
-    entities = []
-    for dev in devices:
-        for description in SENSORS:
-            if description.exists_fn(dev):
-                entities.append(VeSyncSensorEntity(dev, description))
-    async_add_entities(entities, update_before_add=True)
+    async_add_entities(
+        (
+            VeSyncSensorEntity(dev, description)
+            for dev in devices
+            for description in SENSORS
+            if description.exists_fn(dev)
+        ),
+        update_before_add=True,
+    )
 
 
 class VeSyncSensorEntity(VeSyncBaseEntity, SensorEntity):

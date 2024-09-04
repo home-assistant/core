@@ -1,4 +1,5 @@
 """The tests for the demo datetime component."""
+
 from unittest.mock import patch
 
 import pytest
@@ -36,7 +37,7 @@ def test_setup_params(hass: HomeAssistant) -> None:
 
 async def test_set_datetime(hass: HomeAssistant) -> None:
     """Test set datetime service."""
-    hass.config.set_time_zone("UTC")
+    await hass.config.async_set_time_zone("UTC")
     await hass.services.async_call(
         DOMAIN,
         SERVICE_SET_VALUE,

@@ -1,4 +1,5 @@
 """Base classes for Crownstone devices."""
+
 from __future__ import annotations
 
 from crownstone_cloud.cloud_models.crownstones import Crownstone

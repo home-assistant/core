@@ -1,4 +1,5 @@
 """The tests for the Tomato device tracker platform."""
+
 from unittest import mock
 
 import pytest
@@ -24,7 +25,7 @@ def mock_session_response(*args, **kwargs):
     """Mock data generation for session response."""
 
     class MockSessionResponse:
-        def __init__(self, text, status_code):
+        def __init__(self, text, status_code) -> None:
             self.text = text
             self.status_code = status_code
 

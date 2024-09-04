@@ -1,4 +1,5 @@
 """Support for Android IP Webcam settings."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
@@ -18,19 +19,12 @@ from .coordinator import AndroidIPCamDataUpdateCoordinator
 from .entity import AndroidIPCamBaseEntity
 
 
-@dataclass(frozen=True)
-class AndroidIPWebcamSwitchEntityDescriptionMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class AndroidIPWebcamSwitchEntityDescription(SwitchEntityDescription):
+    """Entity description class for Android IP Webcam switches."""
 
     on_func: Callable[[PyDroidIPCam], Coroutine[Any, Any, bool]]
     off_func: Callable[[PyDroidIPCam], Coroutine[Any, Any, bool]]
-
-
-@dataclass(frozen=True)
-class AndroidIPWebcamSwitchEntityDescription(
-    SwitchEntityDescription, AndroidIPWebcamSwitchEntityDescriptionMixin
-):
-    """Entity description class for Android IP Webcam switches."""
 
 
 SWITCH_TYPES: tuple[AndroidIPWebcamSwitchEntityDescription, ...] = (

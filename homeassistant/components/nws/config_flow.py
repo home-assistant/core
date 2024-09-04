@@ -1,4 +1,5 @@
 """Config flow for National Weather Service (NWS) integration."""
+
 from __future__ import annotations
 
 import logging
@@ -65,7 +66,7 @@ class NWSConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(title=info["title"], data=user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
 

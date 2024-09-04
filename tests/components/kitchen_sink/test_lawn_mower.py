@@ -1,4 +1,5 @@
 """The tests for the kitchen_sink lawn mower platform."""
+
 from unittest.mock import patch
 
 import pytest
@@ -69,6 +70,12 @@ async def test_states(hass: HomeAssistant, snapshot: SnapshotAssertion) -> None:
             "lawn_mower.mower_can_dock",
             SERVICE_DOCK,
             LawnMowerActivity.MOWING,
+            LawnMowerActivity.DOCKED,
+        ),
+        (
+            "lawn_mower.mower_can_return",
+            SERVICE_DOCK,
+            LawnMowerActivity.RETURNING,
             LawnMowerActivity.DOCKED,
         ),
     ],

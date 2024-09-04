@@ -1,7 +1,8 @@
 """Tests for Vallox number platform."""
+
 import pytest
 
-from homeassistant.components.number.const import (
+from homeassistant.components.number import (
     ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
     SERVICE_SET_VALUE,

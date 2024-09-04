@@ -1,4 +1,5 @@
 """Support for Aruba Access Points."""
+
 from __future__ import annotations
 
 import logging
@@ -10,7 +11,7 @@ import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
     DOMAIN,
-    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
     DeviceScanner,
 )
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
@@ -22,11 +23,11 @@ _LOGGER = logging.getLogger(__name__)
 
 _DEVICES_REGEX = re.compile(
     r"(?P<name>([^\s]+)?)\s+"
-    + r"(?P<ip>([0-9]{1,3}[\.]){3}[0-9]{1,3})\s+"
-    + r"(?P<mac>([0-9a-f]{2}[:-]){5}([0-9a-f]{2}))\s+"
+    r"(?P<ip>([0-9]{1,3}[\.]){3}[0-9]{1,3})\s+"
+    r"(?P<mac>([0-9a-f]{2}[:-]){5}([0-9a-f]{2}))\s+"
 )
 
-PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,

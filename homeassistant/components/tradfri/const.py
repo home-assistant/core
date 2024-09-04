@@ -1,4 +1,5 @@
 """Consts used by Tradfri."""
+
 import logging
 
 LOGGER = logging.getLogger(__package__)

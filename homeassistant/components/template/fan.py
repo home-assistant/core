@@ -1,4 +1,5 @@
 """Support for Template fans."""
+
 from __future__ import annotations
 
 import logging
@@ -93,7 +94,7 @@ async def _async_create_entities(hass, config):
     fans = []
 
     for object_id, entity_config in config[CONF_FANS].items():
-        entity_config = rewrite_common_legacy_to_modern_conf(entity_config)
+        entity_config = rewrite_common_legacy_to_modern_conf(hass, entity_config)
 
         unique_id = entity_config.get(CONF_UNIQUE_ID)
 
@@ -123,6 +124,7 @@ class TemplateFan(TemplateEntity, FanEntity):
     """A template fan component."""
 
     _attr_should_poll = False
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self,
@@ -194,6 +196,9 @@ class TemplateFan(TemplateEntity, FanEntity):
             self._attr_supported_features |= FanEntityFeature.OSCILLATE
         if self._direction_template:
             self._attr_supported_features |= FanEntityFeature.DIRECTION
+        self._attr_supported_features |= (
+            FanEntityFeature.TURN_OFF | FanEntityFeature.TURN_ON
+        )
 
         self._attr_assumed_state = self._template is None
 

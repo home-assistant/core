@@ -1,4 +1,5 @@
 """Support for MyBMW button entities."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
@@ -11,13 +12,12 @@ from bimmer_connected.vehicle import MyBMWVehicle
 from bimmer_connected.vehicle.remote_services import RemoteServiceStatus
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import BMWBaseEntity
-from .const import DOMAIN
+from . import BMWConfigEntry
+from .entity import BMWBaseEntity
 
 if TYPE_CHECKING:
     from .coordinator import BMWDataUpdateCoordinator
@@ -25,17 +25,11 @@ if TYPE_CHECKING:
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass(frozen=True)
-class BMWRequiredKeysMixin:
-    """Mixin for required keys."""
-
-    remote_function: Callable[[MyBMWVehicle], Coroutine[Any, Any, RemoteServiceStatus]]
-
-
-@dataclass(frozen=True)
-class BMWButtonEntityDescription(ButtonEntityDescription, BMWRequiredKeysMixin):
+@dataclass(frozen=True, kw_only=True)
+class BMWButtonEntityDescription(ButtonEntityDescription):
     """Class describing BMW button entities."""
 
+    remote_function: Callable[[MyBMWVehicle], Coroutine[Any, Any, RemoteServiceStatus]]
     enabled_when_read_only: bool = False
     is_available: Callable[[MyBMWVehicle], bool] = lambda _: True
 
@@ -73,11 +67,11 @@ BUTTON_TYPES: tuple[BMWButtonEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: BMWConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the BMW buttons from config entry."""
-    coordinator: BMWDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data.coordinator
 
     entities: list[BMWButton] = []
 

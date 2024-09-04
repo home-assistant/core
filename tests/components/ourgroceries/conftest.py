@@ -1,4 +1,5 @@
 """Common fixtures for the OurGroceries tests."""
+
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
@@ -18,7 +19,7 @@ PASSWORD = "test-password"
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.ourgroceries.async_setup_entry", return_value=True

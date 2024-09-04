@@ -1,4 +1,5 @@
 """Test the Open Thread Border Router config flow."""
+
 import asyncio
 from http import HTTPStatus
 from typing import Any
@@ -12,7 +13,7 @@ from homeassistant.components import hassio, otbr
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from . import DATASET_CH15, DATASET_CH16
+from . import DATASET_CH15, DATASET_CH16, TEST_BORDER_AGENT_ID, TEST_BORDER_AGENT_ID_2
 
 from tests.common import MockConfigEntry, MockModule, mock_integration
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -48,19 +49,106 @@ def addon_info_fixture():
         yield addon_info
 
 
+@pytest.mark.parametrize(
+    "url",
+    [
+        "http://custom_url:1234",
+        "http://custom_url:1234/",
+        "http://custom_url:1234//",
+    ],
+)
+@pytest.mark.usefixtures(
+    "get_active_dataset_tlvs",
+    "get_border_agent_id",
+)
 async def test_user_flow(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, url: str
 ) -> None:
     """Test the user flow."""
-    url = "http://custom_url:1234"
-    aioclient_mock.get(f"{url}/node/dataset/active", text="aa")
+    await _finish_user_flow(hass, url)
+
+
+@pytest.mark.usefixtures(
+    "get_active_dataset_tlvs",
+    "get_extended_address",
+)
+async def test_user_flow_additional_entry(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test more than a single entry is allowed."""
+    url1 = "http://custom_url:1234"
+    url2 = "http://custom_url_2:1234"
+    aioclient_mock.get(f"{url1}/node/ba-id", json=TEST_BORDER_AGENT_ID.hex())
+    aioclient_mock.get(f"{url2}/node/ba-id", json=TEST_BORDER_AGENT_ID_2.hex())
+
+    mock_integration(hass, MockModule("hassio"))
+
+    # Setup a config entry
+    config_entry = MockConfigEntry(
+        data={"url": url2},
+        domain=otbr.DOMAIN,
+        options={},
+        title="Open Thread Border Router",
+        unique_id=TEST_BORDER_AGENT_ID_2.hex(),
+    )
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+
+    # Do a user flow
+    await _finish_user_flow(hass)
+
+
+@pytest.mark.usefixtures(
+    "get_active_dataset_tlvs",
+    "get_extended_address",
+)
+async def test_user_flow_additional_entry_fail_get_address(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test more than a single entry is allowed.
+
+    This tets the behavior when we can't read the extended address from the existing
+    config entry.
+    """
+    url1 = "http://custom_url:1234"
+    url2 = "http://custom_url_2:1234"
+    aioclient_mock.get(f"{url2}/node/ba-id", json=TEST_BORDER_AGENT_ID_2.hex())
+
+    mock_integration(hass, MockModule("hassio"))
+
+    # Setup a config entry
+    config_entry = MockConfigEntry(
+        data={"url": url2},
+        domain=otbr.DOMAIN,
+        options={},
+        title="Open Thread Border Router",
+        unique_id=TEST_BORDER_AGENT_ID_2.hex(),
+    )
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+
+    # Do a user flow
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(f"{url1}/node/ba-id", json=TEST_BORDER_AGENT_ID.hex())
+    aioclient_mock.get(f"{url2}/node/ba-id", status=HTTPStatus.NOT_FOUND)
+    await _finish_user_flow(hass)
+    assert f"Could not read border agent id from {url2}" in caplog.text
+
+
+async def _finish_user_flow(
+    hass: HomeAssistant, url: str = "http://custom_url:1234"
+) -> None:
+    """Finish a user flow."""
+    stripped_url = "http://custom_url:1234"
     result = await hass.config_entries.flow.async_init(
         otbr.DOMAIN, context={"source": "user"}
     )
 
-    expected_data = {"url": url}
+    expected_data = {"url": stripped_url}
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     with patch(
@@ -73,19 +161,62 @@ async def test_user_flow(
                 "url": url,
             },
         )
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Open Thread Border Router"
     assert result["data"] == expected_data
     assert result["options"] == {}
     assert len(mock_setup_entry.mock_calls) == 1
 
-    config_entry = hass.config_entries.async_entries(otbr.DOMAIN)[0]
+    config_entry = result["result"]
     assert config_entry.data == expected_data
     assert config_entry.options == {}
     assert config_entry.title == "Open Thread Border Router"
-    assert config_entry.unique_id == otbr.DOMAIN
+    assert config_entry.unique_id == TEST_BORDER_AGENT_ID.hex()
 
 
+@pytest.mark.usefixtures(
+    "get_active_dataset_tlvs",
+    "get_border_agent_id",
+    "get_extended_address",
+)
+async def test_user_flow_additional_entry_same_address(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test more than a single entry is allowed."""
+    mock_integration(hass, MockModule("hassio"))
+
+    # Setup a config entry
+    config_entry = MockConfigEntry(
+        data={"url": "http://custom_url:1234"},
+        domain=otbr.DOMAIN,
+        options={},
+        title="Open Thread Border Router",
+        unique_id=TEST_BORDER_AGENT_ID.hex(),
+    )
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+
+    # Start user flow
+    url = "http://custom_url:1234"
+    aioclient_mock.get(f"{url}/node/dataset/active", text="aa")
+    result = await hass.config_entries.flow.async_init(
+        otbr.DOMAIN, context={"source": "user"}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "url": url,
+        },
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "already_configured"}
+
+
+@pytest.mark.usefixtures("get_border_agent_id")
 async def test_user_flow_router_not_setup(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
@@ -101,16 +232,19 @@ async def test_user_flow_router_not_setup(
     result = await hass.config_entries.flow.async_init(
         otbr.DOMAIN, context={"source": "user"}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.otbr.config_flow.async_get_preferred_dataset",
-        return_value=None,
-    ), patch(
-        "homeassistant.components.otbr.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.otbr.config_flow.async_get_preferred_dataset",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.otbr.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -136,7 +270,7 @@ async def test_user_flow_router_not_setup(
         "url": "http://custom_url:1234",
     }
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Open Thread Border Router"
     assert result["data"] == expected_data
     assert result["options"] == {}
@@ -146,10 +280,11 @@ async def test_user_flow_router_not_setup(
     assert config_entry.data == expected_data
     assert config_entry.options == {}
     assert config_entry.title == "Open Thread Border Router"
-    assert config_entry.unique_id == otbr.DOMAIN
+    assert config_entry.unique_id == TEST_BORDER_AGENT_ID.hex()
 
 
-async def test_user_flow_404(
+@pytest.mark.usefixtures("get_border_agent_id")
+async def test_user_flow_get_dataset_404(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test the user flow."""
@@ -159,7 +294,7 @@ async def test_user_flow_404(
         otbr.DOMAIN, context={"source": "user"}
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     result = await hass.config_entries.flow.async_configure(
@@ -168,7 +303,7 @@ async def test_user_flow_404(
             "url": url,
         },
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
 
 
@@ -180,26 +315,50 @@ async def test_user_flow_404(
         aiohttp.ClientError,
     ],
 )
-async def test_user_flow_connect_error(hass: HomeAssistant, error) -> None:
+async def test_user_flow_get_ba_id_connect_error(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, error
+) -> None:
+    """Test the user flow."""
+    await _test_user_flow_connect_error(hass, "get_border_agent_id", error)
+
+
+@pytest.mark.usefixtures("get_border_agent_id")
+@pytest.mark.parametrize(
+    "error",
+    [
+        TimeoutError,
+        python_otbr_api.OTBRError,
+        aiohttp.ClientError,
+    ],
+)
+async def test_user_flow_get_dataset_connect_error(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, error
+) -> None:
+    """Test the user flow."""
+    await _test_user_flow_connect_error(hass, "get_active_dataset_tlvs", error)
+
+
+async def _test_user_flow_connect_error(hass: HomeAssistant, func, error) -> None:
     """Test the user flow."""
     result = await hass.config_entries.flow.async_init(
         otbr.DOMAIN, context={"source": "user"}
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
-    with patch("python_otbr_api.OTBR.get_active_dataset_tlvs", side_effect=error):
+    with patch(f"python_otbr_api.OTBR.{func}", side_effect=error):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
                 "url": "http://custom_url:1234",
             },
         )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
 
 
+@pytest.mark.usefixtures("get_border_agent_id")
 async def test_hassio_discovery_flow(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, addon_info
 ) -> None:
@@ -219,7 +378,7 @@ async def test_hassio_discovery_flow(
         "url": f"http://{HASSIO_DATA.config['host']}:{HASSIO_DATA.config['port']}",
     }
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Silicon Labs Multiprotocol"
     assert result["data"] == expected_data
     assert result["options"] == {}
@@ -232,6 +391,7 @@ async def test_hassio_discovery_flow(
     assert config_entry.unique_id == HASSIO_DATA.uuid
 
 
+@pytest.mark.usefixtures("get_border_agent_id")
 async def test_hassio_discovery_flow_yellow(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, addon_info
 ) -> None:
@@ -248,11 +408,12 @@ async def test_hassio_discovery_flow_yellow(
         "version": None,
     }
 
-    with patch(
-        "homeassistant.components.otbr.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry, patch(
-        "homeassistant.components.otbr.config_flow.yellow_hardware.async_info"
+    with (
+        patch(
+            "homeassistant.components.otbr.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+        patch("homeassistant.components.otbr.config_flow.yellow_hardware.async_info"),
     ):
         result = await hass.config_entries.flow.async_init(
             otbr.DOMAIN, context={"source": "hassio"}, data=HASSIO_DATA
@@ -262,7 +423,7 @@ async def test_hassio_discovery_flow_yellow(
         "url": f"http://{HASSIO_DATA.config['host']}:{HASSIO_DATA.config['port']}",
     }
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Home Assistant Yellow (Silicon Labs Multiprotocol)"
     assert result["data"] == expected_data
     assert result["options"] == {}
@@ -275,8 +436,26 @@ async def test_hassio_discovery_flow_yellow(
     assert config_entry.unique_id == HASSIO_DATA.uuid
 
 
+@pytest.mark.parametrize(
+    ("device", "title"),
+    [
+        (
+            "/dev/serial/by-id/usb-Nabu_Casa_SkyConnect_v1.0_9e2adbd75b8beb119fe564a0f320645d-if00-port0",
+            "Home Assistant SkyConnect (Silicon Labs Multiprotocol)",
+        ),
+        (
+            "/dev/serial/by-id/usb-Nabu_Casa_Home_Assistant_Connect_ZBT-1_9e2adbd75b8beb119fe564a0f320645d-if00-port0",
+            "Home Assistant Connect ZBT-1 (Silicon Labs Multiprotocol)",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("get_border_agent_id")
 async def test_hassio_discovery_flow_sky_connect(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, addon_info
+    device: str,
+    title: str,
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    addon_info,
 ) -> None:
     """Test the hassio discovery flow."""
     url = "http://core-silabs-multiprotocol:8081"
@@ -285,12 +464,7 @@ async def test_hassio_discovery_flow_sky_connect(
     addon_info.return_value = {
         "available": True,
         "hostname": None,
-        "options": {
-            "device": (
-                "/dev/serial/by-id/usb-Nabu_Casa_SkyConnect_v1.0_"
-                "9e2adbd75b8beb119fe564a0f320645d-if00-port0"
-            )
-        },
+        "options": {"device": device},
         "state": None,
         "update_available": False,
         "version": None,
@@ -308,8 +482,8 @@ async def test_hassio_discovery_flow_sky_connect(
         "url": f"http://{HASSIO_DATA.config['host']}:{HASSIO_DATA.config['port']}",
     }
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Home Assistant SkyConnect (Silicon Labs Multiprotocol)"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == title
     assert result["data"] == expected_data
     assert result["options"] == {}
     assert len(mock_setup_entry.mock_calls) == 1
@@ -317,12 +491,11 @@ async def test_hassio_discovery_flow_sky_connect(
     config_entry = hass.config_entries.async_entries(otbr.DOMAIN)[0]
     assert config_entry.data == expected_data
     assert config_entry.options == {}
-    assert (
-        config_entry.title == "Home Assistant SkyConnect (Silicon Labs Multiprotocol)"
-    )
+    assert config_entry.title == title
     assert config_entry.unique_id == HASSIO_DATA.uuid
 
 
+@pytest.mark.usefixtures("get_active_dataset_tlvs", "get_extended_address")
 async def test_hassio_discovery_flow_2x_addons(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, addon_info
 ) -> None:
@@ -331,8 +504,10 @@ async def test_hassio_discovery_flow_2x_addons(
     url2 = "http://core-silabs-multiprotocol_2:8081"
     aioclient_mock.get(f"{url1}/node/dataset/active", text="aa")
     aioclient_mock.get(f"{url2}/node/dataset/active", text="bb")
+    aioclient_mock.get(f"{url1}/node/ba-id", json=TEST_BORDER_AGENT_ID.hex())
+    aioclient_mock.get(f"{url2}/node/ba-id", json=TEST_BORDER_AGENT_ID_2.hex())
 
-    async def _addon_info(hass, slug):
+    async def _addon_info(hass: HomeAssistant, slug: str) -> dict[str, Any]:
         await asyncio.sleep(0)
         if slug == "otbr":
             return {
@@ -364,33 +539,121 @@ async def test_hassio_discovery_flow_2x_addons(
 
     addon_info.side_effect = _addon_info
 
-    with patch(
-        "homeassistant.components.otbr.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
-        result1 = await hass.config_entries.flow.async_init(
-            otbr.DOMAIN, context={"source": "hassio"}, data=HASSIO_DATA
-        )
-        result2 = await hass.config_entries.flow.async_init(
-            otbr.DOMAIN, context={"source": "hassio"}, data=HASSIO_DATA_2
-        )
+    result1 = await hass.config_entries.flow.async_init(
+        otbr.DOMAIN, context={"source": "hassio"}, data=HASSIO_DATA
+    )
+    result2 = await hass.config_entries.flow.async_init(
+        otbr.DOMAIN, context={"source": "hassio"}, data=HASSIO_DATA_2
+    )
 
-        results = [result1, result2]
+    results = [result1, result2]
 
     expected_data = {
         "url": f"http://{HASSIO_DATA.config['host']}:{HASSIO_DATA.config['port']}",
     }
+    expected_data_2 = {
+        "url": f"http://{HASSIO_DATA_2.config['host']}:{HASSIO_DATA_2.config['port']}",
+    }
 
-    assert results[0]["type"] == FlowResultType.CREATE_ENTRY
+    assert results[0]["type"] is FlowResultType.CREATE_ENTRY
     assert (
         results[0]["title"] == "Home Assistant SkyConnect (Silicon Labs Multiprotocol)"
     )
     assert results[0]["data"] == expected_data
     assert results[0]["options"] == {}
-    assert results[1]["type"] == FlowResultType.ABORT
-    assert results[1]["reason"] == "single_instance_allowed"
+
+    assert results[1]["type"] is FlowResultType.CREATE_ENTRY
+    assert (
+        results[1]["title"] == "Home Assistant SkyConnect (Silicon Labs Multiprotocol)"
+    )
+    assert results[1]["data"] == expected_data_2
+    assert results[1]["options"] == {}
+
+    assert len(hass.config_entries.async_entries(otbr.DOMAIN)) == 2
+
+    config_entry = hass.config_entries.async_entries(otbr.DOMAIN)[0]
+    assert config_entry.data == expected_data
+    assert config_entry.options == {}
+    assert (
+        config_entry.title == "Home Assistant SkyConnect (Silicon Labs Multiprotocol)"
+    )
+    assert config_entry.unique_id == HASSIO_DATA.uuid
+
+    config_entry = hass.config_entries.async_entries(otbr.DOMAIN)[1]
+    assert config_entry.data == expected_data_2
+    assert config_entry.options == {}
+    assert (
+        config_entry.title == "Home Assistant SkyConnect (Silicon Labs Multiprotocol)"
+    )
+    assert config_entry.unique_id == HASSIO_DATA_2.uuid
+
+
+@pytest.mark.usefixtures("get_active_dataset_tlvs", "get_extended_address")
+async def test_hassio_discovery_flow_2x_addons_same_ext_address(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, addon_info
+) -> None:
+    """Test the hassio discovery flow when the user has 2 addons with otbr support."""
+    url1 = "http://core-silabs-multiprotocol:8081"
+    url2 = "http://core-silabs-multiprotocol_2:8081"
+    aioclient_mock.get(f"{url1}/node/dataset/active", text="aa")
+    aioclient_mock.get(f"{url2}/node/dataset/active", text="bb")
+    aioclient_mock.get(f"{url1}/node/ba-id", json=TEST_BORDER_AGENT_ID.hex())
+    aioclient_mock.get(f"{url2}/node/ba-id", json=TEST_BORDER_AGENT_ID.hex())
+
+    async def _addon_info(hass: HomeAssistant, slug: str) -> dict[str, Any]:
+        await asyncio.sleep(0)
+        if slug == "otbr":
+            return {
+                "available": True,
+                "hostname": None,
+                "options": {
+                    "device": (
+                        "/dev/serial/by-id/usb-Nabu_Casa_SkyConnect_v1.0_"
+                        "9e2adbd75b8beb119fe564a0f320645d-if00-port0"
+                    )
+                },
+                "state": None,
+                "update_available": False,
+                "version": None,
+            }
+        return {
+            "available": True,
+            "hostname": None,
+            "options": {
+                "device": (
+                    "/dev/serial/by-id/usb-Nabu_Casa_SkyConnect_v1.0_"
+                    "9e2adbd75b8beb119fe564a0f320645d-if00-port1"
+                )
+            },
+            "state": None,
+            "update_available": False,
+            "version": None,
+        }
+
+    addon_info.side_effect = _addon_info
+
+    result1 = await hass.config_entries.flow.async_init(
+        otbr.DOMAIN, context={"source": "hassio"}, data=HASSIO_DATA
+    )
+    result2 = await hass.config_entries.flow.async_init(
+        otbr.DOMAIN, context={"source": "hassio"}, data=HASSIO_DATA_2
+    )
+
+    results = [result1, result2]
+
+    expected_data = {
+        "url": f"http://{HASSIO_DATA.config['host']}:{HASSIO_DATA.config['port']}",
+    }
+
+    assert results[0]["type"] is FlowResultType.CREATE_ENTRY
+    assert (
+        results[0]["title"] == "Home Assistant SkyConnect (Silicon Labs Multiprotocol)"
+    )
+    assert results[0]["data"] == expected_data
+    assert results[0]["options"] == {}
+    assert results[1]["type"] is FlowResultType.ABORT
+    assert results[1]["reason"] == "already_configured"
     assert len(hass.config_entries.async_entries(otbr.DOMAIN)) == 1
-    assert len(mock_setup_entry.mock_calls) == 1
 
     config_entry = hass.config_entries.async_entries(otbr.DOMAIN)[0]
     assert config_entry.data == expected_data
@@ -401,6 +664,7 @@ async def test_hassio_discovery_flow_2x_addons(
     assert config_entry.unique_id == HASSIO_DATA.uuid
 
 
+@pytest.mark.usefixtures("get_border_agent_id")
 async def test_hassio_discovery_flow_router_not_setup(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, addon_info
 ) -> None:
@@ -413,13 +677,16 @@ async def test_hassio_discovery_flow_router_not_setup(
     aioclient_mock.put(f"{url}/node/dataset/active", status=HTTPStatus.CREATED)
     aioclient_mock.put(f"{url}/node/state", status=HTTPStatus.OK)
 
-    with patch(
-        "homeassistant.components.otbr.config_flow.async_get_preferred_dataset",
-        return_value=None,
-    ), patch(
-        "homeassistant.components.otbr.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.otbr.config_flow.async_get_preferred_dataset",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.otbr.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result = await hass.config_entries.flow.async_init(
             otbr.DOMAIN, context={"source": "hassio"}, data=HASSIO_DATA
         )
@@ -442,7 +709,7 @@ async def test_hassio_discovery_flow_router_not_setup(
         "url": f"http://{HASSIO_DATA.config['host']}:{HASSIO_DATA.config['port']}",
     }
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Silicon Labs Multiprotocol"
     assert result["data"] == expected_data
     assert result["options"] == {}
@@ -455,6 +722,7 @@ async def test_hassio_discovery_flow_router_not_setup(
     assert config_entry.unique_id == HASSIO_DATA.uuid
 
 
+@pytest.mark.usefixtures("get_border_agent_id")
 async def test_hassio_discovery_flow_router_not_setup_has_preferred(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, addon_info
 ) -> None:
@@ -467,13 +735,16 @@ async def test_hassio_discovery_flow_router_not_setup_has_preferred(
     aioclient_mock.put(f"{url}/node/dataset/active", status=HTTPStatus.CREATED)
     aioclient_mock.put(f"{url}/node/state", status=HTTPStatus.OK)
 
-    with patch(
-        "homeassistant.components.otbr.config_flow.async_get_preferred_dataset",
-        return_value=DATASET_CH15.hex(),
-    ), patch(
-        "homeassistant.components.otbr.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.otbr.config_flow.async_get_preferred_dataset",
+            return_value=DATASET_CH15.hex(),
+        ),
+        patch(
+            "homeassistant.components.otbr.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result = await hass.config_entries.flow.async_init(
             otbr.DOMAIN, context={"source": "hassio"}, data=HASSIO_DATA
         )
@@ -491,7 +762,7 @@ async def test_hassio_discovery_flow_router_not_setup_has_preferred(
         "url": f"http://{HASSIO_DATA.config['host']}:{HASSIO_DATA.config['port']}",
     }
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Silicon Labs Multiprotocol"
     assert result["data"] == expected_data
     assert result["options"] == {}
@@ -504,6 +775,7 @@ async def test_hassio_discovery_flow_router_not_setup_has_preferred(
     assert config_entry.unique_id == HASSIO_DATA.uuid
 
 
+@pytest.mark.usefixtures("get_border_agent_id")
 async def test_hassio_discovery_flow_router_not_setup_has_preferred_2(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
@@ -522,13 +794,16 @@ async def test_hassio_discovery_flow_router_not_setup_has_preferred_2(
 
     multiprotocol_addon_manager_mock.async_get_channel.return_value = 15
 
-    with patch(
-        "homeassistant.components.otbr.config_flow.async_get_preferred_dataset",
-        return_value=DATASET_CH16.hex(),
-    ), patch(
-        "homeassistant.components.otbr.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "homeassistant.components.otbr.config_flow.async_get_preferred_dataset",
+            return_value=DATASET_CH16.hex(),
+        ),
+        patch(
+            "homeassistant.components.otbr.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result = await hass.config_entries.flow.async_init(
             otbr.DOMAIN, context={"source": "hassio"}, data=HASSIO_DATA
         )
@@ -551,7 +826,7 @@ async def test_hassio_discovery_flow_router_not_setup_has_preferred_2(
         "url": f"http://{HASSIO_DATA.config['host']}:{HASSIO_DATA.config['port']}",
     }
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Silicon Labs Multiprotocol"
     assert result["data"] == expected_data
     assert result["options"] == {}
@@ -564,6 +839,7 @@ async def test_hassio_discovery_flow_router_not_setup_has_preferred_2(
     assert config_entry.unique_id == HASSIO_DATA.uuid
 
 
+@pytest.mark.usefixtures("get_border_agent_id")
 async def test_hassio_discovery_flow_404(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
@@ -574,10 +850,11 @@ async def test_hassio_discovery_flow_404(
         otbr.DOMAIN, context={"source": "hassio"}, data=HASSIO_DATA
     )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "unknown"
 
 
+@pytest.mark.usefixtures("get_border_agent_id")
 async def test_hassio_discovery_flow_new_port_missing_unique_id(
     hass: HomeAssistant,
 ) -> None:
@@ -600,8 +877,8 @@ async def test_hassio_discovery_flow_new_port_missing_unique_id(
         otbr.DOMAIN, context={"source": "hassio"}, data=HASSIO_DATA
     )
 
-    assert result["type"] == FlowResultType.ABORT
-    assert result["reason"] == "single_instance_allowed"
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
 
     expected_data = {
         "url": f"http://{HASSIO_DATA.config['host']}:{HASSIO_DATA.config['port']}",
@@ -610,6 +887,7 @@ async def test_hassio_discovery_flow_new_port_missing_unique_id(
     assert config_entry.data == expected_data
 
 
+@pytest.mark.usefixtures("get_border_agent_id")
 async def test_hassio_discovery_flow_new_port(hass: HomeAssistant) -> None:
     """Test the port can be updated."""
     mock_integration(hass, MockModule("hassio"))
@@ -631,8 +909,8 @@ async def test_hassio_discovery_flow_new_port(hass: HomeAssistant) -> None:
         otbr.DOMAIN, context={"source": "hassio"}, data=HASSIO_DATA
     )
 
-    assert result["type"] == FlowResultType.ABORT
-    assert result["reason"] == "single_instance_allowed"
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
 
     expected_data = {
         "url": f"http://{HASSIO_DATA.config['host']}:{HASSIO_DATA.config['port']}",
@@ -641,6 +919,12 @@ async def test_hassio_discovery_flow_new_port(hass: HomeAssistant) -> None:
     assert config_entry.data == expected_data
 
 
+@pytest.mark.usefixtures(
+    "addon_info",
+    "get_active_dataset_tlvs",
+    "get_border_agent_id",
+    "get_extended_address",
+)
 async def test_hassio_discovery_flow_new_port_other_addon(hass: HomeAssistant) -> None:
     """Test the port is not updated if we get data for another addon hosting OTBR."""
     mock_integration(hass, MockModule("hassio"))
@@ -659,22 +943,34 @@ async def test_hassio_discovery_flow_new_port_other_addon(hass: HomeAssistant) -
         otbr.DOMAIN, context={"source": "hassio"}, data=HASSIO_DATA
     )
 
-    assert result["type"] == FlowResultType.ABORT
-    assert result["reason"] == "single_instance_allowed"
+    # Another entry will be created
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
-    # Make sure the data was not updated
+    # Make sure the data of the existing entry was not updated
     expected_data = {
         "url": f"http://openthread_border_router:{HASSIO_DATA.config['port']+1}",
     }
-    config_entry = hass.config_entries.async_entries(otbr.DOMAIN)[0]
+    config_entry = hass.config_entries.async_get_entry(config_entry.entry_id)
     assert config_entry.data == expected_data
 
 
-@pytest.mark.parametrize(("source", "data"), [("hassio", HASSIO_DATA), ("user", None)])
-async def test_config_flow_single_entry(
-    hass: HomeAssistant, source: str, data: Any
+@pytest.mark.parametrize(
+    ("source", "data", "expected_result"),
+    [
+        ("hassio", HASSIO_DATA, FlowResultType.CREATE_ENTRY),
+        ("user", None, FlowResultType.FORM),
+    ],
+)
+@pytest.mark.usefixtures(
+    "addon_info",
+    "get_active_dataset_tlvs",
+    "get_border_agent_id",
+    "get_extended_address",
+)
+async def test_config_flow_additional_entry(
+    hass: HomeAssistant, source: str, data: Any, expected_result: FlowResultType
 ) -> None:
-    """Test only a single entry is allowed."""
+    """Test more than a single entry is allowed."""
     mock_integration(hass, MockModule("hassio"))
 
     # Setup the config entry
@@ -687,13 +983,11 @@ async def test_config_flow_single_entry(
     config_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.homeassistant_yellow.async_setup_entry",
+        "homeassistant.components.otbr.async_setup_entry",
         return_value=True,
-    ) as mock_setup_entry:
+    ):
         result = await hass.config_entries.flow.async_init(
             otbr.DOMAIN, context={"source": source}, data=data
         )
 
-    assert result["type"] == FlowResultType.ABORT
-    assert result["reason"] == "single_instance_allowed"
-    mock_setup_entry.assert_not_called()
+    assert result["type"] is expected_result

@@ -5,7 +5,7 @@
   "systems": [
     {
       "systemId": "123456-7890-1234",
-      "name": "Gotham City",
+      "name": "Batcave",
       "securityLevel": "admin",
       "hasAlarm": false,
       "country": "Sweden",

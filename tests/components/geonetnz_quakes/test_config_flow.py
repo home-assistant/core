@@ -1,8 +1,9 @@
 """Define tests for the GeoNet NZ Quakes config flow."""
+
 from datetime import timedelta
 from unittest.mock import patch
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.components.geonetnz_quakes import (
     CONF_MINIMUM_MAGNITUDE,
     CONF_MMI,
@@ -16,6 +17,7 @@ from homeassistant.const import (
     CONF_UNIT_SYSTEM,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 
 async def test_duplicate_error(hass: HomeAssistant, config_entry) -> None:
@@ -26,7 +28,7 @@ async def test_duplicate_error(hass: HomeAssistant, config_entry) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}, data=conf
     )
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -35,7 +37,7 @@ async def test_show_form(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
 
@@ -51,13 +53,19 @@ async def test_step_import(hass: HomeAssistant) -> None:
         CONF_MINIMUM_MAGNITUDE: 2.5,
     }
 
-    with patch(
-        "homeassistant.components.geonetnz_quakes.async_setup_entry", return_value=True
-    ), patch("homeassistant.components.geonetnz_quakes.async_setup", return_value=True):
+    with (
+        patch(
+            "homeassistant.components.geonetnz_quakes.async_setup_entry",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.geonetnz_quakes.async_setup", return_value=True
+        ),
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=conf
         )
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "-41.2, 174.7"
     assert result["data"] == {
         CONF_LATITUDE: -41.2,
@@ -76,13 +84,19 @@ async def test_step_user(hass: HomeAssistant) -> None:
     hass.config.longitude = 174.7
     conf = {CONF_RADIUS: 25, CONF_MMI: 4}
 
-    with patch(
-        "homeassistant.components.geonetnz_quakes.async_setup_entry", return_value=True
-    ), patch("homeassistant.components.geonetnz_quakes.async_setup", return_value=True):
+    with (
+        patch(
+            "homeassistant.components.geonetnz_quakes.async_setup_entry",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.geonetnz_quakes.async_setup", return_value=True
+        ),
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}, data=conf
         )
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "-41.2, 174.7"
     assert result["data"] == {
         CONF_LATITUDE: -41.2,

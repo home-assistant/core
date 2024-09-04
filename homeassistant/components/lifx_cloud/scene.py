@@ -1,4 +1,5 @@
 """Support for LIFX Cloud scenes."""
+
 from __future__ import annotations
 
 import asyncio
@@ -41,7 +42,7 @@ async def async_setup_platform(
     token = config.get(CONF_TOKEN)
     timeout = config.get(CONF_TIMEOUT)
 
-    headers = {AUTHORIZATION: f"Bearer {token}"}
+    headers: dict[str, str] = {AUTHORIZATION: f"Bearer {token}"}
 
     url = "https://api.lifx.com/v1/scenes"
 

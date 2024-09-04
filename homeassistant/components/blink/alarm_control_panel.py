@@ -1,4 +1,5 @@
 """Support for Blink Alarm Control Panel."""
+
 from __future__ import annotations
 
 import logging
@@ -45,6 +46,7 @@ class BlinkSyncModuleHA(
     """Representation of a Blink Alarm Control Panel."""
 
     _attr_supported_features = AlarmControlPanelEntityFeature.ARM_AWAY
+    _attr_code_arm_required = False
     _attr_has_entity_name = True
     _attr_name = None
 

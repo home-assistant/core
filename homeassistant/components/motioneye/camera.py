@@ -1,4 +1,5 @@
 """The motionEye integration."""
+
 from __future__ import annotations
 
 from contextlib import suppress
@@ -135,7 +136,7 @@ async def async_setup_entry(
     )
     platform.async_register_entity_service(
         SERVICE_SNAPSHOT,
-        {},
+        None,
         "async_request_snapshot",
     )
 

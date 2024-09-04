@@ -1,4 +1,5 @@
 """Test IMAP diagnostics."""
+
 from datetime import timedelta
 from typing import Any
 from unittest.mock import MagicMock
@@ -6,7 +7,7 @@ from unittest.mock import MagicMock
 import pytest
 
 from homeassistant.components import imap
-from homeassistant.components.sensor.const import SensorStateClass
+from homeassistant.components.sensor import SensorStateClass
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
@@ -65,6 +66,10 @@ async def test_entry_diagnostics(
         "port": 993,
         "charset": "utf-8",
         "folder": "INBOX",
+        "event_message_data": [
+            "text",
+            "headers",
+        ],
         "search": "UnSeen UnDeleted",
         "custom_event_data_template": "{{ 4 * 4 }}",
     }

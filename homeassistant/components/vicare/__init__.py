@@ -1,4 +1,5 @@
 """The ViCare integration."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -14,13 +15,21 @@ from PyViCare.PyViCareUtils import (
     PyViCareInvalidCredentialsError,
 )
 
+from homeassistant.components.climate import DOMAIN as DOMAIN_CLIMATE
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_CLIENT_ID, CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.storage import STORAGE_DIR
 
-from .const import DEFAULT_CACHE_DURATION, DEVICE_LIST, DOMAIN, PLATFORMS
+from .const import (
+    DEFAULT_CACHE_DURATION,
+    DEVICE_LIST,
+    DOMAIN,
+    PLATFORMS,
+    UNSUPPORTED_DEVICES,
+)
 from .types import ViCareDevice
 from .utils import get_device
 
@@ -39,6 +48,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await hass.async_add_executor_job(setup_vicare_api, hass, entry)
     except (PyViCareInvalidConfigurationError, PyViCareInvalidCredentialsError) as err:
         raise ConfigEntryAuthFailed("Authentication failed") from err
+
+    for device in hass.data[DOMAIN][entry.entry_id][DEVICE_LIST]:
+        # Migration can be removed in 2025.4.0
+        await async_migrate_devices(hass, entry, device)
+        # Migration can be removed in 2025.4.0
+        await async_migrate_entities(hass, entry, device)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -102,6 +117,72 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
+async def async_migrate_devices(
+    hass: HomeAssistant, entry: ConfigEntry, device: ViCareDevice
+) -> None:
+    """Migrate old entry."""
+    registry = dr.async_get(hass)
+
+    gateway_serial: str = device.config.getConfig().serial
+    device_serial: str = device.api.getSerial()
+
+    old_identifier = gateway_serial
+    new_identifier = f"{gateway_serial}_{device_serial}"
+
+    # Migrate devices
+    for device_entry in dr.async_entries_for_config_entry(registry, entry.entry_id):
+        if device_entry.identifiers == {(DOMAIN, old_identifier)}:
+            _LOGGER.debug("Migrating device %s", device_entry.name)
+            registry.async_update_device(
+                device_entry.id,
+                serial_number=device_serial,
+                new_identifiers={(DOMAIN, new_identifier)},
+            )
+
+
+async def async_migrate_entities(
+    hass: HomeAssistant, entry: ConfigEntry, device: ViCareDevice
+) -> None:
+    """Migrate old entry."""
+    gateway_serial: str = device.config.getConfig().serial
+    device_serial: str = device.api.getSerial()
+    new_identifier = f"{gateway_serial}_{device_serial}"
+
+    @callback
+    def _update_unique_id(
+        entity_entry: er.RegistryEntry,
+    ) -> dict[str, str] | None:
+        """Update unique ID of entity entry."""
+        if not entity_entry.unique_id.startswith(gateway_serial):
+            # belongs to other device/gateway
+            return None
+        if entity_entry.unique_id.startswith(f"{gateway_serial}_"):
+            # Already correct, nothing to do
+            return None
+
+        unique_id_parts = entity_entry.unique_id.split("-")
+        unique_id_parts[0] = new_identifier
+
+        # convert climate entity unique id from `<device_identifier>-<circuit_no>` to `<device_identifier>-heating-<circuit_no>`
+        if entity_entry.domain == DOMAIN_CLIMATE:
+            unique_id_parts[len(unique_id_parts) - 1] = (
+                f"{entity_entry.translation_key}-{unique_id_parts[len(unique_id_parts)-1]}"
+            )
+
+        entity_new_unique_id = "-".join(unique_id_parts)
+
+        _LOGGER.debug(
+            "Migrating entity %s from %s to new id %s",
+            entity_entry.entity_id,
+            entity_entry.unique_id,
+            entity_new_unique_id,
+        )
+        return {"new_unique_id": entity_new_unique_id}
+
+    # Migrate entities
+    await er.async_migrate_entries(hass, entry.entry_id, _update_unique_id)
+
+
 def get_supported_devices(
     devices: list[PyViCareDeviceConfig],
 ) -> list[PyViCareDeviceConfig]:
@@ -109,5 +190,5 @@ def get_supported_devices(
     return [
         device_config
         for device_config in devices
-        if device_config.getModel() not in ["Heatbox1", "Heatbox2_SRC"]
+        if device_config.getModel() not in UNSUPPORTED_DEVICES
     ]

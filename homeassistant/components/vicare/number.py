@@ -1,4 +1,5 @@
 """Number for ViCare."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -48,11 +49,39 @@ class ViCareNumberEntityDescription(NumberEntityDescription, ViCareRequiredKeysM
     stepping_getter: Callable[[PyViCareDevice], float | None] | None = None
 
 
+DEVICE_ENTITY_DESCRIPTIONS: tuple[ViCareNumberEntityDescription, ...] = (
+    ViCareNumberEntityDescription(
+        key="dhw_temperature",
+        translation_key="dhw_temperature",
+        entity_category=EntityCategory.CONFIG,
+        device_class=NumberDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        value_getter=lambda api: api.getDomesticHotWaterConfiguredTemperature(),
+        value_setter=lambda api, value: api.setDomesticHotWaterTemperature(value),
+        min_value_getter=lambda api: api.getDomesticHotWaterMinTemperature(),
+        max_value_getter=lambda api: api.getDomesticHotWaterMaxTemperature(),
+        native_step=1,
+    ),
+    ViCareNumberEntityDescription(
+        key="dhw_secondary_temperature",
+        translation_key="dhw_secondary_temperature",
+        entity_category=EntityCategory.CONFIG,
+        device_class=NumberDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        value_getter=lambda api: api.getDomesticHotWaterConfiguredTemperature2(),
+        value_setter=lambda api, value: api.setDomesticHotWaterTemperature2(value),
+        # no getters for min, max, stepping exposed yet, using static values
+        native_min_value=10,
+        native_max_value=60,
+        native_step=1,
+    ),
+)
+
+
 CIRCUIT_ENTITY_DESCRIPTIONS: tuple[ViCareNumberEntityDescription, ...] = (
     ViCareNumberEntityDescription(
         key="heating curve shift",
         translation_key="heating_curve_shift",
-        icon="mdi:plus-minus-variant",
         entity_category=EntityCategory.CONFIG,
         device_class=NumberDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -70,7 +99,6 @@ CIRCUIT_ENTITY_DESCRIPTIONS: tuple[ViCareNumberEntityDescription, ...] = (
     ViCareNumberEntityDescription(
         key="heating curve slope",
         translation_key="heating_curve_slope",
-        icon="mdi:slope-uphill",
         entity_category=EntityCategory.CONFIG,
         value_getter=lambda api: api.getHeatingCurveSlope(),
         value_setter=lambda api, slope: (
@@ -217,17 +245,31 @@ def _build_entities(
 ) -> list[ViCareNumber]:
     """Create ViCare number entities for a device."""
 
-    return [
-        ViCareNumber(
-            circuit,
-            device.config,
-            description,
+    entities: list[ViCareNumber] = []
+    for device in device_list:
+        # add device entities
+        entities.extend(
+            ViCareNumber(
+                description,
+                device.config,
+                device.api,
+            )
+            for description in DEVICE_ENTITY_DESCRIPTIONS
+            if is_supported(description.key, description, device.api)
         )
-        for device in device_list
-        for circuit in get_circuits(device.api)
-        for description in CIRCUIT_ENTITY_DESCRIPTIONS
-        if is_supported(description.key, description, circuit)
-    ]
+        # add component entities
+        entities.extend(
+            ViCareNumber(
+                description,
+                device.config,
+                device.api,
+                circuit,
+            )
+            for circuit in get_circuits(device.api)
+            for description in CIRCUIT_ENTITY_DESCRIPTIONS
+            if is_supported(description.key, description, circuit)
+        )
+    return entities
 
 
 async def async_setup_entry(
@@ -253,12 +295,13 @@ class ViCareNumber(ViCareEntity, NumberEntity):
 
     def __init__(
         self,
-        api: PyViCareHeatingDeviceComponent,
-        device_config: PyViCareDeviceConfig,
         description: ViCareNumberEntityDescription,
+        device_config: PyViCareDeviceConfig,
+        device: PyViCareDevice,
+        component: PyViCareHeatingDeviceComponent | None = None,
     ) -> None:
         """Initialize the number."""
-        super().__init__(device_config, api, description.key)
+        super().__init__(description.key, device_config, device, component)
         self.entity_description = description
 
     @property

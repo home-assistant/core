@@ -1,11 +1,11 @@
 """Constants for Axis integration tests."""
 
-from axis.vapix.models.api import CONTEXT
+from axis.models.api import CONTEXT
 
 MAC = "00408C123456"
 FORMATTED_MAC = "00:40:8c:12:34:56"
-MODEL = "model"
-NAME = "name"
+MODEL = "A1234"
+NAME = "home"
 
 DEFAULT_HOST = "1.2.3.4"
 
@@ -74,6 +74,7 @@ MQTT_CLIENT_RESPONSE = {
         "status": {"state": "active", "connectionStatus": "Connected"},
         "config": {
             "server": {"protocol": "tcp", "host": "192.168.0.90", "port": 1883},
+            "deviceTopicPrefix": f"axis/{MAC}",
         },
     },
 }

@@ -1,4 +1,5 @@
 """Config flow for Garages Amsterdam integration."""
+
 from __future__ import annotations
 
 import logging
@@ -35,7 +36,7 @@ class GaragesAmsterdamConfigFlow(ConfigFlow, domain=DOMAIN):
             except ClientResponseError:
                 _LOGGER.error("Unexpected response from server")
                 return self.async_abort(reason="cannot_connect")
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 return self.async_abort(reason="unknown")
 

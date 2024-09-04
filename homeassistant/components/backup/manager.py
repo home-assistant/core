@@ -1,4 +1,5 @@
 """Backup manager for the Backup integration."""
+
 from __future__ import annotations
 
 import asyncio
@@ -125,7 +126,7 @@ class BackupManager:
     async def load_platforms(self) -> None:
         """Load backup platforms."""
         await integration_platform.async_process_integration_platforms(
-            self.hass, DOMAIN, self._add_platform
+            self.hass, DOMAIN, self._add_platform, wait_for_platforms=True
         )
         LOGGER.debug("Loaded %s platforms", len(self.platforms))
         self.loaded_platforms = True

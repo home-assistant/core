@@ -1,9 +1,11 @@
 """Support for Mailgun."""
+
 import hashlib
 import hmac
 import json
 import logging
 
+from aiohttp import web
 import voluptuous as vol
 
 from homeassistant.components import webhook
@@ -47,13 +49,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def handle_webhook(hass, webhook_id, request):
+async def handle_webhook(
+    hass: HomeAssistant, webhook_id: str, request: web.Request
+) -> None:
     """Handle incoming webhook with Mailgun inbound messages."""
     body = await request.text()
     try:
         data = json.loads(body) if body else {}
     except ValueError:
-        return None
+        return
 
     if (
         isinstance(data, dict)

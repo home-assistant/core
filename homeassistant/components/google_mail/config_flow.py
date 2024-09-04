@@ -1,4 +1,5 @@
 """Config flow for Google Mail integration."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -8,10 +9,11 @@ from typing import Any, cast
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
 from homeassistant.helpers import config_entry_oauth2_flow
 
+from . import GoogleMailConfigEntry
 from .const import DEFAULT_ACCESS, DOMAIN
 
 
@@ -22,7 +24,7 @@ class OAuth2FlowHandler(
 
     DOMAIN = DOMAIN
 
-    reauth_entry: ConfigEntry | None = None
+    reauth_entry: GoogleMailConfigEntry | None = None
 
     @property
     def logger(self) -> logging.Logger:

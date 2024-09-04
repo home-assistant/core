@@ -1,4 +1,5 @@
 """Test KNX time."""
+
 from homeassistant.components.knx.const import CONF_RESPOND_TO_READ, KNX_ADDRESS
 from homeassistant.components.knx.schema import TimeSchema
 from homeassistant.components.time import ATTR_TIME, DOMAIN, SERVICE_SET_VALUE

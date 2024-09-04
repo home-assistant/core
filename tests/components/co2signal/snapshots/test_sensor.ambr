@@ -46,6 +46,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.electricity_maps_co2_intensity',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '45.9862319009581',
   })
@@ -97,6 +98,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.electricity_maps_grid_fossil_fuel_percentage',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '5.4611827419371',
   })

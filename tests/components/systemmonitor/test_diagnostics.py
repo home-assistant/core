@@ -1,4 +1,5 @@
 """Tests for the diagnostics data provided by the System Monitor integration."""
+
 from unittest.mock import Mock
 
 from syrupy import SnapshotAssertion
@@ -22,4 +23,4 @@ async def test_diagnostics(
     """Test diagnostics."""
     assert await get_diagnostics_for_config_entry(
         hass, hass_client, mock_added_config_entry
-    ) == snapshot(exclude=props("last_update", "entry_id"))
+    ) == snapshot(exclude=props("last_update", "entry_id", "created_at", "modified_at"))

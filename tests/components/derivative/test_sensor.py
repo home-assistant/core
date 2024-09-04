@@ -1,13 +1,15 @@
 """The tests for the derivative sensor platform."""
+
 from datetime import timedelta
 from math import sin
 import random
+from typing import Any
 
 from freezegun import freeze_time
 
 from homeassistant.components.derivative.const import DOMAIN
 from homeassistant.const import UnitOfPower, UnitOfTime
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -48,7 +50,9 @@ async def test_state(hass: HomeAssistant) -> None:
     assert state.attributes.get("unit_of_measurement") == "kW"
 
 
-async def _setup_sensor(hass, config):
+async def _setup_sensor(
+    hass: HomeAssistant, config: dict[str, Any]
+) -> tuple[dict[str, Any], str]:
     default_config = {
         "platform": "derivative",
         "name": "power",
@@ -66,14 +70,20 @@ async def _setup_sensor(hass, config):
     return config, entity_id
 
 
-async def setup_tests(hass, config, times, values, expected_state):
+async def setup_tests(
+    hass: HomeAssistant,
+    config: dict[str, Any],
+    times: list[int],
+    values: list[float],
+    expected_state: float,
+) -> State:
     """Test derivative sensor state."""
     config, entity_id = await _setup_sensor(hass, config)
 
     # Testing a energy sensor with non-monotonic intervals and values
     base = dt_util.utcnow()
     with freeze_time(base) as freezer:
-        for time, value in zip(times, values):
+        for time, value in zip(times, values, strict=False):
             freezer.move_to(base + timedelta(seconds=time))
             hass.states.async_set(entity_id, value, {}, force_update=True)
             await hass.async_block_till_done()
@@ -174,7 +184,7 @@ async def test_data_moving_average_for_discrete_sensor(hass: HomeAssistant) -> N
 
     base = dt_util.utcnow()
     with freeze_time(base) as freezer:
-        for time, value in zip(times, temperature_values):
+        for time, value in zip(times, temperature_values, strict=False):
             now = base + timedelta(seconds=time)
             freezer.move_to(now)
             hass.states.async_set(entity_id, value, {}, force_update=True)
@@ -218,7 +228,7 @@ async def test_data_moving_average_for_irregular_times(hass: HomeAssistant) -> N
 
     base = dt_util.utcnow()
     with freeze_time(base) as freezer:
-        for time, value in zip(times, temperature_values):
+        for time, value in zip(times, temperature_values, strict=False):
             now = base + timedelta(seconds=time)
             freezer.move_to(now)
             hass.states.async_set(entity_id, value, {}, force_update=True)
@@ -237,11 +247,7 @@ async def test_double_signal_after_delay(hass: HomeAssistant) -> None:
     # The old algorithm would produce extreme values if, after a delay longer than the time window
     # there would be two signals, a large spike would be produced. Check explicitly for this situation
     time_window = 60
-    times = [*range(time_window * 10)]
-    times = times + [
-        time_window * 20,
-        time_window * 20 + 0.01,
-    ]
+    times = [*range(time_window * 10), time_window * 20, time_window * 20 + 0.01]
 
     # just apply sine as some sort of temperature change and make sure the change after the delay is very small
     temperature_values = [sin(x) for x in times]
@@ -260,7 +266,7 @@ async def test_double_signal_after_delay(hass: HomeAssistant) -> None:
     base = dt_util.utcnow()
     previous = 0
     with freeze_time(base) as freezer:
-        for time, value in zip(times, temperature_values):
+        for time, value in zip(times, temperature_values, strict=False):
             now = base + timedelta(seconds=time)
             freezer.move_to(now)
             hass.states.async_set(entity_id, value, {}, force_update=True)

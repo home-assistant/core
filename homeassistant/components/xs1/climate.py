@@ -1,4 +1,5 @@
 """Support for XS1 climate devices."""
+
 from __future__ import annotations
 
 from typing import Any

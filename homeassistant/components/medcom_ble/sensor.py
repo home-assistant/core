@@ -1,4 +1,5 @@
 """Support for Medcom BLE radiation monitor sensors."""
+
 from __future__ import annotations
 
 import logging

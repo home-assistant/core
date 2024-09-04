@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Merge all translation sources into a single JSON file."""
+
 from __future__ import annotations
 
 import json
@@ -38,6 +39,8 @@ def run_download_docker():
             CORE_PROJECT_ID,
             "--original-filenames=false",
             "--replace-breaks=false",
+            "--filter-data",
+            "nonfuzzy",
             "--export-empty-as",
             "skip",
             "--format",

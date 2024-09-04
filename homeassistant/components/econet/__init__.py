@@ -1,4 +1,5 @@
 """Support for EcoNet products."""
+
 import asyncio
 from datetime import timedelta
 import logging

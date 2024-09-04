@@ -1,4 +1,5 @@
 """Tests for the Blue Current integration."""
+
 from __future__ import annotations
 
 from asyncio import Event, Future
@@ -30,15 +31,21 @@ def create_client_mock(
     future_container: FutureContainer,
     started_loop: Event,
     charge_point: dict,
-    status: dict | None,
-    grid: dict | None,
+    status: dict,
+    grid: dict,
 ) -> MagicMock:
     """Create a mock of the bluecurrent-api Client."""
     client_mock = MagicMock(spec=Client)
+    received_charge_points = Event()
 
-    async def start_loop(receiver):
+    async def wait_for_charge_points():
+        """Wait until chargepoints are received."""
+        await received_charge_points.wait()
+
+    async def connect(receiver, on_open):
         """Set the receiver and await future."""
         client_mock.receiver = receiver
+        await on_open()
 
         started_loop.set()
         started_loop.clear()
@@ -49,13 +56,13 @@ def create_client_mock(
 
     async def get_charge_points() -> None:
         """Send a list of charge points to the callback."""
-        await started_loop.wait()
         await client_mock.receiver(
             {
                 "object": "CHARGE_POINTS",
                 "data": [charge_point],
             }
         )
+        received_charge_points.set()
 
     async def get_status(evse_id: str) -> None:
         """Send the status of a charge point to the callback."""
@@ -70,7 +77,8 @@ def create_client_mock(
         """Send the grid status to the callback."""
         await client_mock.receiver({"object": "GRID_STATUS", "data": grid})
 
-    client_mock.start_loop.side_effect = start_loop
+    client_mock.connect.side_effect = connect
+    client_mock.wait_for_charge_points.side_effect = wait_for_charge_points
     client_mock.get_charge_points.side_effect = get_charge_points
     client_mock.get_status.side_effect = get_status
     client_mock.get_grid_status.side_effect = get_grid_status
@@ -91,6 +99,12 @@ async def init_integration(
     if charge_point is None:
         charge_point = DEFAULT_CHARGE_POINT
 
+    if status is None:
+        status = {}
+
+    if grid is None:
+        grid = {}
+
     future_container = FutureContainer(hass.loop.create_future())
     started_loop = Event()
 
@@ -98,8 +112,9 @@ async def init_integration(
         hass, future_container, started_loop, charge_point, status, grid
     )
 
-    with patch("homeassistant.components.blue_current.PLATFORMS", [platform]), patch(
-        "homeassistant.components.blue_current.Client", return_value=client_mock
+    with (
+        patch("homeassistant.components.blue_current.PLATFORMS", [platform]),
+        patch("homeassistant.components.blue_current.Client", return_value=client_mock),
     ):
         config_entry.add_to_hass(hass)
 

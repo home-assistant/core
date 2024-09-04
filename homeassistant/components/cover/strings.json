@@ -18,6 +18,12 @@
       "is_position": "Current {entity_name} position is",
       "is_tilt_position": "Current {entity_name} tilt position is"
     },
+    "extra_fields": {
+      "above": "[%key:common::device_automation::extra_fields::above%]",
+      "below": "[%key:common::device_automation::extra_fields::below%]",
+      "for": "[%key:common::device_automation::extra_fields::for%]",
+      "position": "Position"
+    },
     "trigger_type": {
       "opened": "{entity_name} opened",
       "closed": "{entity_name} closed",

@@ -1,0 +1,23 @@
+send_message:
+  target:
+    entity:
+      domain: todo
+      integration: bring
+  fields:
+    message:
+      example: urgent_message
+      required: true
+      default: "going_shopping"
+      selector:
+        select:
+          translation_key: "notification_type_selector"
+          options:
+            - "going_shopping"
+            - "changed_list"
+            - "shopping_done"
+            - "urgent_message"
+    item:
+      example: Cilantro
+      required: false
+      selector:
+        text:

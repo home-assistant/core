@@ -1,4 +1,5 @@
 """Handle intents with scripts."""
+
 from __future__ import annotations
 
 import logging
@@ -7,7 +8,7 @@ from typing import Any, TypedDict
 import voluptuous as vol
 
 from homeassistant.components.script import CONF_MODE
-from homeassistant.const import CONF_TYPE, SERVICE_RELOAD
+from homeassistant.const import CONF_DESCRIPTION, CONF_TYPE, SERVICE_RELOAD
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import (
     config_validation as cv,
@@ -23,6 +24,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "intent_script"
 
+CONF_PLATFORMS = "platforms"
 CONF_INTENTS = "intents"
 CONF_SPEECH = "speech"
 CONF_REPROMPT = "reprompt"
@@ -40,6 +42,8 @@ CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: {
             cv.string: {
+                vol.Optional(CONF_DESCRIPTION): cv.string,
+                vol.Optional(CONF_PLATFORMS): vol.All([cv.string], vol.Coerce(set)),
                 vol.Optional(CONF_ACTION): cv.SCRIPT_SCHEMA,
                 vol.Optional(
                     CONF_ASYNC_ACTION, default=DEFAULT_CONF_ASYNC_ACTION
@@ -86,7 +90,6 @@ async def async_reload(hass: HomeAssistant, service_call: ServiceCall) -> None:
 
 def async_load_intents(hass: HomeAssistant, intents: dict[str, ConfigType]) -> None:
     """Load YAML intents into the intent system."""
-    template.attach(hass, intents)
     hass.data[DOMAIN] = intents
 
     for intent_type, conf in intents.items():
@@ -141,10 +144,18 @@ class _IntentCardData(TypedDict):
 class ScriptIntentHandler(intent.IntentHandler):
     """Respond to an intent with a script."""
 
+    slot_schema = {
+        vol.Any("name", "area", "floor"): cv.string,
+        vol.Optional("domain"): vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional("device_class"): vol.All(cv.ensure_list, [cv.string]),
+    }
+
     def __init__(self, intent_type: str, config: ConfigType) -> None:
         """Initialize the script intent handler."""
         self.intent_type = intent_type
         self.config = config
+        self.description = config.get(CONF_DESCRIPTION)
+        self.platforms = config.get(CONF_PLATFORMS)
 
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Handle the intent."""
@@ -153,8 +164,10 @@ class ScriptIntentHandler(intent.IntentHandler):
         card: _IntentCardData | None = self.config.get(CONF_CARD)
         action: script.Script | None = self.config.get(CONF_ACTION)
         is_async_action: bool = self.config[CONF_ASYNC_ACTION]
+        hass: HomeAssistant = intent_obj.hass
+        intent_slots = self.async_validate_slots(intent_obj.slots)
         slots: dict[str, Any] = {
-            key: value["value"] for key, value in intent_obj.slots.items()
+            key: value["value"] for key, value in intent_slots.items()
         }
 
         _LOGGER.debug(
@@ -166,6 +179,51 @@ class ScriptIntentHandler(intent.IntentHandler):
                 if not key.startswith("_") and not key.endswith("_raw_value")
             },
         )
+
+        entity_name = slots.get("name")
+        area_name = slots.get("area")
+        floor_name = slots.get("floor")
+
+        # Optional domain/device class filters.
+        # Convert to sets for speed.
+        domains: set[str] | None = None
+        device_classes: set[str] | None = None
+
+        if "domain" in slots:
+            domains = set(slots["domain"])
+
+        if "device_class" in slots:
+            device_classes = set(slots["device_class"])
+
+        match_constraints = intent.MatchTargetsConstraints(
+            name=entity_name,
+            area_name=area_name,
+            floor_name=floor_name,
+            domains=domains,
+            device_classes=device_classes,
+            assistant=intent_obj.assistant,
+        )
+
+        if match_constraints.has_constraints:
+            match_result = intent.async_match_targets(hass, match_constraints)
+            if match_result.is_match:
+                targets = {}
+
+                if match_result.states:
+                    targets["entities"] = [
+                        state.entity_id for state in match_result.states
+                    ]
+
+                if match_result.areas:
+                    targets["areas"] = [area.id for area in match_result.areas]
+
+                if match_result.floors:
+                    targets["floors"] = [
+                        floor.floor_id for floor in match_result.floors
+                    ]
+
+                if targets:
+                    slots["targets"] = targets
 
         if action is not None:
             if is_async_action:

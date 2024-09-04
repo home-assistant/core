@@ -1,4 +1,5 @@
 """Provides the NZBGet DataUpdateCoordinator."""
+
 import asyncio
 from collections.abc import Mapping
 from datetime import timedelta

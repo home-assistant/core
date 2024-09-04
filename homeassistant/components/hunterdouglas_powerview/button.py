@@ -1,4 +1,5 @@
 """Buttons for Hunter Douglas Powerview advanced features."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -19,15 +20,13 @@ from homeassistant.components.button import (
     ButtonEntity,
     ButtonEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
 from .coordinator import PowerviewShadeUpdateCoordinator
 from .entity import ShadeEntity
-from .model import PowerviewDeviceInfo, PowerviewEntryData
+from .model import PowerviewConfigEntry, PowerviewDeviceInfo
 
 
 @dataclass(frozen=True)
@@ -74,29 +73,26 @@ BUTTONS_SHADE: Final = [
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: PowerviewConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the hunter douglas advanced feature buttons."""
-
-    pv_entry: PowerviewEntryData = hass.data[DOMAIN][entry.entry_id]
-
+    pv_entry = entry.runtime_data
     entities: list[ButtonEntity] = []
     for shade in pv_entry.shade_data.values():
         room_name = getattr(pv_entry.room_data.get(shade.room_id), ATTR_NAME, "")
-        for description in BUTTONS_SHADE:
-            if description.create_entity_fn(shade):
-                entities.append(
-                    PowerviewShadeButton(
-                        pv_entry.coordinator,
-                        pv_entry.device_info,
-                        room_name,
-                        shade,
-                        shade.name,
-                        description,
-                    )
-                )
-
+        entities.extend(
+            PowerviewShadeButton(
+                pv_entry.coordinator,
+                pv_entry.device_info,
+                room_name,
+                shade,
+                shade.name,
+                description,
+            )
+            for description in BUTTONS_SHADE
+            if description.create_entity_fn(shade)
+        )
     async_add_entities(entities)
 
 
@@ -119,4 +115,5 @@ class PowerviewShadeButton(ShadeEntity, ButtonEntity):
 
     async def async_press(self) -> None:
         """Handle the button press."""
-        await self.entity_description.press_action(self._shade)
+        async with self.coordinator.radio_operation_lock:
+            await self.entity_description.press_action(self._shade)

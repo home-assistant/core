@@ -1,4 +1,5 @@
 """Support for OPNSense Routers."""
+
 import logging
 
 from pyopnsense import diagnostics

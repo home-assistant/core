@@ -1,9 +1,11 @@
 """Tests for tedee lock."""
+
 from datetime import timedelta
 from unittest.mock import MagicMock
+from urllib.parse import urlparse
 
 from freezegun.api import FrozenDateTimeFactory
-from pytedee_async import TedeeLock
+from pytedee_async import TedeeLock, TedeeLockState
 from pytedee_async.exception import (
     TedeeClientException,
     TedeeDataUpdateException,
@@ -17,15 +19,21 @@ from homeassistant.components.lock import (
     SERVICE_LOCK,
     SERVICE_OPEN,
     SERVICE_UNLOCK,
+    STATE_LOCKED,
     STATE_LOCKING,
+    STATE_UNLOCKED,
     STATE_UNLOCKING,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
+from homeassistant.components.webhook import async_generate_url
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
+from .conftest import WEBHOOK_ID
+
 from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.typing import ClientSessionGenerator
 
 pytestmark = pytest.mark.usefixtures("init_integration")
 
@@ -266,3 +274,42 @@ async def test_new_lock(
     assert state
     state = hass.states.get("lock.lock_6g7h")
     assert state
+
+
+@pytest.mark.parametrize(
+    ("lib_state", "expected_state"),
+    [
+        (TedeeLockState.LOCKED, STATE_LOCKED),
+        (TedeeLockState.HALF_OPEN, STATE_UNKNOWN),
+        (TedeeLockState.UNKNOWN, STATE_UNKNOWN),
+        (TedeeLockState.UNCALIBRATED, STATE_UNAVAILABLE),
+    ],
+)
+async def test_webhook_update(
+    hass: HomeAssistant,
+    mock_tedee: MagicMock,
+    hass_client_no_auth: ClientSessionGenerator,
+    lib_state: TedeeLockState,
+    expected_state: str,
+) -> None:
+    """Test updated data set through webhook."""
+
+    state = hass.states.get("lock.lock_1a2b")
+    assert state
+    assert state.state == STATE_UNLOCKED
+
+    webhook_data = {"dummystate": lib_state.value}
+    # is updated in the lib, so mock and assert below
+    mock_tedee.locks_dict[12345].state = lib_state
+    client = await hass_client_no_auth()
+    webhook_url = async_generate_url(hass, WEBHOOK_ID)
+
+    await client.post(
+        urlparse(webhook_url).path,
+        json=webhook_data,
+    )
+    mock_tedee.parse_webhook_message.assert_called_once_with(webhook_data)
+
+    state = hass.states.get("lock.lock_1a2b")
+    assert state
+    assert state.state == expected_state

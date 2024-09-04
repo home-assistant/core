@@ -1,4 +1,5 @@
 """Provides device triggers for Xiaomi BLE."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -31,12 +32,19 @@ from .const import (
     DOMAIN,
     DOUBLE_BUTTON,
     DOUBLE_BUTTON_PRESS_DOUBLE_LONG,
+    ERROR,
     EVENT_CLASS,
     EVENT_CLASS_BUTTON,
     EVENT_CLASS_CUBE,
     EVENT_CLASS_DIMMER,
+    EVENT_CLASS_ERROR,
+    EVENT_CLASS_FINGERPRINT,
+    EVENT_CLASS_LOCK,
     EVENT_CLASS_MOTION,
     EVENT_TYPE,
+    FINGERPRINT,
+    LOCK,
+    LOCK_FINGERPRINT,
     MOTION,
     MOTION_DEVICE,
     REMOTE,
@@ -61,6 +69,51 @@ TRIGGERS_BY_TYPE = {
         "rotate_left_pressed",
         "rotate_right_pressed",
     ],
+    ERROR: [
+        "frequent_unlocking_with_incorrect_password",
+        "frequent_unlocking_with_wrong_fingerprints",
+        "operation_timeout_password_input_timeout",
+        "lock_picking",
+        "reset_button_is_pressed",
+        "the_wrong_key_is_frequently_unlocked",
+        "foreign_body_in_the_keyhole",
+        "the_key_has_not_been_taken_out",
+        "error_nfc_frequently_unlocks",
+        "timeout_is_not_locked_as_required",
+        "failure_to_unlock_frequently_in_multiple_ways",
+        "unlocking_the_face_frequently_fails",
+        "failure_to_unlock_the_vein_frequently",
+        "hijacking_alarm",
+        "unlock_inside_the_door_after_arming",
+        "palmprints_frequently_fail_to_unlock",
+        "the_safe_was_moved",
+        "the_battery_level_is_less_than_10_percent",
+        "the_battery_level_is_less_than_5_percent",
+        "the_fingerprint_sensor_is_abnormal",
+        "the_accessory_battery_is_low",
+        "mechanical_failure",
+        "the_lock_sensor_is_faulty",
+    ],
+    FINGERPRINT: [
+        "match_successful",
+        "match_failed",
+        "low_quality_too_light_fuzzy",
+        "insufficient_area",
+        "skin_is_too_dry",
+        "skin_is_too_wet",
+    ],
+    LOCK: [
+        "lock_outside_the_door",
+        "unlock_outside_the_door",
+        "lock_inside_the_door",
+        "unlock_inside_the_door",
+        "locked",
+        "turn_on_antilock",
+        "release_the_antilock",
+        "turn_on_child_lock",
+        "turn_off_child_lock",
+        "abnormal",
+    ],
     MOTION_DEVICE: ["motion_detected"],
 }
 
@@ -70,6 +123,10 @@ EVENT_TYPES = {
     DIMMER: ["dimmer"],
     DOUBLE_BUTTON: ["button_left", "button_right"],
     TRIPPLE_BUTTON: ["button_left", "button_middle", "button_right"],
+    ERROR: ["error"],
+    FINGERPRINT: ["fingerprint"],
+    LOCK: ["lock"],
+    MOTION: ["motion"],
     REMOTE: [
         "button_on",
         "button_off",
@@ -105,7 +162,6 @@ EVENT_TYPES = {
         "button_increase_wind_speed",
         "button_decrease_wind_speed",
     ],
-    MOTION: ["motion"],
 }
 
 
@@ -149,6 +205,26 @@ TRIGGER_MODEL_DATA = {
         event_types=EVENT_TYPES[TRIPPLE_BUTTON],
         triggers=TRIGGERS_BY_TYPE[BUTTON_PRESS_DOUBLE_LONG],
     ),
+    ERROR: TriggerModelData(
+        event_class=EVENT_CLASS_ERROR,
+        event_types=EVENT_TYPES[ERROR],
+        triggers=TRIGGERS_BY_TYPE[ERROR],
+    ),
+    LOCK_FINGERPRINT: TriggerModelData(
+        event_class=EVENT_CLASS_FINGERPRINT,
+        event_types=EVENT_TYPES[LOCK] + EVENT_TYPES[FINGERPRINT],
+        triggers=TRIGGERS_BY_TYPE[LOCK] + TRIGGERS_BY_TYPE[FINGERPRINT],
+    ),
+    LOCK: TriggerModelData(
+        event_class=EVENT_CLASS_LOCK,
+        event_types=EVENT_TYPES[LOCK],
+        triggers=TRIGGERS_BY_TYPE[LOCK],
+    ),
+    MOTION_DEVICE: TriggerModelData(
+        event_class=EVENT_CLASS_MOTION,
+        event_types=EVENT_TYPES[MOTION],
+        triggers=TRIGGERS_BY_TYPE[MOTION_DEVICE],
+    ),
     REMOTE: TriggerModelData(
         event_class=EVENT_CLASS_BUTTON,
         event_types=EVENT_TYPES[REMOTE],
@@ -169,11 +245,6 @@ TRIGGER_MODEL_DATA = {
         event_types=EVENT_TYPES[REMOTE_VENFAN],
         triggers=TRIGGERS_BY_TYPE[BUTTON_PRESS_LONG],
     ),
-    MOTION_DEVICE: TriggerModelData(
-        event_class=EVENT_CLASS_MOTION,
-        event_types=EVENT_TYPES[MOTION],
-        triggers=TRIGGERS_BY_TYPE[MOTION_DEVICE],
-    ),
 }
 
 
@@ -185,6 +256,7 @@ MODEL_DATA = {
     "K9BB-1BTN": TRIGGER_MODEL_DATA[BUTTON_PRESS_DOUBLE_LONG],
     "YLAI003": TRIGGER_MODEL_DATA[BUTTON_PRESS_DOUBLE_LONG],
     "XMWXKG01LM": TRIGGER_MODEL_DATA[BUTTON_PRESS_DOUBLE_LONG],
+    "PTX_YK1_QMIMB": TRIGGER_MODEL_DATA[BUTTON_PRESS_DOUBLE_LONG],
     "K9B-1BTN": TRIGGER_MODEL_DATA[BUTTON_PRESS_DOUBLE_LONG],
     "XMWXKG01YL": TRIGGER_MODEL_DATA[DOUBLE_BUTTON_PRESS_DOUBLE_LONG],
     "K9B-2BTN": TRIGGER_MODEL_DATA[DOUBLE_BUTTON_PRESS_DOUBLE_LONG],
@@ -196,6 +268,13 @@ MODEL_DATA = {
     "MUE4094RT": TRIGGER_MODEL_DATA[MOTION_DEVICE],
     "XMMF01JQD": TRIGGER_MODEL_DATA[CUBE],
     "YLKG07YL/YLKG08YL": TRIGGER_MODEL_DATA[DIMMER],
+    "DSL-C08": TRIGGER_MODEL_DATA[LOCK],
+    "XMZNMS08LM": TRIGGER_MODEL_DATA[LOCK],
+    "Lockin-SV40": TRIGGER_MODEL_DATA[LOCK_FINGERPRINT],
+    "MJZNMSQ01YD": TRIGGER_MODEL_DATA[LOCK_FINGERPRINT],
+    "XMZNMS04LM": TRIGGER_MODEL_DATA[LOCK_FINGERPRINT],
+    "ZNMS16LM": TRIGGER_MODEL_DATA[LOCK_FINGERPRINT],
+    "ZNMS17LM": TRIGGER_MODEL_DATA[LOCK_FINGERPRINT],
 }
 
 

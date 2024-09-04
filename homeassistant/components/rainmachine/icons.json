@@ -1,0 +1,107 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "flow_sensor": {
+        "default": "mdi:water-pump"
+      },
+      "freeze": {
+        "default": "mdi:cancel"
+      },
+      "hourly": {
+        "default": "mdi:cancel"
+      },
+      "month": {
+        "default": "mdi:cancel"
+      },
+      "raindelay": {
+        "default": "mdi:cancel"
+      },
+      "rainsensor": {
+        "default": "mdi:cancel"
+      },
+      "weekday": {
+        "default": "mdi:cancel"
+      }
+    },
+    "select": {
+      "freeze_protection_temperature": {
+        "default": "mdi:thermometer"
+      }
+    },
+    "sensor": {
+      "translation_key_0": {
+        "default": "mdi:abc"
+      },
+      "translation_key_1": {
+        "default": "mdi:abc"
+      },
+      "translation_key_2": {
+        "default": "mdi:abc"
+      },
+      "translation_key_3": {
+        "default": "mdi:abc"
+      },
+      "translation_key_4": {
+        "default": "mdi:abc"
+      },
+      "translation_key_5": {
+        "default": "mdi:abc"
+      },
+      "translation_key_6": {
+        "default": "mdi:abc"
+      },
+      "translation_key_7": {
+        "default": "mdi:abc"
+      }
+    },
+    "switch": {
+      "flow_sensor_clicks_cubic_meter": {
+        "default": "mdi:water-pump"
+      },
+      "flow_sensor_consumed_liters": {
+        "default": "mdi:water-pump"
+      },
+      "flow_sensor_leak_clicks": {
+        "default": "mdi:pipe-leak"
+      },
+      "flow_sensor_leak_volume": {
+        "default": "mdi:pipe-leak"
+      }
+    }
+  },
+  "services": {
+    "pause_watering": {
+      "service": "mdi:pause"
+    },
+    "restrict_watering": {
+      "service": "mdi:cancel"
+    },
+    "start_program": {
+      "service": "mdi:play"
+    },
+    "start_zone": {
+      "service": "mdi:play"
+    },
+    "stop_all": {
+      "service": "mdi:stop"
+    },
+    "stop_program": {
+      "service": "mdi:stop"
+    },
+    "stop_zone": {
+      "service": "mdi:stop"
+    },
+    "unpause_watering": {
+      "service": "mdi:play-pause"
+    },
+    "push_flow_meter_data": {
+      "service": "mdi:database-arrow-up"
+    },
+    "push_weather_data": {
+      "service": "mdi:database-arrow-up"
+    },
+    "unrestrict_watering": {
+      "service": "mdi:check"
+    }
+  }
+}

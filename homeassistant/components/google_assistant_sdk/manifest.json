@@ -8,5 +8,5 @@
   "integration_type": "service",
   "iot_class": "cloud_polling",
   "quality_scale": "platinum",
-  "requirements": ["gassist-text==0.0.10"]
+  "requirements": ["gassist-text==0.0.11"]
 }

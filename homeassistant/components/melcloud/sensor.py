@@ -1,4 +1,5 @@
 """Support for MelCloud device sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -23,19 +24,12 @@ from . import MelCloudDevice
 from .const import DOMAIN
 
 
-@dataclasses.dataclass(frozen=True)
-class MelcloudRequiredKeysMixin:
-    """Mixin for required keys."""
+@dataclasses.dataclass(frozen=True, kw_only=True)
+class MelcloudSensorEntityDescription(SensorEntityDescription):
+    """Describes Melcloud sensor entity."""
 
     value_fn: Callable[[Any], float]
     enabled: Callable[[Any], bool]
-
-
-@dataclasses.dataclass(frozen=True)
-class MelcloudSensorEntityDescription(
-    SensorEntityDescription, MelcloudRequiredKeysMixin
-):
-    """Describes Melcloud sensor entity."""
 
 
 ATA_SENSORS: tuple[MelcloudSensorEntityDescription, ...] = (

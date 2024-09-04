@@ -3,6 +3,7 @@
 These are mostly used where a HomeKit accessory exposes additional non-standard
 characteristics that don't map to a Home Assistant feature.
 """
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -43,14 +44,14 @@ BUTTON_ENTITIES: dict[str, HomeKitButtonEntityDescription] = {
         name="Setup",
         translation_key="setup",
         entity_category=EntityCategory.CONFIG,
-        write_value="#HAA@trcmd",
+        write_value="#HAA@trcmd",  # codespell:ignore haa
     ),
     CharacteristicsTypes.VENDOR_HAA_UPDATE: HomeKitButtonEntityDescription(
         key=CharacteristicsTypes.VENDOR_HAA_UPDATE,
         name="Update",
         device_class=ButtonDeviceClass.UPDATE,
         entity_category=EntityCategory.CONFIG,
-        write_value="#HAA@trcmd",
+        write_value="#HAA@trcmd",  # codespell:ignore haa
     ),
     CharacteristicsTypes.IDENTIFY: HomeKitButtonEntityDescription(
         key=CharacteristicsTypes.IDENTIFY,

@@ -1,28 +1,35 @@
 """Test the init file of Mailgun."""
+
 import hashlib
 import hmac
 
+from aiohttp.test_utils import TestClient
 import pytest
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.components import mailgun, webhook
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import CONF_API_KEY, CONF_DOMAIN
-from homeassistant.core import callback
+from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.setup import async_setup_component
+
+from tests.typing import ClientSessionGenerator
 
 API_KEY = "abc123"
 
 
 @pytest.fixture
-async def http_client(hass, hass_client_no_auth):
+async def http_client(
+    hass: HomeAssistant, hass_client_no_auth: ClientSessionGenerator
+) -> TestClient:
     """Initialize a Home Assistant Server for testing this module."""
     await async_setup_component(hass, webhook.DOMAIN, {})
     return await hass_client_no_auth()
 
 
 @pytest.fixture
-async def webhook_id_with_api_key(hass):
+async def webhook_id_with_api_key(hass: HomeAssistant) -> str:
     """Initialize the Mailgun component and get the webhook_id."""
     await async_setup_component(
         hass,
@@ -37,16 +44,16 @@ async def webhook_id_with_api_key(hass):
     result = await hass.config_entries.flow.async_init(
         "mailgun", context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM, result
+    assert result["type"] is FlowResultType.FORM, result
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
     return result["result"].data["webhook_id"]
 
 
 @pytest.fixture
-async def webhook_id_without_api_key(hass):
+async def webhook_id_without_api_key(hass: HomeAssistant) -> str:
     """Initialize the Mailgun component and get the webhook_id w/o API key."""
     await async_setup_component(hass, mailgun.DOMAIN, {})
 
@@ -57,16 +64,16 @@ async def webhook_id_without_api_key(hass):
     result = await hass.config_entries.flow.async_init(
         "mailgun", context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM, result
+    assert result["type"] is FlowResultType.FORM, result
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
     return result["result"].data["webhook_id"]
 
 
 @pytest.fixture
-async def mailgun_events(hass):
+async def mailgun_events(hass: HomeAssistant) -> list[Event]:
     """Return a list of mailgun_events triggered."""
     events = []
 

@@ -1,4 +1,5 @@
 """The Schluter DITRA-HEAT integration."""
+
 import logging
 
 from requests import RequestException, Session

@@ -1,4 +1,5 @@
 """The tests for the Command line sensor platform."""
+
 from __future__ import annotations
 
 import asyncio
@@ -24,6 +25,24 @@ from homeassistant.util import dt as dt_util
 from . import mock_asyncio_subprocess_run
 
 from tests.common import async_fire_time_changed
+
+
+async def test_setup_platform_yaml(hass: HomeAssistant) -> None:
+    """Test setting up the platform with platform yaml."""
+    await setup.async_setup_component(
+        hass,
+        "sensor",
+        {
+            "sensor": {
+                "platform": "command_line",
+                "command": "echo 1",
+                "payload_on": "1",
+                "payload_off": "0",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all()) == 0
 
 
 @pytest.mark.parametrize(
@@ -107,7 +126,7 @@ async def test_template_render(
         hass,
         dt_util.utcnow() + timedelta(minutes=1),
     )
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     entity_state = hass.states.get("sensor.test")
     assert entity_state
@@ -139,7 +158,7 @@ async def test_template_render_with_quote(hass: HomeAssistant) -> None:
             hass,
             dt_util.utcnow() + timedelta(minutes=1),
         )
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         assert len(mock_subprocess_run.mock_calls) == 1
         mock_subprocess_run.assert_called_with(
@@ -474,6 +493,46 @@ async def test_update_with_unnecessary_json_attrs(
                 {
                     "sensor": {
                         "name": "Test",
+                        "command": 'echo \
+                            {\
+                                \\"top_level\\": {\
+                                    \\"second_level\\": {\
+                                        \\"key\\": \\"some_json_value\\",\
+                                        \\"another_key\\": \\"another_json_value\\",\
+                                        \\"key_three\\": \\"value_three\\"\
+                                    }\
+                                }\
+                            }',
+                        "json_attributes": ["key", "another_key", "key_three"],
+                        "json_attributes_path": "$.top_level.second_level",
+                    }
+                }
+            ]
+        }
+    ],
+)
+async def test_update_with_json_attrs_with_json_attrs_path(
+    hass: HomeAssistant, load_yaml_integration: None
+) -> None:
+    """Test using json_attributes_path to select a different part of the json object as root."""
+
+    entity_state = hass.states.get("sensor.test")
+    assert entity_state
+    assert entity_state.attributes["key"] == "some_json_value"
+    assert entity_state.attributes["another_key"] == "another_json_value"
+    assert entity_state.attributes["key_three"] == "value_three"
+    assert "top_level" not in entity_state.attributes
+    assert "second_level" not in entity_state.attributes
+
+
+@pytest.mark.parametrize(
+    "get_config",
+    [
+        {
+            "command_line": [
+                {
+                    "sensor": {
+                        "name": "Test",
                         "unique_id": "unique",
                         "command": "echo 0",
                     }
@@ -733,7 +792,7 @@ async def test_availability(
     hass.states.async_set("sensor.input1", "on")
     freezer.tick(timedelta(minutes=1))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     entity_state = hass.states.get("sensor.test")
     assert entity_state
@@ -744,7 +803,7 @@ async def test_availability(
     with mock_asyncio_subprocess_run(b"January 17, 2022"):
         freezer.tick(timedelta(minutes=1))
         async_fire_time_changed(hass)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     entity_state = hass.states.get("sensor.test")
     assert entity_state

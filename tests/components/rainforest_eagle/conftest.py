@@ -1,5 +1,7 @@
 """Conftest for rainforest_eagle."""
-from unittest.mock import AsyncMock, Mock, patch
+
+from collections.abc import AsyncGenerator
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
 
@@ -12,6 +14,7 @@ from homeassistant.components.rainforest_eagle.const import (
     TYPE_EAGLE_200,
 )
 from homeassistant.const import CONF_HOST, CONF_TYPE
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from . import MOCK_200_RESPONSE_WITHOUT_PRICE, MOCK_CLOUD_ID
@@ -20,7 +23,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture
-def config_entry_200(hass):
+def config_entry_200(hass: HomeAssistant) -> MockConfigEntry:
     """Return a config entry."""
     entry = MockConfigEntry(
         domain="rainforest_eagle",
@@ -37,7 +40,9 @@ def config_entry_200(hass):
 
 
 @pytest.fixture
-async def setup_rainforest_200(hass, config_entry_200):
+async def setup_rainforest_200(
+    hass: HomeAssistant, config_entry_200: MockConfigEntry
+) -> AsyncGenerator[Mock]:
     """Set up rainforest."""
     with patch(
         "aioeagle.ElectricMeter.create_instance",
@@ -52,7 +57,7 @@ async def setup_rainforest_200(hass, config_entry_200):
 
 
 @pytest.fixture
-async def setup_rainforest_100(hass):
+async def setup_rainforest_100(hass: HomeAssistant) -> AsyncGenerator[MagicMock]:
     """Set up rainforest."""
     MockConfigEntry(
         domain="rainforest_eagle",
@@ -65,7 +70,7 @@ async def setup_rainforest_100(hass):
         },
     ).add_to_hass(hass)
     with patch(
-        "homeassistant.components.rainforest_eagle.data.Eagle100Reader",
+        "homeassistant.components.rainforest_eagle.coordinator.Eagle100Reader",
         return_value=Mock(
             get_instantaneous_demand=Mock(
                 return_value={"InstantaneousDemand": {"Demand": "1.152000"}}

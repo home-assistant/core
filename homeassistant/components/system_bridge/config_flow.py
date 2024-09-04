@@ -1,4 +1,5 @@
 """Config flow for System Bridge integration."""
+
 from __future__ import annotations
 
 import asyncio
@@ -12,28 +13,27 @@ from systembridgeconnector.exceptions import (
     ConnectionErrorException,
 )
 from systembridgeconnector.websocket_client import WebSocketClient
-from systembridgemodels.get_data import GetData
-from systembridgemodels.system import System
+from systembridgemodels.modules import GetData, Module
 import voluptuous as vol
 
 from homeassistant.components import zeroconf
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN
+from .const import DATA_WAIT_TIMEOUT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_AUTHENTICATE_DATA_SCHEMA = vol.Schema({vol.Required(CONF_API_KEY): cv.string})
+STEP_AUTHENTICATE_DATA_SCHEMA = vol.Schema({vol.Required(CONF_TOKEN): cv.string})
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_PORT, default=9170): cv.string,
-        vol.Required(CONF_API_KEY): cv.string,
+        vol.Required(CONF_TOKEN): cv.string,
     }
 )
 
@@ -46,25 +46,25 @@ async def _validate_input(
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
-    host = data[CONF_HOST]
 
     websocket_client = WebSocketClient(
-        host,
+        data[CONF_HOST],
         data[CONF_PORT],
-        data[CONF_API_KEY],
+        data[CONF_TOKEN],
+        session=async_get_clientsession(hass),
     )
+
     try:
-        async with asyncio.timeout(15):
-            await websocket_client.connect(session=async_get_clientsession(hass))
-            hass.async_create_task(websocket_client.listen())
-            response = await websocket_client.get_data(GetData(modules=["system"]))
-            _LOGGER.debug("Got response: %s", response.json())
-            if response.data is None or not isinstance(response.data, System):
-                raise CannotConnect("No data received")
-            system: System = response.data
+        async with asyncio.timeout(DATA_WAIT_TIMEOUT):
+            await websocket_client.connect()
+            modules_data = await websocket_client.get_data(
+                GetData(modules=[Module.SYSTEM])
+            )
     except AuthenticationException as exception:
         _LOGGER.warning(
-            "Authentication error when connecting to %s: %s", data[CONF_HOST], exception
+            "Authentication error when connecting to %s: %s",
+            data[CONF_HOST],
+            exception,
         )
         raise InvalidAuth from exception
     except (
@@ -81,9 +81,13 @@ async def _validate_input(
     except ValueError as exception:
         raise CannotConnect from exception
 
-    _LOGGER.debug("Got System data: %s", system.json())
+    _LOGGER.debug("Got modules data: %s", modules_data)
+    if modules_data is None or modules_data.system is None:
+        raise CannotConnect("No system data received")
 
-    return {"hostname": host, "uuid": system.uuid}
+    _LOGGER.debug("Got System data: %s", modules_data.system)
+
+    return {"hostname": data[CONF_HOST], "uuid": modules_data.system.uuid}
 
 
 async def _async_get_info(
@@ -98,7 +102,7 @@ async def _async_get_info(
         errors["base"] = "cannot_connect"
     except InvalidAuth:
         errors["base"] = "invalid_auth"
-    except Exception:  # pylint: disable=broad-except
+    except Exception:
         _LOGGER.exception("Unexpected exception")
         errors["base"] = "unknown"
     else:
@@ -114,6 +118,7 @@ class SystemBridgeConfigFlow(
     """Handle a config flow for System Bridge."""
 
     VERSION = 1
+    MINOR_VERSION = 2
 
     def __init__(self) -> None:
         """Initialize flow."""

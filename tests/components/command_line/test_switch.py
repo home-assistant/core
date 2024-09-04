@@ -1,4 +1,5 @@
 """The tests for the Command line switch platform."""
+
 from __future__ import annotations
 
 import asyncio
@@ -34,6 +35,24 @@ import homeassistant.util.dt as dt_util
 from . import mock_asyncio_subprocess_run
 
 from tests.common import async_fire_time_changed
+
+
+async def test_setup_platform_yaml(hass: HomeAssistant) -> None:
+    """Test setting up the platform with platform yaml."""
+    await setup.async_setup_component(
+        hass,
+        "switch",
+        {
+            "switch": {
+                "platform": "command_line",
+                "command": "echo 1",
+                "payload_on": "1",
+                "payload_off": "0",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all()) == 0
 
 
 async def test_state_integration_yaml(hass: HomeAssistant) -> None:
@@ -349,7 +368,7 @@ async def test_switch_command_state_fail(
     await hass.async_block_till_done()
 
     async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     entity_state = hass.states.get("switch.test")
     assert entity_state
@@ -733,7 +752,7 @@ async def test_availability(
     hass.states.async_set("sensor.input1", "on")
     freezer.tick(timedelta(minutes=1))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     entity_state = hass.states.get("switch.test")
     assert entity_state
@@ -744,7 +763,7 @@ async def test_availability(
     with mock_asyncio_subprocess_run(b"50\n"):
         freezer.tick(timedelta(minutes=1))
         async_fire_time_changed(hass)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     entity_state = hass.states.get("switch.test")
     assert entity_state

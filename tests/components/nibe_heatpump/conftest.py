@@ -1,4 +1,5 @@
 """Test configuration for Nibe Heat Pump."""
+
 from collections.abc import Generator
 from contextlib import ExitStack
 from unittest.mock import AsyncMock, Mock, patch
@@ -15,7 +16,7 @@ from tests.common import async_fire_time_changed
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Make sure we never actually run setup."""
     with patch(
         "homeassistant.components.nibe_heatpump.async_setup_entry", return_value=True
@@ -67,11 +68,12 @@ async def fixture_coils(mock_connection: MockConnection):
     def get_coil_by_address(self, address):
         coils_data = get_coil_by_address_original(self, address)
         if coils_data.address not in mock_connection.coils:
-            raise CoilNotFoundException()
+            raise CoilNotFoundException
         return coils_data
 
-    with patch.object(HeatPump, "get_coils", new=get_coils), patch.object(
-        HeatPump, "get_coil_by_address", new=get_coil_by_address
+    with (
+        patch.object(HeatPump, "get_coils", new=get_coils),
+        patch.object(HeatPump, "get_coil_by_address", new=get_coil_by_address),
     ):
         yield mock_connection.coils
 

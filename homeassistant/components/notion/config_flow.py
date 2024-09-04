@@ -1,4 +1,5 @@
 """Config flow to configure the Notion integration."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -50,7 +51,7 @@ async def async_validate_credentials(
     except NotionError as err:
         LOGGER.error("Unknown Notion error while validation credentials: %s", err)
         errors["base"] = "unknown"
-    except Exception as err:  # pylint: disable=broad-except
+    except Exception as err:  # noqa: BLE001
         LOGGER.exception("Unknown error while validation credentials: %s", err)
         errors["base"] = "unknown"
 

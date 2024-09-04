@@ -249,6 +249,13 @@
       "face_4": "With face 4 activated",
       "face_5": "With face 5 activated",
       "face_6": "With face 6 activated"
+    },
+    "extra_fields": {
+      "color": "Color hue",
+      "duration": "Duration in seconds",
+      "effect_type": "Effect type",
+      "led_number": "LED number",
+      "level": "Brightness (%)"
     }
   },
   "services": {
@@ -406,7 +413,7 @@
     },
     "warning_device_squawk": {
       "name": "Warning device squawk",
-      "description": "This service uses the WD capabilities to emit a quick audible/visible pulse called a \"squawk\". The squawk command has no effect if the WD is currently active (warning in progress).",
+      "description": "This action uses the WD capabilities to emit a quick audible/visible pulse called a \"squawk\". The squawk command has no effect if the WD is currently active (warning in progress).",
       "fields": {
         "ieee": {
           "name": "[%key:component::zha::services::permit::fields::ieee::name%]",
@@ -428,7 +435,7 @@
     },
     "warning_device_warn": {
       "name": "Warning device starts alert",
-      "description": "This service starts the operation of the warning device. The warning device alerts the surrounding area by audible (siren) and visual (strobe) signals.",
+      "description": "This action starts the operation of the warning device. The warning device alerts the surrounding area by audible (siren) and visual (strobe) signals.",
       "fields": {
         "ieee": {
           "name": "[%key:component::zha::services::permit::fields::ieee::name%]",
@@ -569,6 +576,15 @@
       },
       "hand_open": {
         "name": "Opened by hand"
+      },
+      "mounting_mode_active": {
+        "name": "Mounting mode active"
+      },
+      "heat_required": {
+        "name": "Heat required"
+      },
+      "preheat_status": {
+        "name": "Pre-heat status"
       }
     },
     "button": {
@@ -739,6 +755,18 @@
       },
       "min_heat_setpoint_limit": {
         "name": "Min heat setpoint limit"
+      },
+      "exercise_trigger_time": {
+        "name": "Exercise start time"
+      },
+      "external_temperature_sensor": {
+        "name": "External temperature sensor"
+      },
+      "load_room_mean": {
+        "name": "Load room mean"
+      },
+      "regulation_setpoint_offset": {
+        "name": "Regulation setpoint offset"
       }
     },
     "select": {
@@ -810,6 +838,21 @@
       },
       "keypad_lockout": {
         "name": "Keypad lockout"
+      },
+      "exercise_day_of_week": {
+        "name": "Exercise day of the week"
+      },
+      "valve_orientation": {
+        "name": "Valve orientation"
+      },
+      "adaptation_run_command": {
+        "name": "Adaptation run command"
+      },
+      "viewing_direction": {
+        "name": "Viewing direction"
+      },
+      "setpoint_response_time": {
+        "name": "Setpoint response time"
       }
     },
     "sensor": {
@@ -908,6 +951,78 @@
       },
       "hooks_state": {
         "name": "Hooks state"
+      },
+      "open_window_detected": {
+        "name": "Open window detected"
+      },
+      "load_estimate": {
+        "name": "Load estimate"
+      },
+      "adaptation_run_status": {
+        "name": "Adaptation run status",
+        "state": {
+          "nothing": "Idle",
+          "something": "State"
+        },
+        "state_attributes": {
+          "in_progress": {
+            "name": "In progress"
+          },
+          "run_successful": {
+            "name": "Run successful"
+          },
+          "valve_characteristic_lost": {
+            "name": "Valve characteristic lost"
+          }
+        }
+      },
+      "preheat_time": {
+        "name": "Pre-heat time"
+      },
+      "software_error": {
+        "name": "Software error",
+        "state": {
+          "nothing": "Good",
+          "something": "Error"
+        },
+        "state_attributes": {
+          "top_pcb_sensor_error": {
+            "name": "Top PCB sensor error"
+          },
+          "side_pcb_sensor_error": {
+            "name": "Side PCB sensor error"
+          },
+          "non_volatile_memory_error": {
+            "name": "Non-volatile memory error"
+          },
+          "unknown_hw_error": {
+            "name": "Unknown HW error"
+          },
+          "motor_error": {
+            "name": "Motor error"
+          },
+          "invalid_internal_communication": {
+            "name": "Invalid internal communication"
+          },
+          "invalid_clock_information": {
+            "name": "Invalid clock information"
+          },
+          "radio_communication_error": {
+            "name": "Radio communication error"
+          },
+          "encoder_jammed": {
+            "name": "Encoder jammed"
+          },
+          "low_battery": {
+            "name": "Low battery"
+          },
+          "critical_low_battery": {
+            "name": "Critical low battery"
+          }
+        }
+      },
+      "motor_stepcount": {
+        "name": "Motor stepcount"
       }
     },
     "switch": {
@@ -991,6 +1106,27 @@
       },
       "buzzer_manual_alarm": {
         "name": "Buzzer manual alarm"
+      },
+      "external_window_sensor": {
+        "name": "External window sensor"
+      },
+      "use_internal_window_detection": {
+        "name": "Use internal window detection"
+      },
+      "mounting_mode": {
+        "name": "Mounting mode"
+      },
+      "prioritize_external_temperature_sensor": {
+        "name": "Prioritize external temperature sensor"
+      },
+      "heat_available": {
+        "name": "Heat available"
+      },
+      "use_load_balancing": {
+        "name": "Use load balancing"
+      },
+      "adaptation_run_enabled": {
+        "name": "Adaptation run enabled"
       }
     }
   }

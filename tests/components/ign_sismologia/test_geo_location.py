@@ -1,4 +1,5 @@
 """The tests for the IGN Sismologia (Earthquakes) Feed platform."""
+
 import datetime
 from unittest.mock import MagicMock, call, patch
 
@@ -176,7 +177,7 @@ async def test_setup(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> Non
                 [mock_entry_1, mock_entry_4, mock_entry_3],
             )
             async_fire_time_changed(hass, utcnow + SCAN_INTERVAL)
-            await hass.async_block_till_done()
+            await hass.async_block_till_done(wait_background_tasks=True)
 
             all_states = hass.states.async_all()
             assert len(all_states) == 3
@@ -185,7 +186,7 @@ async def test_setup(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> Non
             # so no changes to entities.
             mock_feed_update.return_value = "OK_NO_DATA", None
             async_fire_time_changed(hass, utcnow + 2 * SCAN_INTERVAL)
-            await hass.async_block_till_done()
+            await hass.async_block_till_done(wait_background_tasks=True)
 
             all_states = hass.states.async_all()
             assert len(all_states) == 3
@@ -193,7 +194,7 @@ async def test_setup(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> Non
             # Simulate an update - empty data, removes all entities
             mock_feed_update.return_value = "ERROR", None
             async_fire_time_changed(hass, utcnow + 3 * SCAN_INTERVAL)
-            await hass.async_block_till_done()
+            await hass.async_block_till_done(wait_background_tasks=True)
 
             all_states = hass.states.async_all()
             assert len(all_states) == 0
@@ -204,10 +205,13 @@ async def test_setup_with_custom_location(hass: HomeAssistant) -> None:
     # Set up some mock feed entries for this test.
     mock_entry_1 = _generate_mock_feed_entry("1234", "Title 1", 20.5, (38.1, -3.1))
 
-    with patch(
-        "georss_ign_sismologia_client.feed_manager.IgnSismologiaFeed",
-        wraps=IgnSismologiaFeed,
-    ) as mock_feed, patch("georss_client.feed.GeoRssFeed.update") as mock_feed_update:
+    with (
+        patch(
+            "georss_ign_sismologia_client.feed_manager.IgnSismologiaFeed",
+            wraps=IgnSismologiaFeed,
+        ) as mock_feed,
+        patch("georss_client.feed.GeoRssFeed.update") as mock_feed_update,
+    ):
         mock_feed_update.return_value = "OK", [mock_entry_1]
 
         with assert_setup_component(1, geo_location.DOMAIN):

@@ -1,4 +1,5 @@
 """Support for Modern Forms switches."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -8,12 +9,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import (
-    ModernFormsDataUpdateCoordinator,
-    ModernFormsDeviceEntity,
-    modernforms_exception_handler,
-)
+from . import ModernFormsDeviceEntity, modernforms_exception_handler
 from .const import DOMAIN
+from .coordinator import ModernFormsDataUpdateCoordinator
 
 
 async def async_setup_entry(

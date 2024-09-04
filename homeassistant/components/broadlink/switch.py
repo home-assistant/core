@@ -1,4 +1,5 @@
 """Support for Broadlink switches."""
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
@@ -9,7 +10,7 @@ from broadlink.exceptions import BroadlinkException
 import voluptuous as vol
 
 from homeassistant.components.switch import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as SWITCH_PLATFORM_SCHEMA,
     SwitchDeviceClass,
     SwitchEntity,
 )
@@ -55,7 +56,7 @@ PLATFORM_SCHEMA = vol.All(
     cv.deprecated(CONF_SLOTS),
     cv.deprecated(CONF_TIMEOUT),
     cv.deprecated(CONF_TYPE),
-    PLATFORM_SCHEMA.extend(
+    SWITCH_PLATFORM_SCHEMA.extend(
         {
             vol.Required(CONF_MAC): mac_address,
             vol.Optional(CONF_HOST): cv.string,
@@ -128,7 +129,7 @@ async def async_setup_entry(
     elif device.api.type == "BG1":
         switches.extend(BroadlinkBG1Slot(device, slot) for slot in range(1, 3))
 
-    elif device.api.type == "MP1":
+    elif device.api.type in {"MP1", "MP1S"}:
         switches.extend(BroadlinkMP1Slot(device, slot) for slot in range(1, 5))
 
     async_add_entities(switches)

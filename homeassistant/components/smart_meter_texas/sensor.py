@@ -1,4 +1,5 @@
 """Support for Smart Meter Texas sensors."""
+
 from smart_meter_texas import Meter
 
 from homeassistant.components.sensor import (

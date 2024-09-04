@@ -1,4 +1,5 @@
 """Sensor for the zamg integration."""
+
 from __future__ import annotations
 
 from homeassistant.components.weather import WeatherEntity
@@ -65,9 +66,9 @@ class ZamgWeather(CoordinatorEntity, WeatherEntity):
                 value := self.coordinator.data[self.station_id]["TL"]["data"]
             ) is not None:
                 return float(value)
-            return None
         except (KeyError, ValueError, TypeError):
             return None
+        return None
 
     @property
     def native_pressure(self) -> float | None:
@@ -97,9 +98,9 @@ class ZamgWeather(CoordinatorEntity, WeatherEntity):
                 value := self.coordinator.data[self.station_id]["FFX"]["data"]
             ) is not None:
                 return float(value)
-            return None
         except (KeyError, ValueError, TypeError):
             return None
+        return None
 
     @property
     def wind_bearing(self) -> float | None:
@@ -113,6 +114,6 @@ class ZamgWeather(CoordinatorEntity, WeatherEntity):
                 value := self.coordinator.data[self.station_id]["DDX"]["data"]
             ) is not None:
                 return float(value)
-            return None
         except (KeyError, ValueError, TypeError):
             return None
+        return None

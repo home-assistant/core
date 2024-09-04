@@ -1,4 +1,5 @@
 """Websocket API for automation."""
+
 import json
 from typing import Any
 

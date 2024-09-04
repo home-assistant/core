@@ -1,16 +1,16 @@
 """SQLAlchemy util functions."""
+
 from __future__ import annotations
 
-from collections.abc import Callable, Collection, Generator, Iterable, Sequence
+from collections.abc import Callable, Generator, Sequence
+import contextlib
 from contextlib import contextmanager
 from datetime import date, datetime, timedelta
 import functools
-from functools import partial
-from itertools import islice
 import logging
 import os
 import time
-from typing import TYPE_CHECKING, Any, Concatenate, NoReturn, ParamSpec, TypeVar
+from typing import TYPE_CHECKING, Any, Concatenate, NoReturn
 
 from awesomeversion import (
     AwesomeVersion,
@@ -21,7 +21,7 @@ import ciso8601
 from sqlalchemy import inspect, text
 from sqlalchemy.engine import Result, Row
 from sqlalchemy.engine.interfaces import DBAPIConnection
-from sqlalchemy.exc import OperationalError, SQLAlchemyError
+from sqlalchemy.exc import OperationalError, SQLAlchemyError, StatementError
 from sqlalchemy.orm.query import Query
 from sqlalchemy.orm.session import Session
 from sqlalchemy.sql.lambdas import StatementLambdaElement
@@ -29,10 +29,14 @@ import voluptuous as vol
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
+from homeassistant.helpers.recorder import (  # noqa: F401
+    DATA_INSTANCE,
+    get_instance,
+    session_scope,
+)
 import homeassistant.util.dt as dt_util
 
 from .const import (
-    DATA_INSTANCE,
     DEFAULT_MAX_BIND_VARS,
     DOMAIN,
     SQLITE_MAX_BIND_VARS,
@@ -58,9 +62,6 @@ if TYPE_CHECKING:
     from sqlite3.dbapi2 import Cursor as SQLiteCursor
 
     from . import Recorder
-
-_RecorderT = TypeVar("_RecorderT", bound="Recorder")
-_P = ParamSpec("_P")
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -95,6 +96,7 @@ MARIADB_WITH_FIXED_IN_QUERIES_108 = _simple_version("10.8.4")
 MIN_VERSION_MYSQL = _simple_version("8.0.0")
 MIN_VERSION_PGSQL = _simple_version("12.0")
 MIN_VERSION_SQLITE = _simple_version("3.31.0")
+UPCOMING_MIN_VERSION_SQLITE = _simple_version("3.40.1")
 MIN_VERSION_SQLITE_MODERN_BIND_VARS = _simple_version("3.32.0")
 
 
@@ -114,42 +116,6 @@ SUNDAY_WEEKDAY = 6
 DAYS_IN_WEEK = 7
 
 
-@contextmanager
-def session_scope(
-    *,
-    hass: HomeAssistant | None = None,
-    session: Session | None = None,
-    exception_filter: Callable[[Exception], bool] | None = None,
-    read_only: bool = False,
-) -> Generator[Session, None, None]:
-    """Provide a transactional scope around a series of operations.
-
-    read_only is used to indicate that the session is only used for reading
-    data and that no commit is required. It does not prevent the session
-    from writing and is not a security measure.
-    """
-    if session is None and hass is not None:
-        session = get_instance(hass).get_session()
-
-    if session is None:
-        raise RuntimeError("Session required")
-
-    need_rollback = False
-    try:
-        yield session
-        if session.get_transaction() and not read_only:
-            need_rollback = True
-            session.commit()
-    except Exception as err:  # pylint: disable=broad-except
-        _LOGGER.exception("Error executing query: %s", err)
-        if need_rollback:
-            session.rollback()
-        if not exception_filter or not exception_filter(err):
-            raise
-    finally:
-        session.close()
-
-
 def execute(
     qry: Query, to_native: bool = False, validate_entity_ids: bool = True
 ) -> list[Row]:
@@ -158,7 +124,7 @@ def execute(
     This method also retries a few times in the case of stale connections.
     """
     debug = _LOGGER.isEnabledFor(logging.DEBUG)
-    for tryno in range(0, RETRIES):
+    for tryno in range(RETRIES):
         try:
             if debug:
                 timer_start = time.perf_counter()
@@ -190,13 +156,14 @@ def execute(
                         elapsed,
                     )
 
-            return result
         except SQLAlchemyError as err:
             _LOGGER.error("Error executing query: %s", err)
 
             if tryno == RETRIES - 1:
                 raise
             time.sleep(QUERY_RETRY_WAIT)
+        else:
+            return result
 
     # Unreachable
     raise RuntimeError  # pragma: no cover
@@ -390,7 +357,7 @@ def _fail_unsupported_dialect(dialect_name: str) -> NoReturn:
     raise UnsupportedDialect
 
 
-def _fail_unsupported_version(
+def _raise_if_version_unsupported(
     server_version: str, dialect_name: str, minimum_version: str
 ) -> NoReturn:
     """Warn about unsupported database version."""
@@ -407,16 +374,54 @@ def _fail_unsupported_version(
     raise UnsupportedDialect
 
 
+@callback
+def _async_delete_issue_deprecated_version(
+    hass: HomeAssistant, dialect_name: str
+) -> None:
+    """Delete the issue about upcoming unsupported database version."""
+    ir.async_delete_issue(hass, DOMAIN, f"{dialect_name}_too_old")
+
+
+@callback
+def _async_create_issue_deprecated_version(
+    hass: HomeAssistant,
+    server_version: AwesomeVersion,
+    dialect_name: str,
+    min_version: AwesomeVersion,
+) -> None:
+    """Warn about upcoming unsupported database version."""
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        f"{dialect_name}_too_old",
+        is_fixable=False,
+        severity=ir.IssueSeverity.CRITICAL,
+        translation_key=f"{dialect_name}_too_old",
+        translation_placeholders={
+            "server_version": str(server_version),
+            "min_version": str(min_version),
+        },
+        breaks_in_ha_version="2025.2.0",
+    )
+
+
+def _extract_version_from_server_response_or_raise(
+    server_response: str,
+) -> AwesomeVersion:
+    """Extract version from server response."""
+    return AwesomeVersion(
+        server_response,
+        ensure_strategy=AwesomeVersionStrategy.SIMPLEVER,
+        find_first_match=True,
+    )
+
+
 def _extract_version_from_server_response(
     server_response: str,
 ) -> AwesomeVersion | None:
     """Attempt to extract version from server response."""
     try:
-        return AwesomeVersion(
-            server_response,
-            ensure_strategy=AwesomeVersionStrategy.SIMPLEVER,
-            find_first_match=True,
-        )
+        return _extract_version_from_server_response_or_raise(server_response)
     except AwesomeVersionException:
         return None
 
@@ -509,11 +514,25 @@ def setup_connection_for_dialect(
             # as its persistent and isn't free to call every time.
             result = query_on_connection(dbapi_connection, "SELECT sqlite_version()")
             version_string = result[0][0]
-            version = _extract_version_from_server_response(version_string)
+            version = _extract_version_from_server_response_or_raise(version_string)
 
-            if not version or version < MIN_VERSION_SQLITE:
-                _fail_unsupported_version(
+            if version < MIN_VERSION_SQLITE:
+                _raise_if_version_unsupported(
                     version or version_string, "SQLite", MIN_VERSION_SQLITE
+                )
+
+            # No elif here since _raise_if_version_unsupported raises
+            if version < UPCOMING_MIN_VERSION_SQLITE:
+                instance.hass.add_job(
+                    _async_create_issue_deprecated_version,
+                    instance.hass,
+                    version or version_string,
+                    dialect_name,
+                    UPCOMING_MIN_VERSION_SQLITE,
+                )
+            else:
+                instance.hass.add_job(
+                    _async_delete_issue_deprecated_version, instance.hass, dialect_name
                 )
 
             if version and version > MIN_VERSION_SQLITE_MODERN_BIND_VARS:
@@ -547,7 +566,7 @@ def setup_connection_for_dialect(
 
             if is_maria_db:
                 if not version or version < MIN_VERSION_MARIA_DB:
-                    _fail_unsupported_version(
+                    _raise_if_version_unsupported(
                         version or version_string, "MariaDB", MIN_VERSION_MARIA_DB
                     )
                 if version and (
@@ -563,7 +582,7 @@ def setup_connection_for_dialect(
                     )
 
             elif not version or version < MIN_VERSION_MYSQL:
-                _fail_unsupported_version(
+                _raise_if_version_unsupported(
                     version or version_string, "MySQL", MIN_VERSION_MYSQL
                 )
 
@@ -585,7 +604,7 @@ def setup_connection_for_dialect(
             version_string = result[0][0]
             version = _extract_version_from_server_response(version_string)
             if not version or version < MIN_VERSION_PGSQL:
-                _fail_unsupported_version(
+                _raise_if_version_unsupported(
                     version or version_string, "PostgreSQL", MIN_VERSION_PGSQL
                 )
 
@@ -625,25 +644,27 @@ def _is_retryable_error(instance: Recorder, err: OperationalError) -> bool:
     )
 
 
-_FuncType = Callable[Concatenate[_RecorderT, _P], bool]
+type _FuncType[_T, **_P, _R] = Callable[Concatenate[_T, _P], _R]
 
 
-def retryable_database_job(
+def retryable_database_job[_RecorderT: Recorder, **_P](
     description: str,
-) -> Callable[[_FuncType[_RecorderT, _P]], _FuncType[_RecorderT, _P]]:
+) -> Callable[[_FuncType[_RecorderT, _P, bool]], _FuncType[_RecorderT, _P, bool]]:
     """Try to execute a database job.
 
     The job should return True if it finished, and False if it needs to be rescheduled.
     """
 
-    def decorator(job: _FuncType[_RecorderT, _P]) -> _FuncType[_RecorderT, _P]:
+    def decorator(
+        job: _FuncType[_RecorderT, _P, bool],
+    ) -> _FuncType[_RecorderT, _P, bool]:
         @functools.wraps(job)
         def wrapper(instance: _RecorderT, *args: _P.args, **kwargs: _P.kwargs) -> bool:
             try:
                 return job(instance, *args, **kwargs)
             except OperationalError as err:
                 if _is_retryable_error(instance, err):
-                    assert isinstance(err.orig, BaseException)
+                    assert isinstance(err.orig, BaseException)  # noqa: PT017
                     _LOGGER.info(
                         "%s; %s not completed, retrying", err.orig.args[1], description
                     )
@@ -661,12 +682,9 @@ def retryable_database_job(
     return decorator
 
 
-_WrappedFuncType = Callable[Concatenate[_RecorderT, _P], None]
-
-
-def database_job_retry_wrapper(
+def database_job_retry_wrapper[_RecorderT: Recorder, **_P](
     description: str, attempts: int = 5
-) -> Callable[[_WrappedFuncType[_RecorderT, _P]], _WrappedFuncType[_RecorderT, _P]]:
+) -> Callable[[_FuncType[_RecorderT, _P, None]], _FuncType[_RecorderT, _P, None]]:
     """Try to execute a database job multiple times.
 
     This wrapper handles InnoDB deadlocks and lock timeouts.
@@ -676,25 +694,26 @@ def database_job_retry_wrapper(
     """
 
     def decorator(
-        job: _WrappedFuncType[_RecorderT, _P],
-    ) -> _WrappedFuncType[_RecorderT, _P]:
+        job: _FuncType[_RecorderT, _P, None],
+    ) -> _FuncType[_RecorderT, _P, None]:
         @functools.wraps(job)
         def wrapper(instance: _RecorderT, *args: _P.args, **kwargs: _P.kwargs) -> None:
             for attempt in range(attempts):
                 try:
                     job(instance, *args, **kwargs)
-                    return
                 except OperationalError as err:
                     if attempt == attempts - 1 or not _is_retryable_error(
                         instance, err
                     ):
                         raise
-                    assert isinstance(err.orig, BaseException)
+                    assert isinstance(err.orig, BaseException)  # noqa: PT017
                     _LOGGER.info(
                         "%s; %s failed, retrying", err.orig.args[1], description
                     )
                     time.sleep(instance.db_retry_wait)
                     # Failed with retryable error
+                else:
+                    return
 
         return wrapper
 
@@ -716,7 +735,7 @@ def periodic_db_cleanups(instance: Recorder) -> None:
 
 
 @contextmanager
-def write_lock_db_sqlite(instance: Recorder) -> Generator[None, None, None]:
+def write_lock_db_sqlite(instance: Recorder) -> Generator[None]:
     """Lock database for writes."""
     assert instance.engine is not None
     with instance.engine.connect() as connection:
@@ -741,8 +760,7 @@ def async_migration_in_progress(hass: HomeAssistant) -> bool:
     """
     if DATA_INSTANCE not in hass.data:
         return False
-    instance = get_instance(hass)
-    return instance.migration_in_progress
+    return hass.data[DATA_INSTANCE].migration_in_progress
 
 
 def async_migration_is_live(hass: HomeAssistant) -> bool:
@@ -753,8 +771,7 @@ def async_migration_is_live(hass: HomeAssistant) -> bool:
     """
     if DATA_INSTANCE not in hass.data:
         return False
-    instance: Recorder = hass.data[DATA_INSTANCE]
-    return instance.migration_is_live
+    return hass.data[DATA_INSTANCE].migration_is_live
 
 
 def second_sunday(year: int, month: int) -> date:
@@ -771,12 +788,6 @@ def second_sunday(year: int, month: int) -> date:
 def is_second_sunday(date_time: datetime) -> bool:
     """Check if a time is the second sunday of the month."""
     return bool(second_sunday(date_time.year, date_time.month).day == date_time.day)
-
-
-def get_instance(hass: HomeAssistant) -> Recorder:
-    """Get the recorder instance."""
-    instance: Recorder = hass.data[DATA_INSTANCE]
-    return instance
 
 
 PERIOD_SCHEMA = vol.Schema(
@@ -859,36 +870,6 @@ def resolve_period(
     return (start_time, end_time)
 
 
-def take(take_num: int, iterable: Iterable) -> list[Any]:
-    """Return first n items of the iterable as a list.
-
-    From itertools recipes
-    """
-    return list(islice(iterable, take_num))
-
-
-def chunked(iterable: Iterable, chunked_num: int) -> Iterable[Any]:
-    """Break *iterable* into lists of length *n*.
-
-    From more-itertools
-    """
-    return iter(partial(take, chunked_num, iter(iterable)), [])
-
-
-def chunked_or_all(iterable: Collection[Any], chunked_num: int) -> Iterable[Any]:
-    """Break *collection* into iterables of length *n*.
-
-    Returns the collection if its length is less than *n*.
-
-    Unlike chunked, this function requires a collection so it can
-    determine the length of the collection and return the collection
-    if it is less than *n*.
-    """
-    if len(iterable) <= chunked_num:
-        return (iterable,)
-    return chunked(iterable, chunked_num)
-
-
 def get_index_by_name(session: Session, table_name: str, index_name: str) -> str | None:
     """Get an index by name."""
     connection = session.connection()
@@ -906,3 +887,54 @@ def get_index_by_name(session: Session, table_name: str, index_name: str) -> str
         ),
         None,
     )
+
+
+def filter_unique_constraint_integrity_error(
+    instance: Recorder, row_type: str
+) -> Callable[[Exception], bool]:
+    """Create a filter for unique constraint integrity errors."""
+
+    def _filter_unique_constraint_integrity_error(err: Exception) -> bool:
+        """Handle unique constraint integrity errors."""
+        if not isinstance(err, StatementError):
+            return False
+
+        assert instance.engine is not None
+        dialect_name = instance.engine.dialect.name
+
+        ignore = False
+        if (
+            dialect_name == SupportedDialect.SQLITE
+            and "UNIQUE constraint failed" in str(err)
+        ):
+            ignore = True
+        if (
+            dialect_name == SupportedDialect.POSTGRESQL
+            and err.orig
+            and hasattr(err.orig, "pgcode")
+            and err.orig.pgcode == "23505"
+        ):
+            ignore = True
+        if (
+            dialect_name == SupportedDialect.MYSQL
+            and err.orig
+            and hasattr(err.orig, "args")
+        ):
+            with contextlib.suppress(TypeError):
+                if err.orig.args[0] == 1062:
+                    ignore = True
+
+        if ignore:
+            _LOGGER.warning(
+                (
+                    "Blocked attempt to insert duplicated %s rows, please report"
+                    " at %s"
+                ),
+                row_type,
+                "https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue+label%3A%22integration%3A+recorder%22",
+                exc_info=err,
+            )
+
+        return ignore
+
+    return _filter_unique_constraint_integrity_error

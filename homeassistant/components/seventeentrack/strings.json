@@ -1,0 +1,118 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+    }
+  },
+  "exceptions": {
+    "invalid_config_entry": {
+      "message": "Invalid config entry provided. Got {config_entry_id}"
+    },
+    "unloaded_config_entry": {
+      "message": "Invalid config entry provided. {config_entry_id} is not loaded."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "description": "Configure general settings",
+        "data": {
+          "show_archived": "Whether sensors should be created for archived packages",
+          "show_delivered": "Whether sensors should be created for delivered packages"
+        }
+      }
+    }
+  },
+  "issues": {
+    "deprecated_yaml_import_issue_cannot_connect": {
+      "title": "The 17Track YAML configuration import cannot connect to server",
+      "description": "Configuring 17Track using YAML is being removed but there was a connection error importing your YAML configuration.\n\nThings you can try:\nMake sure your home assistant can reach the web.\n\nThen restart Home Assistant to try importing this integration again.\n\nAlternatively, you may remove the 17Track configuration from your YAML configuration entirely, restart Home Assistant, and add the 17Track integration manually."
+    },
+    "deprecated_yaml_import_issue_invalid_auth": {
+      "title": "The 17Track YAML configuration import request failed due to invalid authentication",
+      "description": "Configuring 17Track using YAML is being removed but there were invalid credentials provided while importing your existing configuration.\nSetup will not proceed.\n\nVerify that your 17Track credentials are correct and restart Home Assistant to attempt the import again.\n\nAlternatively, you may remove the 17Track configuration from your YAML configuration entirely, restart Home Assistant, and add the 17Track integration manually."
+    },
+    "deprecate_sensor": {
+      "title": "17Track package sensors are being deprecated",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "[%key:component::seventeentrack::issues::deprecate_sensor::title%]",
+            "description": "17Track package sensors are deprecated and will be removed.\nPlease update your automations and scripts to get data using the `seventeentrack.get_packages` action."
+          }
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "not_found": {
+        "name": "Not found"
+      },
+      "in_transit": {
+        "name": "In transit"
+      },
+      "expired": {
+        "name": "Expired"
+      },
+      "ready_to_be_picked_up": {
+        "name": "Ready to be picked up"
+      },
+      "undelivered": {
+        "name": "Undelivered"
+      },
+      "delivered": {
+        "name": "Delivered"
+      },
+      "returned": {
+        "name": "Returned"
+      },
+      "package": {
+        "name": "Package {name}"
+      }
+    }
+  },
+  "services": {
+    "get_packages": {
+      "name": "Get packages",
+      "description": "Get packages from 17Track",
+      "fields": {
+        "package_state": {
+          "name": "Package states",
+          "description": "Only return packages with the specified states. Returns all packages if not specified."
+        },
+        "config_entry_id": {
+          "name": "17Track service",
+          "description": "The packages will be retrieved for the selected service."
+        }
+      }
+    }
+  },
+  "selector": {
+    "package_state": {
+      "options": {
+        "not_found": "[%key:component::seventeentrack::entity::sensor::not_found::name%]",
+        "in_transit": "[%key:component::seventeentrack::entity::sensor::in_transit::name%]",
+        "expired": "[%key:component::seventeentrack::entity::sensor::expired::name%]",
+        "ready_to_be_picked_up": "[%key:component::seventeentrack::entity::sensor::ready_to_be_picked_up::name%]",
+        "undelivered": "[%key:component::seventeentrack::entity::sensor::undelivered::name%]",
+        "delivered": "[%key:component::seventeentrack::entity::sensor::delivered::name%]",
+        "returned": "[%key:component::seventeentrack::entity::sensor::returned::name%]"
+      }
+    }
+  }
+}

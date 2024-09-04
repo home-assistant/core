@@ -1,6 +1,5 @@
 """Constants for the Oncue integration."""
 
-
 import aiohttp
 from aiooncue import ServiceFailedException
 

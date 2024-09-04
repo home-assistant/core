@@ -1,0 +1,22 @@
+{
+  "services": {
+    "volume_up": {
+      "service": "mdi:volume-high"
+    },
+    "volume_down": {
+      "service": "mdi:volume-low"
+    },
+    "volume_mute": {
+      "service": "mdi:volume-off"
+    },
+    "media_play_pause": {
+      "service": "mdi:play-pause"
+    },
+    "media_next_track": {
+      "service": "mdi:skip-next"
+    },
+    "media_prev_track": {
+      "service": "mdi:skip-previous"
+    }
+  }
+}

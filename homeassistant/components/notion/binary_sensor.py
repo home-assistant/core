@@ -1,4 +1,5 @@
 """Support for Notion binary sensors."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -30,6 +31,7 @@ from .const import (
     SENSOR_SMOKE_CO,
     SENSOR_WINDOW_HINGED,
 )
+from .coordinator import NotionDataUpdateCoordinator
 from .model import NotionEntityDescription
 
 
@@ -109,7 +111,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up Notion sensors based on a config entry."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: NotionDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
         [
@@ -118,7 +120,6 @@ async def async_setup_entry(
                 listener_id,
                 sensor.uuid,
                 sensor.bridge.id,
-                sensor.system_id,
                 description,
             )
             for listener_id, listener in coordinator.data.listeners.items()

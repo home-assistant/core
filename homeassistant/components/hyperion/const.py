@@ -28,3 +28,6 @@ SIGNAL_ENTITY_REMOVE = f"{DOMAIN}_entity_remove_signal.{{}}"
 TYPE_HYPERION_CAMERA = "hyperion_camera"
 TYPE_HYPERION_LIGHT = "hyperion_light"
 TYPE_HYPERION_COMPONENT_SWITCH_BASE = "hyperion_component_switch"
+
+TYPE_HYPERION_SENSOR_BASE = "hyperion_sensor"
+TYPE_HYPERION_SENSOR_VISIBLE_PRIORITY = "visible_priority"

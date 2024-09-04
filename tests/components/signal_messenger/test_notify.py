@@ -1,4 +1,5 @@
 """The tests for the signal_messenger platform."""
+
 import base64
 import json
 import logging
@@ -63,6 +64,26 @@ def test_send_message(
     assert_sending_requests(signal_requests_mock)
 
 
+def test_send_message_styled(
+    signal_notification_service: SignalNotificationService,
+    signal_requests_mock_factory: Mocker,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test send styled message."""
+    signal_requests_mock = signal_requests_mock_factory()
+    with caplog.at_level(
+        logging.DEBUG, logger="homeassistant.components.signal_messenger.notify"
+    ):
+        data = {"text_mode": "styled"}
+        signal_notification_service.send_message(MESSAGE, data=data)
+    post_data = json.loads(signal_requests_mock.request_history[-1].text)
+    assert "Sending signal message" in caplog.text
+    assert signal_requests_mock.called
+    assert signal_requests_mock.call_count == 2
+    assert post_data["text_mode"] == "styled"
+    assert_sending_requests(signal_requests_mock)
+
+
 def test_send_message_to_api_with_bad_data_throws_error(
     signal_notification_service: SignalNotificationService,
     signal_requests_mock_factory: Mocker,
@@ -70,9 +91,12 @@ def test_send_message_to_api_with_bad_data_throws_error(
 ) -> None:
     """Test sending a message with bad data to the API throws an error."""
     signal_requests_mock = signal_requests_mock_factory(False)
-    with caplog.at_level(
-        logging.DEBUG, logger="homeassistant.components.signal_messenger.notify"
-    ), pytest.raises(SignalCliRestApiError) as exc:
+    with (
+        caplog.at_level(
+            logging.DEBUG, logger="homeassistant.components.signal_messenger.notify"
+        ),
+        pytest.raises(SignalCliRestApiError) as exc,
+    ):
         signal_notification_service.send_message(MESSAGE)
 
     assert "Sending signal message" in caplog.text
@@ -87,14 +111,37 @@ def test_send_message_with_bad_data_throws_vol_error(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test sending a message with bad data throws an error."""
-    with caplog.at_level(
-        logging.DEBUG, logger="homeassistant.components.signal_messenger.notify"
-    ), pytest.raises(vol.Invalid) as exc:
-        data = {"test": "test"}
-        signal_notification_service.send_message(MESSAGE, **{"data": data})
+    with (
+        caplog.at_level(
+            logging.DEBUG, logger="homeassistant.components.signal_messenger.notify"
+        ),
+        pytest.raises(vol.Invalid) as exc,
+    ):
+        signal_notification_service.send_message(MESSAGE, data={"test": "test"})
 
     assert "Sending signal message" in caplog.text
     assert "extra keys not allowed" in str(exc.value)
+
+
+def test_send_message_styled_with_bad_data_throws_vol_error(
+    signal_notification_service: SignalNotificationService,
+    signal_requests_mock_factory: Mocker,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test sending a styled message with bad data throws an error."""
+    with (
+        caplog.at_level(
+            logging.DEBUG, logger="homeassistant.components.signal_messenger.notify"
+        ),
+        pytest.raises(vol.Invalid) as exc,
+    ):
+        signal_notification_service.send_message(MESSAGE, data={"text_mode": "test"})
+
+    assert "Sending signal message" in caplog.text
+    assert (
+        "value must be one of ['normal', 'styled'] for dictionary value @ data['text_mode']"
+        in str(exc.value)
+    )
 
 
 def test_send_message_with_attachment(
@@ -104,19 +151,48 @@ def test_send_message_with_attachment(
 ) -> None:
     """Test send message with attachment."""
     signal_requests_mock = signal_requests_mock_factory()
-    with caplog.at_level(
-        logging.DEBUG, logger="homeassistant.components.signal_messenger.notify"
-    ), tempfile.NamedTemporaryFile(
-        mode="w", suffix=".png", prefix=os.path.basename(__file__)
-    ) as temp_file:
+    with (
+        caplog.at_level(
+            logging.DEBUG, logger="homeassistant.components.signal_messenger.notify"
+        ),
+        tempfile.NamedTemporaryFile(
+            mode="w", suffix=".png", prefix=os.path.basename(__file__)
+        ) as temp_file,
+    ):
         temp_file.write("attachment_data")
         data = {"attachments": [temp_file.name]}
-        signal_notification_service.send_message(MESSAGE, **{"data": data})
+        signal_notification_service.send_message(MESSAGE, data=data)
 
     assert "Sending signal message" in caplog.text
     assert signal_requests_mock.called
     assert signal_requests_mock.call_count == 2
     assert_sending_requests(signal_requests_mock, 1)
+
+
+def test_send_message_styled_with_attachment(
+    signal_notification_service: SignalNotificationService,
+    signal_requests_mock_factory: Mocker,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test send message with attachment."""
+    signal_requests_mock = signal_requests_mock_factory()
+    with (
+        caplog.at_level(
+            logging.DEBUG, logger="homeassistant.components.signal_messenger.notify"
+        ),
+        tempfile.NamedTemporaryFile(
+            mode="w", suffix=".png", prefix=os.path.basename(__file__)
+        ) as temp_file,
+    ):
+        temp_file.write("attachment_data")
+        data = {"attachments": [temp_file.name], "text_mode": "styled"}
+        signal_notification_service.send_message(MESSAGE, data=data)
+    post_data = json.loads(signal_requests_mock.request_history[-1].text)
+    assert "Sending signal message" in caplog.text
+    assert signal_requests_mock.called
+    assert signal_requests_mock.call_count == 2
+    assert_sending_requests(signal_requests_mock, 1)
+    assert post_data["text_mode"] == "styled"
 
 
 def test_send_message_with_attachment_as_url(
@@ -130,12 +206,32 @@ def test_send_message_with_attachment_as_url(
         logging.DEBUG, logger="homeassistant.components.signal_messenger.notify"
     ):
         data = {"urls": [URL_ATTACHMENT]}
-        signal_notification_service.send_message(MESSAGE, **{"data": data})
+        signal_notification_service.send_message(MESSAGE, data=data)
 
     assert "Sending signal message" in caplog.text
     assert signal_requests_mock.called
     assert signal_requests_mock.call_count == 3
     assert_sending_requests(signal_requests_mock, 1)
+
+
+def test_send_message_styled_with_attachment_as_url(
+    signal_notification_service: SignalNotificationService,
+    signal_requests_mock_factory: Mocker,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test send message with attachment as URL."""
+    signal_requests_mock = signal_requests_mock_factory(True, str(len(CONTENT)))
+    with caplog.at_level(
+        logging.DEBUG, logger="homeassistant.components.signal_messenger.notify"
+    ):
+        data = {"urls": [URL_ATTACHMENT], "text_mode": "styled"}
+        signal_notification_service.send_message(MESSAGE, data=data)
+    post_data = json.loads(signal_requests_mock.request_history[-1].text)
+    assert "Sending signal message" in caplog.text
+    assert signal_requests_mock.called
+    assert signal_requests_mock.call_count == 3
+    assert_sending_requests(signal_requests_mock, 1)
+    assert post_data["text_mode"] == "styled"
 
 
 def test_get_attachments(
@@ -182,8 +278,9 @@ def test_get_attachments_with_large_attachment(
     """Test getting attachments as URL with large attachment (per Content-Length header) throws error."""
     signal_requests_mock = signal_requests_mock_factory(True, str(len(CONTENT) + 1))
     with pytest.raises(ValueError) as exc:
-        data = {"urls": [URL_ATTACHMENT]}
-        signal_notification_service.get_attachments_as_bytes(data, len(CONTENT), hass)
+        signal_notification_service.get_attachments_as_bytes(
+            {"urls": [URL_ATTACHMENT]}, len(CONTENT), hass
+        )
 
     assert signal_requests_mock.called
     assert signal_requests_mock.call_count == 1
@@ -198,9 +295,8 @@ def test_get_attachments_with_large_attachment_no_header(
     """Test getting attachments as URL with large attachment (per content length) throws error."""
     signal_requests_mock = signal_requests_mock_factory()
     with pytest.raises(ValueError) as exc:
-        data = {"urls": [URL_ATTACHMENT]}
         signal_notification_service.get_attachments_as_bytes(
-            data, len(CONTENT) - 1, hass
+            {"urls": [URL_ATTACHMENT]}, len(CONTENT) - 1, hass
         )
 
     assert signal_requests_mock.called

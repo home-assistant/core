@@ -1,6 +1,8 @@
 """Tests for Kaleidescape config entry."""
 
-from unittest.mock import AsyncMock
+from unittest.mock import MagicMock
+
+import pytest
 
 from homeassistant.components.kaleidescape.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -14,7 +16,7 @@ from tests.common import MockConfigEntry
 
 async def test_unload_config_entry(
     hass: HomeAssistant,
-    mock_device: AsyncMock,
+    mock_device: MagicMock,
     mock_integration: MockConfigEntry,
 ) -> None:
     """Test config entry loading and unloading."""
@@ -32,7 +34,7 @@ async def test_unload_config_entry(
 
 async def test_config_entry_not_ready(
     hass: HomeAssistant,
-    mock_device: AsyncMock,
+    mock_device: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test config entry not ready."""
@@ -45,12 +47,8 @@ async def test_config_entry_not_ready(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_device(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-    mock_device: AsyncMock,
-    mock_integration: MockConfigEntry,
-) -> None:
+@pytest.mark.usefixtures("mock_device", "mock_integration")
+async def test_device(device_registry: dr.DeviceRegistry) -> None:
     """Test device."""
     device = device_registry.async_get_device(
         identifiers={("kaleidescape", MOCK_SERIAL)}

@@ -14,7 +14,8 @@ from tests.typing import ClientSessionGenerator
     "device_fixture",
     [
         "HWE-P1",
-        "HWE-SKT",
+        "HWE-SKT-11",
+        "HWE-SKT-21",
         "HWE-WTR",
         "SDM230",
         "SDM630",

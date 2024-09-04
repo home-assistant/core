@@ -1,4 +1,5 @@
 """Dune HD implementation of the media player."""
+
 from __future__ import annotations
 
 from typing import Any, Final

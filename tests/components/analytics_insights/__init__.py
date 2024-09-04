@@ -1,4 +1,5 @@
 """Tests for the Homeassistant Analytics integration."""
+
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry

@@ -1,4 +1,5 @@
 """Test the HMAC-based One Time Password (MFA) auth module."""
+
 import asyncio
 from unittest.mock import patch
 
@@ -154,7 +155,7 @@ async def test_login_flow_validates_mfa(hass: HomeAssistant) -> None:
         )
         assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "mfa"
-        assert result["data_schema"].schema.get("code") == str
+        assert result["data_schema"].schema.get("code") is str
 
     # wait service call finished
     await hass.async_block_till_done()
@@ -182,8 +183,9 @@ async def test_login_flow_validates_mfa(hass: HomeAssistant) -> None:
     assert len(notify_calls) == 1
 
     # retry twice
-    with patch("pyotp.HOTP.verify", return_value=False), patch(
-        "pyotp.HOTP.at", return_value=MOCK_CODE_2
+    with (
+        patch("pyotp.HOTP.verify", return_value=False),
+        patch("pyotp.HOTP.at", return_value=MOCK_CODE_2),
     ):
         result = await hass.auth.login_flow.async_configure(
             result["flow_id"], {"code": "invalid-code"}
@@ -212,7 +214,7 @@ async def test_login_flow_validates_mfa(hass: HomeAssistant) -> None:
         )
         assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "mfa"
-        assert result["data_schema"].schema.get("code") == str
+        assert result["data_schema"].schema.get("code") is str
 
     # wait service call finished
     await hass.async_block_till_done()

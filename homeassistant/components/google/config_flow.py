@@ -1,4 +1,5 @@
 """Config flow for Google integration."""
+
 from __future__ import annotations
 
 import asyncio
@@ -92,18 +93,6 @@ class OAuth2FlowHandler(
             "access_type": "offline",
             "prompt": "consent",
         }
-
-    async def async_step_import(self, info: dict[str, Any]) -> ConfigFlowResult:
-        """Import existing auth into a new config entry."""
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
-        implementations = await config_entry_oauth2_flow.async_get_implementations(
-            self.hass, self.DOMAIN
-        )
-        assert len(implementations) == 1
-        self.flow_impl = list(implementations.values())[0]
-        self.external_data = info
-        return await super().async_step_creation(info)
 
     async def async_step_auth(
         self, user_input: dict[str, Any] | None = None

@@ -1,4 +1,5 @@
 """Intellifire Climate Entities."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -68,7 +69,7 @@ class IntellifireClimate(IntellifireEntity, ClimateEntity):
         super().__init__(coordinator, description)
 
         if coordinator.data.thermostat_on:
-            self.last_temp = coordinator.data.thermostat_setpoint_c
+            self.last_temp = int(coordinator.data.thermostat_setpoint_c)
 
     @property
     def hvac_mode(self) -> HVACMode:

@@ -1,4 +1,5 @@
 """Test the Schlage config flow."""
+
 from unittest.mock import AsyncMock, Mock
 
 from pyschlage.exceptions import Error as PyschlageError, NotAuthorizedError
@@ -21,7 +22,7 @@ async def test_form(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -34,7 +35,7 @@ async def test_form(
     await hass.async_block_till_done()
 
     mock_pyschlage_auth.authenticate.assert_called_once_with()
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "test-username"
     assert result2["data"] == {
         "username": "test-username",
@@ -59,7 +60,7 @@ async def test_form_invalid_auth(
             "password": "test-password",
         },
     )
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "invalid_auth"}
 
 
@@ -78,7 +79,7 @@ async def test_form_unknown(hass: HomeAssistant, mock_pyschlage_auth: Mock) -> N
         },
     )
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}
 
 
@@ -104,7 +105,7 @@ async def test_reauth(
     await hass.async_block_till_done()
 
     mock_pyschlage_auth.authenticate.assert_called_once_with()
-    assert result2["type"] == FlowResultType.ABORT
+    assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "reauth_successful"
     assert mock_added_config_entry.data == {
         "username": "asdf@asdf.com",
@@ -137,7 +138,7 @@ async def test_reauth_invalid_auth(
     await hass.async_block_till_done()
 
     mock_pyschlage_auth.authenticate.assert_called_once_with()
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "invalid_auth"}
 
 
@@ -164,7 +165,7 @@ async def test_reauth_wrong_account(
     await hass.async_block_till_done()
 
     mock_pyschlage_auth.authenticate.assert_called_once_with()
-    assert result2["type"] == FlowResultType.ABORT
+    assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "wrong_account"
     assert mock_added_config_entry.data == {
         "username": "asdf@asdf.com",

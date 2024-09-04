@@ -1,4 +1,5 @@
 """Config flow for Risco integration."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -34,8 +35,10 @@ from .const import (
     CONF_CODE_ARM_REQUIRED,
     CONF_CODE_DISARM_REQUIRED,
     CONF_COMMUNICATION_DELAY,
+    CONF_CONCURRENCY,
     CONF_HA_STATES_TO_RISCO,
     CONF_RISCO_STATES_TO_HA,
+    DEFAULT_ADVANCED_OPTIONS,
     DEFAULT_OPTIONS,
     DOMAIN,
     MAX_COMMUNICATION_DELAY,
@@ -102,9 +105,9 @@ async def validate_local_input(
         )
         try:
             await risco.connect()
-        except CannotConnectError as e:
+        except CannotConnectError:
             if comm_delay >= MAX_COMMUNICATION_DELAY:
-                raise e
+                raise
             comm_delay += 1
         else:
             break
@@ -156,7 +159,7 @@ class RiscoConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except UnauthorizedError:
                 errors["base"] = "invalid_auth"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
@@ -194,7 +197,7 @@ class RiscoConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except UnauthorizedError:
                 errors["base"] = "invalid_auth"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
@@ -205,8 +208,8 @@ class RiscoConfigFlow(ConfigFlow, domain=DOMAIN):
                     title=info["title"],
                     data={
                         **user_input,
-                        **{CONF_TYPE: TYPE_LOCAL},
-                        **{CONF_COMMUNICATION_DELAY: info["comm_delay"]},
+                        CONF_TYPE: TYPE_LOCAL,
+                        CONF_COMMUNICATION_DELAY: info["comm_delay"],
                     },
                 )
 
@@ -224,11 +227,8 @@ class RiscoOptionsFlowHandler(OptionsFlow):
         self._data = {**DEFAULT_OPTIONS, **config_entry.options}
 
     def _options_schema(self) -> vol.Schema:
-        return vol.Schema(
+        schema = vol.Schema(
             {
-                vol.Required(
-                    CONF_SCAN_INTERVAL, default=self._data[CONF_SCAN_INTERVAL]
-                ): int,
                 vol.Required(
                     CONF_CODE_ARM_REQUIRED, default=self._data[CONF_CODE_ARM_REQUIRED]
                 ): bool,
@@ -238,6 +238,19 @@ class RiscoOptionsFlowHandler(OptionsFlow):
                 ): bool,
             }
         )
+        if self.show_advanced_options:
+            self._data = {**DEFAULT_ADVANCED_OPTIONS, **self._data}
+            schema = schema.extend(
+                {
+                    vol.Required(
+                        CONF_SCAN_INTERVAL, default=self._data[CONF_SCAN_INTERVAL]
+                    ): int,
+                    vol.Required(
+                        CONF_CONCURRENCY, default=self._data[CONF_CONCURRENCY]
+                    ): int,
+                }
+            )
+        return schema
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None

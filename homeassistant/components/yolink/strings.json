@@ -51,6 +51,12 @@
       "plug_4": { "name": "Plug 4" }
     },
     "sensor": {
+      "current_power": {
+        "name": "Current power"
+      },
+      "power_consumption": {
+        "name": "Power consumption"
+      },
       "power_failure_alarm": {
         "name": "Power failure alarm",
         "state": {
@@ -73,11 +79,19 @@
           "enabled": "[%key:common::state::enabled%]",
           "disabled": "[%key:common::state::disabled%]"
         }
+      },
+      "water_meter_reading": {
+        "name": "Water meter reading"
       }
     },
     "number": {
       "config_volume": {
         "name": "Volume"
+      }
+    },
+    "valve": {
+      "meter_valve_state": {
+        "name": "Valve state"
       }
     }
   },

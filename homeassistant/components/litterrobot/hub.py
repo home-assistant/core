@@ -1,4 +1,5 @@
 """A wrapper 'hub' for the Litter-Robot API."""
+
 from __future__ import annotations
 
 from collections.abc import Generator, Mapping
@@ -54,19 +55,18 @@ class LitterRobotHub:
                 load_robots=load_robots,
                 subscribe_for_updates=subscribe_for_updates,
             )
-            return
         except LitterRobotLoginException as ex:
             raise ConfigEntryAuthFailed("Invalid credentials") from ex
         except LitterRobotException as ex:
             raise ConfigEntryNotReady("Unable to connect to Litter-Robot API") from ex
 
-    def litter_robots(self) -> Generator[LitterRobot, Any, Any]:
+    def litter_robots(self) -> Generator[LitterRobot]:
         """Get Litter-Robots from the account."""
         return (
             robot for robot in self.account.robots if isinstance(robot, LitterRobot)
         )
 
-    def feeder_robots(self) -> Generator[FeederRobot, Any, Any]:
+    def feeder_robots(self) -> Generator[FeederRobot]:
         """Get Feeder-Robots from the account."""
         return (
             robot for robot in self.account.robots if isinstance(robot, FeederRobot)

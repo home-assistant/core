@@ -1,4 +1,5 @@
 """Config flow for 1-Wire component."""
+
 from __future__ import annotations
 
 from typing import Any

@@ -5,6 +5,7 @@ of other integrations. Integrations register an authorization server, and then
 the APIs are used to add one or more client credentials. Integrations may also
 provide credentials from yaml for backwards compatibility.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -28,7 +29,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import collection, config_entry_oauth2_flow
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.storage import Store
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, VolDictType
 from homeassistant.loader import (
     IntegrationNotFound,
     async_get_application_credentials,
@@ -48,14 +49,14 @@ DATA_STORAGE = "storage"
 CONF_AUTH_DOMAIN = "auth_domain"
 DEFAULT_IMPORT_NAME = "Import from configuration.yaml"
 
-CREATE_FIELDS = {
+CREATE_FIELDS: VolDictType = {
     vol.Required(CONF_DOMAIN): cv.string,
     vol.Required(CONF_CLIENT_ID): vol.All(cv.string, vol.Strip),
     vol.Required(CONF_CLIENT_SECRET): vol.All(cv.string, vol.Strip),
     vol.Optional(CONF_AUTH_DOMAIN): cv.string,
     vol.Optional(CONF_NAME): cv.string,
 }
-UPDATE_FIELDS: dict = {}  # Not supported
+UPDATE_FIELDS: VolDictType = {}  # Not supported
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
@@ -291,7 +292,7 @@ async def _get_platform(
         _LOGGER.debug("Integration '%s' does not exist: %s", integration_domain, err)
         return None
     try:
-        platform = integration.get_platform("application_credentials")
+        platform = await integration.async_get_platform("application_credentials")
     except ImportError as err:
         _LOGGER.debug(
             "Integration '%s' does not provide application_credentials: %s",

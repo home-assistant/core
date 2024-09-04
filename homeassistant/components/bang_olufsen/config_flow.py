@@ -1,4 +1,5 @@
 """Config flow for the Bang & Olufsen integration."""
+
 from __future__ import annotations
 
 from ipaddress import AddressValueError, IPv4Address
@@ -133,6 +134,15 @@ class BangOlufsenConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             IPv4Address(self._host)
         except AddressValueError:
             return self.async_abort(reason="ipv6_address")
+
+        # Check connection to ensure valid address is received
+        self._client = MozartClient(self._host)
+
+        async with self._client:
+            try:
+                await self._client.get_beolink_self(_request_timeout=3)
+            except (ClientConnectorError, TimeoutError):
+                return self.async_abort(reason="invalid_address")
 
         self._model = discovery_info.hostname[:-16].replace("-", " ")
         self._serial_number = discovery_info.properties[ATTR_SERIAL_NUMBER]

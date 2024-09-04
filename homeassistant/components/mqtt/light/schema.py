@@ -1,4 +1,5 @@
 """Shared schema code."""
+
 import voluptuous as vol
 
 from ..const import CONF_SCHEMA

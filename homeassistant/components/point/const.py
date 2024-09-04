@@ -1,4 +1,5 @@
 """Define constants for the Point component."""
+
 from datetime import timedelta
 
 DOMAIN = "point"

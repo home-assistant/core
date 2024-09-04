@@ -1,4 +1,5 @@
 """Define constants for the Notion integration."""
+
 import logging
 
 DOMAIN = "notion"

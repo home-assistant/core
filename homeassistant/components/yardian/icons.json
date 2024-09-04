@@ -1,0 +1,14 @@
+{
+  "entity": {
+    "switch": {
+      "switch": {
+        "default": "mdi:water"
+      }
+    }
+  },
+  "services": {
+    "start_irrigation": {
+      "service": "mdi:water"
+    }
+  }
+}

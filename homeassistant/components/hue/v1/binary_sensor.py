@@ -1,4 +1,5 @@
 """Hue binary sensor entities."""
+
 from aiohue.v1.sensors import TYPE_ZLL_PRESENCE
 
 from homeassistant.components.binary_sensor import (

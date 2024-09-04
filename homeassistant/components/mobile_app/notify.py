@@ -1,4 +1,5 @@
 """Support for mobile_app push notifications."""
+
 from __future__ import annotations
 
 import asyncio

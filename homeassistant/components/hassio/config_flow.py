@@ -1,14 +1,12 @@
 """Config flow for Home Assistant Supervisor integration."""
+
 from __future__ import annotations
 
-import logging
 from typing import Any
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 
-from . import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
+from .const import DOMAIN
 
 
 class HassIoConfigFlow(ConfigFlow, domain=DOMAIN):

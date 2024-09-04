@@ -49,7 +49,7 @@ class RainBirdCalendarEntity(
 
     _attr_has_entity_name = True
     _attr_name: str | None = None
-    _attr_icon = "mdi:sprinkler"
+    _attr_translation_key = "calendar"
 
     def __init__(
         self,
@@ -73,7 +73,7 @@ class RainBirdCalendarEntity(
         schedule = self.coordinator.data
         if not schedule:
             return None
-        cursor = schedule.timeline_tz(dt_util.DEFAULT_TIME_ZONE).active_after(
+        cursor = schedule.timeline_tz(dt_util.get_default_time_zone()).active_after(
             dt_util.now()
         )
         program_event = next(cursor, None)

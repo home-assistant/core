@@ -1,9 +1,10 @@
 """Helpers for data entry flows for config entries."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
 import logging
-from typing import TYPE_CHECKING, Any, Generic, TypeVar, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from homeassistant import config_entries
 from homeassistant.components import onboarding
@@ -21,13 +22,12 @@ if TYPE_CHECKING:
 
     from .service_info.mqtt import MqttServiceInfo
 
-_R = TypeVar("_R", bound="Awaitable[bool] | bool")
-DiscoveryFunctionType = Callable[[HomeAssistant], _R]
+type DiscoveryFunctionType[_R] = Callable[[HomeAssistant], _R]
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class DiscoveryFlowHandler(config_entries.ConfigFlow, Generic[_R]):
+class DiscoveryFlowHandler[_R: Awaitable[bool] | bool](config_entries.ConfigFlow):
     """Handle a discovery config flow."""
 
     VERSION = 1
@@ -68,8 +68,7 @@ class DiscoveryFlowHandler(config_entries.ConfigFlow, Generic[_R]):
 
             if not (has_devices := bool(in_progress)):
                 has_devices = await cast(
-                    "asyncio.Future[bool]",
-                    self.hass.async_add_job(self._discovery_function, self.hass),
+                    "asyncio.Future[bool]", self._discovery_function(self.hass)
                 )
 
             if not has_devices:
@@ -220,21 +219,33 @@ class WebhookFlowHandler(config_entries.ConfigFlow):
         if user_input is None:
             return self.async_show_form(step_id="user")
 
-        webhook_id = self.hass.components.webhook.async_generate_id()
+        # Local import to be sure cloud is loaded and setup
+        # pylint: disable-next=import-outside-toplevel
+        from homeassistant.components.cloud import (
+            async_active_subscription,
+            async_create_cloudhook,
+            async_is_connected,
+        )
 
-        if (
-            "cloud" in self.hass.config.components
-            and self.hass.components.cloud.async_active_subscription()
+        # Local import to be sure webhook is loaded and setup
+        # pylint: disable-next=import-outside-toplevel
+        from homeassistant.components.webhook import (
+            async_generate_id,
+            async_generate_url,
+        )
+
+        webhook_id = async_generate_id()
+
+        if "cloud" in self.hass.config.components and async_active_subscription(
+            self.hass
         ):
-            if not self.hass.components.cloud.async_is_connected():
+            if not async_is_connected(self.hass):
                 return self.async_abort(reason="cloud_not_connected")
 
-            webhook_url = await self.hass.components.cloud.async_create_cloudhook(
-                webhook_id
-            )
+            webhook_url = await async_create_cloudhook(self.hass, webhook_id)
             cloudhook = True
         else:
-            webhook_url = self.hass.components.webhook.async_generate_url(webhook_id)
+            webhook_url = async_generate_url(self.hass, webhook_id)
             cloudhook = False
 
         self._description_placeholder["webhook_url"] = webhook_url
@@ -267,4 +278,8 @@ async def webhook_async_remove_entry(
     if not entry.data.get("cloudhook") or "cloud" not in hass.config.components:
         return
 
-    await hass.components.cloud.async_delete_cloudhook(entry.data["webhook_id"])
+    # Local import to be sure cloud is loaded and setup
+    # pylint: disable-next=import-outside-toplevel
+    from homeassistant.components.cloud import async_delete_cloudhook
+
+    await async_delete_cloudhook(hass, entry.data["webhook_id"])

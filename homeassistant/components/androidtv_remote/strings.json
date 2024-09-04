@@ -20,7 +20,7 @@
       },
       "reauth_confirm": {
         "title": "[%key:common::config_flow::title::reauth%]",
-        "description": "You need to pair again with the Android TV ({name})."
+        "description": "You need to pair again with the Android TV ({name}). It will turn on and a pairing code will be displayed on it that you will need to enter in the next screen."
       }
     },
     "error": {
@@ -39,7 +39,18 @@
     "step": {
       "init": {
         "data": {
+          "apps": "Configure applications list",
           "enable_ime": "Enable IME. Needed for getting the current app. Disable for devices that show 'Use keyboard on mobile device screen' instead of the on screen keyboard."
+        }
+      },
+      "apps": {
+        "title": "Configure Android Apps",
+        "description": "Configure application id {app_id}",
+        "data": {
+          "app_name": "Application Name",
+          "app_id": "Application ID",
+          "app_icon": "Application Icon",
+          "app_delete": "Check to delete this application"
         }
       }
     }

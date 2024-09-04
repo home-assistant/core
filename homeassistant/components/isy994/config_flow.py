@@ -1,4 +1,5 @@
 """Config flow for Universal Devices ISY/IoX integration."""
+
 from __future__ import annotations
 
 import asyncio
@@ -156,7 +157,7 @@ class Isy994ConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_host"
             except InvalidAuth:
                 errors[CONF_PASSWORD] = "invalid_auth"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
 
@@ -212,7 +213,7 @@ class Isy994ConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle a discovered ISY/IoX device via dhcp."""
         friendly_name = discovery_info.hostname
-        if friendly_name.startswith("polisy") or friendly_name.startswith("eisy"):
+        if friendly_name.startswith(("polisy", "eisy")):
             url = f"http://{discovery_info.ip}:8080"
         else:
             url = f"http://{discovery_info.ip}"

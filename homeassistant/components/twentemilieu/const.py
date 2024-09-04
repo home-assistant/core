@@ -1,4 +1,5 @@
 """Constants for the Twente Milieu integration."""
+
 from datetime import timedelta
 import logging
 from typing import Final

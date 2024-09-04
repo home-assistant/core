@@ -1,4 +1,5 @@
 """Config flow for ZHA."""
+
 from __future__ import annotations
 
 import collections
@@ -9,6 +10,7 @@ from typing import Any
 import serial.tools.list_ports
 from serial.tools.list_ports_common import ListPortInfo
 import voluptuous as vol
+from zha.application.const import RadioType
 import zigpy.backups
 from zigpy.config import CONF_DEVICE, CONF_DEVICE_PATH
 
@@ -34,13 +36,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.selector import FileSelector, FileSelectorConfig
 from homeassistant.util import dt as dt_util
 
-from .core.const import (
-    CONF_BAUDRATE,
-    CONF_FLOW_CONTROL,
-    CONF_RADIO_TYPE,
-    DOMAIN,
-    RadioType,
-)
+from .const import CONF_BAUDRATE, CONF_FLOW_CONTROL, CONF_RADIO_TYPE, DOMAIN
 from .radio_manager import (
     DEVICE_SCHEMA,
     HARDWARE_DISCOVERY_SCHEMA,
@@ -145,12 +141,12 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
         self._title: str | None = None
 
     @property
-    def hass(self):
+    def hass(self) -> HomeAssistant:
         """Return hass."""
         return self._hass
 
     @hass.setter
-    def hass(self, hass):
+    def hass(self, hass: HomeAssistant) -> None:
         """Set hass."""
         self._hass = hass
         self._radio_mgr.hass = hass
@@ -220,10 +216,10 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
             return await self.async_step_verify_radio()
 
         # Pre-select the currently configured port
-        default_port = vol.UNDEFINED
+        default_port: vol.Undefined | str = vol.UNDEFINED
 
         if self._radio_mgr.device_path is not None:
-            for description, port in zip(list_of_ports, ports):
+            for description, port in zip(list_of_ports, ports, strict=False):
                 if port.device == self._radio_mgr.device_path:
                     default_port = description
                     break
@@ -250,7 +246,7 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
             return await self.async_step_manual_port_config()
 
         # Pre-select the current radio type
-        default = vol.UNDEFINED
+        default: vol.Undefined | str = vol.UNDEFINED
 
         if self._radio_mgr.radio_type is not None:
             default = self._radio_mgr.radio_type.description
@@ -500,23 +496,27 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
 
     VERSION = 4
 
-    async def _set_unique_id_or_update_path(
+    async def _set_unique_id_and_update_ignored_flow(
         self, unique_id: str, device_path: str
     ) -> None:
-        """Set the flow's unique ID and update the device path if it isn't unique."""
+        """Set the flow's unique ID and update the device path in an ignored flow."""
         current_entry = await self.async_set_unique_id(unique_id)
 
         if not current_entry:
             return
 
-        self._abort_if_unique_id_configured(
-            updates={
-                CONF_DEVICE: {
-                    **current_entry.data.get(CONF_DEVICE, {}),
-                    CONF_DEVICE_PATH: device_path,
-                },
-            }
-        )
+        if current_entry.source != SOURCE_IGNORE:
+            self._abort_if_unique_id_configured()
+        else:
+            # Only update the current entry if it is an ignored discovery
+            self._abort_if_unique_id_configured(
+                updates={
+                    CONF_DEVICE: {
+                        **current_entry.data.get(CONF_DEVICE, {}),
+                        CONF_DEVICE_PATH: device_path,
+                    },
+                }
+            )
 
     @staticmethod
     @callback
@@ -586,7 +586,7 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
         description = discovery_info.description
         dev_path = discovery_info.device
 
-        await self._set_unique_id_or_update_path(
+        await self._set_unique_id_and_update_ignored_flow(
             unique_id=f"{vid}:{pid}_{serial_number}_{manufacturer}_{description}",
             device_path=dev_path,
         )
@@ -636,7 +636,7 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
         node_name = local_name.removesuffix(".local")
         device_path = f"socket://{discovery_info.host}:{port}"
 
-        await self._set_unique_id_or_update_path(
+        await self._set_unique_id_and_update_ignored_flow(
             unique_id=node_name,
             device_path=device_path,
         )
@@ -661,7 +661,7 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
         device_settings = discovery_data["port"]
         device_path = device_settings[CONF_DEVICE_PATH]
 
-        await self._set_unique_id_or_update_path(
+        await self._set_unique_id_and_update_ignored_flow(
             unique_id=f"{name}_{radio_type.name}_{device_path}",
             device_path=device_path,
         )

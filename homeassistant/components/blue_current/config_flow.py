@@ -1,4 +1,5 @@
 """Config flow for Blue Current integration."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -47,7 +48,7 @@ class BlueCurrentConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "already_connected"
             except InvalidApiToken:
                 errors["base"] = "invalid_token"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:  # noqa: BLE001
                 LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
 

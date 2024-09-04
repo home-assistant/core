@@ -1,4 +1,5 @@
 """Config flow for Derivative integration."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -9,11 +10,19 @@ import voluptuous as vol
 from homeassistant.components.counter import DOMAIN as COUNTER_DOMAIN
 from homeassistant.components.input_number import DOMAIN as INPUT_NUMBER_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.const import CONF_NAME, CONF_SOURCE, UnitOfTime
+from homeassistant.const import (
+    ATTR_UNIT_OF_MEASUREMENT,
+    CONF_NAME,
+    CONF_SOURCE,
+    UnitOfTime,
+)
+from homeassistant.core import callback
 from homeassistant.helpers import selector
 from homeassistant.helpers.schema_config_entry_flow import (
+    SchemaCommonFlowHandler,
     SchemaConfigFlowHandler,
     SchemaFlowFormStep,
+    SchemaOptionsFlowHandler,
 )
 
 from .const import (
@@ -41,8 +50,43 @@ TIME_UNITS = [
     UnitOfTime.DAYS,
 ]
 
-OPTIONS_SCHEMA = vol.Schema(
-    {
+ALLOWED_DOMAINS = [COUNTER_DOMAIN, INPUT_NUMBER_DOMAIN, SENSOR_DOMAIN]
+
+
+@callback
+def entity_selector_compatible(
+    handler: SchemaOptionsFlowHandler,
+) -> selector.EntitySelector:
+    """Return an entity selector which compatible entities."""
+    current = handler.hass.states.get(handler.options[CONF_SOURCE])
+    unit_of_measurement = (
+        current.attributes.get(ATTR_UNIT_OF_MEASUREMENT) if current else None
+    )
+
+    entities = [
+        ent.entity_id
+        for ent in handler.hass.states.async_all(ALLOWED_DOMAINS)
+        if ent.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == unit_of_measurement
+        and ent.domain in ALLOWED_DOMAINS
+    ]
+
+    return selector.EntitySelector(
+        selector.EntitySelectorConfig(include_entities=entities)
+    )
+
+
+async def _get_options_dict(handler: SchemaCommonFlowHandler | None) -> dict:
+    if handler is None or not isinstance(
+        handler.parent_handler, SchemaOptionsFlowHandler
+    ):
+        entity_selector = selector.EntitySelector(
+            selector.EntitySelectorConfig(domain=ALLOWED_DOMAINS)
+        )
+    else:
+        entity_selector = entity_selector_compatible(handler.parent_handler)
+
+    return {
+        vol.Required(CONF_SOURCE): entity_selector,
         vol.Required(CONF_ROUND_DIGITS, default=2): selector.NumberSelector(
             selector.NumberSelectorConfig(
                 min=0,
@@ -61,25 +105,28 @@ OPTIONS_SCHEMA = vol.Schema(
             ),
         ),
     }
-)
 
-CONFIG_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_NAME): selector.TextSelector(),
-        vol.Required(CONF_SOURCE): selector.EntitySelector(
-            selector.EntitySelectorConfig(
-                domain=[COUNTER_DOMAIN, INPUT_NUMBER_DOMAIN, SENSOR_DOMAIN]
-            ),
-        ),
-    }
-).extend(OPTIONS_SCHEMA.schema)
+
+async def _get_options_schema(handler: SchemaCommonFlowHandler) -> vol.Schema:
+    return vol.Schema(await _get_options_dict(handler))
+
+
+async def _get_config_schema(handler: SchemaCommonFlowHandler) -> vol.Schema:
+    options = await _get_options_dict(handler)
+    return vol.Schema(
+        {
+            vol.Required(CONF_NAME): selector.TextSelector(),
+            **options,
+        }
+    )
+
 
 CONFIG_FLOW = {
-    "user": SchemaFlowFormStep(CONFIG_SCHEMA),
+    "user": SchemaFlowFormStep(_get_config_schema),
 }
 
 OPTIONS_FLOW = {
-    "init": SchemaFlowFormStep(OPTIONS_SCHEMA),
+    "init": SchemaFlowFormStep(_get_options_schema),
 }
 
 

@@ -1,4 +1,5 @@
 """Models for the database in the Recorder."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass

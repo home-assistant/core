@@ -1,4 +1,5 @@
 """UK Environment Agency Flood Monitoring Integration."""
+
 import asyncio
 from datetime import timedelta
 import logging

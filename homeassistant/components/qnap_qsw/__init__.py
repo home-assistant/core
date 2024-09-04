@@ -1,4 +1,5 @@
 """The QNAP QSW integration."""
+
 from __future__ import annotations
 
 import logging

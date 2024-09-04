@@ -1,4 +1,5 @@
 """Config flow for Volvo On Call integration."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -59,7 +60,7 @@ class VolvoOnCallConfigFlow(ConfigFlow, domain=DOMAIN):
                 await self.is_valid(user_input)
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unhandled exception in user step")
                 errors["base"] = "unknown"
             if not errors:
@@ -106,7 +107,7 @@ class VolvoOnCallConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_reauth(
-        self, user_input: Mapping[str, Any]
+        self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Perform reauth upon an API authentication error."""
         self._reauth_entry = self.hass.config_entries.async_get_entry(

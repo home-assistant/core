@@ -1,9 +1,12 @@
 """Preference management for cloud."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
 from typing import Any
 import uuid
+
+from hass_nabucasa.voice import MAP_VOICE, Gender
 
 from homeassistant.auth.const import GROUP_ID_ADMIN
 from homeassistant.auth.models import User
@@ -47,7 +50,7 @@ from .const import (
 
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
-STORAGE_VERSION_MINOR = 3
+STORAGE_VERSION_MINOR = 4
 
 ALEXA_SETTINGS_VERSION = 3
 GOOGLE_SETTINGS_VERSION = 3
@@ -81,6 +84,24 @@ class CloudPreferencesStore(Store):
                 # In HA Core 2024.9, remove the import and also remove the Google
                 # assistant store if it's not been migrated by manual Google assistant
                 old_data.setdefault(PREF_GOOGLE_CONNECTED, await google_connected())
+            if old_minor_version < 4:
+                # Update the default TTS voice to the new default.
+                # The default tts voice is a tuple.
+                # The first item is the language, the second item used to be gender.
+                # The new second item is the voice name.
+                default_tts_voice = old_data.get(PREF_TTS_DEFAULT_VOICE)
+                if default_tts_voice and (voice_item_two := default_tts_voice[1]) in (
+                    Gender.FEMALE,
+                    Gender.MALE,
+                ):
+                    language: str = default_tts_voice[0]
+                    if voice := MAP_VOICE.get((language, voice_item_two)):
+                        old_data[PREF_TTS_DEFAULT_VOICE] = (
+                            language,
+                            voice,
+                        )
+                    else:
+                        old_data[PREF_TTS_DEFAULT_VOICE] = DEFAULT_TTS_DEFAULT_VOICE
 
         return old_data
 
@@ -159,24 +180,28 @@ class CloudPreferences:
         """Update user preferences."""
         prefs = {**self._prefs}
 
-        for key, value in (
-            (PREF_ENABLE_GOOGLE, google_enabled),
-            (PREF_ENABLE_ALEXA, alexa_enabled),
-            (PREF_ENABLE_REMOTE, remote_enabled),
-            (PREF_GOOGLE_SECURE_DEVICES_PIN, google_secure_devices_pin),
-            (PREF_CLOUDHOOKS, cloudhooks),
-            (PREF_CLOUD_USER, cloud_user),
-            (PREF_ALEXA_REPORT_STATE, alexa_report_state),
-            (PREF_GOOGLE_REPORT_STATE, google_report_state),
-            (PREF_ALEXA_SETTINGS_VERSION, alexa_settings_version),
-            (PREF_GOOGLE_SETTINGS_VERSION, google_settings_version),
-            (PREF_TTS_DEFAULT_VOICE, tts_default_voice),
-            (PREF_REMOTE_DOMAIN, remote_domain),
-            (PREF_GOOGLE_CONNECTED, google_connected),
-            (PREF_REMOTE_ALLOW_REMOTE_ENABLE, remote_allow_remote_enable),
-        ):
-            if value is not UNDEFINED:
-                prefs[key] = value
+        prefs.update(
+            {
+                key: value
+                for key, value in (
+                    (PREF_ENABLE_GOOGLE, google_enabled),
+                    (PREF_ENABLE_ALEXA, alexa_enabled),
+                    (PREF_ENABLE_REMOTE, remote_enabled),
+                    (PREF_GOOGLE_SECURE_DEVICES_PIN, google_secure_devices_pin),
+                    (PREF_CLOUDHOOKS, cloudhooks),
+                    (PREF_CLOUD_USER, cloud_user),
+                    (PREF_ALEXA_REPORT_STATE, alexa_report_state),
+                    (PREF_GOOGLE_REPORT_STATE, google_report_state),
+                    (PREF_ALEXA_SETTINGS_VERSION, alexa_settings_version),
+                    (PREF_GOOGLE_SETTINGS_VERSION, google_settings_version),
+                    (PREF_TTS_DEFAULT_VOICE, tts_default_voice),
+                    (PREF_REMOTE_DOMAIN, remote_domain),
+                    (PREF_GOOGLE_CONNECTED, google_connected),
+                    (PREF_REMOTE_ALLOW_REMOTE_ENABLE, remote_allow_remote_enable),
+                )
+                if value is not UNDEFINED
+            }
+        )
 
         await self._save_prefs(prefs)
 
@@ -202,6 +227,10 @@ class CloudPreferences:
             await self._save_prefs(self._empty_config(username))
 
         return True
+
+    async def async_erase_config(self) -> None:
+        """Erase the configuration."""
+        await self._save_prefs(self._empty_config(""))
 
     def as_dict(self) -> dict[str, Any]:
         """Return dictionary version."""
@@ -327,7 +356,10 @@ class CloudPreferences:
 
     @property
     def tts_default_voice(self) -> tuple[str, str]:
-        """Return the default TTS voice."""
+        """Return the default TTS voice.
+
+        The return value is a tuple of language and voice.
+        """
         return self._prefs.get(PREF_TTS_DEFAULT_VOICE, DEFAULT_TTS_DEFAULT_VOICE)  # type: ignore[no-any-return]
 
     async def get_cloud_user(self) -> str:

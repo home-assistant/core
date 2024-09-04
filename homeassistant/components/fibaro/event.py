@@ -1,4 +1,5 @@
 """Support for Fibaro event entities."""
+
 from __future__ import annotations
 
 from pyfibaro.fibaro_device import DeviceModel, SceneEvent
@@ -26,13 +27,15 @@ async def async_setup_entry(
     """Set up the Fibaro event entities."""
     controller: FibaroController = hass.data[DOMAIN][entry.entry_id]
 
-    entities = []
-    for device in controller.fibaro_devices[Platform.EVENT]:
-        for scene_event in device.central_scene_event:
-            # Each scene event represents a button on a device
-            entities.append(FibaroEventEntity(device, scene_event))
-
-    async_add_entities(entities, True)
+    # Each scene event represents a button on a device
+    async_add_entities(
+        (
+            FibaroEventEntity(device, scene_event)
+            for device in controller.fibaro_devices[Platform.EVENT]
+            for scene_event in device.central_scene_event
+        ),
+        True,
+    )
 
 
 class FibaroEventEntity(FibaroDevice, EventEntity):

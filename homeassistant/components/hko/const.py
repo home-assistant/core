@@ -1,4 +1,5 @@
 """Constants for the Hong Kong Observatory integration."""
+
 from hko import LOCATIONS
 
 from homeassistant.components.weather import (

@@ -1,4 +1,5 @@
 """Support for Blink Home Camera System."""
+
 from copy import deepcopy
 import logging
 

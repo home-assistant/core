@@ -1,4 +1,5 @@
 """Test the Matter helpers."""
+
 from __future__ import annotations
 
 from unittest.mock import MagicMock

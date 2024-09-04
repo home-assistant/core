@@ -1,9 +1,10 @@
 """Support to control a Salda Smarty XP/XV ventilation unit."""
+
 from datetime import timedelta
 import ipaddress
 import logging
 
-from pysmarty import Smarty
+from pysmarty2 import Smarty
 import voluptuous as vol
 
 from homeassistant.const import CONF_HOST, CONF_NAME, Platform

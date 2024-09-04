@@ -1,4 +1,5 @@
 """Config flow for Tesla Wall Connector integration."""
+
 from __future__ import annotations
 
 import logging
@@ -103,8 +104,8 @@ class TeslaWallConnectorConfigFlow(ConfigFlow, domain=DOMAIN):
             info = await validate_input(self.hass, user_input)
         except WallConnectorError:
             errors["base"] = "cannot_connect"
-        except Exception as ex:  # pylint: disable=broad-except
-            _LOGGER.exception("Unexpected exception: %s", ex)
+        except Exception:
+            _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
 
         if not errors:

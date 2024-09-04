@@ -1,4 +1,5 @@
 """Support for Homekit switches."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -191,7 +192,7 @@ class DeclarativeCharacteristicSwitch(CharacteristicEntity, SwitchEntity):
         )
 
 
-ENTITY_TYPES: dict[str, type[HomeKitSwitch] | type[HomeKitValve]] = {
+ENTITY_TYPES: dict[str, type[HomeKitSwitch | HomeKitValve]] = {
     ServicesTypes.SWITCH: HomeKitSwitch,
     ServicesTypes.OUTLET: HomeKitSwitch,
     ServicesTypes.VALVE: HomeKitValve,

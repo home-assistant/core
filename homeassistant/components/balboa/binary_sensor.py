@@ -1,4 +1,5 @@
 """Support for Balboa Spa binary sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -33,18 +34,11 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-@dataclass(frozen=True)
-class BalboaBinarySensorEntityDescriptionMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class BalboaBinarySensorEntityDescription(BinarySensorEntityDescription):
+    """A class that describes Balboa binary sensor entities."""
 
     is_on_fn: Callable[[SpaClient], bool]
-
-
-@dataclass(frozen=True)
-class BalboaBinarySensorEntityDescription(
-    BinarySensorEntityDescription, BalboaBinarySensorEntityDescriptionMixin
-):
-    """A class that describes Balboa binary sensor entities."""
 
 
 BINARY_SENSOR_DESCRIPTIONS = (

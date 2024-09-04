@@ -1,4 +1,5 @@
 """Test to check for circular imports in core components."""
+
 import asyncio
 import sys
 
@@ -9,7 +10,7 @@ from homeassistant.bootstrap import (
     DEBUGGER_INTEGRATIONS,
     DEFAULT_INTEGRATIONS,
     FRONTEND_INTEGRATIONS,
-    LOGGING_INTEGRATIONS,
+    LOGGING_AND_HTTP_DEPS_INTEGRATIONS,
     RECORDER_INTEGRATIONS,
     STAGE_1_INTEGRATIONS,
 )
@@ -22,7 +23,7 @@ from homeassistant.bootstrap import (
         {
             *DEBUGGER_INTEGRATIONS,
             *CORE_INTEGRATIONS,
-            *LOGGING_INTEGRATIONS,
+            *LOGGING_AND_HTTP_DEPS_INTEGRATIONS,
             *FRONTEND_INTEGRATIONS,
             *RECORDER_INTEGRATIONS,
             *STAGE_1_INTEGRATIONS,

@@ -1,4 +1,5 @@
 """Support for monitoring Dremel 3D Printer sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -13,7 +14,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
     EntityCategory,
@@ -27,23 +27,16 @@ from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import utcnow
 from homeassistant.util.variance import ignore_variance
 
-from .const import ATTR_EXTRUDER, ATTR_PLATFORM, DOMAIN
+from .const import ATTR_EXTRUDER, ATTR_PLATFORM
+from .coordinator import DremelConfigEntry
 from .entity import Dremel3DPrinterEntity
 
 
-@dataclass(frozen=True)
-class Dremel3DPrinterSensorEntityMixin:
-    """Mixin for Dremel 3D Printer sensor."""
-
-    value_fn: Callable[[Dremel3DPrinter, str], StateType | datetime]
-
-
-@dataclass(frozen=True)
-class Dremel3DPrinterSensorEntityDescription(
-    SensorEntityDescription, Dremel3DPrinterSensorEntityMixin
-):
+@dataclass(frozen=True, kw_only=True)
+class Dremel3DPrinterSensorEntityDescription(SensorEntityDescription):
     """Describes a Dremel 3D Printer sensor."""
 
+    value_fn: Callable[[Dremel3DPrinter, str], StateType | datetime]
     available_fn: Callable[[Dremel3DPrinter, str], bool] = lambda api, _: True
 
 
@@ -241,14 +234,13 @@ SENSOR_TYPES: tuple[Dremel3DPrinterSensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: DremelConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the available Dremel 3D Printer sensors."""
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]
-
     async_add_entities(
-        Dremel3DPrinterSensor(coordinator, description) for description in SENSOR_TYPES
+        Dremel3DPrinterSensor(config_entry.runtime_data, description)
+        for description in SENSOR_TYPES
     )
 
 

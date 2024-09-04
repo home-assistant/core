@@ -1,4 +1,5 @@
 """Tests for the Jellyfin sensor platform."""
+
 from unittest.mock import MagicMock
 
 from homeassistant.components.jellyfin.const import DOMAIN

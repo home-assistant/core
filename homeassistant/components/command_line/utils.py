@@ -1,4 +1,5 @@
 """The command_line component utils."""
+
 from __future__ import annotations
 
 import asyncio
@@ -18,31 +19,32 @@ async def async_call_shell_with_timeout(
     """
     try:
         _LOGGER.debug("Running command: %s", command)
-        proc = await asyncio.create_subprocess_shell(  # noqa: S602 # shell by design
+        proc = await asyncio.create_subprocess_shell(  # shell by design
             command,
             close_fds=False,  # required for posix_spawn
         )
         async with asyncio.timeout(timeout):
             await proc.communicate()
-        return_code = proc.returncode
-        if return_code == _EXEC_FAILED_CODE:
-            _LOGGER.error("Error trying to exec command: %s", command)
-        elif log_return_code and return_code != 0:
-            _LOGGER.error(
-                "Command failed (with return code %s): %s",
-                proc.returncode,
-                command,
-            )
-        return return_code or 0
     except TimeoutError:
         _LOGGER.error("Timeout for command: %s", command)
         return -1
+
+    return_code = proc.returncode
+    if return_code == _EXEC_FAILED_CODE:
+        _LOGGER.error("Error trying to exec command: %s", command)
+    elif log_return_code and return_code != 0:
+        _LOGGER.error(
+            "Command failed (with return code %s): %s",
+            proc.returncode,
+            command,
+        )
+    return return_code or 0
 
 
 async def async_check_output_or_log(command: str, timeout: int) -> str | None:
     """Run a shell command with a timeout and return the output."""
     try:
-        proc = await asyncio.create_subprocess_shell(  # noqa: S602 # shell by design
+        proc = await asyncio.create_subprocess_shell(  # shell by design
             command,
             close_fds=False,  # required for posix_spawn
             stdout=asyncio.subprocess.PIPE,

@@ -18,6 +18,7 @@
       "user_rejected_authorize": "[%key:common::config_flow::abort::oauth2_user_rejected_authorize%]",
       "access_not_configured": "Unable to access the Google API:\n\n{message}",
       "unknown": "[%key:common::config_flow::error::unknown%]",
+      "wrong_account": "Wrong account: Please authenticate with the right account.",
       "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
       "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
       "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]"

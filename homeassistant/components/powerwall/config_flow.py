@@ -1,4 +1,5 @@
 """Config flow for Tesla Powerwall integration."""
+
 from __future__ import annotations
 
 import asyncio
@@ -175,7 +176,7 @@ class PowerwallConfigFlow(ConfigFlow, domain=DOMAIN):
         except AccessDeniedError as ex:
             errors[CONF_PASSWORD] = "invalid_auth"
             description_placeholders = {"error": str(ex)}
-        except Exception as ex:  # pylint: disable=broad-except
+        except Exception as ex:
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
             description_placeholders = {"error": str(ex)}

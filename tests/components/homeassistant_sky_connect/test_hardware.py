@@ -1,29 +1,31 @@
 """Test the Home Assistant SkyConnect hardware platform."""
-from unittest.mock import patch
 
 from homeassistant.components.homeassistant_sky_connect.const import DOMAIN
-from homeassistant.core import EVENT_HOMEASSISTANT_STARTED, HomeAssistant
+from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 from tests.typing import WebSocketGenerator
 
 CONFIG_ENTRY_DATA = {
-    "device": "bla_device",
-    "vid": "bla_vid",
-    "pid": "bla_pid",
-    "serial_number": "bla_serial_number",
-    "manufacturer": "bla_manufacturer",
-    "description": "bla_description",
+    "device": "/dev/serial/by-id/usb-Nabu_Casa_SkyConnect_v1.0_9e2adbd75b8beb119fe564a0f320645d-if00-port0",
+    "vid": "10C4",
+    "pid": "EA60",
+    "serial_number": "9e2adbd75b8beb119fe564a0f320645d",
+    "manufacturer": "Nabu Casa",
+    "product": "SkyConnect v1.0",
+    "firmware": "ezsp",
 }
 
 CONFIG_ENTRY_DATA_2 = {
-    "device": "bla_device_2",
-    "vid": "bla_vid_2",
-    "pid": "bla_pid_2",
-    "serial_number": "bla_serial_number_2",
-    "manufacturer": "bla_manufacturer_2",
-    "description": "bla_description_2",
+    "device": "/dev/serial/by-id/usb-Nabu_Casa_Home_Assistant_Connect_ZBT-1_9e2adbd75b8beb119fe564a0f320645d-if00-port0",
+    "vid": "10C4",
+    "pid": "EA60",
+    "serial_number": "9e2adbd75b8beb119fe564a0f320645d",
+    "manufacturer": "Nabu Casa",
+    "product": "Home Assistant Connect ZBT-1",
+    "firmware": "ezsp",
 }
 
 
@@ -41,22 +43,24 @@ async def test_hardware_info(
         options={},
         title="Home Assistant SkyConnect",
         unique_id="unique_1",
+        version=1,
+        minor_version=2,
     )
     config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+
     config_entry_2 = MockConfigEntry(
         data=CONFIG_ENTRY_DATA_2,
         domain=DOMAIN,
         options={},
-        title="Home Assistant SkyConnect",
+        title="Home Assistant Connect ZBT-1",
         unique_id="unique_2",
+        version=1,
+        minor_version=2,
     )
     config_entry_2.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.homeassistant_sky_connect.usb.async_is_plugged_in",
-        return_value=True,
-    ):
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
+
+    assert await hass.config_entries.async_setup(config_entry_2.entry_id)
 
     client = await hass_ws_client(hass)
 
@@ -71,11 +75,11 @@ async def test_hardware_info(
                 "board": None,
                 "config_entries": [config_entry.entry_id],
                 "dongle": {
-                    "vid": "bla_vid",
-                    "pid": "bla_pid",
-                    "serial_number": "bla_serial_number",
-                    "manufacturer": "bla_manufacturer",
-                    "description": "bla_description",
+                    "vid": "10C4",
+                    "pid": "EA60",
+                    "serial_number": "9e2adbd75b8beb119fe564a0f320645d",
+                    "manufacturer": "Nabu Casa",
+                    "description": "SkyConnect v1.0",
                 },
                 "name": "Home Assistant SkyConnect",
                 "url": "https://skyconnect.home-assistant.io/documentation/",
@@ -84,13 +88,13 @@ async def test_hardware_info(
                 "board": None,
                 "config_entries": [config_entry_2.entry_id],
                 "dongle": {
-                    "vid": "bla_vid_2",
-                    "pid": "bla_pid_2",
-                    "serial_number": "bla_serial_number_2",
-                    "manufacturer": "bla_manufacturer_2",
-                    "description": "bla_description_2",
+                    "vid": "10C4",
+                    "pid": "EA60",
+                    "serial_number": "9e2adbd75b8beb119fe564a0f320645d",
+                    "manufacturer": "Nabu Casa",
+                    "description": "Home Assistant Connect ZBT-1",
                 },
-                "name": "Home Assistant SkyConnect",
+                "name": "Home Assistant Connect ZBT-1",
                 "url": "https://skyconnect.home-assistant.io/documentation/",
             },
         ]

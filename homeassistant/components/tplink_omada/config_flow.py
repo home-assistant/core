@@ -1,4 +1,5 @@
 """Config flow for TP-Link Omada integration."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -217,7 +218,7 @@ class TpLinkOmadaConfigFlow(ConfigFlow, domain=DOMAIN):
         except OmadaClientException as ex:
             _LOGGER.error("Unexpected API error: %s", ex)
             errors["base"] = "unknown"
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         return None

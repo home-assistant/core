@@ -1,4 +1,5 @@
 """Constants for the PECO Outage Counter integration."""
+
 import logging
 from typing import Final
 

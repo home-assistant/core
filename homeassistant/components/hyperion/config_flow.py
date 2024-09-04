@@ -1,4 +1,5 @@
 """Hyperion config flow."""
+
 from __future__ import annotations
 
 import asyncio
@@ -343,7 +344,7 @@ class HyperionConfigFlow(ConfigFlow, domain=DOMAIN):
         # UI to approve the request for a new token).
         assert self._auth_id is not None
         self._request_token_task = self.hass.async_create_task(
-            self._request_token_task_func(self._auth_id)
+            self._request_token_task_func(self._auth_id), eager_start=False
         )
         return self.async_external_step(
             step_id="create_token_external", url=self._get_hyperion_url()
@@ -411,12 +412,7 @@ class HyperionConfigFlow(ConfigFlow, domain=DOMAIN):
         entry = await self.async_set_unique_id(hyperion_id, raise_on_progress=False)
 
         if self.context.get(CONF_SOURCE) == SOURCE_REAUTH and entry is not None:
-            self.hass.config_entries.async_update_entry(entry, data=self._data)
-            # Need to manually reload, as the listener won't have been installed because
-            # the initial load did not succeed (the reauth flow will not be initiated if
-            # the load succeeds)
-            await self.hass.config_entries.async_reload(entry.entry_id)
-            return self.async_abort(reason="reauth_successful")
+            return self.async_update_reload_and_abort(entry, data=self._data)
 
         self._abort_if_unique_id_configured()
 

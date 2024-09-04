@@ -85,6 +85,9 @@
       },
       "remaining_fuel_percent": {
         "default": "mdi:gas-station"
+      },
+      "climate_status": {
+        "default": "mdi:fan"
       }
     },
     "switch": {

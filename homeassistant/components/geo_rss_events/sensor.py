@@ -4,6 +4,7 @@ Retrieves current events (typically incidents or alerts) in GeoRSS format, and
 shows information on events filtered by distance to the HA instance's location
 and grouped by category.
 """
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -13,7 +14,10 @@ from georss_client import UPDATE_OK, UPDATE_OK_NO_DATA
 from georss_generic_client import GenericFeed
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+    SensorEntity,
+)
 from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
@@ -45,7 +49,7 @@ DOMAIN = "geo_rss_events"
 
 SCAN_INTERVAL = timedelta(minutes=5)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_URL): cv.string,
         vol.Optional(CONF_LATITUDE): cv.latitude,
@@ -161,9 +165,9 @@ class GeoRssServiceSensor(SensorEntity):
             # And now compute the attributes from the filtered events.
             matrix = {}
             for entry in feed_entries:
-                matrix[
-                    entry.title
-                ] = f"{entry.distance_to_home:.0f}{UnitOfLength.KILOMETERS}"
+                matrix[entry.title] = (
+                    f"{entry.distance_to_home:.0f}{UnitOfLength.KILOMETERS}"
+                )
             self._state_attributes = matrix
         elif status == UPDATE_OK_NO_DATA:
             _LOGGER.debug("Update successful, but no data received from %s", self._feed)

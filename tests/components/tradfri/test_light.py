@@ -1,4 +1,5 @@
 """Tradfri lights platform tests."""
+
 from typing import Any
 
 import pytest
