@@ -95,9 +95,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: SqueezeboxConfigEntry) -
     version = STATUS_QUERY_VERSION in status and status[STATUS_QUERY_VERSION] or None
     # mac can be missing
     mac_connect = (
-        STATUS_QUERY_MAC in status
-        and {(CONNECTION_NETWORK_MAC, format_mac(status[STATUS_QUERY_MAC]))}
-        or None
+        {(CONNECTION_NETWORK_MAC, format_mac(status[STATUS_QUERY_MAC]))}
+        if STATUS_QUERY_MAC in status
+        else None
     )
 
     device_registry = dr.async_get(hass)
