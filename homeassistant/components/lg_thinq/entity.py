@@ -49,7 +49,7 @@ class ThinQEntity(CoordinatorEntity[DeviceDataUpdateCoordinator]):
             name=coordinator.device_name,
         )
         self._attr_unique_id = f"{coordinator.unique_id}_{self.property_id}"
-        if self.location is not None and self.location in (
+        if self.location is not None and self.location not in (
             Location.MAIN,
             Location.OVEN,
             coordinator.sub_id,
