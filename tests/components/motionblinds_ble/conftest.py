@@ -109,6 +109,7 @@ def mock_config_entry(
     return MockConfigEntry(
         title="mock_title",
         domain=DOMAIN,
+        entry_id="mock_entry_id",
         unique_id=address,
         data={
             CONF_ADDRESS: address,
