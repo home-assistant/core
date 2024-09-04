@@ -1,0 +1,34 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'device': dict({
+      'blind_type': 'Roller blind',
+      'calibration_type': None,
+      'connection_type': 'disconnected',
+      'end_position_info': None,
+      'position': None,
+      'tilt': None,
+      'timezone': None,
+    }),
+    'entry': dict({
+      'data': dict({
+        'address': 'cc:cc:cc:cc:cc:cc',
+        'blind_type': 'roller',
+        'local_name': 'Motionblind CCCC',
+        'mac_code': 'CCCC',
+      }),
+      'disabled_by': None,
+      'domain': 'motionblinds_ble',
+      'entry_id': 'mock_entry_id',
+      'minor_version': 1,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'title': '**REDACTED**',
+      'unique_id': '**REDACTED**',
+      'version': 1,
+    }),
+  })
+# ---
