@@ -56,8 +56,6 @@ from .const import DISCOVERY_TASK, DOMAIN, KNOWN_PLAYERS, SQUEEZEBOX_SOURCE_STRI
 
 SERVICE_CALL_METHOD = "call_method"
 SERVICE_CALL_QUERY = "call_query"
-SERVICE_SYNC = "sync"
-SERVICE_UNSYNC = "unsync"
 
 ATTR_QUERY_RESULT = "query_result"
 ATTR_SYNC_GROUP = "sync_group"
@@ -181,12 +179,6 @@ async def async_setup_entry(
         },
         "async_call_query",
     )
-    platform.async_register_entity_service(
-        SERVICE_SYNC,
-        {vol.Required(ATTR_OTHER_PLAYER): cv.string},
-        "async_sync",
-    )
-    platform.async_register_entity_service(SERVICE_UNSYNC, None, "async_unsync")
 
     # Start server discovery task if not already running
     entry.async_on_unload(async_at_start(hass, start_server_discovery))
@@ -566,25 +558,9 @@ class SqueezeBoxEntity(MediaPlayerEntity):
                     "Could not find player_id for %s. Not syncing", other_player
                 )
 
-    async def async_sync(self, other_player: str) -> None:
-        """Sync this Squeezebox player to another. Deprecated."""
-        _LOGGER.warning(
-            "Service squeezebox.sync is deprecated; use media_player.join_players"
-            " instead"
-        )
-        await self.async_join_players([other_player])
-
     async def async_unjoin_player(self) -> None:
         """Unsync this Squeezebox player."""
         await self._player.async_unsync()
-
-    async def async_unsync(self) -> None:
-        """Unsync this Squeezebox player. Deprecated."""
-        _LOGGER.warning(
-            "Service squeezebox.unsync is deprecated; use media_player.unjoin_player"
-            " instead"
-        )
-        await self.async_unjoin_player()
 
     async def async_browse_media(
         self,
