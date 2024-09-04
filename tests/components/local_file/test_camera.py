@@ -6,6 +6,7 @@ from unittest import mock
 import pytest
 
 from homeassistant.components.local_file.const import DOMAIN, SERVICE_UPDATE_FILE_PATH
+from homeassistant.const import ATTR_ENTITY_ID, CONF_FILE_PATH
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.setup import async_setup_component
@@ -222,7 +223,6 @@ async def test_update_file_path(hass: HomeAssistant) -> None:
             service_data,
             blocking=True,
         )
-        await hass.async_block_till_done()
 
         state = hass.states.get("camera.local_file")
         assert state.attributes.get("file_path") == "new/path.jpg"
@@ -232,7 +232,10 @@ async def test_update_file_path(hass: HomeAssistant) -> None:
         assert state.attributes.get("file_path") == "mock/path_2.jpg"
 
     # Assert it fails if file is not readable
-    service_data = {"entity_id": "camera.local_file", "file_path": "new/path2.jpg"}
+    service_data = {
+        ATTR_ENTITY_ID: "camera.local_file",
+        CONF_FILE_PATH: "new/path2.jpg",
+    }
     with pytest.raises(
         ServiceValidationError, match="Path new/path2.jpg is not accessible"
     ):
