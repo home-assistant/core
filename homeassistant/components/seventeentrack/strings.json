@@ -110,7 +110,7 @@
           "description": "The package will be archived for the specified tracking number."
         },
         "config_entry_id": {
-          "name": "17Track service",
+          "name": "[%key:component::seventeentrack::services::get_packages::fields::config_entry_id::name%]",
           "description": "The package will be archived for the selected service."
         }
       }
