@@ -70,9 +70,9 @@ class AquacellCoordinator(DataUpdateCoordinator[dict[str, Softener]]):
                 _LOGGER.debug("Logged in using: %s", self.refresh_token)
 
                 softeners = await self.aquacell_api.get_all_softeners()
-            except (AuthenticationFailed, TimeoutError) as err:
+            except AuthenticationFailed as err:
                 raise ConfigEntryError from err
-            except AquacellApiException as err:
+            except (AquacellApiException, TimeoutError) as err:
                 raise UpdateFailed(f"Error communicating with API: {err}") from err
 
         return {softener.dsn: softener for softener in softeners}
