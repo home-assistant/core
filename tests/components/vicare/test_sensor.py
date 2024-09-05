@@ -1,6 +1,6 @@
 """Test ViCare sensor entity."""
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -23,7 +23,9 @@ async def test_all_entities(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test all entities."""
-    fixtures: list[Fixture] = [Fixture({"type:boiler"}, "vicare/Vitodens300W.json")]
+    fixtures: list[Fixture] = [
+        Fixture({"type:boiler"}, "vicare/Vitodens300W.json"),
+    ]
     with (
         patch(f"{MODULE}.vicare_login", return_value=MockPyViCare(fixtures)),
         patch(f"{MODULE}.PLATFORMS", [Platform.SENSOR]),
@@ -33,18 +35,22 @@ async def test_all_entities(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
-@pytest.mark.parametrize(
-    "entity_id",
-    [
-        "room_temperature",
-        "room_humidity",
-    ],
-)
-async def test_sensors(
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_room_sensors(
     hass: HomeAssistant,
-    mock_vicare_room_sensors: MagicMock,
     snapshot: SnapshotAssertion,
-    entity_id: str,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test the ViCare binary sensor."""
-    assert hass.states.get(f"binary_sensor.model0_{entity_id}") == snapshot
+    """Test all entities."""
+    fixtures: list[Fixture] = [
+        Fixture({"type:climateSensor"}, "vicare/RoomSensor1.json"),
+        Fixture({"type:climateSensor"}, "vicare/RoomSensor2.json"),
+    ]
+    with (
+        patch(f"{MODULE}.vicare_login", return_value=MockPyViCare(fixtures)),
+        patch(f"{MODULE}.PLATFORMS", [Platform.SENSOR]),
+    ):
+        await setup_integration(hass, mock_config_entry)
+
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
