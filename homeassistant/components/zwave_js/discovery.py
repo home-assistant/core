@@ -885,18 +885,6 @@ DISCOVERY_SCHEMAS = [
             type={ValueType.BOOLEAN},
         ),
     ),
-    # button
-    # Notification CC idle
-    ZWaveDiscoverySchema(
-        platform=Platform.BUTTON,
-        hint="notification idle",
-        primary_value=ZWaveValueDiscoverySchema(
-            command_class={CommandClass.NOTIFICATION},
-            type={ValueType.NUMBER},
-            any_available_states={(0, "idle")},
-        ),
-        allow_multi=True,
-    ),
     # binary sensor for Indicator CC
     ZWaveDiscoverySchema(
         platform=Platform.BINARY_SENSOR,
@@ -957,6 +945,18 @@ DISCOVERY_SCHEMAS = [
             property={VALUE_PROPERTY},
         ),
         data_template=NumericSensorDataTemplate(),
+    ),
+    # button
+    # Notification CC idle
+    ZWaveDiscoverySchema(
+        platform=Platform.BUTTON,
+        hint="notification idle",
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.NOTIFICATION},
+            type={ValueType.NUMBER},
+            any_available_states={(0, "idle")},
+        ),
+        allow_multi=True,
     ),
     # number for Indicator CC (exclude property keys 3-5)
     ZWaveDiscoverySchema(

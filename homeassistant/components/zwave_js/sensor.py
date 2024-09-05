@@ -817,11 +817,6 @@ class ZWaveListSensor(ZwaveSensor):
             alternate_value_name=self.info.primary_value.property_name,
             additional_info=[self.info.primary_value.property_key_name],
         )
-        if (
-            self.info.primary_value.property_name
-            and "UNKNOWN" in self.info.primary_value.property_name
-        ):
-            self._attr_entity_category = EntityCategory.DIAGNOSTIC
         if self.info.primary_value.metadata.states:
             self._attr_device_class = SensorDeviceClass.ENUM
             self._attr_options = list(info.primary_value.metadata.states.values())
