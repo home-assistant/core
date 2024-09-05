@@ -111,8 +111,8 @@ BASE_SCHEMA: VolDictType = {
 }
 
 # Extra data that the user can set on each time range
-CUSTOM_DATA_VALUE = vol.Or(bool, str, int, float)
-CUSTOM_DATA_SCHEMA = vol.Or(vol.Schema({str: CUSTOM_DATA_VALUE}), CUSTOM_DATA_VALUE)
+CUSTOM_DATA_VALUE = vol.Any(bool, str, int, float)
+CUSTOM_DATA_SCHEMA = vol.Any(vol.Schema({str: CUSTOM_DATA_VALUE}), CUSTOM_DATA_VALUE)
 
 TIME_RANGE_SCHEMA: VolDictType = {
     vol.Required(CONF_FROM): cv.time,
