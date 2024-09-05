@@ -71,7 +71,8 @@ def setup_platform(
 ) -> None:
     """Set up an ADS sensor device."""
     ads_hub = hass.data.get(ads.DATA_ADS)
-
+    if ads_hub is None:
+        raise ValueError("ADS Hub is not initialized.")
     ads_var = config[CONF_ADS_VAR]
     ads_type = config[CONF_ADS_TYPE]
     name = config[CONF_NAME]
@@ -93,14 +94,14 @@ class AdsSensor(AdsEntity, SensorEntity):
 
     def __init__(
         self,
-        ads_hub,
-        ads_var,
-        ads_type,
-        name,
-        unit_of_measurement,
-        factor,
-        device_class,
-    ):
+        ads_hub: ads.AdsHub,
+        ads_var: str,
+        ads_type: str,
+        name: str,
+        unit_of_measurement: str | None,
+        factor: int | None,
+        device_class: SensorDeviceClass | None,
+    ) -> None:
         """Initialize AdsSensor entity."""
         super().__init__(ads_hub, name, ads_var)
         self._attr_native_unit_of_measurement = unit_of_measurement
