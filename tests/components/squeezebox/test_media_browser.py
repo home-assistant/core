@@ -4,7 +4,6 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from homeassistant.const import Platform
 from homeassistant.components.media_player import (
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
@@ -17,7 +16,7 @@ from homeassistant.components.squeezebox.browse_media import (
     LIBRARY,
     MEDIA_TYPE_TO_SQUEEZEBOX,
 )
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -31,7 +30,8 @@ async def setup_integration(
     """Fixture for setting up the component."""
     with (
         patch("homeassistant.components.squeezebox.Server", return_value=lms),
-        patch("homeassistant.components.squeezebox.PLATFORMS",
+        patch(
+            "homeassistant.components.squeezebox.PLATFORMS",
             [Platform.MEDIA_PLAYER],
         ),
         patch(
