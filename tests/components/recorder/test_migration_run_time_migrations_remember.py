@@ -72,7 +72,7 @@ def _create_engine_test(*args, **kwargs):
     return engine
 
 
-@pytest.mark.parametrize("enable_migrate_context_ids", [True])
+@pytest.mark.parametrize("enable_migrate_state_context_ids", [True])
 @pytest.mark.parametrize("persistent_database", [True])
 @pytest.mark.usefixtures("hass_storage")  # Prevent test hass from writing to storage
 async def test_migration_changes_prevent_trying_to_migrate_again(
