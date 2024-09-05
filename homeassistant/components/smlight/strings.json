@@ -17,6 +17,14 @@
           "password": "[%key:common::config_flow::data::password%]"
         }
       },
+      "reauth_confirm": {
+        "title": "[%key:common::config_flow::title::reauth%]",
+        "description": "Please enter the correct username and password for host: {host}",
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      },
       "confirm_discovery": {
         "description": "Do you want to set up SMLIGHT at {host}?"
       }
@@ -27,7 +35,10 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "reauth_failed": "[%key:common::config_flow::error::invalid_auth%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
   },
   "entity": {
