@@ -672,14 +672,23 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
             soco.play_from_queue(0)
         elif media_type in PLAYABLE_MEDIA_TYPES:
             item = media_browser.get_media(self.media.library, media_id, media_type)
-
             if not item:
-                _LOGGER.error('Could not find "%s" in the library', media_id)
-                return
-
+                raise ServiceValidationError(
+                    translation_domain=SONOS_DOMAIN,
+                    translation_key="invalid_media",
+                    translation_placeholders={
+                        "media_id": media_id,
+                    },
+                )
             self._play_media_queue(soco, item, enqueue)
         else:
-            _LOGGER.error('Sonos does not support a media type of "%s"', media_type)
+            raise ServiceValidationError(
+                translation_domain=SONOS_DOMAIN,
+                translation_key="invalid_content_type",
+                translation_placeholders={
+                    "media_type": media_type,
+                },
+            )
 
     def _play_media_queue(
         self, soco: SoCo, item: MusicServiceItem, enqueue: MediaPlayerEnqueue
