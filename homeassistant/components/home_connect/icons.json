@@ -21,5 +21,15 @@
     "change_setting": {
       "service": "mdi:cog"
     }
+  },
+  "entity": {
+    "switch": {
+      "refrigeration_dispenser": {
+        "default": "mdi:snowflake",
+        "state": {
+          "off": "mdi:snowflake-off"
+        }
+      }
+    }
   }
 }
