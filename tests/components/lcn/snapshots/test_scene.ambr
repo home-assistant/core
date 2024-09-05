@@ -1,0 +1,19 @@
+# serializer version: 1
+# name: test_entity_attributes[scene.romantic-original_name]
+  'Romantic'
+# ---
+# name: test_entity_attributes[scene.romantic_transition-original_name]
+  'Romantic Transition'
+# ---
+# name: test_scene_activate[scene.romantic-friendly-name]
+  'Romantic'
+# ---
+# name: test_setup_lcn_scene[scene.romantic-state]
+  'unknown'
+# ---
+# name: test_setup_lcn_scene[scene.romantic_transition-state]
+  'unknown'
+# ---
+# name: test_unload_config_entry[scene.romantic-state]
+  'unavailable'
+# ---
