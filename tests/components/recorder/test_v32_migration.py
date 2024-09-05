@@ -109,6 +109,7 @@ async def test_migrate_times(
     with (
         patch.object(recorder, "db_schema", old_db_schema),
         patch.object(migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION),
+        patch.object(migration, "post_migrate_entity_ids", return_value=False),
         patch.object(migration.EventsContextIDMigration, "migrate_data"),
         patch.object(migration.StatesContextIDMigration, "migrate_data"),
         patch.object(migration.EventTypeIDMigration, "migrate_data"),
@@ -120,7 +121,6 @@ async def test_migrate_times(
         patch.object(core, "States", old_db_schema.States),
         patch.object(core, "Events", old_db_schema.Events),
         patch(CREATE_ENGINE_TARGET, new=_create_engine_test(SCHEMA_MODULE_30)),
-        patch("homeassistant.components.recorder.Recorder._post_migrate_entity_ids"),
     ):
         async with (
             async_test_home_assistant() as hass,
@@ -219,6 +219,7 @@ async def test_migrate_times(
         await hass.async_stop()
 
 
+@pytest.mark.parametrize("enable_migrate_entity_ids", [True])
 @pytest.mark.parametrize("persistent_database", [True])
 @pytest.mark.usefixtures("hass_storage")  # Prevent test hass from writing to storage
 async def test_migrate_can_resume_entity_id_post_migration(
@@ -264,13 +265,13 @@ async def test_migrate_can_resume_entity_id_post_migration(
         patch.object(recorder, "db_schema", old_db_schema),
         patch.object(migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION),
         patch.object(migration.EventIDPostMigration, "migrate_data"),
+        patch.object(migration, "post_migrate_entity_ids", return_value=False),
         patch.object(core, "StatesMeta", old_db_schema.StatesMeta),
         patch.object(core, "EventTypes", old_db_schema.EventTypes),
         patch.object(core, "EventData", old_db_schema.EventData),
         patch.object(core, "States", old_db_schema.States),
         patch.object(core, "Events", old_db_schema.Events),
         patch(CREATE_ENGINE_TARGET, new=_create_engine_test(SCHEMA_MODULE_32)),
-        patch("homeassistant.components.recorder.Recorder._post_migrate_entity_ids"),
     ):
         async with (
             async_test_home_assistant() as hass,
@@ -321,6 +322,7 @@ async def test_migrate_can_resume_entity_id_post_migration(
         await hass.async_stop()
 
 
+@pytest.mark.parametrize("enable_migrate_entity_ids", [True])
 @pytest.mark.parametrize("enable_migrate_event_ids", [True])
 @pytest.mark.parametrize("persistent_database", [True])
 @pytest.mark.usefixtures("hass_storage")  # Prevent test hass from writing to storage
@@ -382,13 +384,13 @@ async def test_migrate_can_resume_ix_states_event_id_removed(
         patch.object(recorder, "db_schema", old_db_schema),
         patch.object(migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION),
         patch.object(migration.EventIDPostMigration, "migrate_data"),
+        patch.object(migration, "post_migrate_entity_ids", return_value=False),
         patch.object(core, "StatesMeta", old_db_schema.StatesMeta),
         patch.object(core, "EventTypes", old_db_schema.EventTypes),
         patch.object(core, "EventData", old_db_schema.EventData),
         patch.object(core, "States", old_db_schema.States),
         patch.object(core, "Events", old_db_schema.Events),
         patch(CREATE_ENGINE_TARGET, new=_create_engine_test(SCHEMA_MODULE_32)),
-        patch("homeassistant.components.recorder.Recorder._post_migrate_entity_ids"),
     ):
         async with (
             async_test_home_assistant() as hass,
@@ -514,13 +516,13 @@ async def test_out_of_disk_space_while_rebuild_states_table(
         patch.object(recorder, "db_schema", old_db_schema),
         patch.object(migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION),
         patch.object(migration.EventIDPostMigration, "migrate_data"),
+        patch.object(migration, "post_migrate_entity_ids", return_value=False),
         patch.object(core, "StatesMeta", old_db_schema.StatesMeta),
         patch.object(core, "EventTypes", old_db_schema.EventTypes),
         patch.object(core, "EventData", old_db_schema.EventData),
         patch.object(core, "States", old_db_schema.States),
         patch.object(core, "Events", old_db_schema.Events),
         patch(CREATE_ENGINE_TARGET, new=_create_engine_test(SCHEMA_MODULE_32)),
-        patch("homeassistant.components.recorder.Recorder._post_migrate_entity_ids"),
     ):
         async with (
             async_test_home_assistant() as hass,
@@ -625,6 +627,7 @@ async def test_out_of_disk_space_while_rebuild_states_table(
 
 @pytest.mark.usefixtures("skip_by_db_engine")
 @pytest.mark.skip_on_db_engine(["sqlite"])
+@pytest.mark.parametrize("enable_migrate_entity_ids", [True])
 @pytest.mark.parametrize("enable_migrate_event_ids", [True])
 @pytest.mark.parametrize("persistent_database", [True])
 @pytest.mark.usefixtures("hass_storage")  # Prevent test hass from writing to storage
@@ -690,13 +693,13 @@ async def test_out_of_disk_space_while_removing_foreign_key(
         patch.object(recorder, "db_schema", old_db_schema),
         patch.object(migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION),
         patch.object(migration.EventIDPostMigration, "migrate_data"),
+        patch.object(migration, "post_migrate_entity_ids", return_value=False),
         patch.object(core, "StatesMeta", old_db_schema.StatesMeta),
         patch.object(core, "EventTypes", old_db_schema.EventTypes),
         patch.object(core, "EventData", old_db_schema.EventData),
         patch.object(core, "States", old_db_schema.States),
         patch.object(core, "Events", old_db_schema.Events),
         patch(CREATE_ENGINE_TARGET, new=_create_engine_test(SCHEMA_MODULE_32)),
-        patch("homeassistant.components.recorder.Recorder._post_migrate_entity_ids"),
     ):
         async with (
             async_test_home_assistant() as hass,

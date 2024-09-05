@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
-from thinqconnect import PROPERTY_READABLE, DeviceType
+import logging
+
+from thinqconnect import DeviceType
 from thinqconnect.devices.const import Property as ThinQProperty
-from thinqconnect.integration.homeassistant.property import create_properties
 
 from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
@@ -71,6 +72,7 @@ DEVICE_TYPE_BINARY_SENSOR_MAP: dict[
     ),
     DeviceType.WINE_CELLAR: (BINARY_SENSOR_DESC[ThinQProperty.SABBATH_MODE],),
 }
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -83,22 +85,13 @@ async def async_setup_entry(
     for coordinator in entry.runtime_data.values():
         if (
             descriptions := DEVICE_TYPE_BINARY_SENSOR_MAP.get(
-                coordinator.device_api.device_type
+                coordinator.api.device.device_type
             )
         ) is not None:
             for description in descriptions:
-                properties = create_properties(
-                    device_api=coordinator.device_api,
-                    key=description.key,
-                    children_keys=None,
-                    rw_type=PROPERTY_READABLE,
-                )
-                if not properties:
-                    continue
-
                 entities.extend(
-                    ThinQBinarySensorEntity(coordinator, description, prop)
-                    for prop in properties
+                    ThinQBinarySensorEntity(coordinator, description, property_id)
+                    for property_id in coordinator.api.get_active_idx(description.key)
                 )
 
     if entities:
@@ -112,4 +105,10 @@ class ThinQBinarySensorEntity(ThinQEntity, BinarySensorEntity):
         """Update status itself."""
         super()._update_status()
 
-        self._attr_is_on = self.property.get_value_as_bool()
+        _LOGGER.debug(
+            "[%s:%s] update status: %s",
+            self.coordinator.device_name,
+            self.property_id,
+            self.data.is_on,
+        )
+        self._attr_is_on = self.data.is_on
