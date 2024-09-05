@@ -277,7 +277,6 @@ class AdsHub:
         # Data parsing based on PLC data type
         plc_datatype = notification_item.plc_datatype
         unpack_formats = {
-            pyads.PLCTYPE_BOOL: "<?",
             pyads.PLCTYPE_BYTE: "<b",
             pyads.PLCTYPE_INT: "<h",
             pyads.PLCTYPE_UINT: "<H",
@@ -287,24 +286,22 @@ class AdsHub:
             pyads.PLCTYPE_UDINT: "<I",
             pyads.PLCTYPE_WORD: "<H",
             pyads.PLCTYPE_DWORD: "<I",
-            pyads.PLCTYPE_REAL: "<f",
             pyads.PLCTYPE_LREAL: "<d",
-            pyads.PLCTYPE_STRING: "string",
-            pyads.PLCTYPE_TIME: "<i",
-            pyads.PLCTYPE_DATE: "<i",
-            pyads.PLCTYPE_DT: "<i",
-            pyads.PLCTYPE_TOD: "<i",
+            pyads.PLCTYPE_REAL: "<f",
+            pyads.PLCTYPE_TOD: "<i",  # Treat as DINT
+            pyads.PLCTYPE_DATE: "<i",  # Treat as DINT
+            pyads.PLCTYPE_DT: "<i",  # Treat as DINT
+            pyads.PLCTYPE_TIME: "<i",  # Treat as DINT
         }
 
-        if plc_datatype in unpack_formats:
-            if unpack_formats[plc_datatype] == "string":
-                value = (
-                    bytearray(data)
-                    .split(b"\x00", 1)[0]
-                    .decode("utf-8", errors="ignore")
-                )
-            else:
-                value = struct.unpack(unpack_formats[plc_datatype], bytearray(data))[0]
+        if plc_datatype == pyads.PLCTYPE_BOOL:
+            value = bool(struct.unpack("<?", bytearray(data))[0])
+        elif plc_datatype == pyads.PLCTYPE_STRING:
+            value = (
+                bytearray(data).split(b"\x00", 1)[0].decode("utf-8", errors="ignore")
+            )
+        elif plc_datatype in unpack_formats:
+            value = struct.unpack(unpack_formats[plc_datatype], bytearray(data))[0]
         else:
             value = bytearray(data)
             _LOGGER.warning("No callback available for this datatype")
