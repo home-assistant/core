@@ -105,7 +105,7 @@ class HomeConnectSwitch(HomeConnectEntity, SwitchEntity):
         _LOGGER.debug("Turning on %s", self.entity_description.key)
         try:
             await self.hass.async_add_executor_job(
-                self.device.appliance.set_setting, self.entity_description.key, True
+                self.device.appliance.set_setting, self.entity_description.on_key, True
             )
         except HomeConnectError as err:
             _LOGGER.error("Error while trying to turn on: %s", err)
@@ -121,7 +121,7 @@ class HomeConnectSwitch(HomeConnectEntity, SwitchEntity):
         _LOGGER.debug("Turning off %s", self.entity_description.key)
         try:
             await self.hass.async_add_executor_job(
-                self.device.appliance.set_setting, self.entity_description.key, False
+                self.device.appliance.set_setting, self.entity_description.on_key, False
             )
         except HomeConnectError as err:
             _LOGGER.error("Error while trying to turn off: %s", err)
@@ -139,7 +139,9 @@ class HomeConnectSwitch(HomeConnectEntity, SwitchEntity):
         ).get(ATTR_VALUE)
         self._attr_available = True
         _LOGGER.debug(
-            "Updated %s, new state: %s", self.entity_description.key, self._attr_is_on
+            "Updated %s, new state: %s",
+            self.entity_description.key,
+            self._attr_is_on,
         )
 
 
