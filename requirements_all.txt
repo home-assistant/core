@@ -374,7 +374,7 @@ aiosolaredge==0.2.0
 aiosteamist==1.0.0
 
 # homeassistant.components.switcher_kis
-aioswitcher==4.0.2
+aioswitcher==4.0.3
 
 # homeassistant.components.syncthing
 aiosyncthing==0.5.1
@@ -1597,7 +1597,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.14
 
 # homeassistant.components.plugwise
-plugwise==0.38.3
+plugwise==1.0.0
 
 # homeassistant.components.plum_lightpad
 plumlightpad==0.0.11
@@ -2608,6 +2608,9 @@ sensorpro-ble==0.5.3
 
 # homeassistant.components.sensorpush
 sensorpush-ble==1.6.2
+
+# homeassistant.components.sensoterra
+sensoterra==2.0.1
 
 # homeassistant.components.sentry
 sentry-sdk==1.40.3
