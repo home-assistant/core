@@ -1,4 +1,4 @@
-"""Base entity for Azure DevOps."""
+"""Base entity for AWS Data."""
 
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
