@@ -21,18 +21,19 @@ async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, config_entry: ConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
+    data: dict[str, Any] = {
+        "info": async_redact_data(config_entry.data, TO_REDACT),
+    }
+
     manager: GdacsFeedEntityManager = hass.data[DOMAIN][FEED][config_entry.entry_id]
     status_info: StatusUpdate = manager.status_info()
+    if status_info:
+        data["service"] = {
+            "status": status_info.status,
+            "total": status_info.total,
+            "last_update": status_info.last_update,
+            "last_update_successful": status_info.last_update_successful,
+            "last_timestamp": status_info.last_timestamp,
+        }
 
-    return {
-        "info": async_redact_data(config_entry.data, TO_REDACT),
-        "service": {
-            "status": status_info.status if status_info else "",
-            "total": status_info.total if status_info else "",
-            "last_update": status_info.last_update if status_info else "",
-            "last_update_successful": status_info.last_update_successful
-            if status_info
-            else "",
-            "last_timestamp": status_info.last_timestamp if status_info else "",
-        },
-    }
+    return data
