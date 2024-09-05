@@ -56,6 +56,7 @@ from tests.common import (
     import_and_test_deprecated_constant_enum,
     mock_integration,
     mock_platform,
+    setup_test_component_platform,
 )
 
 
@@ -237,42 +238,15 @@ def test_deprecated_current_constants(
 
 
 async def test_preset_mode_validation(
-    hass: HomeAssistant, config_flow_fixture: None
+    hass: HomeAssistant, register_test_integration: MockConfigEntry
 ) -> None:
     """Test mode validation for fan, swing and preset."""
+    climate_entity = MockClimateEntity(name="test", entity_id="climate.test")
 
-    async def async_setup_entry_init(
-        hass: HomeAssistant, config_entry: ConfigEntry
-    ) -> bool:
-        """Set up test config entry."""
-        await hass.config_entries.async_forward_entry_setups(config_entry, [DOMAIN])
-        return True
-
-    async def async_setup_entry_climate_platform(
-        hass: HomeAssistant,
-        config_entry: ConfigEntry,
-        async_add_entities: AddEntitiesCallback,
-    ) -> None:
-        """Set up test climate platform via config entry."""
-        async_add_entities([MockClimateEntity(name="test", entity_id="climate.test")])
-
-    mock_integration(
-        hass,
-        MockModule(
-            "test",
-            async_setup_entry=async_setup_entry_init,
-        ),
-        built_in=False,
+    setup_test_component_platform(
+        hass, DOMAIN, entities=[climate_entity], from_config_entry=True
     )
-    mock_platform(
-        hass,
-        "test.climate",
-        MockPlatform(async_setup_entry=async_setup_entry_climate_platform),
-    )
-
-    config_entry = MockConfigEntry(domain="test")
-    config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.config_entries.async_setup(register_test_integration.entry_id)
     await hass.async_block_till_done()
 
     state = hass.states.get("climate.test")
@@ -402,7 +376,9 @@ def test_deprecated_supported_features_ints(
 
 
 async def test_warning_not_implemented_turn_on_off_feature(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, config_flow_fixture: None
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    register_test_integration: MockConfigEntry,
 ) -> None:
     """Test adding feature flag and warn if missing when methods are set."""
 
@@ -419,43 +395,15 @@ async def test_warning_not_implemented_turn_on_off_feature(
             """Turn off."""
             called.append("turn_off")
 
-    async def async_setup_entry_init(
-        hass: HomeAssistant, config_entry: ConfigEntry
-    ) -> bool:
-        """Set up test config entry."""
-        await hass.config_entries.async_forward_entry_setups(config_entry, [DOMAIN])
-        return True
-
-    async def async_setup_entry_climate_platform(
-        hass: HomeAssistant,
-        config_entry: ConfigEntry,
-        async_add_entities: AddEntitiesCallback,
-    ) -> None:
-        """Set up test climate platform via config entry."""
-        async_add_entities(
-            [MockClimateEntityTest(name="test", entity_id="climate.test")]
-        )
-
-    mock_integration(
-        hass,
-        MockModule(
-            "test",
-            async_setup_entry=async_setup_entry_init,
-        ),
-        built_in=False,
-    )
-    mock_platform(
-        hass,
-        "test.climate",
-        MockPlatform(async_setup_entry=async_setup_entry_climate_platform),
-    )
+    climate_entity = MockClimateEntityTest(name="test", entity_id="climate.test")
 
     with patch.object(
         MockClimateEntityTest, "__module__", "tests.custom_components.climate.test_init"
     ):
-        config_entry = MockConfigEntry(domain="test")
-        config_entry.add_to_hass(hass)
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        setup_test_component_platform(
+            hass, DOMAIN, entities=[climate_entity], from_config_entry=True
+        )
+        await hass.config_entries.async_setup(register_test_integration.entry_id)
         await hass.async_block_till_done()
 
     state = hass.states.get("climate.test")
@@ -499,7 +447,9 @@ async def test_warning_not_implemented_turn_on_off_feature(
 
 
 async def test_implicit_warning_not_implemented_turn_on_off_feature(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, config_flow_fixture: None
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    register_test_integration: MockConfigEntry,
 ) -> None:
     """Test adding feature flag and warn if missing when methods are not set.
 
@@ -527,43 +477,15 @@ async def test_implicit_warning_not_implemented_turn_on_off_feature(
             """
             return [HVACMode.OFF, HVACMode.HEAT]
 
-    async def async_setup_entry_init(
-        hass: HomeAssistant, config_entry: ConfigEntry
-    ) -> bool:
-        """Set up test config entry."""
-        await hass.config_entries.async_forward_entry_setups(config_entry, [DOMAIN])
-        return True
-
-    async def async_setup_entry_climate_platform(
-        hass: HomeAssistant,
-        config_entry: ConfigEntry,
-        async_add_entities: AddEntitiesCallback,
-    ) -> None:
-        """Set up test climate platform via config entry."""
-        async_add_entities(
-            [MockClimateEntityTest(name="test", entity_id="climate.test")]
-        )
-
-    mock_integration(
-        hass,
-        MockModule(
-            "test",
-            async_setup_entry=async_setup_entry_init,
-        ),
-        built_in=False,
-    )
-    mock_platform(
-        hass,
-        "test.climate",
-        MockPlatform(async_setup_entry=async_setup_entry_climate_platform),
-    )
+    climate_entity = MockClimateEntityTest(name="test", entity_id="climate.test")
 
     with patch.object(
         MockClimateEntityTest, "__module__", "tests.custom_components.climate.test_init"
     ):
-        config_entry = MockConfigEntry(domain="test")
-        config_entry.add_to_hass(hass)
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        setup_test_component_platform(
+            hass, DOMAIN, entities=[climate_entity], from_config_entry=True
+        )
+        await hass.config_entries.async_setup(register_test_integration.entry_id)
         await hass.async_block_till_done()
 
     state = hass.states.get("climate.test")
@@ -579,7 +501,9 @@ async def test_implicit_warning_not_implemented_turn_on_off_feature(
 
 
 async def test_no_warning_implemented_turn_on_off_feature(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, config_flow_fixture: None
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    register_test_integration: MockConfigEntry,
 ) -> None:
     """Test no warning when feature flags are set."""
 
@@ -594,43 +518,15 @@ async def test_no_warning_implemented_turn_on_off_feature(
             | ClimateEntityFeature.TURN_ON
         )
 
-    async def async_setup_entry_init(
-        hass: HomeAssistant, config_entry: ConfigEntry
-    ) -> bool:
-        """Set up test config entry."""
-        await hass.config_entries.async_forward_entry_setups(config_entry, [DOMAIN])
-        return True
-
-    async def async_setup_entry_climate_platform(
-        hass: HomeAssistant,
-        config_entry: ConfigEntry,
-        async_add_entities: AddEntitiesCallback,
-    ) -> None:
-        """Set up test climate platform via config entry."""
-        async_add_entities(
-            [MockClimateEntityTest(name="test", entity_id="climate.test")]
-        )
-
-    mock_integration(
-        hass,
-        MockModule(
-            "test",
-            async_setup_entry=async_setup_entry_init,
-        ),
-        built_in=False,
-    )
-    mock_platform(
-        hass,
-        "test.climate",
-        MockPlatform(async_setup_entry=async_setup_entry_climate_platform),
-    )
+    climate_entity = MockClimateEntityTest(name="test", entity_id="climate.test")
 
     with patch.object(
         MockClimateEntityTest, "__module__", "tests.custom_components.climate.test_init"
     ):
-        config_entry = MockConfigEntry(domain="test")
-        config_entry.add_to_hass(hass)
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        setup_test_component_platform(
+            hass, DOMAIN, entities=[climate_entity], from_config_entry=True
+        )
+        await hass.config_entries.async_setup(register_test_integration.entry_id)
         await hass.async_block_till_done()
 
     state = hass.states.get("climate.test")
@@ -651,7 +547,9 @@ async def test_no_warning_implemented_turn_on_off_feature(
 
 
 async def test_no_warning_integration_has_migrated(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, config_flow_fixture: None
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    register_test_integration: MockConfigEntry,
 ) -> None:
     """Test no warning when integration migrated using `_enable_turn_on_off_backwards_compatibility`."""
 
@@ -665,43 +563,15 @@ async def test_no_warning_integration_has_migrated(
             | ClimateEntityFeature.SWING_MODE
         )
 
-    async def async_setup_entry_init(
-        hass: HomeAssistant, config_entry: ConfigEntry
-    ) -> bool:
-        """Set up test config entry."""
-        await hass.config_entries.async_forward_entry_setups(config_entry, [DOMAIN])
-        return True
-
-    async def async_setup_entry_climate_platform(
-        hass: HomeAssistant,
-        config_entry: ConfigEntry,
-        async_add_entities: AddEntitiesCallback,
-    ) -> None:
-        """Set up test climate platform via config entry."""
-        async_add_entities(
-            [MockClimateEntityTest(name="test", entity_id="climate.test")]
-        )
-
-    mock_integration(
-        hass,
-        MockModule(
-            "test",
-            async_setup_entry=async_setup_entry_init,
-        ),
-        built_in=False,
-    )
-    mock_platform(
-        hass,
-        "test.climate",
-        MockPlatform(async_setup_entry=async_setup_entry_climate_platform),
-    )
+    climate_entity = MockClimateEntityTest(name="test", entity_id="climate.test")
 
     with patch.object(
         MockClimateEntityTest, "__module__", "tests.custom_components.climate.test_init"
     ):
-        config_entry = MockConfigEntry(domain="test")
-        config_entry.add_to_hass(hass)
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        setup_test_component_platform(
+            hass, DOMAIN, entities=[climate_entity], from_config_entry=True
+        )
+        await hass.config_entries.async_setup(register_test_integration.entry_id)
         await hass.async_block_till_done()
 
     state = hass.states.get("climate.test")
@@ -722,7 +592,9 @@ async def test_no_warning_integration_has_migrated(
 
 
 async def test_no_warning_integration_implement_feature_flags(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, config_flow_fixture: None
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    register_test_integration: MockConfigEntry,
 ) -> None:
     """Test no warning when integration uses the correct feature flags."""
 
@@ -737,43 +609,15 @@ async def test_no_warning_integration_implement_feature_flags(
             | ClimateEntityFeature.TURN_ON
         )
 
-    async def async_setup_entry_init(
-        hass: HomeAssistant, config_entry: ConfigEntry
-    ) -> bool:
-        """Set up test config entry."""
-        await hass.config_entries.async_forward_entry_setups(config_entry, [DOMAIN])
-        return True
-
-    async def async_setup_entry_climate_platform(
-        hass: HomeAssistant,
-        config_entry: ConfigEntry,
-        async_add_entities: AddEntitiesCallback,
-    ) -> None:
-        """Set up test climate platform via config entry."""
-        async_add_entities(
-            [MockClimateEntityTest(name="test", entity_id="climate.test")]
-        )
-
-    mock_integration(
-        hass,
-        MockModule(
-            "test",
-            async_setup_entry=async_setup_entry_init,
-        ),
-        built_in=False,
-    )
-    mock_platform(
-        hass,
-        "test.climate",
-        MockPlatform(async_setup_entry=async_setup_entry_climate_platform),
-    )
+    climate_entity = MockClimateEntityTest(name="test", entity_id="climate.test")
 
     with patch.object(
         MockClimateEntityTest, "__module__", "tests.custom_components.climate.test_init"
     ):
-        config_entry = MockConfigEntry(domain="test")
-        config_entry.add_to_hass(hass)
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        setup_test_component_platform(
+            hass, DOMAIN, entities=[climate_entity], from_config_entry=True
+        )
+        await hass.config_entries.async_setup(register_test_integration.entry_id)
         await hass.async_block_till_done()
 
     state = hass.states.get("climate.test")
@@ -1022,7 +866,7 @@ async def test_issue_aux_property_deprecated(
 async def test_no_issue_aux_property_deprecated_for_core(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
-    config_flow_fixture: None,
+    register_test_integration: MockConfigEntry,
     manifest_extra: dict[str, str],
     translation_key: str,
     translation_placeholders_extra: dict[str, str],
@@ -1061,39 +905,10 @@ async def test_no_issue_aux_property_deprecated_for_core(
         entity_id="climate.testing",
     )
 
-    async def async_setup_entry_init(
-        hass: HomeAssistant, config_entry: ConfigEntry
-    ) -> bool:
-        """Set up test config entry."""
-        await hass.config_entries.async_forward_entry_setups(config_entry, [DOMAIN])
-        return True
-
-    async def async_setup_entry_climate_platform(
-        hass: HomeAssistant,
-        config_entry: ConfigEntry,
-        async_add_entities: AddEntitiesCallback,
-    ) -> None:
-        """Set up test weather platform via config entry."""
-        async_add_entities([climate_entity])
-
-    mock_integration(
-        hass,
-        MockModule(
-            "test",
-            async_setup_entry=async_setup_entry_init,
-            partial_manifest=manifest_extra,
-        ),
-        built_in=False,
+    setup_test_component_platform(
+        hass, DOMAIN, entities=[climate_entity], from_config_entry=True
     )
-    mock_platform(
-        hass,
-        "test.climate",
-        MockPlatform(async_setup_entry=async_setup_entry_climate_platform),
-    )
-
-    config_entry = MockConfigEntry(domain="test")
-    config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.config_entries.async_setup(register_test_integration.entry_id)
     await hass.async_block_till_done()
 
     assert climate_entity.state == HVACMode.HEAT
@@ -1111,7 +926,7 @@ async def test_no_issue_aux_property_deprecated_for_core(
 async def test_no_issue_no_aux_property(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
-    config_flow_fixture: None,
+    register_test_integration: MockConfigEntry,
     issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test the issue is raised on deprecated auxiliary heater attributes."""
@@ -1121,38 +936,10 @@ async def test_no_issue_no_aux_property(
         entity_id="climate.testing",
     )
 
-    async def async_setup_entry_init(
-        hass: HomeAssistant, config_entry: ConfigEntry
-    ) -> bool:
-        """Set up test config entry."""
-        await hass.config_entries.async_forward_entry_setups(config_entry, [DOMAIN])
-        return True
-
-    async def async_setup_entry_climate_platform(
-        hass: HomeAssistant,
-        config_entry: ConfigEntry,
-        async_add_entities: AddEntitiesCallback,
-    ) -> None:
-        """Set up test weather platform via config entry."""
-        async_add_entities([climate_entity])
-
-    mock_integration(
-        hass,
-        MockModule(
-            "test",
-            async_setup_entry=async_setup_entry_init,
-        ),
-        built_in=False,
+    setup_test_component_platform(
+        hass, DOMAIN, entities=[climate_entity], from_config_entry=True
     )
-    mock_platform(
-        hass,
-        "test.climate",
-        MockPlatform(async_setup_entry=async_setup_entry_climate_platform),
-    )
-
-    config_entry = MockConfigEntry(domain="test")
-    config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    assert await hass.config_entries.async_setup(register_test_integration.entry_id)
     await hass.async_block_till_done()
 
     assert climate_entity.state == HVACMode.HEAT
@@ -1167,7 +954,7 @@ async def test_no_issue_no_aux_property(
 
 
 async def test_temperature_validation(
-    hass: HomeAssistant, config_flow_fixture: None
+    hass: HomeAssistant, register_test_integration: MockConfigEntry
 ) -> None:
     """Test validation for temperatures."""
 
@@ -1194,40 +981,15 @@ async def test_temperature_validation(
                 self._attr_target_temperature_high = kwargs[ATTR_TARGET_TEMP_HIGH]
                 self._attr_target_temperature_low = kwargs[ATTR_TARGET_TEMP_LOW]
 
-    async def async_setup_entry_init(
-        hass: HomeAssistant, config_entry: ConfigEntry
-    ) -> bool:
-        """Set up test config entry."""
-        await hass.config_entries.async_forward_entry_setups(config_entry, [DOMAIN])
-        return True
-
-    async def async_setup_entry_climate_platform(
-        hass: HomeAssistant,
-        config_entry: ConfigEntry,
-        async_add_entities: AddEntitiesCallback,
-    ) -> None:
-        """Set up test climate platform via config entry."""
-        async_add_entities(
-            [MockClimateEntityTemp(name="test", entity_id="climate.test")]
-        )
-
-    mock_integration(
-        hass,
-        MockModule(
-            "test",
-            async_setup_entry=async_setup_entry_init,
-        ),
-        built_in=False,
-    )
-    mock_platform(
-        hass,
-        "test.climate",
-        MockPlatform(async_setup_entry=async_setup_entry_climate_platform),
+    test_climate = MockClimateEntityTemp(
+        name="Test",
+        unique_id="unique_climate_test",
     )
 
-    config_entry = MockConfigEntry(domain="test")
-    config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    setup_test_component_platform(
+        hass, DOMAIN, entities=[test_climate], from_config_entry=True
+    )
+    await hass.config_entries.async_setup(register_test_integration.entry_id)
     await hass.async_block_till_done()
 
     state = hass.states.get("climate.test")

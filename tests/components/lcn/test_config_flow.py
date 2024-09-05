@@ -129,7 +129,7 @@ async def test_show_form(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
 
 
-async def test_step_user(hass):
+async def test_step_user(hass: HomeAssistant) -> None:
     """Test for user step."""
     with (
         patch("pypck.connection.PchkConnectionManager.async_connect"),
@@ -150,7 +150,9 @@ async def test_step_user(hass):
         }
 
 
-async def test_step_user_existing_host(hass, entry):
+async def test_step_user_existing_host(
+    hass: HomeAssistant, entry: MockConfigEntry
+) -> None:
     """Test for user defined host already exists."""
     entry.add_to_hass(hass)
 
@@ -172,7 +174,9 @@ async def test_step_user_existing_host(hass, entry):
         (TimeoutError, {CONF_BASE: "connection_refused"}),
     ],
 )
-async def test_step_user_error(hass, error, errors):
+async def test_step_user_error(
+    hass: HomeAssistant, error: type[Exception], errors: dict[str, str]
+) -> None:
     """Test for error in user step is handled correctly."""
     with patch(
         "pypck.connection.PchkConnectionManager.async_connect", side_effect=error
@@ -187,7 +191,7 @@ async def test_step_user_error(hass, error, errors):
         assert result["errors"] == errors
 
 
-async def test_step_reconfigure(hass, entry):
+async def test_step_reconfigure(hass: HomeAssistant, entry: MockConfigEntry) -> None:
     """Test for reconfigure step."""
     entry.add_to_hass(hass)
     old_entry_data = entry.data.copy()
@@ -222,7 +226,12 @@ async def test_step_reconfigure(hass, entry):
         (TimeoutError, {CONF_BASE: "connection_refused"}),
     ],
 )
-async def test_step_reconfigure_error(hass, entry, error, errors):
+async def test_step_reconfigure_error(
+    hass: HomeAssistant,
+    entry: MockConfigEntry,
+    error: type[Exception],
+    errors: dict[str, str],
+) -> None:
     """Test for error in reconfigure step is handled correctly."""
     entry.add_to_hass(hass)
     with patch(
@@ -242,7 +251,7 @@ async def test_step_reconfigure_error(hass, entry, error, errors):
         assert result["errors"] == errors
 
 
-async def test_validate_connection():
+async def test_validate_connection() -> None:
     """Test the connection validation."""
     data = CONNECTION_DATA.copy()
 

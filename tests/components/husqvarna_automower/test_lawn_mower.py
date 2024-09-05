@@ -44,6 +44,7 @@ async def test_lawn_mower_states(
         ("UNKNOWN", "PAUSED", LawnMowerActivity.PAUSED),
         ("MOWING", "NOT_APPLICABLE", LawnMowerActivity.MOWING),
         ("NOT_APPLICABLE", "ERROR", LawnMowerActivity.ERROR),
+        ("GOING_HOME", "IN_OPERATION", LawnMowerActivity.RETURNING),
     ):
         values[TEST_MOWER_ID].mower.activity = activity
         values[TEST_MOWER_ID].mower.state = state

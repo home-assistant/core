@@ -65,7 +65,7 @@ class SABnzbdConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_import(self, import_data):
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Import sabnzbd config from configuration.yaml."""
         protocol = "https://" if import_data[CONF_SSL] else "http://"
         import_data[CONF_URL] = (

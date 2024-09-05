@@ -61,6 +61,11 @@ async def test_setup_config_entry(
             "min": "{{ 0 }}",
             "max": "{{ 100 }}",
             "step": "{{ 0.1 }}",
+            "set_value": {
+                "action": "input_number.set_value",
+                "target": {"entity_id": "input_number.test"},
+                "data": {"value": "{{ value }}"},
+            },
         },
         title="My template",
     )
@@ -522,6 +527,11 @@ async def test_device_id(
             "min": "{{ 0 }}",
             "max": "{{ 100 }}",
             "step": "{{ 0.1 }}",
+            "set_value": {
+                "action": "input_number.set_value",
+                "target": {"entity_id": "input_number.test"},
+                "data": {"value": "{{ value }}"},
+            },
             "device_id": device_entry.id,
         },
         title="My template",

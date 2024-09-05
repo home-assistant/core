@@ -18,6 +18,7 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.service_info.mqtt import ReceivePayloadType
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.trigger import TriggerActionType, TriggerData, TriggerInfo
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
@@ -31,7 +32,6 @@ from .models import (
     PayloadSentinel,
     PublishPayloadType,
     ReceiveMessage,
-    ReceivePayloadType,
 )
 
 TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(

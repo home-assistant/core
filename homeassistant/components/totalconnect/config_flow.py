@@ -28,14 +28,16 @@ class TotalConnectConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the config flow."""
         self.username = None
         self.password = None
-        self.usercodes = {}
+        self.usercodes: dict[str, Any] = {}
         self.client = None
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
         errors = {}
 

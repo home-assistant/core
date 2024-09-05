@@ -5,6 +5,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from collections import namedtuple
 from collections.abc import Awaitable, Callable, Coroutine
+from datetime import datetime
 import functools
 import logging
 from typing import Any, cast
@@ -40,17 +41,23 @@ from .const import (
     PROTOCOL_HTTPS,
     PROTOCOL_TELNET,
     SENSORS_BYTES,
+    SENSORS_CPU,
     SENSORS_LOAD_AVG,
+    SENSORS_MEMORY,
     SENSORS_RATES,
     SENSORS_TEMPERATURES,
     SENSORS_TEMPERATURES_LEGACY,
+    SENSORS_UPTIME,
 )
 
 SENSORS_TYPE_BYTES = "sensors_bytes"
 SENSORS_TYPE_COUNT = "sensors_count"
+SENSORS_TYPE_CPU = "sensors_cpu"
 SENSORS_TYPE_LOAD_AVG = "sensors_load_avg"
+SENSORS_TYPE_MEMORY = "sensors_memory"
 SENSORS_TYPE_RATES = "sensors_rates"
 SENSORS_TYPE_TEMPERATURES = "sensors_temperatures"
+SENSORS_TYPE_UPTIME = "sensors_uptime"
 
 WrtDevice = namedtuple("WrtDevice", ["ip", "name", "connected_to"])  # noqa: PYI024
 
@@ -346,6 +353,7 @@ class AsusWrtHttpBridge(AsusWrtBridge):
 
     async def async_get_available_sensors(self) -> dict[str, dict[str, Any]]:
         """Return a dictionary of available sensors for this bridge."""
+        sensors_cpu = await self._get_available_cpu_sensors()
         sensors_temperatures = await self._get_available_temperature_sensors()
         sensors_loadavg = await self._get_loadavg_sensors_availability()
         return {
@@ -353,19 +361,48 @@ class AsusWrtHttpBridge(AsusWrtBridge):
                 KEY_SENSORS: SENSORS_BYTES,
                 KEY_METHOD: self._get_bytes,
             },
+            SENSORS_TYPE_CPU: {
+                KEY_SENSORS: sensors_cpu,
+                KEY_METHOD: self._get_cpu_usage,
+            },
             SENSORS_TYPE_LOAD_AVG: {
                 KEY_SENSORS: sensors_loadavg,
                 KEY_METHOD: self._get_load_avg,
             },
+            SENSORS_TYPE_MEMORY: {
+                KEY_SENSORS: SENSORS_MEMORY,
+                KEY_METHOD: self._get_memory_usage,
+            },
             SENSORS_TYPE_RATES: {
                 KEY_SENSORS: SENSORS_RATES,
                 KEY_METHOD: self._get_rates,
+            },
+            SENSORS_TYPE_UPTIME: {
+                KEY_SENSORS: SENSORS_UPTIME,
+                KEY_METHOD: self._get_uptime,
             },
             SENSORS_TYPE_TEMPERATURES: {
                 KEY_SENSORS: sensors_temperatures,
                 KEY_METHOD: self._get_temperatures,
             },
         }
+
+    async def _get_available_cpu_sensors(self) -> list[str]:
+        """Check which cpu information is available on the router."""
+        try:
+            available_cpu = await self._api.async_get_cpu_usage()
+            available_sensors = [t for t in SENSORS_CPU if t in available_cpu]
+        except AsusWrtError as exc:
+            _LOGGER.warning(
+                (
+                    "Failed checking cpu sensor availability for ASUS router"
+                    " %s. Exception: %s"
+                ),
+                self.host,
+                exc,
+            )
+            return []
+        return available_sensors
 
     async def _get_available_temperature_sensors(self) -> list[str]:
         """Check which temperature information is available on the router."""
@@ -415,3 +452,25 @@ class AsusWrtHttpBridge(AsusWrtBridge):
     async def _get_temperatures(self) -> Any:
         """Fetch temperatures information from the router."""
         return await self._api.async_get_temperatures()
+
+    @handle_errors_and_zip(AsusWrtError, None)
+    async def _get_cpu_usage(self) -> Any:
+        """Fetch cpu information from the router."""
+        return await self._api.async_get_cpu_usage()
+
+    @handle_errors_and_zip(AsusWrtError, None)
+    async def _get_memory_usage(self) -> Any:
+        """Fetch memory information from the router."""
+        return await self._api.async_get_memory_usage()
+
+    async def _get_uptime(self) -> dict[str, Any]:
+        """Fetch uptime from the router."""
+        try:
+            uptimes = await self._api.async_get_uptime()
+        except AsusWrtError as exc:
+            raise UpdateFailed(exc) from exc
+
+        last_boot = datetime.fromisoformat(uptimes["last_boot"])
+        uptime = uptimes["uptime"]
+
+        return dict(zip(SENSORS_UPTIME, [last_boot, uptime], strict=False))
