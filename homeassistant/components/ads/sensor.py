@@ -11,7 +11,7 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
 )
-from homeassistant.const import CONF_NAME, CONF_UNIT_OF_MEASUREMENT
+from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME, CONF_UNIT_OF_MEASUREMENT
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -56,7 +56,7 @@ PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
         ),
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_UNIT_OF_MEASUREMENT, default=""): cv.string,
-        vol.Optional("device_class", default=DEFAULT_DEVICE_CLASS): vol.In(
+        vol.Optional(CONF_DEVICE_CLASS, default=DEFAULT_DEVICE_CLASS): vol.In(
             [device_class.value for device_class in SensorDeviceClass]
         ),
     }
@@ -77,7 +77,7 @@ def setup_platform(
     name = config[CONF_NAME]
     unit_of_measurement = config.get(CONF_UNIT_OF_MEASUREMENT)
     factor = config.get(CONF_ADS_FACTOR)
-    device_class_str = config.get("device_class")
+    device_class_str = config.get(CONF_DEVICE_CLASS)
 
     device_class = SensorDeviceClass(device_class_str) if device_class_str else None
 
@@ -106,12 +106,7 @@ class AdsSensor(AdsEntity, SensorEntity):
         self._attr_native_unit_of_measurement = unit_of_measurement
         self._ads_type = ads_type
         self._factor = factor
-        self._device_class = device_class
-
-    @property
-    def device_class(self) -> SensorDeviceClass | None:
-        """Return the class of this sensor."""
-        return self._device_class
+        self._attr_device_class = device_class
 
     async def async_added_to_hass(self) -> None:
         """Register device notification."""
@@ -127,10 +122,12 @@ class AdsSensor(AdsEntity, SensorEntity):
         """Return the state of the device."""
         state = self._state_dict.get(STATE_KEY_STATE)
 
-        if self._device_class == SensorDeviceClass.TIMESTAMP and isinstance(state, int):
+        if self._attr_device_class == SensorDeviceClass.TIMESTAMP and isinstance(
+            state, int
+        ):
             # Convert integer timestamp to datetime object
             return datetime.fromtimestamp(state, tz=UTC)
-        if self._device_class == SensorDeviceClass.DATE and isinstance(state, int):
+        if self._attr_device_class == SensorDeviceClass.DATE and isinstance(state, int):
             # Convert integer timestamp to datetime object for date only
             dt = datetime.fromtimestamp(state, tz=UTC)
             return dt.date()
