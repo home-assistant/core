@@ -174,6 +174,12 @@ def async_device_outlet_supported_fn(hub: UnifiHub, obj_id: str) -> bool:
     return hub.api.devices[obj_id].outlet_ac_power_budget is not None
 
 
+@callback
+def async_device_uplink_mac_supported_fn(hub: UnifiHub, obj_id: str) -> bool:
+    """Determine if a device supports reading uplink MAC address."""
+    return "uplink_mac" in hub.api.devices[obj_id].raw.get("uplink", {})
+
+
 def device_system_stats_supported_fn(
     stat_index: int, hub: UnifiHub, obj_id: str
 ) -> bool:
@@ -570,6 +576,19 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         supported_fn=lambda hub, obj_id: hub.api.devices[obj_id].has_temperature,
         unique_id_fn=lambda hub, obj_id: f"device_temperature-{obj_id}",
         value_fn=lambda hub, device: device.general_temperature,
+    ),
+    UnifiSensorEntityDescription[Devices, Device](
+        key="Device Uplink MAC",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        api_handler_fn=lambda api: api.devices,
+        available_fn=async_device_available_fn,
+        device_info_fn=async_device_device_info_fn,
+        name_fn=lambda device: "Uplink MAC",
+        object_fn=lambda api, obj_id: api.devices[obj_id],
+        unique_id_fn=lambda hub, obj_id: f"device_uplink_mac-{obj_id}",
+        supported_fn=async_device_uplink_mac_supported_fn,
+        value_fn=lambda hub, device: device.raw.get("uplink", {}).get("uplink_mac"),
+        is_connected_fn=lambda hub, obj_id: hub.api.devices[obj_id].state == 1,
     ),
     UnifiSensorEntityDescription[Devices, Device](
         key="Device State",

@@ -15,6 +15,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.json import json_bytes
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import (
+    ConductivityConverter,
     DataRateConverter,
     DistanceConverter,
     DurationConverter,
@@ -48,7 +49,7 @@ from .util import PERIOD_SCHEMA, get_instance, resolve_period
 
 UNIT_SCHEMA = vol.Schema(
     {
-        vol.Optional("conductivity"): vol.In(DataRateConverter.VALID_UNITS),
+        vol.Optional("conductivity"): vol.In(ConductivityConverter.VALID_UNITS),
         vol.Optional("data_rate"): vol.In(DataRateConverter.VALID_UNITS),
         vol.Optional("distance"): vol.In(DistanceConverter.VALID_UNITS),
         vol.Optional("duration"): vol.In(DurationConverter.VALID_UNITS),

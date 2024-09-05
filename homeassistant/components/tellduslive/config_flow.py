@@ -3,11 +3,12 @@
 import asyncio
 import logging
 import os
+from typing import Any
 
 from tellduslive import Session, supports_local_api
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST
 from homeassistant.util.json import load_json_object
 
@@ -50,7 +51,9 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         )
         return self._session.authorize_url
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Let user select host or cloud."""
         if self._async_current_entries():
             return self.async_abort(reason="already_setup")
@@ -122,14 +125,14 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_user()
 
-    async def async_step_import(self, user_input):
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Import a config entry."""
         if self._async_current_entries():
             return self.async_abort(reason="already_setup")
 
-        self._scan_interval = user_input[KEY_SCAN_INTERVAL]
-        if user_input[CONF_HOST] != DOMAIN:
-            self._hosts.append(user_input[CONF_HOST])
+        self._scan_interval = import_data[KEY_SCAN_INTERVAL]
+        if import_data[CONF_HOST] != DOMAIN:
+            self._hosts.append(import_data[CONF_HOST])
 
         if not await self.hass.async_add_executor_job(
             os.path.isfile, self.hass.config.path(TELLDUS_CONFIG_FILE)
@@ -141,7 +144,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         )
         host = next(iter(conf))
 
-        if user_input[CONF_HOST] != host:
+        if import_data[CONF_HOST] != host:
             return await self.async_step_user()
 
         host = CLOUD_NAME if host == "tellduslive" else host

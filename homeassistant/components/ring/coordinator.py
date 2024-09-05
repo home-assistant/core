@@ -1,8 +1,9 @@
 """Data coordinators for the ring integration."""
 
 from asyncio import TaskGroup
-from collections.abc import Callable
+from collections.abc import Callable, Coroutine
 import logging
+from typing import Any
 
 from ring_doorbell import AuthenticationError, Ring, RingDevices, RingError, RingTimeout
 
@@ -16,10 +17,13 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def _call_api[*_Ts, _R](
-    hass: HomeAssistant, target: Callable[[*_Ts], _R], *args: *_Ts, msg_suffix: str = ""
+    hass: HomeAssistant,
+    target: Callable[[*_Ts], Coroutine[Any, Any, _R]],
+    *args: *_Ts,
+    msg_suffix: str = "",
 ) -> _R:
     try:
-        return await hass.async_add_executor_job(target, *args)
+        return await target(*args)
     except AuthenticationError as err:
         # Raising ConfigEntryAuthFailed will cancel future updates
         # and start a config flow with SOURCE_REAUTH (async_step_reauth)
@@ -52,7 +56,9 @@ class RingDataCoordinator(DataUpdateCoordinator[RingDevices]):
 
     async def _async_update_data(self) -> RingDevices:
         """Fetch data from API endpoint."""
-        update_method: str = "update_data" if self.first_call else "update_devices"
+        update_method: str = (
+            "async_update_data" if self.first_call else "async_update_devices"
+        )
         await _call_api(self.hass, getattr(self.ring_api, update_method))
         self.first_call = False
         devices: RingDevices = self.ring_api.devices()
@@ -67,7 +73,7 @@ class RingDataCoordinator(DataUpdateCoordinator[RingDevices]):
                             tg.create_task(
                                 _call_api(
                                     self.hass,
-                                    lambda device: device.history(limit=10),
+                                    lambda device: device.async_history(limit=10),
                                     device,
                                     msg_suffix=f" for device {device.name}",  # device_id is the mac
                                 )
@@ -75,7 +81,7 @@ class RingDataCoordinator(DataUpdateCoordinator[RingDevices]):
                         tg.create_task(
                             _call_api(
                                 self.hass,
-                                device.update_health_data,
+                                device.async_update_health_data,
                                 msg_suffix=f" for device {device.name}",
                             )
                         )
@@ -100,4 +106,4 @@ class RingNotificationsCoordinator(DataUpdateCoordinator[None]):
 
     async def _async_update_data(self) -> None:
         """Fetch data from API endpoint."""
-        await _call_api(self.hass, self.ring_api.update_dings)
+        await _call_api(self.hass, self.ring_api.async_update_dings)

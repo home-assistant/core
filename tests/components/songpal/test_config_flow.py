@@ -6,7 +6,12 @@ from unittest.mock import patch
 
 from homeassistant.components import ssdp
 from homeassistant.components.songpal.const import CONF_ENDPOINT, DOMAIN
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_SSDP, SOURCE_USER
+from homeassistant.config_entries import (
+    SOURCE_IMPORT,
+    SOURCE_SSDP,
+    SOURCE_USER,
+    ConfigFlowResult,
+)
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -42,7 +47,7 @@ SSDP_DATA = ssdp.SsdpServiceInfo(
 )
 
 
-def _flow_next(hass, flow_id):
+def _flow_next(hass: HomeAssistant, flow_id: str) -> ConfigFlowResult:
     return next(
         flow
         for flow in hass.config_entries.flow.async_progress()
@@ -143,7 +148,7 @@ async def test_flow_import_without_name(hass: HomeAssistant) -> None:
     mocked_device.get_interface_information.assert_called_once()
 
 
-def _create_mock_config_entry(hass):
+def _create_mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
     MockConfigEntry(
         domain=DOMAIN,
         unique_id="uuid:0000",

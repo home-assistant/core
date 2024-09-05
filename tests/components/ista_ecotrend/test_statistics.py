@@ -14,7 +14,7 @@ from homeassistant.helpers import entity_registry as er
 
 from .conftest import extend_statistics
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.components.recorder.common import async_wait_recording_done
 
 
@@ -61,8 +61,12 @@ async def test_statistics_import(
     mock_ista.get_consumption_data = extend_statistics
 
     freezer.tick(datetime.timedelta(days=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
     await async_wait_recording_done(hass)
     freezer.tick(datetime.timedelta(days=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
     await async_wait_recording_done(hass)
 
     for entity in entities:

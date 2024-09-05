@@ -24,13 +24,13 @@ class WiLightFlowHandler(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the WiLight flow."""
         self._host = None
         self._serial_number = None
         self._title = None
         self._model_name = None
-        self._wilight_components = []
+        self._wilight_components: list[str] = []
         self._components_text = ""
 
     def _wilight_update(self, host, serial_number, model_name):

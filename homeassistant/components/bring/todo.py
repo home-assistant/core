@@ -22,7 +22,6 @@ from homeassistant.components.todo import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, entity_platform
-from homeassistant.helpers.config_validation import make_entity_service_schema
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -62,14 +61,12 @@ async def async_setup_entry(
 
     platform.async_register_entity_service(
         SERVICE_PUSH_NOTIFICATION,
-        make_entity_service_schema(
-            {
-                vol.Required(ATTR_NOTIFICATION_TYPE): vol.All(
-                    vol.Upper, cv.enum(BringNotificationType)
-                ),
-                vol.Optional(ATTR_ITEM_NAME): cv.string,
-            }
-        ),
+        {
+            vol.Required(ATTR_NOTIFICATION_TYPE): vol.All(
+                vol.Upper, cv.enum(BringNotificationType)
+            ),
+            vol.Optional(ATTR_ITEM_NAME): cv.string,
+        },
         "async_send_message",
     )
 

@@ -141,7 +141,7 @@ async def test_select_coordinator_update(hass: HomeAssistant, setup_test) -> Non
     assert state.state == "left"
 
 
-async def setup_component(hass, entity_name):
+async def setup_component(hass: HomeAssistant, entity_name: str) -> str:
     """Set up component."""
     entity_id = f"{DOMAIN}.{entity_name}"
 

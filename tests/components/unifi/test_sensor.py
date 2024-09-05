@@ -27,7 +27,12 @@ from homeassistant.components.unifi.const import (
     DEVICE_STATES,
 )
 from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
-from homeassistant.const import ATTR_DEVICE_CLASS, STATE_UNAVAILABLE, Platform
+from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
+    STATE_UNAVAILABLE,
+    EntityCategory,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_registry import RegistryEntryDisabler
@@ -1681,3 +1686,67 @@ async def test_device_with_no_matching_temperatures(
     )
 
     assert temperature_entity is None
+
+
+@pytest.mark.parametrize(
+    "device_payload",
+    [
+        [
+            {
+                "board_rev": 3,
+                "device_id": "device-with-uplink",
+                "ip": "10.0.1.1",
+                "last_seen": 1562600145,
+                "mac": "00:00:00:00:01:01",
+                "model": "US16P150",
+                "name": "Device",
+                "next_interval": 20,
+                "state": 1,
+                "type": "usw",
+                "upgradable": True,
+                "uptime": 60,
+                "version": "4.0.42.10433",
+                "uplink": {
+                    "uplink_mac": "00:00:00:00:00:02",
+                    "port_idx": 1,
+                },
+            },
+            {
+                "board_rev": 3,
+                "device_id": "device-without-uplink",
+                "ip": "10.0.1.2",
+                "last_seen": 1562600145,
+                "mac": "00:00:00:00:01:02",
+                "model": "US16P150",
+                "name": "Other Device",
+                "next_interval": 20,
+                "state": 1,
+                "type": "usw",
+                "upgradable": True,
+                "uptime": 60,
+                "version": "4.0.42.10433",
+                "uplink": {},
+            },
+        ],
+    ],
+)
+@pytest.mark.usefixtures("config_entry_setup")
+async def test_device_uplink(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_websocket_message,
+    device_payload: list[dict[str, Any]],
+) -> None:
+    """Verify that uplink sensors are working as expected."""
+    assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 5
+    assert hass.states.get("sensor.device_uplink_mac").state == "00:00:00:00:00:02"
+    assert (
+        entity_registry.async_get("sensor.device_uplink_mac").entity_category
+        is EntityCategory.DIAGNOSTIC
+    )
+
+    # Verify new event change temperature
+    device = device_payload[0]
+    device["uplink"]["uplink_mac"] = "00:00:00:00:00:03"
+    mock_websocket_message(message=MessageKey.DEVICE, data=device)
+    assert hass.states.get("sensor.device_uplink_mac").state == "00:00:00:00:00:03"

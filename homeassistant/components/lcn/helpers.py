@@ -423,6 +423,16 @@ async def async_update_config_entry(
     hass.config_entries.async_update_entry(config_entry, data=new_data)
 
 
+def get_device_config(
+    address: AddressType, config_entry: ConfigEntry
+) -> ConfigType | None:
+    """Return the device configuration for given address and ConfigEntry."""
+    for device_config in config_entry.data[CONF_DEVICES]:
+        if tuple(device_config[CONF_ADDRESS]) == address:
+            return cast(ConfigType, device_config)
+    return None
+
+
 def has_unique_host_names(hosts: list[ConfigType]) -> list[ConfigType]:
     """Validate that all connection names are unique.
 

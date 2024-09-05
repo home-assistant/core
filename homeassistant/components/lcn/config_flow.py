@@ -3,32 +3,51 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 import pypck
+import voluptuous as vol
 
-from homeassistant.config_entries import (
-    SOURCE_IMPORT,
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-)
+from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import (
+    CONF_BASE,
+    CONF_DEVICES,
+    CONF_ENTITIES,
     CONF_HOST,
     CONF_IP_ADDRESS,
     CONF_PASSWORD,
     CONF_PORT,
     CONF_USERNAME,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_DIM_MODE, CONF_SK_NUM_TRIES, DOMAIN
+from .const import CONF_DIM_MODE, CONF_SK_NUM_TRIES, DIM_MODES, DOMAIN
 from .helpers import purge_device_registry, purge_entity_registry
 
 _LOGGER = logging.getLogger(__name__)
 
+CONFIG_DATA = {
+    vol.Required(CONF_IP_ADDRESS, default=""): str,
+    vol.Required(CONF_PORT, default=4114): cv.positive_int,
+    vol.Required(CONF_USERNAME, default=""): str,
+    vol.Required(CONF_PASSWORD, default=""): str,
+    vol.Required(CONF_SK_NUM_TRIES, default=0): cv.positive_int,
+    vol.Required(CONF_DIM_MODE, default="STEPS200"): vol.In(DIM_MODES),
+}
 
-def get_config_entry(hass: HomeAssistant, data: ConfigType) -> ConfigEntry | None:
+USER_DATA = {vol.Required(CONF_HOST, default="pchk"): str, **CONFIG_DATA}
+
+CONFIG_SCHEMA = vol.Schema(CONFIG_DATA)
+USER_SCHEMA = vol.Schema(USER_DATA)
+
+
+def get_config_entry(
+    hass: HomeAssistant, data: ConfigType
+) -> config_entries.ConfigEntry | None:
     """Check config entries for already configured entries based on the ip address/port."""
     return next(
         (
@@ -41,8 +60,10 @@ def get_config_entry(hass: HomeAssistant, data: ConfigType) -> ConfigEntry | Non
     )
 
 
-async def validate_connection(host_name: str, data: ConfigType) -> ConfigType:
+async def validate_connection(data: ConfigType) -> str | None:
     """Validate if a connection to LCN can be established."""
+    error = None
+    host_name = data[CONF_HOST]
     host = data[CONF_IP_ADDRESS]
     port = data[CONF_PORT]
     username = data[CONF_USERNAME]
@@ -61,49 +82,137 @@ async def validate_connection(host_name: str, data: ConfigType) -> ConfigType:
         host, port, username, password, settings=settings
     )
 
-    await connection.async_connect(timeout=5)
+    try:
+        await connection.async_connect(timeout=5)
+        _LOGGER.debug("LCN connection validated")
+    except pypck.connection.PchkAuthenticationError:
+        _LOGGER.warning('Authentication on PCHK "%s" failed', host_name)
+        error = "authentication_error"
+    except pypck.connection.PchkLicenseError:
+        _LOGGER.warning(
+            'Maximum number of connections on PCHK "%s" was '
+            "reached. An additional license key is required",
+            host_name,
+        )
+        error = "license_error"
+    except (TimeoutError, ConnectionRefusedError):
+        _LOGGER.warning('Connection to PCHK "%s" failed', host_name)
+        error = "connection_refused"
 
-    _LOGGER.debug("LCN connection validated")
     await connection.async_close()
-    return data
+    return error
 
 
-class LcnFlowHandler(ConfigFlow, domain=DOMAIN):
+class LcnFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a LCN config flow."""
 
     VERSION = 1
 
-    async def async_step_import(self, data: ConfigType) -> ConfigFlowResult:
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Import existing configuration from LCN."""
-        host_name = data[CONF_HOST]
         # validate the imported connection parameters
-        try:
-            await validate_connection(host_name, data)
-        except pypck.connection.PchkAuthenticationError:
-            _LOGGER.warning('Authentication on PCHK "%s" failed', host_name)
-            return self.async_abort(reason="authentication_error")
-        except pypck.connection.PchkLicenseError:
-            _LOGGER.warning(
-                (
-                    'Maximum number of connections on PCHK "%s" was '
-                    "reached. An additional license key is required"
-                ),
-                host_name,
+        if error := await validate_connection(import_data):
+            async_create_issue(
+                self.hass,
+                DOMAIN,
+                error,
+                is_fixable=False,
+                issue_domain=DOMAIN,
+                severity=IssueSeverity.ERROR,
+                translation_key=error,
+                translation_placeholders={
+                    "url": "/config/integrations/dashboard/add?domain=lcn"
+                },
             )
-            return self.async_abort(reason="license_error")
-        except TimeoutError:
-            _LOGGER.warning('Connection to PCHK "%s" failed', host_name)
-            return self.async_abort(reason="connection_timeout")
+            return self.async_abort(reason=error)
+
+        async_create_issue(
+            self.hass,
+            HOMEASSISTANT_DOMAIN,
+            f"deprecated_yaml_{DOMAIN}",
+            breaks_in_ha_version="2024.12.0",
+            is_fixable=False,
+            is_persistent=False,
+            issue_domain=DOMAIN,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_yaml",
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": "LCN",
+            },
+        )
 
         # check if we already have a host with the same address configured
-        if entry := get_config_entry(self.hass, data):
-            entry.source = SOURCE_IMPORT
+        if entry := get_config_entry(self.hass, import_data):
+            entry.source = config_entries.SOURCE_IMPORT
             # Cleanup entity and device registry, if we imported from configuration.yaml to
             # remove orphans when entities were removed from configuration
-            purge_entity_registry(self.hass, entry.entry_id, data)
-            purge_device_registry(self.hass, entry.entry_id, data)
+            purge_entity_registry(self.hass, entry.entry_id, import_data)
+            purge_device_registry(self.hass, entry.entry_id, import_data)
 
-            self.hass.config_entries.async_update_entry(entry, data=data)
+            self.hass.config_entries.async_update_entry(entry, data=import_data)
             return self.async_abort(reason="existing_configuration_updated")
 
-        return self.async_create_entry(title=f"{host_name}", data=data)
+        return self.async_create_entry(
+            title=f"{import_data[CONF_HOST]}", data=import_data
+        )
+
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> config_entries.ConfigFlowResult:
+        """Handle a flow initiated by the user."""
+        if user_input is None:
+            return self.async_show_form(step_id="user", data_schema=USER_SCHEMA)
+
+        errors = None
+        if get_config_entry(self.hass, user_input):
+            errors = {CONF_BASE: "already_configured"}
+        elif (error := await validate_connection(user_input)) is not None:
+            errors = {CONF_BASE: error}
+
+        if errors is not None:
+            return self.async_show_form(
+                step_id="user",
+                data_schema=self.add_suggested_values_to_schema(
+                    USER_SCHEMA, user_input
+                ),
+                errors=errors,
+            )
+
+        data: dict = {
+            **user_input,
+            CONF_DEVICES: [],
+            CONF_ENTITIES: [],
+        }
+
+        return self.async_create_entry(title=data[CONF_HOST], data=data)
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> config_entries.ConfigFlowResult:
+        """Reconfigure LCN configuration."""
+        errors = None
+        entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
+        assert entry
+
+        if user_input is not None:
+            user_input[CONF_HOST] = entry.data[CONF_HOST]
+
+            await self.hass.config_entries.async_unload(entry.entry_id)
+            if (error := await validate_connection(user_input)) is not None:
+                errors = {CONF_BASE: error}
+
+            if errors is None:
+                data = entry.data.copy()
+                data.update(user_input)
+                self.hass.config_entries.async_update_entry(entry, data=data)
+                await self.hass.config_entries.async_setup(entry.entry_id)
+                return self.async_abort(reason="reconfigure_successful")
+
+            await self.hass.config_entries.async_setup(entry.entry_id)
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(CONFIG_SCHEMA, entry.data),
+            errors=errors or {},
+        )

@@ -109,7 +109,6 @@ async def test_confirmable_notification(
     assert len(mock_call_action.mock_calls) == 1
     _hass, config, variables, _context = mock_call_action.mock_calls[0][1]
 
-    template.attach(hass, config)
     rendered_config = template.render_complex(config, variables)
 
     assert rendered_config == {

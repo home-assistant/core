@@ -10,7 +10,7 @@ from pytedee_async import (
 import pytest
 
 from homeassistant.components.tedee.const import CONF_LOCAL_ACCESS_TOKEN, DOMAIN
-from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_RECONFIGURE, SOURCE_USER
+from homeassistant.config_entries import SOURCE_RECONFIGURE, SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -122,18 +122,7 @@ async def test_reauth_flow(
 
     mock_config_entry.add_to_hass(hass)
 
-    reauth_result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": SOURCE_REAUTH,
-            "unique_id": mock_config_entry.unique_id,
-            "entry_id": mock_config_entry.entry_id,
-        },
-        data={
-            CONF_LOCAL_ACCESS_TOKEN: LOCAL_ACCESS_TOKEN,
-            CONF_HOST: "192.168.1.42",
-        },
-    )
+    reauth_result = await mock_config_entry.start_reauth_flow(hass)
 
     result = await hass.config_entries.flow.async_configure(
         reauth_result["flow_id"],

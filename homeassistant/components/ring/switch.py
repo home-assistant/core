@@ -7,13 +7,11 @@ from typing import Any
 from ring_doorbell import RingStickUpCam
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.dt as dt_util
 
-from . import RingData
-from .const import DOMAIN
+from . import RingConfigEntry
 from .coordinator import RingDataCoordinator
 from .entity import RingEntity, exception_wrap
 
@@ -30,11 +28,11 @@ SKIP_UPDATES_DELAY = timedelta(seconds=5)
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    entry: RingConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Create the switches for the Ring devices."""
-    ring_data: RingData = hass.data[DOMAIN][config_entry.entry_id]
+    ring_data = entry.runtime_data
     devices_coordinator = ring_data.devices_coordinator
 
     async_add_entities(
@@ -81,18 +79,18 @@ class SirenSwitch(BaseRingSwitch):
         super()._handle_coordinator_update()
 
     @exception_wrap
-    def _set_switch(self, new_state: int) -> None:
+    async def _async_set_switch(self, new_state: int) -> None:
         """Update switch state, and causes Home Assistant to correctly update."""
-        self._device.siren = new_state
+        await self._device.async_set_siren(new_state)
 
         self._attr_is_on = new_state > 0
         self._no_updates_until = dt_util.utcnow() + SKIP_UPDATES_DELAY
-        self.schedule_update_ha_state()
+        self.async_write_ha_state()
 
-    def turn_on(self, **kwargs: Any) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the siren on for 30 seconds."""
-        self._set_switch(1)
+        await self._async_set_switch(1)
 
-    def turn_off(self, **kwargs: Any) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the siren off."""
-        self._set_switch(0)
+        await self._async_set_switch(0)

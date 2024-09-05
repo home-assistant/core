@@ -36,8 +36,10 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     async def _async_setup(self) -> None:
         """Set up connection to Yale."""
         try:
-            self.yale = YaleSmartAlarmClient(
-                self.entry.data[CONF_USERNAME], self.entry.data[CONF_PASSWORD]
+            self.yale = await self.hass.async_add_executor_job(
+                YaleSmartAlarmClient,
+                self.entry.data[CONF_USERNAME],
+                self.entry.data[CONF_PASSWORD],
             )
         except AuthenticationError as error:
             raise ConfigEntryAuthFailed from error
@@ -146,12 +148,7 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Fetch data from Yale."""
         try:
             arm_status = self.yale.get_armed_status()
-            data = self.yale.get_all()
-            cycle = data["CYCLE"]
-            status = data["STATUS"]
-            online = data["ONLINE"]
-            panel_info = data["PANEL INFO"]
-
+            data = self.yale.get_information()
         except AuthenticationError as error:
             raise ConfigEntryAuthFailed from error
         except YALE_BASE_ERRORS as error:
@@ -159,8 +156,8 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         return {
             "arm_status": arm_status,
-            "cycle": cycle,
-            "status": status,
-            "online": online,
-            "panel_info": panel_info,
+            "cycle": data.cycle,
+            "status": data.status,
+            "online": data.online,
+            "panel_info": data.panel_info,
         }
