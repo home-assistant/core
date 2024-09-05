@@ -113,7 +113,7 @@ async def async_setup_entry(
     """Set up an player discovery from a config entry."""
     hass.data.setdefault(DOMAIN, {})
     known_players = hass.data[DOMAIN].setdefault(KNOWN_PLAYERS, [])
-    lms = entry.runtime_data
+    lms = entry.runtime_data.server
 
     async def _player_discovery(now: datetime | None = None) -> None:
         """Discover squeezebox players by polling server."""
@@ -136,7 +136,7 @@ async def async_setup_entry(
 
             if not entity:
                 _LOGGER.debug("Adding new entity: %s", player)
-                entity = SqueezeBoxEntity(player)
+                entity = SqueezeBoxEntity(player, lms)
                 known_players.append(entity)
                 async_add_entities([entity])
 
@@ -212,7 +212,7 @@ class SqueezeBoxEntity(MediaPlayerEntity):
     _last_update: datetime | None = None
     _attr_available = True
 
-    def __init__(self, player: Player) -> None:
+    def __init__(self, player: Player, server: Server) -> None:
         """Initialize the SqueezeBox device."""
         self._player = player
         self._query_result: bool | dict = {}
@@ -222,6 +222,7 @@ class SqueezeBoxEntity(MediaPlayerEntity):
             identifiers={(DOMAIN, self._attr_unique_id)},
             name=player.name,
             connections={(CONNECTION_NETWORK_MAC, self._attr_unique_id)},
+            via_device=(DOMAIN, server.uuid),
         )
 
     @property
