@@ -1,6 +1,5 @@
 """Provides a switch for Home Connect."""
 
-from collections.abc import Callable
 from dataclasses import dataclass
 import logging
 from typing import Any
@@ -36,27 +35,20 @@ class HomeConnectSwitchEntityDescription(SwitchEntityDescription):
     """Switch entity description."""
 
     on_key: str
-    exist_fn: Callable[[HomeConnectDevice], bool]
 
 
 SWITCHES: tuple[HomeConnectSwitchEntityDescription, ...] = (
     HomeConnectSwitchEntityDescription(
         key="Supermode Freezer",
         on_key=REFRIGERATION_SUPERMODEFREEZER,
-        exist_fn=lambda device: REFRIGERATION_SUPERMODEFREEZER
-        in device.appliance.status,
     ),
     HomeConnectSwitchEntityDescription(
         key="Supermode Refrigerator",
         on_key=REFRIGERATION_SUPERMODEREFRIGERATOR,
-        exist_fn=lambda device: REFRIGERATION_SUPERMODEREFRIGERATOR
-        in device.appliance.status,
     ),
     HomeConnectSwitchEntityDescription(
         key="Dispenser Enabled",
         on_key=REFRIGERATION_DISPENSER,
-        translation_key="refrigeration_dispenser",
-        exist_fn=lambda device: REFRIGERATION_DISPENSER in device.appliance.status,
     ),
 )
 
@@ -78,10 +70,11 @@ async def async_setup_entry(
             entity_list += [HomeConnectPowerSwitch(device_dict[CONF_DEVICE])]
             entity_list += [HomeConnectChildLockSwitch(device_dict[CONF_DEVICE])]
             # Auto-discover entities
+            hc_device: HomeConnectDevice = device_dict[CONF_DEVICE]
             for description in SWITCHES:
-                if description.exist_fn(device_dict[CONF_DEVICE]):
+                if description.on_key in hc_device.appliance.status:
                     hc_switch = HomeConnectSwitch(
-                        device=device_dict[CONF_DEVICE],
+                        device=hc_device,
                         desc=description.key,
                     )
                     hc_switch.entity_description = description
