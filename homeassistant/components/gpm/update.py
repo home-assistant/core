@@ -3,13 +3,12 @@
 from __future__ import annotations
 
 from datetime import timedelta
-from typing import Any, cast
+from typing import Any
 
 from homeassistant.components.update import UpdateEntity, UpdateEntityFeature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.issue_registry import create_issue
 
 from . import GPMConfigEntry
 from ._manager import (
@@ -19,7 +18,7 @@ from ._manager import (
     UpdateStrategy,
 )
 from .const import GIT_SHORT_HASH_LEN
-from .repairs import create_restart_issue
+from .repairs import async_create_restart_issue
 
 SCAN_INTERVAL = timedelta(hours=3)
 PARALLEL_UPDATES = 0  # = unlimited
@@ -31,7 +30,7 @@ async def async_setup_entry(  # noqa: D103
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     manager: RepositoryManager = entry.runtime_data
-    async_add_entities([GPMUpdateEntity(manager)], update_before_add=True)
+    async_add_entities([GPMUpdateEntity(manager)], True)
 
 
 class GPMUpdateEntity(UpdateEntity):
@@ -44,25 +43,20 @@ class GPMUpdateEntity(UpdateEntity):
     )
 
     def __init__(self, manager: RepositoryManager) -> None:  # noqa: D107
+        super().__init__()
         self.manager = manager
         self._first_update = True
         self._component_name: str | None = None
 
-    def update(self) -> None:
+    async def async_update(self) -> None:
         """Update state."""
-        # used inside (sync) update method because RepositoryManager methods are not async
-        if self._first_update:
-            self._first_update = False
-        else:
-            self.manager.fetch()
-        self._attr_unique_id = self.manager.unique_id
-        self._attr_name = self.manager.slug
+        await self.manager.fetch()
 
         if isinstance(self.manager, IntegrationRepositoryManager):
-            self._component_name = self.manager.component_name
+            self._component_name = await self.manager.get_component_name()
 
-        current = self.manager.get_current_version()
-        latest = self.manager.get_latest_version()
+        current = await self.manager.get_current_version()
+        latest = await self.manager.get_latest_version()
         if self.manager.update_strategy == UpdateStrategy.LATEST_COMMIT:
             self._attr_installed_version = current[:GIT_SHORT_HASH_LEN]
             self._attr_latest_version = latest[:GIT_SHORT_HASH_LEN]
@@ -71,13 +65,25 @@ class GPMUpdateEntity(UpdateEntity):
             self._attr_latest_version = latest
 
     @property
+    def unique_id(self) -> str:
+        """Return a unique ID."""
+        return self.manager.unique_id
+
+    @property
+    def name(self) -> str:
+        """Return the name of the entity."""
+        return self.manager.slug
+
+    @property
     def entity_picture(self) -> str | None:
         """Return the entity picture to use in the frontend."""
         if self._component_name:
             return f"https://brands.home-assistant.io/_/{self._component_name}/icon.png"
         return None
 
-    def install(self, version: str | None, backup: bool, **kwargs: Any) -> None:
+    async def async_install(
+        self, version: str | None, backup: bool, **kwargs: Any
+    ) -> None:
         """Install an update."""
         to_install = version or self.latest_version
         if to_install == self.installed_version:
@@ -85,14 +91,13 @@ class GPMUpdateEntity(UpdateEntity):
                 f"Version `{self.installed_version}` of `{self.name}` is already downloaded"
             )
         try:
-            self.manager.checkout(to_install)
+            await self.manager.checkout(to_install)
         except GPMError as e:
             raise HomeAssistantError(e) from e
 
-        create_restart_issue(
-            create_issue,
+        async_create_restart_issue(
             self.hass,
             action="update",
-            name=cast(str, self.name),
+            name=self.name,
             issue_domain=self._component_name,
         )

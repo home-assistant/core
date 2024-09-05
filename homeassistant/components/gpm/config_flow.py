@@ -9,7 +9,6 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_TYPE, CONF_URL
-from homeassistant.helpers.issue_registry import async_create_issue
 from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
 
 from . import get_manager
@@ -23,7 +22,7 @@ from ._manager import (
     UpdateStrategy,
 )
 from .const import CONF_DOWNLOAD_URL, CONF_UPDATE_STRATEGY, DOMAIN
-from .repairs import create_restart_issue
+from .repairs import async_create_restart_issue
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -77,24 +76,20 @@ class GPMConfigFlow(ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(self.manager.unique_id)
             self._abort_if_unique_id_configured()
             try:
-                await self.hass.async_add_executor_job(self.manager.clone)
-                latest_version = await self.hass.async_add_executor_job(
-                    self.manager.get_latest_version
-                )
-                await self.hass.async_add_executor_job(
-                    self.manager.checkout, latest_version
-                )
+                await self.manager.clone()
+                latest_version = await self.manager.get_latest_version()
+                await self.manager.checkout(latest_version)
                 if user_input[CONF_TYPE] == RepositoryType.INTEGRATION:
-                    await self.hass.async_add_executor_job(self.manager.install)
+                    await self.manager.install()
                     manager = cast(IntegrationRepositoryManager, self.manager)
-                    create_restart_issue(
-                        async_create_issue,
+                    component_name = await manager.get_component_name()
+                    async_create_restart_issue(
                         self.hass,
                         action="install",
-                        name=manager.component_name,
+                        name=component_name,
                     )
                     return self.async_create_entry(
-                        title=manager.component_name,
+                        title=component_name,
                         data=self._step_user_data,
                     )
                 if user_input[CONF_TYPE] == RepositoryType.RESOURCE:
@@ -102,7 +97,7 @@ class GPMConfigFlow(ConfigFlow, domain=DOMAIN):
             except InvalidStructure:
                 _LOGGER.exception("Invalid structure")
                 errors[CONF_URL] = "invalid_structure"
-                await self.hass.async_add_executor_job(self.manager.remove)
+                await self.manager.remove()
             except GPMError:
                 _LOGGER.exception("Installation failed")
                 errors["base"] = "install_failed"
@@ -127,7 +122,7 @@ class GPMConfigFlow(ConfigFlow, domain=DOMAIN):
         manager = cast(ResourceRepositoryManager, self.manager)
         if user_input is not None:
             self._step_user_data[CONF_DOWNLOAD_URL] = user_input[CONF_DOWNLOAD_URL]
-            self.manager.download_url = user_input[CONF_DOWNLOAD_URL]  # type: ignore[attr-defined]
+            manager.set_download_url(user_input[CONF_DOWNLOAD_URL])
             try:
                 await manager.install()
                 return self.async_create_entry(

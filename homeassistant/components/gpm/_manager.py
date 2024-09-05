@@ -27,7 +27,13 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.template import Template
 from homeassistant.util import slugify
 
-from .const import DOWNLOAD_CHUNK_SIZE, URL_BASE
+from .const import (
+    DOWNLOAD_CHUNK_SIZE,
+    PATH_CLONE_BASEDIR,
+    PATH_INTEGRATION_INSTALL_BASEDIR,
+    PATH_RESOURCE_INSTALL_BASEDIR,
+    URL_BASE,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -57,22 +63,24 @@ class RepositoryManager:
 
     def __init__(
         self,
-        url: str,
+        hass: HomeAssistant,
+        repo_url: str,
         clone_basedir: Path | str,
         install_basedir: Path | str,
-        update_strategy: UpdateStrategy = UpdateStrategy.LATEST_TAG,
+        update_strategy: UpdateStrategy,
     ) -> None:
-        self.url = url
+        self.hass = hass
+        self.repo_url = repo_url
         self.clone_basedir = Path(clone_basedir)
         self.install_basedir = Path(install_basedir)
         self.update_strategy = update_strategy
         self.__repo: Repo | None = None
 
-    @property
-    def is_cloned(self) -> bool:
+    async def is_cloned(self) -> bool:
         """Return True if the GIT repo is cloned."""
         try:
-            return (self.working_dir / ".git").exists()
+            git_dir = self.working_dir / ".git"
+            return await self.hass.async_add_executor_job(git_dir.exists)
         except OSError:
             return False
 
@@ -81,41 +89,46 @@ class RepositoryManager:
         """Ensure that the GIT repo is cloned."""
 
         @functools.wraps(func)
-        def wrapper(self: "RepositoryManager", *args: Any, **kwargs: Any) -> Any:
-            if not self.is_cloned:
+        async def wrapper(self: "RepositoryManager", *args: Any, **kwargs: Any) -> Any:
+            if not await self.is_cloned():
                 raise NotClonedError(self.working_dir)
-            return func(self, *args, **kwargs)
+            return await func(self, *args, **kwargs)
 
         return wrapper
 
-    @property
-    @abstractmethod
-    def is_installed(self) -> bool:
+    async def is_installed(self) -> bool:
         """Return True if the GIT repo is installed."""
+        try:
+            install_path = await self.get_install_path()
+            return await self.hass.async_add_executor_job(install_path.exists)
+        except (OSError, GPMError):
+            return False
 
     @staticmethod
     def ensure_installed(func: Callable[..., Any]) -> Callable[..., Any]:  # noqa: N805
         """Ensure that the GIT repo is installed as a package."""
 
         @functools.wraps(func)
-        def wrapper(self: "RepositoryManager", *args: Any, **kwargs: Any) -> Any:
-            if not self.is_installed:
+        async def wrapper(self: "RepositoryManager", *args: Any, **kwargs: Any) -> Any:
+            if not await self.is_installed():
                 raise NotInstalledError(self.slug)
-            return func(self, *args, **kwargs)
+            return await func(self, *args, **kwargs)
 
         return wrapper
 
-    def clone(self) -> None:
+    async def clone(self) -> None:
         """Clone the GIT repo."""
-        if self.is_cloned:
+        if await self.is_cloned():
             raise AlreadyClonedError(self.working_dir)
-        _LOGGER.info("Cloning %s to %s", self.url, self.working_dir)
+        _LOGGER.info("Cloning %s to %s", self.repo_url, self.working_dir)
         try:
-            self.__repo = Repo.clone_from(self.url, self.working_dir)
+            self.__repo = await self.hass.async_add_executor_job(
+                Repo.clone_from, self.repo_url, self.working_dir
+            )
         except GitCommandError as e:
-            raise CloneError(self.url, self.working_dir) from e
+            raise CloneError(self.repo_url, self.working_dir) from e
 
-    def _get_latest_tag(self, only_stable: bool = True) -> str | None:
+    async def _get_latest_tag(self, only_stable: bool = True) -> str | None:
         """Return the semantiacally latest tag for the GIT repo.
 
         Given the list of tags, determine the latest version according to the semantic versioning.
@@ -123,67 +136,77 @@ class RepositoryManager:
         If `only_stable` is True, alpha, beta, dev, and RC versions are ignored.
         If no semantically valid versions are found, return None.
         """
-        tags = map(str, self._repo.tags)
-        versions: Iterable[AwesomeVersion] = map(AwesomeVersion, tags)
-        versions = filter(lambda v: v.valid, versions)
+        repo = await self._get_repo()
+        tags = await self.hass.async_add_executor_job(lambda: map(str, repo.tags))
+        versions: Iterable[AwesomeVersion] = filter(
+            lambda v: v.valid, map(AwesomeVersion, tags)
+        )
         if only_stable:
             versions = filter(
                 lambda v: not (v.alpha or v.beta or v.dev or v.release_candidate),
                 versions,
             )
         versions = sorted(versions, reverse=True)
-        return str(versions[0]) if versions else None
+        return str(versions[0]) if versions else None  # type: ignore[truthy-iterable]
 
-    def _get_latest_commit(self) -> str:
+    async def _get_latest_commit(self) -> str:
         """Return the latest commit hash."""
-        return self._repo.heads[0].commit.hexsha
+        repo = await self._get_repo()
+        return await self.hass.async_add_executor_job(
+            lambda: repo.heads[0].commit.hexsha
+        )
 
     @ensure_cloned
-    def get_current_version(self) -> str:
+    async def get_current_version(self) -> str:
         """Return the current version."""
-        if self.update_strategy == UpdateStrategy.LATEST_COMMIT:
-            return self._repo.head.commit.hexsha
-        return self._repo.git.describe("--tags", "--abbrev=0")
+        repo = await self._get_repo()
+        return await self.hass.async_add_executor_job(
+            lambda: repo.head.commit.hexsha
+            if self.update_strategy == UpdateStrategy.LATEST_COMMIT
+            else repo.git.describe("--tags", "--abbrev=0")
+        )
 
     @ensure_cloned
-    def get_latest_version(self) -> str:
+    async def get_latest_version(self) -> str:
         """Return the latest version."""
         latest_tag = None
         if self.update_strategy == UpdateStrategy.LATEST_TAG:
-            latest_tag = self._get_latest_tag()
+            latest_tag = await self._get_latest_tag()
         if self.update_strategy == UpdateStrategy.LATEST_UNSTABLE_TAG:
-            latest_tag = self._get_latest_tag(only_stable=False)
-        return latest_tag if latest_tag else self._get_latest_commit()
+            latest_tag = await self._get_latest_tag(only_stable=False)
+        return latest_tag if latest_tag else await self._get_latest_commit()
 
     @ensure_cloned
-    def fetch(self) -> None:
+    async def fetch(self) -> None:
         """Fetch the latest changes from the remote."""
         _LOGGER.info("Fetching %s", self.working_dir)
-        self._repo.remotes[0].fetch()
+        repo = await self._get_repo()
+        await self.hass.async_add_executor_job(lambda: repo.remotes[0].fetch())  # pylint: disable=unnecessary-lambda
 
     @ensure_cloned
-    def checkout(self, ref: str) -> None:
+    async def checkout(self, ref: str) -> None:
         """Checkout the specified reference."""
         _LOGGER.info("Checking out %s", ref)
-        self._repo.git.checkout(ref)
+        repo = await self._get_repo()
+        await self.hass.async_add_executor_job(repo.git.checkout, ref)
 
     @ensure_cloned
     @abstractmethod
-    def install(self) -> None:
+    async def install(self) -> None:
         """Install the GIT repo."""
 
     @ensure_installed
     @abstractmethod
-    def uninstall(self) -> None:
+    async def uninstall(self) -> None:
         """Uninstall the GIT repo."""
 
     @ensure_cloned
-    def remove(self) -> None:
+    async def remove(self) -> None:
         """Remove the GIT repo."""
-        if self.is_installed:
-            self.uninstall()
+        if await self.is_installed():
+            await self.uninstall()
         _LOGGER.info("Removing %s", self.working_dir)
-        shutil.rmtree(self.working_dir)
+        await self.hass.async_add_executor_job(shutil.rmtree, self.working_dir)
         self.__repo = None
 
     @functools.cached_property
@@ -192,18 +215,18 @@ class RepositoryManager:
 
         Examples:
             >>> rm = RepositoryManager(...)
-            >>> rm.url = 'https://github.com/user/foo.git'
+            >>> rm.repo_url = 'https://github.com/user/foo.git'
             >>> rm.unique_id
             'github_com.user.foo'
-            >>> rm.url = 'https://github.com/another-user/bar'
+            >>> rm.repo_url = 'https://github.com/another-user/bar'
             >>> rm.unique_id
             'github_com.another_user.bar'
-            >>> rm.url = 'https://gitlab.com/YETanotherUser123/baz/'
+            >>> rm.repo_url = 'https://gitlab.com/YETanotherUser123/baz/'
             >>> rm.unique_id
             'gitlab_com.yetanotheruser123.baz'
 
         """
-        parsed_url = urlparse(self.url)
+        parsed_url = urlparse(self.repo_url)
         path_segments = parsed_url.path.strip("/").split("/")
         return ".".join(
             map(
@@ -221,11 +244,11 @@ class RepositoryManager:
         """Return slug for the GIT repo."""
         return self.unique_id.rsplit(".", maxsplit=1)[-1]
 
-    @functools.cached_property
     @ensure_cloned
-    def _repo(self) -> Repo:
+    async def _get_repo(self) -> Repo:
         """Return the GIT repo."""
-        self.__repo = Repo(self.working_dir)
+        if not self.__repo:
+            self.__repo = await self.hass.async_add_executor_job(Repo, self.working_dir)
         return self.__repo
 
     @functools.cached_property
@@ -233,55 +256,61 @@ class RepositoryManager:
         """Return the working directory of the GIT repo."""
         return self.clone_basedir / Path(self.unique_id)
 
+    @ensure_cloned
+    @abstractmethod
+    async def get_install_path(self) -> Path:
+        """Return the path to the installed repository."""
+
 
 class IntegrationRepositoryManager(RepositoryManager):
     """Manage GIT repo as a HA integration."""
 
     def __init__(
         self,
-        url: str,
-        clone_basedir: Path | str,
-        install_basedir: Path | str,
-        update_strategy: UpdateStrategy = UpdateStrategy.LATEST_TAG,
+        hass: HomeAssistant,
+        repo_url: str,
+        update_strategy: UpdateStrategy,
     ) -> None:
         super().__init__(
-            url,
-            clone_basedir,
-            install_basedir,
+            hass,
+            repo_url,
+            hass.config.path(PATH_CLONE_BASEDIR),
+            hass.config.path(PATH_INTEGRATION_INSTALL_BASEDIR),
             update_strategy,
         )
+        self._component_dir: Path | None = None
 
     @RepositoryManager.ensure_cloned
-    def install(self) -> None:
+    async def install(self) -> None:
         """Install the GIT repo as a HA integration."""
-        _LOGGER.info("Installing %s to %s", self.component_dir, self.install_symlink)
-        Path(self.install_symlink.parent).mkdir(parents=True, exist_ok=True)
+        component_dir = await self.get_component_dir()
+        install_path = await self.get_install_path()
+        _LOGGER.info("Installing %s to %s", component_dir, install_path)
+        await self.hass.async_add_executor_job(
+            lambda: install_path.parent.mkdir(parents=True, exist_ok=True)
+        )
         try:
-            self.install_symlink.symlink_to(self.component_dir.resolve())
+            await self.hass.async_add_executor_job(
+                install_path.symlink_to, component_dir.resolve()
+            )
         except FileExistsError:
-            raise AlreadyInstalledError(self.install_symlink) from None
+            raise AlreadyInstalledError(install_path) from None
 
     @RepositoryManager.ensure_installed
-    def uninstall(self) -> None:
+    async def uninstall(self) -> None:
         """Uninstall the GIT repo."""
-        _LOGGER.info("Uninstalling %s", self.install_symlink)
-        self.install_symlink.unlink()
+        install_path = await self.get_install_path()
+        _LOGGER.info("Uninstalling %s", install_path)
+        await self.hass.async_add_executor_job(install_path.unlink)
 
-    @property
-    def is_installed(self) -> bool:
-        """Return True if the GIT repo is installed."""
-        try:
-            return self.install_symlink.exists()
-        except (OSError, NotClonedError, InvalidStructure):
-            return False
-
-    @functools.cached_property
     @RepositoryManager.ensure_cloned
-    def component_dir(self) -> Path:
+    async def get_component_dir(self) -> Path:
         """Return the directory of HA integration within the GIT repo."""
+        if self._component_dir:
+            return self._component_dir
         try:
-            custom_components = list(
-                Path(self.working_dir / "custom_components").iterdir()
+            custom_components = await self.hass.async_add_executor_job(
+                lambda: list(Path(self.working_dir / "custom_components").iterdir())
             )
         except FileNotFoundError:
             raise InvalidStructure(
@@ -292,19 +321,18 @@ class IntegrationRepositoryManager(RepositoryManager):
                 "Exactly one `custom_components` subdirectory is expected",
                 self.working_dir,
             )
-        return custom_components[0]
+        self._component_dir = custom_components[0]
+        return self._component_dir
 
-    @functools.cached_property
     @RepositoryManager.ensure_cloned
-    def component_name(self) -> str:
+    async def get_component_name(self) -> str:
         """Return the name of HA integration within the GIT repo."""
-        return self.component_dir.name
+        return (await self.get_component_dir()).name
 
-    @functools.cached_property
     @RepositoryManager.ensure_cloned
-    def install_symlink(self) -> Path:
+    async def get_install_path(self) -> Path:
         """Return the path to symlink which is used to install HA integration."""
-        return self.install_basedir / self.component_name
+        return self.install_basedir / await self.get_component_name()
 
 
 class ResourceRepositoryManager(RepositoryManager):
@@ -312,21 +340,27 @@ class ResourceRepositoryManager(RepositoryManager):
 
     def __init__(
         self,
-        url: str,
         hass: HomeAssistant,
-        clone_basedir: Path | str,
-        install_basedir: Path | str,
-        download_url: str,
-        update_strategy: UpdateStrategy = UpdateStrategy.LATEST_TAG,
+        repo_url: str,
+        download_url: str | None,
+        update_strategy: UpdateStrategy,
     ) -> None:
         super().__init__(
-            url,
-            clone_basedir,
-            install_basedir,
+            hass,
+            repo_url,
+            hass.config.path(PATH_CLONE_BASEDIR),
+            hass.config.path(PATH_RESOURCE_INSTALL_BASEDIR),
             update_strategy,
         )
         self.hass = hass
-        self._download_url = Template(download_url, hass)
+        self.set_download_url(download_url)
+
+    async def is_installed(self) -> bool:
+        """Return True if the GIT repo is installed."""
+        # check empty download_url to enable initial checkout
+        if not await self.get_download_url():
+            return False
+        return await super().is_installed()
 
     @RepositoryManager.ensure_cloned
     async def install(self) -> None:
@@ -337,26 +371,32 @@ class ResourceRepositoryManager(RepositoryManager):
     @RepositoryManager.ensure_installed
     async def uninstall(self) -> None:
         """Uninstall the GIT repo."""
-        await self.hass.async_add_executor_job(self.install_path.unlink)
         await self._remove_resource()
+        install_path = await self.get_install_path()
+        await self.hass.async_add_executor_job(install_path.unlink)
 
-    # @RepositoryManager.ensure_cloned
-    # async def checkout(self, ref: str) -> None:
-    #     """Checkout the specified reference."""
-    #     if self.is_installed:
-    #         await self._remove_resource()
-    #     super().checkout(ref)
-    #     if self.is_installed:
-    #         await self._add_resource()
+    @RepositoryManager.ensure_cloned
+    async def checkout(self, ref: str) -> None:
+        """Checkout the specified reference."""
+        is_installed = await self.is_installed()
+        if is_installed:
+            await self.uninstall()
+        await super().checkout(ref)
+        if is_installed:
+            await self.install()
 
     async def _download_resource(self):
-        _LOGGER.info("Downloading %s to %s", self.download_url, self.install_path)
+        download_url = await self.get_download_url()
+        install_path = await self.get_install_path()
+        _LOGGER.info("Downloading %s to %s", download_url, install_path)
         session = async_get_clientsession(self.hass)
-        self.install_path.parent.mkdir(parents=True, exist_ok=True)
+        await self.hass.async_add_executor_job(
+            lambda: install_path.parent.mkdir(parents=True, exist_ok=True)
+        )
         try:
             async with (
-                session.get(self.download_url, raise_for_status=True) as response,
-                async_open(self.hass, self.install_path, "wb") as file,
+                session.get(download_url, raise_for_status=True) as response,
+                async_open(self.hass, install_path, "wb") as file,
             ):
                 # use larger chunks to prevent spawning too many jobs
                 async for chunk in response.content.iter_chunked(DOWNLOAD_CHUNK_SIZE):
@@ -364,9 +404,8 @@ class ResourceRepositoryManager(RepositoryManager):
         except (ClientError, OSError) as e:
             raise ResourceInstallError from e
 
-    @functools.cached_property
-    def _resource_storage(self) -> ResourceStorageCollection:
-        """Get the resource handler."""
+    def _get_resource_storage(self) -> ResourceStorageCollection:
+        """Return the Lovelace resource storage."""
         try:
             resources: ResourceStorageCollection = self.hass.data[LOVELACE_DOMAIN][
                 "resources"
@@ -382,63 +421,53 @@ class ResourceRepositoryManager(RepositoryManager):
 
         return resources
 
-    async def _add_resource(self):
-        """Add the resource to Home Assistant."""
-        _LOGGER.info("Adding resource %s", self.resource_url)
-        resources = self._resource_storage
+    async def _add_resource(self) -> None:
+        resource_url = await self.get_resource_url()
+        _LOGGER.info("Adding resource %s", resource_url)
+        resources = self._get_resource_storage()
         if not resources.loaded:
             await resources.async_load()
-        await resources.async_create_item(
-            {"res_type": "module", "url": self.resource_url}
-        )
+        await resources.async_create_item({"res_type": "module", "url": resource_url})
 
-    async def _remove_resource(self):
-        _LOGGER.info("Removing resource %s", self.resource_url)
-        resources = self._resource_storage
+    async def _remove_resource(self) -> None:
+        resource_url = await self.get_resource_url()
+        _LOGGER.info("Removing resource %s", resource_url)
+        resources = self._get_resource_storage()
         if not resources.loaded:
             await resources.async_load()
         for entry in resources.async_items():
-            if entry["url"] == self.resource_url:
+            if entry["url"] == resource_url:
                 await resources.async_delete_item(entry["id"])
                 return
-        _LOGGER.warning("Resource %s not found", self.resource_url)
+        _LOGGER.warning("Resource %s not found", resource_url)
 
-    @property
-    def is_installed(self) -> bool:
-        """Return True if the GIT repo is installed."""
-        try:
-            return self.install_path.exists()
-        except (OSError, NotClonedError):
-            return False
-
-    # TODO rename to download_url?
-    @property
     @RepositoryManager.ensure_cloned
-    def download_url(self) -> str:
-        """Return the URL of the resource."""
+    async def get_download_url(self) -> str | None:
+        """Return the download URL of the resource."""
+        if not self._download_url:
+            return None
         return self._download_url.async_render(
-            current_version=self.get_current_version()
+            current_version=await self.get_current_version()
         )
 
-    @download_url.setter
-    def download_url(self, value: str) -> None:
-        """Set the URL of the resource."""
-        self._download_url = Template(value, self.hass)
+    def set_download_url(self, value: str | None) -> None:
+        """Set the download URL of the resource."""
+        self._download_url = Template(value, self.hass) if value else None
 
-    @functools.cached_property
-    def resource_name(self) -> str:
+    async def get_resource_name(self) -> str:
         """Return the name of the resource."""
-        return self.download_url.rsplit("/", maxsplit=1)[-1]
+        download_url = await self.get_download_url()
+        return download_url.rsplit("/", maxsplit=1)[-1]
 
-    @functools.cached_property
-    def resource_url(self) -> str:
+    async def get_resource_url(self) -> str:
         """Return the URL of the installed resource."""
-        return f"{URL_BASE}/{self.resource_name}"
+        resource_name = await self.get_resource_name()
+        return f"{URL_BASE}/{resource_name}"
 
-    @functools.cached_property
-    def install_path(self) -> Path:
+    async def get_install_path(self) -> Path:
         """Return the path to the installed resource."""
-        return self.install_basedir / Path(self.resource_name)
+        resource_name = await self.get_resource_name()
+        return self.install_basedir / Path(resource_name)
 
 
 class GPMError(Exception):
@@ -479,12 +508,12 @@ class AlreadyClonedError(GPMError):
 class CloneError(GPMError):
     """Raised when the GIT repo cannot be cloned."""
 
-    def __init__(self, url: str, working_dir: Path) -> None:
-        self.url = url
+    def __init__(self, repo_url: str, working_dir: Path) -> None:
+        self.repo_url = repo_url
         self.working_dir = working_dir
 
     def __str__(self) -> str:
-        return f"Cannot clone `{self.url}` to `{self.working_dir}`"
+        return f"Cannot clone `{self.repo_url}` to `{self.working_dir}`"
 
 
 class NotInstalledError(GPMError):
@@ -500,11 +529,11 @@ class NotInstalledError(GPMError):
 class AlreadyInstalledError(GPMError):
     """Raised when the GIT repo is already installed."""
 
-    def __init__(self, install_symlink: Path) -> None:
-        self.install_symlink = install_symlink
+    def __init__(self, install_path: Path) -> None:
+        self.install_path = install_path
 
     def __str__(self) -> str:
-        return f"`{self.install_symlink}` already exists"
+        return f"`{self.install_path}` already exists"
 
 
 class ResourceInstallError(GPMError):

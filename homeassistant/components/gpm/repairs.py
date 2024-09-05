@@ -1,12 +1,11 @@
 """Repairs for the GPM component."""
 
-from collections.abc import Callable
 from typing import Any, cast
 
 from homeassistant.components.repairs import RepairsFlow
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers.issue_registry import IssueSeverity
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
 from .const import DOMAIN
 
@@ -15,6 +14,7 @@ class RestartRequiredFixFlow(RepairsFlow):
     """Handler for an issue fixing flow."""
 
     def __init__(self, data: dict[str, str | int | float | None] | None) -> None:  # noqa: D107
+        super().__init__()
         self.data = data
 
     async def async_step_init(
@@ -48,8 +48,7 @@ async def async_create_fix_flow(
     return None
 
 
-def create_restart_issue(
-    fn: Callable,
+def async_create_restart_issue(
     hass: HomeAssistant,
     action: str,
     name: str,
@@ -60,7 +59,7 @@ def create_restart_issue(
         "action": action,
         "name": name,
     }
-    fn(
+    async_create_issue(
         hass=hass,
         domain=DOMAIN,
         issue_id=f"restart_required.{name}",
@@ -68,6 +67,6 @@ def create_restart_issue(
         issue_domain=issue_domain or name,
         severity=IssueSeverity.WARNING,
         translation_key="restart_required",
-        translation_placeholders=data,
+        translation_placeholders=cast(dict[str, str], data),
         data=data,
     )
