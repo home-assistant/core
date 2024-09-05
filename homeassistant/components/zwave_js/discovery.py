@@ -897,16 +897,6 @@ DISCOVERY_SCHEMAS = [
         ),
         allow_multi=True,
     ),
-    ZWaveDiscoverySchema(
-        platform=Platform.BINARY_SENSOR,
-        hint="notification",
-        primary_value=ZWaveValueDiscoverySchema(
-            command_class={
-                CommandClass.NOTIFICATION,
-            },
-            type={ValueType.NUMBER},
-        ),
-    ),
     # binary sensor for Indicator CC
     ZWaveDiscoverySchema(
         platform=Platform.BINARY_SENSOR,
@@ -967,18 +957,6 @@ DISCOVERY_SCHEMAS = [
             property={VALUE_PROPERTY},
         ),
         data_template=NumericSensorDataTemplate(),
-    ),
-    # special list sensors (Notification CC)
-    ZWaveDiscoverySchema(
-        platform=Platform.SENSOR,
-        hint="list_sensor",
-        primary_value=ZWaveValueDiscoverySchema(
-            command_class={
-                CommandClass.NOTIFICATION,
-            },
-            type={ValueType.NUMBER},
-        ),
-        allow_multi=True,
     ),
     # number for Indicator CC (exclude property keys 3-5)
     ZWaveDiscoverySchema(
@@ -1216,6 +1194,28 @@ DISCOVERY_SCHEMAS = [
             type={ValueType.BOOLEAN},
         ),
         entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    ZWaveDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        hint="notification",
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={
+                CommandClass.NOTIFICATION,
+            },
+            type={ValueType.NUMBER},
+        ),
+    ),
+    # special list sensors (Notification CC)
+    ZWaveDiscoverySchema(
+        platform=Platform.SENSOR,
+        hint="list_sensor",
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={
+                CommandClass.NOTIFICATION,
+            },
+            type={ValueType.NUMBER},
+        ),
+        allow_multi=True,
     ),
 ]
 
