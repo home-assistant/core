@@ -14,6 +14,7 @@ from homeassistant.components.squeezebox.browse_media import (
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import format_mac
+from homeassistant.util.uuid import random_uuid_hex
 
 from tests.common import MockConfigEntry
 
@@ -23,6 +24,8 @@ TEST_USE_HTTPS = False
 SERVER_UUID = "12345678-1234-1234-1234-123456789012"
 TEST_MAC = "aa:bb:cc:dd:ee:ff"
 TEST_PLAYER_NAME = "Test Player"
+FAKE_VALID_ITEM_ID = "1234"
+FAKE_INVALID_ITEM_ID = "4321"
 
 
 @pytest.fixture
@@ -70,7 +73,7 @@ async def mock_async_browse(
     fake_items = [
         {
             "title": "Fake Item 1",
-            "id": "1234",
+            "id": FAKE_VALID_ITEM_ID,
             "hasitems": False,
             "item_type": child_types[media_type],
             "artwork_track_id": "b35bb9e9",
@@ -78,7 +81,7 @@ async def mock_async_browse(
         },
         {
             "title": "Fake Item 2",
-            "id": "12345",
+            "id": FAKE_VALID_ITEM_ID + "_2",
             "hasitems": media_type == "favorites",
             "item_type": child_types[media_type],
             "image_url": "http://lms.internal:9000/html/images/favorites.png",
@@ -86,9 +89,9 @@ async def mock_async_browse(
         },
         {
             "title": "Fake Item 3",
-            "id": "123456",
+            "id": FAKE_VALID_ITEM_ID + "_3",
             "hasitems": media_type == "favorites",
-            "album_id": "123456" if media_type == "favorites" else None,
+            "album_id": FAKE_VALID_ITEM_ID if media_type == "favorites" else None,
             "url": "file:///var/lib/squeezeboxserver/music/track_3.mp3",
         },
     ]
@@ -97,10 +100,14 @@ async def mock_async_browse(
         search_type, search_id = browse_id
         if search_id:
             if search_type == "playlist_id":
-                return {
-                    "title": "Fake Item 1",
-                    "items": fake_items,
-                }
+                return (
+                    {
+                        "title": "Fake Item 1",
+                        "items": fake_items,
+                    }
+                    if search_id == FAKE_VALID_ITEM_ID
+                    else None
+                )
             if search_type in SQUEEZEBOX_ID_BY_TYPE.values():
                 for item in fake_items:
                     if item["id"] == search_id:
@@ -125,16 +132,27 @@ async def mock_async_browse(
 
 @pytest.fixture
 def player() -> MagicMock:
+    """Return a mock player."""
+    return create_mock_player()
+
+
+@pytest.fixture
+def player_factory() -> MagicMock:
+    """Return a factory for creating mock players."""
+    return create_mock_player
+
+
+def create_mock_player() -> MagicMock:
     """Mock a Lyrion Media Server player."""
     player = MagicMock()
 
     # set some default fake values for properties
-    player.player_id = TEST_MAC
+    player.player_id = random_uuid_hex()
     player.current_index = 0
     player.mode = "stop"
     player.muting = False
     player.name = TEST_PLAYER_NAME
-    player.playlist = None
+    player.playlist: list(dict(str, str)) | None = None
     player.power = True
     player.repeat = "none"
     player.shuffle = "none"
@@ -143,6 +161,9 @@ def player() -> MagicMock:
 
     # mock pysqueezebox.Player methods
     player.async_browse = AsyncMock(side_effect=mock_async_browse)
+    player.async_clear_playlist = AsyncMock(
+        side_effect=lambda: setattr(player, "playlist", None)
+    )
     player.async_index = AsyncMock(
         side_effect=lambda index: setattr(
             player,
@@ -154,12 +175,18 @@ def player() -> MagicMock:
     )
 
     def async_load_playlist(playlist, cmd):
-        player.playlist = playlist
+        if cmd == "add":
+            if player.playlist is None:
+                player.playlist = []
+            player.playlist.extend(playlist)
+        else:
+            player.playlist = playlist
         player.current_index = 0
+        player.url = player.playlist[0]
 
     player.async_load_playlist = AsyncMock(side_effect=async_load_playlist)
     player.async_load_url = AsyncMock(
-        side_effect=lambda url, cmd: setattr(player, "url", url)
+        side_effect=lambda url, cmd: async_load_playlist([{"url": url}], cmd)
     )
     player.async_play = AsyncMock(side_effect=lambda: setattr(player, "mode", "play"))
     player.async_pause = AsyncMock(side_effect=lambda: setattr(player, "mode", "pause"))
@@ -183,6 +210,7 @@ def player() -> MagicMock:
         )
     )
     player.async_stop = AsyncMock(side_effect=lambda: setattr(player, "mode", "stop"))
+    player.async_sync = AsyncMock()
     player.async_time = AsyncMock(
         side_effect=lambda time: setattr(player, "time", time)
     )
@@ -191,7 +219,9 @@ def player() -> MagicMock:
             player, "mode", "play" if player.mode != "play" else "pause"
         )
     )
+    player.async_query = AsyncMock(return_value="test result")
     player.async_update = AsyncMock()
+    player.async_unsync = AsyncMock()
     player.generate_image_url_from_track_id = MagicMock(
         return_value="http://lms.internal:9000/html/images/favorites.png"
     )
@@ -199,26 +229,58 @@ def player() -> MagicMock:
 
 
 @pytest.fixture
-def lms(player: MagicMock) -> MagicMock:
+def lms_factory(player_factory: MagicMock) -> MagicMock:
+    """Return a factory for creating mock Lyrion Media Servers with arbitrary number of players."""
+    return lambda player_count: create_mock_lms(player_factory, player_count)
+
+
+@pytest.fixture
+def lms(player_factory: MagicMock) -> MagicMock:
     """Mock a Lyrion Media Server with one mock player attached."""
+    return create_mock_lms(player_factory, 1, uuid=TEST_MAC)
+
+
+def create_mock_lms(
+    player_factory: MagicMock, player_count: int, uuid: str | None = None
+) -> MagicMock:
+    """Create a mock Lyrion Media Server with the given number of mock players attached."""
     lms = MagicMock()
-    lms.async_get_players = AsyncMock(return_value=[player])
-    lms.async_query = AsyncMock(return_value={"uuid": format_mac(TEST_MAC)})
-    lms.async_status = AsyncMock(return_value={"uuid": format_mac(TEST_MAC)})
+    players = [player_factory() for _ in range(player_count)]
+    lms.async_get_players = AsyncMock(return_value=players)
+
+    if not uuid:
+        uuid = random_uuid_hex()
+    lms.async_query = AsyncMock(return_value={"uuid": format_mac(uuid)})
     return lms
+
+
+async def configure_squeezebox(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    lms: MagicMock,
+) -> None:
+    """Configure a squeezebox config entry."""
+    with (
+        patch("homeassistant.components.squeezebox.Server", return_value=lms),
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
 
 
 @pytest.fixture
 async def configured_player(
     hass: HomeAssistant, config_entry: MockConfigEntry, lms: MagicMock
 ) -> MagicMock:
-    """Fixture checking calls to pysqueezebox Player from a configured squeezebox."""
-    with (
-        patch("homeassistant.components.squeezebox.Server", return_value=lms),
-        patch(
-            "homeassistant.components.squeezebox.media_player.start_server_discovery"
-        ),
-    ):
-        await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done(wait_background_tasks=True)
+    """Fixture mocking calls to pysqueezebox Player from a configured squeezebox."""
+    await configure_squeezebox(hass, config_entry, lms)
     return (await lms.async_get_players())[0]
+
+
+@pytest.fixture
+async def configured_players(
+    hass: HomeAssistant, config_entry: MockConfigEntry, lms_factory: MagicMock
+) -> list[MagicMock]:
+    """Fixture mocking calls to two pysqueezebox Players from a configured squeezebox."""
+    lms = lms_factory(2)
+    await configure_squeezebox(hass, config_entry, lms)
+    return await lms.async_get_players()

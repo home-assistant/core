@@ -14,6 +14,7 @@ import voluptuous as vol
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
     ATTR_MEDIA_ENQUEUE,
+    BrowseError,
     BrowseMedia,
     MediaPlayerEnqueue,
     MediaPlayerEntity,
@@ -26,6 +27,7 @@ from homeassistant.components.media_player import (
 from homeassistant.config_entries import SOURCE_INTEGRATION_DISCOVERY
 from homeassistant.const import ATTR_COMMAND, CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import (
     config_validation as cv,
     discovery_flow,
@@ -244,13 +246,16 @@ class SqueezeBoxEntity(MediaPlayerEntity):
                 self._remove_dispatcher()
 
     @property
-    def state(self) -> MediaPlayerState | None:
+    def state(self) -> MediaPlayerState:
         """Return the state of the device."""
         if not self._player.power:
             return MediaPlayerState.OFF
-        if self._player.mode:
-            return SQUEEZEBOX_MODE.get(self._player.mode)
-        return None
+        if self._player.mode and self._player.mode in SQUEEZEBOX_MODE:
+            return SQUEEZEBOX_MODE[self._player.mode]
+        _LOGGER.error(
+            "Received unknown mode %s from player %s", self._player.mode, self.name
+        )
+        return MediaPlayerState.IDLE
 
     async def async_update(self) -> None:
         """Update the Player() object."""
@@ -469,7 +474,7 @@ class SqueezeBoxEntity(MediaPlayerEntity):
                     "search_type": MediaType.PLAYLIST,
                 }
                 playlist = await generate_playlist(self._player, payload)
-            except ValueError:
+            except BrowseError:
                 # a list of urls
                 content = json.loads(media_id)
                 playlist = content["urls"]
@@ -548,8 +553,8 @@ class SqueezeBoxEntity(MediaPlayerEntity):
             if other_player_id := player_ids.get(other_player):
                 await self._player.async_sync(other_player_id)
             else:
-                _LOGGER.debug(
-                    "Could not find player_id for %s. Not syncing", other_player
+                raise ServiceValidationError(
+                    f"Could not join unknown player {other_player}"
                 )
 
     async def async_unjoin_player(self) -> None:
