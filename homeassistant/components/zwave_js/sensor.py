@@ -51,7 +51,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import UNDEFINED, StateType
 
-from .binary_sensor import is_valid_binary_notification_sensor
+from .binary_sensor import is_valid_notification_binary_sensor
 from .const import (
     ATTR_METER_TYPE,
     ATTR_METER_TYPE_NAME,
@@ -583,10 +583,7 @@ async def async_setup_entry(
             )
         elif info.platform_hint == "notification":
             # prevent duplicate entities for values that are already represented as binary sensors
-            if any(
-                is_valid_binary_notification_sensor(info, state_key)
-                for state_key in info.primary_value.metadata.states
-            ):
+            if is_valid_notification_binary_sensor(info):
                 return
             entities.append(
                 ZWaveListSensor(config_entry, driver, info, entity_description)
