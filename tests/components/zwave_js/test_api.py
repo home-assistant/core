@@ -4925,3 +4925,21 @@ async def test_invoke_cc_api(
         "methodName": "someMethod",
         "args": [1, 2],
     }
+
+    client.async_send_command.side_effect = NotFoundError
+
+    # Ensure an error is returned
+    await ws_client.send_json_auto_id(
+        {
+            TYPE: "zwave_js/invoke_cc_api",
+            DEVICE_ID: device_radio_thermostat.id,
+            ATTR_COMMAND_CLASS: 67,
+            ATTR_ENDPOINT: 0,
+            ATTR_METHOD_NAME: "someMethod",
+            ATTR_PARAMETERS: [1, 2],
+            ATTR_WAIT_FOR_RESULT: True,
+        }
+    )
+    msg = await ws_client.receive_json()
+    assert not msg["success"]
+    assert msg["error"] == {"code": "NotFoundError", "message": ""}

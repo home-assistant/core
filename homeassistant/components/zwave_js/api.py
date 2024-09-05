@@ -2577,14 +2577,17 @@ async def websocket_invoke_cc_api(
     if endpoint := msg.get(ATTR_ENDPOINT):
         node_or_endpoint = node.endpoints[endpoint]
 
-    result = await node_or_endpoint.async_invoke_cc_api(
-        command_class,
-        method_name,
-        *parameters,
-        wait_for_result=msg.get(ATTR_WAIT_FOR_RESULT, False),
-    )
-
-    connection.send_result(
-        msg[ID],
-        result,
-    )
+    try:
+        result = await node_or_endpoint.async_invoke_cc_api(
+            command_class,
+            method_name,
+            *parameters,
+            wait_for_result=msg.get(ATTR_WAIT_FOR_RESULT, False),
+        )
+    except BaseZwaveJSServerError as err:
+        connection.send_error(msg[ID], err.__class__.__name__, str(err))
+    else:
+        connection.send_result(
+            msg[ID],
+            result,
+        )
