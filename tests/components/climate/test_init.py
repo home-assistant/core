@@ -171,9 +171,11 @@ async def test_sync_turn_off(hass: HomeAssistant) -> None:
     assert climate.turn_off.called
 
 
-def _create_tuples(enum: type[Enum], constant_prefix: str) -> list[tuple[Enum, str]]:
+def _create_tuples(
+    enum: type[Enum], constant_prefix: str, version: str
+) -> list[tuple[Enum, str]]:
     return [
-        (enum_field, constant_prefix)
+        (enum_field, constant_prefix, version)
         for enum_field in enum
         if enum_field
         not in [ClimateEntityFeature.TURN_ON, ClimateEntityFeature.TURN_OFF]
@@ -190,9 +192,12 @@ def test_all(module: ModuleType) -> None:
 
 
 @pytest.mark.parametrize(
-    ("enum", "constant_prefix"),
-    _create_tuples(climate.ClimateEntityFeature, "SUPPORT_")
-    + _create_tuples(climate.HVACMode, "HVAC_MODE_"),
+    ("enum", "constant_prefix", "version"),
+    _create_tuples(climate.ClimateEntityFeature, "SUPPORT_", "2025.1")
+    + _create_tuples(climate.HVACMode, "HVAC_MODE_", "2025.1")
+    + _create_tuples(climate.SwingMode, "SWING_", "2025.10")
+    + _create_tuples(climate.FanMode, "FAN_", "2025.10")
+    + _create_tuples(climate.PresetMode, "PRESET_", "2025.10"),
 )
 @pytest.mark.parametrize(
     "module",
@@ -202,11 +207,12 @@ def test_deprecated_constants(
     caplog: pytest.LogCaptureFixture,
     enum: Enum,
     constant_prefix: str,
+    version: str,
     module: ModuleType,
 ) -> None:
     """Test deprecated constants."""
     import_and_test_deprecated_constant_enum(
-        caplog, module, enum, constant_prefix, "2025.1"
+        caplog, module, enum, constant_prefix, version
     )
 
 

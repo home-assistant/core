@@ -48,49 +48,81 @@ _DEPRECATED_HVAC_MODE_DRY = DeprecatedConstantEnum(HVACMode.DRY, "2025.1")
 _DEPRECATED_HVAC_MODE_FAN_ONLY = DeprecatedConstantEnum(HVACMode.FAN_ONLY, "2025.1")
 HVAC_MODES = [cls.value for cls in HVACMode]
 
-# No preset is active
-PRESET_NONE = "none"
 
-# Device is running an energy-saving mode
-PRESET_ECO = "eco"
+class PresetMode(StrEnum):
+    """Preset mode for climate devices."""
 
-# Device is in away mode
-PRESET_AWAY = "away"
-
-# Device turn all valve full up
-PRESET_BOOST = "boost"
-
-# Device is in comfort mode
-PRESET_COMFORT = "comfort"
-
-# Device is in home mode
-PRESET_HOME = "home"
-
-# Device is prepared for sleep
-PRESET_SLEEP = "sleep"
-
-# Device is reacting to activity (e.g. movement sensors)
-PRESET_ACTIVITY = "activity"
-
-# Possible fan state
-FAN_ON = "on"
-FAN_OFF = "off"
-FAN_AUTO = "auto"
-FAN_LOW = "low"
-FAN_MEDIUM = "medium"
-FAN_HIGH = "high"
-FAN_TOP = "top"
-FAN_MIDDLE = "middle"
-FAN_FOCUS = "focus"
-FAN_DIFFUSE = "diffuse"
+    NONE = "none"
+    ECO = "eco"
+    AWAY = "away"
+    BOOST = "boost"
+    COMFORT = "comfort"
+    HOME = "home"
+    SLEEP = "sleep"
+    ACTIVITY = "activity"
 
 
-# Possible swing state
-SWING_ON = "on"
-SWING_OFF = "off"
-SWING_BOTH = "both"
-SWING_VERTICAL = "vertical"
-SWING_HORIZONTAL = "horizontal"
+# These PRESET_* constants are deprecated as of Home Assistant 2024.10.
+# Please use the PresetMode enum instead.
+_DEPRECATED_PRESET_NONE = DeprecatedConstantEnum(PresetMode.NONE, "2025.10")
+_DEPRECATED_PRESET_ECO = DeprecatedConstantEnum(PresetMode.ECO, "2025.10")
+_DEPRECATED_PRESET_AWAY = DeprecatedConstantEnum(PresetMode.AWAY, "2025.10")
+_DEPRECATED_PRESET_BOOST = DeprecatedConstantEnum(PresetMode.BOOST, "2025.10")
+_DEPRECATED_PRESET_COMFORT = DeprecatedConstantEnum(PresetMode.COMFORT, "2025.10")
+_DEPRECATED_PRESET_HOME = DeprecatedConstantEnum(PresetMode.HOME, "2025.10")
+_DEPRECATED_PRESET_SLEEP = DeprecatedConstantEnum(PresetMode.SLEEP, "2025.10")
+_DEPRECATED_PRESET_ACTIVITY = DeprecatedConstantEnum(PresetMode.ACTIVITY, "2025.10")
+PRESET_MODES = [cls.value for cls in PresetMode]
+
+
+class FanMode(StrEnum):
+    """Fan mode for climate devices."""
+
+    ON = "on"
+    OFF = "off"
+    AUTO = "auto"
+    LOW = "low"
+    MEDIUM = "medium"
+    HIGH = "high"
+    TOP = "top"
+    MIDDLE = "middle"
+    FOCUS = "focus"
+    DIFFUSE = "diffuse"
+
+
+# These FAN_* constants are deprecated as of Home Assistant 2024.10.
+# Please use the FanMode enum instead.
+_DEPRECATED_FAN_ON = DeprecatedConstantEnum(FanMode.ON, "2025.10")
+_DEPRECATED_FAN_OFF = DeprecatedConstantEnum(FanMode.OFF, "2025.10")
+_DEPRECATED_FAN_AUTO = DeprecatedConstantEnum(FanMode.AUTO, "2025.10")
+_DEPRECATED_FAN_LOW = DeprecatedConstantEnum(FanMode.LOW, "2025.10")
+_DEPRECATED_FAN_MEDIUM = DeprecatedConstantEnum(FanMode.MEDIUM, "2025.10")
+_DEPRECATED_FAN_HIGH = DeprecatedConstantEnum(FanMode.HIGH, "2025.10")
+_DEPRECATED_FAN_TOP = DeprecatedConstantEnum(FanMode.TOP, "2025.10")
+_DEPRECATED_FAN_MIDDLE = DeprecatedConstantEnum(FanMode.MIDDLE, "2025.10")
+_DEPRECATED_FAN_FOCUS = DeprecatedConstantEnum(FanMode.FOCUS, "2025.10")
+_DEPRECATED_FAN_DIFFUSE = DeprecatedConstantEnum(FanMode.DIFFUSE, "2025.10")
+FAN_MODES = [cls.value for cls in FanMode]
+
+
+class SwingMode(StrEnum):
+    """Swing mode for climate devices."""
+
+    ON = "on"
+    OFF = "off"
+    BOTH = "both"
+    VERTICAL = "vertical"
+    HORIZONTAL = "horizontal"
+
+
+# These SWING_* constants are deprecated as of Home Assistant 2024.10.
+# Please use the ClimateSwingMode enum instead.
+_DEPRECATED_SWING_ON = DeprecatedConstantEnum(SwingMode.ON, "2025.10")
+_DEPRECATED_SWING_OFF = DeprecatedConstantEnum(SwingMode.OFF, "2025.10")
+_DEPRECATED_SWING_BOTH = DeprecatedConstantEnum(SwingMode.BOTH, "2025.10")
+_DEPRECATED_SWING_VERTICAL = DeprecatedConstantEnum(SwingMode.VERTICAL, "2025.10")
+_DEPRECATED_SWING_HORIZONTAL = DeprecatedConstantEnum(SwingMode.HORIZONTAL, "2025.10")
+SWING_MODES = [cls.value for cls in SwingMode]
 
 
 class HVACAction(StrEnum):
@@ -106,14 +138,6 @@ class HVACAction(StrEnum):
     PREHEATING = "preheating"
 
 
-# These CURRENT_HVAC_* constants are deprecated as of Home Assistant 2022.5.
-# Please use the HVACAction enum instead.
-_DEPRECATED_CURRENT_HVAC_OFF = DeprecatedConstantEnum(HVACAction.OFF, "2025.1")
-_DEPRECATED_CURRENT_HVAC_HEAT = DeprecatedConstantEnum(HVACAction.HEATING, "2025.1")
-_DEPRECATED_CURRENT_HVAC_COOL = DeprecatedConstantEnum(HVACAction.COOLING, "2025.1")
-_DEPRECATED_CURRENT_HVAC_DRY = DeprecatedConstantEnum(HVACAction.DRYING, "2025.1")
-_DEPRECATED_CURRENT_HVAC_IDLE = DeprecatedConstantEnum(HVACAction.IDLE, "2025.1")
-_DEPRECATED_CURRENT_HVAC_FAN = DeprecatedConstantEnum(HVACAction.FAN, "2025.1")
 CURRENT_HVAC_ACTIONS = [cls.value for cls in HVACAction]
 
 
