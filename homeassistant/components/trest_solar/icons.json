@@ -1,0 +1,30 @@
+{
+  "entity": {
+    "sensor": {
+      "battery_discharge": {
+        "default": "mdi:battery-arrow-down"
+      },
+      "battery_charge": {
+        "default": "mdi:battery-arrow-up"
+      },
+      "battery_capacity": {
+        "default": "mdi:battery"
+      },
+      "battery_stored_power": {
+        "default": "mdi:power"
+      },
+      "total_load_active_power": {
+        "default": "mdi:flash"
+      },
+      "realtime_solar": {
+        "default": "mdi:white-balance-sunny"
+      },
+      "solar_profile": {
+        "default": "mdi:solar-power"
+      },
+      "daily_yeild": {
+        "default": "mdi:calendar"
+      }
+    }
+  }
+}

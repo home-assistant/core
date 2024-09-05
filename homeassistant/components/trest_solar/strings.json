@@ -17,5 +17,33 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
+  },
+  "entity": {
+    "sensor": {
+      "battery_discharge": {
+        "name": "Battery Discharge"
+      },
+      "battery_charge": {
+        "name": "Battery Charge"
+      },
+      "battery_capacity": {
+        "name": "Battery Capacity"
+      },
+      "battery_stored_power": {
+        "name": "Battery Stored Power"
+      },
+      "total_load_active_power": {
+        "name": "Total Load Active Power"
+      },
+      "realtime_solar": {
+        "name": "Realtime Solar"
+      },
+      "solar_profile": {
+        "name": "Solar Profile"
+      },
+      "daily_yeild": {
+        "name": "Daily Yeild"
+      }
+    }
   }
 }
