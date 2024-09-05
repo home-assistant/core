@@ -1579,8 +1579,6 @@ async def test_disabled_entity_on_value_removed(
     idle_cover_status_button_entity = (
         "button.4_in_1_sensor_idle_home_security_cover_status"
     )
-    entity_registry.async_update_entity(entity_id=sensor_cover_entity, disabled_by=None)
-    await hass.async_block_till_done()
 
     # must reload the integration when enabling an entity
     await hass.config_entries.async_unload(integration.entry_id)
