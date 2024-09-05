@@ -49,6 +49,7 @@ SWITCHES: tuple[HomeConnectSwitchEntityDescription, ...] = (
     HomeConnectSwitchEntityDescription(
         key="Dispenser Enabled",
         on_key=REFRIGERATION_DISPENSER,
+        translation_key="refrigeration_dispenser",
     ),
 )
 
@@ -71,15 +72,13 @@ async def async_setup_entry(
             entity_list += [HomeConnectChildLockSwitch(device_dict[CONF_DEVICE])]
             # Auto-discover entities
             hc_device: HomeConnectDevice = device_dict[CONF_DEVICE]
-            for description in SWITCHES:
-                if description.on_key in hc_device.appliance.status:
-                    hc_switch = HomeConnectSwitch(
-                        device=hc_device,
-                        desc=description.key,
-                    )
-                    hc_switch.entity_description = description
-                    entities.append(hc_switch)
-            entities += entity_list
+            entities.extend(
+                HomeConnectSwitch(device=hc_device, entity_description=description)
+                for description in SWITCHES
+                if description.on_key in hc_device.appliance.status
+            )
+            entities.extend(entity_list)
+
         return entities
 
     async_add_entities(await hass.async_add_executor_job(get_entities), True)
@@ -91,12 +90,14 @@ class HomeConnectSwitch(HomeConnectEntity, SwitchEntity):
     entity_description: HomeConnectSwitchEntityDescription
     _attr_available: bool = False
 
-    @property
-    def status_key(self) -> bool:
-        """Retrieve the value of the current status."""
-        return self.device.appliance.status.get(self.entity_description.on_key, {}).get(
-            ATTR_VALUE, False
-        )
+    def __init__(
+        self,
+        device: HomeConnectDevice,
+        entity_description: HomeConnectSwitchEntityDescription,
+    ) -> None:
+        """Initialize the entity."""
+        self.entity_description = entity_description
+        super().__init__(device=device, desc=entity_description.key)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on setting."""
@@ -133,7 +134,9 @@ class HomeConnectSwitch(HomeConnectEntity, SwitchEntity):
     async def async_update(self) -> None:
         """Update the switch's status."""
 
-        self._attr_is_on = self.status_key
+        self._attr_is_on = self.device.appliance.status.get(
+            self.entity_description.on_key, {}
+        ).get(ATTR_VALUE)
         self._attr_available = True
         _LOGGER.debug(
             "Updated %s, new state: %s", self.entity_description.key, self._attr_is_on
