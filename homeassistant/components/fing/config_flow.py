@@ -69,7 +69,7 @@ class FingConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_verify(self, user_input=None) -> ConfigFlowResult:
         """Verify connection step."""
-        if user_input is None and self._user_input:
+        if user_input is None and self._user_input is None:
             return self.async_abort(reason="Empty user input")
 
         if not self._verify_connection_task:
@@ -78,24 +78,21 @@ class FingConfigFlow(ConfigFlow, domain=DOMAIN):
                 _verify_connection(user_input=user_input)
             )
         if not self._verify_connection_task.done():
-            self.async_show_progress(
+            return self.async_show_progress(
                 step_id="verify",
                 progress_action="Verifying connection...",
                 progress_task=self._verify_connection_task,
             )
 
         try:
-            await self._verify_connection_task
-            if self._verify_connection_task.exception() is not None:
-                self._exception = self._verify_connection_task.exception()
-            elif self._verify_connection_task.result() is False:
+            result = await self._verify_connection_task
+
+            if result is False:
                 self._exception = Exception(
                     "Network ID parameter is empty. Use the latest API."
                 )
             else:
                 return self.async_show_progress_done(next_step_id="task_completed")
-
-            return self.async_show_progress_done(next_step_id="task_failed")
         except (
             httpx.HTTPError,
             httpx.InvalidURL,
