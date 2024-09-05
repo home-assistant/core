@@ -12,7 +12,7 @@ CONF_SESSION = "session"
 SERVICE_PRESET = "preset"
 ATTR_PRESET_NUMBER = "preset_number"
 
-SERVICE_PRESET_SCHEMA = vol.Schema(
+SERVICE_PRESET_SCHEMA = cv.make_entity_service_schema(
     {
         vol.Required(ATTR_PRESET_NUMBER): cv.positive_int,
     }

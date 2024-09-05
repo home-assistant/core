@@ -4,7 +4,7 @@ preset:
       integration: linkplay
       domain: media_player
   fields:
-    preset:
+    preset_number:
       example: 1
       required: true
       default: 1

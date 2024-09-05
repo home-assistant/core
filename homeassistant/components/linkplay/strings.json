@@ -28,7 +28,7 @@
       "name": "Preset",
       "description": "Play the preset number on the device.",
       "fields": {
-        "preset": {
+        "preset_number": {
           "name": "Preset number",
           "description": "The preset number on the device to play."
         }
