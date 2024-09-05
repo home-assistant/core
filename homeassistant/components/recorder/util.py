@@ -645,23 +645,24 @@ def _is_retryable_error(instance: Recorder, err: OperationalError) -> bool:
 
 
 type _FuncType[_T, **_P, _R] = Callable[Concatenate[_T, _P], _R]
+type _FuncOrMethType[**_P, _R] = Callable[_P, _R]
 
 
-def retryable_database_job[_RecorderT: Recorder, **_P](
-    description: str,
-) -> Callable[[_FuncType[_RecorderT, _P, bool]], _FuncType[_RecorderT, _P, bool]]:
+def retryable_database_job[**_P](
+    description: str, method: bool = False
+) -> Callable[[_FuncOrMethType[_P, bool]], _FuncOrMethType[_P, bool]]:
     """Try to execute a database job.
 
     The job should return True if it finished, and False if it needs to be rescheduled.
     """
+    recorder_pos = 1 if method else 0
 
-    def decorator(
-        job: _FuncType[_RecorderT, _P, bool],
-    ) -> _FuncType[_RecorderT, _P, bool]:
+    def decorator(job: _FuncOrMethType[_P, bool]) -> _FuncOrMethType[_P, bool]:
         @functools.wraps(job)
-        def wrapper(instance: _RecorderT, *args: _P.args, **kwargs: _P.kwargs) -> bool:
+        def wrapper(*args: _P.args, **kwargs: _P.kwargs) -> bool:
+            instance: Recorder = args[recorder_pos]  # type: ignore[assignment]
             try:
-                return job(instance, *args, **kwargs)
+                return job(*args, **kwargs)
             except OperationalError as err:
                 if _is_retryable_error(instance, err):
                     assert isinstance(err.orig, BaseException)  # noqa: PT017
