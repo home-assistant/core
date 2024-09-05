@@ -95,25 +95,25 @@
       "newplugins": {
         "name": "new plugins"
       },
-      "info total albums": {
+      "info_total_albums": {
         "name": "total albums"
       },
-      "info total artists": {
+      "info_total_artists": {
         "name": "total artists"
       },
-      "info total duration": {
+      "info_total_duration": {
         "name": "total duration"
       },
-      "info total genres": {
+      "info_total_genres": {
         "name": "total genres"
       },
-      "info total songs": {
+      "info_total_songs": {
         "name": "total songs"
       },
-      "player count": {
+      "player_count": {
         "name": "player count"
       },
-      "other player count": {
+      "other_player_count": {
         "name": "other player count"
       }
     }
