@@ -75,7 +75,7 @@
   {
     "id": "22",
     "type": "Single Channel Receiver",
-    "assignedZones": [{ "name": "Duxford Close" }],
+    "assignedZones": [{ "name": "East Berlin" }],
     "state": { "outputOnOff": "False" }
   },
   {

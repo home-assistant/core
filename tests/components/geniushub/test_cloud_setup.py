@@ -1,4 +1,4 @@
-"""Test the Geniushub config flow."""
+"""Test the Geniushub cloud setup."""
 
 from unittest.mock import AsyncMock
 
@@ -9,11 +9,7 @@ from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from tests.common import (
-    MockConfigEntry,
-    load_json_array_fixture,
-    load_json_object_fixture,
-)
+from tests.common import MockConfigEntry, load_json_array_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
@@ -51,33 +47,6 @@ def mock_cloud_all(aioclient_mock: AiohttpClientMocker) -> None:
     aioclient_mock.get("https://my.geniushub.co.uk/v1/zones", json=zones)
     aioclient_mock.get("https://my.geniushub.co.uk/v1/devices", json=devices)
     aioclient_mock.get("https://my.geniushub.co.uk/v1/issues", json=[])
-
-
-@pytest.fixture(autouse=True)
-def mock_cloud_single_zone_with_switch(aioclient_mock: AiohttpClientMocker) -> None:
-    """Mock all setup requests."""
-    zones = load_json_object_fixture("single_zone_local_test_data.json", DOMAIN)
-    devices = load_json_object_fixture("single_switch_local_test_data.json", DOMAIN)
-    switch_on = load_json_object_fixture("switch_on_local_test_data.json", DOMAIN)
-    switch_off = load_json_object_fixture("switch_off_local_test_data.json", DOMAIN)
-    aioclient_mock.post("http://127.0.0.1/homeassistant/options", json={"result": "ok"})
-    aioclient_mock.get(
-        "http://10.0.0.130:1223/v3/auth/release",
-        json=({"data": {"UID": "aa:bb:cc:dd:ee:ff", "release": "10.0"}}),
-    )
-    aioclient_mock.get("http://10.0.0.130:1223/v3/zones", json=zones)
-    aioclient_mock.get(
-        "http://10.0.0.130:1223/v3/data_manager",
-        json=devices,
-    )
-    aioclient_mock.patch(
-        "http://10.0.0.130:1223/v3/zone/32",
-        json=switch_on,
-    )
-    aioclient_mock.patch(
-        "http://10.0.0.131:1223/v3/zone/32",
-        json=switch_off,
-    )
 
 
 async def test_cloud_all_sensors(
