@@ -106,6 +106,7 @@ from .util import (
     execute_stmt_lambda_element,
     get_index_by_name,
     retryable_database_job,
+    retryable_database_job_method,
     session_scope,
 )
 
@@ -2229,7 +2230,7 @@ class BaseRunTimeMigration(ABC):
         else:
             self.migration_done(instance, session)
 
-    @retryable_database_job("migrate data", method=True)
+    @retryable_database_job_method("migrate data")
     def migrate_data(self, instance: Recorder) -> bool:
         """Migrate some data, returns True if migration is completed."""
         status = self.migrate_data_impl(instance)
