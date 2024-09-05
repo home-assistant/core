@@ -59,6 +59,7 @@ SOURCE_MAP: dict[PlayingMode, str] = {
     PlayingMode.FM: "FM Radio",
     PlayingMode.RCA: "RCA",
     PlayingMode.UDISK: "USB",
+    PlayingMode.FOLLOWER: "Follower",
 }
 
 SOURCE_MAP_INV: dict[str, PlayingMode] = {v: k for k, v in SOURCE_MAP.items()}
