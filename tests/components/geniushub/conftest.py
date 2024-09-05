@@ -3,12 +3,13 @@
 from collections.abc import Generator
 from unittest.mock import patch
 
+from geniushubclient import GeniusDevice, GeniusZone
 import pytest
 
 from homeassistant.components.geniushub.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, load_json_array_fixture
 from tests.components.smhi.common import AsyncMock
 
 
@@ -39,6 +40,26 @@ def mock_geniushub_client() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
+def mock_geniushub_cloud() -> Generator[AsyncMock]:
+    """Mock a GeniusHub."""
+    with patch(
+        "homeassistant.components.geniushub.GeniusHub",
+        autospec=True,
+    ) as mock_client:
+        client = mock_client.return_value
+        zones = load_json_array_fixture("zones_cloud_test_data.json", DOMAIN)
+        genius_zones = [GeniusZone(z["id"], z, client) for z in zones]
+        client.zone_objs = genius_zones
+        client._zones = genius_zones
+        devices = load_json_array_fixture("devices_cloud_test_data.json", DOMAIN)
+        genius_devices = [GeniusDevice(d["id"], d, client) for d in devices]
+        client.device_objs = genius_devices
+        client._devices = genius_devices
+        client.api_version = 1
+        yield client
+
+
+@pytest.fixture
 def mock_local_config_entry() -> MockConfigEntry:
     """Mock a local config entry."""
     return MockConfigEntry(
@@ -62,4 +83,5 @@ def mock_cloud_config_entry() -> MockConfigEntry:
         data={
             CONF_TOKEN: "abcdef",
         },
+        entry_id="01J71MQF0EC62D620DGYNG2R8H",
     )
