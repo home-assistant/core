@@ -1081,7 +1081,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'room_humidity',
-    'unique_id': 'gateway0_zigbee-d87a3bfffe5d844a-room_humidity',
+    'unique_id': 'gateway0_zigbee_d87a3bfffe5d844a-room_humidity',
     'unit_of_measurement': '%',
   })
 # ---
@@ -1132,7 +1132,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'room_temperature',
-    'unique_id': 'gateway0_zigbee-d87a3bfffe5d844a-room_temperature',
+    'unique_id': 'gateway0_zigbee_d87a3bfffe5d844a-room_temperature',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -1183,7 +1183,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'room_humidity',
-    'unique_id': 'gateway1_zigbee-5cc7c1fffea33a3b-room_humidity',
+    'unique_id': 'gateway1_zigbee_5cc7c1fffea33a3b-room_humidity',
     'unit_of_measurement': '%',
   })
 # ---
@@ -1234,7 +1234,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'room_temperature',
-    'unique_id': 'gateway1_zigbee-5cc7c1fffea33a3b-room_temperature',
+    'unique_id': 'gateway1_zigbee_5cc7c1fffea33a3b-room_temperature',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
