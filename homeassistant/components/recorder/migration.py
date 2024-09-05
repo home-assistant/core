@@ -2229,7 +2229,7 @@ class BaseRunTimeMigration(ABC):
         else:
             self.migration_done(instance, session)
 
-    @retryable_database_job("meep", method=True)
+    @retryable_database_job("migrate data", method=True)
     def migrate_data(self, instance: Recorder) -> bool:
         """Migrate some data, returns True if migration is completed."""
         status = self.migrate_data_impl(instance)
