@@ -2574,7 +2574,7 @@ async def websocket_invoke_cc_api(
     parameters: list[Any] = msg[ATTR_PARAMETERS]
 
     node_or_endpoint: Node | Endpoint = node
-    if endpoint := msg.get(ATTR_ENDPOINT):
+    if (endpoint := msg.get(ATTR_ENDPOINT)) is not None:
         node_or_endpoint = node.endpoints[endpoint]
 
     try:
