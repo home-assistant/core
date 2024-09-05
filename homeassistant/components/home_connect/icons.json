@@ -27,7 +27,6 @@
       "refrigeration_dispenser": {
         "default": "mdi:snowflake",
         "state": {
-          "on": "mdi:snowflake",
           "off": "mdi:snowflake-off"
         }
       }
