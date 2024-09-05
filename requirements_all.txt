@@ -2972,7 +2972,7 @@ wallbox==0.7.0
 watchdog==2.3.1
 
 # homeassistant.components.watchyourlan
-watchyourlanclient==2024.1008a0
+watchyourlanclient==2024.1009a0
 
 # homeassistant.components.waterfurnace
 waterfurnace==1.1.0
