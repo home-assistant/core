@@ -568,7 +568,7 @@ class HassIO:
 
         This method is a coroutine.
         """
-        joined_url = self._base_url.join(URL(command))
+        joined_url = self._base_url.with_path(command)
         # This check is to make sure the normalized URL string
         # is the same as the URL string that was passed in. If
         # they are different, then the passed in command URL
