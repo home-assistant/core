@@ -968,7 +968,6 @@ DISCOVERY_SCHEMAS = [
             type={ValueType.NUMBER},
         ),
         allow_multi=True,
-        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     # number for Indicator CC (exclude property keys 3-5)
     ZWaveDiscoverySchema(
