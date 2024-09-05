@@ -21,28 +21,28 @@
   "entity": {
     "sensor": {
       "battery_discharge": {
-        "name": "Battery Discharge"
+        "name": "Battery discharge"
       },
       "battery_charge": {
-        "name": "Battery Charge"
+        "name": "Battery charge"
       },
       "battery_capacity": {
-        "name": "Battery Capacity"
+        "name": "Battery capacity"
       },
       "battery_stored_power": {
-        "name": "Battery Stored Power"
+        "name": "Battery stored power"
       },
       "total_load_active_power": {
-        "name": "Total Load Active Power"
+        "name": "Total load active power"
       },
       "realtime_solar": {
-        "name": "Realtime Solar"
+        "name": "Realtime solar"
       },
       "solar_profile": {
-        "name": "Solar Profile"
+        "name": "Solar profile"
       },
       "daily_yeild": {
-        "name": "Daily Yeild"
+        "name": "Daily yeild"
       }
     }
   }
