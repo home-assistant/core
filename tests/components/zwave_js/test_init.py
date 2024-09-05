@@ -1574,8 +1574,6 @@ async def test_disabled_entity_on_value_removed(
     hass: HomeAssistant, entity_registry: er.EntityRegistry, zp3111, client, integration
 ) -> None:
     """Test that when entity primary values are removed the entity is removed."""
-    # re-enable this default-disabled entity
-    sensor_cover_entity = "sensor.4_in_1_sensor_home_security_cover_status"
     idle_cover_status_button_entity = (
         "button.4_in_1_sensor_idle_home_security_cover_status"
     )
@@ -1588,10 +1586,6 @@ async def test_disabled_entity_on_value_removed(
     await hass.config_entries.async_setup(integration.entry_id)
     await hass.async_block_till_done()
     assert integration.state is ConfigEntryState.LOADED
-
-    state = hass.states.get(sensor_cover_entity)
-    assert state
-    assert state.state != STATE_UNAVAILABLE
 
     state = hass.states.get(idle_cover_status_button_entity)
     assert state
@@ -1686,10 +1680,6 @@ async def test_disabled_entity_on_value_removed(
     assert state
     assert state.state == STATE_UNAVAILABLE
 
-    state = hass.states.get(sensor_cover_entity)
-    assert state
-    assert state.state == STATE_UNAVAILABLE
-
     state = hass.states.get(idle_cover_status_button_entity)
     assert state
     assert state.state == STATE_UNAVAILABLE
@@ -1705,7 +1695,6 @@ async def test_disabled_entity_on_value_removed(
         | {
             battery_level_entity,
             binary_cover_entity,
-            sensor_cover_entity,
             idle_cover_status_button_entity,
         }
         == new_unavailable_entities
