@@ -1208,18 +1208,29 @@ DISCOVERY_SCHEMAS = [
         # can not be mapped to a binary sensor and must be handled as a regular sensor
         allow_multi=True,
     ),
-    # special list sensors (Notification CC)
+    # alarmType, alarmLevel (Notification CC)
     ZWaveDiscoverySchema(
         platform=Platform.SENSOR,
-        hint="list_sensor",
+        hint="notification_alarm",
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={
+                CommandClass.NOTIFICATION,
+            },
+            property={"alarmType", "alarmLevel"},
+            type={ValueType.NUMBER},
+        ),
+        entity_registry_enabled_default=False,
+    ),
+    # fallback sensors within Notification CC
+    ZWaveDiscoverySchema(
+        platform=Platform.SENSOR,
+        hint="notification",
         primary_value=ZWaveValueDiscoverySchema(
             command_class={
                 CommandClass.NOTIFICATION,
             },
             type={ValueType.NUMBER},
         ),
-        # set allow-multi to false because sensor is the last resort
-        allow_multi=False,
     ),
 ]
 

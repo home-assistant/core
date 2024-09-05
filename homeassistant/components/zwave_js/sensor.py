@@ -581,7 +581,7 @@ async def async_setup_entry(
                     data.unit_of_measurement,
                 )
             )
-        elif info.platform_hint == "list_sensor":
+        elif info.platform_hint == "notification":
             # prevent duplicate entities for values that are already represented as binary sensors
             if any(
                 is_valid_binary_notification_sensor(info, state_key)
