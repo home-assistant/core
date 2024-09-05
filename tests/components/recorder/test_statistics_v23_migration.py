@@ -168,6 +168,9 @@ async def test_delete_duplicates(
         patch.object(
             recorder.migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION
         ),
+        patch.object(
+            recorder.migration, "non_live_data_migration_needed", return_value=False
+        ),
         patch(
             CREATE_ENGINE_TARGET,
             new=partial(
@@ -352,6 +355,9 @@ async def test_delete_duplicates_many(
         patch.object(
             recorder.migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION
         ),
+        patch.object(
+            recorder.migration, "non_live_data_migration_needed", return_value=False
+        ),
         patch(
             CREATE_ENGINE_TARGET,
             new=partial(
@@ -515,6 +521,9 @@ async def test_delete_duplicates_non_identical(
         patch.object(
             recorder.migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION
         ),
+        patch.object(
+            recorder.migration, "non_live_data_migration_needed", return_value=False
+        ),
         patch(
             CREATE_ENGINE_TARGET,
             new=partial(
@@ -637,6 +646,9 @@ async def test_delete_duplicates_short_term(
         patch.object(recorder, "db_schema", old_db_schema),
         patch.object(
             recorder.migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION
+        ),
+        patch.object(
+            recorder.migration, "non_live_data_migration_needed", return_value=False
         ),
         patch(
             CREATE_ENGINE_TARGET,
