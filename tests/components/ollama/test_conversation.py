@@ -482,8 +482,10 @@ async def test_message_history_unlimited(
             "ollama.AsyncClient.chat",
             return_value={"message": {"role": "assistant", "content": "test response"}},
         ),
-        patch.object(mock_config_entry, "options", {ollama.CONF_MAX_HISTORY: 0}),
     ):
+        hass.config_entries.async_update_entry(
+            mock_config_entry, options={ollama.CONF_MAX_HISTORY: 0}
+        )
         for i in range(100):
             result = await conversation.async_converse(
                 hass,

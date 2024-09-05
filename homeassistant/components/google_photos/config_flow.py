@@ -4,13 +4,15 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
+from google_photos_library_api.api import GooglePhotosLibraryApi
+from google_photos_library_api.exceptions import GooglePhotosApiError
+
 from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
-from homeassistant.helpers import config_entry_oauth2_flow
+from homeassistant.helpers import aiohttp_client, config_entry_oauth2_flow
 
 from . import GooglePhotosConfigEntry, api
 from .const import DOMAIN, OAUTH2_SCOPES
-from .exceptions import GooglePhotosApiError
 
 
 class OAuth2FlowHandler(
@@ -39,10 +41,13 @@ class OAuth2FlowHandler(
 
     async def async_oauth_create_entry(self, data: dict[str, Any]) -> ConfigFlowResult:
         """Create an entry for the flow."""
-        client = api.AsyncConfigFlowAuth(self.hass, data[CONF_TOKEN][CONF_ACCESS_TOKEN])
+        session = aiohttp_client.async_get_clientsession(self.hass)
+        auth = api.AsyncConfigFlowAuth(session, data[CONF_TOKEN][CONF_ACCESS_TOKEN])
+        client = GooglePhotosLibraryApi(auth)
+
         try:
             user_resource_info = await client.get_user_info()
-            await client.list_media_items()
+            await client.list_media_items(page_size=1)
         except GooglePhotosApiError as ex:
             return self.async_abort(
                 reason="access_not_configured",
@@ -51,7 +56,7 @@ class OAuth2FlowHandler(
         except Exception:
             self.logger.exception("Unknown error occurred")
             return self.async_abort(reason="unknown")
-        user_id = user_resource_info["id"]
+        user_id = user_resource_info.id
 
         if self.reauth_entry:
             if self.reauth_entry.unique_id == user_id:
@@ -62,7 +67,7 @@ class OAuth2FlowHandler(
 
         await self.async_set_unique_id(user_id)
         self._abort_if_unique_id_configured()
-        return self.async_create_entry(title=user_resource_info["name"], data=data)
+        return self.async_create_entry(title=user_resource_info.name, data=data)
 
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]

@@ -210,6 +210,7 @@ homeassistant.components.glances.*
 homeassistant.components.goalzero.*
 homeassistant.components.google.*
 homeassistant.components.google_assistant_sdk.*
+homeassistant.components.google_cloud.*
 homeassistant.components.google_photos.*
 homeassistant.components.google_sheets.*
 homeassistant.components.gpsd.*
@@ -340,6 +341,7 @@ homeassistant.components.nut.*
 homeassistant.components.onboarding.*
 homeassistant.components.oncue.*
 homeassistant.components.onewire.*
+homeassistant.components.onkyo.*
 homeassistant.components.open_meteo.*
 homeassistant.components.openexchangerates.*
 homeassistant.components.opensky.*
@@ -411,9 +413,11 @@ homeassistant.components.slack.*
 homeassistant.components.sleepiq.*
 homeassistant.components.smhi.*
 homeassistant.components.snooz.*
+homeassistant.components.solarlog.*
 homeassistant.components.sonarr.*
 homeassistant.components.speedtestdotnet.*
 homeassistant.components.sql.*
+homeassistant.components.squeezebox.*
 homeassistant.components.ssdp.*
 homeassistant.components.starlink.*
 homeassistant.components.statistics.*
