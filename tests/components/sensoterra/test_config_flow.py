@@ -3,6 +3,7 @@
 from enum import Enum
 from unittest.mock import AsyncMock, patch
 
+from jwt import DecodeError
 import pytest
 from sensoterra.customerapi import InvalidAuth as StInvalidAuth, Timeout as StTimeout
 
@@ -13,7 +14,7 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from .const import API_EMAIL, API_PASSWORD, API_TOKEN, HASS_UUID, SOURCE_USER
 
-Test = Enum("Test", ["INVALID_AUTH", "TIMEOUT"])
+Test = Enum("Test", ["INVALID_AUTH", "TIMEOUT", "DECODE_ERROR"])
 
 
 async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
@@ -43,7 +44,7 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-@pytest.mark.parametrize("test", [Test.INVALID_AUTH, Test.TIMEOUT])
+@pytest.mark.parametrize("test", [Test.INVALID_AUTH, Test.TIMEOUT, Test.DECODE_ERROR])
 async def test_form_various(
     hass: HomeAssistant, mock_setup_entry: AsyncMock, test: Test
 ) -> None:
@@ -82,6 +83,20 @@ async def test_form_various(
                     },
                 )
             assert result["errors"] == {"base": "invalid_auth"}
+
+        case Test.DECODE_ERROR:
+            with patch(
+                "sensoterra.customerapi.CustomerApi.get_token",
+                side_effect=DecodeError("Mark was here"),
+            ):
+                result = await hass.config_entries.flow.async_configure(
+                    result["flow_id"],
+                    {
+                        CONF_EMAIL: API_EMAIL,
+                        CONF_PASSWORD: API_PASSWORD,
+                    },
+                )
+            assert result["errors"] == {"base": "invalid_access_token"}
 
     assert result["type"] is FlowResultType.FORM
 

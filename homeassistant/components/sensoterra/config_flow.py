@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 from typing import Any
 
+from jwt import DecodeError, decode
 from sensoterra.customerapi import (
     CustomerApi,
     InvalidAuth as StInvalidAuth,
@@ -53,6 +54,13 @@ class SensoterraConfigFlow(ConfigFlow, domain=DOMAIN):
                 token: str = await api.get_token(
                     f"Home Assistant {uuid}", "READONLY", expiration
                 )
+                decoded_token = decode(
+                    token, algorithm="HS256", options={"verify_signature": False}
+                )
+                device_unique_id = decoded_token["sub"]
+                await self.async_set_unique_id(device_unique_id)
+                self._abort_if_unique_id_configured()
+
             except StInvalidAuth as exp:
                 LOGGER.error(
                     "Login attempt with %s: %s", user_input[CONF_EMAIL], exp.message
@@ -61,6 +69,9 @@ class SensoterraConfigFlow(ConfigFlow, domain=DOMAIN):
             except StTimeout:
                 LOGGER.error("Login attempt with %s: time out", user_input[CONF_EMAIL])
                 errors["base"] = "cannot_connect"
+            except DecodeError:
+                LOGGER.error("Login attempt with %s: bad token", user_input[CONF_EMAIL])
+                errors["base"] = "invalid_access_token"
             else:
                 return self.async_create_entry(
                     title=user_input[CONF_EMAIL],
