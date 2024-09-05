@@ -5,6 +5,7 @@ import json
 from typing import Any
 from unittest.mock import AsyncMock, PropertyMock, patch
 
+from monarchmoney_typed.models import MonarchAccount, MonarchCashflowSummary
 import pytest
 
 from homeassistant.components.monarchmoney.const import DOMAIN
@@ -37,18 +38,23 @@ async def mock_config_entry() -> MockConfigEntry:
 def mock_config_api() -> Generator[AsyncMock]:
     """Mock the MonarchMoney class."""
 
-    account_data: dict[str, Any] = json.loads(load_fixture("get_accounts.json", DOMAIN))
-    cashflow_summary: dict[str, Any] = json.loads(
+    account_json: dict[str, Any] = json.loads(load_fixture("get_accounts.json", DOMAIN))
+    account_data = [MonarchAccount(data) for data in account_json["accounts"]]
+    cashflow_json: dict[str, Any] = json.loads(
         load_fixture("get_cashflow_summary.json", DOMAIN)
     )
+    cashflow_summary = MonarchCashflowSummary(cashflow_json)
+
     subs = json.loads(load_fixture("get_subscription_details.json", DOMAIN))
 
     with (
         patch(
-            "homeassistant.components.monarchmoney.config_flow.MonarchMoney",
+            "homeassistant.components.monarchmoney.config_flow.TypedMonarchMoney",
             autospec=True,
         ) as mock_class,
-        patch("homeassistant.components.monarchmoney.MonarchMoney", new=mock_class),
+        patch(
+            "homeassistant.components.monarchmoney.TypedMonarchMoney", new=mock_class
+        ),
     ):
         instance = mock_class.return_value
         type(instance).token = PropertyMock(return_value="mocked_token")

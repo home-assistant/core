@@ -5,6 +5,8 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
 
+from monarchmoney_typed.models import MonarchAccount, MonarchCashflowSummary
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -17,7 +19,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from . import MonarchMoneyConfigEntry
-from .coordinator import MonarchAccount, MonarchCashflow
 from .entity import MonarchMoneyAccountEntity, MonarchMoneyCashFlowEntity
 
 
@@ -26,7 +27,7 @@ class MonarchMoneySensorEntityDescription(SensorEntityDescription):
     """Describe a sensor entity."""
 
     value_fn: Callable[[MonarchAccount], StateType | datetime] | None = None
-    summary_fn: Callable[[MonarchCashflow], StateType] | None = None
+    summary_fn: Callable[[MonarchCashflowSummary], StateType] | None = None
     picture_fn: Callable[[Any], str] | None = None
 
 

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from monarchmoney import MonarchMoney
+from monarchmoney_typed import TypedMonarchMoney
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_TOKEN, Platform
@@ -19,7 +19,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: MonarchMoneyConfigEntry
 ) -> bool:
     """Set up Monarch Money from a config entry."""
-    monarch_client = MonarchMoney(token=entry.data.get(CONF_TOKEN))
+    monarch_client = TypedMonarchMoney(token=entry.data.get(CONF_TOKEN))
 
     mm_coordinator = MonarchMoneyDataUpdateCoordinator(hass, monarch_client)
     await mm_coordinator.async_config_entry_first_refresh()

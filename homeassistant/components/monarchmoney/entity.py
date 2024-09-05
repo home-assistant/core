@@ -1,15 +1,13 @@
 """Monarch money entity definition."""
 
+from monarchmoney_typed.models import MonarchAccount, MonarchCashflowSummary
+
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .coordinator import (
-    MonarchAccount,
-    MonarchCashflow,
-    MonarchMoneyDataUpdateCoordinator,
-)
+from .coordinator import MonarchMoneyDataUpdateCoordinator
 
 
 class MonarchMoneyEntityBase(CoordinatorEntity[MonarchMoneyDataUpdateCoordinator]):
@@ -39,7 +37,7 @@ class MonarchMoneyCashFlowEntity(MonarchMoneyEntityBase):
         )
 
     @property
-    def summary_data(self) -> MonarchCashflow:
+    def summary_data(self) -> MonarchCashflowSummary:
         """Return cashflow summary data."""
         return self.coordinator.cashflow_summary
 
