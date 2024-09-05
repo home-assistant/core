@@ -336,6 +336,7 @@ class SpeedConverter(BaseUnitConverter):
         UnitOfSpeed.KILOMETERS_PER_HOUR: _HRS_TO_SECS / _KM_TO_M,
         UnitOfSpeed.KNOTS: _HRS_TO_SECS / _NAUTICAL_MILE_TO_M,
         UnitOfSpeed.METERS_PER_SECOND: 1,
+        UnitOfSpeed.MILLIMETERS_PER_SECOND: 1 / _MM_TO_M,
         UnitOfSpeed.MILES_PER_HOUR: _HRS_TO_SECS / _MILE_TO_M,
         UnitOfSpeed.BEAUFORT: 1,
     }
@@ -349,6 +350,7 @@ class SpeedConverter(BaseUnitConverter):
         UnitOfSpeed.KNOTS,
         UnitOfSpeed.METERS_PER_SECOND,
         UnitOfSpeed.MILES_PER_HOUR,
+        UnitOfSpeed.MILLIMETERS_PER_SECOND,
         UnitOfSpeed.BEAUFORT,
     }
 
