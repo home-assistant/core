@@ -72,6 +72,7 @@ async def test_device_registry(
     )
     assert reg_device is not None
     assert reg_device.model == "Model Name"
+    assert reg_device.model_id == "S12"
     assert reg_device.sw_version == "13.1"
     assert reg_device.connections == {
         (CONNECTION_NETWORK_MAC, "00:11:22:33:44:55"),
