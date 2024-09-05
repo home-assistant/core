@@ -1,15 +1,13 @@
 """Config flow for WatchYourLAN integration."""
 
 import voluptuous as vol
+from watchyourlanclient import WatchYourLANClient
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL
-from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.httpx_client import get_async_client
 
 from .const import DOMAIN
-from .options_flow import WatchYourLANOptionsFlowHandler
 
 # Schema for the user setup form
 STEP_USER_DATA_SCHEMA = vol.Schema(
@@ -17,9 +15,6 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_HOST): str,
         vol.Optional(CONF_PORT, default=8840): int,
         vol.Optional(CONF_SSL, default=False): bool,
-        vol.Optional("update_interval", default=5): vol.All(
-            vol.Coerce(int), vol.Range(min=1, max=60)
-        ),
     }
 )
 
@@ -29,10 +24,10 @@ async def validate_input(hass, data):
     proto = "https" if data[CONF_SSL] else "http"
     target = f"{proto}://{data[CONF_HOST]}:{data[CONF_PORT]}"
 
-    async with get_async_client(hass) as client:
-        response = await client.get(f"{target}/api/all")
-        if response.status_code != 200:
-            raise CannotConnect
+    api_client = WatchYourLANClient(base_url=target, async_mode=True)
+    response = await api_client.get_all_hosts()
+    if not response:
+        raise CannotConnect
     return {"title": "WatchYourLAN", "url": target}
 
 
@@ -59,12 +54,6 @@ class WatchYourLANConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
-
-    @staticmethod
-    @callback
-    def async_get_options_flow(config_entry):
-        """Get the options flow for this handler."""
-        return WatchYourLANOptionsFlowHandler(config_entry)
 
 
 class CannotConnect(HomeAssistantError):

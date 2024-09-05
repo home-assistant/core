@@ -5,7 +5,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
 from .coordinator import WatchYourLANUpdateCoordinator
 
 
@@ -13,15 +12,14 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the WatchYourLAN sensors."""
-    config = hass.data[DOMAIN][entry.entry_id]
-    coordinator = WatchYourLANUpdateCoordinator(hass, config)
+    coordinator = WatchYourLANUpdateCoordinator(hass, entry.data)
     await coordinator.async_config_entry_first_refresh()
 
     entities = [WatchYourLANDeviceCountSensor(coordinator)]
 
     if isinstance(coordinator.data, list):
         entities += [
-            WatchYourLANSensor(coordinator, device, config)
+            WatchYourLANSensor(coordinator, device, entry.data)
             for device in coordinator.data
             if isinstance(device, dict)
         ]
