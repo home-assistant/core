@@ -4,22 +4,30 @@ When we speak about "version" in this file, we mean either a tag or a commit has
 """
 
 from abc import abstractmethod
-from collections.abc import Callable, Iterable
+from collections.abc import AsyncGenerator, Callable, Iterable
+import contextlib
 from enum import StrEnum, auto
 import functools
 import logging
 from pathlib import Path
 import shutil
 from typing import Any
+from urllib.parse import urlparse
 
+from aiohttp import ClientError
 from awesomeversion import AwesomeVersion
 from git import GitCommandError, Repo
 
-from .const import (
-    PATH_CLONE_BASEDIR,
-    PATH_INTEGRATION_INSTALL_BASEDIR,
-    PATH_RESOURCE_INSTALL_BASEDIR,
+from homeassistant.components.lovelace.const import (  # pylint: disable=hass-component-root-import
+    DOMAIN as LOVELACE_DOMAIN,
 )
+from homeassistant.components.lovelace.resources import ResourceStorageCollection
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.template import Template
+from homeassistant.util import slugify
+
+from .const import DOWNLOAD_CHUNK_SIZE, URL_BASE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -75,7 +83,7 @@ class RepositoryManager:
         @functools.wraps(func)
         def wrapper(self: "RepositoryManager", *args: Any, **kwargs: Any) -> Any:
             if not self.is_cloned:
-                raise NotClonedError(self.slug)
+                raise NotClonedError(self.working_dir)
             return func(self, *args, **kwargs)
 
         return wrapper
@@ -179,23 +187,39 @@ class RepositoryManager:
         self.__repo = None
 
     @functools.cached_property
-    def slug(self) -> str:
-        """Return slug for the GIT repo.
+    def unique_id(self) -> str:
+        """Return (reasonably) unique ID for the GIT repo.
 
         Examples:
             >>> rm = RepositoryManager(...)
             >>> rm.url = 'https://github.com/user/foo.git'
-            >>> rm.slug
-            'foo'
-            >>> rm.url = 'https://github.com/user/bar'
-            >>> rm.slug
-            'bar'
-            >>> rm.url = 'https://github.com/user/baz/'
-            >>> rm.slug
-            'baz'
+            >>> rm.unique_id
+            'github_com.user.foo'
+            >>> rm.url = 'https://github.com/another-user/bar'
+            >>> rm.unique_id
+            'github_com.another_user.bar'
+            >>> rm.url = 'https://gitlab.com/YETanotherUser123/baz/'
+            >>> rm.unique_id
+            'gitlab_com.yetanotheruser123.baz'
 
         """
-        return self.url.rstrip("/").split("/")[-1].replace(".git", "")
+        parsed_url = urlparse(self.url)
+        path_segments = parsed_url.path.strip("/").split("/")
+        return ".".join(
+            map(
+                slugify,
+                [
+                    parsed_url.netloc,
+                    *path_segments[:-1],
+                    path_segments[-1].replace(".git", ""),
+                ],
+            )
+        )
+
+    @functools.cached_property
+    def slug(self) -> str:
+        """Return slug for the GIT repo."""
+        return self.unique_id.rsplit(".", maxsplit=1)[-1]
 
     @functools.cached_property
     @ensure_cloned
@@ -207,7 +231,7 @@ class RepositoryManager:
     @functools.cached_property
     def working_dir(self) -> Path:
         """Return the working directory of the GIT repo."""
-        return self.clone_basedir / Path(self.slug)
+        return self.clone_basedir / Path(self.unique_id)
 
 
 class IntegrationRepositoryManager(RepositoryManager):
@@ -216,8 +240,8 @@ class IntegrationRepositoryManager(RepositoryManager):
     def __init__(
         self,
         url: str,
-        clone_basedir: Path | str = PATH_CLONE_BASEDIR,
-        install_basedir: Path | str = PATH_INTEGRATION_INSTALL_BASEDIR,
+        clone_basedir: Path | str,
+        install_basedir: Path | str,
         update_strategy: UpdateStrategy = UpdateStrategy.LATEST_TAG,
     ) -> None:
         super().__init__(
@@ -289,8 +313,10 @@ class ResourceRepositoryManager(RepositoryManager):
     def __init__(
         self,
         url: str,
-        clone_basedir: Path | str = PATH_CLONE_BASEDIR,
-        install_basedir: Path | str = PATH_RESOURCE_INSTALL_BASEDIR,
+        hass: HomeAssistant,
+        clone_basedir: Path | str,
+        install_basedir: Path | str,
+        download_url: str,
         update_strategy: UpdateStrategy = UpdateStrategy.LATEST_TAG,
     ) -> None:
         super().__init__(
@@ -299,21 +325,120 @@ class ResourceRepositoryManager(RepositoryManager):
             install_basedir,
             update_strategy,
         )
+        self.hass = hass
+        self._download_url = Template(download_url, hass)
 
     @RepositoryManager.ensure_cloned
-    def install(self) -> None:
+    async def install(self) -> None:
         """Install the GIT repo as a HA resource."""
-        raise NotImplementedError
+        await self._download_resource()
+        await self._add_resource()
 
     @RepositoryManager.ensure_installed
-    def uninstall(self) -> None:
+    async def uninstall(self) -> None:
         """Uninstall the GIT repo."""
-        raise NotImplementedError
+        await self.hass.async_add_executor_job(self.install_path.unlink)
+        await self._remove_resource()
+
+    # @RepositoryManager.ensure_cloned
+    # async def checkout(self, ref: str) -> None:
+    #     """Checkout the specified reference."""
+    #     if self.is_installed:
+    #         await self._remove_resource()
+    #     super().checkout(ref)
+    #     if self.is_installed:
+    #         await self._add_resource()
+
+    async def _download_resource(self):
+        _LOGGER.info("Downloading %s to %s", self.download_url, self.install_path)
+        session = async_get_clientsession(self.hass)
+        self.install_path.parent.mkdir(parents=True, exist_ok=True)
+        try:
+            async with (
+                session.get(self.download_url, raise_for_status=True) as response,
+                async_open(self.hass, self.install_path, "wb") as file,
+            ):
+                # use larger chunks to prevent spawning too many jobs
+                async for chunk in response.content.iter_chunked(DOWNLOAD_CHUNK_SIZE):
+                    await self.hass.async_add_executor_job(file.write, chunk)
+        except (ClientError, OSError) as e:
+            raise ResourceInstallError from e
+
+    @functools.cached_property
+    def _resource_storage(self) -> ResourceStorageCollection:
+        """Get the resource handler."""
+        try:
+            resources: ResourceStorageCollection = self.hass.data[LOVELACE_DOMAIN][
+                "resources"
+            ]
+        except KeyError as e:
+            raise ResourcesUpdateError("ResourceStorageCollection not found") from e
+
+        if not hasattr(resources, "store") or resources.store is None:
+            raise ResourcesUpdateError("YAML mode detected")
+
+        if resources.store.key != "lovelace_resources" or resources.store.version != 1:
+            raise ResourcesUpdateError("Unexpected structure")
+
+        return resources
+
+    async def _add_resource(self):
+        """Add the resource to Home Assistant."""
+        _LOGGER.info("Adding resource %s", self.resource_url)
+        resources = self._resource_storage
+        if not resources.loaded:
+            await resources.async_load()
+        await resources.async_create_item(
+            {"res_type": "module", "url": self.resource_url}
+        )
+
+    async def _remove_resource(self):
+        _LOGGER.info("Removing resource %s", self.resource_url)
+        resources = self._resource_storage
+        if not resources.loaded:
+            await resources.async_load()
+        for entry in resources.async_items():
+            if entry["url"] == self.resource_url:
+                await resources.async_delete_item(entry["id"])
+                return
+        _LOGGER.warning("Resource %s not found", self.resource_url)
 
     @property
     def is_installed(self) -> bool:
         """Return True if the GIT repo is installed."""
-        raise NotImplementedError
+        try:
+            return self.install_path.exists()
+        except (OSError, NotClonedError):
+            return False
+
+    # TODO rename to download_url?
+    @property
+    @RepositoryManager.ensure_cloned
+    def download_url(self) -> str:
+        """Return the URL of the resource."""
+        return self._download_url.async_render(
+            current_version=self.get_current_version()
+        )
+
+    @download_url.setter
+    def download_url(self, value: str) -> None:
+        """Set the URL of the resource."""
+        self._download_url = Template(value, self.hass)
+
+    @functools.cached_property
+    def resource_name(self) -> str:
+        """Return the name of the resource."""
+        return self.download_url.rsplit("/", maxsplit=1)[-1]
+
+    @functools.cached_property
+    def resource_url(self) -> str:
+        """Return the URL of the installed resource."""
+        return f"{URL_BASE}/{self.resource_name}"
+
+    @functools.cached_property
+    def install_path(self) -> Path:
+        """Return the path to the installed resource."""
+        return self.install_basedir / Path(self.resource_name)
 
 
 class GPMError(Exception):
@@ -323,11 +448,11 @@ class GPMError(Exception):
 class NotClonedError(GPMError):
     """Raised when the GIT repo is not cloned."""
 
-    def __init__(self, slug: str) -> None:
-        self.slug = slug
+    def __init__(self, working_dir: Path) -> None:
+        self.working_dir = working_dir
 
     def __str__(self) -> str:
-        return f"`{self.slug}` is not cloned"
+        return f"`{self.working_dir}` does not contain a GIT repository"
 
 
 class InvalidStructure(GPMError):
@@ -380,3 +505,30 @@ class AlreadyInstalledError(GPMError):
 
     def __str__(self) -> str:
         return f"`{self.install_symlink}` already exists"
+
+
+class ResourceInstallError(GPMError):
+    """Raised when Lovelace resources can not be installed."""
+
+
+class ResourcesUpdateError(GPMError):
+    """Raised when Lovelace resources can not be updated."""
+
+    def __init__(self, message: str) -> None:
+        self.message = message
+
+    def __str__(self) -> str:
+        return f"Cannot update resources: {self.message}"
+
+
+@contextlib.asynccontextmanager
+async def async_open(
+    hass: HomeAssistant, path: Path, *args, **kwargs
+) -> AsyncGenerator:
+    f = None
+    try:
+        f = await hass.async_add_executor_job(path.open, *args, **kwargs)  # type: ignore[arg-type]
+        yield f
+    finally:
+        if f:
+            f.close()

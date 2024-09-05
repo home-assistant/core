@@ -8,15 +8,22 @@
           "type": "Repository type",
           "update_strategy": "Update strategy"
         }
+      },
+      "resource": {
+        "title": "Fill in resource details",
+        "description": "Frontend resources require URL from where to download compiled JS / CSS files when changes are detected within the repository.\n\nVariable `current_version` will be replaced with the corresponding GIT repository tag / commit hash (as configured in previous step).",
+        "data": {
+          "download_url": "[%key:common::config_flow::data::url%]"
+        }
       }
     },
     "error": {
-      "invalid_structure": "GIT repository has invalid structure. See logs for details.",
-      "install_failed": "Unable to install GIT repository. See logs for details.",
+      "invalid_structure": "Repository has invalid structure. See logs for details.",
+      "install_failed": "Unable to install repository. See logs for details.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "The repository is already configured."
     }
   },
   "selector": {

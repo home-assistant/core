@@ -3,7 +3,7 @@
   "name": "GPM",
   "codeowners": ["@tomasbedrich"],
   "config_flow": true,
-  "dependencies": [],
+  "dependencies": ["http", "lovelace"],
   "documentation": "https://www.home-assistant.io/integrations/gpm",
   "homekit": {},
   "iot_class": "cloud_polling",

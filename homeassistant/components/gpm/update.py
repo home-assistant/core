@@ -18,7 +18,7 @@ from ._manager import (
     RepositoryManager,
     UpdateStrategy,
 )
-from .const import DOMAIN, GIT_SHORT_HASH_LEN
+from .const import GIT_SHORT_HASH_LEN
 from .repairs import create_restart_issue
 
 SCAN_INTERVAL = timedelta(hours=3)
@@ -55,7 +55,7 @@ class GPMUpdateEntity(UpdateEntity):
             self._first_update = False
         else:
             self.manager.fetch()
-        self._attr_unique_id = f"{DOMAIN}_{self.manager.slug}"
+        self._attr_unique_id = self.manager.unique_id
         self._attr_name = self.manager.slug
 
         if isinstance(self.manager, IntegrationRepositoryManager):
