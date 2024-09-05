@@ -1,9 +1,9 @@
 """Test the Sensoterra config flow."""
 
-from enum import Enum
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
-from jwt import DecodeError
+from jwt import DecodeError, decode
 import pytest
 from sensoterra.customerapi import InvalidAuth as StInvalidAuth, Timeout as StTimeout
 
@@ -14,10 +14,10 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from .const import API_EMAIL, API_PASSWORD, API_TOKEN, HASS_UUID, SOURCE_USER
 
-Test = Enum("Test", ["INVALID_AUTH", "TIMEOUT", "DECODE_ERROR"])
+from tests.common import MockConfigEntry
 
 
-async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
+async def test_form(hass: HomeAssistant, mock_get_token: AsyncMock) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -26,6 +26,36 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     assert result["errors"] == {}
 
     hass.data["core.uuid"] = HASS_UUID
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_EMAIL: API_EMAIL,
+            CONF_PASSWORD: API_PASSWORD,
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == API_EMAIL
+    assert result["data"] == {
+        CONF_TOKEN: API_TOKEN,
+        CONF_EMAIL: API_EMAIL,
+    }
+
+    assert len(mock_get_token.mock_calls) == 1
+
+
+async def test_form_unique_id(hass: HomeAssistant, mock_get_token: AsyncMock) -> None:
+    """Test we get the form."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    hass.data["core.uuid"] = HASS_UUID
+
+    # Add a ConfigEntry with the same unique_id as the API_TOKEN contains.
+    decoded_token = decode(
+        API_TOKEN, algorithms=["HS256"], options={"verify_signature": False}
+    )
+    entry = MockConfigEntry(unique_id=decoded_token["sub"], domain=DOMAIN)
+    entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -34,70 +64,45 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
             CONF_PASSWORD: API_PASSWORD,
         },
     )
+    assert result["type"] is FlowResultType.ABORT
 
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == API_EMAIL
-    assert result["data"] == {
-        CONF_TOKEN: API_TOKEN,
-        CONF_EMAIL: API_EMAIL,
-    }
-    assert len(mock_setup_entry.mock_calls) == 1
+    assert len(mock_get_token.mock_calls) == 1
 
 
-@pytest.mark.parametrize("test", [Test.INVALID_AUTH, Test.TIMEOUT, Test.DECODE_ERROR])
-async def test_form_various(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, test: Test
+@pytest.mark.parametrize(
+    "test_input",
+    [
+        (StTimeout, "cannot_connect"),
+        (StInvalidAuth("Invalid credentials"), "invalid_auth"),
+        (DecodeError("Bad API token"), "invalid_access_token"),
+    ],
+)
+async def test_form_exceptions(
+    hass: HomeAssistant,
+    # mock_setup_entry: AsyncMock,
+    mock_get_token: AsyncMock,
+    test_input: tuple[Any, str],
 ) -> None:
-    """Test we handle invalid auth and connection failures."""
+    """Test we handle config form exceptions."""
+    (exception, error_code) = test_input
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-
     hass.data["core.uuid"] = HASS_UUID
 
-    match test:
-        case Test.TIMEOUT:
-            with patch(
-                "sensoterra.customerapi.CustomerApi.get_token",
-                side_effect=StTimeout,
-            ):
-                result = await hass.config_entries.flow.async_configure(
-                    result["flow_id"],
-                    {
-                        CONF_EMAIL: API_EMAIL,
-                        CONF_PASSWORD: API_PASSWORD,
-                    },
-                )
-            assert result["errors"] == {"base": "cannot_connect"}
-
-        case Test.INVALID_AUTH:
-            with patch(
-                "sensoterra.customerapi.CustomerApi.get_token",
-                side_effect=StInvalidAuth("Invalid credentials"),
-            ):
-                result = await hass.config_entries.flow.async_configure(
-                    result["flow_id"],
-                    {
-                        CONF_EMAIL: API_EMAIL,
-                        CONF_PASSWORD: API_PASSWORD,
-                    },
-                )
-            assert result["errors"] == {"base": "invalid_auth"}
-
-        case Test.DECODE_ERROR:
-            with patch(
-                "sensoterra.customerapi.CustomerApi.get_token",
-                side_effect=DecodeError("Mark was here"),
-            ):
-                result = await hass.config_entries.flow.async_configure(
-                    result["flow_id"],
-                    {
-                        CONF_EMAIL: API_EMAIL,
-                        CONF_PASSWORD: API_PASSWORD,
-                    },
-                )
-            assert result["errors"] == {"base": "invalid_access_token"}
-
+    with patch(
+        "sensoterra.customerapi.CustomerApi.get_token",
+        side_effect=exception,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_EMAIL: API_EMAIL,
+                CONF_PASSWORD: API_PASSWORD,
+            },
+        )
+    assert result["errors"] == {"base": error_code}
     assert result["type"] is FlowResultType.FORM
 
     # Make sure the config flow tests finish with either an
@@ -117,4 +122,4 @@ async def test_form_various(
         CONF_TOKEN: API_TOKEN,
         CONF_EMAIL: API_EMAIL,
     }
-    assert len(mock_setup_entry.mock_calls) == 1
+    assert len(mock_get_token.mock_calls) == 1

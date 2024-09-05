@@ -55,7 +55,7 @@ class SensoterraConfigFlow(ConfigFlow, domain=DOMAIN):
                     f"Home Assistant {uuid}", "READONLY", expiration
                 )
                 decoded_token = decode(
-                    token, algorithm="HS256", options={"verify_signature": False}
+                    token, algorithms=["HS256"], options={"verify_signature": False}
                 )
 
             except StInvalidAuth as exp:
