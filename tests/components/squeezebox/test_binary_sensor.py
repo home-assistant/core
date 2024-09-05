@@ -22,7 +22,7 @@ async def test_binary_sensor(
             [Platform.BINARY_SENSOR],
         ),
         patch(
-            "pysqueezebox.Server.async_query",
+            "homeassistant.components.squeezebox.Server.async_query",
             return_value=FAKE_QUERY_RESPONSE,
         ),
     ):
