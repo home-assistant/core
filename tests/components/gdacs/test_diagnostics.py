@@ -22,9 +22,7 @@ async def test_entry_diagnostics(
     config_entry: MockConfigEntry,
 ) -> None:
     """Test config entry diagnostics."""
-    with (
-        patch("aio_georss_client.feed.GeoRssFeed.update") as mock_feed_update,
-    ):
+    with patch("aio_georss_client.feed.GeoRssFeed.update") as mock_feed_update:
         mock_feed_update.return_value = "OK", []
 
         config_entry.add_to_hass(hass)
