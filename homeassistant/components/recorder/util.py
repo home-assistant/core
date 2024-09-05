@@ -683,7 +683,7 @@ def retryable_database_job[**_P](
     return decorator
 
 
-def database_job_retry_wrapper[_RecorderT: Recorder, **_P](
+def database_job_retry_wrapper[**_P](
     description: str, attempts: int = 5
 ) -> Callable[[_FuncType[_P, None]], _FuncType[_P, None]]:
     """Try to execute a database job multiple times.
