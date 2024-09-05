@@ -57,9 +57,6 @@ class SensoterraConfigFlow(ConfigFlow, domain=DOMAIN):
                 decoded_token = decode(
                     token, algorithm="HS256", options={"verify_signature": False}
                 )
-                device_unique_id = decoded_token["sub"]
-                await self.async_set_unique_id(device_unique_id)
-                self._abort_if_unique_id_configured()
 
             except StInvalidAuth as exp:
                 LOGGER.error(
@@ -73,6 +70,9 @@ class SensoterraConfigFlow(ConfigFlow, domain=DOMAIN):
                 LOGGER.error("Login attempt with %s: bad token", user_input[CONF_EMAIL])
                 errors["base"] = "invalid_access_token"
             else:
+                device_unique_id = decoded_token["sub"]
+                await self.async_set_unique_id(device_unique_id)
+                self._abort_if_unique_id_configured()
                 return self.async_create_entry(
                     title=user_input[CONF_EMAIL],
                     data={
