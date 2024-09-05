@@ -49,7 +49,7 @@ from homeassistant.util import (
 )
 from homeassistant.util.limited_size_dict import LimitedSizeDict
 
-from .audio_enhancer import AudioEnhancer, EnhancedAudioChunk, MicroVadEnhancer
+from .audio_enhancer import AudioEnhancer, EnhancedAudioChunk, MicroVadSpeexEnhancer
 from .const import (
     BYTES_PER_CHUNK,
     CONF_DEBUG_RECORDING_DIR,
@@ -538,7 +538,7 @@ class PipelineRun:
     language: str = None  # type: ignore[assignment]
     runner_data: Any | None = None
     intent_agent: str | None = None
-    tts_audio_output: str | None = None
+    tts_audio_output: str | dict[str, Any] | None = None
     wake_word_settings: WakeWordSettings | None = None
     audio_settings: AudioSettings = field(default_factory=AudioSettings)
 
@@ -589,7 +589,7 @@ class PipelineRun:
         # Initialize with audio settings
         if self.audio_settings.needs_processor and (self.audio_enhancer is None):
             # Default audio enhancer
-            self.audio_enhancer = MicroVadEnhancer(
+            self.audio_enhancer = MicroVadSpeexEnhancer(
                 self.audio_settings.auto_gain_dbfs,
                 self.audio_settings.noise_suppression_level,
                 self.audio_settings.is_vad_enabled,
@@ -1052,12 +1052,15 @@ class PipelineRun:
         if self.pipeline.tts_voice is not None:
             tts_options[tts.ATTR_VOICE] = self.pipeline.tts_voice
 
-        if self.tts_audio_output is not None:
+        if isinstance(self.tts_audio_output, dict):
+            tts_options.update(self.tts_audio_output)
+        elif isinstance(self.tts_audio_output, str):
             tts_options[tts.ATTR_PREFERRED_FORMAT] = self.tts_audio_output
             if self.tts_audio_output == "wav":
                 # 16 Khz, 16-bit mono
                 tts_options[tts.ATTR_PREFERRED_SAMPLE_RATE] = SAMPLE_RATE
                 tts_options[tts.ATTR_PREFERRED_SAMPLE_CHANNELS] = SAMPLE_CHANNELS
+                tts_options[tts.ATTR_PREFERRED_SAMPLE_BYTES] = SAMPLE_WIDTH
 
         try:
             options_supported = await tts.async_support_options(

@@ -110,6 +110,7 @@ homeassistant.components.bitcoin.*
 homeassistant.components.blockchain.*
 homeassistant.components.blue_current.*
 homeassistant.components.blueprint.*
+homeassistant.components.bluesound.*
 homeassistant.components.bluetooth.*
 homeassistant.components.bluetooth_adapters.*
 homeassistant.components.bluetooth_tracker.*
@@ -139,6 +140,7 @@ homeassistant.components.cpuspeed.*
 homeassistant.components.crownstone.*
 homeassistant.components.date.*
 homeassistant.components.datetime.*
+homeassistant.components.deako.*
 homeassistant.components.deconz.*
 homeassistant.components.default_config.*
 homeassistant.components.demo.*
@@ -208,6 +210,8 @@ homeassistant.components.glances.*
 homeassistant.components.goalzero.*
 homeassistant.components.google.*
 homeassistant.components.google_assistant_sdk.*
+homeassistant.components.google_cloud.*
+homeassistant.components.google_photos.*
 homeassistant.components.google_sheets.*
 homeassistant.components.gpsd.*
 homeassistant.components.greeneye_monitor.*
@@ -278,6 +282,7 @@ homeassistant.components.lawn_mower.*
 homeassistant.components.lcn.*
 homeassistant.components.ld2410_ble.*
 homeassistant.components.led_ble.*
+homeassistant.components.lektrico.*
 homeassistant.components.lidarr.*
 homeassistant.components.lifx.*
 homeassistant.components.light.*
@@ -294,7 +299,6 @@ homeassistant.components.london_underground.*
 homeassistant.components.lookin.*
 homeassistant.components.luftdaten.*
 homeassistant.components.madvr.*
-homeassistant.components.mailbox.*
 homeassistant.components.manual.*
 homeassistant.components.map.*
 homeassistant.components.mastodon.*
@@ -337,6 +341,7 @@ homeassistant.components.nut.*
 homeassistant.components.onboarding.*
 homeassistant.components.oncue.*
 homeassistant.components.onewire.*
+homeassistant.components.onkyo.*
 homeassistant.components.open_meteo.*
 homeassistant.components.openexchangerates.*
 homeassistant.components.opensky.*
@@ -408,9 +413,11 @@ homeassistant.components.slack.*
 homeassistant.components.sleepiq.*
 homeassistant.components.smhi.*
 homeassistant.components.snooz.*
+homeassistant.components.solarlog.*
 homeassistant.components.sonarr.*
 homeassistant.components.speedtestdotnet.*
 homeassistant.components.sql.*
+homeassistant.components.squeezebox.*
 homeassistant.components.ssdp.*
 homeassistant.components.starlink.*
 homeassistant.components.statistics.*

@@ -27,12 +27,22 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
+def mock_ring_init_auth_class():
+    """Mock ring_doorbell.Auth in init and return the mock class."""
+    with patch("homeassistant.components.ring.Auth", autospec=True) as mock_ring_auth:
+        mock_ring_auth.return_value.async_fetch_token.return_value = {
+            "access_token": "mock-token"
+        }
+        yield mock_ring_auth
+
+
+@pytest.fixture
 def mock_ring_auth():
     """Mock ring_doorbell.Auth."""
     with patch(
         "homeassistant.components.ring.config_flow.Auth", autospec=True
     ) as mock_ring_auth:
-        mock_ring_auth.return_value.fetch_token.return_value = {
+        mock_ring_auth.return_value.async_fetch_token.return_value = {
             "access_token": "mock-token"
         }
         yield mock_ring_auth.return_value

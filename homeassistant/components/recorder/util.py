@@ -644,24 +644,25 @@ def _is_retryable_error(instance: Recorder, err: OperationalError) -> bool:
     )
 
 
-type _FuncType[_T, **_P, _R] = Callable[Concatenate[_T, _P], _R]
+type _FuncType[**P, R] = Callable[Concatenate[Recorder, P], R]
+type _FuncOrMethType[**_P, _R] = Callable[_P, _R]
 
 
-def retryable_database_job[_RecorderT: Recorder, **_P](
-    description: str,
-) -> Callable[[_FuncType[_RecorderT, _P, bool]], _FuncType[_RecorderT, _P, bool]]:
+def retryable_database_job[**_P](
+    description: str, method: bool = False
+) -> Callable[[_FuncOrMethType[_P, bool]], _FuncOrMethType[_P, bool]]:
     """Try to execute a database job.
 
     The job should return True if it finished, and False if it needs to be rescheduled.
     """
+    recorder_pos = 1 if method else 0
 
-    def decorator(
-        job: _FuncType[_RecorderT, _P, bool],
-    ) -> _FuncType[_RecorderT, _P, bool]:
+    def decorator(job: _FuncOrMethType[_P, bool]) -> _FuncOrMethType[_P, bool]:
         @functools.wraps(job)
-        def wrapper(instance: _RecorderT, *args: _P.args, **kwargs: _P.kwargs) -> bool:
+        def wrapper(*args: _P.args, **kwargs: _P.kwargs) -> bool:
+            instance: Recorder = args[recorder_pos]  # type: ignore[assignment]
             try:
-                return job(instance, *args, **kwargs)
+                return job(*args, **kwargs)
             except OperationalError as err:
                 if _is_retryable_error(instance, err):
                     assert isinstance(err.orig, BaseException)  # noqa: PT017
@@ -682,9 +683,9 @@ def retryable_database_job[_RecorderT: Recorder, **_P](
     return decorator
 
 
-def database_job_retry_wrapper[_RecorderT: Recorder, **_P](
+def database_job_retry_wrapper[**_P](
     description: str, attempts: int = 5
-) -> Callable[[_FuncType[_RecorderT, _P, None]], _FuncType[_RecorderT, _P, None]]:
+) -> Callable[[_FuncType[_P, None]], _FuncType[_P, None]]:
     """Try to execute a database job multiple times.
 
     This wrapper handles InnoDB deadlocks and lock timeouts.
@@ -694,10 +695,10 @@ def database_job_retry_wrapper[_RecorderT: Recorder, **_P](
     """
 
     def decorator(
-        job: _FuncType[_RecorderT, _P, None],
-    ) -> _FuncType[_RecorderT, _P, None]:
+        job: _FuncType[_P, None],
+    ) -> _FuncType[_P, None]:
         @functools.wraps(job)
-        def wrapper(instance: _RecorderT, *args: _P.args, **kwargs: _P.kwargs) -> None:
+        def wrapper(instance: Recorder, *args: _P.args, **kwargs: _P.kwargs) -> None:
             for attempt in range(attempts):
                 try:
                     job(instance, *args, **kwargs)

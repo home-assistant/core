@@ -37,11 +37,6 @@ from tests.common import (
 from tests.typing import MqttMockHAClient, MqttMockHAClientGenerator, MqttMockPahoClient
 
 
-@pytest.fixture(autouse=True)
-def mock_storage(hass_storage: dict[str, Any]) -> None:
-    """Autouse hass_storage for the TestCase tests."""
-
-
 def help_assert_message(
     msg: ReceiveMessage,
     topic: str | None = None,
