@@ -72,6 +72,17 @@
       "zigbee_flash_mode": {
         "name": "Zigbee flash mode"
       }
+    },
+    "switch": {
+      "auto_zigbee_update": {
+        "name": "Auto Zigbee update"
+      },
+      "disable_led": {
+        "name": "Disable LEDs"
+      },
+      "night_mode": {
+        "name": "LED night mode"
+      }
     }
   }
 }
