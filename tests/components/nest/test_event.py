@@ -1,7 +1,10 @@
 """Test for Nest event platform."""
 
+import datetime
 from typing import Any
+from unittest.mock import patch
 
+from freezegun.api import FrozenDateTimeFactory
 from google_nest_sdm.event import EventMessage, EventType
 from google_nest_sdm.traits import TraitType
 import pytest
@@ -10,18 +13,30 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.util.dt import utcnow
 
-from .common import DEVICE_ID, CreateDevice
-from .conftest import FakeSubscriber, PlatformSetup
+from .common import DEVICE_ID, CreateDevice, FakeSubscriber
+from .conftest import PlatformSetup
 
 EVENT_SESSION_ID = "CjY5Y3VKaTZwR3o4Y19YbTVfMF..."
 EVENT_ID = "FWWVQVUdGNUlTU2V4MGV2aTNXV..."
 ENCODED_EVENT_ID = "WyJDalk1WTNWS2FUWndSM280WTE5WWJUVmZNRi4uLiIsICJGV1dWUVZVZEdOVWxUVTJWNE1HVjJhVE5YVi4uLiJd"
+
+EVENT_SESSION_ID2 = "DjY5Y3VKaTZwR3o4Y19YbTVfMF..."
+EVENT_ID2 = "GWWVQVUdGNUlTU2V4MGV2aTNXV..."
+ENCODED_EVENT_ID2 = "WyJEalk1WTNWS2FUWndSM280WTE5WWJUVmZNRi4uLiIsICJHV1dWUVZVZEdOVWxUVTJWNE1HVjJhVE5YVi4uLiJd"
 
 
 @pytest.fixture
 def platforms() -> list[Platform]:
     """Fixture for platforms to setup."""
     return [Platform.EVENT]
+
+
+@pytest.fixture(autouse=True)
+def enable_prefetch(subscriber: FakeSubscriber) -> None:
+    """Fixture to enable media fetching for tests to exercise."""
+    subscriber.cache_policy.fetch = True
+    with patch("homeassistant.components.nest.EVENT_MEDIA_CACHE_SIZE", new=5):
+        yield
 
 
 @pytest.fixture
@@ -50,25 +65,36 @@ async def device_traits() -> dict[str, Any]:
 
 def create_events(events: str) -> EventMessage:
     """Create an EventMessage for events."""
+    return create_event_messages(
+        {
+            event: {
+                "eventSessionId": EVENT_SESSION_ID,
+                "eventId": EVENT_ID,
+            }
+            for event in events
+        }
+    )
+
+
+def create_event_messages(
+    events: dict[str, Any], parameters: dict[str, Any] | None = None
+) -> EventMessage:
+    """Create an EventMessage for events."""
     return EventMessage.create_event(
         {
             "eventId": "some-event-id",
             "timestamp": utcnow().isoformat(timespec="seconds"),
             "resourceUpdate": {
                 "name": DEVICE_ID,
-                "events": {
-                    event: {
-                        "eventSessionId": EVENT_SESSION_ID,
-                        "eventId": EVENT_ID,
-                    }
-                    for event in events
-                },
+                "events": events,
             },
+            **(parameters if parameters else {}),
         },
         auth=None,
     )
 
 
+@pytest.mark.freeze_time("2024-08-24T12:00:00Z")
 @pytest.mark.parametrize(
     (
         "trait_types",
@@ -155,7 +181,7 @@ async def test_receive_events(
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
-    assert state.state != "unknown"
+    assert state.state == "2024-08-24T12:00:00.000+00:00"
     assert state.attributes == {
         **expected_attributes,
         "event_type": expected_event_type,
@@ -190,4 +216,110 @@ async def test_ignore_unrelated_event(
         "event_type": None,
         "event_types": ["doorbell_chime"],
         "friendly_name": "Front Chime",
+    }
+
+
+@pytest.mark.freeze_time("2024-08-24T12:00:00Z")
+async def test_event_threads(
+    hass: HomeAssistant,
+    subscriber: FakeSubscriber,
+    setup_platform: PlatformSetup,
+    create_device: CreateDevice,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test multiple events delivered as part of a thread are a single home assistant event."""
+    create_device.create(
+        raw_traits={
+            TraitType.DOORBELL_CHIME: {},
+            TraitType.CAMERA_CLIP_PREVIEW: {},
+        }
+    )
+    await setup_platform()
+
+    state = hass.states.get("event.front_chime")
+    assert state.state == "unknown"
+
+    # Doorbell event is received
+    freezer.tick(datetime.timedelta(seconds=2))
+    await subscriber.async_receive_event(
+        create_event_messages(
+            {
+                EventType.DOORBELL_CHIME: {
+                    "eventSessionId": EVENT_SESSION_ID,
+                    "eventId": EVENT_ID,
+                }
+            },
+            parameters={"eventThreadState": "STARTED"},
+        )
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("event.front_chime")
+    assert state.state == "2024-08-24T12:00:02.000+00:00"
+    assert state.attributes == {
+        "device_class": "doorbell",
+        "event_types": ["doorbell_chime"],
+        "friendly_name": "Front Chime",
+        "event_type": "doorbell_chime",
+        "nest_event_id": ENCODED_EVENT_ID,
+    }
+
+    # Media arrives in a second message that ends the thread
+    freezer.tick(datetime.timedelta(seconds=2))
+    await subscriber.async_receive_event(
+        create_event_messages(
+            {
+                EventType.DOORBELL_CHIME: {
+                    "eventSessionId": EVENT_SESSION_ID,
+                    "eventId": EVENT_ID,
+                },
+                EventType.CAMERA_CLIP_PREVIEW: {
+                    "eventSessionId": EVENT_SESSION_ID,
+                    "previewUrl": "http://example",
+                },
+            },
+            parameters={"eventThreadState": "ENDED"},
+        )
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("event.front_chime")
+    assert (
+        state.state == "2024-08-24T12:00:02.000+00:00"
+    )  # A second event is not received
+    assert state.attributes == {
+        "device_class": "doorbell",
+        "event_types": ["doorbell_chime"],
+        "friendly_name": "Front Chime",
+        "event_type": "doorbell_chime",
+        "nest_event_id": ENCODED_EVENT_ID,
+    }
+
+    # An additional doorbell press event happens (with an updated session id)
+    freezer.tick(datetime.timedelta(seconds=2))
+    await subscriber.async_receive_event(
+        create_event_messages(
+            {
+                EventType.DOORBELL_CHIME: {
+                    "eventSessionId": EVENT_SESSION_ID2,
+                    "eventId": EVENT_ID2,
+                },
+                EventType.CAMERA_CLIP_PREVIEW: {
+                    "eventSessionId": EVENT_SESSION_ID2,
+                    "previewUrl": "http://example",
+                },
+            },
+            parameters={"eventThreadState": "ENDED"},
+        )
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("event.front_chime")
+    assert state.state == "2024-08-24T12:00:06.000+00:00"  # Third event is received
+    assert state.attributes == {
+        "device_class": "doorbell",
+        "event_types": ["doorbell_chime"],
+        "friendly_name": "Front Chime",
+        "event_type": "doorbell_chime",
+        "nest_event_id": ENCODED_EVENT_ID2,
     }

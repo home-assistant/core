@@ -7,6 +7,8 @@
     }
   },
   "services": {
-    "send_message": "mdi:cellphone-message"
+    "send_message": {
+      "service": "mdi:cellphone-message"
+    }
   }
 }

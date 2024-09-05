@@ -415,6 +415,11 @@ ZEROCONF = {
             "domain": "forked_daapd",
         },
     ],
+    "_deako._tcp.local.": [
+        {
+            "domain": "deako",
+        },
+    ],
     "_devialet-http._tcp.local.": [
         {
             "domain": "devialet",
@@ -513,6 +518,10 @@ ZEROCONF = {
         {
             "domain": "bosch_shc",
             "name": "bosch shc*",
+        },
+        {
+            "domain": "lektrico",
+            "name": "lektrico*",
         },
         {
             "domain": "loqed",

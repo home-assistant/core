@@ -144,7 +144,9 @@ class TailwindFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_reauth(self, _: Mapping[str, Any]) -> ConfigFlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Handle initiation of re-authentication with a Tailwind device."""
         self.reauth_entry = self.hass.config_entries.async_get_entry(
             self.context["entry_id"]
