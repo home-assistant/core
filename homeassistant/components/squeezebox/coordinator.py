@@ -63,20 +63,20 @@ class LMSStatusDataUpdateCoordinator(DataUpdateCoordinator):
         data[STATUS_SENSOR_NEEDSRESTART] = STATUS_SENSOR_NEEDSRESTART in data
 
         # Sensors that need special handling
-        # 'lastscan': '1718431678', epoc -> ISO 8601 not allways present
+        # 'lastscan': '1718431678', epoc -> ISO 8601 not always present
         data[STATUS_SENSOR_LASTSCAN] = (
             dt_util.utc_from_timestamp(int(data[STATUS_SENSOR_LASTSCAN]))
             if STATUS_SENSOR_LASTSCAN in data
             else None
         )
-        # newversion str not aways present
+        # newversion str not always present
         # Sample text 'A new version of Logitech Media Server is available (8.5.2 - 0). <a href="updateinfo.html?installerFile=/var/lib/squeezeboxserver/cache/updates/logitechmediaserver_8.5.2_amd64.deb" target="update">Click here for further information</a>.'
         data[STATUS_SENSOR_NEWVERSION] = (
             self.newversion_regex.sub("...", data[STATUS_SENSOR_NEWVERSION])
             if STATUS_SENSOR_NEWVERSION in data
             else None
         )
-        # newplugins str not aways present
+        # newplugins str not always present
         if STATUS_SENSOR_NEWPLUGINS not in data:
             data[STATUS_SENSOR_NEWPLUGINS] = None
 
