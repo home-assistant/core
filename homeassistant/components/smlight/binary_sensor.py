@@ -1,4 +1,4 @@
-"""Support for SLZB-06 Connectivity sensors."""
+"""Support for SLZB-06 binary sensors."""
 
 from __future__ import annotations
 
