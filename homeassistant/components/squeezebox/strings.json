@@ -84,6 +84,38 @@
       "needsrestart": {
         "name": "Needs restart"
       }
+    },
+    "sensor": {
+      "lastscan": {
+        "name": "last scan"
+      },
+      "newversion": {
+        "name": "new version"
+      },
+      "newplugins": {
+        "name": "new plugins"
+      },
+      "info total albums": {
+        "name": "total albums"
+      },
+      "info total artists": {
+        "name": "total artists"
+      },
+      "info total duration": {
+        "name": "total duration"
+      },
+      "info total genres": {
+        "name": "total genres"
+      },
+      "info total songs": {
+        "name": "total songs"
+      },
+      "player count": {
+        "name": "player count"
+      },
+      "other player count": {
+        "name": "other player count"
+      }
     }
   }
 }

@@ -40,7 +40,7 @@ from .coordinator import LMSStatusDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.MEDIA_PLAYER]
+PLATFORMS = [Platform.SENSOR, Platform.BINARY_SENSOR, Platform.MEDIA_PLAYER]
 
 
 @dataclass
