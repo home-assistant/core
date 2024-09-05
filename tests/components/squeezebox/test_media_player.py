@@ -31,7 +31,7 @@ from homeassistant.components.media_player import (
     MediaType,
     RepeatMode,
 )
-from homeassistant.components.squeezebox.const import DOMAIN
+from homeassistant.components.squeezebox.const import DOMAIN, SENSOR_UPDATE_INTERVAL
 from homeassistant.components.squeezebox.media_player import (
     ATTR_PARAMETERS,
     ATTR_QUERY_RESULT,
@@ -89,6 +89,8 @@ async def test_squeezebox_player_rediscovery(
 ) -> None:
     """Test rediscovery of a squeezebox player."""
 
+    assert hass.states.get("media_player.test_player").state == MediaPlayerState.IDLE
+
     # Make the player appear unavailable
     configured_player.connected = False
     await hass.services.async_call(
@@ -102,6 +104,8 @@ async def test_squeezebox_player_rediscovery(
     # Make the player available again
     configured_player.connected = True
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=DISCOVERY_INTERVAL))
+    await hass.async_block_till_done()
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=SENSOR_UPDATE_INTERVAL))
     await hass.async_block_till_done()
     assert hass.states.get("media_player.test_player").state == MediaPlayerState.IDLE
 

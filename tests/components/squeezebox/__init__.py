@@ -1,4 +1,5 @@
 """Tests for the Logitech Squeezebox integration."""
+<<<<<<< HEAD
 
 from homeassistant.components.squeezebox.const import (
     DOMAIN,
@@ -83,3 +84,5 @@ async def setup_mocked_integration(hass: HomeAssistant) -> MockConfigEntry:
     await hass.async_block_till_done()
 
     return entry
+=======
+>>>>>>> 23cc930d62 (Update tests to fix merge conflict with binary_sensor)

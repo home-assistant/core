@@ -251,6 +251,7 @@ def create_mock_lms(
     if not uuid:
         uuid = random_uuid_hex()
     lms.async_query = AsyncMock(return_value={"uuid": format_mac(uuid)})
+    lms.async_status = AsyncMock(return_value={"uuid": format_mac(uuid)})
     return lms
 
 
