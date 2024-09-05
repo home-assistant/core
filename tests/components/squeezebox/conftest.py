@@ -130,4 +130,5 @@ def lms() -> MagicMock:
     )
     lms.async_get_players = AsyncMock(return_value=[player])
     lms.async_query = AsyncMock(return_value={"uuid": format_mac(TEST_MAC)})
+    lms.async_status = AsyncMock(return_value={"uuid": format_mac(TEST_MAC)})
     return lms
