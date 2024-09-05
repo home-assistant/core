@@ -94,7 +94,7 @@ PyTransportNSW==0.1.1
 PyTurboJPEG==1.7.5
 
 # homeassistant.components.vicare
-PyViCare-neo==0.2.1
+PyViCare-neo==0.3.0
 
 # homeassistant.components.xiaomi_aqara
 PyXiaomiGateway==0.14.3
@@ -225,7 +225,7 @@ aioelectricitymaps==0.4.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==25.3.1
+aioesphomeapi==25.3.2
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -605,7 +605,7 @@ dbus-fast==2.24.0
 debugpy==1.8.1
 
 # homeassistant.components.ecovacs
-deebot-client==8.3.0
+deebot-client==8.4.0
 
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
@@ -934,10 +934,10 @@ hole==0.8.0
 holidays==0.56
 
 # homeassistant.components.frontend
-home-assistant-frontend==20240903.1
+home-assistant-frontend==20240904.0
 
 # homeassistant.components.conversation
-home-assistant-intents==2024.8.29
+home-assistant-intents==2024.9.4
 
 # homeassistant.components.home_connect
 homeconnect==0.8.0
@@ -1030,7 +1030,7 @@ kegtron-ble==0.4.0
 knocki==0.3.1
 
 # homeassistant.components.knx
-knx-frontend==2024.8.9.225351
+knx-frontend==2024.9.4.64538
 
 # homeassistant.components.konnected
 konnected==1.2.0
@@ -1566,6 +1566,9 @@ pyipp==0.16.0
 
 # homeassistant.components.iqvia
 pyiqvia==2022.04.0
+
+# homeassistant.components.iskra
+pyiskra==0.1.8
 
 # homeassistant.components.iss
 pyiss==1.0.1
@@ -2208,7 +2211,7 @@ thermobeacon-ble==0.7.0
 thermopro-ble==0.10.0
 
 # homeassistant.components.lg_thinq
-thinqconnect==0.9.5
+thinqconnect==0.9.6
 
 # homeassistant.components.tilt_ble
 tilt-ble==0.2.3

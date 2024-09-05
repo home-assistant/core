@@ -8,7 +8,7 @@ from pysmlight.exceptions import SmlightAuthError, SmlightConnectionError
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -54,8 +54,10 @@ class SmDataUpdateCoordinator(DataUpdateCoordinator[SmData]):
                         self.config_entry.data[CONF_PASSWORD],
                     )
                 except SmlightAuthError as err:
-                    LOGGER.error("Failed to authenticate: %s", err)
-                    raise ConfigEntryError from err
+                    raise ConfigEntryAuthFailed from err
+            else:
+                # Auth required but no credentials available
+                raise ConfigEntryAuthFailed
 
         info = await self.client.get_info()
         self.unique_id = format_mac(info.MAC)
@@ -67,5 +69,8 @@ class SmDataUpdateCoordinator(DataUpdateCoordinator[SmData]):
                 sensors=await self.client.get_sensors(),
                 info=await self.client.get_info(),
             )
+        except SmlightAuthError as err:
+            raise ConfigEntryAuthFailed from err
+
         except SmlightConnectionError as err:
             raise UpdateFailed(err) from err
