@@ -5,11 +5,13 @@ from __future__ import annotations
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
+    CONF_STATE_CLASS,
+    DEVICE_CLASSES_SCHEMA as SENSOR_DEVICE_CLASSES_SCHEMA,
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
-    SensorDeviceClass,
+    STATE_CLASSES_SCHEMA as SENSOR_STATE_CLASSES_SCHEMA,
     SensorEntity,
 )
-from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME, CONF_UNIT_OF_MEASUREMENT
+from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -48,14 +50,8 @@ PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
             ]
         ),
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_DEVICE_CLASS, default=None): vol.Any(
-            None,
-            vol.In([device_class.value for device_class in SensorDeviceClass]),
-        ),
-        vol.Optional(CONF_UNIT_OF_MEASUREMENT, default=""): vol.Any(
-            None,
-            str,
-        ),
+        vol.Optional(CONF_DEVICE_CLASS): SENSOR_DEVICE_CLASSES_SCHEMA,
+        vol.Optional(CONF_STATE_CLASS): SENSOR_STATE_CLASSES_SCHEMA,
     }
 )
 
@@ -74,12 +70,17 @@ def setup_platform(
     ads_type = config[CONF_ADS_TYPE]
     name = config[CONF_NAME]
     factor = config.get(CONF_ADS_FACTOR)
-    device_class_str = config.get(CONF_DEVICE_CLASS)
-    unit_of_measurement = config.get(CONF_UNIT_OF_MEASUREMENT)
-    device_class = SensorDeviceClass(device_class_str) if device_class_str else None
+    device_class = config.get(CONF_DEVICE_CLASS)
+    state_class = config.get(CONF_STATE_CLASS)
 
     entity = AdsSensor(
-        ads_hub, ads_var, ads_type, name, factor, device_class, unit_of_measurement
+        ads_hub,
+        ads_var,
+        ads_type,
+        name,
+        factor,
+        device_class,
+        state_class,
     )
 
     add_entities([entity])
@@ -95,15 +96,15 @@ class AdsSensor(AdsEntity, SensorEntity):
         ads_type: str,
         name: str,
         factor: int | None,
-        device_class: SensorDeviceClass | None,
-        unit_of_measurement: str | None,
+        device_class,
+        state_class,
     ) -> None:
         """Initialize AdsSensor entity."""
         super().__init__(ads_hub, name, ads_var)
         self._ads_type = ads_type
         self._factor = factor
         self._attr_device_class = device_class
-        self._attr_native_unit_of_measurement = unit_of_measurement
+        self._attr_state_class = state_class
         self._state = None
 
     async def async_added_to_hass(self) -> None:
