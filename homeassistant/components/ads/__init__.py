@@ -4,8 +4,6 @@ import asyncio
 from asyncio import timeout
 from collections import namedtuple
 import ctypes
-import datetime
-from datetime import timedelta
 import logging
 import struct
 import threading
@@ -43,7 +41,9 @@ ADSTYPE_LREAL = "lreal"
 ADSTYPE_REAL = "real"
 ADSTYPE_STRING = "string"
 ADSTYPE_TIME = "time"
-ADSTYPE_DATE_AND_TIME = "datetime"
+ADSTYPE_DATE = "date"
+ADSTYPE_DATE_AND_TIME = "dt"
+ADSTYPE_TOD = "tod"
 
 ADS_TYPEMAP = {
     ADSTYPE_BOOL: pyads.PLCTYPE_BOOL,
@@ -60,7 +60,9 @@ ADS_TYPEMAP = {
     ADSTYPE_LREAL: pyads.PLCTYPE_LREAL,
     ADSTYPE_STRING: pyads.PLCTYPE_STRING,
     ADSTYPE_TIME: pyads.PLCTYPE_TIME,
+    ADSTYPE_DATE: pyads.PLCTYPE_DATE,
     ADSTYPE_DATE_AND_TIME: pyads.PLCTYPE_DT,
+    ADSTYPE_TOD: pyads.PLCTYPE_TOD,
 }
 
 CONF_ADS_FACTOR = "factor"
@@ -109,7 +111,9 @@ SCHEMA_SERVICE_WRITE_DATA_BY_NAME = vol.Schema(
                 ADSTYPE_LREAL,
                 ADSTYPE_STRING,
                 ADSTYPE_TIME,
+                ADSTYPE_DATE,
                 ADSTYPE_DATE_AND_TIME,
+                ADSTYPE_TOD,
             ]
         ),
         vol.Required(CONF_ADS_VALUE): vol.Coerce(int),
@@ -251,61 +255,56 @@ class AdsHub:
     def _device_notification_callback(self, notification, name):
         """Handle device notifications."""
         contents = notification.contents
-
         hnotify = int(contents.hNotification)
         _LOGGER.debug("Received notification %d", hnotify)
 
-        # get dynamically sized data array
+        # Get dynamically sized data array
         data_size = contents.cbSampleSize
-        data = (ctypes.c_ubyte * data_size).from_address(
+        data_address = (
             ctypes.addressof(contents)
             + pyads.structs.SAdsNotificationHeader.data.offset
         )
+        data = (ctypes.c_ubyte * data_size).from_address(data_address)
 
-        try:
-            with self._lock:
-                notification_item = self._notification_items[hnotify]
-        except KeyError:
+        # Acquire notification item
+        with self._lock:
+            notification_item = self._notification_items.get(hnotify)
+
+        if not notification_item:
             _LOGGER.error("Unknown device notification handle: %d", hnotify)
             return
 
-        # Parse data to desired datatype
-        if notification_item.plc_datatype == pyads.PLCTYPE_BOOL:
-            value = bool(struct.unpack("<?", bytearray(data))[0])
-        elif notification_item.plc_datatype == pyads.PLCTYPE_BYTE:
-            value = struct.unpack("<b", bytearray(data))[0]
-        elif notification_item.plc_datatype == pyads.PLCTYPE_INT:
-            value = struct.unpack("<h", bytearray(data))[0]
-        elif notification_item.plc_datatype == pyads.PLCTYPE_UINT:
-            value = struct.unpack("<H", bytearray(data))[0]
-        elif notification_item.plc_datatype == pyads.PLCTYPE_SINT:
-            value = struct.unpack("<b", bytearray(data))[0]
-        elif notification_item.plc_datatype == pyads.PLCTYPE_USINT:
-            value = struct.unpack("<B", bytearray(data))[0]
-        elif notification_item.plc_datatype == pyads.PLCTYPE_DINT:
-            value = struct.unpack("<i", bytearray(data))[0]
-        elif notification_item.plc_datatype == pyads.PLCTYPE_UDINT:
-            value = struct.unpack("<I", bytearray(data))[0]
-        elif notification_item.plc_datatype == pyads.PLCTYPE_WORD:
-            value = struct.unpack("<H", bytearray(data))[0]
-        elif notification_item.plc_datatype == pyads.PLCTYPE_DWORD:
-            value = struct.unpack("<I", bytearray(data))[0]
-        elif notification_item.plc_datatype == pyads.PLCTYPE_LREAL:
-            value = struct.unpack("<d", bytearray(data))[0]
-        elif notification_item.plc_datatype == pyads.PLCTYPE_REAL:
-            value = struct.unpack("<f", bytearray(data))[0]
-        elif notification_item.plc_datatype == pyads.PLCTYPE_STRING:
-            value = (
-                bytearray(data).split(b"\x00", 1)[0].decode("utf-8", errors="ignore")
-            )
-        elif notification_item.plc_datatype == pyads.PLCTYPE_TIME:
-            milliseconds = struct.unpack("<I", bytearray(data))[0]
-            value = timedelta(milliseconds=milliseconds)
-        elif notification_item.plc_datatype == pyads.PLCTYPE_DT:
-            raw_value = struct.unpack("<Q", bytearray(data))[0]
-            value = datetime.datetime(1601, 1, 1) + datetime.timedelta(
-                microseconds=raw_value / 10
-            )
+        # Data parsing based on PLC data type
+        plc_datatype = notification_item.plc_datatype
+        unpack_formats = {
+            pyads.PLCTYPE_BOOL: "<?",
+            pyads.PLCTYPE_BYTE: "<b",
+            pyads.PLCTYPE_INT: "<h",
+            pyads.PLCTYPE_UINT: "<H",
+            pyads.PLCTYPE_SINT: "<b",
+            pyads.PLCTYPE_USINT: "<B",
+            pyads.PLCTYPE_DINT: "<i",
+            pyads.PLCTYPE_UDINT: "<I",
+            pyads.PLCTYPE_WORD: "<H",
+            pyads.PLCTYPE_DWORD: "<I",
+            pyads.PLCTYPE_REAL: "<f",
+            pyads.PLCTYPE_LREAL: "<d",
+            pyads.PLCTYPE_STRING: "string",
+            pyads.PLCTYPE_TIME: "<i",
+            pyads.PLCTYPE_DATE: "<i",
+            pyads.PLCTYPE_DT: "<i",
+            pyads.PLCTYPE_TOD: "<i",
+        }
+
+        if plc_datatype in unpack_formats:
+            if unpack_formats[plc_datatype] == "string":
+                value = (
+                    bytearray(data)
+                    .split(b"\x00", 1)[0]
+                    .decode("utf-8", errors="ignore")
+                )
+            else:
+                value = struct.unpack(unpack_formats[plc_datatype], bytearray(data))[0]
         else:
             value = bytearray(data)
             _LOGGER.warning("No callback available for this datatype")
