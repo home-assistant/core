@@ -248,6 +248,27 @@ BOOLEAN_SENSOR_MAPPINGS: dict[int, BinarySensorEntityDescription] = {
 }
 
 
+@callback
+def is_valid_binary_notification_sensor(
+    info: ZwaveDiscoveryInfo, state_key: str
+) -> NotificationZWaveJSEntityDescription | None:
+    """Return if the notification CC subvalue is valid as binary sensor."""
+    # ignore idle key (0)
+    if state_key == "0":
+        return None
+    notification_description: NotificationZWaveJSEntityDescription | None = None
+    for description in NOTIFICATION_SENSOR_MAPPINGS:
+        if (
+            int(description.key)
+            == info.primary_value.metadata.cc_specific[CC_SPECIFIC_NOTIFICATION_TYPE]
+        ) and (not description.states or state_key in description.states):
+            notification_description = description
+            break
+    if notification_description and notification_description.off_state == state_key:
+        return None
+    return notification_description
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -266,30 +287,11 @@ async def async_setup_entry(
         if info.platform_hint == "notification":
             # Get all sensors from Notification CC states
             for state_key in info.primary_value.metadata.states:
-                # ignore idle key (0)
-                if state_key == "0":
+                notification_description = is_valid_binary_notification_sensor(
+                    info, state_key
+                )
+                if not notification_description:
                     continue
-
-                notification_description: (
-                    NotificationZWaveJSEntityDescription | None
-                ) = None
-
-                for description in NOTIFICATION_SENSOR_MAPPINGS:
-                    if (
-                        int(description.key)
-                        == info.primary_value.metadata.cc_specific[
-                            CC_SPECIFIC_NOTIFICATION_TYPE
-                        ]
-                    ) and (not description.states or state_key in description.states):
-                        notification_description = description
-                        break
-
-                if (
-                    notification_description
-                    and notification_description.off_state == state_key
-                ):
-                    continue
-
                 entities.append(
                     ZWaveNotificationBinarySensor(
                         config_entry, driver, info, state_key, notification_description

@@ -1204,6 +1204,9 @@ DISCOVERY_SCHEMAS = [
             },
             type={ValueType.NUMBER},
         ),
+        # set allow-multi to true because some of the notification sensors
+        # can not be mapped to a binary sensor and must be handled as a regular sensor
+        allow_multi=True,
     ),
     # special list sensors (Notification CC)
     ZWaveDiscoverySchema(
@@ -1215,7 +1218,8 @@ DISCOVERY_SCHEMAS = [
             },
             type={ValueType.NUMBER},
         ),
-        allow_multi=True,
+        # set allow-multi to false because sensor is the last resort
+        allow_multi=False,
     ),
 ]
 
