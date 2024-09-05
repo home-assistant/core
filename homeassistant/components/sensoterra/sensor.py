@@ -155,15 +155,13 @@ class SensoterraEntity(CoordinatorEntity[SensoterraCoordinator], SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
-        sensor = self.sensor
-
-        return None if sensor is None else sensor.value
+        assert self.sensor
+        return self.sensor.value
 
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        sensor = self.sensor
-        if sensor is None:
+        if not super().available or (sensor := self.sensor) is None:
             return False
 
         if sensor.timestamp is None:
