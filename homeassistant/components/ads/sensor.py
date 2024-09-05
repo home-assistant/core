@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from datetime import UTC, date, datetime, timedelta
-
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -27,7 +25,6 @@ from . import (
     AdsEntity,
 )
 
-SCAN_INTERVAL = timedelta(seconds=3)
 DEFAULT_NAME = "ADS sensor"
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
@@ -48,10 +45,6 @@ PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
                 ads.ADSTYPE_DWORD,
                 ads.ADSTYPE_LREAL,
                 ads.ADSTYPE_REAL,
-                ads.ADSTYPE_DATE,
-                ads.ADSTYPE_TIME,
-                ads.ADSTYPE_DATE_AND_TIME,
-                ads.ADSTYPE_TOD,
             ]
         ),
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -83,7 +76,6 @@ def setup_platform(
     factor = config.get(CONF_ADS_FACTOR)
     device_class_str = config.get(CONF_DEVICE_CLASS)
     unit_of_measurement = config.get(CONF_UNIT_OF_MEASUREMENT)
-
     device_class = SensorDeviceClass(device_class_str) if device_class_str else None
 
     entity = AdsSensor(
@@ -112,7 +104,7 @@ class AdsSensor(AdsEntity, SensorEntity):
         self._factor = factor
         self._attr_device_class = device_class
         self._attr_native_unit_of_measurement = unit_of_measurement
-        self._state: StateType | datetime | date = None
+        self._state = None
 
     async def async_added_to_hass(self) -> None:
         """Register device notification."""
@@ -122,30 +114,8 @@ class AdsSensor(AdsEntity, SensorEntity):
             STATE_KEY_STATE,
             self._factor,
         )
-        self.async_schedule_update_ha_state(True)
 
     @property
-    def should_poll(self) -> bool:
-        """Return True if the entity should be polled."""
-        return True
-
-    async def async_update(self) -> None:
-        """Fetch data from ADS and update the state."""
-        raw_state = self._ads_hub.read_by_name(
-            self._ads_var, ADS_TYPEMAP[self._ads_type]
-        )
-        # Convert the raw state based on ADS type
-        if self._ads_type == "dt" and isinstance(raw_state, int):
-            self._state = datetime.fromtimestamp(raw_state, tz=UTC)
-        elif self._ads_type == "date" and isinstance(raw_state, int):
-            dt = datetime.fromtimestamp(raw_state, tz=UTC)
-            self._state = dt.date()
-        else:
-            self._state = raw_state
-
-        self.async_write_ha_state()
-
-    @property
-    def native_value(self) -> StateType | datetime | date:
+    def native_value(self) -> StateType:
         """Return the state of the device."""
-        return self._state
+        return self._state_dict[STATE_KEY_STATE]
