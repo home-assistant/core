@@ -15,12 +15,7 @@ from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from . import (
-    _mocked_device,
-    _mocked_feature,
-    setup_platform_for_device,
-    snapshot_platform,
-)
+from . import _mocked_device, setup_platform_for_device, snapshot_platform
 
 from tests.common import MockConfigEntry
 
@@ -29,24 +24,11 @@ ENTITY_ID = "siren.hub"
 
 @pytest.fixture
 async def mocked_hub(hass: HomeAssistant) -> Device:
-    """Return mocked tplink hub with an alarm module and features."""
-
-    features = [
-        _mocked_feature(
-            "alarm",
-        ),
-        _mocked_feature(
-            "test_alarm",
-        ),
-        _mocked_feature(
-            "stop_alarm",
-        ),
-    ]
+    """Return mocked tplink hub with an alarm module."""
 
     return _mocked_device(
         alias="hub",
         modules=[Module.Alarm],
-        features=features,
         device_type=Device.Type.Hub,
     )
 
@@ -73,8 +55,7 @@ async def test_turn_on_and_off(
     """Test that turn_on and turn_off services work as expected."""
     await setup_platform_for_device(hass, mock_config_entry, Platform.SIREN, mocked_hub)
 
-    play_alarm = mocked_hub.features["test_alarm"]
-    stop_alarm = mocked_hub.features["stop_alarm"]
+    alarm_module = mocked_hub.modules[Module.Alarm]
 
     await hass.services.async_call(
         SIREN_DOMAIN,
@@ -83,7 +64,7 @@ async def test_turn_on_and_off(
         blocking=True,
     )
 
-    stop_alarm.set_value.assert_called_with(True)
+    alarm_module.stop.assert_called()
 
     await hass.services.async_call(
         SIREN_DOMAIN,
@@ -92,4 +73,4 @@ async def test_turn_on_and_off(
         blocking=True,
     )
 
-    play_alarm.set_value.assert_called_with(True)
+    alarm_module.play.assert_called()

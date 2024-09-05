@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from kasa import Device, Module
+from kasa.smart.modules.alarm import Alarm
 
 from homeassistant.components.siren import SirenEntity, SirenEntityFeature
 from homeassistant.core import HomeAssistant, callback
@@ -41,23 +42,20 @@ class TPLinkSirenEntity(CoordinatedTPLinkEntity, SirenEntity):
         coordinator: TPLinkDataUpdateCoordinator,
     ) -> None:
         """Initialize the siren entity."""
-        self._test_alarm = device.features["test_alarm"]
-        self._stop_alarm = device.features["stop_alarm"]
-        self._alarm_active = device.features["alarm"]
-
+        self._alarm_module: Alarm = device.modules[Module.Alarm]
         super().__init__(device, coordinator)
 
     @async_refresh_after
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the siren on."""
-        await self._test_alarm.set_value(True)
+        await self._alarm_module.play()
 
     @async_refresh_after
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the siren off."""
-        await self._stop_alarm.set_value(True)
+        await self._alarm_module.stop()
 
     @callback
     def _async_update_attrs(self) -> None:
         """Update the entity's attributes."""
-        self._attr_is_on = self._alarm_active.value
+        self._attr_is_on = self._alarm_module.active
