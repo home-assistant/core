@@ -10,7 +10,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.nice_go.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import Platform
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 
@@ -372,3 +372,25 @@ async def test_connection_attempts_exhausted(
 
     assert "API error" in caplog.text
     assert "Error requesting Nice G.O. data" in caplog.text
+
+
+async def test_reconnect_hass_stopping(
+    hass: HomeAssistant,
+    mock_nice_go: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test reconnect with hass stopping."""
+
+    mock_nice_go.listen = MagicMock()
+    mock_nice_go.connect.side_effect = ApiError
+
+    with patch("homeassistant.components.nice_go.coordinator.asyncio.sleep"):
+        await setup_integration(hass, mock_config_entry, [Platform.COVER])
+
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+        assert mock_nice_go.listen.call_count == 3
+
+        assert len(hass._background_tasks) == 0
