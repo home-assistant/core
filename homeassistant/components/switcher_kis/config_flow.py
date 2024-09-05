@@ -32,8 +32,6 @@ class SwitcherFlowHandler(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the start of the config flow."""
-        if self._async_current_entries(True):
-            return self.async_abort(reason="single_instance_allowed")
 
         self.discovered_devices = await async_discover_devices()
 

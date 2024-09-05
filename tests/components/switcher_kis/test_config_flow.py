@@ -15,6 +15,7 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from .consts import (
     DUMMY_PLUG_DEVICE,
+    DUMMY_SINGLE_SHUTTER_DUAL_DEVICE,
     DUMMY_TOKEN,
     DUMMY_USERNAME,
     DUMMY_WATER_HEATER_DEVICE,
@@ -57,6 +58,80 @@ async def test_user_setup(
         await hass.async_block_till_done()
 
         assert len(mock_setup_entry.mock_calls) == 1
+
+
+@pytest.mark.parametrize(
+    "mock_bridge",
+    [
+        [
+            DUMMY_SINGLE_SHUTTER_DUAL_DEVICE,
+        ]
+    ],
+    indirect=True,
+)
+async def test_user_setup_found_token_device(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_bridge
+) -> None:
+    """Test we can finish a config flow with token device found."""
+    with patch("homeassistant.components.switcher_kis.utils.DISCOVERY_TIME_SEC", 0):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "confirm"
+
+        result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+        assert mock_bridge.is_running is False
+        assert result2["type"] is FlowResultType.FORM
+        assert result2["step_id"] == "credentials"
+
+        mock_response = MagicMock()
+        mock_response.status = 200
+        mock_response.json = AsyncMock(return_value={"result": "true"})
+        mock_response.__aenter__.return_value = mock_response
+        mock_response.__aexit__.return_value = AsyncMock()
+
+        with (
+            patch(
+                "aioswitcher.device.tools.validate_token",
+                return_value=True,
+            ),
+            patch(
+                "aioswitcher.device.tools.aiohttp.ClientSession.post",
+                new=AsyncMock(return_value=mock_response),
+            ),
+        ):
+            result3 = await hass.config_entries.flow.async_configure(
+                result2["flow_id"],
+                {CONF_USERNAME: DUMMY_USERNAME, CONF_TOKEN: DUMMY_TOKEN},
+            )
+
+            assert result3["type"] is FlowResultType.CREATE_ENTRY
+            assert result3["title"] == "Switcher"
+            assert result3["result"].data == {"username": None, "token": None}
+
+        with (
+            patch(
+                "aioswitcher.device.tools.validate_token",
+                return_value=False,
+            ),
+            patch(
+                "aioswitcher.device.tools.aiohttp.ClientSession.post",
+                new=AsyncMock(return_value=mock_response),
+            ),
+        ):
+            result4 = await hass.config_entries.flow.async_configure(
+                result2["flow_id"],
+                {CONF_USERNAME: DUMMY_USERNAME, CONF_TOKEN: DUMMY_TOKEN},
+            )
+
+            await hass.async_block_till_done()
+
+            assert result4["type"] is FlowResultType.FORM
+            assert result4["step_id"] == "credentials"
+            assert result4["errors"] == {"base": "invalid_auth"}
 
 
 async def test_user_setup_abort_no_devices_found(
