@@ -33,9 +33,15 @@ class WeatherFlowCloudConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
     async def async_step_reauth(
-        self, user_input: Mapping[str, Any]
+        self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle a flow for reauth."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle a flow initiated by reauthentication."""
         errors = {}
 
         if user_input is not None:
@@ -54,7 +60,7 @@ class WeatherFlowCloudConfigFlow(ConfigFlow, domain=DOMAIN):
                     )
 
         return self.async_show_form(
-            step_id="reauth",
+            step_id="reauth_confirm",
             data_schema=vol.Schema({vol.Required(CONF_API_TOKEN): str}),
             errors=errors,
         )

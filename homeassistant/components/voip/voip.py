@@ -33,7 +33,7 @@ from homeassistant.components.assist_pipeline import (
 )
 from homeassistant.components.assist_pipeline.audio_enhancer import (
     AudioEnhancer,
-    MicroVadEnhancer,
+    MicroVadSpeexEnhancer,
 )
 from homeassistant.components.assist_pipeline.vad import (
     AudioBuffer,
@@ -235,7 +235,7 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
         try:
             # Wait for speech before starting pipeline
             segmenter = VoiceCommandSegmenter(silence_seconds=self.silence_seconds)
-            audio_enhancer = MicroVadEnhancer(0, 0, True)
+            audio_enhancer = MicroVadSpeexEnhancer(0, 0, True)
             chunk_buffer: deque[bytes] = deque(
                 maxlen=self.buffered_chunks_before_speech,
             )
