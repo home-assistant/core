@@ -149,7 +149,7 @@ class SensoterraEntity(CoordinatorEntity[SensoterraCoordinator], SensorEntity):
 
     @property
     def sensor(self) -> Sensor | None:
-        """Return the sensor, or None if it doesn't exists."""
+        """Return the sensor, or None if it doesn't exist."""
         return self.coordinator.get_sensor(self._sensor_id)
 
     @property
