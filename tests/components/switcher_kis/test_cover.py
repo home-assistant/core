@@ -226,7 +226,7 @@ async def test_cover2(
         assert state.state == STATE_OPEN
         assert state.attributes[ATTR_CURRENT_POSITION] == 77
 
-    #     # Test open
+    # Test open
     with patch(
         "homeassistant.components.switcher_kis.cover.SwitcherType2Api.set_position"
     ) as mock_control_device:
@@ -246,7 +246,7 @@ async def test_cover2(
         state = hass.states.get(ENTITY_ID2)
         assert state.state == STATE_OPENING
 
-    #     # Test close
+    # Test close
     with patch(
         "homeassistant.components.switcher_kis.cover.SwitcherType2Api.set_position"
     ) as mock_control_device:
@@ -266,7 +266,7 @@ async def test_cover2(
         state = hass.states.get(ENTITY_ID2)
         assert state.state == STATE_CLOSING
 
-    #     # Test stop
+    # Test stop
     with patch(
         "homeassistant.components.switcher_kis.cover.SwitcherType2Api.stop_shutter"
     ) as mock_control_device:
