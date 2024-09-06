@@ -312,7 +312,7 @@
     },
     "switch": {
       "central_heating_override_n": {
-        "name": "Central heating {circuit_number} override"
+        "name": "Force central heating {circuit_number} on"
       }
     }
   },
