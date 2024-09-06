@@ -16,7 +16,7 @@ from homeassistant.components.switch import (
     SwitchEntityDescription,
 )
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import SmConfigEntry
@@ -85,7 +85,6 @@ class SmSwitch(SmEntity, SwitchEntity):
         self._attr_unique_id = f"{coordinator.unique_id}-{description.key}"
 
         self._page, self._toggle = self.entity_description.setting.value
-        self._update_attrs()
 
     async def set_smlight(self, state: bool) -> None:
         """Set the state on SLZB device."""
@@ -105,14 +104,7 @@ class SmSwitch(SmEntity, SwitchEntity):
 
         await self.set_smlight(False)
 
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle update from data coordinator."""
-        self._update_attrs()
-        super()._handle_coordinator_update()
-
-    def _update_attrs(self):
-        """Update the entity attributes."""
-        self._attr_is_on = self.entity_description.state_fn(
-            self.coordinator.data.sensors
-        )
+    @property
+    def is_on(self) -> bool:
+        """Return the state of the switch."""
+        return bool(self.entity_description.state_fn(self.coordinator.data.sensors))

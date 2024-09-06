@@ -2,10 +2,13 @@
 
 from unittest.mock import MagicMock
 
+from freezegun.api import FrozenDateTimeFactory
+from pysmlight import Sensors
 from pysmlight.const import Settings
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.smlight.const import SCAN_INTERVAL
 from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
     SERVICE_TURN_OFF,
@@ -17,7 +20,7 @@ from homeassistant.helpers import entity_registry as er
 
 from .conftest import setup_integration
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 pytestmark = [
     pytest.mark.usefixtures(
@@ -45,16 +48,18 @@ async def test_switch_setup(
 
 
 @pytest.mark.parametrize(
-    ("entity", "setting"),
+    ("entity", "setting", "field"),
     [
-        ("disable_leds", Settings.DISABLE_LEDS),
-        ("led_night_mode", Settings.NIGHT_MODE),
-        ("auto_zigbee_update", Settings.ZB_AUTOUPDATE),
+        ("disable_leds", Settings.DISABLE_LEDS, "disable_leds"),
+        ("led_night_mode", Settings.NIGHT_MODE, "night_mode"),
+        ("auto_zigbee_update", Settings.ZB_AUTOUPDATE, "auto_zigbee"),
     ],
 )
 async def test_switches(
     hass: HomeAssistant,
     entity: str,
+    field: str,
+    freezer: FrozenDateTimeFactory,
     mock_config_entry: MockConfigEntry,
     mock_smlight_client: MagicMock,
     setting: Settings,
@@ -77,6 +82,11 @@ async def test_switches(
 
     assert len(mock_smlight_client.set_toggle.mock_calls) == 1
     mock_smlight_client.set_toggle.assert_called_once_with(_page, _toggle, True)
+    mock_smlight_client.get_sensors.return_value = Sensors(**{field: True})
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
     assert state.state == STATE_ON
@@ -90,6 +100,11 @@ async def test_switches(
 
     assert len(mock_smlight_client.set_toggle.mock_calls) == 2
     mock_smlight_client.set_toggle.assert_called_with(_page, _toggle, False)
+    mock_smlight_client.get_sensors.return_value = Sensors(**{field: False})
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
     assert state.state == STATE_OFF
