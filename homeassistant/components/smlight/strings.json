@@ -45,5 +45,11 @@
         "name": "RAM usage"
       }
     }
+  },
+  "issues": {
+    "unsupported_firmware": {
+      "title": "SLZB core firmware update required",
+      "description": "Your SMLIGHT SLZB-06x device is running an unsupported core firmware version. Please update it to the latest version to enjoy all the features of this integration."
+    }
   }
 }
