@@ -14,7 +14,7 @@ import logging
 import re
 import time
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Any, Concatenate, NamedTuple, ParamSpec, TypeVar, cast
+from typing import TYPE_CHECKING, Any, Concatenate, NamedTuple, cast
 from zoneinfo import ZoneInfo
 
 import voluptuous as vol
@@ -171,9 +171,6 @@ if TYPE_CHECKING:
     from .update import ZHAFirmwareUpdateCoordinator
 
     _LogFilterType = Filter | Callable[[LogRecord], bool]
-
-_P = ParamSpec("_P")
-_EntityT = TypeVar("_EntityT", bound="ZHAEntity")
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -1277,7 +1274,7 @@ def create_zha_config(hass: HomeAssistant, ha_zha_data: HAZHAData) -> ZHAData:
     )
 
 
-def convert_zha_error_to_ha_error(
+def convert_zha_error_to_ha_error[**_P, _EntityT: ZHAEntity](
     func: Callable[Concatenate[_EntityT, _P], Awaitable[None]],
 ) -> Callable[Concatenate[_EntityT, _P], Coroutine[Any, Any, None]]:
     """Decorate ZHA commands and re-raises ZHAException as HomeAssistantError."""
