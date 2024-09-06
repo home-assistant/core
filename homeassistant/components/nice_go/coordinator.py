@@ -20,7 +20,7 @@ from nice_go import (
 )
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import issue_registry as ir
@@ -77,11 +77,10 @@ class NiceGOUpdateCoordinator(DataUpdateCoordinator[dict[str, NiceGODevice]]):
         self._unsub_data: Callable[[], None] | None = None
         self._unsub_connection_lost: Callable[[], None] | None = None
         self.connected = False
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._async_ha_stop)
         self._hass_stopping: bool = hass.is_stopping
 
     @callback
-    def _async_ha_stop(self, event: Event) -> None:
+    def async_ha_stop(self, event: Event) -> None:
         """Stop reconnecting if hass is stopping."""
         self._hass_stopping = True
 
