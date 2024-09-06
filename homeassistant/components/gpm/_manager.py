@@ -22,6 +22,7 @@ from homeassistant.components.lovelace.const import (  # pylint: disable=hass-co
     DOMAIN as LOVELACE_DOMAIN,
 )
 from homeassistant.components.lovelace.resources import ResourceStorageCollection
+from homeassistant.const import EVENT_LOVELACE_UPDATED
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
@@ -395,6 +396,8 @@ class IntegrationRepositoryManager(RepositoryManager):
 class ResourceRepositoryManager(RepositoryManager):
     """Manage GIT repo as a HA resource."""
 
+    _resource_storage: ResourceStorageCollection | None = None
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -423,24 +426,38 @@ class ResourceRepositoryManager(RepositoryManager):
     async def install(self) -> None:
         """Install the GIT repo as a HA resource."""
         await self._download_resource()
-        await self._add_resource()
+        resource_url = await self.get_resource_url()
+        await self._add_resource(resource_url)
+        await self._refresh_frontend()
 
     @RepositoryManager.ensure_installed
     async def uninstall(self) -> None:
         """Uninstall the GIT repo."""
-        await self._remove_resource()
+        resource_url = await self.get_resource_url()
+        await self._remove_resource(resource_url)
         install_path = await self.get_install_path()
         await self.hass.async_add_executor_job(install_path.unlink)
+        await self._refresh_frontend()
+
+    @RepositoryManager.ensure_installed
+    async def update(self, ref: str):
+        """Update / downgrade the installed resource."""
+        old_resource_url = await self.get_resource_url()
+        old_install_path = await self.get_install_path()
+        await self.hass.async_add_executor_job(old_install_path.unlink)
+        await super().checkout(ref)
+        await self._download_resource()
+        new_resource_url = await self.get_resource_url()
+        await self._update_resource(old_resource_url, new_resource_url)
+        await self._refresh_frontend()
 
     @RepositoryManager.ensure_cloned
     async def checkout(self, ref: str) -> None:
         """Checkout the specified reference."""
-        is_installed = await self.is_installed()
-        if is_installed:
-            await self.uninstall()
-        await super().checkout(ref)
-        if is_installed:
-            await self.install()
+        if await self.is_installed():
+            await self.update(ref)
+        else:
+            await super().checkout(ref)
 
     async def _download_resource(self):
         download_url = await self.get_download_url()
@@ -461,42 +478,59 @@ class ResourceRepositoryManager(RepositoryManager):
         except (ClientError, OSError) as e:
             raise ResourceInstallError from e
 
-    def _get_resource_storage(self) -> ResourceStorageCollection:
+    @classmethod
+    async def _get_resource_storage(
+        cls, hass: HomeAssistant
+    ) -> ResourceStorageCollection:
         """Return the Lovelace resource storage."""
+        if cls._resource_storage:
+            return cls._resource_storage
         try:
-            resources: ResourceStorageCollection = self.hass.data[LOVELACE_DOMAIN][
-                "resources"
-            ]
+            res: ResourceStorageCollection = hass.data[LOVELACE_DOMAIN]["resources"]
         except KeyError as e:
             raise ResourcesUpdateError("ResourceStorageCollection not found") from e
-
-        if not hasattr(resources, "store") or resources.store is None:
+        if not hasattr(res, "store") or res.store is None:
             raise ResourcesUpdateError("YAML mode detected")
-
-        if resources.store.key != "lovelace_resources" or resources.store.version != 1:
+        if res.store.key != "lovelace_resources" or res.store.version != 1:
             raise ResourcesUpdateError("Unexpected structure")
+        if not res.loaded:
+            await res.async_load()
+        cls._resource_storage = res
+        return res
 
-        return resources
-
-    async def _add_resource(self) -> None:
-        resource_url = await self.get_resource_url()
+    async def _add_resource(self, resource_url: str) -> None:
         _LOGGER.info("Adding resource %s", resource_url)
-        resources = self._get_resource_storage()
-        if not resources.loaded:
-            await resources.async_load()
+        resources = await self._get_resource_storage(self.hass)
         await resources.async_create_item({"res_type": "module", "url": resource_url})
 
-    async def _remove_resource(self) -> None:
-        resource_url = await self.get_resource_url()
+    async def _update_resource(
+        self, old_resource_url: str, new_resource_url: str
+    ) -> None:
+        _LOGGER.info("Updating resource %s to %s", old_resource_url, new_resource_url)
+        resources = await self._get_resource_storage(self.hass)
+        for entry in resources.async_items():
+            if entry["url"] == old_resource_url:
+                await resources.async_update_item(
+                    entry["id"], {"url": new_resource_url}
+                )
+                break
+        else:
+            _LOGGER.warning("Resource %s not found", old_resource_url)
+            await self._add_resource(new_resource_url)
+
+    async def _remove_resource(self, resource_url) -> None:
         _LOGGER.info("Removing resource %s", resource_url)
-        resources = self._get_resource_storage()
-        if not resources.loaded:
-            await resources.async_load()
+        resources = await self._get_resource_storage(self.hass)
         for entry in resources.async_items():
             if entry["url"] == resource_url:
                 await resources.async_delete_item(entry["id"])
-                return
-        _LOGGER.warning("Resource %s not found", resource_url)
+                break
+        else:
+            _LOGGER.warning("Resource %s not found", resource_url)
+
+    async def _refresh_frontend(self) -> None:
+        """Refresh the frontend to apply the changes."""
+        self.hass.bus.async_fire(EVENT_LOVELACE_UPDATED, {"url_path": None})
 
     @RepositoryManager.ensure_cloned
     async def get_download_url(self) -> str | None:
@@ -515,21 +549,22 @@ class ResourceRepositoryManager(RepositoryManager):
             return
         self._download_url = Template(value, self.hass)
 
-    async def get_resource_name(self) -> str:
+    async def get_resource_name(self) -> Path:
         """Return the name of the resource."""
         download_url = await self.get_download_url()
-        return download_url.rsplit("/", maxsplit=1)[-1]
+        basename = Path(download_url.rsplit("/", maxsplit=1)[-1])
+        current_version = slugify(await self.get_current_version())
+        return Path(f"{basename.stem}_{current_version}{basename.suffix}")
 
     async def get_resource_url(self) -> str:
         """Return the URL of the installed resource."""
         resource_name = await self.get_resource_name()
-        current_version = slugify(await self.get_current_version())
-        return f"{URL_BASE}/{resource_name}?v={current_version}"
+        return f"{URL_BASE}/{resource_name}"
 
     async def get_install_path(self) -> Path:
         """Return the path to the installed resource."""
         resource_name = await self.get_resource_name()
-        return self.install_basedir / Path(resource_name)
+        return self.install_basedir / resource_name
 
     async def get_title(self) -> str:
         """Return the title of the repository."""
