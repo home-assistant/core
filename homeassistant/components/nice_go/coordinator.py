@@ -46,6 +46,7 @@ class NiceGODevice:
     light_status: bool
     fw_version: str
     connected: bool
+    vacation_mode: bool
 
 
 class NiceGOUpdateCoordinator(DataUpdateCoordinator[dict[str, NiceGODevice]]):
@@ -105,6 +106,7 @@ class NiceGOUpdateCoordinator(DataUpdateCoordinator[dict[str, NiceGODevice]]):
             connected = barrier_state.connectionState.connected
         else:
             connected = False
+        vacation_mode = barrier_state.reported["vcnMode"]
 
         return NiceGODevice(
             id=device_id,
@@ -113,6 +115,7 @@ class NiceGOUpdateCoordinator(DataUpdateCoordinator[dict[str, NiceGODevice]]):
             light_status=light_status,
             fw_version=fw_version,
             connected=connected,
+            vacation_mode=vacation_mode,
         )
 
     async def _async_update_data(self) -> dict[str, NiceGODevice]:

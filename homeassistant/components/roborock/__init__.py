@@ -168,7 +168,9 @@ async def setup_device_v1(
     home_data_rooms: list[HomeDataRoom],
 ) -> RoborockDataUpdateCoordinator | None:
     """Set up a device Coordinator."""
-    mqtt_client = RoborockMqttClientV1(user_data, DeviceData(device, product_info.name))
+    mqtt_client = await hass.async_add_executor_job(
+        RoborockMqttClientV1, user_data, DeviceData(device, product_info.name)
+    )
     try:
         networking = await mqtt_client.get_networking()
         if networking is None:

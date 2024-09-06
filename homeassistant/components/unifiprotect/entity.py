@@ -278,7 +278,8 @@ class ProtectDeviceEntity(BaseProtectEntity):
         self._attr_device_info = DeviceInfo(
             name=self.device.display_name,
             manufacturer=DEFAULT_BRAND,
-            model=self.device.type,
+            model=self.device.market_name or self.device.type,
+            model_id=self.device.type,
             via_device=(DOMAIN, self.data.api.bootstrap.nvr.mac),
             sw_version=self.device.firmware_version,
             connections={(dr.CONNECTION_NETWORK_MAC, self.device.mac)},

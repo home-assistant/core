@@ -22,12 +22,7 @@ from homeassistant.components.deconz.const import (
 )
 from homeassistant.components.hassio import HassioServiceInfo
 from homeassistant.components.ssdp import ATTR_UPNP_MANUFACTURER_URL, ATTR_UPNP_SERIAL
-from homeassistant.config_entries import (
-    SOURCE_HASSIO,
-    SOURCE_REAUTH,
-    SOURCE_SSDP,
-    SOURCE_USER,
-)
+from homeassistant.config_entries import SOURCE_HASSIO, SOURCE_SSDP, SOURCE_USER
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT, CONTENT_TYPE_JSON
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -407,12 +402,7 @@ async def test_reauth_flow_update_configuration(
     config_entry_setup: MockConfigEntry,
 ) -> None:
     """Verify reauth flow can update gateway API key."""
-    result = await hass.config_entries.flow.async_init(
-        DECONZ_DOMAIN,
-        data=config_entry_setup.data,
-        context={"source": SOURCE_REAUTH},
-    )
-
+    result = await config_entry_setup.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "link"
 

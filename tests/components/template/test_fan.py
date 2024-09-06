@@ -699,13 +699,13 @@ async def test_set_invalid_osc(hass: HomeAssistant, calls: list[ServiceCall]) ->
 
 
 def _verify(
-    hass,
-    expected_state,
-    expected_percentage,
-    expected_oscillating,
-    expected_direction,
-    expected_preset_mode,
-):
+    hass: HomeAssistant,
+    expected_state: str,
+    expected_percentage: int | None,
+    expected_oscillating: bool | None,
+    expected_direction: str | None,
+    expected_preset_mode: str | None,
+) -> None:
     """Verify fan's state, speed and osc."""
     state = hass.states.get(_TEST_FAN)
     attributes = state.attributes
@@ -716,7 +716,7 @@ def _verify(
     assert attributes.get(ATTR_PRESET_MODE) == expected_preset_mode
 
 
-async def _register_fan_sources(hass):
+async def _register_fan_sources(hass: HomeAssistant) -> None:
     with assert_setup_component(1, "input_boolean"):
         assert await setup.async_setup_component(
             hass, "input_boolean", {"input_boolean": {"state": None}}
@@ -760,8 +760,11 @@ async def _register_fan_sources(hass):
 
 
 async def _register_components(
-    hass, speed_list=None, preset_modes=None, speed_count=None
-):
+    hass: HomeAssistant,
+    speed_list: list[str] | None = None,
+    preset_modes: list[str] | None = None,
+    speed_count: int | None = None,
+) -> None:
     """Register basic components for testing."""
     await _register_fan_sources(hass)
 

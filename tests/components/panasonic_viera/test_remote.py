@@ -18,7 +18,7 @@ from .conftest import MOCK_CONFIG_DATA, MOCK_DEVICE_INFO, MOCK_ENCRYPTION_DATA
 from tests.common import MockConfigEntry
 
 
-async def setup_panasonic_viera(hass):
+async def setup_panasonic_viera(hass: HomeAssistant) -> None:
     """Initialize integration for tests."""
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
