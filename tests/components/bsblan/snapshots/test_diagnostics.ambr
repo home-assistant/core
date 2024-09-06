@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_diagnostics[static.json]
+# name: test_diagnostics
   dict({
     'coordinator_data': dict({
       'state': dict({
