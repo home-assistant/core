@@ -95,6 +95,7 @@ homeassistant.components.aruba.*
 homeassistant.components.arwn.*
 homeassistant.components.aseko_pool_live.*
 homeassistant.components.assist_pipeline.*
+homeassistant.components.assist_satellite.*
 homeassistant.components.asuswrt.*
 homeassistant.components.autarco.*
 homeassistant.components.auth.*
