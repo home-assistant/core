@@ -37,34 +37,17 @@ ENTITY_DESCRIPTIONS = [
 ]
 
 
-# Utility function for setting up device info consistently
-def build_device_info(device: dict[str, Any], domain: str) -> DeviceInfo:
-    """Build device info helper function."""
-    return DeviceInfo(
-        identifiers={(domain, device.get("ID", "Unknown"))},
-        name=device.get("Name") or f"WatchYourLAN {device.get('ID', 'Unknown')}",
-        manufacturer=device.get("Hw", "Unknown Manufacturer"),
-        model="WatchYourLAN Device",
-        sw_version=device.get("Last_Seen", "Unknown"),
-    )
-
-
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the WatchYourLAN sensors."""
     coordinator: WatchYourLANUpdateCoordinator = entry.runtime_data
 
-    # Use a more general type hint to accommodate both sensor types
-    entities: list[SensorEntity] = [WatchYourLANDeviceCountSensor(coordinator)]
-
-    # Loop over each device and create sensors for each entity description
-    for device in coordinator.data:
-        if isinstance(device, dict):
-            entities += [
-                WatchYourLANGenericSensor(coordinator, device, description)
-                for description in ENTITY_DESCRIPTIONS
-            ]
+    entities: list[SensorEntity] = [WatchYourLANDeviceCountSensor(coordinator)] + [
+        WatchYourLANGenericSensor(coordinator, device, description)
+        for device in coordinator.data
+        for description in ENTITY_DESCRIPTIONS
+    ]
 
     async_add_entities(entities)
 
@@ -85,7 +68,6 @@ class WatchYourLANGenericSensor(
         self.device = device
         self.entity_description = description
         self._attr_unique_id = f"{self.device.get('ID')}_{description.key}"
-        self._attr_device_info = build_device_info(self.device, DOMAIN)
 
     @property
     def native_value(self) -> str:
@@ -103,6 +85,18 @@ class WatchYourLANGenericSensor(
             "iface": "Iface",
         }
         return field_mapping.get(self.entity_description.key, "")
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device info for the sensor."""
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.device.get("ID", "Unknown"))},
+            name=self.device.get("Name")
+            or f"WatchYourLAN {self.device.get('ID', 'Unknown')}",
+            manufacturer=self.device.get("Hw", "Unknown Manufacturer"),
+            model="WatchYourLAN Device",
+            sw_version=self.device.get("Last_Seen", "Unknown"),
+        )
 
 
 class WatchYourLANDeviceCountSensor(
