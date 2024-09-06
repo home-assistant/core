@@ -1,14 +1,11 @@
 """The WatchYourLAN integration."""
 
-import logging
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
 from .coordinator import WatchYourLANUpdateCoordinator
 
-_LOGGER = logging.getLogger(__name__)
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 type WatchYourLANConfigEntry = ConfigEntry[WatchYourLANUpdateCoordinator]
 
@@ -19,7 +16,7 @@ async def async_setup_entry(
     """Set up WatchYourLAN from a config entry."""
 
     # Create and store the coordinator, passing the entire ConfigEntry
-    coordinator = WatchYourLANUpdateCoordinator(hass, entry)
+    coordinator = WatchYourLANUpdateCoordinator(hass)
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
 

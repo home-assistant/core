@@ -37,7 +37,9 @@ class WatchYourLANConfigFlow(ConfigFlow, domain=DOMAIN):
             try:
                 # Use the WatchYourLANClient to validate the connection
                 api_client = WatchYourLANClient(
-                    base_url=user_input[CONF_URL], async_mode=True
+                    base_url=user_input[CONF_URL],
+                    async_mode=True,
+                    verify_ssl=user_input[CONF_SSL],
                 )
                 hosts = await api_client.get_all_hosts()
                 if not hosts:
