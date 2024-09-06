@@ -734,6 +734,7 @@ select = [
     "PIE", # flake8-pie
     "PL", # pylint
     "PT", # flake8-pytest-style
+    "PTH", # flake8-pathlib
     "PYI", # flake8-pyi
     "RET", # flake8-return
     "RSE", # flake8-raise
@@ -904,6 +905,10 @@ split-on-trailing-comma = false
 "homeassistant/__main__.py" = ["T201"]
 "homeassistant/scripts/*" = ["T201"]
 "script/*" = ["T20"]
+
+# Temporary
+"homeassistant/**" = ["PTH"]
+"tests/**" = ["PTH"]
 
 [tool.ruff.lint.mccabe]
 max-complexity = 25
