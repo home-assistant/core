@@ -7,8 +7,8 @@ from datetime import timedelta
 from aiohttp import ClientResponseError
 from gql.transport.exceptions import TransportServerError
 from monarchmoney import LoginFailedException
-from monarchmoney_typed import TypedMonarchMoney
-from monarchmoney_typed.models import MonarchAccount, MonarchCashflowSummary
+from typedmonarchmoney import TypedMonarchMoney
+from typedmonarchmoney.models import MonarchAccount, MonarchCashflowSummary
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant

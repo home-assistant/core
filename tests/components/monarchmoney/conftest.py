@@ -5,8 +5,8 @@ import json
 from typing import Any
 from unittest.mock import AsyncMock, PropertyMock, patch
 
-from monarchmoney_typed.models import MonarchAccount, MonarchCashflowSummary
 import pytest
+from typedmonarchmoney.models import MonarchAccount, MonarchCashflowSummary
 
 from homeassistant.components.monarchmoney.const import DOMAIN
 from homeassistant.const import CONF_TOKEN

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from monarchmoney_typed import TypedMonarchMoney
+from typedmonarchmoney import TypedMonarchMoney
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_TOKEN, Platform
