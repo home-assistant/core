@@ -1,6 +1,5 @@
 """Test opentherm_gw switches."""
 
-from datetime import timedelta
 from unittest.mock import AsyncMock, MagicMock, call
 
 import pytest
@@ -12,7 +11,6 @@ from homeassistant.components.switch import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
-from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_ID,
@@ -22,9 +20,8 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.util import dt as dt_util
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(
@@ -56,6 +53,7 @@ async def test_switch_added_disabled(
     assert entity_entry.disabled_by == er.RegistryEntryDisabler.INTEGRATION
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize(
     ("entity_key", "target_func"),
     [
@@ -86,17 +84,6 @@ async def test_ch_override_switch(
             f"{mock_config_entry.data[CONF_ID]}-{OpenThermDeviceIdentifier.GATEWAY}-{entity_key}",
         )
     ) is not None
-
-    assert (entity_entry := entity_registry.async_get(switch_entity_id)) is not None
-    assert entity_entry.disabled_by == er.RegistryEntryDisabler.INTEGRATION
-
-    entity_registry.async_update_entity(switch_entity_id, disabled_by=None)
-
-    async_fire_time_changed(
-        hass,
-        dt_util.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
-    )
-    await hass.async_block_till_done()
     assert hass.states.get(switch_entity_id).state == STATE_UNKNOWN
 
     await hass.services.async_call(
