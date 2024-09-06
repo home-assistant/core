@@ -113,7 +113,6 @@ async def test_squeezebox_player_rediscovery(
     freezer.tick(timedelta(seconds=DISCOVERY_INTERVAL))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
-    # player should have been rediscovered but its sensors are not yet updated
     freezer.tick(timedelta(seconds=SENSOR_UPDATE_INTERVAL))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()

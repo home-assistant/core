@@ -140,7 +140,7 @@ async def async_setup_entry(
                 _LOGGER.debug("Adding new entity: %s", player)
                 entity = SqueezeBoxEntity(player, lms)
                 known_players.append(entity)
-                async_add_entities([entity])
+                async_add_entities([entity], True)
 
         if players := await lms.async_get_players():
             for player in players:
