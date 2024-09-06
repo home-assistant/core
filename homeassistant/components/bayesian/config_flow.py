@@ -242,6 +242,7 @@ async def validate_observation_setup(
         pass
     if user_input[CONF_PLATFORM] == ObservationTypes.TEMPLATE:
         pass
+
     # add_another is really just a variable for controlling the flow
     add_another: bool = user_input.pop("add_another", False)
 
@@ -252,6 +253,7 @@ async def validate_observation_setup(
         CONF_OBSERVATIONS, []
     )
     observations.append(user_input)
+    _LOGGER.warning(observations)  # TODO delete-me
     return {"add_another": True} if add_another else {}
 
 
@@ -450,7 +452,7 @@ def ws_start_preview(
 
         return errors
 
-    # TODO should msg['user_input'] be put into a variable?
+    user_input: dict[str, Any] = msg["user_input"]
     entity_registry_entry: er.RegistryEntry | None = None
     if msg["flow_type"] == "config_flow":
         flow_status = hass.config_entries.flow.async_get(msg["flow_id"])
@@ -474,7 +476,7 @@ def ws_start_preview(
         if entries:
             entity_registry_entry = entries[0]
 
-    errors = _validate(schema, template_type, msg["user_input"])
+    errors = _validate(schema, template_type, user_input)
 
     @callback
     def async_preview_updated(
@@ -516,7 +518,7 @@ def ws_start_preview(
         return
 
     template_config = {
-        CONF_STATE: msg["user_input"]["value_template"],
+        CONF_STATE: user_input["value_template"],
     }
     preview_entity = async_create_preview_sensor(hass, "Observation", template_config)
     preview_entity.hass = hass
