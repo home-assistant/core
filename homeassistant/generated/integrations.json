@@ -1569,7 +1569,7 @@
       "integrations": {
         "emoncms": {
           "integration_type": "hub",
-          "config_flow": false,
+          "config_flow": true,
           "iot_class": "local_polling",
           "name": "Emoncms"
         },
@@ -2904,6 +2904,12 @@
     },
     "iron_os": {
       "name": "IronOS",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
+    "iskra": {
+      "name": "iskra",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_polling"
@@ -5202,7 +5208,7 @@
       "iot_class": "local_push"
     },
     "ruckus_unleashed": {
-      "name": "Ruckus Unleashed",
+      "name": "Ruckus",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_polling"
@@ -5384,6 +5390,12 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_push"
+    },
+    "sensoterra": {
+      "name": "Sensoterra",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
     },
     "sentry": {
       "name": "Sentry",
@@ -6841,6 +6853,12 @@
       "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
+    },
+    "weheat": {
+      "name": "Weheat",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
     },
     "wemo": {
       "name": "Belkin WeMo",

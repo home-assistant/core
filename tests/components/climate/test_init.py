@@ -826,7 +826,7 @@ async def test_issue_aux_property_deprecated(
     assert (
         "test::MockClimateEntityWithAux implements the `is_aux_heat` property or uses "
         "the auxiliary  heater methods in a subclass of ClimateEntity which is deprecated "
-        f"and will be unsupported from Home Assistant 2024.10. Please {report}"
+        f"and will be unsupported from Home Assistant 2025.4. Please {report}"
     ) in caplog.text
 
     # Assert we only log warning once
