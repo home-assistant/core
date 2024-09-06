@@ -73,7 +73,7 @@ class AssistSatelliteEntity(entity.Entity):
     _is_announcing = False
     _wake_word_intercept_future: asyncio.Future[str | None] | None = None
 
-    __assist_satellite_state: AssistSatelliteState | None = None
+    __assist_satellite_state = AssistSatelliteState.LISTENING_WAKE_WORD
 
     @final
     @property
