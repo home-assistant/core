@@ -1,5 +1,6 @@
 """Test Nice G.O. init."""
 
+import asyncio
 from datetime import timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -11,7 +12,7 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.nice_go.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import issue_registry as ir
 
 from . import setup_integration
@@ -378,19 +379,38 @@ async def test_reconnect_hass_stopping(
     hass: HomeAssistant,
     mock_nice_go: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test reconnect with hass stopping."""
 
     mock_nice_go.listen = MagicMock()
     mock_nice_go.connect.side_effect = ApiError
 
-    with patch("homeassistant.components.nice_go.coordinator.asyncio.sleep"):
-        await setup_integration(hass, mock_config_entry, [Platform.COVER])
+    wait_for_hass = asyncio.Event()
 
+    @callback
+    def _async_ha_stop(event: Event) -> None:
+        """Stop reconnecting if hass is stopping."""
+        wait_for_hass.set()
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_ha_stop)
+
+    with (
+        patch("homeassistant.components.nice_go.coordinator.RECONNECT_DELAY", 0.1),
+        patch("homeassistant.components.nice_go.coordinator.RECONNECT_ATTEMPTS", 20),
+    ):
+        await setup_integration(hass, mock_config_entry, [Platform.COVER])
+        await hass.async_block_till_done()
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+        await wait_for_hass.wait()
         await hass.async_block_till_done(wait_background_tasks=True)
 
-        assert mock_nice_go.listen.call_count == 3
+        assert mock_nice_go.connect.call_count < 10
 
         assert len(hass._background_tasks) == 0
+
+        assert "API error" in caplog.text
+        assert (
+            "Failed to connect to the websocket, reconnect attempts exhausted"
+            not in caplog.text
+        )

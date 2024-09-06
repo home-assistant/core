@@ -20,8 +20,8 @@ from nice_go import (
 )
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
-from homeassistant.core import HomeAssistant
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -77,6 +77,13 @@ class NiceGOUpdateCoordinator(DataUpdateCoordinator[dict[str, NiceGODevice]]):
         self._unsub_data: Callable[[], None] | None = None
         self._unsub_connection_lost: Callable[[], None] | None = None
         self.connected = False
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._async_ha_stop)
+        self._hass_stopping: bool = hass.is_stopping
+
+    @callback
+    def _async_ha_stop(self, event: Event) -> None:
+        """Stop reconnecting if hass is stopping."""
+        self._hass_stopping = True
 
     async def _parse_barrier(self, barrier_state: BarrierState) -> NiceGODevice | None:
         """Parse barrier data."""
@@ -191,7 +198,7 @@ class NiceGOUpdateCoordinator(DataUpdateCoordinator[dict[str, NiceGODevice]]):
         )
 
         for _ in range(RECONNECT_ATTEMPTS):
-            if self.hass.is_stopping:
+            if self._hass_stopping:
                 return
 
             try:
