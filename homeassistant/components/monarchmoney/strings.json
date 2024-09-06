@@ -30,13 +30,13 @@
       },
 
       "sum_income": {
-        "name": "Income YTD"
+        "name": "Income Year to Date"
       },
       "sum_expense": {
-        "name": "Expense YTD"
+        "name": "Expense Year to Date"
       },
       "savings": {
-        "name": "Savings YTD"
+        "name": "Savings Year to Date"
       },
       "savings_rate": {
         "name": "Savings rate"

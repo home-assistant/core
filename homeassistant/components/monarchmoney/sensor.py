@@ -26,7 +26,7 @@ from .entity import MonarchMoneyAccountEntity, MonarchMoneyCashFlowEntity
 class MonarchMoneySensorEntityDescription(SensorEntityDescription):
     """Describe a sensor entity."""
 
-    value_fn: Callable[[MonarchAccount], StateType | datetime] | None = None
+    value_fn: Callable[[MonarchAccount], StateType | datetime]
     summary_fn: Callable[[MonarchCashflowSummary], StateType] | None = None
     picture_fn: Callable[[Any], str] | None = None
 
@@ -64,13 +64,6 @@ MONARCH_MONEY_AGE_SENSORS: tuple[MonarchMoneySensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda account: account.last_update,
-    ),
-    MonarchMoneySensorEntityDescription(
-        key="created",
-        translation_key="created",
-        device_class=SensorDeviceClass.TIMESTAMP,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda account: account.date_created,
     ),
 )
 

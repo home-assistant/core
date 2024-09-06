@@ -59,7 +59,9 @@ class MonarchMoneyAccountEntity(MonarchMoneyEntityBase):
         self._attr_attribution = (
             f"Data provided by Monarch Money API via {account.data_provider}"
         )
-        self._attr_unique_id = f"{coordinator.subscription_id}_{account.name}_{description.translation_key}"
+        self._attr_unique_id = (
+            f"{coordinator.subscription_id}_{account.id}_{description.translation_key}"
+        )
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, account.id)},
             name=f"{account.institution_name} {account.name}",
