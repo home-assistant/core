@@ -38,7 +38,7 @@ from .entity import (
     platform_async_setup_entry,
 )
 from .enum_mapper import EsphomeEnumMapper
-from .ffmpeg_proxy import async_allow_proxy_url
+from .ffmpeg_proxy import async_create_proxy_url
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -73,7 +73,7 @@ class EsphomeMediaPlayer(
         if self._static_info.supports_pause:
             flags |= MediaPlayerEntityFeature.PAUSE | MediaPlayerEntityFeature.PLAY
         self._attr_supported_features = flags
-        self._entry_data.media_player_formats[self.entity_id] = cast(
+        self._entry_data.media_player_formats[static_info.unique_id] = cast(
             MediaPlayerInfo, static_info
         ).supported_formats
 
@@ -81,27 +81,19 @@ class EsphomeMediaPlayer(
     @esphome_state_property
     def state(self) -> MediaPlayerState | None:
         """Return current state."""
-        state = _STATES.from_esphome(self._state.state)
-        if state is not None:
-            return cast(MediaPlayerState, state)
-
-        return None
+        return _STATES.from_esphome(self._state.state)
 
     @property
     @esphome_state_property
     def is_volume_muted(self) -> bool:
         """Return true if volume is muted."""
-        return self._state.muted is True
+        return self._state.muted
 
     @property
     @esphome_float_state_property
     def volume_level(self) -> float | None:
         """Volume level of the media player (0..1)."""
-        volume = self._state.volume
-        if volume is not None:
-            return cast(float, volume)
-
-        return None
+        return self._state.volume
 
     @convert_api_error_ha_error
     async def async_play_media(
@@ -117,10 +109,18 @@ class EsphomeMediaPlayer(
         media_id = async_process_play_media_url(self.hass, media_id)
         announcement = kwargs.get(ATTR_MEDIA_ANNOUNCE)
 
+        supported_formats: list[MediaPlayerSupportedFormat] | None = (
+            self._entry_data.media_player_formats.get(self._static_info.unique_id)
+        )
+
         if (
-            self.supported_formats
+            supported_formats
             and _is_url(media_id)
-            and (proxy_url := self._get_proxy_url(media_id, announcement is True))
+            and (
+                proxy_url := self._get_proxy_url(
+                    supported_formats, media_id, announcement is True
+                )
+            )
         ):
             # Substitute proxy URL
             media_id = proxy_url
@@ -133,7 +133,13 @@ class EsphomeMediaPlayer(
         """Handle entity being removed."""
         await super().async_will_remove_from_hass()
         self._entry_data.media_player_formats.pop(self.entity_id, None)
-    def _get_proxy_url(self, url: str, announcement: bool) -> str | None:
+
+    def _get_proxy_url(
+        self,
+        supported_formats: list[MediaPlayerSupportedFormat],
+        url: str,
+        announcement: bool,
+    ) -> str | None:
         """Get URL for ffmpeg proxy."""
         if self.device_entry is None:
             # Device id is required
@@ -141,7 +147,7 @@ class EsphomeMediaPlayer(
 
         # Choose the first default or announcement supported format
         format_to_use: MediaPlayerSupportedFormat | None = None
-        for supported_format in self.supported_formats:
+        for supported_format in supported_formats:
             if (format_to_use is None) and (
                 supported_format.purpose == MediaPlayerFormatPurpose.DEFAULT
             ):
@@ -164,7 +170,7 @@ class EsphomeMediaPlayer(
         _LOGGER.debug("Proxying media url %s with format %s", url, format_to_use)
         device_id = self.device_entry.id
         media_format = format_to_use.format
-        convert_id = async_allow_proxy_url(
+        proxy_url = async_create_proxy_url(
             self.hass,
             device_id,
             url,
@@ -173,9 +179,7 @@ class EsphomeMediaPlayer(
             channels=format_to_use.num_channels,
         )
 
-        # Ensure the URL has a file extension for devices that use it to
-        # identify the file type.
-        proxy_url = f"/api/esphome/ffmpeg_proxy/{device_id}/{convert_id}.{media_format}"
+        # Resolve URL
         return async_process_play_media_url(self.hass, proxy_url)
 
     async def async_browse_media(
@@ -216,13 +220,6 @@ class EsphomeMediaPlayer(
         self._client.media_player_command(
             self._key,
             command=MediaPlayerCommand.MUTE if mute else MediaPlayerCommand.UNMUTE,
-        )
-
-    @property
-    def supported_formats(self) -> list[MediaPlayerSupportedFormat]:
-        """Return list of supported formats."""
-        return cast(
-            list[MediaPlayerSupportedFormat], self._static_info.supported_formats
         )
 
 

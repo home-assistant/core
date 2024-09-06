@@ -19,28 +19,24 @@ from .const import DATA_FFMPEG_PROXY
 _LOGGER = logging.getLogger(__name__)
 
 
-def async_allow_proxy_url(
+def async_create_proxy_url(
     hass: HomeAssistant,
     device_id: str,
-    url: str,
+    media_url: str,
     media_format: str,
     rate: int | None = None,
     channels: int | None = None,
 ) -> str:
-    """Mark a URL as allowed for conversion by a specific device.
-
-    The URL will be removed from the allow list once it is requested in the HTTP
-    view.
-    """
+    """Create a one-time use proxy URL that automatically converts the media."""
     data: FFmpegProxyData = hass.data[DATA_FFMPEG_PROXY]
 
     convert_id = ulid.ulid()
     data.conversions[device_id][convert_id] = FFmpegConversionInfo(
-        url, media_format, rate, channels
+        media_url, media_format, rate, channels
     )
-    _LOGGER.debug("URL allowed by proxy: %s", url)
+    _LOGGER.debug("Media URL allowed by proxy: %s", media_url)
 
-    return convert_id
+    return f"/api/esphome/ffmpeg_proxy/{device_id}/{convert_id}.{media_format}"
 
 
 @dataclass
@@ -101,6 +97,7 @@ class FFmpegConvertResponse(web.StreamResponse):
 
         """
         super().__init__(status=200)
+        self.hass = manager.hass
         self.manager = manager
         self.convert_info = convert_info
         self.device_id = device_id
@@ -147,7 +144,8 @@ class FFmpegConvertResponse(web.StreamResponse):
         try:
             # Pull audio chunks from ffmpeg and pass them to the HTTP client
             while (
-                (request.transport is not None)
+                self.hass.is_running
+                and (request.transport is not None)
                 and (not request.transport.is_closing())
                 and (proc.returncode is None)
                 and (chunk := await proc.stdout.read(self.chunk_size))
@@ -205,7 +203,7 @@ class FFmpegProxyView(HomeAssistantView):
 
         # Stop any existing process
         proc = self.proxy_data.processes.pop(device_id, None)
-        if proc is not None:
+        if (proc is not None) and (proc.returncode is None):
             _LOGGER.debug("Stopping existing ffmpeg process for device: %s", device_id)
 
             # Terminate hangs, so kill is used
