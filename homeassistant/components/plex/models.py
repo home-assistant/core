@@ -49,15 +49,18 @@ class PlexSession:
         self.media_codec_long = None
         self.media_filename = None
         self.media_tmdb_id = None
+        self.media_tvdb_id = None
         self.media_edition_title = None
         self.media_year = None
 
         # Only available on sessions
         self.player = next(iter(session.players), None)
-        self.device_product = self.player.product
+        if self.player:
+            self.device_product = self.player.product
         self.media_position = session.viewOffset
         self.session_key = session.sessionKey
-        self.state = self.player.state
+        if self.player:
+            self.state = self.player.state
         self.username = next(iter(session.usernames), None)
 
         # Used by sensor entity
@@ -76,21 +79,38 @@ class PlexSession:
         if media_item := next(iter(media.media), None):
             for stream in media_item.parts[0].streams:
                 if stream.streamType == 2:  # 2 is the audio stream
+                    # plex returns two forms of codecs, both are relevant and important
                     self.media_codec = stream.displayTitle
                     self.media_codec_long = stream.extendedDisplayTitle
                     break
 
-    def update_tmdb_id(self, media):
-        """Update TMDB ID."""
-        for guid in media.guids:
-            if tmdb_match := re.search(r"(?:themoviedb|tmdb)://(\d+)", guid.id):
-                self.media_tmdb_id = tmdb_match.group(1)
-                return
-        self.media_tmdb_id = None
+    def update_item_ids(self, source):
+        """Update TMDB and TVDB ID."""
+        _LOGGER.debug(
+            "Attempting to extract TMDB and TVDB IDs from source %s", source.guids
+        )
+        for guid in source.guids:
+            _LOGGER.debug("Found GUID: %s", guid.id)
+            match guid.id:
+                case str(id_str) if (
+                    tmdb_match := re.search(r"(?:tmdb)://(\d+)", id_str)
+                ):
+                    self.media_tmdb_id = tmdb_match.group(1)
+                    _LOGGER.debug("TMDB ID found: %s", self.media_tmdb_id)
+                case str(id_str) if (
+                    tvdb_match := re.search(r"(?:tvdb)://(\d+)", id_str)
+                ):
+                    self.media_tvdb_id = tvdb_match.group(1)
+                    _LOGGER.debug("TVDB ID found: %s", self.media_tvdb_id)
+
+        _LOGGER.debug(
+            "Final IDs - TMDB: %s, TVDB: %s", self.media_tmdb_id, self.media_tvdb_id
+        )
 
     def get_edition_name(self, media):
         """Get the edition name from metadata or filename."""
         edition = getattr(media, "editionTitle", "")
+        # having edition in metadata is rare
         if edition:
             _LOGGER.debug("Found edition title in metadata")
             return edition
@@ -121,7 +141,8 @@ class PlexSession:
         self.media_image_url = self.get_media_image_url(media)
         self.media_summary = media.summary
         self.media_title = media.title
-
+        self.source = media.source()
+        _LOGGER.debug("Media source: %s", self.source)
         if media.duration:
             self.media_duration = int(media.duration / 1000)
 
@@ -130,9 +151,11 @@ class PlexSession:
         if media_item := next(iter(media.media), None):
             self.media_filename = media_item.parts[0].file if media_item.parts else None
 
+        # Get metadata
         self.media_edition_title = self.get_edition_name(media)
         self.update_audio_codec(media)
-        self.update_tmdb_id(media)
+        # GUIDs are not present in session objects, only source
+        self.update_item_ids(self.source)
 
         if media.librarySectionID in SPECIAL_SECTIONS:
             self.media_library_title = SPECIAL_SECTIONS[media.librarySectionID]
@@ -150,7 +173,6 @@ class PlexSession:
             self.media_library_title = (
                 media.section().title if media.librarySectionID is not None else ""
             )
-
         if media.type == "episode":
             self.media_content_type = MediaType.TVSHOW
             self.media_season = media.seasonNumber

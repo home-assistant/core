@@ -62,6 +62,35 @@
       "scan_clients": {
         "name": "Scan clients"
       }
+    },
+    "sensor": {
+      "year": {
+        "name": "Year"
+      },
+      "title": {
+        "name": "Title"
+      },
+      "filename": {
+        "name": "Filename"
+      },
+      "codec": {
+        "name": "Codec"
+      },
+      "codec_long": {
+        "name": "Codec Extended"
+      },
+      "tmdb_id": {
+        "name": "TMDB ID"
+      },
+      "tvdb_id": {
+        "name": "TVDB ID"
+      },
+      "edition_title": {
+        "name": "Edition Title"
+      },
+      "plex": {
+        "name": "Plex"
+      }
     }
   },
   "services": {
