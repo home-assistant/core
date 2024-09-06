@@ -1,12 +1,11 @@
 """Support for the WatchYourLAN service."""
 
-from homeassistant.components.sensor import (
-    RestoreSensor,
-    SensorEntity,
-    SensorEntityDescription,
-)
+from typing import Any
+
+from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -14,192 +13,101 @@ from .const import DOMAIN
 from .coordinator import WatchYourLANUpdateCoordinator
 
 # Define entity descriptions for each sensor type
-ONLINE_STATUS_DESCRIPTION = SensorEntityDescription(
-    key="online_status",
-    name="Online Status",
-)
-
-IP_ADDRESS_DESCRIPTION = SensorEntityDescription(
-    key="ip_address",
-    name="IP Address",
-)
-
-MAC_ADDRESS_DESCRIPTION = SensorEntityDescription(
-    key="mac_address",
-    name="MAC Address",
-)
-
-IFACE_DESCRIPTION = SensorEntityDescription(
-    key="iface",
-    name="Network Interface",
-)
+ENTITY_DESCRIPTIONS = [
+    SensorEntityDescription(
+        key="online_status",
+        name="Online Status",
+        icon="mdi:lan-connect",
+    ),
+    SensorEntityDescription(
+        key="ip_address",
+        name="IP Address",
+        icon="mdi:ip-network",
+    ),
+    SensorEntityDescription(
+        key="mac_address",
+        name="MAC Address",
+        icon="mdi:lan",
+    ),
+    SensorEntityDescription(
+        key="iface",
+        name="Network Interface",
+        icon="mdi:ethernet",
+    ),
+]
 
 
 # Utility function for setting up device info consistently
-def build_device_info(device, domain):
+def build_device_info(device: dict[str, Any], domain: str) -> DeviceInfo:
     """Build device info helper function."""
-    return {
-        "identifiers": {(domain, device.get("ID", "Unknown"))},
-        "name": device.get("Name") or f"WatchYourLAN {device.get('ID', 'Unknown')}",
-        "manufacturer": device.get("Hw", "Unknown Manufacturer"),
-        "model": "WatchYourLAN Device",
-        "sw_version": device.get("Last_Seen", "Unknown"),
-    }
+    return DeviceInfo(
+        identifiers={(domain, device.get("ID", "Unknown"))},
+        name=device.get("Name") or f"WatchYourLAN {device.get('ID', 'Unknown')}",
+        manufacturer=device.get("Hw", "Unknown Manufacturer"),
+        model="WatchYourLAN Device",
+        sw_version=device.get("Last_Seen", "Unknown"),
+    )
 
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the WatchYourLAN sensors."""
-    coordinator = entry.runtime_data["coordinator"]
+    coordinator: WatchYourLANUpdateCoordinator = entry.runtime_data
 
-    # Define a list that can store multiple sensor types
-    entities: list[SensorEntity | CoordinatorEntity] = []
+    # Use a more general type hint to accommodate both sensor types
+    entities: list[SensorEntity] = [WatchYourLANDeviceCountSensor(coordinator)]
 
-    # Create device count sensor
-    entities.append(WatchYourLANDeviceCountSensor(coordinator))
-
-    # Loop over each device and create sensors for online status, IP, MAC, and Iface
+    # Loop over each device and create sensors for each entity description
     for device in coordinator.data:
         if isinstance(device, dict):
-            entities.append(
-                WatchYourLANSensor(coordinator, device)
-            )  # Online/Offline sensor
-            entities.append(WatchYourLANIPSensor(coordinator, device))  # IP sensor
-            entities.append(WatchYourLANMacSensor(coordinator, device))  # MAC sensor
-            entities.append(
-                WatchYourLANIfaceSensor(coordinator, device)
-            )  # Iface sensor
+            entities += [
+                WatchYourLANGenericSensor(coordinator, device, description)
+                for description in ENTITY_DESCRIPTIONS
+            ]
 
-    # Add all the entities
     async_add_entities(entities)
 
 
-class WatchYourLANSensor(CoordinatorEntity, RestoreSensor, SensorEntity):
-    """Representation of a WatchYourLAN online/offline sensor."""
+class WatchYourLANGenericSensor(
+    CoordinatorEntity[WatchYourLANUpdateCoordinator], SensorEntity
+):
+    """Generic WatchYourLAN sensor for different data points."""
 
     def __init__(
-        self, coordinator: WatchYourLANUpdateCoordinator, device: dict
+        self,
+        coordinator: WatchYourLANUpdateCoordinator,
+        device: dict[str, Any],
+        description: SensorEntityDescription,
     ) -> None:
-        """Initialize the sensor for online/offline state."""
+        """Initialize the sensor."""
         super().__init__(coordinator)
         self.device = device
-        self.entity_description = ONLINE_STATUS_DESCRIPTION
-
-        # Set the unique ID and device info
-        self._attr_unique_id = f"{self.device.get('ID')}_online_status"
+        self.entity_description = description
+        self._attr_unique_id = f"{self.device.get('ID')}_{description.key}"
         self._attr_device_info = build_device_info(self.device, DOMAIN)
-
-        # Set an appropriate icon for the sensor
-        self._attr_icon = (
-            "mdi:lan-connect"
-            if self.device.get("Now", 0) == 1
-            else "mdi:lan-disconnect"
-        )
 
     @property
     def native_value(self) -> str:
-        """Return the native value of the sensor."""
-        return "Online" if self.device.get("Now", 0) == 1 else "Offline"
+        """Return the native value of the sensor based on its description."""
+        if self.entity_description.key == "online_status":
+            return "Online" if self.device.get("Now", 0) == 1 else "Offline"
+        return self.device.get(self._get_device_field_for_key(), "Unknown")
 
-    async def async_update(self):
-        """Update the sensor's state from the coordinator."""
-        await (
-            self.coordinator.async_request_refresh()
-        )  # Request data update from the coordinator
-        self._attr_native_value = (
-            "Online" if self.device.get("Now", 0) == 1 else "Offline"
-        )
-
-
-class WatchYourLANIPSensor(CoordinatorEntity, RestoreSensor, SensorEntity):
-    """Sensor for the IP address of the device."""
-
-    def __init__(
-        self, coordinator: WatchYourLANUpdateCoordinator, device: dict
-    ) -> None:
-        """Initialize the IP address sensor."""
-        super().__init__(coordinator)
-        self.device = device
-        self.entity_description = IP_ADDRESS_DESCRIPTION
-
-        # Set the unique ID and device info
-        self._attr_unique_id = f"{self.device.get('ID')}_ip"
-        self._attr_device_info = build_device_info(self.device, DOMAIN)
-
-        # Set an appropriate icon for the IP address sensor
-        self._attr_icon = "mdi:ip-network"
-
-    @property
-    def native_value(self) -> str:
-        """Return the native value of the IP address."""
-        return self.device.get("IP", "Unknown")
-
-    async def async_update(self):
-        """Update the sensor's state from the coordinator."""
-        await self.coordinator.async_request_refresh()
-        self._attr_native_value = self.device.get("IP", "Unknown")
+    def _get_device_field_for_key(self) -> str:
+        """Map description key to the appropriate device field."""
+        field_mapping = {
+            "online_status": "Now",
+            "ip_address": "IP",
+            "mac_address": "Mac",
+            "iface": "Iface",
+        }
+        return field_mapping.get(self.entity_description.key, "")
 
 
-class WatchYourLANMacSensor(CoordinatorEntity, RestoreSensor, SensorEntity):
-    """Sensor for the MAC address of the device."""
-
-    def __init__(
-        self, coordinator: WatchYourLANUpdateCoordinator, device: dict
-    ) -> None:
-        """Initialize the MAC address sensor."""
-        super().__init__(coordinator)
-        self.device = device
-        self.entity_description = MAC_ADDRESS_DESCRIPTION
-
-        # Set the unique ID and device info
-        self._attr_unique_id = f"{self.device.get('ID')}_mac"
-        self._attr_device_info = build_device_info(self.device, DOMAIN)
-
-        # Set an appropriate icon for the MAC address sensor
-        self._attr_icon = "mdi:lan"
-
-    @property
-    def native_value(self) -> str:
-        """Return the native value of the MAC address."""
-        return self.device.get("Mac", "Unknown")
-
-    async def async_update(self):
-        """Update the sensor's state from the coordinator."""
-        await self.coordinator.async_request_refresh()
-        self._attr_native_value = self.device.get("Mac", "Unknown")
-
-
-class WatchYourLANIfaceSensor(CoordinatorEntity, RestoreSensor, SensorEntity):
-    """Sensor for the network interface (Iface) of the device."""
-
-    def __init__(
-        self, coordinator: WatchYourLANUpdateCoordinator, device: dict
-    ) -> None:
-        """Initialize the network interface sensor."""
-        super().__init__(coordinator)
-        self.device = device
-        self.entity_description = IFACE_DESCRIPTION
-
-        # Set the unique ID and device info
-        self._attr_unique_id = f"{self.device.get('ID')}_iface"
-        self._attr_device_info = build_device_info(self.device, DOMAIN)
-
-        # Set an appropriate icon for the network interface sensor
-        self._attr_icon = "mdi:ethernet"
-
-    @property
-    def native_value(self) -> str:
-        """Return the native value of the network interface."""
-        return self.device.get("Iface", "Unknown")
-
-    async def async_update(self):
-        """Update the sensor's state from the coordinator."""
-        await self.coordinator.async_request_refresh()
-        self._attr_native_value = self.device.get("Iface", "Unknown")
-
-
-class WatchYourLANDeviceCountSensor(CoordinatorEntity, SensorEntity):
+class WatchYourLANDeviceCountSensor(
+    CoordinatorEntity[WatchYourLANUpdateCoordinator], SensorEntity
+):
     """Sensor that tracks the total number of devices."""
 
     def __init__(self, coordinator: WatchYourLANUpdateCoordinator) -> None:
@@ -207,19 +115,19 @@ class WatchYourLANDeviceCountSensor(CoordinatorEntity, SensorEntity):
         super().__init__(coordinator)
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the sensor."""
         return "WatchYourLAN Total Devices"
 
     @property
-    def native_value(self):
+    def native_value(self) -> int:
         """Return the state of the sensor."""
         return (
             len(self.coordinator.data) if isinstance(self.coordinator.data, list) else 0
         )
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return additional details such as known/unknown devices and devices per network interface."""
         if isinstance(self.coordinator.data, list):
             online_count = sum(
@@ -231,7 +139,7 @@ class WatchYourLANDeviceCountSensor(CoordinatorEntity, SensorEntity):
             )
             unknown_count = len(self.coordinator.data) - known_count
 
-            iface_counts = {}
+            iface_counts: dict[str, int] = {}
             for device in self.coordinator.data:
                 iface = device.get("Iface", "Unknown")
                 iface_counts[iface] = iface_counts.get(iface, 0) + 1
