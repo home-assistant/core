@@ -10,10 +10,9 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN
+from .const import DOMAIN, AssistSatelliteEntityFeature
 from .entity import AssistSatelliteEntity, AssistSatelliteEntityDescription
 from .errors import SatelliteBusyError
-from .models import AssistSatelliteEntityFeature, AssistSatelliteState
 from .websocket_api import async_register_websocket_api
 
 __all__ = [
@@ -21,7 +20,6 @@ __all__ = [
     "AssistSatelliteEntity",
     "AssistSatelliteEntityDescription",
     "AssistSatelliteEntityFeature",
-    "AssistSatelliteState",
     "SatelliteBusyError",
 ]
 

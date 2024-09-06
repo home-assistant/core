@@ -1,5 +1,6 @@
 """Test helpers for Assist Satellite."""
 
+import pathlib
 from unittest.mock import Mock
 
 import pytest
@@ -12,22 +13,23 @@ from homeassistant.components.assist_satellite import (
 )
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.setup import async_setup_component
 
 from tests.common import (
     MockConfigEntry,
     MockModule,
-    MockPlatform,
     mock_config_flow,
     mock_integration,
     mock_platform,
-)
-from tests.components.tts.conftest import (
-    mock_tts_cache_dir_fixture_autouse,  # noqa: F401
+    setup_test_component_platform,
 )
 
-TEST_DOMAIN = "test_satellite"
+TEST_DOMAIN = "test"
+
+
+@pytest.fixture(autouse=True)
+def mock_tts(mock_tts_cache_dir: pathlib.Path) -> None:
+    """Mock TTS cache dir fixture."""
 
 
 class MockAssistSatellite(AssistSatelliteEntity):
@@ -95,19 +97,8 @@ async def init_components(
             async_unload_entry=async_unload_entry_init,
         ),
     )
-
+    setup_test_component_platform(hass, AS_DOMAIN, [entity], from_config_entry=True)
     mock_platform(hass, f"{TEST_DOMAIN}.config_flow", Mock())
-
-    async def async_setup_entry_platform(
-        hass: HomeAssistant,
-        config_entry: ConfigEntry,
-        async_add_entities: AddEntitiesCallback,
-    ) -> None:
-        """Set up test satellite platform via config entry."""
-        async_add_entities([entity])
-
-    loaded_platform = MockPlatform(async_setup_entry=async_setup_entry_platform)
-    mock_platform(hass, f"{TEST_DOMAIN}.{AS_DOMAIN}", loaded_platform)
 
     with mock_config_flow(TEST_DOMAIN, ConfigFlow):
         assert await hass.config_entries.async_setup(config_entry.entry_id)

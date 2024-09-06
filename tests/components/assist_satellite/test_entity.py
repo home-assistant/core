@@ -17,10 +17,8 @@ from homeassistant.components.assist_pipeline import (
     async_update_pipeline,
     vad,
 )
-from homeassistant.components.assist_satellite import (
-    AssistSatelliteState,
-    SatelliteBusyError,
-)
+from homeassistant.components.assist_satellite import SatelliteBusyError
+from homeassistant.components.assist_satellite.entity import AssistSatelliteState
 from homeassistant.components.media_source import PlayMedia
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_UNKNOWN

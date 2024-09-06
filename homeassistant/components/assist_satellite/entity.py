@@ -3,9 +3,10 @@
 from abc import abstractmethod
 import asyncio
 from collections.abc import AsyncIterable
+from enum import StrEnum
 import logging
 import time
-from typing import Any, Final
+from typing import Any, Final, final
 
 from homeassistant.components import media_source, stt, tts
 from homeassistant.components.assist_pipeline import (
@@ -28,12 +29,28 @@ from homeassistant.helpers import entity
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.util import ulid
 
+from .const import AssistSatelliteEntityFeature
 from .errors import AssistSatelliteError, SatelliteBusyError
-from .models import AssistSatelliteEntityFeature, AssistSatelliteState
 
 _CONVERSATION_TIMEOUT_SEC: Final = 5 * 60  # 5 minutes
 
 _LOGGER = logging.getLogger(__name__)
+
+
+class AssistSatelliteState(StrEnum):
+    """Valid states of an Assist satellite entity."""
+
+    LISTENING_WAKE_WORD = "listening_wake_word"
+    """Device is streaming audio for wake word detection to Home Assistant."""
+
+    LISTENING_COMMAND = "listening_command"
+    """Device is streaming audio with the voice command to Home Assistant."""
+
+    PROCESSING = "processing"
+    """Home Assistant is processing the voice command."""
+
+    RESPONDING = "responding"
+    """Device is speaking the response."""
 
 
 class AssistSatelliteEntityDescription(EntityDescription, frozen_or_thawed=True):
@@ -55,6 +72,14 @@ class AssistSatelliteEntity(entity.Entity):
     _run_has_tts: bool = False
     _is_announcing = False
     _wake_word_intercept_future: asyncio.Future[str | None] | None = None
+
+    __assist_satellite_state: AssistSatelliteState | None = None
+
+    @final
+    @property
+    def state(self) -> str | None:
+        """Return state of the entity."""
+        return self.__assist_satellite_state
 
     @property
     def pipeline_entity_id(self) -> str | None:
@@ -260,7 +285,7 @@ class AssistSatelliteEntity(entity.Entity):
     @callback
     def _set_state(self, state: AssistSatelliteState) -> None:
         """Set the entity's state."""
-        self._attr_state = state
+        self.__assist_satellite_state = state
         self.async_write_ha_state()
 
     @callback
@@ -271,7 +296,7 @@ class AssistSatelliteEntity(entity.Entity):
     @callback
     def _resolve_pipeline(self) -> str | None:
         """Resolve pipeline from select entity to id.
-        
+
         Return None to make async_get_pipeline look up the preferred pipeline.
         """
         if not (pipeline_entity_id := self.pipeline_entity_id):
