@@ -255,8 +255,7 @@ def explore_module(package: str, explore_children: bool) -> list[str]:
 
 def core_requirements() -> list[str]:
     """Gather core requirements out of pyproject.toml."""
-    with Path("pyproject.toml").open("rb") as fp:
-        data = tomllib.load(fp)
+    data = tomllib.loads(Path("pyproject.toml").read_text())
     dependencies: list[str] = data["project"]["dependencies"]
     return dependencies
 
@@ -589,7 +588,7 @@ def main(validate: bool, ci: bool) -> int:
 def _get_hassfest_config() -> Config:
     """Get hassfest config."""
     return Config(
-        root=Path(".").absolute(),
+        root=Path().absolute(),
         specific_integrations=None,
         action="validate",
         requirements=True,

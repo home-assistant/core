@@ -218,33 +218,28 @@ def validate(integrations: dict[str, Integration], config: Config) -> None:
     brands = Brand.load_dir(config.root / "homeassistant/brands", config)
     validate_brands(brands, integrations, config)
 
-    with config_flow_path.open() as fp:
-        if fp.read() != content:
-            config.add_error(
-                "config_flow",
-                "File config_flows.py is not up to date. "
-                "Run python3 -m script.hassfest",
-                fixable=True,
-            )
+    if config_flow_path.read_text() != content:
+        config.add_error(
+            "config_flow",
+            "File config_flows.py is not up to date. " "Run python3 -m script.hassfest",
+            fixable=True,
+        )
 
     config.cache["integrations"] = content = _generate_integrations(
         brands, integrations, config
     )
-    with integrations_path.open() as fp:
-        if fp.read() != content + "\n":
-            config.add_error(
-                "config_flow",
-                "File integrations.json is not up to date. "
-                "Run python3 -m script.hassfest",
-                fixable=True,
-            )
+    if integrations_path.read_text() != content + "\n":
+        config.add_error(
+            "config_flow",
+            "File integrations.json is not up to date. "
+            "Run python3 -m script.hassfest",
+            fixable=True,
+        )
 
 
 def generate(integrations: dict[str, Integration], config: Config) -> None:
     """Generate config flow file."""
     config_flow_path = config.root / "homeassistant/generated/config_flows.py"
     integrations_path = config.root / "homeassistant/generated/integrations.json"
-    with config_flow_path.open("w") as fp:
-        fp.write(f"{config.cache['config_flow']}")
-    with integrations_path.open("w") as fp:
-        fp.write(f"{config.cache['integrations']}\n")
+    config_flow_path.write_text(f"{config.cache['config_flow']}")
+    integrations_path.write_text(f"{config.cache['integrations']}\n")

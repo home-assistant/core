@@ -55,16 +55,9 @@ def run_download_docker():
         raise ExitApp("Failed to download translations")
 
 
-def save_json(filename: Path, data: list | dict):
-    """Save JSON data to a file.
-
-    Returns True on success.
-    """
-    data = json.dumps(data, sort_keys=True, indent=4)
-    with filename.open("w", encoding="utf-8") as fdesc:
-        fdesc.write(data)
-        return True
-    return False
+def save_json(filename: Path, data: list | dict) -> None:
+    """Save JSON data to a file."""
+    filename.write_text(json.dumps(data, sort_keys=True, indent=4), encoding="utf-8")
 
 
 def get_component_path(lang, component) -> Path | None:

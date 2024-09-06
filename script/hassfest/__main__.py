@@ -109,8 +109,8 @@ def get_config() -> Config:
     )
     parser.add_argument(
         "--core-integrations-path",
-        type=pathlib.Path,
-        default=pathlib.Path("homeassistant/components"),
+        type=Path,
+        default=Path("homeassistant/components"),
         help="Path to core integrations",
     )
     parsed = parser.parse_args()
