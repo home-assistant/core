@@ -387,9 +387,7 @@ async def test_disarm_code_required(
         # runtime user entered code is bad
         DATA_WITH_CODE = DATA.copy()
         DATA_WITH_CODE["code"] = "666"
-        with pytest.raises(
-            ServiceValidationError, match="User entered incorrect alarm PIN code"
-        ):
+        with pytest.raises(ServiceValidationError, match="Incorrect code entered"):
             await hass.services.async_call(
                 ALARM_DOMAIN, SERVICE_ALARM_DISARM, DATA_WITH_CODE, blocking=True
             )
