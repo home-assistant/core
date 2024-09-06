@@ -309,6 +309,11 @@
       "outside_temperature": {
         "name": "Outside temperature"
       }
+    },
+    "switch": {
+      "central_heating_override_n": {
+        "name": "Force central heating {circuit_number} on"
+      }
     }
   },
   "options": {
