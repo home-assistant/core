@@ -3,15 +3,17 @@
 from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
+from pysmlight import Info
 from pysmlight.exceptions import SmlightAuthError, SmlightConnectionError, SmlightError
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.smlight.const import SCAN_INTERVAL
+from homeassistant.components.smlight.const import DOMAIN, SCAN_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.issue_registry import IssueRegistry
 
 from .conftest import setup_integration
 
@@ -110,3 +112,33 @@ async def test_device_info(
     )
     assert device_entry is not None
     assert device_entry == snapshot
+
+
+async def test_device_legacy_firmware(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_smlight_client: MagicMock,
+    device_registry: dr.DeviceRegistry,
+    issue_registry: IssueRegistry,
+) -> None:
+    """Test device setup for old firmware version that dont support required API."""
+    LEGACY_VERSION = "v2.3.1"
+    mock_smlight_client.get_sensors.side_effect = SmlightError
+    mock_smlight_client.get_info.return_value = Info(
+        legacy_api=1, sw_version=LEGACY_VERSION, MAC="AA:BB:CC:DD:EE:FF"
+    )
+    entry = await setup_integration(hass, mock_config_entry)
+
+    assert entry.unique_id == "aa:bb:cc:dd:ee:ff"
+
+    device_entry = device_registry.async_get_device(
+        connections={(dr.CONNECTION_NETWORK_MAC, entry.unique_id)}
+    )
+    assert LEGACY_VERSION in device_entry.sw_version
+
+    issue = issue_registry.async_get_issue(
+        domain=DOMAIN, issue_id="unsupported_firmware"
+    )
+    assert issue is not None
+    assert issue.domain == DOMAIN
+    assert issue.issue_id == "unsupported_firmware"

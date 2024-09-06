@@ -350,7 +350,7 @@ aioridwell==2024.01.0
 aioruckus==0.41
 
 # homeassistant.components.russound_rio
-aiorussound==2.3.2
+aiorussound==3.0.4
 
 # homeassistant.components.ruuvi_gateway
 aioruuvigateway==0.1.0
@@ -575,7 +575,7 @@ bleak-retry-connector==3.5.0
 bleak==0.22.2
 
 # homeassistant.components.blebox
-blebox-uniapi==2.4.2
+blebox-uniapi==2.5.0
 
 # homeassistant.components.blink
 blinkpy==0.23.0
@@ -1108,7 +1108,7 @@ hole==0.8.0
 holidays==0.56
 
 # homeassistant.components.frontend
-home-assistant-frontend==20240904.0
+home-assistant-frontend==20240906.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2024.9.4
@@ -1753,7 +1753,7 @@ pyatag==0.3.5.3
 pyatmo==8.1.0
 
 # homeassistant.components.apple_tv
-pyatv==0.15.0
+pyatv==0.15.1
 
 # homeassistant.components.aussie_broadband
 pyaussiebb==0.0.15
@@ -2616,7 +2616,7 @@ sensoterra==2.0.1
 sentry-sdk==1.40.3
 
 # homeassistant.components.sfr_box
-sfrbox-api==0.0.8
+sfrbox-api==0.0.10
 
 # homeassistant.components.sharkiq
 sharkiq==1.0.2
