@@ -117,8 +117,8 @@ async def test_calls_not_allowed(
     with patch.object(protocol, "send_audio", send_audio):
         protocol.on_chunk(bytes(_ONE_SECOND))
 
-    async with asyncio.timeout(1):
-        await done.wait()
+        async with asyncio.timeout(1):
+            await done.wait()
 
     assert sum(played_audio_bytes) > 0
     assert played_audio_bytes == snapshot()
