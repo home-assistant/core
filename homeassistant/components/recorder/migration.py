@@ -2594,6 +2594,7 @@ class EventIDPostMigration(BaseRunTimeMigration):
             # removing the index is the likely all that needs to happen.
             all_gone = not result
 
+        fk_remove_ok = False
         if all_gone:
             # Only drop the index if there are no more event_ids in the states table
             # ex all NULL
