@@ -7,6 +7,7 @@ from functools import partial
 import logging
 
 import pypck
+from pypck.connection import PchkConnectionManager
 
 from homeassistant import config_entries
 from homeassistant.const import (
@@ -87,7 +88,7 @@ async def async_setup_entry(
     }
 
     # connect to PCHK
-    lcn_connection = pypck.connection.PchkConnectionManager(
+    lcn_connection = PchkConnectionManager(
         config_entry.data[CONF_IP_ADDRESS],
         config_entry.data[CONF_PORT],
         config_entry.data[CONF_USERNAME],
