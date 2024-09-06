@@ -46,7 +46,7 @@ def check_device_registry(
     assert registry_entry.manufacturer == expected_device[ATTR_MANUFACTURER]
     assert registry_entry.name == expected_device[ATTR_NAME]
     assert registry_entry.model == expected_device[ATTR_MODEL]
-    assert registry_entry.sw_version == expected_device[ATTR_MODEL_ID]
+    assert registry_entry.model_id == expected_device[ATTR_MODEL_ID]
 
 
 def check_entities(
