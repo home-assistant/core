@@ -10,7 +10,7 @@ from homeassistant.components import light
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, VolSchemaType
 
 from ..mixins import async_setup_entity_entry_helper
 from .schema import CONF_SCHEMA, MQTT_LIGHT_SCHEMA_SCHEMA
@@ -33,7 +33,7 @@ from .schema_template import (
 
 def validate_mqtt_light_discovery(config_value: dict[str, Any]) -> ConfigType:
     """Validate MQTT light schema for discovery."""
-    schemas = {
+    schemas: dict[str, VolSchemaType] = {
         "basic": DISCOVERY_SCHEMA_BASIC,
         "json": DISCOVERY_SCHEMA_JSON,
         "template": DISCOVERY_SCHEMA_TEMPLATE,
@@ -44,7 +44,7 @@ def validate_mqtt_light_discovery(config_value: dict[str, Any]) -> ConfigType:
 
 def validate_mqtt_light_modern(config_value: dict[str, Any]) -> ConfigType:
     """Validate MQTT light schema for setup from configuration.yaml."""
-    schemas = {
+    schemas: dict[str, VolSchemaType] = {
         "basic": PLATFORM_SCHEMA_MODERN_BASIC,
         "json": PLATFORM_SCHEMA_MODERN_JSON,
         "template": PLATFORM_SCHEMA_MODERN_TEMPLATE,

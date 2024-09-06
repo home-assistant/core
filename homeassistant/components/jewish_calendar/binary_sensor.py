@@ -6,7 +6,6 @@ from collections.abc import Callable
 from dataclasses import dataclass
 import datetime as dt
 from datetime import datetime
-from typing import Any
 
 import hdate
 from hdate.zmanim import Zmanim
@@ -16,18 +15,14 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_LANGUAGE, CONF_LOCATION, EntityCategory
+from homeassistant.const import EntityCategory
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers import event
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.dt as dt_util
 
-from .const import (
-    CONF_CANDLE_LIGHT_MINUTES,
-    CONF_HAVDALAH_OFFSET_MINUTES,
-    DEFAULT_NAME,
-    DOMAIN,
-)
+from .const import DOMAIN
+from .entity import JewishCalendarEntity
 
 
 @dataclass(frozen=True)
@@ -75,33 +70,19 @@ async def async_setup_entry(
     entry = hass.data[DOMAIN][config_entry.entry_id]
 
     async_add_entities(
-        JewishCalendarBinarySensor(config_entry.entry_id, entry, description)
+        JewishCalendarBinarySensor(config_entry, entry, description)
         for description in BINARY_SENSORS
     )
 
 
-class JewishCalendarBinarySensor(BinarySensorEntity):
+class JewishCalendarBinarySensor(JewishCalendarEntity, BinarySensorEntity):
     """Representation of an Jewish Calendar binary sensor."""
 
     _attr_should_poll = False
     _attr_entity_category = EntityCategory.DIAGNOSTIC
-    entity_description: JewishCalendarBinarySensorEntityDescription
+    _update_unsub: CALLBACK_TYPE | None = None
 
-    def __init__(
-        self,
-        entry_id: str,
-        data: dict[str, Any],
-        description: JewishCalendarBinarySensorEntityDescription,
-    ) -> None:
-        """Initialize the binary sensor."""
-        self.entity_description = description
-        self._attr_name = f"{DEFAULT_NAME} {description.name}"
-        self._attr_unique_id = f"{entry_id}-{description.key}"
-        self._location = data[CONF_LOCATION]
-        self._hebrew = data[CONF_LANGUAGE] == "hebrew"
-        self._candle_lighting_offset = data[CONF_CANDLE_LIGHT_MINUTES]
-        self._havdalah_offset = data[CONF_HAVDALAH_OFFSET_MINUTES]
-        self._update_unsub: CALLBACK_TYPE | None = None
+    entity_description: JewishCalendarBinarySensorEntityDescription
 
     @property
     def is_on(self) -> bool:

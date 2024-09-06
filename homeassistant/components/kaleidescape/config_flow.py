@@ -38,7 +38,7 @@ class KaleidescapeConfigFlow(ConfigFlow, domain=DOMAIN):
             try:
                 info = await validate_host(host)
                 if info.server_only:
-                    raise UnsupportedError
+                    raise UnsupportedError  # noqa: TRY301
             except ConnectionError:
                 errors["base"] = ERROR_CANNOT_CONNECT
             except UnsupportedError:
@@ -73,7 +73,7 @@ class KaleidescapeConfigFlow(ConfigFlow, domain=DOMAIN):
         try:
             self.discovered_device = await validate_host(host)
             if self.discovered_device.server_only:
-                raise UnsupportedError
+                raise UnsupportedError  # noqa: TRY301
         except ConnectionError:
             return self.async_abort(reason=ERROR_CANNOT_CONNECT)
         except UnsupportedError:

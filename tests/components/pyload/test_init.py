@@ -5,7 +5,7 @@ from unittest.mock import MagicMock
 from pyloadapi.exceptions import CannotConnect, InvalidAuth, ParserError
 import pytest
 
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -61,3 +61,5 @@ async def test_config_entry_setup_invalid_auth(
     await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.SETUP_ERROR
+
+    assert any(config_entry.async_get_active_flows(hass, {SOURCE_REAUTH}))

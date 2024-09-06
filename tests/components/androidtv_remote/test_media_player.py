@@ -20,10 +20,11 @@ async def test_media_player_receives_push_updates(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_api: MagicMock
 ) -> None:
     """Test the Android TV Remote media player receives push updates and state is updated."""
-    mock_config_entry.options = {
-        "apps": {"com.google.android.youtube.tv": {"app_name": "YouTube"}}
-    }
     mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        options={"apps": {"com.google.android.youtube.tv": {"app_name": "YouTube"}}},
+    )
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
@@ -322,7 +323,7 @@ async def test_browse_media(
     mock_api: MagicMock,
 ) -> None:
     """Test the Android TV Remote media player browse media."""
-    mock_config_entry.options = {
+    new_options = {
         "apps": {
             "com.google.android.youtube.tv": {
                 "app_name": "YouTube",
@@ -332,6 +333,7 @@ async def test_browse_media(
         }
     }
     mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(mock_config_entry, options=new_options)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
@@ -345,7 +347,7 @@ async def test_browse_media(
     )
     response = await client.receive_json()
     assert response["success"]
-    assert {
+    assert response["result"] == {
         "title": "Applications",
         "media_class": "directory",
         "media_content_type": "apps",
@@ -377,7 +379,7 @@ async def test_browse_media(
                 "thumbnail": "",
             },
         ],
-    } == response["result"]
+    }
 
 
 async def test_media_player_connection_closed(

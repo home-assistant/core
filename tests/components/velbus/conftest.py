@@ -1,9 +1,9 @@
 """Fixtures for the Velbus tests."""
 
+from collections.abc import Generator
 from unittest.mock import MagicMock, patch
 
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.velbus.const import DOMAIN
 from homeassistant.config_entries import ConfigEntry

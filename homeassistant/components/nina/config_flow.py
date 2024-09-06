@@ -17,6 +17,7 @@ from homeassistant.core import callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import VolDictType
 
 from .const import (
     _LOGGER,
@@ -137,14 +138,16 @@ class NinaConfigFlow(ConfigFlow, domain=DOMAIN):
 
             errors["base"] = "no_selection"
 
+        regions_schema: VolDictType = {
+            vol.Optional(region): cv.multi_select(self.regions[region])
+            for region in CONST_REGIONS
+        }
+
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
                 {
-                    **{
-                        vol.Optional(region): cv.multi_select(self.regions[region])
-                        for region in CONST_REGIONS
-                    },
+                    **regions_schema,
                     vol.Required(CONF_MESSAGE_SLOTS, default=5): vol.All(
                         int, vol.Range(min=1, max=20)
                     ),
@@ -179,9 +182,11 @@ class OptionsFlowHandler(OptionsFlow):
             if name not in self.data:
                 self.data[name] = []
 
-    async def async_step_init(self, user_input=None):
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle options flow."""
-        errors: dict[str, Any] = {}
+        errors: dict[str, str] = {}
 
         if not self._all_region_codes_sorted:
             nina: Nina = Nina(async_get_clientsession(self.hass))
@@ -241,33 +246,33 @@ class OptionsFlowHandler(OptionsFlow):
                     self.config_entry, data=user_input
                 )
 
-                return self.async_create_entry(title="", data=None)
+                return self.async_create_entry(title="", data={})
 
             errors["base"] = "no_selection"
 
+        schema: VolDictType = {
+            **{
+                vol.Optional(region, default=self.data[region]): cv.multi_select(
+                    self.regions[region]
+                )
+                for region in CONST_REGIONS
+            },
+            vol.Required(
+                CONF_MESSAGE_SLOTS,
+                default=self.data[CONF_MESSAGE_SLOTS],
+            ): vol.All(int, vol.Range(min=1, max=20)),
+            vol.Optional(
+                CONF_HEADLINE_FILTER,
+                default=self.data[CONF_HEADLINE_FILTER],
+            ): cv.string,
+            vol.Optional(
+                CONF_AREA_FILTER,
+                default=self.data[CONF_AREA_FILTER],
+            ): cv.string,
+        }
+
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
-                {
-                    **{
-                        vol.Optional(
-                            region, default=self.data[region]
-                        ): cv.multi_select(self.regions[region])
-                        for region in CONST_REGIONS
-                    },
-                    vol.Required(
-                        CONF_MESSAGE_SLOTS,
-                        default=self.data[CONF_MESSAGE_SLOTS],
-                    ): vol.All(int, vol.Range(min=1, max=20)),
-                    vol.Optional(
-                        CONF_HEADLINE_FILTER,
-                        default=self.data[CONF_HEADLINE_FILTER],
-                    ): cv.string,
-                    vol.Optional(
-                        CONF_AREA_FILTER,
-                        default=self.data[CONF_AREA_FILTER],
-                    ): cv.string,
-                }
-            ),
+            data_schema=vol.Schema(schema),
             errors=errors,
         )

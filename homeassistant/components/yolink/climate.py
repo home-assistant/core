@@ -77,6 +77,7 @@ class YoLinkClimateEntity(YoLinkEntity, ClimateEntity):
         self._attr_fan_modes = [FAN_ON, FAN_AUTO]
         self._attr_min_temp = -10
         self._attr_max_temp = 50
+        self._attr_hvac_mode = None
         self._attr_hvac_modes = [
             HVACMode.COOL,
             HVACMode.HEAT,

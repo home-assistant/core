@@ -81,6 +81,9 @@
     }
   },
   "exceptions": {
+    "manual_switching_disabled": {
+      "message": "Can't toggle switch while manual switching is disabled for the device."
+    },
     "change_preset_while_active_mode": {
       "message": "Can't change preset while holiday or summer mode is active on the device."
     },

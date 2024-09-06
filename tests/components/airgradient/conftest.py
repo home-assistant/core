@@ -1,10 +1,10 @@
 """AirGradient tests configuration."""
 
+from collections.abc import Generator
 from unittest.mock import patch
 
 from airgradient import Config, Measures
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.airgradient.const import DOMAIN
 from homeassistant.const import CONF_HOST
@@ -44,6 +44,7 @@ def mock_airgradient_client() -> Generator[AsyncMock]:
         client.get_config.return_value = Config.from_json(
             load_fixture("get_config_local.json", DOMAIN)
         )
+        client.get_latest_firmware_version.return_value = "3.1.4"
         yield client
 
 

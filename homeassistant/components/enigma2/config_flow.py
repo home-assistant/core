@@ -68,8 +68,9 @@ CONFIG_SCHEMA = vol.Schema(
 async def get_options_schema(handler: SchemaCommonFlowHandler) -> vol.Schema:
     """Get the options schema."""
     entry = cast(SchemaOptionsFlowHandler, handler.parent_handler).config_entry
-    device: OpenWebIfDevice = entry.runtime_data
-    bouquets = [b[1] for b in (await device.get_all_bouquets())["bouquets"]]
+    bouquets = [
+        b[1] for b in (await entry.runtime_data.device.get_all_bouquets())["bouquets"]
+    ]
 
     return vol.Schema(
         {
@@ -151,20 +152,20 @@ class Enigma2ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             )
         return self.async_create_entry(data=user_input, title=user_input[CONF_HOST])
 
-    async def async_step_import(self, user_input: dict[str, Any]) -> ConfigFlowResult:
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Handle the import step."""
-        if CONF_PORT not in user_input:
-            user_input[CONF_PORT] = DEFAULT_PORT
-        if CONF_SSL not in user_input:
-            user_input[CONF_SSL] = DEFAULT_SSL
-        user_input[CONF_VERIFY_SSL] = DEFAULT_VERIFY_SSL
+        if CONF_PORT not in import_data:
+            import_data[CONF_PORT] = DEFAULT_PORT
+        if CONF_SSL not in import_data:
+            import_data[CONF_SSL] = DEFAULT_SSL
+        import_data[CONF_VERIFY_SSL] = DEFAULT_VERIFY_SSL
 
-        data = {key: user_input[key] for key in user_input if key in self.DATA_KEYS}
+        data = {key: import_data[key] for key in import_data if key in self.DATA_KEYS}
         options = {
-            key: user_input[key] for key in user_input if key in self.OPTIONS_KEYS
+            key: import_data[key] for key in import_data if key in self.OPTIONS_KEYS
         }
 
-        if errors := await self.validate_user_input(user_input):
+        if errors := await self.validate_user_input(import_data):
             async_create_issue(
                 self.hass,
                 DOMAIN,

@@ -68,4 +68,8 @@ class OnlineStatus(CoordinatorEntity[APCUPSdCoordinator], BinarySensorEntity):
         """Returns true if the UPS is online."""
         # Check if ONLINE bit is set in STATFLAG.
         key = self.entity_description.key.upper()
-        return int(self.coordinator.data[key], 16) & _VALUE_ONLINE_MASK != 0
+        # The daemon could either report just a hex ("0x05000008"), or a hex with a "Status Flag"
+        # suffix ("0x05000008 Status Flag") in older versions.
+        # Here we trim the suffix if it exists to support both.
+        flag = self.coordinator.data[key].removesuffix(" Status Flag")
+        return int(flag, 16) & _VALUE_ONLINE_MASK != 0

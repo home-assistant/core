@@ -1,7 +1,7 @@
 """Test the KNX config flow."""
 
 from contextlib import contextmanager
-from unittest.mock import Mock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 from xknx.exceptions.exception import CommunicationError, InvalidSecureConfiguration
@@ -76,10 +76,10 @@ def patch_file_upload(return_value=FIXTURE_KEYRING, side_effect=None):
     """Patch file upload. Yields the Keyring instance (return_value)."""
     with (
         patch(
-            "homeassistant.components.knx.helpers.keyring.process_uploaded_file"
+            "homeassistant.components.knx.storage.keyring.process_uploaded_file"
         ) as file_upload_mock,
         patch(
-            "homeassistant.components.knx.helpers.keyring.sync_load_keyring",
+            "homeassistant.components.knx.storage.keyring.sync_load_keyring",
             return_value=return_value,
             side_effect=side_effect,
         ),
@@ -126,7 +126,7 @@ def _gateway_descriptor(
 class GatewayScannerMock:
     """Mock GatewayScanner."""
 
-    def __init__(self, gateways=None):
+    def __init__(self, gateways=None) -> None:
         """Initialize GatewayScannerMock."""
         # Key is a HPAI instance in xknx, but not used in HA anyway.
         self.found_gateways = (
@@ -184,7 +184,6 @@ async def test_routing_setup(
             CONF_KNX_INDIVIDUAL_ADDRESS: "1.1.110",
         },
     )
-    await hass.async_block_till_done()
     assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == "Routing as 1.1.110"
     assert result3["data"] == {
@@ -259,7 +258,6 @@ async def test_routing_setup_advanced(
             CONF_KNX_LOCAL_IP: "192.168.1.112",
         },
     )
-    await hass.async_block_till_done()
     assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == "Routing as 1.1.110"
     assert result3["data"] == {
@@ -350,7 +348,6 @@ async def test_routing_secure_manual_setup(
             CONF_KNX_ROUTING_SYNC_LATENCY_TOLERANCE: 2000,
         },
     )
-    await hass.async_block_till_done()
     assert secure_routing_manual["type"] is FlowResultType.CREATE_ENTRY
     assert secure_routing_manual["title"] == "Secure Routing as 0.0.123"
     assert secure_routing_manual["data"] == {
@@ -419,7 +416,6 @@ async def test_routing_secure_keyfile(
                 CONF_KNX_KNXKEY_PASSWORD: "password",
             },
         )
-        await hass.async_block_till_done()
     assert routing_secure_knxkeys["type"] is FlowResultType.CREATE_ENTRY
     assert routing_secure_knxkeys["title"] == "Secure Routing as 0.0.123"
     assert routing_secure_knxkeys["data"] == {
@@ -514,7 +510,7 @@ async def test_routing_secure_keyfile(
     return_value=GatewayScannerMock(),
 )
 async def test_tunneling_setup_manual(
-    _gateway_scanner_mock,
+    gateway_scanner_mock: MagicMock,
     hass: HomeAssistant,
     knx_setup,
     user_input,
@@ -552,7 +548,6 @@ async def test_tunneling_setup_manual(
             result2["flow_id"],
             user_input,
         )
-        await hass.async_block_till_done()
     assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == title
     assert result3["data"] == config_entry_data
@@ -564,7 +559,7 @@ async def test_tunneling_setup_manual(
     return_value=GatewayScannerMock(),
 )
 async def test_tunneling_setup_manual_request_description_error(
-    _gateway_scanner_mock,
+    gateway_scanner_mock: MagicMock,
     hass: HomeAssistant,
     knx_setup,
 ) -> None:
@@ -681,7 +676,6 @@ async def test_tunneling_setup_manual_request_description_error(
                 CONF_PORT: 3671,
             },
         )
-        await hass.async_block_till_done()
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Tunneling TCP @ 192.168.0.1"
     assert result["data"] == {
@@ -706,7 +700,10 @@ async def test_tunneling_setup_manual_request_description_error(
     return_value=_gateway_descriptor("192.168.0.2", 3675),
 )
 async def test_tunneling_setup_for_local_ip(
-    _request_description_mock, _gateway_scanner_mock, hass: HomeAssistant, knx_setup
+    request_description_mock: MagicMock,
+    gateway_scanner_mock: MagicMock,
+    hass: HomeAssistant,
+    knx_setup,
 ) -> None:
     """Test tunneling if only one gateway is found."""
     result = await hass.config_entries.flow.async_init(
@@ -772,7 +769,6 @@ async def test_tunneling_setup_for_local_ip(
             CONF_KNX_LOCAL_IP: "192.168.1.112",
         },
     )
-    await hass.async_block_till_done()
     assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == "Tunneling UDP @ 192.168.0.2"
     assert result3["data"] == {
@@ -821,7 +817,6 @@ async def test_tunneling_setup_for_multiple_found_gateways(
         tunnel_flow["flow_id"],
         {CONF_KNX_GATEWAY: str(gateway)},
     )
-    await hass.async_block_till_done()
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         **DEFAULT_ENTRY_DATA,
@@ -905,7 +900,6 @@ async def test_form_with_automatic_connection_handling(
             CONF_KNX_CONNECTION_TYPE: CONF_KNX_AUTOMATIC,
         },
     )
-    await hass.async_block_till_done()
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == CONF_KNX_AUTOMATIC.capitalize()
     assert result2["data"] == {
@@ -971,7 +965,7 @@ async def _get_menu_step_secure_tunnel(hass: HomeAssistant) -> FlowResult:
     ),
 )
 async def test_get_secure_menu_step_manual_tunnelling(
-    _request_description_mock,
+    request_description_mock: MagicMock,
     hass: HomeAssistant,
 ) -> None:
     """Test flow reaches secure_tunnellinn menu step from manual tunnelling configuration."""
@@ -1040,7 +1034,6 @@ async def test_configure_secure_tunnel_manual(hass: HomeAssistant, knx_setup) ->
             CONF_KNX_SECURE_DEVICE_AUTHENTICATION: "device_auth",
         },
     )
-    await hass.async_block_till_done()
     assert secure_tunnel_manual["type"] is FlowResultType.CREATE_ENTRY
     assert secure_tunnel_manual["data"] == {
         **DEFAULT_ENTRY_DATA,
@@ -1086,7 +1079,6 @@ async def test_configure_secure_knxkeys(hass: HomeAssistant, knx_setup) -> None:
         {CONF_KNX_TUNNEL_ENDPOINT_IA: CONF_KNX_AUTOMATIC},
     )
 
-    await hass.async_block_till_done()
     assert secure_knxkeys["type"] is FlowResultType.CREATE_ENTRY
     assert secure_knxkeys["data"] == {
         **DEFAULT_ENTRY_DATA,
@@ -1201,7 +1193,6 @@ async def test_options_flow_connection_type(
                 CONF_KNX_GATEWAY: str(gateway),
             },
         )
-        await hass.async_block_till_done()
         assert result3["type"] is FlowResultType.CREATE_ENTRY
         assert not result3["data"]
         assert mock_config_entry.data == {
@@ -1307,7 +1298,6 @@ async def test_options_flow_secure_manual_to_keyfile(
         {CONF_KNX_TUNNEL_ENDPOINT_IA: "1.0.1"},
     )
 
-    await hass.async_block_till_done()
     assert secure_knxkeys["type"] is FlowResultType.CREATE_ENTRY
     assert mock_config_entry.data == {
         **DEFAULT_ENTRY_DATA,
@@ -1352,7 +1342,6 @@ async def test_options_communication_settings(
             CONF_KNX_TELEGRAM_LOG_SIZE: 3000,
         },
     )
-    await hass.async_block_till_done()
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert not result2.get("data")
     assert mock_config_entry.data == {
@@ -1405,7 +1394,6 @@ async def test_options_update_keyfile(hass: HomeAssistant, knx_setup) -> None:
                 CONF_KNX_KNXKEY_PASSWORD: "password",
             },
         )
-        await hass.async_block_till_done()
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert not result2.get("data")
     assert mock_config_entry.data == {
@@ -1463,7 +1451,6 @@ async def test_options_keyfile_upload(hass: HomeAssistant, knx_setup) -> None:
             CONF_KNX_TUNNEL_ENDPOINT_IA: "1.0.1",
         },
     )
-    await hass.async_block_till_done()
     assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert not result3.get("data")
     assert mock_config_entry.data == {

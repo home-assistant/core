@@ -1,10 +1,10 @@
 """Test the Google Sheets config flow."""
 
+from collections.abc import Generator
 from unittest.mock import Mock, patch
 
 from gspread import GSpreadException
 import pytest
-from typing_extensions import Generator
 
 from homeassistant import config_entries
 from homeassistant.components.application_credentials import (

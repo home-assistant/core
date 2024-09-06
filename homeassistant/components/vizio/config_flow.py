@@ -188,7 +188,7 @@ class VizioConfigFlow(ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize config flow."""
-        self._user_schema = None
+        self._user_schema: vol.Schema | None = None
         self._must_show_form: bool | None = None
         self._ch_type: str | None = None
         self._pairing_token: str | None = None
@@ -285,9 +285,7 @@ class VizioConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
 
-    async def async_step_import(
-        self, import_config: dict[str, Any]
-    ) -> ConfigFlowResult:
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Import a config entry from configuration.yaml."""
         # Check if new config entry matches any existing config entries
         for entry in self._async_current_entries():
@@ -296,28 +294,28 @@ class VizioConfigFlow(ConfigFlow, domain=DOMAIN):
                 continue
 
             if await self.hass.async_add_executor_job(
-                _host_is_same, entry.data[CONF_HOST], import_config[CONF_HOST]
+                _host_is_same, entry.data[CONF_HOST], import_data[CONF_HOST]
             ):
                 updated_options: dict[str, Any] = {}
                 updated_data: dict[str, Any] = {}
                 remove_apps = False
 
-                if entry.data[CONF_HOST] != import_config[CONF_HOST]:
-                    updated_data[CONF_HOST] = import_config[CONF_HOST]
+                if entry.data[CONF_HOST] != import_data[CONF_HOST]:
+                    updated_data[CONF_HOST] = import_data[CONF_HOST]
 
-                if entry.data[CONF_NAME] != import_config[CONF_NAME]:
-                    updated_data[CONF_NAME] = import_config[CONF_NAME]
+                if entry.data[CONF_NAME] != import_data[CONF_NAME]:
+                    updated_data[CONF_NAME] = import_data[CONF_NAME]
 
                 # Update entry.data[CONF_APPS] if import_config[CONF_APPS] differs, and
                 # pop entry.data[CONF_APPS] if import_config[CONF_APPS] is not specified
-                if entry.data.get(CONF_APPS) != import_config.get(CONF_APPS):
-                    if not import_config.get(CONF_APPS):
+                if entry.data.get(CONF_APPS) != import_data.get(CONF_APPS):
+                    if not import_data.get(CONF_APPS):
                         remove_apps = True
                     else:
-                        updated_options[CONF_APPS] = import_config[CONF_APPS]
+                        updated_options[CONF_APPS] = import_data[CONF_APPS]
 
-                if entry.data.get(CONF_VOLUME_STEP) != import_config[CONF_VOLUME_STEP]:
-                    updated_options[CONF_VOLUME_STEP] = import_config[CONF_VOLUME_STEP]
+                if entry.data.get(CONF_VOLUME_STEP) != import_data[CONF_VOLUME_STEP]:
+                    updated_options[CONF_VOLUME_STEP] = import_data[CONF_VOLUME_STEP]
 
                 if updated_options or updated_data or remove_apps:
                     new_data = entry.data.copy()
@@ -345,9 +343,9 @@ class VizioConfigFlow(ConfigFlow, domain=DOMAIN):
         self._must_show_form = True
         # Store config key/value pairs that are not configurable in user step so they
         # don't get lost on user step
-        if import_config.get(CONF_APPS):
-            self._apps = copy.deepcopy(import_config[CONF_APPS])
-        return await self.async_step_user(user_input=import_config)
+        if import_data.get(CONF_APPS):
+            self._apps = copy.deepcopy(import_data[CONF_APPS])
+        return await self.async_step_user(user_input=import_data)
 
     async def async_step_zeroconf(
         self, discovery_info: zeroconf.ZeroconfServiceInfo

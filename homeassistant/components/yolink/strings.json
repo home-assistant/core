@@ -51,6 +51,12 @@
       "plug_4": { "name": "Plug 4" }
     },
     "sensor": {
+      "current_power": {
+        "name": "Current power"
+      },
+      "power_consumption": {
+        "name": "Power consumption"
+      },
       "power_failure_alarm": {
         "name": "Power failure alarm",
         "state": {

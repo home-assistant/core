@@ -29,8 +29,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import TessieConfigEntry
-from .coordinator import TessieStateUpdateCoordinator
-from .entity import TessieEntity
+from .entity import TessieEnergyEntity, TessieEntity
+from .helpers import handle_command
+from .models import TessieEnergyData, TessieVehicleData
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -70,6 +71,8 @@ CHARGE_DESCRIPTION: TessieSwitchEntityDescription = TessieSwitchEntityDescriptio
     off_func=lambda: stop_charging,
 )
 
+PARALLEL_UPDATES = 0
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -84,11 +87,22 @@ async def async_setup_entry(
                 TessieSwitchEntity(vehicle, description)
                 for vehicle in entry.runtime_data.vehicles
                 for description in DESCRIPTIONS
-                if description.key in vehicle.data
+                if description.key in vehicle.data_coordinator.data
             ),
             (
                 TessieChargeSwitchEntity(vehicle, CHARGE_DESCRIPTION)
                 for vehicle in entry.runtime_data.vehicles
+            ),
+            (
+                TessieChargeFromGridSwitchEntity(energysite)
+                for energysite in entry.runtime_data.energysites
+                if energysite.info_coordinator.data.get("components_battery")
+                and energysite.info_coordinator.data.get("components_solar")
+            ),
+            (
+                TessieStormModeSwitchEntity(energysite)
+                for energysite in entry.runtime_data.energysites
+                if energysite.info_coordinator.data.get("components_storm_mode_capable")
             ),
         )
     )
@@ -102,11 +116,11 @@ class TessieSwitchEntity(TessieEntity, SwitchEntity):
 
     def __init__(
         self,
-        coordinator: TessieStateUpdateCoordinator,
+        vehicle: TessieVehicleData,
         description: TessieSwitchEntityDescription,
     ) -> None:
         """Initialize the Switch."""
-        super().__init__(coordinator, description.key)
+        super().__init__(vehicle, description.key)
         self.entity_description = description
 
     @property
@@ -135,3 +149,74 @@ class TessieChargeSwitchEntity(TessieSwitchEntity):
         if (charge := self.get("charge_state_user_charge_enable_request")) is not None:
             return charge
         return self._value
+
+
+class TessieChargeFromGridSwitchEntity(TessieEnergyEntity, SwitchEntity):
+    """Entity class for Charge From Grid switch."""
+
+    def __init__(
+        self,
+        data: TessieEnergyData,
+    ) -> None:
+        """Initialize the switch."""
+        super().__init__(
+            data,
+            data.info_coordinator,
+            "components_disallow_charge_from_grid_with_solar_installed",
+        )
+
+    def _async_update_attrs(self) -> None:
+        """Update the attributes of the entity."""
+        # When disallow_charge_from_grid_with_solar_installed is missing, its Off.
+        # But this sensor is flipped to match how the Tesla app works.
+        self._attr_is_on = not self.get(self.key, False)
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn on the Switch."""
+        await handle_command(
+            self.api.grid_import_export(
+                disallow_charge_from_grid_with_solar_installed=False
+            )
+        )
+        self._attr_is_on = True
+        self.async_write_ha_state()
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn off the Switch."""
+        await handle_command(
+            self.api.grid_import_export(
+                disallow_charge_from_grid_with_solar_installed=True
+            )
+        )
+        self._attr_is_on = False
+        self.async_write_ha_state()
+
+
+class TessieStormModeSwitchEntity(TessieEnergyEntity, SwitchEntity):
+    """Entity class for Storm Mode switch."""
+
+    def __init__(
+        self,
+        data: TessieEnergyData,
+    ) -> None:
+        """Initialize the switch."""
+        super().__init__(
+            data, data.info_coordinator, "user_settings_storm_mode_enabled"
+        )
+
+    def _async_update_attrs(self) -> None:
+        """Update the attributes of the sensor."""
+        self._attr_available = self._value is not None
+        self._attr_is_on = bool(self._value)
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn on the Switch."""
+        await handle_command(self.api.storm_mode(enabled=True))
+        self._attr_is_on = True
+        self.async_write_ha_state()
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn off the Switch."""
+        await handle_command(self.api.storm_mode(enabled=False))
+        self._attr_is_on = False
+        self.async_write_ha_state()

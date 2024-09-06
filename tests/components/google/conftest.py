@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable
+from collections.abc import AsyncGenerator, Awaitable, Callable, Generator
 import datetime
 import http
 import time
@@ -13,7 +13,6 @@ from aiohttp.client_exceptions import ClientError
 from gcal_sync.auth import API_BASE_URL
 from oauth2client.client import OAuth2Credentials
 import pytest
-from typing_extensions import AsyncGenerator, Generator
 import yaml
 
 from homeassistant.components.application_credentials import (
@@ -294,7 +293,7 @@ def mock_calendars_list(
 @pytest.fixture
 def mock_calendar_get(
     aioclient_mock: AiohttpClientMocker,
-) -> Callable[[...], None]:
+) -> Callable[..., None]:
     """Fixture for returning a calendar get response."""
 
     def _result(
@@ -316,7 +315,7 @@ def mock_calendar_get(
 @pytest.fixture
 def mock_insert_event(
     aioclient_mock: AiohttpClientMocker,
-) -> Callable[[...], None]:
+) -> Callable[..., None]:
     """Fixture for capturing event creation."""
 
     def _expect_result(
@@ -331,7 +330,7 @@ def mock_insert_event(
 
 
 @pytest.fixture(autouse=True)
-async def set_time_zone(hass):
+async def set_time_zone(hass: HomeAssistant) -> None:
     """Set the time zone for the tests."""
     # Set our timezone to CST/Regina so we can check calculations
     # This keeps UTC-6 all year round

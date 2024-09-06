@@ -2,7 +2,6 @@
 
 from copy import deepcopy
 import json
-import logging
 from typing import Any
 from unittest.mock import patch
 
@@ -100,35 +99,6 @@ CONFIG_ALL_SERVICES = help_custom_config(
         },
     ),
 )
-
-
-async def test_warning_schema_option(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test the warning on use of deprecated schema option."""
-    await mqtt_mock_entry()
-    # Send discovery message with deprecated schema option
-    async_fire_mqtt_message(
-        hass,
-        f"homeassistant/{vacuum.DOMAIN}/bla/config",
-        '{"name": "test", "schema": "state", "o": {"name": "Bla2MQTT", "sw": "0.99", "url":"https://example.com/support"}}',
-    )
-    await hass.async_block_till_done()
-    await hass.async_block_till_done(wait_background_tasks=True)
-
-    state = hass.states.get("vacuum.test")
-    assert state is not None
-    with caplog.at_level(logging.WARNING):
-        assert (
-            "The `schema` option is deprecated for MQTT vacuum, but it was used in a "
-            "discovery payload. Please contact the maintainer of the integration or "
-            "service that supplies the config, and suggest to remove the option."
-            in caplog.text
-        )
-        assert "https://example.com/support" in caplog.text
-        assert "at discovery topic homeassistant/vacuum/bla/config" in caplog.text
 
 
 @pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])
@@ -507,11 +477,7 @@ async def test_update_with_json_attrs_not_dict(
 ) -> None:
     """Test attributes get extracted from a JSON result."""
     await help_test_update_with_json_attrs_not_dict(
-        hass,
-        mqtt_mock_entry,
-        caplog,
-        vacuum.DOMAIN,
-        DEFAULT_CONFIG_2,
+        hass, mqtt_mock_entry, caplog, vacuum.DOMAIN, DEFAULT_CONFIG_2
     )
 
 
@@ -522,26 +488,16 @@ async def test_update_with_json_attrs_bad_json(
 ) -> None:
     """Test attributes get extracted from a JSON result."""
     await help_test_update_with_json_attrs_bad_json(
-        hass,
-        mqtt_mock_entry,
-        caplog,
-        vacuum.DOMAIN,
-        DEFAULT_CONFIG_2,
+        hass, mqtt_mock_entry, caplog, vacuum.DOMAIN, DEFAULT_CONFIG_2
     )
 
 
 async def test_discovery_update_attr(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test update of discovered MQTTAttributes."""
     await help_test_discovery_update_attr(
-        hass,
-        mqtt_mock_entry,
-        caplog,
-        vacuum.DOMAIN,
-        DEFAULT_CONFIG_2,
+        hass, mqtt_mock_entry, vacuum.DOMAIN, DEFAULT_CONFIG_2
     )
 
 
@@ -574,34 +530,27 @@ async def test_unique_id(
 
 
 async def test_discovery_removal_vacuum(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test removal of discovered vacuum."""
     data = '{"name": "test", "command_topic": "test_topic"}'
-    await help_test_discovery_removal(
-        hass, mqtt_mock_entry, caplog, vacuum.DOMAIN, data
-    )
+    await help_test_discovery_removal(hass, mqtt_mock_entry, vacuum.DOMAIN, data)
 
 
 async def test_discovery_update_vacuum(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test update of discovered vacuum."""
     config1 = {"name": "Beer", "command_topic": "test_topic"}
     config2 = {"name": "Milk", "command_topic": "test_topic"}
     await help_test_discovery_update(
-        hass, mqtt_mock_entry, caplog, vacuum.DOMAIN, config1, config2
+        hass, mqtt_mock_entry, vacuum.DOMAIN, config1, config2
     )
 
 
 async def test_discovery_update_unchanged_vacuum(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test update of discovered vacuum."""
     data1 = '{"name": "Beer", "command_topic": "test_topic"}'
@@ -609,27 +558,18 @@ async def test_discovery_update_unchanged_vacuum(
         "homeassistant.components.mqtt.vacuum.MqttStateVacuum.discovery_update"
     ) as discovery_update:
         await help_test_discovery_update_unchanged(
-            hass,
-            mqtt_mock_entry,
-            caplog,
-            vacuum.DOMAIN,
-            data1,
-            discovery_update,
+            hass, mqtt_mock_entry, vacuum.DOMAIN, data1, discovery_update
         )
 
 
 @pytest.mark.no_fail_on_log_exception
 async def test_discovery_broken(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test handling of bad discovery message."""
     data1 = '{"name": "Beer", "command_topic": "test_topic#"}'
     data2 = '{"name": "Milk", "command_topic": "test_topic"}'
-    await help_test_discovery_broken(
-        hass, mqtt_mock_entry, caplog, vacuum.DOMAIN, data1, data2
-    )
+    await help_test_discovery_broken(hass, mqtt_mock_entry, vacuum.DOMAIN, data1, data2)
 
 
 async def test_entity_device_info_with_connection(
@@ -704,20 +644,8 @@ async def test_entity_debug_info_message(
 @pytest.mark.parametrize(
     ("service", "topic", "parameters", "payload", "template"),
     [
-        (
-            vacuum.SERVICE_START,
-            "command_topic",
-            None,
-            "start",
-            None,
-        ),
-        (
-            vacuum.SERVICE_CLEAN_SPOT,
-            "command_topic",
-            None,
-            "clean_spot",
-            None,
-        ),
+        (vacuum.SERVICE_START, "command_topic", None, "start", None),
+        (vacuum.SERVICE_CLEAN_SPOT, "command_topic", None, "clean_spot", None),
         (
             vacuum.SERVICE_SET_FAN_SPEED,
             "set_fan_speed_topic",
@@ -732,13 +660,7 @@ async def test_entity_debug_info_message(
             "custom command",
             None,
         ),
-        (
-            vacuum.SERVICE_STOP,
-            "command_topic",
-            None,
-            "stop",
-            None,
-        ),
+        (vacuum.SERVICE_STOP, "command_topic", None, "stop", None),
     ],
 )
 async def test_publishing_with_custom_encoding(
@@ -782,8 +704,7 @@ async def test_publishing_with_custom_encoding(
 
 
 async def test_reloadable(
-    hass: HomeAssistant,
-    mqtt_client_mock: MqttMockPahoClient,
+    hass: HomeAssistant, mqtt_client_mock: MqttMockPahoClient
 ) -> None:
     """Test reloading the MQTT platform."""
     domain = vacuum.DOMAIN

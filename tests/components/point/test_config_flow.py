@@ -10,7 +10,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 
-def init_config_flow(hass, side_effect=None):
+def init_config_flow(
+    hass: HomeAssistant, side_effect: type[Exception] | None = None
+) -> config_flow.PointFlowHandler:
     """Init a configuration flow."""
     config_flow.register_flow_implementation(hass, DOMAIN, "id", "secret")
     flow = config_flow.PointFlowHandler()
@@ -22,7 +24,7 @@ def init_config_flow(hass, side_effect=None):
 
 
 @pytest.fixture
-def is_authorized():
+def is_authorized() -> bool:
     """Set PointSession authorized."""
     return True
 

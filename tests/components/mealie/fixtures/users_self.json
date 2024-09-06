@@ -1,0 +1,24 @@
+{
+  "id": "bf1c62fe-4941-4332-9886-e54e88dbdba0",
+  "username": "admin",
+  "fullName": "Change Me",
+  "email": "changeme@example.com",
+  "authMethod": "Mealie",
+  "admin": true,
+  "group": "home",
+  "advanced": true,
+  "canInvite": true,
+  "canManage": true,
+  "canOrganize": true,
+  "groupId": "24477569-f6af-4b53-9e3f-6d04b0ca6916",
+  "groupSlug": "home",
+  "tokens": [
+    {
+      "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJsb25nX3Rva2VuIjp0cnVlLCJpZCI6ImJmMWM2MmZlLTQ5NDEtNDMzMi05ODg2LWU1NGU4OGRiZGJhMCIsIm5hbWUiOiJ0ZXN0aW5nIiwiaW50ZWdyYXRpb25faWQiOiJnZW5lcmljIiwiZXhwIjoxODczOTA5ODk4fQ.xwXZp4fL2g1RbIqGtBeOaS6RDfsYbQDHj8XtRM3wlX0",
+      "name": "testing",
+      "id": 2,
+      "createdAt": "2024-05-20T10:31:38.179669"
+    }
+  ],
+  "cacheKey": "1234"
+}

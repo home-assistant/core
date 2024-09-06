@@ -61,7 +61,7 @@ def async_see(
 class MockScannerEntity(ScannerEntity):
     """Test implementation of a ScannerEntity."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Init."""
         self.connected = False
         self._hostname = "test.hostname.org"
@@ -110,7 +110,7 @@ class MockScannerEntity(ScannerEntity):
 class MockScanner(DeviceScanner):
     """Mock device scanner."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the MockScanner."""
         self.devices_home = []
 

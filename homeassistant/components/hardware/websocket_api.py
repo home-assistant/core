@@ -99,8 +99,8 @@ def ws_subscribe_system_status(
             "memory_free_mb": round(virtual_memory.available / 1024**2, 1),
             "timestamp": dt_util.utcnow().isoformat(),
         }
-        for connection, msg_id in system_status.subscribers:
-            connection.send_message(websocket_api.event_message(msg_id, json_msg))
+        for conn, msg_id in system_status.subscribers:
+            conn.send_message(websocket_api.event_message(msg_id, json_msg))
 
     if not system_status.subscribers:
         system_status.remove_periodic_timer = async_track_time_interval(

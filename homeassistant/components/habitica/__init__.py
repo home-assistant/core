@@ -15,6 +15,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_SENSORS,
     CONF_URL,
+    CONF_VERIFY_SSL,
     Platform,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
@@ -82,7 +83,7 @@ INSTANCE_LIST_SCHEMA = vol.All(
 )
 CONFIG_SCHEMA = vol.Schema({DOMAIN: INSTANCE_LIST_SCHEMA}, extra=vol.ALLOW_EXTRA)
 
-PLATFORMS = [Platform.SENSOR]
+PLATFORMS = [Platform.BUTTON, Platform.SENSOR, Platform.SWITCH, Platform.TODO]
 
 SERVICE_API_CALL_SCHEMA = vol.Schema(
     {
@@ -110,7 +111,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: HabiticaConfigEntry) -> bool:
+async def async_setup_entry(
+    hass: HomeAssistant, config_entry: HabiticaConfigEntry
+) -> bool:
     """Set up habitica from a config entry."""
 
     class HAHabitipyAsync(HabitipyAsync):
@@ -123,6 +126,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HabiticaConfigEntry) -> 
         name = call.data[ATTR_NAME]
         path = call.data[ATTR_PATH]
         entries = hass.config_entries.async_entries(DOMAIN)
+
         api = None
         for entry in entries:
             if entry.data[CONF_NAME] == name:
@@ -145,18 +149,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: HabiticaConfigEntry) -> 
             EVENT_API_CALL_SUCCESS, {ATTR_NAME: name, ATTR_PATH: path, ATTR_DATA: data}
         )
 
-    websession = async_get_clientsession(hass)
-
-    url = entry.data[CONF_URL]
-    username = entry.data[CONF_API_USER]
-    password = entry.data[CONF_API_KEY]
+    websession = async_get_clientsession(
+        hass, verify_ssl=config_entry.data.get(CONF_VERIFY_SSL, True)
+    )
 
     api = await hass.async_add_executor_job(
         HAHabitipyAsync,
         {
-            "url": url,
-            "login": username,
-            "password": password,
+            "url": config_entry.data[CONF_URL],
+            "login": config_entry.data[CONF_API_USER],
+            "password": config_entry.data[CONF_API_KEY],
         },
     )
     try:
@@ -169,18 +171,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: HabiticaConfigEntry) -> 
             ) from e
         raise ConfigEntryNotReady(e) from e
 
-    if not entry.data.get(CONF_NAME):
+    if not config_entry.data.get(CONF_NAME):
         name = user["profile"]["name"]
         hass.config_entries.async_update_entry(
-            entry,
-            data={**entry.data, CONF_NAME: name},
+            config_entry,
+            data={**config_entry.data, CONF_NAME: name},
         )
 
     coordinator = HabiticaDataUpdateCoordinator(hass, api)
     await coordinator.async_config_entry_first_refresh()
 
-    entry.runtime_data = coordinator
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    config_entry.runtime_data = coordinator
+    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
     if not hass.services.has_service(DOMAIN, SERVICE_API_CALL):
         hass.services.async_register(

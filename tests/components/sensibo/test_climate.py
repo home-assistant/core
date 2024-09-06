@@ -400,6 +400,10 @@ async def test_climate_temperatures(
             "homeassistant.components.sensibo.util.SensiboClient.async_set_ac_state_property",
             return_value={"result": {"status": "Success"}},
         ),
+        pytest.raises(
+            ServiceValidationError,
+            match="Provided temperature 24.0 is not valid. Accepted range is 10 to 20",
+        ),
     ):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
@@ -410,7 +414,7 @@ async def test_climate_temperatures(
     await hass.async_block_till_done()
 
     state2 = hass.states.get("climate.hallway")
-    assert state2.attributes["temperature"] == 20
+    assert state2.attributes["temperature"] == 19
 
     with (
         patch(

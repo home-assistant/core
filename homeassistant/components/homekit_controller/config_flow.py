@@ -24,6 +24,7 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.typing import VolDictType
 
 from .const import DOMAIN, KNOWN_DEVICES
 from .storage import async_get_entity_storage
@@ -555,7 +556,7 @@ class HomekitControllerFlowHandler(ConfigFlow, domain=DOMAIN):
             "category": formatted_category(self.category),
         }
 
-        schema = {vol.Required("pairing_code"): vol.All(str, vol.Strip)}
+        schema: VolDictType = {vol.Required("pairing_code"): vol.All(str, vol.Strip)}
         if errors and errors.get("pairing_code") == "insecure_setup_code":
             schema[vol.Optional("allow_insecure_setup_codes")] = bool
 

@@ -130,6 +130,8 @@ def _entry_dict(entry: cr.CategoryEntry) -> dict[str, Any]:
     """Convert entry to API format."""
     return {
         "category_id": entry.category_id,
+        "created_at": entry.created_at.timestamp(),
         "icon": entry.icon,
+        "modified_at": entry.modified_at.timestamp(),
         "name": entry.name,
     }

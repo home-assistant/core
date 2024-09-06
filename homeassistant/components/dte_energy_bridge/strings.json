@@ -1,0 +1,8 @@
+{
+  "issues": {
+    "deprecated_integration": {
+      "title": "The DTE Energy Bridge integration will be removed",
+      "description": "The DTE Energy Bridge integration will be removed as new users can't get any supported devices, and the integration will fail as soon as a current device gets internet access.\n\n Please remove all `{domain}`platform sensors from your configuration and restart Home Assistant."
+    }
+  }
+}

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import binascii
 import logging
+from re import sub
 from typing import Any
 
 import pyotp
@@ -47,6 +48,7 @@ class TOTPConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             if user_input.get(CONF_TOKEN) and not user_input.get(CONF_NEW_TOKEN):
+                user_input[CONF_TOKEN] = sub(r"\s+", "", user_input[CONF_TOKEN])
                 try:
                     await self.hass.async_add_executor_job(
                         pyotp.TOTP(user_input[CONF_TOKEN]).now
@@ -80,15 +82,15 @@ class TOTPConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_import(self, import_info: dict[str, Any]) -> ConfigFlowResult:
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Import config from yaml."""
 
-        await self.async_set_unique_id(import_info[CONF_TOKEN])
+        await self.async_set_unique_id(import_data[CONF_TOKEN])
         self._abort_if_unique_id_configured()
 
         return self.async_create_entry(
-            title=import_info.get(CONF_NAME, DEFAULT_NAME),
-            data=import_info,
+            title=import_data.get(CONF_NAME, DEFAULT_NAME),
+            data=import_data,
         )
 
     async def async_step_confirm(

@@ -36,7 +36,6 @@ from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.util.unit_conversion import TemperatureConverter
 
 from . import EcobeeData
@@ -387,8 +386,6 @@ class Thermostat(ClimateEntity):
         supported = SUPPORT_FLAGS
         if self.has_humidifier_control:
             supported = supported | ClimateEntityFeature.TARGET_HUMIDITY
-        if self.has_aux_heat:
-            supported = supported | ClimateEntityFeature.AUX_HEAT
         if len(self.hvac_modes) > 1 and HVACMode.OFF in self.hvac_modes:
             supported = (
                 supported | ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
@@ -448,11 +445,6 @@ class Thermostat(ClimateEntity):
             bool(self.settings.get("hasHumidifier"))
             and self.settings.get("humidifierMode") == HUMIDIFIER_MANUAL_MODE
         )
-
-    @property
-    def has_aux_heat(self) -> bool:
-        """Return true if the ecobee has a heat pump."""
-        return bool(self.settings.get(HAS_HEAT_PUMP))
 
     @property
     def target_humidity(self) -> int | None:
@@ -572,46 +564,6 @@ class Thermostat(ClimateEntity):
             "equipment_running": status,
             "fan_min_on_time": self.settings["fanMinOnTime"],
         }
-
-    @property
-    def is_aux_heat(self) -> bool:
-        """Return true if aux heater."""
-        return self.settings["hvacMode"] == ECOBEE_AUX_HEAT_ONLY
-
-    async def async_turn_aux_heat_on(self) -> None:
-        """Turn auxiliary heater on."""
-        async_create_issue(
-            self.hass,
-            DOMAIN,
-            "migrate_aux_heat",
-            breaks_in_ha_version="2024.10.0",
-            is_fixable=True,
-            is_persistent=True,
-            translation_key="migrate_aux_heat",
-            severity=IssueSeverity.WARNING,
-        )
-        _LOGGER.debug("Setting HVAC mode to auxHeatOnly to turn on aux heat")
-        self._last_hvac_mode_before_aux_heat = self.hvac_mode
-        await self.hass.async_add_executor_job(
-            self.data.ecobee.set_hvac_mode, self.thermostat_index, ECOBEE_AUX_HEAT_ONLY
-        )
-        self.update_without_throttle = True
-
-    async def async_turn_aux_heat_off(self) -> None:
-        """Turn auxiliary heater off."""
-        async_create_issue(
-            self.hass,
-            DOMAIN,
-            "migrate_aux_heat",
-            breaks_in_ha_version="2024.10.0",
-            is_fixable=True,
-            is_persistent=True,
-            translation_key="migrate_aux_heat",
-            severity=IssueSeverity.WARNING,
-        )
-        _LOGGER.debug("Setting HVAC mode to last mode to disable aux heat")
-        await self.async_set_hvac_mode(self._last_hvac_mode_before_aux_heat)
-        self.update_without_throttle = True
 
     def set_preset_mode(self, preset_mode: str) -> None:
         """Activate a preset."""

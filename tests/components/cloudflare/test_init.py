@@ -1,7 +1,7 @@
 """Test the Cloudflare integration."""
 
 from datetime import timedelta
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pycfdns
 import pytest
@@ -23,7 +23,7 @@ from . import ENTRY_CONFIG, init_integration
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
-async def test_unload_entry(hass: HomeAssistant, cfupdate) -> None:
+async def test_unload_entry(hass: HomeAssistant, cfupdate: MagicMock) -> None:
     """Test successful unload of entry."""
     entry = await init_integration(hass)
 
@@ -42,7 +42,7 @@ async def test_unload_entry(hass: HomeAssistant, cfupdate) -> None:
     [pycfdns.ComunicationException()],
 )
 async def test_async_setup_raises_entry_not_ready(
-    hass: HomeAssistant, cfupdate, side_effect
+    hass: HomeAssistant, cfupdate: MagicMock, side_effect: Exception
 ) -> None:
     """Test that it throws ConfigEntryNotReady when exception occurs during setup."""
     instance = cfupdate.return_value
@@ -57,7 +57,7 @@ async def test_async_setup_raises_entry_not_ready(
 
 
 async def test_async_setup_raises_entry_auth_failed(
-    hass: HomeAssistant, cfupdate
+    hass: HomeAssistant, cfupdate: MagicMock
 ) -> None:
     """Test that it throws ConfigEntryAuthFailed when exception occurs during setup."""
     instance = cfupdate.return_value
@@ -84,7 +84,7 @@ async def test_async_setup_raises_entry_auth_failed(
 
 
 async def test_integration_services(
-    hass: HomeAssistant, cfupdate, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant, cfupdate: MagicMock, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test integration services."""
     instance = cfupdate.return_value
@@ -120,7 +120,9 @@ async def test_integration_services(
     assert "All target records are up to date" not in caplog.text
 
 
-async def test_integration_services_with_issue(hass: HomeAssistant, cfupdate) -> None:
+async def test_integration_services_with_issue(
+    hass: HomeAssistant, cfupdate: MagicMock
+) -> None:
     """Test integration services with issue."""
     instance = cfupdate.return_value
 
@@ -145,7 +147,7 @@ async def test_integration_services_with_issue(hass: HomeAssistant, cfupdate) ->
 
 
 async def test_integration_services_with_nonexisting_record(
-    hass: HomeAssistant, cfupdate, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant, cfupdate: MagicMock, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test integration services."""
     instance = cfupdate.return_value
@@ -185,7 +187,7 @@ async def test_integration_services_with_nonexisting_record(
 
 async def test_integration_update_interval(
     hass: HomeAssistant,
-    cfupdate,
+    cfupdate: MagicMock,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test integration update interval."""

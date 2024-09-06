@@ -8,24 +8,24 @@ from typing import Any
 from bimmer_connected.vehicle import MyBMWVehicle
 
 from homeassistant.components.device_tracker import SourceType, TrackerEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import BMWBaseEntity
-from .const import ATTR_DIRECTION, DOMAIN
+from . import BMWConfigEntry
+from .const import ATTR_DIRECTION
 from .coordinator import BMWDataUpdateCoordinator
+from .entity import BMWBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: BMWConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the MyBMW tracker from config entry."""
-    coordinator: BMWDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data.coordinator
     entities: list[BMWDeviceTracker] = []
 
     for vehicle in coordinator.account.vehicles:
@@ -63,7 +63,7 @@ class BMWDeviceTracker(BMWBaseEntity, TrackerEntity):
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return entity specific state attributes."""
-        return {**self._attrs, ATTR_DIRECTION: self.vehicle.vehicle_location.heading}
+        return {ATTR_DIRECTION: self.vehicle.vehicle_location.heading}
 
     @property
     def latitude(self) -> float | None:

@@ -156,7 +156,7 @@ def _prepare_result_json(
     data = result.copy()
 
     if (schema := data["data_schema"]) is None:
-        data["data_schema"] = []
+        data["data_schema"] = []  # type: ignore[typeddict-item]  # json result type
     else:
         data["data_schema"] = voluptuous_serialize.convert(schema)
 

@@ -1,6 +1,6 @@
 """Tests for the EZVIZ integration."""
 
-from unittest.mock import patch
+from unittest.mock import _patch, patch
 
 from homeassistant.components.ezviz.const import (
     ATTR_SERIAL,
@@ -83,10 +83,11 @@ API_LOGIN_RETURN_VALIDATE = {
 }
 
 
-def _patch_async_setup_entry(return_value=True):
+def patch_async_setup_entry() -> _patch:
+    """Patch async_setup_entry."""
     return patch(
         "homeassistant.components.ezviz.async_setup_entry",
-        return_value=return_value,
+        return_value=True,
     )
 
 

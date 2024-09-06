@@ -120,7 +120,9 @@ async def test_wrong_version(hass: HomeAssistant) -> None:
         await smart_home.async_handle_message(hass, get_default_config(hass), msg)
 
 
-async def discovery_test(device, hass, expected_endpoints=1):
+async def discovery_test(
+    device, hass: HomeAssistant, expected_endpoints: int = 1
+) -> dict[str, Any] | list[dict[str, Any]] | None:
     """Test alexa discovery request."""
     request = get_new_request("Alexa.Discovery", "Discover")
 
@@ -1979,7 +1981,7 @@ async def test_cover_position(
             "friendly_name": "Test cover range",
             "device_class": "blind",
             "supported_features": supported_features,
-            "position": position,
+            "current_position": position,
         },
     )
     appliance = await discovery_test(device, hass)
@@ -2296,7 +2298,7 @@ async def test_cover_position_range(
             "friendly_name": "Test cover range",
             "device_class": "blind",
             "supported_features": 7,
-            "position": 30,
+            "current_position": 30,
         },
     )
     appliance = await discovery_test(device, hass)
@@ -2601,8 +2603,15 @@ async def test_stop_valve(
 
 
 async def assert_percentage_changes(
-    hass, adjustments, namespace, name, endpoint, parameter, service, changed_parameter
-):
+    hass: HomeAssistant,
+    adjustments,
+    namespace,
+    name,
+    endpoint,
+    parameter,
+    service,
+    changed_parameter,
+) -> None:
     """Assert an API request making percentage changes works.
 
     AdjustPercentage, AdjustBrightness, etc. are examples of such requests.
@@ -2616,8 +2625,15 @@ async def assert_percentage_changes(
 
 
 async def assert_range_changes(
-    hass, adjustments, namespace, name, endpoint, service, changed_parameter, instance
-):
+    hass: HomeAssistant,
+    adjustments: list[tuple[int | str, int, bool]],
+    namespace: str,
+    name: str,
+    endpoint: str,
+    service: str,
+    changed_parameter: str | None,
+    instance: str,
+) -> None:
     """Assert an API request making range changes works.
 
     AdjustRangeValue are examples of such requests.
@@ -4658,7 +4674,7 @@ async def test_cover_semantics_position_and_tilt(hass: HomeAssistant) -> None:
             "friendly_name": "Test cover semantics",
             "device_class": "blind",
             "supported_features": 255,
-            "position": 30,
+            "current_position": 30,
             "tilt_position": 30,
         },
     )

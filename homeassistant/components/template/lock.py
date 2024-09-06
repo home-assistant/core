@@ -7,7 +7,7 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.components.lock import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as LOCK_PLATFORM_SCHEMA,
     STATE_JAMMED,
     STATE_LOCKING,
     STATE_UNLOCKING,
@@ -44,7 +44,7 @@ CONF_UNLOCK = "unlock"
 DEFAULT_NAME = "Template Lock"
 DEFAULT_OPTIMISTIC = False
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = LOCK_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_NAME): cv.string,
         vol.Required(CONF_LOCK): cv.SCRIPT_SCHEMA,
@@ -59,7 +59,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def _async_create_entities(hass, config):
     """Create the Template lock."""
-    config = rewrite_common_legacy_to_modern_conf(config)
+    config = rewrite_common_legacy_to_modern_conf(hass, config)
     return [TemplateLock(hass, config, config.get(CONF_UNIQUE_ID))]
 
 

@@ -30,7 +30,7 @@ from homeassistant.exceptions import (
     HomeAssistantError,
 )
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntry, DeviceInfo
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
 
@@ -300,6 +300,10 @@ class FibaroController:
             return self._device_infos[device.parent_fibaro_id]
         return DeviceInfo(identifiers={(DOMAIN, self.hub_serial)})
 
+    def get_all_device_identifiers(self) -> list[set[tuple[str, str]]]:
+        """Get all identifiers of fibaro integration."""
+        return [device["identifiers"] for device in self._device_infos.values()]
+
     def get_room_name(self, room_id: int) -> str | None:
         """Get the room name by room id."""
         assert self._room_map
@@ -427,6 +431,23 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: DeviceEntry
+) -> bool:
+    """Remove a device entry from fibaro integration.
+
+    Only removing devices which are not present anymore are eligible to be removed.
+    """
+    controller: FibaroController = hass.data[DOMAIN][config_entry.entry_id]
+    for identifiers in controller.get_all_device_identifiers():
+        if device_entry.identifiers == identifiers:
+            # Fibaro device is still served by the controller,
+            # do not allow to remove the device entry
+            return False
+
+    return True
 
 
 class FibaroDevice(Entity):

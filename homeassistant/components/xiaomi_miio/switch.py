@@ -115,6 +115,7 @@ from .const import (
 )
 from .device import XiaomiCoordinatedMiioEntity, XiaomiMiioEntity
 from .gateway import XiaomiGatewayDevice
+from .typing import ServiceMethodDetails
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -176,16 +177,16 @@ SERVICE_SCHEMA_POWER_PRICE = SERVICE_SCHEMA.extend(
 )
 
 SERVICE_TO_METHOD = {
-    SERVICE_SET_WIFI_LED_ON: {"method": "async_set_wifi_led_on"},
-    SERVICE_SET_WIFI_LED_OFF: {"method": "async_set_wifi_led_off"},
-    SERVICE_SET_POWER_MODE: {
-        "method": "async_set_power_mode",
-        "schema": SERVICE_SCHEMA_POWER_MODE,
-    },
-    SERVICE_SET_POWER_PRICE: {
-        "method": "async_set_power_price",
-        "schema": SERVICE_SCHEMA_POWER_PRICE,
-    },
+    SERVICE_SET_WIFI_LED_ON: ServiceMethodDetails(method="async_set_wifi_led_on"),
+    SERVICE_SET_WIFI_LED_OFF: ServiceMethodDetails(method="async_set_wifi_led_off"),
+    SERVICE_SET_POWER_MODE: ServiceMethodDetails(
+        method="async_set_power_mode",
+        schema=SERVICE_SCHEMA_POWER_MODE,
+    ),
+    SERVICE_SET_POWER_PRICE: ServiceMethodDetails(
+        method="async_set_power_price",
+        schema=SERVICE_SCHEMA_POWER_PRICE,
+    ),
 }
 
 MODEL_TO_FEATURES_MAP = {
@@ -235,7 +236,7 @@ SWITCH_TYPES = (
     XiaomiMiioSwitchDescription(
         key=ATTR_BUZZER,
         feature=FEATURE_SET_BUZZER,
-        name="Buzzer",
+        translation_key=ATTR_BUZZER,
         icon="mdi:volume-high",
         method_on="async_set_buzzer_on",
         method_off="async_set_buzzer_off",
@@ -244,7 +245,7 @@ SWITCH_TYPES = (
     XiaomiMiioSwitchDescription(
         key=ATTR_CHILD_LOCK,
         feature=FEATURE_SET_CHILD_LOCK,
-        name="Child lock",
+        translation_key=ATTR_CHILD_LOCK,
         icon="mdi:lock",
         method_on="async_set_child_lock_on",
         method_off="async_set_child_lock_off",
@@ -253,7 +254,7 @@ SWITCH_TYPES = (
     XiaomiMiioSwitchDescription(
         key=ATTR_DISPLAY,
         feature=FEATURE_SET_DISPLAY,
-        name="Display",
+        translation_key=ATTR_DISPLAY,
         icon="mdi:led-outline",
         method_on="async_set_display_on",
         method_off="async_set_display_off",
@@ -262,7 +263,7 @@ SWITCH_TYPES = (
     XiaomiMiioSwitchDescription(
         key=ATTR_DRY,
         feature=FEATURE_SET_DRY,
-        name="Dry mode",
+        translation_key=ATTR_DRY,
         icon="mdi:hair-dryer",
         method_on="async_set_dry_on",
         method_off="async_set_dry_off",
@@ -271,7 +272,7 @@ SWITCH_TYPES = (
     XiaomiMiioSwitchDescription(
         key=ATTR_CLEAN,
         feature=FEATURE_SET_CLEAN,
-        name="Clean mode",
+        translation_key=ATTR_CLEAN,
         icon="mdi:shimmer",
         method_on="async_set_clean_on",
         method_off="async_set_clean_off",
@@ -281,7 +282,7 @@ SWITCH_TYPES = (
     XiaomiMiioSwitchDescription(
         key=ATTR_LED,
         feature=FEATURE_SET_LED,
-        name="LED",
+        translation_key=ATTR_LED,
         icon="mdi:led-outline",
         method_on="async_set_led_on",
         method_off="async_set_led_off",
@@ -290,7 +291,7 @@ SWITCH_TYPES = (
     XiaomiMiioSwitchDescription(
         key=ATTR_LEARN_MODE,
         feature=FEATURE_SET_LEARN_MODE,
-        name="Learn mode",
+        translation_key=ATTR_LEARN_MODE,
         icon="mdi:school-outline",
         method_on="async_set_learn_mode_on",
         method_off="async_set_learn_mode_off",
@@ -299,7 +300,7 @@ SWITCH_TYPES = (
     XiaomiMiioSwitchDescription(
         key=ATTR_AUTO_DETECT,
         feature=FEATURE_SET_AUTO_DETECT,
-        name="Auto detect",
+        translation_key=ATTR_AUTO_DETECT,
         method_on="async_set_auto_detect_on",
         method_off="async_set_auto_detect_off",
         entity_category=EntityCategory.CONFIG,
@@ -307,7 +308,7 @@ SWITCH_TYPES = (
     XiaomiMiioSwitchDescription(
         key=ATTR_IONIZER,
         feature=FEATURE_SET_IONIZER,
-        name="Ionizer",
+        translation_key=ATTR_IONIZER,
         icon="mdi:shimmer",
         method_on="async_set_ionizer_on",
         method_off="async_set_ionizer_off",
@@ -316,7 +317,7 @@ SWITCH_TYPES = (
     XiaomiMiioSwitchDescription(
         key=ATTR_ANION,
         feature=FEATURE_SET_ANION,
-        name="Ionizer",
+        translation_key=ATTR_ANION,
         icon="mdi:shimmer",
         method_on="async_set_anion_on",
         method_off="async_set_anion_off",
@@ -325,7 +326,7 @@ SWITCH_TYPES = (
     XiaomiMiioSwitchDescription(
         key=ATTR_PTC,
         feature=FEATURE_SET_PTC,
-        name="Auxiliary heat",
+        translation_key=ATTR_PTC,
         icon="mdi:radiator",
         method_on="async_set_ptc_on",
         method_off="async_set_ptc_off",
@@ -488,9 +489,9 @@ async def async_setup_other_entry(hass, config_entry, async_add_entities):
 
             update_tasks = []
             for device in devices:
-                if not hasattr(device, method["method"]):
+                if not hasattr(device, method.method):
                     continue
-                await getattr(device, method["method"])(**params)
+                await getattr(device, method.method)(**params)
                 update_tasks.append(
                     asyncio.create_task(device.async_update_ha_state(True))
                 )
@@ -499,7 +500,7 @@ async def async_setup_other_entry(hass, config_entry, async_add_entities):
                 await asyncio.wait(update_tasks)
 
         for plug_service, method in SERVICE_TO_METHOD.items():
-            schema = method.get("schema", SERVICE_SCHEMA)
+            schema = method.schema or SERVICE_SCHEMA
             hass.services.async_register(
                 DOMAIN, plug_service, async_service_handler, schema=schema
             )

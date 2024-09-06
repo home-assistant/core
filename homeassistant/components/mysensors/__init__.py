@@ -10,7 +10,6 @@ from mysensors import BaseAsyncGateway
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import DeviceEntry
 
 from .const import (
@@ -30,9 +29,6 @@ from .gateway import finish_setup, gw_stop, setup_gateway
 _LOGGER = logging.getLogger(__name__)
 
 DATA_HASS_CONFIG = "hass_config"
-
-
-CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

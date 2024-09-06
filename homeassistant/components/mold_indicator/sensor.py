@@ -8,7 +8,10 @@ import math
 import voluptuous as vol
 
 from homeassistant import util
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+    SensorEntity,
+)
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_NAME,
@@ -46,7 +49,7 @@ DEFAULT_NAME = "Mold Indicator"
 MAGNUS_K2 = 17.62
 MAGNUS_K3 = 243.12
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_INDOOR_TEMP): cv.entity_id,
         vol.Required(CONF_OUTDOOR_TEMP): cv.entity_id,

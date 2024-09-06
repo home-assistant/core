@@ -9,7 +9,10 @@ from typing import Any
 import requests
 import voluptuous as vol
 
-from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
+from homeassistant.components.switch import (
+    PLATFORM_SCHEMA as SWITCH_PLATFORM_SCHEMA,
+    SwitchEntity,
+)
 from homeassistant.const import CONF_NAME, CONF_RESOURCE
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -31,7 +34,7 @@ PIN_FUNCTION_SCHEMA = vol.Schema(
     }
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_RESOURCE): cv.url,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,

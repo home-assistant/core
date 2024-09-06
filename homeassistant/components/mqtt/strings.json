@@ -1,9 +1,5 @@
 {
   "issues": {
-    "deprecation_mqtt_schema_vacuum_yaml": {
-      "title": "MQTT vacuum entities with deprecated `schema` config settings found in your configuration.yaml",
-      "description": "The `schema` setting for MQTT vacuum entities is deprecated and should be removed. Please adjust your configuration.yaml and restart Home Assistant to fix this issue."
-    },
     "deprecated_color_handling": {
       "title": "Deprecated color handling used for MQTT light",
       "description": "An MQTT light config (with `json` schema) found in `configuration.yaml` uses deprecated color handling flags.\n\nConfiguration found:\n```yaml\n{config}\n```\nDeprecated flags: **{deprecated_flags}**.\n\nUse the `supported_color_modes` option instead and [reload](/developer-tools/yaml) the manually configured MQTT items or restart Home Assistant to fix this issue."
@@ -15,10 +11,25 @@
     "invalid_platform_config": {
       "title": "Invalid config found for mqtt {domain} item",
       "description": "Home Assistant detected an invalid config for a manually configured item.\n\nPlatform domain: **{domain}**\nConfiguration file: **{config_file}**\nNear line: **{line}**\nConfiguration found:\n```yaml\n{config}\n```\nError: **{error}**.\n\nMake sure the configuration is valid and [reload](/developer-tools/yaml) the manually configured MQTT items or restart Home Assistant to fix this issue."
+    },
+    "payload_template_deprecation": {
+      "title": "Deprecated option used in mqtt publish action call",
+      "description": "Deprecated `payload_template` option used in MQTT publish action call to topic `{topic}` from payload template `{payload_template}`. Use the `payload` option instead. In automations templates are supported natively. Update the automation or script to use the `payload` option instead and restart Home Assistant to fix this issue."
+    },
+    "topic_template_deprecation": {
+      "title": "Deprecated option used in mqtt publish action call",
+      "description": "Deprecated `topic_template` option used in MQTT publish action call to topic `{topic}` from topic template `{topic_template}`. Use the `topic` option instead. In automations templates are supported natively. Update the automation or script to use the `topic` option instead and restart Home Assistant to fix this issue."
     }
   },
   "config": {
     "step": {
+      "user": {
+        "description": "Please choose how you want to connect to the MQTT broker:",
+        "menu_options": {
+          "addon": "Use the official {addon} add-on.",
+          "broker": "Manually enter the MQTT broker connection details"
+        }
+      },
       "broker": {
         "description": "Please enter the connection information of your MQTT broker.",
         "data": {
@@ -59,15 +70,15 @@
           "ws_path": "The WebSocket path to be used for the connection to your MQTT broker."
         }
       },
+      "install_addon": {
+        "title": "Installing add-on"
+      },
+      "start_addon": {
+        "title": "Starting add-on"
+      },
       "hassio_confirm": {
         "title": "MQTT Broker via Home Assistant add-on",
-        "description": "Do you want to configure Home Assistant to connect to the MQTT broker provided by the add-on {addon}?",
-        "data": {
-          "discovery": "Enable discovery"
-        },
-        "data_description": {
-          "discovery": "Option to enable MQTT automatic discovery."
-        }
+        "description": "Do you want to configure Home Assistant to connect to the MQTT broker provided by the add-on {addon}?"
       },
       "reauth_confirm": {
         "title": "Re-authentication required with the MQTT broker",
@@ -83,6 +94,10 @@
       }
     },
     "abort": {
+      "addon_info_failed": "Failed get info for the {addon} add-on.",
+      "addon_install_failed": "Failed to install the {addon} add-on.",
+      "addon_start_failed": "Failed to start the {addon} add-on.",
+      "addon_connection_failed": "Failed to connect to the {addon} add-on. Check the add-on status and try again later.",
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
@@ -170,7 +185,7 @@
         "title": "MQTT options",
         "description": "Discovery - If discovery is enabled (recommended), Home Assistant will automatically discover devices and entities which publish their configuration on the MQTT broker. If discovery is disabled, all configuration must be done manually.\nDiscovery prefix - The prefix a configuration topic for automatic discovery must start with.\nBirth message - The birth message will be sent each time Home Assistant (re)connects to the MQTT broker.\nWill message - The will message will be sent each time Home Assistant loses its connection to the broker, both in case of a clean (e.g. Home Assistant shutting down) and in case of an unclean (e.g. Home Assistant crashing or losing its network connection) disconnect.",
         "data": {
-          "discovery": "[%key:component::mqtt::config::step::hassio_confirm::data::discovery%]",
+          "discovery": "Enable discovery",
           "discovery_prefix": "Discovery prefix",
           "birth_enable": "Enable birth message",
           "birth_topic": "Birth message topic",
@@ -226,6 +241,10 @@
       "name": "Publish",
       "description": "Publishes a message to an MQTT topic.",
       "fields": {
+        "evaluate_payload": {
+          "name": "Evaluate payload",
+          "description": "When `payload` is a Python bytes literal, evaluate the bytes literal and publish the raw data."
+        },
         "topic": {
           "name": "Topic",
           "description": "Topic to publish to."

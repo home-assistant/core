@@ -33,10 +33,10 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
     UnitOfApparentPower,
+    UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
     UnitOfFrequency,
@@ -50,7 +50,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
-from .coordinator import EnphaseUpdateCoordinator
+from .coordinator import EnphaseConfigEntry, EnphaseUpdateCoordinator
 from .entity import EnvoyBaseEntity
 
 ICON = "mdi:flash"
@@ -297,6 +297,28 @@ CT_NET_CONSUMPTION_SENSORS = (
         on_phase=None,
     ),
     EnvoyCTSensorEntityDescription(
+        key="net_ct_current",
+        translation_key="net_ct_current",
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.CURRENT,
+        suggested_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        suggested_display_precision=3,
+        entity_registry_enabled_default=False,
+        value_fn=attrgetter("current"),
+        on_phase=None,
+    ),
+    EnvoyCTSensorEntityDescription(
+        key="net_ct_powerfactor",
+        translation_key="net_ct_powerfactor",
+        device_class=SensorDeviceClass.POWER_FACTOR,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=2,
+        entity_registry_enabled_default=False,
+        value_fn=attrgetter("power_factor"),
+        on_phase=None,
+    ),
+    EnvoyCTSensorEntityDescription(
         key="net_consumption_ct_metering_status",
         translation_key="net_ct_metering_status",
         device_class=SensorDeviceClass.ENUM,
@@ -332,6 +354,51 @@ CT_NET_CONSUMPTION_PHASE_SENSORS = {
 }
 
 CT_PRODUCTION_SENSORS = (
+    EnvoyCTSensorEntityDescription(
+        key="production_ct_frequency",
+        translation_key="production_ct_frequency",
+        native_unit_of_measurement=UnitOfFrequency.HERTZ,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.FREQUENCY,
+        suggested_display_precision=1,
+        entity_registry_enabled_default=False,
+        value_fn=attrgetter("frequency"),
+        on_phase=None,
+    ),
+    EnvoyCTSensorEntityDescription(
+        key="production_ct_voltage",
+        translation_key="production_ct_voltage",
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.VOLTAGE,
+        suggested_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        suggested_display_precision=1,
+        entity_registry_enabled_default=False,
+        value_fn=attrgetter("voltage"),
+        on_phase=None,
+    ),
+    EnvoyCTSensorEntityDescription(
+        key="production_ct_current",
+        translation_key="production_ct_current",
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.CURRENT,
+        suggested_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        suggested_display_precision=3,
+        entity_registry_enabled_default=False,
+        value_fn=attrgetter("current"),
+        on_phase=None,
+    ),
+    EnvoyCTSensorEntityDescription(
+        key="production_ct_powerfactor",
+        translation_key="production_ct_powerfactor",
+        device_class=SensorDeviceClass.POWER_FACTOR,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=2,
+        entity_registry_enabled_default=False,
+        value_fn=attrgetter("power_factor"),
+        on_phase=None,
+    ),
     EnvoyCTSensorEntityDescription(
         key="production_ct_metering_status",
         translation_key="production_ct_metering_status",
@@ -401,6 +468,17 @@ CT_STORAGE_SENSORS = (
         on_phase=None,
     ),
     EnvoyCTSensorEntityDescription(
+        key="storage_ct_frequency",
+        translation_key="storage_ct_frequency",
+        native_unit_of_measurement=UnitOfFrequency.HERTZ,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.FREQUENCY,
+        suggested_display_precision=1,
+        entity_registry_enabled_default=False,
+        value_fn=attrgetter("frequency"),
+        on_phase=None,
+    ),
+    EnvoyCTSensorEntityDescription(
         key="storage_voltage",
         translation_key="storage_ct_voltage",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
@@ -410,6 +488,28 @@ CT_STORAGE_SENSORS = (
         suggested_display_precision=1,
         entity_registry_enabled_default=False,
         value_fn=attrgetter("voltage"),
+        on_phase=None,
+    ),
+    EnvoyCTSensorEntityDescription(
+        key="storage_ct_current",
+        translation_key="storage_ct_current",
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.CURRENT,
+        suggested_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        suggested_display_precision=3,
+        entity_registry_enabled_default=False,
+        value_fn=attrgetter("current"),
+        on_phase=None,
+    ),
+    EnvoyCTSensorEntityDescription(
+        key="storage_ct_powerfactor",
+        translation_key="storage_ct_powerfactor",
+        device_class=SensorDeviceClass.POWER_FACTOR,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=2,
+        entity_registry_enabled_default=False,
+        value_fn=attrgetter("power_factor"),
         on_phase=None,
     ),
     EnvoyCTSensorEntityDescription(
@@ -579,11 +679,11 @@ ENCHARGE_AGGREGATE_SENSORS = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: EnphaseConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up envoy sensor platform."""
-    coordinator: EnphaseUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
     envoy_data = coordinator.envoy.data
     assert envoy_data is not None
     _LOGGER.debug("Envoy data: %s", envoy_data)

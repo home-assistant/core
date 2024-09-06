@@ -55,6 +55,7 @@ def test_regex_get_module_platform(
         ("list[dict[str, Any]]", 1, ("list", "dict[str, Any]")),
         ("tuple[bytes | None, str | None]", 2, ("tuple", "bytes | None", "str | None")),
         ("Callable[[], TestServer]", 2, ("Callable", "[]", "TestServer")),
+        ("pytest.CaptureFixture[str]", 1, ("pytest.CaptureFixture", "str")),
     ],
 )
 def test_regex_x_of_y_i(
@@ -1264,6 +1265,7 @@ def test_pytest_fixture(linter: UnittestLinter, type_hint_checker: BaseChecker) 
     def sample_fixture( #@
         hass: HomeAssistant,
         caplog: pytest.LogCaptureFixture,
+        capsys: pytest.CaptureFixture[str],
         aiohttp_server: Callable[[], TestServer],
         unused_tcp_port_factory: Callable[[], int],
         enable_custom_integrations: None,

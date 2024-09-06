@@ -1,6 +1,7 @@
 """The tests for Monoprice Media player platform."""
 
 from collections import defaultdict
+from typing import Any
 from unittest.mock import patch
 
 from serial import SerialException
@@ -58,7 +59,7 @@ class AttrDict(dict):
 class MockMonoprice:
     """Mock for pymonoprice object."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Init mock object."""
         self.zones = defaultdict(
             lambda: AttrDict(power=True, volume=0, mute=True, source=1)
@@ -105,7 +106,7 @@ async def test_cannot_connect(hass: HomeAssistant) -> None:
         assert hass.states.get(ZONE_1_ID) is None
 
 
-async def _setup_monoprice(hass, monoprice):
+async def _setup_monoprice(hass: HomeAssistant, monoprice: MockMonoprice) -> None:
     with patch(
         "homeassistant.components.monoprice.get_monoprice",
         new=lambda *a: monoprice,
@@ -116,7 +117,9 @@ async def _setup_monoprice(hass, monoprice):
         await hass.async_block_till_done()
 
 
-async def _setup_monoprice_with_options(hass, monoprice):
+async def _setup_monoprice_with_options(
+    hass: HomeAssistant, monoprice: MockMonoprice
+) -> None:
     with patch(
         "homeassistant.components.monoprice.get_monoprice",
         new=lambda *a: monoprice,
@@ -129,7 +132,9 @@ async def _setup_monoprice_with_options(hass, monoprice):
         await hass.async_block_till_done()
 
 
-async def _setup_monoprice_not_first_run(hass, monoprice):
+async def _setup_monoprice_not_first_run(
+    hass: HomeAssistant, monoprice: MockMonoprice
+) -> None:
     with patch(
         "homeassistant.components.monoprice.get_monoprice",
         new=lambda *a: monoprice,
@@ -141,19 +146,17 @@ async def _setup_monoprice_not_first_run(hass, monoprice):
         await hass.async_block_till_done()
 
 
-async def _call_media_player_service(hass, name, data):
+async def _call_media_player_service(
+    hass: HomeAssistant, name: str, data: dict[str, Any]
+) -> None:
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN, name, service_data=data, blocking=True
     )
 
 
-async def _call_homeassistant_service(hass, name, data):
-    await hass.services.async_call(
-        "homeassistant", name, service_data=data, blocking=True
-    )
-
-
-async def _call_monoprice_service(hass, name, data):
+async def _call_monoprice_service(
+    hass: HomeAssistant, name: str, data: dict[str, Any]
+) -> None:
     await hass.services.async_call(DOMAIN, name, service_data=data, blocking=True)
 
 

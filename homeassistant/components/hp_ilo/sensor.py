@@ -8,7 +8,10 @@ import logging
 import hpilo
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+    SensorEntity,
+)
 from homeassistant.const import (
     CONF_HOST,
     CONF_MONITORED_VARIABLES,
@@ -47,7 +50,7 @@ SENSOR_TYPES = {
     "network_settings": ["Network Settings", "get_network_settings"],
 }
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_USERNAME): cv.string,
@@ -128,9 +131,6 @@ class HpIloSensor(SensorEntity):
         self._unit_of_measurement = unit_of_measurement
         self._ilo_function = SENSOR_TYPES[sensor_type][1]
         self.hp_ilo_data = hp_ilo_data
-
-        if sensor_value_template is not None:
-            sensor_value_template.hass = hass
         self._sensor_value_template = sensor_value_template
 
         self._state = None
