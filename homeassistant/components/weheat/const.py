@@ -14,7 +14,7 @@ OAUTH2_TOKEN = (
     "https://auth.weheat.nl/auth/realms/Weheat/protocol/openid-connect/token/"
 )
 API_URL = "https://api.weheat.nl"
-API_SCOPE = "openid offline_access"
+OAUTH2_SCOPES = ["openid", "offline_access"]
 
 
 UPDATE_INTERVAL = 30
