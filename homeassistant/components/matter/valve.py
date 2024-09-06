@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from enum import IntEnum
-from math import floor
 from typing import Any
 
 from chip.clusters import Objects as clusters
@@ -71,6 +70,19 @@ class MatterValve(MatterEntity, ValveEntity):
             else None
         )
 
+    async def send_device_command(
+        self,
+        command: clusters.ClusterCommand,
+        timed_request_timeout_ms: int = 1000,
+    ) -> None:
+        """Send a command to the device."""
+        await self.matter_client.send_device_command(
+            node_id=self._endpoint.node.node_id,
+            endpoint_id=self._endpoint.endpoint_id,
+            command=command,
+            timed_request_timeout_ms=timed_request_timeout_ms,
+        )
+
     async def async_open_water_valve(self) -> None:
         """Open the water valve."""
         await self.send_device_command(
@@ -92,14 +104,6 @@ class MatterValve(MatterEntity, ValveEntity):
             clusters.ValveConfigurationAndControl.Commands.Open(
                 position
             )  # TargetLevel type="percent"
-        )
-
-    async def send_device_command(self, command: Any) -> None:
-        """Send device command."""
-        await self.matter_client.send_device_command(
-            node_id=self._endpoint.node.node_id,
-            endpoint_id=self._endpoint.endpoint_id,
-            command=command,
         )
 
     @callback
