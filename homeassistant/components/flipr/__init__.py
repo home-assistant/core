@@ -70,5 +70,5 @@ def detect_invalid_old_configuration(hass: HomeAssistant, entry: ConfigEntry):
 
     if find_duplicate_entries(entries):
         raise ConfigEntryError(
-            "Duplicate entries found for flipr with the same user email. Please remove one of it manually. Multiple fliprs will be automatically after restart."
+            "Duplicate entries found for flipr with the same user email. Please remove one of it manually. Multiple fliprs will be automatically detected after restart."
         )
