@@ -61,7 +61,7 @@ class ElkThermostatEMHeat(ElkEntity, SwitchEntity):
     def __init__(self, element: Element, elk: Elk, elk_data: ELKM1Data) -> None:
         """Initialize the emergency heat switch."""
         super().__init__(element, elk, elk_data)
-        self._unique_id = self._unique_id + "emheat"
+        self._unique_id = f"{self._unique_id}emheat"
         self._attr_name = f"{element.name} emergency heat"
 
     @property
