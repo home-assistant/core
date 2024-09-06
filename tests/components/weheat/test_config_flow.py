@@ -118,6 +118,7 @@ async def handle_oauth(
         f"{OAUTH2_AUTHORIZE}?response_type=code&client_id={CLIENT_ID}"
         "&redirect_uri=https://example.com/auth/external/callback"
         f"&state={state}"
+        "&scope=openid+offline_access"
     )
 
     client = await hass_client_no_auth()
