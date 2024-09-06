@@ -84,13 +84,16 @@ class PlexSession:
                     self.media_codec_long = stream.extendedDisplayTitle
                     break
 
-    def update_item_ids(self, source):
+    def update_item_ids(self, media):
         """Update TMDB and TVDB ID."""
+        # get the source object from the session
+        source = media.source()
         _LOGGER.debug(
             "Attempting to extract TMDB and TVDB IDs from source %s", source.guids
         )
         for guid in source.guids:
             _LOGGER.debug("Found GUID: %s", guid.id)
+            # search for tmdb:// or tvdb:// in the guid.id
             match guid.id:
                 case str(id_str) if (
                     tmdb_match := re.search(r"(?:tmdb)://(\d+)", id_str)
@@ -114,7 +117,7 @@ class PlexSession:
         if edition:
             _LOGGER.debug("Found edition title in metadata")
             return edition
-
+        # extract edition from filename
         if self.media_filename:
             _LOGGER.debug(
                 "Attempting to extract edition from filename %s", self.media_filename
@@ -141,8 +144,6 @@ class PlexSession:
         self.media_image_url = self.get_media_image_url(media)
         self.media_summary = media.summary
         self.media_title = media.title
-        self.source = media.source()
-        _LOGGER.debug("Media source: %s", self.source)
         if media.duration:
             self.media_duration = int(media.duration / 1000)
 
@@ -155,7 +156,7 @@ class PlexSession:
         self.media_edition_title = self.get_edition_name(media)
         self.update_audio_codec(media)
         # GUIDs are not present in session objects, only source
-        self.update_item_ids(self.source)
+        self.update_item_ids(media)
 
         if media.librarySectionID in SPECIAL_SECTIONS:
             self.media_library_title = SPECIAL_SECTIONS[media.librarySectionID]

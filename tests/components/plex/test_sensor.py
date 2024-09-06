@@ -304,8 +304,8 @@ async def test_plex_sensors_no_sessions(
 
     # Test each sensor
     for sensor_name, expected_state in expected_states.items():
-        sensor = hass.states.get(f"sensor.plex_{sensor_name}")
-        assert sensor, f"Sensor 'sensor.plex_{sensor_name}' not found"
+        sensor = hass.states.get(f"sensor.shield_android_tv_{sensor_name}")
+        assert sensor, f"Sensor 'sensor.shield_android_tv_{sensor_name}' not found"
         assert (
             sensor.state == expected_state
         ), f"Expected {sensor_name} to be {expected_state}, but it was {sensor.state} with {requests_mock.last_request.text} and payload is {empty_payload}"
@@ -378,37 +378,42 @@ async def test_plex_sensors_values(
     await hass.async_block_till_done()
 
     # Test year sensor
-    year_sensor = hass.states.get("sensor.plex_year")
+    year_sensor = hass.states.get("sensor.shield_android_tv_year")
     assert year_sensor
     assert year_sensor.state == "2000"
 
     # Test title sensor
-    title_sensor = hass.states.get("sensor.plex_title")
+    title_sensor = hass.states.get("sensor.shield_android_tv_title")
     assert title_sensor
     assert title_sensor.state == "Movie 1"
 
     # Test filename sensor
-    filename_sensor = hass.states.get("sensor.plex_filename")
+    filename_sensor = hass.states.get("sensor.shield_android_tv_filename")
     assert filename_sensor
     assert filename_sensor.state is not None
 
     # Test codec sensor
-    codec_sensor = hass.states.get("sensor.plex_codec")
+    codec_sensor = hass.states.get("sensor.shield_android_tv_codec")
     assert codec_sensor
     assert codec_sensor.state == "English (DTS 5.1)"
 
     # Test codec long sensor
-    codec_long_sensor = hass.states.get("sensor.plex_codec_long")
+    codec_long_sensor = hass.states.get("sensor.shield_android_tv_codec_long")
     assert codec_long_sensor
     assert codec_long_sensor.state == "DTS 5.1 @ 1536 kbps (English)"
 
     # Test TMDB ID sensor
-    tmdb_sensor = hass.states.get("sensor.plex_tmdb_id")
+    tmdb_sensor = hass.states.get("sensor.shield_android_tv_tmdb_id")
+    assert tmdb_sensor
+    assert tmdb_sensor.state == "12345"
+
+    # Test TVDB ID sensor
+    tmdb_sensor = hass.states.get("sensor.shield_android_tv_tvdb_id")
     assert tmdb_sensor
     assert tmdb_sensor.state == "12345"
 
     # Test edition title sensor
-    edition_sensor = hass.states.get("sensor.plex_edition_title")
+    edition_sensor = hass.states.get("sensor.shield_android_tv_edition_title")
     assert edition_sensor
     assert (
         edition_sensor.state == "Extended"
