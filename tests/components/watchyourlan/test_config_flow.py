@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, patch
 from homeassistant import config_entries
 from homeassistant.components.watchyourlan.config_flow import CannotConnect
 from homeassistant.components.watchyourlan.const import DOMAIN
-from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL
+from homeassistant.const import CONF_SSL, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -27,11 +27,11 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
         new_callable=AsyncMock,
         return_value={"title": "WatchYourLAN", "url": "http://127.0.0.1:8840"},
     ):
+        # Provide data that matches the schema (CONF_URL and CONF_SSL)
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                CONF_HOST: "127.0.0.1",
-                CONF_PORT: 8840,
+                CONF_URL: "http://127.0.0.1:8840",
                 CONF_SSL: False,
             },
         )
@@ -41,7 +41,7 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "WatchYourLAN"
     assert result["data"] == {
-        "url": "http://127.0.0.1:8840",
+        CONF_URL: "http://127.0.0.1:8840",
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -63,8 +63,7 @@ async def test_form_cannot_connect(
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                CONF_HOST: "127.0.0.1",
-                CONF_PORT: 8840,
+                CONF_URL: "http://127.0.0.1:8840",
                 CONF_SSL: False,
             },
         )
@@ -82,8 +81,7 @@ async def test_form_cannot_connect(
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                CONF_HOST: "127.0.0.1",
-                CONF_PORT: 8840,
+                CONF_URL: "http://127.0.0.1:8840",
                 CONF_SSL: False,
             },
         )
@@ -93,7 +91,7 @@ async def test_form_cannot_connect(
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "WatchYourLAN"
     assert result["data"] == {
-        "url": "http://127.0.0.1:8840",
+        CONF_URL: "http://127.0.0.1:8840",
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -115,8 +113,7 @@ async def test_form_invalid_host(
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                CONF_HOST: "invalid-host",
-                CONF_PORT: 8840,
+                CONF_URL: "http://invalid-url",
                 CONF_SSL: False,
             },
         )
