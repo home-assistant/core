@@ -106,4 +106,4 @@ class ServerStatusSensor(LMSStatusEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """LMS Status directly from coordinator data."""
-        return self.coordinator.data[self.entity_description.key]
+        return cast(StateType, self.coordinator.data[self.entity_description.key])
