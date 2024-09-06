@@ -506,7 +506,7 @@ bleak-retry-connector==3.5.0
 bleak==0.22.2
 
 # homeassistant.components.blebox
-blebox-uniapi==2.4.2
+blebox-uniapi==2.5.0
 
 # homeassistant.components.blink
 blinkpy==0.23.0
@@ -2074,7 +2074,7 @@ sensoterra==2.0.1
 sentry-sdk==1.40.3
 
 # homeassistant.components.sfr_box
-sfrbox-api==0.0.8
+sfrbox-api==0.0.10
 
 # homeassistant.components.sharkiq
 sharkiq==1.0.2
