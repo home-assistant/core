@@ -1,6 +1,5 @@
 """Test configuration and mocks for LCN component."""
 
-from collections.abc import AsyncGenerator
 import json
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
@@ -97,7 +96,9 @@ def create_config_entry_myhome() -> MockConfigEntry:
     return create_config_entry("myhome")
 
 
-async def init_integration(hass: HomeAssistant, entry: MockConfigEntry):
+async def init_integration(
+    hass: HomeAssistant, entry: MockConfigEntry
+) -> MockPchkConnectionManager:
     """Set up the LCN integration in Home Assistant."""
     hass.http = Mock()  # needs to be mocked as hass.http.register_static_path is called when registering the frontend
     lcn_connection = None
@@ -121,7 +122,7 @@ async def init_integration(hass: HomeAssistant, entry: MockConfigEntry):
 async def init_lcn_connection(
     hass: HomeAssistant,
     entry: MockConfigEntry,
-) -> AsyncGenerator[MockPchkConnectionManager]:
+) -> MockPchkConnectionManager:
     """Set up the LCN integration in Home Assistantand yield connection object."""
     return await init_integration(hass, entry)
 
