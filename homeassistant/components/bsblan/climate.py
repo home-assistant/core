@@ -149,10 +149,7 @@ class BSBLANClimate(BSBLanEntity, ClimateEntity):
             if kwargs[ATTR_PRESET_MODE] == PRESET_ECO:
                 data[ATTR_HVAC_MODE] = PRESET_ECO
             elif kwargs[ATTR_PRESET_MODE] == PRESET_NONE:
-                # Don't change the HVAC mode when setting to PRESET_NONE
-                pass
-            else:
-                data[ATTR_HVAC_MODE] = HVACMode.AUTO
+                data[ATTR_HVAC_MODE] = PRESET_NONE
 
         try:
             await self.coordinator.client.thermostat(**data)
