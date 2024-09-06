@@ -96,14 +96,14 @@
         "description": "[%key:component::bayesian::config::step::template::description%]",
         "data": {
           "entity_id": "[%key:component::bayesian::config::step::state::data::entity_id%]",
-          "template": "[%key:component::bayesian::config::step::template::data::template%]",
+          "value_template": "[%key:component::bayesian::config::step::template::data::value_template%]",
           "prob_given_true": "[%key:component::bayesian::config::step::state::data::prob_given_true%]",
           "prob_given_false": "[%key:component::bayesian::config::step::state::data::prob_given_false%]",
           "add_another": "[%key:component::bayesian::config::step::state::data::add_another%]"
         },
         "data_description": {
           "entity_id": "[%key:component::bayesian::config::step::state::data_description::entity_id%]",
-          "template": "[%key:component::bayesian::config::step::template::data_description::template%]",
+          "value_template": "[%key:component::bayesian::config::step::template::data_description::value_template%]",
           "prob_given_true": "[%key:component::bayesian::config::step::state::data_description::prob_given_true%]",
           "prob_given_false": "[%key:component::bayesian::config::step::state::data_description::prob_given_false%]"
         }
@@ -183,14 +183,14 @@
         "description": "Add an observation with evaluates a template.",
         "data": {
           "entity_id": "[%key:component::bayesian::config::step::state::data::entity_id%]",
-          "template": "Template",
+          "value_template": "Template",
           "prob_given_true": "[%key:component::bayesian::config::step::state::data::prob_given_true%]",
           "prob_given_false": "[%key:component::bayesian::config::step::state::data::prob_given_false%]",
           "add_another": "[%key:component::bayesian::config::step::state::data::add_another%]"
         },
         "data_description": {
           "entity_id": "[%key:component::bayesian::config::step::state::data_description::entity_id%]",
-          "template": "A template that evaluates to `True` will update the prior accordingly, A template that returns `False` will update the prior with inverse probabilities, a template that resolves `None` will be ignored.",
+          "value_template": "A template that evaluates to `true` will update the prior accordingly, A template that returns `false` or `None` will update the prior with inverse probabilities. A template the returns an error will not update probabilities",
           "prob_given_true": "[%key:component::bayesian::config::step::state::data_description::prob_given_true%]",
           "prob_given_false": "[%key:component::bayesian::config::step::state::data_description::prob_given_true%]"
         }

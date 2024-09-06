@@ -26,7 +26,6 @@ from homeassistant.const import (
     CONF_PLATFORM,
     CONF_STATE,
     CONF_VALUE_TEMPLATE,
-    Platform,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -40,6 +39,7 @@ from homeassistant.helpers.schema_config_entry_flow import (
     SchemaFlowMenuStep,
     SchemaFlowStep,
 )
+from homeassistant.helpers.template import result_as_boolean
 
 from .const import (
     CONF_OBSERVATIONS,
@@ -154,7 +154,7 @@ STATE_SUBSCHEMA = vol.Schema(
 
 NUMERIC_STATE_SUBSCHEMA = vol.Schema(
     {
-        CONF_PLATFORM: str(ObservationTypes.NUMERIC_STATE),
+        vol.Required(CONF_PLATFORM): str(ObservationTypes.NUMERIC_STATE),
         vol.Required(CONF_ENTITY_ID): selector.EntitySelector(
             selector.EntitySelectorConfig(
                 domain=[SENSOR_DOMAIN, INPUT_NUMBER_DOMAIN, NUMBER_DOMAIN]
@@ -175,7 +175,7 @@ NUMERIC_STATE_SUBSCHEMA = vol.Schema(
 
 TEMPLATE_SUBSCHEMA = vol.Schema(
     {
-        CONF_PLATFORM: CONF_TEMPLATE,
+        vol.Required(CONF_PLATFORM): str(ObservationTypes.TEMPLATE),
         vol.Required(CONF_VALUE_TEMPLATE): selector.TemplateSelector(
             selector.TemplateSelectorConfig(),
         ),
@@ -230,6 +230,7 @@ async def validate_observation_setup(
 ) -> dict[str, Any]:
     """Validate observation input."""
 
+    _LOGGER.warning(user_input)
     if user_input[CONF_P_GIVEN_T] == user_input[CONF_P_GIVEN_F]:
         raise SchemaFlowError("equal_probabilities")
 
@@ -438,7 +439,9 @@ def ws_start_preview(
         errors = {}
         key: vol.Marker
         for key, validator in schema.schema.items():
-            if key.schema not in user_input:
+            if (
+                key.schema not in user_input or key == CONF_PLATFORM
+            ):  # TODO we exclude CONF_PLATFORM because it is associated with a static object not a validator
                 continue
             try:
                 validator(user_input[key.schema])
@@ -447,21 +450,23 @@ def ws_start_preview(
 
         return errors
 
+    # TODO should msg['user_input'] be put into a variable?
     entity_registry_entry: er.RegistryEntry | None = None
     if msg["flow_type"] == "config_flow":
         flow_status = hass.config_entries.flow.async_get(msg["flow_id"])
         template_type = flow_status["step_id"]
-        form_step = cast(SchemaFlowFormStep, OPTIONS_FLOW["template"])
+        form_step = cast(
+            SchemaFlowFormStep, CONFIG_FLOW[str(ObservationTypes.TEMPLATE)]
+        )
         schema = cast(vol.Schema, form_step.schema)
-        name = msg["user_input"]["name"]
     else:
+        # TODO untested
         flow_status = hass.config_entries.options.async_get(msg["flow_id"])
         config_entry = hass.config_entries.async_get_entry(flow_status["handler"])
         if not config_entry:
             raise HomeAssistantError
         template_type = config_entry.options["template_type"]
-        name = config_entry.options["name"]
-        schema = cast(vol.Schema, OPTIONS_FLOW["template"])
+        schema = cast(vol.Schema, OPTIONS_FLOW[str(OptionsFlowSteps.EDIT_OBSERVATION)])
         entity_registry = er.async_get(hass)
         entries = er.async_entries_for_config_entry(
             entity_registry, flow_status["handler"]
@@ -479,6 +484,7 @@ def ws_start_preview(
         error: str | None,
     ) -> None:
         """Forward config entry state events to websocket."""
+
         if error is not None:
             connection.send_message(
                 websocket_api.event_message(
@@ -490,7 +496,11 @@ def ws_start_preview(
         connection.send_message(
             websocket_api.event_message(
                 msg["id"],
-                {"attributes": attributes, "listeners": listeners, "state": state},
+                {
+                    "attributes": attributes,
+                    "listeners": listeners,
+                    "state": result_as_boolean(state),
+                },
             )
         )
 
@@ -505,7 +515,10 @@ def ws_start_preview(
         )
         return
 
-    preview_entity = async_create_preview_sensor(hass, name, msg["user_input"])
+    template_config = {
+        CONF_STATE: msg["user_input"]["value_template"],
+    }
+    preview_entity = async_create_preview_sensor(hass, "Observation", template_config)
     preview_entity.hass = hass
     preview_entity.registry_entry = entity_registry_entry
 

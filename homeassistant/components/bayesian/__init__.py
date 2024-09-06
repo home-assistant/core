@@ -10,8 +10,7 @@ from homeassistant.helpers.typing import ConfigType
 from .binary_sensor import PLATFORM_SCHEMA  # noqa: F401
 from .const import DOMAIN, PLATFORMS  # noqa: F401
 
-_LOGGER = logging.getLogger(__name__)  # TODO delete-me
-
+_LOGGER = logging.getLogger(__name__)
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Bayesian integration from YAML."""
@@ -27,7 +26,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Bayesian from a config entry."""
-    _LOGGER.warning("Calling async_setup_entry() Entry : %s", entry)  # TODO delete me
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(update_listener))
 
