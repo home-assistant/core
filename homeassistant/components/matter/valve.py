@@ -29,11 +29,11 @@ ValveConfigurationAndControlFeature = (
 )
 
 # The MASK used for extracting bits 0 to 1 of the byte.
-OPERATIONAL_STATUS_MASK = 0b11
+CURRENT_STATE_MASK = 0b11
 
 
 # ValveStateEnum
-class OperationalStatus(IntEnum):
+class CurrentState(IntEnum):
     """Currently ongoing operations enumeration for Matter water valve."""
 
     VALVE_IS_CURRENTLY_CLOSED = 0b00
@@ -105,48 +105,26 @@ class MatterValve(MatterEntity, ValveEntity):
     @callback
     def _update_from_device(self) -> None:
         """Update from device."""
-        operational_status = self.get_matter_attribute_value(
-            clusters.ValveConfigurationAndControl.Attributes.OperationalStatus
+        current_state = self.get_matter_attribute_value(
+            clusters.ValveConfigurationAndControl.Attributes.CurrentState
         )
 
-        assert operational_status is not None
+        assert current_state is not None
 
         LOGGER.debug(
-            "Operational status %s for %s",
-            f"{operational_status:#010b}",
+            "Current state %s for %s",
+            f"{current_state:#010b}",
             self.entity_id,
         )
 
-        state = operational_status & OPERATIONAL_STATUS_MASK
+        state = current_state & CURRENT_STATE_MASK
         match state:
             # Valve is transitioning between closed and open positions or between levels
-            case OperationalStatus.VALVE_IS_CURRENTLY_TRANSITIONING:
+            case CurrentState.VALVE_IS_CURRENTLY_TRANSITIONING:
                 self._attr_is_opening = True
             case _:
                 self._attr_is_opening = False
                 self._attr_is_closing = False
-
-        if self._entity_info.endpoint.has_attribute(
-            None, clusters.ValveConfigurationAndControl.Attributes.CurrentLevel
-        ):
-            # A value of 100 percent SHALL indicate the fully open position
-            # A value of 0 percent SHALL indicate the fully closed position
-            # A value of null SHALL indicate that the current state is not known
-            current_valve_position = self.get_matter_attribute_value(
-                clusters.Attributes.CurrentLevel
-            )
-            self._attr_current_valve_position = (
-                floor(current_valve_position / 100)
-                if current_valve_position is not None
-                else None
-            )
-
-            LOGGER.debug(
-                "Current position for %s - raw: %s - corrected: %s",
-                self.entity_id,
-                current_valve_position,
-                self.current_valve_position,
-            )
 
     @callback
     def _calculate_features(
