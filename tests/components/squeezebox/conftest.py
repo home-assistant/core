@@ -14,15 +14,17 @@ from homeassistant.components.squeezebox.browse_media import (
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import format_mac
-from homeassistant.util.uuid import random_uuid_hex
 
 from tests.common import MockConfigEntry
 
 TEST_HOST = "1.2.3.4"
 TEST_PORT = "9000"
 TEST_USE_HTTPS = False
-SERVER_UUID = "12345678-1234-1234-1234-123456789012"
-TEST_MAC = "aa:bb:cc:dd:ee:ff"
+SERVER_UUIDS = [
+    "12345678-1234-1234-1234-123456789012",
+    "87654321-4321-4321-4321-210987654321",
+]
+TEST_MAC = ["aa:bb:cc:dd:ee:ff", "ff:ee:dd:cc:bb:aa"]
 TEST_PLAYER_NAME = "Test Player"
 TEST_SERVER_NAME = "Test Server"
 FAKE_VALID_ITEM_ID = "1234"
@@ -43,7 +45,7 @@ def config_entry(hass: HomeAssistant) -> MockConfigEntry:
     """Add the squeezebox mock config entry to hass."""
     config_entry = MockConfigEntry(
         domain=const.DOMAIN,
-        unique_id=SERVER_UUID,
+        unique_id=SERVER_UUIDS[0],
         data={
             CONF_HOST: TEST_HOST,
             CONF_PORT: TEST_PORT,
@@ -143,40 +145,41 @@ def player_factory() -> MagicMock:
     return mock_pysqueezebox_player
 
 
-def mock_pysqueezebox_player() -> MagicMock:
+def mock_pysqueezebox_player(uuid: str) -> MagicMock:
     """Mock a Lyrion Media Server player."""
-    with patch("pysqueezebox.Player", autospec=True) as mock_player:
+    with patch(
+        "homeassistant.components.squeezebox.media_player.Player", autospec=True
+    ) as mock_player:
         mock_player.async_browse = AsyncMock(side_effect=mock_async_browse)
         mock_player.generate_image_url_from_track_id = MagicMock(
             return_value="http://lms.internal:9000/html/images/favorites.png"
         )
         mock_player.name = TEST_PLAYER_NAME
-        mock_player.player_id = random_uuid_hex()
+        mock_player.player_id = uuid
         return mock_player
 
 
 @pytest.fixture
 def lms_factory(player_factory: MagicMock) -> MagicMock:
     """Return a factory for creating mock Lyrion Media Servers with arbitrary number of players."""
-    return lambda player_count: mock_pysqueezebox_server(player_factory, player_count)
+    return lambda player_count, uuid: mock_pysqueezebox_server(
+        player_factory, player_count, uuid
+    )
 
 
 @pytest.fixture
 def lms(player_factory: MagicMock) -> MagicMock:
     """Mock a Lyrion Media Server with one mock player attached."""
-    return mock_pysqueezebox_server(player_factory, 1, uuid=TEST_MAC)
+    return mock_pysqueezebox_server(player_factory, 1, uuid=TEST_MAC[0])
 
 
 def mock_pysqueezebox_server(
-    player_factory: MagicMock, player_count: int, uuid: str | None = None
+    player_factory: MagicMock, player_count: int, uuid: str
 ) -> MagicMock:
     """Create a mock Lyrion Media Server with the given number of mock players attached."""
     with patch("pysqueezebox.Server", autospec=True) as mock_lms:
-        players = [player_factory() for _ in range(player_count)]
+        players = [player_factory(TEST_MAC[index]) for index in range(player_count)]
         mock_lms.async_get_players = AsyncMock(return_value=players)
-
-        if not uuid:
-            uuid = random_uuid_hex()
 
         mock_lms.uuid = uuid
         mock_lms.name = TEST_SERVER_NAME
@@ -212,6 +215,6 @@ async def configured_players(
     hass: HomeAssistant, config_entry: MockConfigEntry, lms_factory: MagicMock
 ) -> list[MagicMock]:
     """Fixture mocking calls to two pysqueezebox Players from a configured squeezebox."""
-    lms = lms_factory(2)
+    lms = lms_factory(2, uuid=SERVER_UUIDS[0])
     await configure_squeezebox(hass, config_entry, lms)
     return await lms.async_get_players()
