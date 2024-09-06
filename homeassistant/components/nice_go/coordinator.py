@@ -35,6 +35,7 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
 RECONNECT_ATTEMPTS = 3
 RECONNECT_DELAY = 5
 
@@ -259,7 +260,7 @@ class NiceGOUpdateCoordinator(DataUpdateCoordinator[dict[str, NiceGODevice]]):
         self.connected = False
 
         # Give some time for reconnection
-        await asyncio.sleep(5)
+        await asyncio.sleep(RECONNECT_DELAY)
         if self.connected:
             _LOGGER.debug("Reconnected, not setting error")
             return

@@ -270,13 +270,10 @@ async def test_on_connection_lost(
 
     assert mock_nice_go.listen.call_count == 3
 
-    with patch(
-        "homeassistant.components.nice_go.coordinator.asyncio.sleep"
-    ) as mock_sleep:
+    with patch("homeassistant.components.nice_go.coordinator.RECONNECT_DELAY", 0):
         await mock_nice_go.listen.call_args_list[2][0][1](
             {"exception": ValueError("test")}
         )
-        mock_sleep.assert_called_once_with(5)
 
     assert hass.states.get("cover.test_garage_1").state == "unavailable"
 
@@ -305,20 +302,14 @@ async def test_on_connection_lost_reconnect(
 
     assert mock_nice_go.listen.call_count == 3
 
-    with patch(
-        "homeassistant.components.nice_go.coordinator.asyncio.sleep"
-    ) as mock_sleep:
+    assert hass.states.get("cover.test_garage_1").state == "closed"
 
-        async def side_effect(sleep_time: int) -> None:
-            await mock_nice_go.listen.call_args_list[0][0][1]()
-
-        mock_sleep.side_effect = side_effect
-
+    with patch("homeassistant.components.nice_go.coordinator.RECONNECT_DELAY", 0):
         await mock_nice_go.listen.call_args_list[2][0][1](
             {"exception": ValueError("test")}
         )
 
-    assert hass.states.get("cover.test_garage_1").state == "closed"
+    assert hass.states.get("cover.test_garage_1").state == "unavailable"
 
 
 async def test_no_connection_state(
