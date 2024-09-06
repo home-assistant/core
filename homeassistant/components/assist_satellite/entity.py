@@ -115,12 +115,15 @@ class AssistSatelliteEntity(entity.Entity):
         message: str | None = None,
         media_id: str | None = None,
     ) -> None:
-        """Play an announcement on the satellite.
+        """Play and show an announcement on the satellite.
 
         If media_id is not provided, message is synthesized to
         audio with the selected pipeline.
 
-        Calls async_announce with media id.
+        If media_id is provided, it is played directly. It is possible
+        to omit the message and the satellite will not show any text.
+
+        Calls async_announce with message and media id.
         """
         if message is None:
             message = ""
