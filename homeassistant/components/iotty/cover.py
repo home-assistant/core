@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 import logging
 from typing import Any, cast
 
@@ -11,6 +10,7 @@ from iottycloud.shutter import Shutter, ShutterState
 from iottycloud.verbs import SH_DEVICE_TYPE_UID
 
 from homeassistant.components.cover import (
+    ATTR_POSITION,
     CoverDeviceClass,
     CoverEntity,
     CoverEntityFeature,
@@ -153,6 +153,16 @@ class IottyShutter(CoverEntity, CoordinatorEntity[IottyDataUpdateCoordinator]):
         )
 
     @property
+    def is_opening(self) -> bool:
+        """Return true if the Shutter is opening."""
+        return self._iotty_device.status == ShutterState.OPENING
+
+    @property
+    def is_closing(self) -> bool:
+        """Return true if the Shutter is closing."""
+        return self._iotty_device.status == ShutterState.CLOSING
+
+    @property
     def supported_features(self) -> CoverEntityFeature:
         """Flag supported features."""
         return CoverEntityFeature(0) | (
@@ -164,31 +174,33 @@ class IottyShutter(CoverEntity, CoordinatorEntity[IottyDataUpdateCoordinator]):
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
-        self._iotty_device.status = ShutterState.OPENING
-        await asyncio.sleep(1)
-        self._iotty_device.percentage = 100
-        self._iotty_device.status = ShutterState.STATIONARY
+        await self._iotty_cloud.command(
+            self._iotty_device.device_id, self._iotty_device.cmd_open()
+        )
         await self.coordinator.async_request_refresh()
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
-        self._iotty_device.status = ShutterState.CLOSING
-        await asyncio.sleep(1)
-        self._iotty_device.percentage = 0
-        self._iotty_device.status = ShutterState.STATIONARY
+        await self._iotty_cloud.command(
+            self._iotty_device.device_id, self._iotty_device.cmd_close()
+        )
         await self.coordinator.async_request_refresh()
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
-        self._iotty_device.status = ShutterState.OPENING
-        await asyncio.sleep(1)
-        self._iotty_device.percentage = 50
-        self._iotty_device.status = ShutterState.STATIONARY
+        percentage = kwargs[ATTR_POSITION]
+        await self._iotty_cloud.command(
+            self._iotty_device.device_id,
+            self._iotty_device.cmd_move_to(),
+            f'{{"percentage": {percentage} }}',
+        )
         await self.coordinator.async_request_refresh()
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
-        self._iotty_device.status = ShutterState.STATIONARY
+        await self._iotty_cloud.command(
+            self._iotty_device.device_id, self._iotty_device.cmd_stop()
+        )
         await self.coordinator.async_request_refresh()
 
     @callback
