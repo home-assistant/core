@@ -22,7 +22,7 @@ from . import setup_integration
 from tests.common import MockConfigEntry
 
 
-@pytest.mark.freeze_time(datetime.datetime(2023, 6, 5, tzinfo=datetime.UTC))
+@pytest.mark.freeze_time(datetime.datetime(2023, 6, 5, 12))
 async def test_calendar_state_off(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -37,7 +37,7 @@ async def test_calendar_state_off(
     assert state.state == "off"
 
 
-@pytest.mark.freeze_time(datetime.datetime(2023, 6, 5, 19, tzinfo=datetime.UTC))
+@pytest.mark.freeze_time(datetime.datetime(2023, 6, 5, 19))
 async def test_calendar_state_on(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -52,7 +52,7 @@ async def test_calendar_state_on(
     assert state.state == "on"
 
 
-@pytest.mark.freeze_time(datetime.datetime(2023, 6, 5, tzinfo=datetime.UTC))
+@pytest.mark.freeze_time(datetime.datetime(2023, 6, 5))
 @pytest.mark.parametrize(
     (
         "start_date",
