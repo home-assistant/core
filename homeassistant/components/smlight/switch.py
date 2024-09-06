@@ -84,7 +84,7 @@ class SmSwitch(SmEntity, SwitchEntity):
         self.entity_description = description
         self._attr_unique_id = f"{coordinator.unique_id}-{description.key}"
 
-        self._page, self._toggle = self.entity_description.setting.value
+        self._page, self._toggle = description.setting.value
 
     async def set_smlight(self, state: bool) -> None:
         """Set the state on SLZB device."""
@@ -105,6 +105,6 @@ class SmSwitch(SmEntity, SwitchEntity):
         await self.set_smlight(False)
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return the state of the switch."""
-        return bool(self.entity_description.state_fn(self.coordinator.data.sensors))
+        return self.entity_description.state_fn(self.coordinator.data.sensors)
