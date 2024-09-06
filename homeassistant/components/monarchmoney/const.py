@@ -2,7 +2,7 @@
 
 import logging
 
-DOMAIN = "monarchmoney"
+DOMAIN = "monarch_money"
 
 LOGGER = logging.getLogger(__package__)
 
