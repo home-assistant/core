@@ -142,7 +142,7 @@ class MonarchMoneyConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._abort_if_unique_id_configured()
 
                 return self.async_create_entry(
-                    title=info["title"],
+                    title="Monarch Money",
                     data={CONF_TOKEN: info[CONF_TOKEN]},
                 )
         return self.async_show_form(
