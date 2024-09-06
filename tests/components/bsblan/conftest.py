@@ -52,14 +52,9 @@ def mock_bsblan() -> Generator[MagicMock, None, None]:
             load_fixture("device.json", DOMAIN)
         )
         bsblan.state.return_value = State.from_json(load_fixture("state.json", DOMAIN))
-
-        # Patch static values based on the test case
-        async def set_static_values(param):
-            bsblan.static_values.return_value = StaticState.from_json(
-                load_fixture(param, DOMAIN)
-            )
-
-        bsblan.set_static_values = set_static_values
+        bsblan.static_values.return_value = StaticState.from_json(
+            load_fixture("static.json", DOMAIN)
+        )
 
         yield bsblan
 
