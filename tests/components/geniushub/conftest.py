@@ -40,7 +40,7 @@ def mock_geniushub_client() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_geniushub_cloud() -> Generator[AsyncMock]:
+def mock_geniushub_cloud() -> Generator[MagicMock]:
     """Mock a GeniusHub."""
     with patch(
         "homeassistant.components.geniushub.GeniusHub",
