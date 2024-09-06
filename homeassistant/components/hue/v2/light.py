@@ -226,7 +226,11 @@ class HueLight(HueBaseEntity, LightEntity):
         flash = kwargs.get(ATTR_FLASH)
         effect = effect_str = kwargs.get(ATTR_EFFECT)
         if effect_str in (EFFECT_NONE, EFFECT_NONE.lower()):
-            effect = EffectStatus.NO_EFFECT
+            # ignore effect if set to "None" and we have no effect active
+            # the special effect "None" is only used to stop an active effect
+            # but sending it while no effect is active can actually result in issues
+            # https://github.com/home-assistant/core/issues/122165
+            effect = None if self.effect == EFFECT_NONE else EffectStatus.NO_EFFECT
         elif effect_str is not None:
             # work out if we got a regular effect or timed effect
             effect = EffectStatus(effect_str)

@@ -37,6 +37,7 @@ from .entity import (
 
 ATTR_SPEED = "speed"
 SUPPORT_PTZ_SPEED = CameraEntityFeature.STREAM
+SERVICE_PTZ_MOVE = "ptz_move"
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -172,7 +173,7 @@ async def async_setup_entry(
 
     platform = async_get_current_platform()
     platform.async_register_entity_service(
-        "ptz_move",
+        SERVICE_PTZ_MOVE,
         {vol.Required(ATTR_SPEED): cv.positive_int},
         "async_ptz_move",
         [SUPPORT_PTZ_SPEED],

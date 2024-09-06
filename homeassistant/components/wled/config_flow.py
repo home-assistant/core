@@ -46,7 +46,9 @@ class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
             except WLEDConnectionError:
                 errors["base"] = "cannot_connect"
             else:
-                await self.async_set_unique_id(device.info.mac_address)
+                await self.async_set_unique_id(
+                    device.info.mac_address, raise_on_progress=False
+                )
                 self._abort_if_unique_id_configured(
                     updates={CONF_HOST: user_input[CONF_HOST]}
                 )
@@ -56,8 +58,6 @@ class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
                         CONF_HOST: user_input[CONF_HOST],
                     },
                 )
-        else:
-            user_input = {}
 
         return self.async_show_form(
             step_id="user",

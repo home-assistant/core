@@ -156,19 +156,19 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     component.async_register_entity_service(
         SERVICE_TURN_ON,
-        {},
+        None,
         "async_turn_on",
         [ClimateEntityFeature.TURN_ON],
     )
     component.async_register_entity_service(
         SERVICE_TURN_OFF,
-        {},
+        None,
         "async_turn_off",
         [ClimateEntityFeature.TURN_OFF],
     )
     component.async_register_entity_service(
         SERVICE_TOGGLE,
-        {},
+        None,
         "async_toggle",
         [ClimateEntityFeature.TURN_OFF, ClimateEntityFeature.TURN_ON],
     )
@@ -429,7 +429,7 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             (
                 "%s::%s implements the `is_aux_heat` property or uses the auxiliary  "
                 "heater methods in a subclass of ClimateEntity which is "
-                "deprecated and will be unsupported from Home Assistant 2024.10."
+                "deprecated and will be unsupported from Home Assistant 2025.4."
                 " Please %s"
             ),
             self.platform.platform_name,
@@ -451,7 +451,7 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             self.hass,
             DOMAIN,
             f"deprecated_climate_aux_{self.platform.platform_name}",
-            breaks_in_ha_version="2024.10.0",
+            breaks_in_ha_version="2025.4.0",
             is_fixable=False,
             is_persistent=False,
             issue_domain=self.platform.platform_name,

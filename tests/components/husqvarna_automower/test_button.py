@@ -34,7 +34,6 @@ from tests.common import (
 
 
 @pytest.mark.freeze_time(datetime.datetime(2023, 6, 5, tzinfo=datetime.UTC))
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_button_states_and_commands(
     hass: HomeAssistant,
     mock_automower_client: AsyncMock,

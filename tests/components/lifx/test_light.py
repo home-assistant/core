@@ -1,6 +1,7 @@
 """Tests for the lifx integration light platform."""
 
 from datetime import timedelta
+from typing import Any
 from unittest.mock import patch
 
 import aiolifx_effects
@@ -1299,7 +1300,7 @@ async def test_config_zoned_light_strip_fails(
     class MockFailingLifxCommand:
         """Mock a lifx command that fails on the 2nd try."""
 
-        def __init__(self, bulb, **kwargs):
+        def __init__(self, bulb, **kwargs: Any) -> None:
             """Init command."""
             self.bulb = bulb
             self.call_count = 0
@@ -1338,7 +1339,7 @@ async def test_legacy_zoned_light_strip(
     class MockPopulateLifxZonesCommand:
         """Mock populating the number of zones."""
 
-        def __init__(self, bulb, **kwargs):
+        def __init__(self, bulb, **kwargs: Any) -> None:
             """Init command."""
             self.bulb = bulb
             self.call_count = 0
@@ -1845,7 +1846,7 @@ async def test_color_bulb_is_actually_off(hass: HomeAssistant) -> None:
     class MockLifxCommandActuallyOff:
         """Mock a lifx command that will update our power level state."""
 
-        def __init__(self, bulb, **kwargs):
+        def __init__(self, bulb, **kwargs: Any) -> None:
             """Init command."""
             self.bulb = bulb
             self.calls = []

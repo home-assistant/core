@@ -32,10 +32,12 @@ from homeassistant.core import (
     DOMAIN as HOMEASSISTANT_DOMAIN,
     CoreState,
     HomeAssistant,
+    ServiceCall,
     State,
     callback,
 )
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.typing import StateType
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -206,7 +208,7 @@ async def test_unique_id(
     assert entry.unique_id == unique_id
 
 
-def _setup_sensor(hass, humidity):
+def _setup_sensor(hass: HomeAssistant, humidity: StateType) -> None:
     """Set up the test sensor."""
     hass.states.async_set(ENT_SENSOR, humidity)
 
@@ -669,13 +671,13 @@ async def test_operation_mode_humidify(hass: HomeAssistant) -> None:
     assert call.data["entity_id"] == ENT_SWITCH
 
 
-async def _setup_switch(hass, is_on):
+async def _setup_switch(hass: HomeAssistant, is_on: bool) -> list[ServiceCall]:
     """Set up the test switch."""
     hass.states.async_set(ENT_SWITCH, STATE_ON if is_on else STATE_OFF)
     calls = []
 
     @callback
-    def log_call(call):
+    def log_call(call: ServiceCall) -> None:
         """Log service calls."""
         calls.append(call)
 
@@ -1615,7 +1617,7 @@ async def test_restore_state_uncoherence_case(hass: HomeAssistant) -> None:
     assert state.state == STATE_OFF
 
 
-async def _setup_humidifier(hass):
+async def _setup_humidifier(hass: HomeAssistant) -> None:
     assert await async_setup_component(
         hass,
         DOMAIN,
@@ -1635,7 +1637,9 @@ async def _setup_humidifier(hass):
     await hass.async_block_till_done()
 
 
-def _mock_restore_cache(hass, humidity=40, state=STATE_OFF):
+def _mock_restore_cache(
+    hass: HomeAssistant, humidity: int = 40, state: str = STATE_OFF
+) -> None:
     mock_restore_cache(
         hass,
         (

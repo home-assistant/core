@@ -1335,7 +1335,7 @@ async def test_wrap_sensor(hass: HomeAssistant, mock_do_cycle, expected) -> None
 
 
 @pytest.fixture(name="mock_restore")
-async def mock_restore(hass):
+async def mock_restore(hass: HomeAssistant) -> None:
     """Mock restore cache."""
     mock_restore_cache_with_extra_data(
         hass,

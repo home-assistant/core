@@ -1,0 +1,203 @@
+# serializer version: 1
+# name: test_service_dyn_text
+  tuple(
+    0,
+    'text in row 1',
+  )
+# ---
+# name: test_service_led
+  tuple(
+    <LedPort.LED6: 5>,
+    <LedStatus.BLINK: 'B'>,
+  )
+# ---
+# name: test_service_lock_keys
+  tuple(
+    0,
+    list([
+      <KeyLockStateModifier.OFF: '0'>,
+      <KeyLockStateModifier.OFF: '0'>,
+      <KeyLockStateModifier.ON: '1'>,
+      <KeyLockStateModifier.ON: '1'>,
+      <KeyLockStateModifier.TOGGLE: 'U'>,
+      <KeyLockStateModifier.TOGGLE: 'U'>,
+      <KeyLockStateModifier.NOCHANGE: '-'>,
+      <KeyLockStateModifier.NOCHANGE: '-'>,
+    ]),
+  )
+# ---
+# name: test_service_lock_keys_tab_a_temporary
+  tuple(
+    10,
+    <TimeUnit.SECONDS: 'S'>,
+    list([
+      <KeyLockStateModifier.OFF: '0'>,
+      <KeyLockStateModifier.OFF: '0'>,
+      <KeyLockStateModifier.ON: '1'>,
+      <KeyLockStateModifier.ON: '1'>,
+      <KeyLockStateModifier.TOGGLE: 'U'>,
+      <KeyLockStateModifier.TOGGLE: 'U'>,
+      <KeyLockStateModifier.NOCHANGE: '-'>,
+      <KeyLockStateModifier.NOCHANGE: '-'>,
+    ]),
+  )
+# ---
+# name: test_service_lock_regulator
+  tuple(
+    0,
+    True,
+  )
+# ---
+# name: test_service_output_abs
+  tuple(
+    0,
+    100,
+    9,
+  )
+# ---
+# name: test_service_output_rel
+  tuple(
+    0,
+    25,
+  )
+# ---
+# name: test_service_output_toggle
+  tuple(
+    0,
+    9,
+  )
+# ---
+# name: test_service_pck
+  tuple(
+    'PIN4',
+  )
+# ---
+# name: test_service_relays
+  tuple(
+    list([
+      <RelayStateModifier.OFF: '0'>,
+      <RelayStateModifier.OFF: '0'>,
+      <RelayStateModifier.ON: '1'>,
+      <RelayStateModifier.ON: '1'>,
+      <RelayStateModifier.TOGGLE: 'U'>,
+      <RelayStateModifier.TOGGLE: 'U'>,
+      <RelayStateModifier.NOCHANGE: '-'>,
+      <RelayStateModifier.NOCHANGE: '-'>,
+    ]),
+  )
+# ---
+# name: test_service_send_keys
+  tuple(
+    list([
+      list([
+        True,
+        False,
+        False,
+        False,
+        True,
+        False,
+        False,
+        False,
+      ]),
+      list([
+        False,
+        False,
+        False,
+        False,
+        False,
+        False,
+        False,
+        False,
+      ]),
+      list([
+        False,
+        False,
+        False,
+        False,
+        False,
+        False,
+        False,
+        False,
+      ]),
+      list([
+        False,
+        False,
+        False,
+        False,
+        False,
+        False,
+        False,
+        True,
+      ]),
+    ]),
+    <SendKeyCommand.HIT: 'K'>,
+  )
+# ---
+# name: test_service_send_keys_hit_deferred
+  tuple(
+    list([
+      list([
+        True,
+        False,
+        False,
+        False,
+        True,
+        False,
+        False,
+        False,
+      ]),
+      list([
+        False,
+        False,
+        False,
+        False,
+        False,
+        False,
+        False,
+        False,
+      ]),
+      list([
+        False,
+        False,
+        False,
+        False,
+        False,
+        False,
+        False,
+        False,
+      ]),
+      list([
+        False,
+        False,
+        False,
+        False,
+        False,
+        False,
+        False,
+        True,
+      ]),
+    ]),
+    5,
+    <TimeUnit.SECONDS: 'S'>,
+  )
+# ---
+# name: test_service_var_abs
+  tuple(
+    <Var.VAR1ORTVAR: 0>,
+    75.0,
+    <VarUnit.PERCENT: '%'>,
+  )
+# ---
+# name: test_service_var_rel
+  tuple(
+    <Var.VAR1ORTVAR: 0>,
+    10.0,
+    <VarUnit.PERCENT: '%'>,
+    <RelVarRef.CURRENT: 1>,
+  )
+# ---
+# name: test_service_var_reset
+  tuple(
+    <Var.VAR1ORTVAR: 0>,
+  )
+# ---
