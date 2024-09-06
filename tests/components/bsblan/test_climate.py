@@ -21,12 +21,7 @@ from homeassistant.components.climate import (
     SERVICE_SET_TEMPERATURE,
     HVACMode,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    ATTR_TEMPERATURE,
-    Platform,
-    UnitOfTemperature,
-)
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.entity_registry as er
@@ -44,10 +39,10 @@ ENTITY_ID = "climate.bsb_lan"
 
 
 @pytest.mark.parametrize(
-    ("static_file", "temperature_unit"),
+    ("static_file"),
     [
-        ("static.json", UnitOfTemperature.CELSIUS),
-        ("static_F.json", UnitOfTemperature.FAHRENHEIT),
+        ("static.json"),
+        ("static_F.json"),
     ],
 )
 async def test_celsius_fahrenheit(
@@ -57,7 +52,6 @@ async def test_celsius_fahrenheit(
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
     static_file: str,
-    temperature_unit: str,
 ) -> None:
     """Test Celsius and Fahrenheit temperature units."""
     # Load static data from fixture
@@ -135,7 +129,6 @@ async def test_climate_entity_properties(
     assert state.attributes["preset_mode"] == PRESET_ECO
 
 
-@pytest.mark.parametrize("static_file", ["static.json"])
 @pytest.mark.parametrize(
     "mode",
     [HVACMode.HEAT, HVACMode.AUTO, HVACMode.OFF],
@@ -144,15 +137,10 @@ async def test_async_set_hvac_mode(
     hass: HomeAssistant,
     mock_bsblan: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    static_file: str,
     mode: HVACMode,
 ) -> None:
     """Test setting HVAC mode via service call."""
-    static_data = json.loads(load_fixture(static_file, DOMAIN))
-    with patch.object(
-        mock_bsblan, "static_values", return_value=StaticState.from_dict(static_data)
-    ):
-        await setup_with_selected_platforms(hass, mock_config_entry, [Platform.CLIMATE])
+    await setup_with_selected_platforms(hass, mock_config_entry, [Platform.CLIMATE])
 
     # Call the service to set HVAC mode
     await hass.services.async_call(
@@ -168,22 +156,18 @@ async def test_async_set_hvac_mode(
 
 
 @pytest.mark.parametrize(
-    ("hvac_mode", "preset_mode", "expected_success"),
+    ("hvac_mode", "preset_mode"),
     [
-        (HVACMode.AUTO, PRESET_ECO, True),
-        (HVACMode.AUTO, PRESET_NONE, True),
-        (HVACMode.HEAT, PRESET_ECO, False),
+        (HVACMode.AUTO, PRESET_ECO),
+        (HVACMode.AUTO, PRESET_NONE),
     ],
 )
-async def test_async_set_preset_mode(
+async def test_async_set_preset_mode_succes(
     hass: HomeAssistant,
     mock_bsblan: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    entity_registry: er.EntityRegistry,
     hvac_mode: HVACMode,
     preset_mode: str,
-    expected_success: bool,
-    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test setting preset mode via service call."""
     await setup_with_selected_platforms(hass, mock_config_entry, [Platform.CLIMATE])
@@ -194,26 +178,48 @@ async def test_async_set_preset_mode(
     mock_bsblan.state.return_value.hvac_mode = mock_hvac_mode
 
     # Attempt to set the preset mode
-    if not expected_success:
-        with pytest.raises(HomeAssistantError) as exc_info:
-            await hass.services.async_call(
-                CLIMATE_DOMAIN,
-                SERVICE_SET_PRESET_MODE,
-                {ATTR_ENTITY_ID: ENTITY_ID, ATTR_PRESET_MODE: preset_mode},
-                blocking=True,
-            )
-        assert "set_preset_mode_error" in str(exc_info.value)
-    else:
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_PRESET_MODE,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_PRESET_MODE: preset_mode},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+
+@pytest.mark.parametrize(
+    ("hvac_mode", "preset_mode"),
+    [
+        (
+            HVACMode.HEAT,
+            PRESET_ECO,
+        )
+    ],
+)
+async def test_async_set_preset_mode_error(
+    hass: HomeAssistant,
+    mock_bsblan: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    hvac_mode: HVACMode,
+    preset_mode: str,
+) -> None:
+    """Test setting preset mode via service call."""
+    await setup_with_selected_platforms(hass, mock_config_entry, [Platform.CLIMATE])
+
+    # patch hvac_mode
+    mock_hvac_mode = MagicMock()
+    mock_hvac_mode.value = hvac_mode
+    mock_bsblan.state.return_value.hvac_mode = mock_hvac_mode
+
+    # Attempt to set the preset mode
+    ERROR_MSG = "Preset mode can only be set when HVAC mode is set to 'auto'"
+    with pytest.raises(HomeAssistantError, match=ERROR_MSG):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_PRESET_MODE,
             {ATTR_ENTITY_ID: ENTITY_ID, ATTR_PRESET_MODE: preset_mode},
             blocking=True,
         )
-        await hass.async_block_till_done()
-
-    # Reset the mock for the next iteration
-    mock_bsblan.thermostat.reset_mock()
 
 
 @pytest.mark.parametrize(
@@ -241,8 +247,6 @@ async def test_async_set_temperature(
     )
     # Assert that the thermostat method was called with the correct temperature
     mock_bsblan.thermostat.assert_called_once_with(target_temperature=target_temp)
-
-    mock_bsblan.thermostat.reset_mock()
 
 
 async def test_async_set_data(
@@ -300,12 +304,11 @@ async def test_async_set_data(
 
     # Test error handling
     mock_bsblan.thermostat.side_effect = BSBLANError("Test error")
-    with pytest.raises(HomeAssistantError) as exc_info:
+    ERROR_MSG = "An error occurred while updating the BSBLAN device"
+    with pytest.raises(HomeAssistantError, match=ERROR_MSG):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_TEMPERATURE,
             {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 20},
             blocking=True,
         )
-    assert "An error occurred while updating the BSBLAN device" in str(exc_info.value)
-    assert exc_info.value.translation_key == "set_data_error"
