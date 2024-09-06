@@ -1,6 +1,6 @@
 """The tests for the Ring switch platform."""
 
-from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
+from unittest.mock import AsyncMock, patch
 
 from aiohttp.test_utils import make_mocked_request
 from freezegun.api import FrozenDateTimeFactory
@@ -180,8 +180,7 @@ async def test_motion_detection_errors_when_turned_on(
     assert not any(config_entry.async_get_active_flows(hass, {SOURCE_REAUTH}))
 
     front_camera_mock = mock_ring_devices.get_device(765432)
-    p = PropertyMock(side_effect=exception_type)
-    type(front_camera_mock).motion_detection = p
+    front_camera_mock.async_set_motion_detection.side_effect = exception_type
 
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
@@ -191,7 +190,7 @@ async def test_motion_detection_errors_when_turned_on(
             blocking=True,
         )
     await hass.async_block_till_done()
-    p.assert_called_once()
+    front_camera_mock.async_set_motion_detection.assert_called_once()
     assert (
         any(
             flow
@@ -212,7 +211,7 @@ async def test_camera_handle_mjpeg_stream(
     await setup_platform(hass, Platform.CAMERA)
 
     front_camera_mock = mock_ring_devices.get_device(765432)
-    front_camera_mock.recording_url.return_value = None
+    front_camera_mock.async_recording_url.return_value = None
 
     state = hass.states.get("camera.front")
     assert state is not None
@@ -220,8 +219,8 @@ async def test_camera_handle_mjpeg_stream(
     mock_request = make_mocked_request("GET", "/", headers={"token": "x"})
 
     # history not updated yet
-    front_camera_mock.history.assert_not_called()
-    front_camera_mock.recording_url.assert_not_called()
+    front_camera_mock.async_history.assert_not_called()
+    front_camera_mock.async_recording_url.assert_not_called()
     stream = await camera.async_get_mjpeg_stream(hass, mock_request, "camera.front")
     assert stream is None
 
@@ -229,30 +228,30 @@ async def test_camera_handle_mjpeg_stream(
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
-    front_camera_mock.history.assert_called_once()
-    front_camera_mock.recording_url.assert_called_once()
+    front_camera_mock.async_history.assert_called_once()
+    front_camera_mock.async_recording_url.assert_called_once()
 
     stream = await camera.async_get_mjpeg_stream(hass, mock_request, "camera.front")
     assert stream is None
 
     # Stop the history updating so we can update the values manually
-    front_camera_mock.history = MagicMock()
+    front_camera_mock.async_history = AsyncMock()
     front_camera_mock.last_history[0]["recording"]["status"] = "not ready"
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
-    front_camera_mock.recording_url.assert_called_once()
+    front_camera_mock.async_recording_url.assert_called_once()
     stream = await camera.async_get_mjpeg_stream(hass, mock_request, "camera.front")
     assert stream is None
 
     # If the history id hasn't changed the camera will not check again for the video url
     # until the FORCE_REFRESH_INTERVAL has passed
     front_camera_mock.last_history[0]["recording"]["status"] = "ready"
-    front_camera_mock.recording_url = MagicMock(return_value="http://dummy.url")
+    front_camera_mock.async_recording_url = AsyncMock(return_value="http://dummy.url")
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
-    front_camera_mock.recording_url.assert_not_called()
+    front_camera_mock.async_recording_url.assert_not_called()
 
     stream = await camera.async_get_mjpeg_stream(hass, mock_request, "camera.front")
     assert stream is None
@@ -260,7 +259,7 @@ async def test_camera_handle_mjpeg_stream(
     freezer.tick(FORCE_REFRESH_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
-    front_camera_mock.recording_url.assert_called_once()
+    front_camera_mock.async_recording_url.assert_called_once()
 
     # Now the stream should be returned
     stream_reader = MockStreamReader(SMALLEST_VALID_JPEG_BYTES)
@@ -290,8 +289,8 @@ async def test_camera_image(
     assert state is not None
 
     # history not updated yet
-    front_camera_mock.history.assert_not_called()
-    front_camera_mock.recording_url.assert_not_called()
+    front_camera_mock.async_history.assert_not_called()
+    front_camera_mock.async_recording_url.assert_not_called()
     with (
         patch(
             "homeassistant.components.ring.camera.ffmpeg.async_get_image",
@@ -305,8 +304,8 @@ async def test_camera_image(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
     # history updated so image available
-    front_camera_mock.history.assert_called_once()
-    front_camera_mock.recording_url.assert_called_once()
+    front_camera_mock.async_history.assert_called_once()
+    front_camera_mock.async_recording_url.assert_called_once()
 
     with patch(
         "homeassistant.components.ring.camera.ffmpeg.async_get_image",

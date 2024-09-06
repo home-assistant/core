@@ -39,7 +39,18 @@ from homeassistant.components.media_player import (
     ATTR_SOUND_MODE,
     ATTR_SOUND_MODE_LIST,
     DOMAIN as MEDIA_PLAYER_DOMAIN,
+    SERVICE_CLEAR_PLAYLIST,
+    SERVICE_MEDIA_NEXT_TRACK,
+    SERVICE_MEDIA_PLAY_PAUSE,
+    SERVICE_MEDIA_PREVIOUS_TRACK,
+    SERVICE_MEDIA_SEEK,
+    SERVICE_MEDIA_STOP,
+    SERVICE_PLAY_MEDIA,
     SERVICE_SELECT_SOUND_MODE,
+    SERVICE_SELECT_SOURCE,
+    SERVICE_TURN_OFF,
+    SERVICE_VOLUME_MUTE,
+    SERVICE_VOLUME_SET,
     MediaPlayerState,
     MediaType,
 )
@@ -117,7 +128,9 @@ async def test_initialization(
 
 
 async def test_async_update_sources_audio_only(
-    hass: HomeAssistant, mock_config_entry, mock_mozart_client
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_mozart_client: AsyncMock,
 ) -> None:
     """Test sources are correctly handled in _async_update_sources."""
     mock_mozart_client.get_remote_menu.return_value = {}
@@ -130,7 +143,9 @@ async def test_async_update_sources_audio_only(
 
 
 async def test_async_update_sources_outdated_api(
-    hass: HomeAssistant, mock_mozart_client, mock_config_entry
+    hass: HomeAssistant,
+    mock_mozart_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test fallback sources are correctly handled in _async_update_sources."""
     mock_mozart_client.get_available_sources.side_effect = ValueError()
@@ -393,8 +408,8 @@ async def test_async_turn_off(
     )
 
     await hass.services.async_call(
-        "media_player",
-        "turn_off",
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_TURN_OFF,
         {ATTR_ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID},
         blocking=True,
     )
@@ -424,8 +439,8 @@ async def test_async_set_volume_level(
     assert ATTR_MEDIA_VOLUME_LEVEL not in states.attributes
 
     await hass.services.async_call(
-        "media_player",
-        "volume_set",
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_VOLUME_SET,
         {
             ATTR_ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID,
             ATTR_MEDIA_VOLUME_LEVEL: TEST_VOLUME_HOME_ASSISTANT_FORMAT,
@@ -462,8 +477,8 @@ async def test_async_mute_volume(
     assert ATTR_MEDIA_VOLUME_MUTED not in states.attributes
 
     await hass.services.async_call(
-        "media_player",
-        "volume_mute",
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_VOLUME_MUTE,
         {
             ATTR_ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID,
             ATTR_MEDIA_VOLUME_MUTED: TEST_VOLUME_HOME_ASSISTANT_FORMAT,
@@ -517,8 +532,8 @@ async def test_async_media_play_pause(
     assert states.state == BANG_OLUFSEN_STATES[initial_state.value]
 
     await hass.services.async_call(
-        "media_player",
-        "media_play_pause",
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_MEDIA_PLAY_PAUSE,
         {ATTR_ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID},
         blocking=True,
     )
@@ -547,8 +562,8 @@ async def test_async_media_stop(
     assert states.state == BANG_OLUFSEN_STATES[TEST_PLAYBACK_STATE_PLAYING.value]
 
     await hass.services.async_call(
-        "media_player",
-        "media_stop",
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_MEDIA_STOP,
         {ATTR_ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID},
         blocking=True,
     )
@@ -568,8 +583,8 @@ async def test_async_media_next_track(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
     await hass.services.async_call(
-        "media_player",
-        "media_next_track",
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_MEDIA_NEXT_TRACK,
         {ATTR_ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID},
         blocking=True,
     )
@@ -609,8 +624,8 @@ async def test_async_media_seek(
     # Check results
     with expected_result:
         await hass.services.async_call(
-            "media_player",
-            "media_seek",
+            MEDIA_PLAYER_DOMAIN,
+            SERVICE_MEDIA_SEEK,
             {
                 ATTR_ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID,
                 ATTR_MEDIA_SEEK_POSITION: TEST_SEEK_POSITION_HOME_ASSISTANT_FORMAT,
@@ -632,8 +647,8 @@ async def test_async_media_previous_track(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
     await hass.services.async_call(
-        "media_player",
-        "media_previous_track",
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_MEDIA_PREVIOUS_TRACK,
         {ATTR_ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID},
         blocking=True,
     )
@@ -652,8 +667,8 @@ async def test_async_clear_playlist(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
     await hass.services.async_call(
-        "media_player",
-        "clear_playlist",
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_CLEAR_PLAYLIST,
         {ATTR_ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID},
         blocking=True,
     )
@@ -688,8 +703,8 @@ async def test_async_select_source(
 
     with expected_result:
         await hass.services.async_call(
-            "media_player",
-            "select_source",
+            MEDIA_PLAYER_DOMAIN,
+            SERVICE_SELECT_SOURCE,
             {
                 ATTR_ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID,
                 ATTR_INPUT_SOURCE: source,
@@ -750,8 +765,8 @@ async def test_async_play_media_invalid_type(
 
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
-            "media_player",
-            "play_media",
+            MEDIA_PLAYER_DOMAIN,
+            SERVICE_PLAY_MEDIA,
             {
                 ATTR_ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID,
                 ATTR_MEDIA_CONTENT_ID: "test",
@@ -779,8 +794,8 @@ async def test_async_play_media_url(
     await async_setup_component(hass, "media_source", {"media_source": {}})
 
     await hass.services.async_call(
-        "media_player",
-        "play_media",
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_PLAY_MEDIA,
         {
             ATTR_ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID,
             ATTR_MEDIA_CONTENT_ID: "media-source://media_source/local/doorbell.mp3",
@@ -805,8 +820,8 @@ async def test_async_play_media_overlay_absolute_volume_uri(
     await async_setup_component(hass, "media_source", {"media_source": {}})
 
     await hass.services.async_call(
-        "media_player",
-        "play_media",
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_PLAY_MEDIA,
         {
             ATTR_ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID,
             ATTR_MEDIA_CONTENT_ID: "media-source://media_source/local/doorbell.mp3",
@@ -837,8 +852,8 @@ async def test_async_play_media_overlay_invalid_offset_volume_tts(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
     await hass.services.async_call(
-        "media_player",
-        "play_media",
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_PLAY_MEDIA,
         {
             ATTR_ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID,
             ATTR_MEDIA_CONTENT_ID: "Dette er en test",
@@ -874,8 +889,8 @@ async def test_async_play_media_overlay_offset_volume_tts(
     volume_callback(TEST_VOLUME)
 
     await hass.services.async_call(
-        "media_player",
-        "play_media",
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_PLAY_MEDIA,
         {
             ATTR_ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID,
             ATTR_MEDIA_CONTENT_ID: "This is a test",
@@ -904,8 +919,8 @@ async def test_async_play_media_tts(
     await async_setup_component(hass, "media_source", {"media_source": {}})
 
     await hass.services.async_call(
-        "media_player",
-        "play_media",
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_PLAY_MEDIA,
         {
             ATTR_ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID,
             ATTR_MEDIA_CONTENT_ID: "media-source://media_source/local/doorbell.mp3",
@@ -928,8 +943,8 @@ async def test_async_play_media_radio(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
     await hass.services.async_call(
-        "media_player",
-        "play_media",
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_PLAY_MEDIA,
         {
             ATTR_ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID,
             ATTR_MEDIA_CONTENT_ID: "1234567890123456",
@@ -954,8 +969,8 @@ async def test_async_play_media_favourite(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
     await hass.services.async_call(
-        "media_player",
-        "play_media",
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_PLAY_MEDIA,
         {
             ATTR_ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID,
             ATTR_MEDIA_CONTENT_ID: "1",
@@ -979,8 +994,8 @@ async def test_async_play_media_deezer_flow(
 
     # Send a service call
     await hass.services.async_call(
-        "media_player",
-        "play_media",
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_PLAY_MEDIA,
         {
             ATTR_ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID,
             ATTR_MEDIA_CONTENT_ID: "flow",
@@ -1006,8 +1021,8 @@ async def test_async_play_media_deezer_playlist(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
     await hass.services.async_call(
-        "media_player",
-        "play_media",
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_PLAY_MEDIA,
         {
             ATTR_ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID,
             ATTR_MEDIA_CONTENT_ID: "playlist:1234567890",
@@ -1033,8 +1048,8 @@ async def test_async_play_media_deezer_track(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
     await hass.services.async_call(
-        "media_player",
-        "play_media",
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_PLAY_MEDIA,
         {
             ATTR_ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID,
             ATTR_MEDIA_CONTENT_ID: "1234567890",
@@ -1062,8 +1077,8 @@ async def test_async_play_media_invalid_deezer(
 
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
-            "media_player",
-            "play_media",
+            MEDIA_PLAYER_DOMAIN,
+            SERVICE_PLAY_MEDIA,
             {
                 ATTR_ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID,
                 ATTR_MEDIA_CONTENT_ID: "flow",
@@ -1099,8 +1114,8 @@ async def test_async_play_media_url_m3u(
         ),
     ):
         await hass.services.async_call(
-            "media_player",
-            "play_media",
+            MEDIA_PLAYER_DOMAIN,
+            SERVICE_PLAY_MEDIA,
             {
                 ATTR_ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID,
                 ATTR_MEDIA_CONTENT_ID: "media-source://media_source/local/doorbell.mp3",

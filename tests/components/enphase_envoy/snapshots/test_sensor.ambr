@@ -783,6 +783,61 @@
     'state': '50.2',
   })
 # ---
+# name: test_sensor[envoy_1p_metered][sensor.envoy_1234_frequency_production_ct-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.envoy_1234_frequency_production_ct',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.FREQUENCY: 'frequency'>,
+    'original_icon': 'mdi:flash',
+    'original_name': 'Frequency production CT',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'production_ct_frequency',
+    'unique_id': '1234_production_ct_frequency',
+    'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
+  })
+# ---
+# name: test_sensor[envoy_1p_metered][sensor.envoy_1234_frequency_production_ct-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'frequency',
+      'friendly_name': 'Envoy 1234 Frequency production CT',
+      'icon': 'mdi:flash',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.envoy_1234_frequency_production_ct',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '50.1',
+  })
+# ---
 # name: test_sensor[envoy_1p_metered][sensor.envoy_1234_lifetime_energy_consumption-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -1227,6 +1282,230 @@
     'state': 'normal',
   })
 # ---
+# name: test_sensor[envoy_1p_metered][sensor.envoy_1234_net_consumption_ct_current-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.envoy_1234_net_consumption_ct_current',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
+    'original_icon': 'mdi:flash',
+    'original_name': 'Net consumption CT current',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'net_ct_current',
+    'unique_id': '1234_net_ct_current',
+    'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+  })
+# ---
+# name: test_sensor[envoy_1p_metered][sensor.envoy_1234_net_consumption_ct_current-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'current',
+      'friendly_name': 'Envoy 1234 Net consumption CT current',
+      'icon': 'mdi:flash',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.envoy_1234_net_consumption_ct_current',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.3',
+  })
+# ---
+# name: test_sensor[envoy_1p_metered][sensor.envoy_1234_powerfactor_net_consumption_ct-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.envoy_1234_powerfactor_net_consumption_ct',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
+    'original_icon': 'mdi:flash',
+    'original_name': 'Powerfactor net consumption CT',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'net_ct_powerfactor',
+    'unique_id': '1234_net_ct_powerfactor',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[envoy_1p_metered][sensor.envoy_1234_powerfactor_net_consumption_ct-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power_factor',
+      'friendly_name': 'Envoy 1234 Powerfactor net consumption CT',
+      'icon': 'mdi:flash',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.envoy_1234_powerfactor_net_consumption_ct',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.21',
+  })
+# ---
+# name: test_sensor[envoy_1p_metered][sensor.envoy_1234_powerfactor_production_ct-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.envoy_1234_powerfactor_production_ct',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
+    'original_icon': 'mdi:flash',
+    'original_name': 'powerfactor production CT',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'production_ct_powerfactor',
+    'unique_id': '1234_production_ct_powerfactor',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[envoy_1p_metered][sensor.envoy_1234_powerfactor_production_ct-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power_factor',
+      'friendly_name': 'Envoy 1234 powerfactor production CT',
+      'icon': 'mdi:flash',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.envoy_1234_powerfactor_production_ct',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.11',
+  })
+# ---
+# name: test_sensor[envoy_1p_metered][sensor.envoy_1234_production_ct_current-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.envoy_1234_production_ct_current',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
+    'original_icon': 'mdi:flash',
+    'original_name': 'Production CT current',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'production_ct_current',
+    'unique_id': '1234_production_ct_current',
+    'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+  })
+# ---
+# name: test_sensor[envoy_1p_metered][sensor.envoy_1234_production_ct_current-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'current',
+      'friendly_name': 'Envoy 1234 Production CT current',
+      'icon': 'mdi:flash',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.envoy_1234_production_ct_current',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.2',
+  })
+# ---
 # name: test_sensor[envoy_1p_metered][sensor.envoy_1234_voltage_net_consumption_ct-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -1283,6 +1562,64 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '112',
+  })
+# ---
+# name: test_sensor[envoy_1p_metered][sensor.envoy_1234_voltage_production_ct-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.envoy_1234_voltage_production_ct',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
+    'original_icon': 'mdi:flash',
+    'original_name': 'Voltage production CT',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'production_ct_voltage',
+    'unique_id': '1234_production_ct_voltage',
+    'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+  })
+# ---
+# name: test_sensor[envoy_1p_metered][sensor.envoy_1234_voltage_production_ct-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'voltage',
+      'friendly_name': 'Envoy 1234 Voltage production CT',
+      'icon': 'mdi:flash',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.envoy_1234_voltage_production_ct',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '111',
   })
 # ---
 # name: test_sensor[envoy_1p_metered][sensor.inverter_1-entry]
@@ -3912,6 +4249,446 @@
     }),
     'context': <ANY>,
     'entity_id': 'sensor.envoy_1234_frequency_net_consumption_ct_l3',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '50.2',
+  })
+# ---
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_frequency_production_ct-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.envoy_1234_frequency_production_ct',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.FREQUENCY: 'frequency'>,
+    'original_icon': 'mdi:flash',
+    'original_name': 'Frequency production CT',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'production_ct_frequency',
+    'unique_id': '1234_production_ct_frequency',
+    'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
+  })
+# ---
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_frequency_production_ct-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'frequency',
+      'friendly_name': 'Envoy 1234 Frequency production CT',
+      'icon': 'mdi:flash',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.envoy_1234_frequency_production_ct',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '50.1',
+  })
+# ---
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_frequency_production_ct_l1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.envoy_1234_frequency_production_ct_l1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.FREQUENCY: 'frequency'>,
+    'original_icon': 'mdi:flash',
+    'original_name': 'Frequency production CT l1',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'production_ct_frequency_phase',
+    'unique_id': '1234_production_ct_frequency_l1',
+    'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
+  })
+# ---
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_frequency_production_ct_l1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'frequency',
+      'friendly_name': 'Envoy 1234 Frequency production CT l1',
+      'icon': 'mdi:flash',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.envoy_1234_frequency_production_ct_l1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '50.1',
+  })
+# ---
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_frequency_production_ct_l2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.envoy_1234_frequency_production_ct_l2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.FREQUENCY: 'frequency'>,
+    'original_icon': 'mdi:flash',
+    'original_name': 'Frequency production CT l2',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'production_ct_frequency_phase',
+    'unique_id': '1234_production_ct_frequency_l2',
+    'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
+  })
+# ---
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_frequency_production_ct_l2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'frequency',
+      'friendly_name': 'Envoy 1234 Frequency production CT l2',
+      'icon': 'mdi:flash',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.envoy_1234_frequency_production_ct_l2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '50.1',
+  })
+# ---
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_frequency_production_ct_l3-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.envoy_1234_frequency_production_ct_l3',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.FREQUENCY: 'frequency'>,
+    'original_icon': 'mdi:flash',
+    'original_name': 'Frequency production CT l3',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'production_ct_frequency_phase',
+    'unique_id': '1234_production_ct_frequency_l3',
+    'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
+  })
+# ---
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_frequency_production_ct_l3-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'frequency',
+      'friendly_name': 'Envoy 1234 Frequency production CT l3',
+      'icon': 'mdi:flash',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.envoy_1234_frequency_production_ct_l3',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '50.1',
+  })
+# ---
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_frequency_storage_ct-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.envoy_1234_frequency_storage_ct',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.FREQUENCY: 'frequency'>,
+    'original_icon': 'mdi:flash',
+    'original_name': 'Frequency storage CT',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'storage_ct_frequency',
+    'unique_id': '1234_storage_ct_frequency',
+    'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
+  })
+# ---
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_frequency_storage_ct-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'frequency',
+      'friendly_name': 'Envoy 1234 Frequency storage CT',
+      'icon': 'mdi:flash',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.envoy_1234_frequency_storage_ct',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '50.3',
+  })
+# ---
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_frequency_storage_ct_l1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.envoy_1234_frequency_storage_ct_l1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.FREQUENCY: 'frequency'>,
+    'original_icon': 'mdi:flash',
+    'original_name': 'Frequency storage CT l1',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'storage_ct_frequency_phase',
+    'unique_id': '1234_storage_ct_frequency_l1',
+    'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
+  })
+# ---
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_frequency_storage_ct_l1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'frequency',
+      'friendly_name': 'Envoy 1234 Frequency storage CT l1',
+      'icon': 'mdi:flash',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.envoy_1234_frequency_storage_ct_l1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '50.3',
+  })
+# ---
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_frequency_storage_ct_l2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.envoy_1234_frequency_storage_ct_l2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.FREQUENCY: 'frequency'>,
+    'original_icon': 'mdi:flash',
+    'original_name': 'Frequency storage CT l2',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'storage_ct_frequency_phase',
+    'unique_id': '1234_storage_ct_frequency_l2',
+    'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
+  })
+# ---
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_frequency_storage_ct_l2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'frequency',
+      'friendly_name': 'Envoy 1234 Frequency storage CT l2',
+      'icon': 'mdi:flash',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.envoy_1234_frequency_storage_ct_l2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '50.2',
+  })
+# ---
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_frequency_storage_ct_l3-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.envoy_1234_frequency_storage_ct_l3',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.FREQUENCY: 'frequency'>,
+    'original_icon': 'mdi:flash',
+    'original_name': 'Frequency storage CT l3',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'storage_ct_frequency_phase',
+    'unique_id': '1234_storage_ct_frequency_l3',
+    'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
+  })
+# ---
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_frequency_storage_ct_l3-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'frequency',
+      'friendly_name': 'Envoy 1234 Frequency storage CT l3',
+      'icon': 'mdi:flash',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.envoy_1234_frequency_storage_ct_l3',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -6582,6 +7359,1118 @@
     'state': 'normal',
   })
 # ---
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_net_consumption_ct_current-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.envoy_1234_net_consumption_ct_current',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
+    'original_icon': 'mdi:flash',
+    'original_name': 'Net consumption CT current',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'net_ct_current',
+    'unique_id': '1234_net_ct_current',
+    'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+  })
+# ---
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_net_consumption_ct_current-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'current',
+      'friendly_name': 'Envoy 1234 Net consumption CT current',
+      'icon': 'mdi:flash',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.envoy_1234_net_consumption_ct_current',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.3',
+  })
+# ---
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_net_consumption_ct_current_l1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.envoy_1234_net_consumption_ct_current_l1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
+    'original_icon': 'mdi:flash',
+    'original_name': 'Net consumption CT current l1',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'net_ct_current_phase',
+    'unique_id': '1234_net_ct_current_l1',
+    'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+  })
+# ---
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_net_consumption_ct_current_l1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'current',
+      'friendly_name': 'Envoy 1234 Net consumption CT current l1',
+      'icon': 'mdi:flash',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.envoy_1234_net_consumption_ct_current_l1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.3',
+  })
+# ---
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_net_consumption_ct_current_l2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.envoy_1234_net_consumption_ct_current_l2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
+    'original_icon': 'mdi:flash',
+    'original_name': 'Net consumption CT current l2',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'net_ct_current_phase',
+    'unique_id': '1234_net_ct_current_l2',
+    'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+  })
+# ---
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_net_consumption_ct_current_l2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'current',
+      'friendly_name': 'Envoy 1234 Net consumption CT current l2',
+      'icon': 'mdi:flash',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.envoy_1234_net_consumption_ct_current_l2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.3',
+  })
+# ---
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_net_consumption_ct_current_l3-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.envoy_1234_net_consumption_ct_current_l3',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
+    'original_icon': 'mdi:flash',
+    'original_name': 'Net consumption CT current l3',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'net_ct_current_phase',
+    'unique_id': '1234_net_ct_current_l3',
+    'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+  })
+# ---
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_net_consumption_ct_current_l3-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'current',
+      'friendly_name': 'Envoy 1234 Net consumption CT current l3',
+      'icon': 'mdi:flash',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.envoy_1234_net_consumption_ct_current_l3',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.3',
+  })
+# ---
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_powerfactor_net_consumption_ct-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.envoy_1234_powerfactor_net_consumption_ct',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
+    'original_icon': 'mdi:flash',
+    'original_name': 'Powerfactor net consumption CT',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'net_ct_powerfactor',
+    'unique_id': '1234_net_ct_powerfactor',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_powerfactor_net_consumption_ct-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power_factor',
+      'friendly_name': 'Envoy 1234 Powerfactor net consumption CT',
+      'icon': 'mdi:flash',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.envoy_1234_powerfactor_net_consumption_ct',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.21',
+  })
+# ---
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_powerfactor_net_consumption_ct_l1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.envoy_1234_powerfactor_net_consumption_ct_l1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
+    'original_icon': 'mdi:flash',
+    'original_name': 'Powerfactor net consumption CT l1',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'net_ct_powerfactor_phase',
+    'unique_id': '1234_net_ct_powerfactor_l1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_powerfactor_net_consumption_ct_l1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power_factor',
+      'friendly_name': 'Envoy 1234 Powerfactor net consumption CT l1',
+      'icon': 'mdi:flash',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.envoy_1234_powerfactor_net_consumption_ct_l1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.22',
+  })
+# ---
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_powerfactor_net_consumption_ct_l2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.envoy_1234_powerfactor_net_consumption_ct_l2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
+    'original_icon': 'mdi:flash',
+    'original_name': 'Powerfactor net consumption CT l2',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'net_ct_powerfactor_phase',
+    'unique_id': '1234_net_ct_powerfactor_l2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_powerfactor_net_consumption_ct_l2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power_factor',
+      'friendly_name': 'Envoy 1234 Powerfactor net consumption CT l2',
+      'icon': 'mdi:flash',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.envoy_1234_powerfactor_net_consumption_ct_l2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.23',
+  })
+# ---
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_powerfactor_net_consumption_ct_l3-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.envoy_1234_powerfactor_net_consumption_ct_l3',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
+    'original_icon': 'mdi:flash',
+    'original_name': 'Powerfactor net consumption CT l3',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'net_ct_powerfactor_phase',
+    'unique_id': '1234_net_ct_powerfactor_l3',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_powerfactor_net_consumption_ct_l3-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power_factor',
+      'friendly_name': 'Envoy 1234 Powerfactor net consumption CT l3',
+      'icon': 'mdi:flash',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.envoy_1234_powerfactor_net_consumption_ct_l3',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.24',
+  })
+# ---
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_powerfactor_production_ct-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.envoy_1234_powerfactor_production_ct',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
+    'original_icon': 'mdi:flash',
+    'original_name': 'powerfactor production CT',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'production_ct_powerfactor',
+    'unique_id': '1234_production_ct_powerfactor',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_powerfactor_production_ct-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power_factor',
+      'friendly_name': 'Envoy 1234 powerfactor production CT',
+      'icon': 'mdi:flash',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.envoy_1234_powerfactor_production_ct',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.11',
+  })
+# ---
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_powerfactor_production_ct_l1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.envoy_1234_powerfactor_production_ct_l1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
+    'original_icon': 'mdi:flash',
+    'original_name': 'Powerfactor production CT l1',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'production_ct_powerfactor_phase',
+    'unique_id': '1234_production_ct_powerfactor_l1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_powerfactor_production_ct_l1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power_factor',
+      'friendly_name': 'Envoy 1234 Powerfactor production CT l1',
+      'icon': 'mdi:flash',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.envoy_1234_powerfactor_production_ct_l1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.12',
+  })
+# ---
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_powerfactor_production_ct_l2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.envoy_1234_powerfactor_production_ct_l2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
+    'original_icon': 'mdi:flash',
+    'original_name': 'Powerfactor production CT l2',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'production_ct_powerfactor_phase',
+    'unique_id': '1234_production_ct_powerfactor_l2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_powerfactor_production_ct_l2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power_factor',
+      'friendly_name': 'Envoy 1234 Powerfactor production CT l2',
+      'icon': 'mdi:flash',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.envoy_1234_powerfactor_production_ct_l2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.13',
+  })
+# ---
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_powerfactor_production_ct_l3-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.envoy_1234_powerfactor_production_ct_l3',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
+    'original_icon': 'mdi:flash',
+    'original_name': 'Powerfactor production CT l3',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'production_ct_powerfactor_phase',
+    'unique_id': '1234_production_ct_powerfactor_l3',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_powerfactor_production_ct_l3-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power_factor',
+      'friendly_name': 'Envoy 1234 Powerfactor production CT l3',
+      'icon': 'mdi:flash',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.envoy_1234_powerfactor_production_ct_l3',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.14',
+  })
+# ---
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_powerfactor_storage_ct-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.envoy_1234_powerfactor_storage_ct',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
+    'original_icon': 'mdi:flash',
+    'original_name': 'Powerfactor storage CT',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'storage_ct_powerfactor',
+    'unique_id': '1234_storage_ct_powerfactor',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_powerfactor_storage_ct-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power_factor',
+      'friendly_name': 'Envoy 1234 Powerfactor storage CT',
+      'icon': 'mdi:flash',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.envoy_1234_powerfactor_storage_ct',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.23',
+  })
+# ---
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_powerfactor_storage_ct_l1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.envoy_1234_powerfactor_storage_ct_l1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
+    'original_icon': 'mdi:flash',
+    'original_name': 'Powerfactor storage CT l1',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'storage_ct_powerfactor_phase',
+    'unique_id': '1234_storage_ct_powerfactor_l1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_powerfactor_storage_ct_l1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power_factor',
+      'friendly_name': 'Envoy 1234 Powerfactor storage CT l1',
+      'icon': 'mdi:flash',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.envoy_1234_powerfactor_storage_ct_l1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.32',
+  })
+# ---
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_powerfactor_storage_ct_l2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.envoy_1234_powerfactor_storage_ct_l2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
+    'original_icon': 'mdi:flash',
+    'original_name': 'Powerfactor storage CT l2',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'storage_ct_powerfactor_phase',
+    'unique_id': '1234_storage_ct_powerfactor_l2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_powerfactor_storage_ct_l2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power_factor',
+      'friendly_name': 'Envoy 1234 Powerfactor storage CT l2',
+      'icon': 'mdi:flash',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.envoy_1234_powerfactor_storage_ct_l2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.23',
+  })
+# ---
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_powerfactor_storage_ct_l3-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.envoy_1234_powerfactor_storage_ct_l3',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
+    'original_icon': 'mdi:flash',
+    'original_name': 'Powerfactor storage CT l3',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'storage_ct_powerfactor_phase',
+    'unique_id': '1234_storage_ct_powerfactor_l3',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_powerfactor_storage_ct_l3-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power_factor',
+      'friendly_name': 'Envoy 1234 Powerfactor storage CT l3',
+      'icon': 'mdi:flash',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.envoy_1234_powerfactor_storage_ct_l3',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.24',
+  })
+# ---
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_production_ct_current-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.envoy_1234_production_ct_current',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
+    'original_icon': 'mdi:flash',
+    'original_name': 'Production CT current',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'production_ct_current',
+    'unique_id': '1234_production_ct_current',
+    'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+  })
+# ---
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_production_ct_current-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'current',
+      'friendly_name': 'Envoy 1234 Production CT current',
+      'icon': 'mdi:flash',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.envoy_1234_production_ct_current',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.2',
+  })
+# ---
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_production_ct_current_l1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.envoy_1234_production_ct_current_l1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
+    'original_icon': 'mdi:flash',
+    'original_name': 'Production CT current l1',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'production_ct_current_phase',
+    'unique_id': '1234_production_ct_current_l1',
+    'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+  })
+# ---
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_production_ct_current_l1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'current',
+      'friendly_name': 'Envoy 1234 Production CT current l1',
+      'icon': 'mdi:flash',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.envoy_1234_production_ct_current_l1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.2',
+  })
+# ---
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_production_ct_current_l2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.envoy_1234_production_ct_current_l2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
+    'original_icon': 'mdi:flash',
+    'original_name': 'Production CT current l2',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'production_ct_current_phase',
+    'unique_id': '1234_production_ct_current_l2',
+    'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+  })
+# ---
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_production_ct_current_l2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'current',
+      'friendly_name': 'Envoy 1234 Production CT current l2',
+      'icon': 'mdi:flash',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.envoy_1234_production_ct_current_l2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.2',
+  })
+# ---
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_production_ct_current_l3-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.envoy_1234_production_ct_current_l3',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
+    'original_icon': 'mdi:flash',
+    'original_name': 'Production CT current l3',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'production_ct_current_phase',
+    'unique_id': '1234_production_ct_current_l3',
+    'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+  })
+# ---
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_production_ct_current_l3-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'current',
+      'friendly_name': 'Envoy 1234 Production CT current l3',
+      'icon': 'mdi:flash',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.envoy_1234_production_ct_current_l3',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.2',
+  })
+# ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_reserve_battery_energy-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -6678,6 +8567,238 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '15',
+  })
+# ---
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_storage_ct_current-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.envoy_1234_storage_ct_current',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
+    'original_icon': 'mdi:flash',
+    'original_name': 'Storage CT current',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'storage_ct_current',
+    'unique_id': '1234_storage_ct_current',
+    'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+  })
+# ---
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_storage_ct_current-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'current',
+      'friendly_name': 'Envoy 1234 Storage CT current',
+      'icon': 'mdi:flash',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.envoy_1234_storage_ct_current',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.4',
+  })
+# ---
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_storage_ct_current_l1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.envoy_1234_storage_ct_current_l1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
+    'original_icon': 'mdi:flash',
+    'original_name': 'Storage CT current l1',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'storage_ct_current_phase',
+    'unique_id': '1234_storage_ct_current_l1',
+    'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+  })
+# ---
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_storage_ct_current_l1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'current',
+      'friendly_name': 'Envoy 1234 Storage CT current l1',
+      'icon': 'mdi:flash',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.envoy_1234_storage_ct_current_l1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.4',
+  })
+# ---
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_storage_ct_current_l2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.envoy_1234_storage_ct_current_l2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
+    'original_icon': 'mdi:flash',
+    'original_name': 'Storage CT current l2',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'storage_ct_current_phase',
+    'unique_id': '1234_storage_ct_current_l2',
+    'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+  })
+# ---
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_storage_ct_current_l2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'current',
+      'friendly_name': 'Envoy 1234 Storage CT current l2',
+      'icon': 'mdi:flash',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.envoy_1234_storage_ct_current_l2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.3',
+  })
+# ---
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_storage_ct_current_l3-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.envoy_1234_storage_ct_current_l3',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
+    'original_icon': 'mdi:flash',
+    'original_name': 'Storage CT current l3',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'storage_ct_current_phase',
+    'unique_id': '1234_storage_ct_current_l3',
+    'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+  })
+# ---
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_storage_ct_current_l3-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'current',
+      'friendly_name': 'Envoy 1234 Storage CT current l3',
+      'icon': 'mdi:flash',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.envoy_1234_storage_ct_current_l3',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.3',
   })
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_voltage_net_consumption_ct-entry]
@@ -6910,6 +9031,238 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '112',
+  })
+# ---
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_voltage_production_ct-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.envoy_1234_voltage_production_ct',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
+    'original_icon': 'mdi:flash',
+    'original_name': 'Voltage production CT',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'production_ct_voltage',
+    'unique_id': '1234_production_ct_voltage',
+    'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+  })
+# ---
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_voltage_production_ct-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'voltage',
+      'friendly_name': 'Envoy 1234 Voltage production CT',
+      'icon': 'mdi:flash',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.envoy_1234_voltage_production_ct',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '111',
+  })
+# ---
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_voltage_production_ct_l1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.envoy_1234_voltage_production_ct_l1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
+    'original_icon': 'mdi:flash',
+    'original_name': 'Voltage production CT l1',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'production_ct_voltage_phase',
+    'unique_id': '1234_production_ct_voltage_l1',
+    'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+  })
+# ---
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_voltage_production_ct_l1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'voltage',
+      'friendly_name': 'Envoy 1234 Voltage production CT l1',
+      'icon': 'mdi:flash',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.envoy_1234_voltage_production_ct_l1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '111',
+  })
+# ---
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_voltage_production_ct_l2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.envoy_1234_voltage_production_ct_l2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
+    'original_icon': 'mdi:flash',
+    'original_name': 'Voltage production CT l2',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'production_ct_voltage_phase',
+    'unique_id': '1234_production_ct_voltage_l2',
+    'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+  })
+# ---
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_voltage_production_ct_l2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'voltage',
+      'friendly_name': 'Envoy 1234 Voltage production CT l2',
+      'icon': 'mdi:flash',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.envoy_1234_voltage_production_ct_l2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '111',
+  })
+# ---
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_voltage_production_ct_l3-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.envoy_1234_voltage_production_ct_l3',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
+    'original_icon': 'mdi:flash',
+    'original_name': 'Voltage production CT l3',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'production_ct_voltage_phase',
+    'unique_id': '1234_production_ct_voltage_l3',
+    'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+  })
+# ---
+# name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_voltage_production_ct_l3-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'voltage',
+      'friendly_name': 'Envoy 1234 Voltage production CT l3',
+      'icon': 'mdi:flash',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.envoy_1234_voltage_production_ct_l3',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '111',
   })
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_voltage_storage_ct-entry]
@@ -9064,6 +11417,226 @@
     'state': '50.2',
   })
 # ---
+# name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_frequency_production_ct-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.envoy_1234_frequency_production_ct',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.FREQUENCY: 'frequency'>,
+    'original_icon': 'mdi:flash',
+    'original_name': 'Frequency production CT',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'production_ct_frequency',
+    'unique_id': '1234_production_ct_frequency',
+    'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
+  })
+# ---
+# name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_frequency_production_ct-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'frequency',
+      'friendly_name': 'Envoy 1234 Frequency production CT',
+      'icon': 'mdi:flash',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.envoy_1234_frequency_production_ct',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '50.1',
+  })
+# ---
+# name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_frequency_production_ct_l1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.envoy_1234_frequency_production_ct_l1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.FREQUENCY: 'frequency'>,
+    'original_icon': 'mdi:flash',
+    'original_name': 'Frequency production CT l1',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'production_ct_frequency_phase',
+    'unique_id': '1234_production_ct_frequency_l1',
+    'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
+  })
+# ---
+# name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_frequency_production_ct_l1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'frequency',
+      'friendly_name': 'Envoy 1234 Frequency production CT l1',
+      'icon': 'mdi:flash',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.envoy_1234_frequency_production_ct_l1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '50.1',
+  })
+# ---
+# name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_frequency_production_ct_l2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.envoy_1234_frequency_production_ct_l2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.FREQUENCY: 'frequency'>,
+    'original_icon': 'mdi:flash',
+    'original_name': 'Frequency production CT l2',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'production_ct_frequency_phase',
+    'unique_id': '1234_production_ct_frequency_l2',
+    'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
+  })
+# ---
+# name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_frequency_production_ct_l2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'frequency',
+      'friendly_name': 'Envoy 1234 Frequency production CT l2',
+      'icon': 'mdi:flash',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.envoy_1234_frequency_production_ct_l2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '50.1',
+  })
+# ---
+# name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_frequency_production_ct_l3-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.envoy_1234_frequency_production_ct_l3',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.FREQUENCY: 'frequency'>,
+    'original_icon': 'mdi:flash',
+    'original_name': 'Frequency production CT l3',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'production_ct_frequency_phase',
+    'unique_id': '1234_production_ct_frequency_l3',
+    'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
+  })
+# ---
+# name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_frequency_production_ct_l3-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'frequency',
+      'friendly_name': 'Envoy 1234 Frequency production CT l3',
+      'icon': 'mdi:flash',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.envoy_1234_frequency_production_ct_l3',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '50.1',
+  })
+# ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_lifetime_energy_consumption-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -10840,6 +13413,902 @@
     'state': 'normal',
   })
 # ---
+# name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_net_consumption_ct_current-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.envoy_1234_net_consumption_ct_current',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
+    'original_icon': 'mdi:flash',
+    'original_name': 'Net consumption CT current',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'net_ct_current',
+    'unique_id': '1234_net_ct_current',
+    'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+  })
+# ---
+# name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_net_consumption_ct_current-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'current',
+      'friendly_name': 'Envoy 1234 Net consumption CT current',
+      'icon': 'mdi:flash',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.envoy_1234_net_consumption_ct_current',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.3',
+  })
+# ---
+# name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_net_consumption_ct_current_l1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.envoy_1234_net_consumption_ct_current_l1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
+    'original_icon': 'mdi:flash',
+    'original_name': 'Net consumption CT current l1',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'net_ct_current_phase',
+    'unique_id': '1234_net_ct_current_l1',
+    'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+  })
+# ---
+# name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_net_consumption_ct_current_l1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'current',
+      'friendly_name': 'Envoy 1234 Net consumption CT current l1',
+      'icon': 'mdi:flash',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.envoy_1234_net_consumption_ct_current_l1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.3',
+  })
+# ---
+# name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_net_consumption_ct_current_l2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.envoy_1234_net_consumption_ct_current_l2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
+    'original_icon': 'mdi:flash',
+    'original_name': 'Net consumption CT current l2',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'net_ct_current_phase',
+    'unique_id': '1234_net_ct_current_l2',
+    'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+  })
+# ---
+# name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_net_consumption_ct_current_l2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'current',
+      'friendly_name': 'Envoy 1234 Net consumption CT current l2',
+      'icon': 'mdi:flash',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.envoy_1234_net_consumption_ct_current_l2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.3',
+  })
+# ---
+# name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_net_consumption_ct_current_l3-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.envoy_1234_net_consumption_ct_current_l3',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
+    'original_icon': 'mdi:flash',
+    'original_name': 'Net consumption CT current l3',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'net_ct_current_phase',
+    'unique_id': '1234_net_ct_current_l3',
+    'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+  })
+# ---
+# name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_net_consumption_ct_current_l3-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'current',
+      'friendly_name': 'Envoy 1234 Net consumption CT current l3',
+      'icon': 'mdi:flash',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.envoy_1234_net_consumption_ct_current_l3',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.3',
+  })
+# ---
+# name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_powerfactor_net_consumption_ct-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.envoy_1234_powerfactor_net_consumption_ct',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
+    'original_icon': 'mdi:flash',
+    'original_name': 'Powerfactor net consumption CT',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'net_ct_powerfactor',
+    'unique_id': '1234_net_ct_powerfactor',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_powerfactor_net_consumption_ct-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power_factor',
+      'friendly_name': 'Envoy 1234 Powerfactor net consumption CT',
+      'icon': 'mdi:flash',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.envoy_1234_powerfactor_net_consumption_ct',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.21',
+  })
+# ---
+# name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_powerfactor_net_consumption_ct_l1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.envoy_1234_powerfactor_net_consumption_ct_l1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
+    'original_icon': 'mdi:flash',
+    'original_name': 'Powerfactor net consumption CT l1',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'net_ct_powerfactor_phase',
+    'unique_id': '1234_net_ct_powerfactor_l1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_powerfactor_net_consumption_ct_l1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power_factor',
+      'friendly_name': 'Envoy 1234 Powerfactor net consumption CT l1',
+      'icon': 'mdi:flash',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.envoy_1234_powerfactor_net_consumption_ct_l1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.22',
+  })
+# ---
+# name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_powerfactor_net_consumption_ct_l2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.envoy_1234_powerfactor_net_consumption_ct_l2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
+    'original_icon': 'mdi:flash',
+    'original_name': 'Powerfactor net consumption CT l2',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'net_ct_powerfactor_phase',
+    'unique_id': '1234_net_ct_powerfactor_l2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_powerfactor_net_consumption_ct_l2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power_factor',
+      'friendly_name': 'Envoy 1234 Powerfactor net consumption CT l2',
+      'icon': 'mdi:flash',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.envoy_1234_powerfactor_net_consumption_ct_l2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.23',
+  })
+# ---
+# name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_powerfactor_net_consumption_ct_l3-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.envoy_1234_powerfactor_net_consumption_ct_l3',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
+    'original_icon': 'mdi:flash',
+    'original_name': 'Powerfactor net consumption CT l3',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'net_ct_powerfactor_phase',
+    'unique_id': '1234_net_ct_powerfactor_l3',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_powerfactor_net_consumption_ct_l3-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power_factor',
+      'friendly_name': 'Envoy 1234 Powerfactor net consumption CT l3',
+      'icon': 'mdi:flash',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.envoy_1234_powerfactor_net_consumption_ct_l3',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.24',
+  })
+# ---
+# name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_powerfactor_production_ct-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.envoy_1234_powerfactor_production_ct',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
+    'original_icon': 'mdi:flash',
+    'original_name': 'powerfactor production CT',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'production_ct_powerfactor',
+    'unique_id': '1234_production_ct_powerfactor',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_powerfactor_production_ct-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power_factor',
+      'friendly_name': 'Envoy 1234 powerfactor production CT',
+      'icon': 'mdi:flash',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.envoy_1234_powerfactor_production_ct',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.11',
+  })
+# ---
+# name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_powerfactor_production_ct_l1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.envoy_1234_powerfactor_production_ct_l1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
+    'original_icon': 'mdi:flash',
+    'original_name': 'Powerfactor production CT l1',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'production_ct_powerfactor_phase',
+    'unique_id': '1234_production_ct_powerfactor_l1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_powerfactor_production_ct_l1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power_factor',
+      'friendly_name': 'Envoy 1234 Powerfactor production CT l1',
+      'icon': 'mdi:flash',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.envoy_1234_powerfactor_production_ct_l1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.12',
+  })
+# ---
+# name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_powerfactor_production_ct_l2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.envoy_1234_powerfactor_production_ct_l2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
+    'original_icon': 'mdi:flash',
+    'original_name': 'Powerfactor production CT l2',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'production_ct_powerfactor_phase',
+    'unique_id': '1234_production_ct_powerfactor_l2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_powerfactor_production_ct_l2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power_factor',
+      'friendly_name': 'Envoy 1234 Powerfactor production CT l2',
+      'icon': 'mdi:flash',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.envoy_1234_powerfactor_production_ct_l2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.13',
+  })
+# ---
+# name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_powerfactor_production_ct_l3-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.envoy_1234_powerfactor_production_ct_l3',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
+    'original_icon': 'mdi:flash',
+    'original_name': 'Powerfactor production CT l3',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'production_ct_powerfactor_phase',
+    'unique_id': '1234_production_ct_powerfactor_l3',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_powerfactor_production_ct_l3-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power_factor',
+      'friendly_name': 'Envoy 1234 Powerfactor production CT l3',
+      'icon': 'mdi:flash',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.envoy_1234_powerfactor_production_ct_l3',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.14',
+  })
+# ---
+# name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_production_ct_current-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.envoy_1234_production_ct_current',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
+    'original_icon': 'mdi:flash',
+    'original_name': 'Production CT current',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'production_ct_current',
+    'unique_id': '1234_production_ct_current',
+    'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+  })
+# ---
+# name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_production_ct_current-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'current',
+      'friendly_name': 'Envoy 1234 Production CT current',
+      'icon': 'mdi:flash',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.envoy_1234_production_ct_current',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.2',
+  })
+# ---
+# name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_production_ct_current_l1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.envoy_1234_production_ct_current_l1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
+    'original_icon': 'mdi:flash',
+    'original_name': 'Production CT current l1',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'production_ct_current_phase',
+    'unique_id': '1234_production_ct_current_l1',
+    'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+  })
+# ---
+# name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_production_ct_current_l1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'current',
+      'friendly_name': 'Envoy 1234 Production CT current l1',
+      'icon': 'mdi:flash',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.envoy_1234_production_ct_current_l1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.2',
+  })
+# ---
+# name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_production_ct_current_l2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.envoy_1234_production_ct_current_l2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
+    'original_icon': 'mdi:flash',
+    'original_name': 'Production CT current l2',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'production_ct_current_phase',
+    'unique_id': '1234_production_ct_current_l2',
+    'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+  })
+# ---
+# name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_production_ct_current_l2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'current',
+      'friendly_name': 'Envoy 1234 Production CT current l2',
+      'icon': 'mdi:flash',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.envoy_1234_production_ct_current_l2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.2',
+  })
+# ---
+# name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_production_ct_current_l3-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.envoy_1234_production_ct_current_l3',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
+    'original_icon': 'mdi:flash',
+    'original_name': 'Production CT current l3',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'production_ct_current_phase',
+    'unique_id': '1234_production_ct_current_l3',
+    'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+  })
+# ---
+# name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_production_ct_current_l3-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'current',
+      'friendly_name': 'Envoy 1234 Production CT current l3',
+      'icon': 'mdi:flash',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.envoy_1234_production_ct_current_l3',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.2',
+  })
+# ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_voltage_net_consumption_ct-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -11070,6 +14539,238 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '112',
+  })
+# ---
+# name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_voltage_production_ct-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.envoy_1234_voltage_production_ct',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
+    'original_icon': 'mdi:flash',
+    'original_name': 'Voltage production CT',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'production_ct_voltage',
+    'unique_id': '1234_production_ct_voltage',
+    'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+  })
+# ---
+# name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_voltage_production_ct-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'voltage',
+      'friendly_name': 'Envoy 1234 Voltage production CT',
+      'icon': 'mdi:flash',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.envoy_1234_voltage_production_ct',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '111',
+  })
+# ---
+# name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_voltage_production_ct_l1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.envoy_1234_voltage_production_ct_l1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
+    'original_icon': 'mdi:flash',
+    'original_name': 'Voltage production CT l1',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'production_ct_voltage_phase',
+    'unique_id': '1234_production_ct_voltage_l1',
+    'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+  })
+# ---
+# name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_voltage_production_ct_l1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'voltage',
+      'friendly_name': 'Envoy 1234 Voltage production CT l1',
+      'icon': 'mdi:flash',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.envoy_1234_voltage_production_ct_l1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '111',
+  })
+# ---
+# name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_voltage_production_ct_l2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.envoy_1234_voltage_production_ct_l2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
+    'original_icon': 'mdi:flash',
+    'original_name': 'Voltage production CT l2',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'production_ct_voltage_phase',
+    'unique_id': '1234_production_ct_voltage_l2',
+    'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+  })
+# ---
+# name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_voltage_production_ct_l2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'voltage',
+      'friendly_name': 'Envoy 1234 Voltage production CT l2',
+      'icon': 'mdi:flash',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.envoy_1234_voltage_production_ct_l2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '111',
+  })
+# ---
+# name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_voltage_production_ct_l3-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.envoy_1234_voltage_production_ct_l3',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
+    'original_icon': 'mdi:flash',
+    'original_name': 'Voltage production CT l3',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'production_ct_voltage_phase',
+    'unique_id': '1234_production_ct_voltage_l3',
+    'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+  })
+# ---
+# name: test_sensor[envoy_nobatt_metered_3p][sensor.envoy_1234_voltage_production_ct_l3-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'voltage',
+      'friendly_name': 'Envoy 1234 Voltage production CT l3',
+      'icon': 'mdi:flash',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.envoy_1234_voltage_production_ct_l3',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '111',
   })
 # ---
 # name: test_sensor[envoy_nobatt_metered_3p][sensor.inverter_1-entry]
@@ -11343,6 +15044,61 @@
     'state': '1.234',
   })
 # ---
+# name: test_sensor[envoy_tot_cons_metered][sensor.envoy_1234_frequency_production_ct-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.envoy_1234_frequency_production_ct',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.FREQUENCY: 'frequency'>,
+    'original_icon': 'mdi:flash',
+    'original_name': 'Frequency production CT',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'production_ct_frequency',
+    'unique_id': '1234_production_ct_frequency',
+    'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
+  })
+# ---
+# name: test_sensor[envoy_tot_cons_metered][sensor.envoy_1234_frequency_production_ct-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'frequency',
+      'friendly_name': 'Envoy 1234 Frequency production CT',
+      'icon': 'mdi:flash',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.envoy_1234_frequency_production_ct',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '50.1',
+  })
+# ---
 # name: test_sensor[envoy_tot_cons_metered][sensor.envoy_1234_lifetime_energy_production-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -11505,6 +15261,176 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'normal',
+  })
+# ---
+# name: test_sensor[envoy_tot_cons_metered][sensor.envoy_1234_powerfactor_production_ct-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.envoy_1234_powerfactor_production_ct',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER_FACTOR: 'power_factor'>,
+    'original_icon': 'mdi:flash',
+    'original_name': 'powerfactor production CT',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'production_ct_powerfactor',
+    'unique_id': '1234_production_ct_powerfactor',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[envoy_tot_cons_metered][sensor.envoy_1234_powerfactor_production_ct-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power_factor',
+      'friendly_name': 'Envoy 1234 powerfactor production CT',
+      'icon': 'mdi:flash',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.envoy_1234_powerfactor_production_ct',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.11',
+  })
+# ---
+# name: test_sensor[envoy_tot_cons_metered][sensor.envoy_1234_production_ct_current-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.envoy_1234_production_ct_current',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 3,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
+    'original_icon': 'mdi:flash',
+    'original_name': 'Production CT current',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'production_ct_current',
+    'unique_id': '1234_production_ct_current',
+    'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+  })
+# ---
+# name: test_sensor[envoy_tot_cons_metered][sensor.envoy_1234_production_ct_current-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'current',
+      'friendly_name': 'Envoy 1234 Production CT current',
+      'icon': 'mdi:flash',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.envoy_1234_production_ct_current',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.2',
+  })
+# ---
+# name: test_sensor[envoy_tot_cons_metered][sensor.envoy_1234_voltage_production_ct-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.envoy_1234_voltage_production_ct',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
+    'original_icon': 'mdi:flash',
+    'original_name': 'Voltage production CT',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'production_ct_voltage',
+    'unique_id': '1234_production_ct_voltage',
+    'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+  })
+# ---
+# name: test_sensor[envoy_tot_cons_metered][sensor.envoy_1234_voltage_production_ct-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'voltage',
+      'friendly_name': 'Envoy 1234 Voltage production CT',
+      'icon': 'mdi:flash',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.envoy_1234_voltage_production_ct',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '111',
   })
 # ---
 # name: test_sensor[envoy_tot_cons_metered][sensor.inverter_1-entry]
