@@ -44,10 +44,10 @@ class WatchYourLANConfigFlow(ConfigFlow, domain=DOMAIN):
                 hosts = await api_client.get_all_hosts()
                 if not hosts:
                     errors["base"] = "cannot_connect"
-            except (ConnectError, HTTPStatusError):
+            except (ConnectError, HTTPStatusError) as exc:
+                _LOGGER.error("Connection error during setup: %s", exc)
                 errors["base"] = "cannot_connect"
-            except Exception:
-                _LOGGER.exception("Unexpected error during WatchYourLAN setup")
+            except Exception:  # noqa: BLE001
                 errors["base"] = "unknown"
             else:
                 # Return a config entry on successful connection

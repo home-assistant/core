@@ -2,8 +2,9 @@
 
 from unittest.mock import AsyncMock, patch
 
+from httpx import ConnectError
+
 from homeassistant import config_entries
-from homeassistant.components.watchyourlan.config_flow import CannotConnect
 from homeassistant.components.watchyourlan.const import DOMAIN
 from homeassistant.const import CONF_SSL, CONF_URL
 from homeassistant.core import HomeAssistant
@@ -54,11 +55,11 @@ async def test_form_cannot_connect(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    # Simulate CannotConnect error during validation
+    # Simulate ConnectError or HTTPStatusError during validation
     with patch(
         "homeassistant.components.watchyourlan.config_flow.WatchYourLANClient.get_all_hosts",
         new_callable=AsyncMock,
-        side_effect=CannotConnect,
+        side_effect=ConnectError("test"),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -108,7 +109,7 @@ async def test_form_invalid_host(
     with patch(
         "homeassistant.components.watchyourlan.config_flow.WatchYourLANClient.get_all_hosts",
         new_callable=AsyncMock,
-        side_effect=CannotConnect,
+        side_effect=ConnectError("test"),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
