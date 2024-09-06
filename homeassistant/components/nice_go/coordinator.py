@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
 import json
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from nice_go import (
     BARRIER_STATUS,
@@ -20,7 +21,7 @@ from nice_go import (
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -34,6 +35,9 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+RECONNECT_ATTEMPTS = 3
+RECONNECT_DELAY = 5
 
 
 @dataclass
@@ -70,7 +74,16 @@ class NiceGOUpdateCoordinator(DataUpdateCoordinator[dict[str, NiceGODevice]]):
         self.email = self.config_entry.data[CONF_EMAIL]
         self.password = self.config_entry.data[CONF_PASSWORD]
         self.api = NiceGOApi()
-        self.ws_connected = False
+        self._unsub_connected: Callable[[], None] | None = None
+        self._unsub_data: Callable[[], None] | None = None
+        self._unsub_connection_lost: Callable[[], None] | None = None
+        self.connected = False
+        self._hass_stopping: bool = hass.is_stopping
+
+    @callback
+    def async_ha_stop(self, event: Event) -> None:
+        """Stop reconnecting if hass is stopping."""
+        self._hass_stopping = True
 
     async def _parse_barrier(self, barrier_state: BarrierState) -> NiceGODevice | None:
         """Parse barrier data."""
@@ -178,16 +191,30 @@ class NiceGOUpdateCoordinator(DataUpdateCoordinator[dict[str, NiceGODevice]]):
 
     async def client_listen(self) -> None:
         """Listen to the websocket for updates."""
-        self.api.event(self.on_connected)
-        self.api.event(self.on_data)
-        try:
-            await self.api.connect(reconnect=True)
-        except ApiError:
-            _LOGGER.exception("API error")
+        self._unsub_connected = self.api.listen("on_connected", self.on_connected)
+        self._unsub_data = self.api.listen("on_data", self.on_data)
+        self._unsub_connection_lost = self.api.listen(
+            "on_connection_lost", self.on_connection_lost
+        )
 
-        if not self.hass.is_stopping:
-            await asyncio.sleep(5)
-            await self.client_listen()
+        for _ in range(RECONNECT_ATTEMPTS):
+            if self._hass_stopping:
+                return
+
+            try:
+                await self.api.connect(reconnect=True)
+            except ApiError:
+                _LOGGER.exception("API error")
+            else:
+                return
+
+            await asyncio.sleep(RECONNECT_DELAY)
+
+        self.async_set_update_error(
+            TimeoutError(
+                "Failed to connect to the websocket, reconnect attempts exhausted"
+            )
+        )
 
     async def on_data(self, data: dict[str, Any]) -> None:
         """Handle incoming data from the websocket."""
@@ -220,4 +247,38 @@ class NiceGOUpdateCoordinator(DataUpdateCoordinator[dict[str, NiceGODevice]]):
     async def on_connected(self) -> None:
         """Handle the websocket connection."""
         _LOGGER.debug("Connected to the websocket")
+        self.connected = True
+
         await self.api.subscribe(self.organization_id)
+
+        if not self.last_update_success:
+            self.async_set_updated_data(self.data)
+
+    async def on_connection_lost(self, data: dict[str, Exception]) -> None:
+        """Handle the websocket connection loss. Don't need to do much since the library will automatically reconnect."""
+        _LOGGER.debug("Connection lost to the websocket")
+        self.connected = False
+
+        # Give some time for reconnection
+        await asyncio.sleep(RECONNECT_DELAY)
+        if self.connected:
+            _LOGGER.debug("Reconnected, not setting error")
+            return
+
+        # There's likely a problem with the connection, and not the server being flaky
+        self.async_set_update_error(data["exception"])
+
+    def unsubscribe(self) -> None:
+        """Unsubscribe from the websocket."""
+        if TYPE_CHECKING:
+            assert self._unsub_connected is not None
+            assert self._unsub_data is not None
+            assert self._unsub_connection_lost is not None
+
+        self._unsub_connection_lost()
+        self._unsub_connected()
+        self._unsub_data()
+        self._unsub_connected = None
+        self._unsub_data = None
+        self._unsub_connection_lost = None
+        _LOGGER.debug("Unsubscribed from the websocket")
