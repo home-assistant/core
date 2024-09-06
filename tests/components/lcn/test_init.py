@@ -79,7 +79,10 @@ async def test_async_setup_entry_update(
     assert dummy_device in device_registry.devices.values()
 
     # setup new entry with same data via import step (should cleanup dummy device)
-    with patch("pypck.connection.PchkConnectionManager", MockPchkConnectionManager):
+    with patch(
+        "homeassistant.components.lcn.config_flow.validate_connection",
+        return_value=None,
+    ):
         await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=entry.data
         )
@@ -131,7 +134,10 @@ async def test_async_setup_entry_raises_timeout_error(
 async def test_async_setup_from_configuration_yaml(hass: HomeAssistant) -> None:
     """Test a successful setup using data from configuration.yaml."""
     with (
-        patch("pypck.connection.PchkConnectionManager", MockPchkConnectionManager),
+        patch(
+            "homeassistant.components.lcn.config_flow.validate_connection",
+            return_value=None,
+        ),
         patch("homeassistant.components.lcn.async_setup_entry") as async_setup_entry,
     ):
         await setup_component(hass)
