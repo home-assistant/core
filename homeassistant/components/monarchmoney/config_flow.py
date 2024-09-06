@@ -7,7 +7,7 @@ from typing import Any
 
 from monarchmoney import LoginFailedException, RequireMFAException
 from monarchmoney.monarchmoney import SESSION_FILE
-from monarchmoney_typed import TypedMonarchMoney
+from typedmonarchmoney import TypedMonarchMoney
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
