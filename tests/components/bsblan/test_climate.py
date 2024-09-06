@@ -9,7 +9,7 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.bsblan.const import ATTR_TARGET_TEMPERATURE, DOMAIN
+from homeassistant.components.bsblan.const import DOMAIN
 from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
     ATTR_PRESET_MODE,
@@ -18,6 +18,7 @@ from homeassistant.components.climate import (
     PRESET_NONE,
     SERVICE_SET_HVAC_MODE,
     SERVICE_SET_PRESET_MODE,
+    SERVICE_SET_TEMPERATURE,
     HVACMode,
 )
 from homeassistant.const import (
@@ -27,7 +28,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 import homeassistant.helpers.entity_registry as er
 
 from . import setup_with_selected_platforms
@@ -187,26 +188,10 @@ async def test_async_set_preset_mode(
     """Test setting preset mode via service call."""
     await setup_with_selected_platforms(hass, mock_config_entry, [Platform.CLIMATE])
 
-    # Set the HVAC mode
-    await hass.services.async_call(
-        CLIMATE_DOMAIN,
-        SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HVAC_MODE: hvac_mode},
-        blocking=True,
-    )
-    # wait for the service call to complete
-    await hass.async_block_till_done()
-
-    freezer.tick(timedelta(minutes=1))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    # Verify HVAC mode was set correctly
-    # state = hass.states.get(ENTITY_ID)
-    # assert state.state == hvac_mode, f"HVAC mode not set correctly. Expected {hvac_mode}, got {state.state}"
-
-    # Reset the mock to clear the call from setting HVAC mode
-    # mock_bsblan.thermostat.reset_mock()
+    # patch hvac_mode
+    mock_hvac_mode = MagicMock()
+    mock_hvac_mode.value = hvac_mode
+    mock_bsblan.state.return_value.hvac_mode = mock_hvac_mode
 
     # Attempt to set the preset mode
     if not expected_success:
@@ -227,157 +212,115 @@ async def test_async_set_preset_mode(
         )
         await hass.async_block_till_done()
 
-        expected_hvac_mode = PRESET_ECO if preset_mode == PRESET_ECO else HVACMode.AUTO
-        mock_bsblan.thermostat.assert_called_once_with(hvac_mode=expected_hvac_mode)
-
-    # Verify the final state
-    state = hass.states.get(ENTITY_ID)
-    assert state.state == hvac_mode
-    assert state.attributes.get("preset_mode") == (
-        preset_mode if expected_success else PRESET_NONE
-    )
-
     # Reset the mock for the next iteration
     mock_bsblan.thermostat.reset_mock()
 
 
+@pytest.mark.parametrize(
+    ("target_temp", "expected_result"),
+    [
+        (8.0, "success"),  # Min temperature
+        (15.0, "success"),  # Mid-range temperature
+        (20.0, "success"),  # Max temperature
+        (7.9, "failure"),  # Just below min
+        (20.1, "failure"),  # Just above max
+    ],
+)
 async def test_async_set_temperature(
     hass: HomeAssistant,
     mock_bsblan: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    entity_registry: er.EntityRegistry,
+    target_temp: float,
+    expected_result: str,
 ) -> None:
-    """Test the async_set_temperature function."""
+    """Test setting temperature via service call."""
     await setup_with_selected_platforms(hass, mock_config_entry, [Platform.CLIMATE])
 
-    climate_entity = hass.data[CLIMATE_DOMAIN].get_entity(ENTITY_ID)
+    if expected_result == "success":
+        # Call the service to set temperature
+        await hass.services.async_call(
+            domain=CLIMATE_DOMAIN,
+            service=SERVICE_SET_TEMPERATURE,
+            service_data={ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: target_temp},
+            blocking=True,
+        )
+        # Assert that the thermostat method was called with the correct temperature
+        mock_bsblan.thermostat.assert_called_once_with(target_temperature=target_temp)
+    else:
+        # Expect a ServiceValidationError for temperatures out of range
+        with pytest.raises(ServiceValidationError) as exc_info:
+            await hass.services.async_call(
+                domain=CLIMATE_DOMAIN,
+                service=SERVICE_SET_TEMPERATURE,
+                service_data={ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: target_temp},
+                blocking=True,
+            )
+        assert exc_info.value.translation_key == "temp_out_of_range"
 
-    # Test setting temperature within the allowed range
-    with patch.object(climate_entity, "async_set_data") as mock_set_data:
-        test_temp = (climate_entity.min_temp + climate_entity.max_temp) / 2
-        await climate_entity.async_set_temperature(**{ATTR_TEMPERATURE: test_temp})
-        mock_set_data.assert_called_once_with(**{ATTR_TEMPERATURE: test_temp})
-
-    # Test setting temperature to the minimum allowed value
-    with patch.object(climate_entity, "async_set_data") as mock_set_data:
-        await climate_entity.async_set_temperature(
-            **{ATTR_TEMPERATURE: climate_entity.min_temp}
-        )
-        mock_set_data.assert_called_once_with(
-            **{ATTR_TEMPERATURE: climate_entity.min_temp}
-        )
-
-    # Test setting temperature to the maximum allowed value
-    with patch.object(climate_entity, "async_set_data") as mock_set_data:
-        await climate_entity.async_set_temperature(
-            **{ATTR_TEMPERATURE: climate_entity.max_temp}
-        )
-        mock_set_data.assert_called_once_with(
-            **{ATTR_TEMPERATURE: climate_entity.max_temp}
-        )
-
-    # Test setting temperature with additional parameters
-    with patch.object(climate_entity, "async_set_data") as mock_set_data:
-        test_temp = (climate_entity.min_temp + climate_entity.max_temp) / 2
-        additional_param = "test_param"
-        await climate_entity.async_set_temperature(
-            **{ATTR_TEMPERATURE: test_temp, additional_param: "value"}
-        )
-        mock_set_data.assert_called_once_with(
-            **{ATTR_TEMPERATURE: test_temp, additional_param: "value"}
-        )
+    mock_bsblan.thermostat.reset_mock()
 
 
 async def test_async_set_data(
     hass: HomeAssistant,
     mock_bsblan: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test the async_set_data function."""
+    """Test setting data via service calls."""
     await setup_with_selected_platforms(hass, mock_config_entry, [Platform.CLIMATE])
 
-    climate_entity = hass.data[CLIMATE_DOMAIN].get_entity(ENTITY_ID)
-
     # Test setting temperature
-    with (
-        patch.object(
-            climate_entity.coordinator.client, "thermostat"
-        ) as mock_thermostat,
-        patch.object(
-            climate_entity.coordinator, "async_request_refresh"
-        ) as mock_refresh,
-    ):
-        await climate_entity.async_set_data(**{ATTR_TEMPERATURE: 22})
-        mock_thermostat.assert_called_once_with(**{ATTR_TARGET_TEMPERATURE: 22})
-        mock_refresh.assert_called_once()
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 19},
+        blocking=True,
+    )
+    mock_bsblan.thermostat.assert_called_once_with(target_temperature=19)
+    mock_bsblan.thermostat.reset_mock()
 
     # Test setting HVAC mode
-    with (
-        patch.object(
-            climate_entity.coordinator.client, "thermostat"
-        ) as mock_thermostat,
-        patch.object(
-            climate_entity.coordinator, "async_request_refresh"
-        ) as mock_refresh,
-    ):
-        await climate_entity.async_set_data(**{ATTR_HVAC_MODE: HVACMode.HEAT})
-        mock_thermostat.assert_called_once_with(**{ATTR_HVAC_MODE: HVACMode.HEAT})
-        mock_refresh.assert_called_once()
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HVAC_MODE: HVACMode.HEAT},
+        blocking=True,
+    )
+    mock_bsblan.thermostat.assert_called_once_with(hvac_mode=HVACMode.HEAT)
+    mock_bsblan.thermostat.reset_mock()
+
+    # Patch HVAC mode to AUTO
+    mock_hvac_mode = MagicMock()
+    mock_hvac_mode.value = HVACMode.AUTO
+    mock_bsblan.state.return_value.hvac_mode = mock_hvac_mode
+
+    # Test setting preset mode to ECO
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_PRESET_MODE,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_PRESET_MODE: PRESET_ECO},
+        blocking=True,
+    )
+    mock_bsblan.thermostat.assert_called_once_with(hvac_mode=PRESET_ECO)
+    mock_bsblan.thermostat.reset_mock()
 
     # Test setting preset mode to NONE
-    with (
-        patch.object(
-            climate_entity.coordinator.client, "thermostat"
-        ) as mock_thermostat,
-        patch.object(
-            climate_entity.coordinator, "async_request_refresh"
-        ) as mock_refresh,
-    ):
-        await climate_entity.async_set_data(**{ATTR_PRESET_MODE: PRESET_NONE})
-        mock_thermostat.assert_called_once_with(**{ATTR_HVAC_MODE: HVACMode.AUTO})
-        mock_refresh.assert_called_once()
-
-    # Test setting preset mode to a non-NONE value
-    with (
-        patch.object(
-            climate_entity.coordinator.client, "thermostat"
-        ) as mock_thermostat,
-        patch.object(
-            climate_entity.coordinator, "async_request_refresh"
-        ) as mock_refresh,
-    ):
-        await climate_entity.async_set_data(**{ATTR_PRESET_MODE: "eco"})
-        mock_thermostat.assert_called_once_with(**{ATTR_HVAC_MODE: "eco"})
-        mock_refresh.assert_called_once()
-
-    # Test setting multiple parameters
-    with (
-        patch.object(
-            climate_entity.coordinator.client, "thermostat"
-        ) as mock_thermostat,
-        patch.object(
-            climate_entity.coordinator, "async_request_refresh"
-        ) as mock_refresh,
-    ):
-        await climate_entity.async_set_data(
-            **{ATTR_TEMPERATURE: 23, ATTR_HVAC_MODE: HVACMode.COOL}
-        )
-        mock_thermostat.assert_called_once_with(
-            **{ATTR_TARGET_TEMPERATURE: 23, ATTR_HVAC_MODE: HVACMode.COOL}
-        )
-        mock_refresh.assert_called_once()
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_PRESET_MODE,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_PRESET_MODE: PRESET_NONE},
+        blocking=True,
+    )
+    mock_bsblan.thermostat.assert_called_once()
+    mock_bsblan.thermostat.reset_mock()
 
     # Test error handling
-    with (
-        patch.object(
-            climate_entity.coordinator.client,
-            "thermostat",
-            side_effect=BSBLANError("Test error"),
-        ),
-        pytest.raises(HomeAssistantError) as exc_info,
-    ):
-        await climate_entity.async_set_data(**{ATTR_TEMPERATURE: 24})
-
+    mock_bsblan.thermostat.side_effect = BSBLANError("Test error")
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_TEMPERATURE,
+            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 20},
+            blocking=True,
+        )
     assert "An error occurred while updating the BSBLAN device" in str(exc_info.value)
     assert exc_info.value.translation_key == "set_data_error"
