@@ -3,6 +3,8 @@
   "device_ip": "192.168.1.161",
   "fs_total": 3456,
   "fw_channel": "dev",
+  "legacy_api": 0,
+  "hostname": "SLZB-06p7",
   "MAC": "AA:BB:CC:DD:EE:FF",
   "model": "SLZB-06p7",
   "ram_total": 296,
