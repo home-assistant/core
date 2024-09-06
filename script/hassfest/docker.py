@@ -103,9 +103,9 @@ LABEL "com.github.actions.color"="gray-dark"
 """
 
 
-def _get_package_versions(file: str, packages: set[str]) -> dict[str, str]:
+def _get_package_versions(file: Path, packages: set[str]) -> dict[str, str]:
     package_versions: dict[str, str] = {}
-    with open(file, encoding="UTF-8") as fp:
+    with file.open(encoding="UTF-8") as fp:
         for _, line in enumerate(fp):
             if package_versions.keys() == packages:
                 return package_versions
@@ -173,10 +173,10 @@ def _generate_files(config: Config) -> list[File]:
     ) * 1000
 
     package_versions = _get_package_versions(
-        "requirements_test.txt", {"pipdeptree", "tqdm", "uv"}
+        Path("requirements_test.txt"), {"pipdeptree", "tqdm", "uv"}
     )
     package_versions |= _get_package_versions(
-        "requirements_test_pre_commit.txt", {"ruff"}
+        Path("requirements_test_pre_commit.txt"), {"ruff"}
     )
 
     return [

@@ -66,7 +66,7 @@ class BucketHolder:
 
     def create_ouput_file(self) -> None:
         """Create output file."""
-        with open("pytest_buckets.txt", "w") as file:
+        with Path("pytest_buckets.txt").open("w") as file:
             for idx, bucket in enumerate(self._buckets):
                 print(f"Bucket {idx+1} has {bucket.total_tests} tests")
                 file.write(bucket.get_paths_line())
