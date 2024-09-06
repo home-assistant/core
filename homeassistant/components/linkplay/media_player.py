@@ -9,6 +9,7 @@ from typing import Any, Concatenate
 from linkplay.bridge import LinkPlayBridge
 from linkplay.consts import EqualizerMode, LoopMode, PlayingMode, PlayingStatus
 from linkplay.exceptions import LinkPlayException, LinkPlayRequestException
+import voluptuous as vol
 
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
@@ -22,12 +23,16 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr, entity_platform
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_platform,
+)
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import utcnow
 
 from . import LinkPlayConfigEntry
-from .const import DOMAIN, SERVICE_PRESET, SERVICE_PRESET_SCHEMA
+from .const import DOMAIN
 from .utils import MANUFACTURER_GENERIC, get_info_from_project
 
 _LOGGER = logging.getLogger(__name__)
@@ -104,6 +109,15 @@ SEEKABLE_FEATURES: MediaPlayerEntityFeature = (
     | MediaPlayerEntityFeature.NEXT_TRACK
     | MediaPlayerEntityFeature.REPEAT_SET
     | MediaPlayerEntityFeature.SEEK
+)
+
+SERVICE_PRESET = "play_preset"
+ATTR_PRESET_NUMBER = "preset_number"
+
+SERVICE_PRESET_SCHEMA = cv.make_entity_service_schema(
+    {
+        vol.Required(ATTR_PRESET_NUMBER): cv.positive_int,
+    }
 )
 
 

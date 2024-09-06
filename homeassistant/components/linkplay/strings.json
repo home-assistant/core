@@ -24,8 +24,8 @@
     }
   },
   "services": {
-    "preset": {
-      "name": "Preset",
+    "play_preset": {
+      "name": "Play preset",
       "description": "Play the preset number on the device.",
       "fields": {
         "preset_number": {

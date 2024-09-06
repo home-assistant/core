@@ -1,4 +1,4 @@
-preset:
+play_preset:
   target:
     entity:
       integration: linkplay

@@ -1,6 +1,6 @@
 {
   "services": {
-    "preset": {
+    "play_preset": {
       "service": "mdi:play-box-outline"
     }
   }
