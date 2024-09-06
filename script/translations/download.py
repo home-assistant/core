@@ -103,7 +103,7 @@ def save_language_translations(lang, translations):
                     f"Skipping {lang} for {component}, as the integration doesn't seem to exist."
                 )
                 continue
-            path.mkdir(parents=True, exist_ok=True)
+            path.parent.mkdir(parents=True, exist_ok=True)
             save_json(path, base_translations)
 
         if "platform" not in component_translations:
@@ -113,7 +113,7 @@ def save_language_translations(lang, translations):
             "platform"
         ].items():
             path = get_platform_path(lang, component, platform)
-            path.mkdir(parents=True, exist_ok=True)
+            path.parent.mkdir(parents=True, exist_ok=True)
             save_json(path, platform_translations)
 
 
