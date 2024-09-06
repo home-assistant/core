@@ -21,7 +21,6 @@ from homeassistant.components.assist_satellite import SatelliteBusyError
 from homeassistant.components.assist_satellite.entity import AssistSatelliteState
 from homeassistant.components.media_source import PlayMedia
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import Context, HomeAssistant
 
 from . import ENTITY_ID
@@ -35,7 +34,7 @@ async def test_entity_state(
 
     state = hass.states.get(ENTITY_ID)
     assert state is not None
-    assert state.state == STATE_UNKNOWN
+    assert state.state == AssistSatelliteState.LISTENING_WAKE_WORD
 
     context = Context()
     audio_stream = object()
@@ -71,7 +70,7 @@ async def test_entity_state(
     assert kwargs["end_stage"] == PipelineStage.TTS
 
     for event_type, expected_state in (
-        (PipelineEventType.RUN_START, STATE_UNKNOWN),
+        (PipelineEventType.RUN_START, AssistSatelliteState.LISTENING_WAKE_WORD),
         (PipelineEventType.RUN_END, AssistSatelliteState.LISTENING_WAKE_WORD),
         (PipelineEventType.WAKE_WORD_START, AssistSatelliteState.LISTENING_WAKE_WORD),
         (PipelineEventType.WAKE_WORD_END, AssistSatelliteState.LISTENING_WAKE_WORD),
