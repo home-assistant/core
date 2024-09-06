@@ -5,43 +5,6 @@
       'battery_percent': 100,
     }),
     'calendar': dict({
-      'events': list([
-        dict({
-          'end': '2023-06-05T09:00:00+00:00',
-          'rrule': 'FREQ=WEEKLY;BYDAY=MO,TU,TH,SA',
-          'start': '2023-06-05T01:00:00+00:00',
-          'uid': '60_480_MO,TU,TH,SA',
-          'work_area_id': 654321,
-        }),
-        dict({
-          'end': '2023-06-05T10:00:00+00:00',
-          'rrule': 'FREQ=WEEKLY;BYDAY=MO,TH,SA',
-          'start': '2023-06-05T02:00:00+00:00',
-          'uid': '120_480_MO,TH,SA',
-          'work_area_id': None,
-        }),
-        dict({
-          'end': '2023-06-06T00:00:00+00:00',
-          'rrule': 'FREQ=WEEKLY;BYDAY=MO,WE,FR',
-          'start': '2023-06-05T19:00:00+00:00',
-          'uid': '1140_300_MO,WE,FR',
-          'work_area_id': 123456,
-        }),
-        dict({
-          'end': '2023-06-06T08:00:00+00:00',
-          'rrule': 'FREQ=WEEKLY;BYDAY=TU,TH,SA',
-          'start': '2023-06-06T00:00:00+00:00',
-          'uid': '0_480_TU,TH,SA',
-          'work_area_id': 123456,
-        }),
-        dict({
-          'end': '2023-06-06T08:00:00+00:00',
-          'rrule': 'FREQ=WEEKLY;BYDAY=TU,TH,SA',
-          'start': '2023-06-06T00:00:00+00:00',
-          'uid': '0_480_TU,TH,SA',
-          'work_area_id': 654321,
-        }),
-      ]),
       'tasks': list([
         dict({
           'duration': 300,
@@ -54,7 +17,7 @@
           'tuesday': False,
           'wednesday': True,
           'work_area_id': 123456,
-          'work_area_name': None,
+          'work_area_name': 'Front lawn',
         }),
         dict({
           'duration': 480,
@@ -67,6 +30,7 @@
           'tuesday': True,
           'wednesday': False,
           'work_area_id': 123456,
+          'work_area_name': 'Front lawn',
         }),
         dict({
           'duration': 480,
@@ -79,6 +43,7 @@
           'tuesday': True,
           'wednesday': False,
           'work_area_id': 654321,
+          'work_area_name': 'Back lawn',
         }),
         dict({
           'duration': 480,
@@ -91,6 +56,7 @@
           'tuesday': True,
           'wednesday': False,
           'work_area_id': 654321,
+          'work_area_name': 'Back lawn',
         }),
         dict({
           'duration': 480,
@@ -108,6 +74,7 @@
       ]),
     }),
     'capabilities': dict({
+      'can_confirm_error': True,
       'headlights': True,
       'position': True,
       'stay_out_zones': True,

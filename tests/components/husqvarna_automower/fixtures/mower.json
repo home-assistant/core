@@ -13,6 +13,7 @@
           "batteryPercent": 100
         },
         "capabilities": {
+          "canConfirmError": true,
           "headlights": true,
           "workAreas": true,
           "position": true,
