@@ -128,6 +128,7 @@ class BSBLANClimate(BSBLanEntity, ClimateEntity):
         """Set preset mode."""
         if self.hvac_mode != HVACMode.AUTO and preset_mode != PRESET_NONE:
             raise ServiceValidationError(
+                "Preset mode can only be set when HVAC mode is set to 'auto'",
                 translation_domain=DOMAIN,
                 translation_key="set_preset_mode_error",
                 translation_placeholders={"preset_mode": preset_mode},
