@@ -3,6 +3,8 @@
 from datetime import timedelta
 from unittest.mock import AsyncMock, MagicMock, call
 
+import pytest
+
 from homeassistant.components.opentherm_gw import DOMAIN as OPENTHERM_DOMAIN
 from homeassistant.components.opentherm_gw.const import OpenThermDeviceIdentifier
 from homeassistant.components.switch import (
@@ -23,6 +25,35 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed
+
+
+@pytest.mark.parametrize(
+    "entity_key", ["central_heating_1_override", "central_heating_2_override"]
+)
+async def test_switch_added_disabled(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_pyotgw: MagicMock,
+    entity_key: str,
+) -> None:
+    """Test switch gets added in disabled state."""
+
+    mock_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (
+        switch_entity_id := entity_registry.async_get_entity_id(
+            SWITCH_DOMAIN,
+            OPENTHERM_DOMAIN,
+            f"{mock_config_entry.data[CONF_ID]}-{OpenThermDeviceIdentifier.GATEWAY}-{entity_key}",
+        )
+    ) is not None
+
+    assert (entity_entry := entity_registry.async_get(switch_entity_id)) is not None
+    assert entity_entry.disabled_by == er.RegistryEntryDisabler.INTEGRATION
 
 
 async def test_ch_override_switch(
