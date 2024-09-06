@@ -37,7 +37,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class AssistSatelliteEntityDescription(EntityDescription, frozen_or_thawed=True):
-    """A class that describes binary sensor entities."""
+    """A class that describes Assist satellite entities."""
 
 
 class AssistSatelliteEntity(entity.Entity):
@@ -45,7 +45,6 @@ class AssistSatelliteEntity(entity.Entity):
 
     entity_description: AssistSatelliteEntityDescription
     _attr_should_poll = False
-    _attr_state: AssistSatelliteState | None = None
     _attr_supported_features = AssistSatelliteEntityFeature(0)
     _attr_pipeline_entity_id: str | None = None
     _attr_vad_sensitivity_entity_id: str | None = None
@@ -259,7 +258,7 @@ class AssistSatelliteEntity(entity.Entity):
         self.on_pipeline_event(event)
 
     @callback
-    def _set_state(self, state: AssistSatelliteState):
+    def _set_state(self, state: AssistSatelliteState) -> None:
         """Set the entity's state."""
         self._attr_state = state
         self.async_write_ha_state()
@@ -271,7 +270,10 @@ class AssistSatelliteEntity(entity.Entity):
 
     @callback
     def _resolve_pipeline(self) -> str | None:
-        """Resolve pipeline from select entity to id."""
+        """Resolve pipeline from select entity to id.
+        
+        Return None to make async_get_pipeline look up the preferred pipeline.
+        """
         if not (pipeline_entity_id := self.pipeline_entity_id):
             return None
 
