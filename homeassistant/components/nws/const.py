@@ -27,6 +27,7 @@ CONF_STATION = "station"
 
 ATTRIBUTION = "Data from National Weather Service/NOAA"
 
+ATTR_FORECAST_SHORT_DESCRIPTION: Final = "short_description"
 ATTR_FORECAST_DETAILED_DESCRIPTION: Final = "detailed_description"
 
 CONDITION_CLASSES: dict[str, list[str]] = {

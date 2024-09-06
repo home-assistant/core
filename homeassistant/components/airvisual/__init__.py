@@ -31,7 +31,6 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import (
     aiohttp_client,
-    config_validation as cv,
     device_registry as dr,
     entity_registry as er,
 )
@@ -61,8 +60,6 @@ DOMAIN_AIRVISUAL_PRO = "airvisual_pro"
 PLATFORMS = [Platform.SENSOR]
 
 DEFAULT_ATTRIBUTION = "Data provided by AirVisual"
-
-CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 
 @callback

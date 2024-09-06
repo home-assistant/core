@@ -169,9 +169,14 @@ async def test_block_restored_sleeping_binary_sensor(
 ) -> None:
     """Test block restored sleeping binary sensor."""
     entry = await init_integration(hass, 1, sleep_period=1000, skip_setup=True)
-    register_device(device_registry, entry)
+    device = register_device(device_registry, entry)
     entity_id = register_entity(
-        hass, BINARY_SENSOR_DOMAIN, "test_name_motion", "sensor_0-motion", entry
+        hass,
+        BINARY_SENSOR_DOMAIN,
+        "test_name_motion",
+        "sensor_0-motion",
+        entry,
+        device_id=device.id,
     )
     mock_restore_cache(hass, [State(entity_id, STATE_ON)])
     monkeypatch.setattr(mock_block_device, "initialized", False)
@@ -196,9 +201,14 @@ async def test_block_restored_sleeping_binary_sensor_no_last_state(
 ) -> None:
     """Test block restored sleeping binary sensor missing last state."""
     entry = await init_integration(hass, 1, sleep_period=1000, skip_setup=True)
-    register_device(device_registry, entry)
+    device = register_device(device_registry, entry)
     entity_id = register_entity(
-        hass, BINARY_SENSOR_DOMAIN, "test_name_motion", "sensor_0-motion", entry
+        hass,
+        BINARY_SENSOR_DOMAIN,
+        "test_name_motion",
+        "sensor_0-motion",
+        entry,
+        device_id=device.id,
     )
     monkeypatch.setattr(mock_block_device, "initialized", False)
     await hass.config_entries.async_setup(entry.entry_id)
@@ -265,6 +275,7 @@ async def test_rpc_sleeping_binary_sensor(
 ) -> None:
     """Test RPC online sleeping binary sensor."""
     entity_id = f"{BINARY_SENSOR_DOMAIN}.test_name_cloud"
+    monkeypatch.setattr(mock_rpc_device, "connected", False)
     monkeypatch.setitem(mock_rpc_device.status["sys"], "wakeup_period", 1000)
     config_entry = await init_integration(hass, 2, sleep_period=1000)
 
@@ -304,9 +315,14 @@ async def test_rpc_restored_sleeping_binary_sensor(
 ) -> None:
     """Test RPC restored binary sensor."""
     entry = await init_integration(hass, 2, sleep_period=1000, skip_setup=True)
-    register_device(device_registry, entry)
+    device = register_device(device_registry, entry)
     entity_id = register_entity(
-        hass, BINARY_SENSOR_DOMAIN, "test_name_cloud", "cloud-cloud", entry
+        hass,
+        BINARY_SENSOR_DOMAIN,
+        "test_name_cloud",
+        "cloud-cloud",
+        entry,
+        device_id=device.id,
     )
 
     mock_restore_cache(hass, [State(entity_id, STATE_ON)])
@@ -333,9 +349,14 @@ async def test_rpc_restored_sleeping_binary_sensor_no_last_state(
 ) -> None:
     """Test RPC restored sleeping binary sensor missing last state."""
     entry = await init_integration(hass, 2, sleep_period=1000, skip_setup=True)
-    register_device(device_registry, entry)
+    device = register_device(device_registry, entry)
     entity_id = register_entity(
-        hass, BINARY_SENSOR_DOMAIN, "test_name_cloud", "cloud-cloud", entry
+        hass,
+        BINARY_SENSOR_DOMAIN,
+        "test_name_cloud",
+        "cloud-cloud",
+        entry,
+        device_id=device.id,
     )
 
     monkeypatch.setattr(mock_rpc_device, "initialized", False)
@@ -357,16 +378,25 @@ async def test_rpc_restored_sleeping_binary_sensor_no_last_state(
     assert hass.states.get(entity_id).state == STATE_OFF
 
 
-async def test_rpc_device_virtual_binary_sensor_with_name(
+@pytest.mark.parametrize(
+    ("name", "entity_id"),
+    [
+        ("Virtual binary sensor", "binary_sensor.test_name_virtual_binary_sensor"),
+        (None, "binary_sensor.test_name_boolean_203"),
+    ],
+)
+async def test_rpc_device_virtual_binary_sensor(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     mock_rpc_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
+    name: str | None,
+    entity_id: str,
 ) -> None:
     """Test a virtual binary sensor for RPC device."""
     config = deepcopy(mock_rpc_device.config)
     config["boolean:203"] = {
-        "name": "Virtual binary sensor",
+        "name": name,
         "meta": {"ui": {"view": "label"}},
     }
     monkeypatch.setattr(mock_rpc_device, "config", config)
@@ -374,8 +404,6 @@ async def test_rpc_device_virtual_binary_sensor_with_name(
     status = deepcopy(mock_rpc_device.status)
     status["boolean:203"] = {"value": True}
     monkeypatch.setattr(mock_rpc_device, "status", status)
-
-    entity_id = "binary_sensor.test_name_virtual_binary_sensor"
 
     await init_integration(hass, 3)
 
@@ -390,34 +418,6 @@ async def test_rpc_device_virtual_binary_sensor_with_name(
     monkeypatch.setitem(mock_rpc_device.status["boolean:203"], "value", False)
     mock_rpc_device.mock_update()
     assert hass.states.get(entity_id).state == STATE_OFF
-
-
-async def test_rpc_device_virtual_binary_sensor_without_name(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    mock_rpc_device: Mock,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """Test a virtual binary sensor for RPC device."""
-    config = deepcopy(mock_rpc_device.config)
-    config["boolean:203"] = {"name": None, "meta": {"ui": {"view": "label"}}}
-    monkeypatch.setattr(mock_rpc_device, "config", config)
-
-    status = deepcopy(mock_rpc_device.status)
-    status["boolean:203"] = {"value": True}
-    monkeypatch.setattr(mock_rpc_device, "status", status)
-
-    entity_id = "binary_sensor.test_name_boolean_203"
-
-    await init_integration(hass, 3)
-
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state == STATE_ON
-
-    entry = entity_registry.async_get(entity_id)
-    assert entry
-    assert entry.unique_id == "123456789ABC-boolean:203-boolean"
 
 
 async def test_rpc_remove_virtual_binary_sensor_when_mode_toggle(

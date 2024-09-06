@@ -111,6 +111,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: TessieConfigEntry) -> bo
         for product in products:
             if "energy_site_id" in product:
                 site_id = product["energy_site_id"]
+                if not (
+                    product["components"]["battery"]
+                    or product["components"]["solar"]
+                    or "wall_connectors" in product["components"]
+                ):
+                    _LOGGER.debug(
+                        "Skipping Energy Site %s as it has no components",
+                        site_id,
+                    )
+                    continue
+
                 api = EnergySpecific(tessie.energy, site_id)
                 energysites.append(
                     TessieEnergyData(

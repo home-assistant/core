@@ -9,7 +9,6 @@ from homeassistant.components.lamarzocco.config_flow import CONF_MACHINE
 from homeassistant.components.lamarzocco.const import CONF_USE_BLUETOOTH, DOMAIN
 from homeassistant.config_entries import (
     SOURCE_BLUETOOTH,
-    SOURCE_REAUTH,
     SOURCE_RECONFIGURE,
     SOURCE_USER,
     ConfigEntryState,
@@ -248,15 +247,7 @@ async def test_reauth_flow(
 
     mock_config_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": SOURCE_REAUTH,
-            "unique_id": mock_config_entry.unique_id,
-            "entry_id": mock_config_entry.entry_id,
-        },
-        data=mock_config_entry.data,
-    )
+    result = await mock_config_entry.start_reauth_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"

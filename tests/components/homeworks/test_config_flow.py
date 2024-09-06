@@ -2,6 +2,7 @@
 
 from unittest.mock import ANY, MagicMock
 
+from pyhomeworks import exceptions as hw_exceptions
 import pytest
 from pytest_unordered import unordered
 
@@ -17,7 +18,13 @@ from homeassistant.components.homeworks.const import (
     DOMAIN,
 )
 from homeassistant.config_entries import SOURCE_RECONFIGURE, SOURCE_USER
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_USERNAME,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -45,7 +52,7 @@ async def test_user_flow(
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Main controller"
-    assert result["data"] == {}
+    assert result["data"] == {"password": None, "username": None}
     assert result["options"] == {
         "controller_id": "main_controller",
         "dimmers": [],
@@ -53,9 +60,107 @@ async def test_user_flow(
         "keypads": [],
         "port": 1234,
     }
-    mock_homeworks.assert_called_once_with("192.168.0.1", 1234, ANY)
+    mock_homeworks.assert_called_once_with("192.168.0.1", 1234, ANY, None, None)
     mock_controller.close.assert_called_once_with()
-    mock_controller.join.assert_called_once_with()
+    mock_controller.join.assert_not_called()
+
+
+async def test_user_flow_credentials(
+    hass: HomeAssistant, mock_homeworks: MagicMock, mock_setup_entry
+) -> None:
+    """Test the user configuration flow."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+
+    mock_controller = MagicMock()
+    mock_homeworks.return_value = mock_controller
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_HOST: "192.168.0.1",
+            CONF_NAME: "Main controller",
+            CONF_PASSWORD: "hunter2",
+            CONF_PORT: 1234,
+            CONF_USERNAME: "username",
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Main controller"
+    assert result["data"] == {"password": "hunter2", "username": "username"}
+    assert result["options"] == {
+        "controller_id": "main_controller",
+        "dimmers": [],
+        "host": "192.168.0.1",
+        "keypads": [],
+        "port": 1234,
+    }
+    mock_homeworks.assert_called_once_with(
+        "192.168.0.1", 1234, ANY, "username", "hunter2"
+    )
+    mock_controller.close.assert_called_once_with()
+    mock_controller.join.assert_not_called()
+
+
+async def test_user_flow_credentials_user_only(
+    hass: HomeAssistant, mock_homeworks: MagicMock, mock_setup_entry
+) -> None:
+    """Test the user configuration flow."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+
+    mock_controller = MagicMock()
+    mock_homeworks.return_value = mock_controller
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_HOST: "192.168.0.1",
+            CONF_NAME: "Main controller",
+            CONF_PORT: 1234,
+            CONF_USERNAME: "username",
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Main controller"
+    assert result["data"] == {"password": None, "username": "username"}
+    assert result["options"] == {
+        "controller_id": "main_controller",
+        "dimmers": [],
+        "host": "192.168.0.1",
+        "keypads": [],
+        "port": 1234,
+    }
+    mock_homeworks.assert_called_once_with("192.168.0.1", 1234, ANY, "username", None)
+    mock_controller.close.assert_called_once_with()
+    mock_controller.join.assert_not_called()
+
+
+async def test_user_flow_credentials_password_only(
+    hass: HomeAssistant, mock_homeworks: MagicMock, mock_setup_entry
+) -> None:
+    """Test the user configuration flow."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+
+    mock_controller = MagicMock()
+    mock_homeworks.return_value = mock_controller
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_HOST: "192.168.0.1",
+            CONF_NAME: "Main controller",
+            CONF_PASSWORD: "hunter2",
+            CONF_PORT: 1234,
+        },
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "need_username_with_password"}
 
 
 async def test_user_flow_already_exists(
@@ -96,7 +201,12 @@ async def test_user_flow_already_exists(
 
 @pytest.mark.parametrize(
     ("side_effect", "error"),
-    [(ConnectionError, "connection_error"), (Exception, "unknown_error")],
+    [
+        (hw_exceptions.HomeworksConnectionFailed, "connection_error"),
+        (hw_exceptions.HomeworksInvalidCredentialsProvided, "invalid_credentials"),
+        (hw_exceptions.HomeworksNoCredentialsProvided, "credentials_needed"),
+        (Exception, "unknown_error"),
+    ],
 )
 async def test_user_flow_cannot_connect(
     hass: HomeAssistant,
@@ -266,6 +376,32 @@ async def test_reconfigure_flow_flow_no_change(
     }
 
 
+async def test_reconfigure_flow_credentials_password_only(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_homeworks: MagicMock
+) -> None:
+    """Test reconfigure flow."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_RECONFIGURE, "entry_id": mock_config_entry.entry_id},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_HOST: "192.168.0.2",
+            CONF_PASSWORD: "hunter2",
+            CONF_PORT: 1234,
+        },
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {"base": "need_username_with_password"}
+
+
 async def test_options_add_light_flow(
     hass: HomeAssistant,
     mock_empty_config_entry: MockConfigEntry,
@@ -432,7 +568,14 @@ async def test_options_add_remove_light_flow(
     )
 
 
-@pytest.mark.parametrize("keypad_address", ["[02:08:03:01]", "[02:08:03]"])
+@pytest.mark.parametrize(
+    "keypad_address",
+    [
+        "[02:08:03]",
+        "[02:08:03:01]",
+        "[02:08:03:01:00]",
+    ],
+)
 async def test_options_add_remove_keypad_flow(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

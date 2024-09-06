@@ -384,7 +384,7 @@ DISCOVERY_SCHEMAS = [
             key="ThirdRealityEnergySensorWattAccumulated",
             device_class=SensorDeviceClass.ENERGY,
             entity_category=EntityCategory.DIAGNOSTIC,
-            native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+            native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
             suggested_display_precision=3,
             state_class=SensorStateClass.TOTAL_INCREASING,
             measurement_to_ha=lambda x: x / 1000,
@@ -447,5 +447,19 @@ DISCOVERY_SCHEMAS = [
         ),
         entity_class=MatterSensor,
         required_attributes=(NeoCluster.Attributes.Current,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="SwitchCurrentPosition",
+            native_unit_of_measurement=None,
+            device_class=None,
+            state_class=SensorStateClass.MEASUREMENT,
+            translation_key="switch_current_position",
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(clusters.Switch.Attributes.CurrentPosition,),
+        allow_multi=True,  # also used for event entity
     ),
 ]

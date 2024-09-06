@@ -51,10 +51,12 @@ class VoIPCallInProgress(VoIPEntity, BinarySensorEntity):
         """Call when entity about to be added to hass."""
         await super().async_added_to_hass()
 
-        self.async_on_remove(self._device.async_listen_update(self._is_active_changed))
+        self.async_on_remove(
+            self.voip_device.async_listen_update(self._is_active_changed)
+        )
 
     @callback
     def _is_active_changed(self, device: VoIPDevice) -> None:
         """Call when active state changed."""
-        self._attr_is_on = self._device.is_active
+        self._attr_is_on = self.voip_device.is_active
         self.async_write_ha_state()

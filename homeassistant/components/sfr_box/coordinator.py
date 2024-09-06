@@ -15,7 +15,7 @@ _LOGGER = logging.getLogger(__name__)
 _SCAN_INTERVAL = timedelta(minutes=1)
 
 
-class SFRDataUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
+class SFRDataUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT | None]):
     """Coordinator to manage data updates."""
 
     def __init__(
@@ -23,14 +23,14 @@ class SFRDataUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
         hass: HomeAssistant,
         box: SFRBox,
         name: str,
-        method: Callable[[SFRBox], Coroutine[Any, Any, _DataT]],
+        method: Callable[[SFRBox], Coroutine[Any, Any, _DataT | None]],
     ) -> None:
         """Initialize coordinator."""
         self.box = box
         self._method = method
         super().__init__(hass, _LOGGER, name=name, update_interval=_SCAN_INTERVAL)
 
-    async def _async_update_data(self) -> _DataT:
+    async def _async_update_data(self) -> _DataT | None:
         """Update data."""
         try:
             return await self._method(self.box)

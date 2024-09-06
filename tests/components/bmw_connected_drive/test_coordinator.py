@@ -8,7 +8,7 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.bmw_connected_drive import DOMAIN as BMW_DOMAIN
-from homeassistant.core import DOMAIN as HA_DOMAIN, HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.update_coordinator import UpdateFailed
@@ -118,6 +118,7 @@ async def test_init_reauth(
         await hass.async_block_till_done()
 
     reauth_issue = issue_registry.async_get_issue(
-        HA_DOMAIN, f"config_entry_reauth_{BMW_DOMAIN}_{config_entry.entry_id}"
+        HOMEASSISTANT_DOMAIN,
+        f"config_entry_reauth_{BMW_DOMAIN}_{config_entry.entry_id}",
     )
     assert reauth_issue.active is True

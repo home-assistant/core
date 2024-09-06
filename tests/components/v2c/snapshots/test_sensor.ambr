@@ -126,7 +126,7 @@
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
-    'original_icon': 'mdi:ev-station',
+    'original_icon': None,
     'original_name': 'Charge power',
     'platform': 'v2c',
     'previous_unique_id': None,
@@ -141,7 +141,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'power',
       'friendly_name': 'EVSE 1.1.1.1 Charge power',
-      'icon': 'mdi:ev-station',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
@@ -255,6 +254,103 @@
     'state': '0.0',
   })
 # ---
+# name: test_sensor[sensor.evse_1_1_1_1_installation_voltage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.evse_1_1_1_1_installation_voltage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
+    'original_icon': None,
+    'original_name': 'Installation voltage',
+    'platform': 'v2c',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'voltage_installation',
+    'unique_id': 'da58ee91f38c2406c2a36d0a1a7f8569_voltage_installation',
+    'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+  })
+# ---
+# name: test_sensor[sensor.evse_1_1_1_1_installation_voltage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'voltage',
+      'friendly_name': 'EVSE 1.1.1.1 Installation voltage',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.evse_1_1_1_1_installation_voltage',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensor[sensor.evse_1_1_1_1_ip_address-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.evse_1_1_1_1_ip_address',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'IP address',
+    'platform': 'v2c',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'ip_address',
+    'unique_id': 'da58ee91f38c2406c2a36d0a1a7f8569_ip_address',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[sensor.evse_1_1_1_1_ip_address-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'EVSE 1.1.1.1 IP address',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.evse_1_1_1_1_ip_address',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_sensor[sensor.evse_1_1_1_1_meter_error-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -304,7 +400,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': None,
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
     'entity_id': 'sensor.evse_1_1_1_1_meter_error',
     'has_entity_name': True,
     'hidden_by': None,
@@ -426,5 +522,100 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
+  })
+# ---
+# name: test_sensor[sensor.evse_1_1_1_1_signal_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.evse_1_1_1_1_signal_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Signal status',
+    'platform': 'v2c',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'signal_status',
+    'unique_id': 'da58ee91f38c2406c2a36d0a1a7f8569_signal_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[sensor.evse_1_1_1_1_signal_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'EVSE 1.1.1.1 Signal status',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.evse_1_1_1_1_signal_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensor[sensor.evse_1_1_1_1_ssid-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.evse_1_1_1_1_ssid',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'SSID',
+    'platform': 'v2c',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'ssid',
+    'unique_id': 'da58ee91f38c2406c2a36d0a1a7f8569_ssid',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[sensor.evse_1_1_1_1_ssid-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'EVSE 1.1.1.1 SSID',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.evse_1_1_1_1_ssid',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
   })
 # ---

@@ -62,7 +62,7 @@ from .const import (
     TELEGRAM_LOG_MAX,
     KNXConfigEntryData,
 )
-from .helpers.keyring import DEFAULT_KNX_KEYRING_FILENAME, save_uploaded_knxkeys_file
+from .storage.keyring import DEFAULT_KNX_KEYRING_FILENAME, save_uploaded_knxkeys_file
 from .validation import ia_validator, ip_v4_validator
 
 CONF_KNX_GATEWAY: Final = "gateway"
@@ -445,7 +445,7 @@ class KNXCommonFlow(ABC, ConfigEntryBaseFlow):
             try:
                 key_bytes = bytes.fromhex(user_input[CONF_KNX_ROUTING_BACKBONE_KEY])
                 if len(key_bytes) != 16:
-                    raise ValueError
+                    raise ValueError  # noqa: TRY301
             except ValueError:
                 errors[CONF_KNX_ROUTING_BACKBONE_KEY] = "invalid_backbone_key"
             if not errors:

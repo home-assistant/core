@@ -120,8 +120,6 @@ class Thermostat(ZHAEntity, ClimateEntity):
             features |= ClimateEntityFeature.FAN_MODE
         if ZHAClimateEntityFeature.SWING_MODE in zha_features:
             features |= ClimateEntityFeature.SWING_MODE
-        if ZHAClimateEntityFeature.AUX_HEAT in zha_features:
-            features |= ClimateEntityFeature.AUX_HEAT
         if ZHAClimateEntityFeature.TURN_OFF in zha_features:
             features |= ClimateEntityFeature.TURN_OFF
         if ZHAClimateEntityFeature.TURN_ON in zha_features:

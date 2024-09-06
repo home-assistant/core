@@ -31,11 +31,12 @@ from homeassistant.const import (
     CONF_ICON,
     CONF_ID,
     CONF_NAME,
+    EVENT_STATE_CHANGED,
     SERVICE_RELOAD,
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import EVENT_STATE_CHANGED, Context, HomeAssistant
+from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 

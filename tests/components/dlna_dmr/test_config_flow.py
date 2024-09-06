@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterable
+from collections.abc import Generator
 import dataclasses
 import logging
 from unittest.mock import Mock, patch
@@ -89,7 +89,7 @@ MOCK_DISCOVERY = ssdp.SsdpServiceInfo(
 
 
 @pytest.fixture(autouse=True)
-def mock_get_mac_address() -> Iterable[Mock]:
+def mock_get_mac_address() -> Generator[Mock]:
     """Mock the get_mac_address function to prevent network access and assist tests."""
     with patch(
         "homeassistant.components.dlna_dmr.config_flow.get_mac_address", autospec=True
@@ -99,7 +99,7 @@ def mock_get_mac_address() -> Iterable[Mock]:
 
 
 @pytest.fixture(autouse=True)
-def mock_setup_entry() -> Iterable[Mock]:
+def mock_setup_entry() -> Generator[Mock]:
     """Mock async_setup_entry."""
     with patch(
         "homeassistant.components.dlna_dmr.async_setup_entry", return_value=True

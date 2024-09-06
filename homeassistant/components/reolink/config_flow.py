@@ -6,6 +6,7 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
+from reolink_aio.api import ALLOWED_SPECIAL_CHARS
 from reolink_aio.exceptions import ApiError, CredentialsInvalidError, ReolinkError
 import voluptuous as vol
 
@@ -29,7 +30,12 @@ from homeassistant.helpers import config_validation as cv, selector
 from homeassistant.helpers.device_registry import format_mac
 
 from .const import CONF_USE_HTTPS, DOMAIN
-from .exceptions import ReolinkException, ReolinkWebhookException, UserNotAdmin
+from .exceptions import (
+    PasswordIncompatible,
+    ReolinkException,
+    ReolinkWebhookException,
+    UserNotAdmin,
+)
 from .host import ReolinkHost
 from .util import is_connected
 
@@ -42,7 +48,7 @@ DEFAULT_OPTIONS = {CONF_PROTOCOL: DEFAULT_PROTOCOL}
 class ReolinkOptionsFlowHandler(OptionsFlow):
     """Handle Reolink options."""
 
-    def __init__(self, config_entry):
+    def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize ReolinkOptionsFlowHandler."""
         self.config_entry = config_entry
 
@@ -206,8 +212,11 @@ class ReolinkFlowHandler(ConfigFlow, domain=DOMAIN):
                 errors[CONF_USERNAME] = "not_admin"
                 placeholders["username"] = host.api.username
                 placeholders["userlevel"] = host.api.user_level
+            except PasswordIncompatible:
+                errors[CONF_PASSWORD] = "password_incompatible"
+                placeholders["special_chars"] = ALLOWED_SPECIAL_CHARS
             except CredentialsInvalidError:
-                errors[CONF_HOST] = "invalid_auth"
+                errors[CONF_PASSWORD] = "invalid_auth"
             except ApiError as err:
                 placeholders["error"] = str(err)
                 errors[CONF_HOST] = "api_error"

@@ -27,6 +27,16 @@ async def async_get_config_entry_diagnostics(
                     "energy_production_month": coordinator.data.solar.energy_production_month,
                     "energy_production_total": coordinator.data.solar.energy_production_total,
                 },
+                "inverters": [
+                    {
+                        "serial_number": inverter.serial_number,
+                        "out_ac_power": inverter.out_ac_power,
+                        "out_ac_energy_total": inverter.out_ac_energy_total,
+                        "grid_turned_off": inverter.grid_turned_off,
+                        "health": inverter.health,
+                    }
+                    for inverter in coordinator.data.inverters.values()
+                ],
             }
             for coordinator in autarco_data
         ],

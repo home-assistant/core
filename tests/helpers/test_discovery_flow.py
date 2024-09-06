@@ -6,7 +6,8 @@ from unittest.mock import AsyncMock, call, patch
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.core import EVENT_HOMEASSISTANT_STARTED, CoreState, HomeAssistant
+from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
+from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers import discovery_flow
 
 

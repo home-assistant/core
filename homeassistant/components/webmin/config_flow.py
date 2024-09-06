@@ -53,9 +53,10 @@ async def validate_user_input(
     except Exception as err:
         raise SchemaFlowError("unknown") from err
 
-    await cast(SchemaConfigFlowHandler, handler.parent_handler).async_set_unique_id(
-        get_sorted_mac_addresses(data)[0]
-    )
+    if len(mac_addresses := get_sorted_mac_addresses(data)) > 0:
+        await cast(SchemaConfigFlowHandler, handler.parent_handler).async_set_unique_id(
+            mac_addresses[0]
+        )
     return user_input
 
 

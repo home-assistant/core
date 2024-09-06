@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-from dataclasses import dataclass
 from datetime import timedelta
 import logging
 
@@ -14,13 +13,20 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
-from .exceptions import ReolinkException, UserNotAdmin
+from .exceptions import PasswordIncompatible, ReolinkException, UserNotAdmin
 from .host import ReolinkHost
+from .services import async_setup_services
+from .util import ReolinkData, get_device_uid_and_ch
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,14 +46,14 @@ DEVICE_UPDATE_INTERVAL = timedelta(seconds=60)
 FIRMWARE_UPDATE_INTERVAL = timedelta(hours=12)
 NUM_CRED_ERRORS = 3
 
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
-@dataclass
-class ReolinkData:
-    """Data for the Reolink integration."""
 
-    host: ReolinkHost
-    device_coordinator: DataUpdateCoordinator[None]
-    firmware_coordinator: DataUpdateCoordinator[None]
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up Reolink shared code."""
+
+    async_setup_services(hass)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
@@ -56,7 +62,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     try:
         await host.async_init()
-    except (UserNotAdmin, CredentialsInvalidError) as err:
+    except (UserNotAdmin, CredentialsInvalidError, PasswordIncompatible) as err:
         await host.stop()
         raise ConfigEntryAuthFailed(err) from err
     except (
@@ -186,7 +192,47 @@ async def async_remove_config_entry_device(
 ) -> bool:
     """Remove a device from a config entry."""
     host: ReolinkHost = hass.data[DOMAIN][config_entry.entry_id].host
-    (device_uid, ch) = get_device_uid_and_ch(device, host)
+    (device_uid, ch, is_chime) = get_device_uid_and_ch(device, host)
+
+    if is_chime:
+        await host.api.get_state(cmd="GetDingDongList")
+        chime = host.api.chime(ch)
+        if (
+            chime is None
+            or chime.connect_state is None
+            or chime.connect_state < 0
+            or chime.channel not in host.api.channels
+        ):
+            _LOGGER.debug(
+                "Removing Reolink chime %s with id %s, "
+                "since it is not coupled to %s anymore",
+                device.name,
+                ch,
+                host.api.nvr_name,
+            )
+            return True
+
+        # remove the chime from the host
+        await chime.remove()
+        await host.api.get_state(cmd="GetDingDongList")
+        if chime.connect_state < 0:
+            _LOGGER.debug(
+                "Removed Reolink chime %s with id %s from %s",
+                device.name,
+                ch,
+                host.api.nvr_name,
+            )
+            return True
+
+        _LOGGER.warning(
+            "Cannot remove Reolink chime %s with id %s, because it is still connected "
+            "to %s, please first remove the chime "
+            "in the reolink app",
+            device.name,
+            ch,
+            host.api.nvr_name,
+        )
+        return False
 
     if not host.api.is_nvr or ch is None:
         _LOGGER.warning(
@@ -225,24 +271,6 @@ async def async_remove_config_entry_device(
     return False
 
 
-def get_device_uid_and_ch(
-    device: dr.DeviceEntry, host: ReolinkHost
-) -> tuple[list[str], int | None]:
-    """Get the channel and the split device_uid from a reolink DeviceEntry."""
-    device_uid = [
-        dev_id[1].split("_") for dev_id in device.identifiers if dev_id[0] == DOMAIN
-    ][0]
-
-    if len(device_uid) < 2:
-        # NVR itself
-        ch = None
-    elif device_uid[1].startswith("ch") and len(device_uid[1]) <= 5:
-        ch = int(device_uid[1][2:])
-    else:
-        ch = host.api.channel_for_uid(device_uid[1])
-    return (device_uid, ch)
-
-
 def migrate_entity_ids(
     hass: HomeAssistant, config_entry_id: str, host: ReolinkHost
 ) -> None:
@@ -251,7 +279,7 @@ def migrate_entity_ids(
     devices = dr.async_entries_for_config_entry(device_reg, config_entry_id)
     ch_device_ids = {}
     for device in devices:
-        (device_uid, ch) = get_device_uid_and_ch(device, host)
+        (device_uid, ch, is_chime) = get_device_uid_and_ch(device, host)
 
         if host.api.supported(None, "UID") and device_uid[0] != host.unique_id:
             if ch is None:
@@ -261,8 +289,8 @@ def migrate_entity_ids(
             new_identifiers = {(DOMAIN, new_device_id)}
             device_reg.async_update_device(device.id, new_identifiers=new_identifiers)
 
-        if ch is None:
-            continue  # Do not consider the NVR itself
+        if ch is None or is_chime:
+            continue  # Do not consider the NVR itself or chimes
 
         ch_device_ids[device.id] = ch
         if host.api.supported(ch, "UID") and device_uid[1] != host.api.camera_uid(ch):

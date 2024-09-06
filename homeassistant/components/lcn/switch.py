@@ -1,7 +1,7 @@
 """Support for LCN switches."""
 
-from __future__ import annotations
-
+from collections.abc import Iterable
+from functools import partial
 from typing import Any
 
 import pypck
@@ -14,24 +14,41 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
 
 from . import LcnEntity
-from .const import CONF_DOMAIN_DATA, CONF_OUTPUT, OUTPUT_PORTS
+from .const import (
+    ADD_ENTITIES_CALLBACKS,
+    CONF_DOMAIN_DATA,
+    CONF_OUTPUT,
+    DOMAIN,
+    OUTPUT_PORTS,
+)
 from .helpers import DeviceConnectionType, InputType, get_device_connection
 
 PARALLEL_UPDATES = 0
 
 
-def create_lcn_switch_entity(
-    hass: HomeAssistant, entity_config: ConfigType, config_entry: ConfigEntry
-) -> LcnEntity:
-    """Set up an entity for this domain."""
-    device_connection = get_device_connection(
-        hass, entity_config[CONF_ADDRESS], config_entry
-    )
+def add_lcn_switch_entities(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+    entity_configs: Iterable[ConfigType],
+) -> None:
+    """Add entities for this domain."""
+    entities: list[LcnOutputSwitch | LcnRelaySwitch] = []
+    for entity_config in entity_configs:
+        device_connection = get_device_connection(
+            hass, entity_config[CONF_ADDRESS], config_entry
+        )
 
-    if entity_config[CONF_DOMAIN_DATA][CONF_OUTPUT] in OUTPUT_PORTS:
-        return LcnOutputSwitch(entity_config, config_entry.entry_id, device_connection)
-    # in RELAY_PORTS
-    return LcnRelaySwitch(entity_config, config_entry.entry_id, device_connection)
+        if entity_config[CONF_DOMAIN_DATA][CONF_OUTPUT] in OUTPUT_PORTS:
+            entities.append(
+                LcnOutputSwitch(entity_config, config_entry.entry_id, device_connection)
+            )
+        else:  # in RELAY_PORTS
+            entities.append(
+                LcnRelaySwitch(entity_config, config_entry.entry_id, device_connection)
+            )
+
+    async_add_entities(entities)
 
 
 async def async_setup_entry(
@@ -40,11 +57,23 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up LCN switch entities from a config entry."""
+    add_entities = partial(
+        add_lcn_switch_entities,
+        hass,
+        config_entry,
+        async_add_entities,
+    )
 
-    async_add_entities(
-        create_lcn_switch_entity(hass, entity_config, config_entry)
-        for entity_config in config_entry.data[CONF_ENTITIES]
-        if entity_config[CONF_DOMAIN] == DOMAIN_SWITCH
+    hass.data[DOMAIN][config_entry.entry_id][ADD_ENTITIES_CALLBACKS].update(
+        {DOMAIN_SWITCH: add_entities}
+    )
+
+    add_entities(
+        (
+            entity_config
+            for entity_config in config_entry.data[CONF_ENTITIES]
+            if entity_config[CONF_DOMAIN] == DOMAIN_SWITCH
+        ),
     )
 
 

@@ -174,9 +174,12 @@ async def test_frontend_and_static(mock_http_client: TestClient) -> None:
     assert "public" in resp.headers.get("cache-control")
 
 
-async def test_dont_cache_service_worker(mock_http_client: TestClient) -> None:
+@pytest.mark.parametrize("sw_url", ["/sw-modern.js", "/sw-legacy.js"])
+async def test_dont_cache_service_worker(
+    mock_http_client: TestClient, sw_url: str
+) -> None:
     """Test that we don't cache the service worker."""
-    resp = await mock_http_client.get("/service_worker.js")
+    resp = await mock_http_client.get(sw_url)
     assert resp.status == 200
     assert "cache-control" not in resp.headers
 

@@ -2,21 +2,11 @@
 
 from __future__ import annotations
 
-from pytrafikverket import TrafikverketTrain
-from pytrafikverket.exceptions import (
-    InvalidAuthentication,
-    MultipleTrainStationsFound,
-    NoTrainStationFound,
-)
-
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CONF_FROM, CONF_TO, PLATFORMS
+from .const import PLATFORMS
 from .coordinator import TVDataUpdateCoordinator
 
 TVTrainConfigEntry = ConfigEntry[TVDataUpdateCoordinator]
@@ -25,21 +15,7 @@ TVTrainConfigEntry = ConfigEntry[TVDataUpdateCoordinator]
 async def async_setup_entry(hass: HomeAssistant, entry: TVTrainConfigEntry) -> bool:
     """Set up Trafikverket Train from a config entry."""
 
-    http_session = async_get_clientsession(hass)
-    train_api = TrafikverketTrain(http_session, entry.data[CONF_API_KEY])
-
-    try:
-        to_station = await train_api.async_get_train_station(entry.data[CONF_TO])
-        from_station = await train_api.async_get_train_station(entry.data[CONF_FROM])
-    except InvalidAuthentication as error:
-        raise ConfigEntryAuthFailed from error
-    except (NoTrainStationFound, MultipleTrainStationsFound) as error:
-        raise ConfigEntryNotReady(
-            f"Problem when trying station {entry.data[CONF_FROM]} to"
-            f" {entry.data[CONF_TO]}. Error: {error} "
-        ) from error
-
-    coordinator = TVDataUpdateCoordinator(hass, to_station, from_station)
+    coordinator = TVDataUpdateCoordinator(hass)
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
 

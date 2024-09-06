@@ -78,7 +78,12 @@ async def async_setup_entry(
 class ZwaveFan(ZWaveBaseEntity, FanEntity):
     """Representation of a Z-Wave fan."""
 
-    _attr_supported_features = FanEntityFeature.SET_SPEED
+    _attr_supported_features = (
+        FanEntityFeature.SET_SPEED
+        | FanEntityFeature.TURN_OFF
+        | FanEntityFeature.TURN_ON
+    )
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self, config_entry: ConfigEntry, driver: Driver, info: ZwaveDiscoveryInfo
@@ -249,7 +254,11 @@ class ValueMappingZwaveFan(ZwaveFan):
     @property
     def supported_features(self) -> FanEntityFeature:
         """Flag supported features."""
-        flags = FanEntityFeature.SET_SPEED
+        flags = (
+            FanEntityFeature.SET_SPEED
+            | FanEntityFeature.TURN_OFF
+            | FanEntityFeature.TURN_ON
+        )
         if self.has_fan_value_mapping and self.fan_value_mapping.presets:
             flags |= FanEntityFeature.PRESET_MODE
 
@@ -382,7 +391,13 @@ class ZwaveThermostatFan(ZWaveBaseEntity, FanEntity):
     @property
     def supported_features(self) -> FanEntityFeature:
         """Flag supported features."""
-        return FanEntityFeature.PRESET_MODE
+        if not self._fan_off:
+            return FanEntityFeature.PRESET_MODE
+        return (
+            FanEntityFeature.PRESET_MODE
+            | FanEntityFeature.TURN_ON
+            | FanEntityFeature.TURN_OFF
+        )
 
     @property
     def fan_state(self) -> str | None:

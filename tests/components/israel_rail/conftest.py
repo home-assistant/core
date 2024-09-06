@@ -1,12 +1,12 @@
 """Configuration for Israel rail tests."""
 
+from collections.abc import Generator
 from datetime import datetime
 from unittest.mock import AsyncMock, patch
 from zoneinfo import ZoneInfo
 
 from israelrailapi.api import TrainRoute
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.israel_rail import CONF_DESTINATION, CONF_START, DOMAIN
 
@@ -129,54 +129,6 @@ TRAINS = [
         train_number="1238",
         departure_time=get_time(10, 50),
         arrival_time=get_time(11, 10),
-        origin_platform="1",
-        dest_platform="2",
-        origin_station="3500",
-        destination_station="3700",
-    ),
-]
-
-TRAINS_WRONG_FORMAT = [
-    get_train_route(
-        train_number="1234",
-        departure_time="2021-10-1010:10:10",
-        arrival_time="2021-10-10T10:30:10",
-        origin_platform="1",
-        dest_platform="2",
-        origin_station="3500",
-        destination_station="3700",
-    ),
-    get_train_route(
-        train_number="1235",
-        departure_time="2021-10-1010:20:10",
-        arrival_time="2021-10-10T10:40:10",
-        origin_platform="1",
-        dest_platform="2",
-        origin_station="3500",
-        destination_station="3700",
-    ),
-    get_train_route(
-        train_number="1236",
-        departure_time="2021-10-1010:30:10",
-        arrival_time="2021-10-10T10:50:10",
-        origin_platform="1",
-        dest_platform="2",
-        origin_station="3500",
-        destination_station="3700",
-    ),
-    get_train_route(
-        train_number="1237",
-        departure_time="2021-10-1010:40:10",
-        arrival_time="2021-10-10T11:00:10",
-        origin_platform="1",
-        dest_platform="2",
-        origin_station="3500",
-        destination_station="3700",
-    ),
-    get_train_route(
-        train_number="1238",
-        departure_time="2021-10-1010:50:10",
-        arrival_time="2021-10-10T11:10:10",
         origin_platform="1",
         dest_platform="2",
         origin_station="3500",

@@ -33,7 +33,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import (
-    DOMAIN as HA_DOMAIN,
+    DOMAIN as HOMEASSISTANT_DOMAIN,
     Event,
     EventStateChangedData,
     HomeAssistant,
@@ -554,12 +554,14 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
     async def _async_device_turn_on(self) -> None:
         """Turn humidifier toggleable device on."""
         data = {ATTR_ENTITY_ID: self._switch_entity_id}
-        await self.hass.services.async_call(HA_DOMAIN, SERVICE_TURN_ON, data)
+        await self.hass.services.async_call(HOMEASSISTANT_DOMAIN, SERVICE_TURN_ON, data)
 
     async def _async_device_turn_off(self) -> None:
         """Turn humidifier toggleable device off."""
         data = {ATTR_ENTITY_ID: self._switch_entity_id}
-        await self.hass.services.async_call(HA_DOMAIN, SERVICE_TURN_OFF, data)
+        await self.hass.services.async_call(
+            HOMEASSISTANT_DOMAIN, SERVICE_TURN_OFF, data
+        )
 
     async def async_set_mode(self, mode: str) -> None:
         """Set new mode.

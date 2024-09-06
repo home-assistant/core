@@ -30,30 +30,28 @@ from tests.components.logbook.common import MockRow, mock_humanify
     "sensor_payload",
     [
         {
-            "1": {
-                "config": {
-                    "armed": "disarmed",
-                    "enrolled": 0,
-                    "on": True,
-                    "panel": "disarmed",
-                    "pending": [],
-                    "reachable": True,
-                },
-                "ep": 1,
-                "etag": "3c4008d74035dfaa1f0bb30d24468b12",
-                "lastseen": "2021-04-02T13:07Z",
-                "manufacturername": "Universal Electronics Inc",
-                "modelid": "URC4450BC0-X-R",
-                "name": "Keypad",
-                "state": {
-                    "action": "armed_away,1111,55",
-                    "lastupdated": "2021-04-02T13:08:18.937",
-                    "lowbattery": False,
-                    "tampered": True,
-                },
-                "type": "ZHAAncillaryControl",
-                "uniqueid": "00:0d:6f:00:13:4f:61:39-01-0501",
-            }
+            "config": {
+                "armed": "disarmed",
+                "enrolled": 0,
+                "on": True,
+                "panel": "disarmed",
+                "pending": [],
+                "reachable": True,
+            },
+            "ep": 1,
+            "etag": "3c4008d74035dfaa1f0bb30d24468b12",
+            "lastseen": "2021-04-02T13:07Z",
+            "manufacturername": "Universal Electronics Inc",
+            "modelid": "URC4450BC0-X-R",
+            "name": "Keypad",
+            "state": {
+                "action": "armed_away,1111,55",
+                "lastupdated": "2021-04-02T13:08:18.937",
+                "lowbattery": False,
+                "tampered": True,
+            },
+            "type": "ZHAAncillaryControl",
+            "uniqueid": "00:0d:6f:00:13:4f:61:39-01-0501",
         }
     ],
 )
@@ -64,8 +62,8 @@ async def test_humanifying_deconz_alarm_event(
     sensor_payload: dict[str, Any],
 ) -> None:
     """Test humanifying deCONZ alarm event."""
-    keypad_event_id = slugify(sensor_payload["1"]["name"])
-    keypad_serial = serial_from_unique_id(sensor_payload["1"]["uniqueid"])
+    keypad_event_id = slugify(sensor_payload["name"])
+    keypad_serial = serial_from_unique_id(sensor_payload["uniqueid"])
     keypad_entry = device_registry.async_get_device(
         identifiers={(DECONZ_DOMAIN, keypad_serial)}
     )

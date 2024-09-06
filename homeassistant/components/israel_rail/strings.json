@@ -28,8 +28,8 @@
       "departure2": {
         "name": "Departure +2"
       },
-      "transfers": {
-        "name": "Transfers"
+      "trains": {
+        "name": "Trains"
       },
       "platform": {
         "name": "Platform"

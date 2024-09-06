@@ -52,7 +52,7 @@
         "step": {
           "confirm": {
             "title": "[%key:component::seventeentrack::issues::deprecate_sensor::title%]",
-            "description": "17Track package sensors are deprecated and will be removed.\nPlease update your automations and scripts to get data using the `seventeentrack.get_packages` service call."
+            "description": "17Track package sensors are deprecated and will be removed.\nPlease update your automations and scripts to get data using the `seventeentrack.get_packages` action."
           }
         }
       }
@@ -98,6 +98,20 @@
         "config_entry_id": {
           "name": "17Track service",
           "description": "The packages will be retrieved for the selected service."
+        }
+      }
+    },
+    "archive_package": {
+      "name": "Archive package",
+      "description": "Archive a package",
+      "fields": {
+        "package_tracking_number": {
+          "name": "Package tracking number",
+          "description": "The package will be archived for the specified tracking number."
+        },
+        "config_entry_id": {
+          "name": "[%key:component::seventeentrack::services::get_packages::fields::config_entry_id::name%]",
+          "description": "The package will be archived for the selected service."
         }
       }
     }

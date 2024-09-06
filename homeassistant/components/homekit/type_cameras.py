@@ -233,8 +233,7 @@ class Camera(HomeAccessory, PyhapCamera):  # type: ignore[misc]
                 self._char_motion_detected = serv_motion.configure_char(
                     CHAR_MOTION_DETECTED, value=False
                 )
-                if not self.motion_is_event:
-                    self._async_update_motion_state(state)
+                self._async_update_motion_state(None, state)
 
         self._char_doorbell_detected = None
         self._char_doorbell_detected_switch = None
@@ -264,9 +263,7 @@ class Camera(HomeAccessory, PyhapCamera):  # type: ignore[misc]
         )
         serv_speaker = self.add_preload_service(SERV_SPEAKER)
         serv_speaker.configure_char(CHAR_MUTE, value=0)
-
-        if not self.doorbell_is_event:
-            self._async_update_doorbell_state(state)
+        self._async_update_doorbell_state(None, state)
 
     @pyhap_callback  # type: ignore[misc]
     @callback
@@ -304,20 +301,25 @@ class Camera(HomeAccessory, PyhapCamera):  # type: ignore[misc]
         self, event: Event[EventStateChangedData]
     ) -> None:
         """Handle state change event listener callback."""
-        if not state_changed_event_is_same_state(event):
-            self._async_update_motion_state(event.data["new_state"])
+        if not state_changed_event_is_same_state(event) and (
+            new_state := event.data["new_state"]
+        ):
+            self._async_update_motion_state(event.data["old_state"], new_state)
 
     @callback
-    def _async_update_motion_state(self, new_state: State | None) -> None:
+    def _async_update_motion_state(
+        self, old_state: State | None, new_state: State
+    ) -> None:
         """Handle link motion sensor state change to update HomeKit value."""
-        if not new_state:
-            return
-
         state = new_state.state
         char = self._char_motion_detected
         assert char is not None
         if self.motion_is_event:
-            if state in (STATE_UNKNOWN, STATE_UNAVAILABLE):
+            if (
+                old_state is None
+                or old_state.state == STATE_UNAVAILABLE
+                or state in (STATE_UNKNOWN, STATE_UNAVAILABLE)
+            ):
                 return
             _LOGGER.debug(
                 "%s: Set linked motion %s sensor to True/False",
@@ -348,16 +350,21 @@ class Camera(HomeAccessory, PyhapCamera):  # type: ignore[misc]
         if not state_changed_event_is_same_state(event) and (
             new_state := event.data["new_state"]
         ):
-            self._async_update_doorbell_state(new_state)
+            self._async_update_doorbell_state(event.data["old_state"], new_state)
 
     @callback
-    def _async_update_doorbell_state(self, new_state: State) -> None:
+    def _async_update_doorbell_state(
+        self, old_state: State | None, new_state: State
+    ) -> None:
         """Handle link doorbell sensor state change to update HomeKit value."""
         assert self._char_doorbell_detected
         assert self._char_doorbell_detected_switch
         state = new_state.state
         if state == STATE_ON or (
-            self.doorbell_is_event and state not in (STATE_UNKNOWN, STATE_UNAVAILABLE)
+            self.doorbell_is_event
+            and old_state is not None
+            and old_state.state != STATE_UNAVAILABLE
+            and state not in (STATE_UNKNOWN, STATE_UNAVAILABLE)
         ):
             self._char_doorbell_detected.set_value(DOORBELL_SINGLE_PRESS)
             self._char_doorbell_detected_switch.set_value(DOORBELL_SINGLE_PRESS)

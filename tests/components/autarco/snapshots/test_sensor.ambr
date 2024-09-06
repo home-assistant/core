@@ -1,5 +1,209 @@
 # serializer version: 1
-# name: test_solar_sensors[sensor.solar_energy_production_month-entry]
+# name: test_all_sensors[sensor.inverter_test_serial_1_energy_ac_output_total-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.inverter_test_serial_1_energy_ac_output_total',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Energy AC output total',
+    'platform': 'autarco',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'out_ac_energy_total',
+    'unique_id': 'test-serial-1_out_ac_energy_total',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_all_sensors[sensor.inverter_test_serial_1_energy_ac_output_total-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Inverter test-serial-1 Energy AC output total',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.inverter_test_serial_1_energy_ac_output_total',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '10379',
+  })
+# ---
+# name: test_all_sensors[sensor.inverter_test_serial_1_power_ac_output-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.inverter_test_serial_1_power_ac_output',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Power AC output',
+    'platform': 'autarco',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'out_ac_power',
+    'unique_id': 'test-serial-1_out_ac_power',
+    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+  })
+# ---
+# name: test_all_sensors[sensor.inverter_test_serial_1_power_ac_output-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Inverter test-serial-1 Power AC output',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.inverter_test_serial_1_power_ac_output',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '200',
+  })
+# ---
+# name: test_all_sensors[sensor.inverter_test_serial_2_energy_ac_output_total-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.inverter_test_serial_2_energy_ac_output_total',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Energy AC output total',
+    'platform': 'autarco',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'out_ac_energy_total',
+    'unique_id': 'test-serial-2_out_ac_energy_total',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_all_sensors[sensor.inverter_test_serial_2_energy_ac_output_total-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Inverter test-serial-2 Energy AC output total',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.inverter_test_serial_2_energy_ac_output_total',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '10379',
+  })
+# ---
+# name: test_all_sensors[sensor.inverter_test_serial_2_power_ac_output-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.inverter_test_serial_2_power_ac_output',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Power AC output',
+    'platform': 'autarco',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'out_ac_power',
+    'unique_id': 'test-serial-2_out_ac_power',
+    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+  })
+# ---
+# name: test_all_sensors[sensor.inverter_test_serial_2_power_ac_output-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Inverter test-serial-2 Power AC output',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.inverter_test_serial_2_power_ac_output',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '500',
+  })
+# ---
+# name: test_all_sensors[sensor.solar_energy_production_month-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -32,7 +236,7 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_solar_sensors[sensor.solar_energy_production_month-state]
+# name: test_all_sensors[sensor.solar_energy_production_month-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
@@ -47,7 +251,7 @@
     'state': '58',
   })
 # ---
-# name: test_solar_sensors[sensor.solar_energy_production_today-entry]
+# name: test_all_sensors[sensor.solar_energy_production_today-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -80,7 +284,7 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_solar_sensors[sensor.solar_energy_production_today-state]
+# name: test_all_sensors[sensor.solar_energy_production_today-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
@@ -95,7 +299,7 @@
     'state': '4',
   })
 # ---
-# name: test_solar_sensors[sensor.solar_energy_production_total-entry]
+# name: test_all_sensors[sensor.solar_energy_production_total-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -130,7 +334,7 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_solar_sensors[sensor.solar_energy_production_total-state]
+# name: test_all_sensors[sensor.solar_energy_production_total-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
@@ -146,7 +350,7 @@
     'state': '10379',
   })
 # ---
-# name: test_solar_sensors[sensor.solar_power_production-entry]
+# name: test_all_sensors[sensor.solar_power_production-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -181,7 +385,7 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_solar_sensors[sensor.solar_power_production-state]
+# name: test_all_sensors[sensor.solar_power_production-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',

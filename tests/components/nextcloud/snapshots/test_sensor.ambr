@@ -1,0 +1,3973 @@
+# serializer version: 1
+# name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_active_users_last_5_minutes-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.my_nc_url_local_amount_of_active_users_last_5_minutes',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Amount of active users last 5 minutes',
+    'platform': 'nextcloud',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'nextcloud_activeusers_last5minutes',
+    'unique_id': '1234567890abcdef#activeUsers_last5minutes',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_active_users_last_5_minutes-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'my.nc_url.local Amount of active users last 5 minutes',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_nc_url_local_amount_of_active_users_last_5_minutes',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_active_users_last_day-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.my_nc_url_local_amount_of_active_users_last_day',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Amount of active users last day',
+    'platform': 'nextcloud',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'nextcloud_activeusers_last24hours',
+    'unique_id': '1234567890abcdef#activeUsers_last24hours',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_active_users_last_day-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'my.nc_url.local Amount of active users last day',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_nc_url_local_amount_of_active_users_last_day',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_active_users_last_hour-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.my_nc_url_local_amount_of_active_users_last_hour',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Amount of active users last hour',
+    'platform': 'nextcloud',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'nextcloud_activeusers_last1hour',
+    'unique_id': '1234567890abcdef#activeUsers_last1hour',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_active_users_last_hour-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'my.nc_url.local Amount of active users last hour',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_nc_url_local_amount_of_active_users_last_hour',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_files-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.my_nc_url_local_amount_of_files',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Amount of files',
+    'platform': 'nextcloud',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'nextcloud_storage_num_files',
+    'unique_id': '1234567890abcdef#storage_num_files',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_files-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'my.nc_url.local Amount of files',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_nc_url_local_amount_of_files',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '6783',
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_group_shares-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.my_nc_url_local_amount_of_group_shares',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Amount of group shares',
+    'platform': 'nextcloud',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'nextcloud_shares_num_shares_groups',
+    'unique_id': '1234567890abcdef#shares_num_shares_groups',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_group_shares-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'my.nc_url.local Amount of group shares',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_nc_url_local_amount_of_group_shares',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_link_shares-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.my_nc_url_local_amount_of_link_shares',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Amount of link shares',
+    'platform': 'nextcloud',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'nextcloud_shares_num_shares_link',
+    'unique_id': '1234567890abcdef#shares_num_shares_link',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_link_shares-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'my.nc_url.local Amount of link shares',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_nc_url_local_amount_of_link_shares',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2',
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_local_storages-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.my_nc_url_local_amount_of_local_storages',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Amount of local storages',
+    'platform': 'nextcloud',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'nextcloud_storage_num_storages_local',
+    'unique_id': '1234567890abcdef#storage_num_storages_local',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_local_storages-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'my.nc_url.local Amount of local storages',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_nc_url_local_amount_of_local_storages',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1',
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_mail_shares-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.my_nc_url_local_amount_of_mail_shares',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Amount of mail shares',
+    'platform': 'nextcloud',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'nextcloud_shares_num_shares_mail',
+    'unique_id': '1234567890abcdef#shares_num_shares_mail',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_mail_shares-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'my.nc_url.local Amount of mail shares',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_nc_url_local_amount_of_mail_shares',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_other_storages-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.my_nc_url_local_amount_of_other_storages',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Amount of other storages',
+    'platform': 'nextcloud',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'nextcloud_storage_num_storages_other',
+    'unique_id': '1234567890abcdef#storage_num_storages_other',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_other_storages-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'my.nc_url.local Amount of other storages',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_nc_url_local_amount_of_other_storages',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1',
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_passwordless_link_shares-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.my_nc_url_local_amount_of_passwordless_link_shares',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Amount of passwordless link shares',
+    'platform': 'nextcloud',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'nextcloud_shares_num_shares_link_no_password',
+    'unique_id': '1234567890abcdef#shares_num_shares_link_no_password',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_passwordless_link_shares-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'my.nc_url.local Amount of passwordless link shares',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_nc_url_local_amount_of_passwordless_link_shares',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2',
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_room_shares-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.my_nc_url_local_amount_of_room_shares',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Amount of room shares',
+    'platform': 'nextcloud',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'nextcloud_shares_num_shares_room',
+    'unique_id': '1234567890abcdef#shares_num_shares_room',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_room_shares-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'my.nc_url.local Amount of room shares',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_nc_url_local_amount_of_room_shares',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_shares-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.my_nc_url_local_amount_of_shares',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Amount of shares',
+    'platform': 'nextcloud',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'nextcloud_shares_num_shares',
+    'unique_id': '1234567890abcdef#shares_num_shares',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_shares-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'my.nc_url.local Amount of shares',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_nc_url_local_amount_of_shares',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2',
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_shares_received-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.my_nc_url_local_amount_of_shares_received',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Amount of shares received',
+    'platform': 'nextcloud',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'nextcloud_shares_num_fed_shares_received',
+    'unique_id': '1234567890abcdef#shares_num_fed_shares_received',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_shares_received-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'my.nc_url.local Amount of shares received',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_nc_url_local_amount_of_shares_received',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1',
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_shares_sent-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.my_nc_url_local_amount_of_shares_sent',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Amount of shares sent',
+    'platform': 'nextcloud',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'nextcloud_shares_num_fed_shares_sent',
+    'unique_id': '1234567890abcdef#shares_num_fed_shares_sent',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_shares_sent-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'my.nc_url.local Amount of shares sent',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_nc_url_local_amount_of_shares_sent',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_storages-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.my_nc_url_local_amount_of_storages',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Amount of storages',
+    'platform': 'nextcloud',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'nextcloud_storage_num_storages',
+    'unique_id': '1234567890abcdef#storage_num_storages',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_storages-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'my.nc_url.local Amount of storages',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_nc_url_local_amount_of_storages',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '4',
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_storages_at_home-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.my_nc_url_local_amount_of_storages_at_home',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Amount of storages at home',
+    'platform': 'nextcloud',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'nextcloud_storage_num_storages_home',
+    'unique_id': '1234567890abcdef#storage_num_storages_home',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_storages_at_home-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'my.nc_url.local Amount of storages at home',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_nc_url_local_amount_of_storages_at_home',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2',
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_user-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.my_nc_url_local_amount_of_user',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Amount of user',
+    'platform': 'nextcloud',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'nextcloud_storage_num_users',
+    'unique_id': '1234567890abcdef#storage_num_users',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_user-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'my.nc_url.local Amount of user',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_nc_url_local_amount_of_user',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2',
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_user_shares-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.my_nc_url_local_amount_of_user_shares',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Amount of user shares',
+    'platform': 'nextcloud',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'nextcloud_shares_num_shares_user',
+    'unique_id': '1234567890abcdef#shares_num_shares_user',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_user_shares-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'my.nc_url.local Amount of user shares',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_nc_url_local_amount_of_user_shares',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_apps_installed-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.my_nc_url_local_apps_installed',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Apps installed',
+    'platform': 'nextcloud',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'nextcloud_system_apps_num_installed',
+    'unique_id': '1234567890abcdef#system_apps_num_installed',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_apps_installed-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'my.nc_url.local Apps installed',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_nc_url_local_apps_installed',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '41',
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_cache_expunges-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.my_nc_url_local_cache_expunges',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Cache expunges',
+    'platform': 'nextcloud',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'nextcloud_cache_expunges',
+    'unique_id': '1234567890abcdef#cache_expunges',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_cache_expunges-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'my.nc_url.local Cache expunges',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_nc_url_local_cache_expunges',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_cache_memory-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.my_nc_url_local_cache_memory',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Cache memory',
+    'platform': 'nextcloud',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'nextcloud_cache_memory_type',
+    'unique_id': '1234567890abcdef#cache_memory_type',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_cache_memory-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'my.nc_url.local Cache memory',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_nc_url_local_cache_memory',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'mmap',
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_cache_memory_size-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.my_nc_url_local_cache_memory_size',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
+    'original_icon': None,
+    'original_name': 'Cache memory size',
+    'platform': 'nextcloud',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'nextcloud_cache_mem_size',
+    'unique_id': '1234567890abcdef#cache_mem_size',
+    'unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_cache_memory_size-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'data_size',
+      'friendly_name': 'my.nc_url.local Cache memory size',
+      'unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_nc_url_local_cache_memory_size',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.175296',
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_cache_number_of_entires-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.my_nc_url_local_cache_number_of_entires',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Cache number of entires',
+    'platform': 'nextcloud',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'nextcloud_cache_num_entries',
+    'unique_id': '1234567890abcdef#cache_num_entries',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_cache_number_of_entires-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'my.nc_url.local Cache number of entires',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_nc_url_local_cache_number_of_entires',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '102',
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_cache_number_of_hits-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.my_nc_url_local_cache_number_of_hits',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Cache number of hits',
+    'platform': 'nextcloud',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'nextcloud_cache_num_hits',
+    'unique_id': '1234567890abcdef#cache_num_hits',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_cache_number_of_hits-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'my.nc_url.local Cache number of hits',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_nc_url_local_cache_number_of_hits',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '590911',
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_cache_number_of_inserts-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.my_nc_url_local_cache_number_of_inserts',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Cache number of inserts',
+    'platform': 'nextcloud',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'nextcloud_cache_num_inserts',
+    'unique_id': '1234567890abcdef#cache_num_inserts',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_cache_number_of_inserts-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'my.nc_url.local Cache number of inserts',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_nc_url_local_cache_number_of_inserts',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '55421',
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_cache_number_of_misses-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.my_nc_url_local_cache_number_of_misses',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Cache number of misses',
+    'platform': 'nextcloud',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'nextcloud_cache_num_misses',
+    'unique_id': '1234567890abcdef#cache_num_misses',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_cache_number_of_misses-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'my.nc_url.local Cache number of misses',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_nc_url_local_cache_number_of_misses',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '55250',
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_cache_number_of_slots-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.my_nc_url_local_cache_number_of_slots',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Cache number of slots',
+    'platform': 'nextcloud',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'nextcloud_cache_num_slots',
+    'unique_id': '1234567890abcdef#cache_num_slots',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_cache_number_of_slots-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'my.nc_url.local Cache number of slots',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_nc_url_local_cache_number_of_slots',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '4099',
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_cache_start_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.my_nc_url_local_cache_start_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Cache start time',
+    'platform': 'nextcloud',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'nextcloud_cache_start_time',
+    'unique_id': '1234567890abcdef#cache_start_time',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_cache_start_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'my.nc_url.local Cache start time',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_nc_url_local_cache_start_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2024-07-29T03:00:08+00:00',
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_cache_ttl-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.my_nc_url_local_cache_ttl',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Cache ttl',
+    'platform': 'nextcloud',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'nextcloud_cache_ttl',
+    'unique_id': '1234567890abcdef#cache_ttl',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_cache_ttl-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'my.nc_url.local Cache ttl',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_nc_url_local_cache_ttl',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_cpu_load_last_15_minutes-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.my_nc_url_local_cpu_load_last_15_minutes',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'CPU Load last 15 minutes',
+    'platform': 'nextcloud',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'nextcloud_system_cpuload_15',
+    'unique_id': '1234567890abcdef#system_cpuload_15',
+    'unit_of_measurement': 'load',
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_cpu_load_last_15_minutes-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'my.nc_url.local CPU Load last 15 minutes',
+      'unit_of_measurement': 'load',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_nc_url_local_cpu_load_last_15_minutes',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1.45263671875',
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_cpu_load_last_1_minute-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.my_nc_url_local_cpu_load_last_1_minute',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'CPU Load last 1 minute',
+    'platform': 'nextcloud',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'nextcloud_system_cpuload_1',
+    'unique_id': '1234567890abcdef#system_cpuload_1',
+    'unit_of_measurement': 'load',
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_cpu_load_last_1_minute-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'my.nc_url.local CPU Load last 1 minute',
+      'unit_of_measurement': 'load',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_nc_url_local_cpu_load_last_1_minute',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2.06640625',
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_cpu_load_last_5_minutes-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.my_nc_url_local_cpu_load_last_5_minutes',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'CPU Load last 5 minutes',
+    'platform': 'nextcloud',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'nextcloud_system_cpuload_5',
+    'unique_id': '1234567890abcdef#system_cpuload_5',
+    'unit_of_measurement': 'load',
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_cpu_load_last_5_minutes-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'my.nc_url.local CPU Load last 5 minutes',
+      'unit_of_measurement': 'load',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_nc_url_local_cpu_load_last_5_minutes',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1.58447265625',
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_database_size-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.my_nc_url_local_database_size',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
+    'original_icon': None,
+    'original_name': 'Database size',
+    'platform': 'nextcloud',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'nextcloud_database_size',
+    'unique_id': '1234567890abcdef#database_size',
+    'unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_database_size-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'data_size',
+      'friendly_name': 'my.nc_url.local Database size',
+      'unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_nc_url_local_database_size',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '4.784128',
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_database_type-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.my_nc_url_local_database_type',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Database type',
+    'platform': 'nextcloud',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'nextcloud_database_type',
+    'unique_id': '1234567890abcdef#database_type',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_database_type-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'my.nc_url.local Database type',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_nc_url_local_database_type',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'sqlite3',
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_database_version-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.my_nc_url_local_database_version',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Database version',
+    'platform': 'nextcloud',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'nextcloud_database_version',
+    'unique_id': '1234567890abcdef#database_version',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_database_version-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'my.nc_url.local Database version',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_nc_url_local_database_version',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3.40.1',
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_free_memory-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.my_nc_url_local_free_memory',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfInformation.GIGABYTES: 'GB'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
+    'original_icon': None,
+    'original_name': 'Free memory',
+    'platform': 'nextcloud',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'nextcloud_system_mem_free',
+    'unique_id': '1234567890abcdef#system_mem_free',
+    'unit_of_measurement': <UnitOfInformation.GIGABYTES: 'GB'>,
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_free_memory-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'data_size',
+      'friendly_name': 'my.nc_url.local Free memory',
+      'unit_of_measurement': <UnitOfInformation.GIGABYTES: 'GB'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_nc_url_local_free_memory',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '6.75328',
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_free_space-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.my_nc_url_local_free_space',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfInformation.GIGABYTES: 'GB'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
+    'original_icon': None,
+    'original_name': 'Free space',
+    'platform': 'nextcloud',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'nextcloud_system_freespace',
+    'unique_id': '1234567890abcdef#system_freespace',
+    'unit_of_measurement': <UnitOfInformation.GIGABYTES: 'GB'>,
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_free_space-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'data_size',
+      'friendly_name': 'my.nc_url.local Free space',
+      'unit_of_measurement': <UnitOfInformation.GIGABYTES: 'GB'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_nc_url_local_free_space',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '32.769138688',
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_free_swap_memory-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.my_nc_url_local_free_swap_memory',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfInformation.GIGABYTES: 'GB'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
+    'original_icon': None,
+    'original_name': 'Free swap memory',
+    'platform': 'nextcloud',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'nextcloud_system_swap_free',
+    'unique_id': '1234567890abcdef#system_swap_free',
+    'unit_of_measurement': <UnitOfInformation.GIGABYTES: 'GB'>,
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_free_swap_memory-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'data_size',
+      'friendly_name': 'my.nc_url.local Free swap memory',
+      'unit_of_measurement': <UnitOfInformation.GIGABYTES: 'GB'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_nc_url_local_free_swap_memory',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '10.484736',
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_interned_buffer_size-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.my_nc_url_local_interned_buffer_size',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
+    'original_icon': None,
+    'original_name': 'Interned buffer size',
+    'platform': 'nextcloud',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'nextcloud_interned_strings_usage_buffer_size',
+    'unique_id': '1234567890abcdef#interned_strings_usage_buffer_size',
+    'unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_interned_buffer_size-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'data_size',
+      'friendly_name': 'my.nc_url.local Interned buffer size',
+      'unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_nc_url_local_interned_buffer_size',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '33.554432',
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_interned_free_memory-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.my_nc_url_local_interned_free_memory',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
+    'original_icon': None,
+    'original_name': 'Interned free memory',
+    'platform': 'nextcloud',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'nextcloud_interned_strings_usage_free_memory',
+    'unique_id': '1234567890abcdef#interned_strings_usage_free_memory',
+    'unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_interned_free_memory-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'data_size',
+      'friendly_name': 'my.nc_url.local Interned free memory',
+      'unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_nc_url_local_interned_free_memory',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '20.924072',
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_interned_number_of_strings-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.my_nc_url_local_interned_number_of_strings',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Interned number of strings',
+    'platform': 'nextcloud',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'nextcloud_interned_strings_usage_number_of_strings',
+    'unique_id': '1234567890abcdef#interned_strings_usage_number_of_strings',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_interned_number_of_strings-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'my.nc_url.local Interned number of strings',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_nc_url_local_interned_number_of_strings',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '69242',
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_interned_used_memory-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.my_nc_url_local_interned_used_memory',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
+    'original_icon': None,
+    'original_name': 'Interned used memory',
+    'platform': 'nextcloud',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'nextcloud_interned_strings_usage_used_memory',
+    'unique_id': '1234567890abcdef#interned_strings_usage_used_memory',
+    'unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_interned_used_memory-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'data_size',
+      'friendly_name': 'my.nc_url.local Interned used memory',
+      'unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_nc_url_local_interned_used_memory',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '12.63036',
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_jit_buffer_free-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.my_nc_url_local_jit_buffer_free',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
+    'original_icon': None,
+    'original_name': 'JIT buffer free',
+    'platform': 'nextcloud',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'nextcloud_jit_buffer_free',
+    'unique_id': '1234567890abcdef#jit_buffer_free',
+    'unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_jit_buffer_free-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'data_size',
+      'friendly_name': 'my.nc_url.local JIT buffer free',
+      'unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_nc_url_local_jit_buffer_free',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '133.190688',
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_jit_buffer_size-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.my_nc_url_local_jit_buffer_size',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
+    'original_icon': None,
+    'original_name': 'JIT buffer size',
+    'platform': 'nextcloud',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'nextcloud_jit_buffer_size',
+    'unique_id': '1234567890abcdef#jit_buffer_size',
+    'unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_jit_buffer_size-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'data_size',
+      'friendly_name': 'my.nc_url.local JIT buffer size',
+      'unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_nc_url_local_jit_buffer_size',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '134.217712',
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_jit_kind-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.my_nc_url_local_jit_kind',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'JIT kind',
+    'platform': 'nextcloud',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'nextcloud_jit_kind',
+    'unique_id': '1234567890abcdef#jit_kind',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_jit_kind-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'my.nc_url.local JIT kind',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_nc_url_local_jit_kind',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '5',
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_jit_opt_flags-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.my_nc_url_local_jit_opt_flags',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'JIT opt flags',
+    'platform': 'nextcloud',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'nextcloud_jit_opt_flags',
+    'unique_id': '1234567890abcdef#jit_opt_flags',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_jit_opt_flags-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'my.nc_url.local JIT opt flags',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_nc_url_local_jit_opt_flags',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '6',
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_jit_opt_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.my_nc_url_local_jit_opt_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'JIT opt level',
+    'platform': 'nextcloud',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'nextcloud_jit_opt_level',
+    'unique_id': '1234567890abcdef#jit_opt_level',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_jit_opt_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'my.nc_url.local JIT opt level',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_nc_url_local_jit_opt_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '5',
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_opcache_blacklist_miss_ratio-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.my_nc_url_local_opcache_blacklist_miss_ratio',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Opcache blacklist miss ratio',
+    'platform': 'nextcloud',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'nextcloud_opcache_statistics_blacklist_miss_ratio',
+    'unique_id': '1234567890abcdef#opcache_statistics_blacklist_miss_ratio',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_opcache_blacklist_miss_ratio-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'my.nc_url.local Opcache blacklist miss ratio',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_nc_url_local_opcache_blacklist_miss_ratio',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_opcache_blacklist_misses-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.my_nc_url_local_opcache_blacklist_misses',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Opcache blacklist misses',
+    'platform': 'nextcloud',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'nextcloud_opcache_statistics_blacklist_misses',
+    'unique_id': '1234567890abcdef#opcache_statistics_blacklist_misses',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_opcache_blacklist_misses-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'my.nc_url.local Opcache blacklist misses',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_nc_url_local_opcache_blacklist_misses',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_opcache_cached_keys-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.my_nc_url_local_opcache_cached_keys',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Opcache cached keys',
+    'platform': 'nextcloud',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'nextcloud_opcache_statistics_num_cached_keys',
+    'unique_id': '1234567890abcdef#opcache_statistics_num_cached_keys',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_opcache_cached_keys-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'my.nc_url.local Opcache cached keys',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_nc_url_local_opcache_cached_keys',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2654',
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_opcache_cached_scripts-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.my_nc_url_local_opcache_cached_scripts',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Opcache cached scripts',
+    'platform': 'nextcloud',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'nextcloud_opcache_statistics_num_cached_scripts',
+    'unique_id': '1234567890abcdef#opcache_statistics_num_cached_scripts',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_opcache_cached_scripts-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'my.nc_url.local Opcache cached scripts',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_nc_url_local_opcache_cached_scripts',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1406',
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_opcache_current_wasted_percentage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.my_nc_url_local_opcache_current_wasted_percentage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Opcache current wasted percentage',
+    'platform': 'nextcloud',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'nextcloud_server_php_opcache_memory_usage_current_wasted_percentage',
+    'unique_id': '1234567890abcdef#server_php_opcache_memory_usage_current_wasted_percentage',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_opcache_current_wasted_percentage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'my.nc_url.local Opcache current wasted percentage',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_nc_url_local_opcache_current_wasted_percentage',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_opcache_free_memory-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.my_nc_url_local_opcache_free_memory',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
+    'original_icon': None,
+    'original_name': 'Opcache free memory',
+    'platform': 'nextcloud',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'nextcloud_server_php_opcache_memory_usage_free_memory',
+    'unique_id': '1234567890abcdef#server_php_opcache_memory_usage_free_memory',
+    'unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_opcache_free_memory-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'data_size',
+      'friendly_name': 'my.nc_url.local Opcache free memory',
+      'unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_nc_url_local_opcache_free_memory',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '62.190616',
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_opcache_hash_restarts-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.my_nc_url_local_opcache_hash_restarts',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Opcache hash restarts',
+    'platform': 'nextcloud',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'nextcloud_opcache_statistics_hash_restarts',
+    'unique_id': '1234567890abcdef#opcache_statistics_hash_restarts',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_opcache_hash_restarts-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'my.nc_url.local Opcache hash restarts',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_nc_url_local_opcache_hash_restarts',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_opcache_hit_rate-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.my_nc_url_local_opcache_hit_rate',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Opcache hit rate',
+    'platform': 'nextcloud',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'nextcloud_opcache_statistics_opcache_hit_rate',
+    'unique_id': '1234567890abcdef#opcache_statistics_opcache_hit_rate',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_opcache_hit_rate-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'my.nc_url.local Opcache hit rate',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_nc_url_local_opcache_hit_rate',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '99.9855667222406',
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_opcache_hits-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.my_nc_url_local_opcache_hits',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Opcache hits',
+    'platform': 'nextcloud',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'nextcloud_opcache_statistics_hits',
+    'unique_id': '1234567890abcdef#opcache_statistics_hits',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_opcache_hits-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'my.nc_url.local Opcache hits',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_nc_url_local_opcache_hits',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '9739971',
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_opcache_last_restart_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.my_nc_url_local_opcache_last_restart_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Opcache last restart time',
+    'platform': 'nextcloud',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'nextcloud_opcache_statistics_last_restart_time',
+    'unique_id': '1234567890abcdef#opcache_statistics_last_restart_time',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_opcache_last_restart_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'my.nc_url.local Opcache last restart time',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_nc_url_local_opcache_last_restart_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1970-01-01T00:00:00+00:00',
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_opcache_manual_restarts-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.my_nc_url_local_opcache_manual_restarts',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Opcache manual restarts',
+    'platform': 'nextcloud',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'nextcloud_opcache_statistics_manual_restarts',
+    'unique_id': '1234567890abcdef#opcache_statistics_manual_restarts',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_opcache_manual_restarts-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'my.nc_url.local Opcache manual restarts',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_nc_url_local_opcache_manual_restarts',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_opcache_max_cached_keys-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.my_nc_url_local_opcache_max_cached_keys',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Opcache max cached keys',
+    'platform': 'nextcloud',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'nextcloud_opcache_statistics_max_cached_keys',
+    'unique_id': '1234567890abcdef#opcache_statistics_max_cached_keys',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_opcache_max_cached_keys-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'my.nc_url.local Opcache max cached keys',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_nc_url_local_opcache_max_cached_keys',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '16229',
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_opcache_misses-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.my_nc_url_local_opcache_misses',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Opcache misses',
+    'platform': 'nextcloud',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'nextcloud_opcache_statistics_misses',
+    'unique_id': '1234567890abcdef#opcache_statistics_misses',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_opcache_misses-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'my.nc_url.local Opcache misses',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_nc_url_local_opcache_misses',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1406',
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_opcache_out_of_memory_restarts-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.my_nc_url_local_opcache_out_of_memory_restarts',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Opcache out of memory restarts',
+    'platform': 'nextcloud',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'nextcloud_opcache_statistics_oom_restarts',
+    'unique_id': '1234567890abcdef#opcache_statistics_oom_restarts',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_opcache_out_of_memory_restarts-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'my.nc_url.local Opcache out of memory restarts',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_nc_url_local_opcache_out_of_memory_restarts',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_opcache_start_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.my_nc_url_local_opcache_start_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Opcache start time',
+    'platform': 'nextcloud',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'nextcloud_opcache_statistics_start_time',
+    'unique_id': '1234567890abcdef#opcache_statistics_start_time',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_opcache_start_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'my.nc_url.local Opcache start time',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_nc_url_local_opcache_start_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2024-07-29T03:00:08+00:00',
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_opcache_used_memory-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.my_nc_url_local_opcache_used_memory',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
+    'original_icon': None,
+    'original_name': 'Opcache used memory',
+    'platform': 'nextcloud',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'nextcloud_server_php_opcache_memory_usage_used_memory',
+    'unique_id': '1234567890abcdef#server_php_opcache_memory_usage_used_memory',
+    'unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_opcache_used_memory-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'data_size',
+      'friendly_name': 'my.nc_url.local Opcache used memory',
+      'unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_nc_url_local_opcache_used_memory',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '72.027112',
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_opcache_wasted_memory-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.my_nc_url_local_opcache_wasted_memory',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
+    'original_icon': None,
+    'original_name': 'Opcache wasted memory',
+    'platform': 'nextcloud',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'nextcloud_server_php_opcache_memory_usage_wasted_memory',
+    'unique_id': '1234567890abcdef#server_php_opcache_memory_usage_wasted_memory',
+    'unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_opcache_wasted_memory-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'data_size',
+      'friendly_name': 'my.nc_url.local Opcache wasted memory',
+      'unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_nc_url_local_opcache_wasted_memory',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_php_max_execution_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.my_nc_url_local_php_max_execution_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'PHP max execution time',
+    'platform': 'nextcloud',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'nextcloud_server_php_max_execution_time',
+    'unique_id': '1234567890abcdef#server_php_max_execution_time',
+    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_php_max_execution_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'my.nc_url.local PHP max execution time',
+      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_nc_url_local_php_max_execution_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3600',
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_php_memory_limit-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.my_nc_url_local_php_memory_limit',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
+    'original_icon': None,
+    'original_name': 'PHP memory limit',
+    'platform': 'nextcloud',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'nextcloud_server_php_memory_limit',
+    'unique_id': '1234567890abcdef#server_php_memory_limit',
+    'unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_php_memory_limit-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'data_size',
+      'friendly_name': 'my.nc_url.local PHP memory limit',
+      'unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_nc_url_local_php_memory_limit',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '536.870912',
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_php_upload_maximum_filesize-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.my_nc_url_local_php_upload_maximum_filesize',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
+    'original_icon': None,
+    'original_name': 'PHP upload maximum filesize',
+    'platform': 'nextcloud',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'nextcloud_server_php_upload_max_filesize',
+    'unique_id': '1234567890abcdef#server_php_upload_max_filesize',
+    'unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_php_upload_maximum_filesize-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'data_size',
+      'friendly_name': 'my.nc_url.local PHP upload maximum filesize',
+      'unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_nc_url_local_php_upload_maximum_filesize',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '536.870912',
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_php_version-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.my_nc_url_local_php_version',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'PHP version',
+    'platform': 'nextcloud',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'nextcloud_server_php_version',
+    'unique_id': '1234567890abcdef#server_php_version',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_php_version-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'my.nc_url.local PHP version',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_nc_url_local_php_version',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '8.2.18',
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_sma_available_memory-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.my_nc_url_local_sma_available_memory',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
+    'original_icon': None,
+    'original_name': 'SMA available memory',
+    'platform': 'nextcloud',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'nextcloud_sma_avail_mem',
+    'unique_id': '1234567890abcdef#sma_avail_mem',
+    'unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_sma_available_memory-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'data_size',
+      'friendly_name': 'my.nc_url.local SMA available memory',
+      'unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_nc_url_local_sma_available_memory',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '33.342368',
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_sma_number_of_segments-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.my_nc_url_local_sma_number_of_segments',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'SMA number of segments',
+    'platform': 'nextcloud',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'nextcloud_sma_num_seg',
+    'unique_id': '1234567890abcdef#sma_num_seg',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_sma_number_of_segments-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'my.nc_url.local SMA number of segments',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_nc_url_local_sma_number_of_segments',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1',
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_sma_segment_size-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.my_nc_url_local_sma_segment_size',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
+    'original_icon': None,
+    'original_name': 'SMA segment size',
+    'platform': 'nextcloud',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'nextcloud_sma_seg_size',
+    'unique_id': '1234567890abcdef#sma_seg_size',
+    'unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_sma_segment_size-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'data_size',
+      'friendly_name': 'my.nc_url.local SMA segment size',
+      'unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_nc_url_local_sma_segment_size',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '33.554312',
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_system_memcache_distributed-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.my_nc_url_local_system_memcache_distributed',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'System memcache distributed',
+    'platform': 'nextcloud',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'nextcloud_system_memcache_distributed',
+    'unique_id': '1234567890abcdef#system_memcache.distributed',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_system_memcache_distributed-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'my.nc_url.local System memcache distributed',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_nc_url_local_system_memcache_distributed',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'none',
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_system_memcache_local-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.my_nc_url_local_system_memcache_local',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'System memcache local',
+    'platform': 'nextcloud',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'nextcloud_system_memcache_local',
+    'unique_id': '1234567890abcdef#system_memcache.local',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_system_memcache_local-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'my.nc_url.local System memcache local',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_nc_url_local_system_memcache_local',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '\\OC\\Memcache\\APCu',
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_system_memcache_locking-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.my_nc_url_local_system_memcache_locking',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'System memcache locking',
+    'platform': 'nextcloud',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'nextcloud_system_memcache_locking',
+    'unique_id': '1234567890abcdef#system_memcache.locking',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_system_memcache_locking-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'my.nc_url.local System memcache locking',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_nc_url_local_system_memcache_locking',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'none',
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_system_theme-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.my_nc_url_local_system_theme',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'System theme',
+    'platform': 'nextcloud',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'nextcloud_system_theme',
+    'unique_id': '1234567890abcdef#system_theme',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_system_theme-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'my.nc_url.local System theme',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_nc_url_local_system_theme',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '',
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_system_version-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.my_nc_url_local_system_version',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'System version',
+    'platform': 'nextcloud',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'nextcloud_system_version',
+    'unique_id': '1234567890abcdef#system_version',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_system_version-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'my.nc_url.local System version',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_nc_url_local_system_version',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '28.0.4.1',
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_total_memory-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.my_nc_url_local_total_memory',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfInformation.GIGABYTES: 'GB'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
+    'original_icon': None,
+    'original_name': 'Total memory',
+    'platform': 'nextcloud',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'nextcloud_system_mem_total',
+    'unique_id': '1234567890abcdef#system_mem_total',
+    'unit_of_measurement': <UnitOfInformation.GIGABYTES: 'GB'>,
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_total_memory-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'data_size',
+      'friendly_name': 'my.nc_url.local Total memory',
+      'unit_of_measurement': <UnitOfInformation.GIGABYTES: 'GB'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_nc_url_local_total_memory',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '30.728192',
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_total_swap_memory-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.my_nc_url_local_total_swap_memory',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfInformation.GIGABYTES: 'GB'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
+    'original_icon': None,
+    'original_name': 'Total swap memory',
+    'platform': 'nextcloud',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'nextcloud_system_swap_total',
+    'unique_id': '1234567890abcdef#system_swap_total',
+    'unit_of_measurement': <UnitOfInformation.GIGABYTES: 'GB'>,
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_total_swap_memory-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'data_size',
+      'friendly_name': 'my.nc_url.local Total swap memory',
+      'unit_of_measurement': <UnitOfInformation.GIGABYTES: 'GB'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_nc_url_local_total_swap_memory',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '10.484736',
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_updates_available-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.my_nc_url_local_updates_available',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Updates available',
+    'platform': 'nextcloud',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'nextcloud_system_apps_num_updates_available',
+    'unique_id': '1234567890abcdef#system_apps_num_updates_available',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_updates_available-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'my.nc_url.local Updates available',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_nc_url_local_updates_available',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_webserver-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.my_nc_url_local_webserver',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Webserver',
+    'platform': 'nextcloud',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'nextcloud_server_webserver',
+    'unique_id': '1234567890abcdef#server_webserver',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_async_setup_entry[sensor.my_nc_url_local_webserver-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'my.nc_url.local Webserver',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_nc_url_local_webserver',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Apache/2.4.57 (Debian)',
+  })
+# ---
