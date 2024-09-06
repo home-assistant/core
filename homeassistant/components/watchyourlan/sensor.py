@@ -5,11 +5,10 @@ from typing import Any
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
 from .coordinator import WatchYourLANUpdateCoordinator
 
 # Define entity descriptions for each sensor type
@@ -90,7 +89,9 @@ class WatchYourLANGenericSensor(
     def device_info(self) -> DeviceInfo:
         """Return device info for the sensor."""
         return DeviceInfo(
-            identifiers={(DOMAIN, self.device.get("ID", "Unknown"))},
+            connections={
+                (CONNECTION_NETWORK_MAC, self.device.get("Mac", "00:00:00:00:00:00"))
+            },
             name=self.device.get("Name")
             or f"WatchYourLAN {self.device.get('ID', 'Unknown')}",
             manufacturer=self.device.get("Hw", "Unknown Manufacturer"),
