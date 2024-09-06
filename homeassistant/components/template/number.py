@@ -31,7 +31,7 @@ from homeassistant.helpers.script import Script
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import TriggerUpdateCoordinator
-from .const import DOMAIN
+from .const import CONF_MAX, CONF_MIN, CONF_STEP, DOMAIN
 from .template_entity import (
     TEMPLATE_ENTITY_AVAILABILITY_SCHEMA,
     TEMPLATE_ENTITY_ICON_SCHEMA,
@@ -42,9 +42,6 @@ from .trigger_entity import TriggerEntity
 _LOGGER = logging.getLogger(__name__)
 
 CONF_SET_VALUE = "set_value"
-CONF_MIN = "min"
-CONF_MAX = "max"
-CONF_STEP = "step"
 
 DEFAULT_NAME = "Template Number"
 DEFAULT_OPTIMISTIC = False

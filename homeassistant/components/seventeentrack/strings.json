@@ -100,6 +100,20 @@
           "description": "The packages will be retrieved for the selected service."
         }
       }
+    },
+    "archive_package": {
+      "name": "Archive package",
+      "description": "Archive a package",
+      "fields": {
+        "package_tracking_number": {
+          "name": "Package tracking number",
+          "description": "The package will be archived for the specified tracking number."
+        },
+        "config_entry_id": {
+          "name": "[%key:component::seventeentrack::services::get_packages::fields::config_entry_id::name%]",
+          "description": "The package will be archived for the selected service."
+        }
+      }
     }
   },
   "selector": {

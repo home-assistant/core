@@ -28,7 +28,7 @@ from homeassistant.util.dt import utcnow
 
 from . import LinkPlayConfigEntry
 from .const import DOMAIN, SERVICE_PRESET, SERVICE_PRESET_SCHEMA
-from .utils import get_info_from_project
+from .utils import MANUFACTURER_GENERIC, get_info_from_project
 
 _LOGGER = logging.getLogger(__name__)
 STATE_MAP: dict[PlayingStatus, MediaPlayerState] = {
@@ -59,6 +59,7 @@ SOURCE_MAP: dict[PlayingMode, str] = {
     PlayingMode.FM: "FM Radio",
     PlayingMode.RCA: "RCA",
     PlayingMode.UDISK: "USB",
+    PlayingMode.FOLLOWER: "Follower",
 }
 
 SOURCE_MAP_INV: dict[str, PlayingMode] = {v: k for k, v in SOURCE_MAP.items()}
@@ -159,6 +160,9 @@ class LinkPlayMediaPlayerEntity(MediaPlayerEntity):
         ]
 
         manufacturer, model = get_info_from_project(bridge.device.properties["project"])
+        if model != MANUFACTURER_GENERIC:
+            model_id = bridge.device.properties["project"]
+
         self._attr_device_info = dr.DeviceInfo(
             configuration_url=bridge.endpoint,
             connections={(dr.CONNECTION_NETWORK_MAC, bridge.device.properties["MAC"])},
@@ -166,6 +170,7 @@ class LinkPlayMediaPlayerEntity(MediaPlayerEntity):
             identifiers={(DOMAIN, bridge.device.uuid)},
             manufacturer=manufacturer,
             model=model,
+            model_id=model_id,
             name=bridge.device.name,
             sw_version=bridge.device.properties["firmware"],
         )
