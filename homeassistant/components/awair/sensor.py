@@ -293,6 +293,7 @@ class AwairSensor(CoordinatorEntity[AwairDataUpdateCoordinator], SensorEntity):
             identifiers={(DOMAIN, self._device.uuid)},
             manufacturer="Awair",
             model=self._device.model,
+            model_id=self._device.device_type,
             name=(
                 self._device.name
                 or cast(ConfigEntry, self.coordinator.config_entry).title

@@ -20,6 +20,9 @@ from homeassistant.components.media_player import (
     MediaType,
     RepeatMode,
 )
+from homeassistant.components.media_player.browse_media import (
+    async_process_play_media_url,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
@@ -28,7 +31,7 @@ from homeassistant.util.dt import utcnow
 
 from . import LinkPlayConfigEntry
 from .const import DOMAIN
-from .utils import get_info_from_project
+from .utils import MANUFACTURER_GENERIC, get_info_from_project
 
 _LOGGER = logging.getLogger(__name__)
 STATE_MAP: dict[PlayingStatus, MediaPlayerState] = {
@@ -153,6 +156,9 @@ class LinkPlayMediaPlayerEntity(MediaPlayerEntity):
         ]
 
         manufacturer, model = get_info_from_project(bridge.device.properties["project"])
+        if model != MANUFACTURER_GENERIC:
+            model_id = bridge.device.properties["project"]
+
         self._attr_device_info = dr.DeviceInfo(
             configuration_url=bridge.endpoint,
             connections={(dr.CONNECTION_NETWORK_MAC, bridge.device.properties["MAC"])},
@@ -160,6 +166,7 @@ class LinkPlayMediaPlayerEntity(MediaPlayerEntity):
             identifiers={(DOMAIN, bridge.device.uuid)},
             manufacturer=manufacturer,
             model=model,
+            model_id=model_id,
             name=bridge.device.name,
             sw_version=bridge.device.properties["firmware"],
         )
@@ -234,10 +241,14 @@ class LinkPlayMediaPlayerEntity(MediaPlayerEntity):
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
         """Play a piece of media."""
-        media = await media_source.async_resolve_media(
-            self.hass, media_id, self.entity_id
-        )
-        await self._bridge.player.play(media.url)
+        if media_source.is_media_source_id(media_id):
+            play_item = await media_source.async_resolve_media(
+                self.hass, media_id, self.entity_id
+            )
+            media_id = play_item.url
+
+        url = async_process_play_media_url(self.hass, media_id)
+        await self._bridge.player.play(url)
 
     def _update_properties(self) -> None:
         """Update the properties of the media player."""
