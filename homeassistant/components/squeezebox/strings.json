@@ -87,34 +87,34 @@
     },
     "sensor": {
       "lastscan": {
-        "name": "last scan"
+        "name": "Last scan"
       },
       "newversion": {
-        "name": "new version"
+        "name": "New version"
       },
       "newplugins": {
-        "name": "new plugins"
+        "name": "New plugins"
       },
       "info_total_albums": {
-        "name": "total albums"
+        "name": "Total albums"
       },
       "info_total_artists": {
-        "name": "total artists"
+        "name": "Total artists"
       },
       "info_total_duration": {
-        "name": "total duration"
+        "name": "Total duration"
       },
       "info_total_genres": {
-        "name": "total genres"
+        "name": "Total genres"
       },
       "info_total_songs": {
-        "name": "total songs"
+        "name": "Total songs"
       },
       "player_count": {
-        "name": "player count"
+        "name": "Player count"
       },
       "other_player_count": {
-        "name": "other player count"
+        "name": "Other player count"
       }
     }
   }
