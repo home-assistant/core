@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 from pypck.inputs import ModStatusVar, Unknown
 from pypck.lcn_addr import LcnAddr
-from pypck.lcn_defs import Var, VarValue
+from pypck.lcn_defs import Var, VarUnit, VarValue
 from syrupy.assertion import SnapshotAssertion
 
 # pylint: disable=hass-component-root-import
@@ -26,6 +26,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
     ATTR_TEMPERATURE,
+    STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -88,9 +89,7 @@ async def test_entity_attributes(
 
 
 async def test_set_hvac_mode_heat(
-    hass: HomeAssistant,
-    lcn_connection: MockPchkConnectionManager,
-    snapshot: SnapshotAssertion,
+    hass: HomeAssistant, lcn_connection: MockPchkConnectionManager
 ) -> None:
     """Test the hvac mode is set to heat."""
     with patch.object(MockModuleConnection, "lock_regulator") as lock_regulator:
@@ -107,9 +106,7 @@ async def test_set_hvac_mode_heat(
             blocking=True,
         )
 
-        assert lock_regulator.await_args.args == snapshot(
-            name="lock_regulator-awaited-failed"
-        )
+        lock_regulator.assert_awaited_with(0, False)
 
         state = hass.states.get("climate.climate1")
         assert state is not None
@@ -126,19 +123,15 @@ async def test_set_hvac_mode_heat(
             blocking=True,
         )
 
-        assert lock_regulator.await_args.args == snapshot(
-            name="lock_regulator-awaited-success"
-        )
+        lock_regulator.assert_awaited_with(0, False)
 
         state = hass.states.get("climate.climate1")
         assert state is not None
-        assert state.state == snapshot(name=f"{state.entity_id}-state")
+        assert state.state == HVACMode.HEAT
 
 
 async def test_set_hvac_mode_off(
-    hass: HomeAssistant,
-    lcn_connection: MockPchkConnectionManager,
-    snapshot: SnapshotAssertion,
+    hass: HomeAssistant, lcn_connection: MockPchkConnectionManager
 ) -> None:
     """Test the hvac mode is set off."""
     with patch.object(MockModuleConnection, "lock_regulator") as lock_regulator:
@@ -155,9 +148,7 @@ async def test_set_hvac_mode_off(
             blocking=True,
         )
 
-        assert lock_regulator.await_args.args == snapshot(
-            name="lock_regulator-awaited-failed"
-        )
+        lock_regulator.assert_awaited_with(0, True)
 
         state = hass.states.get("climate.climate1")
         assert state is not None
@@ -174,24 +165,21 @@ async def test_set_hvac_mode_off(
             blocking=True,
         )
 
-        assert lock_regulator.await_args.args == snapshot(
-            name="lock_regulator-awaited-success"
-        )
+        lock_regulator.assert_awaited_with(0, True)
 
         state = hass.states.get("climate.climate1")
         assert state is not None
-        assert state.state == snapshot(name=f"{state.entity_id}-state")
+        assert state.state == HVACMode.OFF
 
 
 async def test_set_temperature(
     hass: HomeAssistant,
     lcn_connection: MockPchkConnectionManager,
-    snapshot: SnapshotAssertion,
 ) -> None:
     """Test the temperature is set."""
     with patch.object(MockModuleConnection, "var_abs") as var_abs:
         state = hass.states.get("climate.climate1")
-        state.state = snapshot(name=f"{state.entity_id}-state")
+        state.state = HVACMode.HEAT
 
         # wrong temperature set via service call with high/low attributes
         var_abs.return_value = False
@@ -220,7 +208,7 @@ async def test_set_temperature(
             blocking=True,
         )
 
-        assert var_abs.await_args.args == snapshot(name="var_abs-awaited-failed")
+        var_abs.assert_awaited_with(Var.R1VARSETPOINT, 25.5, VarUnit.CELSIUS)
 
         state = hass.states.get("climate.climate1")
         assert state is not None
@@ -237,20 +225,17 @@ async def test_set_temperature(
             blocking=True,
         )
 
-        assert var_abs.await_args.args == snapshot(name="var_abs-awaited-success")
+        var_abs.assert_awaited_with(Var.R1VARSETPOINT, 25.5, VarUnit.CELSIUS)
 
         state = hass.states.get("climate.climate1")
         assert state is not None
-        assert state.attributes[ATTR_TEMPERATURE] == snapshot(
-            name=f"{state.entity_id}-temperature"
-        )
+        assert state.attributes[ATTR_TEMPERATURE] == 25.5
 
 
 async def test_pushed_current_temperature_status_change(
     hass: HomeAssistant,
     entry,
     lcn_connection: MockPchkConnectionManager,
-    snapshot: SnapshotAssertion,
 ) -> None:
     """Test the climate changes its current temperature on status received."""
     device_connection = get_device_connection(hass, (0, 7, False), entry)
@@ -264,20 +249,15 @@ async def test_pushed_current_temperature_status_change(
 
     state = hass.states.get("climate.climate1")
     assert state is not None
-    assert state.state == snapshot(name=f"{state.entity_id}-state")
-    assert state.attributes[ATTR_CURRENT_TEMPERATURE] == snapshot(
-        name=f"{state.entity_id}-current-temperature"
-    )
-    assert state.attributes[ATTR_TEMPERATURE] == snapshot(
-        name=f"{state.entity_id}-temperature"
-    )
+    assert state.state == HVACMode.HEAT
+    assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 25.5
+    assert state.attributes[ATTR_TEMPERATURE] is None
 
 
 async def test_pushed_setpoint_status_change(
     hass: HomeAssistant,
     entry,
     lcn_connection: MockPchkConnectionManager,
-    snapshot: SnapshotAssertion,
 ) -> None:
     """Test the climate changes its setpoint on status received."""
     device_connection = get_device_connection(hass, (0, 7, False), entry)
@@ -291,20 +271,15 @@ async def test_pushed_setpoint_status_change(
 
     state = hass.states.get("climate.climate1")
     assert state is not None
-    assert state.state == snapshot(name=f"{state.entity_id}-state")
-    assert state.attributes[ATTR_CURRENT_TEMPERATURE] == snapshot(
-        name=f"{state.entity_id}-current-temperature"
-    )
-    assert state.attributes[ATTR_TEMPERATURE] == snapshot(
-        name=f"{state.entity_id}-temperature"
-    )
+    assert state.state == HVACMode.HEAT
+    assert state.attributes[ATTR_CURRENT_TEMPERATURE] is None
+    assert state.attributes[ATTR_TEMPERATURE] == 25.5
 
 
 async def test_pushed_lock_status_change(
     hass: HomeAssistant,
     entry: MockConfigEntry,
     lcn_connection: MockPchkConnectionManager,
-    snapshot: SnapshotAssertion,
 ) -> None:
     """Test the climate changes its setpoint on status received."""
     device_connection = get_device_connection(hass, (0, 7, False), entry)
@@ -318,20 +293,15 @@ async def test_pushed_lock_status_change(
 
     state = hass.states.get("climate.climate1")
     assert state is not None
-    assert state.state == snapshot(name=f"{state.entity_id}-state")
-    assert state.attributes[ATTR_CURRENT_TEMPERATURE] == snapshot(
-        name=f"{state.entity_id}-current-temperature"
-    )
-    assert state.attributes[ATTR_TEMPERATURE] == snapshot(
-        name=f"{state.entity_id}-temperature"
-    )
+    assert state.state == HVACMode.OFF
+    assert state.attributes[ATTR_CURRENT_TEMPERATURE] is None
+    assert state.attributes[ATTR_TEMPERATURE] is None
 
 
 async def test_pushed_wrong_input(
     hass: HomeAssistant,
     entry: MockConfigEntry,
     lcn_connection: MockPchkConnectionManager,
-    snapshot: SnapshotAssertion,
 ) -> None:
     """Test the climate handles wrong input correctly."""
     device_connection = get_device_connection(hass, (0, 7, False), entry)
@@ -340,21 +310,16 @@ async def test_pushed_wrong_input(
     await hass.async_block_till_done()
 
     state = hass.states.get("climate.climate1")
-    assert state.attributes[ATTR_CURRENT_TEMPERATURE] == snapshot(
-        name=f"{state.entity_id}-current-temperature"
-    )
-    assert state.attributes[ATTR_TEMPERATURE] == snapshot(
-        name=f"{state.entity_id}-temperature"
-    )
+    assert state.attributes[ATTR_CURRENT_TEMPERATURE] is None
+    assert state.attributes[ATTR_TEMPERATURE] is None
 
 
 async def test_unload_config_entry(
     hass: HomeAssistant,
     entry: MockConfigEntry,
     lcn_connection: MockPchkConnectionManager,
-    snapshot: SnapshotAssertion,
 ) -> None:
     """Test the climate is removed when the config entry is unloaded."""
     await hass.config_entries.async_forward_entry_unload(entry, DOMAIN_CLIMATE)
     state = hass.states.get("climate.climate1")
-    assert state.state == snapshot(name=f"{state.entity_id}-state")
+    assert state.state == STATE_UNAVAILABLE

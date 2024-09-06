@@ -5,20 +5,6 @@
 # name: test_entity_attributes[scene.romantic_transition-original_name]
   'Romantic Transition'
 # ---
-# name: test_scene_activate[activate_scene-awaited]
-  tuple(
-    0,
-    0,
-    list([
-      <OutputPort.OUTPUT1: 0>,
-      <OutputPort.OUTPUT2: 1>,
-    ]),
-    list([
-      <RelayPort.RELAY1: 0>,
-    ]),
-    None,
-  )
-# ---
 # name: test_scene_activate[scene.romantic-friendly-name]
   'Romantic'
 # ---
