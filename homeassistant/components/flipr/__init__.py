@@ -1,5 +1,6 @@
 """The Flipr integration."""
 
+from collections import Counter
 import logging
 
 from flipr_api import FliprAPIRestClient
@@ -7,6 +8,7 @@ from flipr_api import FliprAPIRestClient
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError
 
 from .const import CONF_ENTRY_FLIPR_COORDINATORS, DOMAIN
 from .coordinator import FliprDataUpdateCoordinator
@@ -19,6 +21,9 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up flipr from a config entry."""
     hass.data.setdefault(DOMAIN, {})
+
+    # Detect invalid old config entry and raise error if found
+    detect_invalid_old_configuration(hass, entry)
 
     config = entry.data
 
@@ -53,24 +58,17 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Migrate config entry."""
-    _LOGGER.info("Migration of flipr config from version %s", entry.version)
+def detect_invalid_old_configuration(hass: HomeAssistant, entry: ConfigEntry):
+    """Detect invalid old configuration and raise error if found."""
 
-    if entry.version == 1:
-        # In version 1, we have flipr id as config entry unique id and one device per config entry.
-        # We need to migrate to a new config entry that may contain multiple devices. So we change the title and entry data to match config_flow evolution.
-        login = entry.data[CONF_EMAIL]
-        new_title = f"Flipr {login}"
+    def find_duplicate_entries(entries):
+        values = [e.data["email"] for e in entries]
+        _LOGGER.debug("Detecting duplicates in values : %s", values)
+        return any(count > 1 for count in Counter(values).values())
 
-        new_data = {**entry.data}
-        # We do not store anymore the flipr_id in the config entry.
-        new_data.pop("flipr_id")
+    entries = hass.config_entries.async_entries(DOMAIN)
 
-        hass.config_entries.async_update_entry(
-            entry, data=new_data, title=new_title, version=2
+    if find_duplicate_entries(entries):
+        raise ConfigEntryError(
+            "Duplicate entries found for flipr with the same user email. Please remove one of it manually. Multiple fliprs will be automatically after restart."
         )
-
-        _LOGGER.info("Migration of flipr config to version 2 successful")
-
-    return True

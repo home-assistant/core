@@ -37,11 +37,11 @@ async def async_setup_entry(
 
     coordinators = hass.data[DOMAIN][CONF_ENTRY_FLIPR_COORDINATORS]
 
-    for coordinator in coordinators:
-        async_add_entities(
-            FliprBinarySensor(coordinator, description)
-            for description in BINARY_SENSORS_TYPES
-        )
+    async_add_entities(
+        FliprBinarySensor(coordinator, description)
+        for description in BINARY_SENSORS_TYPES
+        for coordinator in coordinators
+    )
 
 
 class FliprBinarySensor(FliprEntity, BinarySensorEntity):

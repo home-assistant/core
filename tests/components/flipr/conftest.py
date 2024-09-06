@@ -57,9 +57,9 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 def mock_config_entry() -> MockConfigEntry:
     """Mock the config entry."""
     return MockConfigEntry(
-        version=2,
+        version=1,
         domain=DOMAIN,
-        unique_id="test_entry_unique_id",
+        unique_id="myflipr_id",
         data={
             CONF_EMAIL: "toto@toto.com",
             CONF_PASSWORD: "myPassword",
@@ -68,17 +68,15 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_config_entry_v1() -> MockConfigEntry:
+def mock_config_entry_dup() -> MockConfigEntry:
     """Mock the config entry."""
     return MockConfigEntry(
         version=1,
         domain=DOMAIN,
-        title="myfliprid",
-        unique_id="test_entry_unique_id",
+        unique_id="myflipr_id_dup",
         data={
             CONF_EMAIL: "toto@toto.com",
             CONF_PASSWORD: "myPassword",
-            "flipr_id": "myfliprid",
         },
     )
 

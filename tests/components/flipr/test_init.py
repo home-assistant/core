@@ -1,14 +1,16 @@
 """Tests for init methods."""
 
+import logging
 from unittest.mock import AsyncMock
 
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration
 
 from tests.common import MockConfigEntry
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def test_unload_entry(
@@ -30,18 +32,26 @@ async def test_unload_entry(
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 
 
-async def test_migrate_entry(
+async def test_duplicate_config_entries(
     hass: HomeAssistant,
-    mock_config_entry_v1: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
+    mock_config_entry_dup: MockConfigEntry,
     mock_flipr_client: AsyncMock,
 ) -> None:
-    """Test migrate config entry from v1 to v2."""
+    """Test duplicate config entries."""
 
-    await setup_integration(hass, mock_config_entry_v1)
-    assert mock_config_entry_v1.state is ConfigEntryState.LOADED
-    assert mock_config_entry_v1.version == 2
-    assert mock_config_entry_v1.title == "Flipr toto@toto.com"
-    assert mock_config_entry_v1.data == {
-        CONF_EMAIL: "toto@toto.com",
-        CONF_PASSWORD: "myPassword",
-    }
+    _LOGGER.debug("mock_config_entry = %s", mock_config_entry)
+    _LOGGER.debug("mock_config_entry_dup = %s", mock_config_entry_dup)
+
+    _LOGGER.debug("SETTING FIST ENTRY")
+    mock_config_entry.add_to_hass(hass)
+    # Initialize the first entry with default mock
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Initialize the second entry with another flipr id
+    _LOGGER.debug("SETTING SECOND ENTRY")
+    mock_config_entry_dup.add_to_hass(hass)
+    assert not await hass.config_entries.async_setup(mock_config_entry_dup.entry_id)
+    await hass.async_block_till_done()
+    assert mock_config_entry_dup.state is ConfigEntryState.SETUP_ERROR

@@ -63,10 +63,11 @@ async def async_setup_entry(
     """Defer sensor setup to the shared sensor module."""
     coordinators = hass.data[DOMAIN][CONF_ENTRY_FLIPR_COORDINATORS]
 
-    for coordinator in coordinators:
-        async_add_entities(
-            FliprSensor(coordinator, description) for description in SENSOR_TYPES
-        )
+    async_add_entities(
+        FliprSensor(coordinator, description)
+        for description in SENSOR_TYPES
+        for coordinator in coordinators
+    )
 
 
 class FliprSensor(FliprEntity, SensorEntity):

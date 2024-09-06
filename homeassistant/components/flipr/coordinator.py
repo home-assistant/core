@@ -17,6 +17,8 @@ _LOGGER = logging.getLogger(__name__)
 class BaseDataUpdateCoordinator(DataUpdateCoordinator):
     """Parent class to hold Flipr and Hub data retrieval."""
 
+    config_entry: ConfigEntry
+
     def __init__(
         self, hass: HomeAssistant, entry: ConfigEntry, flipr_or_hub_id: str
     ) -> None:
@@ -26,7 +28,7 @@ class BaseDataUpdateCoordinator(DataUpdateCoordinator):
         self.device_id = flipr_or_hub_id
 
         self.client = FliprAPIRestClient(username, password)
-        self.entry = entry
+        self.config_entry = entry
 
         super().__init__(
             hass,
