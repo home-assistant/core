@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, patch
 from homeassistant import config_entries
 from homeassistant.components.watchyourlan.config_flow import CannotConnect
 from homeassistant.components.watchyourlan.const import DOMAIN
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -23,7 +23,8 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
 
     # Patch the API call to simulate valid response
     with patch(
-        "homeassistant.components.watchyourlan.config_flow.validate_input",
+        "homeassistant.components.watchyourlan.config_flow.WatchYourLANClient.get_all_hosts",
+        new_callable=AsyncMock,
         return_value={"title": "WatchYourLAN", "url": "http://127.0.0.1:8840"},
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -31,6 +32,7 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
             {
                 CONF_HOST: "127.0.0.1",
                 CONF_PORT: 8840,
+                CONF_SSL: False,
             },
         )
         await hass.async_block_till_done()
@@ -39,11 +41,7 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "WatchYourLAN"
     assert result["data"] == {
-        CONF_HOST: "127.0.0.1",
-        CONF_PORT: 8840,
         "url": "http://127.0.0.1:8840",
-        "update_interval": 5,
-        "ssl": False,
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -58,7 +56,8 @@ async def test_form_cannot_connect(
 
     # Simulate CannotConnect error during validation
     with patch(
-        "homeassistant.components.watchyourlan.config_flow.validate_input",
+        "homeassistant.components.watchyourlan.config_flow.WatchYourLANClient.get_all_hosts",
+        new_callable=AsyncMock,
         side_effect=CannotConnect,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -66,6 +65,7 @@ async def test_form_cannot_connect(
             {
                 CONF_HOST: "127.0.0.1",
                 CONF_PORT: 8840,
+                CONF_SSL: False,
             },
         )
 
@@ -75,7 +75,8 @@ async def test_form_cannot_connect(
 
     # Simulate a valid entry after resolving connection issue
     with patch(
-        "homeassistant.components.watchyourlan.config_flow.validate_input",
+        "homeassistant.components.watchyourlan.config_flow.WatchYourLANClient.get_all_hosts",
+        new_callable=AsyncMock,
         return_value={"title": "WatchYourLAN", "url": "http://127.0.0.1:8840"},
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -83,6 +84,7 @@ async def test_form_cannot_connect(
             {
                 CONF_HOST: "127.0.0.1",
                 CONF_PORT: 8840,
+                CONF_SSL: False,
             },
         )
         await hass.async_block_till_done()
@@ -91,11 +93,7 @@ async def test_form_cannot_connect(
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "WatchYourLAN"
     assert result["data"] == {
-        CONF_HOST: "127.0.0.1",
-        CONF_PORT: 8840,
         "url": "http://127.0.0.1:8840",
-        "update_interval": 5,
-        "ssl": False,
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -110,7 +108,8 @@ async def test_form_invalid_host(
 
     # Simulate an invalid hostname or connection issue
     with patch(
-        "homeassistant.components.watchyourlan.config_flow.validate_input",
+        "homeassistant.components.watchyourlan.config_flow.WatchYourLANClient.get_all_hosts",
+        new_callable=AsyncMock,
         side_effect=CannotConnect,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -118,6 +117,7 @@ async def test_form_invalid_host(
             {
                 CONF_HOST: "invalid-host",
                 CONF_PORT: 8840,
+                CONF_SSL: False,
             },
         )
 

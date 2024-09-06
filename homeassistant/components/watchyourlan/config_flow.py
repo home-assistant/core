@@ -1,13 +1,17 @@
 """Config flow for WatchYourLAN integration."""
 
+import logging
+
 import voluptuous as vol
 from watchyourlanclient import WatchYourLANClient
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 # Schema for the user setup form
 STEP_USER_DATA_SCHEMA = vol.Schema(
@@ -19,19 +23,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
-async def validate_input(hass, data):
-    """Validate the user input allows us to connect to the API."""
-    proto = "https" if data[CONF_SSL] else "http"
-    target = f"{proto}://{data[CONF_HOST]}:{data[CONF_PORT]}"
-
-    api_client = WatchYourLANClient(base_url=target, async_mode=True)
-    response = await api_client.get_all_hosts()
-    if not response:
-        raise CannotConnect
-    return {"title": "WatchYourLAN", "url": target}
-
-
-class WatchYourLANConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class WatchYourLANConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for WatchYourLAN."""
 
     VERSION = 1
@@ -42,13 +34,24 @@ class WatchYourLANConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 # Validate input and construct the URL
-                info = await validate_input(self.hass, user_input)
-                # Store the URL in the config entry
-                user_input["url"] = info["url"]
-                return self.async_create_entry(title=info["title"], data=user_input)
+                proto = "https" if user_input[CONF_SSL] else "http"
+                target = f"{proto}://{user_input[CONF_HOST]}:{user_input[CONF_PORT]}"
+
+                # Use the WatchYourLANClient to validate the connection
+                api_client = WatchYourLANClient(base_url=target, async_mode=True)
+                hosts = await api_client.get_all_hosts()
+                if not hosts:
+                    raise CannotConnect  # noqa: TRY301
+
+                # Return a config entry on successful connection
+                return self.async_create_entry(
+                    title="WatchYourLAN", data={"url": target}
+                )
+
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except Exception:  # noqa: BLE001
+                _LOGGER.exception("Unexpected error during WatchYourLAN setup")
                 errors["base"] = "unknown"
 
         return self.async_show_form(
