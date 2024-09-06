@@ -244,8 +244,8 @@ class IndexSensor(IQVIAEntity, SensorEntity):
         key = self.entity_description.key.split("_")[-1].title()
 
         try:
-            [period] = [p for p in data["periods"] if p["Type"] == key]  # type: ignore[index]
-        except TypeError:
+            period = next(p for p in data["periods"] if p["Type"] == key)  # type: ignore[index]
+        except StopIteration:
             return
 
         data = cast(dict[str, Any], data)
