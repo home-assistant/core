@@ -349,7 +349,7 @@ async def _get_select_observation_schema(
         {
             vol.Required("index"): vol.In(
                 {
-                    str(index): f"{config[CONF_PLATFORM]} observation: {config.get(CONF_NAME)}"
+                    str(index): f"{config[CONF_PLATFORM]} observation: {config.get(CONF_NAME)}" #TODO should we make this prettier rather than including a string literal
                     for index, config in enumerate(handler.options[CONF_OBSERVATIONS])
                 },
             )
