@@ -32,7 +32,9 @@ async def test_async_setup_entry(hass: HomeAssistant, entry, lcn_connection) -> 
 async def test_async_setup_multiple_entries(hass: HomeAssistant, entry, entry2) -> None:
     """Test a successful setup and unload of multiple entries."""
     hass.http = Mock()
-    with patch("pypck.connection.PchkConnectionManager", MockPchkConnectionManager):
+    with patch(
+        "homeassistant.components.lcn.PchkConnectionManager", MockPchkConnectionManager
+    ):
         for config_entry in (entry, entry2):
             config_entry.add_to_hass(hass)
             await hass.config_entries.async_setup(config_entry.entry_id)
