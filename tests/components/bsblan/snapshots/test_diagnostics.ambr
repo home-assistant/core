@@ -46,6 +46,22 @@
           'value': '18.5',
         }),
       }),
+      'static': dict({
+        'max_temp': dict({
+          'data_type': 0,
+          'desc': '',
+          'name': 'Summer/winter changeover temp heat circuit 1',
+          'unit': '&deg;C',
+          'value': '20.0',
+        }),
+        'min_temp': dict({
+          'data_type': 0,
+          'desc': '',
+          'name': 'Room temp frost protection setpoint',
+          'unit': '&deg;C',
+          'value': '8.0',
+        }),
+      }),
     }),
     'device': dict({
       'MAC': '00:80:41:19:69:90',
