@@ -8,6 +8,10 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_ICON,
     ATTR_IDENTIFIERS,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
+    ATTR_MODEL_ID,
+    ATTR_NAME,
     ATTR_STATE,
     STATE_UNAVAILABLE,
 )
@@ -38,6 +42,11 @@ def check_device_registry(
         identifiers=expected_device[ATTR_IDENTIFIERS]
     )
     assert registry_entry is not None
+    assert registry_entry.identifiers == expected_device[ATTR_IDENTIFIERS]
+    assert registry_entry.manufacturer == expected_device[ATTR_MANUFACTURER]
+    assert registry_entry.name == expected_device[ATTR_NAME]
+    assert registry_entry.model == expected_device[ATTR_MODEL]
+    assert registry_entry.sw_version == expected_device[ATTR_MODEL_ID]
 
 
 def check_entities(
