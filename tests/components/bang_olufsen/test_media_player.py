@@ -38,6 +38,8 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_VOLUME_MUTED,
     ATTR_SOUND_MODE,
     ATTR_SOUND_MODE_LIST,
+    DOMAIN as MEDIA_PLAYER_DOMAIN,
+    SERVICE_SELECT_SOUND_MODE,
     MediaPlayerState,
     MediaType,
 )
@@ -717,8 +719,8 @@ async def test_async_select_sound_mode(
     )
 
     await hass.services.async_call(
-        "media_player",
-        "select_sound_mode",
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_SELECT_SOUND_MODE,
         {
             ATTR_ENTITY_ID: TEST_MEDIA_PLAYER_ENTITY_ID,
             ATTR_SOUND_MODE: TEST_ACTIVE_SOUND_MODE_NAME_2,
