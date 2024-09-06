@@ -1,5 +1,0 @@
-version: "1"
-rules:
-  - base: dev
-    upstream: home-assistant:dev    # change `wei` to the owner of upstream repo
-    mergeMethod: hardreset
