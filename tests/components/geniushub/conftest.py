@@ -1,7 +1,8 @@
 """GeniusHub tests configuration."""
 
 from collections.abc import Generator
-from unittest.mock import patch
+from typing import Any
+from unittest.mock import MagicMock, patch
 
 from geniushubclient import GeniusDevice, GeniusZone
 import pytest
@@ -39,19 +40,31 @@ def mock_geniushub_client() -> Generator[AsyncMock]:
         yield client
 
 
+@pytest.fixture(scope="session")
+def zones() -> list[dict[str, Any]]:
+    """Return a list of zones."""
+    return load_json_array_fixture("zones_cloud_test_data.json", DOMAIN)
+
+
+@pytest.fixture(scope="session")
+def devices() -> list[dict[str, Any]]:
+    """Return a list of devices."""
+    return load_json_array_fixture("devices_cloud_test_data.json", DOMAIN)
+
+
 @pytest.fixture
-def mock_geniushub_cloud() -> Generator[MagicMock]:
+def mock_geniushub_cloud(
+    zones: list[dict[str, Any]], devices: list[dict[str, Any]]
+) -> Generator[MagicMock]:
     """Mock a GeniusHub."""
     with patch(
         "homeassistant.components.geniushub.GeniusHub",
         autospec=True,
     ) as mock_client:
         client = mock_client.return_value
-        zones = load_json_array_fixture("zones_cloud_test_data.json", DOMAIN)
         genius_zones = [GeniusZone(z["id"], z, client) for z in zones]
         client.zone_objs = genius_zones
         client._zones = genius_zones
-        devices = load_json_array_fixture("devices_cloud_test_data.json", DOMAIN)
         genius_devices = [GeniusDevice(d["id"], d, client) for d in devices]
         client.device_objs = genius_devices
         client._devices = genius_devices
