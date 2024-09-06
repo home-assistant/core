@@ -111,10 +111,10 @@ SEEKABLE_FEATURES: MediaPlayerEntityFeature = (
     | MediaPlayerEntityFeature.SEEK
 )
 
-SERVICE_PRESET = "play_preset"
+SERVICE_PLAY_PRESET = "play_preset"
 ATTR_PRESET_NUMBER = "preset_number"
 
-SERVICE_PRESET_SCHEMA = cv.make_entity_service_schema(
+SERVICE_PLAY_PRESET_SCHEMA = cv.make_entity_service_schema(
     {
         vol.Required(ATTR_PRESET_NUMBER): cv.positive_int,
     }
@@ -131,7 +131,7 @@ async def async_setup_entry(
     # register services
     platform = entity_platform.async_get_current_platform()
     platform.async_register_entity_service(
-        SERVICE_PRESET, SERVICE_PRESET_SCHEMA, "async_play_preset"
+        SERVICE_PLAY_PRESET, SERVICE_PLAY_PRESET_SCHEMA, "async_play_preset"
     )
 
     # add entities
