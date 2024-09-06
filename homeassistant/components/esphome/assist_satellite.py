@@ -86,7 +86,7 @@ async def async_setup_entry(
     ):
         async_add_entities(
             [
-                EsphomeAssistSatellite(hass, entry, entry_data),
+                EsphomeAssistSatellite(entry, entry_data),
             ]
         )
 
@@ -104,14 +104,12 @@ class EsphomeAssistSatellite(
 
     def __init__(
         self,
-        hass: HomeAssistant,
         config_entry: ConfigEntry,
         entry_data: RuntimeEntryData,
     ) -> None:
         """Initialize satellite."""
         super().__init__(entry_data)
 
-        self.hass = hass
         self.config_entry = config_entry
         self.entry_data = entry_data
         self.cli = self.entry_data.client
@@ -450,9 +448,6 @@ class EsphomeAssistSatellite(
             self._udp_server = None
 
         _LOGGER.debug("Stopped UDP server")
-
-
-# -----------------------------------------------------------------------------
 
 
 class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
