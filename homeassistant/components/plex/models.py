@@ -46,7 +46,7 @@ class PlexSession:
 
         # Metadata
         self.media_codec = None
-        self.media_codec_long = None
+        self.media_codec_extended = None
         self.media_filename = None
         self.media_tmdb_id = None
         self.media_tvdb_id = None
@@ -81,7 +81,7 @@ class PlexSession:
                 if stream.streamType == 2:  # 2 is the audio stream
                     # plex returns two forms of codecs, both are relevant and important
                     self.media_codec = stream.displayTitle
-                    self.media_codec_long = stream.extendedDisplayTitle
+                    self.media_codec_extended = stream.extendedDisplayTitle
                     break
 
     def update_item_ids(self, media):

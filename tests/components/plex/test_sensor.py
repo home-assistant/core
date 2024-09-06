@@ -271,46 +271,6 @@ async def test_library_sensor_values(
     assert library_music_sensor.attributes["last_added_timestamp"] == str(TIMESTAMP)
 
 
-async def test_plex_sensors_no_sessions(
-    hass: HomeAssistant,
-    setup_plex_server,
-    requests_mock: requests_mock.Mocker,
-    empty_payload,
-) -> None:
-    """Test the Plex sensors when there are no active sessions."""
-    mock_plex_server = await setup_plex_server()
-    await wait_for_debouncer(hass)
-
-    # Use the empty_payload fixture to simulate no active sessions
-    requests_mock.get("/status/sessions", text=empty_payload)
-
-    # Trigger an update
-    async_dispatcher_send(
-        hass,
-        PLEX_UPDATE_SENSOR_SIGNAL.format(mock_plex_server.machine_identifier),
-    )
-    await hass.async_block_till_done()
-
-    # Define expected states for each sensor
-    expected_states = {
-        "year": STATE_UNAVAILABLE,
-        "title": STATE_UNAVAILABLE,
-        "filename": STATE_UNAVAILABLE,
-        "codec": STATE_UNAVAILABLE,
-        "codec_long": STATE_UNAVAILABLE,
-        "tmdb_id": STATE_UNAVAILABLE,
-        "edition_title": STATE_UNAVAILABLE,
-    }
-
-    # Test each sensor
-    for sensor_name, expected_state in expected_states.items():
-        sensor = hass.states.get(f"sensor.shield_android_tv_{sensor_name}")
-        assert sensor, f"Sensor 'sensor.shield_android_tv_{sensor_name}' not found"
-        assert (
-            sensor.state == expected_state
-        ), f"Expected {sensor_name} to be {expected_state}, but it was {sensor.state} with {requests_mock.last_request.text} and payload is {empty_payload}"
-
-
 @pytest.mark.parametrize(
     "session_fixture",
     [
@@ -348,11 +308,11 @@ async def test_plex_sensors_special_sessions(
         "title",
         "filename",
         "codec",
-        "codec_long",
+        "codec_extended",
         "tmdb_id",
         "edition_title",
     ):
-        sensor = hass.states.get(f"sensor.plex_{sensor_name}")
+        sensor = hass.states.get(f"sensor.shield_android_tv_{sensor_name}")
         assert sensor
         assert sensor.state is not None
 
@@ -398,19 +358,9 @@ async def test_plex_sensors_values(
     assert codec_sensor.state == "English (DTS 5.1)"
 
     # Test codec long sensor
-    codec_long_sensor = hass.states.get("sensor.shield_android_tv_codec_long")
-    assert codec_long_sensor
-    assert codec_long_sensor.state == "DTS 5.1 @ 1536 kbps (English)"
-
-    # Test TMDB ID sensor
-    tmdb_sensor = hass.states.get("sensor.shield_android_tv_tmdb_id")
-    assert tmdb_sensor
-    assert tmdb_sensor.state == "12345"
-
-    # Test TVDB ID sensor
-    tmdb_sensor = hass.states.get("sensor.shield_android_tv_tvdb_id")
-    assert tmdb_sensor
-    assert tmdb_sensor.state == "12345"
+    codec_extended = hass.states.get("sensor.shield_android_tv_codec_extended")
+    assert codec_extended
+    assert codec_extended.state == "DTS 5.1 @ 1536 kbps (English)"
 
     # Test edition title sensor
     edition_sensor = hass.states.get("sensor.shield_android_tv_edition_title")

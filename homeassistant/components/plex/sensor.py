@@ -83,9 +83,9 @@ PLEX_SENSORS: tuple[PlexSensorEntityDescription, ...] = (
         value_fn=lambda sensor: sensor.get_attr("media_codec"),
     ),
     PlexSensorEntityDescription(
-        key="codec_long",
-        translation_key="codec_long",
-        value_fn=lambda sensor: sensor.get_attr("media_codec_long"),
+        key="codec_extended",
+        translation_key="codec_extended",
+        value_fn=lambda sensor: sensor.get_attr("media_codec_extended"),
     ),
     PlexSensorEntityDescription(
         key="tmdb_id",
@@ -139,6 +139,14 @@ async def async_setup_entry(
     )
     get_plex_data(hass)[DISPATCHERS][server_id].append(unsub)
 
+    def create_library_sensors():
+        """Create Plex library sensors with sync calls."""
+        sensors.extend(
+            PlexLibrarySectionSensor(hass, plex_server, library)
+            for library in plex_server.library.sections()
+        )
+
+    await hass.async_add_executor_job(create_library_sensors)
     async_add_entities(sensors, True)
 
 

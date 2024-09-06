@@ -5,10 +5,11 @@
     <Writer count="2" filter="writer=50000" id="50000" tag="A Writer" />
     <Producer count="3" filter="producer=2000" id="2000" tag="Dr. Producer" />
     <Country count="452" filter="country=1105" id="1105" tag="USA" />
+    <Guid id="tmdb://12345"/>
+<Guid id="tvdb://67890"/>
     <Role count="25" filter="actor=1" id="1" role="Character 1" tag="Actor 1" thumb="http://4.3.2.1/t/p/original/1.jpg" />
     <Role count="2" filter="actor=2" id="2" role="Character 2" tag="Actor 2" thumb="http://4.3.2.1/t/p/original/2.jpg" />
     <Role filter="actor=3" id="3" role="Character 3" tag="Actor 3" thumb="http://4.3.2.1/t/p/original/3.jpg" />
-    <Guid id="tmdb://12345" />
     <Player address="1.2.3.11" device="SHIELD Android TV" deviceClass="stb" local="1" machineIdentifier="1234567890123456-com-plexapp-android" model="darcy" platform="Android" platformVersion="9" product="Plex for Android (TV)" profile="Android" protocolVersion="1" relayed="0" remotePublicAddress="10.20.30.40" secure="1" state="playing" title="SHIELD Android TV" userID="{user_id}" vendor="NVIDIA" version="8.9.2.21619" />
     <User id="{user_id}" thumb="https://plex.tv/users/1234567890abcdef/avatar?c=11111" title="User {user_id}" />
     <Session bandwidth="7000" id="session_id_1" location="lan" />

@@ -1,6 +1,7 @@
 """Fixtures for Plex tests."""
 
 from collections.abc import Generator
+import re
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -534,6 +535,10 @@ def mock_plex_calls(
     requests_mock.get(f"{url}/library/metadata/30", text=media_30)
     requests_mock.get(f"{url}/library/metadata/100", text=media_100)
     requests_mock.get(f"{url}/library/metadata/200", text=media_200)
+    requests_mock.get(
+        re.compile(f"{url}/library/metadata/9876543210\\.*"), text=media_200
+    )
+    requests_mock.get(re.compile(f"{url}/library/metadata/203214\\.*"), text=media_200)
 
     requests_mock.get(f"{url}/library/metadata/20/children", text=children_20)
     requests_mock.get(f"{url}/library/metadata/30/children", text=children_30)

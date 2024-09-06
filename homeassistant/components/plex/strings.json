@@ -76,7 +76,7 @@
       "codec": {
         "name": "Codec"
       },
-      "codec_long": {
+      "codec_extended": {
         "name": "Codec Extended"
       },
       "tmdb_id": {
