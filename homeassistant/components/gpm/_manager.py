@@ -261,6 +261,10 @@ class RepositoryManager:
     async def get_install_path(self) -> Path:
         """Return the path to the installed repository."""
 
+    @abstractmethod
+    async def get_title(self) -> str:
+        """Return the title of the repository."""
+
 
 class IntegrationRepositoryManager(RepositoryManager):
     """Manage GIT repo as a HA integration."""
@@ -333,6 +337,10 @@ class IntegrationRepositoryManager(RepositoryManager):
     async def get_install_path(self) -> Path:
         """Return the path to symlink which is used to install HA integration."""
         return self.install_basedir / await self.get_component_name()
+
+    async def get_title(self) -> str:
+        """Return the title of the repository."""
+        return await self.get_component_name()
 
 
 class ResourceRepositoryManager(RepositoryManager):
@@ -446,13 +454,17 @@ class ResourceRepositoryManager(RepositoryManager):
         """Return the download URL of the resource."""
         if not self._download_url:
             return None
-        return self._download_url.async_render(
-            current_version=await self.get_current_version()
-        )
+        return self._download_url.async_render(version=await self.get_current_version())
 
-    def set_download_url(self, value: str | None) -> None:
+    def set_download_url(self, value: str | Template | None) -> None:
         """Set the download URL of the resource."""
-        self._download_url = Template(value, self.hass) if value else None
+        if not value:
+            self._download_url = None
+            return
+        if isinstance(value, Template):
+            self._download_url = value
+            return
+        self._download_url = Template(value, self.hass)
 
     async def get_resource_name(self) -> str:
         """Return the name of the resource."""
@@ -468,6 +480,10 @@ class ResourceRepositoryManager(RepositoryManager):
         """Return the path to the installed resource."""
         resource_name = await self.get_resource_name()
         return self.install_basedir / Path(resource_name)
+
+    async def get_title(self) -> str:
+        """Return the title of the repository."""
+        return self.slug
 
 
 class GPMError(Exception):

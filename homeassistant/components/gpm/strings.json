@@ -7,23 +7,31 @@
           "url": "[%key:common::config_flow::data::url%]",
           "type": "Repository type",
           "update_strategy": "Update strategy"
+        },
+        "data_description": {
+          "url": "E.g.: `https://github.com/user/awesome-component.git`",
+          "type": "Integrations are `custom_components` that are not part of Home Assistant.\nRepositories are frontend resources like themes, Lovelace plugins, etc.",
+          "update_strategy": "Determines which references from repository are reported as updates in Home Assistant.\nLatest tag will offer the latest stable version. Latest unstable tag will offer the latest tag, even if it is a dev, alpha, beta, or RC version. Latest commit will always follow the latest commit (this is the least stable option)."
         }
       },
       "resource": {
         "title": "Fill in resource details",
-        "description": "Frontend resources require URL from where to download compiled JS / CSS files when changes are detected within the repository.\n\nVariable `current_version` will be replaced with the corresponding GIT repository tag / commit hash (as configured in previous step).",
+        "description": "Frontend resources require URL from where to download compiled JS / CSS files when changes are detected within the repository.\n\nVariable `version` will be replaced with the corresponding GIT repository tag / commit hash (as configured in previous step).",
         "data": {
           "download_url": "[%key:common::config_flow::data::url%]"
         }
       }
     },
     "error": {
-      "invalid_structure": "Repository has invalid structure. See logs for details.",
-      "install_failed": "Unable to install repository. See logs for details.",
+      "invalid_url": "The URL is invalid.",
+      "invalid_template": "The template is invalid.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
-      "already_configured": "The repository is already configured."
+      "install_failed": "Unable to install repository. See logs for details.",
+      "invalid_structure": "Repository has invalid structure. See logs for details.",
+      "already_configured": "The repository is already configured.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     }
   },
   "selector": {
