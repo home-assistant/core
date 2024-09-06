@@ -6,6 +6,29 @@ import pytest
 from syrupy import SnapshotAssertion
 
 from homeassistant.components.lcn import DOMAIN
+from homeassistant.components.lcn.const import (
+    CONF_KEYS,
+    CONF_LED,
+    CONF_OUTPUT,
+    CONF_PCK,
+    CONF_RELVARREF,
+    CONF_ROW,
+    CONF_SETPOINT,
+    CONF_TABLE,
+    CONF_TEXT,
+    CONF_TIME,
+    CONF_TIME_UNIT,
+    CONF_TRANSITION,
+    CONF_VALUE,
+    CONF_VARIABLE,
+)
+from homeassistant.components.lcn.services import LcnService
+from homeassistant.const import (
+    CONF_ADDRESS,
+    CONF_BRIGHTNESS,
+    CONF_STATE,
+    CONF_UNIT_OF_MEASUREMENT,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -23,17 +46,17 @@ async def test_service_output_abs(
     with patch.object(MockModuleConnection, "dim_output") as dim_output:
         await hass.services.async_call(
             DOMAIN,
-            "output_abs",
+            LcnService.OUTPUT_ABS,
             {
-                "address": "pchk.s0.m7",
-                "output": "output1",
-                "brightness": 100,
-                "transition": 5,
+                CONF_ADDRESS: "pchk.s0.m7",
+                CONF_OUTPUT: "output1",
+                CONF_BRIGHTNESS: 100,
+                CONF_TRANSITION: 5,
             },
             blocking=True,
         )
 
-    assert dim_output.await_args.args == snapshot(name="dim_output")
+    assert dim_output.await_args.args == snapshot(name=LcnService.OUTPUT_ABS)
 
 
 @patch("pypck.connection.PchkConnectionManager", MockPchkConnectionManager)
@@ -47,16 +70,16 @@ async def test_service_output_rel(
     with patch.object(MockModuleConnection, "rel_output") as rel_output:
         await hass.services.async_call(
             DOMAIN,
-            "output_rel",
+            LcnService.OUTPUT_REL,
             {
-                "address": "pchk.s0.m7",
-                "output": "output1",
-                "brightness": 25,
+                CONF_ADDRESS: "pchk.s0.m7",
+                CONF_OUTPUT: "output1",
+                CONF_BRIGHTNESS: 25,
             },
             blocking=True,
         )
 
-    assert rel_output.await_args.args == snapshot(name="rel_output")
+    assert rel_output.await_args.args == snapshot(name=LcnService.OUTPUT_REL)
 
 
 @patch("pypck.connection.PchkConnectionManager", MockPchkConnectionManager)
@@ -70,16 +93,16 @@ async def test_service_output_toggle(
     with patch.object(MockModuleConnection, "toggle_output") as toggle_output:
         await hass.services.async_call(
             DOMAIN,
-            "output_toggle",
+            LcnService.OUTPUT_TOGGLE,
             {
-                "address": "pchk.s0.m7",
-                "output": "output1",
-                "transition": 5,
+                CONF_ADDRESS: "pchk.s0.m7",
+                CONF_OUTPUT: "output1",
+                CONF_TRANSITION: 5,
             },
             blocking=True,
         )
 
-    assert toggle_output.await_args.args == snapshot(name="toggle_output")
+    assert toggle_output.await_args.args == snapshot(name=LcnService.OUTPUT_TOGGLE)
 
 
 @patch("pypck.connection.PchkConnectionManager", MockPchkConnectionManager)
@@ -91,12 +114,12 @@ async def test_service_relays(hass: HomeAssistant, snapshot: SnapshotAssertion) 
     with patch.object(MockModuleConnection, "control_relays") as control_relays:
         await hass.services.async_call(
             DOMAIN,
-            "relays",
-            {"address": "pchk.s0.m7", "state": "0011TT--"},
+            LcnService.RELAYS,
+            {CONF_ADDRESS: "pchk.s0.m7", CONF_STATE: "0011TT--"},
             blocking=True,
         )
 
-    assert control_relays.await_args.args == snapshot(name="control_relays")
+    assert control_relays.await_args.args == snapshot(name=LcnService.RELAYS)
 
 
 @patch("pypck.connection.PchkConnectionManager", MockPchkConnectionManager)
@@ -108,12 +131,12 @@ async def test_service_led(hass: HomeAssistant, snapshot: SnapshotAssertion) -> 
     with patch.object(MockModuleConnection, "control_led") as control_led:
         await hass.services.async_call(
             DOMAIN,
-            "led",
-            {"address": "pchk.s0.m7", "led": "led6", "state": "blink"},
+            LcnService.LED,
+            {CONF_ADDRESS: "pchk.s0.m7", CONF_LED: "led6", CONF_STATE: "blink"},
             blocking=True,
         )
 
-    assert control_led.await_args.args == snapshot(name="control_led")
+    assert control_led.await_args.args == snapshot(name=LcnService.LED)
 
 
 @patch("pypck.connection.PchkConnectionManager", MockPchkConnectionManager)
@@ -127,17 +150,17 @@ async def test_service_var_abs(
     with patch.object(MockModuleConnection, "var_abs") as var_abs:
         await hass.services.async_call(
             DOMAIN,
-            "var_abs",
+            LcnService.VAR_ABS,
             {
-                "address": "pchk.s0.m7",
-                "variable": "var1",
-                "value": 75,
-                "unit_of_measurement": "%",
+                CONF_ADDRESS: "pchk.s0.m7",
+                CONF_VARIABLE: "var1",
+                CONF_VALUE: 75,
+                CONF_UNIT_OF_MEASUREMENT: "%",
             },
             blocking=True,
         )
 
-    assert var_abs.await_args.args == snapshot(name="var_abs")
+    assert var_abs.await_args.args == snapshot(name=LcnService.VAR_ABS)
 
 
 @patch("pypck.connection.PchkConnectionManager", MockPchkConnectionManager)
@@ -151,18 +174,18 @@ async def test_service_var_rel(
     with patch.object(MockModuleConnection, "var_rel") as var_rel:
         await hass.services.async_call(
             DOMAIN,
-            "var_rel",
+            LcnService.VAR_REL,
             {
-                "address": "pchk.s0.m7",
-                "variable": "var1",
-                "value": 10,
-                "unit_of_measurement": "%",
-                "value_reference": "current",
+                CONF_ADDRESS: "pchk.s0.m7",
+                CONF_VARIABLE: "var1",
+                CONF_VALUE: 10,
+                CONF_UNIT_OF_MEASUREMENT: "%",
+                CONF_RELVARREF: "current",
             },
             blocking=True,
         )
 
-    assert var_rel.await_args.args == snapshot(name="var_rel")
+    assert var_rel.await_args.args == snapshot(name=LcnService.VAR_REL)
 
 
 @patch("pypck.connection.PchkConnectionManager", MockPchkConnectionManager)
@@ -176,12 +199,12 @@ async def test_service_var_reset(
     with patch.object(MockModuleConnection, "var_reset") as var_reset:
         await hass.services.async_call(
             DOMAIN,
-            "var_reset",
-            {"address": "pchk.s0.m7", "variable": "var1"},
+            LcnService.VAR_RESET,
+            {CONF_ADDRESS: "pchk.s0.m7", CONF_VARIABLE: "var1"},
             blocking=True,
         )
 
-    assert var_reset.await_args.args == snapshot(name="var_reset")
+    assert var_reset.await_args.args == snapshot(name=LcnService.VAR_RESET)
 
 
 @patch("pypck.connection.PchkConnectionManager", MockPchkConnectionManager)
@@ -195,12 +218,16 @@ async def test_service_lock_regulator(
     with patch.object(MockModuleConnection, "lock_regulator") as lock_regulator:
         await hass.services.async_call(
             DOMAIN,
-            "lock_regulator",
-            {"address": "pchk.s0.m7", "setpoint": "r1varsetpoint", "state": True},
+            LcnService.LOCK_REGULATOR,
+            {
+                CONF_ADDRESS: "pchk.s0.m7",
+                CONF_SETPOINT: "r1varsetpoint",
+                CONF_STATE: True,
+            },
             blocking=True,
         )
 
-    assert lock_regulator.await_args.args == snapshot(name="lock_regulator")
+    assert lock_regulator.await_args.args == snapshot(name=LcnService.LOCK_REGULATOR)
 
 
 @patch("pypck.connection.PchkConnectionManager", MockPchkConnectionManager)
@@ -214,8 +241,8 @@ async def test_service_send_keys(
     with patch.object(MockModuleConnection, "send_keys") as send_keys:
         await hass.services.async_call(
             DOMAIN,
-            "send_keys",
-            {"address": "pchk.s0.m7", "keys": "a1a5d8", "state": "hit"},
+            LcnService.SEND_KEYS,
+            {CONF_ADDRESS: "pchk.s0.m7", CONF_KEYS: "a1a5d8", CONF_STATE: "hit"},
             blocking=True,
         )
 
@@ -224,7 +251,7 @@ async def test_service_send_keys(
     keys[0][4] = True
     keys[3][7] = True
 
-    assert send_keys.await_args.args == snapshot(name="send_keys")
+    assert send_keys.await_args.args == snapshot(name=LcnService.SEND_KEYS)
 
 
 @patch("pypck.connection.PchkConnectionManager", MockPchkConnectionManager)
@@ -246,13 +273,18 @@ async def test_service_send_keys_hit_deferred(
     ) as send_keys_hit_deferred:
         await hass.services.async_call(
             DOMAIN,
-            "send_keys",
-            {"address": "pchk.s0.m7", "keys": "a1a5d8", "time": 5, "time_unit": "s"},
+            LcnService.SEND_KEYS,
+            {
+                CONF_ADDRESS: "pchk.s0.m7",
+                CONF_KEYS: "a1a5d8",
+                CONF_TIME: 5,
+                CONF_TIME_UNIT: "s",
+            },
             blocking=True,
         )
 
     assert send_keys_hit_deferred.await_args.args == snapshot(
-        name="send_keys_hit_deferred"
+        name=f"{LcnService.SEND_KEYS}-hit-deferred-success"
     )
 
     # wrong key action
@@ -264,13 +296,13 @@ async def test_service_send_keys_hit_deferred(
     ):
         await hass.services.async_call(
             DOMAIN,
-            "send_keys",
+            LcnService.SEND_KEYS,
             {
-                "address": "pchk.s0.m7",
-                "keys": "a1a5d8",
-                "state": "make",
-                "time": 5,
-                "time_unit": "s",
+                CONF_ADDRESS: "pchk.s0.m7",
+                CONF_KEYS: "a1a5d8",
+                CONF_STATE: "make",
+                CONF_TIME: 5,
+                CONF_TIME_UNIT: "s",
             },
             blocking=True,
         )
@@ -287,12 +319,12 @@ async def test_service_lock_keys(
     with patch.object(MockModuleConnection, "lock_keys") as lock_keys:
         await hass.services.async_call(
             DOMAIN,
-            "lock_keys",
-            {"address": "pchk.s0.m7", "table": "a", "state": "0011TT--"},
+            LcnService.LOCK_KEYS,
+            {CONF_ADDRESS: "pchk.s0.m7", CONF_TABLE: "a", CONF_STATE: "0011TT--"},
             blocking=True,
         )
 
-    assert lock_keys.await_args.args == snapshot(name="lock_keys")
+    assert lock_keys.await_args.args == snapshot(name=LcnService.LOCK_KEYS)
 
 
 @patch("pypck.connection.PchkConnectionManager", MockPchkConnectionManager)
@@ -309,18 +341,18 @@ async def test_service_lock_keys_tab_a_temporary(
     ) as lock_keys_tab_a_temporary:
         await hass.services.async_call(
             DOMAIN,
-            "lock_keys",
+            LcnService.LOCK_KEYS,
             {
-                "address": "pchk.s0.m7",
-                "state": "0011TT--",
-                "time": 10,
-                "time_unit": "s",
+                CONF_ADDRESS: "pchk.s0.m7",
+                CONF_STATE: "0011TT--",
+                CONF_TIME: 10,
+                CONF_TIME_UNIT: "s",
             },
             blocking=True,
         )
 
     assert lock_keys_tab_a_temporary.await_args.args == snapshot(
-        name="lock_keys_tab_a_temporary"
+        name=f"{LcnService.LOCK_KEYS}-tab-a-temporary-success"
     )
 
     # wrong table
@@ -332,13 +364,13 @@ async def test_service_lock_keys_tab_a_temporary(
     ):
         await hass.services.async_call(
             DOMAIN,
-            "lock_keys",
+            LcnService.LOCK_KEYS,
             {
-                "address": "pchk.s0.m7",
-                "table": "b",
-                "state": "0011TT--",
-                "time": 10,
-                "time_unit": "s",
+                CONF_ADDRESS: "pchk.s0.m7",
+                CONF_TABLE: "b",
+                CONF_STATE: "0011TT--",
+                CONF_TIME: 10,
+                CONF_TIME_UNIT: "s",
             },
             blocking=True,
         )
@@ -355,12 +387,12 @@ async def test_service_dyn_text(
     with patch.object(MockModuleConnection, "dyn_text") as dyn_text:
         await hass.services.async_call(
             DOMAIN,
-            "dyn_text",
-            {"address": "pchk.s0.m7", "row": 1, "text": "text in row 1"},
+            LcnService.DYN_TEXT,
+            {CONF_ADDRESS: "pchk.s0.m7", CONF_ROW: 1, CONF_TEXT: "text in row 1"},
             blocking=True,
         )
 
-    assert dyn_text.await_args.args == snapshot(name="dyn_text")
+    assert dyn_text.await_args.args == snapshot(name=LcnService.DYN_TEXT)
 
 
 @patch("pypck.connection.PchkConnectionManager", MockPchkConnectionManager)
@@ -372,18 +404,16 @@ async def test_service_pck(hass: HomeAssistant, snapshot: SnapshotAssertion) -> 
     with patch.object(MockModuleConnection, "pck") as pck:
         await hass.services.async_call(
             DOMAIN,
-            "pck",
-            {"address": "pchk.s0.m7", "pck": "PIN4"},
+            LcnService.PCK,
+            {CONF_ADDRESS: "pchk.s0.m7", CONF_PCK: "PIN4"},
             blocking=True,
         )
 
-    assert pck.await_args.args == snapshot(name="pck")
+    assert pck.await_args.args == snapshot(name=LcnService.PCK)
 
 
 @patch("pypck.connection.PchkConnectionManager", MockPchkConnectionManager)
-async def test_service_called_with_invalid_host_id(
-    hass: HomeAssistant, snapshot: SnapshotAssertion
-) -> None:
+async def test_service_called_with_invalid_host_id(hass: HomeAssistant) -> None:
     """Test service was called with non existing host id."""
     await async_setup_component(hass, "persistent_notification", {})
     await setup_component(hass)
@@ -391,8 +421,8 @@ async def test_service_called_with_invalid_host_id(
     with patch.object(MockModuleConnection, "pck") as pck, pytest.raises(ValueError):
         await hass.services.async_call(
             DOMAIN,
-            "pck",
-            {"address": "foobar.s0.m7", "pck": "PIN4"},
+            LcnService.PCK,
+            {CONF_ADDRESS: "foobar.s0.m7", CONF_PCK: "PIN4"},
             blocking=True,
         )
 

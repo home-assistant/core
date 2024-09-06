@@ -5,7 +5,7 @@
     'text in row 1',
   )
 # ---
-# name: test_service_led[control_led]
+# name: test_service_led[led]
   tuple(
     <LedPort.LED6: 5>,
     <LedStatus.BLINK: 'B'>,
@@ -26,7 +26,7 @@
     ]),
   )
 # ---
-# name: test_service_lock_keys_tab_a_temporary[lock_keys_tab_a_temporary]
+# name: test_service_lock_keys_tab_a_temporary[lock_keys-tab-a-temporary-success]
   tuple(
     10,
     <TimeUnit.SECONDS: 'S'>,
@@ -48,20 +48,20 @@
     True,
   )
 # ---
-# name: test_service_output_abs[dim_output]
+# name: test_service_output_abs[output_abs]
   tuple(
     0,
     100,
     9,
   )
 # ---
-# name: test_service_output_rel[rel_output]
+# name: test_service_output_rel[output_rel]
   tuple(
     0,
     25,
   )
 # ---
-# name: test_service_output_toggle[toggle_output]
+# name: test_service_output_toggle[output_toggle]
   tuple(
     0,
     9,
@@ -72,7 +72,7 @@
     'PIN4',
   )
 # ---
-# name: test_service_relays[control_relays]
+# name: test_service_relays[relays]
   tuple(
     list([
       <RelayStateModifier.OFF: '0'>,
@@ -133,7 +133,7 @@
     <SendKeyCommand.HIT: 'K'>,
   )
 # ---
-# name: test_service_send_keys_hit_deferred[send_keys_hit_deferred]
+# name: test_service_send_keys_hit_deferred[send_keys-hit-deferred-success]
   tuple(
     list([
       list([
