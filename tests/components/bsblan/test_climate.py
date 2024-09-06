@@ -9,7 +9,7 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.bsblan.const import ATTR_TARGET_TEMPERATURE
+from homeassistant.components.bsblan.const import ATTR_TARGET_TEMPERATURE, DOMAIN
 from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
     ATTR_PRESET_MODE,
@@ -60,7 +60,7 @@ async def test_celsius_fahrenheit(
 ) -> None:
     """Test Celsius and Fahrenheit temperature units."""
     # Load static data from fixture
-    static_data = json.loads(load_fixture(static_file, CLIMATE_DOMAIN))
+    static_data = json.loads(load_fixture(static_file, DOMAIN))
 
     # Patch the static_values method to return our test data
     with patch.object(
@@ -147,7 +147,7 @@ async def test_async_set_hvac_mode(
     mode: HVACMode,
 ) -> None:
     """Test setting HVAC mode via service call."""
-    static_data = json.loads(load_fixture(static_file, CLIMATE_DOMAIN))
+    static_data = json.loads(load_fixture(static_file, DOMAIN))
     with patch.object(
         mock_bsblan, "static_values", return_value=StaticState.from_dict(static_data)
     ):
