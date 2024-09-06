@@ -9,7 +9,6 @@ from watchyourlanclient import WatchYourLANClient
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_SSL, CONF_URL
-from homeassistant.exceptions import HomeAssistantError
 
 from .const import DOMAIN
 
@@ -42,22 +41,19 @@ class WatchYourLANConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
                 hosts = await api_client.get_all_hosts()
                 if not hosts:
-                    raise CannotConnect  # noqa: TRY301
-            except (CannotConnect, ConnectError, HTTPStatusError):
+                    errors["base"] = "cannot_connect"
+            except (ConnectError, HTTPStatusError):
                 errors["base"] = "cannot_connect"
             except Exception:
                 _LOGGER.exception("Unexpected error during WatchYourLAN setup")
                 errors["base"] = "unknown"
             else:
                 # Return a config entry on successful connection
-                return self.async_create_entry(
-                    title="WatchYourLAN", data={"url": user_input[CONF_URL]}
-                )
+                if not errors:
+                    return self.async_create_entry(
+                        title="WatchYourLAN", data={"url": user_input[CONF_URL]}
+                    )
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
-
-
-class CannotConnect(HomeAssistantError):
-    """Error to indicate we cannot connect to the WatchYourLAN API."""
