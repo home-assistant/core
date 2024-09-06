@@ -2,7 +2,6 @@
 
 from unittest.mock import patch
 
-from pypck.lcn_defs import OutputPort, RelayPort
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.scene import DOMAIN as DOMAIN_SCENE
@@ -70,9 +69,8 @@ async def test_scene_activate(
         assert state.attributes["friendly_name"] == snapshot(
             name=f"{state.entity_id}-friendly-name"
         )
-        activate_scene.assert_awaited_with(
-            0, 0, [OutputPort.OUTPUT1, OutputPort.OUTPUT2], [RelayPort.RELAY1], None
-        )
+
+        assert activate_scene.await_args.args == snapshot(name="activate_scene-awaited")
 
 
 async def test_unload_config_entry(

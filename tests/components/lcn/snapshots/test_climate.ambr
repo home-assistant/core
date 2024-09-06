@@ -59,14 +59,52 @@
 # name: test_set_hvac_mode_heat[climate.climate1-state]
   'heat'
 # ---
+# name: test_set_hvac_mode_heat[lock_regulator-awaited-failed]
+  tuple(
+    0,
+    False,
+  )
+# ---
+# name: test_set_hvac_mode_heat[lock_regulator-awaited-success]
+  tuple(
+    0,
+    False,
+  )
+# ---
 # name: test_set_hvac_mode_off[climate.climate1-state]
   'off'
 # ---
-# name: test_set_temperature[climate.climate1-state]
+# name: test_set_hvac_mode_off[lock_regulator-awaited-failed]
+  tuple(
+    0,
+    True,
+  )
+# ---
+# name: test_set_hvac_mode_off[lock_regulator-awaited-success]
+  tuple(
+    0,
+    True,
+  )
+# ---
+# name: test_set_temperature.1
   'heat'
 # ---
 # name: test_set_temperature[climate.climate1-temperature]
   25.5
+# ---
+# name: test_set_temperature[var_abs-awaited-failed]
+  tuple(
+    <Var.R1VARSETPOINT: 12>,
+    25.5,
+    <VarUnit.CELSIUS: '°C'>,
+  )
+# ---
+# name: test_set_temperature[var_abs-awaited-success]
+  tuple(
+    <Var.R1VARSETPOINT: 12>,
+    25.5,
+    <VarUnit.CELSIUS: '°C'>,
+  )
 # ---
 # name: test_setup_lcn_climate[climate.climate1-state]
   'heat'

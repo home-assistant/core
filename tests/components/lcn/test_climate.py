@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 from pypck.inputs import ModStatusVar, Unknown
 from pypck.lcn_addr import LcnAddr
-from pypck.lcn_defs import Var, VarUnit, VarValue
+from pypck.lcn_defs import Var, VarValue
 from syrupy.assertion import SnapshotAssertion
 
 # pylint: disable=hass-component-root-import
@@ -107,7 +107,9 @@ async def test_set_hvac_mode_heat(
             blocking=True,
         )
 
-        lock_regulator.assert_awaited_with(0, False)
+        assert lock_regulator.await_args.args == snapshot(
+            name="lock_regulator-awaited-failed"
+        )
 
         state = hass.states.get("climate.climate1")
         assert state is not None
@@ -124,7 +126,9 @@ async def test_set_hvac_mode_heat(
             blocking=True,
         )
 
-        lock_regulator.assert_awaited_with(0, False)
+        assert lock_regulator.await_args.args == snapshot(
+            name="lock_regulator-awaited-success"
+        )
 
         state = hass.states.get("climate.climate1")
         assert state is not None
@@ -151,7 +155,9 @@ async def test_set_hvac_mode_off(
             blocking=True,
         )
 
-        lock_regulator.assert_awaited_with(0, True)
+        assert lock_regulator.await_args.args == snapshot(
+            name="lock_regulator-awaited-failed"
+        )
 
         state = hass.states.get("climate.climate1")
         assert state is not None
@@ -168,7 +174,9 @@ async def test_set_hvac_mode_off(
             blocking=True,
         )
 
-        lock_regulator.assert_awaited_with(0, True)
+        assert lock_regulator.await_args.args == snapshot(
+            name="lock_regulator-awaited-success"
+        )
 
         state = hass.states.get("climate.climate1")
         assert state is not None
@@ -212,7 +220,7 @@ async def test_set_temperature(
             blocking=True,
         )
 
-        var_abs.assert_awaited_with(Var.R1VARSETPOINT, 25.5, VarUnit.CELSIUS)
+        assert var_abs.await_args.args == snapshot(name="var_abs-awaited-failed")
 
         state = hass.states.get("climate.climate1")
         assert state is not None
@@ -229,7 +237,7 @@ async def test_set_temperature(
             blocking=True,
         )
 
-        var_abs.assert_awaited_with(Var.R1VARSETPOINT, 25.5, VarUnit.CELSIUS)
+        assert var_abs.await_args.args == snapshot(name="var_abs-awaited-success")
 
         state = hass.states.get("climate.climate1")
         assert state is not None
