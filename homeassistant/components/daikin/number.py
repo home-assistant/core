@@ -1,4 +1,5 @@
 """Support for Daikin AirBase zone temperatures."""
+
 from __future__ import annotations
 
 from homeassistant.components.number import NumberDeviceClass, NumberEntity
@@ -10,6 +11,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import DiscoveryInfoType
 
 from . import DOMAIN as DAIKIN_DOMAIN, DaikinApi
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -27,6 +29,7 @@ async def async_setup_entry(
                 if zone[0] != "-" and zone[2] != 0
             ]
         )
+
 
 class DaikinZoneTemperature(NumberEntity):
     """Representation of a zone temperature setting."""
