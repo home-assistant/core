@@ -22,6 +22,6 @@ async def async_get_config_entry_diagnostics(
         "device": data.device.to_dict(),
         "coordinator_data": {
             "state": data.coordinator.data.state.to_dict(),
-            "static": data.static.to_dict(),
         },
+        "static": data.static.to_dict(),
     }
