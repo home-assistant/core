@@ -79,7 +79,7 @@
   },
   "exceptions": {
     "invalid_pin": {
-      "message": "User entered incorrect alarm PIN code."
+      "message": "Incorrect code entered"
     }
   }
 }
