@@ -1,17 +1,17 @@
 # serializer version: 1
-# name: test_service_dyn_text[dyn_text]
+# name: test_service_dyn_text
   tuple(
     0,
     'text in row 1',
   )
 # ---
-# name: test_service_led[led]
+# name: test_service_led
   tuple(
     <LedPort.LED6: 5>,
     <LedStatus.BLINK: 'B'>,
   )
 # ---
-# name: test_service_lock_keys[lock_keys]
+# name: test_service_lock_keys
   tuple(
     0,
     list([
@@ -26,7 +26,7 @@
     ]),
   )
 # ---
-# name: test_service_lock_keys_tab_a_temporary[lock_keys-tab-a-temporary-success]
+# name: test_service_lock_keys_tab_a_temporary
   tuple(
     10,
     <TimeUnit.SECONDS: 'S'>,
@@ -42,37 +42,37 @@
     ]),
   )
 # ---
-# name: test_service_lock_regulator[lock_regulator]
+# name: test_service_lock_regulator
   tuple(
     0,
     True,
   )
 # ---
-# name: test_service_output_abs[output_abs]
+# name: test_service_output_abs
   tuple(
     0,
     100,
     9,
   )
 # ---
-# name: test_service_output_rel[output_rel]
+# name: test_service_output_rel
   tuple(
     0,
     25,
   )
 # ---
-# name: test_service_output_toggle[output_toggle]
+# name: test_service_output_toggle
   tuple(
     0,
     9,
   )
 # ---
-# name: test_service_pck[pck]
+# name: test_service_pck
   tuple(
     'PIN4',
   )
 # ---
-# name: test_service_relays[relays]
+# name: test_service_relays
   tuple(
     list([
       <RelayStateModifier.OFF: '0'>,
@@ -86,7 +86,7 @@
     ]),
   )
 # ---
-# name: test_service_send_keys[send_keys]
+# name: test_service_send_keys
   tuple(
     list([
       list([
@@ -133,7 +133,7 @@
     <SendKeyCommand.HIT: 'K'>,
   )
 # ---
-# name: test_service_send_keys_hit_deferred[send_keys-hit-deferred-success]
+# name: test_service_send_keys_hit_deferred
   tuple(
     list([
       list([
@@ -181,14 +181,14 @@
     <TimeUnit.SECONDS: 'S'>,
   )
 # ---
-# name: test_service_var_abs[var_abs]
+# name: test_service_var_abs
   tuple(
     <Var.VAR1ORTVAR: 0>,
     75.0,
     <VarUnit.PERCENT: '%'>,
   )
 # ---
-# name: test_service_var_rel[var_rel]
+# name: test_service_var_rel
   tuple(
     <Var.VAR1ORTVAR: 0>,
     10.0,
@@ -196,7 +196,7 @@
     <RelVarRef.CURRENT: 1>,
   )
 # ---
-# name: test_service_var_reset[var_reset]
+# name: test_service_var_reset
   tuple(
     <Var.VAR1ORTVAR: 0>,
   )

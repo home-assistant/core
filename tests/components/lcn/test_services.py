@@ -56,7 +56,7 @@ async def test_service_output_abs(
             blocking=True,
         )
 
-    assert dim_output.await_args.args == snapshot(name=LcnService.OUTPUT_ABS)
+    assert dim_output.await_args.args == snapshot()
 
 
 @patch("pypck.connection.PchkConnectionManager", MockPchkConnectionManager)
@@ -79,7 +79,7 @@ async def test_service_output_rel(
             blocking=True,
         )
 
-    assert rel_output.await_args.args == snapshot(name=LcnService.OUTPUT_REL)
+    assert rel_output.await_args.args == snapshot()
 
 
 @patch("pypck.connection.PchkConnectionManager", MockPchkConnectionManager)
@@ -102,7 +102,7 @@ async def test_service_output_toggle(
             blocking=True,
         )
 
-    assert toggle_output.await_args.args == snapshot(name=LcnService.OUTPUT_TOGGLE)
+    assert toggle_output.await_args.args == snapshot()
 
 
 @patch("pypck.connection.PchkConnectionManager", MockPchkConnectionManager)
@@ -119,7 +119,7 @@ async def test_service_relays(hass: HomeAssistant, snapshot: SnapshotAssertion) 
             blocking=True,
         )
 
-    assert control_relays.await_args.args == snapshot(name=LcnService.RELAYS)
+    assert control_relays.await_args.args == snapshot()
 
 
 @patch("pypck.connection.PchkConnectionManager", MockPchkConnectionManager)
@@ -136,7 +136,7 @@ async def test_service_led(hass: HomeAssistant, snapshot: SnapshotAssertion) -> 
             blocking=True,
         )
 
-    assert control_led.await_args.args == snapshot(name=LcnService.LED)
+    assert control_led.await_args.args == snapshot()
 
 
 @patch("pypck.connection.PchkConnectionManager", MockPchkConnectionManager)
@@ -160,7 +160,7 @@ async def test_service_var_abs(
             blocking=True,
         )
 
-    assert var_abs.await_args.args == snapshot(name=LcnService.VAR_ABS)
+    assert var_abs.await_args.args == snapshot()
 
 
 @patch("pypck.connection.PchkConnectionManager", MockPchkConnectionManager)
@@ -185,7 +185,7 @@ async def test_service_var_rel(
             blocking=True,
         )
 
-    assert var_rel.await_args.args == snapshot(name=LcnService.VAR_REL)
+    assert var_rel.await_args.args == snapshot()
 
 
 @patch("pypck.connection.PchkConnectionManager", MockPchkConnectionManager)
@@ -204,7 +204,7 @@ async def test_service_var_reset(
             blocking=True,
         )
 
-    assert var_reset.await_args.args == snapshot(name=LcnService.VAR_RESET)
+    assert var_reset.await_args.args == snapshot()
 
 
 @patch("pypck.connection.PchkConnectionManager", MockPchkConnectionManager)
@@ -227,7 +227,7 @@ async def test_service_lock_regulator(
             blocking=True,
         )
 
-    assert lock_regulator.await_args.args == snapshot(name=LcnService.LOCK_REGULATOR)
+    assert lock_regulator.await_args.args == snapshot()
 
 
 @patch("pypck.connection.PchkConnectionManager", MockPchkConnectionManager)
@@ -251,7 +251,7 @@ async def test_service_send_keys(
     keys[0][4] = True
     keys[3][7] = True
 
-    assert send_keys.await_args.args == snapshot(name=LcnService.SEND_KEYS)
+    assert send_keys.await_args.args == snapshot()
 
 
 @patch("pypck.connection.PchkConnectionManager", MockPchkConnectionManager)
@@ -283,9 +283,7 @@ async def test_service_send_keys_hit_deferred(
             blocking=True,
         )
 
-    assert send_keys_hit_deferred.await_args.args == snapshot(
-        name=f"{LcnService.SEND_KEYS}-hit-deferred-success"
-    )
+    assert send_keys_hit_deferred.await_args.args == snapshot()
 
     # wrong key action
     with (
@@ -324,7 +322,7 @@ async def test_service_lock_keys(
             blocking=True,
         )
 
-    assert lock_keys.await_args.args == snapshot(name=LcnService.LOCK_KEYS)
+    assert lock_keys.await_args.args == snapshot()
 
 
 @patch("pypck.connection.PchkConnectionManager", MockPchkConnectionManager)
@@ -351,9 +349,7 @@ async def test_service_lock_keys_tab_a_temporary(
             blocking=True,
         )
 
-    assert lock_keys_tab_a_temporary.await_args.args == snapshot(
-        name=f"{LcnService.LOCK_KEYS}-tab-a-temporary-success"
-    )
+    assert lock_keys_tab_a_temporary.await_args.args == snapshot()
 
     # wrong table
     with (
@@ -392,7 +388,7 @@ async def test_service_dyn_text(
             blocking=True,
         )
 
-    assert dyn_text.await_args.args == snapshot(name=LcnService.DYN_TEXT)
+    assert dyn_text.await_args.args == snapshot()
 
 
 @patch("pypck.connection.PchkConnectionManager", MockPchkConnectionManager)
@@ -409,7 +405,7 @@ async def test_service_pck(hass: HomeAssistant, snapshot: SnapshotAssertion) -> 
             blocking=True,
         )
 
-    assert pck.await_args.args == snapshot(name=LcnService.PCK)
+    assert pck.await_args.args == snapshot()
 
 
 @patch("pypck.connection.PchkConnectionManager", MockPchkConnectionManager)
