@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from typing import TYPE_CHECKING
 
 from sfrbox_api.bridge import SFRBox
 from sfrbox_api.exceptions import SFRBoxAuthenticationError, SFRBoxError
@@ -46,6 +47,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Preload system information
     await data.system.async_config_entry_first_refresh()
     system_info = data.system.data
+    if TYPE_CHECKING:
+        assert system_info is not None
 
     # Preload other coordinators (based on net infrastructure)
     tasks = [data.wan.async_config_entry_first_refresh()]
