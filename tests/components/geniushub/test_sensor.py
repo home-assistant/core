@@ -1,7 +1,8 @@
 """Tests for the Geniushub sensor platform."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
+import pytest
 from syrupy import SnapshotAssertion
 
 from homeassistant.const import Platform
@@ -13,10 +14,10 @@ from . import setup_integration
 from tests.common import MockConfigEntry, snapshot_platform
 
 
+@pytest.mark.usefixtures("mock_geniushub_cloud")
 async def test_cloud_all_sensors(
     hass: HomeAssistant,
     mock_cloud_config_entry: MockConfigEntry,
-    mock_geniushub_cloud: AsyncMock,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
