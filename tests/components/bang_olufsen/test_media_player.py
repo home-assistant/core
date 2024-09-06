@@ -1,7 +1,6 @@
 """Test the Bang & Olufsen media_player entity."""
 
-from collections.abc import Callable
-from contextlib import nullcontext as does_not_raise
+from contextlib import AbstractContextManager, nullcontext as does_not_raise
 import logging
 from unittest.mock import AsyncMock, patch
 
@@ -583,7 +582,7 @@ async def test_async_media_seek(
     mock_mozart_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     source: Source,
-    expected_result: Callable,
+    expected_result: AbstractContextManager,
     seek_called_times: int,
 ) -> None:
     """Test async_media_seek."""
@@ -669,7 +668,7 @@ async def test_async_select_source(
     mock_mozart_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     source: str,
-    expected_result: Callable,
+    expected_result: AbstractContextManager,
     audio_source_call: int,
     video_source_call: int,
 ) -> None:
