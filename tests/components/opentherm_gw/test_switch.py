@@ -67,7 +67,6 @@ async def test_ch_override_switch(
         },
         blocking=True,
     )
-    await hass.async_block_till_done()
     assert hass.states.get(switch_entity_id).state == STATE_OFF
 
     await hass.services.async_call(
@@ -78,7 +77,6 @@ async def test_ch_override_switch(
         },
         blocking=True,
     )
-    await hass.async_block_till_done()
     assert hass.states.get(switch_entity_id).state == STATE_ON
 
     assert mock_pyotgw.return_value.set_ch_enable_bit.await_count == 2
@@ -138,7 +136,6 @@ async def test_ch2_override_switch(
         },
         blocking=True,
     )
-    await hass.async_block_till_done()
     assert hass.states.get(switch_entity_id).state == STATE_ON
 
     assert mock_pyotgw.return_value.set_ch2_enable_bit.await_count == 2
