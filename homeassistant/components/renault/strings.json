@@ -142,7 +142,8 @@
           "unplugged": "Unplugged",
           "plugged": "Plugged in",
           "plug_error": "Plug error",
-          "plug_unknown": "Plug unknown"
+          "plug_unknown": "Plug unknown",
+          "plugged_waiting_for_charge": "Plugged in waiting for charge"
         }
       },
       "res_state": {
