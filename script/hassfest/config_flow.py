@@ -221,7 +221,7 @@ def validate(integrations: dict[str, Integration], config: Config) -> None:
     if config_flow_path.read_text() != content:
         config.add_error(
             "config_flow",
-            "File config_flows.py is not up to date. " "Run python3 -m script.hassfest",
+            "File config_flows.py is not up to date. Run python3 -m script.hassfest",
             fixable=True,
         )
 
