@@ -36,10 +36,11 @@ class ApSystemsDataCoordinator(DataUpdateCoordinator[ApSystemsSensorData]):
 
     async def _async_setup(self) -> None:
         try:
-            max_power = (await self.api.get_device_info()).maxPower
+            device_info = await self.api.get_device_info()
         except (ConnectionError, TimeoutError):
             raise UpdateFailed from None
-        self.api.max_power = max_power
+        self.api.max_power = device_info.maxPower
+        self.api.min_power = device_info.minPower
 
     async def _async_update_data(self) -> ApSystemsSensorData:
         output_data = await self.api.get_output_data()
