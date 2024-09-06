@@ -236,7 +236,7 @@ async def test_get_block_input_triggers(
 async def test_get_rpc_channel_name(mock_rpc_device: Mock) -> None:
     """Test get RPC channel name."""
     assert get_rpc_channel_name(mock_rpc_device, "input:0") == "Test name input 0"
-    assert get_rpc_channel_name(mock_rpc_device, "input:3") == "Test name input_3"
+    assert get_rpc_channel_name(mock_rpc_device, "input:3") == "Test name Input 3"
 
 
 async def test_get_rpc_input_triggers(
