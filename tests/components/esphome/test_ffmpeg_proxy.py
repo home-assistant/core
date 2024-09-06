@@ -3,17 +3,38 @@
 from http import HTTPStatus
 import io
 import tempfile
+from unittest.mock import patch
 from urllib.request import pathname2url
 import wave
 
 import mutagen
 
 from homeassistant.components import esphome
-from homeassistant.components.esphome.ffmpeg_proxy import async_allow_proxy_url
+from homeassistant.components.esphome.ffmpeg_proxy import async_create_proxy_url
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.typing import ClientSessionGenerator
+
+
+async def test_async_create_proxy_url(hass: HomeAssistant) -> None:
+    """Test that async_create_proxy_url returns the correct format."""
+    assert await async_setup_component(hass, "esphome", {})
+
+    device_id = "test-device"
+    convert_id = "test-id"
+    media_format = "flac"
+    media_url = "http://127.0.0.1/test.mp3"
+    proxy_url = f"/api/esphome/ffmpeg_proxy/{device_id}/{convert_id}.{media_format}"
+
+    with patch(
+        "homeassistant.components.esphome.ffmpeg_proxy.ulid.ulid",
+        return_value=convert_id,
+    ):
+        assert (
+            async_create_proxy_url(hass, device_id, media_url, media_format)
+            == proxy_url
+        )
 
 
 async def test_proxy_view(
@@ -35,7 +56,7 @@ async def test_proxy_view(
 
         temp_file.seek(0)
         wav_url = pathname2url(temp_file.name)
-        convert_id = "not-a-valid-id"
+        convert_id = "test-id"
         url = f"/api/esphome/ffmpeg_proxy/{device_id}/{convert_id}.mp3"
 
         # Should fail because we haven't allowed the URL yet
@@ -43,10 +64,16 @@ async def test_proxy_view(
         assert req.status == HTTPStatus.BAD_REQUEST
 
         # Allow the URL
-        convert_id = async_allow_proxy_url(
-            hass, device_id, wav_url, media_format="mp3", rate=22050, channels=2
-        )
-        url = f"/api/esphome/ffmpeg_proxy/{device_id}/{convert_id}.mp3"
+        with patch(
+            "homeassistant.components.esphome.ffmpeg_proxy.ulid.ulid",
+            return_value=convert_id,
+        ):
+            assert (
+                async_create_proxy_url(
+                    hass, device_id, wav_url, media_format="mp3", rate=22050, channels=2
+                )
+                == url
+            )
 
         req = await client.get(url)
         assert req.status == HTTPStatus.OK
@@ -74,10 +101,7 @@ async def test_ffmpeg_error(
     client = await hass_client()
 
     # Try to convert a file that doesn't exist
-    convert_id = async_allow_proxy_url(
-        hass, device_id, "missing-file", media_format="mp3"
-    )
-    url = f"/api/esphome/ffmpeg_proxy/{device_id}/{convert_id}.mp3"
+    url = async_create_proxy_url(hass, device_id, "missing-file", media_format="mp3")
     req = await client.get(url)
 
     # The HTTP status is OK because the ffmpeg process started, but no data is

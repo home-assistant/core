@@ -18,7 +18,6 @@ from aioesphomeapi import (
 import pytest
 
 from homeassistant.components import media_source
-from homeassistant.components.esphome.ffmpeg_proxy import async_create_proxy_url
 from homeassistant.components.media_player import (
     ATTR_MEDIA_ANNOUNCE,
     ATTR_MEDIA_CONTENT_ID,
@@ -287,26 +286,6 @@ async def test_media_player_entity_with_source(
     mock_client.media_player_command.assert_has_calls(
         [call(1, media_url="media-source://tts?message=hello", announcement=True)]
     )
-
-
-async def test_async_create_proxy_url(hass: HomeAssistant) -> None:
-    """Test that async_create_proxy_url returns the correct format."""
-    assert await async_setup_component(hass, "esphome", {})
-
-    device_id = "test-device"
-    convert_id = "test-id"
-    media_format = "flac"
-    media_url = "http://127.0.0.1/test.mp3"
-    proxy_url = f"/api/esphome/ffmpeg_proxy/{device_id}/{convert_id}.{media_format}"
-
-    with patch(
-        "homeassistant.components.esphome.ffmpeg_proxy.ulid.ulid",
-        return_value=convert_id,
-    ):
-        assert (
-            async_create_proxy_url(hass, device_id, media_url, media_format)
-            == proxy_url
-        )
 
 
 async def test_media_player_proxy(
