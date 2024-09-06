@@ -3,7 +3,6 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any
 
 from typedmonarchmoney.models import MonarchAccount, MonarchCashflowSummary
 
@@ -24,16 +23,27 @@ from .entity import MonarchMoneyAccountEntity, MonarchMoneyCashFlowEntity
 
 @dataclass(frozen=True, kw_only=True)
 class MonarchMoneySensorEntityDescription(SensorEntityDescription):
-    """Describe a sensor entity."""
+    """Base common class."""
+
+
+@dataclass(frozen=True, kw_only=True)
+class MonarchMoneyAccountSensorEntityDescription(MonarchMoneySensorEntityDescription):
+    """Describe an account sensor entity."""
 
     value_fn: Callable[[MonarchAccount], StateType | datetime]
-    summary_fn: Callable[[MonarchCashflowSummary], StateType] | None = None
-    picture_fn: Callable[[Any], str] | None = None
+    picture_fn: Callable[[MonarchAccount], str | None] | None = None
+
+
+@dataclass(frozen=True, kw_only=True)
+class MonarchMoneyCashflowSensorEntityDescription(MonarchMoneySensorEntityDescription):
+    """Describe a cashflow sensor entity."""
+
+    summary_fn: Callable[[MonarchCashflowSummary], StateType] | None
 
 
 # These sensors include assets like a boat that might have value
-MONARCH_MONEY_VALUE_SENSORS: tuple[MonarchMoneySensorEntityDescription, ...] = (
-    MonarchMoneySensorEntityDescription(
+MONARCH_MONEY_VALUE_SENSORS: tuple[MonarchMoneyAccountSensorEntityDescription, ...] = (
+    MonarchMoneyAccountSensorEntityDescription(
         key="value",
         translation_key="value",
         state_class=SensorStateClass.TOTAL,
@@ -45,8 +55,8 @@ MONARCH_MONEY_VALUE_SENSORS: tuple[MonarchMoneySensorEntityDescription, ...] = (
 )
 
 # Most accounts are balance sensors
-MONARCH_MONEY_SENSORS: tuple[MonarchMoneySensorEntityDescription, ...] = (
-    MonarchMoneySensorEntityDescription(
+MONARCH_MONEY_SENSORS: tuple[MonarchMoneyAccountSensorEntityDescription, ...] = (
+    MonarchMoneyAccountSensorEntityDescription(
         key="currentBalance",
         translation_key="balance",
         state_class=SensorStateClass.TOTAL,
@@ -57,8 +67,8 @@ MONARCH_MONEY_SENSORS: tuple[MonarchMoneySensorEntityDescription, ...] = (
     ),
 )
 
-MONARCH_MONEY_AGE_SENSORS: tuple[MonarchMoneySensorEntityDescription, ...] = (
-    MonarchMoneySensorEntityDescription(
+MONARCH_MONEY_AGE_SENSORS: tuple[MonarchMoneyAccountSensorEntityDescription, ...] = (
+    MonarchMoneyAccountSensorEntityDescription(
         key="age",
         translation_key="age",
         device_class=SensorDeviceClass.TIMESTAMP,
@@ -67,8 +77,8 @@ MONARCH_MONEY_AGE_SENSORS: tuple[MonarchMoneySensorEntityDescription, ...] = (
     ),
 )
 
-MONARCH_CASHFLOW_SENSORS: tuple[MonarchMoneySensorEntityDescription, ...] = (
-    MonarchMoneySensorEntityDescription(
+MONARCH_CASHFLOW_SENSORS: tuple[MonarchMoneyCashflowSensorEntityDescription, ...] = (
+    MonarchMoneyCashflowSensorEntityDescription(
         key="sum_income",
         translation_key="sum_income",
         summary_fn=lambda summary: summary.income,
@@ -77,7 +87,7 @@ MONARCH_CASHFLOW_SENSORS: tuple[MonarchMoneySensorEntityDescription, ...] = (
         native_unit_of_measurement=CURRENCY_DOLLAR,
         icon="mdi:cash-plus",
     ),
-    MonarchMoneySensorEntityDescription(
+    MonarchMoneyCashflowSensorEntityDescription(
         key="sum_expense",
         translation_key="sum_expense",
         summary_fn=lambda summary: summary.expenses,
@@ -86,7 +96,7 @@ MONARCH_CASHFLOW_SENSORS: tuple[MonarchMoneySensorEntityDescription, ...] = (
         native_unit_of_measurement=CURRENCY_DOLLAR,
         icon="mdi:cash-minus",
     ),
-    MonarchMoneySensorEntityDescription(
+    MonarchMoneyCashflowSensorEntityDescription(
         key="savings",
         translation_key="savings",
         summary_fn=lambda summary: summary.savings,
@@ -95,7 +105,7 @@ MONARCH_CASHFLOW_SENSORS: tuple[MonarchMoneySensorEntityDescription, ...] = (
         native_unit_of_measurement=CURRENCY_DOLLAR,
         icon="mdi:piggy-bank-outline",
     ),
-    MonarchMoneySensorEntityDescription(
+    MonarchMoneyCashflowSensorEntityDescription(
         key="savings_rate",
         translation_key="savings_rate",
         summary_fn=lambda summary: summary.savings_rate * 100,
@@ -161,7 +171,7 @@ async def async_setup_entry(
 class MonarchMoneyCashFlowSensor(MonarchMoneyCashFlowEntity, SensorEntity):
     """Cashflow summary sensor."""
 
-    entity_description: MonarchMoneySensorEntityDescription
+    entity_description: MonarchMoneyCashflowSensorEntityDescription
 
     @property
     def native_value(self) -> StateType | datetime:
@@ -174,7 +184,7 @@ class MonarchMoneyCashFlowSensor(MonarchMoneyCashFlowEntity, SensorEntity):
 class MonarchMoneySensor(MonarchMoneyAccountEntity, SensorEntity):
     """Define a monarch money sensor."""
 
-    entity_description: MonarchMoneySensorEntityDescription
+    entity_description: MonarchMoneyAccountSensorEntityDescription
 
     @property
     def native_value(self) -> StateType | datetime | None:

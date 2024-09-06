@@ -6,7 +6,11 @@ from typing import Any
 from unittest.mock import AsyncMock, PropertyMock, patch
 
 import pytest
-from typedmonarchmoney.models import MonarchAccount, MonarchCashflowSummary
+from typedmonarchmoney.models import (
+    MonarchAccount,
+    MonarchCashflowSummary,
+    MonarchSubscription,
+)
 
 from homeassistant.components.monarchmoney.const import DOMAIN
 from homeassistant.const import CONF_TOKEN
@@ -44,8 +48,9 @@ def mock_config_api() -> Generator[AsyncMock]:
         load_fixture("get_cashflow_summary.json", DOMAIN)
     )
     cashflow_summary = MonarchCashflowSummary(cashflow_json)
-
-    subs = json.loads(load_fixture("get_subscription_details.json", DOMAIN))
+    subscription_details = MonarchSubscription(
+        json.loads(load_fixture("get_subscription_details.json", DOMAIN))
+    )
 
     with (
         patch(
@@ -60,19 +65,8 @@ def mock_config_api() -> Generator[AsyncMock]:
         type(instance).token = PropertyMock(return_value="mocked_token")
         instance.login = AsyncMock(return_value=None)
         instance.multi_factor_authenticate = AsyncMock(return_value=None)
-        instance.get_subscription_details = AsyncMock(
-            return_value={
-                "subscription": {
-                    "id": "123456789",
-                    "paymentSource": "STRIPE",
-                    "referralCode": "go3dpvrdmw",
-                    "isOnFreeTrial": False,
-                    "hasPremiumEntitlement": True,
-                    "__typename": "HouseholdSubscription",
-                }
-            }
-        )
+        instance.get_subscription_details = AsyncMock(return_value=subscription_details)
         instance.get_accounts = AsyncMock(return_value=account_data)
         instance.get_cashflow_summary = AsyncMock(return_value=cashflow_summary)
-        instance.get_subscription_details = AsyncMock(return_value=subs)
+        instance.get_subscription_details = AsyncMock(return_value=subscription_details)
         yield mock_class

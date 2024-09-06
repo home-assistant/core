@@ -8,6 +8,7 @@ from typing import Any
 from monarchmoney import LoginFailedException, RequireMFAException
 from monarchmoney.monarchmoney import SESSION_FILE
 from typedmonarchmoney import TypedMonarchMoney
+from typedmonarchmoney.models import MonarchSubscription
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -88,8 +89,9 @@ async def validate_login(
 
     LOGGER.debug(f"Connection successful - saving session to file {SESSION_FILE}")
     LOGGER.debug("Obtaining subscription id")
-    subs = await monarch_client.get_subscription_details()
-    subscription_id = subs["subscription"]["id"]
+    subs: MonarchSubscription = await monarch_client.get_subscription_details()
+    assert subs is not None
+    subscription_id = subs.id
     return {
         "title": "Monarch Money",
         CONF_TOKEN: monarch_client.token,

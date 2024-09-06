@@ -17,7 +17,7 @@ class MonarchMoneyEntityBase(CoordinatorEntity[MonarchMoneyDataUpdateCoordinator
 
 
 class MonarchMoneyCashFlowEntity(MonarchMoneyEntityBase):
-    """Custom entity for Cashflow sensors."""
+    """Entity for Cashflow sensors."""
 
     def __init__(
         self,
@@ -31,9 +31,8 @@ class MonarchMoneyCashFlowEntity(MonarchMoneyEntityBase):
         )
         self.entity_description = description
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, "monarch_money_cashflow")},
+            identifiers={(DOMAIN, coordinator.subscription_id)},
             name="Cashflow",
-            suggested_area="Banking/Finance",
         )
 
     @property
@@ -43,7 +42,7 @@ class MonarchMoneyCashFlowEntity(MonarchMoneyEntityBase):
 
 
 class MonarchMoneyAccountEntity(MonarchMoneyEntityBase):
-    """Define a generic class for Entities."""
+    """Entity for Account Sensors."""
 
     def __init__(
         self,
@@ -69,7 +68,13 @@ class MonarchMoneyAccountEntity(MonarchMoneyEntityBase):
             manufacturer=account.data_provider,
             model=f"{account.institution_name} - {account.type_name} - {account.subtype_name}",
             configuration_url=account.institution_url,
-            suggested_area="Banking/Finance",
+        )
+
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return super().available and (
+            self._account_id in [x.id for x in self.coordinator.data.account_data]
         )
 
     @property
