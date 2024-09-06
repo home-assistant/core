@@ -12,6 +12,7 @@ from typing import Any, cast
 
 import jwt
 
+# it is a test comment
 from homeassistant import data_entry_flow
 from homeassistant.core import (
     CALLBACK_TYPE,
