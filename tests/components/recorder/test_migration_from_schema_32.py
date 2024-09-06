@@ -335,7 +335,7 @@ async def test_migrate_events_context_ids(
 
     # Check the index which will be removed by the migrator no longer exists
     with session_scope(hass=hass) as session:
-        assert get_index_by_name(session, "states", "ix_states_context_id") is None
+        assert get_index_by_name(session, "events", "ix_events_context_id") is None
 
 
 @pytest.mark.parametrize("enable_migrate_context_ids", [True])
