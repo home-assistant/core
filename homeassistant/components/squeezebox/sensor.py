@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -11,7 +12,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import EntityCategory, UnitOfTime
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import SqueezeboxConfigEntry
@@ -27,7 +28,6 @@ from .const import (
     STATUS_SENSOR_OTHER_PLAYER_COUNT,
     STATUS_SENSOR_PLAYER_COUNT,
 )
-from .coordinator import LMSStatusDataUpdateCoordinator
 from .entity import LMSStatusEntity
 
 SENSORS: tuple[SensorEntityDescription, ...] = (
@@ -103,20 +103,7 @@ async def async_setup_entry(
 class ServerStatusSensor(LMSStatusEntity, SensorEntity):
     """LMS Status based sensor from LMS via cooridnatior."""
 
-    def __init__(
-        self,
-        coordinator: LMSStatusDataUpdateCoordinator,
-        description: SensorEntityDescription,
-    ) -> None:
-        """Initialize the sensor using description, and coordinator data."""
-        super().__init__(coordinator, description)
-        self.native_value = coordinator.data[description.key]
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        self.native_value = self.coordinator.data[self.entity_description.key]
-        _LOGGER.debug(
-            "Update Sensor %s=%s", self.entity_description.key, self.native_value
-        )
-        self.async_write_ha_state()
+    @property
+    def native_value(self) -> Any:
+        """LMS Status directly from coordinator data."""
+        return self.coordinator.data[self.entity_description.key]
