@@ -230,7 +230,7 @@ class HueLight(HueBaseEntity, LightEntity):
             # the special effect "None" is only used to stop an active effect
             # but sending it while no effect is active can actually result in issues
             # https://github.com/home-assistant/core/issues/122165
-            effect = None if self.effect == EFFECT_NONE else EffectStatus.NO_EFFECT
+            effect = None if self.effect == EFFECT_NONE else effect
         elif effect_str is not None:
             # work out if we got a regular effect or timed effect
             effect = EffectStatus(effect_str)
