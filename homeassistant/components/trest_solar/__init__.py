@@ -10,7 +10,7 @@ from .coordinator import TrestDataCoordinator
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
-TrestConfigEntry = ConfigEntry[TrestDataCoordinator]
+type TrestConfigEntry = ConfigEntry[TrestDataCoordinator]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: TrestConfigEntry) -> bool:

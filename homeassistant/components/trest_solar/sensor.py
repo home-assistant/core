@@ -78,10 +78,8 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
 
     async_add_entities(
-        [
-            TrestSolarControllerSensor(coordinator, entry.entry_id, description)
-            for description in SENSOR_TYPES
-        ]
+        TrestSolarControllerSensor(coordinator, entry.entry_id, description)
+        for description in SENSOR_TYPES
     )
 
 
@@ -89,7 +87,6 @@ class TrestSolarControllerSensor(CoordinatorEntity[TrestDataCoordinator], Sensor
     """The sensor for Trest Solar Controller."""
 
     _attr_has_entity_name = True
-    entity_description: SensorEntityDescription
 
     def __init__(
         self,
@@ -113,10 +110,4 @@ class TrestSolarControllerSensor(CoordinatorEntity[TrestDataCoordinator], Sensor
         """Return the state of the sensor."""
 
         key = self.entity_description.key
-
-        if key == "timestamp":
-            timestamp_str = self.coordinator.data.to_dict().get(key)
-            if timestamp_str:
-                return datetime.fromisoformat(timestamp_str)
-
         return self.coordinator.data.to_dict().get(key)
