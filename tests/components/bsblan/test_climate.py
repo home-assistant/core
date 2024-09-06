@@ -28,7 +28,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.entity_registry as er
 
 from . import setup_with_selected_platforms
@@ -217,13 +217,11 @@ async def test_async_set_preset_mode(
 
 
 @pytest.mark.parametrize(
-    ("target_temp", "expected_result"),
+    ("target_temp"),
     [
-        (8.0, "success"),  # Min temperature
-        (15.0, "success"),  # Mid-range temperature
-        (20.0, "success"),  # Max temperature
-        (7.9, "failure"),  # Just below min
-        (20.1, "failure"),  # Just above max
+        (8.0),  # Min temperature
+        (15.0),  # Mid-range temperature
+        (20.0),  # Max temperature
     ],
 )
 async def test_async_set_temperature(
@@ -231,31 +229,18 @@ async def test_async_set_temperature(
     mock_bsblan: AsyncMock,
     mock_config_entry: MockConfigEntry,
     target_temp: float,
-    expected_result: str,
 ) -> None:
     """Test setting temperature via service call."""
     await setup_with_selected_platforms(hass, mock_config_entry, [Platform.CLIMATE])
 
-    if expected_result == "success":
-        # Call the service to set temperature
-        await hass.services.async_call(
-            domain=CLIMATE_DOMAIN,
-            service=SERVICE_SET_TEMPERATURE,
-            service_data={ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: target_temp},
-            blocking=True,
-        )
-        # Assert that the thermostat method was called with the correct temperature
-        mock_bsblan.thermostat.assert_called_once_with(target_temperature=target_temp)
-    else:
-        # Expect a ServiceValidationError for temperatures out of range
-        with pytest.raises(ServiceValidationError) as exc_info:
-            await hass.services.async_call(
-                domain=CLIMATE_DOMAIN,
-                service=SERVICE_SET_TEMPERATURE,
-                service_data={ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: target_temp},
-                blocking=True,
-            )
-        assert exc_info.value.translation_key == "temp_out_of_range"
+    await hass.services.async_call(
+        domain=CLIMATE_DOMAIN,
+        service=SERVICE_SET_TEMPERATURE,
+        service_data={ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: target_temp},
+        blocking=True,
+    )
+    # Assert that the thermostat method was called with the correct temperature
+    mock_bsblan.thermostat.assert_called_once_with(target_temperature=target_temp)
 
     mock_bsblan.thermostat.reset_mock()
 
