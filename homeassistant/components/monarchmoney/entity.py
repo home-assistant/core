@@ -56,31 +56,17 @@ class MonarchMoneyAccountEntity(MonarchMoneyEntityBase):
 
         self.entity_description = description
         self._account_id = account.id
-
-        # Parse out some fields
-        institution = "Manual entry"
-        if account.institution_name is not None:
-            institution = account.institution_name
-        configuration_url = "http://monarchmoney.com"
-        if account.institution_url is not None:
-            configuration_url = account.institution_url
-
         self._attr_attribution = (
             f"Data provided by Monarch Money API via {account.data_provider}"
         )
-
-        if not configuration_url.startswith(("http://", "https://")):
-            configuration_url = f"http://{configuration_url}"
-
         self._attr_unique_id = f"{coordinator.subscription_id}_{account.name}_{description.translation_key}"
-
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, account.id)},
-            name=f"{institution} {account.name}",
+            name=f"{account.institution_name} {account.name}",
             entry_type=DeviceEntryType.SERVICE,
             manufacturer=account.data_provider,
-            model=f"{institution} - {account.type_name} - {account.subtype_name}",
-            configuration_url=configuration_url,
+            model=f"{account.institution_name} - {account.type_name} - {account.subtype_name}",
+            configuration_url=account.institution_url,
             suggested_area="Banking/Finance",
         )
 
