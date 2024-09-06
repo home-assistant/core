@@ -1,4 +1,4 @@
-"""Const for the HEOS integration."""
+"""Const for the Fing integration."""
 
 AGENT_IP = "agent_ip"
 AGENT_PORT = "agent_port"
