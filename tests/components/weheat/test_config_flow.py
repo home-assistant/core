@@ -10,7 +10,7 @@ from homeassistant.components.weheat.const import (
     OAUTH2_AUTHORIZE,
     OAUTH2_TOKEN,
 )
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER, ConfigFlowResult
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_SOURCE, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -35,7 +35,6 @@ async def test_full_flow(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    setup_credentials,
     mock_setup_entry,
 ) -> None:
     """Check full of adding a single heat pump."""
@@ -43,7 +42,7 @@ async def test_full_flow(
         DOMAIN, context={CONF_SOURCE: SOURCE_USER}
     )
 
-    await handle_oath(hass, hass_client_no_auth, aioclient_mock, result)
+    await handle_oauth(hass, hass_client_no_auth, aioclient_mock, result)
 
     with (
         patch(
@@ -56,6 +55,8 @@ async def test_full_flow(
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert len(mock_setup_entry.mock_calls) == 1
     assert len(mock_weheat.mock_calls) == 1
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].unique_id == USER_UUID_1
     assert result["result"].title == ENTRY_TITLE
     assert result["data"][CONF_TOKEN][CONF_REFRESH_TOKEN] == MOCK_REFRESH_TOKEN
@@ -68,13 +69,12 @@ async def test_duplicate_unique_id(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    setup_credentials,
     mock_setup_entry,
 ) -> None:
     """Check that the config flow is aborted when an entry with the same ID exists."""
     first_entry = MockConfigEntry(
         domain=DOMAIN,
-        data=None,
+        data={},
         unique_id=USER_UUID_1,
     )
 
@@ -84,7 +84,7 @@ async def test_duplicate_unique_id(
         DOMAIN, context={CONF_SOURCE: SOURCE_USER}
     )
 
-    await handle_oath(hass, hass_client_no_auth, aioclient_mock, result)
+    await handle_oauth(hass, hass_client_no_auth, aioclient_mock, result)
 
     with (
         patch(
@@ -99,9 +99,14 @@ async def test_duplicate_unique_id(
     assert result["reason"] == "already_configured"
 
 
-async def handle_oath(hass, hass_client_no_auth, aioclient_mock, result):
+async def handle_oauth(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    result: ConfigFlowResult,
+) -> None:
     """Handle the Oauth2 part of the flow."""
-    state = config_entry_oauth2_flow._encode_jwt(  # noqa: SLF001
+    state = config_entry_oauth2_flow._encode_jwt(
         hass,
         {
             "flow_id": result["flow_id"],
