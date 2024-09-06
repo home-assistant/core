@@ -1,5 +1,6 @@
 """Coordinator for the WatchYourLAN integration."""
 
+from datetime import timedelta
 import logging
 from types import MappingProxyType
 
@@ -16,10 +17,14 @@ class WatchYourLANUpdateCoordinator(DataUpdateCoordinator):
 
     def __init__(self, hass: HomeAssistant, config: MappingProxyType) -> None:
         """Initialize the coordinator."""
+        # Set up a regular polling interval (e.g., every 60 seconds)
+        update_interval = timedelta(seconds=60)  # Poll every 60 seconds
+
         super().__init__(
             hass,
             _LOGGER,
             name="WatchYourLAN",
+            update_interval=update_interval,  # Add polling interval here
         )
         self.api_url = config.get("url")
         self.api_client = WatchYourLANClient(
@@ -33,5 +38,3 @@ class WatchYourLANUpdateCoordinator(DataUpdateCoordinator):
         except Exception as e:
             _LOGGER.error("Failed to fetch data from WatchYourLAN")
             raise UpdateFailed(f"Error fetching data: {e}") from e
-
-        return None
