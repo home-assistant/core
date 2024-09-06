@@ -1,8 +1,10 @@
 """Common fixtures for the SMLIGHT Zigbee tests."""
 
-from collections.abc import AsyncGenerator, Generator
+from collections.abc import AsyncGenerator, Callable, Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from pysmlight.const import Settings
+from pysmlight.sse import sseClient
 from pysmlight.web import CmdWrapper, Info, Sensors
 import pytest
 
@@ -89,6 +91,23 @@ def mock_smlight_client(request: pytest.FixtureRequest) -> Generator[MagicMock]:
 
         api.cmds = AsyncMock(spec_set=CmdWrapper)
         api.set_toggle = AsyncMock()
+        api.sse = MagicMock(spec_set=sseClient)
+        api.sse.client = AsyncMock()
+        api._settings_callbacks = {}
+
+        def _mock_settings_cb(
+            setting: Settings, callback: Callable
+        ) -> Callable[[], None]:
+            if setting not in api._settings_callbacks:
+                api._settings_callbacks[setting] = callback
+
+            def remove_callback():
+                if setting in api._settings_callbacks:
+                    del api._settings_callbacks[setting]
+
+            return remove_callback
+
+        api.sse.register_settings_cb.side_effect = _mock_settings_cb
 
         yield api
 
