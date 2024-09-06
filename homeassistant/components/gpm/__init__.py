@@ -25,7 +25,6 @@ from .const import (
     PATH_RESOURCE_INSTALL_BASEDIR,
     URL_BASE,
 )
-from .repairs import async_create_restart_issue
 
 PLATFORMS: list[Platform] = [Platform.UPDATE]
 
@@ -69,18 +68,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: GPMConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: GPMConfigEntry) -> bool:
     """Unload a config entry."""
-    manager = entry.runtime_data
-    issue_domain = (
-        await manager.get_component_name()
-        if isinstance(manager, IntegrationRepositoryManager)
-        else None
-    )
-    async_create_restart_issue(
-        hass,
-        action="uninstall",
-        name=manager.slug,
-        issue_domain=issue_domain,
-    )
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 

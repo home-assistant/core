@@ -5,9 +5,6 @@ from typing import Any, cast
 from homeassistant.components.repairs import RepairsFlow
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
-
-from .const import DOMAIN
 
 
 class RestartRequiredFixFlow(RepairsFlow):
@@ -46,27 +43,3 @@ async def async_create_fix_flow(
     if issue_id.startswith("restart_required."):
         return RestartRequiredFixFlow(data)
     return None
-
-
-def async_create_restart_issue(
-    hass: HomeAssistant,
-    action: str,
-    name: str,
-    issue_domain: str | None = None,
-) -> None:
-    """Create an issue to inform the user that a restart is required."""
-    data: dict[str, str | int | float | None] = {
-        "action": action,
-        "name": name,
-    }
-    async_create_issue(
-        hass=hass,
-        domain=DOMAIN,
-        issue_id=f"restart_required.{name}",
-        is_fixable=True,
-        issue_domain=issue_domain or name,
-        severity=IssueSeverity.WARNING,
-        translation_key="restart_required",
-        translation_placeholders=cast(dict[str, str], data),
-        data=data,
-    )

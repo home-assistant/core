@@ -16,7 +16,6 @@ from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
 from . import get_manager
 from ._manager import (
     GPMError,
-    IntegrationRepositoryManager,
     InvalidStructure,
     RepositoryManager,
     RepositoryType,
@@ -24,7 +23,6 @@ from ._manager import (
     UpdateStrategy,
 )
 from .const import CONF_DOWNLOAD_URL, CONF_UPDATE_STRATEGY, DOMAIN
-from .repairs import async_create_restart_issue
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -59,7 +57,7 @@ class GPMConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for GPM."""
 
     VERSION = 1
-    _user_input: dict[str, Any]
+    _user_input: dict[str, str]
     manager: RepositoryManager
 
     async def async_step_user(
@@ -69,12 +67,11 @@ class GPMConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             try:
+                cv.url(user_input[CONF_URL])
                 self._user_input = {
-                    CONF_URL: cv.url(user_input[CONF_URL]),
-                    CONF_TYPE: RepositoryType(user_input[CONF_TYPE]),
-                    CONF_UPDATE_STRATEGY: UpdateStrategy(
-                        user_input[CONF_UPDATE_STRATEGY]
-                    ),
+                    CONF_URL: user_input[CONF_URL],
+                    CONF_TYPE: user_input[CONF_TYPE],
+                    CONF_UPDATE_STRATEGY: user_input[CONF_UPDATE_STRATEGY],
                 }
                 self.manager = get_manager(self.hass, user_input)
                 await self.async_set_unique_id(self.manager.unique_id)
@@ -109,8 +106,8 @@ class GPMConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 download_url = cv.template(user_input[CONF_DOWNLOAD_URL])
-                self._user_input[CONF_DOWNLOAD_URL] = download_url
                 manager.set_download_url(download_url)
+                self._user_input[CONF_DOWNLOAD_URL] = user_input[CONF_DOWNLOAD_URL]
                 return await self.async_step_install()
             except vol.Invalid:
                 _LOGGER.exception("Invalid template")
@@ -138,15 +135,6 @@ class GPMConfigFlow(ConfigFlow, domain=DOMAIN):
             latest_version = await self.manager.get_latest_version()
             await self.manager.checkout(latest_version)
             await self.manager.install()
-            if self._user_input[CONF_TYPE] == RepositoryType.INTEGRATION:
-                # TODO move to manager
-                manager = cast(IntegrationRepositoryManager, self.manager)
-                component_name = await manager.get_component_name()
-                async_create_restart_issue(
-                    self.hass,
-                    action="install",
-                    name=component_name,
-                )
             title = await self.manager.get_title()
             return self.async_create_entry(
                 title=title,

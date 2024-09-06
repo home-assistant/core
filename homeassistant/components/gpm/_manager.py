@@ -24,10 +24,12 @@ from homeassistant.components.lovelace.const import (  # pylint: disable=hass-co
 from homeassistant.components.lovelace.resources import ResourceStorageCollection
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.template import Template
 from homeassistant.util import slugify
 
 from .const import (
+    DOMAIN,
     DOWNLOAD_CHUNK_SIZE,
     PATH_CLONE_BASEDIR,
     PATH_INTEGRATION_INSTALL_BASEDIR,
@@ -299,6 +301,16 @@ class IntegrationRepositoryManager(RepositoryManager):
             )
         except FileExistsError:
             raise AlreadyInstalledError(install_path) from None
+        await self._create_restart_issue("install")
+
+    @RepositoryManager.ensure_cloned
+    async def checkout(self, ref: str) -> None:
+        """Checkout the specified reference."""
+        current_ref = await self.get_current_version()
+        is_changing = current_ref != ref
+        await super().checkout(ref)
+        if is_changing:
+            await self._create_restart_issue("update")
 
     @RepositoryManager.ensure_installed
     async def uninstall(self) -> None:
@@ -306,6 +318,7 @@ class IntegrationRepositoryManager(RepositoryManager):
         install_path = await self.get_install_path()
         _LOGGER.info("Uninstalling %s", install_path)
         await self.hass.async_add_executor_job(install_path.unlink)
+        await self._create_restart_issue("uninstall")
 
     @RepositoryManager.ensure_cloned
     async def get_component_dir(self) -> Path:
@@ -341,6 +354,25 @@ class IntegrationRepositoryManager(RepositoryManager):
     async def get_title(self) -> str:
         """Return the title of the repository."""
         return await self.get_component_name()
+
+    async def _create_restart_issue(self, action: str) -> None:
+        """Create an issue to inform the user that a restart is required."""
+        component_name = await self.get_component_name()
+        issue_data = {
+            "action": action,
+            "name": component_name,
+        }
+        async_create_issue(
+            hass=self.hass,
+            domain=DOMAIN,
+            issue_id=f"restart_required.{component_name}",
+            is_fixable=True,
+            issue_domain=component_name,
+            severity=IssueSeverity.WARNING,
+            translation_key="restart_required",
+            translation_placeholders=issue_data,
+            data=issue_data,
+        )
 
 
 class ResourceRepositoryManager(RepositoryManager):
@@ -474,7 +506,8 @@ class ResourceRepositoryManager(RepositoryManager):
     async def get_resource_url(self) -> str:
         """Return the URL of the installed resource."""
         resource_name = await self.get_resource_name()
-        return f"{URL_BASE}/{resource_name}"
+        current_version = slugify(await self.get_current_version())
+        return f"{URL_BASE}/{resource_name}?v={current_version}"
 
     async def get_install_path(self) -> Path:
         """Return the path to the installed resource."""

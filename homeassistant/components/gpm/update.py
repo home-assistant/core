@@ -18,7 +18,6 @@ from ._manager import (
     UpdateStrategy,
 )
 from .const import GIT_SHORT_HASH_LEN
-from .repairs import async_create_restart_issue
 
 SCAN_INTERVAL = timedelta(hours=3)
 PARALLEL_UPDATES = 0  # = unlimited
@@ -94,10 +93,3 @@ class GPMUpdateEntity(UpdateEntity):
             await self.manager.checkout(to_install)
         except GPMError as e:
             raise HomeAssistantError(e) from e
-
-        async_create_restart_issue(
-            self.hass,
-            action="update",
-            name=self.name,
-            issue_domain=self._component_name,
-        )
