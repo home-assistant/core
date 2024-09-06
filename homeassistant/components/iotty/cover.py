@@ -10,7 +10,11 @@ from iottycloud.device import Device
 from iottycloud.shutter import Shutter, ShutterState
 from iottycloud.verbs import SH_DEVICE_TYPE_UID
 
-from homeassistant.components.cover import CoverDeviceClass, CoverEntity
+from homeassistant.components.cover import (
+    CoverDeviceClass,
+    CoverEntity,
+    CoverEntityFeature,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -127,6 +131,14 @@ class IottyShutter(CoverEntity, CoordinatorEntity[IottyDataUpdateCoordinator]):
         )
 
     @property
+    def current_cover_position(self) -> int | None:
+        """Return the current position of the shutter.
+
+        None is unknown, 0 is closed, 100 is fully open.
+        """
+        return self._iotty_device.percentage
+
+    @property
     def is_closed(self) -> bool:
         """Return true if the Shutter is closed."""
         _LOGGER.debug(
@@ -138,6 +150,16 @@ class IottyShutter(CoverEntity, CoordinatorEntity[IottyDataUpdateCoordinator]):
         return (
             self._iotty_device.status == ShutterState.STATIONARY
             and self._iotty_device.percentage == 0
+        )
+
+    @property
+    def supported_features(self) -> CoverEntityFeature:
+        """Flag supported features."""
+        return CoverEntityFeature(0) | (
+            CoverEntityFeature.OPEN
+            | CoverEntityFeature.CLOSE
+            | CoverEntityFeature.STOP
+            | CoverEntityFeature.SET_POSITION
         )
 
     async def async_open_cover(self, **kwargs: Any) -> None:
