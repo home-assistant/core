@@ -4,16 +4,17 @@ import copy
 from unittest.mock import patch
 
 from homeassistant.components.squeezebox.const import (
-    DOMAIN,
     STATUS_QUERY_LIBRARYNAME,
     STATUS_QUERY_MAC,
     STATUS_QUERY_UUID,
     STATUS_QUERY_VERSION,
     STATUS_SENSOR_RESCAN,
 )
-from homeassistant.const import CONF_HOST, CONF_PORT, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+
+from .conftest import configure_squeezebox
 
 from tests.common import MockConfigEntry
 
@@ -52,28 +53,10 @@ FAKE_QUERY_RESPONSE = {
 }
 
 
-async def setup_mocked_integration(hass: HomeAssistant) -> MockConfigEntry:
-    """Mock ConfigEntry in Home Assistant."""
-
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=FAKE_UUID,
-        data={
-            CONF_HOST: FAKE_IP,
-            CONF_PORT: FAKE_PORT,
-        },
-    )
-
-    entry.add_to_hass(hass)
-
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-    return entry
-
-
 async def test_binary_sensor(
     hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    lms: MockConfigEntry,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test binary sensor states and attributes."""
@@ -89,8 +72,9 @@ async def test_binary_sensor(
             return_value=copy.deepcopy(FAKE_QUERY_RESPONSE),
         ),
     ):
-        await setup_mocked_integration(hass)
-    state = hass.states.get("binary_sensor.fakelib_library_rescan")
+        await configure_squeezebox(hass, config_entry, lms)
+
+    state = hass.states.get("binary_sensor.1_2_3_4_needs_restart")
 
     assert state is not None
-    assert state.state == "on"
+    assert state.state == "off"

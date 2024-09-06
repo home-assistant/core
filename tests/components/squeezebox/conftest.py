@@ -24,6 +24,7 @@ TEST_USE_HTTPS = False
 SERVER_UUID = "12345678-1234-1234-1234-123456789012"
 TEST_MAC = "aa:bb:cc:dd:ee:ff"
 TEST_PLAYER_NAME = "Test Player"
+TEST_SERVER_NAME = "Test Server"
 FAKE_VALID_ITEM_ID = "1234"
 FAKE_INVALID_ITEM_ID = "4321"
 
@@ -133,126 +134,55 @@ async def mock_async_browse(
 @pytest.fixture
 def player() -> MagicMock:
     """Return a mock player."""
-    return create_mock_player()
+    return mock_pysqueezebox_player()
 
 
 @pytest.fixture
 def player_factory() -> MagicMock:
     """Return a factory for creating mock players."""
-    return create_mock_player
+    return mock_pysqueezebox_player
 
 
-def create_mock_player() -> MagicMock:
+def mock_pysqueezebox_player() -> MagicMock:
     """Mock a Lyrion Media Server player."""
-    player = MagicMock()
-
-    # set some default fake values for properties
-    player.player_id = random_uuid_hex()
-    player.current_index = 0
-    player.mode = "stop"
-    player.muting = False
-    player.name = TEST_PLAYER_NAME
-    player.playlist: list(dict(str, str)) | None = None
-    player.power = True
-    player.repeat = "none"
-    player.shuffle = "none"
-    player.time = 0
-    player.volume = 10
-
-    # mock pysqueezebox.Player methods
-    player.async_browse = AsyncMock(side_effect=mock_async_browse)
-    player.async_clear_playlist = AsyncMock(
-        side_effect=lambda: setattr(player, "playlist", None)
-    )
-    player.async_index = AsyncMock(
-        side_effect=lambda index: setattr(
-            player,
-            "current_index",
-            player.current_index + int(index)
-            if index.startswith(("+", "-"))
-            else index,
+    with patch("pysqueezebox.Player", autospec=True) as mock_player:
+        mock_player.async_browse = AsyncMock(side_effect=mock_async_browse)
+        mock_player.generate_image_url_from_track_id = MagicMock(
+            return_value="http://lms.internal:9000/html/images/favorites.png"
         )
-    )
-
-    def async_load_playlist(playlist, cmd):
-        if cmd == "add":
-            if player.playlist is None:
-                player.playlist = []
-            player.playlist.extend(playlist)
-        else:
-            player.playlist = playlist
-        player.current_index = 0
-        player.url = player.playlist[0]
-
-    player.async_load_playlist = AsyncMock(side_effect=async_load_playlist)
-    player.async_load_url = AsyncMock(
-        side_effect=lambda url, cmd: async_load_playlist([{"url": url}], cmd)
-    )
-    player.async_play = AsyncMock(side_effect=lambda: setattr(player, "mode", "play"))
-    player.async_pause = AsyncMock(side_effect=lambda: setattr(player, "mode", "pause"))
-    player.async_set_muting = AsyncMock(
-        side_effect=lambda muting: setattr(player, "muting", muting)
-    )
-    player.async_set_power = AsyncMock(
-        side_effect=lambda power: setattr(player, "power", power)
-    )
-    player.async_set_repeat = AsyncMock(
-        side_effect=lambda repeat: setattr(player, "repeat", repeat)
-    )
-    player.async_set_shuffle = AsyncMock(
-        side_effect=lambda shuffle: setattr(player, "shuffle", shuffle)
-    )
-    player.async_set_volume = AsyncMock(
-        side_effect=lambda volume: setattr(
-            player,
-            "volume",
-            player.volume + int(volume) if volume.startswith(("+", "-")) else volume,
-        )
-    )
-    player.async_stop = AsyncMock(side_effect=lambda: setattr(player, "mode", "stop"))
-    player.async_sync = AsyncMock()
-    player.async_time = AsyncMock(
-        side_effect=lambda time: setattr(player, "time", time)
-    )
-    player.async_toggle_pause = AsyncMock(
-        side_effect=lambda: setattr(
-            player, "mode", "play" if player.mode != "play" else "pause"
-        )
-    )
-    player.async_query = AsyncMock(return_value="test result")
-    player.async_update = AsyncMock()
-    player.async_unsync = AsyncMock()
-    player.generate_image_url_from_track_id = MagicMock(
-        return_value="http://lms.internal:9000/html/images/favorites.png"
-    )
-    return player
+        mock_player.name = TEST_PLAYER_NAME
+        mock_player.player_id = random_uuid_hex()
+        return mock_player
 
 
 @pytest.fixture
 def lms_factory(player_factory: MagicMock) -> MagicMock:
     """Return a factory for creating mock Lyrion Media Servers with arbitrary number of players."""
-    return lambda player_count: create_mock_lms(player_factory, player_count)
+    return lambda player_count: mock_pysqueezebox_server(player_factory, player_count)
 
 
 @pytest.fixture
 def lms(player_factory: MagicMock) -> MagicMock:
     """Mock a Lyrion Media Server with one mock player attached."""
-    return create_mock_lms(player_factory, 1, uuid=TEST_MAC)
+    return mock_pysqueezebox_server(player_factory, 1, uuid=TEST_MAC)
 
 
-def create_mock_lms(
+def mock_pysqueezebox_server(
     player_factory: MagicMock, player_count: int, uuid: str | None = None
 ) -> MagicMock:
     """Create a mock Lyrion Media Server with the given number of mock players attached."""
-    lms = MagicMock()
-    players = [player_factory() for _ in range(player_count)]
-    lms.async_get_players = AsyncMock(return_value=players)
+    with patch("pysqueezebox.Server", autospec=True) as mock_lms:
+        players = [player_factory() for _ in range(player_count)]
+        mock_lms.async_get_players = AsyncMock(return_value=players)
 
-    if not uuid:
-        uuid = random_uuid_hex()
-    lms.async_query = AsyncMock(return_value={"uuid": format_mac(uuid)})
-    lms.async_status = AsyncMock(return_value={"uuid": format_mac(uuid)})
-    return lms
+        if not uuid:
+            uuid = random_uuid_hex()
+
+        mock_lms.uuid = uuid
+        mock_lms.name = TEST_SERVER_NAME
+        mock_lms.async_query = AsyncMock(return_value={"uuid": format_mac(uuid)})
+        mock_lms.async_status = AsyncMock(return_value={"uuid": format_mac(uuid)})
+        return mock_lms
 
 
 async def configure_squeezebox(

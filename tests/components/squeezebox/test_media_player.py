@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 import json
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -16,6 +16,7 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_CONTENT_TYPE,
     ATTR_MEDIA_ENQUEUE,
     ATTR_MEDIA_POSITION,
+    ATTR_MEDIA_POSITION_UPDATED_AT,
     ATTR_MEDIA_REPEAT,
     ATTR_MEDIA_SEEK_POSITION,
     ATTR_MEDIA_SHUFFLE,
@@ -34,7 +35,6 @@ from homeassistant.components.media_player import (
 from homeassistant.components.squeezebox.const import DOMAIN, SENSOR_UPDATE_INTERVAL
 from homeassistant.components.squeezebox.media_player import (
     ATTR_PARAMETERS,
-    ATTR_QUERY_RESULT,
     DISCOVERY_INTERVAL,
     SERVICE_CALL_METHOD,
     SERVICE_CALL_QUERY,
@@ -62,6 +62,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceRegistry
+from homeassistant.helpers.entity_registry import EntityRegistry
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
@@ -82,6 +83,17 @@ async def test_device_registry(
     }
     assert reg_device.name == TEST_PLAYER_NAME
     assert reg_device.suggested_area is None
+
+
+async def test_entity_registry(
+    hass: HomeAssistant, entity_registry: EntityRegistry, configured_player: MagicMock
+) -> None:
+    """Test squeezebox media_player entity registered in the entity registry."""
+    assert entity_registry.async_get("media_player.test_player")
+    assert (
+        entity_registry.async_get("media_player.test_player").unique_id
+        == configured_player.player_id
+    )
 
 
 async def test_squeezebox_player_rediscovery(
@@ -121,7 +133,6 @@ async def test_squeezebox_turn_on(
         blocking=True,
     )
     configured_player.async_set_power.assert_called_once_with(True)
-    assert hass.states.get("media_player.test_player").state == MediaPlayerState.IDLE
 
 
 async def test_squeezebox_turn_off(
@@ -135,6 +146,50 @@ async def test_squeezebox_turn_off(
         blocking=True,
     )
     configured_player.async_set_power.assert_called_once_with(False)
+
+
+async def test_squeezebox_state(
+    hass: HomeAssistant, configured_player: MagicMock
+) -> None:
+    """Test determining the MediaPlayerState."""
+
+    await async_setup_component(hass, HOMEASSISTANT_DOMAIN, {})
+
+    configured_player.power = True
+    configured_player.mode = "stop"
+    await hass.services.async_call(
+        HOMEASSISTANT_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {ATTR_ENTITY_ID: "media_player.test_player"},
+        blocking=True,
+    )
+    assert hass.states.get("media_player.test_player").state == MediaPlayerState.IDLE
+
+    configured_player.mode = "play"
+    await hass.services.async_call(
+        HOMEASSISTANT_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {ATTR_ENTITY_ID: "media_player.test_player"},
+        blocking=True,
+    )
+    assert hass.states.get("media_player.test_player").state == MediaPlayerState.PLAYING
+
+    configured_player.mode = "pause"
+    await hass.services.async_call(
+        HOMEASSISTANT_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {ATTR_ENTITY_ID: "media_player.test_player"},
+        blocking=True,
+    )
+    assert hass.states.get("media_player.test_player").state == MediaPlayerState.PAUSED
+
+    configured_player.power = False
+    await hass.services.async_call(
+        HOMEASSISTANT_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {ATTR_ENTITY_ID: "media_player.test_player"},
+        blocking=True,
+    )
     assert hass.states.get("media_player.test_player").state == MediaPlayerState.OFF
 
 
@@ -149,10 +204,6 @@ async def test_squeezebox_volume_up(
         blocking=True,
     )
     configured_player.async_set_volume.assert_called_once_with("+5")
-    assert (
-        hass.states.get("media_player.test_player").attributes[ATTR_MEDIA_VOLUME_LEVEL]
-        == 0.15
-    )
 
 
 async def test_squeezebox_volume_down(
@@ -166,10 +217,6 @@ async def test_squeezebox_volume_down(
         blocking=True,
     )
     configured_player.async_set_volume.assert_called_once_with("-5")
-    assert (
-        hass.states.get("media_player.test_player").attributes[ATTR_MEDIA_VOLUME_LEVEL]
-        == 0.05
-    )
 
 
 async def test_squeezebox_volume_set(
@@ -183,18 +230,28 @@ async def test_squeezebox_volume_set(
         blocking=True,
     )
     configured_player.async_set_volume.assert_called_once_with("50")
+
+
+async def test_squeezebox_volume_property(
+    hass: HomeAssistant, configured_player: MagicMock
+) -> None:
+    """Test volume property."""
+
+    await async_setup_component(hass, HOMEASSISTANT_DOMAIN, {})
+
+    configured_player.volume = 50
+    await hass.services.async_call(
+        HOMEASSISTANT_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {ATTR_ENTITY_ID: "media_player.test_player"},
+        blocking=True,
+    )
     assert (
         hass.states.get("media_player.test_player").attributes[ATTR_MEDIA_VOLUME_LEVEL]
         == 0.5
     )
 
-
-async def test_squeezebox_volume_unavailable(
-    hass: HomeAssistant, configured_player: MagicMock
-) -> None:
-    """Test volume attribute when volume is unavailable."""
     configured_player.volume = None
-    await async_setup_component(hass, HOMEASSISTANT_DOMAIN, {})
     await hass.services.async_call(
         HOMEASSISTANT_DOMAIN,
         SERVICE_UPDATE_ENTITY,
@@ -218,10 +275,6 @@ async def test_squeezebox_mute(
         blocking=True,
     )
     configured_player.async_set_muting.assert_called_once_with(True)
-    assert (
-        hass.states.get("media_player.test_player").attributes[ATTR_MEDIA_VOLUME_MUTED]
-        is True
-    )
 
 
 async def test_squeezebox_unmute(
@@ -235,6 +288,33 @@ async def test_squeezebox_unmute(
         blocking=True,
     )
     configured_player.async_set_muting.assert_called_once_with(False)
+
+
+async def test_squeezebox_mute_property(
+    hass: HomeAssistant, configured_player: MagicMock
+) -> None:
+    """Test the mute property."""
+    await async_setup_component(hass, HOMEASSISTANT_DOMAIN, {})
+
+    configured_player.muting = True
+    await hass.services.async_call(
+        HOMEASSISTANT_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {ATTR_ENTITY_ID: "media_player.test_player"},
+        blocking=True,
+    )
+    assert (
+        hass.states.get("media_player.test_player").attributes[ATTR_MEDIA_VOLUME_MUTED]
+        is True
+    )
+
+    configured_player.muting = False
+    await hass.services.async_call(
+        HOMEASSISTANT_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {ATTR_ENTITY_ID: "media_player.test_player"},
+        blocking=True,
+    )
     assert (
         hass.states.get("media_player.test_player").attributes[ATTR_MEDIA_VOLUME_MUTED]
         is False
@@ -255,10 +335,7 @@ async def test_squeezebox_repeat_mode(
         blocking=True,
     )
     configured_player.async_set_repeat.assert_called_once_with("playlist")
-    assert (
-        hass.states.get("media_player.test_player").attributes[ATTR_MEDIA_REPEAT]
-        == RepeatMode.ALL
-    )
+
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
         SERVICE_REPEAT_SET,
@@ -269,10 +346,7 @@ async def test_squeezebox_repeat_mode(
         blocking=True,
     )
     configured_player.async_set_repeat.assert_called_with("song")
-    assert (
-        hass.states.get("media_player.test_player").attributes[ATTR_MEDIA_REPEAT]
-        == RepeatMode.ONE
-    )
+
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
         SERVICE_REPEAT_SET,
@@ -283,6 +357,45 @@ async def test_squeezebox_repeat_mode(
         blocking=True,
     )
     configured_player.async_set_repeat.assert_called_with("none")
+
+
+async def test_squeezebox_repeat_mode_property(
+    hass: HomeAssistant, configured_player: MagicMock
+) -> None:
+    """Test the repeat mode property."""
+    await async_setup_component(hass, HOMEASSISTANT_DOMAIN, {})
+
+    configured_player.repeat = "playlist"
+    await hass.services.async_call(
+        HOMEASSISTANT_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {ATTR_ENTITY_ID: "media_player.test_player"},
+        blocking=True,
+    )
+    assert (
+        hass.states.get("media_player.test_player").attributes[ATTR_MEDIA_REPEAT]
+        == RepeatMode.ALL
+    )
+
+    configured_player.repeat = "song"
+    await hass.services.async_call(
+        HOMEASSISTANT_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {ATTR_ENTITY_ID: "media_player.test_player"},
+        blocking=True,
+    )
+    assert (
+        hass.states.get("media_player.test_player").attributes[ATTR_MEDIA_REPEAT]
+        == RepeatMode.ONE
+    )
+
+    configured_player.repeat = "none"
+    await hass.services.async_call(
+        HOMEASSISTANT_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {ATTR_ENTITY_ID: "media_player.test_player"},
+        blocking=True,
+    )
     assert (
         hass.states.get("media_player.test_player").attributes[ATTR_MEDIA_REPEAT]
         == RepeatMode.OFF
@@ -303,10 +416,7 @@ async def test_squeezebox_shuffle(
         blocking=True,
     )
     configured_player.async_set_shuffle.assert_called_once_with("song")
-    assert (
-        hass.states.get("media_player.test_player").attributes[ATTR_MEDIA_SHUFFLE]
-        is True
-    )
+
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
         SERVICE_SHUFFLE_SET,
@@ -317,6 +427,37 @@ async def test_squeezebox_shuffle(
         blocking=True,
     )
     configured_player.async_set_shuffle.assert_called_with("none")
+    assert (
+        hass.states.get("media_player.test_player").attributes[ATTR_MEDIA_SHUFFLE]
+        is False
+    )
+
+
+async def test_squeezebox_shuffle_property(
+    hass: HomeAssistant, configured_player: MagicMock
+) -> None:
+    """Test the shuffle property."""
+    await async_setup_component(hass, HOMEASSISTANT_DOMAIN, {})
+
+    configured_player.shuffle = "song"
+    await hass.services.async_call(
+        HOMEASSISTANT_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {ATTR_ENTITY_ID: "media_player.test_player"},
+        blocking=True,
+    )
+    assert (
+        hass.states.get("media_player.test_player").attributes[ATTR_MEDIA_SHUFFLE]
+        is True
+    )
+
+    configured_player.shuffle = "none"
+    await hass.services.async_call(
+        HOMEASSISTANT_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {ATTR_ENTITY_ID: "media_player.test_player"},
+        blocking=True,
+    )
     assert (
         hass.states.get("media_player.test_player").attributes[ATTR_MEDIA_SHUFFLE]
         is False
@@ -334,7 +475,6 @@ async def test_squeezebox_play(
         blocking=True,
     )
     configured_player.async_play.assert_called_once()
-    assert hass.states.get("media_player.test_player").state == MediaPlayerState.PLAYING
 
 
 async def test_squeezebox_play_pause(
@@ -348,15 +488,6 @@ async def test_squeezebox_play_pause(
         blocking=True,
     )
     configured_player.async_toggle_pause.assert_called_once()
-    assert hass.states.get("media_player.test_player").state == MediaPlayerState.PLAYING
-    await hass.services.async_call(
-        MEDIA_PLAYER_DOMAIN,
-        SERVICE_MEDIA_PLAY_PAUSE,
-        {ATTR_ENTITY_ID: "media_player.test_player"},
-        blocking=True,
-    )
-    assert configured_player.async_toggle_pause.call_count == 2
-    assert hass.states.get("media_player.test_player").state == MediaPlayerState.PAUSED
 
 
 async def test_squeezebox_pause(
@@ -370,7 +501,6 @@ async def test_squeezebox_pause(
         blocking=True,
     )
     configured_player.async_pause.assert_called_once()
-    assert hass.states.get("media_player.test_player").state == MediaPlayerState.PAUSED
 
 
 async def test_squeezebox_seek(
@@ -397,10 +527,6 @@ async def test_squeezebox_seek(
         blocking=True,
     )
     configured_player.async_time.assert_called_once_with(100)
-    assert (
-        hass.states.get("media_player.test_player").attributes[ATTR_MEDIA_POSITION]
-        == 100
-    )
 
 
 async def test_squeezebox_stop(
@@ -414,7 +540,6 @@ async def test_squeezebox_stop(
         blocking=True,
     )
     configured_player.async_stop.assert_called_once()
-    assert hass.states.get("media_player.test_player").state == MediaPlayerState.IDLE
 
 
 async def test_squeezebox_load_playlist(
@@ -531,6 +656,7 @@ async def test_squeezebox_skip_tracks(
         blocking=True,
     )
     configured_player.async_index.assert_called_once_with("+1")
+
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
         SERVICE_MEDIA_PREVIOUS_TRACK,
@@ -557,19 +683,12 @@ async def test_squeezebox_call_query(
     configured_player.async_query.assert_called_once_with(
         "test_command", "param1", "param2"
     )
-    assert (
-        hass.states.get("media_player.test_player").attributes[ATTR_QUERY_RESULT]
-        == "test result"
-    )
 
 
 async def test_squeezebox_call_method(
     hass: HomeAssistant, configured_player: MagicMock
 ) -> None:
     """Test method call service call."""
-    query_result = hass.states.get("media_player.test_player").attributes[
-        ATTR_QUERY_RESULT
-    ]
     await hass.services.async_call(
         DOMAIN,
         SERVICE_CALL_METHOD,
@@ -582,11 +701,6 @@ async def test_squeezebox_call_method(
     )
     configured_player.async_query.assert_called_once_with(
         "test_command", "param1", "param2"
-    )
-    # confirm no change to query_result
-    assert (
-        hass.states.get("media_player.test_player").attributes[ATTR_QUERY_RESULT]
-        == query_result
     )
 
 
@@ -673,3 +787,96 @@ async def test_squeezebox_unjoin(
         blocking=True,
     )
     configured_player.async_unsync.assert_called_once()
+
+
+async def test_squeezebox_media_content_properties(
+    hass: HomeAssistant,
+    configured_player: MagicMock,
+) -> None:
+    """Test media_content_id and media_content_type properties."""
+    await async_setup_component(hass, HOMEASSISTANT_DOMAIN, {})
+
+    playlist_urls = [
+        {"url": "test_title"},
+        {"url": "test_title_2"},
+    ]
+    configured_player.current_index = 0
+    configured_player.playlist = playlist_urls
+    await hass.services.async_call(
+        HOMEASSISTANT_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {ATTR_ENTITY_ID: "media_player.test_player"},
+        blocking=True,
+    )
+    assert hass.states.get("media_player.test_player").attributes[
+        ATTR_MEDIA_CONTENT_ID
+    ] == json.dumps({"index": 0, "urls": playlist_urls})
+    assert (
+        hass.states.get("media_player.test_player").attributes[ATTR_MEDIA_CONTENT_TYPE]
+        == MediaType.PLAYLIST
+    )
+
+    configured_player.url = "test_url"
+    configured_player.playlist = [{"url": "test_url"}]
+    await hass.services.async_call(
+        HOMEASSISTANT_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {ATTR_ENTITY_ID: "media_player.test_player"},
+        blocking=True,
+    )
+    assert (
+        hass.states.get("media_player.test_player").attributes[ATTR_MEDIA_CONTENT_ID]
+        == "test_url"
+    )
+    assert (
+        hass.states.get("media_player.test_player").attributes[ATTR_MEDIA_CONTENT_TYPE]
+        == MediaType.MUSIC
+    )
+
+    configured_player.playlist = None
+    configured_player.url = None
+    await hass.services.async_call(
+        HOMEASSISTANT_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {ATTR_ENTITY_ID: "media_player.test_player"},
+        blocking=True,
+    )
+    assert (
+        ATTR_MEDIA_CONTENT_ID
+        not in hass.states.get("media_player.test_player").attributes
+    )
+    assert (
+        ATTR_MEDIA_CONTENT_TYPE
+        not in hass.states.get("media_player.test_player").attributes
+    )
+
+
+async def test_squeezebox_media_position_property(
+    hass: HomeAssistant, configured_player: MagicMock
+) -> None:
+    """Test media_position property."""
+    await async_setup_component(hass, HOMEASSISTANT_DOMAIN, {})
+
+    configured_player.time = 100
+    configured_player.async_update = AsyncMock(
+        side_effect=lambda: setattr(configured_player, "time", 105)
+    )
+    last_update = utcnow()
+    await hass.services.async_call(
+        HOMEASSISTANT_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {ATTR_ENTITY_ID: "media_player.test_player"},
+        blocking=True,
+    )
+    assert (
+        hass.states.get("media_player.test_player").attributes[ATTR_MEDIA_POSITION]
+        == 105
+    )
+    assert (
+        (
+            hass.states.get("media_player.test_player").attributes[
+                ATTR_MEDIA_POSITION_UPDATED_AT
+            ]
+        )
+        > last_update
+    )
