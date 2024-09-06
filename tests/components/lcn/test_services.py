@@ -2,8 +2,8 @@
 
 from unittest.mock import patch
 
-import pypck
 import pytest
+from syrupy import SnapshotAssertion
 
 from homeassistant.components.lcn import DOMAIN
 from homeassistant.core import HomeAssistant
@@ -13,7 +13,9 @@ from .conftest import MockModuleConnection, MockPchkConnectionManager, setup_com
 
 
 @patch("pypck.connection.PchkConnectionManager", MockPchkConnectionManager)
-async def test_service_output_abs(hass: HomeAssistant) -> None:
+async def test_service_output_abs(
+    hass: HomeAssistant, snapshot: SnapshotAssertion
+) -> None:
     """Test output_abs service."""
     await async_setup_component(hass, "persistent_notification", {})
     await setup_component(hass)
@@ -31,11 +33,13 @@ async def test_service_output_abs(hass: HomeAssistant) -> None:
             blocking=True,
         )
 
-    dim_output.assert_awaited_with(0, 100, 9)
+    assert dim_output.await_args.args == snapshot(name="dim_output")
 
 
 @patch("pypck.connection.PchkConnectionManager", MockPchkConnectionManager)
-async def test_service_output_rel(hass: HomeAssistant) -> None:
+async def test_service_output_rel(
+    hass: HomeAssistant, snapshot: SnapshotAssertion
+) -> None:
     """Test output_rel service."""
     await async_setup_component(hass, "persistent_notification", {})
     await setup_component(hass)
@@ -52,11 +56,13 @@ async def test_service_output_rel(hass: HomeAssistant) -> None:
             blocking=True,
         )
 
-    rel_output.assert_awaited_with(0, 25)
+    assert rel_output.await_args.args == snapshot(name="rel_output")
 
 
 @patch("pypck.connection.PchkConnectionManager", MockPchkConnectionManager)
-async def test_service_output_toggle(hass: HomeAssistant) -> None:
+async def test_service_output_toggle(
+    hass: HomeAssistant, snapshot: SnapshotAssertion
+) -> None:
     """Test output_toggle service."""
     await async_setup_component(hass, "persistent_notification", {})
     await setup_component(hass)
@@ -73,11 +79,11 @@ async def test_service_output_toggle(hass: HomeAssistant) -> None:
             blocking=True,
         )
 
-    toggle_output.assert_awaited_with(0, 9)
+    assert toggle_output.await_args.args == snapshot(name="toggle_output")
 
 
 @patch("pypck.connection.PchkConnectionManager", MockPchkConnectionManager)
-async def test_service_relays(hass: HomeAssistant) -> None:
+async def test_service_relays(hass: HomeAssistant, snapshot: SnapshotAssertion) -> None:
     """Test relays service."""
     await async_setup_component(hass, "persistent_notification", {})
     await setup_component(hass)
@@ -90,14 +96,11 @@ async def test_service_relays(hass: HomeAssistant) -> None:
             blocking=True,
         )
 
-    states = ["OFF", "OFF", "ON", "ON", "TOGGLE", "TOGGLE", "NOCHANGE", "NOCHANGE"]
-    relay_states = [pypck.lcn_defs.RelayStateModifier[state] for state in states]
-
-    control_relays.assert_awaited_with(relay_states)
+    assert control_relays.await_args.args == snapshot(name="control_relays")
 
 
 @patch("pypck.connection.PchkConnectionManager", MockPchkConnectionManager)
-async def test_service_led(hass: HomeAssistant) -> None:
+async def test_service_led(hass: HomeAssistant, snapshot: SnapshotAssertion) -> None:
     """Test led service."""
     await async_setup_component(hass, "persistent_notification", {})
     await setup_component(hass)
@@ -110,14 +113,13 @@ async def test_service_led(hass: HomeAssistant) -> None:
             blocking=True,
         )
 
-    led = pypck.lcn_defs.LedPort["LED6"]
-    led_state = pypck.lcn_defs.LedStatus["BLINK"]
-
-    control_led.assert_awaited_with(led, led_state)
+    assert control_led.await_args.args == snapshot(name="control_led")
 
 
 @patch("pypck.connection.PchkConnectionManager", MockPchkConnectionManager)
-async def test_service_var_abs(hass: HomeAssistant) -> None:
+async def test_service_var_abs(
+    hass: HomeAssistant, snapshot: SnapshotAssertion
+) -> None:
     """Test var_abs service."""
     await async_setup_component(hass, "persistent_notification", {})
     await setup_component(hass)
@@ -135,13 +137,13 @@ async def test_service_var_abs(hass: HomeAssistant) -> None:
             blocking=True,
         )
 
-    var_abs.assert_awaited_with(
-        pypck.lcn_defs.Var["VAR1"], 75, pypck.lcn_defs.VarUnit.parse("%")
-    )
+    assert var_abs.await_args.args == snapshot(name="var_abs")
 
 
 @patch("pypck.connection.PchkConnectionManager", MockPchkConnectionManager)
-async def test_service_var_rel(hass: HomeAssistant) -> None:
+async def test_service_var_rel(
+    hass: HomeAssistant, snapshot: SnapshotAssertion
+) -> None:
     """Test var_rel service."""
     await async_setup_component(hass, "persistent_notification", {})
     await setup_component(hass)
@@ -160,16 +162,13 @@ async def test_service_var_rel(hass: HomeAssistant) -> None:
             blocking=True,
         )
 
-    var_rel.assert_awaited_with(
-        pypck.lcn_defs.Var["VAR1"],
-        10,
-        pypck.lcn_defs.VarUnit.parse("%"),
-        pypck.lcn_defs.RelVarRef["CURRENT"],
-    )
+    assert var_rel.await_args.args == snapshot(name="var_rel")
 
 
 @patch("pypck.connection.PchkConnectionManager", MockPchkConnectionManager)
-async def test_service_var_reset(hass: HomeAssistant) -> None:
+async def test_service_var_reset(
+    hass: HomeAssistant, snapshot: SnapshotAssertion
+) -> None:
     """Test var_reset service."""
     await async_setup_component(hass, "persistent_notification", {})
     await setup_component(hass)
@@ -182,11 +181,13 @@ async def test_service_var_reset(hass: HomeAssistant) -> None:
             blocking=True,
         )
 
-    var_reset.assert_awaited_with(pypck.lcn_defs.Var["VAR1"])
+    assert var_reset.await_args.args == snapshot(name="var_reset")
 
 
 @patch("pypck.connection.PchkConnectionManager", MockPchkConnectionManager)
-async def test_service_lock_regulator(hass: HomeAssistant) -> None:
+async def test_service_lock_regulator(
+    hass: HomeAssistant, snapshot: SnapshotAssertion
+) -> None:
     """Test lock_regulator service."""
     await async_setup_component(hass, "persistent_notification", {})
     await setup_component(hass)
@@ -199,11 +200,13 @@ async def test_service_lock_regulator(hass: HomeAssistant) -> None:
             blocking=True,
         )
 
-    lock_regulator.assert_awaited_with(0, True)
+    assert lock_regulator.await_args.args == snapshot(name="lock_regulator")
 
 
 @patch("pypck.connection.PchkConnectionManager", MockPchkConnectionManager)
-async def test_service_send_keys(hass: HomeAssistant) -> None:
+async def test_service_send_keys(
+    hass: HomeAssistant, snapshot: SnapshotAssertion
+) -> None:
     """Test send_keys service."""
     await async_setup_component(hass, "persistent_notification", {})
     await setup_component(hass)
@@ -221,11 +224,13 @@ async def test_service_send_keys(hass: HomeAssistant) -> None:
     keys[0][4] = True
     keys[3][7] = True
 
-    send_keys.assert_awaited_with(keys, pypck.lcn_defs.SendKeyCommand["HIT"])
+    assert send_keys.await_args.args == snapshot(name="send_keys")
 
 
 @patch("pypck.connection.PchkConnectionManager", MockPchkConnectionManager)
-async def test_service_send_keys_hit_deferred(hass: HomeAssistant) -> None:
+async def test_service_send_keys_hit_deferred(
+    hass: HomeAssistant, snapshot: SnapshotAssertion
+) -> None:
     """Test send_keys (hit_deferred) service."""
     await async_setup_component(hass, "persistent_notification", {})
     await setup_component(hass)
@@ -246,8 +251,8 @@ async def test_service_send_keys_hit_deferred(hass: HomeAssistant) -> None:
             blocking=True,
         )
 
-    send_keys_hit_deferred.assert_awaited_with(
-        keys, 5, pypck.lcn_defs.TimeUnit.parse("S")
+    assert send_keys_hit_deferred.await_args.args == snapshot(
+        name="send_keys_hit_deferred"
     )
 
     # wrong key action
@@ -272,7 +277,9 @@ async def test_service_send_keys_hit_deferred(hass: HomeAssistant) -> None:
 
 
 @patch("pypck.connection.PchkConnectionManager", MockPchkConnectionManager)
-async def test_service_lock_keys(hass: HomeAssistant) -> None:
+async def test_service_lock_keys(
+    hass: HomeAssistant, snapshot: SnapshotAssertion
+) -> None:
     """Test lock_keys service."""
     await async_setup_component(hass, "persistent_notification", {})
     await setup_component(hass)
@@ -285,19 +292,16 @@ async def test_service_lock_keys(hass: HomeAssistant) -> None:
             blocking=True,
         )
 
-    states = ["OFF", "OFF", "ON", "ON", "TOGGLE", "TOGGLE", "NOCHANGE", "NOCHANGE"]
-    lock_states = [pypck.lcn_defs.KeyLockStateModifier[state] for state in states]
-    lock_keys.assert_awaited_with(0, lock_states)
+    assert lock_keys.await_args.args == snapshot(name="lock_keys")
 
 
 @patch("pypck.connection.PchkConnectionManager", MockPchkConnectionManager)
-async def test_service_lock_keys_tab_a_temporary(hass: HomeAssistant) -> None:
+async def test_service_lock_keys_tab_a_temporary(
+    hass: HomeAssistant, snapshot: SnapshotAssertion
+) -> None:
     """Test lock_keys (tab_a_temporary) service."""
     await async_setup_component(hass, "persistent_notification", {})
     await setup_component(hass)
-
-    states = ["OFF", "OFF", "ON", "ON", "TOGGLE", "TOGGLE", "NOCHANGE", "NOCHANGE"]
-    lock_states = [pypck.lcn_defs.KeyLockStateModifier[state] for state in states]
 
     # success
     with patch.object(
@@ -315,8 +319,8 @@ async def test_service_lock_keys_tab_a_temporary(hass: HomeAssistant) -> None:
             blocking=True,
         )
 
-    lock_keys_tab_a_temporary.assert_awaited_with(
-        10, pypck.lcn_defs.TimeUnit.parse("S"), lock_states
+    assert lock_keys_tab_a_temporary.await_args.args == snapshot(
+        name="lock_keys_tab_a_temporary"
     )
 
     # wrong table
@@ -341,7 +345,9 @@ async def test_service_lock_keys_tab_a_temporary(hass: HomeAssistant) -> None:
 
 
 @patch("pypck.connection.PchkConnectionManager", MockPchkConnectionManager)
-async def test_service_dyn_text(hass: HomeAssistant) -> None:
+async def test_service_dyn_text(
+    hass: HomeAssistant, snapshot: SnapshotAssertion
+) -> None:
     """Test dyn_text service."""
     await async_setup_component(hass, "persistent_notification", {})
     await setup_component(hass)
@@ -354,11 +360,11 @@ async def test_service_dyn_text(hass: HomeAssistant) -> None:
             blocking=True,
         )
 
-    dyn_text.assert_awaited_with(0, "text in row 1")
+    assert dyn_text.await_args.args == snapshot(name="dyn_text")
 
 
 @patch("pypck.connection.PchkConnectionManager", MockPchkConnectionManager)
-async def test_service_pck(hass: HomeAssistant) -> None:
+async def test_service_pck(hass: HomeAssistant, snapshot: SnapshotAssertion) -> None:
     """Test pck service."""
     await async_setup_component(hass, "persistent_notification", {})
     await setup_component(hass)
@@ -371,11 +377,13 @@ async def test_service_pck(hass: HomeAssistant) -> None:
             blocking=True,
         )
 
-    pck.assert_awaited_with("PIN4")
+    assert pck.await_args.args == snapshot(name="pck")
 
 
 @patch("pypck.connection.PchkConnectionManager", MockPchkConnectionManager)
-async def test_service_called_with_invalid_host_id(hass: HomeAssistant) -> None:
+async def test_service_called_with_invalid_host_id(
+    hass: HomeAssistant, snapshot: SnapshotAssertion
+) -> None:
     """Test service was called with non existing host id."""
     await async_setup_component(hass, "persistent_notification", {})
     await setup_component(hass)
