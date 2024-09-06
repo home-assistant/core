@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from contextlib import suppress
+import enum
 import logging
 
 from PyViCare.PyViCareDevice import Device as PyViCareDevice
@@ -28,9 +29,57 @@ from homeassistant.util.percentage import (
 
 from .const import DEVICE_LIST, DOMAIN
 from .entity import ViCareEntity
-from .types import VentilationMode, VentilationProgram
 
 _LOGGER = logging.getLogger(__name__)
+
+
+class VentilationProgram(enum.StrEnum):
+    """ViCare preset ventilation programs.
+
+    As listed in https://github.com/somm15/PyViCare/blob/6c5b023ca6c8bb2d38141dd1746dc1705ec84ce8/PyViCare/PyViCareVentilationDevice.py#L37
+    """
+
+    LEVEL_ONE = "levelOne"
+    LEVEL_TWO = "levelTwo"
+    LEVEL_THREE = "levelThree"
+    LEVEL_FOUR = "levelFour"
+
+
+class VentilationMode(enum.StrEnum):
+    """ViCare ventilation modes."""
+
+    PERMANENT = "permanent"  # on, speed controlled by program (levelOne-levelFour)
+    VENTILATION = "ventilation"  # activated by schedule
+    SENSOR_DRIVEN = "sensor_driven"  # activated by schedule, override by sensor
+    SENSOR_OVERRIDE = "sensor_override"  # activated by sensor
+
+    @staticmethod
+    def to_vicare_mode(mode: str | None) -> str | None:
+        """Return the mapped ViCare ventilation mode for the Home Assistant mode."""
+        if mode:
+            try:
+                ventilation_mode = VentilationMode(mode)
+            except ValueError:
+                # ignore unsupported / unmapped modes
+                return None
+            return HA_TO_VICARE_MODE_VENTILATION.get(ventilation_mode) if mode else None
+        return None
+
+    @staticmethod
+    def from_vicare_mode(vicare_mode: str | None) -> str | None:
+        """Return the mapped Home Assistant mode for the ViCare ventilation mode."""
+        for mode in VentilationMode:
+            if HA_TO_VICARE_MODE_VENTILATION.get(VentilationMode(mode)) == vicare_mode:
+                return mode
+        return None
+
+
+HA_TO_VICARE_MODE_VENTILATION = {
+    VentilationMode.PERMANENT: "permanent",
+    VentilationMode.VENTILATION: "ventilation",
+    VentilationMode.SENSOR_DRIVEN: "sensorDriven",
+    VentilationMode.SENSOR_OVERRIDE: "sensorOverride",
+}
 
 ORDERED_NAMED_FAN_SPEEDS = [
     VentilationProgram.LEVEL_ONE,
@@ -80,7 +129,7 @@ class ViCareFan(ViCareEntity, FanEntity):
         device: PyViCareDevice,
     ) -> None:
         """Initialize the fan entity."""
-        super().__init__(device_config, device, self._attr_translation_key)
+        super().__init__(self._attr_translation_key, device_config, device)
 
     def update(self) -> None:
         """Update state of fan."""

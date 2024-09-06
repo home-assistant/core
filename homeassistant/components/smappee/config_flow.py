@@ -69,9 +69,11 @@ class SmappeeFlowHandler(
 
         return await self.async_step_zeroconf_confirm()
 
-    async def async_step_zeroconf_confirm(self, user_input=None):
+    async def async_step_zeroconf_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Confirm zeroconf flow."""
-        errors = {}
+        errors: dict[str, str] = {}
 
         # Check if already configured (cloud)
         if self.is_cloud_device_already_added():
@@ -118,7 +120,9 @@ class SmappeeFlowHandler(
 
         return await self.async_step_environment()
 
-    async def async_step_environment(self, user_input=None):
+    async def async_step_environment(
+        self, user_input: dict[str, str] | None = None
+    ) -> ConfigFlowResult:
         """Decide environment, cloud or local."""
         if user_input is None:
             return self.async_show_form(
@@ -144,7 +148,9 @@ class SmappeeFlowHandler(
 
         return await self.async_step_pick_implementation()
 
-    async def async_step_local(self, user_input=None):
+    async def async_step_local(
+        self, user_input: dict[str, str] | None = None
+    ) -> ConfigFlowResult:
         """Handle local flow."""
         if user_input is None:
             return self.async_show_form(

@@ -26,7 +26,6 @@
         'email': '**REDACTED**',
         'password': '**REDACTED**',
         'refresh_token': '**REDACTED**',
-        'refresh_token_creation_time': 1722184160.738171,
       }),
       'disabled_by': None,
       'domain': 'nice_go',

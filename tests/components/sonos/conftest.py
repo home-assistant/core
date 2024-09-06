@@ -10,7 +10,12 @@ from unittest.mock import AsyncMock, MagicMock, Mock, patch
 import pytest
 from soco import SoCo
 from soco.alarms import Alarms
-from soco.data_structures import DidlFavorite, DidlPlaylistContainer, SearchResult
+from soco.data_structures import (
+    DidlFavorite,
+    DidlMusicTrack,
+    DidlPlaylistContainer,
+    SearchResult,
+)
 from soco.events_base import Event as SonosEvent
 
 from homeassistant.components import ssdp, zeroconf
@@ -185,6 +190,7 @@ class SoCoMockFactory:
         battery_info,
         alarm_clock,
         sonos_playlists: SearchResult,
+        sonos_queue: list[DidlMusicTrack],
     ) -> None:
         """Initialize the mock factory."""
         self.mock_list: dict[str, MockSoCo] = {}
@@ -194,6 +200,7 @@ class SoCoMockFactory:
         self.battery_info = battery_info
         self.alarm_clock = alarm_clock
         self.sonos_playlists = sonos_playlists
+        self.sonos_queue = sonos_queue
 
     def cache_mock(
         self, mock_soco: MockSoCo, ip_address: str, name: str = "Zone A"
@@ -207,6 +214,7 @@ class SoCoMockFactory:
         mock_soco.get_current_track_info.return_value = self.current_track_info
         mock_soco.music_source_from_uri = SoCo.music_source_from_uri
         mock_soco.get_sonos_playlists.return_value = self.sonos_playlists
+        mock_soco.get_queue.return_value = self.sonos_queue
         my_speaker_info = self.speaker_info.copy()
         my_speaker_info["zone_name"] = name
         my_speaker_info["uid"] = mock_soco.uid
@@ -255,6 +263,19 @@ def soco_sharelink():
         yield mock_instance
 
 
+@pytest.fixture(name="sonos_websocket")
+def sonos_websocket():
+    """Fixture to mock SonosWebSocket."""
+    with patch(
+        "homeassistant.components.sonos.speaker.SonosWebsocket"
+    ) as mock_sonos_ws:
+        mock_instance = AsyncMock()
+        mock_instance.play_clip = AsyncMock()
+        mock_instance.play_clip.return_value = [{"success": 1}, {}]
+        mock_sonos_ws.return_value = mock_instance
+        yield mock_instance
+
+
 @pytest.fixture(name="soco_factory")
 def soco_factory(
     music_library,
@@ -263,6 +284,8 @@ def soco_factory(
     battery_info,
     alarm_clock,
     sonos_playlists: SearchResult,
+    sonos_websocket,
+    sonos_queue: list[DidlMusicTrack],
 ):
     """Create factory for instantiating SoCo mocks."""
     factory = SoCoMockFactory(
@@ -272,6 +295,7 @@ def soco_factory(
         battery_info,
         alarm_clock,
         sonos_playlists,
+        sonos_queue=sonos_queue,
     )
     with (
         patch("homeassistant.components.sonos.SoCo", new=factory.get_mock),
@@ -354,6 +378,13 @@ def sonos_playlists_fixture() -> SearchResult:
     playlists = load_json_value_fixture("sonos_playlists.json", "sonos")
     playlists_list = [DidlPlaylistContainer.from_dict(pl) for pl in playlists]
     return SearchResult(playlists_list, "sonos_playlists", 1, 1, 0)
+
+
+@pytest.fixture(name="sonos_queue")
+def sonos_queue() -> list[DidlMusicTrack]:
+    """Create sonos queue fixture."""
+    queue = load_json_value_fixture("sonos_queue.json", "sonos")
+    return [DidlMusicTrack.from_dict(track) for track in queue]
 
 
 class MockMusicServiceItem:

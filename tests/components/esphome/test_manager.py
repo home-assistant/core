@@ -721,6 +721,34 @@ async def test_state_subscription(
     assert mock_client.send_home_assistant_state.mock_calls == []
 
 
+async def test_state_request(
+    mock_client: APIClient,
+    hass: HomeAssistant,
+    mock_esphome_device: Callable[
+        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
+        Awaitable[MockESPHomeDevice],
+    ],
+) -> None:
+    """Test ESPHome requests state change."""
+    device: MockESPHomeDevice = await mock_esphome_device(
+        mock_client=mock_client,
+        entity_info=[],
+        user_service=[],
+        states=[],
+    )
+    await hass.async_block_till_done()
+    hass.states.async_set("binary_sensor.test", "on", {"bool": True, "float": 3.0})
+    device.mock_home_assistant_state_request("binary_sensor.test", None)
+    await hass.async_block_till_done()
+    assert mock_client.send_home_assistant_state.mock_calls == [
+        call("binary_sensor.test", None, "on")
+    ]
+    mock_client.send_home_assistant_state.reset_mock()
+    hass.states.async_set("binary_sensor.test", "off", {"bool": False, "float": 5.0})
+    await hass.async_block_till_done()
+    assert mock_client.send_home_assistant_state.mock_calls == []
+
+
 async def test_debug_logging(
     mock_client: APIClient,
     hass: HomeAssistant,

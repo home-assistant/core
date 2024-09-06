@@ -3,7 +3,7 @@
 from laundrify_aio import exceptions
 
 from homeassistant.components.laundrify.const import DOMAIN
-from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_CODE, CONF_SOURCE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -95,9 +95,8 @@ async def test_form_unkown_exception(
 
 async def test_step_reauth(hass: HomeAssistant) -> None:
     """Test the reauth form is shown."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_REAUTH}
-    )
+    config_entry = create_entry(hass)
+    result = await config_entry.start_reauth_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
