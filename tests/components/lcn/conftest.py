@@ -5,11 +5,11 @@ from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 import pypck
-from pypck.connection import PchkConnectionManager
 import pypck.module
 from pypck.module import GroupConnection, ModuleConnection
 import pytest
 
+from homeassistant.components.lcn import PchkConnectionManager
 from homeassistant.components.lcn.const import DOMAIN
 from homeassistant.components.lcn.helpers import AddressType, generate_unique_id
 from homeassistant.const import CONF_ADDRESS, CONF_DEVICES, CONF_ENTITIES, CONF_HOST
