@@ -1,6 +1,5 @@
 """Config flow file."""
 
-import asyncio
 from typing import Any
 
 from fing_agent_api import FingAgent
@@ -39,60 +38,56 @@ def _get_data_schema(
     )
 
 
-async def _verify_connection(user_input: dict[str, Any]) -> bool:
-    """Verify the user data."""
-    fing_api = FingAgent(
-        user_input[AGENT_IP], user_input[AGENT_PORT], user_input[AGENT_KEY]
-    )
-    response = await fing_api.get_devices()
-    return response.network_id is not None
-
-
 class FingConfigFlow(ConfigFlow, domain=DOMAIN):
     """Fing config flow."""
 
     # The schema version of the entries that it creates
     # Home Assistant will call your migrate method if the version changes
     VERSION = 1
-    _verify_connection_task: asyncio.Task | None = None
-    _user_input: dict[str, Any] | None = None
-    _exception: BaseException | None = None
+
+    def exception_to_message(self, exception: BaseException | None):
+        """Generate error message from the exception."""
+        if exception is None:
+            return "Connection verification raised an unknown exception."
+        if isinstance(exception, httpx.HTTPError):
+            return f"HTTP exception -> Args: {exception.args}"
+        if isinstance(exception, httpx.InvalidURL):
+            return f"Invalid URL exception -> Args: {exception.args}"
+        if isinstance(exception, httpx.CookieConflict):
+            return f"CookieConflict exception -> Args: {exception.args}"
+        if isinstance(exception, httpx.StreamError):
+            return f"Stream error exception -> Args: {exception.args}"
+        return f"Generic exception raised -> Args: {exception.args}"
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Set up user step."""
+        errors: dict[str, str] = {}
+
+        if user_input is not None and await self._verify_data(user_input, errors):
+            return self.async_create_entry(title=user_input[CONF_NAME], data=user_input)
+
         return self.async_show_form(
-            step_id="verify",
+            step_id="user",
             data_schema=_get_data_schema(self.hass),
+            errors=errors,
         )
 
-    async def async_step_verify(self, user_input=None) -> ConfigFlowResult:
-        """Verify connection step."""
-        if user_input is None and self._user_input is None:
-            return self.async_abort(reason="Empty user input")
-
-        if not self._verify_connection_task:
-            self._user_input = user_input
-            self._verify_connection_task = self.hass.async_create_task(
-                _verify_connection(user_input=user_input)
-            )
-        if not self._verify_connection_task.done():
-            return self.async_show_progress(
-                step_id="verify",
-                progress_action="Verifying connection...",
-                progress_task=self._verify_connection_task,
-            )
+    async def _verify_data(
+        self, user_input: dict[str, Any], errors: dict[str, str]
+    ) -> bool:
+        """Verify the user data."""
 
         try:
-            result = await self._verify_connection_task
+            fing_api = FingAgent(
+                user_input[AGENT_IP], user_input[AGENT_PORT], user_input[AGENT_KEY]
+            )
+            response = await fing_api.get_devices()
+            if response.network_id is not None:
+                return True
 
-            if result is False:
-                self._exception = Exception(
-                    "Network ID parameter is empty. Use the latest API."
-                )
-            else:
-                return self.async_show_progress_done(next_step_id="task_completed")
+            errors["base"] = "Network ID parameter is empty. Use the latest API."
         except (
             httpx.HTTPError,
             httpx.InvalidURL,
@@ -100,46 +95,6 @@ class FingConfigFlow(ConfigFlow, domain=DOMAIN):
             httpx.StreamError,
             Exception,
         ) as exception:
-            self._exception = exception
-        finally:
-            self._verify_connection_task = None
+            errors["base"] = self.exception_to_message(exception)
 
-        return self.async_show_progress_done(next_step_id="task_failed")
-
-    async def async_step_task_failed(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Last step."""
-        errors: dict[str, str] = {}
-        if self._exception is None:
-            errors["base"] = "Connection verification raised an unknown exception."
-        elif isinstance(self._exception, httpx.HTTPError):
-            errors["base"] = f"HTTP exception -> Args: {self._exception.args}"
-        elif isinstance(self._exception, httpx.InvalidURL):
-            errors["base"] = f"Invalid URL exception -> Args: {self._exception.args}"
-        elif isinstance(self._exception, httpx.CookieConflict):
-            errors["base"] = f"CookieConflict exception -> Args: {self._exception.args}"
-        elif isinstance(self._exception, httpx.StreamError):
-            errors["base"] = f"Stream error exception -> Args: {self._exception.args}"
-        else:
-            errors["base"] = f"Generic exception raised -> Args: {self._exception.args}"
-
-        return self.async_show_form(
-            step_id="verify",
-            data_schema=_get_data_schema(self.hass),
-            errors=errors,
-        )
-
-    async def async_step_task_completed(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Last step."""
-        if self._user_input is None:
-            return self.async_show_form(
-                step_id="verify",
-                data_schema=_get_data_schema(self.hass),
-            )
-
-        return self.async_create_entry(
-            title=self._user_input[CONF_NAME], data=self._user_input
-        )
+        return False

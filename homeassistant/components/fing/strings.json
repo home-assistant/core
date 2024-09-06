@@ -2,33 +2,12 @@
   "config": {
     "step": {
       "user": {
-        "title": "[%key:common::config_flow::data::location%]",
-        "description": "Fing agent setup",
+        "title": "Fing Agent Setup",
         "data": {
           "name": "Agent name",
           "agent_ip": "IP",
           "agent_port": "Port",
-          "agent_key": "Auth key"
-        }
-      }
-    },
-    "error": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
-    },
-    "abort": {
-      "no_home": "No home coordinates are set in the Home Assistant configuration"
-    }
-  },
-  "options": {
-    "step": {
-      "init": {
-        "title": "[%key:common::config_flow::data::location%]",
-        "description": "Fing agent setup",
-        "data": {
-          "name": "Agent name",
-          "agent_ip": "Agent IP",
-          "agent_port": "Port",
-          "agent_key": "Auth key"
+          "agent_key": "API Key"
         }
       }
     }
