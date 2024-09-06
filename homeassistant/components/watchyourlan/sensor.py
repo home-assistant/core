@@ -95,7 +95,6 @@ class WatchYourLANGenericSensor(
             or f"WatchYourLAN {self.device.get('ID', 'Unknown')}",
             manufacturer=self.device.get("Hw", "Unknown Manufacturer"),
             model="WatchYourLAN Device",
-            sw_version=self.device.get("Last_Seen", "Unknown"),
         )
 
 
