@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
-from typing import Any, Final
+from typing import Any
 
 from pysmlight import Sensors
 from pysmlight.const import Settings
@@ -15,11 +15,11 @@ from homeassistant.components.switch import (
     SwitchEntity,
     SwitchEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import SmConfigEntry
 from .coordinator import SmDataUpdateCoordinator
 from .entity import SmEntity
 
@@ -34,7 +34,7 @@ class SmSwitchEntityDescription(SwitchEntityDescription):
     state_fn: Callable[[Sensors], bool | None]
 
 
-SWITCHES: Final = [
+SWITCHES: list[SmSwitchEntityDescription] = [
     SmSwitchEntityDescription(
         key="disable_led",
         translation_key="disable_led",
@@ -59,7 +59,7 @@ SWITCHES: Final = [
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: SmConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Initialize switches for SLZB-06 device."""
@@ -87,7 +87,7 @@ class SmSwitch(SmEntity, SwitchEntity):
         self._page, self._toggle = self.entity_description.setting.value
         self._update_attrs()
 
-    async def set_smlight(self, state: bool):
+    async def set_smlight(self, state: bool) -> None:
         """Set the state on SLZB device."""
         await self.coordinator.client.set_toggle(self._page, self._toggle, state)
 
