@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -14,6 +13,7 @@ from homeassistant.components.sensor import (
 from homeassistant.const import EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
 
 from . import SqueezeboxConfigEntry
 from .const import (
@@ -104,6 +104,6 @@ class ServerStatusSensor(LMSStatusEntity, SensorEntity):
     """LMS Status based sensor from LMS via cooridnatior."""
 
     @property
-    def native_value(self) -> Any:
+    def native_value(self) -> StateType:
         """LMS Status directly from coordinator data."""
         return self.coordinator.data[self.entity_description.key]
