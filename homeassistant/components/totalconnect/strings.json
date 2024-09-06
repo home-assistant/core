@@ -33,7 +33,6 @@
     "step": {
       "init": {
         "title": "TotalConnect Options",
-        "description": "Options for this TotalConnect location",
         "data": {
           "auto_bypass_low_battery": "Auto bypass low battery",
           "code_required": "Require user to enter code for alarm actions"
