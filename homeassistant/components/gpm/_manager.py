@@ -76,6 +76,8 @@ class RepositoryManager:
         self.clone_basedir = Path(clone_basedir)
         self.install_basedir = Path(install_basedir)
         self.update_strategy = update_strategy
+        self._current_version_cache: str | None = None
+        self._latest_version_cache: str | None = None
         self.__repo: Repo | None = None
 
     async def is_cloned(self) -> bool:
@@ -161,27 +163,38 @@ class RepositoryManager:
     @ensure_cloned
     async def get_current_version(self) -> str:
         """Return the current version."""
-        repo = await self._get_repo()
-        return await self.hass.async_add_executor_job(
-            lambda: repo.head.commit.hexsha
-            if self.update_strategy == UpdateStrategy.LATEST_COMMIT
-            else repo.git.describe("--tags", "--abbrev=0")
-        )
+        if not self._current_version_cache:
+            repo = await self._get_repo()
+
+            def _get_current_version() -> str:
+                if self.update_strategy == UpdateStrategy.LATEST_COMMIT:
+                    return repo.head.commit.hexsha
+                return repo.git.describe("--tags", "--abbrev=0")
+
+            self._current_version_cache = await self.hass.async_add_executor_job(
+                _get_current_version
+            )
+        return self._current_version_cache
 
     @ensure_cloned
     async def get_latest_version(self) -> str:
         """Return the latest version."""
-        latest_tag = None
-        if self.update_strategy == UpdateStrategy.LATEST_TAG:
-            latest_tag = await self._get_latest_tag()
-        if self.update_strategy == UpdateStrategy.LATEST_UNSTABLE_TAG:
-            latest_tag = await self._get_latest_tag(only_stable=False)
-        return latest_tag if latest_tag else await self._get_latest_commit()
+        if not self._latest_version_cache:
+            latest_tag = None
+            if self.update_strategy == UpdateStrategy.LATEST_TAG:
+                latest_tag = await self._get_latest_tag()
+            if self.update_strategy == UpdateStrategy.LATEST_UNSTABLE_TAG:
+                latest_tag = await self._get_latest_tag(only_stable=False)
+            self._latest_version_cache = (
+                latest_tag if latest_tag else await self._get_latest_commit()
+            )
+        return self._latest_version_cache
 
     @ensure_cloned
     async def fetch(self) -> None:
         """Fetch the latest changes from the remote."""
         _LOGGER.info("Fetching %s", self.working_dir)
+        self._latest_version_cache = None
         repo = await self._get_repo()
         await self.hass.async_add_executor_job(lambda: repo.remotes[0].fetch())  # pylint: disable=unnecessary-lambda
 
@@ -189,6 +202,7 @@ class RepositoryManager:
     async def checkout(self, ref: str) -> None:
         """Checkout the specified reference."""
         _LOGGER.info("Checking out %s", ref)
+        self._current_version_cache = None
         repo = await self._get_repo()
         await self.hass.async_add_executor_job(repo.git.checkout, ref)
 
@@ -209,6 +223,8 @@ class RepositoryManager:
             await self.uninstall()
         _LOGGER.info("Removing %s", self.working_dir)
         await self.hass.async_add_executor_job(shutil.rmtree, self.working_dir)
+        self._current_version_cache = None
+        self._latest_version_cache = None
         self.__repo = None
 
     @functools.cached_property
