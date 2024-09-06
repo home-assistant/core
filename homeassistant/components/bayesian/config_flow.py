@@ -132,9 +132,11 @@ SUBSCHEMA_BOILERPLATE = vol.Schema(
                 unit_of_measurement="%",
             ),
         ),
-        vol.Optional("add_another"): cv.boolean,
+        vol.Required(CONF_NAME): selector.TextSelector(),
     }
 )
+
+ADD_ANOTHER_BOX_SCHEMA = vol.Schema({vol.Optional("add_another"): cv.boolean})
 
 STATE_SUBSCHEMA = vol.Schema(
     {
@@ -154,7 +156,7 @@ STATE_SUBSCHEMA = vol.Schema(
 
 NUMERIC_STATE_SUBSCHEMA = vol.Schema(
     {
-        vol.Required(CONF_PLATFORM): str(ObservationTypes.NUMERIC_STATE),
+        vol.Required(CONF_PLATFORM): str(ObservationTypes.NUMERIC_STATE),#TODO, in a separted PR there will be multiple state ranges per entity so the entity ID will not be enough to identify it
         vol.Required(CONF_ENTITY_ID): selector.EntitySelector(
             selector.EntitySelectorConfig(
                 domain=[SENSOR_DOMAIN, INPUT_NUMBER_DOMAIN, NUMBER_DOMAIN]
@@ -175,6 +177,7 @@ NUMERIC_STATE_SUBSCHEMA = vol.Schema(
 
 TEMPLATE_SUBSCHEMA = vol.Schema(
     {
+
         vol.Required(CONF_PLATFORM): str(ObservationTypes.TEMPLATE),
         vol.Required(CONF_VALUE_TEMPLATE): selector.TemplateSelector(
             selector.TemplateSelectorConfig(),
@@ -230,7 +233,6 @@ async def validate_observation_setup(
 ) -> dict[str, Any]:
     """Validate observation input."""
 
-    _LOGGER.warning(user_input)
     if user_input[CONF_P_GIVEN_T] == user_input[CONF_P_GIVEN_F]:
         raise SchemaFlowError("equal_probabilities")
 
@@ -252,8 +254,11 @@ async def validate_observation_setup(
     observations: list[dict[str, Any]] = handler.options.setdefault(
         CONF_OBSERVATIONS, []
     )
-    observations.append(user_input)
-    _LOGGER.warning(observations)  # TODO delete-me
+    if idx := handler.options.get("index"):
+        #if there is an index, that means we are in observation editing mode and we want to overwrite not append
+        observations[int(idx)] = user_input
+    else:
+        observations.append(user_input)
     return {"add_another": True} if add_another else {}
 
 
@@ -270,6 +275,7 @@ def _convert_percentages_to_fractions(
     data: dict[str, str | float | int],
 ) -> dict[str, str | float]:
     """Convert percentage values in a dictionary to fractions."""
+    #TODO ensure does not run on numeric_state above and below
     return {
         key: (value / 100 if isinstance(value, (int, float)) else value)
         for key, value in data.items()
@@ -280,6 +286,7 @@ def _convert_fractions_to_percentages(
     data: dict[str, str | float],
 ) -> dict[str, str | float]:
     """Convert fraction values in a dictionary to percentages."""
+    #TODO ensure does not run on numeric_state above and below
     return {
         key: (value * 100 if isinstance(value, (float)) else value)
         for key, value in data.items()
@@ -296,19 +303,19 @@ CONFIG_FLOW = {
         ObservationTypes.list()
     ),
     str(ObservationTypes.STATE): SchemaFlowFormStep(
-        STATE_SUBSCHEMA,
+        STATE_SUBSCHEMA.extend(ADD_ANOTHER_BOX_SCHEMA.schema),
         next_step=_choose_observation_step,
         validate_user_input=validate_observation_setup,
         suggested_values=None,
     ),
     str(ObservationTypes.NUMERIC_STATE): SchemaFlowFormStep(
-        NUMERIC_STATE_SUBSCHEMA,
+        NUMERIC_STATE_SUBSCHEMA.extend(ADD_ANOTHER_BOX_SCHEMA.schema),
         next_step=_choose_observation_step,
         validate_user_input=validate_observation_setup,
         suggested_values=None,
     ),
     str(ObservationTypes.TEMPLATE): SchemaFlowFormStep(
-        TEMPLATE_SUBSCHEMA,
+        TEMPLATE_SUBSCHEMA.extend(ADD_ANOTHER_BOX_SCHEMA.schema),
         next_step=_choose_observation_step,
         preview="template",
         validate_user_input=validate_observation_setup,
@@ -327,21 +334,22 @@ async def _get_base_suggested_values(
 
 async def _get_edit_observation_suggested_values(
     handler: SchemaCommonFlowHandler,
-) -> dict[str, Any]:  # TODO untested, borrowed from scrape
+) -> dict[str, Any]:
     """Return suggested values for observation editing."""
-    idx: int = handler.flow_state["_idx"]
-    return dict(handler.options[CONF_OBSERVATIONS][idx])
+
+    idx = int(handler.options["index"])
+    return _convert_fractions_to_percentages(dict(handler.options[CONF_OBSERVATIONS][idx]))
 
 
 async def _get_select_observation_schema(
     handler: SchemaCommonFlowHandler,
-) -> vol.Schema:  # TODO untested, borrowed from scrape
+) -> vol.Schema:
     """Return schema for selecting a observation."""
     return vol.Schema(
         {
             vol.Required("index"): vol.In(
                 {
-                    str(index): config[CONF_NAME]
+                    str(index): f"{config[CONF_PLATFORM]} observation: {config.get(CONF_NAME)}"
                     for index, config in enumerate(handler.options[CONF_OBSERVATIONS])
                 },
             )
@@ -357,7 +365,7 @@ async def _get_remove_observation_schema(
         {
             vol.Required("index"): cv.multi_select(
                 {
-                    str(index): config[CONF_NAME]
+                    str(index): f"{config[CONF_PLATFORM]} observation: {config.get(CONF_NAME)}"
                     for index, config in enumerate(handler.options[CONF_OBSERVATIONS])
                 },
             )
@@ -369,9 +377,15 @@ async def _get_edit_observation_schema(
     handler: SchemaCommonFlowHandler,
 ) -> vol.Schema:  # TODO
     """Select which schema to return depending on which observation type it is."""
-
-    return  # TODO we will also need to drop the "add another" box from the schema here
-
+    #TODO need to remove the add another box
+    observations: list[dict[str,Any]] = handler.options["observations"]
+    selected_idx = int(handler.options["index"])
+    if observations[selected_idx][CONF_PLATFORM] == str(ObservationTypes.STATE):
+        return STATE_SUBSCHEMA
+    if observations[selected_idx][CONF_PLATFORM] == str(ObservationTypes.NUMERIC_STATE):
+        return NUMERIC_STATE_SUBSCHEMA
+    if observations[selected_idx][CONF_PLATFORM] == str(ObservationTypes.TEMPLATE):
+        return TEMPLATE_SUBSCHEMA
 
 OPTIONS_FLOW: dict[str, SchemaFlowStep] = {
     str(OptionsFlowSteps.INIT): SchemaFlowMenuStep(
@@ -390,10 +404,12 @@ OPTIONS_FLOW: dict[str, SchemaFlowStep] = {
     str(OptionsFlowSteps.EDIT_OBSERVATION): SchemaFlowFormStep(
         _get_edit_observation_schema,
         suggested_values=_get_edit_observation_suggested_values,
+        validate_user_input=validate_observation_setup
     ),
     str(OptionsFlowSteps.REMOVE_OBSERVATION): SchemaFlowFormStep(
         _get_remove_observation_schema,
         suggested_values=None,
+        validate_user_input=validate_remove_observation, #TODO implement validate_remove_observation
     ),
 }
 OPTIONS_FLOW.update(CONFIG_FLOW)
@@ -437,7 +453,7 @@ def ws_start_preview(
 ) -> None:
     """Generate a preview."""
 
-    def _validate(schema: vol.Schema, domain: str, user_input: dict[str, Any]) -> Any:
+    def _validate(schema: vol.Schema, user_input: dict[str, Any]) -> Any:
         errors = {}
         key: vol.Marker
         for key, validator in schema.schema.items():
@@ -456,19 +472,18 @@ def ws_start_preview(
     entity_registry_entry: er.RegistryEntry | None = None
     if msg["flow_type"] == "config_flow":
         flow_status = hass.config_entries.flow.async_get(msg["flow_id"])
-        template_type = flow_status["step_id"]
         form_step = cast(
             SchemaFlowFormStep, CONFIG_FLOW[str(ObservationTypes.TEMPLATE)]
         )
-        schema = cast(vol.Schema, form_step.schema)
     else:
         # TODO untested
         flow_status = hass.config_entries.options.async_get(msg["flow_id"])
         config_entry = hass.config_entries.async_get_entry(flow_status["handler"])
         if not config_entry:
             raise HomeAssistantError
-        template_type = config_entry.options["template_type"]
-        schema = cast(vol.Schema, OPTIONS_FLOW[str(OptionsFlowSteps.EDIT_OBSERVATION)])
+        form_step = cast(
+            SchemaFlowFormStep, OPTIONS_FLOW[str(ObservationTypes.TEMPLATE)]
+        )
         entity_registry = er.async_get(hass)
         entries = er.async_entries_for_config_entry(
             entity_registry, flow_status["handler"]
@@ -476,7 +491,8 @@ def ws_start_preview(
         if entries:
             entity_registry_entry = entries[0]
 
-    errors = _validate(schema, template_type, user_input)
+    schema = cast(vol.Schema, form_step.schema)
+    errors = _validate(schema, user_input)
 
     @callback
     def async_preview_updated(

@@ -55,10 +55,38 @@
           "template": "[%key:component::bayesian::config::step::observation_selector::menu_options::template%]"
         }
       },
+      "select_edit_observation": {
+        "title": "Select an observation to edit"
+      },
+      "edit_observation": {
+        "title": "Edit observation",
+        "description": "[%key:component::bayesian::config::step::state::description%]",
+        "data": {
+          "name": "[%key:common::config_flow::data::name%]",
+          "entity_id": "[%key:component::bayesian::config::step::state::data::entity_id%]",
+          "to_state": "[%key:component::bayesian::config::step::state::data::to_state%]",
+          "above": "[%key:component::bayesian::config::step::numeric_state::data::above%]",
+          "below": "[%key:component::bayesian::config::step::numeric_state::data::below%]",
+          "value_template": "[%key:component::bayesian::config::step::template::data::value_template%]",
+          "prob_given_true": "[%key:component::bayesian::config::step::state::data::prob_given_true%]",
+          "prob_given_false": "[%key:component::bayesian::config::step::state::data::prob_given_false%]"
+        },
+        "data_description": {
+          "name": "[%key:component::bayesian::config::step::state::data_description::name%]",
+          "entity_id": "[%key:component::bayesian::config::step::state::data_description::entity_id%]",
+          "to_state": "[%key:component::bayesian::config::step::state::data_description::to_state%]",
+          "above": "[%key:component::bayesian::config::step::numeric_state::data_description::above%]",
+          "below": "[%key:component::bayesian::config::step::numeric_state::data_description::below%]",
+          "value_template": "[%key:component::bayesian::config::step::template::data_description::value_template%]",
+          "prob_given_true": "[%key:component::bayesian::config::step::state::data_description::prob_given_true%]",
+          "prob_given_false": "[%key:component::bayesian::config::step::state::data_description::prob_given_false%]"
+        }
+      },
       "state": {
         "title": "[%key:component::bayesian::config::step::state::title%]",
         "description": "[%key:component::bayesian::config::step::state::description%]",
         "data": {
+          "name": "[%key:common::config_flow::data::name%]",
           "entity_id": "[%key:component::bayesian::config::step::state::data::entity_id%]",
           "to_state": "[%key:component::bayesian::config::step::state::data::to_state%]",
           "prob_given_true": "[%key:component::bayesian::config::step::state::data::prob_given_true%]",
@@ -66,6 +94,7 @@
           "add_another": "[%key:component::bayesian::config::step::state::data::add_another%]"
         },
         "data_description": {
+          "name": "[%key:component::bayesian::config::step::state::data_description::name%]",
           "entity_id": "[%key:component::bayesian::config::step::state::data_description::entity_id%]",
           "to_state": "[%key:component::bayesian::config::step::state::data_description::to_state%]",
           "prob_given_true": "[%key:component::bayesian::config::step::state::data_description::prob_given_true%]",
@@ -76,6 +105,7 @@
         "title": "[%key:component::bayesian::config::step::state::title%]",
         "description": "[%key:component::bayesian::config::step::numeric_state::description%]",
         "data": {
+          "name": "[%key:common::config_flow::data::name%]",
           "entity_id": "[%key:component::bayesian::config::step::state::data::entity_id%]",
           "above": "[%key:component::bayesian::config::step::numeric_state::data::above%]",
           "below": "[%key:component::bayesian::config::step::numeric_state::data::below%]",
@@ -84,6 +114,7 @@
           "add_another": "[%key:component::bayesian::config::step::state::data::add_another%]"
         },
         "data_description": {
+          "name": "[%key:component::bayesian::config::step::state::data_description::name%]",
           "entity_id": "[%key:component::bayesian::config::step::state::data_description::entity_id%]",
           "above": "[%key:component::bayesian::config::step::numeric_state::data_description::above%]",
           "below": "[%key:component::bayesian::config::step::numeric_state::data_description::below%]",
@@ -95,14 +126,14 @@
         "title": "[%key:component::bayesian::config::step::state::title%]",
         "description": "[%key:component::bayesian::config::step::template::description%]",
         "data": {
-          "entity_id": "[%key:component::bayesian::config::step::state::data::entity_id%]",
+          "name": "[%key:common::config_flow::data::name%]",
           "value_template": "[%key:component::bayesian::config::step::template::data::value_template%]",
           "prob_given_true": "[%key:component::bayesian::config::step::state::data::prob_given_true%]",
           "prob_given_false": "[%key:component::bayesian::config::step::state::data::prob_given_false%]",
           "add_another": "[%key:component::bayesian::config::step::state::data::add_another%]"
         },
         "data_description": {
-          "entity_id": "[%key:component::bayesian::config::step::state::data_description::entity_id%]",
+          "name": "[%key:component::bayesian::config::step::state::data_description::name%]",
           "value_template": "[%key:component::bayesian::config::step::template::data_description::value_template%]",
           "prob_given_true": "[%key:component::bayesian::config::step::state::data_description::prob_given_true%]",
           "prob_given_false": "[%key:component::bayesian::config::step::state::data_description::prob_given_false%]"
@@ -146,6 +177,7 @@
         "title": "Add a Bayesian Sensor",
         "description": "Add an observation which examines the state of an entity.",
         "data": {
+          "name": "[%key:common::config_flow::data::name%]",
           "entity_id": "Entity",
           "to_state": "To state",
           "prob_given_true": "Probability Given True",
@@ -153,6 +185,7 @@
           "add_another": "Add another observation?"
         },
         "data_description": {
+          "name": "This name will be used for to identify this observation for editing in the future",
           "entity_id": "The entity of interest.",
           "to_state": "The state of the sensor to be detected",
           "prob_given_true": "The probability of detecting the above state when the Bayesian sensor should be on",
@@ -163,6 +196,7 @@
         "title": "[%key:component::bayesian::config::step::state::title%]",
         "description": "Add an observation which examines the value of a numeric entity.",
         "data": {
+          "name": "[%key:common::config_flow::data::name%]",
           "entity_id": "[%key:component::bayesian::config::step::state::data::entity_id%]",
           "above": "Above",
           "below": "Below",
@@ -171,6 +205,7 @@
           "add_another": "[%key:component::bayesian::config::step::state::data::add_another%]"
         },
         "data_description": {
+          "name": "[%key:component::bayesian::config::step::state::data_description::name%]",
           "entity_id": "[%key:component::bayesian::config::step::state::data_description::entity_id%]",
           "above": "Optional - the lower end of the numeric range. Values exactly matching this will not count",
           "below": "Optional - the upper end of the numeric range. Values matching this will only count if more than one range is configured for the same entity.",
@@ -182,14 +217,14 @@
         "title": "[%key:component::bayesian::config::step::state::title%]",
         "description": "Add an observation with evaluates a template.",
         "data": {
-          "entity_id": "[%key:component::bayesian::config::step::state::data::entity_id%]",
+          "name": "[%key:common::config_flow::data::name%]",
           "value_template": "Template",
           "prob_given_true": "[%key:component::bayesian::config::step::state::data::prob_given_true%]",
           "prob_given_false": "[%key:component::bayesian::config::step::state::data::prob_given_false%]",
           "add_another": "[%key:component::bayesian::config::step::state::data::add_another%]"
         },
         "data_description": {
-          "entity_id": "[%key:component::bayesian::config::step::state::data_description::entity_id%]",
+          "name": "[%key:component::bayesian::config::step::state::data_description::name%]",
           "value_template": "A template that evaluates to `true` will update the prior accordingly, A template that returns `false` or `None` will update the prior with inverse probabilities. A template the returns an error will not update probabilities",
           "prob_given_true": "[%key:component::bayesian::config::step::state::data_description::prob_given_true%]",
           "prob_given_false": "[%key:component::bayesian::config::step::state::data_description::prob_given_true%]"
