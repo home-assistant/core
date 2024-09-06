@@ -216,9 +216,10 @@ class RepositoryManager:
     async def uninstall(self) -> None:
         """Uninstall the GIT repo."""
 
-    @ensure_cloned
     async def remove(self) -> None:
         """Remove the GIT repo."""
+        if not await self.is_cloned():
+            return
         if await self.is_installed():
             await self.uninstall()
         _LOGGER.info("Removing %s", self.working_dir)
