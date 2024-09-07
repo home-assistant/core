@@ -1,4 +1,51 @@
 # serializer version: 1
+# name: test_sensors[sensor.mock_title_connection_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.mock_title_connection_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:connection',
+    'original_name': 'Connection mode',
+    'platform': 'smlight',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'device_mode',
+    'unique_id': 'aa:bb:cc:dd:ee:ff_device_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.mock_title_connection_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Title Connection mode',
+      'icon': 'mdi:connection',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_title_connection_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
 # name: test_sensors[sensor.mock_title_core_chip_temp-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -148,6 +195,99 @@
     'state': '188',
   })
 # ---
+# name: test_sensors[sensor.mock_title_firmware_channel-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.mock_title_firmware_channel',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Firmware channel',
+    'platform': 'smlight',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'firmware_channel',
+    'unique_id': 'aa:bb:cc:dd:ee:ff_firmware_channel',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.mock_title_firmware_channel-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Title Firmware channel',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_title_firmware_channel',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'dev',
+  })
+# ---
+# name: test_sensors[sensor.mock_title_ip_address-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.mock_title_ip_address',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:ip-network-outline',
+    'original_name': 'IP address',
+    'platform': 'smlight',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'device_ip',
+    'unique_id': 'aa:bb:cc:dd:ee:ff_device_ip',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.mock_title_ip_address-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Title IP address',
+      'icon': 'mdi:ip-network-outline',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_title_ip_address',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '192.168.1.161',
+  })
+# ---
 # name: test_sensors[sensor.mock_title_ram_usage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -248,6 +388,53 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '32.7',
+  })
+# ---
+# name: test_sensors[sensor.mock_title_zigbee_type-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.mock_title_zigbee_type',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:zigbee',
+    'original_name': 'Zigbee type',
+    'platform': 'smlight',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'zigbee_type',
+    'unique_id': 'aa:bb:cc:dd:ee:ff_zigbee_type',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.mock_title_zigbee_type-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Title Zigbee type',
+      'icon': 'mdi:zigbee',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_title_zigbee_type',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '-1',
   })
 # ---
 # name: test_sensors[sensor.mock_title_zigbee_uptime-entry]
