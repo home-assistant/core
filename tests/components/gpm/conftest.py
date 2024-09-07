@@ -8,9 +8,11 @@ import pytest
 
 from homeassistant.components.gpm._manager import (
     IntegrationRepositoryManager,
+    ResourceRepositoryManager,
     UpdateStrategy,
 )
 from homeassistant.core import HomeAssistant
+from typing import Generic
 
 
 @pytest.fixture
@@ -22,12 +24,9 @@ def mock_setup_entry() -> Generator[AsyncMock]:
         yield mock_setup_entry
 
 
-@pytest.fixture
-def mock_manager(
-    hass: HomeAssistant,
-) -> Generator[IntegrationRepositoryManager, None, None]:
+def _mock_manager[T](hass: HomeAssistant, cls: Generic[T]) -> Generator[T, None, None]:
     """Mock the GPM manager."""
-    manager = IntegrationRepositoryManager(
+    manager = cls(
         hass,
         "https://github.com/user/awesome-component",
         UpdateStrategy.LATEST_TAG,
@@ -48,3 +47,19 @@ def mock_manager(
         return_value=manager,
     ) as mock:
         yield mock.return_value
+
+
+@pytest.fixture
+def mock_integration_manager(
+    hass: HomeAssistant,
+) -> Generator[IntegrationRepositoryManager, None, None]:
+    """Mock the GPM manager."""
+    yield from _mock_manager(hass, IntegrationRepositoryManager)
+
+
+@pytest.fixture
+def mock_resource_manager(
+    hass: HomeAssistant,
+) -> Generator[ResourceRepositoryManager, None, None]:
+    """Mock the GPM manager."""
+    yield from _mock_manager(hass, ResourceRepositoryManager)
