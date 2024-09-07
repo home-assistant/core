@@ -215,6 +215,16 @@ class LinkPlayMediaPlayerEntity(MediaPlayerEntity):
         await self._bridge.player.resume()
 
     @exception_wrap
+    async def async_media_next_track(self) -> None:
+        """Send next command."""
+        await self._bridge.player.next()
+
+    @exception_wrap
+    async def async_media_previous_track(self) -> None:
+        """Send previous command."""
+        await self._bridge.player.previous()
+
+    @exception_wrap
     async def async_set_repeat(self, repeat: RepeatMode) -> None:
         """Set repeat mode."""
         await self._bridge.player.set_loop_mode(REPEAT_MAP_INV[repeat])
