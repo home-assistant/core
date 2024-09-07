@@ -148,5 +148,16 @@
         }
       }
     }
+  },
+  "selector": {
+    "profile": {
+      "options": {
+        "home": "Home",
+        "away": "Away",
+        "boost": "Boost",
+        "fireplace": "Fireplace",
+        "extra": "Extra"
+      }
+    }
   }
 }

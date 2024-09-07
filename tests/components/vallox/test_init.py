@@ -55,16 +55,16 @@ async def test_create_service(
 @pytest.mark.parametrize(
     ("profile", "duration"),
     [
-        ("Home", None),
-        ("Home", 15),
-        ("Away", None),
-        ("Away", 15),
-        ("Boost", None),
-        ("Boost", 15),
-        ("Fireplace", None),
-        ("Fireplace", 15),
-        ("Extra", None),
-        ("Extra", 15),
+        ("home", None),
+        ("home", 15),
+        ("away", None),
+        ("away", 15),
+        ("boost", None),
+        ("boost", 15),
+        ("fireplace", None),
+        ("fireplace", 15),
+        ("extra", None),
+        ("extra", 15),
     ],
 )
 async def test_set_profile_service(

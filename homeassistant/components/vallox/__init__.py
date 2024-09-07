@@ -22,7 +22,7 @@ from .const import (
     DEFAULT_FAN_SPEED_HOME,
     DEFAULT_NAME,
     DOMAIN,
-    PRESET_MODE_TO_VALLOX_PROFILE,
+    I18N_KEY_TO_VALLOX_PROFILE,
 )
 from .coordinator import ValloxDataUpdateCoordinator
 
@@ -67,7 +67,7 @@ ATTR_DURATION = "duration"
 
 SERVICE_SCHEMA_SET_PROFILE = vol.Schema(
     {
-        vol.Required(ATTR_PROFILE): vol.In(PRESET_MODE_TO_VALLOX_PROFILE),
+        vol.Required(ATTR_PROFILE): vol.In(I18N_KEY_TO_VALLOX_PROFILE),
         vol.Optional(ATTR_DURATION): vol.All(
             vol.Coerce(int), vol.Clamp(min=1, max=65535)
         ),
@@ -207,7 +207,7 @@ class ValloxServiceHandler:
         _LOGGER.debug("Activating profile %s for %s min", profile, duration)
         try:
             await self._client.set_profile(
-                PRESET_MODE_TO_VALLOX_PROFILE[profile], duration
+                I18N_KEY_TO_VALLOX_PROFILE[profile], duration
             )
         except ValloxApiException as err:
             _LOGGER.error(

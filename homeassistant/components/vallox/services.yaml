@@ -34,12 +34,13 @@ set_profile:
       required: true
       selector:
         select:
+          translation_key: "profile"
           options:
-            - "Home"
-            - "Away"
-            - "Boost"
-            - "Fireplace"
-            - "Extra"
+            - "home"
+            - "away"
+            - "boost"
+            - "fireplace"
+            - "extra"
     duration:
       required: false
       selector:
