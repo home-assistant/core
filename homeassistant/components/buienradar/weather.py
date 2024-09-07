@@ -10,7 +10,6 @@ from buienradar.constants import (
     MIN_TEMP,
     RAIN,
     RAIN_CHANCE,
-    SUN_CHANCE,
     WINDAZIMUTH,
     WINDSPEED,
 )
@@ -30,7 +29,6 @@ from homeassistant.components.weather import (
     ATTR_CONDITION_SUNNY,
     ATTR_CONDITION_WINDY,
     ATTR_CONDITION_WINDY_VARIANT,
-    ATTR_FORECAST_CLOUD_COVERAGE,
     ATTR_FORECAST_CONDITION,
     ATTR_FORECAST_NATIVE_PRECIPITATION,
     ATTR_FORECAST_NATIVE_TEMP,
@@ -194,7 +192,6 @@ class BrWeather(WeatherEntity):
                 ATTR_FORECAST_NATIVE_TEMP: data_in.get(MAX_TEMP),
                 ATTR_FORECAST_NATIVE_PRECIPITATION: data_in.get(RAIN),
                 ATTR_FORECAST_PRECIPITATION_PROBABILITY: data_in.get(RAIN_CHANCE),
-                ATTR_FORECAST_CLOUD_COVERAGE: 100 - data_in.get(SUN_CHANCE),
                 ATTR_FORECAST_WIND_BEARING: data_in.get(WINDAZIMUTH),
                 ATTR_FORECAST_NATIVE_WIND_SPEED: data_in.get(WINDSPEED),
             }
