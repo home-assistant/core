@@ -165,7 +165,7 @@ async def async_setup_platform(
             result = await hass.config_entries.flow.async_init(
                 DOMAIN,
                 context={"source": SOURCE_IMPORT},
-                data=config | {CONF_HOST: info.host},
+                data=config | {CONF_HOST: info.host} | {CONF_NAME: info.model_name},
             )
             results.append((host, result))
 

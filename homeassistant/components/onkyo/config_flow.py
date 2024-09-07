@@ -14,7 +14,7 @@ from homeassistant.config_entries import (
     OptionsFlow,
     OptionsFlowWithConfigEntry,
 )
-from homeassistant.const import CONF_DEVICE, CONF_HOST
+from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_NAME
 from homeassistant.core import callback
 from homeassistant.helpers.selector import (
     NumberSelector,
@@ -29,6 +29,7 @@ from homeassistant.helpers.selector import (
 from . import receiver as rcver
 from .const import (
     BRAND_NAME,
+    CONF_RECEIVER_MAX_VOLUME,
     CONF_SOURCES_ALLOWED,
     CONF_SOURCES_DEFAULT,
     CONF_VOLUME_RESOLUTION,
@@ -61,6 +62,14 @@ CONF_SCHEMA_CONFIGURE = vol.Schema(
 _LOGGER = logging.getLogger(__name__)
 
 
+def get_unique_id(receiver_info: rcver.ReceiverInfo):
+    """Generate the unique HA id from the receiver info."""
+
+    # QUESTION: I think this can be {self._receiver_info.identifier}_main
+    # since there is a unique id conversion in the import flow.
+    return f"{receiver_info.model_name}_{receiver_info.identifier}"
+
+
 @dataclass
 class ReceiverConfig:
     """Onkyo Receiver configuration."""
@@ -77,17 +86,24 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
         self._discovered_infos: dict[str, rcver.Receiver] = {}
         self._receiver_info: rcver.ReceiverInfo
 
-    def _createOnkyoEntry(self, config: ReceiverConfig, options=None):
+    def _createOnkyoEntry(
+        self, config: ReceiverConfig, host: str, name: str, options: dict | None = None
+    ):
+        merged_options = {
+            OPTION_MAX_VOLUME: OPTION_MAX_VOLUME_DEFAULT,
+            OPTION_SOURCES: config.sources,
+        }
+
+        if options is not None:
+            merged_options = merged_options | options
+
         return self.async_create_entry(
-            title=self._receiver_info.model_name,
+            title=name,
             data={
-                CONF_HOST: self._receiver_info.host,
+                CONF_HOST: host,
                 CONF_VOLUME_RESOLUTION: config.volume_resolution,
             },
-            options={
-                OPTION_MAX_VOLUME: OPTION_MAX_VOLUME_DEFAULT,
-                OPTION_SOURCES: config.sources,
-            },
+            options=merged_options,
         )
 
     async def async_step_user(
@@ -187,10 +203,12 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
                             strict=False,
                         )
                     ),
-                )
+                ),
+                self._receiver_info.host,
+                self._receiver_info.model_name,
             )
 
-        unique_id = f"{self._receiver_info.model_name}_{self._receiver_info.identifier}"
+        unique_id = get_unique_id(self._receiver_info)
         _LOGGER.debug(
             "Found receiver with ip %s, setting unique_id to %s",
             self._receiver_info.host,
@@ -209,34 +227,53 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=CONF_SCHEMA_CONFIGURE,
         )
 
-    # async def async_step_import(self, user_input: dict[str, Any]) -> ConfigFlowResult:
-    #     """Import the yaml config."""
-    #     host: str = user_input[CONF_HOST]
+    async def async_step_import(self, user_input: dict[str, Any]) -> ConfigFlowResult:
+        """Import the yaml config."""
 
-    #     info = None
-    #     try:
-    #         info = await rcver.async_interview(host)
-    #     except Exception:
-    #         _LOGGER.exception("Unexpected exception")
-    #         return self.async_abort(reason="cannot_connect")
+        _LOGGER.debug("import flow user input: %s", user_input)
 
-    #     if info is None:
-    #         # Info is None when connection fails
-    #         return self.async_abort(reason="cannot_connect")
+        host: str | None = user_input.get(CONF_HOST)
+        name: str | None = user_input.get(CONF_NAME)
+        max_volume: str = user_input.get(OPTION_MAX_VOLUME, OPTION_MAX_VOLUME_DEFAULT)
+        volume_resolution: int = user_input.get(
+            CONF_RECEIVER_MAX_VOLUME, CONF_VOLUME_RESOLUTION_DEFAULT
+        )
+        sources: dict[str, str] = user_input.get(OPTION_SOURCES, {})
 
-    #     await self.async_set_unique_id(info.identifier, raise_on_progress=False)
-    #     self._abort_if_unique_id_configured()
+        # Sanity check, should be there
+        if host is None:
+            _LOGGER.error("Import error, host is not set")
+            return self.async_abort(reason="cannot_connect")
 
-    #     # TEDOEN: validate the user yaml: volume_resolution and sources
+        info: rcver.ReceiverInfo | None
+        try:
+            info = await rcver.async_interview(host)
+        except Exception:
+            _LOGGER.exception("Unexpected exception")
+            return self.async_abort(reason="cannot_connect")
 
-    #     return self._createOnkyoEntry(
-    #         info,
-    #         options={
-    #             CONF_MAX_VOLUME: user_input[CONF_MAX_VOLUME],
-    #             CONF_VOLUME_RESOLUTION: user_input[CONF_RECEIVER_MAX_VOLUME],
-    #             CONF_SOURCES: user_input[CONF_SOURCES],
-    #         },
-    #     )
+        if info is None:
+            _LOGGER.exception(
+                "Receiver with hostname %s not reachable at this moment. Aborting import",
+                host,
+            )
+            return self.async_abort(reason="cannot_connect")
+
+        unique_id = get_unique_id(info)
+        await self.async_set_unique_id(unique_id, raise_on_progress=False)
+        self._abort_if_unique_id_configured()
+
+        options = {
+            OPTION_MAX_VOLUME: max_volume,
+        }
+
+        return self._createOnkyoEntry(
+            ReceiverConfig(volume_resolution, sources),
+            host,
+            # Default to model name if no name is given through YAML.
+            name or info.model_name,
+            options,
+        )
 
     @staticmethod
     @callback
