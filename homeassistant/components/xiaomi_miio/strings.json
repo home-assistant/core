@@ -120,33 +120,33 @@
         "name": "Power supply"
       },
       "is_water_box_attached": {
-        "name": "Mop attached"
+        "name": "[%key:component::roborock::entity::binary_sensor::mop_attached::name%]"
       },
       "is_water_shortage": {
-        "name": "Water shortage"
+        "name": "[%key:component::roborock::entity::binary_sensor::water_shortage::name%]"
       },
       "is_water_box_carriage_attached": {
-        "name": "[%key:component::xiaomi_miio::entity::binary_sensor::is_water_box_attached::name%]"
+        "name": "[%key:component::roborock::entity::binary_sensor::mop_attached::name%]"
       }
     },
     "button": {
       "reset_dust_filter": {
-        "name": "Reset dust filter"
+        "name": "Reset dust filter consumable"
       },
       "reset_upper_filter": {
-        "name": "Reset upper filter"
+        "name": "Reset upper filter consumable"
       },
       "reset_vacuum_main_brush": {
-        "name": "Reset main brush"
+        "name": "[%key:component::roborock::entity::button::reset_main_brush_consumable::name%]"
       },
       "reset_vacuum_side_brush": {
-        "name": "Reset side brush"
+        "name": "[%key:component::roborock::entity::button::reset_side_brush_consumable::name%]"
       },
       "reset_vacuum_filter": {
-        "name": "Reset filter"
+        "name": "[%key:component::roborock::entity::button::reset_air_filter_consumable::name%]"
       },
       "reset_vacuum_sensor_dirty": {
-        "name": "Reset sensor dirty"
+        "name": "[%key:component::roborock::entity::button::reset_sensor_consumable::name%]"
       }
     },
     "number": {
@@ -240,16 +240,16 @@
         "name": "Purify volume"
       },
       "dnd_start": {
-        "name": "DnD start"
+        "name": "[%key:component::roborock::entity::time::dnd_start_time::name%]"
       },
       "dnd_end": {
-        "name": "DnD end"
+        "name": "[%key:component::roborock::entity::time::dnd_end_time::name%]"
       },
       "last_clean_start": {
-        "name": "Last clean start"
+        "name": "[%key:component::roborock::entity::sensor::last_clean_start::name%]"
       },
       "last_clean_end": {
-        "name": "Last clean end"
+        "name": "[%key:component::roborock::entity::sensor::last_clean_end::name%]"
       },
       "duration": {
         "name": "Last clean duration"
@@ -258,16 +258,16 @@
         "name": "Last clean area"
       },
       "clean_time": {
-        "name": "Current clean duration"
+        "name": "[%key:component::roborock::entity::sensor::cleaning_time::name%]"
       },
       "clean_area": {
-        "name": "Current clean area"
+        "name": "[%key:component::roborock::entity::sensor::cleaning_area::name%]"
       },
       "total_duration": {
-        "name": "Total duration"
+        "name": "[%key:component::roborock::entity::sensor::total_cleaning_time::name%]"
       },
       "total_area": {
-        "name": "Total clean area"
+        "name": "[%key:component::roborock::entity::sensor::total_cleaning_area::name%]"
       },
       "count": {
         "name": "Total clean count"
@@ -276,16 +276,16 @@
         "name": "Total dust collection count"
       },
       "main_brush_left": {
-        "name": "Main brush left"
+        "name": "[%key:component::roborock::entity::sensor::main_brush_time_left::name%]"
       },
       "side_brush_left": {
-        "name": "Side brush left"
+        "name": "[%key:component::roborock::entity::sensor::side_brush_time_left::name%]"
       },
       "filter_left": {
-        "name": "Filter left"
+        "name": "[%key:component::roborock::entity::sensor::filter_time_left::name%]"
       },
       "sensor_dirty_left": {
-        "name": "Sensor dirty left"
+        "name": "[%key:component::roborock::entity::sensor::sensor_time_left::name%]"
       }
     },
     "switch": {
