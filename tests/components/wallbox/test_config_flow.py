@@ -160,13 +160,7 @@ async def test_form_reauth(hass: HomeAssistant, entry: MockConfigEntry) -> None:
             status_code=200,
         )
 
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={
-                "source": config_entries.SOURCE_REAUTH,
-                "entry_id": entry.entry_id,
-            },
-        )
+        result = await entry.start_reauth_flow(hass)
 
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -201,13 +195,7 @@ async def test_form_reauth_invalid(hass: HomeAssistant, entry: MockConfigEntry) 
             status_code=200,
         )
 
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={
-                "source": config_entries.SOURCE_REAUTH,
-                "entry_id": entry.entry_id,
-            },
-        )
+        result = await entry.start_reauth_flow(hass)
 
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],

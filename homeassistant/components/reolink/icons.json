@@ -300,6 +300,11 @@
     }
   },
   "services": {
-    "ptz_move": "mdi:pan"
+    "ptz_move": {
+      "service": "mdi:pan"
+    },
+    "play_chime": {
+      "service": "mdi:music"
+    }
   }
 }

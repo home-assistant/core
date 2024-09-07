@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock
 
 from syrupy import SnapshotAssertion
 
-from homeassistant.components.airgradient import DOMAIN
+from homeassistant.components.airgradient.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 

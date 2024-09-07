@@ -21,7 +21,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
@@ -31,19 +30,18 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import RingData
-from .const import DOMAIN
+from . import RingConfigEntry
 from .coordinator import RingDataCoordinator
 from .entity import RingDeviceT, RingEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    entry: RingConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up a sensor for a Ring device."""
-    ring_data: RingData = hass.data[DOMAIN][config_entry.entry_id]
+    ring_data = entry.runtime_data
     devices_coordinator = ring_data.devices_coordinator
 
     entities = [
