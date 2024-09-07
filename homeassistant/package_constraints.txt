@@ -62,7 +62,7 @@ urllib3>=1.26.5,<2
 voluptuous-openapi==0.0.5
 voluptuous-serialize==2.6.0
 voluptuous==0.15.2
-yarl==1.9.11
+yarl==1.10.0
 zeroconf==0.133.0
 
 # Constrain pycryptodome to avoid vulnerability
