@@ -183,6 +183,7 @@
       "enable_identify_on_join": "Enable identify effect when devices join the network",
       "default_light_transition": "Default light transition time (seconds)",
       "consider_unavailable_mains": "Consider mains powered devices unavailable after (seconds)",
+      "enable_mains_startup_polling": "Refresh state for mains powered devices on startup",
       "consider_unavailable_battery": "Consider battery powered devices unavailable after (seconds)"
     },
     "zha_alarm_options": {
