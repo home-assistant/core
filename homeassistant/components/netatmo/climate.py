@@ -43,6 +43,7 @@ from .const import (
     DATA_SCHEDULES,
     DOMAIN,
     EVENT_TYPE_CANCEL_SET_POINT,
+    EVENT_TYPE_COOLING_MODE,
     EVENT_TYPE_SCHEDULE,
     EVENT_TYPE_SET_POINT,
     EVENT_TYPE_THERM_MODE,
@@ -227,6 +228,7 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
         for event_type in (
             EVENT_TYPE_SET_POINT,
             EVENT_TYPE_THERM_MODE,
+            EVENT_TYPE_COOLING_MODE,
             EVENT_TYPE_CANCEL_SET_POINT,
             EVENT_TYPE_SCHEDULE,
         ):
@@ -276,6 +278,12 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
             elif self._attr_preset_mode in [PRESET_SCHEDULE, PRESET_HOME]:
                 self.async_update_callback()
                 self.data_handler.async_force_update(self._signal_name)
+            self.async_write_ha_state()
+            return
+
+        if data["event_type"] == EVENT_TYPE_COOLING_MODE:
+            self._attr_preset_mode = NETATMO_MAP_PRESET[home[EVENT_TYPE_COOLING_MODE]]
+            self._attr_hvac_mode = HVAC_MAP_NETATMO[self._attr_preset_mode]
             self.async_write_ha_state()
             return
 
