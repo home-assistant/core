@@ -30,7 +30,6 @@ from .entity import SmEntity
 class SmSensorEntityDescription(SensorEntityDescription):
     """Class describing SMLIGHT sensor entities."""
 
-    entity_category = EntityCategory.DIAGNOSTIC
     value_fn: Callable[[Sensors], float | None]
 
 
@@ -109,6 +108,7 @@ class SmSensorEntity(SmEntity, SensorEntity):
     """Representation of a slzb sensor."""
 
     entity_description: SmSensorEntityDescription
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     def __init__(
         self,
