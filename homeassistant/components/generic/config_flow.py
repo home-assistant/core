@@ -84,6 +84,10 @@ SUPPORTED_IMAGE_TYPES = {"png", "jpeg", "gif", "svg+xml", "webp"}
 IMAGE_PREVIEWS_ACTIVE = "previews"
 
 
+class InvalidStreamException(HomeAssistantError):
+    """Error to indicate an invalid stream."""
+
+
 def build_schema(
     user_input: Mapping[str, Any],
     is_options_flow: bool = False,
@@ -238,14 +242,14 @@ def slug(
 
 async def async_test_and_preview_stream(
     hass: HomeAssistant, info: Mapping[str, Any]
-) -> dict[str, str] | PreviewStream:
+) -> PreviewStream | None:
     """Verify that the stream is valid before we create an entity.
 
-    Returns a dict with errors if any, or the stream object if valid.
+    Returns the stream object if valid. Raises InvalidStreamException if not.
     The stream object is used to preview the video in the UI.
     """
     if not (stream_source := info.get(CONF_STREAM_SOURCE)):
-        return {}
+        return None
     # Import from stream.worker as stream cannot reexport from worker
     # without forcing the av dependency on default_config
     # pylint: disable-next=import-outside-toplevel
@@ -257,7 +261,7 @@ async def async_test_and_preview_stream(
         stream_source = stream_source.async_render(parse_result=False)
     except TemplateError as err:
         _LOGGER.warning("Problem rendering template %s: %s", stream_source, err)
-        return {CONF_STREAM_SOURCE: "template_error"}
+        raise InvalidStreamException("template_error") from err
     stream_options: dict[str, str | bool | float] = {}
     if rtsp_transport := info.get(CONF_RTSP_TRANSPORT):
         stream_options[CONF_RTSP_TRANSPORT] = rtsp_transport
@@ -266,10 +270,10 @@ async def async_test_and_preview_stream(
 
     try:
         url = yarl.URL(stream_source)
-    except ValueError:
-        return {CONF_STREAM_SOURCE: "malformed_url"}
+    except ValueError as err:
+        raise InvalidStreamException("malformed_url") from err
     if not url.is_absolute():
-        return {CONF_STREAM_SOURCE: "relative_url"}
+        raise InvalidStreamException("relative_url")
     if not url.user and not url.password:
         username = info.get(CONF_USERNAME)
         password = info.get(CONF_PASSWORD)
@@ -287,24 +291,24 @@ async def async_test_and_preview_stream(
             )
         )
         hls_provider = stream.add_provider(HLS_PROVIDER)
-        await stream.start()
-        if not await hls_provider.part_recv(timeout=SOURCE_TIMEOUT):
-            hass.async_create_task(stream.stop())
-            return {CONF_STREAM_SOURCE: "timeout"}
     except StreamWorkerError as err:
         return {CONF_STREAM_SOURCE: "unknown_with_details", "error_details": str(err)}
     except PermissionError:
         return {CONF_STREAM_SOURCE: "stream_not_permitted"}
     except OSError as err:
         if err.errno == EHOSTUNREACH:
-            return {CONF_STREAM_SOURCE: "stream_no_route_to_host"}
+            raise InvalidStreamException("stream_no_route_to_host") from err
         if err.errno == EIO:  # input/output error
-            return {CONF_STREAM_SOURCE: "stream_io_error"}
+            raise InvalidStreamException("stream_io_error") from err
         raise
     except HomeAssistantError as err:
         if "Stream integration is not set up" in str(err):
-            return {CONF_STREAM_SOURCE: "stream_not_set_up"}
+            raise InvalidStreamException("stream_not_set_up") from err
         raise
+    await stream.start()
+    if not await hls_provider.part_recv(timeout=SOURCE_TIMEOUT):
+        hass.async_create_task(stream.stop())
+        raise InvalidStreamException("timeout")
     return stream
 
 
@@ -359,12 +363,12 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "no_still_image_or_stream_url"
             else:
                 errors, still_format = await async_test_still(hass, user_input)
-                result = await async_test_and_preview_stream(hass, user_input)
-                if isinstance(result, dict):
-                    errors = errors | result
-                    self.context.pop("preview_stream", None)
-                else:
+                try:
+                    result = await async_test_and_preview_stream(hass, user_input)
                     self.context["preview_stream"] = result
+                except InvalidStreamException as err:
+                    errors |= {CONF_STREAM_SOURCE: str(err)}
+                    self.context.pop("preview_stream", None)
                 if not errors:
                     user_input[CONF_CONTENT_TYPE] = still_format
                     still_url = user_input.get(CONF_STILL_IMAGE_URL)
@@ -447,10 +451,12 @@ class GenericOptionsFlowHandler(OptionsFlow):
             errors, still_format = await async_test_still(
                 hass, self.config_entry.options | user_input
             )
+            try:
+                await async_test_and_preview_stream(hass, user_input)
+            except InvalidStreamException as err:
+                errors |= {CONF_STREAM_SOURCE: str(err)}
+                # Stream preview during options flow not yet implemented
 
-            result = await async_test_and_preview_stream(hass, user_input)
-            if isinstance(result, dict):
-                errors = errors | result
             still_url = user_input.get(CONF_STILL_IMAGE_URL)
             if not errors:
                 if still_url is None:
