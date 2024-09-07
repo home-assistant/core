@@ -774,6 +774,16 @@ class BrSensor(SensorEntity):
         self._measured = data.get(MEASURED)
         sensor_type = self.entity_description.key
 
+        extra_state_attributes = {
+            ATTR_ATTRIBUTION: data.get(ATTRIBUTION),
+            STATIONNAME_LABEL: data.get(STATIONNAME),
+        }
+        if self._measured is not None:
+            # convert datetime (Europe/Amsterdam) into local datetime
+            local_dt = dt_util.as_local(self._measured)
+            extra_state_attributes[MEASURED_LABEL] = local_dt.strftime("%c")
+        self._attr_extra_state_attributes = extra_state_attributes
+
         if sensor_type.endswith(("_1d", "_2d", "_3d", "_4d", "_5d")):
             # update forecasting sensors:
             fcday = 0
@@ -867,6 +877,11 @@ class BrSensor(SensorEntity):
             self._attr_native_value = nested.get(
                 sensor_type[len(PRECIPITATION_FORECAST) + 1 :]
             )
+
+            if self._timeframe is not None:
+                extra_state_attributes[TIMEFRAME_LABEL] = "%d min" % (self._timeframe)
+                self._attr_extra_state_attributes = extra_state_attributes
+
             return True
 
         if sensor_type in [WINDSPEED, WINDGUST]:
@@ -885,21 +900,5 @@ class BrSensor(SensorEntity):
 
         # update all other sensors
         self._attr_native_value = data.get(sensor_type)
-        if sensor_type.startswith(PRECIPITATION_FORECAST):
-            result = {ATTR_ATTRIBUTION: data.get(ATTRIBUTION)}
-            if self._timeframe is not None:
-                result[TIMEFRAME_LABEL] = "%d min" % (self._timeframe)
 
-            self._attr_extra_state_attributes = result
-
-        result = {
-            ATTR_ATTRIBUTION: data.get(ATTRIBUTION),
-            STATIONNAME_LABEL: data.get(STATIONNAME),
-        }
-        if self._measured is not None:
-            # convert datetime (Europe/Amsterdam) into local datetime
-            local_dt = dt_util.as_local(self._measured)
-            result[MEASURED_LABEL] = local_dt.strftime("%c")
-
-        self._attr_extra_state_attributes = result
         return True
