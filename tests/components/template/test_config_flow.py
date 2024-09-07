@@ -98,9 +98,9 @@ from tests.typing import WebSocketGenerator
             {"one": "30.0", "two": "20.0"},
             {},
             {
-                "min": "{{ 0 }}",
-                "max": "{{ 100 }}",
-                "step": "{{ 0.1 }}",
+                "min": "0",
+                "max": "100",
+                "step": "0.1",
                 "set_value": {
                     "action": "input_number.set_value",
                     "target": {"entity_id": "input_number.test"},
@@ -108,9 +108,9 @@ from tests.typing import WebSocketGenerator
                 },
             },
             {
-                "min": "{{ 0 }}",
-                "max": "{{ 100 }}",
-                "step": "{{ 0.1 }}",
+                "min": 0,
+                "max": 100,
+                "step": 0.1,
                 "set_value": {
                     "action": "input_number.set_value",
                     "target": {"entity_id": "input_number.test"},
@@ -258,14 +258,14 @@ async def test_config_flow(
             "number",
             {"state": "{{ states('number.one') }}"},
             {
-                "min": "{{ 0 }}",
-                "max": "{{ 100 }}",
-                "step": "{{ 0.1 }}",
+                "min": "0",
+                "max": "100",
+                "step": "0.1",
             },
             {
-                "min": "{{ 0 }}",
-                "max": "{{ 100 }}",
-                "step": "{{ 0.1 }}",
+                "min": 0,
+                "max": 100,
+                "step": 0.1,
             },
         ),
         (
@@ -451,9 +451,9 @@ def get_suggested(schema, key):
             ["30.0", "20.0"],
             {"one": "30.0", "two": "20.0"},
             {
-                "min": "{{ 0 }}",
-                "max": "{{ 100 }}",
-                "step": "{{ 0.1 }}",
+                "min": 0,
+                "max": 100,
+                "step": 0.1,
                 "set_value": {
                     "action": "input_number.set_value",
                     "target": {"entity_id": "input_number.test"},
@@ -461,9 +461,9 @@ def get_suggested(schema, key):
                 },
             },
             {
-                "min": "{{ 0 }}",
-                "max": "{{ 100 }}",
-                "step": "{{ 0.1 }}",
+                "min": 0,
+                "max": 100,
+                "step": 0.1,
                 "set_value": {
                     "action": "input_number.set_value",
                     "target": {"entity_id": "input_number.test"},
@@ -1230,14 +1230,14 @@ async def test_option_flow_sensor_preview_config_entry_removed(
             "number",
             {"state": "{{ states('number.one') }}"},
             {
-                "min": "{{ 0 }}",
-                "max": "{{ 100 }}",
-                "step": "{{ 0.1 }}",
+                "min": 0,
+                "max": 100,
+                "step": 0.1,
             },
             {
-                "min": "{{ 0 }}",
-                "max": "{{ 100 }}",
-                "step": "{{ 0.1 }}",
+                "min": 0,
+                "max": 100,
+                "step": 0.1,
             },
         ),
         (
