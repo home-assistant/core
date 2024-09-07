@@ -2255,7 +2255,7 @@ twilio==6.32.0
 # homeassistant.components.twitch
 twitchAPI==4.2.1
 
-# homeassistant.components.monarchmoney
+# homeassistant.components.monarch_money
 typedmonarchmoney==0.2.3
 
 # homeassistant.components.ukraine_alarm

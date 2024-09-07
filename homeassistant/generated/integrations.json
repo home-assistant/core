@@ -3796,7 +3796,7 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
-    "monarchmoney": {
+    "monarch_money": {
       "name": "Monarch Money",
       "integration_type": "hub",
       "config_flow": true,
