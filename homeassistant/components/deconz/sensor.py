@@ -10,6 +10,7 @@ from typing import Generic, TypeVar
 from pydeconz.interfaces.sensors import SensorResources
 from pydeconz.models.event import EventType
 from pydeconz.models.sensor import SensorBase as PydeconzSensorBase
+from pydeconz.models.sensor.air_purifier import AirPurifier
 from pydeconz.models.sensor.air_quality import AirQuality
 from pydeconz.models.sensor.carbon_dioxide import CarbonDioxide
 from pydeconz.models.sensor.consumption import Consumption
@@ -47,6 +48,7 @@ from homeassistant.const import (
     UnitOfPower,
     UnitOfPressure,
     UnitOfTemperature,
+    UnitOfTime,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -77,6 +79,7 @@ ATTR_EVENT_ID = "event_id"
 
 T = TypeVar(
     "T",
+    AirPurifier,
     AirQuality,
     CarbonDioxide,
     Consumption,
@@ -108,6 +111,19 @@ class DeconzSensorDescription(Generic[T], SensorEntityDescription):
 
 
 ENTITY_DESCRIPTIONS: tuple[DeconzSensorDescription, ...] = (
+    DeconzSensorDescription[AirPurifier](
+        key="air_purifier_filter_run_time",
+        supported_fn=lambda device: True,
+        update_key="filterruntime",
+        name_suffix="Filter time",
+        value_fn=lambda device: device.filter_run_time,
+        instance_check=AirPurifier,
+        device_class=SensorDeviceClass.DURATION,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.DAYS,
+        suggested_display_precision=1,
+    ),
     DeconzSensorDescription[AirQuality](
         key="air_quality",
         supported_fn=lambda device: device.supports_air_quality,

@@ -1,5 +1,6 @@
 """Config flow to configure WiLight."""
 
+from typing import Any
 from urllib.parse import urlparse
 
 import pywilight
@@ -89,7 +90,9 @@ class WiLightFlowHandler(ConfigFlow, domain=DOMAIN):
         self.context["title_placeholders"] = {"name": self._title}
         return await self.async_step_confirm()
 
-    async def async_step_confirm(self, user_input=None):
+    async def async_step_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle user-confirmation of discovered WiLight."""
         if user_input is not None:
             return self._get_entry()

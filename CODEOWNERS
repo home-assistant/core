@@ -143,6 +143,8 @@ build.json @home-assistant/supervisor
 /tests/components/aseko_pool_live/ @milanmeu
 /homeassistant/components/assist_pipeline/ @balloob @synesthesiam
 /tests/components/assist_pipeline/ @balloob @synesthesiam
+/homeassistant/components/assist_satellite/ @home-assistant/core @synesthesiam
+/tests/components/assist_satellite/ @home-assistant/core @synesthesiam
 /homeassistant/components/asuswrt/ @kennedyshead @ollo69
 /tests/components/asuswrt/ @kennedyshead @ollo69
 /homeassistant/components/atag/ @MatsNL
@@ -1288,6 +1290,8 @@ build.json @home-assistant/supervisor
 /tests/components/sensorpro/ @bdraco
 /homeassistant/components/sensorpush/ @bdraco
 /tests/components/sensorpush/ @bdraco
+/homeassistant/components/sensoterra/ @markruys
+/tests/components/sensoterra/ @markruys
 /homeassistant/components/sentry/ @dcramer @frenck
 /tests/components/sentry/ @dcramer @frenck
 /homeassistant/components/senz/ @milanmeu
@@ -1636,6 +1640,8 @@ build.json @home-assistant/supervisor
 /tests/components/webostv/ @thecode
 /homeassistant/components/websocket_api/ @home-assistant/core
 /tests/components/websocket_api/ @home-assistant/core
+/homeassistant/components/weheat/ @jesperraemaekers
+/tests/components/weheat/ @jesperraemaekers
 /homeassistant/components/wemo/ @esev
 /tests/components/wemo/ @esev
 /homeassistant/components/whirlpool/ @abmantis @mkmer

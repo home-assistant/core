@@ -91,7 +91,7 @@ async def test_zeroconf_flow(
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["context"]["source"] == "zeroconf"
     assert result2["context"]["unique_id"] == "aa:bb:cc:dd:ee:ff"
-    assert result2["title"] == "SLZB-06p7"
+    assert result2["title"] == "slzb-06"
     assert result2["data"] == {
         CONF_HOST: MOCK_HOST,
     }
@@ -143,7 +143,7 @@ async def test_zeroconf_flow_auth(
     assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["context"]["source"] == "zeroconf"
     assert result3["context"]["unique_id"] == "aa:bb:cc:dd:ee:ff"
-    assert result3["title"] == "SLZB-06p7"
+    assert result3["title"] == "slzb-06"
     assert result3["data"] == {
         CONF_USERNAME: MOCK_USERNAME,
         CONF_PASSWORD: MOCK_PASSWORD,
@@ -356,7 +356,7 @@ async def test_zeroconf_legacy_mac(
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["context"]["source"] == "zeroconf"
     assert result2["context"]["unique_id"] == "aa:bb:cc:dd:ee:ff"
-    assert result2["title"] == "SLZB-06p7"
+    assert result2["title"] == "slzb-06"
     assert result2["data"] == {
         CONF_HOST: MOCK_HOST,
     }
