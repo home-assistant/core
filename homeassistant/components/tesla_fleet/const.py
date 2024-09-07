@@ -41,3 +41,10 @@ class TeslaFleetState(StrEnum):
     ONLINE = "online"
     ASLEEP = "asleep"
     OFFLINE = "offline"
+
+
+class TeslaFleetClimateSide(StrEnum):
+    """Tesla Fleet Climate Keeper Modes."""
+
+    DRIVER = "driver_temp"
+    PASSENGER = "passenger_temp"
