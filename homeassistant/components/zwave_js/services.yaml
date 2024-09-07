@@ -344,10 +344,6 @@ ping:
           multiple: true
 
 reset_meter:
-  target:
-    entity:
-      domain: sensor
-      integration: zwave_js
   fields:
     area_id:
       example: living_room

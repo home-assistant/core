@@ -150,6 +150,11 @@
     "type": "Sensor",
     "category": "Debug"
   },
+  "check_latest_firmware": {
+    "value": "<Action>",
+    "type": "Action",
+    "category": "Info"
+  },
   "thermostat_mode": {
     "value": "off",
     "type": "Sensor",

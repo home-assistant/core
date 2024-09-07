@@ -235,15 +235,7 @@ async def test_reauth_flow(hass: HomeAssistant, region, brand) -> None:
     )
     mock_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "unique_id": mock_entry.unique_id,
-            "entry_id": mock_entry.entry_id,
-        },
-        data=CONFIG_INPUT | {"region": region[0], "brand": brand[0]},
-    )
+    result = await mock_entry.start_reauth_flow(hass)
 
     assert result["step_id"] == "reauth_confirm"
     assert result["type"] is FlowResultType.FORM
@@ -294,21 +286,7 @@ async def test_reauth_flow_auth_error(hass: HomeAssistant, region, brand) -> Non
     )
     mock_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "unique_id": mock_entry.unique_id,
-            "entry_id": mock_entry.entry_id,
-        },
-        data={
-            CONF_USERNAME: "test-username",
-            CONF_PASSWORD: "new-password",
-            "region": region[0],
-            "brand": brand[0],
-        },
-    )
-
+    result = await mock_entry.start_reauth_flow(hass)
     assert result["step_id"] == "reauth_confirm"
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
@@ -345,15 +323,7 @@ async def test_reauth_flow_connnection_error(
     )
     mock_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "unique_id": mock_entry.unique_id,
-            "entry_id": mock_entry.entry_id,
-        },
-        data=CONFIG_INPUT | {"region": region[0], "brand": brand[0]},
-    )
+    result = await mock_entry.start_reauth_flow(hass)
 
     assert result["step_id"] == "reauth_confirm"
     assert result["type"] is FlowResultType.FORM

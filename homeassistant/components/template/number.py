@@ -31,7 +31,7 @@ from homeassistant.helpers.script import Script
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import TriggerUpdateCoordinator
-from .const import DOMAIN
+from .const import CONF_MAX, CONF_MIN, CONF_STEP, DOMAIN
 from .template_entity import (
     TEMPLATE_ENTITY_AVAILABILITY_SCHEMA,
     TEMPLATE_ENTITY_ICON_SCHEMA,
@@ -42,9 +42,6 @@ from .trigger_entity import TriggerEntity
 _LOGGER = logging.getLogger(__name__)
 
 CONF_SET_VALUE = "set_value"
-CONF_MIN = "min"
-CONF_MAX = "max"
-CONF_STEP = "step"
 
 DEFAULT_NAME = "Template Number"
 DEFAULT_OPTIMISTIC = False
@@ -70,7 +67,7 @@ NUMBER_CONFIG_SCHEMA = vol.Schema(
         vol.Required(CONF_NAME): cv.template,
         vol.Required(CONF_STATE): cv.template,
         vol.Required(CONF_STEP): cv.template,
-        vol.Optional(CONF_SET_VALUE): cv.SCRIPT_SCHEMA,
+        vol.Required(CONF_SET_VALUE): cv.SCRIPT_SCHEMA,
         vol.Optional(CONF_MIN): cv.template,
         vol.Optional(CONF_MAX): cv.template,
         vol.Optional(CONF_DEVICE_ID): selector.DeviceSelector(),
@@ -154,11 +151,10 @@ class TemplateNumber(TemplateEntity, NumberEntity):
         super().__init__(hass, config=config, unique_id=unique_id)
         assert self._attr_name is not None
         self._value_template = config[CONF_STATE]
-        self._command_set_value = (
-            Script(hass, config[CONF_SET_VALUE], self._attr_name, DOMAIN)
-            if config.get(CONF_SET_VALUE, None) is not None
-            else None
+        self._command_set_value = Script(
+            hass, config[CONF_SET_VALUE], self._attr_name, DOMAIN
         )
+
         self._step_template = config[CONF_STEP]
         self._min_value_template = config[CONF_MIN]
         self._max_value_template = config[CONF_MAX]
