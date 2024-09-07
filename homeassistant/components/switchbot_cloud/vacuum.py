@@ -4,7 +4,16 @@ from typing import Any
 
 from switchbot_api import Device, Remote, SwitchBotAPI, VacuumCommands
 
-from homeassistant.components.vacuum import StateVacuumEntity, VacuumEntityFeature
+from homeassistant.components.vacuum import (
+    STATE_CLEANING,
+    STATE_DOCKED,
+    STATE_ERROR,
+    STATE_IDLE,
+    STATE_PAUSED,
+    STATE_RETURNING,
+    StateVacuumEntity,
+    VacuumEntityFeature,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -45,9 +54,20 @@ async def async_setup_entry(
 # "1": "Standard",
 # "2": "Strong",
 # "3": "MAX"
+VACUUM_SWITCHBOT_STATE_TO_HA_STATE: dict[str, str] = {
+    "StandBy": STATE_IDLE,
+    "Clearing": STATE_CLEANING,
+    "Paused": STATE_PAUSED,
+    "GotoChargeBase": STATE_RETURNING,
+    "Charging": STATE_DOCKED,
+    "ChargeDone": STATE_DOCKED,
+    "Dormant": STATE_IDLE,
+    "InTrouble": STATE_ERROR,
+    "InRemoteControl": STATE_CLEANING,
+    "InDustCollecting": STATE_DOCKED,
+}
 
 
-# GET /v1.1/devices/{deviceId}/status
 # https://github.com/OpenWonderLabs/SwitchBotAPI?tab=readme-ov-file#robot-vacuum-cleaner-s1-plus-1
 class SwitchBotCloudVacuum(SwitchBotCloudEntity, StateVacuumEntity):
     """Representation of a SwitchBot vacuum."""
@@ -62,16 +82,17 @@ class SwitchBotCloudVacuum(SwitchBotCloudEntity, StateVacuumEntity):
     )
 
     _attr_name = None
-    _attr_fan_speed_list: list[str] = ["1", "2", "3", "4"]
+    _attr_fan_speed_list: list[str] = ["quiet", "standard", "strong", "max"]
 
     async def async_set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:
         """Set fan speed."""
-        self._attr_fan_speed = fan_speed
-        await self.send_api_command(
-            VacuumCommands.POW_LEVEL,
-            parameters=fan_speed,
-        )
-        self.async_write_ha_state()
+        if fan_speed in self._attr_fan_speed_list:
+            self._attr_fan_speed = fan_speed
+            await self.send_api_command(
+                VacuumCommands.POW_LEVEL,
+                parameters=str(self._attr_fan_speed_list.index(fan_speed)),
+            )
+            self.async_write_ha_state()
 
     async def async_pause(self) -> None:
         """Pause the cleaning task."""
@@ -98,7 +119,11 @@ class SwitchBotCloudVacuum(SwitchBotCloudEntity, StateVacuumEntity):
         # 'battery': 100
         self._attr_battery_level = self.coordinator.data.get("battery")
         self._attr_available = self.coordinator.data.get("onlineStatus") == "online"
-        self._attr_state = self.coordinator.data.get("workingStatus")
+
+        switchbot_state = self.coordinator.data.get("workingStatus")
+        if switchbot_state in VACUUM_SWITCHBOT_STATE_TO_HA_STATE:
+            self._attr_state = VACUUM_SWITCHBOT_STATE_TO_HA_STATE[switchbot_state]
+
         self.async_write_ha_state()
 
 
@@ -107,7 +132,4 @@ def _async_make_entity(
     api: SwitchBotAPI, device: Device | Remote, coordinator: SwitchBotCoordinator
 ) -> SwitchBotCloudVacuum:
     """Make a SwitchBotCloudVacuum."""
-    if device.device_type in ["K10+"]:
-        return SwitchBotCloudVacuum(api, device, coordinator)
-
-    raise NotImplementedError(f"Unsupported device type: {device.device_type}")
+    return SwitchBotCloudVacuum(api, device, coordinator)

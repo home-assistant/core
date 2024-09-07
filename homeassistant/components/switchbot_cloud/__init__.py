@@ -87,7 +87,12 @@ def make_device_data(
             devices_data.sensors.append(
                 prepare_device(hass, api, device, coordinators_by_id)
             )
-        if isinstance(device, Device) and device.device_type in ["K10+"]:
+        if isinstance(device, Device) and device.device_type in [
+            "K10+",
+            "K10+ Pro",
+            "Robot Vacuum Cleaner S1",
+            "Robot Vacuum Cleaner S1 Plus",
+        ]:
             devices_data.vacuums.append(
                 prepare_device(hass, api, device, coordinators_by_id)
             )
