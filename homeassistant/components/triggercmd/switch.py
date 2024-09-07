@@ -48,7 +48,7 @@ class TRIGGERcmdSwitch(SwitchEntity):
         self._attr_name = trigger.trigger_id
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, trigger.computer_id)},
-            name=str(trigger.computer_id).capitalize(),
+            name=trigger.computer_id.capitalize(),
             sw_version=trigger.firmware_version,
             model=trigger.model,
             manufacturer=trigger.hub.manufacturer,

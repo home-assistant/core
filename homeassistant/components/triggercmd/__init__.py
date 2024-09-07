@@ -9,7 +9,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import TOKEN
+from .const import CONF_TOKEN
 
 PLATFORMS = [
     Platform.SWITCH,
@@ -20,7 +20,7 @@ type TriggercmdConfigEntry = ConfigEntry[ha.Hub]
 
 async def async_setup_entry(hass: HomeAssistant, entry: TriggercmdConfigEntry) -> bool:
     """Set up TRIGGERcmd from a config entry."""
-    hub = ha.Hub(entry.data[TOKEN])
+    hub = ha.Hub(entry.data[CONF_TOKEN])
 
     try:
         await hub.connection_test()
