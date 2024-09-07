@@ -125,7 +125,7 @@ class IRobotEntity(Entity):
         """Return last mission start time."""
         if (
             ts := self.vacuum_state.get("cleanMissionStatus", {}).get("mssnStrtTm")
-        ) is None:
+        ) is None or ts == 0:
             return None
         tz = ZoneInfo(self.vacuum_state.get("timezone", "UTC"))
         return datetime.fromtimestamp(ts, tz=tz)
