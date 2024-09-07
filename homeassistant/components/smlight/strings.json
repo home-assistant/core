@@ -68,6 +68,32 @@
       },
       "socket_uptime": {
         "name": "Zigbee uptime"
+      },
+      "device_ip": {
+        "name": "IP address"
+      },
+      "device_mode": {
+        "name": "Connection mode",
+        "state": {
+          "0": "Ethernet",
+          "1": "Wi-Fi",
+          "2": "USB"
+        }
+      },
+      "firmware_channel": {
+        "name": "Firmware channel",
+        "state": {
+          "dev": "Development",
+          "release": "Stable"
+        }
+      },
+      "zigbee_type": {
+        "name": "Zigbee type",
+        "state": {
+          "0": "Coordinator",
+          "1": "Router",
+          "2": "Thread"
+        }
       }
     },
     "button": {
