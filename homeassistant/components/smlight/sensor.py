@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from itertools import chain
 
-from pysmlight import Sensors
+from pysmlight import Info, Sensors
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -31,6 +31,40 @@ class SmSensorEntityDescription(SensorEntityDescription):
     """Class describing SMLIGHT sensor entities."""
 
     value_fn: Callable[[Sensors], float | None]
+
+
+@dataclass(frozen=True, kw_only=True)
+class SmInfoEntityDescription(SensorEntityDescription):
+    """Class describing SMLIGHT information entities."""
+
+    value_fn: Callable[[Info], int | str | None]
+
+
+INFO: list[SmInfoEntityDescription] = [
+    SmInfoEntityDescription(
+        key="device_ip",
+        translation_key="device_ip",
+        icon="mdi:ip-network-outline",
+        value_fn=lambda x: x.device_ip,
+    ),
+    SmInfoEntityDescription(
+        key="device_mode",
+        translation_key="device_mode",
+        icon="mdi:connection",
+        value_fn=lambda x: x.coord_mode,
+    ),
+    SmInfoEntityDescription(
+        key="firmware_channel",
+        translation_key="firmware_channel",
+        value_fn=lambda x: x.fw_channel,
+    ),
+    SmInfoEntityDescription(
+        key="zigbee_type",
+        translation_key="zigbee_type",
+        icon="mdi:zigbee",
+        value_fn=lambda x: x.zb_type,
+    ),
+]
 
 
 SENSORS: list[SmSensorEntityDescription] = [
@@ -98,6 +132,7 @@ async def async_setup_entry(
 
     async_add_entities(
         chain(
+            (SmInfoSensorEntity(coordinator, description) for description in INFO),
             (SmSensorEntity(coordinator, description) for description in SENSORS),
             (SmUptimeSensorEntity(coordinator, description) for description in UPTIME),
         )
@@ -122,9 +157,32 @@ class SmSensorEntity(SmEntity, SensorEntity):
         self._attr_unique_id = f"{coordinator.unique_id}_{description.key}"
 
     @property
-    def native_value(self) -> datetime | float | None:
+    def native_value(self) -> datetime | str | float | None:
         """Return the sensor value."""
         return self.entity_description.value_fn(self.coordinator.data.sensors)
+
+
+class SmInfoSensorEntity(SmEntity, SensorEntity):
+    """Representation of a slzb info sensor."""
+
+    entity_description: SmInfoEntityDescription
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+
+    def __init__(
+        self,
+        coordinator: SmDataUpdateCoordinator,
+        description: SmInfoEntityDescription,
+    ) -> None:
+        """Initiate slzb sensor."""
+        super().__init__(coordinator)
+
+        self.entity_description = description
+        self._attr_unique_id = f"{coordinator.unique_id}_{description.key}"
+
+    @property
+    def native_value(self) -> int | str | None:
+        """Return the sensor value."""
+        return self.entity_description.value_fn(self.coordinator.data.info)
 
 
 class SmUptimeSensorEntity(SmSensorEntity):
