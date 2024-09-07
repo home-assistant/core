@@ -316,7 +316,7 @@ async def test_energy_sensors(
     assert state.attributes["device_class"] == "power"
     assert state.attributes["friendly_name"] == "Eve Energy Plug Patched Power"
     # ensure we do not have a duplicated entity from the custom cluster
-    state = hass.states.get(entity_id + "_1")
+    state = hass.states.get(f"{entity_id}_1")
     assert state is None
 
     # voltage sensor on Matter 1.3 ElectricalPowermeasurement cluster
@@ -328,7 +328,7 @@ async def test_energy_sensors(
     assert state.attributes["device_class"] == "voltage"
     assert state.attributes["friendly_name"] == "Eve Energy Plug Patched Voltage"
     # ensure we do not have a duplicated entity from the custom cluster
-    state = hass.states.get(entity_id + "_1")
+    state = hass.states.get(f"{entity_id}_1")
     assert state is None
 
     # energy sensor on Matter 1.3 ElectricalEnergymeasurement cluster
@@ -341,7 +341,7 @@ async def test_energy_sensors(
     assert state.attributes["friendly_name"] == "Eve Energy Plug Patched Energy"
     assert state.attributes["state_class"] == "total_increasing"
     # ensure we do not have a duplicated entity from the custom cluster
-    state = hass.states.get(entity_id + "_1")
+    state = hass.states.get(f"{entity_id}_1")
     assert state is None
 
     # current sensor on Matter 1.3 ElectricalPowermeasurement cluster
@@ -353,7 +353,7 @@ async def test_energy_sensors(
     assert state.attributes["device_class"] == "current"
     assert state.attributes["friendly_name"] == "Eve Energy Plug Patched Current"
     # ensure we do not have a duplicated entity from the custom cluster
-    state = hass.states.get(entity_id + "_1")
+    state = hass.states.get(f"{entity_id}_1")
     assert state is None
 
 
