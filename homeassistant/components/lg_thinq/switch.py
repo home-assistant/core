@@ -5,9 +5,8 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from thinqconnect import PROPERTY_WRITABLE, DeviceType
+from thinqconnect import DeviceType
 from thinqconnect.devices.const import Property as ThinQProperty
-from thinqconnect.integration.homeassistant.property import create_properties
 
 from homeassistant.components.switch import (
     SwitchDeviceClass,
@@ -20,44 +19,34 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import ThinqConfigEntry
 from .entity import ThinQEntity
 
-OPERATION_SWITCH_DESC: dict[ThinQProperty, SwitchEntityDescription] = {
-    ThinQProperty.AIR_FAN_OPERATION_MODE: SwitchEntityDescription(
-        key=ThinQProperty.AIR_FAN_OPERATION_MODE,
-        translation_key="operation_power",
-    ),
-    ThinQProperty.AIR_PURIFIER_OPERATION_MODE: SwitchEntityDescription(
-        key=ThinQProperty.AIR_PURIFIER_OPERATION_MODE,
-        translation_key="operation_power",
-    ),
-    ThinQProperty.BOILER_OPERATION_MODE: SwitchEntityDescription(
-        key=ThinQProperty.BOILER_OPERATION_MODE,
-        translation_key="operation_power",
-    ),
-    ThinQProperty.DEHUMIDIFIER_OPERATION_MODE: SwitchEntityDescription(
-        key=ThinQProperty.DEHUMIDIFIER_OPERATION_MODE,
-        translation_key="operation_power",
-    ),
-    ThinQProperty.HUMIDIFIER_OPERATION_MODE: SwitchEntityDescription(
-        key=ThinQProperty.HUMIDIFIER_OPERATION_MODE,
-        translation_key="operation_power",
-    ),
-}
-
-DEVIE_TYPE_SWITCH_MAP: dict[DeviceType, tuple[SwitchEntityDescription, ...]] = {
+DEVICE_TYPE_SWITCH_MAP: dict[DeviceType, tuple[SwitchEntityDescription, ...]] = {
     DeviceType.AIR_PURIFIER_FAN: (
-        OPERATION_SWITCH_DESC[ThinQProperty.AIR_FAN_OPERATION_MODE],
+        SwitchEntityDescription(
+            key=ThinQProperty.AIR_FAN_OPERATION_MODE, translation_key="operation_power"
+        ),
     ),
     DeviceType.AIR_PURIFIER: (
-        OPERATION_SWITCH_DESC[ThinQProperty.AIR_PURIFIER_OPERATION_MODE],
+        SwitchEntityDescription(
+            key=ThinQProperty.AIR_PURIFIER_OPERATION_MODE,
+            translation_key="operation_power",
+        ),
     ),
     DeviceType.DEHUMIDIFIER: (
-        OPERATION_SWITCH_DESC[ThinQProperty.DEHUMIDIFIER_OPERATION_MODE],
+        SwitchEntityDescription(
+            key=ThinQProperty.DEHUMIDIFIER_OPERATION_MODE,
+            translation_key="operation_power",
+        ),
     ),
     DeviceType.HUMIDIFIER: (
-        OPERATION_SWITCH_DESC[ThinQProperty.HUMIDIFIER_OPERATION_MODE],
+        SwitchEntityDescription(
+            key=ThinQProperty.HUMIDIFIER_OPERATION_MODE,
+            translation_key="operation_power",
+        ),
     ),
     DeviceType.SYSTEM_BOILER: (
-        OPERATION_SWITCH_DESC[ThinQProperty.BOILER_OPERATION_MODE],
+        SwitchEntityDescription(
+            key=ThinQProperty.BOILER_OPERATION_MODE, translation_key="operation_power"
+        ),
     ),
 }
 
@@ -73,23 +62,14 @@ async def async_setup_entry(
     entities: list[ThinQSwitchEntity] = []
     for coordinator in entry.runtime_data.values():
         if (
-            descriptions := DEVIE_TYPE_SWITCH_MAP.get(
-                coordinator.device_api.device_type
+            descriptions := DEVICE_TYPE_SWITCH_MAP.get(
+                coordinator.api.device.device_type
             )
         ) is not None:
             for description in descriptions:
-                properties = create_properties(
-                    device_api=coordinator.device_api,
-                    key=description.key,
-                    children_keys=None,
-                    rw_type=PROPERTY_WRITABLE,
-                )
-                if not properties:
-                    continue
-
                 entities.extend(
-                    ThinQSwitchEntity(coordinator, description, prop)
-                    for prop in properties
+                    ThinQSwitchEntity(coordinator, description, property_id)
+                    for property_id in coordinator.api.get_active_idx(description.key)
                 )
 
     if entities:
@@ -105,14 +85,20 @@ class ThinQSwitchEntity(ThinQEntity, SwitchEntity):
         """Update status itself."""
         super()._update_status()
 
-        self._attr_is_on = self.property.get_value_as_bool()
+        _LOGGER.debug(
+            "[%s:%s] update status: %s",
+            self.coordinator.device_name,
+            self.property_id,
+            self.data.is_on,
+        )
+        self._attr_is_on = self.data.is_on
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
         _LOGGER.debug("[%s] async_turn_on", self.name)
-        await self.async_post_value("POWER_ON")
+        await self.async_call_api(self.coordinator.api.async_turn_on(self.property_id))
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the switch."""
         _LOGGER.debug("[%s] async_turn_off", self.name)
-        await self.async_post_value("POWER_OFF")
+        await self.async_call_api(self.coordinator.api.async_turn_off(self.property_id))

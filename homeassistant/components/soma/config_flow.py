@@ -39,7 +39,7 @@ class SomaFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_creation(user_input)
 
-    async def async_step_creation(self, user_input=None):
+    async def async_step_creation(self, user_input: dict[str, Any]) -> ConfigFlowResult:
         """Finish config flow."""
         try:
             api = await self.hass.async_add_executor_job(
