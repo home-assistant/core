@@ -5,8 +5,6 @@ from collections.abc import Awaitable, Callable
 import contextlib
 from dataclasses import dataclass, field
 from logging import getLogger
-import secrets
-from typing import Any
 
 from aiohttp import web
 from switchbot_api import CannotConnect, Device, InvalidAuth, Remote, SwitchBotAPI
@@ -16,9 +14,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_API_TOKEN, CONF_WEBHOOK_ID, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.storage import Store
 
-from .const import DOMAIN, STORAGE_KEY, STORAGE_VERSION
+from .const import DOMAIN, ENTRY_TITLE
 from .coordinator import SwitchBotCoordinator
 
 _LOGGER = getLogger(__name__)
@@ -134,41 +131,57 @@ async def async_setup_entry(hass: HomeAssistant, config: ConfigEntry) -> bool:
         coordinator.update_by_webhook() for coordinator in coordinators_by_id.values()
     ):
         # Need webhook
+        if CONF_WEBHOOK_ID not in config.data or config.unique_id is None:
+            new_data = config.data.copy()
+            if CONF_WEBHOOK_ID not in new_data:
+                new_data[CONF_WEBHOOK_ID] = webhook.async_generate_id()
 
-        # Get/create config to store a unique id for this hass instance.
-        store = Store[dict[str, Any]](
-            hass, STORAGE_VERSION, STORAGE_KEY + "-" + config.entry_id
-        )
-        if not (persistent_config := await store.async_load()):
-            # Create config
-            persistent_config = {
-                CONF_WEBHOOK_ID: secrets.token_hex(),
-            }
-            await store.async_save(persistent_config)
+            hass.config_entries.async_update_entry(
+                config,
+                data=new_data,
+            )
 
         # register webhook
+        webhook_name = ENTRY_TITLE
+        if config.title != ENTRY_TITLE:
+            webhook_name = f"{ENTRY_TITLE} {config.title}"
+
         with contextlib.suppress(Exception):
             webhook.async_register(
                 hass,
                 DOMAIN,
-                "SwitchBot Cloud",
-                persistent_config[CONF_WEBHOOK_ID],
+                webhook_name,
+                config.data[CONF_WEBHOOK_ID],
                 create_handle_webhook(coordinators_by_id),
             )
 
         webhook_url = webhook.async_generate_url(
-            hass, persistent_config[CONF_WEBHOOK_ID]
+            hass,
+            config.data[CONF_WEBHOOK_ID],
         )
         # check if webhook is configured
         check_webhook_result = None
         with contextlib.suppress(Exception):
             check_webhook_result = await api.get_webook_configuration()
 
-        if (
-            not check_webhook_result
-            or "urls" not in check_webhook_result
-            or webhook_url not in check_webhook_result["urls"]
-        ):
+        actual_webhook_urls = (
+            check_webhook_result["urls"]
+            if check_webhook_result and "urls" in check_webhook_result
+            else []
+        )
+        need_add_webhook = (
+            len(actual_webhook_urls) == 0 or webhook_url not in actual_webhook_urls
+        )
+        need_clean_previous_webhook = (
+            len(actual_webhook_urls) > 0 and webhook_url not in actual_webhook_urls
+        )
+
+        if need_clean_previous_webhook:
+            # it seems is impossible to register multiple webhook.
+            # So, if webhook already exists, we delete it
+            await api.delete_webhook(actual_webhook_urls[0])
+
+        if need_add_webhook:
             # call api for register webhookurl
             await api.setup_webhook(webhook_url)
 
