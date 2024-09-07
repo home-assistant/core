@@ -207,6 +207,7 @@ class MatterAdapter:
             sw_version=basic_info.softwareVersionString,
             manufacturer=basic_info.vendorName or endpoint.node.device_info.vendorName,
             model=model,
+            model_id=str(basic_info.productID) if basic_info.productID else None,
             serial_number=serial_number,
             via_device=(DOMAIN, bridge_device_id) if bridge_device_id else None,
         )
