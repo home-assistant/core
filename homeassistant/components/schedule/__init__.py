@@ -56,7 +56,7 @@ def valid_schedule(schedule: list[dict[str, str]]) -> list[dict[str, str]]:
 
     Ensure they have no overlap and the end time is greater than the start time.
     """
-    # Emtpty schedule is valid
+    # Empty schedule is valid
     if not schedule:
         return schedule
 
@@ -111,8 +111,7 @@ BASE_SCHEMA: VolDictType = {
 }
 
 # Extra data that the user can set on each time range
-CUSTOM_DATA_VALUE = vol.Any(bool, str, int, float)
-CUSTOM_DATA_SCHEMA = vol.Any(vol.Schema({str: CUSTOM_DATA_VALUE}), CUSTOM_DATA_VALUE)
+CUSTOM_DATA_SCHEMA = vol.Schema({str: vol.Any(bool, str, int, float)})
 
 TIME_RANGE_SCHEMA: VolDictType = {
     vol.Required(CONF_FROM): cv.time,
@@ -141,7 +140,6 @@ STORAGE_SCHEDULE_SCHEMA: VolDictType = {
     )
     for day in CONF_ALL_DAYS
 }
-
 
 # Validate YAML config
 CONFIG_SCHEMA = vol.Schema(
@@ -242,7 +240,7 @@ class Schedule(CollectionEntity):
     """Schedule entity."""
 
     _entity_component_unrecorded_attributes = frozenset(
-        {ATTR_EDITABLE, ATTR_NEXT_EVENT, CONF_DATA}
+        {ATTR_EDITABLE, ATTR_NEXT_EVENT}
     )
 
     _attr_has_entity_name = True
@@ -260,8 +258,7 @@ class Schedule(CollectionEntity):
         self._attr_name = self._config[CONF_NAME]
         self._attr_unique_id = self._config[CONF_ID]
 
-        # The "data" attribute is always excluded from the recorder, but
-        # also exclude any custom attributes that may be present on time ranges.
+        # Exclude any custom attributes that may be present on time ranges.
         self._unrecorded_attributes = self.all_custom_data_keys()
         self._Entity__combined_unrecorded_attributes = (
             self._entity_component_unrecorded_attributes | self._unrecorded_attributes
@@ -361,12 +358,9 @@ class Schedule(CollectionEntity):
             ATTR_NEXT_EVENT: next_event,
         }
 
-        if isinstance(current_data, dict):
+        if current_data:
             # Add each key/value pair in the data to the entity's state attributes
             self._attr_extra_state_attributes.update(current_data)
-        elif current_data is not None:
-            # Expose the data as a single state attribute
-            self._attr_extra_state_attributes[CONF_DATA] = current_data
 
         self.async_write_ha_state()
 
@@ -391,7 +385,7 @@ class Schedule(CollectionEntity):
                 if not time_range_custom_data or not isinstance(
                     time_range_custom_data, dict
                 ):
-                    continue  # this time range has no custom data, or it is a single value
+                    continue  # this time range has no custom data, or it is not a dict
 
                 data_keys.update(time_range_custom_data.keys())
 

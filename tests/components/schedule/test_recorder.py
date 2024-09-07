@@ -8,7 +8,7 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.recorder.history import get_significant_states
-from homeassistant.components.schedule.const import ATTR_NEXT_EVENT, CONF_DATA, DOMAIN
+from homeassistant.components.schedule.const import ATTR_NEXT_EVENT, DOMAIN
 from homeassistant.const import ATTR_EDITABLE, ATTR_FRIENDLY_NAME, ATTR_ICON
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -41,7 +41,9 @@ async def test_exclude_attributes(
                         {"from": "7:00", "to": "8:00", "data": {"party_level": "epic"}}
                     ],
                     "saturday": [{"from": "9:00", "to": "10:00"}],
-                    "sunday": [{"from": "11:00", "to": "12:00", "data": "VIPs only"}],
+                    "sunday": [
+                        {"from": "11:00", "to": "12:00", "data": {"entry": "VIPs only"}}
+                    ],
                 }
             }
         },
@@ -59,7 +61,7 @@ async def test_exclude_attributes(
     async_fire_time_changed(hass, fire_all=True)
     await hass.async_block_till_done()
     state = hass.states.get("schedule.test")
-    assert CONF_DATA not in state.attributes
+    assert "entry" not in state.attributes
     assert state.attributes["party_level"] == "epic"
 
     # Move to during Sunday event
@@ -67,7 +69,8 @@ async def test_exclude_attributes(
     async_fire_time_changed(hass, fire_all=True)
     await hass.async_block_till_done()
     state = hass.states.get("schedule.test")
-    assert state.attributes[CONF_DATA] == "VIPs only"
+    assert "party_level" not in state.attributes
+    assert state.attributes["entry"] == "VIPs only"
 
     await hass.async_block_till_done()
     freezer.tick(timedelta(minutes=5))
@@ -85,5 +88,5 @@ async def test_exclude_attributes(
             assert ATTR_FRIENDLY_NAME in state.attributes
             assert ATTR_ICON in state.attributes
             assert ATTR_NEXT_EVENT not in state.attributes
-            assert CONF_DATA not in state.attributes
+            assert "entry" not in state.attributes
             assert "party_level" not in state.attributes

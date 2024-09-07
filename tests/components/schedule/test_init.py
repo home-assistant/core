@@ -80,7 +80,7 @@ def schedule_setup(
                                 {
                                     CONF_FROM: "00:00:00",
                                     CONF_TO: "24:00:00",
-                                    CONF_DATA: "VIPs only",
+                                    CONF_DATA: {"entry": "VIPs only"},
                                 },
                             ],
                         }
@@ -116,7 +116,7 @@ def schedule_setup(
                             {
                                 CONF_FROM: "00:00:00",
                                 CONF_TO: "23:59:59",
-                                CONF_DATA: "VIPs only",
+                                CONF_DATA: {"entry": "VIPs only"},
                             }
                         ],
                     }
@@ -584,7 +584,7 @@ async def test_ws_list(
         {CONF_FROM: "00:00:00", CONF_TO: "23:59:59"}
     ]
     assert result["from_storage"][CONF_SUNDAY] == [
-        {CONF_FROM: "00:00:00", CONF_TO: "24:00:00", CONF_DATA: "VIPs only"}
+        {CONF_FROM: "00:00:00", CONF_TO: "24:00:00", CONF_DATA: {"entry": "VIPs only"}}
     ]
     assert "from_yaml" not in result
 
