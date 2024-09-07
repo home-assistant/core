@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from functools import partial
-from typing import Any
+from typing import Any, cast
 
 from aioesphomeapi import (
     EntityInfo,
@@ -66,6 +66,9 @@ class EsphomeMediaPlayer(
         if self._static_info.supports_pause:
             flags |= MediaPlayerEntityFeature.PAUSE | MediaPlayerEntityFeature.PLAY
         self._attr_supported_features = flags
+        self._entry_data.media_player_formats[self.entity_id] = cast(
+            MediaPlayerInfo, static_info
+        ).supported_formats
 
     @property
     @esphome_state_property
@@ -102,6 +105,11 @@ class EsphomeMediaPlayer(
         self._client.media_player_command(
             self._key, media_url=media_id, announcement=announcement
         )
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Handle entity being removed."""
+        await super().async_will_remove_from_hass()
+        self._entry_data.media_player_formats.pop(self.entity_id, None)
 
     async def async_browse_media(
         self,

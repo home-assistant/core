@@ -31,9 +31,17 @@
     }
   },
   "services": {
-    "delete_sms": "mdi:delete",
-    "set_option": "mdi:cog",
-    "connect_lte": "mdi:wifi",
-    "disconnect_lte": "mdi:wifi-off"
+    "delete_sms": {
+      "service": "mdi:delete"
+    },
+    "set_option": {
+      "service": "mdi:cog"
+    },
+    "connect_lte": {
+      "service": "mdi:wifi"
+    },
+    "disconnect_lte": {
+      "service": "mdi:wifi-off"
+    }
   }
 }

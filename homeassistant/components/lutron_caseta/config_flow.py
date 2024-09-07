@@ -95,7 +95,9 @@ class LutronCasetaFlowHandler(ConfigFlow, domain=DOMAIN):
         """Handle a flow initialized by homekit discovery."""
         return await self.async_step_zeroconf(discovery_info)
 
-    async def async_step_link(self, user_input=None):
+    async def async_step_link(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle pairing with the hub."""
         errors = {}
         # Abort if existing entry with matching host exists.
@@ -166,21 +168,21 @@ class LutronCasetaFlowHandler(ConfigFlow, domain=DOMAIN):
         for asset_key, conf_key in FILE_MAPPING.items():
             self.data[conf_key] = TLS_ASSET_TEMPLATE.format(self.bridge_id, asset_key)
 
-    async def async_step_import(self, import_info):
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Import a new Caseta bridge as a config entry.
 
         This flow is triggered by `async_setup`.
         """
-        host = import_info[CONF_HOST]
+        host = import_data[CONF_HOST]
         # Store the imported config for other steps in this flow to access.
         self.data[CONF_HOST] = host
 
         # Abort if existing entry with matching host exists.
         self._async_abort_entries_match({CONF_HOST: self.data[CONF_HOST]})
 
-        self.data[CONF_KEYFILE] = import_info[CONF_KEYFILE]
-        self.data[CONF_CERTFILE] = import_info[CONF_CERTFILE]
-        self.data[CONF_CA_CERTS] = import_info[CONF_CA_CERTS]
+        self.data[CONF_KEYFILE] = import_data[CONF_KEYFILE]
+        self.data[CONF_CERTFILE] = import_data[CONF_CERTFILE]
+        self.data[CONF_CA_CERTS] = import_data[CONF_CA_CERTS]
 
         if not (lutron_id := await self.async_get_lutron_id()):
             # Ultimately we won't have a dedicated step for import failure, but
@@ -198,7 +200,9 @@ class LutronCasetaFlowHandler(ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured()
         return self.async_create_entry(title=ENTRY_DEFAULT_TITLE, data=self.data)
 
-    async def async_step_import_failed(self, user_input=None):
+    async def async_step_import_failed(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Make failed import surfaced to user."""
         self.context["title_placeholders"] = {CONF_NAME: self.data[CONF_HOST]}
 

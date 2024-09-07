@@ -188,7 +188,7 @@ async def test_options_flow_init(hass: HomeAssistant) -> None:
         )
 
         assert result["type"] is FlowResultType.CREATE_ENTRY
-        assert result["data"] is None
+        assert result["data"] == {}
 
         assert dict(config_entry.data) == {
             CONF_HEADLINE_FILTER: deepcopy(DUMMY_DATA[CONF_HEADLINE_FILTER]),

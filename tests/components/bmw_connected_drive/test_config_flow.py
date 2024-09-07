@@ -188,15 +188,7 @@ async def test_reauth(hass: HomeAssistant) -> None:
 
         assert config_entry.data == config_entry_with_wrong_password["data"]
 
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={
-                "source": config_entries.SOURCE_REAUTH,
-                "unique_id": config_entry.unique_id,
-                "entry_id": config_entry.entry_id,
-            },
-        )
-
+        result = await config_entry.start_reauth_flow(hass)
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "user"
         assert result["errors"] == {}

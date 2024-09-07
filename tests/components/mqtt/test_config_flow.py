@@ -1551,14 +1551,7 @@ async def test_step_reauth(
     assert result["context"]["source"] == "reauth"
 
     # Show the form
-    result = await hass.config_entries.flow.async_init(
-        mqtt.DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": config_entry.entry_id,
-        },
-        data=config_entry.data,
-    )
+    result = await config_entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
