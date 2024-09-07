@@ -33,7 +33,7 @@ class SmSensorEntityDescription(SensorEntityDescription):
     value_fn: Callable[[Sensors], float | None]
 
 
-SENSORS = [
+SENSORS: list[SmSensorEntityDescription] = [
     SmSensorEntityDescription(
         key="core_temperature",
         translation_key="core_temperature",
@@ -70,7 +70,7 @@ SENSORS = [
     ),
 ]
 
-UPTIME = [
+UPTIME: list[SmSensorEntityDescription] = [
     SmSensorEntityDescription(
         key="core_uptime",
         translation_key="core_uptime",
