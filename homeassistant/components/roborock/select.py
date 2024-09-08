@@ -135,7 +135,8 @@ class RoborockCurrentMapSelectEntity(RoborockCoordinatedEntityV1, SelectEntity):
                     RoborockCommand.LOAD_MULTI_MAP,
                     [map_id],
                 )
-                # We need to wait after updating the map so that other commands will be executed correctly.
+                # We need to wait after updating the map
+                # so that other commands will be executed correctly.
                 await asyncio.sleep(MAP_SLEEP)
                 break
 
