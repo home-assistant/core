@@ -44,13 +44,11 @@ INFO: list[SmInfoEntityDescription] = [
     SmInfoEntityDescription(
         key="device_ip",
         translation_key="device_ip",
-        icon="mdi:ip-network-outline",
         value_fn=lambda x: x.device_ip,
     ),
     SmInfoEntityDescription(
         key="device_mode",
         translation_key="device_mode",
-        icon="mdi:connection",
         value_fn=lambda x: x.coord_mode,
     ),
     SmInfoEntityDescription(
@@ -61,7 +59,6 @@ INFO: list[SmInfoEntityDescription] = [
     SmInfoEntityDescription(
         key="zigbee_type",
         translation_key="zigbee_type",
-        icon="mdi:zigbee",
         value_fn=lambda x: x.zb_type,
     ),
 ]
