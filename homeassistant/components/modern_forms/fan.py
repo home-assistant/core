@@ -56,7 +56,7 @@ async def async_setup_entry(
 
     platform.async_register_entity_service(
         SERVICE_CLEAR_FAN_SLEEP_TIMER,
-        {},
+        None,
         "async_clear_fan_sleep_timer",
     )
 

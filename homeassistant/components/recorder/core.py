@@ -225,7 +225,6 @@ class Recorder(threading.Thread):
         self.event_session: Session | None = None
         self._get_session: Callable[[], Session] | None = None
         self._completed_first_database_setup: bool | None = None
-        self.async_migration_event = asyncio.Event()
         self.migration_in_progress = False
         self.migration_is_live = False
         self.use_legacy_events_index = False
@@ -366,13 +365,6 @@ class Recorder(threading.Thread):
     ) -> asyncio.Future[_T]:
         """Add an executor job from within the event loop."""
         return self.hass.loop.run_in_executor(self._db_executor, target, *args)
-
-    def _stop_executor(self) -> None:
-        """Stop the executor."""
-        if self._db_executor is None:
-            return
-        self._db_executor.shutdown()
-        self._db_executor = None
 
     @callback
     def _async_check_queue(self, *_: Any) -> None:
@@ -941,11 +933,6 @@ class Recorder(threading.Thread):
 
         return False
 
-    @callback
-    def _async_migration_started(self) -> None:
-        """Set the migration started event."""
-        self.async_migration_event.set()
-
     def _migrate_schema_offline(
         self, schema_status: migration.SchemaValidationStatus
     ) -> tuple[bool, migration.SchemaValidationStatus]:
@@ -970,7 +957,6 @@ class Recorder(threading.Thread):
             "Database upgrade in progress",
             "recorder_database_migration",
         )
-        self.hass.add_job(self._async_migration_started)
         return self._migrate_schema(schema_status, True)
 
     def _migrate_schema(
@@ -1297,14 +1283,6 @@ class Recorder(threading.Thread):
         self.event_session = self.get_session()
         self.event_session.expire_on_commit = False
 
-    def _post_schema_migration(self, old_version: int, new_version: int) -> None:
-        """Run post schema migration tasks."""
-        migration.post_schema_migration(self, old_version, new_version)
-
-    def _post_migrate_entity_ids(self) -> bool:
-        """Post migrate entity_ids if needed."""
-        return migration.post_migrate_entity_ids(self)
-
     def _send_keep_alive(self) -> None:
         """Send a keep alive to keep the db connection open."""
         assert self.event_session is not None
@@ -1501,5 +1479,13 @@ class Recorder(threading.Thread):
         try:
             self._end_session()
         finally:
-            self._stop_executor()
+            if self._db_executor:
+                # We shutdown the executor without forcefully
+                # joining the threads until after we have tried
+                # to cleanly close the connection.
+                self._db_executor.shutdown(join_threads_or_timeout=False)
             self._close_connection()
+            if self._db_executor:
+                # After the connection is closed, we can join the threads
+                # or forcefully shutdown the threads if they take too long.
+                self._db_executor.join_threads_or_timeout()

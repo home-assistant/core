@@ -8,13 +8,7 @@ import lupupy
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_IP_ADDRESS,
-    CONF_NAME,
-    CONF_PASSWORD,
-    CONF_USERNAME,
-)
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
@@ -64,37 +58,6 @@ class LupusecConfigFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
-        )
-
-    async def async_step_import(self, user_input: dict[str, Any]) -> ConfigFlowResult:
-        """Import the yaml config."""
-        self._async_abort_entries_match(
-            {
-                CONF_HOST: user_input[CONF_IP_ADDRESS],
-                CONF_USERNAME: user_input[CONF_USERNAME],
-                CONF_PASSWORD: user_input[CONF_PASSWORD],
-            }
-        )
-        host = user_input[CONF_IP_ADDRESS]
-        username = user_input[CONF_USERNAME]
-        password = user_input[CONF_PASSWORD]
-        try:
-            await test_host_connection(self.hass, host, username, password)
-        except CannotConnect:
-            return self.async_abort(reason="cannot_connect")
-        except JSONDecodeError:
-            return self.async_abort(reason="cannot_connect")
-        except Exception:
-            _LOGGER.exception("Unexpected exception")
-            return self.async_abort(reason="unknown")
-
-        return self.async_create_entry(
-            title=user_input.get(CONF_NAME, host),
-            data={
-                CONF_HOST: host,
-                CONF_USERNAME: username,
-                CONF_PASSWORD: password,
-            },
         )
 
 

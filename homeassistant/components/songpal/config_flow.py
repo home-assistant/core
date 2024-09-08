@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from typing import TYPE_CHECKING, Any
 from urllib.parse import urlparse
 
 from songpal import Device, SongpalException
@@ -20,7 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 class SongpalConfig:
     """Device Configuration."""
 
-    def __init__(self, name, host, endpoint):
+    def __init__(self, name: str, host: str | None, endpoint: str) -> None:
         """Initialize Configuration."""
         self.name = name
         self.host = host
@@ -32,11 +33,11 @@ class SongpalConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self) -> None:
-        """Initialize the flow."""
-        self.conf: SongpalConfig | None = None
+    conf: SongpalConfig
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, str] | None = None
+    ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
         if user_input is None:
             return self.async_show_form(
@@ -72,7 +73,9 @@ class SongpalConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_init(user_input)
 
-    async def async_step_init(self, user_input=None):
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle a flow start."""
         # Check if already configured
         self._async_abort_entries_match({CONF_ENDPOINT: self.conf.endpoint})
@@ -119,14 +122,16 @@ class SongpalConfigFlow(ConfigFlow, domain=DOMAIN):
             CONF_HOST: parsed_url.hostname,
         }
 
+        if TYPE_CHECKING:
+            assert isinstance(parsed_url.hostname, str)
         self.conf = SongpalConfig(friendly_name, parsed_url.hostname, endpoint)
 
         return await self.async_step_init()
 
-    async def async_step_import(self, user_input=None):
+    async def async_step_import(self, import_data: dict[str, str]) -> ConfigFlowResult:
         """Import a config entry."""
-        name = user_input.get(CONF_NAME)
-        endpoint = user_input.get(CONF_ENDPOINT)
+        name = import_data.get(CONF_NAME)
+        endpoint = import_data[CONF_ENDPOINT]
         parsed_url = urlparse(endpoint)
 
         # Try to connect to test the endpoint
@@ -143,4 +148,4 @@ class SongpalConfigFlow(ConfigFlow, domain=DOMAIN):
 
         self.conf = SongpalConfig(name, parsed_url.hostname, endpoint)
 
-        return await self.async_step_init(user_input)
+        return await self.async_step_init(import_data)
