@@ -12,7 +12,7 @@ from PyViCare.PyViCareUtils import PyViCareNotSupportedFeatureError
 from homeassistant.config_entries import ConfigEntry
 
 from .const import CONF_HEATING_TYPE, HEATING_TYPE_TO_CREATOR_METHOD, HeatingType
-from .types import ViCareRequiredKeysMixin
+from .types import ViCareDevice, ViCareRequiredKeysMixin
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,6 +25,14 @@ def get_device(
         device_config,
         HEATING_TYPE_TO_CREATOR_METHOD[HeatingType(entry.data[CONF_HEATING_TYPE])],
     )()
+
+
+def get_device_serial(device: ViCareDevice) -> str | None:
+    """Get device serial for device if supported."""
+    try:
+        return device.api.getSerial()
+    except PyViCareNotSupportedFeatureError:
+        return None
 
 
 def is_supported(
