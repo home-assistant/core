@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 import pytest
+from triggercmd import TRIGGERcmdConnectionError
 
 from homeassistant.components.triggercmd.const import CONF_TOKEN, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -140,7 +141,7 @@ async def test_config_flow_connection_error(hass: HomeAssistant) -> None:
     with (
         patch(
             "homeassistant.components.triggercmd.client.async_connection_test",
-            return_value={"status_code": 403},
+            side_effect=TRIGGERcmdConnectionError,
         ),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -149,7 +150,7 @@ async def test_config_flow_connection_error(hass: HomeAssistant) -> None:
         )
 
     assert result["errors"] == {
-        "connection": "connection_error",
+        "base": "connection_error",
     }
     assert result["type"] is FlowResultType.FORM
 

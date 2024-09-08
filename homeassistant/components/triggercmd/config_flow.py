@@ -6,7 +6,7 @@ import logging
 from typing import Any
 
 import jwt
-from triggercmd import client
+from triggercmd import TRIGGERcmdConnectionError, client
 import voluptuous as vol
 
 from homeassistant import exceptions
@@ -32,11 +32,12 @@ async def validate_input(hass: HomeAssistant, data: dict) -> str:
     if not token_data["id"]:
         raise InvalidToken
 
-    status_code = await client.async_connection_test(data[CONF_TOKEN])
-    if status_code != 200:
-        raise ConnectionError
-
-    return token_data["id"]
+    try:
+        await client.async_connection_test(data[CONF_TOKEN])
+    except Exception as e:
+        raise TRIGGERcmdConnectionError from e
+    else:
+        return token_data["id"]
 
 
 class TriggerCMDConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -54,8 +55,8 @@ class TriggerCMDConfigFlow(ConfigFlow, domain=DOMAIN):
                 title = await validate_input(self.hass, user_input)
             except InvalidToken:
                 errors[CONF_TOKEN] = "invalid_token"
-            except ConnectionError:
-                errors["connection"] = "connection_error"
+            except TRIGGERcmdConnectionError:
+                errors["base"] = "connection_error"
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
