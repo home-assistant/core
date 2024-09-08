@@ -15,6 +15,7 @@ from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
 
 from . import get_manager
 from ._manager import (
+    AlreadyClonedError,
     GPMError,
     InvalidStructure,
     RepositoryManager,
@@ -98,7 +99,7 @@ class GPMConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_resource(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle the initial step."""
+        """Handle the resource step."""
         errors: dict[str, str] = {}
         assert self._user_input is not None
         assert self._user_input[CONF_TYPE] == RepositoryType.RESOURCE
@@ -126,7 +127,7 @@ class GPMConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_install(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle the initial step."""
+        """Handle the install step."""
         abort_reason = None
         assert self._user_input is not None
 
@@ -145,6 +146,9 @@ class GPMConfigFlow(ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Invalid structure")
             abort_reason = "invalid_structure"
             await self.manager.remove()
+        except AlreadyClonedError:
+            _LOGGER.exception("Installation failed")
+            abort_reason = "install_failed"
         except GPMError:
             _LOGGER.exception("Installation failed")
             abort_reason = "install_failed"

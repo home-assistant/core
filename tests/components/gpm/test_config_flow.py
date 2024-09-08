@@ -1,121 +1,278 @@
 """Test the GPM config flow."""
 
+from pathlib import Path
 from unittest.mock import AsyncMock
 
-import pytest
-
-from homeassistant.components.gpm._manager import IntegrationRepositoryManager
-from homeassistant.components.gpm.const import CONF_UPDATE_STRATEGY, DOMAIN
-from homeassistant.config_entries import SOURCE_USER, ConfigFlow
+from homeassistant.components.gpm._manager import (
+    AlreadyClonedError,
+    CloneError,
+    IntegrationRepositoryManager,
+    InvalidStructure,
+    RepositoryType,
+    ResourceRepositoryManager,
+    UpdateStrategy,
+)
+from homeassistant.components.gpm.const import (
+    CONF_DOWNLOAD_URL,
+    CONF_UPDATE_STRATEGY,
+    DOMAIN,
+)
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_TYPE, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 
-@pytest.fixture
-async def make_user_input(**kwargs):
-    """Return a default user input, possibly overrides some keys."""
-
-    def _make_user_input(**kwargs) -> dict[str, str]:
-        return {
-            CONF_URL: "https://github.com/user/awesome-component",
-            CONF_TYPE: "integration",
-            CONF_UPDATE_STRATEGY: "latest_tag",
-            **kwargs,
-        }
-
-    return _make_user_input
-
-
-@pytest.fixture
-async def make_config_flow(hass: HomeAssistant):
-    """Return a configured config flow."""
-
-    async def _make_config_flow():
-        config_flow = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}
-        )
-        assert config_flow["type"] == FlowResultType.FORM
-        assert config_flow["errors"] == {}
-        return config_flow
-
-    return _make_config_flow
-
-
-async def test_integration(
+async def test_async_step_install_integration(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
     mock_integration_manager: IntegrationRepositoryManager,
-    make_config_flow,
-    make_user_input,
 ) -> None:
-    """Test we get the form."""
-    config_flow = await make_config_flow()
-    config_flow = await hass.config_entries.flow.async_configure(
-        config_flow["flow_id"],
-        make_user_input(),
+    """Test async_step_install for integration."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] == {}
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_URL: "https://github.com/user/awesome-component"},
     )
     await hass.async_block_till_done()
-    mock_integration_manager.clone.assert_called_once()
-    mock_integration_manager.checkout.assert_called_with("v1.0.0")
-    mock_integration_manager.install.assert_called_once()
-
-    assert config_flow["type"] == FlowResultType.CREATE_ENTRY
-    assert config_flow["title"] == "awesome_component"
-    assert config_flow["data"] == {
+    assert mock_integration_manager.clone.await_count == 1
+    assert mock_integration_manager.checkout.await_count == 1
+    assert mock_integration_manager.install.await_count == 1
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == "awesome_component"
+    assert result["data"] == {
         CONF_URL: "https://github.com/user/awesome-component",
         CONF_TYPE: "integration",
-        CONF_UPDATE_STRATEGY: "latest_tag",
+        CONF_UPDATE_STRATEGY: UpdateStrategy.LATEST_TAG,
     }
-    mock_setup_entry.assert_called_once()
+    assert mock_setup_entry.call_count == 1
 
 
-async def test_integration_invalid_url(
+async def test_async_step_user_integration_invalid_url(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
     mock_integration_manager: IntegrationRepositoryManager,
-    make_config_flow,
-    make_user_input,
 ) -> None:
-    """Test we handle invalid URL."""
-    config_flow = await make_config_flow()
-    config_flow = await hass.config_entries.flow.async_configure(
-        config_flow["flow_id"],
-        make_user_input(url="this-is-not-a-url"),
+    """Test handling of invalid URL in async_step_user."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_URL: "this-is-not-a-url"},
     )
     await hass.async_block_till_done()
-    mock_integration_manager.clone.assert_not_called()
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] == {CONF_URL: "invalid_url"}
+    assert mock_integration_manager.clone.await_count == 0
 
     # test recovery from URL validation error
-    config_flow = await hass.config_entries.flow.async_configure(
-        config_flow["flow_id"],
-        make_user_input(),
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_URL: "https://github.com/user/awesome-component"},
     )
-    assert config_flow["type"] == FlowResultType.CREATE_ENTRY
-    mock_setup_entry.assert_called_once()
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert mock_setup_entry.call_count == 1
 
 
-async def test_abort_on_duplicate_unique_id(
+async def test_async_step_user_already_configured(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
     mock_integration_manager: IntegrationRepositoryManager,
-    make_config_flow,
-    make_user_input,
 ) -> None:
-    """Test we abort on duplicate unique ID."""
-    config_flow = await make_config_flow()
-    config_flow = await hass.config_entries.flow.async_configure(
-        config_flow["flow_id"],
-        make_user_input(),
+    """Test handling of duplicate unique_id in async_step_user."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_URL: "https://github.com/user/awesome-component"},
     )
     await hass.async_block_till_done()
-    another_config_flow = await make_config_flow()
-    another_config_flow = await hass.config_entries.flow.async_configure(
-        another_config_flow["flow_id"],
-        make_user_input(),
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert mock_setup_entry.call_count == 1
+    result2 = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result2 = await hass.config_entries.flow.async_configure(
+        result2["flow_id"],
+        {CONF_URL: "https://github.com/user/awesome-component"},
     )
     await hass.async_block_till_done()
-    assert config_flow["flow_id"] != another_config_flow["flow_id"]
-    assert another_config_flow["type"] == FlowResultType.ABORT
-    assert another_config_flow["reason"] == "already_configured"
-    mock_setup_entry.assert_called_once()
+    assert result2["type"] == FlowResultType.ABORT
+    assert result2["reason"] == "already_configured"
+    assert mock_setup_entry.call_count == 1
+
+
+async def test_async_step_install_invalid_structure(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_integration_manager: IntegrationRepositoryManager,
+) -> None:
+    """Test handling of GPMError exception in async_step_install."""
+    mock_integration_manager.get_latest_version.side_effect = InvalidStructure(
+        "foobar", Path("foobar")
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_URL: "https://github.com/user/awesome-component"},
+    )
+    await hass.async_block_till_done()
+    assert mock_integration_manager.clone.await_count == 1
+    assert mock_integration_manager.checkout.await_count == 0
+    assert mock_integration_manager.remove.await_count == 1
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "invalid_structure"
+    assert mock_setup_entry.call_count == 0
+
+
+async def test_async_step_install_already_cloned(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_integration_manager: IntegrationRepositoryManager,
+) -> None:
+    """Test handling of GPMError exception in async_step_install."""
+    mock_integration_manager.clone.side_effect = AlreadyClonedError(Path("foobar"))
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_URL: "https://github.com/user/awesome-component"},
+    )
+    await hass.async_block_till_done()
+    assert mock_integration_manager.clone.await_count == 1
+    assert mock_integration_manager.checkout.await_count == 0
+    assert mock_integration_manager.remove.await_count == 0
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "install_failed"
+    assert mock_setup_entry.call_count == 0
+
+
+async def test_async_step_install_failed(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_integration_manager: IntegrationRepositoryManager,
+) -> None:
+    """Test handling of unexpected exception in async_step_install."""
+    mock_integration_manager.clone.side_effect = CloneError("foobar", Path("foobar"))
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_URL: "https://github.com/user/awesome-component"},
+    )
+    await hass.async_block_till_done()
+    assert mock_integration_manager.clone.await_count == 1
+    assert mock_integration_manager.get_latest_version.await_count == 0
+    assert mock_integration_manager.remove.await_count == 1
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "install_failed"
+    assert mock_setup_entry.call_count == 0
+
+
+async def test_async_step_install_unexpected_exception(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_integration_manager: IntegrationRepositoryManager,
+) -> None:
+    """Test handling of unexpected exception in async_step_install."""
+    mock_integration_manager.clone.side_effect = ValueError
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_URL: "https://github.com/user/awesome-component"},
+    )
+    await hass.async_block_till_done()
+    assert mock_integration_manager.clone.await_count == 1
+    assert mock_integration_manager.get_latest_version.await_count == 0
+    assert mock_integration_manager.remove.await_count == 0
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "unknown"
+    assert mock_setup_entry.call_count == 0
+
+
+async def test_async_step_install_resource(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_resource_manager: ResourceRepositoryManager,
+) -> None:
+    """Test async_step_install for resource."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_URL: "https://github.com/user/awesome-card",
+            CONF_TYPE: RepositoryType.RESOURCE,
+        },
+    )
+    await hass.async_block_till_done()
+    assert mock_resource_manager.clone.await_count == 0
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_DOWNLOAD_URL: "https://github.com/user/awesome-card/releases/download/{{ version }}/bundle.js"
+        },
+    )
+    await hass.async_block_till_done()
+    assert mock_resource_manager.clone.await_count == 1
+    assert mock_resource_manager.checkout.await_count == 1
+    assert mock_resource_manager.install.await_count == 1
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == "awesome_card"
+    assert result["data"] == {
+        CONF_URL: "https://github.com/user/awesome-card",
+        CONF_TYPE: RepositoryType.RESOURCE,
+        CONF_UPDATE_STRATEGY: UpdateStrategy.LATEST_TAG,
+        CONF_DOWNLOAD_URL: "https://github.com/user/awesome-card/releases/download/{{ version }}/bundle.js",
+    }
+    assert mock_setup_entry.call_count == 1
+
+
+async def test_async_step_resource_invalid_template(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_resource_manager: ResourceRepositoryManager,
+) -> None:
+    """Test handling of invalid template in async_step_resource."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_URL: "https://github.com/user/awesome-card",
+            CONF_TYPE: RepositoryType.RESOURCE,
+        },
+    )
+    await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_DOWNLOAD_URL: "https://{{% foobar %}}github.com/user/awesome-card/releases/download/version/bundle.js"
+        },
+    )
+    await hass.async_block_till_done()
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] == {CONF_DOWNLOAD_URL: "invalid_template"}
+    assert mock_resource_manager.clone.await_count == 0
+
+    # test recovery from template validation error
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_DOWNLOAD_URL: "https://example.com/bundle_{{version}}.js"},
+    )
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert mock_setup_entry.call_count == 1

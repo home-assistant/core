@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from typing import cast
 
 from homeassistant.components.http import StaticPathConfig
 from homeassistant.config_entries import ConfigEntry
@@ -36,6 +37,7 @@ type GPMConfigEntry = ConfigEntry[RepositoryManager]  # noqa: F821
 def get_manager(hass: HomeAssistant, data: Mapping[str, str]) -> RepositoryManager:
     """Get the RepositoryManager from a config entry or ConfigFlow.user_input data."""
     # explicitly cast type to trigger fail in case of unexpected data
+    type_ = RepositoryType(data[CONF_TYPE])
     cls = (
         IntegrationRepositoryManager
         if RepositoryType(data[CONF_TYPE]) == RepositoryType.INTEGRATION
@@ -46,7 +48,8 @@ def get_manager(hass: HomeAssistant, data: Mapping[str, str]) -> RepositoryManag
         data[CONF_URL],
         UpdateStrategy(data[CONF_UPDATE_STRATEGY]),
     )
-    if isinstance(res, ResourceRepositoryManager):
+    if type_ == RepositoryType.RESOURCE:
+        res = cast(ResourceRepositoryManager, res)
         res.set_download_url(data.get(CONF_DOWNLOAD_URL))
     return res
 

@@ -12,7 +12,6 @@ from homeassistant.components.gpm._manager import (
     UpdateStrategy,
 )
 from homeassistant.core import HomeAssistant
-from typing import Generic
 
 
 @pytest.fixture
@@ -24,9 +23,12 @@ def mock_setup_entry() -> Generator[AsyncMock]:
         yield mock_setup_entry
 
 
-def _mock_manager[T](hass: HomeAssistant, cls: Generic[T]) -> Generator[T, None, None]:
+@pytest.fixture
+def mock_integration_manager(
+    hass: HomeAssistant,
+) -> Generator[IntegrationRepositoryManager, None, None]:
     """Mock the GPM manager."""
-    manager = cls(
+    manager = IntegrationRepositoryManager(
         hass,
         "https://github.com/user/awesome-component",
         UpdateStrategy.LATEST_TAG,
@@ -36,6 +38,7 @@ def _mock_manager[T](hass: HomeAssistant, cls: Generic[T]) -> Generator[T, None,
     manager.install = AsyncMock(return_value=None)
     manager.is_cloned = AsyncMock(return_value=True)
     manager.is_installed = AsyncMock(return_value=False)
+    manager.remove = AsyncMock(return_value=None)
     manager.get_component_dir = AsyncMock(
         return_value=Path(
             "/config/gpm/awesome_component/custom_components/awesome_component"
@@ -43,18 +46,11 @@ def _mock_manager[T](hass: HomeAssistant, cls: Generic[T]) -> Generator[T, None,
     )
     manager.get_latest_version = AsyncMock(return_value="v1.0.0")
     with patch(
-        "homeassistant.components.gpm.get_manager",
+        "homeassistant.components.gpm.IntegrationRepositoryManager",
+        autospec=True,
         return_value=manager,
     ) as mock:
         yield mock.return_value
-
-
-@pytest.fixture
-def mock_integration_manager(
-    hass: HomeAssistant,
-) -> Generator[IntegrationRepositoryManager, None, None]:
-    """Mock the GPM manager."""
-    yield from _mock_manager(hass, IntegrationRepositoryManager)
 
 
 @pytest.fixture
@@ -62,4 +58,24 @@ def mock_resource_manager(
     hass: HomeAssistant,
 ) -> Generator[ResourceRepositoryManager, None, None]:
     """Mock the GPM manager."""
-    yield from _mock_manager(hass, ResourceRepositoryManager)
+    manager = ResourceRepositoryManager(
+        hass,
+        "https://github.com/user/awesome-card",
+        UpdateStrategy.LATEST_TAG,
+    )
+    manager.set_download_url(
+        "https://github.com/user/awesome-card/releases/download/{{ version }}/bundle.js"
+    )
+    manager.clone = AsyncMock(return_value=None)
+    manager.checkout = AsyncMock(return_value=None)
+    manager.install = AsyncMock(return_value=None)
+    manager.is_cloned = AsyncMock(return_value=True)
+    manager.is_installed = AsyncMock(return_value=False)
+    manager.remove = AsyncMock(return_value=None)
+    manager.get_latest_version = AsyncMock(return_value="v1.0.0")
+    with patch(
+        "homeassistant.components.gpm.ResourceRepositoryManager",
+        autospec=True,
+        return_value=manager,
+    ) as mock:
+        yield mock.return_value
