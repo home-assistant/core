@@ -83,7 +83,7 @@ class ActiveConnection:
             const.EVENT_WEBSOCKET_CONNECTED,
             {
                 "connection_uuid": self.connection_uuid,
-                "remote": remote,
+                "remote_ip": remote,
                 "username": user.name,
                 "user_agent": user_agent,
             },
@@ -269,7 +269,7 @@ class ActiveConnection:
             const.EVENT_WEBSOCKET_DISCONNECTED,
             {
                 "connection_uuid": self.connection_uuid,
-                "remote": remote,
+                "remote_ip": remote,
                 "username": self.user.name,
                 "user_agent": user_agent,
             },
