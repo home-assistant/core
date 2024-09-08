@@ -255,10 +255,10 @@ aiokafka==0.10.0
 aiolifx-effects==0.3.2
 
 # homeassistant.components.lifx
-aiolifx-themes==0.5.0
+aiolifx-themes==0.5.5
 
 # homeassistant.components.lifx
-aiolifx==1.0.9
+aiolifx==1.1.1
 
 # homeassistant.components.livisi
 aiolivisi==0.0.19
@@ -1786,7 +1786,7 @@ pysmartthings==0.7.8
 pysml==0.0.12
 
 # homeassistant.components.smlight
-pysmlight==0.0.14
+pysmlight==0.0.15
 
 # homeassistant.components.snmp
 pysnmp==6.2.5
@@ -2404,7 +2404,7 @@ yt-dlp==2024.08.06
 zamg==0.3.6
 
 # homeassistant.components.zeroconf
-zeroconf==0.133.0
+zeroconf==0.134.0
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.1
