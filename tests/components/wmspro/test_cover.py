@@ -2,7 +2,9 @@
 
 from unittest.mock import AsyncMock, patch
 
-from homeassistant.components.wmspro.const import DOMAIN, MANUFACTURER
+from syrupy import SnapshotAssertion
+
+from homeassistant.components.wmspro.const import DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_CLOSE_COVER,
@@ -14,7 +16,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
-from .conftest import setup_config_entry
+from . import setup_config_entry
 
 from tests.common import MockConfigEntry
 
@@ -25,6 +27,8 @@ async def test_cover_device(
     mock_hub_ping: AsyncMock,
     mock_hub_configuration_prod: AsyncMock,
     mock_hub_status_prod_awning: AsyncMock,
+    device_registry: dr.DeviceRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test that a cover device is created correctly."""
     assert await setup_config_entry(hass, mock_config_entry)
@@ -32,12 +36,9 @@ async def test_cover_device(
     assert len(mock_hub_configuration_prod.mock_calls) == 1
     assert len(mock_hub_status_prod_awning.mock_calls) == 2
 
-    device_registry = dr.async_get(hass)
     device_entry = device_registry.async_get_device(identifiers={(DOMAIN, "58717")})
     assert device_entry is not None
-    assert device_entry.manufacturer == MANUFACTURER
-    assert device_entry.name == "Markise"
-    assert device_entry.serial_number == 58717
+    assert device_entry == snapshot
 
 
 async def test_cover_update(
@@ -93,7 +94,6 @@ async def test_cover_close_and_open(
     ):
         before = len(mock_hub_status_prod_awning.mock_calls)
 
-        await async_setup_component(hass, Platform.COVER, {})
         await hass.services.async_call(
             Platform.COVER,
             SERVICE_CLOSE_COVER,
@@ -113,11 +113,10 @@ async def test_cover_close_and_open(
     ):
         before = len(mock_hub_status_prod_awning.mock_calls)
 
-        await async_setup_component(hass, Platform.COVER, {})
         await hass.services.async_call(
             Platform.COVER,
             SERVICE_OPEN_COVER,
-            {"entity_id": entity.entity_id},
+            {ATTR_ENTITY_ID: entity.entity_id},
             blocking=True,
         )
 
@@ -153,7 +152,6 @@ async def test_cover_move(
     ):
         before = len(mock_hub_status_prod_awning.mock_calls)
 
-        await async_setup_component(hass, Platform.COVER, {})
         await hass.services.async_call(
             Platform.COVER,
             SERVICE_SET_COVER_POSITION,
@@ -193,7 +191,6 @@ async def test_cover_move_and_stop(
     ):
         before = len(mock_hub_status_prod_awning.mock_calls)
 
-        await async_setup_component(hass, Platform.COVER, {})
         await hass.services.async_call(
             Platform.COVER,
             "set_cover_position",
@@ -213,7 +210,6 @@ async def test_cover_move_and_stop(
     ):
         before = len(mock_hub_status_prod_awning.mock_calls)
 
-        await async_setup_component(hass, Platform.COVER, {})
         await hass.services.async_call(
             Platform.COVER,
             "stop_cover",
