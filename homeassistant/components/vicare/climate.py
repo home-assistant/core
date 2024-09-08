@@ -87,7 +87,7 @@ def _build_entities(
     """Create ViCare climate entities for a device."""
     return [
         ViCareClimate(
-            get_device_serial(device),
+            get_device_serial(device.api),
             device.config,
             device.api,
             circuit,

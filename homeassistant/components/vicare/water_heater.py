@@ -69,7 +69,7 @@ def _build_entities(
 
     return [
         ViCareWater(
-            get_device_serial(device),
+            get_device_serial(device.api),
             device.config,
             device.api,
             circuit,

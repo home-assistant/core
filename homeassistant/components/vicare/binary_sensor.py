@@ -122,7 +122,7 @@ def _build_entities(
         entities.extend(
             ViCareBinarySensor(
                 description,
-                get_device_serial(device),
+                get_device_serial(device.api),
                 device.config,
                 device.api,
             )
@@ -138,7 +138,7 @@ def _build_entities(
             entities.extend(
                 ViCareBinarySensor(
                     description,
-                    get_device_serial(device),
+                    get_device_serial(device.api),
                     device.config,
                     device.api,
                     component,
