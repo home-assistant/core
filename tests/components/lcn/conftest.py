@@ -53,11 +53,19 @@ class MockPchkConnectionManager(PchkConnectionManager):
     async def async_close(self) -> None:
         """Mock closing a connection to PCHK."""
 
-    @patch.object(pypck.connection, "ModuleConnection", MockModuleConnection)
-    @patch.object(pypck.connection, "GroupConnection", MockGroupConnection)
     def get_address_conn(self, addr, request_serials=False):
         """Get LCN address connection."""
         return super().get_address_conn(addr, request_serials)
+
+    @patch.object(pypck.connection, "ModuleConnection", MockModuleConnection)
+    def get_module_conn(self, addr, request_serials=False):
+        """Get LCN module connection."""
+        return super().get_module_conn(addr, request_serials)
+
+    @patch.object(pypck.connection, "GroupConnection", MockGroupConnection)
+    def get_group_conn(self, addr):
+        """Get LCN group connection."""
+        return super().get_group_conn(addr)
 
     scan_modules = AsyncMock()
     send_command = AsyncMock()
