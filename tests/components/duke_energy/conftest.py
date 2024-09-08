@@ -10,6 +10,14 @@ from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
+from tests.typing import RecorderInstanceGenerator
+
+
+@pytest.fixture
+async def mock_recorder_before_hass(
+    async_test_recorder: RecorderInstanceGenerator,
+) -> None:
+    """Set up recorder."""
 
 
 @pytest.fixture
@@ -38,8 +46,14 @@ def mock_controller():
         }
     )
     api.get_meters = AsyncMock(return_value={})
-    with patch(
-        "homeassistant.components.duke_energy.config_flow.DukeEnergy",
-        return_value=api,
+    with (
+        patch(
+            "homeassistant.components.duke_energy.config_flow.DukeEnergy",
+            return_value=api,
+        ),
+        patch(
+            "homeassistant.components.duke_energy.coordinator.DukeEnergy",
+            return_value=api,
+        ),
     ):
         yield api
