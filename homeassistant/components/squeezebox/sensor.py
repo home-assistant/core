@@ -25,7 +25,6 @@ from .const import (
     STATUS_SENSOR_INFO_TOTAL_SONGS,
     STATUS_SENSOR_LASTSCAN,
     STATUS_SENSOR_NEWPLUGINS,
-    STATUS_SENSOR_NEWVERSION,
     STATUS_SENSOR_OTHER_PLAYER_COUNT,
     STATUS_SENSOR_PLAYER_COUNT,
 )
@@ -64,11 +63,6 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
     ),
     SensorEntityDescription(
         key=STATUS_SENSOR_NEWPLUGINS,
-        entity_registry_visible_default=False,
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    SensorEntityDescription(
-        key=STATUS_SENSOR_NEWVERSION,
         entity_registry_visible_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
