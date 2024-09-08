@@ -107,15 +107,15 @@ def generate_schema(domain: str, flow_type: str) -> vol.Schema:
     if domain == Platform.NUMBER:
         schema |= {
             vol.Required(CONF_STATE): selector.TemplateSelector(),
-            vol.Required(
-                CONF_MIN, default=f"{{{{{DEFAULT_MIN_VALUE}}}}}"
-            ): selector.TemplateSelector(),
-            vol.Required(
-                CONF_MAX, default=f"{{{{{DEFAULT_MAX_VALUE}}}}}"
-            ): selector.TemplateSelector(),
-            vol.Required(
-                CONF_STEP, default=f"{{{{{DEFAULT_STEP}}}}}"
-            ): selector.TemplateSelector(),
+            vol.Required(CONF_MIN, default=DEFAULT_MIN_VALUE): selector.NumberSelector(
+                selector.NumberSelectorConfig(mode=selector.NumberSelectorMode.BOX),
+            ),
+            vol.Required(CONF_MAX, default=DEFAULT_MAX_VALUE): selector.NumberSelector(
+                selector.NumberSelectorConfig(mode=selector.NumberSelectorMode.BOX),
+            ),
+            vol.Required(CONF_STEP, default=DEFAULT_STEP): selector.NumberSelector(
+                selector.NumberSelectorConfig(mode=selector.NumberSelectorMode.BOX),
+            ),
             vol.Optional(CONF_SET_VALUE): selector.ActionSelector(),
         }
 

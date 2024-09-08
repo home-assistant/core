@@ -1,10 +1,8 @@
 """Test the Google Photos media source."""
 
-from typing import Any
 from unittest.mock import Mock
 
-from googleapiclient.errors import HttpError
-from httplib2 import Response
+from google_photos_library_api.exceptions import GooglePhotosApiError
 import pytest
 
 from homeassistant.components.google_photos.const import DOMAIN, UPLOAD_SCOPE
@@ -46,7 +44,7 @@ async def test_no_config_entries(
     assert not browse.children
 
 
-@pytest.mark.usefixtures("setup_integration", "setup_api")
+@pytest.mark.usefixtures("setup_integration", "mock_api")
 @pytest.mark.parametrize(
     ("scopes"),
     [
@@ -64,7 +62,7 @@ async def test_no_read_scopes(
     assert not browse.children
 
 
-@pytest.mark.usefixtures("setup_integration", "setup_api")
+@pytest.mark.usefixtures("setup_integration", "mock_api")
 @pytest.mark.parametrize(
     ("album_path", "expected_album_title"),
     [
@@ -135,14 +133,14 @@ async def test_browse_albums(
     ] == expected_medias
 
 
-@pytest.mark.usefixtures("setup_integration", "setup_api")
+@pytest.mark.usefixtures("setup_integration", "mock_api")
 async def test_invalid_config_entry(hass: HomeAssistant) -> None:
     """Test browsing to a config entry that does not exist."""
     with pytest.raises(BrowseError, match="Could not find config entry"):
         await async_browse_media(hass, f"{URI_SCHEME}{DOMAIN}/invalid-config-entry")
 
 
-@pytest.mark.usefixtures("setup_integration", "setup_api")
+@pytest.mark.usefixtures("setup_integration", "mock_api")
 @pytest.mark.parametrize("fixture_name", ["list_mediaitems.json"])
 async def test_browse_invalid_path(hass: HomeAssistant) -> None:
     """Test browsing to a photo is not possible."""
@@ -161,8 +159,8 @@ async def test_browse_invalid_path(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("setup_integration")
-@pytest.mark.parametrize("fixture_name", ["list_mediaitems.json"])
-async def test_invalid_album_id(hass: HomeAssistant, setup_api: Mock) -> None:
+@pytest.mark.parametrize("api_error", [GooglePhotosApiError("some error")])
+async def test_invalid_album_id(hass: HomeAssistant, mock_api: Mock) -> None:
     """Test browsing to an album id that does not exist."""
     browse = await async_browse_media(hass, f"{URI_SCHEME}{DOMAIN}")
     assert browse.domain == DOMAIN
@@ -171,11 +169,6 @@ async def test_invalid_album_id(hass: HomeAssistant, setup_api: Mock) -> None:
     assert [(child.identifier, child.title) for child in browse.children] == [
         (CONFIG_ENTRY_ID, "Account Name")
     ]
-
-    setup_api.return_value.mediaItems.return_value.search = Mock()
-    setup_api.return_value.mediaItems.return_value.search.return_value.execute.side_effect = HttpError(
-        Response({"status": "404"}), b""
-    )
 
     with pytest.raises(BrowseError, match="Error listing media items"):
         await async_browse_media(
@@ -201,18 +194,9 @@ async def test_missing_photo_id(
         await async_resolve_media(hass, f"{URI_SCHEME}{DOMAIN}/{identifier}", None)
 
 
-@pytest.mark.usefixtures("setup_integration", "setup_api")
-@pytest.mark.parametrize(
-    "side_effect",
-    [
-        HttpError(Response({"status": "403"}), b""),
-    ],
-)
-async def test_list_media_items_failure(
-    hass: HomeAssistant,
-    setup_api: Any,
-    side_effect: HttpError | Response,
-) -> None:
+@pytest.mark.usefixtures("setup_integration", "mock_api")
+@pytest.mark.parametrize("api_error", [GooglePhotosApiError("some error")])
+async def test_list_albums_failure(hass: HomeAssistant) -> None:
     """Test browsing to an album id that does not exist."""
     browse = await async_browse_media(hass, f"{URI_SCHEME}{DOMAIN}")
     assert browse.domain == DOMAIN
@@ -222,24 +206,13 @@ async def test_list_media_items_failure(
         (CONFIG_ENTRY_ID, "Account Name")
     ]
 
-    setup_api.return_value.mediaItems.return_value.list = Mock()
-    setup_api.return_value.mediaItems.return_value.list.return_value.execute.side_effect = side_effect
-
-    with pytest.raises(BrowseError, match="Error listing media items"):
-        await async_browse_media(
-            hass, f"{URI_SCHEME}{DOMAIN}/{CONFIG_ENTRY_ID}/a/recent"
-        )
+    with pytest.raises(BrowseError, match="Error listing albums"):
+        await async_browse_media(hass, f"{URI_SCHEME}{DOMAIN}/{CONFIG_ENTRY_ID}")
 
 
-@pytest.mark.usefixtures("setup_integration", "setup_api")
-@pytest.mark.parametrize(
-    "fixture_name",
-    [
-        "api_not_enabled_response.json",
-        "not_dict.json",
-    ],
-)
-async def test_media_items_error_parsing_response(hass: HomeAssistant) -> None:
+@pytest.mark.usefixtures("setup_integration", "mock_api")
+@pytest.mark.parametrize("api_error", [GooglePhotosApiError("some error")])
+async def test_list_media_items_failure(hass: HomeAssistant) -> None:
     """Test browsing to an album id that does not exist."""
     browse = await async_browse_media(hass, f"{URI_SCHEME}{DOMAIN}")
     assert browse.domain == DOMAIN
@@ -248,6 +221,7 @@ async def test_media_items_error_parsing_response(hass: HomeAssistant) -> None:
     assert [(child.identifier, child.title) for child in browse.children] == [
         (CONFIG_ENTRY_ID, "Account Name")
     ]
+
     with pytest.raises(BrowseError, match="Error listing media items"):
         await async_browse_media(
             hass, f"{URI_SCHEME}{DOMAIN}/{CONFIG_ENTRY_ID}/a/recent"
