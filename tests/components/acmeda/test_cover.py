@@ -1,24 +1,11 @@
 """Define tests for the Acmeda config flow."""
 
-import pytest
-
 from homeassistant.components.acmeda.const import DOMAIN
 from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry
-
-
-@pytest.fixture
-def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
-    """Return the default mocked config entry."""
-    mock_config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={"host": "127.0.0.1"},
-    )
-    mock_config_entry.add_to_hass(hass)
-    return mock_config_entry
 
 
 async def test_cover_id_migration(
