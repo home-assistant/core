@@ -113,11 +113,6 @@
       "other_player_count": {
         "name": "Other player count"
       }
-    },
-    "update": {
-      "newversion": {
-        "name": "New version"
-      }
     }
   }
 }
