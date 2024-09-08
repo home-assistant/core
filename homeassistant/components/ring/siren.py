@@ -6,12 +6,10 @@ from typing import Any
 from ring_doorbell import RingChime, RingEventKind
 
 from homeassistant.components.siren import ATTR_TONE, SirenEntity, SirenEntityFeature
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import RingData
-from .const import DOMAIN
+from . import RingConfigEntry
 from .coordinator import RingDataCoordinator
 from .entity import RingEntity, exception_wrap
 
@@ -20,11 +18,11 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    entry: RingConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Create the sirens for the Ring devices."""
-    ring_data: RingData = hass.data[DOMAIN][config_entry.entry_id]
+    ring_data = entry.runtime_data
     devices_coordinator = ring_data.devices_coordinator
 
     async_add_entities(

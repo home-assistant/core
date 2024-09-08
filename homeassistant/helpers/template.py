@@ -81,6 +81,7 @@ from . import (
     label_registry,
     location as loc_helper,
 )
+from .deprecation import deprecated_function
 from .singleton import singleton
 from .translation import async_translate_state
 from .typing import TemplateVarsType
@@ -207,15 +208,24 @@ def async_setup(hass: HomeAssistant) -> bool:
 
 
 @bind_hass
+@deprecated_function(
+    "automatic setting of Template.hass introduced by HA Core PR #89242",
+    breaks_in_ha_version="2025.10",
+)
 def attach(hass: HomeAssistant, obj: Any) -> None:
+    """Recursively attach hass to all template instances in list and dict."""
+    return _attach(hass, obj)
+
+
+def _attach(hass: HomeAssistant, obj: Any) -> None:
     """Recursively attach hass to all template instances in list and dict."""
     if isinstance(obj, list):
         for child in obj:
-            attach(hass, child)
+            _attach(hass, child)
     elif isinstance(obj, collections.abc.Mapping):
         for child_key, child_value in obj.items():
-            attach(hass, child_key)
-            attach(hass, child_value)
+            _attach(hass, child_key)
+            _attach(hass, child_value)
     elif isinstance(obj, Template):
         obj.hass = hass
 
@@ -497,9 +507,25 @@ class Template:
     )
 
     def __init__(self, template: str, hass: HomeAssistant | None = None) -> None:
-        """Instantiate a template."""
+        """Instantiate a template.
+
+        Note: A valid hass instance should always be passed in. The hass parameter
+        will be non optional in Home Assistant Core 2025.10.
+        """
+        # pylint: disable-next=import-outside-toplevel
+        from .frame import report
+
         if not isinstance(template, str):
             raise TypeError("Expected template to be a string")
+
+        if not hass:
+            report(
+                (
+                    "creates a template object without passing hass, "
+                    "which will stop working in HA Core 2025.10"
+                ),
+                error_if_core=False,
+            )
 
         self.template: str = template.strip()
         self._compiled_code: CodeType | None = None

@@ -5437,13 +5437,8 @@ async def test_report_direct_mutation_of_config_entry(
     entry = MockConfigEntry(domain="test")
     entry.add_to_hass(hass)
 
-    setattr(entry, field, "new_value")
-
-    assert (
-        f'Detected code that sets "{field}" directly to update a config entry. '
-        "This is deprecated and will stop working in Home Assistant 2024.9, "
-        "it should be updated to use async_update_entry instead. Please report this issue."
-    ) in caplog.text
+    with pytest.raises(AttributeError):
+        setattr(entry, field, "new_value")
 
 
 async def test_updating_non_added_entry_raises(hass: HomeAssistant) -> None:
