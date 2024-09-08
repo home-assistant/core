@@ -127,15 +127,6 @@ async def init_integration(
     return lcn_connection
 
 
-@pytest.fixture(name="lcn_connection")
-async def init_lcn_connection(
-    hass: HomeAssistant,
-    entry: MockConfigEntry,
-) -> MockPchkConnectionManager:
-    """Set up the LCN integration in Home Assistantand yield connection object."""
-    return await init_integration(hass, entry)
-
-
 async def setup_component(hass: HomeAssistant) -> None:
     """Set up the LCN component."""
     fixture_filename = "lcn/config.json"
