@@ -18,12 +18,11 @@ from .helpers import update_devices
 class PulseHub:
     """Manages a single Pulse Hub."""
 
-    api: aiopulse.Hub
-
     def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
         """Initialize the system."""
         self.config_entry = config_entry
         self.hass = hass
+        self.api = aiopulse.Hub(hass.loop)
         self.tasks: list[asyncio.Task[None]] = []
         self.current_rollers: dict[int, aiopulse.Roller] = {}
         self.cleanup_callbacks: list[Callable[[], None]] = []
