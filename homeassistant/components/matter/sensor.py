@@ -170,7 +170,6 @@ DISCOVERY_SCHEMAS = [
             native_unit_of_measurement=UnitOfElectricPotential.VOLT,
             device_class=SensorDeviceClass.VOLTAGE,
             entity_category=EntityCategory.DIAGNOSTIC,
-            # value has double precision
             measurement_to_ha=lambda x: x / 1000,
             state_class=SensorStateClass.MEASUREMENT,
         ),
