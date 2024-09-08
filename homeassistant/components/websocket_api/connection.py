@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable, Hashable
 from contextvars import ContextVar
 from typing import TYPE_CHECKING, Any, Literal
+import uuid
 
 from aiohttp import web
 import voluptuous as vol
@@ -45,6 +46,7 @@ class ActiveConnection:
         "supported_features",
         "handlers",
         "binary_handlers",
+        "connection_uuid",
     )
 
     def __init__(
@@ -69,6 +71,23 @@ class ActiveConnection:
             self.hass.data[const.DOMAIN]
         )
         self.binary_handlers: list[BinaryHandler | None] = []
+        self.connection_uuid: str = str(uuid.uuid4())
+
+        # Fire an event on the event bus to notify that a new websocket client
+        # has connected (and successfully authenticated)
+        cu = current_request.get()
+        remote = cu.remote if cu else None
+        user_agent = cu.headers.get("user-agent") if cu else None
+
+        hass.bus.async_fire(
+            const.EVENT_WEBSOCKET_CONNECTED,
+            {
+                "connection_uuid": self.connection_uuid,
+                "remote": remote,
+                "user": user,
+                "user_agent": user_agent,
+            },
+        )
         current_connection.set(self)
 
     def __repr__(self) -> str:
@@ -85,7 +104,13 @@ class ActiveConnection:
         description = self.user.name or ""
         if request:
             description += " " + describe_request(request)
+        if self.connection_uuid:
+            description += f" (UUID {self.connection_uuid})"
         return description
+
+    def get_uuid(self) -> str:
+        """Return the connection's randomly-assigned UUID."""
+        return self.connection_uuid
 
     def context(self, msg: dict[str, Any]) -> Context:
         """Return a context."""
@@ -235,6 +260,21 @@ class ActiveConnection:
     @callback
     def async_handle_close(self) -> None:
         """Handle closing down connection."""
+
+        # notify on the event bus
+        cu = current_request.get()
+        remote = cu.remote if cu else None
+        user_agent = cu.headers.get("user-agent") if cu else None
+        self.hass.bus.async_fire(
+            const.EVENT_WEBSOCKET_DISCONNECTED,
+            {
+                "connection_uuid": self.connection_uuid,
+                "remote": remote,
+                "user": self.user,
+                "user_agent": user_agent,
+            },
+        )
+
         for unsub in self.subscriptions.values():
             try:
                 unsub()

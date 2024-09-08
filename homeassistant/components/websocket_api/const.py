@@ -54,6 +54,9 @@ TYPE_RESULT: Final = "result"
 SIGNAL_WEBSOCKET_CONNECTED: Final = "websocket_connected"
 SIGNAL_WEBSOCKET_DISCONNECTED: Final = "websocket_disconnected"
 
+EVENT_WEBSOCKET_CONNECTED: Final = "websocket_connected"
+EVENT_WEBSOCKET_DISCONNECTED: Final = "websocket_disconnected"
+
 # Data used to store the current connection list
 DATA_CONNECTIONS: Final = f"{DOMAIN}.connections"
 

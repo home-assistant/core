@@ -10,8 +10,13 @@ import voluptuous as vol
 
 from homeassistant import exceptions
 from homeassistant.components import websocket_api
-from homeassistant.components.websocket_api.const import DOMAIN
-from homeassistant.core import HomeAssistant
+from homeassistant.components.websocket_api.const import (
+    DOMAIN,
+    EVENT_WEBSOCKET_CONNECTED,
+    EVENT_WEBSOCKET_DISCONNECTED,
+)
+from homeassistant.const import MATCH_ALL
+from homeassistant.core import HomeAssistant, callback
 
 from tests.common import MockUser
 
@@ -132,3 +137,29 @@ async def test_binary_handler_registration() -> None:
     # Verify we reuse an unsubscribed prefix
     prefix, unsub = connection.async_register_binary_handler(None)
     assert prefix == 15
+
+
+async def test_event_bus_messages(hass: HomeAssistant) -> None:
+    """Test that events are fired to the bus when connection is created or closed."""
+
+    connects = []
+    disconnects = []
+
+    @callback
+    def event_listener(event):
+        if event.type == EVENT_WEBSOCKET_CONNECTED:
+            connects.append(event)
+        elif event.type == EVENT_WEBSOCKET_DISCONNECTED:
+            disconnects.append(event)
+
+    hass.bus.async_listen(MATCH_ALL, event_listener)
+
+    connection = websocket_api.ActiveConnection(
+        hass, Mock(data={websocket_api.DOMAIN: None}), None, None, Mock()
+    )
+
+    assert len(connects) == 1
+
+    await connection.handle_close()
+
+    assert len(disconnects) == 1
