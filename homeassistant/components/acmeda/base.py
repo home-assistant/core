@@ -62,7 +62,7 @@ class AcmedaBase(entity.Entity):
     def notify_update(self) -> None:
         """Write updated device state information."""
         LOGGER.debug("Device update notification received: %s", self.name)
-        self.async_write_ha_state()
+        self.schedule_update_ha_state()
 
     @property
     def unique_id(self) -> str:
