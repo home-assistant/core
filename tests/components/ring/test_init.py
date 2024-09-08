@@ -2,18 +2,22 @@
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from ring_doorbell import AuthenticationError, RingError, RingTimeout
+from ring_doorbell import AuthenticationError, Ring, RingError, RingTimeout
 
 from homeassistant.components import ring
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.ring import DOMAIN
 from homeassistant.components.ring.const import CONF_LISTEN_CREDENTIALS, SCAN_INTERVAL
+from homeassistant.components.ring.coordinator import RingEventListener
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import CONF_TOKEN, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
+
+from .device_mocks import FRONT_DOOR_DEVICE_ID
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -443,14 +447,24 @@ async def test_listen_token_updated(
 async def test_no_listen_start(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
-    mock_ring_event_listener_class,
-    mock_ring_client,
+    entity_registry: er.EntityRegistry,
+    mock_ring_event_listener_class: type[RingEventListener],
+    mock_ring_client: Ring,
 ) -> None:
     """Test behaviour if listener doesn't start."""
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
         version=1,
         data={"username": "foo", "token": {}},
+    )
+    # Create a binary sensor entity so it is not ignored by the deprecation check
+    # and the listener will start
+    entity_registry.async_get_or_create(
+        domain=BINARY_SENSOR_DOMAIN,
+        platform=DOMAIN,
+        unique_id=f"{FRONT_DOOR_DEVICE_ID}-motion",
+        suggested_object_id=f"{FRONT_DOOR_DEVICE_ID}_motion",
+        config_entry=mock_entry,
     )
     mock_ring_event_listener_class.do_not_start = True
 
