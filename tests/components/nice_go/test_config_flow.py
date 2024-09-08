@@ -117,7 +117,6 @@ async def test_reauth(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_nice_go: AsyncMock,
-    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test reauth flow."""
 
