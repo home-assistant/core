@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable, Mapping
 import logging
 import math
 from typing import TYPE_CHECKING, Any
@@ -25,6 +26,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import (
+    CALLBACK_TYPE,
     Event,
     EventStateChangedData,
     HomeAssistant,
@@ -166,6 +168,29 @@ class MoldIndicator(SensorEntity):
             hass,
             indoor_humidity_sensor,
         )
+        self._preview_callback: Callable[[str, Mapping[str, Any]], None] | None = None
+
+    @callback
+    def async_start_preview(
+        self,
+        preview_callback: Callable[[str, Mapping[str, Any]], None],
+    ) -> CALLBACK_TYPE:
+        """Render a preview."""
+        # Abort early if there is no source entity_id's or calibration factor
+        if (
+            not self._indoor_temp
+            or self._outdoor_temp
+            or self._indoor_hum
+            or self._calib_factor
+        ):
+            self._attr_available = False
+            calculated_state = self._async_calculate_state()
+            preview_callback(calculated_state.state, calculated_state.attributes)
+            return self._call_on_remove_callbacks
+
+        self._preview_callback = preview_callback
+
+        return self._call_on_remove_callbacks
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
@@ -186,7 +211,14 @@ class MoldIndicator(SensorEntity):
             )
 
             if self._update_sensor(entity, old_state, new_state):
-                self.async_schedule_update_ha_state(True)
+                if self._preview_callback:
+                    calculated_state = self._async_calculate_state()
+                    self._preview_callback(
+                        calculated_state.state, calculated_state.attributes
+                    )
+                # only write state to the state machine if we are not in preview mode
+                if not self._preview_callback:
+                    self.async_schedule_update_ha_state(True)
 
         @callback
         def mold_indicator_startup(event: Event) -> None:
@@ -222,7 +254,7 @@ class MoldIndicator(SensorEntity):
                 else schedule_update
             )
 
-            if schedule_update:
+            if schedule_update and not self._preview_callback:
                 self.async_schedule_update_ha_state(True)
 
         self.hass.bus.async_listen_once(
