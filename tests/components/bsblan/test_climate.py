@@ -1,8 +1,7 @@
 """Tests for the BSB-Lan climate platform."""
 
 from datetime import timedelta
-import json
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 from bsblan import BSBLANError, StaticState
 from freezegun.api import FrozenDateTimeFactory
@@ -31,7 +30,7 @@ from . import setup_with_selected_platforms
 from tests.common import (
     MockConfigEntry,
     async_fire_time_changed,
-    load_fixture,
+    load_json_object_fixture,
     snapshot_platform,
 )
 
@@ -54,20 +53,14 @@ async def test_celsius_fahrenheit(
     static_file: str,
 ) -> None:
     """Test Celsius and Fahrenheit temperature units."""
-    # Load static data from fixture
-    static_data = json.loads(load_fixture(static_file, DOMAIN))
 
-    # Patch the static_values method to return our test data
-    with patch.object(
-        mock_bsblan, "static_values", return_value=StaticState.from_dict(static_data)
-    ):
-        # Set up the climate platform
-        await setup_with_selected_platforms(hass, mock_config_entry, [Platform.CLIMATE])
+    static_data = load_json_object_fixture(static_file, DOMAIN)
 
-        # Take a snapshot of the entity registry
-        await snapshot_platform(
-            hass, entity_registry, snapshot, mock_config_entry.entry_id
-        )
+    mock_bsblan.static_values.return_value = StaticState.from_dict(static_data)
+
+    await setup_with_selected_platforms(hass, mock_config_entry, [Platform.CLIMATE])
+
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
 async def test_climate_entity_properties(
@@ -212,8 +205,8 @@ async def test_async_set_preset_mode_error(
     mock_bsblan.state.return_value.hvac_mode = mock_hvac_mode
 
     # Attempt to set the preset mode
-    ERROR_MSG = "Preset mode can only be set when HVAC mode is set to 'auto'"
-    with pytest.raises(HomeAssistantError, match=ERROR_MSG):
+    error_message = "Preset mode can only be set when HVAC mode is set to 'auto'"
+    with pytest.raises(HomeAssistantError, match=error_message):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_PRESET_MODE,
@@ -304,8 +297,8 @@ async def test_async_set_data(
 
     # Test error handling
     mock_bsblan.thermostat.side_effect = BSBLANError("Test error")
-    ERROR_MSG = "An error occurred while updating the BSBLAN device"
-    with pytest.raises(HomeAssistantError, match=ERROR_MSG):
+    error_message = "An error occurred while updating the BSBLAN device"
+    with pytest.raises(HomeAssistantError, match=error_message):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_TEMPERATURE,
