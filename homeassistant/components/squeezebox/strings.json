@@ -89,9 +89,6 @@
       "lastscan": {
         "name": "Last scan"
       },
-      "newplugins": {
-        "name": "New plugins"
-      },
       "info_total_albums": {
         "name": "Total albums"
       },
@@ -111,7 +108,7 @@
         "name": "Player count"
       },
       "other_player_count": {
-        "name": "Other player count"
+        "name": "Other server player count"
       }
     }
   }
