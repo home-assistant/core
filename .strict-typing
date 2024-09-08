@@ -316,6 +316,7 @@ homeassistant.components.minecraft_server.*
 homeassistant.components.mjpeg.*
 homeassistant.components.modbus.*
 homeassistant.components.modem_callerid.*
+homeassistant.components.mold_indicator.*
 homeassistant.components.monzo.*
 homeassistant.components.moon.*
 homeassistant.components.mopeka.*
