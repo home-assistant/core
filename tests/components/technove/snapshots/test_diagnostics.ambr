@@ -1,7 +1,7 @@
 # serializer version: 1
 # name: test_diagnostics
   dict({
-    'auto_charge': True,
+    'auto_charge': False,
     'conflict_in_sharing_config': False,
     'current': 23.75,
     'energy_session': 12.34,

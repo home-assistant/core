@@ -86,7 +86,8 @@
         "name": "Charging Mode",
         "state": {
           "immediate_charging": "Immediate charging",
-          "delayed_charging": "Delayed charging"
+          "delayed_charging": "Delayed charging",
+          "no_action": "No action"
         }
       }
     },
@@ -147,7 +148,8 @@
           "cooling": "Cooling",
           "heating": "Heating",
           "inactive": "Inactive",
-          "standby": "Standby"
+          "standby": "Standby",
+          "ventilation": "Ventilation"
         }
       },
       "front_left_current_pressure": {

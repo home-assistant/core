@@ -162,6 +162,7 @@ class DdWrtDeviceScanner(DeviceScanner):
             )
             return None
         _LOGGER.error("Invalid response from DD-WRT: %s", response)
+        return None
 
 
 def _parse_ddwrt_response(data_str):

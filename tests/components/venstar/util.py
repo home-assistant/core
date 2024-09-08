@@ -15,7 +15,7 @@ TEST_MODELS = ["t2k", "colortouch"]
 def mock_venstar_devices(f):
     """Decorate function to mock a Venstar Colortouch and T2000 thermostat API."""
 
-    async def wrapper(hass):
+    async def wrapper(hass: HomeAssistant) -> None:
         # Mock thermostats are:
         # Venstar T2000, FW 4.38
         # Venstar "colortouch" T7850, FW 5.1
@@ -37,7 +37,7 @@ def mock_venstar_devices(f):
                     f"http://venstar-{model}.localdomain/query/alerts",
                     text=load_fixture(f"venstar/{model}_alerts.json"),
                 )
-            return await f(hass)
+            await f(hass)
 
     return wrapper
 

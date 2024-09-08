@@ -107,6 +107,7 @@ _TEST_FIXTURES: dict[str, list[str] | str] = {
     "device_registry": "DeviceRegistry",
     "enable_bluetooth": "None",
     "enable_custom_integrations": "None",
+    "enable_missing_statistics": "bool",
     "enable_nightly_purge": "bool",
     "enable_statistics": "bool",
     "enable_schema_validation": "bool",
@@ -1756,39 +1757,6 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                     kwargs_type="Any",
                     return_type=None,
                     has_async_counterpart=True,
-                ),
-            ],
-        ),
-    ],
-    "mailbox": [
-        ClassTypeHintMatch(
-            base_class="Mailbox",
-            matches=[
-                TypeHintMatch(
-                    function_name="media_type",
-                    return_type="str",
-                ),
-                TypeHintMatch(
-                    function_name="can_delete",
-                    return_type="bool",
-                ),
-                TypeHintMatch(
-                    function_name="has_media",
-                    return_type="bool",
-                ),
-                TypeHintMatch(
-                    function_name="async_get_media",
-                    arg_types={1: "str"},
-                    return_type="bytes",
-                ),
-                TypeHintMatch(
-                    function_name="async_get_messages",
-                    return_type="list[dict[str, Any]]",
-                ),
-                TypeHintMatch(
-                    function_name="async_delete",
-                    arg_types={1: "str"},
-                    return_type="bool",
                 ),
             ],
         ),

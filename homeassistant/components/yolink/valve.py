@@ -37,7 +37,7 @@ DEVICE_TYPES: tuple[YoLinkValveEntityDescription, ...] = (
         key="valve_state",
         translation_key="meter_valve_state",
         device_class=ValveDeviceClass.WATER,
-        value=lambda value: value == "closed" if value is not None else None,
+        value=lambda value: value != "open" if value is not None else None,
         exists_fn=lambda device: device.device_type
         == ATTR_DEVICE_WATER_METER_CONTROLLER
         and not device.device_model_name.startswith(DEV_MODEL_WATER_METER_YS5007),

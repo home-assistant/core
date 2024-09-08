@@ -128,6 +128,13 @@ def fixture_config_entry_options() -> MappingProxyType[str, Any]:
 # Axis API fixtures
 
 
+@pytest.fixture(autouse=True)
+def reset_mock_requests() -> Generator[None]:
+    """Reset respx mock routes after the test."""
+    yield
+    respx.mock.clear()
+
+
 @pytest.fixture(name="mock_requests")
 def fixture_request(
     respx_mock: respx.MockRouter,

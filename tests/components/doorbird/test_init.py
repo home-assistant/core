@@ -56,6 +56,16 @@ async def test_http_favorites_request_fails(
     assert doorbird_entry.entry.state is ConfigEntryState.SETUP_RETRY
 
 
+async def test_http_schedule_api_missing(
+    doorbird_mocker: DoorbirdMockerType,
+) -> None:
+    """Test missing the schedule API is non-fatal as not all models support it."""
+    doorbird_entry = await doorbird_mocker(
+        schedule_side_effect=mock_not_found_exception()
+    )
+    assert doorbird_entry.entry.state is ConfigEntryState.LOADED
+
+
 async def test_events_changed(
     hass: HomeAssistant,
     doorbird_mocker: DoorbirdMockerType,

@@ -415,6 +415,11 @@ ZEROCONF = {
             "domain": "forked_daapd",
         },
     ],
+    "_deako._tcp.local.": [
+        {
+            "domain": "deako",
+        },
+    ],
     "_devialet-http._tcp.local.": [
         {
             "domain": "devialet",
@@ -513,6 +518,10 @@ ZEROCONF = {
         {
             "domain": "bosch_shc",
             "name": "bosch shc*",
+        },
+        {
+            "domain": "lektrico",
+            "name": "lektrico*",
         },
         {
             "domain": "loqed",
@@ -651,6 +660,11 @@ ZEROCONF = {
             "name": "yeelink-*",
         },
     ],
+    "_musc._tcp.local.": [
+        {
+            "domain": "bluesound",
+        },
+    ],
     "_nanoleafapi._tcp.local.": [
         {
             "domain": "nanoleaf",
@@ -742,6 +756,9 @@ ZEROCONF = {
         },
     ],
     "_slzb-06._tcp.local.": [
+        {
+            "domain": "smlight",
+        },
         {
             "domain": "zha",
             "name": "slzb-06*",

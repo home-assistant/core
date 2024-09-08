@@ -1,7 +1,7 @@
 """Support for LCN scenes."""
 
-from __future__ import annotations
-
+from collections.abc import Iterable
+from functools import partial
 from typing import Any
 
 import pypck
@@ -15,10 +15,12 @@ from homeassistant.helpers.typing import ConfigType
 
 from . import LcnEntity
 from .const import (
+    ADD_ENTITIES_CALLBACKS,
     CONF_DOMAIN_DATA,
     CONF_OUTPUTS,
     CONF_REGISTER,
     CONF_TRANSITION,
+    DOMAIN,
     OUTPUT_PORTS,
 )
 from .helpers import DeviceConnectionType, get_device_connection
@@ -26,15 +28,24 @@ from .helpers import DeviceConnectionType, get_device_connection
 PARALLEL_UPDATES = 0
 
 
-def create_lcn_scene_entity(
-    hass: HomeAssistant, entity_config: ConfigType, config_entry: ConfigEntry
-) -> LcnEntity:
-    """Set up an entity for this domain."""
-    device_connection = get_device_connection(
-        hass, entity_config[CONF_ADDRESS], config_entry
-    )
+def add_lcn_entities(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+    entity_configs: Iterable[ConfigType],
+) -> None:
+    """Add entities for this domain."""
+    entities: list[LcnScene] = []
+    for entity_config in entity_configs:
+        device_connection = get_device_connection(
+            hass, entity_config[CONF_ADDRESS], config_entry
+        )
 
-    return LcnScene(entity_config, config_entry.entry_id, device_connection)
+        entities.append(
+            LcnScene(entity_config, config_entry.entry_id, device_connection)
+        )
+
+    async_add_entities(entities)
 
 
 async def async_setup_entry(
@@ -43,11 +54,23 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up LCN switch entities from a config entry."""
+    add_entities = partial(
+        add_lcn_entities,
+        hass,
+        config_entry,
+        async_add_entities,
+    )
 
-    async_add_entities(
-        create_lcn_scene_entity(hass, entity_config, config_entry)
-        for entity_config in config_entry.data[CONF_ENTITIES]
-        if entity_config[CONF_DOMAIN] == DOMAIN_SCENE
+    hass.data[DOMAIN][config_entry.entry_id][ADD_ENTITIES_CALLBACKS].update(
+        {DOMAIN_SCENE: add_entities}
+    )
+
+    add_entities(
+        (
+            entity_config
+            for entity_config in config_entry.data[CONF_ENTITIES]
+            if entity_config[CONF_DOMAIN] == DOMAIN_SCENE
+        ),
     )
 
 

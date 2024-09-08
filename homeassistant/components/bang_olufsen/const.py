@@ -68,20 +68,20 @@ class BangOlufsenModel(StrEnum):
 class WebsocketNotification(StrEnum):
     """Enum for WebSocket notification types."""
 
-    PLAYBACK_ERROR: Final[str] = "playback_error"
-    PLAYBACK_METADATA: Final[str] = "playback_metadata"
-    PLAYBACK_PROGRESS: Final[str] = "playback_progress"
-    PLAYBACK_SOURCE: Final[str] = "playback_source"
-    PLAYBACK_STATE: Final[str] = "playback_state"
-    SOFTWARE_UPDATE_STATE: Final[str] = "software_update_state"
-    SOURCE_CHANGE: Final[str] = "source_change"
-    VOLUME: Final[str] = "volume"
+    PLAYBACK_ERROR = "playback_error"
+    PLAYBACK_METADATA = "playback_metadata"
+    PLAYBACK_PROGRESS = "playback_progress"
+    PLAYBACK_SOURCE = "playback_source"
+    PLAYBACK_STATE = "playback_state"
+    SOFTWARE_UPDATE_STATE = "software_update_state"
+    SOURCE_CHANGE = "source_change"
+    VOLUME = "volume"
 
     # Sub-notifications
-    NOTIFICATION: Final[str] = "notification"
-    REMOTE_MENU_CHANGED: Final[str] = "remoteMenuChanged"
+    NOTIFICATION = "notification"
+    REMOTE_MENU_CHANGED = "remoteMenuChanged"
 
-    ALL: Final[str] = "all"
+    ALL = "all"
 
 
 DOMAIN: Final[str] = "bang_olufsen"

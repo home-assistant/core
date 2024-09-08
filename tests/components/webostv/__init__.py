@@ -2,6 +2,7 @@
 
 from homeassistant.components.webostv.const import DOMAIN
 from homeassistant.const import CONF_CLIENT_SECRET, CONF_HOST
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from .const import CLIENT_KEY, FAKE_UUID, HOST, TV_NAME
@@ -9,7 +10,9 @@ from .const import CLIENT_KEY, FAKE_UUID, HOST, TV_NAME
 from tests.common import MockConfigEntry
 
 
-async def setup_webostv(hass, unique_id=FAKE_UUID):
+async def setup_webostv(
+    hass: HomeAssistant, unique_id: str | None = FAKE_UUID
+) -> MockConfigEntry:
     """Initialize webostv and media_player for tests."""
     entry = MockConfigEntry(
         domain=DOMAIN,

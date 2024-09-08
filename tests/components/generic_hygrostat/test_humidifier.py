@@ -3,6 +3,7 @@
 import datetime
 
 from freezegun import freeze_time
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 import voluptuous as vol
 
@@ -29,13 +30,15 @@ from homeassistant.const import (
 )
 import homeassistant.core as ha
 from homeassistant.core import (
-    DOMAIN as HASS_DOMAIN,
+    DOMAIN as HOMEASSISTANT_DOMAIN,
     CoreState,
     HomeAssistant,
+    ServiceCall,
     State,
     callback,
 )
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.typing import StateType
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -206,7 +209,7 @@ async def test_unique_id(
     assert entry.unique_id == unique_id
 
 
-def _setup_sensor(hass, humidity):
+def _setup_sensor(hass: HomeAssistant, humidity: StateType) -> None:
     """Set up the test sensor."""
     hass.states.async_set(ENT_SENSOR, humidity)
 
@@ -518,6 +521,7 @@ async def test_set_target_humidity_humidifier_on(hass: HomeAssistant) -> None:
     calls = await _setup_switch(hass, False)
     _setup_sensor(hass, 36)
     await hass.async_block_till_done()
+    calls.clear()
     await hass.services.async_call(
         DOMAIN,
         SERVICE_SET_HUMIDITY,
@@ -527,7 +531,7 @@ async def test_set_target_humidity_humidifier_on(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     assert len(calls) == 1
     call = calls[0]
-    assert call.domain == HASS_DOMAIN
+    assert call.domain == HOMEASSISTANT_DOMAIN
     assert call.service == SERVICE_TURN_ON
     assert call.data["entity_id"] == ENT_SWITCH
 
@@ -538,6 +542,7 @@ async def test_set_target_humidity_humidifier_off(hass: HomeAssistant) -> None:
     calls = await _setup_switch(hass, True)
     _setup_sensor(hass, 45)
     await hass.async_block_till_done()
+    calls.clear()
     await hass.services.async_call(
         DOMAIN,
         SERVICE_SET_HUMIDITY,
@@ -547,7 +552,7 @@ async def test_set_target_humidity_humidifier_off(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     assert len(calls) == 1
     call = calls[0]
-    assert call.domain == HASS_DOMAIN
+    assert call.domain == HOMEASSISTANT_DOMAIN
     assert call.service == SERVICE_TURN_OFF
     assert call.data["entity_id"] == ENT_SWITCH
 
@@ -587,7 +592,7 @@ async def test_humidity_change_humidifier_on_outside_tolerance(
     await hass.async_block_till_done()
     assert len(calls) == 1
     call = calls[0]
-    assert call.domain == HASS_DOMAIN
+    assert call.domain == HOMEASSISTANT_DOMAIN
     assert call.service == SERVICE_TURN_ON
     assert call.data["entity_id"] == ENT_SWITCH
 
@@ -627,7 +632,7 @@ async def test_humidity_change_humidifier_off_outside_tolerance(
     await hass.async_block_till_done()
     assert len(calls) == 1
     call = calls[0]
-    assert call.domain == HASS_DOMAIN
+    assert call.domain == HOMEASSISTANT_DOMAIN
     assert call.service == SERVICE_TURN_OFF
     assert call.data["entity_id"] == ENT_SWITCH
 
@@ -664,18 +669,18 @@ async def test_operation_mode_humidify(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     assert len(calls) == 1
     call = calls[0]
-    assert call.domain == HASS_DOMAIN
+    assert call.domain == HOMEASSISTANT_DOMAIN
     assert call.service == SERVICE_TURN_ON
     assert call.data["entity_id"] == ENT_SWITCH
 
 
-async def _setup_switch(hass, is_on):
+async def _setup_switch(hass: HomeAssistant, is_on: bool) -> list[ServiceCall]:
     """Set up the test switch."""
     hass.states.async_set(ENT_SWITCH, STATE_ON if is_on else STATE_OFF)
     calls = []
 
     @callback
-    def log_call(call):
+    def log_call(call: ServiceCall) -> None:
         """Log service calls."""
         calls.append(call)
 
@@ -725,7 +730,7 @@ async def test_set_target_humidity_dry_off(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     assert len(calls) == 1
     call = calls[0]
-    assert call.domain == HASS_DOMAIN
+    assert call.domain == HOMEASSISTANT_DOMAIN
     assert call.service == SERVICE_TURN_OFF
     assert call.data["entity_id"] == ENT_SWITCH
     assert hass.states.get(ENTITY).attributes.get("action") == "drying"
@@ -784,7 +789,7 @@ async def test_operation_mode_dry(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     assert len(calls) == 1
     call = calls[0]
-    assert call.domain == HASS_DOMAIN
+    assert call.domain == HOMEASSISTANT_DOMAIN
     assert call.service == SERVICE_TURN_ON
     assert call.data["entity_id"] == ENT_SWITCH
 
@@ -797,7 +802,7 @@ async def test_set_target_humidity_dry_on(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     assert len(calls) == 1
     call = calls[0]
-    assert call.domain == HASS_DOMAIN
+    assert call.domain == HOMEASSISTANT_DOMAIN
     assert call.service == SERVICE_TURN_ON
     assert call.data["entity_id"] == ENT_SWITCH
 
@@ -810,7 +815,7 @@ async def test_init_ignores_tolerance(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     assert len(calls) == 1
     call = calls[0]
-    assert call.domain == HASS_DOMAIN
+    assert call.domain == HOMEASSISTANT_DOMAIN
     assert call.service == SERVICE_TURN_OFF
     assert call.data["entity_id"] == ENT_SWITCH
 
@@ -835,7 +840,7 @@ async def test_set_humidity_change_dry_off_outside_tolerance(
     await hass.async_block_till_done()
     assert len(calls) == 1
     call = calls[0]
-    assert call.domain == HASS_DOMAIN
+    assert call.domain == HOMEASSISTANT_DOMAIN
     assert call.service == SERVICE_TURN_OFF
     assert call.data["entity_id"] == ENT_SWITCH
 
@@ -858,7 +863,7 @@ async def test_humidity_change_dry_on_outside_tolerance(hass: HomeAssistant) -> 
     await hass.async_block_till_done()
     assert len(calls) == 1
     call = calls[0]
-    assert call.domain == HASS_DOMAIN
+    assert call.domain == HOMEASSISTANT_DOMAIN
     assert call.service == SERVICE_TURN_ON
     assert call.data["entity_id"] == ENT_SWITCH
 
@@ -878,7 +883,7 @@ async def test_running_when_operating_mode_is_off_2(hass: HomeAssistant) -> None
     await hass.async_block_till_done()
     assert len(calls) == 1
     call = calls[0]
-    assert call.domain == HASS_DOMAIN
+    assert call.domain == HOMEASSISTANT_DOMAIN
     assert call.service == SERVICE_TURN_OFF
     assert call.data["entity_id"] == ENT_SWITCH
     assert hass.states.get(ENTITY).attributes.get("action") == "off"
@@ -918,7 +923,7 @@ async def setup_comp_4(hass: HomeAssistant) -> None:
                 "humidifier": ENT_SWITCH,
                 "target_sensor": ENT_SENSOR,
                 "device_class": "dehumidifier",
-                "min_cycle_duration": datetime.timedelta(minutes=10),
+                "min_cycle_duration": {"minutes": 10},
                 "initial_state": True,
                 "target_humidity": 40,
             }
@@ -956,7 +961,7 @@ async def test_humidity_change_dry_trigger_on_long_enough(hass: HomeAssistant) -
     await hass.async_block_till_done()
     assert len(calls) == 1
     call = calls[0]
-    assert call.domain == HASS_DOMAIN
+    assert call.domain == HOMEASSISTANT_DOMAIN
     assert call.service == SERVICE_TURN_ON
     assert call.data["entity_id"] == ENT_SWITCH
 
@@ -990,7 +995,7 @@ async def test_humidity_change_dry_trigger_off_long_enough(hass: HomeAssistant) 
     await hass.async_block_till_done()
     assert len(calls) == 1
     call = calls[0]
-    assert call.domain == HASS_DOMAIN
+    assert call.domain == HOMEASSISTANT_DOMAIN
     assert call.service == SERVICE_TURN_OFF
     assert call.data["entity_id"] == ENT_SWITCH
 
@@ -1060,7 +1065,7 @@ async def setup_comp_6(hass: HomeAssistant) -> None:
                 "wet_tolerance": 3,
                 "humidifier": ENT_SWITCH,
                 "target_sensor": ENT_SENSOR,
-                "min_cycle_duration": datetime.timedelta(minutes=10),
+                "min_cycle_duration": {"minutes": 10},
                 "initial_state": True,
                 "target_humidity": 40,
             }
@@ -1115,7 +1120,7 @@ async def test_humidity_change_humidifier_trigger_on_long_enough(
     await hass.async_block_till_done()
     assert len(calls) == 1
     call = calls[0]
-    assert call.domain == HASS_DOMAIN
+    assert call.domain == HOMEASSISTANT_DOMAIN
     assert call.service == SERVICE_TURN_ON
     assert call.data["entity_id"] == ENT_SWITCH
 
@@ -1136,7 +1141,7 @@ async def test_humidity_change_humidifier_trigger_off_long_enough(
     await hass.async_block_till_done()
     assert len(calls) == 1
     call = calls[0]
-    assert call.domain == HASS_DOMAIN
+    assert call.domain == HOMEASSISTANT_DOMAIN
     assert call.service == SERVICE_TURN_OFF
     assert call.data["entity_id"] == ENT_SWITCH
 
@@ -1217,8 +1222,8 @@ async def setup_comp_7(hass: HomeAssistant) -> None:
                 "humidifier": ENT_SWITCH,
                 "target_sensor": ENT_SENSOR,
                 "device_class": "dehumidifier",
-                "min_cycle_duration": datetime.timedelta(minutes=15),
-                "keep_alive": datetime.timedelta(minutes=10),
+                "min_cycle_duration": {"minutes": 15},
+                "keep_alive": {"minutes": 10},
                 "initial_state": True,
                 "target_humidity": 40,
             }
@@ -1243,7 +1248,7 @@ async def test_humidity_change_dry_trigger_on_long_enough_3(
     await hass.async_block_till_done()
     assert len(calls) == 1
     call = calls[0]
-    assert call.domain == HASS_DOMAIN
+    assert call.domain == HOMEASSISTANT_DOMAIN
     assert call.service == SERVICE_TURN_ON
     assert call.data["entity_id"] == ENT_SWITCH
 
@@ -1264,7 +1269,7 @@ async def test_humidity_change_dry_trigger_off_long_enough_3(
     await hass.async_block_till_done()
     assert len(calls) == 1
     call = calls[0]
-    assert call.domain == HASS_DOMAIN
+    assert call.domain == HOMEASSISTANT_DOMAIN
     assert call.service == SERVICE_TURN_OFF
     assert call.data["entity_id"] == ENT_SWITCH
 
@@ -1283,8 +1288,8 @@ async def setup_comp_8(hass: HomeAssistant) -> None:
                 "wet_tolerance": 3,
                 "humidifier": ENT_SWITCH,
                 "target_sensor": ENT_SENSOR,
-                "min_cycle_duration": datetime.timedelta(minutes=15),
-                "keep_alive": datetime.timedelta(minutes=10),
+                "min_cycle_duration": {"minutes": 15},
+                "keep_alive": {"minutes": 10},
                 "initial_state": True,
                 "target_humidity": 40,
             }
@@ -1309,7 +1314,7 @@ async def test_humidity_change_humidifier_trigger_on_long_enough_2(
     await hass.async_block_till_done()
     assert len(calls) == 1
     call = calls[0]
-    assert call.domain == HASS_DOMAIN
+    assert call.domain == HOMEASSISTANT_DOMAIN
     assert call.service == SERVICE_TURN_ON
     assert call.data["entity_id"] == ENT_SWITCH
 
@@ -1330,7 +1335,7 @@ async def test_humidity_change_humidifier_trigger_off_long_enough_2(
     await hass.async_block_till_done()
     assert len(calls) == 1
     call = calls[0]
-    assert call.domain == HASS_DOMAIN
+    assert call.domain == HOMEASSISTANT_DOMAIN
     assert call.service == SERVICE_TURN_OFF
     assert call.data["entity_id"] == ENT_SWITCH
 
@@ -1385,7 +1390,7 @@ async def test_float_tolerance_values_2(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     assert len(calls) == 1
     call = calls[0]
-    assert call.domain == HASS_DOMAIN
+    assert call.domain == HOMEASSISTANT_DOMAIN
     assert call.service == SERVICE_TURN_OFF
     assert call.data["entity_id"] == ENT_SWITCH
 
@@ -1615,7 +1620,7 @@ async def test_restore_state_uncoherence_case(hass: HomeAssistant) -> None:
     assert state.state == STATE_OFF
 
 
-async def _setup_humidifier(hass):
+async def _setup_humidifier(hass: HomeAssistant) -> None:
     assert await async_setup_component(
         hass,
         DOMAIN,
@@ -1635,7 +1640,9 @@ async def _setup_humidifier(hass):
     await hass.async_block_till_done()
 
 
-def _mock_restore_cache(hass, humidity=40, state=STATE_OFF):
+def _mock_restore_cache(
+    hass: HomeAssistant, humidity: int = 40, state: str = STATE_OFF
+) -> None:
     mock_restore_cache(
         hass,
         (
@@ -1729,7 +1736,9 @@ async def test_away_fixed_humidity_mode(hass: HomeAssistant) -> None:
 
 @pytest.mark.usefixtures("setup_comp_1")
 async def test_sensor_stale_duration(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test turn off on sensor stale."""
 
@@ -1771,14 +1780,31 @@ async def test_sensor_stale_duration(
     assert hass.states.get(humidifier_switch).state == STATE_ON
 
     # Wait 11 minutes
-    async_fire_time_changed(hass, dt_util.utcnow() + datetime.timedelta(minutes=11))
+    freezer.tick(datetime.timedelta(minutes=11))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     # 11 minutes later, no news from the sensor : emergency cut off
     assert hass.states.get(humidifier_switch).state == STATE_OFF
     assert "emergency" in caplog.text
 
-    # Updated value from sensor received
+    # Updated value from sensor received (same value)
+    _setup_sensor(hass, 23)
+    await hass.async_block_till_done()
+
+    # A new value has arrived, the humidifier should go ON
+    assert hass.states.get(humidifier_switch).state == STATE_ON
+
+    # Wait 11 minutes
+    freezer.tick(datetime.timedelta(minutes=11))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # 11 minutes later, no news from the sensor : emergency cut off
+    assert hass.states.get(humidifier_switch).state == STATE_OFF
+    assert "emergency" in caplog.text
+
+    # Updated value from sensor received (new value)
     _setup_sensor(hass, 24)
     await hass.async_block_till_done()
 

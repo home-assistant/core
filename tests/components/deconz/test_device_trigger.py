@@ -343,6 +343,7 @@ async def test_functional_device_trigger(
     assert len(hass.states.async_entity_ids(AUTOMATION_DOMAIN)) == 1
 
     await sensor_ws_data({"state": {"buttonevent": 1002}})
+    await hass.async_block_till_done()
     assert len(service_calls) == 1
     assert service_calls[0].data["some"] == "test_trigger_button_press"
 

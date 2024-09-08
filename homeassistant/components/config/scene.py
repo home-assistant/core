@@ -11,7 +11,7 @@ from homeassistant.components.scene import (
 )
 from homeassistant.config import SCENE_CONFIG_PATH
 from homeassistant.const import CONF_ID, SERVICE_RELOAD
-from homeassistant.core import DOMAIN as HA_DOMAIN, HomeAssistant, callback
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 
 from .const import ACTION_DELETE
@@ -32,7 +32,9 @@ def async_setup(hass: HomeAssistant) -> bool:
 
         ent_reg = er.async_get(hass)
 
-        entity_id = ent_reg.async_get_entity_id(DOMAIN, HA_DOMAIN, config_key)
+        entity_id = ent_reg.async_get_entity_id(
+            DOMAIN, HOMEASSISTANT_DOMAIN, config_key
+        )
 
         if entity_id is None:
             return

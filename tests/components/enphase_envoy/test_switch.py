@@ -12,7 +12,6 @@ from homeassistant.const import (
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
-    STATE_CLOSED,
     STATE_OFF,
     STATE_ON,
 )
@@ -146,12 +145,24 @@ async def test_switch_grid_operation(
 
 
 @pytest.mark.parametrize(
-    ("mock_envoy"), ["envoy_metered_batt_relay"], indirect=["mock_envoy"]
+    ("mock_envoy", "entity_states"),
+    [
+        (
+            "envoy_metered_batt_relay",
+            {
+                "NC1": (STATE_OFF, 0, 1),
+                "NC2": (STATE_ON, 1, 0),
+                "NC3": (STATE_OFF, 0, 1),
+            },
+        )
+    ],
+    indirect=["mock_envoy"],
 )
 async def test_switch_relay_operation(
     hass: HomeAssistant,
     mock_envoy: AsyncMock,
     config_entry: MockConfigEntry,
+    entity_states: dict[str, tuple[str, int, int]],
 ) -> None:
     """Test enphase_envoy switch relay entities operation."""
     with patch("homeassistant.components.enphase_envoy.PLATFORMS", [Platform.SWITCH]):
@@ -162,13 +173,10 @@ async def test_switch_relay_operation(
     for contact_id, dry_contact in mock_envoy.data.dry_contact_settings.items():
         name = dry_contact.load_name.lower().replace(" ", "_")
         test_entity = f"{entity_base}{name}"
-        target_value = mock_envoy.data.dry_contact_status[contact_id].status
         assert (entity_state := hass.states.get(test_entity))
-        assert (
-            entity_state.state == STATE_ON
-            if target_value == STATE_CLOSED
-            else STATE_OFF
-        )
+        assert entity_state.state == entity_states[contact_id][0]
+        open_count = entity_states[contact_id][1]
+        close_count = entity_states[contact_id][2]
 
         await hass.services.async_call(
             SWITCH_DOMAIN,
@@ -199,15 +207,7 @@ async def test_switch_relay_operation(
             blocking=True,
         )
 
-        assert (
-            mock_envoy.open_dry_contact.await_count
-            if target_value == STATE_CLOSED
-            else mock_envoy.close_dry_contact.await_count
-        ) == 1
-        assert (
-            mock_envoy.close_dry_contact.await_count
-            if target_value == STATE_CLOSED
-            else mock_envoy.open_dry_contact.await_count
-        ) == 0
+        assert mock_envoy.open_dry_contact.await_count == open_count
+        assert mock_envoy.close_dry_contact.await_count == close_count
         mock_envoy.open_dry_contact.reset_mock()
         mock_envoy.close_dry_contact.reset_mock()

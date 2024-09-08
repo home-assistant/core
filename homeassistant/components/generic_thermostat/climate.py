@@ -38,7 +38,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import (
-    DOMAIN as HA_DOMAIN,
+    DOMAIN as HOMEASSISTANT_DOMAIN,
     CoreState,
     Event,
     EventStateChangedData,
@@ -485,7 +485,7 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
         try:
             cur_temp = float(state.state)
             if not math.isfinite(cur_temp):
-                raise ValueError(f"Sensor has illegal state {state.state}")
+                raise ValueError(f"Sensor has illegal state {state.state}")  # noqa: TRY301
             self._cur_temp = cur_temp
         except ValueError as ex:
             _LOGGER.error("Unable to update from sensor: %s", ex)
@@ -570,14 +570,14 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
         """Turn heater toggleable device on."""
         data = {ATTR_ENTITY_ID: self.heater_entity_id}
         await self.hass.services.async_call(
-            HA_DOMAIN, SERVICE_TURN_ON, data, context=self._context
+            HOMEASSISTANT_DOMAIN, SERVICE_TURN_ON, data, context=self._context
         )
 
     async def _async_heater_turn_off(self) -> None:
         """Turn heater toggleable device off."""
         data = {ATTR_ENTITY_ID: self.heater_entity_id}
         await self.hass.services.async_call(
-            HA_DOMAIN, SERVICE_TURN_OFF, data, context=self._context
+            HOMEASSISTANT_DOMAIN, SERVICE_TURN_OFF, data, context=self._context
         )
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:

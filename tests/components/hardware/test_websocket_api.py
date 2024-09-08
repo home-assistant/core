@@ -61,7 +61,7 @@ async def test_system_status_subscription(
     response = await client.receive_json()
     assert response["success"]
 
-    VirtualMem = namedtuple("VirtualMemory", ["available", "percent", "total"])
+    VirtualMem = namedtuple("VirtualMemory", ["available", "percent", "total"])  # noqa: PYI024
     vmem = VirtualMem(10 * 1024**2, 50, 30 * 1024**2)
 
     with (
