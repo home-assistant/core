@@ -37,7 +37,7 @@ async def test_user(hass: HomeAssistant) -> None:
     assert data[CONF_EMAIL] == "test@example.com"
 
 
-@pytest.mark.usefixtures("mock_config_entry", "test_api")
+@pytest.mark.usefixtures("recorder_mock", "mock_config_entry", "test_api")
 async def test_abort_if_already_setup(hass: HomeAssistant) -> None:
     """Test we abort if the email is already setup."""
     result = await hass.config_entries.flow.async_init(
@@ -53,6 +53,7 @@ async def test_abort_if_already_setup(hass: HomeAssistant) -> None:
     assert result.get("reason") == "already_configured"
 
 
+@pytest.mark.usefixtures("recorder_mock")
 async def test_asserts(hass: HomeAssistant, test_api: Mock) -> None:
     """Test the failure scenarios."""
 
