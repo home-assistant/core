@@ -7,12 +7,13 @@ from homeassistant.components.vallox import (
     ATTR_DURATION,
     ATTR_PROFILE,
     ATTR_PROFILE_FAN_SPEED,
+    I18N_KEY_TO_VALLOX_PROFILE,
     SERVICE_SET_PROFILE,
     SERVICE_SET_PROFILE_FAN_SPEED_AWAY,
     SERVICE_SET_PROFILE_FAN_SPEED_BOOST,
     SERVICE_SET_PROFILE_FAN_SPEED_HOME,
 )
-from homeassistant.components.vallox.const import DOMAIN, PRESET_MODE_TO_VALLOX_PROFILE
+from homeassistant.components.vallox.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
 from .conftest import patch_set_fan_speed, patch_set_profile
@@ -90,5 +91,5 @@ async def test_set_profile_service(
 
         # Assert
         set_profile.assert_called_once_with(
-            PRESET_MODE_TO_VALLOX_PROFILE[profile], duration
+            I18N_KEY_TO_VALLOX_PROFILE[profile], duration
         )
