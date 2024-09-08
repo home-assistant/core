@@ -2,10 +2,7 @@
 
 from __future__ import annotations
 
-from homeassistant.const import Platform
-
 DOMAIN = "mold_indicator"
-PLATFORMS = [Platform.SENSOR]
 
 CONF_CALIBRATION_FACTOR = "calibration_factor"
 CONF_INDOOR_HUMIDITY = "indoor_humidity_sensor"
