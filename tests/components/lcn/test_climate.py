@@ -282,6 +282,6 @@ async def test_unload_config_entry(
     """Test the climate is removed when the config entry is unloaded."""
     await init_integration(hass, entry)
 
-    await hass.config_entries.async_forward_entry_unload(entry, DOMAIN_CLIMATE)
+    await hass.config_entries.async_unload(entry.entry_id)
     state = hass.states.get("climate.climate1")
     assert state.state == STATE_UNAVAILABLE
