@@ -43,17 +43,20 @@ class DukeEnergyConfigFlow(ConfigFlow, domain=DOMAIN):
             try:
                 auth = await api.authenticate()
             except ClientResponseError as e:
-                errors["base"] = (
-                    "invalid_auth" if e.status == 404 else "could_not_connect"
-                )
+                errors["base"] = "invalid_auth" if e.status == 404 else "cannot_connect"
             except (ClientError, TimeoutError):
-                errors["base"] = "could_not_connect"
+                errors["base"] = "cannot_connect"
             except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
                 email = auth["email"].lower()
-                data = {CONF_EMAIL: email, **user_input}
+                username = auth["cdp_internal_user_id"].lower()
+                data = {
+                    CONF_EMAIL: email,
+                    CONF_USERNAME: username,
+                    CONF_PASSWORD: user_input[CONF_PASSWORD],
+                }
                 self._async_abort_entries_match(data)
                 return self.async_create_entry(title=email, data=data)
 

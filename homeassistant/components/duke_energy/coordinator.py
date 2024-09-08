@@ -15,6 +15,7 @@ from homeassistant.components.recorder.statistics import (
     get_last_statistics,
     statistics_during_period,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, UnitOfEnergy, UnitOfVolume
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -27,9 +28,13 @@ _LOGGER = logging.getLogger(__name__)
 
 _SUPPORTED_METER_TYPES = ("ELECTRIC",)
 
+type DukeEnergyConfigEntry = ConfigEntry[DukeEnergyCoordinator]
+
 
 class DukeEnergyCoordinator(DataUpdateCoordinator[None]):
     """Handle inserting statistics."""
+
+    config_entry: DukeEnergyConfigEntry
 
     def __init__(
         self,
@@ -61,8 +66,7 @@ class DukeEnergyCoordinator(DataUpdateCoordinator[None]):
         # This makes _async_update_data get periodically called so we can insert statistics.
         self.async_add_listener(_dummy_listener)
 
-        if self.config_entry:
-            self.config_entry.async_on_unload(self._clear_statistics)
+        self.config_entry.async_on_unload(self._clear_statistics)
 
     def _clear_statistics(self) -> None:
         """Clear statistics."""
