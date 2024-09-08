@@ -28,7 +28,9 @@ from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.mark.parametrize(
-    ("mock_envoy"), ["envoy_metered_batt_relay"], indirect=["mock_envoy"]
+    ("mock_envoy"),
+    ["envoy_metered_batt_relay", "envoy_eu_batt"],
+    indirect=["mock_envoy"],
 )
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_select(
@@ -172,19 +174,29 @@ async def test_select_relay_modes(
 
 
 @pytest.mark.parametrize(
-    ("mock_envoy"), ["envoy_metered_batt_relay"], indirect=["mock_envoy"]
+    ("mock_envoy", "use_envoy_serial"),
+    [
+        ("envoy_metered_batt_relay", False),
+        ("envoy_eu_batt", True),
+    ],
+    indirect=["mock_envoy"],
 )
 async def test_select_storage_modes(
     hass: HomeAssistant,
     mock_envoy: AsyncMock,
     config_entry: MockConfigEntry,
+    use_envoy_serial: bool,
 ) -> None:
     """Test select platform entities storage mode changes."""
     with patch("homeassistant.components.enphase_envoy.PLATFORMS", [Platform.SELECT]):
         await setup_integration(hass, config_entry)
 
-    sn = mock_envoy.data.enpower.serial_number
-    test_entity = f"{Platform.SELECT}.enpower_{sn}_storage_mode"
+    sn = (
+        f"envoy_{mock_envoy.serial_number}"
+        if use_envoy_serial
+        else f"enpower_{mock_envoy.data.enpower.serial_number}"
+    )
+    test_entity = f"{Platform.SELECT}.{sn}_storage_mode"
 
     assert (entity_state := hass.states.get(test_entity))
     assert STORAGE_MODE_MAP[mock_envoy.data.tariff.storage_settings.mode] == (
