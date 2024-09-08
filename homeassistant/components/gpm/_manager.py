@@ -402,7 +402,6 @@ class ResourceRepositoryManager(RepositoryManager):
         self,
         hass: HomeAssistant,
         repo_url: str,
-        download_url: str | None,
         update_strategy: UpdateStrategy,
     ) -> None:
         super().__init__(
@@ -413,7 +412,7 @@ class ResourceRepositoryManager(RepositoryManager):
             update_strategy,
         )
         self.hass = hass
-        self.set_download_url(download_url)
+        self._download_url: Template | None = None
 
     async def is_installed(self) -> bool:
         """Return True if the GIT repo is installed."""

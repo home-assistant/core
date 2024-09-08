@@ -36,19 +36,19 @@ type GPMConfigEntry = ConfigEntry[RepositoryManager]  # noqa: F821
 def get_manager(hass: HomeAssistant, data: Mapping[str, str]) -> RepositoryManager:
     """Get the RepositoryManager from a config entry or ConfigFlow.user_input data."""
     # explicitly cast type to trigger fail in case of unexpected data
-    type_ = RepositoryType(data[CONF_TYPE])
-    if type_ == RepositoryType.INTEGRATION:
-        return IntegrationRepositoryManager(
-            hass,
-            data[CONF_URL],
-            UpdateStrategy(data[CONF_UPDATE_STRATEGY]),
-        )
-    return ResourceRepositoryManager(
+    cls = (
+        IntegrationRepositoryManager
+        if RepositoryType(data[CONF_TYPE]) == RepositoryType.INTEGRATION
+        else ResourceRepositoryManager
+    )
+    res = cls(
         hass,
         data[CONF_URL],
-        data.get(CONF_DOWNLOAD_URL),
         UpdateStrategy(data[CONF_UPDATE_STRATEGY]),
     )
+    if isinstance(res, ResourceRepositoryManager):
+        res.set_download_url(data.get(CONF_DOWNLOAD_URL))
+    return res
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
