@@ -10,7 +10,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.nice_go.const import DOMAIN
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import issue_registry as ir
@@ -56,6 +56,9 @@ async def test_setup_failure(
 
     await setup_integration(hass, mock_config_entry, [])
     assert mock_config_entry.state is entry_state
+
+    if entry_state == ConfigEntryState.SETUP_ERROR:
+        assert any(mock_config_entry.async_get_active_flows(hass, {SOURCE_REAUTH}))
 
 
 async def test_firmware_update_required(
@@ -176,6 +179,8 @@ async def test_update_refresh_token_auth_failed(
     assert mock_nice_go.get_all_barriers.call_count == 1
     assert mock_config_entry.data["refresh_token"] == "test-refresh-token"
     assert "Authentication failed" in caplog.text
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert any(mock_config_entry.async_get_active_flows(hass, {SOURCE_REAUTH}))
 
 
 async def test_client_listen_api_error(
