@@ -23,9 +23,12 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 _LOGGER = logging.getLogger(__name__)
 
 
+if TYPE_CHECKING:
+    from . import HueBLEConfigEntry
+
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: HueBLEConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Add light for passed config_entry in HA."""
