@@ -22,11 +22,12 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
 
 
 async def test_cover_id_migration(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test migrating unique id."""
     mock_config_entry.add_to_hass(hass)
-    entity_registry = er.async_get(hass)
     entity_registry.async_get_or_create(
         COVER_DOMAIN, DOMAIN, 1234567890123, config_entry=mock_config_entry
     )
