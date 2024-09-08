@@ -147,19 +147,18 @@ async def test_event_bus_messages(hass: HomeAssistant) -> None:
 
     @callback
     def event_listener(event):
-        if event.type == EVENT_WEBSOCKET_CONNECTED:
+        if event.event_type == EVENT_WEBSOCKET_CONNECTED:
             connects.append(event)
-        elif event.type == EVENT_WEBSOCKET_DISCONNECTED:
+        elif event.event_type == EVENT_WEBSOCKET_DISCONNECTED:
             disconnects.append(event)
 
     hass.bus.async_listen(MATCH_ALL, event_listener)
 
-    connection = websocket_api.ActiveConnection(
-        hass, Mock(data={websocket_api.DOMAIN: None}), None, None, Mock()
-    )
+    hass.data = {**hass.data, websocket_api.DOMAIN: None}
+    connection = websocket_api.ActiveConnection(None, hass, None, None, Mock())
 
     assert len(connects) == 1
 
-    await connection.handle_close()
+    connection.async_handle_close()
 
     assert len(disconnects) == 1
