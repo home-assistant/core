@@ -11,7 +11,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import EntityCategory, UnitOfTime
+from homeassistant.const import UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -24,7 +24,6 @@ from .const import (
     STATUS_SENSOR_INFO_TOTAL_GENRES,
     STATUS_SENSOR_INFO_TOTAL_SONGS,
     STATUS_SENSOR_LASTSCAN,
-    STATUS_SENSOR_NEWPLUGINS,
     STATUS_SENSOR_OTHER_PLAYER_COUNT,
     STATUS_SENSOR_PLAYER_COUNT,
 )
@@ -34,12 +33,10 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key=STATUS_SENSOR_INFO_TOTAL_ALBUMS,
         state_class=SensorStateClass.TOTAL,
-        icon="mdi:album",
     ),
     SensorEntityDescription(
         key=STATUS_SENSOR_INFO_TOTAL_ARTISTS,
         state_class=SensorStateClass.TOTAL,
-        icon="mdi:account-music",
     ),
     SensorEntityDescription(
         key=STATUS_SENSOR_INFO_TOTAL_DURATION,
@@ -50,12 +47,10 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key=STATUS_SENSOR_INFO_TOTAL_GENRES,
         state_class=SensorStateClass.TOTAL,
-        icon="mdi:drama-masks",
     ),
     SensorEntityDescription(
         key=STATUS_SENSOR_INFO_TOTAL_SONGS,
         state_class=SensorStateClass.TOTAL,
-        icon="mdi:file-music",
     ),
     SensorEntityDescription(
         key=STATUS_SENSOR_LASTSCAN,
@@ -64,13 +59,11 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key=STATUS_SENSOR_PLAYER_COUNT,
         state_class=SensorStateClass.TOTAL,
-        icon="mdi:folder-play",
     ),
     SensorEntityDescription(
         key=STATUS_SENSOR_OTHER_PLAYER_COUNT,
         state_class=SensorStateClass.TOTAL,
         entity_registry_visible_default=False,
-        icon="mdi:folder-play-outline",
     ),
 )
 

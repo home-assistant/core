@@ -16,8 +16,6 @@ from .const import (
     STATUS_API_TIMEOUT,
     STATUS_SENSOR_LASTSCAN,
     STATUS_SENSOR_NEEDSRESTART,
-    STATUS_SENSOR_NEWPLUGINS,
-    STATUS_SENSOR_NEWVERSION,
     STATUS_SENSOR_RESCAN,
 )
 
@@ -69,16 +67,6 @@ class LMSStatusDataUpdateCoordinator(DataUpdateCoordinator):
             if STATUS_SENSOR_LASTSCAN in data
             else None
         )
-        # newversion str not always present
-        # Sample text 'A new version of Logitech Media Server is available (8.5.2 - 0). <a href="updateinfo.html?installerFile=/var/lib/squeezeboxserver/cache/updates/logitechmediaserver_8.5.2_amd64.deb" target="update">Click here for further information</a>.'
-        data[STATUS_SENSOR_NEWVERSION] = (
-            self.newversion_regex.sub("...", data[STATUS_SENSOR_NEWVERSION])
-            if STATUS_SENSOR_NEWVERSION in data
-            else None
-        )
-        # newplugins str not always present
-        if STATUS_SENSOR_NEWPLUGINS not in data:
-            data[STATUS_SENSOR_NEWPLUGINS] = None
 
         _LOGGER.debug("Processed serverstatus %s=%s", self.lms.name, data)
         return data
