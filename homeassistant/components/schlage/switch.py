@@ -92,7 +92,6 @@ class SchlageSwitch(SchlageEntity, SwitchEntity):
     @property
     def is_on(self) -> bool:
         """Return True if the switch is on."""
-        assert self._lock is not None
         return self.entity_description.value_fn(self._lock)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
