@@ -17,7 +17,6 @@
     "models": [
       "LIFX A19",
       "LIFX A21",
-      "LIFX B10",
       "LIFX Beam",
       "LIFX BR30",
       "LIFX Candle",
@@ -41,7 +40,6 @@
       "LIFX Round",
       "LIFX Square",
       "LIFX String",
-      "LIFX T10",
       "LIFX Tile",
       "LIFX White",
       "LIFX Z"
@@ -50,7 +48,7 @@
   "iot_class": "local_polling",
   "loggers": ["aiolifx", "aiolifx_effects", "bitstring"],
   "requirements": [
-    "aiolifx==1.0.8",
+    "aiolifx==1.0.9",
     "aiolifx-effects==0.3.2",
     "aiolifx-themes==0.5.0"
   ]
