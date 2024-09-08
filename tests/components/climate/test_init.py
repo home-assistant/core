@@ -980,32 +980,25 @@ async def test_no_issue_no_aux_property(
 
 
 async def test_humidity_validation(
-    hass: HomeAssistant, register_test_integration: MockConfigEntry
+    hass: HomeAssistant,
+    register_test_integration: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test validation for humidity."""
 
-    class MockClimateEntityTemp(MockClimateEntity):
+    class MockClimateEntityHumidity(MockClimateEntity):
         """Mock climate class with mocked aux heater."""
 
-        _attr_supported_features = (
-            ClimateEntityFeature.FAN_MODE
-            | ClimateEntityFeature.PRESET_MODE
-            | ClimateEntityFeature.SWING_MODE
-            | ClimateEntityFeature.TARGET_TEMPERATURE
-            | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
-            | ClimateEntityFeature.TARGET_HUMIDITY
-        )
+        _attr_supported_features = ClimateEntityFeature.TARGET_HUMIDITY
         _attr_target_humidity = 50
-        _attr_target_temperature = 15
-        _attr_target_temperature_high = 18
-        _attr_target_temperature_low = 10
-        _attr_target_temperature_step = PRECISION_WHOLE
+        _attr_min_humidity = 50
+        _attr_max_humidity = 60
 
         def set_humidity(self, humidity: int) -> None:
             """Set new target humidity."""
             self._attr_target_humidity = humidity
 
-    test_climate = MockClimateEntityTemp(
+    test_climate = MockClimateEntityHumidity(
         name="Test",
         unique_id="unique_climate_test",
     )
@@ -1021,7 +1014,7 @@ async def test_humidity_validation(
 
     with pytest.raises(
         ServiceValidationError,
-        match="Provided humidity 1 is not valid. Accepted range is 30 to 99",
+        match="Provided humidity 1 is not valid. Accepted range is 50 to 60",
     ) as exc:
         await hass.services.async_call(
             DOMAIN,
@@ -1032,10 +1025,23 @@ async def test_humidity_validation(
             },
             blocking=True,
         )
-    assert (
-        str(exc.value) == "Provided humidity 1 is not valid. Accepted range is 30 to 99"
-    )
+
     assert exc.value.translation_key == "humidity_out_of_range"
+    assert "Check valid humidity 1 in range 50 - 60" in caplog.text
+
+    with pytest.raises(
+        ServiceValidationError,
+        match="Provided humidity 70 is not valid. Accepted range is 50 to 60",
+    ) as exc:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_HUMIDITY,
+            {
+                "entity_id": "climate.test",
+                ATTR_HUMIDITY: "70",
+            },
+            blocking=True,
+        )
 
 
 async def test_temperature_validation(

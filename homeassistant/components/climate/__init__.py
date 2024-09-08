@@ -936,6 +936,12 @@ async def async_service_humidity_set(
     humidity = service_call.data[ATTR_HUMIDITY]
     min_humidity = entity.min_humidity
     max_humidity = entity.max_humidity
+    _LOGGER.debug(
+        "Check valid humidity %d in range %d - %d",
+        humidity,
+        min_humidity,
+        max_humidity,
+    )
     if humidity < min_humidity or humidity > max_humidity:
         raise ServiceValidationError(
             translation_domain=DOMAIN,
