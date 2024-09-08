@@ -26,6 +26,6 @@ PLATFORMS = [
 
 
 SCAN_INTERVAL = timedelta(minutes=1)
-NOTIFICATIONS_SCAN_INTERVAL = timedelta(seconds=5)
 
 CONF_2FA = "2fa"
+CONF_LISTEN_CREDENTIALS = "listen_token"
