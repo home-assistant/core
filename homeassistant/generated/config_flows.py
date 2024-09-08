@@ -12,6 +12,7 @@ FLOWS = {
         "history_stats",
         "integration",
         "min_max",
+        "mold_indicator",
         "random",
         "statistics",
         "switch_as_x",
