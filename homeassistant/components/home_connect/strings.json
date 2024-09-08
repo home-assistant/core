@@ -19,22 +19,66 @@
   },
   "entity": {
     "binary_sensor": {
-      "door": {
-        "name": "Door"
-      },
-      "remote_control": {
+      "bsh-common-status-remote_control_active": {
         "name": "Remote control"
       },
-      "remote_start": {
+      "bsh-common-status-remote_control_start_allowed": {
         "name": "Remote start"
+      },
+      "bsh-common-status-local_control_active": {
+        "name": "Local control"
+      },
+      "consumer_products-cleaning_robot-status-dust_box_inserted": {
+        "name": "Dust box Inserted"
+      },
+      "consumer_products-cleaning_robot-status-lifted": {
+        "name": "Lifted"
+      },
+      "consumer_products-cleaning_robot-status-lost": {
+        "name": "Lost"
       }
     },
     "light": {
-      "ambient_light": {
+      "bsh-common-setting-ambient_light_enabled": {
         "name": "Ambient light"
       },
-      "light": {
-        "name": "[%key:component::light::title%]"
+      "cooking-common-setting-lighting": {
+        "name": "Functional light"
+      },
+      "refrigeration-common-setting-light-external-power": {
+        "name": "External light"
+      },
+      "refrigeration-common-setting-light-internal-power": {
+        "name": "Internal light"
+      }
+    },
+    "number": {
+      "refrigeration-fridge_freezer-setting-setpoint_temperature_refrigerator": {
+        "name": "Refrigerator temperature"
+      },
+      "refrigeration-fridge_freezer-setting-setpoint_temperature_freezer": {
+        "name": "Freezer temperature"
+      },
+      "refrigeration-common-setting-bottle_cooler-setpoint_temperature": {
+        "name": "Bottle cooler temperature"
+      },
+      "refrigeration-common-setting-chiller_left-setpoint_temperature": {
+        "name": "Chiller left temperature"
+      },
+      "refrigeration-common-setting-chiller_common-setpoint_temperature": {
+        "name": "Chiller temperature"
+      },
+      "refrigeration-common-setting-chiller_right-setpoint_temperature": {
+        "name": "Chiller right temperature"
+      },
+      "refrigeration-common-setting-wine_compartment-setpoint_temperature": {
+        "name": "Wine compartment temperature"
+      },
+      "refrigeration-common-setting-wine_compartment2-setpoint_temperature": {
+        "name": "Wine compartment 2 temperature"
+      },
+      "refrigeration-common-setting-wine_compartment3-setpoint_temperature": {
+        "name": "Wine compartment 3 temperature"
       }
     },
     "select": {
@@ -196,13 +240,28 @@
           "laundry_care-washer_dryer-program-wash_and_dry_60": "Wash and dry 60 min",
           "laundry_care-washer_dryer-program-wash_and_dry_90": "Wash and dry 90 min"
         }
+      },
+      "consumer_products-cleaning_robot-setting-current_map": {
+        "name": "Current map",
+        "state": {
+          "consumer_products-cleaning_robot-enum_type-available_maps-temp_map": "Temporary map",
+          "consumer_products-cleaning_robot-enum_type-available_maps-map1": "User-defined map 1",
+          "consumer_products-cleaning_robot-enum_type-available_maps-map2": "User-defined map 2",
+          "consumer_products-cleaning_robot-enum_type-available_maps-map3": "User-defined map 3"
+        }
       }
     },
     "sensor": {
-      "duration": {
+      "bsh-common-option-duration": {
         "name": "Duration"
       },
-      "operation_state": {
+      "bsh-common-option-program_progress": {
+        "name": "Program progress"
+      },
+      "bsh-common-option-remaining_program_time": {
+        "name": "Remaining program time"
+      },
+      "bsh-common-status-operation_state": {
         "name": "Operation state",
         "state": {
           "bsh-common-enum_type-operation_state-inactive": "Inactive",
@@ -216,19 +275,201 @@
           "bsh-common-enum_type-operation_state-aborting": "Aborting"
         }
       },
-      "program_progress": {
-        "name": "Program progress"
+      "bsh-common-status-door_state": {
+        "name": "Door",
+        "state": {
+          "bsh-common-enum_type-door_state-closed": "Closed",
+          "bsh-common-enum_type-door_state-locked": "Locked",
+          "bsh-common-enum_type-door_state-open": "Open"
+        }
       },
-      "remaining_program_time": {
-        "name": "Remaining program time"
+      "refrigeration-common-status-door-bottle_cooler": {
+        "name": "Boottle cooler door",
+        "state": {
+          "bsh-common-enum_type-door_state-closed": "[%key:component::home_connect::entity::sensor::bsh-common-status-door_state::state::bsh-common-enum_type-door_state-closed%]",
+          "bsh-common-enum_type-door_state-open": "[%key:component::home_connect::entity::sensor::bsh-common-status-door_state::state::bsh-common-enum_type-door_state-open%]"
+        }
+      },
+      "refrigeration-common-status-door-chiller_common": {
+        "name": "Chiller door",
+        "state": {
+          "bsh-common-enum_type-door_state-closed": "[%key:component::home_connect::entity::sensor::bsh-common-status-door_state::state::bsh-common-enum_type-door_state-closed%]",
+          "bsh-common-enum_type-door_state-open": "[%key:component::home_connect::entity::sensor::bsh-common-status-door_state::state::bsh-common-enum_type-door_state-open%]"
+        }
+      },
+      "refrigeration-common-status-door-chiller": {
+        "name": "[key:component::home_connect::entity::sensor::refrigeration-common-status-door-chiller_common::name%]",
+        "state": {
+          "bsh-common-enum_type-door_state-closed": "[%key:component::home_connect::entity::sensor::bsh-common-status-door_state::state::bsh-common-enum_type-door_state-closed%]",
+          "bsh-common-enum_type-door_state-open": "[%key:component::home_connect::entity::sensor::bsh-common-status-door_state::state::bsh-common-enum_type-door_state-open%]"
+        }
+      },
+      "refrigeration-common-status-door-chiller_left": {
+        "name": "Chiller left door",
+        "state": {
+          "bsh-common-enum_type-door_state-closed": "[%key:component::home_connect::entity::sensor::bsh-common-status-door_state::state::bsh-common-enum_type-door_state-closed%]",
+          "bsh-common-enum_type-door_state-open": "[%key:component::home_connect::entity::sensor::bsh-common-status-door_state::state::bsh-common-enum_type-door_state-open%]"
+        }
+      },
+      "refrigeration-common-status-door-chiller_right": {
+        "name": "Chiller right door",
+        "state": {
+          "bsh-common-enum_type-door_state-closed": "[%key:component::home_connect::entity::sensor::bsh-common-status-door_state::state::bsh-common-enum_type-door_state-closed%]",
+          "bsh-common-enum_type-door_state-open": "[%key:component::home_connect::entity::sensor::bsh-common-status-door_state::state::bsh-common-enum_type-door_state-open%]"
+        }
+      },
+      "refrigeration-common-status-door-flex_compartment": {
+        "name": "Flex compartment door",
+        "state": {
+          "bsh-common-enum_type-door_state-closed": "[%key:component::home_connect::entity::sensor::bsh-common-status-door_state::state::bsh-common-enum_type-door_state-closed%]",
+          "bsh-common-enum_type-door_state-open": "[%key:component::home_connect::entity::sensor::bsh-common-status-door_state::state::bsh-common-enum_type-door_state-open%]"
+        }
+      },
+      "refrigeration-common-status-door-freezer": {
+        "name": "Freezer door",
+        "state": {
+          "bsh-common-enum_type-door_state-closed": "[%key:component::home_connect::entity::sensor::bsh-common-status-door_state::state::bsh-common-enum_type-door_state-closed%]",
+          "bsh-common-enum_type-door_state-open": "[%key:component::home_connect::entity::sensor::bsh-common-status-door_state::state::bsh-common-enum_type-door_state-open%]"
+        }
+      },
+      "refrigeration-common-status-door-refrigerator": {
+        "name": "Refrigerator door",
+        "state": {
+          "bsh-common-enum_type-door_state-closed": "[%key:component::home_connect::entity::sensor::bsh-common-status-door_state::state::bsh-common-enum_type-door_state-closed%]",
+          "bsh-common-enum_type-door_state-open": "[%key:component::home_connect::entity::sensor::bsh-common-status-door_state::state::bsh-common-enum_type-door_state-open%]"
+        }
+      },
+      "refrigeration-common-status-door-refrigerator2": {
+        "name": "Refrigerator door 2",
+        "state": {
+          "bsh-common-enum_type-door_state-closed": "[%key:component::home_connect::entity::sensor::bsh-common-status-door_state::state::bsh-common-enum_type-door_state-closed%]",
+          "bsh-common-enum_type-door_state-open": "[%key:component::home_connect::entity::sensor::bsh-common-status-door_state::state::bsh-common-enum_type-door_state-open%]"
+        }
+      },
+      "refrigeration-common-status-door-refrigerator3": {
+        "name": "Refrigerator door 3",
+        "state": {
+          "bsh-common-enum_type-door_state-closed": "[%key:component::home_connect::entity::sensor::bsh-common-status-door_state::state::bsh-common-enum_type-door_state-closed%]",
+          "bsh-common-enum_type-door_state-open": "[%key:component::home_connect::entity::sensor::bsh-common-status-door_state::state::bsh-common-enum_type-door_state-open%]"
+        }
+      },
+      "refrigeration-common-status-door-wine_compartment": {
+        "name": "Wine compartment door",
+        "state": {
+          "bsh-common-enum_type-door_state-closed": "[%key:component::home_connect::entity::sensor::bsh-common-status-door_state::state::bsh-common-enum_type-door_state-closed%]",
+          "bsh-common-enum_type-door_state-open": "[%key:component::home_connect::entity::sensor::bsh-common-status-door_state::state::bsh-common-enum_type-door_state-open%]"
+        }
+      },
+      "consumer_products-coffee_maker-status-beverage_counter_coffee": {
+        "name": "Coffee counter"
+      },
+      "consumer_products-coffee_maker-status-beverage_counter_powder_coffee": {
+        "name": "Powder coffee counter"
+      },
+      "consumer_products-coffee_maker-status-beverage_counter_hot_water": {
+        "name": "Hot water counter"
+      },
+      "consumer_products-coffee_maker-status-beverage_counter_hot_water_cups": {
+        "name": "Hot water cups counter"
+      },
+      "consumer_products-coffee_maker-status-beverage_counter_hot_milk": {
+        "name": "Hot milk counter"
+      },
+      "consumer_products-coffee_maker-status-beverage_counter_frothy_milk": {
+        "name": "Frothy milk counter"
+      },
+      "consumer_products-coffee_maker-status-beverage_counter_milk": {
+        "name": "Milk counter"
+      },
+      "consumer_products-coffee_maker-status-beverage_counter_coffee_and_milk": {
+        "name": "Coffee and milk counter"
+      },
+      "consumer_products-coffee_maker-status-beverage_counter_ristretto_espresso": {
+        "name": "Ristretto espresso counter"
+      },
+      "bsh-common-status-battery_level": {
+        "name": "Battery level"
+      },
+      "bsh-common-status-battery_charging_state": {
+        "name": "Battery charging state",
+        "state": {
+          "bsh-common-enum_type-battery_charging_state-discharging": "Discharging",
+          "bsh-common-enum_type-battery_charging_state-charging": "Charging"
+        }
+      },
+      "bsh-common-status-charging_connection": {
+        "name": "Charging connection",
+        "state": {
+          "bsh-common-enum_type-charging_connection-disconnected": "Disconnected",
+          "bsh-common-enum_type-charging_connection-connected": "Connected"
+        }
+      },
+      "bsh-common-status-video-camera_state": {
+        "name": "Camera state",
+        "state": {
+          "bsh-common-enum_type-video-camera_state-disabled": "Disabled",
+          "bsh-common-enum_type-video-camera_state-sleeping": "Sleeping",
+          "bsh-common-enum_type-video-camera_state-ready": "Ready",
+          "bsh-common-enum_type-video-camera_state-streaming_local": "Streaming local",
+          "bsh-common-enum_type-video-camera_state-streaming_cloud": "Streaming cloud",
+          "bsh-common-enum_type-video-camera_state-streaming_local_and_cloud": "Streaming local and cloud",
+          "bsh-common-enum_type-video-camera_state-error": "Error"
+        }
+      },
+      "consumer_products-cleaning_robot-status-last_selected_map": {
+        "name": "Last selected map",
+        "state": {
+          "consumer_products-cleaning_robot-enum_type-available_maps-temp_map": "[key:component::home_connect::entity::select::consumer_products-cleaning_robot-setting-current_selected_map::state::consumer_products-cleaning_robot-enum_type-available_maps-temp_map%]",
+          "consumer_products-cleaning_robot-enum_type-available_maps-map1": "[key:component::home_connect::entity::select::consumer_products-cleaning_robot-setting-current_selected_map::state::consumer_products-cleaning_robot-enum_type-available_maps-map1%]",
+          "consumer_products-cleaning_robot-enum_type-available_maps-map2": "[key:component::home_connect::entity::select::consumer_products-cleaning_robot-setting-current_selected_map::state::consumer_products-cleaning_robot-enum_type-available_maps-map2%]",
+          "consumer_products-cleaning_robot-enum_type-available_maps-map3": "[key:component::home_connect::entity::select::consumer_products-cleaning_robot-setting-current_selected_map::state::consumer_products-cleaning_robot-enum_type-available_maps-map3%]"
+        }
       }
     },
     "switch": {
-      "child_lock": {
+      "bsh-common-setting-power_state": {
+        "name": "Power"
+      },
+      "bsh-common-setting-child_lock": {
         "name": "Child lock"
       },
-      "power": {
-        "name": "Power"
+      "consumer_products-coffee_maker-setting-cup_warmer": {
+        "name": "Cup warmer"
+      },
+      "refrigeration-fridge_freezer-setting-super_mode_refrigerator": {
+        "name": "refrigerator super mode"
+      },
+      "refrigeration-fridge_freezer-setting-super_mode_freezer": {
+        "name": "Freezer super mode"
+      },
+      "refrigeration-common-setting-eco_mode": {
+        "name": "Eco Mode"
+      },
+      "cooking-oven-setting-sabbath_mode": {
+        "name": "Sabbath Mode"
+      },
+      "refrigeration-common-setting-sabbath_mode": {
+        "name": "Sabbath Mode"
+      },
+      "refrigeration-common-setting-vacation_mode": {
+        "name": "Vacation Mode"
+      },
+      "refrigeration-common-setting-fresh_mode": {
+        "name": "Fresh Mode"
+      },
+      "refrigeration-common-setting-dispenser-enabled": {
+        "name": "Dispenser enabled"
+      },
+      "refrigeration-common-setting-door-assistant_fridge": {
+        "name": "Fridge door assistant"
+      },
+      "refrigeration-common-setting-door-assistant_freezer": {
+        "name": "Freezer door assistant"
+      }
+    },
+    "time": {
+      "bsh-common-setting-alarm_clock": {
+        "name": "Alarm clock"
       }
     }
   },

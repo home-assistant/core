@@ -1,18 +1,12 @@
 """Tests for home_connect light entities."""
 
 from collections.abc import Awaitable, Callable, Generator
-from unittest.mock import MagicMock, Mock
+from unittest.mock import MagicMock, Mock, call
 
 from homeconnect.api import HomeConnectError
 import pytest
 
-from homeassistant.components.home_connect.const import (
-    BSH_AMBIENT_LIGHT_BRIGHTNESS,
-    BSH_AMBIENT_LIGHT_CUSTOM_COLOR,
-    BSH_AMBIENT_LIGHT_ENABLED,
-    COOKING_LIGHTING,
-    COOKING_LIGHTING_BRIGHTNESS,
-)
+from homeassistant.components.home_connect.const import ATTR_VALUE
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
@@ -24,12 +18,21 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_component import async_update_entity
+import homeassistant.util.color as color_util
 
 from .conftest import get_all_appliances
 
 from tests.common import MockConfigEntry, load_json_object_fixture
 
 TEST_HC_APP = "Hood"
+BSH_AMBIENT_LIGHT_BRIGHTNESS = "BSH.Common.Setting.AmbientLightBrightness"
+BSH_AMBIENT_LIGHT_COLOR = "BSH.Common.Setting.AmbientLightColor"
+BSH_AMBIENT_LIGHT_ENABLE_CUSTOM_COLOR = "BSH.Common.EnumType.AmbientLightColor.CustomColor"
+BSH_AMBIENT_LIGHT_CUSTOM_COLOR = "BSH.Common.Setting.AmbientLightCustomColor"
+BSH_AMBIENT_LIGHT_ENABLED = "BSH.Common.Setting.AmbientLightEnabled"
+COOKING_LIGHTING = "Cooking.Common.Setting.Lighting"
+COOKING_LIGHTING_BRIGHTNESS = "Cooking.Common.Setting.LightingBrightness"
 
 SETTINGS_STATUS = {
     setting.pop("key"): setting
@@ -62,102 +65,151 @@ async def test_light(
 
 
 @pytest.mark.parametrize(
-    ("entity_id", "status", "service", "service_data", "state", "appliance"),
+    (
+        "entity_id",
+        "status",
+        "state",
+        "service",
+        "service_data",
+        "appliance",
+        "expected_setting_calls",
+    ),
     [
         (
-            "light.hood_light",
+            "light.hood_functional_light",
             {
                 COOKING_LIGHTING: {
-                    "value": True,
+                    ATTR_VALUE: True,
                 },
             },
+            STATE_ON,
             SERVICE_TURN_ON,
             {},
-            STATE_ON,
             "Hood",
+            [call(COOKING_LIGHTING, True)],
         ),
         (
-            "light.hood_light",
+            "light.hood_functional_light",
             {
                 COOKING_LIGHTING: {
-                    "value": True,
+                    ATTR_VALUE: True,
                 },
-                COOKING_LIGHTING_BRIGHTNESS: {"value": 70},
+                COOKING_LIGHTING_BRIGHTNESS: {ATTR_VALUE: 70},
             },
+            STATE_ON,
             SERVICE_TURN_ON,
             {"brightness": 200},
-            STATE_ON,
             "Hood",
+            [
+                call(COOKING_LIGHTING, True),
+                call(COOKING_LIGHTING_BRIGHTNESS, 81),
+            ],
         ),
         (
-            "light.hood_light",
+            "light.hood_functional_light",
             {
-                COOKING_LIGHTING: {"value": False},
-                COOKING_LIGHTING_BRIGHTNESS: {"value": 70},
+                COOKING_LIGHTING: {ATTR_VALUE: False},
+                COOKING_LIGHTING_BRIGHTNESS: {ATTR_VALUE: 70},
             },
+            STATE_OFF,
             SERVICE_TURN_OFF,
             {},
-            STATE_OFF,
             "Hood",
+            [call(COOKING_LIGHTING, False)],
         ),
         (
-            "light.hood_light",
+            "light.hood_functional_light",
             {
                 COOKING_LIGHTING: {
-                    "value": None,
+                    ATTR_VALUE: None,
                 },
                 COOKING_LIGHTING_BRIGHTNESS: None,
             },
+            STATE_UNKNOWN,
             SERVICE_TURN_ON,
             {},
-            STATE_UNKNOWN,
             "Hood",
+            [call(COOKING_LIGHTING, True)],
         ),
         (
             "light.hood_ambient_light",
             {
                 BSH_AMBIENT_LIGHT_ENABLED: {
-                    "value": True,
+                    ATTR_VALUE: True,
                 },
-                BSH_AMBIENT_LIGHT_BRIGHTNESS: {"value": 70},
+                BSH_AMBIENT_LIGHT_BRIGHTNESS: {ATTR_VALUE: 70},
             },
+            STATE_ON,
             SERVICE_TURN_ON,
             {"brightness": 200},
-            STATE_ON,
             "Hood",
+            [
+                call(BSH_AMBIENT_LIGHT_ENABLED, True),
+                call(BSH_AMBIENT_LIGHT_BRIGHTNESS, 81),
+            ],
         ),
         (
             "light.hood_ambient_light",
             {
-                BSH_AMBIENT_LIGHT_ENABLED: {"value": False},
-                BSH_AMBIENT_LIGHT_BRIGHTNESS: {"value": 70},
+                BSH_AMBIENT_LIGHT_ENABLED: {ATTR_VALUE: False},
+                BSH_AMBIENT_LIGHT_BRIGHTNESS: {ATTR_VALUE: 70},
             },
+            STATE_OFF,
             SERVICE_TURN_OFF,
             {},
-            STATE_OFF,
             "Hood",
+            [
+                call(BSH_AMBIENT_LIGHT_ENABLED, False),
+            ],
         ),
         (
             "light.hood_ambient_light",
             {
-                BSH_AMBIENT_LIGHT_ENABLED: {"value": True},
+                BSH_AMBIENT_LIGHT_ENABLED: {ATTR_VALUE: True},
                 BSH_AMBIENT_LIGHT_CUSTOM_COLOR: {},
             },
+            STATE_ON,
             SERVICE_TURN_ON,
             {},
-            STATE_ON,
             "Hood",
+            [call(BSH_AMBIENT_LIGHT_ENABLED, True)],
+        ),
+        (
+            "light.hood_ambient_light",
+            {
+                BSH_AMBIENT_LIGHT_ENABLED: {ATTR_VALUE: False},
+                BSH_AMBIENT_LIGHT_COLOR: {
+                    ATTR_VALUE: "",
+                },
+                BSH_AMBIENT_LIGHT_CUSTOM_COLOR: {},
+            },
+            STATE_OFF,
+            SERVICE_TURN_ON,
+            {
+                "rgb_color": [255, 255, 0],
+            },
+            "Hood",
+            [
+                call(BSH_AMBIENT_LIGHT_ENABLED, True),
+                call(BSH_AMBIENT_LIGHT_COLOR, BSH_AMBIENT_LIGHT_ENABLE_CUSTOM_COLOR),
+                call(
+                    BSH_AMBIENT_LIGHT_CUSTOM_COLOR,
+                    f"#{color_util.color_rgb_to_hex(255,255,0)}",
+                ),
+            ],
         ),
     ],
     indirect=["appliance"],
 )
+@pytest.mark.usefixtures("bypass_throttle")
 async def test_light_functionality(
     entity_id: str,
     status: dict,
+    state: str,
     service: str,
     service_data: dict,
-    state: str,
     appliance: Mock,
+    expected_setting_calls: tuple,
     bypass_throttle: Generator[None],
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -174,6 +226,10 @@ async def test_light_functionality(
     assert config_entry.state == ConfigEntryState.LOADED
 
     appliance.status.update(status)
+    await async_update_entity(hass, entity_id)
+    await hass.async_block_till_done()
+    assert hass.states.is_state(entity_id, state)
+
     service_data["entity_id"] = entity_id
     await hass.services.async_call(
         LIGHT_DOMAIN,
@@ -181,7 +237,8 @@ async def test_light_functionality(
         service_data,
         blocking=True,
     )
-    assert hass.states.is_state(entity_id, state)
+    await hass.async_block_till_done()
+    appliance.set_setting.assert_has_calls(expected_setting_calls)
 
 
 @pytest.mark.parametrize(
@@ -196,10 +253,10 @@ async def test_light_functionality(
     ),
     [
         (
-            "light.hood_light",
+            "light.hood_functional_light",
             {
                 COOKING_LIGHTING: {
-                    "value": False,
+                    ATTR_VALUE: False,
                 },
             },
             SERVICE_TURN_ON,
@@ -209,12 +266,12 @@ async def test_light_functionality(
             "Hood",
         ),
         (
-            "light.hood_light",
+            "light.hood_functional_light",
             {
                 COOKING_LIGHTING: {
-                    "value": True,
+                    ATTR_VALUE: True,
                 },
-                COOKING_LIGHTING_BRIGHTNESS: {"value": 70},
+                COOKING_LIGHTING_BRIGHTNESS: {ATTR_VALUE: 70},
             },
             SERVICE_TURN_ON,
             {"brightness": 200},
@@ -223,9 +280,9 @@ async def test_light_functionality(
             "Hood",
         ),
         (
-            "light.hood_light",
+            "light.hood_functional_light",
             {
-                COOKING_LIGHTING: {"value": False},
+                COOKING_LIGHTING: {ATTR_VALUE: False},
             },
             SERVICE_TURN_OFF,
             {},
@@ -237,9 +294,9 @@ async def test_light_functionality(
             "light.hood_ambient_light",
             {
                 BSH_AMBIENT_LIGHT_ENABLED: {
-                    "value": True,
+                    ATTR_VALUE: True,
                 },
-                BSH_AMBIENT_LIGHT_BRIGHTNESS: {"value": 70},
+                BSH_AMBIENT_LIGHT_BRIGHTNESS: {ATTR_VALUE: 70},
             },
             SERVICE_TURN_ON,
             {},
@@ -251,19 +308,20 @@ async def test_light_functionality(
             "light.hood_ambient_light",
             {
                 BSH_AMBIENT_LIGHT_ENABLED: {
-                    "value": True,
+                    ATTR_VALUE: True,
                 },
-                BSH_AMBIENT_LIGHT_BRIGHTNESS: {"value": 70},
+                BSH_AMBIENT_LIGHT_BRIGHTNESS: {ATTR_VALUE: 70},
             },
             SERVICE_TURN_ON,
             {"brightness": 200},
             "set_setting",
-            [HomeConnectError, None, HomeConnectError, HomeConnectError],
+            [HomeConnectError, None, HomeConnectError],
             "Hood",
         ),
     ],
     indirect=["problematic_appliance"],
 )
+@pytest.mark.usefixtures("bypass_throttle")
 async def test_switch_exception_handling(
     entity_id: str,
     status: dict,

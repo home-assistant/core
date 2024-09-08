@@ -1,11 +1,17 @@
 """Tests for home_connect sensor entities."""
 
 from collections.abc import Awaitable, Callable
+import random
 from unittest.mock import MagicMock, Mock
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
+from homeassistant.components.home_connect.const import (
+    ATTR_ALLOWED_VALUES,
+    ATTR_CONSTRAINTS,
+    ATTR_VALUE,
+)
 from homeassistant.components.home_connect.utils import bsh_key_to_translation_key
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
@@ -19,46 +25,46 @@ TEST_HC_APP = "Dishwasher"
 
 EVENT_PROG_DELAYED_START = {
     "BSH.Common.Status.OperationState": {
-        "value": "BSH.Common.EnumType.OperationState.DelayedStart"
+        ATTR_VALUE: "BSH.Common.EnumType.OperationState.DelayedStart"
     },
 }
 
 EVENT_PROG_REMAIN_NO_VALUE = {
     "BSH.Common.Option.RemainingProgramTime": {},
     "BSH.Common.Status.OperationState": {
-        "value": "BSH.Common.EnumType.OperationState.DelayedStart"
+        ATTR_VALUE: "BSH.Common.EnumType.OperationState.DelayedStart"
     },
 }
 
 
 EVENT_PROG_RUN = {
-    "BSH.Common.Option.RemainingProgramTime": {"value": "0"},
-    "BSH.Common.Option.ProgramProgress": {"value": "60"},
+    "BSH.Common.Option.RemainingProgramTime": {ATTR_VALUE: "0"},
+    "BSH.Common.Option.ProgramProgress": {ATTR_VALUE: "60"},
     "BSH.Common.Status.OperationState": {
-        "value": "BSH.Common.EnumType.OperationState.Run"
+        ATTR_VALUE: "BSH.Common.EnumType.OperationState.Run"
     },
 }
 
 
 EVENT_PROG_UPDATE_1 = {
-    "BSH.Common.Option.RemainingProgramTime": {"value": "0"},
-    "BSH.Common.Option.ProgramProgress": {"value": "80"},
+    "BSH.Common.Option.RemainingProgramTime": {ATTR_VALUE: "0"},
+    "BSH.Common.Option.ProgramProgress": {ATTR_VALUE: "80"},
     "BSH.Common.Status.OperationState": {
-        "value": "BSH.Common.EnumType.OperationState.Run"
+        ATTR_VALUE: "BSH.Common.EnumType.OperationState.Run"
     },
 }
 
 EVENT_PROG_UPDATE_2 = {
-    "BSH.Common.Option.RemainingProgramTime": {"value": "20"},
-    "BSH.Common.Option.ProgramProgress": {"value": "99"},
+    "BSH.Common.Option.RemainingProgramTime": {ATTR_VALUE: "20"},
+    "BSH.Common.Option.ProgramProgress": {ATTR_VALUE: "99"},
     "BSH.Common.Status.OperationState": {
-        "value": "BSH.Common.EnumType.OperationState.Run"
+        ATTR_VALUE: "BSH.Common.EnumType.OperationState.Run"
     },
 }
 
 EVENT_PROG_END = {
     "BSH.Common.Status.OperationState": {
-        "value": "BSH.Common.EnumType.OperationState.Ready"
+        ATTR_VALUE: "BSH.Common.EnumType.OperationState.Ready"
     },
 }
 
@@ -154,6 +160,8 @@ async def test_event_sensors(
     get_appliances.return_value = [appliance]
 
     assert config_entry.state == ConfigEntryState.NOT_LOADED
+    appliance.get_programs_available = MagicMock(return_value=["dummy_program"])
+    appliance.status.update(EVENT_PROG_DELAYED_START)
     assert await integration_setup()
     assert config_entry.state == ConfigEntryState.LOADED
 
@@ -199,6 +207,8 @@ async def test_remaining_prog_time_edge_cases(
     freezer.move_to(time_to_freeze)
 
     assert config_entry.state == ConfigEntryState.NOT_LOADED
+    appliance.get_programs_available = MagicMock(return_value=["dummy_program"])
+    appliance.status.update(EVENT_PROG_REMAIN_NO_VALUE)
     assert await integration_setup()
     assert config_entry.state == ConfigEntryState.LOADED
 
@@ -211,3 +221,54 @@ async def test_remaining_prog_time_edge_cases(
         await hass.async_block_till_done()
         freezer.tick()
         assert hass.states.is_state(entity_id, expected_state)
+
+
+@pytest.mark.parametrize(
+    ("entity_id", "state_key", "posible_states"),
+    [
+        (
+            "sensor.washer_operation_state",
+            "BSH.Common.Status.OperationState",
+            (
+                "BSH.Common.EnumType.OperationState.Inactive",
+                "BSH.Common.EnumType.OperationState.Ready",
+                "BSH.Common.EnumType.OperationState.DelayedStart",
+                "BSH.Common.EnumType.OperationState.Run",
+                "BSH.Common.EnumType.OperationState.Pause",
+                "BSH.Common.EnumType.OperationState.ActionRequired",
+                "BSH.Common.EnumType.OperationState.Finished",
+                "BSH.Common.EnumType.OperationState.Error",
+                "BSH.Common.EnumType.OperationState.Aborting",
+            ),
+        ),
+    ],
+)
+@pytest.mark.usefixtures("bypass_throttle")
+async def test_enum_sensors(
+    entity_id: str,
+    state_key: str,
+    posible_states: tuple[str],
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[], Awaitable[bool]],
+    setup_credentials: None,
+    appliance: Mock,
+    get_appliances: MagicMock,
+) -> None:
+    """Test enum sensors."""
+    appliance.get.side_effect = [
+        {ATTR_CONSTRAINTS: {ATTR_ALLOWED_VALUES: posible_states}}
+    ]
+    get_appliances.return_value = [appliance]
+    state: str = random.choice(posible_states)
+
+    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    appliance.status.update({state_key: {ATTR_VALUE: state}})
+    assert await integration_setup()
+    assert config_entry.state == ConfigEntryState.LOADED
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).attributes["options"] == [
+        bsh_key_to_translation_key(state) for state in posible_states
+    ]
+    assert hass.states.is_state(entity_id, bsh_key_to_translation_key(state))

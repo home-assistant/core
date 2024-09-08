@@ -1,42 +1,214 @@
 {
   "entity": {
     "binary_sensor": {
-      "remote_control": {
+      "bsh-common-status-remote_control_active": {
         "default": "mdi:remote",
         "state": {
           "on": "mdi:remote",
           "off": "mdi:remote-off"
         }
       },
-      "remote_start": {
+      "bsh-common-status-remote_control_start_allowed": {
         "default": "mdi:remote",
         "state": {
           "on": "mdi:remote",
           "off": "mdi:remote-off"
         }
+      },
+      "consumer_products-cleaning_robot-status-dust_box_inserted": {
+        "default": "mdi:download"
+      },
+      "consumer_products-cleaning_robot-status-lifted": {
+        "default": "mdi:arrow-up-right-bold"
+      },
+      "consumer_products-cleaning_robot-status-lost": {
+        "default": "mdi:map-marker-remove-variant"
       }
     },
     "sensor": {
-      "duration": {
+      "bsh-common-option-duration": {
         "default": "mdi:update"
       },
-      "operation_state": {
+      "bsh-common-status-operation_state": {
         "default": "mdi:state-machine"
       },
-      "program_progress": {
+      "bsh-common-option-program_progress": {
         "default": "mdi:progress-clock"
+      },
+      "bsh-common-status-door_state": {
+        "default": "mdi:door",
+        "state": {
+          "bsh-common-enum_type-door_state-closed": "mdi:door-closed",
+          "bsh-common-enum_type-door_state-locked": "mdi:door-closed-lock",
+          "bsh-common-enum_type-door_state-open": "mdi:door-open"
+        }
+      },
+      "refrigeration-common-status-door-bottle_cooler": {
+        "default": "mdi:door",
+        "state": {
+          "bsh-common-enum_type-door_state-open": "mdi:door-open"
+        }
+      },
+      "refrigeration-common-status-door-chiller_common": {
+        "default": "mdi:door",
+        "state": {
+          "bsh-common-enum_type-door_state-open": "mdi:door-open"
+        }
+      },
+      "refrigeration-common-status-door-chiller": {
+        "default": "mdi:door",
+        "state": {
+          "bsh-common-enum_type-door_state-open": "mdi:door-open"
+        }
+      },
+      "refrigeration-common-status-door-chiller_left": {
+        "default": "mdi:door",
+        "state": {
+          "bsh-common-enum_type-door_state-open": "mdi:door-open"
+        }
+      },
+      "refrigeration-common-status-door-chiller_right": {
+        "default": "mdi:door",
+        "state": {
+          "bsh-common-enum_type-door_state-open": "mdi:door-open"
+        }
+      },
+      "refrigeration-common-status-door-flex_compartment": {
+        "default": "mdi:door",
+        "state": {
+          "bsh-common-enum_type-door_state-open": "mdi:door-open"
+        }
+      },
+      "refrigeration-common-status-door-freezer": {
+        "default": "mdi:door",
+        "state": {
+          "bsh-common-enum_type-door_state-open": "mdi:door-open"
+        }
+      },
+      "refrigeration-common-status-door-refrigerator": {
+        "default": "mdi:door",
+        "state": {
+          "bsh-common-enum_type-door_state-open": "mdi:door-open"
+        }
+      },
+      "refrigeration-common-status-door-refrigerator2": {
+        "default": "mdi:door",
+        "state": {
+          "bsh-common-enum_type-door_state-open": "mdi:door-open"
+        }
+      },
+      "refrigeration-common-status-door-refrigerator3": {
+        "default": "mdi:door",
+        "state": {
+          "bsh-common-enum_type-door_state-open": "mdi:door-open"
+        }
+      },
+      "refrigeration-common-status-door-wine_compartment": {
+        "default": "mdi:door",
+        "state": {
+          "bsh-common-enum_type-door_state-open": "mdi:door-open"
+        }
+      },
+      "consumer_products-coffee_maker-status-beverage_counter_coffee": {
+        "default": "mdi:coffee"
+      },
+      "consumer_products-coffee_maker-status-beverage_counter_powder_coffee": {
+        "default": "mdi:coffee"
+      },
+      "consumer_products-coffee_maker-status-beverage_counter_hot_water": {
+        "default": "mdi:cup-water"
+      },
+      "consumer_products-coffee_maker-status-beverage_counter_hot_water_cups": {
+        "default": "mdi:cup"
+      },
+      "consumer_products-coffee_maker-status-beverage_counter_hot_milk": {
+        "default": "mdi:cup"
+      },
+      "consumer_products-coffee_maker-status-beverage_counter_frothy_milk": {
+        "default": "mdi:cup"
+      },
+      "consumer_products-coffee_maker-status-beverage_counter_milk": {
+        "default": "mdi:cup"
+      },
+      "consumer_products-coffee_maker-status-beverage_counter_coffee_and_milk": {
+        "default": "mdi:coffee"
+      },
+      "consumer_products-coffee_maker-status-beverage_counter_ristretto_espresso": {
+        "default": "mdi:coffee"
+      },
+      "bsh-common-status-battery_charging_state": {
+        "default": "mdi:battery-charging-50",
+        "state": {
+          "bsh-common-enum_type-battery_charging_state-discharging": "mdi:battery-50"
+        }
+      },
+      "bsh-common-status-charging_connection": {
+        "default": "mdi:power-plug",
+        "state": {
+          "bsh-common-enum_type-charging_connection-disconnected": "mdi:power-plug-off"
+        }
+      },
+      "bsh-common-status-video-camera_state": {
+        "default": "mdi:camera",
+        "state": {
+          "bsh-common-enum_type-video-camera_state-disabled": "mdi:camera-off",
+          "bsh-common-enum_type-video-camera_state-sleeping": "mdi:sleep",
+          "bsh-common-enum_type-video-camera_state-error": "mdi:alert-circle-outline"
+        }
+      },
+      "consumer_products-cleaning_robot-status-last_selected_map": {
+        "default": "mdi:map",
+        "state": {
+          "consumer_products-cleaning_robot-enum_type-available_maps-temp_map": "mdi:map-clock-outline",
+          "consumer_products-cleaning_robot-enum_type-available_maps-map1": "mdi:numeric-1",
+          "consumer_products-cleaning_robot-enum_type-available_maps-map2": "mdi:numeric-2",
+          "consumer_products-cleaning_robot-enum_type-available_maps-map3": "mdi:numeric-3"
+        }
       }
     },
     "switch": {
-      "child_lock": {
+      "bsh-common-setting-power_state": {
+        "default": "mdi:power"
+      },
+      "bsh-common-setting-child_lock": {
         "default": "mdi:lock",
         "state": {
           "on": "mdi:lock",
           "off": "mdi:lock-off"
         }
       },
-      "power": {
-        "default": "mdi:power"
+      "consumer_products-coffee_maker-setting-cup_warmer": {
+        "default": "mdi:heat-wave"
+      },
+      "refrigeration-fridge_freezer-setting-super_mode_refrigerator": {
+        "default": "mdi:speedometer"
+      },
+      "refrigeration-fridge_freezer-setting-super_mode_freezer": {
+        "default": "mdi:speedometer"
+      },
+      "refrigeration-common-setting-eco_mode": {
+        "default": "mdi:sprout"
+      },
+      "cooking-oven-setting-sabbath_mode": {
+        "default": "mdi:volume-mute"
+      },
+      "refrigeration-common-setting-sabbath_mode": {
+        "default": "mdi:volume-mute"
+      },
+      "refrigeration-common-setting-vacation_mode": {
+        "default": "mdi:beach"
+      },
+      "refrigeration-common-setting-fresh_mode": {
+        "default": "mdi:leaf"
+      },
+      "refrigeration-common-setting-dispenser-enabled": {
+        "default": "mdi:delete-variant"
+      },
+      "refrigeration-common-setting-door-assistant_fridge": {
+        "default": "mdi:door"
+      },
+      "refrigeration-common-setting-door-assistant_freezer": {
+        "default": "mdi:door"
       }
     }
   },

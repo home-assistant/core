@@ -13,7 +13,7 @@ from homeassistant.components.application_credentials import (
     async_import_client_credential,
 )
 from homeassistant.components.home_connect import update_all_devices
-from homeassistant.components.home_connect.const import DOMAIN
+from homeassistant.components.home_connect.const import ATTR_VALUE, DOMAIN
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -164,6 +164,7 @@ def mock_problematic_appliance(request: pytest.FixtureRequest) -> Mock:
     )
     mock.name = app
     type(mock).status = PropertyMock(return_value={})
+    mock.get.side_effect = HomeConnectError
     mock.get_programs_active.side_effect = HomeConnectError
     mock.get_programs_available.side_effect = HomeConnectError
     mock.start_program.side_effect = HomeConnectError
@@ -220,11 +221,11 @@ def get_all_appliances():
         appliance.status.update(appliance.get_status.return_value)
         appliance.status.update(appliance.get_settings.return_value)
         appliance.set_setting.side_effect = (
-            lambda x, y, appliance=appliance: appliance.status.update({x: {"value": y}})
+            lambda x, y, appliance=appliance: appliance.status.update({x: {ATTR_VALUE: y}})
         )
         appliance.start_program.side_effect = (
             lambda x, appliance=appliance: appliance.status.update(
-                {"BSH.Common.Root.ActiveProgram": {"value": x}}
+                {"BSH.Common.Root.ActiveProgram": {ATTR_VALUE: x}}
             )
         )
         appliance.stop_program.side_effect = (

@@ -2,23 +2,16 @@
 
 import logging
 
-from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.components.binary_sensor import (
+    BinarySensorEntity,
+    BinarySensorEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ENTITIES
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import (
-    ATTR_VALUE,
-    BSH_DOOR_STATE,
-    BSH_DOOR_STATE_CLOSED,
-    BSH_DOOR_STATE_LOCKED,
-    BSH_DOOR_STATE_OPEN,
-    BSH_REMOTE_CONTROL_ACTIVATION_STATE,
-    BSH_REMOTE_START_ALLOWANCE_STATE,
-    DOMAIN,
-)
-from .entity import HomeConnectEntity
+from .const import ATTR_VALUE, DOMAIN
+from .entity import HomeConnectEntity, HomeConnectEntityDescription
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,63 +24,65 @@ async def async_setup_entry(
     """Set up the Home Connect binary sensor."""
 
     def get_entities():
-        entities = []
         hc_api = hass.data[DOMAIN][config_entry.entry_id]
-        for device_dict in hc_api.devices:
-            entity_dicts = device_dict.get(CONF_ENTITIES, {}).get("binary_sensor", [])
-            entities += [HomeConnectBinarySensor(**d) for d in entity_dicts]
-        return entities
+        return [
+            HomeConnectBinarySensorEntity(device, state)
+            for state in BSH_BINARY_SENSORS
+            for device in hc_api.devices
+            if state.key in device.appliance.status
+        ]
 
     async_add_entities(await hass.async_add_executor_job(get_entities), True)
 
 
-class HomeConnectBinarySensor(HomeConnectEntity, BinarySensorEntity):
+class HomeConnectBinarySensorEntityDescription(
+    HomeConnectEntityDescription,
+    BinarySensorEntityDescription,
+    frozen_or_thawed=True,
+):
+    """Description of a Home Connect binary sensor entity."""
+
+
+class HomeConnectBinarySensorEntity(HomeConnectEntity, BinarySensorEntity):
     """Binary sensor for Home Connect."""
 
-    def __init__(self, device, desc, device_class=None):
-        """Initialize the entity."""
-        super().__init__(device, desc)
-        self._state = None
-        self._device_class = device_class
-        match desc:
-            case "door":
-                self._update_key = BSH_DOOR_STATE
-                self._false_value_list = (BSH_DOOR_STATE_CLOSED, BSH_DOOR_STATE_LOCKED)
-                self._true_value_list = [BSH_DOOR_STATE_OPEN]
-            case "remote_control":
-                self._update_key = BSH_REMOTE_CONTROL_ACTIVATION_STATE
-                self._false_value_list = [False]
-                self._true_value_list = [True]
-            case "remote_start":
-                self._update_key = BSH_REMOTE_START_ALLOWANCE_STATE
-                self._false_value_list = [False]
-                self._true_value_list = [True]
-
-    @property
-    def is_on(self):
-        """Return true if the binary sensor is on."""
-        return bool(self._state)
+    entity_description: HomeConnectBinarySensorEntityDescription
 
     @property
     def available(self) -> bool:
         """Return true if the binary sensor is available."""
-        return self._state is not None
+        return self.is_on is not None
 
     async def async_update(self) -> None:
         """Update the binary sensor's status."""
-        state = self.device.appliance.status.get(self._update_key, {})
-        if not state:
-            self._state = None
-        elif state.get(ATTR_VALUE) in self._false_value_list:
-            self._state = False
-        elif state.get(ATTR_VALUE) in self._true_value_list:
-            self._state = True
-        else:
-            _LOGGER.warning("Unexpected value for %s state: %s", self.entity_id, state)
-            self._state = None
-        _LOGGER.debug("Updated, new state: %s", self._state)
+        if (
+            not self.status
+            or ATTR_VALUE not in self.status
+            or self.status[ATTR_VALUE] not in [True, False]
+        ):
+            self._attr_is_on = None
+            return
+        self._attr_is_on = self.status[ATTR_VALUE]
+        _LOGGER.debug("Updated, new state: %s", self._attr_is_on)
 
-    @property
-    def device_class(self):
-        """Return the device class."""
-        return self._device_class
+
+BSH_BINARY_SENSORS = (
+    HomeConnectBinarySensorEntityDescription(
+        key="BSH.Common.Status.RemoteControlActive",
+    ),
+    HomeConnectBinarySensorEntityDescription(
+        key="BSH.Common.Status.RemoteControlStartAllowed",
+    ),
+    HomeConnectBinarySensorEntityDescription(
+        key="BSH.Common.Status.LocalControlActive",
+    ),
+    HomeConnectBinarySensorEntityDescription(
+        key="ConsumerProducts.CleaningRobot.Status.DustBoxInserted",
+    ),
+    HomeConnectBinarySensorEntityDescription(
+        key="ConsumerProducts.CleaningRobot.Status.Lifted",
+    ),
+    HomeConnectBinarySensorEntityDescription(
+        key="ConsumerProducts.CleaningRobot.Status.Lost",
+    ),
+)

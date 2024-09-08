@@ -110,6 +110,15 @@
         "haId": "BOSCH-HCS000000-D00000000006"
       },
       {
+        "name": "Cleaning Robot",
+        "brand": "BOSCH",
+        "vib": "HCS000007",
+        "connected": true,
+        "type": "CleaningRobot",
+        "enumber": "HCS000000/07",
+        "haId": "BOSCH-HCS000000-D00000000007"
+      },
+      {
         "name": "DNE",
         "brand": "BOSCH",
         "vib": "HCS000000",

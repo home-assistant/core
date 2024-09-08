@@ -10,8 +10,28 @@ from requests import HTTPError
 import requests_mock
 
 from homeassistant.components.home_connect import SCAN_INTERVAL
-from homeassistant.components.home_connect.const import DOMAIN, OAUTH2_TOKEN
+from homeassistant.components.home_connect.const import (
+    ATTR_KEY,
+    ATTR_PROGRAM,
+    ATTR_UNIT,
+    ATTR_VALUE,
+    DOMAIN,
+    OAUTH2_TOKEN,
+    SERVICE_OPTION_ACTIVE,
+    SERVICE_OPTION_SELECTED,
+    SERVICE_PAUSE_PROGRAM,
+    SERVICE_RESUME_PROGRAM,
+    SERVICE_SELECT_PROGRAM,
+    SERVICE_SETTING,
+    SERVICE_START_PROGRAM,
+)
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import (
+    ATTR_DEVICE_ID,
+    ATTR_DOMAIN,
+    ATTR_SERVICE,
+    ATTR_SERVICE_DATA,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
@@ -29,33 +49,33 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 
 SERVICE_KV_CALL_PARAMS = [
     {
-        "domain": DOMAIN,
-        "service": "set_option_active",
-        "service_data": {
-            "device_id": "DEVICE_ID",
-            "key": "",
-            "value": "",
-            "unit": "",
+        ATTR_DOMAIN: DOMAIN,
+        ATTR_SERVICE: SERVICE_OPTION_ACTIVE,
+        ATTR_SERVICE_DATA: {
+            ATTR_DEVICE_ID: "DEVICE_ID",
+            ATTR_KEY: "",
+            ATTR_VALUE: "",
+            ATTR_UNIT: "",
         },
         "blocking": True,
     },
     {
-        "domain": DOMAIN,
-        "service": "set_option_selected",
-        "service_data": {
-            "device_id": "DEVICE_ID",
-            "key": "",
-            "value": "",
+        ATTR_DOMAIN: DOMAIN,
+        ATTR_SERVICE: SERVICE_OPTION_SELECTED,
+        ATTR_SERVICE_DATA: {
+            ATTR_DEVICE_ID: "DEVICE_ID",
+            ATTR_KEY: "",
+            ATTR_VALUE: "",
         },
         "blocking": True,
     },
     {
-        "domain": DOMAIN,
-        "service": "change_setting",
-        "service_data": {
-            "device_id": "DEVICE_ID",
-            "key": "",
-            "value": "",
+        ATTR_DOMAIN: DOMAIN,
+        ATTR_SERVICE: SERVICE_SETTING,
+        ATTR_SERVICE_DATA: {
+            ATTR_DEVICE_ID: "DEVICE_ID",
+            ATTR_KEY: "",
+            ATTR_VALUE: "",
         },
         "blocking": True,
     },
@@ -63,18 +83,18 @@ SERVICE_KV_CALL_PARAMS = [
 
 SERVICE_COMMAND_CALL_PARAMS = [
     {
-        "domain": DOMAIN,
-        "service": "pause_program",
-        "service_data": {
-            "device_id": "DEVICE_ID",
+        ATTR_DOMAIN: DOMAIN,
+        ATTR_SERVICE: SERVICE_PAUSE_PROGRAM,
+        ATTR_SERVICE_DATA: {
+            ATTR_DEVICE_ID: "DEVICE_ID",
         },
         "blocking": True,
     },
     {
-        "domain": DOMAIN,
-        "service": "resume_program",
-        "service_data": {
-            "device_id": "DEVICE_ID",
+        ATTR_DOMAIN: DOMAIN,
+        ATTR_SERVICE: SERVICE_RESUME_PROGRAM,
+        ATTR_SERVICE_DATA: {
+            ATTR_DEVICE_ID: "DEVICE_ID",
         },
         "blocking": True,
     },
@@ -83,38 +103,38 @@ SERVICE_COMMAND_CALL_PARAMS = [
 
 SERVICE_PROGRAM_CALL_PARAMS = [
     {
-        "domain": DOMAIN,
-        "service": "select_program",
-        "service_data": {
-            "device_id": "DEVICE_ID",
-            "program": "",
-            "key": "",
-            "value": "",
+        ATTR_DOMAIN: DOMAIN,
+        ATTR_SERVICE: SERVICE_SELECT_PROGRAM,
+        ATTR_SERVICE_DATA: {
+            ATTR_DEVICE_ID: "DEVICE_ID",
+            ATTR_PROGRAM: "",
+            ATTR_KEY: "",
+            ATTR_VALUE: "",
         },
         "blocking": True,
     },
     {
-        "domain": DOMAIN,
-        "service": "start_program",
-        "service_data": {
-            "device_id": "DEVICE_ID",
-            "program": "",
-            "key": "",
-            "value": "",
-            "unit": "C",
+        ATTR_DOMAIN: DOMAIN,
+        ATTR_SERVICE: SERVICE_START_PROGRAM,
+        ATTR_SERVICE_DATA: {
+            ATTR_DEVICE_ID: "DEVICE_ID",
+            ATTR_PROGRAM: "",
+            ATTR_KEY: "",
+            ATTR_VALUE: "",
+            ATTR_UNIT: "C",
         },
         "blocking": True,
     },
 ]
 
 SERVICE_APPLIANCE_METHOD_MAPPING = {
-    "set_option_active": "set_options_active_program",
-    "set_option_selected": "set_options_selected_program",
-    "change_setting": "set_setting",
-    "pause_program": "execute_command",
-    "resume_program": "execute_command",
-    "select_program": "select_program",
-    "start_program": "start_program",
+    SERVICE_OPTION_ACTIVE: "set_options_active_program",
+    SERVICE_OPTION_SELECTED: "set_options_selected_program",
+    SERVICE_SETTING: "set_setting",
+    SERVICE_PAUSE_PROGRAM: "execute_command",
+    SERVICE_RESUME_PROGRAM: "execute_command",
+    SERVICE_SELECT_PROGRAM: "select_program",
+    SERVICE_START_PROGRAM: "start_program",
 }
 
 
@@ -263,8 +283,8 @@ async def test_services(
         identifiers={(DOMAIN, appliance.haId)},
     )
 
-    service_name = service_call["service"]
-    service_call["service_data"]["device_id"] = device_entry.id
+    service_name = service_call[ATTR_SERVICE]
+    service_call[ATTR_SERVICE_DATA]["device_id"] = device_entry.id
     await hass.services.async_call(**service_call)
     await hass.async_block_till_done()
     assert (
@@ -290,7 +310,7 @@ async def test_services_exception(
 
     service_call = SERVICE_KV_CALL_PARAMS[0]
 
-    service_call["service_data"]["device_id"] = "DOES_NOT_EXISTS"
+    service_call[ATTR_SERVICE_DATA]["device_id"] = "DOES_NOT_EXISTS"
 
     with pytest.raises(ValueError):
         await hass.services.async_call(**service_call)
