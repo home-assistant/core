@@ -6,7 +6,7 @@ import logging
 from typing import Any
 
 import jwt
-from triggercmd import TRIGGERcmdConnectionError, client, ha
+from triggercmd import client
 import voluptuous as vol
 
 from homeassistant import exceptions
@@ -18,12 +18,6 @@ from .const import CONF_TOKEN, DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 DATA_SCHEMA = vol.Schema({(CONF_TOKEN): str})
-
-
-async def test_token(token: str) -> int:
-    """Test the auth token."""
-    r = await client.async_list(token)
-    return r.status_code
 
 
 async def validate_input(hass: HomeAssistant, data: dict) -> str:
@@ -38,21 +32,11 @@ async def validate_input(hass: HomeAssistant, data: dict) -> str:
     if not token_data["id"]:
         raise InvalidToken
 
-    status_code = await test_token(data[CONF_TOKEN])
-    if not status_code == 200:
-        raise InvalidToken
+    status_code = await client.async_connection_test(data[CONF_TOKEN])
+    if status_code != 200:
+        raise ConnectionError
 
     return token_data["id"]
-
-
-async def test_connection(errors: dict[str, Any], token: str) -> dict[str, Any]:
-    """Test the connection."""
-    try:
-        hub = ha.Hub(token)
-        await hub.connection_test()
-    except TRIGGERcmdConnectionError:
-        errors["connection"] = "connection_error"
-    return errors
 
 
 class TriggerCMDConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -70,18 +54,16 @@ class TriggerCMDConfigFlow(ConfigFlow, domain=DOMAIN):
                 title = await validate_input(self.hass, user_input)
             except InvalidToken:
                 errors[CONF_TOKEN] = "invalid_token"
+            except ConnectionError:
+                errors["connection"] = "connection_error"
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                errors = await test_connection(
-                    errors=errors, token=user_input[CONF_TOKEN]
-                )
-                if errors.get("connection") != "connection_error":
-                    await self.async_set_unique_id(title)
-                    self._abort_if_unique_id_configured()
+                await self.async_set_unique_id(title)
+                self._abort_if_unique_id_configured()
 
-                    return self.async_create_entry(title=title, data=user_input)
+                return self.async_create_entry(title=title, data=user_input)
 
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors

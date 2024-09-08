@@ -1,6 +1,6 @@
 """Define tests for the triggercmd config flow."""
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -13,77 +13,90 @@ from tests.common import MockConfigEntry
 
 invalid_token_with_length_100_or_more = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjEyMzQ1Njc4OTBxd2VydHl1aW9wYXNkZiIsImlhdCI6MTcxOTg4MTU4M30.E4T2S4RQfuI2ww74sUkkT-wyTGrV5_VDkgUdae5yo4E"
 invalid_token_id = "1234567890qwertyuiopasdf"
+invalid_token_with_length_100_or_more_and_no_id = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub2lkIjoiMTIzNDU2Nzg5MHF3ZXJ0eXVpb3Bhc2RmIiwiaWF0IjoxNzE5ODgxNTgzfQ.MaJLNWPGCE51Zibhbq-Yz7h3GkUxLurR2eoM2frnO6Y"
 
 
-@pytest.fixture
-def mock_hub():
-    """Create a mock hub."""
-    with patch("homeassistant.components.triggercmd.hub.Hub") as mock_hub_class:
-        mock_hub_instance = mock_hub_class.return_value
-        mock_hub_instance.test_connection = MagicMock(return_value=True)
-        yield mock_hub_instance
-
-
-async def test_config_flow_initial_form(
+async def test_full_flow(
     hass: HomeAssistant,
 ) -> None:
-    """Test the initial step of the config flow."""
+    """Test config flow happy path."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
     )
 
-    assert result["step_id"] == "user"
     assert result["errors"] == {}
-    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["type"] == FlowResultType.FORM
 
-
-async def test_config_flow_user_invalid_token(
-    hass: HomeAssistant,
-) -> None:
-    """Test a valid jwt but invalid TRIGGERcmd token."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-    )
-
-    with patch(
-        "homeassistant.components.triggercmd.async_setup_entry",
-        return_value=True,
+    with (
+        patch(
+            "homeassistant.components.triggercmd.client.async_connection_test",
+            return_value=200,
+        ),
+        patch(
+            "homeassistant.components.triggercmd.ha.Hub",
+        ),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_TOKEN: invalid_token_with_length_100_or_more},
         )
-        await hass.async_block_till_done()
 
-    assert result["step_id"] == "user"
-    assert result["errors"] == {"base": "unknown"}
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def test_config_flow_user_short_nontoken(
+@pytest.mark.parametrize(
+    ("test_input", "expected"),
+    [
+        (invalid_token_with_length_100_or_more_and_no_id, {"base": "unknown"}),
+        ("not-a-token", {CONF_TOKEN: "invalid_token"}),
+    ],
+)
+async def test_config_flow_user_invalid_token(
     hass: HomeAssistant,
+    test_input: str,
+    expected: dict,
 ) -> None:
     """Test the initial step of the config flow."""
-    init_result = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
     )
 
-    with patch(
-        "homeassistant.components.triggercmd.async_setup_entry",
-        return_value=True,
+    with (
+        patch(
+            "homeassistant.components.triggercmd.client.async_connection_test",
+            return_value=200,
+        ),
+        patch(
+            "homeassistant.components.triggercmd.ha.Hub",
+        ),
     ):
         result = await hass.config_entries.flow.async_configure(
-            init_result["flow_id"],
-            {CONF_TOKEN: "not-a-token"},
+            result["flow_id"],
+            {CONF_TOKEN: test_input},
         )
-        await hass.async_block_till_done()
 
+    assert result["errors"] == expected
     assert result["step_id"] == "user"
-    assert result["errors"] == {CONF_TOKEN: "invalid_token"}
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
+
+    with (
+        patch(
+            "homeassistant.components.triggercmd.client.async_connection_test",
+            return_value=200,
+        ),
+        patch(
+            "homeassistant.components.triggercmd.ha.Hub",
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_TOKEN: invalid_token_with_length_100_or_more},
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_config_flow_entry_already_configured(hass: HomeAssistant) -> None:
@@ -104,22 +117,17 @@ async def test_config_flow_entry_already_configured(hass: HomeAssistant) -> None
 
     with (
         patch(
-            "homeassistant.components.triggercmd.config_flow.test_token",
+            "homeassistant.components.triggercmd.client.async_connection_test",
             return_value=200,
-        ),
-        patch(
-            "homeassistant.components.triggercmd.config_flow.test_connection",
-            return_value={},
         ),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_TOKEN: invalid_token_with_length_100_or_more},
         )
-        await hass.async_block_till_done()
 
-    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+    assert result["type"] is FlowResultType.ABORT
 
 
 async def test_config_flow_connection_error(hass: HomeAssistant) -> None:
@@ -131,60 +139,32 @@ async def test_config_flow_connection_error(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "homeassistant.components.triggercmd.config_flow.test_token",
-            return_value=200,
-        ),
-        patch(
-            "homeassistant.components.triggercmd.config_flow.test_connection",
-            return_value={"connection": "connection_error"},
+            "homeassistant.components.triggercmd.client.async_connection_test",
+            return_value={"status_code": 403},
         ),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_TOKEN: invalid_token_with_length_100_or_more},
         )
-        await hass.async_block_till_done()
 
-    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {
         "connection": "connection_error",
     }
-
-
-async def test_config_flow_happy_path(
-    hass: HomeAssistant,
-) -> None:
-    """Test config flow happy path."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-    )
-
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "user"
+    assert result["type"] is FlowResultType.FORM
 
     with (
         patch(
-            "homeassistant.components.triggercmd.config_flow.test_token",
+            "homeassistant.components.triggercmd.client.async_connection_test",
             return_value=200,
         ),
         patch(
-            "homeassistant.components.triggercmd.config_flow.test_connection",
-            return_value={},
-        ),
-        patch(
-            "homeassistant.components.triggercmd.config_flow.validate_input",
-            return_value="my-hub-id",
-        ),
-        patch(
-            "homeassistant.components.triggercmd.async_setup_entry",
-            return_value=True,
+            "homeassistant.components.triggercmd.ha.Hub",
         ),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_TOKEN: invalid_token_with_length_100_or_more},
         )
-        await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
