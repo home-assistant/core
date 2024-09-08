@@ -89,9 +89,6 @@
       "lastscan": {
         "name": "Last scan"
       },
-      "newversion": {
-        "name": "New version"
-      },
       "newplugins": {
         "name": "New plugins"
       },
@@ -115,6 +112,11 @@
       },
       "other_player_count": {
         "name": "Other player count"
+      }
+    },
+    "update": {
+      "newversion": {
+        "name": "New version"
       }
     }
   }
