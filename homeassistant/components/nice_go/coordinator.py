@@ -164,6 +164,8 @@ class NiceGOUpdateCoordinator(DataUpdateCoordinator[dict[str, NiceGODevice]]):
                 raise ConfigEntryAuthFailed from e
             except ApiError as e:
                 raise UpdateFailed from e
+            except (ConfigEntryAuthFailed, UpdateFailed):
+                raise
             else:
                 self.async_set_updated_data(devices)
 
