@@ -132,7 +132,14 @@ class RingListenCoordinator(BaseDataUpdateCoordinatorProtocol):
         self.config_entry = config_entry
         self.start_timeout = 10
         self.config_entry.async_on_unload(self.async_shutdown)
-        self.alerts = ring_api.active_alerts()
+        self.index_alerts()
+
+    def index_alerts(self) -> None:
+        "Index the active alerts."
+        self.alerts = {
+            (alert.doorbot_id, alert.kind): alert
+            for alert in self.ring_api.active_alerts()
+        }
 
     async def async_shutdown(self) -> None:
         """Cancel any scheduled call, and ignore new runs."""
@@ -160,13 +167,13 @@ class RingListenCoordinator(BaseDataUpdateCoordinatorProtocol):
         self._listen_callback_id = self.event_listener.add_notification_callback(
             self._on_event
         )
-        self.alerts = self.ring_api.active_alerts()
+        self.index_alerts()
         # Update the listeners so they switch from Unavailable to Unknown
         self._async_update_listeners()
 
     def _on_event(self, event: RingEvent) -> None:
         self.logger.debug("Ring event received: %s", event)
-        self.alerts = self.ring_api.active_alerts()
+        self.index_alerts()
         self._async_update_listeners(event.doorbot_id)
 
     @callback

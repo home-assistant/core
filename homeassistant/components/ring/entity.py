@@ -38,7 +38,7 @@ _RingCoordinatorT = TypeVar(
 )
 
 
-@dataclass
+@dataclass(slots=True)
 class DeprecatedInfo:
     """Class to define deprecation info for deprecated entities."""
 

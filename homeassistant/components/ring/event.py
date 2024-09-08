@@ -90,13 +90,9 @@ class RingEvent(RingBaseEntity[RingListenCoordinator, RingDeviceT], EventEntity)
         self._trigger_event(event)
 
     def _get_coordinator_alert(self) -> RingAlert | None:
-        alerts = (
-            alert
-            for alert in self.coordinator.ring_api.active_alerts()
-            if alert.kind == self.entity_description.key
-            and alert.doorbot_id == self._device.device_api_id
+        return self.coordinator.alerts.get(
+            (self._device.device_api_id, self.entity_description.key)
         )
-        return next(alerts, None)
 
     @callback
     def _handle_coordinator_update(self) -> None:

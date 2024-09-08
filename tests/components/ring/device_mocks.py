@@ -31,6 +31,7 @@ CHIME_HEALTH = load_json_value_fixture("chime_health_attrs.json", DOMAIN)
 
 FRONT_DOOR_DEVICE_ID = 987654
 INGRESS_DEVICE_ID = 185036587
+FRONT_DEVICE_ID = 765432
 
 
 def get_mock_devices():

@@ -5,6 +5,7 @@ import time
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from ring_doorbell import Ring
 
 from homeassistant.components.ring.binary_sensor import RingEvent
 from homeassistant.components.ring.coordinator import RingEventListener
@@ -42,13 +43,13 @@ from .device_mocks import FRONT_DOOR_DEVICE_ID, INGRESS_DEVICE_ID
 )
 async def test_event(
     hass: HomeAssistant,
-    mock_ring_client,
+    mock_ring_client: Ring,
     mock_ring_event_listener_class: RingEventListener,
     freezer: FrozenDateTimeFactory,
-    device_id,
-    device_name,
-    alert_kind,
-    device_class,
+    device_id: int,
+    device_name: str,
+    alert_kind: str,
+    device_class: str,
 ) -> None:
     """Test the Ring event platforms."""
 

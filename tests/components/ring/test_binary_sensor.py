@@ -5,17 +5,19 @@ from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from ring_doorbell import Ring
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.ring.binary_sensor import RingEvent
 from homeassistant.components.ring.const import DOMAIN
 from homeassistant.components.ring.coordinator import RingEventListener
-from homeassistant.const import Platform
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
 
-from .common import setup_automation, setup_platform
+from .common import setup_automation
 from .device_mocks import FRONT_DOOR_DEVICE_ID, INGRESS_DEVICE_ID
 
 from tests.common import async_fire_time_changed
@@ -43,32 +45,44 @@ from tests.common import async_fire_time_changed
         ),
     ],
 )
-async def test_binary_sensor_without_deprecation(
+async def test_binary_sensor(
     hass: HomeAssistant,
-    mock_ring_client,
+    mock_config_entry: ConfigEntry,
+    mock_ring_client: Ring,
     mock_ring_event_listener_class: RingEventListener,
+    entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
-    device_id,
-    device_name,
-    alert_kind,
-    device_class,
+    device_id: int,
+    device_name: str,
+    alert_kind: str,
+    device_class: str,
 ) -> None:
-    """Test the Ring binary sensors as if they were not deprecated."""
-    with patch(
-        "homeassistant.components.ring.binary_sensor.async_check_create_deprecated",
-        return_value=True,
-    ):
-        await setup_platform(hass, Platform.BINARY_SENSOR)
+    """Test the Ring binary sensors."""
+    # Create the entity so it is not ignored by the deprecation check
+    mock_config_entry.add_to_hass(hass)
+
+    entity_id = f"binary_sensor.{device_name}_{alert_kind}"
+    unique_id = f"{device_id}-{alert_kind}"
+
+    entity_registry.async_get_or_create(
+        domain=BINARY_SENSOR_DOMAIN,
+        platform=DOMAIN,
+        unique_id=unique_id,
+        suggested_object_id=f"{device_name}_{alert_kind}",
+        config_entry=mock_config_entry,
+    )
+    with patch("homeassistant.components.ring.PLATFORMS", [Platform.BINARY_SENSOR]):
+        assert await async_setup_component(hass, DOMAIN, {})
 
     on_event_cb = mock_ring_event_listener_class.return_value.add_notification_callback.call_args.args[
         0
     ]
 
     # Default state is set to off
-    entity_id = f"binary_sensor.{device_name}_{alert_kind}"
+
     state = hass.states.get(entity_id)
     assert state is not None
-    assert state.state == "off"
+    assert state.state == STATE_OFF
     assert state.attributes["device_class"] == device_class
 
     # A new alert sets to on
@@ -79,7 +93,7 @@ async def test_binary_sensor_without_deprecation(
     on_event_cb(event)
     state = hass.states.get(entity_id)
     assert state is not None
-    assert state.state == "on"
+    assert state.state == STATE_ON
 
     # Test that another event resets the expiry callback
     freezer.tick(60)
@@ -92,14 +106,14 @@ async def test_binary_sensor_without_deprecation(
     on_event_cb(event)
     state = hass.states.get(entity_id)
     assert state is not None
-    assert state.state == "on"
+    assert state.state == STATE_ON
 
     freezer.tick(120)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
     assert state is not None
-    assert state.state == "on"
+    assert state.state == STATE_ON
 
     # Test the second alert has expired
     freezer.tick(60)
@@ -107,13 +121,13 @@ async def test_binary_sensor_without_deprecation(
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
     assert state is not None
-    assert state.state == "off"
+    assert state.state == STATE_OFF
 
 
 async def test_binary_sensor_not_exists_with_deprecation(
     hass: HomeAssistant,
-    mock_config_entry,
-    mock_ring_client,
+    mock_config_entry: ConfigEntry,
+    mock_ring_client: Ring,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test the deprecated Ring binary sensors are deleted or raise issues."""
@@ -142,12 +156,12 @@ async def test_binary_sensor_not_exists_with_deprecation(
 )
 async def test_binary_sensor_exists_with_deprecation(
     hass: HomeAssistant,
-    mock_config_entry,
-    mock_ring_client,
+    mock_config_entry: ConfigEntry,
+    mock_ring_client: Ring,
     entity_registry: er.EntityRegistry,
     issue_registry: ir.IssueRegistry,
-    entity_disabled,
-    entity_has_automations,
+    entity_disabled: bool,
+    entity_has_automations: bool,
 ) -> None:
     """Test the deprecated Ring binary sensors are deleted or raise issues."""
     mock_config_entry.add_to_hass(hass)

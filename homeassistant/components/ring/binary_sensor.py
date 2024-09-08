@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from asyncio import TimerHandle
 from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import datetime
@@ -17,8 +16,9 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.event import async_call_at
 
 from . import RingConfigEntry
 from .coordinator import RingListenCoordinator
@@ -108,7 +108,7 @@ class RingBinarySensor(
         self._attr_unique_id = f"{device.id}-{description.key}"
         self._attr_is_on = False
         self._active_alert: RingEvent | None = None
-        self._cancel_callback: TimerHandle | None = None
+        self._cancel_callback: CALLBACK_TYPE | None = None
 
     @callback
     def _async_handle_event(self, alert: RingEvent) -> None:
@@ -118,11 +118,11 @@ class RingBinarySensor(
         loop = self.hass.loop
         when = loop.time() + alert.expires_in
         if self._cancel_callback:
-            self._cancel_callback.cancel()
-        self._cancel_callback = loop.call_at(when, self._async_cancel_event)
+            self._cancel_callback()
+        self._cancel_callback = async_call_at(self.hass, self._async_cancel_event, when)
 
     @callback
-    def _async_cancel_event(self) -> None:
+    def _async_cancel_event(self, _now: Any) -> None:
         """Clear the event."""
         self._cancel_callback = None
         self._attr_is_on = False
@@ -130,13 +130,9 @@ class RingBinarySensor(
         self.async_write_ha_state()
 
     def _get_coordinator_alert(self) -> RingEvent | None:
-        alerts = (
-            alert
-            for alert in self.coordinator.ring_api.active_alerts()
-            if alert.kind == self.entity_description.key
-            and alert.doorbot_id == self._device.device_api_id
+        return self.coordinator.alerts.get(
+            (self._device.device_api_id, self.entity_description.key)
         )
-        return next(alerts, None)
 
     @callback
     def _handle_coordinator_update(self) -> None:
