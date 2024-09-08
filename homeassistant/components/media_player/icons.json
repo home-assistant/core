@@ -32,7 +32,7 @@
     }
   },
   "services": {
-    "browse_media:" {
+    "browse_media": {
       "service": "mdi:folder-search"
     },
     "clear_playlist": {

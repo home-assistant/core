@@ -15,8 +15,9 @@ from homeassistant.components.media_player import (
     BrowseMedia,
     async_process_play_media_url,
 )
+from homeassistant.components.media_player.const import ATTR_MEDIA_CONTENT_TYPE
 from homeassistant.components.websocket_api import ActiveConnection
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant, SupportsResponse, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.frame import report_usage
 from homeassistant.helpers.integration_platform import (
@@ -55,6 +56,12 @@ __all__ = [
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
+MEDIA_SOURCE_BROWSE_MEDIA_SCHEMA = vol.Schema(
+    {
+        vol.Optional(ATTR_MEDIA_CONTENT_ID): cv.string,
+    }
+)
+
 
 class MediaSourceProtocol(Protocol):
     """Define the format of media_source platforms."""
@@ -88,6 +95,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     await async_process_integration_platforms(
         hass, DOMAIN, _process_media_source_platform
     )
+
+    hass.services.async_register(
+        DOMAIN,
+        "browse_media",
+        async_browse_media,
+        MEDIA_SOURCE_BROWSE_MEDIA_SCHEMA,
+        supports_response=SupportsResponse.ONLY,
+    )
+
     return True
 
 
@@ -121,7 +137,7 @@ def _get_media_item(
 @bind_hass
 async def async_browse_media(
     hass: HomeAssistant,
-    media_content_id: str | None,
+    media_content_id: str | None = None,
     *,
     content_filter: Callable[[BrowseMedia], bool] | None = None,
 ) -> BrowseMediaSource:
