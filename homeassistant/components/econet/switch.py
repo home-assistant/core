@@ -27,10 +27,8 @@ async def async_setup_entry(
     """Set up the ecobee thermostat switch entity."""
     equipment = hass.data[DOMAIN][EQUIPMENT][entry.entry_id]
     async_add_entities(
-        [
-            EcoNetSwitchAuxHeatOnly(thermostat)
-            for thermostat in equipment[EquipmentType.THERMOSTAT]
-        ],
+        EcoNetSwitchAuxHeatOnly(thermostat)
+        for thermostat in equipment[EquipmentType.THERMOSTAT]
     )
 
 
