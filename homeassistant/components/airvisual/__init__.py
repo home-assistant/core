@@ -93,10 +93,9 @@ def async_get_cloud_coordinators_by_api_key(
 ) -> list[DataUpdateCoordinator]:
     """Get all DataUpdateCoordinator objects related to a particular API key."""
     return [
-        coordinator
-        for entry_id, coordinator in hass.data[DOMAIN].items()
-        if (entry := hass.config_entries.async_get_entry(entry_id))
-        and entry.data.get(CONF_API_KEY) == api_key
+        entry.runtime_data
+        for entry in hass.config_entries.async_entries(DOMAIN)
+        if entry.data.get(CONF_API_KEY) == api_key and hasattr(entry, "runtime_data")
     ]
 
 
