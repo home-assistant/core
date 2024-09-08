@@ -1,6 +1,6 @@
 {
   "entity": {
-    "sensor" : {
+    "sensor": {
       "info_total_albums": {
         "default": "mdi:album"
       },
