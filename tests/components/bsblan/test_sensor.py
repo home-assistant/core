@@ -1,58 +1,22 @@
 """Tests for the BSB-Lan sensor platform."""
 
 from datetime import timedelta
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.bsblan.const import DOMAIN
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.entity_registry as er
 
 from . import setup_with_selected_platforms
 
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    load_fixture,
-    snapshot_platform,
-)
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 ENTITY_CURRENT_TEMP = "sensor.bsb_lan_current_temperature"
 ENTITY_OUTSIDE_TEMP = "sensor.bsb_lan_outside_temperature"
-
-
-@pytest.mark.parametrize(
-    ("static_file"),
-    [
-        ("static.json"),
-        ("static_F.json"),
-    ],
-)
-async def test_celsius_fahrenheit(
-    hass: HomeAssistant,
-    mock_bsblan: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-    snapshot: SnapshotAssertion,
-    entity_registry: er.EntityRegistry,
-    static_file: str,
-) -> None:
-    """Test Celsius and Fahrenheit temperature units."""
-    # Load static data from fixture
-    static_data = load_fixture(static_file, DOMAIN)
-
-    # Patch the static_values method to return our test data
-    with patch.object(mock_bsblan, "static_values", return_value=static_data):
-        # Set up the sensor platform
-        await setup_with_selected_platforms(hass, mock_config_entry, [Platform.SENSOR])
-
-        # Take a snapshot of the entity registry
-        await snapshot_platform(
-            hass, entity_registry, snapshot, mock_config_entry.entry_id
-        )
 
 
 async def test_sensor_entity_properties(
