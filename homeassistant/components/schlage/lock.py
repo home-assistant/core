@@ -42,25 +42,22 @@ class SchlageLockEntity(SchlageEntity, LockEntity):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        self._update_attrs()
-        return super()._handle_coordinator_update()
+        if self.device_id in self.coordinator.data.locks:
+            self._update_attrs()
+        super()._handle_coordinator_update()
 
     def _update_attrs(self) -> None:
         """Update our internal state attributes."""
-        if self._lock is None:
-            return
         self._attr_is_locked = self._lock.is_locked
         self._attr_is_jammed = self._lock.is_jammed
         self._attr_changed_by = self._lock.last_changed_by()
 
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the device."""
-        assert self._lock is not None
         await self.hass.async_add_executor_job(self._lock.lock)
         await self.coordinator.async_request_refresh()
 
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the device."""
-        assert self._lock is not None
         await self.hass.async_add_executor_job(self._lock.unlock)
         await self.coordinator.async_request_refresh()

@@ -21,7 +21,6 @@ class SchlageEntity(CoordinatorEntity[SchlageDataUpdateCoordinator]):
         super().__init__(coordinator=coordinator)
         self.device_id = device_id
         self._attr_unique_id = device_id
-        assert self._lock is not None
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, device_id)},
             name=self._lock.name,
@@ -31,15 +30,13 @@ class SchlageEntity(CoordinatorEntity[SchlageDataUpdateCoordinator]):
         )
 
     @property
-    def _lock_data(self) -> LockData | None:
+    def _lock_data(self) -> LockData:
         """Fetch the LockData from our coordinator."""
-        return self.coordinator.data.locks.get(self.device_id, None)
+        return self.coordinator.data.locks[self.device_id]
 
     @property
-    def _lock(self) -> Lock | None:
+    def _lock(self) -> Lock:
         """Fetch the Schlage lock from our coordinator."""
-        if self._lock_data is None:
-            return None
         return self._lock_data.lock
 
     @property
