@@ -1266,6 +1266,7 @@ class UnitOfSpeed(StrEnum):
 
     BEAUFORT = "Beaufort"
     FEET_PER_SECOND = "ft/s"
+    INCHES_PER_SECOND = "in/s"
     METERS_PER_SECOND = "m/s"
     KILOMETERS_PER_HOUR = "km/h"
     KNOTS = "kn"
