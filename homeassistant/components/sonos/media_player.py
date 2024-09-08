@@ -84,6 +84,7 @@ REPEAT_TO_SONOS = {
 SONOS_TO_REPEAT = {meaning: mode for mode, meaning in REPEAT_TO_SONOS.items()}
 
 UPNP_ERRORS_TO_IGNORE = ["701", "711", "712"]
+ANNOUNCE_NOT_SUPPORTED_ERRORS: list[str] = ["globalError"]
 
 SERVICE_SNAPSHOT = "snapshot"
 SERVICE_RESTORE = "restore"
@@ -102,8 +103,6 @@ ATTR_INCLUDE_LINKED_ZONES = "include_linked_zones"
 ATTR_MASTER = "master"
 ATTR_WITH_GROUP = "with_group"
 ATTR_QUEUE_POSITION = "queue_position"
-
-ANNOUNCE_NOT_SUPPORTED_ERRORS = ["globalError"]
 
 
 async def async_setup_entry(
