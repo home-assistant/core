@@ -17,6 +17,7 @@ from homeassistant.helpers import (
     entity_registry as er,
 )
 
+from .const import CONF_HTTP_QUIRKS
 from .coordinator import AirzoneUpdateCoordinator
 
 PLATFORMS: list[Platform] = [
@@ -78,6 +79,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AirzoneConfigEntry) -> b
         entry.data[CONF_HOST],
         entry.data[CONF_PORT],
         entry.data.get(CONF_ID, DEFAULT_SYSTEM_ID),
+        entry.options.get(CONF_HTTP_QUIRKS, False),
     )
 
     airzone = AirzoneLocalApi(aiohttp_client.async_get_clientsession(hass), options)
@@ -89,7 +91,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: AirzoneConfigEntry) -> b
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
+    entry.async_on_unload(entry.add_update_listener(async_update_options))
+
     return True
+
+
+async def async_update_options(hass: HomeAssistant, entry: AirzoneConfigEntry) -> None:
+    """Update options."""
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: AirzoneConfigEntry) -> bool:

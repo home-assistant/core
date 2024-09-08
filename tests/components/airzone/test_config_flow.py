@@ -1,5 +1,6 @@
 """Define tests for the Airzone config flow."""
 
+from copy import deepcopy
 from unittest.mock import patch
 
 from aioairzone.const import API_MAC, API_SYSTEMS
@@ -14,7 +15,7 @@ from aioairzone.exceptions import (
 from homeassistant import config_entries
 from homeassistant.components import dhcp
 from homeassistant.components.airzone.config_flow import short_mac
-from homeassistant.components.airzone.const import DOMAIN
+from homeassistant.components.airzone.const import CONF_HTTP_QUIRKS, DOMAIN
 from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_ID, CONF_PORT
 from homeassistant.core import HomeAssistant
@@ -26,8 +27,10 @@ from .util import (
     CONFIG_ID1,
     HVAC_DHW_MOCK,
     HVAC_MOCK,
+    HVAC_SYSTEMS_MOCK,
     HVAC_VERSION_MOCK,
     HVAC_WEBSERVER_MOCK,
+    async_init_integration,
 )
 
 from tests.common import MockConfigEntry
@@ -97,6 +100,65 @@ async def test_form(hass: HomeAssistant) -> None:
         assert CONF_ID not in result["data"]
 
         assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_options_flow(hass: HomeAssistant) -> None:
+    """Test config flow options."""
+
+    config_entry = MockConfigEntry(
+        data=CONFIG,
+        domain=DOMAIN,
+        unique_id="airzone_unique_id",
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={CONF_HTTP_QUIRKS: True}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert config_entry.options == {CONF_HTTP_QUIRKS: True}
+
+
+async def test_update_options(hass: HomeAssistant) -> None:
+    """Test update options triggers reload."""
+
+    config_entry = await async_init_integration(hass)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    new_options = deepcopy(dict(config_entry.options))
+    new_options[CONF_HTTP_QUIRKS] = True
+
+    with (
+        patch(
+            "homeassistant.components.airzone.AirzoneLocalApi.get_dhw",
+            return_value=HVAC_DHW_MOCK,
+        ),
+        patch(
+            "homeassistant.components.airzone.AirzoneLocalApi.get_hvac",
+            return_value=HVAC_MOCK,
+        ),
+        patch(
+            "homeassistant.components.airzone.AirzoneLocalApi.get_hvac_systems",
+            return_value=HVAC_SYSTEMS_MOCK,
+        ),
+        patch(
+            "homeassistant.components.airzone.AirzoneLocalApi.get_version",
+            return_value=HVAC_VERSION_MOCK,
+        ),
+        patch(
+            "homeassistant.components.airzone.AirzoneLocalApi.get_webserver",
+            return_value=HVAC_WEBSERVER_MOCK,
+        ),
+    ):
+        hass.config_entries.async_update_entry(config_entry, options=new_options)
+        await hass.async_block_till_done()
+
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert config_entry.state is ConfigEntryState.LOADED
 
 
 async def test_form_invalid_system_id(hass: HomeAssistant) -> None:
