@@ -27,13 +27,14 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 def mock_integration_manager(
     hass: HomeAssistant,
 ) -> Generator[IntegrationRepositoryManager, None, None]:
-    """Mock the GPM manager."""
+    """Mock GPM manager."""
     manager = IntegrationRepositoryManager(
         hass,
         "https://github.com/user/awesome-component",
         UpdateStrategy.LATEST_TAG,
     )
     manager.clone = AsyncMock(return_value=None)
+    manager.fetch = AsyncMock(return_value=None)
     manager.checkout = AsyncMock(return_value=None)
     manager.install = AsyncMock(return_value=None)
     manager.is_cloned = AsyncMock(return_value=True)
@@ -44,6 +45,7 @@ def mock_integration_manager(
             "/config/gpm/awesome_component/custom_components/awesome_component"
         )
     )
+    manager.get_current_version = AsyncMock(return_value="v0.9.9")
     manager.get_latest_version = AsyncMock(return_value="v1.0.0")
     with patch(
         "homeassistant.components.gpm.IntegrationRepositoryManager",
@@ -67,11 +69,13 @@ def mock_resource_manager(
         "https://github.com/user/awesome-card/releases/download/{{ version }}/bundle.js"
     )
     manager.clone = AsyncMock(return_value=None)
+    manager.fetch = AsyncMock(return_value=None)
     manager.checkout = AsyncMock(return_value=None)
     manager.install = AsyncMock(return_value=None)
     manager.is_cloned = AsyncMock(return_value=True)
     manager.is_installed = AsyncMock(return_value=False)
     manager.remove = AsyncMock(return_value=None)
+    manager.get_current_version = AsyncMock(return_value="v0.9.9")
     manager.get_latest_version = AsyncMock(return_value="v1.0.0")
     with patch(
         "homeassistant.components.gpm.ResourceRepositoryManager",

@@ -11,12 +11,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import GPMConfigEntry
-from ._manager import (
-    GPMError,
-    IntegrationRepositoryManager,
-    RepositoryManager,
-    UpdateStrategy,
-)
+from ._manager import IntegrationRepositoryManager, RepositoryManager, UpdateStrategy
 from .const import GIT_SHORT_HASH_LEN
 
 SCAN_INTERVAL = timedelta(hours=3)
@@ -44,7 +39,6 @@ class GPMUpdateEntity(UpdateEntity):
     def __init__(self, manager: RepositoryManager) -> None:  # noqa: D107
         super().__init__()
         self.manager = manager
-        self._first_update = True
         self._component_name: str | None = None
 
     async def async_update(self) -> None:
@@ -89,7 +83,4 @@ class GPMUpdateEntity(UpdateEntity):
             raise HomeAssistantError(
                 f"Version `{self.installed_version}` of `{self.name}` is already downloaded"
             )
-        try:
-            await self.manager.checkout(to_install)
-        except GPMError as e:
-            raise HomeAssistantError(e) from e
+        await self.manager.checkout(to_install)
