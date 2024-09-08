@@ -84,6 +84,7 @@ REPEAT_TO_SONOS = {
 SONOS_TO_REPEAT = {meaning: mode for mode, meaning in REPEAT_TO_SONOS.items()}
 
 UPNP_ERRORS_TO_IGNORE = ["701", "711", "712"]
+ANNOUNCE_NOT_SUPPORTED_ERRORS: list[str] = ["globalError"]
 
 SERVICE_SNAPSHOT = "snapshot"
 SERVICE_RESTORE = "restore"
@@ -556,11 +557,24 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
                 ) from exc
             if response.get("success"):
                 return
-            raise HomeAssistantError(
-                translation_domain=SONOS_DOMAIN,
-                translation_key="announce_media_error",
-                translation_placeholders={"media_id": media_id, "response": response},
-            )
+            if response.get("type") in ANNOUNCE_NOT_SUPPORTED_ERRORS:
+                # If the speaker does not support announce do not raise and
+                # fall through to_play_media to play the clip directly.
+                _LOGGER.debug(
+                    "Speaker %s does not support announce, media_id %s response %s",
+                    self.speaker.zone_name,
+                    media_id,
+                    response,
+                )
+            else:
+                raise HomeAssistantError(
+                    translation_domain=SONOS_DOMAIN,
+                    translation_key="announce_media_error",
+                    translation_placeholders={
+                        "media_id": media_id,
+                        "response": response,
+                    },
+                )
 
         if spotify.is_spotify_media_type(media_type):
             media_type = spotify.resolve_spotify_media_type(media_type)
