@@ -39,7 +39,6 @@ async def test_form_sensor(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> 
             CONF_CALIBRATION_FACTOR: 2.0,
         },
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == DEFAULT_NAME
@@ -111,7 +110,6 @@ async def test_entry_already_exist(
             CONF_CALIBRATION_FACTOR: 2.0,
         },
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
