@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock
 from monarchmoney import LoginFailedException, RequireMFAException
 
 from homeassistant import config_entries
-from homeassistant.components.monarchmoney.const import CONF_MFA_CODE, DOMAIN
+from homeassistant.components.monarch_money.const import CONF_MFA_CODE, DOMAIN
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType

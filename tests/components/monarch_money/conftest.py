@@ -12,7 +12,7 @@ from typedmonarchmoney.models import (
     MonarchSubscription,
 )
 
-from homeassistant.components.monarchmoney.const import DOMAIN
+from homeassistant.components.monarch_money.const import DOMAIN
 from homeassistant.const import CONF_TOKEN
 
 from tests.common import MockConfigEntry, load_fixture
@@ -22,7 +22,7 @@ from tests.common import MockConfigEntry, load_fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.monarchmoney.async_setup_entry", return_value=True
+        "homeassistant.components.monarch_money.async_setup_entry", return_value=True
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -54,11 +54,11 @@ def mock_config_api() -> Generator[AsyncMock]:
 
     with (
         patch(
-            "homeassistant.components.monarchmoney.config_flow.TypedMonarchMoney",
+            "homeassistant.components.monarch_money.config_flow.TypedMonarchMoney",
             autospec=True,
         ) as mock_class,
         patch(
-            "homeassistant.components.monarchmoney.TypedMonarchMoney", new=mock_class
+            "homeassistant.components.monarch_money.TypedMonarchMoney", new=mock_class
         ),
     ):
         instance = mock_class.return_value

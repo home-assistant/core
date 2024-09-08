@@ -21,7 +21,7 @@ async def test_all_entities(
     mock_config_api: AsyncMock,
 ) -> None:
     """Test all entities."""
-    with patch("homeassistant.components.monarchmoney.PLATFORMS", [Platform.SENSOR]):
+    with patch("homeassistant.components.monarch_money.PLATFORMS", [Platform.SENSOR]):
         await setup_integration(hass, mock_config_entry)
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)

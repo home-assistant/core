@@ -1,5 +1,5 @@
 {
-  "domain": "monarchmoney",
+  "domain": "monarch_money",
   "name": "Monarch Money",
   "codeowners": ["@jeeftor"],
   "config_flow": true,
