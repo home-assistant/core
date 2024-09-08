@@ -78,5 +78,14 @@
         "name": "RSSI"
       }
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "http_quirks": "Enable custom HTTP airzone quirks"
+        }
+      }
+    }
   }
 }

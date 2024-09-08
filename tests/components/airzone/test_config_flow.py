@@ -14,7 +14,7 @@ from aioairzone.exceptions import (
 from homeassistant import config_entries
 from homeassistant.components import dhcp
 from homeassistant.components.airzone.config_flow import short_mac
-from homeassistant.components.airzone.const import DOMAIN
+from homeassistant.components.airzone.const import CONF_HTTP_QUIRKS, DOMAIN
 from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_ID, CONF_PORT
 from homeassistant.core import HomeAssistant
@@ -97,6 +97,27 @@ async def test_form(hass: HomeAssistant) -> None:
         assert CONF_ID not in result["data"]
 
         assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_options_flow(hass: HomeAssistant) -> None:
+    """Test config flow options."""
+
+    config_entry = MockConfigEntry(
+        data=CONFIG,
+        domain=DOMAIN,
+        unique_id="airzone_unique_id",
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={CONF_HTTP_QUIRKS: True}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert config_entry.options == {CONF_HTTP_QUIRKS: True}
 
 
 async def test_form_invalid_system_id(hass: HomeAssistant) -> None:

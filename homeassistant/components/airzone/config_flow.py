@@ -11,13 +11,18 @@ from aioairzone.localapi import AirzoneLocalApi, ConnectionOptions
 import voluptuous as vol
 
 from homeassistant.components import dhcp
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_ID, CONF_PORT
+from homeassistant.core import callback
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.schema_config_entry_flow import (
+    SchemaFlowFormStep,
+    SchemaOptionsFlowHandler,
+)
 
-from .const import DOMAIN
+from .const import CONF_HTTP_QUIRKS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,6 +37,15 @@ SYSTEM_ID_SCHEMA = CONFIG_SCHEMA.extend(
         vol.Required(CONF_ID, default=1): int,
     }
 )
+
+OPTIONS_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_HTTP_QUIRKS, default=False): bool,
+    }
+)
+OPTIONS_FLOW = {
+    "init": SchemaFlowFormStep(OPTIONS_SCHEMA),
+}
 
 
 def short_mac(addr: str) -> str:
@@ -61,6 +75,7 @@ class AirZoneConfigFlow(ConfigFlow, domain=DOMAIN):
                     user_input[CONF_HOST],
                     user_input[CONF_PORT],
                     user_input.get(CONF_ID, DEFAULT_SYSTEM_ID),
+                    False,
                 ),
             )
 
@@ -168,3 +183,11 @@ class AirZoneConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(base_schema),
             errors=errors,
         )
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: ConfigEntry,
+    ) -> SchemaOptionsFlowHandler:
+        """Get the options flow for this handler."""
+        return SchemaOptionsFlowHandler(config_entry, OPTIONS_FLOW)

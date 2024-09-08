@@ -17,6 +17,7 @@ from homeassistant.helpers import (
     entity_registry as er,
 )
 
+from .const import CONF_HTTP_QUIRKS
 from .coordinator import AirzoneUpdateCoordinator
 
 PLATFORMS: list[Platform] = [
@@ -78,6 +79,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AirzoneConfigEntry) -> b
         entry.data[CONF_HOST],
         entry.data[CONF_PORT],
         entry.data.get(CONF_ID, DEFAULT_SYSTEM_ID),
+        entry.options.get(CONF_HTTP_QUIRKS, False),
     )
 
     airzone = AirzoneLocalApi(aiohttp_client.async_get_clientsession(hass), options)

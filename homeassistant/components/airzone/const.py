@@ -6,6 +6,7 @@ from aioairzone.common import TemperatureUnit
 
 from homeassistant.const import UnitOfTemperature
 
+CONF_HTTP_QUIRKS: Final = "http_quirks"
 DOMAIN: Final = "airzone"
 MANUFACTURER: Final = "Airzone"
 
