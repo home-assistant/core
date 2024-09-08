@@ -62,11 +62,6 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TIMESTAMP,
     ),
     SensorEntityDescription(
-        key=STATUS_SENSOR_NEWPLUGINS,
-        entity_registry_visible_default=False,
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    SensorEntityDescription(
         key=STATUS_SENSOR_PLAYER_COUNT,
         state_class=SensorStateClass.TOTAL,
         icon="mdi:folder-play",
