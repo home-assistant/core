@@ -78,31 +78,41 @@ def async_register_commands(
 ) -> None:
     """Register commands."""
     async_reg(hass, handle_call_service)
+    async_reg(hass, handle_connection_info)
     async_reg(hass, handle_entity_source)
     async_reg(hass, handle_execute_script)
     async_reg(hass, handle_fire_event)
     async_reg(hass, handle_get_config)
     async_reg(hass, handle_get_services)
     async_reg(hass, handle_get_states)
-    async_reg(hass, handle_manifest_get)
+    async_reg(hass, handle_integration_descriptions)
     async_reg(hass, handle_integration_setup_info)
+    async_reg(hass, handle_manifest_get)
     async_reg(hass, handle_manifest_list)
     async_reg(hass, handle_ping)
     async_reg(hass, handle_render_template)
     async_reg(hass, handle_subscribe_bootstrap_integrations)
+    async_reg(hass, handle_subscribe_entities)
     async_reg(hass, handle_subscribe_events)
     async_reg(hass, handle_subscribe_trigger)
+    async_reg(hass, handle_supported_features)
     async_reg(hass, handle_test_condition)
     async_reg(hass, handle_unsubscribe_events)
     async_reg(hass, handle_validate_config)
-    async_reg(hass, handle_subscribe_entities)
-    async_reg(hass, handle_supported_features)
-    async_reg(hass, handle_integration_descriptions)
 
 
 def pong_message(iden: int) -> dict[str, Any]:
     """Return a pong message."""
     return {"id": iden, "type": "pong"}
+
+
+def connection_info_message(iden: int, conn: ActiveConnection) -> dict[str, Any]:
+    """Return a connection information message."""
+    return {
+        "id": iden,
+        "type": "connection_info",
+        "connection_uuid": conn.get_uuid(),
+    }
 
 
 @callback
@@ -577,6 +587,15 @@ def handle_ping(
 ) -> None:
     """Handle ping command."""
     connection.send_message(pong_message(msg["id"]))
+
+
+@callback
+@decorators.websocket_command({vol.Required("type"): "connection_info"})
+def handle_connection_info(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Handle connection_info command."""
+    connection.send_message(connection_info_message(msg["id"], connection))
 
 
 @lru_cache

@@ -84,7 +84,7 @@ class ActiveConnection:
             {
                 "connection_uuid": self.connection_uuid,
                 "remote": remote,
-                "user": user,
+                "username": user.name,
                 "user_agent": user_agent,
             },
         )
@@ -270,7 +270,7 @@ class ActiveConnection:
             {
                 "connection_uuid": self.connection_uuid,
                 "remote": remote,
-                "user": self.user,
+                "username": self.user.name,
                 "user_agent": user_agent,
             },
         )

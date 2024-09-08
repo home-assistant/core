@@ -735,12 +735,26 @@ async def test_get_config(
 
 
 async def test_ping(websocket_client: MockHAClientWebSocket) -> None:
-    """Test get_panels command."""
+    """Test ping command."""
     await websocket_client.send_json({"id": 5, "type": "ping"})
 
     msg = await websocket_client.receive_json()
     assert msg["id"] == 5
     assert msg["type"] == "pong"
+
+
+async def test_connection_info(websocket_client: MockHAClientWebSocket) -> None:
+    """Test get_connection_info command."""
+    await websocket_client.send_json({"id": 5, "type": "connection_info"})
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 5
+    assert msg["type"] == "connection_info"
+
+    # consider connection uuid to be an opaque type (ie, don't assume any
+    # particular format)
+    assert msg["connection_uuid"] is not None
+    assert len(msg["connection_uuid"]) > 0
 
 
 async def test_call_service_context_with_user(
