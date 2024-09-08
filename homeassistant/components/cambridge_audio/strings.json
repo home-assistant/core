@@ -4,9 +4,6 @@
   },
   "config": {
     "step": {
-      "confirm": {
-        "description": "[%key:common::config_flow::description::confirm_setup%]"
-      },
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
