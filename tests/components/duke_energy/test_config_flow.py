@@ -53,6 +53,22 @@ async def test_abort_if_already_setup(hass: HomeAssistant) -> None:
     assert result.get("reason") == "already_configured"
 
 
+@pytest.mark.usefixtures("recorder_mock", "mock_config_entry", "test_api")
+async def test_abort_if_already_setup_alternate_username(hass: HomeAssistant) -> None:
+    """Test we abort if the email is already setup."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USER},
+        data={
+            CONF_USERNAME: "test@example.com",
+            CONF_PASSWORD: "test-password",
+        },
+    )
+    assert result
+    assert result.get("type") is FlowResultType.ABORT
+    assert result.get("reason") == "already_configured"
+
+
 @pytest.mark.usefixtures("recorder_mock")
 async def test_asserts(hass: HomeAssistant, test_api: Mock) -> None:
     """Test the failure scenarios."""
@@ -80,7 +96,7 @@ async def test_asserts(hass: HomeAssistant, test_api: Mock) -> None:
         data={CONF_USERNAME: "test-username", CONF_PASSWORD: "test-password"},
     )
     assert result.get("type") is FlowResultType.FORM
-    assert result.get("errors") == {"base": "could_not_connect"}
+    assert result.get("errors") == {"base": "cannot_connect"}
 
     # test with ConnectionTimeout
     test_api.authenticate = AsyncMock(side_effect=TimeoutError())
@@ -90,7 +106,7 @@ async def test_asserts(hass: HomeAssistant, test_api: Mock) -> None:
         data={CONF_USERNAME: "test-username", CONF_PASSWORD: "test-password"},
     )
     assert result.get("type") is FlowResultType.FORM
-    assert result.get("errors") == {"base": "could_not_connect"}
+    assert result.get("errors") == {"base": "cannot_connect"}
 
     # test with HTTPError
     test_api.authenticate = AsyncMock(side_effect=ClientError())
@@ -100,7 +116,7 @@ async def test_asserts(hass: HomeAssistant, test_api: Mock) -> None:
         data={CONF_USERNAME: "test-username", CONF_PASSWORD: "test-password"},
     )
     assert result.get("type") is FlowResultType.FORM
-    assert result.get("errors") == {"base": "could_not_connect"}
+    assert result.get("errors") == {"base": "cannot_connect"}
 
     # test with random exception
     test_api.authenticate = AsyncMock(side_effect=Exception())

@@ -31,7 +31,12 @@ def mock_config_entry(hass: HomeAssistant) -> Generator[AsyncMock]:
 def mock_controller():
     """Mock a successful Duke Energy API."""
     api = Mock()
-    api.authenticate = AsyncMock(return_value={"email": "TEST@EXAMPLE.COM"})
+    api.authenticate = AsyncMock(
+        return_value={
+            "email": "TEST@EXAMPLE.COM",
+            "cdp_internal_user_id": "test-username",
+        }
+    )
     api.get_meters = AsyncMock(return_value={})
     with patch(
         "homeassistant.components.duke_energy.config_flow.DukeEnergy",
