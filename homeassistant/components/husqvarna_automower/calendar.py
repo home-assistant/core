@@ -2,7 +2,6 @@
 
 from datetime import datetime
 import logging
-from zoneinfo import ZoneInfo
 
 from homeassistant.components.calendar import CalendarEntity, CalendarEvent
 from homeassistant.core import HomeAssistant
@@ -57,12 +56,8 @@ class AutomowerCalendarEntity(AutomowerBaseEntity, CalendarEntity):
             return None
         return CalendarEvent(
             summary=program_event.program_id,
-            start=program_event.start.replace(
-                tzinfo=ZoneInfo(str(dt_util.DEFAULT_TIME_ZONE))
-            ),
-            end=program_event.end.replace(
-                tzinfo=ZoneInfo(str(dt_util.DEFAULT_TIME_ZONE))
-            ),
+            start=program_event.start.replace(tzinfo=dt_util.DEFAULT_TIME_ZONE),
+            end=program_event.end.replace(tzinfo=dt_util.DEFAULT_TIME_ZONE),
             rrule=program_event.rrule_str,
         )
 
@@ -83,12 +78,8 @@ class AutomowerCalendarEntity(AutomowerBaseEntity, CalendarEntity):
         return [
             CalendarEvent(
                 summary=program_event.program_id,
-                start=program_event.start.replace(
-                    tzinfo=ZoneInfo(str(dt_util.DEFAULT_TIME_ZONE))
-                ),
-                end=program_event.end.replace(
-                    tzinfo=ZoneInfo(str(dt_util.DEFAULT_TIME_ZONE))
-                ),
+                start=program_event.start.replace(tzinfo=dt_util.DEFAULT_TIME_ZONE),
+                end=program_event.end.replace(tzinfo=dt_util.DEFAULT_TIME_ZONE),
                 rrule=program_event.rrule_str,
             )
             for program_event in cursor
