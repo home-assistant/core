@@ -6,7 +6,6 @@ from homeassistant.components.acmeda.const import DOMAIN
 from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
@@ -16,7 +15,7 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
     """Return the default mocked config entry."""
     mock_config_entry = MockConfigEntry(
         domain=DOMAIN,
-        data={},
+        data={"host": "127.0.0.1"},
     )
     mock_config_entry.add_to_hass(hass)
     return mock_config_entry
@@ -31,7 +30,8 @@ async def test_cover_id_migration(
     entity_registry.async_get_or_create(
         COVER_DOMAIN, DOMAIN, 1234567890123, config_entry=mock_config_entry
     )
-    assert await async_setup_component(hass, DOMAIN, {})
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
     await hass.async_block_till_done()
     entities = er.async_entries_for_config_entry(
         entity_registry, mock_config_entry.entry_id
