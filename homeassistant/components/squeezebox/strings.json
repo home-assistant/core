@@ -108,7 +108,7 @@
         "name": "Player count"
       },
       "other_player_count": {
-        "name": "Other server player count"
+        "name": "Player count off service"
       }
     }
   }
