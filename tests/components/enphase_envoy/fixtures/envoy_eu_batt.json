@@ -1,0 +1,874 @@
+{
+  "serial_number": "123456789012",
+  "firmware": "7.6.358",
+  "part_number": "800-00654-r08",
+  "envoy_model": "Envoy, phases: 3, phase mode: three, net-consumption CT, production CT",
+  "supported_features": 1759,
+  "phase_mode": "three",
+  "phase_count": 3,
+  "active_phase_count": 0,
+  "ct_meter_count": 2,
+  "consumption_meter_type": "net-consumption",
+  "production_meter_type": "production",
+  "storage_meter_type": null,
+  "data": {
+    "encharge_inventory": {
+      "122327081322": {
+        "admin_state": 6,
+        "admin_state_str": "ENCHG_STATE_READY",
+        "bmu_firmware_version": "2.1.16",
+        "comm_level_2_4_ghz": 4,
+        "comm_level_sub_ghz": 4,
+        "communicating": true,
+        "dc_switch_off": false,
+        "encharge_capacity": 3500,
+        "encharge_revision": 2,
+        "firmware_loaded_date": 1714736645,
+        "firmware_version": "2.6.6618_rel/22.11",
+        "installed_date": 1714736645,
+        "last_report_date": 1714804173,
+        "led_status": 17,
+        "max_cell_temp": 16,
+        "operating": true,
+        "part_number": "830-01760-r46",
+        "percent_full": 4,
+        "serial_number": "122327081322",
+        "temperature": 16,
+        "temperature_unit": "C",
+        "zigbee_dongle_fw_version": "100F"
+      }
+    },
+    "encharge_power": {
+      "122327081322": {
+        "apparent_power_mva": 0,
+        "real_power_mw": 0,
+        "soc": 4
+      }
+    },
+    "encharge_aggregate": {
+      "available_energy": 140,
+      "backup_reserve": 0,
+      "state_of_charge": 4,
+      "reserve_state_of_charge": 0,
+      "configured_reserve_state_of_charge": 0,
+      "max_available_capacity": 3500
+    },
+    "enpower": null,
+    "system_consumption": {
+      "watt_hours_lifetime": 11230297,
+      "watt_hours_last_7_days": 60488,
+      "watt_hours_today": 11220,
+      "watts_now": 267
+    },
+    "system_production": {
+      "watt_hours_lifetime": 3264161,
+      "watt_hours_last_7_days": 70188,
+      "watt_hours_today": 105,
+      "watts_now": 119
+    },
+    "system_consumption_phases": null,
+    "system_production_phases": null,
+    "system_net_consumption": {
+      "watt_hours_lifetime": 7967021,
+      "watt_hours_last_7_days": 0,
+      "watt_hours_today": 0,
+      "watts_now": 148
+    },
+    "system_net_consumption_phases": null,
+    "ctmeter_production": {
+      "eid": 704643328,
+      "timestamp": 1714804347,
+      "energy_delivered": 3264161,
+      "energy_received": 2600,
+      "active_power": 119,
+      "power_factor": 0.666,
+      "voltage": 717.827,
+      "current": 0.727,
+      "frequency": 50.0,
+      "state": "enabled",
+      "measurement_type": "production",
+      "metering_status": "normal",
+      "status_flags": []
+    },
+    "ctmeter_consumption": {
+      "eid": 704643584,
+      "timestamp": 1714804347,
+      "energy_delivered": 9671362,
+      "energy_received": 1704783,
+      "active_power": 148,
+      "power_factor": 0.318,
+      "voltage": 717.603,
+      "current": 1.918,
+      "frequency": 50.0,
+      "state": "enabled",
+      "measurement_type": "net-consumption",
+      "metering_status": "normal",
+      "status_flags": []
+    },
+    "ctmeter_storage": null,
+    "ctmeter_production_phases": {
+      "L1": {
+        "eid": 1778385169,
+        "timestamp": 1714804347,
+        "energy_delivered": 1064047,
+        "energy_received": 19,
+        "active_power": 38,
+        "power_factor": 0.636,
+        "voltage": 240.455,
+        "current": 0.238,
+        "frequency": 50.0,
+        "state": "enabled",
+        "measurement_type": "production",
+        "metering_status": "normal",
+        "status_flags": []
+      },
+      "L2": {
+        "eid": 1778385170,
+        "timestamp": 1714804347,
+        "energy_delivered": 1105921,
+        "energy_received": 518,
+        "active_power": 42,
+        "power_factor": 0.615,
+        "voltage": 239.646,
+        "current": 0.3,
+        "frequency": 50.0,
+        "state": "enabled",
+        "measurement_type": "production",
+        "metering_status": "normal",
+        "status_flags": []
+      },
+      "L3": {
+        "eid": 1778385171,
+        "timestamp": 1714804347,
+        "energy_delivered": 1094193,
+        "energy_received": 2062,
+        "active_power": 39,
+        "power_factor": 0.778,
+        "voltage": 237.725,
+        "current": 0.189,
+        "frequency": 50.0,
+        "state": "enabled",
+        "measurement_type": "production",
+        "metering_status": "normal",
+        "status_flags": []
+      }
+    },
+    "ctmeter_consumption_phases": {
+      "L1": {
+        "eid": 1778385425,
+        "timestamp": 1714804347,
+        "energy_delivered": 3066805,
+        "energy_received": 309331,
+        "active_power": 186,
+        "power_factor": 0.493,
+        "voltage": 240.294,
+        "current": 1.566,
+        "frequency": 50.0,
+        "state": "enabled",
+        "measurement_type": "net-consumption",
+        "metering_status": "normal",
+        "status_flags": []
+      },
+      "L2": {
+        "eid": 1778385426,
+        "timestamp": 1714804347,
+        "energy_delivered": 2426811,
+        "energy_received": 678824,
+        "active_power": -17,
+        "power_factor": -0.375,
+        "voltage": 239.513,
+        "current": 0.194,
+        "frequency": 50.0,
+        "state": "enabled",
+        "measurement_type": "net-consumption",
+        "metering_status": "normal",
+        "status_flags": []
+      },
+      "L3": {
+        "eid": 1778385427,
+        "timestamp": 1714804347,
+        "energy_delivered": 4177747,
+        "energy_received": 716628,
+        "active_power": -21,
+        "power_factor": -0.571,
+        "voltage": 237.796,
+        "current": 0.159,
+        "frequency": 50.0,
+        "state": "enabled",
+        "measurement_type": "net-consumption",
+        "metering_status": "normal",
+        "status_flags": []
+      }
+    },
+    "ctmeter_storage_phases": null,
+    "dry_contact_status": {},
+    "dry_contact_settings": {},
+    "inverters": {
+      "482312083761": {
+        "serial_number": "482312083761",
+        "last_report_date": 1714804246,
+        "last_report_watts": 11,
+        "max_report_watts": 341
+      },
+      "482312084840": {
+        "serial_number": "482312084840",
+        "last_report_date": 1714803976,
+        "last_report_watts": 9,
+        "max_report_watts": 336
+      },
+      "482312087202": {
+        "serial_number": "482312087202",
+        "last_report_date": 1714804186,
+        "last_report_watts": 12,
+        "max_report_watts": 343
+      },
+      "482312084298": {
+        "serial_number": "482312084298",
+        "last_report_date": 1714804187,
+        "last_report_watts": 11,
+        "max_report_watts": 343
+      },
+      "482312087222": {
+        "serial_number": "482312087222",
+        "last_report_date": 1714803404,
+        "last_report_watts": 13,
+        "max_report_watts": 342
+      },
+      "482312083708": {
+        "serial_number": "482312083708",
+        "last_report_date": 1714803465,
+        "last_report_watts": 14,
+        "max_report_watts": 342
+      },
+      "482312086604": {
+        "serial_number": "482312086604",
+        "last_report_date": 1714803495,
+        "last_report_watts": 14,
+        "max_report_watts": 340
+      },
+      "482312087072": {
+        "serial_number": "482312087072",
+        "last_report_date": 1714803435,
+        "last_report_watts": 13,
+        "max_report_watts": 340
+      },
+      "482312082644": {
+        "serial_number": "482312082644",
+        "last_report_date": 1714803585,
+        "last_report_watts": 13,
+        "max_report_watts": 341
+      }
+    },
+    "tariff": {
+      "currency": {
+        "code": "EUR"
+      },
+      "logger": "mylogger",
+      "date": "1714749724",
+      "storage_settings": {
+        "mode": "self-consumption",
+        "operation_mode_sub_type": "",
+        "reserved_soc": 0.0,
+        "very_low_soc": 5,
+        "charge_from_grid": true,
+        "date": "1714749724"
+      },
+      "single_rate": {
+        "rate": 0.0,
+        "sell": 0.0
+      },
+      "seasons": [
+        {
+          "id": "all_year_long",
+          "start": "1/1",
+          "days": [
+            {
+              "id": "all_days",
+              "days": "Mon,Tue,Wed,Thu,Fri,Sat,Sun",
+              "must_charge_start": 0,
+              "must_charge_duration": 0,
+              "must_charge_mode": "CP",
+              "enable_discharge_to_grid": false,
+              "periods": [
+                {
+                  "id": "period_1",
+                  "start": 0,
+                  "rate": 0.0
+                }
+              ]
+            }
+          ],
+          "tiers": []
+        }
+      ],
+      "seasons_sell": []
+    },
+    "raw": {
+      "/ivp/meters": [
+        {
+          "eid": 704643328,
+          "state": "enabled",
+          "measurementType": "production",
+          "phaseMode": "three",
+          "phaseCount": 3,
+          "meteringStatus": "normal",
+          "statusFlags": []
+        },
+        {
+          "eid": 704643584,
+          "state": "enabled",
+          "measurementType": "net-consumption",
+          "phaseMode": "three",
+          "phaseCount": 3,
+          "meteringStatus": "normal",
+          "statusFlags": []
+        }
+      ],
+      "/ivp/meters/readings": [
+        {
+          "eid": 704643328,
+          "timestamp": 1714804347,
+          "actEnergyDlvd": 3264160.793,
+          "actEnergyRcvd": 2599.885,
+          "apparentEnergy": 4225140.177,
+          "reactEnergyLagg": 943620.773,
+          "reactEnergyLead": 58691.262,
+          "instantaneousDemand": 119.065,
+          "activePower": 119.065,
+          "apparentPower": 173.94,
+          "reactivePower": 4.114,
+          "pwrFactor": 0.666,
+          "voltage": 717.827,
+          "current": 0.727,
+          "freq": 50.0,
+          "channels": [
+            {
+              "eid": 1778385169,
+              "timestamp": 1714804347,
+              "actEnergyDlvd": 1064046.936,
+              "actEnergyRcvd": 19.428,
+              "apparentEnergy": 1375000.058,
+              "reactEnergyLagg": 314247.281,
+              "reactEnergyLead": 21768.496,
+              "instantaneousDemand": 38.313,
+              "activePower": 38.313,
+              "apparentPower": 57.367,
+              "reactivePower": 1.403,
+              "pwrFactor": 0.636,
+              "voltage": 240.455,
+              "current": 0.238,
+              "freq": 50.0
+            },
+            {
+              "eid": 1778385170,
+              "timestamp": 1714804347,
+              "actEnergyDlvd": 1105920.676,
+              "actEnergyRcvd": 518.282,
+              "apparentEnergy": 1501914.525,
+              "reactEnergyLagg": 310307.761,
+              "reactEnergyLead": 20407.466,
+              "instantaneousDemand": 41.683,
+              "activePower": 41.683,
+              "apparentPower": 71.693,
+              "reactivePower": 0.94,
+              "pwrFactor": 0.615,
+              "voltage": 239.646,
+              "current": 0.3,
+              "freq": 50.0
+            },
+            {
+              "eid": 1778385171,
+              "timestamp": 1714804347,
+              "actEnergyDlvd": 1094193.182,
+              "actEnergyRcvd": 2062.175,
+              "apparentEnergy": 1348225.594,
+              "reactEnergyLagg": 319065.731,
+              "reactEnergyLead": 16515.3,
+              "instantaneousDemand": 39.07,
+              "activePower": 39.07,
+              "apparentPower": 44.88,
+              "reactivePower": 1.771,
+              "pwrFactor": 0.778,
+              "voltage": 237.725,
+              "current": 0.189,
+              "freq": 50.0
+            }
+          ]
+        },
+        {
+          "eid": 704643584,
+          "timestamp": 1714804347,
+          "actEnergyDlvd": 9671361.96,
+          "actEnergyRcvd": 1704783.419,
+          "apparentEnergy": 13673800.457,
+          "reactEnergyLagg": 494494.97,
+          "reactEnergyLead": 3015382.102,
+          "instantaneousDemand": 148.165,
+          "activePower": 148.165,
+          "apparentPower": 460.673,
+          "reactivePower": -300.949,
+          "pwrFactor": 0.318,
+          "voltage": 717.603,
+          "current": 1.918,
+          "freq": 50.0,
+          "channels": [
+            {
+              "eid": 1778385425,
+              "timestamp": 1714804347,
+              "actEnergyDlvd": 3066804.679,
+              "actEnergyRcvd": 309330.838,
+              "apparentEnergy": 4951108.353,
+              "reactEnergyLagg": 24517.912,
+              "reactEnergyLead": 2377508.453,
+              "instantaneousDemand": 185.511,
+              "activePower": 185.511,
+              "apparentPower": 376.511,
+              "reactivePower": -298.049,
+              "pwrFactor": 0.493,
+              "voltage": 240.294,
+              "current": 1.566,
+              "freq": 50.0
+            },
+            {
+              "eid": 1778385426,
+              "timestamp": 1714804347,
+              "actEnergyDlvd": 2426810.597,
+              "actEnergyRcvd": 678824.485,
+              "apparentEnergy": 3566049.507,
+              "reactEnergyLagg": 366590.771,
+              "reactEnergyLead": 368314.783,
+              "instantaneousDemand": -16.627,
+              "activePower": -16.627,
+              "apparentPower": 46.326,
+              "reactivePower": -25.535,
+              "pwrFactor": -0.375,
+              "voltage": 239.513,
+              "current": 0.194,
+              "freq": 50.0
+            },
+            {
+              "eid": 1778385427,
+              "timestamp": 1714804347,
+              "actEnergyDlvd": 4177746.684,
+              "actEnergyRcvd": 716628.097,
+              "apparentEnergy": 5156642.597,
+              "reactEnergyLagg": 103386.286,
+              "reactEnergyLead": 269558.867,
+              "instantaneousDemand": -20.719,
+              "activePower": -20.719,
+              "apparentPower": 37.835,
+              "reactivePower": 22.635,
+              "pwrFactor": -0.571,
+              "voltage": 237.796,
+              "current": 0.159,
+              "freq": 50.0
+            }
+          ]
+        }
+      ],
+      "/production": {
+        "production": [
+          {
+            "type": "inverters",
+            "activeCount": 9,
+            "readingTime": 1714804306,
+            "wNow": 107,
+            "whLifetime": 920667
+          },
+          {
+            "type": "eim",
+            "activeCount": 1,
+            "measurementType": "production",
+            "readingTime": 1714804348,
+            "wNow": 119.065,
+            "whLifetime": 3264160.793,
+            "varhLeadLifetime": 58691.262,
+            "varhLagLifetime": 943620.773,
+            "vahLifetime": 4225140.177,
+            "rmsCurrent": 0.727,
+            "rmsVoltage": 717.827,
+            "reactPwr": 4.114,
+            "apprntPwr": 173.94,
+            "pwrFactor": 0.67,
+            "whToday": 104.793,
+            "whLastSevenDays": 70187.793,
+            "vahToday": 1331.177,
+            "varhLeadToday": 1.262,
+            "varhLagToday": 1054.773
+          }
+        ],
+        "consumption": [
+          {
+            "type": "eim",
+            "activeCount": 1,
+            "measurementType": "total-consumption",
+            "readingTime": 1714804348,
+            "wNow": 267.23,
+            "whLifetime": 11230296.56,
+            "varhLeadLifetime": 2956690.84,
+            "varhLagLifetime": -449125.804,
+            "vahLifetime": 13673800.457,
+            "rmsCurrent": 1.941,
+            "rmsVoltage": 717.603,
+            "reactPwr": -296.835,
+            "apprntPwr": 466.217,
+            "pwrFactor": 0.56,
+            "whToday": 11219.56,
+            "whLastSevenDays": 60487.56,
+            "vahToday": 14520.457,
+            "varhLeadToday": 3820.84,
+            "varhLagToday": 0.0
+          },
+          {
+            "type": "eim",
+            "activeCount": 1,
+            "measurementType": "net-consumption",
+            "readingTime": 1714804348,
+            "wNow": 148.165,
+            "whLifetime": 7967021.314,
+            "varhLeadLifetime": 3015382.102,
+            "varhLagLifetime": 494494.97,
+            "vahLifetime": 13673800.457,
+            "rmsCurrent": 1.214,
+            "rmsVoltage": 717.603,
+            "reactPwr": -300.949,
+            "apprntPwr": 292.209,
+            "pwrFactor": 0.5,
+            "whToday": 0,
+            "whLastSevenDays": 0,
+            "vahToday": 0,
+            "varhLeadToday": 0,
+            "varhLagToday": 0
+          }
+        ],
+        "storage": [
+          {
+            "type": "acb",
+            "activeCount": 0,
+            "readingTime": 0,
+            "wNow": 0,
+            "whNow": 0,
+            "state": "idle"
+          }
+        ]
+      },
+      "/api/v1/production/inverters": [
+        {
+          "serialNumber": "482312083761",
+          "lastReportDate": 1714804246,
+          "devType": 1,
+          "lastReportWatts": 11,
+          "maxReportWatts": 341
+        },
+        {
+          "serialNumber": "482312084840",
+          "lastReportDate": 1714803976,
+          "devType": 1,
+          "lastReportWatts": 9,
+          "maxReportWatts": 336
+        },
+        {
+          "serialNumber": "482312087202",
+          "lastReportDate": 1714804186,
+          "devType": 1,
+          "lastReportWatts": 12,
+          "maxReportWatts": 343
+        },
+        {
+          "serialNumber": "482312084298",
+          "lastReportDate": 1714804187,
+          "devType": 1,
+          "lastReportWatts": 11,
+          "maxReportWatts": 343
+        },
+        {
+          "serialNumber": "482312087222",
+          "lastReportDate": 1714803404,
+          "devType": 1,
+          "lastReportWatts": 13,
+          "maxReportWatts": 342
+        },
+        {
+          "serialNumber": "482312083708",
+          "lastReportDate": 1714803465,
+          "devType": 1,
+          "lastReportWatts": 14,
+          "maxReportWatts": 342
+        },
+        {
+          "serialNumber": "482312086604",
+          "lastReportDate": 1714803495,
+          "devType": 1,
+          "lastReportWatts": 14,
+          "maxReportWatts": 340
+        },
+        {
+          "serialNumber": "482312087072",
+          "lastReportDate": 1714803435,
+          "devType": 1,
+          "lastReportWatts": 13,
+          "maxReportWatts": 340
+        },
+        {
+          "serialNumber": "482312082644",
+          "lastReportDate": 1714803585,
+          "devType": 1,
+          "lastReportWatts": 13,
+          "maxReportWatts": 341
+        }
+      ],
+      "/ivp/ensemble/inventory": [
+        {
+          "type": "ENCHARGE",
+          "devices": [
+            {
+              "part_num": "830-01760-r46",
+              "installed": 1714736645,
+              "serial_num": "122327081322",
+              "device_status": ["envoy.global.ok", "prop.done"],
+              "last_rpt_date": 1714804173,
+              "admin_state": 6,
+              "admin_state_str": "ENCHG_STATE_READY",
+              "created_date": 1714736645,
+              "img_load_date": 1714736645,
+              "img_pnum_running": "2.6.6618_rel/22.11",
+              "zigbee_dongle_fw_version": "100F",
+              "bmu_fw_version": "2.1.16",
+              "operating": true,
+              "communicating": true,
+              "sleep_enabled": false,
+              "percentFull": 4,
+              "temperature": 16,
+              "maxCellTemp": 16,
+              "comm_level_sub_ghz": 4,
+              "comm_level_2_4_ghz": 4,
+              "led_status": 17,
+              "dc_switch_off": false,
+              "encharge_rev": 2,
+              "encharge_capacity": 3500
+            }
+          ]
+        }
+      ],
+      "/ivp/ensemble/secctrl": {
+        "shutdown": false,
+        "freq_bias_hz": 1.3899999856948853,
+        "voltage_bias_v": 16.899999618530273,
+        "freq_bias_hz_q8": 2235,
+        "voltage_bias_v_q5": 540,
+        "freq_bias_hz_phaseb": 0.0,
+        "voltage_bias_v_phaseb": 0.0,
+        "freq_bias_hz_q8_phaseb": 0,
+        "voltage_bias_v_q5_phaseb": 0,
+        "freq_bias_hz_phasec": 0.0,
+        "voltage_bias_v_phasec": 0.0,
+        "freq_bias_hz_q8_phasec": 0,
+        "voltage_bias_v_q5_phasec": 0,
+        "configured_backup_soc": 0,
+        "adjusted_backup_soc": 0,
+        "agg_soc": 4,
+        "Max_energy": 3500,
+        "ENC_agg_soc": 4,
+        "ENC_agg_soh": 100,
+        "ENC_agg_backup_energy": 0,
+        "ENC_agg_avail_energy": 140,
+        "Enc_commissioned_capacity": 3500,
+        "Enc_max_available_capacity": 3500,
+        "ACB_agg_soc": 0,
+        "ACB_agg_energy": 0
+      },
+      "/ivp/ensemble/power": {
+        "devices:": [
+          {
+            "serial_num": "122327081322",
+            "real_power_mw": 0,
+            "apparent_power_mva": 0,
+            "soc": 4
+          }
+        ]
+      },
+      "/admin/lib/tariff": {
+        "tariff": {
+          "currency": {
+            "code": "EUR"
+          },
+          "logger": "mylogger",
+          "date": "1714749724",
+          "storage_settings": {
+            "mode": "self-consumption",
+            "operation_mode_sub_type": "",
+            "reserved_soc": 0.0,
+            "very_low_soc": 5,
+            "charge_from_grid": false,
+            "date": "1714749724"
+          },
+          "single_rate": {
+            "rate": 0.0,
+            "sell": 0.0
+          },
+          "seasons": [
+            {
+              "id": "all_year_long",
+              "start": "1/1",
+              "days": [
+                {
+                  "id": "all_days",
+                  "days": "Mon,Tue,Wed,Thu,Fri,Sat,Sun",
+                  "must_charge_start": 0,
+                  "must_charge_duration": 0,
+                  "must_charge_mode": "CP",
+                  "enable_discharge_to_grid": false,
+                  "periods": [
+                    {
+                      "id": "period_1",
+                      "start": 0,
+                      "rate": 0.0
+                    }
+                  ]
+                }
+              ],
+              "tiers": []
+            }
+          ],
+          "seasons_sell": []
+        },
+        "schedule": {
+          "source": "Tariff",
+          "date": "2024-05-03 15:28:15 UTC",
+          "version": "00.00.02",
+          "reserved_soc": 0.0,
+          "operation_mode_sub_type": "",
+          "very_low_soc": 5,
+          "charge_from_grid": false,
+          "battery_mode": "self-consumption",
+          "schedule": {
+            "Disable": [
+              {
+                "Sun": [
+                  {
+                    "start": 0,
+                    "duration": 1440,
+                    "setting": "ID"
+                  }
+                ]
+              },
+              {
+                "Mon": [
+                  {
+                    "start": 0,
+                    "duration": 1440,
+                    "setting": "ID"
+                  }
+                ]
+              },
+              {
+                "Tue": [
+                  {
+                    "start": 0,
+                    "duration": 1440,
+                    "setting": "ID"
+                  }
+                ]
+              },
+              {
+                "Wed": [
+                  {
+                    "start": 0,
+                    "duration": 1440,
+                    "setting": "ID"
+                  }
+                ]
+              },
+              {
+                "Thu": [
+                  {
+                    "start": 0,
+                    "duration": 1440,
+                    "setting": "ID"
+                  }
+                ]
+              },
+              {
+                "Fri": [
+                  {
+                    "start": 0,
+                    "duration": 1440,
+                    "setting": "ID"
+                  }
+                ]
+              },
+              {
+                "Sat": [
+                  {
+                    "start": 0,
+                    "duration": 1440,
+                    "setting": "ID"
+                  }
+                ]
+              }
+            ],
+            "tariff": [
+              {
+                "start": "1/1",
+                "end": "1/1",
+                "Sun": [
+                  {
+                    "start": 0,
+                    "duration": 1440,
+                    "setting": "ZN"
+                  }
+                ],
+                "Mon": [
+                  {
+                    "start": 0,
+                    "duration": 1440,
+                    "setting": "ZN"
+                  }
+                ],
+                "Tue": [
+                  {
+                    "start": 0,
+                    "duration": 1440,
+                    "setting": "ZN"
+                  }
+                ],
+                "Wed": [
+                  {
+                    "start": 0,
+                    "duration": 1440,
+                    "setting": "ZN"
+                  }
+                ],
+                "Thu": [
+                  {
+                    "start": 0,
+                    "duration": 1440,
+                    "setting": "ZN"
+                  }
+                ],
+                "Fri": [
+                  {
+                    "start": 0,
+                    "duration": 1440,
+                    "setting": "ZN"
+                  }
+                ],
+                "Sat": [
+                  {
+                    "start": 0,
+                    "duration": 1440,
+                    "setting": "ZN"
+                  }
+                ]
+              }
+            ]
+          },
+          "override": false,
+          "override_backup_soc": 30.0,
+          "override_chg_dischg_rate": 0.0,
+          "override_tou_mode": "StorageTouMode_DEFAULT_TOU_MODE"
+        }
+      }
+    }
+  }
+}
