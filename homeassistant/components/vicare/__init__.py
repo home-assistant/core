@@ -31,7 +31,7 @@ from .const import (
     UNSUPPORTED_DEVICES,
 )
 from .types import ViCareDevice
-from .utils import get_device
+from .utils import get_device, get_device_serial
 
 _LOGGER = logging.getLogger(__name__)
 _TOKEN_FILENAME = "vicare_token.save"
@@ -124,10 +124,15 @@ async def async_migrate_devices(
     registry = dr.async_get(hass)
 
     gateway_serial: str = device.config.getConfig().serial
-    device_serial: str = device.api.getSerial()
+    device_id = device.config.getId()
+    device_serial: str | None = await hass.async_add_executor_job(
+        get_device_serial, device.api
+    )
 
     old_identifier = gateway_serial
-    new_identifier = f"{gateway_serial}_{device_serial}"
+    new_identifier = (
+        f"{gateway_serial}_{device_serial if device_serial is not None else device_id}"
+    )
 
     # Migrate devices
     for device_entry in dr.async_entries_for_config_entry(registry, entry.entry_id):
@@ -145,8 +150,14 @@ async def async_migrate_entities(
 ) -> None:
     """Migrate old entry."""
     gateway_serial: str = device.config.getConfig().serial
-    device_serial: str = device.api.getSerial()
-    new_identifier = f"{gateway_serial}_{device_serial}"
+    device_id = device.config.getId()
+    device_serial: str | None = await hass.async_add_executor_job(
+        get_device_serial, device.api
+    )
+
+    new_identifier = (
+        f"{gateway_serial}_{device_serial if device_serial is not None else device_id}"
+    )
 
     @callback
     def _update_unique_id(

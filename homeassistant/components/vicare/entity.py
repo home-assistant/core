@@ -10,6 +10,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN
+from .utils import get_device_serial
 
 
 class ViCareEntity(Entity):
@@ -20,7 +21,6 @@ class ViCareEntity(Entity):
     def __init__(
         self,
         unique_id_suffix: str,
-        device_serial: str | None,
         device_config: PyViCareDeviceConfig,
         device: PyViCareDevice,
         component: PyViCareHeatingDeviceComponent | None = None,
@@ -28,6 +28,7 @@ class ViCareEntity(Entity):
         """Initialize the entity."""
         gateway_serial = device_config.getConfig().serial
         device_id = device_config.getId()
+        device_serial: str | None = get_device_serial(device)
 
         identifier = f"{gateway_serial}_{device_serial if device_serial is not None else device_id}"
 
