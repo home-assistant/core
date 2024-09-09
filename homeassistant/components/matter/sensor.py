@@ -509,7 +509,7 @@ DISCOVERY_SCHEMAS = [
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
-        entity_description=MatterSensorEntityDescription(     
+        entity_description=MatterSensorEntityDescription(
             key="ElectricalPowerMeasurementWatt",
             device_class=SensorDeviceClass.POWER,
             entity_category=EntityCategory.DIAGNOSTIC,
