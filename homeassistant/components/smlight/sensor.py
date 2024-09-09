@@ -127,7 +127,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up SMLIGHT sensor based on a config entry."""
-    coordinator = entry.runtime_data
+    coordinator = entry.runtime_data.data
 
     async_add_entities(
         chain(

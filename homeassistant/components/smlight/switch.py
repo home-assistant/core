@@ -63,7 +63,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Initialize switches for SLZB-06 device."""
-    coordinator = entry.runtime_data
+    coordinator = entry.runtime_data.data
 
     async_add_entities(SmSwitch(coordinator, switch) for switch in SWITCHES)
 

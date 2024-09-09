@@ -60,7 +60,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up SMLIGHT buttons based on a config entry."""
-    coordinator = entry.runtime_data
+    coordinator = entry.runtime_data.data
 
     async_add_entities(SmButton(coordinator, button) for button in BUTTONS)
 
