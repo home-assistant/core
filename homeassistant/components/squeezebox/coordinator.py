@@ -37,7 +37,9 @@ class LMSStatusDataUpdateCoordinator(DataUpdateCoordinator):
             always_update=False,
         )
         self.lms = lms
-        self.newversion_regex = re.compile("<.*$")
+        self.newversion_regex_pre = re.compile("^.*\(")
+        self.newversion_regex_post = re.compile("<.*$")
+        self.newplugins_regex = re.compile(".* - ")
 
     async def _async_update_data(self) -> dict:
         """Fetch data fromn LMS status call.
@@ -74,13 +76,17 @@ class LMSStatusDataUpdateCoordinator(DataUpdateCoordinator):
         # newversion str not always present
         # Sample text 'A new version of Logitech Media Server is available (8.5.2 - 0). <a href="updateinfo.html?installerFile=/var/lib/squeezeboxserver/cache/updates/logitechmediaserver_8.5.2_amd64.deb" target="update">Click here for further information</a>.'
         data[STATUS_SENSOR_NEWVERSION] = (
-            self.newversion_regex.sub("...", data[STATUS_SENSOR_NEWVERSION])
+            self.newversion_regex_pre.sub("(", self.newversion_regex_post.sub("...", data[STATUS_SENSOR_NEWVERSION]))
             if STATUS_SENSOR_NEWVERSION in data
             else None
         )
         # newplugins str not always present
-        if STATUS_SENSOR_NEWPLUGINS not in data:
-            data[STATUS_SENSOR_NEWPLUGINS] = None
+        # newplugins': newplugins': 'Plugins have been updated - Restart Required (BBC Sounds)
+        data[STATUS_SENSOR_NEWPLUGINS] = (
+            self.newplugins_regex.sub("", data[STATUS_SENSOR_NEWPLUGINS])
+            if STATUS_SENSOR_NEWPLUGINS in data
+            else "current"
+        )
 
         _LOGGER.debug("Processed serverstatus %s=%s", self.lms.name, data)
         return data

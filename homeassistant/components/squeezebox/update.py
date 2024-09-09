@@ -82,6 +82,7 @@ class ServerStatusUpdatePlugins(LMSStatusEntity, UpdateEntity):
     auto_update = True
     supported_features = UpdateEntityFeature.INSTALL
     title: str = SERVER_MODEL + " plugins"
+    installed_version = "current"
 
     @property
     def latest_version(self) -> StateType:
@@ -93,4 +94,5 @@ class ServerStatusUpdatePlugins(LMSStatusEntity, UpdateEntity):
     ) -> None:
         """Install all plugin updates."""
         _LOGGER.debug("server restart for plugin install")
+        await self.coordinator.lms.async_query("serverstatus")
         # await self.coordinator.lms.async_query("restartserver")
