@@ -4,7 +4,7 @@ from pyhap.loader import get_loader
 import pytest
 
 from homeassistant.components.alarm_control_panel import (
-    DOMAIN,
+    DOMAIN as ALARM_CONTROL_PANEL_DOMAIN,
     AlarmControlPanelEntityFeature,
 )
 from homeassistant.components.homekit.const import ATTR_VALUE
@@ -77,10 +77,16 @@ async def test_switch_set_state(
     assert acc.char_current_state.value == 4
 
     # Set from HomeKit
-    call_arm_home = async_mock_service(hass, DOMAIN, "alarm_arm_home")
-    call_arm_away = async_mock_service(hass, DOMAIN, "alarm_arm_away")
-    call_arm_night = async_mock_service(hass, DOMAIN, "alarm_arm_night")
-    call_disarm = async_mock_service(hass, DOMAIN, "alarm_disarm")
+    call_arm_home = async_mock_service(
+        hass, ALARM_CONTROL_PANEL_DOMAIN, "alarm_arm_home"
+    )
+    call_arm_away = async_mock_service(
+        hass, ALARM_CONTROL_PANEL_DOMAIN, "alarm_arm_away"
+    )
+    call_arm_night = async_mock_service(
+        hass, ALARM_CONTROL_PANEL_DOMAIN, "alarm_arm_night"
+    )
+    call_disarm = async_mock_service(hass, ALARM_CONTROL_PANEL_DOMAIN, "alarm_disarm")
 
     acc.char_target_state.client_update_value(0)
     await hass.async_block_till_done()
@@ -131,7 +137,9 @@ async def test_no_alarm_code(
     acc = SecuritySystem(hass, hk_driver, "SecuritySystem", entity_id, 2, config)
 
     # Set from HomeKit
-    call_arm_home = async_mock_service(hass, DOMAIN, "alarm_arm_home")
+    call_arm_home = async_mock_service(
+        hass, ALARM_CONTROL_PANEL_DOMAIN, "alarm_arm_home"
+    )
 
     acc.char_target_state.client_update_value(0)
     await hass.async_block_till_done()
