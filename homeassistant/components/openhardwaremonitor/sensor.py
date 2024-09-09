@@ -18,6 +18,7 @@ from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.components.sensor import SensorStateClass
 from homeassistant.util import Throttle
 from homeassistant.util.dt import utcnow
 
@@ -74,6 +75,11 @@ class OpenHardwareMonitorDevice(SensorEntity):
     def name(self):
         """Return the name of the device."""
         return self._name
+
+    @property
+    def state_class(self):
+        """Return the state class of this entity, from STATE_CLASSES, if any."""
+        return SensorStateClass.MEASUREMENT
 
     @property
     def native_unit_of_measurement(self):
