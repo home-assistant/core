@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from functools import lru_cache
-from typing import Final
 
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_BILLION,
