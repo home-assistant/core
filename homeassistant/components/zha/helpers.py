@@ -14,7 +14,7 @@ import logging
 import re
 import time
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Any, Concatenate, NamedTuple, ParamSpec, TypeVar, cast
+from typing import TYPE_CHECKING, Any, Concatenate, NamedTuple, cast
 from zoneinfo import ZoneInfo
 
 import voluptuous as vol
@@ -171,9 +171,6 @@ if TYPE_CHECKING:
     from .update import ZHAFirmwareUpdateCoordinator
 
     _LogFilterType = Filter | Callable[[LogRecord], bool]
-
-_P = ParamSpec("_P")
-_EntityT = TypeVar("_EntityT", bound="ZHAEntity")
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -802,21 +799,24 @@ class ZHAGatewayProxy(EventBase):
                 )
 
     def _cleanup_group_entity_registry_entries(
-        self, zigpy_group: zigpy.group.Group
+        self, zha_group_proxy: ZHAGroupProxy
     ) -> None:
         """Remove entity registry entries for group entities when the groups are removed from HA."""
         # first we collect the potential unique ids for entities that could be created from this group
         possible_entity_unique_ids = [
-            f"{domain}_zha_group_0x{zigpy_group.group_id:04x}"
+            f"{domain}_zha_group_0x{zha_group_proxy.group.group_id:04x}"
             for domain in GROUP_ENTITY_DOMAINS
         ]
 
         # then we get all group entity entries tied to the coordinator
         entity_registry = er.async_get(self.hass)
-        assert self.coordinator_zha_device
+        assert self.gateway.coordinator_zha_device
+        coordinator_proxy = self.device_proxies[
+            self.gateway.coordinator_zha_device.ieee
+        ]
         all_group_entity_entries = er.async_entries_for_device(
             entity_registry,
-            self.coordinator_zha_device.device_id,
+            coordinator_proxy.device_id,
             include_disabled_entities=True,
         )
 
@@ -1274,7 +1274,7 @@ def create_zha_config(hass: HomeAssistant, ha_zha_data: HAZHAData) -> ZHAData:
     )
 
 
-def convert_zha_error_to_ha_error(
+def convert_zha_error_to_ha_error[**_P, _EntityT: ZHAEntity](
     func: Callable[Concatenate[_EntityT, _P], Awaitable[None]],
 ) -> Callable[Concatenate[_EntityT, _P], Coroutine[Any, Any, None]]:
     """Decorate ZHA commands and re-raises ZHAException as HomeAssistantError."""

@@ -11,7 +11,7 @@ from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
-LOCATION_ID = "123456"
+LOCATION_ID = 123456
 
 DEVICE_INFO_BASIC_1 = {
     "DeviceID": "987654",

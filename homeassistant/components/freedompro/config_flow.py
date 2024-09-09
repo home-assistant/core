@@ -19,19 +19,19 @@ STEP_USER_DATA_SCHEMA = vol.Schema({vol.Required(CONF_API_KEY): str})
 class Hub:
     """Freedompro Hub class."""
 
-    def __init__(self, hass, api_key):
+    def __init__(self, hass: HomeAssistant, api_key: str) -> None:
         """Freedompro Hub class init."""
         self._hass = hass
         self._api_key = api_key
 
-    async def authenticate(self):
+    async def authenticate(self) -> dict[str, Any]:
         """Freedompro Hub class authenticate."""
         return await get_list(
             aiohttp_client.async_get_clientsession(self._hass), self._api_key
         )
 
 
-async def validate_input(hass: HomeAssistant, api_key):
+async def validate_input(hass: HomeAssistant, api_key: str) -> None:
     """Validate api key."""
     hub = Hub(hass, api_key)
     result = await hub.authenticate()
