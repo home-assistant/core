@@ -72,6 +72,7 @@ NUMBER_CONFIG_SCHEMA = vol.Schema(
         vol.Required(CONF_SET_VALUE): cv.SCRIPT_SCHEMA,
         vol.Optional(CONF_MIN): cv.template,
         vol.Optional(CONF_MAX): cv.template,
+        vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
         vol.Optional(CONF_DEVICE_ID): selector.DeviceSelector(),
     }
 )
