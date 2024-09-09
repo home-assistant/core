@@ -27,6 +27,8 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+from tests.common import MockConfigEntry
+
 
 async def test_config_flow(hass: HomeAssistant) -> None:
     """Test the config flow."""
@@ -351,3 +353,40 @@ async def test_single_template_observation(hass: HomeAssistant) -> None:
         }
 
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_basic_options(hass: HomeAssistant) -> None:
+    """Test reconfiguring the basic options."""
+    # Setup the config entry
+    config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={
+            CONF_NAME: "Office occupied",
+            CONF_PROBABILITY_THRESHOLD: 0.5,
+            CONF_PRIOR: 0.15,
+            CONF_DEVICE_CLASS: "occupancy",
+            CONF_OBSERVATIONS: [
+                {
+                    CONF_PLATFORM: "numeric_state",
+                    CONF_ENTITY_ID: "sensor.office_illuminance_lux",
+                    CONF_ABOVE: 40,
+                    CONF_P_GIVEN_T: 0.85,
+                    CONF_P_GIVEN_F: 0.45,
+                    CONF_NAME: "Office is bright",
+                }
+            ],
+        },
+        title="Office occupied",
+    )
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    hass.states.async_set("sensor.office_illuminance_lux", 50)
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "init"
+
+    # TODO Test editing the basic settings
