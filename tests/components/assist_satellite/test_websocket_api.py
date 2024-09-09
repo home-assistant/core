@@ -24,7 +24,7 @@ async def test_intercept_wake_word(
 
     await ws_client.send_json_auto_id(
         {
-            "type": "assist_satellite/intercept_wake_word",
+            "type": "assist_satellite/intercept_wake_word/start",
             "entity_id": ENTITY_ID,
         }
     )
@@ -55,7 +55,7 @@ async def test_intercept_wake_word_requires_on_device_wake_word(
 
     await ws_client.send_json_auto_id(
         {
-            "type": "assist_satellite/intercept_wake_word",
+            "type": "assist_satellite/intercept_wake_word/start",
             "entity_id": ENTITY_ID,
         }
     )
@@ -88,7 +88,7 @@ async def test_intercept_wake_word_requires_wake_word_phrase(
 
     await ws_client.send_json_auto_id(
         {
-            "type": "assist_satellite/intercept_wake_word",
+            "type": "assist_satellite/intercept_wake_word/start",
             "entity_id": ENTITY_ID,
         }
     )
@@ -124,7 +124,7 @@ async def test_intercept_wake_word_require_admin(
 
     await ws_client.send_json_auto_id(
         {
-            "type": "assist_satellite/intercept_wake_word",
+            "type": "assist_satellite/intercept_wake_word/start",
             "entity_id": ENTITY_ID,
         }
     )
@@ -148,7 +148,7 @@ async def test_intercept_wake_word_invalid_satellite(
 
     await ws_client.send_json_auto_id(
         {
-            "type": "assist_satellite/intercept_wake_word",
+            "type": "assist_satellite/intercept_wake_word/start",
             "entity_id": "assist_satellite.invalid",
         }
     )
@@ -167,26 +167,55 @@ async def test_intercept_wake_word_twice(
     entity: MockAssistSatellite,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
-    """Test intercepting a wake word requires admin access."""
+    """Test intercepting a wake word twice cancels the previous request."""
     ws_client = await hass_ws_client(hass)
 
     await ws_client.send_json_auto_id(
         {
-            "type": "assist_satellite/intercept_wake_word",
+            "type": "assist_satellite/intercept_wake_word/start",
             "entity_id": ENTITY_ID,
         }
     )
 
     await ws_client.send_json_auto_id(
         {
-            "type": "assist_satellite/intercept_wake_word",
+            "type": "assist_satellite/intercept_wake_word/start",
             "entity_id": ENTITY_ID,
         }
     )
     response = await ws_client.receive_json()
 
-    assert not response["success"]
-    assert response["error"] == {
-        "code": "home_assistant_error",
-        "message": "Wake word interception already in progress",
-    }
+    assert response["success"]
+    assert response["result"] == {"wake_word_phrase": None}
+
+
+async def test_intercept_wake_word_stop(
+    hass: HomeAssistant,
+    init_components: ConfigEntry,
+    entity: MockAssistSatellite,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test that we can stop intercepting wake words."""
+    ws_client = await hass_ws_client(hass)
+
+    await ws_client.send_json_auto_id(
+        {
+            "type": "assist_satellite/intercept_wake_word/start",
+            "entity_id": ENTITY_ID,
+        }
+    )
+
+    task = asyncio.create_task(ws_client.receive_json())
+
+    async with asyncio.timeout(1):
+        # Will cancel the open request
+        await ws_client.send_json_auto_id(
+            {
+                "type": "assist_satellite/intercept_wake_word/stop",
+                "entity_id": ENTITY_ID,
+            }
+        )
+
+        response = await task
+        assert response["success"]
+        assert response["result"] == {"wake_word_phrase": None}
