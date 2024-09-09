@@ -180,12 +180,9 @@ class UpdateEntityDescription(EntityDescription, frozen_or_thawed=True):
 
 
 @lru_cache(maxsize=256)
-def _version_is_newer(
-    latest_version: str, installed_version: str, compare_by_string: bool = False
-) -> bool:
+def _version_is_newer(latest_version: str, installed_version: str) -> bool:
     """Return True if version is newer."""
-    latest_ver = latest_version if compare_by_string else AwesomeVersion(latest_version)
-    return latest_ver > installed_version
+    return AwesomeVersion(latest_version) > installed_version
 
 
 CACHED_PROPERTIES_WITH_ATTR_ = {
