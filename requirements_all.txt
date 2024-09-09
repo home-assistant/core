@@ -870,6 +870,9 @@ eliqonline==1.2.2
 # homeassistant.components.elkm1
 elkm1-lib==2.2.11
 
+# homeassistant.components.inels
+elkoep-mqtt==0.2.33b13
+
 # homeassistant.components.elmax
 elmax-api==0.0.6.4rc0
 
