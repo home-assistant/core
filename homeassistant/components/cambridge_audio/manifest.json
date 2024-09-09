@@ -5,7 +5,7 @@
   "config_flow": true,
   "dependencies": [],
   "documentation": "https://www.home-assistant.io/integrations/cambridge_audio",
-  "iot_class": "local_polling",
-  "requirements": ["aiostreammagic==1.0.0"],
+  "iot_class": "local_push",
+  "requirements": ["aiostreammagic==2.0.1"],
   "zeroconf": ["_stream-magic._tcp.local.", "_smoip._tcp.local."]
 }

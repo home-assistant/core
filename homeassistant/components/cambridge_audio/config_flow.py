@@ -9,7 +9,6 @@ from homeassistant.components import zeroconf
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_MODEL
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
 
@@ -39,9 +38,8 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
 
         await self.async_set_unique_id(discovery_info.properties["serial"])
         self._abort_if_unique_id_configured(updates={CONF_HOST: host})
-        session = async_get_clientsession(self.hass)
-        self.client = StreamMagicClient(host, session=session)
-        await self.client.get_info()
+        self.client = StreamMagicClient(host)
+        await self.client.connect()
 
         self.context["title_placeholders"] = {
             "model": self.data[CONF_MODEL],
@@ -73,17 +71,16 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             host = user_input[CONF_HOST]
-            session = async_get_clientsession(self.hass)
-            client = StreamMagicClient(host, session)
+            client = StreamMagicClient(host)
             try:
-                info = await client.get_info()
+                await client.connect()
             except StreamMagicError:
                 errors["base"] = "cannot_connect"
             else:
-                await self.async_set_unique_id(info.udn)
+                await self.async_set_unique_id(client.info.udn)
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
-                    title=info.name,
+                    title=client.info.name,
                     data={CONF_HOST: host},
                 )
         return self.async_show_form(

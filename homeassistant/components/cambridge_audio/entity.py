@@ -1,26 +1,26 @@
 """Base class for AirGradient entities."""
 
+from aiostreammagic import StreamMagicClient
+
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .coordinator import CambridgeAudioCoordinator
 
 
-class CambridgeAudioEntity(CoordinatorEntity[CambridgeAudioCoordinator]):
+class CambridgeAudioEntity:
     """Defines a base Cambridge Audio entity."""
 
     _attr_has_entity_name = True
     _attr_name = None
 
-    def __init__(self, coordinator: CambridgeAudioCoordinator) -> None:
+    def __init__(self, client: StreamMagicClient) -> None:
         """Initialize Cambridge Audio entity."""
-        super().__init__(coordinator)
-        info = coordinator.data.info
+        self.client = client
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, info.udn)},
-            name=info.name,
+            identifiers={(DOMAIN, client.info.udn)},
+            name=client.info.name,
             manufacturer="Cambridge Audio",
-            model=info.model,
-            serial_number=info.udn,
+            model=client.info.model,
+            serial_number=client.info.udn,
+            configuration_url=f"http://{client.host}",
         )
