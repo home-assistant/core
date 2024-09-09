@@ -22,6 +22,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from tests.common import (
@@ -42,7 +43,7 @@ async def test_set_temp_schema_no_req(
     """Test the set temperature schema with missing required data."""
     domain = "climate"
     service = "test_set_temperature"
-    schema = SET_TEMPERATURE_SCHEMA
+    schema = cv.make_entity_service_schema(SET_TEMPERATURE_SCHEMA)
     calls = async_mock_service(hass, domain, service, schema)
 
     data = {"hvac_mode": "off", "entity_id": ["climate.test_id"]}
@@ -59,7 +60,7 @@ async def test_set_temp_schema(
     """Test the set temperature schema with ok required data."""
     domain = "water_heater"
     service = "test_set_temperature"
-    schema = SET_TEMPERATURE_SCHEMA
+    schema = cv.make_entity_service_schema(SET_TEMPERATURE_SCHEMA)
     calls = async_mock_service(hass, domain, service, schema)
 
     data = {

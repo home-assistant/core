@@ -39,7 +39,7 @@ def get_scanner(hass: HomeAssistant, config: ConfigType) -> BboxDeviceScanner | 
     return scanner if scanner.success_init else None
 
 
-Device = namedtuple("Device", ["mac", "name", "ip", "last_update"])
+Device = namedtuple("Device", ["mac", "name", "ip", "last_update"])  # noqa: PYI024
 
 
 class BboxDeviceScanner(DeviceScanner):

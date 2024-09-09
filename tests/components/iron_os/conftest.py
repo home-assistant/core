@@ -108,7 +108,7 @@ def mock_ble_device() -> Generator[MagicMock]:
 
 
 @pytest.fixture
-def mock_pynecil() -> Generator[AsyncMock, None, None]:
+def mock_pynecil() -> Generator[AsyncMock]:
     """Mock Pynecil library."""
     with patch(
         "homeassistant.components.iron_os.Pynecil", autospec=True

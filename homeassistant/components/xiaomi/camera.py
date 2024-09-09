@@ -80,7 +80,6 @@ class XiaomiCamera(Camera):
         self._manager = get_ffmpeg_manager(hass)
         self._name = config[CONF_NAME]
         self.host = config[CONF_HOST]
-        self.host.hass = hass
         self._model = config[CONF_MODEL]
         self.port = config[CONF_PORT]
         self.path = config[CONF_PATH]

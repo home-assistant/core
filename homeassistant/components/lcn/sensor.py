@@ -1,7 +1,7 @@
 """Support for LCN sensors."""
 
-from __future__ import annotations
-
+from collections.abc import Iterable
+from functools import partial
 from itertools import chain
 from typing import cast
 
@@ -22,7 +22,9 @@ from homeassistant.helpers.typing import ConfigType
 
 from . import LcnEntity
 from .const import (
+    ADD_ENTITIES_CALLBACKS,
     CONF_DOMAIN_DATA,
+    DOMAIN,
     LED_PORTS,
     S0_INPUTS,
     SETPOINTS,
@@ -32,22 +34,35 @@ from .const import (
 from .helpers import DeviceConnectionType, InputType, get_device_connection
 
 
-def create_lcn_sensor_entity(
-    hass: HomeAssistant, entity_config: ConfigType, config_entry: ConfigEntry
-) -> LcnEntity:
-    """Set up an entity for this domain."""
-    device_connection = get_device_connection(
-        hass, entity_config[CONF_ADDRESS], config_entry
-    )
-
-    if entity_config[CONF_DOMAIN_DATA][CONF_SOURCE] in chain(
-        VARIABLES, SETPOINTS, THRESHOLDS, S0_INPUTS
-    ):
-        return LcnVariableSensor(
-            entity_config, config_entry.entry_id, device_connection
+def add_lcn_entities(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+    entity_configs: Iterable[ConfigType],
+) -> None:
+    """Add entities for this domain."""
+    entities: list[LcnVariableSensor | LcnLedLogicSensor] = []
+    for entity_config in entity_configs:
+        device_connection = get_device_connection(
+            hass, entity_config[CONF_ADDRESS], config_entry
         )
-    # in LED_PORTS + LOGICOP_PORTS
-    return LcnLedLogicSensor(entity_config, config_entry.entry_id, device_connection)
+
+        if entity_config[CONF_DOMAIN_DATA][CONF_SOURCE] in chain(
+            VARIABLES, SETPOINTS, THRESHOLDS, S0_INPUTS
+        ):
+            entities.append(
+                LcnVariableSensor(
+                    entity_config, config_entry.entry_id, device_connection
+                )
+            )
+        else:  # in LED_PORTS + LOGICOP_PORTS
+            entities.append(
+                LcnLedLogicSensor(
+                    entity_config, config_entry.entry_id, device_connection
+                )
+            )
+
+    async_add_entities(entities)
 
 
 async def async_setup_entry(
@@ -56,11 +71,23 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up LCN switch entities from a config entry."""
+    add_entities = partial(
+        add_lcn_entities,
+        hass,
+        config_entry,
+        async_add_entities,
+    )
 
-    async_add_entities(
-        create_lcn_sensor_entity(hass, entity_config, config_entry)
-        for entity_config in config_entry.data[CONF_ENTITIES]
-        if entity_config[CONF_DOMAIN] == DOMAIN_SENSOR
+    hass.data[DOMAIN][config_entry.entry_id][ADD_ENTITIES_CALLBACKS].update(
+        {DOMAIN_SENSOR: add_entities}
+    )
+
+    add_entities(
+        (
+            entity_config
+            for entity_config in config_entry.data[CONF_ENTITIES]
+            if entity_config[CONF_DOMAIN] == DOMAIN_SENSOR
+        ),
     )
 
 

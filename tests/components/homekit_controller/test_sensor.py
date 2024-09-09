@@ -3,10 +3,10 @@
 from collections.abc import Callable
 from unittest.mock import patch
 
-from aiohomekit.model import Transport
+from aiohomekit.model import Accessory, Transport
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.characteristics.const import ThreadNodeCapabilities, ThreadStatus
-from aiohomekit.model.services import ServicesTypes
+from aiohomekit.model.services import Service, ServicesTypes
 from aiohomekit.protocol.statuscodes import HapStatusCode
 from aiohomekit.testing import FakePairing
 import pytest
@@ -24,7 +24,7 @@ from .common import TEST_DEVICE_SERVICE_INFO, Helper, setup_test_component
 from tests.components.bluetooth import inject_bluetooth_service_info
 
 
-def create_temperature_sensor_service(accessory):
+def create_temperature_sensor_service(accessory: Accessory) -> None:
     """Define temperature characteristics."""
     service = accessory.add_service(ServicesTypes.TEMPERATURE_SENSOR)
 
@@ -32,7 +32,7 @@ def create_temperature_sensor_service(accessory):
     cur_state.value = 0
 
 
-def create_humidity_sensor_service(accessory):
+def create_humidity_sensor_service(accessory: Accessory) -> None:
     """Define humidity characteristics."""
     service = accessory.add_service(ServicesTypes.HUMIDITY_SENSOR)
 
@@ -40,7 +40,7 @@ def create_humidity_sensor_service(accessory):
     cur_state.value = 0
 
 
-def create_light_level_sensor_service(accessory):
+def create_light_level_sensor_service(accessory: Accessory) -> None:
     """Define light level characteristics."""
     service = accessory.add_service(ServicesTypes.LIGHT_SENSOR)
 
@@ -48,7 +48,7 @@ def create_light_level_sensor_service(accessory):
     cur_state.value = 0
 
 
-def create_carbon_dioxide_level_sensor_service(accessory):
+def create_carbon_dioxide_level_sensor_service(accessory: Accessory) -> None:
     """Define carbon dioxide level characteristics."""
     service = accessory.add_service(ServicesTypes.CARBON_DIOXIDE_SENSOR)
 
@@ -56,7 +56,7 @@ def create_carbon_dioxide_level_sensor_service(accessory):
     cur_state.value = 0
 
 
-def create_battery_level_sensor(accessory):
+def create_battery_level_sensor(accessory: Accessory) -> Service:
     """Define battery level characteristics."""
     service = accessory.add_service(ServicesTypes.BATTERY_SERVICE)
 
@@ -280,7 +280,7 @@ async def test_battery_low(
     assert state.attributes["icon"] == "mdi:battery-alert"
 
 
-def create_switch_with_sensor(accessory):
+def create_switch_with_sensor(accessory: Accessory) -> Service:
     """Define battery level characteristics."""
     service = accessory.add_service(ServicesTypes.OUTLET)
 

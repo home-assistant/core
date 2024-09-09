@@ -28,7 +28,7 @@ SCAN_INTERVAL = timedelta(hours=4)
 
 ICON = "mdi:currency-eur"
 
-BankCredentials = namedtuple("BankCredentials", "blz login pin url")
+BankCredentials = namedtuple("BankCredentials", "blz login pin url")  # noqa: PYI024
 
 CONF_BIN = "bank_identification_number"
 CONF_ACCOUNTS = "accounts"

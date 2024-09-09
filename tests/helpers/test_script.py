@@ -249,7 +249,7 @@ async def test_calling_service_basic(
 
     alias = "service step"
     sequence = cv.SCRIPT_SCHEMA(
-        {"alias": alias, "service": "test.script", "data": {"hello": "world"}}
+        {"alias": alias, "action": "test.script", "data": {"hello": "world"}}
     )
     script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
 
@@ -352,13 +352,13 @@ async def test_calling_service_response_data(
         [
             {
                 "alias": "service step1",
-                "service": "test.script",
+                "action": "test.script",
                 # Store the result of the service call as a variable
                 "response_variable": "my_response",
             },
             {
                 "alias": "service step2",
-                "service": "test.script",
+                "action": "test.script",
                 "data_template": {
                     # Result of previous service call
                     "key": "{{ my_response.data }}"
@@ -441,7 +441,7 @@ async def test_service_response_data_errors(
         [
             {
                 "alias": "service step1",
-                "service": "test.script",
+                "action": "test.script",
                 **params,
             },
         ]
@@ -458,7 +458,7 @@ async def test_data_template_with_templated_key(hass: HomeAssistant) -> None:
     calls = async_mock_service(hass, "test", "script")
 
     sequence = cv.SCRIPT_SCHEMA(
-        {"service": "test.script", "data_template": {"{{ hello_var }}": "world"}}
+        {"action": "test.script", "data_template": {"{{ hello_var }}": "world"}}
     )
     script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
 
@@ -525,11 +525,11 @@ async def test_multiple_runs_no_wait(hass: HomeAssistant) -> None:
     sequence = cv.SCRIPT_SCHEMA(
         [
             {
-                "service": "test.script",
+                "action": "test.script",
                 "data_template": {"fire": "{{ fire1 }}", "listen": "{{ listen1 }}"},
             },
             {
-                "service": "test.script",
+                "action": "test.script",
                 "data_template": {"fire": "{{ fire2 }}", "listen": "{{ listen2 }}"},
             },
         ]
@@ -605,7 +605,7 @@ async def test_stop_no_wait(hass: HomeAssistant, count) -> None:
 
     hass.services.async_register("test", "script", async_simulate_long_service)
 
-    sequence = cv.SCRIPT_SCHEMA([{"service": "test.script"}, {"event": event}])
+    sequence = cv.SCRIPT_SCHEMA([{"action": "test.script"}, {"event": event}])
     script_obj = script.Script(
         hass,
         sequence,
@@ -3894,7 +3894,7 @@ async def test_parallel_error(
     sequence = cv.SCRIPT_SCHEMA(
         {
             "parallel": [
-                {"service": "epic.failure"},
+                {"action": "epic.failure"},
             ]
         }
     )
@@ -3946,7 +3946,7 @@ async def test_propagate_error_service_not_found(hass: HomeAssistant) -> None:
     await async_setup_component(hass, "homeassistant", {})
     event = "test_event"
     events = async_capture_events(hass, event)
-    sequence = cv.SCRIPT_SCHEMA([{"service": "test.script"}, {"event": event}])
+    sequence = cv.SCRIPT_SCHEMA([{"action": "test.script"}, {"event": event}])
     script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
 
     with pytest.raises(exceptions.ServiceNotFound):
@@ -3980,7 +3980,7 @@ async def test_propagate_error_invalid_service_data(hass: HomeAssistant) -> None
     events = async_capture_events(hass, event)
     calls = async_mock_service(hass, "test", "script", vol.Schema({"text": str}))
     sequence = cv.SCRIPT_SCHEMA(
-        [{"service": "test.script", "data": {"text": 1}}, {"event": event}]
+        [{"action": "test.script", "data": {"text": 1}}, {"event": event}]
     )
     script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
 
@@ -4022,7 +4022,7 @@ async def test_propagate_error_service_exception(hass: HomeAssistant) -> None:
 
     hass.services.async_register("test", "script", record_call)
 
-    sequence = cv.SCRIPT_SCHEMA([{"service": "test.script"}, {"event": event}])
+    sequence = cv.SCRIPT_SCHEMA([{"action": "test.script"}, {"event": event}])
     script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
 
     with pytest.raises(ValueError):
@@ -4057,35 +4057,35 @@ async def test_referenced_labels(hass: HomeAssistant) -> None:
         cv.SCRIPT_SCHEMA(
             [
                 {
-                    "service": "test.script",
+                    "action": "test.script",
                     "data": {"label_id": "label_service_not_list"},
                 },
                 {
-                    "service": "test.script",
+                    "action": "test.script",
                     "data": {
                         "label_id": ["label_service_list_1", "label_service_list_2"]
                     },
                 },
                 {
-                    "service": "test.script",
+                    "action": "test.script",
                     "data": {"label_id": "{{ 'label_service_template' }}"},
                 },
                 {
-                    "service": "test.script",
+                    "action": "test.script",
                     "target": {"label_id": "label_in_target"},
                 },
                 {
-                    "service": "test.script",
+                    "action": "test.script",
                     "data_template": {"label_id": "label_in_data_template"},
                 },
-                {"service": "test.script", "data": {"without": "label_id"}},
+                {"action": "test.script", "data": {"without": "label_id"}},
                 {
                     "choose": [
                         {
                             "conditions": "{{ true == false }}",
                             "sequence": [
                                 {
-                                    "service": "test.script",
+                                    "action": "test.script",
                                     "data": {"label_id": "label_choice_1_seq"},
                                 }
                             ],
@@ -4094,7 +4094,7 @@ async def test_referenced_labels(hass: HomeAssistant) -> None:
                             "conditions": "{{ true == false }}",
                             "sequence": [
                                 {
-                                    "service": "test.script",
+                                    "action": "test.script",
                                     "data": {"label_id": "label_choice_2_seq"},
                                 }
                             ],
@@ -4102,7 +4102,7 @@ async def test_referenced_labels(hass: HomeAssistant) -> None:
                     ],
                     "default": [
                         {
-                            "service": "test.script",
+                            "action": "test.script",
                             "data": {"label_id": "label_default_seq"},
                         }
                     ],
@@ -4113,13 +4113,13 @@ async def test_referenced_labels(hass: HomeAssistant) -> None:
                     "if": [],
                     "then": [
                         {
-                            "service": "test.script",
+                            "action": "test.script",
                             "data": {"label_id": "label_if_then"},
                         }
                     ],
                     "else": [
                         {
-                            "service": "test.script",
+                            "action": "test.script",
                             "data": {"label_id": "label_if_else"},
                         }
                     ],
@@ -4127,7 +4127,7 @@ async def test_referenced_labels(hass: HomeAssistant) -> None:
                 {
                     "parallel": [
                         {
-                            "service": "test.script",
+                            "action": "test.script",
                             "data": {"label_id": "label_parallel"},
                         }
                     ],
@@ -4161,33 +4161,33 @@ async def test_referenced_floors(hass: HomeAssistant) -> None:
         cv.SCRIPT_SCHEMA(
             [
                 {
-                    "service": "test.script",
+                    "action": "test.script",
                     "data": {"floor_id": "floor_service_not_list"},
                 },
                 {
-                    "service": "test.script",
+                    "action": "test.script",
                     "data": {"floor_id": ["floor_service_list"]},
                 },
                 {
-                    "service": "test.script",
+                    "action": "test.script",
                     "data": {"floor_id": "{{ 'floor_service_template' }}"},
                 },
                 {
-                    "service": "test.script",
+                    "action": "test.script",
                     "target": {"floor_id": "floor_in_target"},
                 },
                 {
-                    "service": "test.script",
+                    "action": "test.script",
                     "data_template": {"floor_id": "floor_in_data_template"},
                 },
-                {"service": "test.script", "data": {"without": "floor_id"}},
+                {"action": "test.script", "data": {"without": "floor_id"}},
                 {
                     "choose": [
                         {
                             "conditions": "{{ true == false }}",
                             "sequence": [
                                 {
-                                    "service": "test.script",
+                                    "action": "test.script",
                                     "data": {"floor_id": "floor_choice_1_seq"},
                                 }
                             ],
@@ -4196,7 +4196,7 @@ async def test_referenced_floors(hass: HomeAssistant) -> None:
                             "conditions": "{{ true == false }}",
                             "sequence": [
                                 {
-                                    "service": "test.script",
+                                    "action": "test.script",
                                     "data": {"floor_id": "floor_choice_2_seq"},
                                 }
                             ],
@@ -4204,7 +4204,7 @@ async def test_referenced_floors(hass: HomeAssistant) -> None:
                     ],
                     "default": [
                         {
-                            "service": "test.script",
+                            "action": "test.script",
                             "data": {"floor_id": "floor_default_seq"},
                         }
                     ],
@@ -4215,13 +4215,13 @@ async def test_referenced_floors(hass: HomeAssistant) -> None:
                     "if": [],
                     "then": [
                         {
-                            "service": "test.script",
+                            "action": "test.script",
                             "data": {"floor_id": "floor_if_then"},
                         }
                     ],
                     "else": [
                         {
-                            "service": "test.script",
+                            "action": "test.script",
                             "data": {"floor_id": "floor_if_else"},
                         }
                     ],
@@ -4229,7 +4229,7 @@ async def test_referenced_floors(hass: HomeAssistant) -> None:
                 {
                     "parallel": [
                         {
-                            "service": "test.script",
+                            "action": "test.script",
                             "data": {"floor_id": "floor_parallel"},
                         }
                     ],
@@ -4262,33 +4262,33 @@ async def test_referenced_areas(hass: HomeAssistant) -> None:
         cv.SCRIPT_SCHEMA(
             [
                 {
-                    "service": "test.script",
+                    "action": "test.script",
                     "data": {"area_id": "area_service_not_list"},
                 },
                 {
-                    "service": "test.script",
+                    "action": "test.script",
                     "data": {"area_id": ["area_service_list"]},
                 },
                 {
-                    "service": "test.script",
+                    "action": "test.script",
                     "data": {"area_id": "{{ 'area_service_template' }}"},
                 },
                 {
-                    "service": "test.script",
+                    "action": "test.script",
                     "target": {"area_id": "area_in_target"},
                 },
                 {
-                    "service": "test.script",
+                    "action": "test.script",
                     "data_template": {"area_id": "area_in_data_template"},
                 },
-                {"service": "test.script", "data": {"without": "area_id"}},
+                {"action": "test.script", "data": {"without": "area_id"}},
                 {
                     "choose": [
                         {
                             "conditions": "{{ true == false }}",
                             "sequence": [
                                 {
-                                    "service": "test.script",
+                                    "action": "test.script",
                                     "data": {"area_id": "area_choice_1_seq"},
                                 }
                             ],
@@ -4297,7 +4297,7 @@ async def test_referenced_areas(hass: HomeAssistant) -> None:
                             "conditions": "{{ true == false }}",
                             "sequence": [
                                 {
-                                    "service": "test.script",
+                                    "action": "test.script",
                                     "data": {"area_id": "area_choice_2_seq"},
                                 }
                             ],
@@ -4305,7 +4305,7 @@ async def test_referenced_areas(hass: HomeAssistant) -> None:
                     ],
                     "default": [
                         {
-                            "service": "test.script",
+                            "action": "test.script",
                             "data": {"area_id": "area_default_seq"},
                         }
                     ],
@@ -4316,13 +4316,13 @@ async def test_referenced_areas(hass: HomeAssistant) -> None:
                     "if": [],
                     "then": [
                         {
-                            "service": "test.script",
+                            "action": "test.script",
                             "data": {"area_id": "area_if_then"},
                         }
                     ],
                     "else": [
                         {
-                            "service": "test.script",
+                            "action": "test.script",
                             "data": {"area_id": "area_if_else"},
                         }
                     ],
@@ -4330,7 +4330,7 @@ async def test_referenced_areas(hass: HomeAssistant) -> None:
                 {
                     "parallel": [
                         {
-                            "service": "test.script",
+                            "action": "test.script",
                             "data": {"area_id": "area_parallel"},
                         }
                     ],
@@ -4364,27 +4364,27 @@ async def test_referenced_entities(hass: HomeAssistant) -> None:
         cv.SCRIPT_SCHEMA(
             [
                 {
-                    "service": "test.script",
+                    "action": "test.script",
                     "data": {"entity_id": "light.service_not_list"},
                 },
                 {
-                    "service": "test.script",
+                    "action": "test.script",
                     "data": {"entity_id": ["light.service_list"]},
                 },
                 {
-                    "service": "test.script",
+                    "action": "test.script",
                     "data": {"entity_id": "{{ 'light.service_template' }}"},
                 },
                 {
-                    "service": "test.script",
+                    "action": "test.script",
                     "entity_id": "light.direct_entity_referenced",
                 },
                 {
-                    "service": "test.script",
+                    "action": "test.script",
                     "target": {"entity_id": "light.entity_in_target"},
                 },
                 {
-                    "service": "test.script",
+                    "action": "test.script",
                     "data_template": {"entity_id": "light.entity_in_data_template"},
                 },
                 {
@@ -4392,7 +4392,7 @@ async def test_referenced_entities(hass: HomeAssistant) -> None:
                     "entity_id": "sensor.condition",
                     "state": "100",
                 },
-                {"service": "test.script", "data": {"without": "entity_id"}},
+                {"action": "test.script", "data": {"without": "entity_id"}},
                 {"scene": "scene.hello"},
                 {
                     "choose": [
@@ -4400,7 +4400,7 @@ async def test_referenced_entities(hass: HomeAssistant) -> None:
                             "conditions": "{{ states.light.choice_1_cond == 'on' }}",
                             "sequence": [
                                 {
-                                    "service": "test.script",
+                                    "action": "test.script",
                                     "data": {"entity_id": "light.choice_1_seq"},
                                 }
                             ],
@@ -4413,7 +4413,7 @@ async def test_referenced_entities(hass: HomeAssistant) -> None:
                             },
                             "sequence": [
                                 {
-                                    "service": "test.script",
+                                    "action": "test.script",
                                     "data": {"entity_id": "light.choice_2_seq"},
                                 }
                             ],
@@ -4421,7 +4421,7 @@ async def test_referenced_entities(hass: HomeAssistant) -> None:
                     ],
                     "default": [
                         {
-                            "service": "test.script",
+                            "action": "test.script",
                             "data": {"entity_id": "light.default_seq"},
                         }
                     ],
@@ -4432,13 +4432,13 @@ async def test_referenced_entities(hass: HomeAssistant) -> None:
                     "if": [],
                     "then": [
                         {
-                            "service": "test.script",
+                            "action": "test.script",
                             "data": {"entity_id": "light.if_then"},
                         }
                     ],
                     "else": [
                         {
-                            "service": "test.script",
+                            "action": "test.script",
                             "data": {"entity_id": "light.if_else"},
                         }
                     ],
@@ -4446,7 +4446,7 @@ async def test_referenced_entities(hass: HomeAssistant) -> None:
                 {
                     "parallel": [
                         {
-                            "service": "test.script",
+                            "action": "test.script",
                             "data": {"entity_id": "light.parallel"},
                         }
                     ],
@@ -4491,19 +4491,19 @@ async def test_referenced_devices(hass: HomeAssistant) -> None:
                     "domain": "switch",
                 },
                 {
-                    "service": "test.script",
+                    "action": "test.script",
                     "data": {"device_id": "data-string-id"},
                 },
                 {
-                    "service": "test.script",
+                    "action": "test.script",
                     "data_template": {"device_id": "data-template-string-id"},
                 },
                 {
-                    "service": "test.script",
+                    "action": "test.script",
                     "target": {"device_id": "target-string-id"},
                 },
                 {
-                    "service": "test.script",
+                    "action": "test.script",
                     "target": {"device_id": ["target-list-id-1", "target-list-id-2"]},
                 },
                 {
@@ -4515,7 +4515,7 @@ async def test_referenced_devices(hass: HomeAssistant) -> None:
                             ),
                             "sequence": [
                                 {
-                                    "service": "test.script",
+                                    "action": "test.script",
                                     "target": {
                                         "device_id": "choice-1-seq-device-target"
                                     },
@@ -4530,7 +4530,7 @@ async def test_referenced_devices(hass: HomeAssistant) -> None:
                             },
                             "sequence": [
                                 {
-                                    "service": "test.script",
+                                    "action": "test.script",
                                     "target": {
                                         "device_id": "choice-2-seq-device-target"
                                     },
@@ -4540,7 +4540,7 @@ async def test_referenced_devices(hass: HomeAssistant) -> None:
                     ],
                     "default": [
                         {
-                            "service": "test.script",
+                            "action": "test.script",
                             "target": {"device_id": "default-device-target"},
                         }
                     ],
@@ -4549,13 +4549,13 @@ async def test_referenced_devices(hass: HomeAssistant) -> None:
                     "if": [],
                     "then": [
                         {
-                            "service": "test.script",
+                            "action": "test.script",
                             "data": {"device_id": "if-then"},
                         }
                     ],
                     "else": [
                         {
-                            "service": "test.script",
+                            "action": "test.script",
                             "data": {"device_id": "if-else"},
                         }
                     ],
@@ -4563,7 +4563,7 @@ async def test_referenced_devices(hass: HomeAssistant) -> None:
                 {
                     "parallel": [
                         {
-                            "service": "test.script",
+                            "action": "test.script",
                             "target": {"device_id": "parallel-device"},
                         }
                     ],
@@ -5104,7 +5104,7 @@ async def test_set_variable(
     sequence = cv.SCRIPT_SCHEMA(
         [
             {"alias": alias, "variables": {"variable": "value"}},
-            {"service": "test.script", "data": {"value": "{{ variable }}"}},
+            {"action": "test.script", "data": {"value": "{{ variable }}"}},
         ]
     )
     script_obj = script.Script(hass, sequence, "test script", "test_domain")
@@ -5143,9 +5143,9 @@ async def test_set_redefines_variable(
     sequence = cv.SCRIPT_SCHEMA(
         [
             {"variables": {"variable": "1"}},
-            {"service": "test.script", "data": {"value": "{{ variable }}"}},
+            {"action": "test.script", "data": {"value": "{{ variable }}"}},
             {"variables": {"variable": "{{ variable | int + 1 }}"}},
-            {"service": "test.script", "data": {"value": "{{ variable }}"}},
+            {"action": "test.script", "data": {"value": "{{ variable }}"}},
         ]
     )
     script_obj = script.Script(hass, sequence, "test script", "test_domain")
@@ -5214,7 +5214,7 @@ async def test_validate_action_config(
         }
 
     configs = {
-        cv.SCRIPT_ACTION_CALL_SERVICE: {"service": "light.turn_on"},
+        cv.SCRIPT_ACTION_CALL_SERVICE: {"action": "light.turn_on"},
         cv.SCRIPT_ACTION_DELAY: {"delay": 5},
         cv.SCRIPT_ACTION_WAIT_TEMPLATE: {
             "wait_template": "{{ states.light.kitchen.state == 'on' }}"
@@ -5349,7 +5349,7 @@ async def test_embedded_wait_for_trigger_in_automation(hass: HomeAssistant) -> N
                                     }
                                 ]
                             },
-                            {"service": "test.script"},
+                            {"action": "test.script"},
                         ],
                     }
                 },
@@ -5704,12 +5704,12 @@ async def test_continue_on_error(hass: HomeAssistant) -> None:
             {"event": "test_event"},
             {
                 "continue_on_error": True,
-                "service": "broken.service",
+                "action": "broken.service",
             },
             {"event": "test_event"},
             {
                 "continue_on_error": False,
-                "service": "broken.service",
+                "action": "broken.service",
             },
             {"event": "test_event"},
         ]
@@ -5786,7 +5786,7 @@ async def test_continue_on_error_automation_issue(hass: HomeAssistant) -> None:
         [
             {
                 "continue_on_error": True,
-                "service": "service.not_found",
+                "action": "service.not_found",
             },
         ]
     )
@@ -5834,7 +5834,7 @@ async def test_continue_on_error_unknown_error(hass: HomeAssistant) -> None:
         [
             {
                 "continue_on_error": True,
-                "service": "some.service",
+                "action": "some.service",
             },
         ]
     )
@@ -5884,7 +5884,7 @@ async def test_disabled_actions(
             {
                 "alias": "Hello",
                 "enabled": enabled_value,
-                "service": "broken.service",
+                "action": "broken.service",
             },
             {
                 "alias": "World",
@@ -6255,7 +6255,7 @@ async def test_disallowed_recursion(
     context = Context()
     calls = 0
     alias = "event step"
-    sequence1 = cv.SCRIPT_SCHEMA({"alias": alias, "service": "test.call_script_2"})
+    sequence1 = cv.SCRIPT_SCHEMA({"alias": alias, "action": "test.call_script_2"})
     script1_obj = script.Script(
         hass,
         sequence1,
@@ -6265,7 +6265,7 @@ async def test_disallowed_recursion(
         running_description="test script1",
     )
 
-    sequence2 = cv.SCRIPT_SCHEMA({"alias": alias, "service": "test.call_script_3"})
+    sequence2 = cv.SCRIPT_SCHEMA({"alias": alias, "action": "test.call_script_3"})
     script2_obj = script.Script(
         hass,
         sequence2,
@@ -6275,7 +6275,7 @@ async def test_disallowed_recursion(
         running_description="test script2",
     )
 
-    sequence3 = cv.SCRIPT_SCHEMA({"alias": alias, "service": "test.call_script_1"})
+    sequence3 = cv.SCRIPT_SCHEMA({"alias": alias, "action": "test.call_script_1"})
     script3_obj = script.Script(
         hass,
         sequence3,
@@ -6315,3 +6315,43 @@ async def test_disallowed_recursion(
         "- test_domain2.Test Name2\n"
         "- test_domain3.Test Name3"
     ) in caplog.text
+
+
+async def test_calling_service_backwards_compatible(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test the calling of a service with the service instead of the action key."""
+    context = Context()
+    calls = async_mock_service(hass, "test", "script")
+
+    alias = "service step"
+    sequence = cv.SCRIPT_SCHEMA(
+        {"alias": alias, "service": "test.script", "data": {"hello": "{{ 'world' }}"}}
+    )
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+
+    await script_obj.async_run(context=context)
+    await hass.async_block_till_done()
+
+    assert len(calls) == 1
+    assert calls[0].context is context
+    assert calls[0].data.get("hello") == "world"
+    assert f"Executing step {alias}" in caplog.text
+
+    assert_action_trace(
+        {
+            "0": [
+                {
+                    "result": {
+                        "params": {
+                            "domain": "test",
+                            "service": "script",
+                            "service_data": {"hello": "world"},
+                            "target": {},
+                        },
+                        "running_script": False,
+                    }
+                }
+            ],
+        }
+    )

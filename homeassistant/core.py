@@ -101,6 +101,7 @@ from .util import dt as dt_util, location
 from .util.async_ import (
     cancelling,
     create_eager_task,
+    get_scheduled_timer_handles,
     run_callback_threadsafe,
     shutdown_run_callback_threadsafe,
 )
@@ -450,9 +451,7 @@ class HomeAssistant:
         self.import_executor = InterruptibleThreadPoolExecutor(
             max_workers=1, thread_name_prefix="ImportExecutor"
         )
-        self.loop_thread_id = getattr(
-            self.loop, "_thread_ident", getattr(self.loop, "_thread_id")
-        )
+        self.loop_thread_id = getattr(self.loop, "_thread_id")
 
     def verify_event_loop_thread(self, what: str) -> None:
         """Report and raise if we are not running in the event loop thread."""
@@ -1227,8 +1226,7 @@ class HomeAssistant:
 
     def _cancel_cancellable_timers(self) -> None:
         """Cancel timer handles marked as cancellable."""
-        handles: Iterable[asyncio.TimerHandle] = self.loop._scheduled  # type: ignore[attr-defined] # noqa: SLF001
-        for handle in handles:
+        for handle in get_scheduled_timer_handles(self.loop):
             if (
                 not handle.cancelled()
                 and (args := handle._args)  # noqa: SLF001

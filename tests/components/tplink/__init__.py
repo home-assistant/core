@@ -39,7 +39,7 @@ from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, load_json_value_fixture
 
-ColorTempRange = namedtuple("ColorTempRange", ["min", "max"])
+ColorTempRange = namedtuple("ColorTempRange", ["min", "max"])  # noqa: PYI024
 
 MODULE = "homeassistant.components.tplink"
 MODULE_CONFIG_FLOW = "homeassistant.components.tplink.config_flow"

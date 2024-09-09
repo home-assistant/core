@@ -19,7 +19,6 @@ from evohomeasync2.schema.const import (
 )
 
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.event import async_call_later
 
 from .const import CONF_LOCATION_IDX, DOMAIN, GWS, TCS, UTC_OFFSET
 from .helpers import handle_evo_exception
@@ -107,7 +106,7 @@ class EvoBroker:
             return None
 
         if update_state:  # wait a moment for system to quiesce before updating state
-            async_call_later(self.hass, 1, self._update_v2_api_state)
+            await self.hass.data[DOMAIN]["coordinator"].async_request_refresh()
 
         return result
 

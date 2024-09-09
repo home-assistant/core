@@ -364,7 +364,6 @@ class TagEntity(Entity):
     """Representation of a Tag entity."""
 
     _unrecorded_attributes = frozenset({TAG_ID})
-    _attr_translation_key = DOMAIN
     _attr_should_poll = False
 
     def __init__(

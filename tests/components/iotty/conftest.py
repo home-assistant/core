@@ -65,7 +65,7 @@ def aiohttp_client_session() -> None:
 
 
 @pytest.fixture
-def mock_aioclient() -> Generator[AiohttpClientMocker, None, None]:
+def mock_aioclient() -> Generator[AiohttpClientMocker]:
     """Fixture to mock aioclient calls."""
     with mock_aiohttp_client() as mock_session:
         yield mock_session
@@ -96,7 +96,7 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_config_entries_async_forward_entry_setup() -> Generator[AsyncMock, None, None]:
+def mock_config_entries_async_forward_entry_setup() -> Generator[AsyncMock]:
     """Mock async_forward_entry_setup."""
     with patch(
         "homeassistant.config_entries.ConfigEntries.async_forward_entry_setups"
@@ -105,7 +105,7 @@ def mock_config_entries_async_forward_entry_setup() -> Generator[AsyncMock, None
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch(
         "homeassistant.components.iotty.async_setup_entry", return_value=True
@@ -114,7 +114,7 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
-def mock_iotty() -> Generator[None, MagicMock, None]:
+def mock_iotty() -> Generator[MagicMock]:
     """Mock IottyProxy."""
     with patch(
         "homeassistant.components.iotty.api.IottyProxy", autospec=True
@@ -123,7 +123,7 @@ def mock_iotty() -> Generator[None, MagicMock, None]:
 
 
 @pytest.fixture
-def mock_coordinator() -> Generator[None, MagicMock, None]:
+def mock_coordinator() -> Generator[MagicMock]:
     """Mock IottyDataUpdateCoordinator."""
     with patch(
         "homeassistant.components.iotty.coordinator.IottyDataUpdateCoordinator",
@@ -133,7 +133,7 @@ def mock_coordinator() -> Generator[None, MagicMock, None]:
 
 
 @pytest.fixture
-def mock_get_devices_nodevices() -> Generator[AsyncMock, None, None]:
+def mock_get_devices_nodevices() -> Generator[AsyncMock]:
     """Mock for get_devices, returning two objects."""
 
     with patch("iottycloud.cloudapi.CloudApi.get_devices") as mock_fn:
@@ -141,7 +141,7 @@ def mock_get_devices_nodevices() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
-def mock_get_devices_twolightswitches() -> Generator[AsyncMock, None, None]:
+def mock_get_devices_twolightswitches() -> Generator[AsyncMock]:
     """Mock for get_devices, returning two objects."""
 
     with patch(
@@ -151,7 +151,7 @@ def mock_get_devices_twolightswitches() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
-def mock_command_fn() -> Generator[AsyncMock, None, None]:
+def mock_command_fn() -> Generator[AsyncMock]:
     """Mock for command."""
 
     with patch("iottycloud.cloudapi.CloudApi.command", return_value=None) as mock_fn:
@@ -159,7 +159,7 @@ def mock_command_fn() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
-def mock_get_status_filled_off() -> Generator[AsyncMock, None, None]:
+def mock_get_status_filled_off() -> Generator[AsyncMock]:
     """Mock setting up a get_status."""
 
     retval = {RESULT: {STATUS: STATUS_OFF}}
@@ -170,7 +170,7 @@ def mock_get_status_filled_off() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
-def mock_get_status_filled() -> Generator[AsyncMock, None, None]:
+def mock_get_status_filled() -> Generator[AsyncMock]:
     """Mock setting up a get_status."""
 
     retval = {RESULT: {STATUS: STATUS_ON}}

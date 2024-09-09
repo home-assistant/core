@@ -411,7 +411,9 @@ async def test_assist_api_prompt(
     )
     hass.states.async_set(entry2.entity_id, "on", {"friendly_name": "Living Room"})
 
-    def create_entity(device: dr.DeviceEntry, write_state=True) -> None:
+    def create_entity(
+        device: dr.DeviceEntry, write_state=True, aliases: set[str] | None = None
+    ) -> None:
         """Create an entity for a device and track entity_id."""
         entity = entity_registry.async_get_or_create(
             "light",
@@ -421,6 +423,8 @@ async def test_assist_api_prompt(
             original_name=str(device.name or "Unnamed Device"),
             suggested_object_id=str(device.name or "unnamed_device"),
         )
+        if aliases:
+            entity_registry.async_update_entity(entity.entity_id, aliases=aliases)
         if write_state:
             entity.write_unavailable_state(hass)
 
@@ -432,7 +436,8 @@ async def test_assist_api_prompt(
             manufacturer="Test Manufacturer",
             model="Test Model",
             suggested_area="Test Area",
-        )
+        ),
+        aliases={"my test light"},
     )
     for i in range(3):
         create_entity(
@@ -516,7 +521,7 @@ async def test_assist_api_prompt(
   domain: light
   state: 'on'
   areas: Test Area, Alternative name
-- names: Test Device
+- names: Test Device, my test light
   domain: light
   state: unavailable
   areas: Test Area, Alternative name
@@ -616,6 +621,7 @@ async def test_assist_api_prompt(
 
 async def test_script_tool(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     area_registry: ar.AreaRegistry,
     floor_registry: fr.FloorRegistry,
 ) -> None:
@@ -659,6 +665,10 @@ async def test_script_tool(
     )
     async_expose_entity(hass, "conversation", "script.test_script", True)
 
+    entity_registry.async_update_entity(
+        "script.test_script", name="script name", aliases={"script alias"}
+    )
+
     area = area_registry.async_create("Living room")
     floor = floor_registry.async_create("2")
 
@@ -671,7 +681,10 @@ async def test_script_tool(
 
     tool = tools[0]
     assert tool.name == "test_script"
-    assert tool.description == "This is a test script"
+    assert (
+        tool.description
+        == "This is a test script. Aliases: ['script name', 'script alias']"
+    )
     schema = {
         vol.Required("beer", description="Number of beers"): cv.string,
         vol.Optional("wine"): selector.NumberSelector({"min": 0, "max": 3}),
@@ -684,7 +697,10 @@ async def test_script_tool(
     assert tool.parameters.schema == schema
 
     assert hass.data[llm.SCRIPT_PARAMETERS_CACHE] == {
-        "test_script": ("This is a test script", vol.Schema(schema))
+        "test_script": (
+            "This is a test script. Aliases: ['script name', 'script alias']",
+            vol.Schema(schema),
+        )
     }
 
     tool_input = llm.ToolInput(
@@ -754,12 +770,18 @@ async def test_script_tool(
 
     tool = tools[0]
     assert tool.name == "test_script"
-    assert tool.description == "This is a new test script"
+    assert (
+        tool.description
+        == "This is a new test script. Aliases: ['script name', 'script alias']"
+    )
     schema = {vol.Required("beer", description="Number of beers"): cv.string}
     assert tool.parameters.schema == schema
 
     assert hass.data[llm.SCRIPT_PARAMETERS_CACHE] == {
-        "test_script": ("This is a new test script", vol.Schema(schema))
+        "test_script": (
+            "This is a new test script. Aliases: ['script name', 'script alias']",
+            vol.Schema(schema),
+        )
     }
 
 
@@ -842,13 +864,22 @@ async def test_selector_serializer(
     assert selector_serializer(
         selector.ColorTempSelector({"min_mireds": 100, "max_mireds": 1000})
     ) == {"type": "number", "minimum": 100, "maximum": 1000}
+    assert selector_serializer(selector.ConditionSelector()) == {
+        "type": "array",
+        "items": {"nullable": True, "type": "string"},
+    }
     assert selector_serializer(selector.ConfigEntrySelector()) == {"type": "string"}
     assert selector_serializer(selector.ConstantSelector({"value": "test"})) == {
-        "enum": ["test"]
+        "type": "string",
+        "enum": ["test"],
     }
-    assert selector_serializer(selector.ConstantSelector({"value": 1})) == {"enum": [1]}
+    assert selector_serializer(selector.ConstantSelector({"value": 1})) == {
+        "type": "integer",
+        "enum": [1],
+    }
     assert selector_serializer(selector.ConstantSelector({"value": True})) == {
-        "enum": [True]
+        "type": "boolean",
+        "enum": [True],
     }
     assert selector_serializer(selector.QrCodeSelector({"data": "test"})) == {
         "type": "string"
@@ -875,6 +906,17 @@ async def test_selector_serializer(
     assert selector_serializer(selector.DeviceSelector({"multiple": True})) == {
         "type": "array",
         "items": {"type": "string"},
+    }
+    assert selector_serializer(selector.DurationSelector()) == {
+        "type": "object",
+        "properties": {
+            "days": {"type": "number"},
+            "hours": {"type": "number"},
+            "minutes": {"type": "number"},
+            "seconds": {"type": "number"},
+            "milliseconds": {"type": "number"},
+        },
+        "required": [],
     }
     assert selector_serializer(selector.EntitySelector()) == {
         "type": "string",
@@ -929,7 +971,10 @@ async def test_selector_serializer(
         "minimum": 30,
         "maximum": 100,
     }
-    assert selector_serializer(selector.ObjectSelector()) == {"type": "object"}
+    assert selector_serializer(selector.ObjectSelector()) == {
+        "type": "object",
+        "additionalProperties": True,
+    }
     assert selector_serializer(
         selector.SelectSelector(
             {
@@ -951,6 +996,48 @@ async def test_selector_serializer(
     assert selector_serializer(
         selector.StateSelector({"entity_id": "sensor.test"})
     ) == {"type": "string"}
+    target_schema = selector_serializer(selector.TargetSelector())
+    target_schema["properties"]["entity_id"]["anyOf"][0][
+        "enum"
+    ].sort()  # Order is not deterministic
+    assert target_schema == {
+        "type": "object",
+        "properties": {
+            "area_id": {
+                "anyOf": [
+                    {"type": "string", "enum": ["none"]},
+                    {"type": "array", "items": {"type": "string", "nullable": True}},
+                ]
+            },
+            "device_id": {
+                "anyOf": [
+                    {"type": "string", "enum": ["none"]},
+                    {"type": "array", "items": {"type": "string", "nullable": True}},
+                ]
+            },
+            "entity_id": {
+                "anyOf": [
+                    {"type": "string", "enum": ["all", "none"], "format": "lower"},
+                    {"type": "string", "nullable": True},
+                    {"type": "array", "items": {"type": "string"}},
+                ]
+            },
+            "floor_id": {
+                "anyOf": [
+                    {"type": "string", "enum": ["none"]},
+                    {"type": "array", "items": {"type": "string", "nullable": True}},
+                ]
+            },
+            "label_id": {
+                "anyOf": [
+                    {"type": "string", "enum": ["none"]},
+                    {"type": "array", "items": {"type": "string", "nullable": True}},
+                ]
+            },
+        },
+        "required": [],
+    }
+
     assert selector_serializer(selector.TemplateSelector()) == {
         "type": "string",
         "format": "jinja2",

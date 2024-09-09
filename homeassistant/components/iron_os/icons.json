@@ -1,11 +1,13 @@
 {
   "entity": {
+    "number": {
+      "setpoint_temperature": {
+        "default": "mdi:thermometer"
+      }
+    },
     "sensor": {
       "live_temperature": {
         "default": "mdi:soldering-iron"
-      },
-      "setpoint_temperature": {
-        "default": "mdi:thermostat"
       },
       "voltage": {
         "default": "mdi:current-dc"

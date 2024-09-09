@@ -6,7 +6,7 @@ from typing import Any
 from pyhap.const import CATEGORY_DOOR_LOCK
 
 from homeassistant.components.lock import (
-    DOMAIN,
+    DOMAIN as LOCK_DOMAIN,
     STATE_JAMMED,
     STATE_LOCKED,
     STATE_LOCKING,
@@ -89,7 +89,7 @@ class Lock(HomeAccessory):
         params = {ATTR_ENTITY_ID: self.entity_id}
         if self._code:
             params[ATTR_CODE] = self._code
-        self.async_call_service(DOMAIN, service, params)
+        self.async_call_service(LOCK_DOMAIN, service, params)
 
     @callback
     def async_update_state(self, new_state: State) -> None:
