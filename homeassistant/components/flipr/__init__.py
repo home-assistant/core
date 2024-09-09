@@ -1,6 +1,7 @@
 """The Flipr integration."""
 
 from collections import Counter
+from dataclasses import dataclass
 import logging
 
 from flipr_api import FliprAPIRestClient
@@ -9,8 +10,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
+from homeassistant.helpers import issue_registry as ir
 
-from .const import CONF_ENTRY_FLIPR_COORDINATORS, DOMAIN
+from .const import DOMAIN
 from .coordinator import FliprDataUpdateCoordinator
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
@@ -18,7 +20,18 @@ PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+@dataclass
+class FliprData:
+    """The Flipr data class."""
+
+    client: FliprAPIRestClient
+    flipr_coordinators: list[FliprDataUpdateCoordinator]
+
+
+type FliprConfigEntry = ConfigEntry[FliprData]
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: FliprConfigEntry) -> bool:
     """Set up flipr from a config entry."""
     hass.data.setdefault(DOMAIN, {})
 
@@ -36,12 +49,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     _LOGGER.debug("List of devices ids : %s", ids)
 
+    entry.runtime_data = FliprData(client=client, flipr_coordinators=[])
+
     flipr_coordinators = []
     for flipr_id in ids["flipr"]:
         flipr_coordinator = FliprDataUpdateCoordinator(hass, entry, flipr_id)
         await flipr_coordinator.async_config_entry_first_refresh()
         flipr_coordinators.append(flipr_coordinator)
-    hass.data[DOMAIN][CONF_ENTRY_FLIPR_COORDINATORS] = flipr_coordinators
+
+    entry.runtime_data.flipr_coordinators = flipr_coordinators
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -50,12 +66,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
-    if unload_ok:
-        hass.data[DOMAIN].pop(CONF_ENTRY_FLIPR_COORDINATORS)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 def detect_invalid_old_configuration(hass: HomeAssistant, entry: ConfigEntry):
@@ -69,6 +81,32 @@ def detect_invalid_old_configuration(hass: HomeAssistant, entry: ConfigEntry):
     entries = hass.config_entries.async_entries(DOMAIN)
 
     if find_duplicate_entries(entries):
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            "duplicate_config",
+            breaks_in_ha_version="2024.10.0",
+            is_fixable=False,
+            severity=ir.IssueSeverity.ERROR,
+            translation_key="duplicate_config",
+        )
+
         raise ConfigEntryError(
             "Duplicate entries found for flipr with the same user email. Please remove one of it manually. Multiple fliprs will be automatically detected after restart."
         )
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Migrate config entry."""
+    _LOGGER.debug("Migration of flipr config from version %s", entry.version)
+
+    if entry.version == 1:
+        # In version 1, we have flipr id as config entry unique id and one device per config entry.
+        # We need to migrate to a new config entry that may contain multiple devices. So we change the entry data to match config_flow evolution.
+        login = entry.data[CONF_EMAIL]
+
+        hass.config_entries.async_update_entry(entry, version=2, unique_id=login)
+
+        _LOGGER.debug("Migration of flipr config to version 2 successful")
+
+    return True

@@ -1,6 +1,5 @@
 """Test the Flipr config flow."""
 
-import logging
 from unittest.mock import AsyncMock
 
 import pytest
@@ -11,8 +10,6 @@ from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def test_full_flow(
@@ -35,8 +32,6 @@ async def test_full_flow(
             CONF_PASSWORD: "dummypass",
         },
     )
-
-    _LOGGER.debug("result: %s", result)
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Flipr dummylogin"

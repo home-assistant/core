@@ -5,7 +5,7 @@ from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import ATTRIBUTION, DOMAIN, MANUFACTURER
-from .coordinator import BaseDataUpdateCoordinator
+from .coordinator import FliprDataUpdateCoordinator
 
 
 class FliprEntity(CoordinatorEntity):
@@ -16,7 +16,7 @@ class FliprEntity(CoordinatorEntity):
 
     def __init__(
         self,
-        coordinator: BaseDataUpdateCoordinator,
+        coordinator: FliprDataUpdateCoordinator,
         description: EntityDescription,
         is_flipr_hub: bool = False,
     ) -> None:

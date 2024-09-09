@@ -57,23 +57,9 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 def mock_config_entry() -> MockConfigEntry:
     """Mock the config entry."""
     return MockConfigEntry(
-        version=1,
+        version=2,
         domain=DOMAIN,
-        unique_id="myflipr_id",
-        data={
-            CONF_EMAIL: "toto@toto.com",
-            CONF_PASSWORD: "myPassword",
-        },
-    )
-
-
-@pytest.fixture
-def mock_config_entry_dup() -> MockConfigEntry:
-    """Mock the config entry."""
-    return MockConfigEntry(
-        version=1,
-        domain=DOMAIN,
-        unique_id="myflipr_id_dup",
+        unique_id="toto@toto.com",
         data={
             CONF_EMAIL: "toto@toto.com",
             CONF_PASSWORD: "myPassword",
@@ -90,10 +76,6 @@ def mock_flipr_client() -> Generator[AsyncMock]:
             "homeassistant.components.flipr.FliprAPIRestClient",
             autospec=True,
         ) as mock_client,
-        patch(
-            "homeassistant.components.flipr.coordinator.FliprAPIRestClient",
-            new=mock_client,
-        ),
         patch(
             "homeassistant.components.flipr.config_flow.FliprAPIRestClient",
             new=mock_client,

@@ -40,5 +40,11 @@
         "name": "Red OX"
       }
     }
+  },
+  "issues": {
+    "duplicate_config": {
+      "title": "Duplicate conflicting flipr configurations",
+      "description": "You have many fliprs configured with the same account. In the new version of flipr integration, the configuration has changed internaly. Please remove the fliprs you have and then reconfigure the integration. You will not loose any data nor automation since the flipr entities will be recreated with the same names."
+    }
   }
 }
