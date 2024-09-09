@@ -698,6 +698,8 @@ build.json @home-assistant/supervisor
 /tests/components/improv_ble/ @emontnemery
 /homeassistant/components/incomfort/ @jbouwh
 /tests/components/incomfort/ @jbouwh
+/homeassistant/components/inels/ @epdevlab
+/tests/components/inels/ @epdevlab
 /homeassistant/components/influxdb/ @mdegat01
 /tests/components/influxdb/ @mdegat01
 /homeassistant/components/inkbird/ @bdraco
