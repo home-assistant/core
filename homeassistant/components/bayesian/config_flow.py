@@ -22,6 +22,7 @@ from homeassistant.const import (
     CONF_BELOW,
     CONF_DEVICE_CLASS,
     CONF_ENTITY_ID,
+    CONF_ID,
     CONF_NAME,
     CONF_PLATFORM,
     CONF_STATE,
@@ -294,7 +295,7 @@ async def _get_edit_observation_schema(
 ) -> vol.Schema:  # TODO
     """Select which schema to return depending on which observation type it is."""
     # TODO need to remove the add another box
-    observations: list[dict[str, Any]] = handler.options["observations"]
+    observations: list[dict[str, Any]] = handler.options[CONF_OBSERVATIONS]
     selected_idx = int(handler.options["index"])
     if observations[selected_idx][CONF_PLATFORM] == str(ObservationTypes.STATE):
         return STATE_SUBSCHEMA
@@ -380,6 +381,22 @@ async def _validate_observation_setup(
     else:
         observations.append(user_input)
     return {"add_another": True} if add_another else {}
+
+
+async def _validate_remove_observation(
+    handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
+) -> dict[str, Any]:
+    """Delete an observation."""
+    observations: list[dict[str, Any]] = handler.options[CONF_OBSERVATIONS]
+    indexes: set[str] = set(user_input["index"])
+
+    # Standard behavior is to merge the result with the options.
+    # In this case, we want to remove sub-items so we update the options directly.
+    for index in indexes:
+        observations.pop(int(index))
+    _LOGGER.warning(observations)
+    _LOGGER.warning(handler.options[CONF_OBSERVATIONS])
+    return {}
 
 
 CONFIG_FLOW = {
@@ -531,14 +548,14 @@ def ws_start_preview(
         if error is not None:
             connection.send_message(
                 websocket_api.event_message(
-                    msg["id"],
+                    msg[CONF_ID],
                     {"error": error},
                 )
             )
             return
         connection.send_message(
             websocket_api.event_message(
-                msg["id"],
+                msg[CONF_ID],
                 {
                     "attributes": attributes,
                     "listeners": listeners,
@@ -550,7 +567,7 @@ def ws_start_preview(
     if errors:
         connection.send_message(
             {
-                "id": msg["id"],
+                "id": msg[CONF_ID],
                 "type": websocket_api.TYPE_RESULT,
                 "success": False,
                 "error": {"code": "invalid_user_input", "message": errors},
@@ -559,13 +576,13 @@ def ws_start_preview(
         return
 
     template_config = {
-        CONF_STATE: user_input["value_template"],
+        CONF_STATE: user_input[CONF_VALUE_TEMPLATE],
     }
     preview_entity = async_create_preview_sensor(hass, "Observation", template_config)
     preview_entity.hass = hass
     preview_entity.registry_entry = entity_registry_entry
 
-    connection.send_result(msg["id"])
-    connection.subscriptions[msg["id"]] = preview_entity.async_start_preview(
+    connection.send_result(msg[CONF_ID])
+    connection.subscriptions[msg[CONF_ID]] = preview_entity.async_start_preview(
         async_preview_updated
     )

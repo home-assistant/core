@@ -16,6 +16,7 @@ CONF_PROBABILITY_THRESHOLD = "probability_threshold"
 CONF_P_GIVEN_F = "prob_given_false"
 CONF_P_GIVEN_T = "prob_given_true"
 CONF_TO_STATE = "to_state"
+CONF_INDEX = "index"
 
 DEFAULT_NAME = "Bayesian Binary Sensor"
 DEFAULT_PROBABILITY_THRESHOLD = 0.5
