@@ -461,7 +461,7 @@ class HassImportsFormatChecker(BaseChecker):
             "Used when a helper should be used via the namespace",
         ),
         "W7426": (
-            "`%s` should not be imported using an alias, such as `%s as %s`",
+            "`%s` should be imported using an alias, such as `%s as %s`",
             "hass-import-constant-alias",
             "Used when a constant should be imported as an alias",
         ),
