@@ -1,0 +1,9 @@
+{
+  "domain": "inels",
+  "name": "iNELS",
+  "codeowners": ["@epdevlab"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/inels",
+  "iot_class": "local_push",
+  "requirements": ["elkoep-mqtt==0.2.33b13"]
+}
