@@ -1266,13 +1266,15 @@ class RpcSensor(ShellyRpcAttributeEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return value of sensor."""
-        if not self.option_map:
-            return self.attribute_value
+        attribute_value = self.attribute_value
 
-        if not isinstance(self.attribute_value, str):
+        if not self.option_map:
+            return attribute_value
+
+        if not isinstance(attribute_value, str):
             return None
 
-        return self.option_map[self.attribute_value]
+        return self.option_map[attribute_value]
 
 
 class BlockSleepingSensor(ShellySleepingBlockAttributeEntity, RestoreSensor):

@@ -81,7 +81,7 @@ class AirVisualProFlowHandler(ConfigFlow, domain=DOMAIN):
         self._reauth_entry: ConfigEntry | None = None
 
     async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
-        """Import a config entry from configuration.yaml."""
+        """Import a config entry from `airvisual` integration (see #83882)."""
         return await self.async_step_user(import_data)
 
     async def async_step_reauth(

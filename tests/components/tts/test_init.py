@@ -30,9 +30,9 @@ from .common import (
     DEFAULT_LANG,
     SUPPORT_LANGUAGES,
     TEST_DOMAIN,
-    MockProvider,
     MockTTS,
     MockTTSEntity,
+    MockTTSProvider,
     get_media_source_url,
     mock_config_entry_setup,
     mock_setup,
@@ -220,7 +220,7 @@ async def test_service(
 
 @pytest.mark.parametrize(
     ("mock_provider", "mock_tts_entity"),
-    [(MockProvider("de_DE"), MockTTSEntity("de_DE"))],
+    [(MockTTSProvider("de_DE"), MockTTSEntity("de_DE"))],
 )
 @pytest.mark.parametrize(
     ("setup", "tts_service", "service_data", "expected_url_suffix"),
@@ -281,7 +281,7 @@ async def test_service_default_language(
 
 @pytest.mark.parametrize(
     ("mock_provider", "mock_tts_entity"),
-    [(MockProvider("en_US"), MockTTSEntity("en_US"))],
+    [(MockTTSProvider("en_US"), MockTTSEntity("en_US"))],
 )
 @pytest.mark.parametrize(
     ("setup", "tts_service", "service_data", "expected_url_suffix"),
@@ -511,7 +511,7 @@ async def test_service_options(
     ).is_file()
 
 
-class MockProviderWithDefaults(MockProvider):
+class MockProviderWithDefaults(MockTTSProvider):
     """Mock provider with default options."""
 
     @property
@@ -854,7 +854,7 @@ async def test_service_receive_voice(
 
 @pytest.mark.parametrize(
     ("mock_provider", "mock_tts_entity"),
-    [(MockProvider("de_DE"), MockTTSEntity("de_DE"))],
+    [(MockTTSProvider("de_DE"), MockTTSEntity("de_DE"))],
 )
 @pytest.mark.parametrize(
     ("setup", "tts_service", "service_data", "expected_url_suffix"),
@@ -1015,7 +1015,7 @@ async def test_service_without_cache(
     ).is_file()
 
 
-class MockProviderBoom(MockProvider):
+class MockProviderBoom(MockTTSProvider):
     """Mock provider that blows up."""
 
     def get_tts_audio(
@@ -1041,7 +1041,7 @@ class MockEntityBoom(MockTTSEntity):
 async def test_setup_legacy_cache_dir(
     hass: HomeAssistant,
     mock_tts_cache_dir: Path,
-    mock_provider: MockProvider,
+    mock_provider: MockTTSProvider,
 ) -> None:
     """Set up a TTS platform with cache and call service without cache."""
     calls = async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
@@ -1106,7 +1106,7 @@ async def test_setup_cache_dir(
     await hass.async_block_till_done()
 
 
-class MockProviderEmpty(MockProvider):
+class MockProviderEmpty(MockTTSProvider):
     """Mock provider with empty get_tts_audio."""
 
     def get_tts_audio(
@@ -1178,7 +1178,7 @@ async def test_service_get_tts_error(
 
 async def test_load_cache_legacy_retrieve_without_mem_cache(
     hass: HomeAssistant,
-    mock_provider: MockProvider,
+    mock_provider: MockTTSProvider,
     mock_tts_cache_dir: Path,
     hass_client: ClientSessionGenerator,
 ) -> None:
@@ -1426,7 +1426,7 @@ async def test_legacy_fetching_in_async(
     """Test async fetching of data for a legacy provider."""
     tts_audio: asyncio.Future[bytes] = asyncio.Future()
 
-    class ProviderWithAsyncFetching(MockProvider):
+    class ProviderWithAsyncFetching(MockTTSProvider):
         """Provider that supports audio output option."""
 
         @property
@@ -1662,8 +1662,8 @@ async def test_ws_list_engines_deprecated(
     also provides tts entities.
     """
 
-    mock_provider = MockProvider(DEFAULT_LANG)
-    mock_provider_2 = MockProvider(DEFAULT_LANG)
+    mock_provider = MockTTSProvider(DEFAULT_LANG)
+    mock_provider_2 = MockTTSProvider(DEFAULT_LANG)
     mock_integration(hass, MockModule(domain="test"))
     mock_platform(hass, "test.tts", MockTTS(mock_provider))
     mock_integration(hass, MockModule(domain="test_2"))
@@ -1910,7 +1910,7 @@ async def test_ttsentity_subclass_properties(
 async def test_default_engine_prefer_entity(
     hass: HomeAssistant,
     mock_tts_entity: MockTTSEntity,
-    mock_provider: MockProvider,
+    mock_provider: MockTTSProvider,
 ) -> None:
     """Test async_default_engine.
 
@@ -1941,7 +1941,7 @@ async def test_default_engine_prefer_entity(
 )
 async def test_default_engine_prefer_cloud_entity(
     hass: HomeAssistant,
-    mock_provider: MockProvider,
+    mock_provider: MockTTSProvider,
     config_flow_test_domains: str,
 ) -> None:
     """Test async_default_engine.

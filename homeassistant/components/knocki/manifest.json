@@ -4,7 +4,7 @@
   "codeowners": ["@joostlek", "@jgatto1", "@JakeBosh"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/knocki",
-  "integration_type": "device",
+  "integration_type": "hub",
   "iot_class": "cloud_push",
   "loggers": ["knocki"],
   "requirements": ["knocki==0.3.1"]

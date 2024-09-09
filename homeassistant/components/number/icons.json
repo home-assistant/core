@@ -149,6 +149,8 @@
     }
   },
   "services": {
-    "set_value": "mdi:numeric"
+    "set_value": {
+      "service": "mdi:numeric"
+    }
   }
 }

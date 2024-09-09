@@ -11,6 +11,7 @@ from zeroconf.asyncio import AsyncServiceInfo
 
 from homeassistant.components import otbr, thread
 from homeassistant.components.thread import discovery
+from homeassistant.config_entries import SOURCE_HASSIO, SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
@@ -18,7 +19,6 @@ from homeassistant.setup import async_setup_component
 from . import (
     BASE_URL,
     CONFIG_ENTRY_DATA_MULTIPAN,
-    CONFIG_ENTRY_DATA_THREAD,
     DATASET_CH15,
     DATASET_CH16,
     DATASET_INSECURE_NW_KEY,
@@ -71,6 +71,7 @@ async def test_import_dataset(
         domain=otbr.DOMAIN,
         options={},
         title="My OTBR",
+        unique_id=TEST_BORDER_AGENT_EXTENDED_ADDRESS.hex(),
     )
     config_entry.add_to_hass(hass)
 
@@ -138,6 +139,7 @@ async def test_import_share_radio_channel_collision(
         domain=otbr.DOMAIN,
         options={},
         title="My OTBR",
+        unique_id=TEST_BORDER_AGENT_EXTENDED_ADDRESS.hex(),
     )
     config_entry.add_to_hass(hass)
     with (
@@ -177,6 +179,7 @@ async def test_import_share_radio_no_channel_collision(
         domain=otbr.DOMAIN,
         options={},
         title="My OTBR",
+        unique_id=TEST_BORDER_AGENT_EXTENDED_ADDRESS.hex(),
     )
     config_entry.add_to_hass(hass)
     with (
@@ -214,6 +217,7 @@ async def test_import_insecure_dataset(
         domain=otbr.DOMAIN,
         options={},
         title="My OTBR",
+        unique_id=TEST_BORDER_AGENT_EXTENDED_ADDRESS.hex(),
     )
     config_entry.add_to_hass(hass)
     with (
@@ -252,6 +256,7 @@ async def test_config_entry_not_ready(
         domain=otbr.DOMAIN,
         options={},
         title="My OTBR",
+        unique_id=TEST_BORDER_AGENT_EXTENDED_ADDRESS.hex(),
     )
     config_entry.add_to_hass(hass)
     get_active_dataset_tlvs.side_effect = error
@@ -268,6 +273,7 @@ async def test_border_agent_id_not_supported(
         domain=otbr.DOMAIN,
         options={},
         title="My OTBR",
+        unique_id=TEST_BORDER_AGENT_EXTENDED_ADDRESS.hex(),
     )
     config_entry.add_to_hass(hass)
     get_border_agent_id.side_effect = python_otbr_api.GetBorderAgentIdNotSupportedError
@@ -281,6 +287,7 @@ async def test_config_entry_update(hass: HomeAssistant) -> None:
         domain=otbr.DOMAIN,
         options={},
         title="My OTBR",
+        unique_id=TEST_BORDER_AGENT_EXTENDED_ADDRESS.hex(),
     )
     config_entry.add_to_hass(hass)
     mock_api = MagicMock()
@@ -314,25 +321,33 @@ async def test_remove_entry(
     await hass.config_entries.async_remove(config_entry.entry_id)
 
 
-async def test_remove_extra_entries(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+@pytest.mark.parametrize(
+    ("source", "unique_id", "updated_unique_id"),
+    [
+        (SOURCE_HASSIO, None, None),
+        (SOURCE_HASSIO, "abcd", "abcd"),
+        (SOURCE_USER, None, TEST_BORDER_AGENT_ID.hex()),
+        (SOURCE_USER, "abcd", TEST_BORDER_AGENT_ID.hex()),
+    ],
+)
+async def test_update_unique_id(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    source: str,
+    unique_id: str | None,
+    updated_unique_id: str | None,
 ) -> None:
-    """Test we remove additional config entries."""
+    """Test we update the unique id if extended address has changed."""
 
-    config_entry1 = MockConfigEntry(
+    config_entry = MockConfigEntry(
         data=CONFIG_ENTRY_DATA_MULTIPAN,
         domain=otbr.DOMAIN,
         options={},
+        source=source,
         title="Open Thread Border Router",
+        unique_id=unique_id,
     )
-    config_entry2 = MockConfigEntry(
-        data=CONFIG_ENTRY_DATA_THREAD,
-        domain=otbr.DOMAIN,
-        options={},
-        title="Open Thread Border Router",
-    )
-    config_entry1.add_to_hass(hass)
-    config_entry2.add_to_hass(hass)
-    assert len(hass.config_entries.async_entries(otbr.DOMAIN)) == 2
+    config_entry.add_to_hass(hass)
     assert await async_setup_component(hass, otbr.DOMAIN, {})
-    assert len(hass.config_entries.async_entries(otbr.DOMAIN)) == 1
+    config_entry = hass.config_entries.async_get_entry(config_entry.entry_id)
+    assert config_entry.unique_id == updated_unique_id

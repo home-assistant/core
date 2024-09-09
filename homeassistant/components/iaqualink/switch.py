@@ -6,7 +6,7 @@ from typing import Any
 
 from iaqualink.device import AqualinkSwitch
 
-from homeassistant.components.switch import DOMAIN, SwitchEntity
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -25,7 +25,8 @@ async def async_setup_entry(
 ) -> None:
     """Set up discovered switches."""
     async_add_entities(
-        (HassAqualinkSwitch(dev) for dev in hass.data[AQUALINK_DOMAIN][DOMAIN]), True
+        (HassAqualinkSwitch(dev) for dev in hass.data[AQUALINK_DOMAIN][SWITCH_DOMAIN]),
+        True,
     )
 
 
