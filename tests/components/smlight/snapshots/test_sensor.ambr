@@ -4,7 +4,13 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'options': list([
+        'lan',
+        'wifi',
+        'usb',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
@@ -21,8 +27,8 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
-    'original_icon': 'mdi:connection',
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
     'original_name': 'Connection mode',
     'platform': 'smlight',
     'previous_unique_id': None,
@@ -35,15 +41,20 @@
 # name: test_sensors[sensor.mock_title_connection_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'enum',
       'friendly_name': 'Mock Title Connection mode',
-      'icon': 'mdi:connection',
+      'options': list([
+        'lan',
+        'wifi',
+        'usb',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_title_connection_mode',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': 'lan',
   })
 # ---
 # name: test_sensors[sensor.mock_title_core_chip_temp-entry]
@@ -200,7 +211,12 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'options': list([
+        'dev',
+        'release',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
@@ -217,7 +233,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Firmware channel',
     'platform': 'smlight',
@@ -231,7 +247,12 @@
 # name: test_sensors[sensor.mock_title_firmware_channel-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'enum',
       'friendly_name': 'Mock Title Firmware channel',
+      'options': list([
+        'dev',
+        'release',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_title_firmware_channel',
@@ -239,53 +260,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'dev',
-  })
-# ---
-# name: test_sensors[sensor.mock_title_ip_address-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.mock_title_ip_address',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': 'mdi:ip-network-outline',
-    'original_name': 'IP address',
-    'platform': 'smlight',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'device_ip',
-    'unique_id': 'aa:bb:cc:dd:ee:ff_device_ip',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensors[sensor.mock_title_ip_address-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Title IP address',
-      'icon': 'mdi:ip-network-outline',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.mock_title_ip_address',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '192.168.1.161',
   })
 # ---
 # name: test_sensors[sensor.mock_title_ram_usage-entry]
@@ -395,7 +369,14 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'options': list([
+        'coordinator',
+        'router',
+        'thread',
+        'unknown',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
@@ -412,8 +393,8 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
-    'original_icon': 'mdi:zigbee',
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
     'original_name': 'Zigbee type',
     'platform': 'smlight',
     'previous_unique_id': None,
@@ -426,15 +407,21 @@
 # name: test_sensors[sensor.mock_title_zigbee_type-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'enum',
       'friendly_name': 'Mock Title Zigbee type',
-      'icon': 'mdi:zigbee',
+      'options': list([
+        'coordinator',
+        'router',
+        'thread',
+        'unknown',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_title_zigbee_type',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '-1',
+    'state': 'unknown',
   })
 # ---
 # name: test_sensors[sensor.mock_title_zigbee_uptime-entry]

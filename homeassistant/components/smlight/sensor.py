@@ -47,18 +47,24 @@ INFO: list[SmInfoEntityDescription] = [
     SmInfoEntityDescription(
         key="device_mode",
         translation_key="device_mode",
+        device_class=SensorDeviceClass.ENUM,
         lookup=MODE_LIST,
+        options=["lan", "wifi", "usb"],
         value_fn=lambda x: x.coord_mode,
     ),
     SmInfoEntityDescription(
         key="firmware_channel",
         translation_key="firmware_channel",
+        device_class=SensorDeviceClass.ENUM,
+        options=["dev", "release"],
         value_fn=lambda x: x.fw_channel,
     ),
     SmInfoEntityDescription(
         key="zigbee_type",
         translation_key="zigbee_type",
+        device_class=SensorDeviceClass.ENUM,
         lookup=ZB_TYPES,
+        options=["coordinator", "router", "thread", "unknown"],
         value_fn=lambda x: x.zb_type,
     ),
 ]
@@ -183,7 +189,7 @@ class SmInfoSensorEntity(SmEntity, SensorEntity):
 
         if self.entity_description.lookup is not None:
             assert isinstance(value, int)
-            value = self.entity_description.lookup[value]
+            value = self.entity_description.lookup[value].lower()
 
         return value
 
