@@ -124,15 +124,14 @@
           "name": "Swing modes"
         },
         "swing_horizontal_mode": {
-          "name": "Swing horizontal mode",
+          "name": "Horizontal swing mode",
           "state": {
             "off": "[%key:common::state::off%]",
-            "on": "[%key:common::state::on%]",
-            "both": "Both"
+            "on": "[%key:common::state::on%]"
           }
         },
         "swing_horizontal_modes": {
-          "name": "Swing horizontal modes"
+          "name": "Horizontal swing modes"
         },
         "target_temp_high": {
           "name": "Upper target temperature"
@@ -233,12 +232,12 @@
       }
     },
     "set_swing_horizontal_mode": {
-      "name": "Set swing horizontal mode",
-      "description": "Sets swing horizontal operation mode.",
+      "name": "Set horizontal swing mode",
+      "description": "Sets horizontal swing operation mode.",
       "fields": {
         "swing_horizontal_mode": {
-          "name": "Swing horizontal mode",
-          "description": "Swing horizontal operation mode."
+          "name": "Horizontal swing mode",
+          "description": "Horizontal swing operation mode."
         }
       }
     },

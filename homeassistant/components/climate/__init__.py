@@ -225,7 +225,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         SERVICE_SET_SWING_HORIZONTAL_MODE,
         {vol.Required(ATTR_SWING_HORIZONTAL_MODE): cv.string},
         "async_handle_set_swing_horizontal_mode_service",
-        [ClimateEntityFeature.SWING_MODE],
+        [ClimateEntityFeature.SWING_HORIZONTAL_MODE],
     )
 
     return True
@@ -264,6 +264,8 @@ CACHED_PROPERTIES_WITH_ATTR_ = {
     "fan_modes",
     "swing_mode",
     "swing_modes",
+    "swing_horizontal_mode",
+    "swing_horizontal_modes",
     "supported_features",
     "min_temp",
     "max_temp",
@@ -524,7 +526,7 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             data[ATTR_SWING_MODES] = self.swing_modes
 
         if ClimateEntityFeature.SWING_HORIZONTAL_MODE in supported_features:
-            data[ATTR_SWING_MODES] = self.swing_horizontal_modes
+            data[ATTR_SWING_HORIZONTAL_MODE] = self.swing_horizontal_modes
 
         return data
 
@@ -578,7 +580,7 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             data[ATTR_SWING_MODE] = self.swing_mode
 
         if ClimateEntityFeature.SWING_HORIZONTAL_MODE in supported_features:
-            data[ATTR_SWING_MODE] = self.swing_horizontal_mode
+            data[ATTR_SWING_HORIZONTAL_MODE] = self.swing_horizontal_mode
 
         if ClimateEntityFeature.AUX_HEAT in supported_features:
             data[ATTR_AUX_HEAT] = STATE_ON if self.is_aux_heat else STATE_OFF
@@ -833,9 +835,9 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         self._valid_mode_or_raise(
             "horizontal_swing", swing_horizontal_mode, self.swing_horizontal_modes
         )
-        await self.async_set_swing_mode(swing_horizontal_mode)
+        await self.async_set_swing_horizontal_mode(swing_horizontal_mode)
 
-    def set_swing_horizontal_mode(self, swing_mode: str) -> None:
+    def set_swing_horizontal_mode(self, swing_horizontal_mode: str) -> None:
         """Set new target horizontal swing operation."""
         raise NotImplementedError
 

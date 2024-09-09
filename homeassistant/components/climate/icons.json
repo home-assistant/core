@@ -55,7 +55,6 @@
         "swing_horizontal_mode": {
           "default": "mdi:circle-medium",
           "state": {
-            "both": "mdi:arrow-all",
             "off": "mdi:arrow-oscillating-off",
             "on": "mdi:arrow-expand-horizontal"
           }

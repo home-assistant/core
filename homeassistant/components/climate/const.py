@@ -93,9 +93,8 @@ SWING_VERTICAL = "vertical"
 SWING_HORIZONTAL = "horizontal"
 
 # Possible horizontal swing state
-SWING_ON = "on"
-SWING_OFF = "off"
-SWING_BOTH = "both"
+SWING_HORIZONTAL_ON = "on"
+SWING_HORIZONTAL_OFF = "off"
 
 
 class HVACAction(StrEnum):
