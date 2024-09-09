@@ -28,7 +28,7 @@ async def test_async_create_proxy_url(hass: HomeAssistant) -> None:
     proxy_url = f"/api/esphome/ffmpeg_proxy/{device_id}/{convert_id}.{media_format}"
 
     with patch(
-        "homeassistant.components.esphome.ffmpeg_proxy.ulid.ulid",
+        "homeassistant.components.esphome.ffmpeg_proxy.secrets.token_urlsafe",
         return_value=convert_id,
     ):
         assert (
@@ -65,7 +65,7 @@ async def test_proxy_view(
 
         # Allow the URL
         with patch(
-            "homeassistant.components.esphome.ffmpeg_proxy.ulid.ulid",
+            "homeassistant.components.esphome.ffmpeg_proxy.secrets.token_urlsafe",
             return_value=convert_id,
         ):
             assert (
