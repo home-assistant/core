@@ -130,9 +130,7 @@ class IfAction(Protocol):
 
     config: list[ConfigType]
 
-    def __call__(
-        self, hass: HomeAssistant, variables: Mapping[str, Any] | None = None
-    ) -> bool:
+    def __call__(self, variables: Mapping[str, Any] | None = None) -> bool:
         """AND all conditions."""
 
 
@@ -715,7 +713,7 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
             if (
                 not skip_condition
                 and self._cond_func is not None
-                and not self._cond_func(self.hass, variables)
+                and not self._cond_func(variables)
             ):
                 self._logger.debug(
                     "Conditions not met, aborting automation. Condition summary: %s",

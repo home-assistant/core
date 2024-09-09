@@ -1,8 +1,8 @@
 """Data update coordinator for trigger based template entities."""
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.const import EVENT_HOMEASSISTANT_START
 from homeassistant.core import Context, CoreState, callback
@@ -26,7 +26,7 @@ class TriggerUpdateCoordinator(DataUpdateCoordinator):
         """Instantiate trigger data."""
         super().__init__(hass, _LOGGER, name="Trigger Update Coordinator")
         self.config = config
-        self._cond_func: condition.ConditionCheckerType | None = None
+        self._cond_func: Callable[[Mapping[str, Any] | None], bool] | None = None
         self._unsub_start: Callable[[], None] | None = None
         self._unsub_trigger: Callable[[], None] | None = None
         self._script: Script | None = None
@@ -124,7 +124,7 @@ class TriggerUpdateCoordinator(DataUpdateCoordinator):
     def _check_condition(self, run_variables, context=None) -> bool | None:
         if not self._cond_func:
             return True
-        condition_result = self._cond_func(self.hass, run_variables)
+        condition_result = self._cond_func(run_variables)
         if condition_result is False:
             _LOGGER.debug(
                 "Conditions not met, aborting template trigger update. Condition summary: %s",

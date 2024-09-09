@@ -1070,16 +1070,14 @@ async def async_conditions_from_config(
     condition_configs: list[ConfigType],
     logger: logging.Logger,
     name: str,
-) -> ConditionCheckerType:
+) -> Callable[[TemplateVarsType], bool]:
     """AND all conditions."""
     checks: list[ConditionCheckerType] = [
         await async_from_config(hass, condition_config)
         for condition_config in condition_configs
     ]
 
-    def check_conditions(
-        hass: HomeAssistant, variables: TemplateVarsType = None
-    ) -> bool:
+    def check_conditions(variables: TemplateVarsType = None) -> bool:
         """AND all conditions."""
         errors: list[ConditionErrorIndex] = []
         for index, check in enumerate(checks):
