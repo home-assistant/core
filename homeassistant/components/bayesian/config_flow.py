@@ -217,9 +217,18 @@ def _convert_percentages_to_fractions(
     data: dict[str, str | float | int],
 ) -> dict[str, str | float]:
     """Convert percentage values in a dictionary to fractions."""
-    # TODO ensure does not run on numeric_state above and below
+    percentages = [
+        CONF_P_GIVEN_T,
+        CONF_P_GIVEN_F,
+        CONF_PRIOR,
+        CONF_PROBABILITY_THRESHOLD,
+    ]
     return {
-        key: (value / 100 if isinstance(value, (int, float)) else value)
+        key: (
+            value / 100
+            if isinstance(value, (int, float)) and key in percentages
+            else value
+        )
         for key, value in data.items()
     }
 
@@ -228,9 +237,18 @@ def _convert_fractions_to_percentages(
     data: dict[str, str | float],
 ) -> dict[str, str | float]:
     """Convert fraction values in a dictionary to percentages."""
-    # TODO ensure does not run on numeric_state above and below
+    percentages = [
+        CONF_P_GIVEN_T,
+        CONF_P_GIVEN_F,
+        CONF_PRIOR,
+        CONF_PROBABILITY_THRESHOLD,
+    ]
     return {
-        key: (value * 100 if isinstance(value, (float)) else value)
+        key: (
+            value * 100
+            if isinstance(value, (int, float)) and key in percentages
+            else value
+        )
         for key, value in data.items()
     }
 
