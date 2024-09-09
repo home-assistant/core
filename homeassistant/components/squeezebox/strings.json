@@ -84,6 +84,14 @@
       "needsrestart": {
         "name": "Needs restart"
       }
+    },
+    "update": {
+      "newversion": {
+        "name": "LMS version"
+      },
+      "newplugins": {
+	"name": "Updated plugins"
+      }
     }
   }
 }
