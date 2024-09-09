@@ -30,11 +30,5 @@ async def test_user_flow(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["version"] == 1
     assert result["data"] == sample_config
-    assert result["title"] == "Living Room Sky Box"
 
     assert len(mock_setup_entry.mock_calls) == 1
-
-
-def get_suggested_value(schema, key):
-    """Get suggested value for key in voluptuous schema."""
-    return next(x for x in schema.schema if x == key).description["suggested_value"]

@@ -9,7 +9,7 @@ import pytest
 import skyboxremote
 
 from homeassistant.components.sky_remote.const import CONF_LEGACY_CONTROL_PORT
-from homeassistant.const import CONF_HOST, CONF_NAME
+from homeassistant.const import CONF_HOST
 
 
 @pytest.fixture(name="sample_config")
@@ -21,7 +21,6 @@ async def get_config_to_integration_load() -> dict[str, Any]:
     """
     return {
         CONF_HOST: "10.0.0.1",
-        CONF_NAME: "Living Room Sky Box",
         CONF_LEGACY_CONTROL_PORT: True,
     }
 

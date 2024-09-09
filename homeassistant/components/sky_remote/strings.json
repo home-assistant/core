@@ -5,12 +5,10 @@
         "title": "Add Sky Remote",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
-          "name": "Name",
           "legacy_port": "Legacy Port"
         },
         "data_description": {
-          "host": "IP address or hostname of your Sky device",
-          "name": "Name of the remote entity that wil be created",
+          "host": "Hostname or IP address of your Sky device",
           "legacy_port": "Only enable if running SkyQ firmware < 060"
         }
       }

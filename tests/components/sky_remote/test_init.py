@@ -2,7 +2,7 @@
 
 from homeassistant.components.sky_remote.const import CONF_LEGACY_CONTROL_PORT, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_HOST, CONF_NAME
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -15,7 +15,6 @@ async def test_setup_entry(hass: HomeAssistant, mock_remote_control) -> None:
         domain=DOMAIN,
         data={
             CONF_HOST: "example.com",
-            CONF_NAME: "Sky Remote",
             CONF_LEGACY_CONTROL_PORT: False,
         },
     )
@@ -38,7 +37,6 @@ async def test_setup_entry_with_legacy_port(
         domain=DOMAIN,
         data={
             CONF_HOST: "example.com",
-            CONF_NAME: "Sky Remote",
             CONF_LEGACY_CONTROL_PORT: True,
         },
     )
@@ -61,7 +59,6 @@ async def test_setup_unconnectable_entry(
         domain=DOMAIN,
         data={
             CONF_HOST: "example.com",
-            CONF_NAME: "Sky Remote",
             CONF_LEGACY_CONTROL_PORT: False,
         },
     )
@@ -79,7 +76,6 @@ async def test_unload_entry(hass: HomeAssistant, mock_remote_control) -> None:
         domain=DOMAIN,
         data={
             CONF_HOST: "example.com",
-            CONF_NAME: "Sky Remote",
             CONF_LEGACY_CONTROL_PORT: True,
         },
     )
