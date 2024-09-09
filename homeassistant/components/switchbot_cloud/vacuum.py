@@ -19,7 +19,13 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import SwitchbotCloudData
-from .const import DOMAIN
+from .const import (
+    DOMAIN,
+    VACUUM_FAN_SPEED_MAX,
+    VACUUM_FAN_SPEED_QUIET,
+    VACUUM_FAN_SPEED_STANDARD,
+    VACUUM_FAN_SPEED_STRONG,
+)
 from .coordinator import SwitchBotCoordinator
 from .entity import SwitchBotCloudEntity
 
@@ -37,23 +43,6 @@ async def async_setup_entry(
     )
 
 
-# vacuum state / workingStatus
-# "StandBy": "Stand by",
-# "Clearing": "Clearing",
-# "Paused": "Paused",
-# "GotoChargeBase": "Go to charge base",
-# "Charging": "Charging",
-# "ChargeDone": "Charge done",
-# "Dormant": "Dormant",
-# "InTrouble": "In trouble",
-# "InRemoteControl": "In remote control",
-# "InDustCollecting": "In dust collecting"
-
-# fan speed
-# "0": "Quiet",
-# "1": "Standard",
-# "2": "Strong",
-# "3": "MAX"
 VACUUM_SWITCHBOT_STATE_TO_HA_STATE: dict[str, str] = {
     "StandBy": STATE_IDLE,
     "Clearing": STATE_CLEANING,
@@ -65,6 +54,13 @@ VACUUM_SWITCHBOT_STATE_TO_HA_STATE: dict[str, str] = {
     "InTrouble": STATE_ERROR,
     "InRemoteControl": STATE_CLEANING,
     "InDustCollecting": STATE_DOCKED,
+}
+
+VACUUM_FAN_SPEED_TO_SWITCHBOT_FAN_SPEED: dict[str, str] = {
+    VACUUM_FAN_SPEED_QUIET: "0",
+    VACUUM_FAN_SPEED_STANDARD: "1",
+    VACUUM_FAN_SPEED_STRONG: "2",
+    VACUUM_FAN_SPEED_MAX: "3",
 }
 
 
@@ -82,17 +78,19 @@ class SwitchBotCloudVacuum(SwitchBotCloudEntity, StateVacuumEntity):
     )
 
     _attr_name = None
-    _attr_fan_speed_list: list[str] = ["quiet", "standard", "strong", "max"]
+    _attr_fan_speed_list: list[str] = list(
+        VACUUM_FAN_SPEED_TO_SWITCHBOT_FAN_SPEED.keys()
+    )
 
     async def async_set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:
         """Set fan speed."""
-        if fan_speed in self._attr_fan_speed_list:
-            self._attr_fan_speed = fan_speed
+        self._attr_fan_speed = fan_speed
+        if fan_speed in VACUUM_FAN_SPEED_TO_SWITCHBOT_FAN_SPEED:
             await self.send_api_command(
                 VacuumCommands.POW_LEVEL,
-                parameters=str(self._attr_fan_speed_list.index(fan_speed)),
+                parameters=VACUUM_FAN_SPEED_TO_SWITCHBOT_FAN_SPEED[fan_speed],
             )
-            self.async_write_ha_state()
+        self.async_write_ha_state()
 
     async def async_pause(self) -> None:
         """Pause the cleaning task."""
@@ -112,15 +110,10 @@ class SwitchBotCloudVacuum(SwitchBotCloudEntity, StateVacuumEntity):
         if not self.coordinator.data:
             return
 
-        # 'deviceId' | 'deviceMac': 'XXXXX'
-        # 'deviceType': 'K10+' | 'WoSweeperMini'
-        # 'workingStatus': 'ChargeDone' | 'Charging' | 'GotoChargeBase' | 'Clearing' | 'Paused' | ...
-        # 'onlineStatus': 'online'
-        # 'battery': 100
         self._attr_battery_level = self.coordinator.data.get("battery")
         self._attr_available = self.coordinator.data.get("onlineStatus") == "online"
 
-        switchbot_state = self.coordinator.data.get("workingStatus")
+        switchbot_state = str(self.coordinator.data.get("workingStatus"))
         self._attr_state = VACUUM_SWITCHBOT_STATE_TO_HA_STATE.get(switchbot_state)
 
         self.async_write_ha_state()
