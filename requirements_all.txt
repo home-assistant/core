@@ -237,7 +237,7 @@ aioelectricitymaps==0.4.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==25.3.2
+aioesphomeapi==25.4.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
