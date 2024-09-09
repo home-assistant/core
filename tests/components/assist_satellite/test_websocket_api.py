@@ -24,24 +24,25 @@ async def test_intercept_wake_word(
 
     await ws_client.send_json_auto_id(
         {
-            "type": "assist_satellite/intercept_wake_word/start",
+            "type": "assist_satellite/intercept_wake_word",
             "entity_id": ENTITY_ID,
         }
     )
-
-    for _ in range(3):
-        await asyncio.sleep(0)
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+    assert msg["result"] is None
+    subscription_id = msg["id"]
 
     await entity.async_accept_pipeline_from_satellite(
-        object(),
+        object(),  # type: ignore[arg-type]
         start_stage=PipelineStage.STT,
         wake_word_phrase="ok, nabu",
     )
 
-    response = await ws_client.receive_json()
-
-    assert response["success"]
-    assert response["result"] == {"wake_word_phrase": "ok, nabu"}
+    msg = await ws_client.receive_json()
+    assert msg["id"] == subscription_id
+    assert msg["type"] == "event"
+    assert msg["event"] == {"wake_word_phrase": "ok, nabu"}
 
 
 async def test_intercept_wake_word_requires_on_device_wake_word(
@@ -55,16 +56,17 @@ async def test_intercept_wake_word_requires_on_device_wake_word(
 
     await ws_client.send_json_auto_id(
         {
-            "type": "assist_satellite/intercept_wake_word/start",
+            "type": "assist_satellite/intercept_wake_word",
             "entity_id": ENTITY_ID,
         }
     )
 
-    for _ in range(3):
-        await asyncio.sleep(0)
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+    assert msg["result"] is None
 
     await entity.async_accept_pipeline_from_satellite(
-        object(),
+        object(),  # type: ignore[arg-type]
         # Emulate wake word processing in Home Assistant
         start_stage=PipelineStage.WAKE_WORD,
     )
@@ -88,16 +90,17 @@ async def test_intercept_wake_word_requires_wake_word_phrase(
 
     await ws_client.send_json_auto_id(
         {
-            "type": "assist_satellite/intercept_wake_word/start",
+            "type": "assist_satellite/intercept_wake_word",
             "entity_id": ENTITY_ID,
         }
     )
 
-    for _ in range(3):
-        await asyncio.sleep(0)
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+    assert msg["result"] is None
 
     await entity.async_accept_pipeline_from_satellite(
-        object(),
+        object(),  # type: ignore[arg-type]
         start_stage=PipelineStage.STT,
         # We are not passing wake word phrase
     )
@@ -124,7 +127,7 @@ async def test_intercept_wake_word_require_admin(
 
     await ws_client.send_json_auto_id(
         {
-            "type": "assist_satellite/intercept_wake_word/start",
+            "type": "assist_satellite/intercept_wake_word",
             "entity_id": ENTITY_ID,
         }
     )
@@ -148,14 +151,14 @@ async def test_intercept_wake_word_invalid_satellite(
 
     await ws_client.send_json_auto_id(
         {
-            "type": "assist_satellite/intercept_wake_word/start",
+            "type": "assist_satellite/intercept_wake_word",
             "entity_id": "assist_satellite.invalid",
         }
     )
-    response = await ws_client.receive_json()
+    msg = await ws_client.receive_json()
 
-    assert not response["success"]
-    assert response["error"] == {
+    assert not msg["success"]
+    assert msg["error"] == {
         "code": "not_found",
         "message": "Entity not found",
     }
@@ -172,50 +175,33 @@ async def test_intercept_wake_word_twice(
 
     await ws_client.send_json_auto_id(
         {
-            "type": "assist_satellite/intercept_wake_word/start",
+            "type": "assist_satellite/intercept_wake_word",
             "entity_id": ENTITY_ID,
         }
     )
 
-    await ws_client.send_json_auto_id(
-        {
-            "type": "assist_satellite/intercept_wake_word/start",
-            "entity_id": ENTITY_ID,
-        }
-    )
-    response = await ws_client.receive_json()
-
-    assert response["success"]
-    assert response["result"] == {"wake_word_phrase": None}
-
-
-async def test_intercept_wake_word_stop(
-    hass: HomeAssistant,
-    init_components: ConfigEntry,
-    entity: MockAssistSatellite,
-    hass_ws_client: WebSocketGenerator,
-) -> None:
-    """Test that we can stop intercepting wake words."""
-    ws_client = await hass_ws_client(hass)
-
-    await ws_client.send_json_auto_id(
-        {
-            "type": "assist_satellite/intercept_wake_word/start",
-            "entity_id": ENTITY_ID,
-        }
-    )
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+    assert msg["result"] is None
 
     task = asyncio.create_task(ws_client.receive_json())
 
-    async with asyncio.timeout(1):
-        # Will cancel the open request
-        await ws_client.send_json_auto_id(
-            {
-                "type": "assist_satellite/intercept_wake_word/stop",
-                "entity_id": ENTITY_ID,
-            }
-        )
+    await ws_client.send_json_auto_id(
+        {
+            "type": "assist_satellite/intercept_wake_word",
+            "entity_id": ENTITY_ID,
+        }
+    )
 
-        response = await task
-        assert response["success"]
-        assert response["result"] == {"wake_word_phrase": None}
+    # Should get an error from previous subscription
+    msg = await task
+    assert not msg["success"]
+    assert msg["error"] == {
+        "code": "home_assistant_error",
+        "message": "Only one interception is allowed",
+    }
+
+    # Response to second subscription
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+    assert msg["result"] is None

@@ -16,20 +16,19 @@ from .entity import AssistSatelliteEntity
 @callback
 def async_register_websocket_api(hass: HomeAssistant) -> None:
     """Register the websocket API."""
-    websocket_api.async_register_command(hass, websocket_intercept_wake_word_start)
-    websocket_api.async_register_command(hass, websocket_intercept_wake_word_stop)
+    websocket_api.async_register_command(hass, websocket_intercept_wake_word)
 
 
 @callback
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "assist_satellite/intercept_wake_word/start",
+        vol.Required("type"): "assist_satellite/intercept_wake_word",
         vol.Required("entity_id"): cv.entity_domain(DOMAIN),
     }
 )
 @websocket_api.require_admin
 @websocket_api.async_response
-async def websocket_intercept_wake_word_start(
+async def websocket_intercept_wake_word(
     hass: HomeAssistant,
     connection: websocket_api.connection.ActiveConnection,
     msg: dict[str, Any],
@@ -43,31 +42,20 @@ async def websocket_intercept_wake_word_start(
         )
         return
 
-    wake_word_phrase = await satellite.async_intercept_wake_word()
-    connection.send_result(msg["id"], {"wake_word_phrase": wake_word_phrase})
+    @callback
+    def wake_word_listener(wake_word_phrase: str | None, message: str) -> None:
+        """Push an intercepted wake word to websocket."""
+        if wake_word_phrase is not None:
+            connection.send_message(
+                websocket_api.event_message(
+                    msg["id"],
+                    {"wake_word_phrase": wake_word_phrase},
+                )
+            )
+        else:
+            connection.send_error(msg["id"], "home_assistant_error", message)
 
-
-@callback
-@websocket_api.websocket_command(
-    {
-        vol.Required("type"): "assist_satellite/intercept_wake_word/stop",
-        vol.Required("entity_id"): cv.entity_domain(DOMAIN),
-    }
-)
-@websocket_api.require_admin
-@websocket_api.async_response
-async def websocket_intercept_wake_word_stop(
-    hass: HomeAssistant,
-    connection: websocket_api.connection.ActiveConnection,
-    msg: dict[str, Any],
-) -> None:
-    """Intercept the next wake word from a satellite."""
-    component: EntityComponent[AssistSatelliteEntity] = hass.data[DOMAIN]
-    satellite = component.get_entity(msg["entity_id"])
-    if satellite is None:
-        connection.send_error(
-            msg["id"], websocket_api.ERR_NOT_FOUND, "Entity not found"
-        )
-        return
-
-    satellite.async_stop_intercept_wake_word()
+    connection.subscriptions[msg["id"]] = satellite.async_intercept_wake_word(
+        wake_word_listener
+    )
+    connection.send_message(websocket_api.result_message(msg["id"]))
