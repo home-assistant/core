@@ -89,7 +89,7 @@ from .models import (  # noqa: F401
     PayloadSentinel,
     PublishPayloadType,
     ReceiveMessage,
-    ReceivePayloadType,
+    convert_outgoing_mqtt_payload,
 )
 from .subscription import (  # noqa: F401
     EntitySubscription,
@@ -115,6 +115,7 @@ SERVICE_DUMP = "dump"
 
 ATTR_TOPIC_TEMPLATE = "topic_template"
 ATTR_PAYLOAD_TEMPLATE = "payload_template"
+ATTR_EVALUATE_PAYLOAD = "evaluate_payload"
 
 MAX_RECONNECT_WAIT = 300  # seconds
 
@@ -166,6 +167,7 @@ MQTT_PUBLISH_SCHEMA = vol.All(
             vol.Exclusive(ATTR_TOPIC_TEMPLATE, CONF_TOPIC): cv.string,
             vol.Exclusive(ATTR_PAYLOAD, CONF_PAYLOAD): cv.string,
             vol.Exclusive(ATTR_PAYLOAD_TEMPLATE, CONF_PAYLOAD): cv.string,
+            vol.Optional(ATTR_EVALUATE_PAYLOAD): cv.boolean,
             vol.Optional(ATTR_QOS, default=DEFAULT_QOS): valid_qos_schema,
             vol.Optional(ATTR_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
         },
@@ -295,6 +297,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         msg_topic: str | None = call.data.get(ATTR_TOPIC)
         msg_topic_template: str | None = call.data.get(ATTR_TOPIC_TEMPLATE)
         payload: PublishPayloadType = call.data.get(ATTR_PAYLOAD)
+        evaluate_payload: bool = call.data.get(ATTR_EVALUATE_PAYLOAD, False)
         payload_template: str | None = call.data.get(ATTR_PAYLOAD_TEMPLATE)
         qos: int = call.data[ATTR_QOS]
         retain: bool = call.data[ATTR_RETAIN]
@@ -354,6 +357,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             payload = MqttCommandTemplate(
                 template.Template(payload_template, hass)
             ).async_render()
+        elif evaluate_payload:
+            # Convert quoted binary literal to raw data
+            payload = convert_outgoing_mqtt_payload(payload)
 
         if TYPE_CHECKING:
             assert msg_topic is not None

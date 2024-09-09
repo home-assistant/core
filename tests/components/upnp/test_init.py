@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable, Coroutine
 import copy
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from async_upnp_client.profiles.igd import IgdDevice
@@ -140,7 +142,13 @@ async def test_async_setup_udn_mismatch(
     )
 
     # Set up device discovery callback.
-    async def register_callback(hass, callback, match_dict):
+    async def register_callback(
+        hass: HomeAssistant,
+        callback: Callable[
+            [ssdp.SsdpServiceInfo, ssdp.SsdpChange], Coroutine[Any, Any, None] | None
+        ],
+        match_dict: dict[str, str] | None = None,
+    ) -> MagicMock:
         """Immediately do callback."""
         await callback(test_discovery, ssdp.SsdpChange.ALIVE)
         return MagicMock()

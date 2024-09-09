@@ -8,7 +8,7 @@ from unittest.mock import patch
 from aiohomekit import AccessoryNotFoundError
 from aiohomekit.model import Accessory, Transport
 from aiohomekit.model.characteristics import CharacteristicsTypes
-from aiohomekit.model.services import ServicesTypes
+from aiohomekit.model.services import Service, ServicesTypes
 from aiohomekit.testing import FakePairing
 from attr import asdict
 import pytest
@@ -40,7 +40,7 @@ ALIVE_DEVICE_NAME = "testdevice"
 ALIVE_DEVICE_ENTITY_ID = "light.testdevice"
 
 
-def create_motion_sensor_service(accessory):
+def create_motion_sensor_service(accessory: Accessory) -> None:
     """Define motion characteristics as per page 225 of HAP spec."""
     service = accessory.add_service(ServicesTypes.MOTION_SENSOR)
     cur_state = service.add_char(CharacteristicsTypes.MOTION_DETECTED)
@@ -83,7 +83,7 @@ async def test_async_remove_entry(
     assert hkid not in hass.data[ENTITY_MAP].storage_data
 
 
-def create_alive_service(accessory):
+def create_alive_service(accessory: Accessory) -> Service:
     """Create a service to validate we can only remove dead devices."""
     service = accessory.add_service(ServicesTypes.LIGHTBULB, name=ALIVE_DEVICE_NAME)
     service.add_char(CharacteristicsTypes.ON)

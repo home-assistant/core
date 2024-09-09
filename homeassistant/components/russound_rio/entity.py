@@ -4,7 +4,7 @@ from collections.abc import Awaitable, Callable, Coroutine
 from functools import wraps
 from typing import Any, Concatenate
 
-from aiorussound import Controller
+from aiorussound import Controller, RussoundTcpConnectionHandler
 
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
@@ -60,6 +60,10 @@ class RussoundBaseEntity(Entity):
             model=controller.controller_type,
             sw_version=controller.firmware_version,
         )
+        if isinstance(self._instance.connection_handler, RussoundTcpConnectionHandler):
+            self._attr_device_info["configuration_url"] = (
+                f"http://{self._instance.connection_handler.host}"
+            )
         if controller.parent_controller:
             self._attr_device_info["via_device"] = (
                 DOMAIN,
@@ -78,8 +82,12 @@ class RussoundBaseEntity(Entity):
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
-        self._instance.add_connection_callback(self._is_connected_updated)
+        self._instance.connection_handler.add_connection_callback(
+            self._is_connected_updated
+        )
 
     async def async_will_remove_from_hass(self) -> None:
         """Remove callbacks."""
-        self._instance.remove_connection_callback(self._is_connected_updated)
+        self._instance.connection_handler.remove_connection_callback(
+            self._is_connected_updated
+        )

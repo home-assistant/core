@@ -13,7 +13,8 @@ from tests.components.bluetooth import inject_bluetooth_service_info
 
 
 async def test_options_update_listener(
-    mock_config_entry: MockConfigEntry, hass: HomeAssistant
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test options_update_listener."""
 
@@ -33,8 +34,8 @@ async def test_options_update_listener(
 
 
 async def test_update_ble_device(
-    mock_config_entry: MockConfigEntry,
     hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
     service_info: BluetoothServiceInfoBleak,
 ) -> None:
     """Test async_update_ble_device."""

@@ -5,7 +5,6 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable, Iterable
 from datetime import timedelta
-from functools import partial
 import logging
 from types import ModuleType
 from typing import Any, Generic
@@ -264,25 +263,16 @@ class EntityComponent(Generic[_EntityT]):
         supports_response: SupportsResponse = SupportsResponse.NONE,
     ) -> None:
         """Register an entity service."""
-        if schema is None or isinstance(schema, dict):
-            schema = cv.make_entity_service_schema(schema)
-
-        service_func: str | HassJob[..., Any]
-        service_func = func if isinstance(func, str) else HassJob(func)
-
-        self.hass.services.async_register(
+        service.async_register_entity_service(
+            self.hass,
             self.domain,
             name,
-            partial(
-                service.entity_service_call,
-                self.hass,
-                self._entities,
-                service_func,
-                required_features=required_features,
-            ),
-            schema,
-            supports_response,
+            entities=self._entities,
+            func=func,
             job_type=HassJobType.Coroutinefunction,
+            required_features=required_features,
+            schema=schema,
+            supports_response=supports_response,
         )
 
     async def async_setup_platform(

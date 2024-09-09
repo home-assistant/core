@@ -2,8 +2,9 @@
   "config": {
     "step": {
       "user": {
-        "description": "Fill in your Aquacell mobile app credentials",
+        "description": "Select the brand of the softener and fill in your softener mobile app credentials",
         "data": {
+          "brand": "Brand",
           "email": "[%key:common::config_flow::data::email%]",
           "password": "[%key:common::config_flow::data::password%]"
         }

@@ -24,6 +24,7 @@ from . import setup_integration
 from tests.common import MockConfigEntry
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize("blind_type", [MotionBlindType.CURTAIN])
 @pytest.mark.parametrize(
     ("sensor", "register_callback", "initial_value", "args", "expected_value"),
@@ -87,10 +88,10 @@ from tests.common import MockConfigEntry
     ],
 )
 async def test_sensor(
+    hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_motion_device: Mock,
     name: str,
-    hass: HomeAssistant,
     sensor: str,
     register_callback: Callable[[MotionDevice], Callable[..., None]],
     initial_value: str,

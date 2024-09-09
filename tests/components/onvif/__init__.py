@@ -151,7 +151,9 @@ def setup_mock_device(mock_device, capabilities=None):
         pullpoint_manager=MagicMock(state=PullPointManagerState.PAUSED),
     )
 
-    def mock_constructor(hass, config):
+    def mock_constructor(
+        hass: HomeAssistant, config: config_entries.ConfigEntry
+    ) -> MagicMock:
         """Fake the controller constructor."""
         return mock_device
 
