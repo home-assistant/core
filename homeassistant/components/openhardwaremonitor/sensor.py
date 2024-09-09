@@ -62,7 +62,7 @@ class OpenHardwareMonitorDevice(SensorEntity):
     """Device used to display information from OpenHardwareMonitor."""
 
     _attr_state_class = SensorStateClass.MEASUREMENT
-    
+
     def __init__(self, data, name, path, unit_of_measurement):
         """Initialize an OpenHardwareMonitor sensor."""
         self._name = name
