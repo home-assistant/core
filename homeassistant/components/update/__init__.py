@@ -214,7 +214,6 @@ class UpdateEntity(
 
     entity_description: UpdateEntityDescription
     _attr_auto_update: bool = False
-    _attr_compare_by_strings: bool = False
     _attr_installed_version: str | None = None
     _attr_device_class: UpdateDeviceClass | None
     _attr_in_progress: bool | int = False
@@ -388,6 +387,11 @@ class UpdateEntity(
         """
         raise NotImplementedError
 
+    def version_is_newer(self, latest_version: str, installed_version: str) -> bool:
+        """Return True if installed version is newer that available."""
+        # We don't inline the method because of caching
+        return _version_is_newer(latest_version, installed_version)
+
     @property
     @final
     def state(self) -> str | None:
@@ -403,9 +407,7 @@ class UpdateEntity(
             return STATE_OFF
 
         try:
-            newer = _version_is_newer(
-                latest_version, installed_version, self._attr_compare_by_strings
-            )
+            newer = self.version_is_newer(latest_version, installed_version)
         except AwesomeVersionCompareException:
             # Can't compare versions, already tried exact match
             return STATE_ON
