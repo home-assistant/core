@@ -43,6 +43,7 @@ from homeassistant.helpers.schema_config_entry_flow import (
 from homeassistant.helpers.template import result_as_boolean
 
 from .const import (
+    CONF_INDEX,
     CONF_OBSERVATIONS,
     CONF_P_GIVEN_F,
     CONF_P_GIVEN_T,
@@ -260,7 +261,7 @@ async def _get_select_observation_schema(
     """Return schema for selecting a observation."""
     return vol.Schema(
         {
-            vol.Required("index"): vol.In(
+            vol.Required(CONF_INDEX): vol.In(
                 {
                     str(
                         index
@@ -278,7 +279,7 @@ async def _get_remove_observation_schema(
     """Return schema for observation removal."""
     return vol.Schema(
         {
-            vol.Required("index"): cv.multi_select(
+            vol.Required(CONF_INDEX): cv.multi_select(
                 {
                     str(
                         index
@@ -296,7 +297,7 @@ async def _get_edit_observation_schema(
     """Select which schema to return depending on which observation type it is."""
     # TODO need to remove the add another box
     observations: list[dict[str, Any]] = handler.options[CONF_OBSERVATIONS]
-    selected_idx = int(handler.options["index"])
+    selected_idx = int(handler.options[CONF_INDEX])
     if observations[selected_idx][CONF_PLATFORM] == str(ObservationTypes.STATE):
         return STATE_SUBSCHEMA
     if observations[selected_idx][CONF_PLATFORM] == str(ObservationTypes.NUMERIC_STATE):
@@ -327,7 +328,7 @@ async def _get_edit_observation_suggested_values(
 ) -> dict[str, Any]:
     """Return suggested values for observation editing."""
 
-    idx = int(handler.options["index"])
+    idx = int(handler.options[CONF_INDEX])
     return _convert_fractions_to_percentages(
         dict(handler.options[CONF_OBSERVATIONS][idx])
     )
@@ -375,7 +376,7 @@ async def _validate_observation_setup(
     observations: list[dict[str, Any]] = handler.options.setdefault(
         CONF_OBSERVATIONS, []
     )
-    if idx := handler.options.get("index"):
+    if idx := handler.options.get(CONF_INDEX):
         # if there is an index, that means we are in observation editing mode and we want to overwrite not append
         observations[int(idx)] = user_input
     else:
@@ -388,7 +389,7 @@ async def _validate_remove_observation(
 ) -> dict[str, Any]:
     """Delete an observation."""
     observations: list[dict[str, Any]] = handler.options[CONF_OBSERVATIONS]
-    indexes: set[str] = set(user_input["index"])
+    indexes: set[str] = set(user_input[CONF_INDEX])
 
     # Standard behavior is to merge the result with the options.
     # In this case, we want to remove sub-items so we update the options directly.
