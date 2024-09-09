@@ -239,6 +239,41 @@ async def test_get_rpc_channel_name(mock_rpc_device: Mock) -> None:
     assert get_rpc_channel_name(mock_rpc_device, "input:3") == "Test name Input 3"
 
 
+@pytest.mark.parametrize(("component"), ["cover", "light", "switch", "input"])
+async def test_get_rpc_channel_name_multiple_components(
+    mock_rpc_device: Mock, monkeypatch: pytest.MonkeyPatch, component: str
+) -> None:
+    """Test get RPC channel name."""
+    config = {
+        f"{component}:0": {"name": None},
+        f"{component}:1": {"name": None},
+    }
+    monkeypatch.setattr(mock_rpc_device, "config", config)
+
+    assert (
+        get_rpc_channel_name(mock_rpc_device, f"{component}:0")
+        == f"Test name {component.title()} 0"
+    )
+    assert (
+        get_rpc_channel_name(mock_rpc_device, f"{component}:1")
+        == f"Test name {component.title()} 1"
+    )
+
+
+@pytest.mark.parametrize(("component"), ["cover", "light", "switch", "input"])
+async def test_get_rpc_channel_name_single_component(
+    mock_rpc_device: Mock, monkeypatch: pytest.MonkeyPatch, component: str
+) -> None:
+    """Test get RPC channel name."""
+    config = {f"{component}:0": {"name": None}}
+    monkeypatch.setattr(mock_rpc_device, "config", config)
+
+    assert (
+        get_rpc_channel_name(mock_rpc_device, f"{component}:0")
+        == f"Test name {component.title()}"
+    )
+
+
 async def test_get_rpc_input_triggers(
     mock_rpc_device: Mock, monkeypatch: pytest.MonkeyPatch
 ) -> None:
