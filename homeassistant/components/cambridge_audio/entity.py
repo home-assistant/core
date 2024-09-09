@@ -3,11 +3,12 @@
 from aiostreammagic import StreamMagicClient
 
 from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN
 
 
-class CambridgeAudioEntity:
+class CambridgeAudioEntity(Entity):
     """Defines a base Cambridge Audio entity."""
 
     _attr_has_entity_name = True

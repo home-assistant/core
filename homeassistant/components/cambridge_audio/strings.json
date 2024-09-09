@@ -4,14 +4,9 @@
   },
   "config": {
     "step": {
-      "user": {
-        "data": {
-          "host": "[%key:common::config_flow::data::host%]"
-        }
+      "confirm": {
+        "description": "[%key:common::config_flow::description::confirm_setup%]"
       }
-    },
-    "error": {
-      "cannot_connect": "[%key:component::cambridge_audio::common::error_cannot_connect%]"
     },
     "abort": {
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",

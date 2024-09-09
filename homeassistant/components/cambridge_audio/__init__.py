@@ -2,13 +2,16 @@
 
 from __future__ import annotations
 
+import asyncio
+
 from aiostreammagic import StreamMagicClient
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+
+from .const import CONNECT_TIMEOUT, STREAM_MAGIC_EXCEPTIONS
 
 PLATFORMS: list[Platform] = [Platform.MEDIA_PLAYER]
 
@@ -25,10 +28,10 @@ async def async_setup_entry(
     )
 
     try:
-        await client.connect()
-    except:
-        raise ConfigEntryNotReady("Not ready")
-
+        async with asyncio.timeout(CONNECT_TIMEOUT):
+            await client.connect()
+    except STREAM_MAGIC_EXCEPTIONS as err:
+        raise ConfigEntryNotReady(f"Error while connecting to {client.host}") from err
     entry.runtime_data = client
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -40,4 +43,6 @@ async def async_unload_entry(
     hass: HomeAssistant, entry: CambridgeAudioConfigEntry
 ) -> bool:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+        await entry.runtime_data.disconnect()
+    return unload_ok
