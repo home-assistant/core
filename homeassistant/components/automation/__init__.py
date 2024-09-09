@@ -47,14 +47,7 @@ from homeassistant.core import (
     split_entity_id,
     valid_entity_id,
 )
-from homeassistant.exceptions import (
-    ConditionError,
-    ConditionErrorContainer,
-    ConditionErrorIndex,
-    HomeAssistantError,
-    ServiceNotFound,
-    TemplateError,
-)
+from homeassistant.exceptions import HomeAssistantError, ServiceNotFound, TemplateError
 from homeassistant.helpers import condition
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.deprecation import (
@@ -137,7 +130,9 @@ class IfAction(Protocol):
 
     config: list[ConfigType]
 
-    def __call__(self, variables: Mapping[str, Any] | None = None) -> bool:
+    def __call__(
+        self, hass: HomeAssistant, variables: Mapping[str, Any] | None = None
+    ) -> bool:
         """AND all conditions."""
 
 
@@ -720,7 +715,7 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
             if (
                 not skip_condition
                 and self._cond_func is not None
-                and not self._cond_func(variables)
+                and not self._cond_func(self.hass, variables)
             ):
                 self._logger.debug(
                     "Conditions not met, aborting automation. Condition summary: %s",
@@ -1146,38 +1141,13 @@ async def _async_process_if(
     """Process if checks."""
     if_configs = config[CONF_CONDITION]
 
-    checks: list[condition.ConditionCheckerType] = []
-    for if_config in if_configs:
-        try:
-            checks.append(await condition.async_from_config(hass, if_config))
-        except HomeAssistantError as ex:
-            LOGGER.warning("Invalid condition: %s", ex)
-            return None
-
-    def if_action(variables: Mapping[str, Any] | None = None) -> bool:
-        """AND all conditions."""
-        errors: list[ConditionErrorIndex] = []
-        for index, check in enumerate(checks):
-            try:
-                with trace_path(["condition", str(index)]):
-                    if check(hass, variables) is False:
-                        return False
-            except ConditionError as ex:
-                errors.append(
-                    ConditionErrorIndex(
-                        "condition", index=index, total=len(checks), error=ex
-                    )
-                )
-
-        if errors:
-            LOGGER.warning(
-                "Error evaluating condition in '%s':\n%s",
-                name,
-                ConditionErrorContainer("condition", errors=errors),
-            )
-            return False
-
-        return True
+    try:
+        if_action = await condition.async_conditions_from_config(
+            hass, if_configs, LOGGER, name
+        )
+    except HomeAssistantError as ex:
+        LOGGER.warning("Invalid condition: %s", ex)
+        return None
 
     result: IfAction = if_action  # type: ignore[assignment]
     result.config = if_configs

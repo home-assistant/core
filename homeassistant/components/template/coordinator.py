@@ -5,15 +5,10 @@ import logging
 
 from homeassistant.const import EVENT_HOMEASSISTANT_START
 from homeassistant.core import Context, CoreState, callback
-from homeassistant.exceptions import (
-    ConditionError,
-    ConditionErrorContainer,
-    ConditionErrorIndex,
-)
 from homeassistant.helpers import condition, discovery, trigger as trigger_helper
 from homeassistant.helpers.script import Script
-from homeassistant.helpers.trace import trace_get, trace_path
-from homeassistant.helpers.typing import ConfigType, TemplateVarsType
+from homeassistant.helpers.trace import trace_get
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import CONF_ACTION, CONF_CONDITION, CONF_TRIGGER, DOMAIN, PLATFORMS
@@ -30,7 +25,7 @@ class TriggerUpdateCoordinator(DataUpdateCoordinator):
         """Instantiate trigger data."""
         super().__init__(hass, _LOGGER, name="Trigger Update Coordinator")
         self.config = config
-        self._cond_func: Callable[[TemplateVarsType | None], bool] | None = None
+        self._cond_func: condition.ConditionCheckerType | None = None
         self._unsub_start: Callable[[], None] | None = None
         self._unsub_trigger: Callable[[], None] | None = None
         self._script: Script | None = None
@@ -81,7 +76,9 @@ class TriggerUpdateCoordinator(DataUpdateCoordinator):
             )
 
         if CONF_CONDITION in self.config:
-            self._cond_func = await self._setup_condition_checker()
+            self._cond_func = await condition.async_conditions_from_config(
+                self.hass, self.config[CONF_CONDITION], _LOGGER, self.name
+            )
 
         if start_event is not None:
             self._unsub_start = None
@@ -101,41 +98,6 @@ class TriggerUpdateCoordinator(DataUpdateCoordinator):
             start_event is not None,
         )
 
-    async def _setup_condition_checker(
-        self,
-    ) -> Callable[[TemplateVarsType | None], bool] | None:
-        cond_configs = self.config[CONF_CONDITION]
-        checks: list[condition.ConditionCheckerType] = [
-            await condition.async_from_config(self.hass, cond_config)
-            for cond_config in cond_configs
-        ]
-
-        def check_conditions(variables: TemplateVarsType | None = None) -> bool:
-            """AND all conditions."""
-            errors: list[ConditionErrorIndex] = []
-            for index, check in enumerate(checks):
-                try:
-                    with trace_path(["condition", str(index)]):
-                        if check(self.hass, variables) is False:
-                            return False
-                except ConditionError as ex:
-                    errors.append(
-                        ConditionErrorIndex(
-                            "condition", index=index, total=len(checks), error=ex
-                        )
-                    )
-
-            if errors:
-                _LOGGER.warning(
-                    "Error evaluating template trigger condition:\n%s",
-                    ConditionErrorContainer("condition", errors=errors),
-                )
-                return False
-
-            return True
-
-        return check_conditions
-
     async def _handle_triggered_with_script(self, run_variables, context=None):
         if not self._check_condition(run_variables, context):
             return
@@ -151,15 +113,16 @@ class TriggerUpdateCoordinator(DataUpdateCoordinator):
             return
         self._execute_update(run_variables, context)
 
-    def _check_condition(self, run_variables, context=None) -> bool:
-        condition_result = self._cond_func(run_variables) if self._cond_func else True
+    def _check_condition(self, run_variables, context=None) -> bool | None:
+        if not self._cond_func:
+            return True
+        condition_result = self._cond_func(self.hass, run_variables)
         if condition_result is False:
             _LOGGER.debug(
                 "Conditions not met, aborting template trigger update. Condition summary: %s",
                 trace_get(clear=False),
             )
-            return False
-        return True
+        return condition_result
 
     @callback
     def _execute_update(self, run_variables, context=None) -> None:
