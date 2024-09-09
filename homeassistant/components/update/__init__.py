@@ -386,7 +386,7 @@ class UpdateEntity(
 
     def version_is_newer(self, latest_version: str, installed_version: str) -> bool:
         """Return True if installed version is newer that available."""
-        # We don't inline the method because of caching
+        # We don't inline the `_version_is_newer` function because of caching
         return _version_is_newer(latest_version, installed_version)
 
     @property
