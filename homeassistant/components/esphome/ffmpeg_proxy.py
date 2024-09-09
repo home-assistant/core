@@ -5,6 +5,7 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 from http import HTTPStatus
 import logging
+import secrets
 
 from aiohttp import web
 from aiohttp.abc import AbstractStreamWriter, BaseRequest
@@ -12,7 +13,6 @@ from aiohttp.abc import AbstractStreamWriter, BaseRequest
 from homeassistant.components.ffmpeg import FFmpegManager
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.core import HomeAssistant
-from homeassistant.util import ulid
 
 from .const import DATA_FFMPEG_PROXY
 
@@ -29,14 +29,9 @@ def async_create_proxy_url(
 ) -> str:
     """Create a one-time use proxy URL that automatically converts the media."""
     data: FFmpegProxyData = hass.data[DATA_FFMPEG_PROXY]
-
-    convert_id = ulid.ulid()
-    data.conversions[device_id][convert_id] = FFmpegConversionInfo(
-        media_url, media_format, rate, channels
+    return data.async_create_proxy_url(
+        device_id, media_url, media_format, rate, channels
     )
-    _LOGGER.debug("Media URL allowed by proxy: %s", media_url)
-
-    return f"/api/esphome/ffmpeg_proxy/{device_id}/{convert_id}.{media_format}"
 
 
 @dataclass
@@ -67,6 +62,23 @@ class FFmpegProxyData:
 
     # device_id -> process
     processes: dict[str, asyncio.subprocess.Process] = field(default_factory=dict)
+
+    def async_create_proxy_url(
+        self,
+        device_id: str,
+        media_url: str,
+        media_format: str,
+        rate: int | None,
+        channels: int | None,
+    ) -> str:
+        """Create a one-time use proxy URL that automatically converts the media."""
+        convert_id = secrets.token_urlsafe(16)
+        self.conversions[device_id][convert_id] = FFmpegConversionInfo(
+            media_url, media_format, rate, channels
+        )
+        _LOGGER.debug("Media URL allowed by proxy: %s", media_url)
+
+        return f"/api/esphome/ffmpeg_proxy/{device_id}/{convert_id}.{media_format}"
 
 
 class FFmpegConvertResponse(web.StreamResponse):
@@ -164,7 +176,7 @@ class FFmpegConvertResponse(web.StreamResponse):
                 stderr_text = ""
                 while line := await proc.stderr.readline():
                     stderr_text += line.decode()
-                _LOGGER.error(stderr_text)
+                _LOGGER.error("Error shutting down ffmpeg: %s", stderr_text)
             else:
                 _LOGGER.debug("Conversion completed: %s", self.convert_info)
 
