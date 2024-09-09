@@ -8,6 +8,7 @@ from datetime import datetime, timedelta
 from itertools import chain
 
 from pysmlight import Info, Sensors
+from pysmlight.const import MODE_LIST, ZB_TYPES
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -38,6 +39,7 @@ class SmSensorEntityDescription(SensorEntityDescription):
 class SmInfoEntityDescription(SensorEntityDescription):
     """Class describing SMLIGHT information entities."""
 
+    lookup: list[str] | dict[int, str] | None = None
     value_fn: Callable[[Info], StateType]
 
 
@@ -45,6 +47,7 @@ INFO: list[SmInfoEntityDescription] = [
     SmInfoEntityDescription(
         key="device_mode",
         translation_key="device_mode",
+        lookup=MODE_LIST,
         value_fn=lambda x: x.coord_mode,
     ),
     SmInfoEntityDescription(
@@ -55,6 +58,7 @@ INFO: list[SmInfoEntityDescription] = [
     SmInfoEntityDescription(
         key="zigbee_type",
         translation_key="zigbee_type",
+        lookup=ZB_TYPES,
         value_fn=lambda x: x.zb_type,
     ),
 ]
@@ -175,7 +179,13 @@ class SmInfoSensorEntity(SmEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return the sensor value."""
-        return self.entity_description.value_fn(self.coordinator.data.info)
+        value = self.entity_description.value_fn(self.coordinator.data.info)
+
+        if self.entity_description.lookup is not None:
+            assert isinstance(value, int)
+            value = self.entity_description.lookup[value]
+
+        return value
 
 
 class SmUptimeSensorEntity(SmSensorEntity):

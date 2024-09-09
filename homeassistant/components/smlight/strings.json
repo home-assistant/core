@@ -72,9 +72,9 @@
       "device_mode": {
         "name": "Connection mode",
         "state": {
-          "0": "Ethernet",
-          "1": "Wi-Fi",
-          "2": "USB"
+          "lan": "Ethernet",
+          "wifi": "Wi-Fi",
+          "usb": "USB"
         }
       },
       "firmware_channel": {
@@ -87,9 +87,10 @@
       "zigbee_type": {
         "name": "Zigbee type",
         "state": {
-          "0": "Coordinator",
-          "1": "Router",
-          "2": "Thread"
+          "coordinator": "Coordinator",
+          "router": "Router",
+          "thread": "Thread",
+          "unknown": "Unknown"
         }
       }
     },
