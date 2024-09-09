@@ -12,6 +12,7 @@ from .const import DOMAIN, PLATFORMS  # noqa: F401
 
 _LOGGER = logging.getLogger(__name__)
 
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Bayesian integration from YAML."""
     if DOMAIN not in config:
