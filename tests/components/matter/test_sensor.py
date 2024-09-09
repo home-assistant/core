@@ -260,7 +260,6 @@ async def test_battery_sensor(
     assert entry
     assert entry.entity_category == EntityCategory.DIAGNOSTIC
 
-
     """Test battery voltage sensor."""
     entity_id = "sensor.eve_door_battery_voltage"
     state = hass.states.get(entity_id)
@@ -278,6 +277,7 @@ async def test_battery_sensor(
 
     assert entry
     assert entry.entity_category == EntityCategory.DIAGNOSTIC
+
 
 # This tests needs to be adjusted to remove lingering tasks
 @pytest.mark.parametrize("expected_lingering_tasks", [True])
