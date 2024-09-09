@@ -239,7 +239,9 @@ async def test_get_rpc_channel_name(mock_rpc_device: Mock) -> None:
     assert get_rpc_channel_name(mock_rpc_device, "input:3") == "Test name Input 3"
 
 
-@pytest.mark.parametrize(("component"), ["cover", "input", "light", "switch"])
+@pytest.mark.parametrize(
+    ("component"), ["cover", "input", "light", "rgb", "rgbw", "switch", "thermostat"]
+)
 async def test_get_rpc_channel_name_multiple_components(
     mock_rpc_device: Mock, monkeypatch: pytest.MonkeyPatch, component: str
 ) -> None:
@@ -260,7 +262,9 @@ async def test_get_rpc_channel_name_multiple_components(
     )
 
 
-@pytest.mark.parametrize(("component"), ["cover", "input", "light", "switch"])
+@pytest.mark.parametrize(
+    ("component"), ["cover", "input", "light", "rgb", "rgbw", "switch", "thermostat"]
+)
 async def test_get_rpc_channel_name_single_component(
     mock_rpc_device: Mock, monkeypatch: pytest.MonkeyPatch, component: str
 ) -> None:
