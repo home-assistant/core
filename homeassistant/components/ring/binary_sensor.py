@@ -10,25 +10,22 @@ from typing import Any, Generic
 from ring_doorbell import RingCapability, RingEvent
 from ring_doorbell.const import KIND_DING, KIND_MOTION
 
+from homeassistant.components.automation import automations_with_entity
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.const import Platform
+from homeassistant.components.event import DOMAIN as EVENT_DOMAIN
+from homeassistant.components.script import scripts_with_entity
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.helpers.entity import DeprecatedInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_at
 
 from . import RingConfigEntry
 from .coordinator import RingListenCoordinator
-from .entity import (
-    DeprecatedInfo,
-    RingBaseEntity,
-    RingDeviceT,
-    RingEntityDescription,
-    async_check_create_deprecated,
-)
+from .entity import RingBaseEntity, RingDeviceT, RingEntityDescription
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -47,7 +44,12 @@ BINARY_SENSOR_TYPES: tuple[RingBinarySensorEntityDescription, ...] = (
         device_class=BinarySensorDeviceClass.OCCUPANCY,
         capability=RingCapability.DING,
         deprecated_info=DeprecatedInfo(
-            new_platform=Platform.EVENT, breaks_in_ha_version="2025.4.0"
+            new_platform=EVENT_DOMAIN,
+            breaks_in_ha_version="2025.4.0",
+            issue_items_fn=lambda hass, entity_id: automations_with_entity(
+                hass, entity_id
+            )
+            + scripts_with_entity(hass, entity_id),
         ),
     ),
     RingBinarySensorEntityDescription(
@@ -56,7 +58,12 @@ BINARY_SENSOR_TYPES: tuple[RingBinarySensorEntityDescription, ...] = (
         device_class=BinarySensorDeviceClass.MOTION,
         capability=RingCapability.MOTION_DETECTION,
         deprecated_info=DeprecatedInfo(
-            new_platform=Platform.EVENT, breaks_in_ha_version="2025.4.0"
+            new_platform=EVENT_DOMAIN,
+            breaks_in_ha_version="2025.4.0",
+            issue_items_fn=lambda hass, entity_id: automations_with_entity(
+                hass, entity_id
+            )
+            + scripts_with_entity(hass, entity_id),
         ),
     ),
 )
@@ -76,12 +83,6 @@ async def async_setup_entry(
         for description in BINARY_SENSOR_TYPES
         for device in ring_data.devices.all_devices
         if device.has_capability(description.capability)
-        and async_check_create_deprecated(
-            hass,
-            Platform.BINARY_SENSOR,
-            f"{device.id}-{description.key}",
-            description,
-        )
     )
 
 

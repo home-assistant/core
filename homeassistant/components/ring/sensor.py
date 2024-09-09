@@ -15,6 +15,9 @@ from ring_doorbell import (
     RingOther,
 )
 
+from homeassistant.components.automation import automations_with_entity
+from homeassistant.components.event import DOMAIN as EVENT_DOMAIN
+from homeassistant.components.script import scripts_with_entity
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -25,21 +28,15 @@ from homeassistant.const import (
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     EntityCategory,
-    Platform,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity import DeprecatedInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from . import RingConfigEntry
 from .coordinator import RingDataCoordinator
-from .entity import (
-    DeprecatedInfo,
-    RingDeviceT,
-    RingEntity,
-    RingEntityDescription,
-    async_check_create_deprecated,
-)
+from .entity import RingDeviceT, RingEntity, RingEntityDescription
 
 
 async def async_setup_entry(
@@ -56,12 +53,6 @@ async def async_setup_entry(
         for description in SENSOR_TYPES
         for device in ring_data.devices.all_devices
         if description.exists_fn(device)
-        and async_check_create_deprecated(
-            hass,
-            Platform.SENSOR,
-            f"{device.id}-{description.key}",
-            description,
-        )
     ]
 
     async_add_entities(entities)
@@ -188,7 +179,12 @@ SENSOR_TYPES: tuple[RingSensorEntityDescription[Any], ...] = (
         else None,
         exists_fn=lambda device: device.has_capability(RingCapability.HISTORY),
         deprecated_info=DeprecatedInfo(
-            new_platform=Platform.EVENT, breaks_in_ha_version="2025.4.0"
+            new_platform=EVENT_DOMAIN,
+            breaks_in_ha_version="2025.4.0",
+            issue_items_fn=lambda hass, entity_id: automations_with_entity(
+                hass, entity_id
+            )
+            + scripts_with_entity(hass, entity_id),
         ),
     ),
     RingSensorEntityDescription[RingGeneric](
@@ -207,7 +203,12 @@ SENSOR_TYPES: tuple[RingSensorEntityDescription[Any], ...] = (
         else None,
         exists_fn=lambda device: device.has_capability(RingCapability.HISTORY),
         deprecated_info=DeprecatedInfo(
-            new_platform=Platform.EVENT, breaks_in_ha_version="2025.4.0"
+            new_platform=EVENT_DOMAIN,
+            breaks_in_ha_version="2025.4.0",
+            issue_items_fn=lambda hass, entity_id: automations_with_entity(
+                hass, entity_id
+            )
+            + scripts_with_entity(hass, entity_id),
         ),
     ),
     RingSensorEntityDescription[RingDoorBell | RingChime](

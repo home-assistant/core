@@ -9,11 +9,14 @@ from datetime import timedelta
 from logging import Logger, getLogger
 from typing import TYPE_CHECKING, Any, Protocol
 
+from awesomeversion import AwesomeVersion
+
 from homeassistant import config_entries
 from homeassistant.const import (
     ATTR_RESTORED,
     DEVICE_DEFAULT_NAME,
     EVENT_HOMEASSISTANT_STARTED,
+    __version__,
 )
 from homeassistant.core import (
     CALLBACK_TYPE,
@@ -38,6 +41,8 @@ from homeassistant.setup import SetupPhases, async_start_setup
 from homeassistant.util.async_ import create_eager_task
 from homeassistant.util.hass_dict import HassKey
 
+# from homeassistant.components.automation import automations_with_entity
+# from homeassistant.components.script import scripts_with_entity
 from . import (
     device_registry as dev_reg,
     entity_registry as ent_reg,
@@ -610,6 +615,80 @@ class EntityPlatform:
                 timeout,
             )
 
+    def _async_check_create_deprecated(
+        self,
+        entity: Entity,
+        entity_registry: EntityRegistry,
+    ) -> bool:
+        """Return true if the entity should be created based on the deprecated_info.
+
+        If deprecated_info is not defined will return true.
+        If entity not yet created will return false.
+        If entity disabled will delete it and return false.
+        Otherwise will return true and create issues for scripts or automations.
+        """
+        if not (deprecated_info := entity.deprecated_info):
+            return True
+
+        hass = self.hass
+        platform = self.platform_name
+        domain = self.domain
+        unique_id = entity.unique_id
+
+        if not unique_id:
+            # Entity does not provide a unique_id. Log a warning?
+            return AwesomeVersion(__version__) >= AwesomeVersion(
+                deprecated_info.breaks_in_ha_version
+            )
+        entity_id = entity_registry.async_get_entity_id(
+            domain,
+            platform,
+            unique_id,
+        )
+        if not entity_id:
+            return False
+
+        entity_entry = entity_registry.async_get(entity_id)
+        assert entity_entry
+
+        if entity_entry.disabled or AwesomeVersion(__version__) >= AwesomeVersion(
+            deprecated_info.breaks_in_ha_version
+        ):
+            # If the entity exists and is disabled or the breaks in HA version
+            # has been reached then we want to remove the entity.
+            entity_registry.async_remove(entity_id)
+            return False
+
+        # Check for issues that need to be created
+        issue_items = []
+        if issue_items_fn := deprecated_info.issue_items_fn:
+            issue_items = issue_items_fn(hass, entity_id)
+
+        for item in issue_items:
+            translation_placeholders = {
+                "entity": entity_id,
+                "info": item,
+                "platform": platform,
+                "breaks_in_ha_version": deprecated_info.breaks_in_ha_version,
+            }
+            if new_platform := deprecated_info.new_platform:
+                translation_placeholders["new_platform"] = new_platform
+                translation_key = "deprecated_entity_with_new_platform"
+            else:
+                translation_key = "deprecated_entity"
+            async_create_issue(
+                hass,
+                platform,
+                f"deprecated_entity_{entity_id}_{item}",
+                breaks_in_ha_version=deprecated_info.breaks_in_ha_version,
+                is_fixable=False,
+                is_persistent=False,
+                severity=IssueSeverity.WARNING,
+                translation_key=translation_key,
+                translation_placeholders=translation_placeholders,
+            )
+        return True
+
     async def async_add_entities(
         self, new_entities: Iterable[Entity], update_before_add: bool = False
     ) -> None:
@@ -626,6 +705,8 @@ class EntityPlatform:
         coros: list[Coroutine[Any, Any, None]] = []
         entities: list[Entity] = []
         for entity in new_entities:
+            if not self._async_check_create_deprecated(entity, entity_registry):
+                continue
             coros.append(
                 self._async_add_entity(entity, update_before_add, entity_registry)
             )

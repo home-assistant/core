@@ -42,6 +42,14 @@
       "title": "Unused YAML configuration for the {platform} integration",
       "description": "It's not possible to configure {platform} {domain} by adding `{platform_key}` to the {domain} configuration. Please check the documentation for more information on how to set up this integration.\n\nTo resolve this:\n1. Remove `{platform_key}` occurences from the `{domain}:` configuration in your YAML configuration file.\n2. Restart Home Assistant.\n\nExample that should be removed:\n{yaml_example}\n"
     },
+    "deprecated_entity": {
+      "title": "Detected deprecated `{platform}` entity usage",
+      "description": "We detected that entity `{entity}` is being used in `{info}`\n\nThis entity will be removed in Home Assistant `{breaks_in_ha_version}`, to clear this alert disable the entity and restart Home Assistant."
+    },
+    "deprecated_entity_with_new_platform": {
+      "title": "Detected deprecated `{platform}` entity usage",
+      "description": "We detected that entity `{entity}` is being used in `{info}`\n\nWe have created a new `{new_platform}` entity and you should migrate `{info}` to use this new entity.\n\nWhen you are done migrating `{info}` and are ready to have the deprecated `{entity}` entity removed, disable the entity and restart Home Assistant."
+    },
     "storage_corruption": {
       "title": "Storage corruption detected for `{storage_key}`",
       "fix_flow": {

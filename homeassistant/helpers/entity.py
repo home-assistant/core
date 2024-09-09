@@ -232,6 +232,15 @@ class EntityPlatformState(Enum):
 _SENTINEL = object()
 
 
+@dataclasses.dataclass(slots=True)
+class DeprecatedInfo:
+    """Class to define deprecation info for deprecated entities."""
+
+    breaks_in_ha_version: str
+    new_platform: str | None = None
+    issue_items_fn: Callable[[HomeAssistant, str], list[str]] | None = None
+
+
 class EntityDescription(metaclass=FrozenOrThawed, frozen_or_thawed=True):
     """A class that describes Home Assistant entities."""
 
@@ -249,6 +258,7 @@ class EntityDescription(metaclass=FrozenOrThawed, frozen_or_thawed=True):
     translation_key: str | None = None
     translation_placeholders: Mapping[str, str] | None = None
     unit_of_measurement: str | None = None
+    deprecated_info: DeprecatedInfo | None = None
 
 
 @dataclasses.dataclass(frozen=True, slots=True)
@@ -528,6 +538,7 @@ class Entity(
     _attr_capability_attributes: dict[str, Any] | None = None
     _attr_device_class: str | None
     _attr_device_info: DeviceInfo | None = None
+    _attr_deprecated_info: DeprecatedInfo | None
     _attr_entity_category: EntityCategory | None
     _attr_has_entity_name: bool
     _attr_entity_picture: str | None = None
@@ -603,6 +614,15 @@ class Entity(
         if hasattr(self, "entity_description"):
             return self.entity_description.has_entity_name
         return False
+
+    @cached_property
+    def deprecated_info(self) -> DeprecatedInfo | None:
+        """Return deprecated info if the entity is deprecated."""
+        if hasattr(self, "_attr_deprecated_info"):
+            return self._attr_deprecated_info
+        if hasattr(self, "entity_description"):
+            return self.entity_description.deprecated_info
+        return None
 
     def _device_class_name_helper(
         self,
