@@ -374,6 +374,7 @@ async def _validate_observation_setup(
         # if we are in adding mode we need to record the platform from the step id
         user_input[CONF_PLATFORM] = handler.parent_handler.cur_step["step_id"]
         observations.append(user_input)
+    _LOGGER.debug("Added observation with settings: %s", user_input)
     return {"add_another": True} if add_another else {}
 
 
