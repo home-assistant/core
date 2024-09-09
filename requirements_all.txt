@@ -179,7 +179,7 @@ aioairq==0.3.2
 aioairzone-cloud==0.6.5
 
 # homeassistant.components.airzone
-aioairzone==0.9.0
+aioairzone==0.9.1
 
 # homeassistant.components.ambient_network
 # homeassistant.components.ambient_station
@@ -237,7 +237,7 @@ aioelectricitymaps==0.4.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==25.3.2
+aioesphomeapi==25.4.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -309,7 +309,7 @@ aionut==4.3.3
 aiooncue==0.3.7
 
 # homeassistant.components.openexchangerates
-aioopenexchangerates==0.4.0
+aioopenexchangerates==0.6.2
 
 # homeassistant.components.nmap_tracker
 aiooui==0.1.6
