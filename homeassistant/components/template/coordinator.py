@@ -77,7 +77,7 @@ class TriggerUpdateCoordinator(DataUpdateCoordinator):
 
         if CONF_CONDITION in self.config:
             self._cond_func = await condition.async_conditions_from_config(
-                self.hass, self.config[CONF_CONDITION], _LOGGER, self.name
+                self.hass, self.config[CONF_CONDITION], _LOGGER, "template entity"
             )
 
         if start_event is not None:

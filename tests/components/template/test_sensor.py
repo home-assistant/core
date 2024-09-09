@@ -1291,7 +1291,7 @@ async def test_trigger_conditional_entity_evaluation_error(
     assert state is not None
     assert state.state == STATE_UNKNOWN
 
-    assert "Error evaluating template trigger condition" in caplog.text
+    assert "Error evaluating condition in 'template entity'" in caplog.text
 
 
 @pytest.mark.parametrize(("count", "domain"), [(0, template.DOMAIN)])
