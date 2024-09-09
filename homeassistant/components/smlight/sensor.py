@@ -18,6 +18,7 @@ from homeassistant.components.sensor import (
 from homeassistant.const import EntityCategory, UnitOfInformation, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import utcnow
 
 from . import SmConfigEntry
@@ -177,7 +178,7 @@ class SmInfoSensorEntity(SmEntity, SensorEntity):
         self._attr_unique_id = f"{coordinator.unique_id}_{description.key}"
 
     @property
-    def native_value(self) -> int | str | None:
+    def native_value(self) -> StateType:
         """Return the sensor value."""
         return self.entity_description.value_fn(self.coordinator.data.info)
 
