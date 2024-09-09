@@ -12,7 +12,7 @@ from pydeconz.models.light.cover import Cover
 from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
-    DOMAIN as COVER_DOMAIN,
+    DOMAIN,
     CoverDeviceClass,
     CoverEntity,
     CoverEntityFeature,
@@ -38,7 +38,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up covers for deCONZ component."""
     hub = DeconzHub.get_hub(hass, config_entry)
-    hub.entities[COVER_DOMAIN] = set()
+    hub.entities[DOMAIN] = set()
 
     @callback
     def async_add_cover(_: EventType, cover_id: str) -> None:
@@ -54,7 +54,7 @@ async def async_setup_entry(
 class DeconzCover(DeconzDevice[Cover], CoverEntity):
     """Representation of a deCONZ cover."""
 
-    TYPE = COVER_DOMAIN
+    TYPE = DOMAIN
 
     def __init__(self, cover_id: str, hub: DeconzHub) -> None:
         """Set up cover device."""

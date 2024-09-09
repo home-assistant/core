@@ -10,7 +10,7 @@ from pydeconz.models.sensor.ancillary_control import (
 )
 
 from homeassistant.components.alarm_control_panel import (
-    DOMAIN as ALARM_CONTROL_PANEL_DOMAIN,
+    DOMAIN,
     AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
     CodeFormat,
@@ -60,7 +60,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the deCONZ alarm control panel devices."""
     hub = DeconzHub.get_hub(hass, config_entry)
-    hub.entities[ALARM_CONTROL_PANEL_DOMAIN] = set()
+    hub.entities[DOMAIN] = set()
 
     @callback
     def async_add_sensor(_: EventType, sensor_id: str) -> None:
@@ -79,7 +79,7 @@ class DeconzAlarmControlPanel(DeconzDevice[AncillaryControl], AlarmControlPanelE
     """Representation of a deCONZ alarm control panel."""
 
     _update_key = "panel"
-    TYPE = ALARM_CONTROL_PANEL_DOMAIN
+    TYPE = DOMAIN
 
     _attr_code_format = CodeFormat.NUMBER
     _attr_supported_features = (
