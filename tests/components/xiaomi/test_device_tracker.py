@@ -156,7 +156,7 @@ async def test_config(xiaomi_mock, hass: HomeAssistant) -> None:
     config = {
         DEVICE_TRACKER_DOMAIN: xiaomi.PLATFORM_SCHEMA(
             {
-                CONF_PLATFORM: xiaomi.DOMAIN,
+                CONF_PLATFORM: DEVICE_TRACKER_DOMAIN,
                 CONF_HOST: "192.168.0.1",
                 CONF_PASSWORD: "passwordTest",
             }
@@ -181,7 +181,7 @@ async def test_config_full(xiaomi_mock, hass: HomeAssistant) -> None:
     config = {
         DEVICE_TRACKER_DOMAIN: xiaomi.PLATFORM_SCHEMA(
             {
-                CONF_PLATFORM: xiaomi.DOMAIN,
+                CONF_PLATFORM: DEVICE_TRACKER_DOMAIN,
                 CONF_HOST: "192.168.0.1",
                 CONF_USERNAME: "alternativeAdminName",
                 CONF_PASSWORD: "passwordTest",
@@ -205,7 +205,7 @@ async def test_invalid_credential(mock_get, mock_post, hass: HomeAssistant) -> N
     config = {
         DEVICE_TRACKER_DOMAIN: xiaomi.PLATFORM_SCHEMA(
             {
-                CONF_PLATFORM: xiaomi.DOMAIN,
+                CONF_PLATFORM: DEVICE_TRACKER_DOMAIN,
                 CONF_HOST: "192.168.0.1",
                 CONF_USERNAME: INVALID_USERNAME,
                 CONF_PASSWORD: "passwordTest",
@@ -222,7 +222,7 @@ async def test_valid_credential(mock_get, mock_post, hass: HomeAssistant) -> Non
     config = {
         DEVICE_TRACKER_DOMAIN: xiaomi.PLATFORM_SCHEMA(
             {
-                CONF_PLATFORM: xiaomi.DOMAIN,
+                CONF_PLATFORM: DEVICE_TRACKER_DOMAIN,
                 CONF_HOST: "192.168.0.1",
                 CONF_USERNAME: "admin",
                 CONF_PASSWORD: "passwordTest",
@@ -246,7 +246,7 @@ async def test_token_timed_out(mock_get, mock_post, hass: HomeAssistant) -> None
     config = {
         DEVICE_TRACKER_DOMAIN: xiaomi.PLATFORM_SCHEMA(
             {
-                CONF_PLATFORM: xiaomi.DOMAIN,
+                CONF_PLATFORM: DEVICE_TRACKER_DOMAIN,
                 CONF_HOST: "192.168.0.1",
                 CONF_USERNAME: TOKEN_TIMEOUT_USERNAME,
                 CONF_PASSWORD: "passwordTest",
