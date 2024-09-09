@@ -11,7 +11,7 @@ import requests
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
-    DOMAIN as DEVICE_TRACKER_DOMAIN,
+    DOMAIN,
     PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
     DeviceScanner,
 )
@@ -46,7 +46,7 @@ PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
 
 def get_scanner(hass: HomeAssistant, config: ConfigType) -> TomatoDeviceScanner:
     """Validate the configuration and returns a Tomato scanner."""
-    return TomatoDeviceScanner(config[DEVICE_TRACKER_DOMAIN])
+    return TomatoDeviceScanner(config[DOMAIN])
 
 
 class TomatoDeviceScanner(DeviceScanner):
