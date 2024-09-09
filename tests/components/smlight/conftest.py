@@ -98,12 +98,10 @@ def mock_smlight_client(request: pytest.FixtureRequest) -> Generator[MagicMock]:
         def _mock_settings_cb(
             setting: Settings, callback: Callable
         ) -> Callable[[], None]:
-            if setting not in api._settings_callbacks:
-                api._settings_callbacks[setting] = callback
+            api._settings_callbacks.setdefault(setting, callback)
 
             def remove_callback():
-                if setting in api._settings_callbacks:
-                    del api._settings_callbacks[setting]
+                api._settings_callbacks.pop(setting, None)
 
             return remove_callback
 
