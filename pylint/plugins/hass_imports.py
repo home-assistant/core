@@ -485,28 +485,21 @@ class HassImportsFormatChecker(BaseChecker):
         """Check for improper `import _` invocations."""
         if self.current_package is None:
             return
-        for module, alias in node.names:
+        for module, _alias in node.names:
             if module.startswith(f"{self.current_package}."):
                 self.add_message("hass-relative-import", node=node)
                 continue
-
-            if (
-                not module.startswith("homeassistant.components.")
-                or self.current_package.startswith("tests.components.")
-                and self.current_package.split(".")[2] == module.split(".")[2]
+            if module.startswith("homeassistant.components.") and module.endswith(
+                "const"
             ):
-                # Ignore check if the component being tested matches
-                # the component being imported from
-                continue
-
-            if module.endswith(".const"):
-                # Ensure constants are imported from the root module
+                if (
+                    self.current_package.startswith("tests.components.")
+                    and self.current_package.split(".")[2] == module.split(".")[2]
+                ):
+                    # Ignore check if the component being tested matches
+                    # the component being imported from
+                    continue
                 self.add_message("hass-component-root-import", node=node)
-                continue
-
-            if module.endswith(".DOMAIN") and (alias is None or alias == "DOMAIN"):
-                # Ensure alias is set for external domains
-                self.add_message("hass-import-constant-alias", node=node, args="DOMAIN")
 
     def _visit_importfrom_relative(
         self, current_package: str, node: nodes.ImportFrom
