@@ -3790,12 +3790,6 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
-    "mold_indicator": {
-      "name": "Mold Indicator",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "local_polling"
-    },
     "monarch_money": {
       "name": "Monarch Money",
       "integration_type": "hub",
