@@ -460,6 +460,11 @@ class HassImportsFormatChecker(BaseChecker):
             "hass-helper-namespace-import",
             "Used when a helper should be used via the namespace",
         ),
+        "W7426": (
+            "`%s` should not be imported directly. Please use an alias",
+            "hass-import-constant-alias",
+            "Used when a constant should be imported as an alias",
+        ),
     }
     options = ()
 
@@ -480,21 +485,28 @@ class HassImportsFormatChecker(BaseChecker):
         """Check for improper `import _` invocations."""
         if self.current_package is None:
             return
-        for module, _alias in node.names:
+        for module, alias in node.names:
             if module.startswith(f"{self.current_package}."):
                 self.add_message("hass-relative-import", node=node)
                 continue
-            if module.startswith("homeassistant.components.") and module.endswith(
-                "const"
+
+            if (
+                not module.startswith("homeassistant.components.")
+                or self.current_package.startswith("tests.components.")
+                and self.current_package.split(".")[2] == module.split(".")[2]
             ):
-                if (
-                    self.current_package.startswith("tests.components.")
-                    and self.current_package.split(".")[2] == module.split(".")[2]
-                ):
-                    # Ignore check if the component being tested matches
-                    # the component being imported from
-                    continue
+                # Ignore check if the component being tested matches
+                # the component being imported from
+                continue
+
+            if module.endswith(".const"):
+                # Ensure constants are imported from the root module
                 self.add_message("hass-component-root-import", node=node)
+                continue
+
+            if module.endswith(".DOMAIN") and (alias is None or alias == "DOMAIN"):
+                # Ensure alias is set for external domains
+                self.add_message("hass-import-constant-alias", node=node)
 
     def _visit_importfrom_relative(
         self, current_package: str, node: nodes.ImportFrom
