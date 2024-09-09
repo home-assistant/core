@@ -175,7 +175,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     component.async_register_entity_service(
         SERVICE_SET_HVAC_MODE,
         {vol.Required(ATTR_HVAC_MODE): vol.Coerce(HVACMode)},
-        "async_set_hvac_mode",
+        "async_handle_set_hvac_mode_service",
     )
     component.async_register_entity_service(
         SERVICE_SET_PRESET_MODE,
@@ -694,20 +694,35 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     @callback
     def _valid_mode_or_raise(
         self,
-        mode_type: Literal["preset", "swing", "fan"],
-        mode: str,
-        modes: list[str] | None,
+        mode_type: Literal["preset", "swing", "fan", "hvac"],
+        mode: str | HVACMode,
+        modes: list[str] | list[HVACMode] | None,
     ) -> None:
         """Raise ServiceValidationError on invalid modes."""
         if modes and mode in modes:
             return
         modes_str: str = ", ".join(modes) if modes else ""
-        if mode_type == "preset":
-            translation_key = "not_valid_preset_mode"
-        elif mode_type == "swing":
-            translation_key = "not_valid_swing_mode"
-        elif mode_type == "fan":
-            translation_key = "not_valid_fan_mode"
+        translation_key = f"not_valid_{mode_type}_mode"
+        if mode_type == "hvac":
+            report_issue = async_suggest_report_issue(
+                self.hass,
+                integration_domain=self.platform.platform_name,
+                module=type(self).__module__,
+            )
+            _LOGGER.warning(
+                (
+                    "%s::%s sets the hvac_mode %s which is not "
+                    "valid for this entity with modes: %s. "
+                    "This will stop working in 2025.3 and raise an error instead. "
+                    "Please %s"
+                ),
+                self.platform.platform_name,
+                self.__class__.__name__,
+                mode,
+                modes_str,
+                report_issue,
+            )
+            return
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key=translation_key,
@@ -748,6 +763,12 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
         await self.hass.async_add_executor_job(self.set_fan_mode, fan_mode)
+
+    @final
+    async def async_handle_set_hvac_mode_service(self, hvac_mode: HVACMode) -> None:
+        """Validate and set new preset mode."""
+        self._valid_mode_or_raise("hvac", hvac_mode, self.hvac_modes)
+        await self.async_set_hvac_mode(hvac_mode)
 
     def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
