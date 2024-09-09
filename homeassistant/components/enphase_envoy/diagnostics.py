@@ -10,7 +10,6 @@ from pyenphase.envoy import Envoy
 from pyenphase.exceptions import EnvoyError
 
 from homeassistant.components.diagnostics import async_redact_data
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
@@ -23,8 +22,8 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.json import json_dumps
 from homeassistant.util.json import json_loads
 
-from .const import DOMAIN, OPTION_DIAGNOSTICS_INCLUDE_FIXTURES
-from .coordinator import EnphaseUpdateCoordinator
+from .const import OPTION_DIAGNOSTICS_INCLUDE_FIXTURES
+from .coordinator import EnphaseConfigEntry
 
 CONF_TITLE = "title"
 CLEAN_TEXT = "<<envoyserial>>"
@@ -81,10 +80,10 @@ async def _get_fixture_collection(envoy: Envoy, serial: str) -> dict[str, Any]:
 
 
 async def async_get_config_entry_diagnostics(
-    hass: HomeAssistant, entry: ConfigEntry
+    hass: HomeAssistant, entry: EnphaseConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    coordinator: EnphaseUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     if TYPE_CHECKING:
         assert coordinator.envoy.data

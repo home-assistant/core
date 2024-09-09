@@ -62,7 +62,7 @@ class AprilaireConfigFlow(ConfigFlow, domain=DOMAIN):
 
             self._abort_if_unique_id_configured()
 
-            return self.async_create_entry(title="Aprilaire", data=user_input)
+            return self.async_create_entry(title="AprilAire", data=user_input)
 
         return self.async_show_form(
             step_id="user",

@@ -1,0 +1,52 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "base_url": "[%key:common::config_flow::data::url%]",
+          "client_id": "Client key",
+          "client_secret": "Client secret",
+          "access_token": "[%key:common::config_flow::data::access_token%]"
+        },
+        "data_description": {
+          "base_url": "The URL of your Mastodon instance."
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+    },
+    "error": {
+      "unauthorized_error": "The credentials are incorrect.",
+      "network_error": "The Mastodon instance was not found.",
+      "unknown": "Unknown error occured when connecting to the Mastodon instance."
+    }
+  },
+  "issues": {
+    "deprecated_yaml_import_issue_unauthorized_error": {
+      "title": "YAML import failed due to an authentication error",
+      "description": "Configuring {integration_title} using YAML is being removed but there was an authentication error while importing your existing configuration.\nPlease use the UI to configure Mastodon. Don't forget to delete the YAML configuration."
+    },
+    "deprecated_yaml_import_issue_network_error": {
+      "title": "YAML import failed because the instance was not found",
+      "description": "Configuring {integration_title} using YAML is being removed but no instance was found while importing your existing configuration.\nPlease use the UI to configure Mastodon. Don't forget to delete the YAML configuration."
+    },
+    "deprecated_yaml_import_issue_unknown": {
+      "title": "YAML import failed with unknown error",
+      "description": "Configuring {integration_title} using YAML is being removed but there was an unknown error while importing your existing configuration.\nPlease use the UI to configure Mastodon. Don't forget to delete the YAML configuration."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "followers": {
+        "name": "Followers"
+      },
+      "following": {
+        "name": "Following"
+      },
+      "posts": {
+        "name": "Posts"
+      }
+    }
+  }
+}

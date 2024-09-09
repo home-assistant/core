@@ -11,6 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import format_mac
 
 from .coordinator import ShellyConfigEntry
+from .utils import get_rpc_ws_url
 
 TO_REDACT = {CONF_USERNAME, CONF_PASSWORD}
 
@@ -24,6 +25,8 @@ async def async_get_config_entry_diagnostics(
     device_settings: str | dict = "not initialized"
     device_status: str | dict = "not initialized"
     bluetooth: str | dict = "not initialized"
+    last_error: str = "not initialized"
+
     if shelly_entry_data.block:
         block_coordinator = shelly_entry_data.block
         assert block_coordinator
@@ -55,6 +58,10 @@ async def async_get_config_entry_diagnostics(
                     "uptime",
                 ]
             }
+
+        if block_coordinator.device.last_error:
+            last_error = repr(block_coordinator.device.last_error)
+
     else:
         rpc_coordinator = shelly_entry_data.rpc
         assert rpc_coordinator
@@ -67,6 +74,12 @@ async def async_get_config_entry_diagnostics(
             device_settings = {
                 k: v for k, v in rpc_coordinator.device.config.items() if k in ["cloud"]
             }
+            ws_config = rpc_coordinator.device.config["ws"]
+            device_settings["ws_outbound_enabled"] = ws_config["enable"]
+            if ws_config["enable"]:
+                device_settings["ws_outbound_server_valid"] = bool(
+                    ws_config["server"] == get_rpc_ws_url(hass)
+                )
             device_status = {
                 k: v
                 for k, v in rpc_coordinator.device.status.items()
@@ -79,6 +92,9 @@ async def async_get_config_entry_diagnostics(
                 "scanner": await scanner.async_diagnostics(),
             }
 
+        if rpc_coordinator.device.last_error:
+            last_error = repr(rpc_coordinator.device.last_error)
+
     if isinstance(device_status, dict):
         device_status = async_redact_data(device_status, ["ssid"])
 
@@ -87,5 +103,6 @@ async def async_get_config_entry_diagnostics(
         "device_info": device_info,
         "device_settings": device_settings,
         "device_status": device_status,
+        "last_error": last_error,
         "bluetooth": bluetooth,
     }

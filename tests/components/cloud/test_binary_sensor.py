@@ -1,10 +1,10 @@
 """Tests for the cloud binary sensor."""
 
+from collections.abc import Generator
 from unittest.mock import MagicMock, patch
 
 from hass_nabucasa.const import DISPATCH_REMOTE_CONNECT, DISPATCH_REMOTE_DISCONNECT
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_registry import EntityRegistry

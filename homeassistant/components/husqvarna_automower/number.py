@@ -1,26 +1,22 @@
 """Creates the number entities for the mower."""
 
-import asyncio
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 import logging
 from typing import TYPE_CHECKING, Any
 
-from aioautomower.exceptions import ApiException
 from aioautomower.model import MowerAttributes, WorkArea
 from aioautomower.session import AutomowerSession
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.const import PERCENTAGE, EntityCategory, Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import AutomowerConfigEntry
-from .const import EXECUTION_TIME_DELAY
 from .coordinator import AutomowerDataUpdateCoordinator
-from .entity import AutomowerControlEntity
+from .entity import AutomowerControlEntity, handle_sending_exception
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -160,16 +156,12 @@ class AutomowerNumberEntity(AutomowerControlEntity, NumberEntity):
         """Return the state of the number."""
         return self.entity_description.value_fn(self.mower_attributes)
 
+    @handle_sending_exception()
     async def async_set_native_value(self, value: float) -> None:
         """Change to new number value."""
-        try:
-            await self.entity_description.set_value_fn(
-                self.coordinator.api, self.mower_id, value
-            )
-        except ApiException as exception:
-            raise HomeAssistantError(
-                f"Command couldn't be sent to the command queue: {exception}"
-            ) from exception
+        await self.entity_description.set_value_fn(
+            self.coordinator.api, self.mower_id, value
+        )
 
 
 class AutomowerWorkAreaNumberEntity(AutomowerControlEntity, NumberEntity):
@@ -208,21 +200,12 @@ class AutomowerWorkAreaNumberEntity(AutomowerControlEntity, NumberEntity):
         """Return the state of the number."""
         return self.entity_description.value_fn(self.work_area)
 
+    @handle_sending_exception(poll_after_sending=True)
     async def async_set_native_value(self, value: float) -> None:
         """Change to new number value."""
-        try:
-            await self.entity_description.set_value_fn(
-                self.coordinator, self.mower_id, value, self.work_area_id
-            )
-        except ApiException as exception:
-            raise HomeAssistantError(
-                f"Command couldn't be sent to the command queue: {exception}"
-            ) from exception
-        else:
-            # As there are no updates from the websocket regarding work area changes,
-            # we need to wait 5s and then poll the API.
-            await asyncio.sleep(EXECUTION_TIME_DELAY)
-            await self.coordinator.async_request_refresh()
+        await self.entity_description.set_value_fn(
+            self.coordinator, self.mower_id, value, self.work_area_id
+        )
 
 
 @callback

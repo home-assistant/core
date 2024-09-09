@@ -1,6 +1,7 @@
 """Support for Wyoming satellite services."""
 
 import asyncio
+from collections.abc import AsyncGenerator
 import io
 import logging
 import time
@@ -8,7 +9,6 @@ from typing import Final
 from uuid import uuid4
 import wave
 
-from typing_extensions import AsyncGenerator
 from wyoming.asr import Transcribe, Transcript
 from wyoming.audio import AudioChunk, AudioChunkConverter, AudioStart, AudioStop
 from wyoming.client import AsyncTcpClient
@@ -25,6 +25,7 @@ from wyoming.wake import Detect, Detection
 
 from homeassistant.components import assist_pipeline, intent, stt, tts
 from homeassistant.components.assist_pipeline import select as pipeline_select
+from homeassistant.components.assist_pipeline.vad import VadSensitivity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import Context, HomeAssistant, callback
 
@@ -409,6 +410,9 @@ class WyomingSatellite:
                     noise_suppression_level=self.device.noise_suppression_level,
                     auto_gain_dbfs=self.device.auto_gain,
                     volume_multiplier=self.device.volume_multiplier,
+                    silence_seconds=VadSensitivity.to_seconds(
+                        self.device.vad_sensitivity
+                    ),
                 ),
                 device_id=self.device.device_id,
                 wake_word_phrase=wake_word_phrase,

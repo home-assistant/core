@@ -14,7 +14,7 @@ from homeassistant.components.habitica.const import (
     SERVICE_API_CALL,
 )
 from homeassistant.const import ATTR_NAME
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Event, HomeAssistant
 
 from tests.common import MockConfigEntry, async_capture_events
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -24,13 +24,13 @@ TEST_USER_NAME = "test_user"
 
 
 @pytest.fixture
-def capture_api_call_success(hass):
+def capture_api_call_success(hass: HomeAssistant) -> list[Event]:
     """Capture api_call events."""
     return async_capture_events(hass, EVENT_API_CALL_SUCCESS)
 
 
 @pytest.fixture
-def habitica_entry(hass):
+def habitica_entry(hass: HomeAssistant) -> MockConfigEntry:
     """Test entry for the following tests."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -52,6 +52,7 @@ def common_requests(aioclient_mock: AiohttpClientMocker) -> AiohttpClientMocker:
         "https://habitica.com/api/v3/user",
         json={
             "data": {
+                "auth": {"local": {"username": TEST_USER_NAME}},
                 "api_user": "test-api-user",
                 "profile": {"name": TEST_USER_NAME},
                 "stats": {
@@ -73,7 +74,20 @@ def common_requests(aioclient_mock: AiohttpClientMocker) -> AiohttpClientMocker:
             }
         },
     )
-
+    aioclient_mock.get(
+        "https://habitica.com/api/v3/tasks/user?type=completedTodos",
+        json={
+            "data": [
+                {
+                    "text": "this is a mock todo #5",
+                    "id": 5,
+                    "_id": 5,
+                    "type": "todo",
+                    "completed": True,
+                }
+            ]
+        },
+    )
     aioclient_mock.get(
         "https://habitica.com/api/v3/tasks/user",
         json={
@@ -98,8 +112,9 @@ def common_requests(aioclient_mock: AiohttpClientMocker) -> AiohttpClientMocker:
     return aioclient_mock
 
 
+@pytest.mark.usefixtures("common_requests")
 async def test_entry_setup_unload(
-    hass: HomeAssistant, habitica_entry, common_requests
+    hass: HomeAssistant, habitica_entry: MockConfigEntry
 ) -> None:
     """Test integration setup and unload."""
     assert await hass.config_entries.async_setup(habitica_entry.entry_id)
@@ -112,8 +127,11 @@ async def test_entry_setup_unload(
     assert not hass.services.has_service(DOMAIN, SERVICE_API_CALL)
 
 
+@pytest.mark.usefixtures("common_requests")
 async def test_service_call(
-    hass: HomeAssistant, habitica_entry, common_requests, capture_api_call_success
+    hass: HomeAssistant,
+    habitica_entry: MockConfigEntry,
+    capture_api_call_success: list[Event],
 ) -> None:
     """Test integration setup, service call and unload."""
 

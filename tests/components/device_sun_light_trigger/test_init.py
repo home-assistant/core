@@ -77,11 +77,10 @@ async def scanner(
     )
     await hass.async_block_till_done()
 
-    return scanner
 
-
+@pytest.mark.usefixtures("scanner")
 async def test_lights_on_when_sun_sets(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory, scanner
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
     """Test lights go on when there is someone home and the sun sets."""
     test_time = datetime(2017, 4, 5, 1, 2, 3, tzinfo=dt_util.UTC)
@@ -136,8 +135,9 @@ async def test_lights_turn_off_when_everyone_leaves(hass: HomeAssistant) -> None
     )
 
 
+@pytest.mark.usefixtures("scanner")
 async def test_lights_turn_on_when_coming_home_after_sun_set(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory, scanner
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
     """Test lights turn on when coming home after sun set."""
     test_time = datetime(2017, 4, 5, 3, 2, 3, tzinfo=dt_util.UTC)
@@ -172,8 +172,9 @@ async def test_lights_turn_on_when_coming_home_after_sun_set(
     )
 
 
+@pytest.mark.usefixtures("scanner")
 async def test_lights_turn_on_when_coming_home_after_sun_set_person(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory, scanner
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
     """Test lights turn on when coming home after sun set."""
     device_1 = f"{DOMAIN}.device_1"

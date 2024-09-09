@@ -1,6 +1,7 @@
 """The profiler integration."""
 
 import asyncio
+from collections.abc import Generator
 import contextlib
 from contextlib import suppress
 from datetime import timedelta
@@ -14,7 +15,6 @@ import traceback
 from typing import Any, cast
 
 from lru import LRU
-from typing_extensions import Generator
 import voluptuous as vol
 
 from homeassistant.components import persistent_notification

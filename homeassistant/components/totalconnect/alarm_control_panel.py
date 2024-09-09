@@ -55,13 +55,13 @@ async def async_setup_entry(
 
     platform.async_register_entity_service(
         SERVICE_ALARM_ARM_AWAY_INSTANT,
-        {},
+        None,
         "async_alarm_arm_away_instant",
     )
 
     platform.async_register_entity_service(
         SERVICE_ALARM_ARM_HOME_INSTANT,
-        {},
+        None,
         "async_alarm_arm_home_instant",
     )
 
@@ -103,6 +103,7 @@ class TotalConnectAlarm(TotalConnectLocationEntity, AlarmControlPanelEntity):
     @property
     def state(self) -> str | None:
         """Return the state of the device."""
+        # State attributes can be removed in 2025.3
         attr = {
             "location_id": self._location.location_id,
             "partition": self._partition_id,

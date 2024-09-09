@@ -37,7 +37,16 @@
       "message": "Username \"{username}\" already exists"
     },
     "username_not_normalized": {
-      "message": "Username \"{new_username}\" is not normalized"
+      "message": "Username \"{new_username}\" is not normalized. Please make sure the username is lowercase and does not contain any whitespace."
+    },
+    "user_not_found": {
+      "message": "User not found"
+    }
+  },
+  "issues": {
+    "homeassistant_provider_not_normalized_usernames": {
+      "title": "Not normalized usernames detected",
+      "description": "The Home Assistant auth provider is running in legacy mode because we detected not normalized usernames. The legacy mode is deprecated and will be removed. Please change the following usernames:\n\n{usernames}\n\nNormalized usernames are case folded (lower case) and stripped of whitespaces."
     }
   }
 }

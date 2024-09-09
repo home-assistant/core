@@ -1,11 +1,11 @@
 """Tests for Renault sensors."""
 
+from collections.abc import Generator
 from unittest.mock import patch
 
 import pytest
 from renault_api.kamereon import schemas
 from syrupy.assertion import SnapshotAssertion
-from typing_extensions import Generator
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.config_entries import ConfigEntry

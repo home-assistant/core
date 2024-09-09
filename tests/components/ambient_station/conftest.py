@@ -1,10 +1,10 @@
 """Define test fixtures for Ambient PWS."""
 
+from collections.abc import Generator
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.ambient_station.const import CONF_APP_KEY, DOMAIN
 from homeassistant.const import CONF_API_KEY

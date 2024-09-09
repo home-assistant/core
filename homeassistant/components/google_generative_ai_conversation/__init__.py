@@ -7,7 +7,7 @@ from pathlib import Path
 
 from google.ai import generativelanguage_v1beta
 from google.api_core.client_options import ClientOptions
-from google.api_core.exceptions import ClientError, DeadlineExceeded, GoogleAPICallError
+from google.api_core.exceptions import ClientError, DeadlineExceeded, GoogleAPIError
 import google.generativeai as genai
 import google.generativeai.types as genai_types
 import voluptuous as vol
@@ -71,7 +71,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         try:
             response = await model.generate_content_async(prompt_parts)
         except (
-            GoogleAPICallError,
+            GoogleAPIError,
             ValueError,
             genai_types.BlockedPromptException,
             genai_types.StopCandidateException,
@@ -111,7 +111,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await client.get_model(
             name=entry.options.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL), timeout=5.0
         )
-    except (GoogleAPICallError, ValueError) as err:
+    except (GoogleAPIError, ValueError) as err:
         if isinstance(err, ClientError) and err.reason == "API_KEY_INVALID":
             raise ConfigEntryAuthFailed(err) from err
         if isinstance(err, DeadlineExceeded):

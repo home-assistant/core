@@ -8,7 +8,10 @@ import os
 from file_read_backwards import FileReadBackwards
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+    SensorEntity,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_FILE_PATH,
@@ -26,7 +29,7 @@ from .const import DEFAULT_NAME, FILE_ICON
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_FILE_PATH): cv.isfile,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -57,14 +60,15 @@ async def async_setup_entry(
 ) -> None:
     """Set up the file sensor."""
     config = dict(entry.data)
+    options = dict(entry.options)
     file_path: str = config[CONF_FILE_PATH]
     unique_id: str = entry.entry_id
     name: str = config.get(CONF_NAME, DEFAULT_NAME)
-    unit: str | None = config.get(CONF_UNIT_OF_MEASUREMENT)
+    unit: str | None = options.get(CONF_UNIT_OF_MEASUREMENT)
     value_template: Template | None = None
 
-    if CONF_VALUE_TEMPLATE in config:
-        value_template = Template(config[CONF_VALUE_TEMPLATE], hass)
+    if CONF_VALUE_TEMPLATE in options:
+        value_template = Template(options[CONF_VALUE_TEMPLATE], hass)
 
     async_add_entities(
         [FileSensor(unique_id, name, file_path, unit, value_template)], True

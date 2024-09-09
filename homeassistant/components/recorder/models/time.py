@@ -65,9 +65,7 @@ def process_datetime_to_timestamp(ts: datetime) -> float:
 
 def datetime_to_timestamp_or_none(dt: datetime | None) -> float | None:
     """Convert a datetime to a timestamp."""
-    if dt is None:
-        return None
-    return dt_util.utc_to_timestamp(dt)
+    return None if dt is None else dt.timestamp()
 
 
 def timestamp_to_datetime_or_none(ts: float | None) -> datetime | None:

@@ -244,7 +244,7 @@ async def test_template_syntax_error(
                 "platform": "template",
                 "panels": {
                     "test_template_panel": {
-                        "name": "Template Alarm Panel",
+                        "name": '{{ "Template Alarm Panel" }}',
                         "value_template": "disarmed",
                         **OPTIMISTIC_TEMPLATE_ALARM_CONFIG,
                     }

@@ -37,7 +37,6 @@ class StateAttributesManager(BaseLRUTableManager[StateAttributes]):
     def __init__(self, recorder: Recorder) -> None:
         """Initialize the event type manager."""
         super().__init__(recorder, CACHE_SIZE)
-        self.active = True  # always active
 
     def serialize_from_event(self, event: Event[EventStateChangedData]) -> bytes | None:
         """Serialize event data."""

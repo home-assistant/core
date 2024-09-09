@@ -1,6 +1,7 @@
 """Test the Google Maps Travel Time sensors."""
 
-from unittest.mock import patch
+from collections.abc import Generator
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -25,7 +26,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture(name="mock_update")
-def mock_update_fixture():
+def mock_update_fixture() -> Generator[MagicMock]:
     """Mock an update to the sensor."""
     with (
         patch("homeassistant.components.google_travel_time.sensor.Client"),
@@ -56,7 +57,7 @@ def mock_update_fixture():
 
 
 @pytest.fixture(name="mock_update_duration")
-def mock_update_duration_fixture(mock_update):
+def mock_update_duration_fixture(mock_update: MagicMock) -> MagicMock:
     """Mock an update to the sensor returning no duration_in_traffic."""
     mock_update.return_value = {
         "rows": [
@@ -77,7 +78,7 @@ def mock_update_duration_fixture(mock_update):
 
 
 @pytest.fixture(name="mock_update_empty")
-def mock_update_empty_fixture(mock_update):
+def mock_update_empty_fixture(mock_update: MagicMock) -> MagicMock:
     """Mock an update to the sensor with an empty response."""
     mock_update.return_value = None
     return mock_update

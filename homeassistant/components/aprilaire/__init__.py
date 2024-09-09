@@ -17,6 +17,7 @@ from .coordinator import AprilaireCoordinator
 
 PLATFORMS: list[Platform] = [
     Platform.CLIMATE,
+    Platform.HUMIDIFIER,
     Platform.SELECT,
     Platform.SENSOR,
 ]

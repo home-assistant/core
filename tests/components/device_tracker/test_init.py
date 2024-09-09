@@ -1,5 +1,6 @@
 """The tests for the device tracker component."""
 
+from collections.abc import Generator
 from datetime import datetime, timedelta
 import json
 import logging
@@ -8,7 +9,6 @@ from types import ModuleType
 from unittest.mock import call, patch
 
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components import device_tracker, zone
 from homeassistant.components.device_tracker import SourceType, const, legacy

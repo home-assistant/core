@@ -1,6 +1,7 @@
 """Test account link services."""
 
 import asyncio
+from collections.abc import Generator
 import logging
 from time import time
 from unittest.mock import AsyncMock, Mock, patch
@@ -21,7 +22,9 @@ TEST_DOMAIN = "oauth2_test"
 
 
 @pytest.fixture
-def flow_handler(hass):
+def flow_handler(
+    hass: HomeAssistant,
+) -> Generator[type[config_entry_oauth2_flow.AbstractOAuth2FlowHandler]]:
     """Return a registered config flow."""
 
     mock_platform(hass, f"{TEST_DOMAIN}.config_flow")
@@ -180,7 +183,10 @@ async def test_get_services_error(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("current_request_with_host")
-async def test_implementation(hass: HomeAssistant, flow_handler) -> None:
+async def test_implementation(
+    hass: HomeAssistant,
+    flow_handler: type[config_entry_oauth2_flow.AbstractOAuth2FlowHandler],
+) -> None:
     """Test Cloud OAuth2 implementation."""
     hass.data[DATA_CLOUD] = None
 

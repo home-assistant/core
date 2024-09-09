@@ -19,7 +19,7 @@ def mock_load_json():
 
 
 @pytest.fixture(autouse=True)
-def mock_dependencies(hass):
+def mock_dependencies(hass: HomeAssistant) -> None:
     """Mock dependencies loaded."""
     mock_component(hass, "zeroconf")
     mock_component(hass, "device_tracker")

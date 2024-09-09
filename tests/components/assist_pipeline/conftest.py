@@ -2,23 +2,28 @@
 
 from __future__ import annotations
 
-from collections.abc import AsyncIterable
+from collections.abc import AsyncIterable, Generator
 from pathlib import Path
 from typing import Any
 from unittest.mock import AsyncMock
 
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components import stt, tts, wake_word
 from homeassistant.components.assist_pipeline import DOMAIN, select as assist_select
+from homeassistant.components.assist_pipeline.const import (
+    BYTES_PER_CHUNK,
+    SAMPLE_CHANNELS,
+    SAMPLE_RATE,
+    SAMPLE_WIDTH,
+)
 from homeassistant.components.assist_pipeline.pipeline import (
     PipelineData,
     PipelineStorageCollection,
 )
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.setup import async_setup_component
@@ -31,115 +36,17 @@ from tests.common import (
     mock_integration,
     mock_platform,
 )
+from tests.components.stt.common import MockSTTProvider, MockSTTProviderEntity
+from tests.components.tts.common import MockTTSProvider
 
 _TRANSCRIPT = "test transcript"
 
+BYTES_ONE_SECOND = SAMPLE_RATE * SAMPLE_WIDTH * SAMPLE_CHANNELS
+
 
 @pytest.fixture(autouse=True)
-def mock_tts_cache_dir_autouse(mock_tts_cache_dir: Path) -> Path:
+def mock_tts_cache_dir_autouse(mock_tts_cache_dir: Path) -> None:
     """Mock the TTS cache dir with empty dir."""
-    return mock_tts_cache_dir
-
-
-class BaseProvider:
-    """Mock STT provider."""
-
-    _supported_languages = ["en-US"]
-
-    def __init__(self, text: str) -> None:
-        """Init test provider."""
-        self.text = text
-        self.received: list[bytes] = []
-
-    @property
-    def supported_languages(self) -> list[str]:
-        """Return a list of supported languages."""
-        return self._supported_languages
-
-    @property
-    def supported_formats(self) -> list[stt.AudioFormats]:
-        """Return a list of supported formats."""
-        return [stt.AudioFormats.WAV]
-
-    @property
-    def supported_codecs(self) -> list[stt.AudioCodecs]:
-        """Return a list of supported codecs."""
-        return [stt.AudioCodecs.PCM]
-
-    @property
-    def supported_bit_rates(self) -> list[stt.AudioBitRates]:
-        """Return a list of supported bitrates."""
-        return [stt.AudioBitRates.BITRATE_16]
-
-    @property
-    def supported_sample_rates(self) -> list[stt.AudioSampleRates]:
-        """Return a list of supported samplerates."""
-        return [stt.AudioSampleRates.SAMPLERATE_16000]
-
-    @property
-    def supported_channels(self) -> list[stt.AudioChannels]:
-        """Return a list of supported channels."""
-        return [stt.AudioChannels.CHANNEL_MONO]
-
-    async def async_process_audio_stream(
-        self, metadata: stt.SpeechMetadata, stream: AsyncIterable[bytes]
-    ) -> stt.SpeechResult:
-        """Process an audio stream."""
-        async for data in stream:
-            if not data:
-                break
-            self.received.append(data)
-        return stt.SpeechResult(self.text, stt.SpeechResultState.SUCCESS)
-
-
-class MockSttProvider(BaseProvider, stt.Provider):
-    """Mock provider."""
-
-
-class MockSttProviderEntity(BaseProvider, stt.SpeechToTextEntity):
-    """Mock provider entity."""
-
-    _attr_name = "Mock STT"
-
-
-class MockTTSProvider(tts.Provider):
-    """Mock TTS provider."""
-
-    name = "Test"
-    _supported_languages = ["en-US"]
-    _supported_voices = {
-        "en-US": [
-            tts.Voice("james_earl_jones", "James Earl Jones"),
-            tts.Voice("fran_drescher", "Fran Drescher"),
-        ]
-    }
-    _supported_options = ["voice", "age", tts.ATTR_AUDIO_OUTPUT]
-
-    @property
-    def default_language(self) -> str:
-        """Return the default language."""
-        return "en"
-
-    @property
-    def supported_languages(self) -> list[str]:
-        """Return list of supported languages."""
-        return self._supported_languages
-
-    @callback
-    def async_get_supported_voices(self, language: str) -> list[tts.Voice] | None:
-        """Return a list of supported voices for a language."""
-        return self._supported_voices.get(language)
-
-    @property
-    def supported_options(self) -> list[str]:
-        """Return list of supported options like voice, emotions."""
-        return self._supported_options
-
-    def get_tts_audio(
-        self, message: str, language: str, options: dict[str, Any]
-    ) -> tts.TtsAudioType:
-        """Load TTS data."""
-        return ("mp3", b"")
 
 
 class MockTTSPlatform(MockPlatform):
@@ -147,7 +54,7 @@ class MockTTSPlatform(MockPlatform):
 
     PLATFORM_SCHEMA = tts.PLATFORM_SCHEMA
 
-    def __init__(self, *, async_get_engine, **kwargs):
+    def __init__(self, *, async_get_engine, **kwargs: Any) -> None:
         """Initialize the tts platform."""
         super().__init__(**kwargs)
         self.async_get_engine = async_get_engine
@@ -156,25 +63,29 @@ class MockTTSPlatform(MockPlatform):
 @pytest.fixture
 async def mock_tts_provider() -> MockTTSProvider:
     """Mock TTS provider."""
-    return MockTTSProvider()
+    provider = MockTTSProvider("en")
+    provider._supported_languages = ["en-US"]
+    return provider
 
 
 @pytest.fixture
-async def mock_stt_provider() -> MockSttProvider:
+async def mock_stt_provider() -> MockSTTProvider:
     """Mock STT provider."""
-    return MockSttProvider(_TRANSCRIPT)
+    return MockSTTProvider(supported_languages=["en-US"], text=_TRANSCRIPT)
 
 
 @pytest.fixture
-def mock_stt_provider_entity() -> MockSttProviderEntity:
+def mock_stt_provider_entity() -> MockSTTProviderEntity:
     """Test provider entity fixture."""
-    return MockSttProviderEntity(_TRANSCRIPT)
+    entity = MockSTTProviderEntity(supported_languages=["en-US"], text=_TRANSCRIPT)
+    entity._attr_name = "Mock STT"
+    return entity
 
 
 class MockSttPlatform(MockPlatform):
     """Provide a fake STT platform."""
 
-    def __init__(self, *, async_get_engine, **kwargs):
+    def __init__(self, *, async_get_engine, **kwargs: Any) -> None:
         """Initialize the stt platform."""
         super().__init__(**kwargs)
         self.async_get_engine = async_get_engine
@@ -284,8 +195,8 @@ def config_flow_fixture(hass: HomeAssistant) -> Generator[None]:
 @pytest.fixture
 async def init_supporting_components(
     hass: HomeAssistant,
-    mock_stt_provider: MockSttProvider,
-    mock_stt_provider_entity: MockSttProviderEntity,
+    mock_stt_provider: MockSTTProvider,
+    mock_stt_provider_entity: MockSTTProviderEntity,
     mock_tts_provider: MockTTSProvider,
     mock_wake_word_provider_entity: MockWakeWordEntity,
     mock_wake_word_provider_entity2: MockWakeWordEntity2,
@@ -463,3 +374,8 @@ def pipeline_data(hass: HomeAssistant, init_components) -> PipelineData:
 def pipeline_storage(pipeline_data) -> PipelineStorageCollection:
     """Return pipeline storage collection."""
     return pipeline_data.pipeline_store
+
+
+def make_10ms_chunk(header: bytes) -> bytes:
+    """Return 10ms of zeros with the given header."""
+    return header + bytes(BYTES_PER_CHUNK - len(header))

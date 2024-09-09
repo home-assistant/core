@@ -112,7 +112,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             # away so we use the "logbook" domain
             domain = DOMAIN
 
-        message.hass = hass
         message = message.async_render(parse_result=False)
         async_log_entry(hass, name, message, domain, entity_id, service.context)
 

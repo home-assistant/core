@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from functools import partial
 from typing import Any
 
 from aioesphomeapi import APIVersion, CoverInfo, CoverOperation, CoverState, EntityInfo
@@ -13,9 +14,7 @@ from homeassistant.components.cover import (
     CoverEntity,
     CoverEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.core import callback
 from homeassistant.util.enum import try_parse_enum
 
 from .entity import (
@@ -24,20 +23,6 @@ from .entity import (
     esphome_state_property,
     platform_async_setup_entry,
 )
-
-
-async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
-) -> None:
-    """Set up ESPHome covers based on a config entry."""
-    await platform_async_setup_entry(
-        hass,
-        entry,
-        async_add_entities,
-        info_type=CoverInfo,
-        entity_type=EsphomeCover,
-        state_type=CoverState,
-    )
 
 
 class EsphomeCover(EsphomeEntity[CoverInfo, CoverState], CoverEntity):
@@ -76,13 +61,13 @@ class EsphomeCover(EsphomeEntity[CoverInfo, CoverState], CoverEntity):
     @esphome_state_property
     def is_opening(self) -> bool:
         """Return if the cover is opening or not."""
-        return self._state.current_operation == CoverOperation.IS_OPENING
+        return self._state.current_operation is CoverOperation.IS_OPENING
 
     @property
     @esphome_state_property
     def is_closing(self) -> bool:
         """Return if the cover is closing or not."""
-        return self._state.current_operation == CoverOperation.IS_CLOSING
+        return self._state.current_operation is CoverOperation.IS_CLOSING
 
     @property
     @esphome_state_property
@@ -135,3 +120,11 @@ class EsphomeCover(EsphomeEntity[CoverInfo, CoverState], CoverEntity):
         """Move the cover tilt to a specific position."""
         tilt_position: int = kwargs[ATTR_TILT_POSITION]
         self._client.cover_command(key=self._key, tilt=tilt_position / 100)
+
+
+async_setup_entry = partial(
+    platform_async_setup_entry,
+    info_type=CoverInfo,
+    entity_type=EsphomeCover,
+    state_type=CoverState,
+)

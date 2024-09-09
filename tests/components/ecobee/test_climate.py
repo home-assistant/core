@@ -1,24 +1,16 @@
 """The test for the Ecobee thermostat module."""
 
-import copy
 from http import HTTPStatus
 from unittest import mock
-from unittest.mock import MagicMock
 
 import pytest
 
 from homeassistant import const
-from homeassistant.components import climate
 from homeassistant.components.climate import ClimateEntityFeature
-from homeassistant.components.ecobee.climate import (
-    ECOBEE_AUX_HEAT_ONLY,
-    PRESET_AWAY_INDEFINITELY,
-    Thermostat,
-)
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES, STATE_OFF
+from homeassistant.components.ecobee.climate import PRESET_AWAY_INDEFINITELY, Thermostat
+from homeassistant.const import ATTR_SUPPORTED_FEATURES, STATE_OFF
 from homeassistant.core import HomeAssistant
 
-from . import GENERIC_THERMOSTAT_INFO_WITH_HEATPUMP
 from .common import setup_platform
 
 ENTITY_ID = "climate.ecobee"
@@ -111,25 +103,6 @@ async def test_aux_heat_not_supported_by_default(hass: HomeAssistant) -> None:
     )
 
 
-async def test_aux_heat_supported_with_heat_pump(hass: HomeAssistant) -> None:
-    """Aux Heat should be supported if thermostat has heatpump."""
-    mock_get_thermostat = mock.Mock()
-    mock_get_thermostat.return_value = GENERIC_THERMOSTAT_INFO_WITH_HEATPUMP
-    with mock.patch("pyecobee.Ecobee.get_thermostat", mock_get_thermostat):
-        await setup_platform(hass, const.Platform.CLIMATE)
-    state = hass.states.get(ENTITY_ID)
-    assert (
-        state.attributes.get(ATTR_SUPPORTED_FEATURES)
-        == ClimateEntityFeature.PRESET_MODE
-        | ClimateEntityFeature.FAN_MODE
-        | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
-        | ClimateEntityFeature.TARGET_TEMPERATURE
-        | ClimateEntityFeature.AUX_HEAT
-        | ClimateEntityFeature.TURN_OFF
-        | ClimateEntityFeature.TURN_ON
-    )
-
-
 async def test_current_temperature(ecobee_fixture, thermostat) -> None:
     """Test current temperature."""
     assert thermostat.current_temperature == 30
@@ -195,7 +168,7 @@ async def test_hvac_mode(ecobee_fixture, thermostat) -> None:
 
 async def test_hvac_modes(thermostat) -> None:
     """Test operation list property."""
-    assert ["heat_cool", "heat", "cool", "off"] == thermostat.hvac_modes
+    assert thermostat.hvac_modes == ["heat_cool", "heat", "cool", "off"]
 
 
 async def test_hvac_mode2(ecobee_fixture, thermostat) -> None:
@@ -208,74 +181,51 @@ async def test_hvac_mode2(ecobee_fixture, thermostat) -> None:
 async def test_extra_state_attributes(ecobee_fixture, thermostat) -> None:
     """Test device state attributes property."""
     ecobee_fixture["equipmentStatus"] = "heatPump2"
-    assert {
+    assert thermostat.extra_state_attributes == {
         "fan": "off",
         "climate_mode": "Climate1",
         "fan_min_on_time": 10,
         "equipment_running": "heatPump2",
-    } == thermostat.extra_state_attributes
+    }
 
     ecobee_fixture["equipmentStatus"] = "auxHeat2"
-    assert {
+    assert thermostat.extra_state_attributes == {
         "fan": "off",
         "climate_mode": "Climate1",
         "fan_min_on_time": 10,
         "equipment_running": "auxHeat2",
-    } == thermostat.extra_state_attributes
+    }
 
     ecobee_fixture["equipmentStatus"] = "compCool1"
-    assert {
+    assert thermostat.extra_state_attributes == {
         "fan": "off",
         "climate_mode": "Climate1",
         "fan_min_on_time": 10,
         "equipment_running": "compCool1",
-    } == thermostat.extra_state_attributes
+    }
     ecobee_fixture["equipmentStatus"] = ""
-    assert {
+    assert thermostat.extra_state_attributes == {
         "fan": "off",
         "climate_mode": "Climate1",
         "fan_min_on_time": 10,
         "equipment_running": "",
-    } == thermostat.extra_state_attributes
+    }
 
     ecobee_fixture["equipmentStatus"] = "Unknown"
-    assert {
+    assert thermostat.extra_state_attributes == {
         "fan": "off",
         "climate_mode": "Climate1",
         "fan_min_on_time": 10,
         "equipment_running": "Unknown",
-    } == thermostat.extra_state_attributes
+    }
 
     ecobee_fixture["program"]["currentClimateRef"] = "c2"
-    assert {
+    assert thermostat.extra_state_attributes == {
         "fan": "off",
         "climate_mode": "Climate2",
         "fan_min_on_time": 10,
         "equipment_running": "Unknown",
-    } == thermostat.extra_state_attributes
-
-
-async def test_is_aux_heat_on(hass: HomeAssistant) -> None:
-    """Test aux heat property is only enabled for auxHeatOnly."""
-    mock_get_thermostat = mock.Mock()
-    mock_get_thermostat.return_value = copy.deepcopy(
-        GENERIC_THERMOSTAT_INFO_WITH_HEATPUMP
-    )
-    mock_get_thermostat.return_value["settings"]["hvacMode"] = "auxHeatOnly"
-    with mock.patch("pyecobee.Ecobee.get_thermostat", mock_get_thermostat):
-        await setup_platform(hass, const.Platform.CLIMATE)
-    state = hass.states.get(ENTITY_ID)
-    assert state.attributes[climate.ATTR_AUX_HEAT] == "on"
-
-
-async def test_is_aux_heat_off(hass: HomeAssistant) -> None:
-    """Test aux heat property is only enabled for auxHeatOnly."""
-    mock_get_thermostat = mock.Mock()
-    mock_get_thermostat.return_value = GENERIC_THERMOSTAT_INFO_WITH_HEATPUMP
-    with mock.patch("pyecobee.Ecobee.get_thermostat", mock_get_thermostat):
-        await setup_platform(hass, const.Platform.CLIMATE)
-    state = hass.states.get(ENTITY_ID)
-    assert state.attributes[climate.ATTR_AUX_HEAT] == "off"
+    }
 
 
 async def test_set_temperature(ecobee_fixture, thermostat, data) -> None:
@@ -398,36 +348,6 @@ async def test_set_fan_mode_auto(thermostat, data) -> None:
     data.ecobee.set_fan_mode.assert_has_calls(
         [mock.call(1, "auto", "nextTransition", holdHours=None)]
     )
-
-
-async def test_turn_aux_heat_on(hass: HomeAssistant, mock_ecobee: MagicMock) -> None:
-    """Test when aux heat is set on.  This must change the HVAC mode."""
-    mock_ecobee.get_thermostat.return_value = GENERIC_THERMOSTAT_INFO_WITH_HEATPUMP
-    mock_ecobee.thermostats = [GENERIC_THERMOSTAT_INFO_WITH_HEATPUMP]
-    await setup_platform(hass, const.Platform.CLIMATE)
-    await hass.services.async_call(
-        climate.DOMAIN,
-        climate.SERVICE_SET_AUX_HEAT,
-        {ATTR_ENTITY_ID: ENTITY_ID, climate.ATTR_AUX_HEAT: True},
-        blocking=True,
-    )
-    assert mock_ecobee.set_hvac_mode.call_count == 1
-    assert mock_ecobee.set_hvac_mode.call_args == mock.call(0, ECOBEE_AUX_HEAT_ONLY)
-
-
-async def test_turn_aux_heat_off(hass: HomeAssistant, mock_ecobee: MagicMock) -> None:
-    """Test when aux heat is tuned off.  Must change HVAC mode back to last used."""
-    mock_ecobee.get_thermostat.return_value = GENERIC_THERMOSTAT_INFO_WITH_HEATPUMP
-    mock_ecobee.thermostats = [GENERIC_THERMOSTAT_INFO_WITH_HEATPUMP]
-    await setup_platform(hass, const.Platform.CLIMATE)
-    await hass.services.async_call(
-        climate.DOMAIN,
-        climate.SERVICE_SET_AUX_HEAT,
-        {ATTR_ENTITY_ID: ENTITY_ID, climate.ATTR_AUX_HEAT: False},
-        blocking=True,
-    )
-    assert mock_ecobee.set_hvac_mode.call_count == 1
-    assert mock_ecobee.set_hvac_mode.call_args == mock.call(0, "auto")
 
 
 async def test_preset_indefinite_away(ecobee_fixture, thermostat) -> None:

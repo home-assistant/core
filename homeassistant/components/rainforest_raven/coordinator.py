@@ -167,7 +167,7 @@ class RAVEnDataCoordinator(DataUpdateCoordinator):
                 await device.synchronize()
                 self._device_info = await device.get_device_info()
         except:
-            await device.close()
+            await device.abort()
             raise
 
         self._raven_device = device

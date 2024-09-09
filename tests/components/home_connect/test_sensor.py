@@ -1,7 +1,6 @@
 """Tests for home_connect sensor entities."""
 
-from collections.abc import Awaitable, Callable, Generator
-from typing import Any
+from collections.abc import Awaitable, Callable
 from unittest.mock import MagicMock, Mock
 
 from freezegun.api import FrozenDateTimeFactory
@@ -69,9 +68,8 @@ def platforms() -> list[str]:
     return [Platform.SENSOR]
 
 
+@pytest.mark.usefixtures("bypass_throttle")
 async def test_sensors(
-    bypass_throttle: Generator[None, Any, None],
-    hass: HomeAssistant,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[], Awaitable[bool]],
     setup_credentials: None,
@@ -131,12 +129,12 @@ ENTITY_ID_STATES = {
         )
     ),
 )
+@pytest.mark.usefixtures("bypass_throttle")
 async def test_event_sensors(
     appliance: Mock,
     states: tuple,
     event_run: dict,
     freezer: FrozenDateTimeFactory,
-    bypass_throttle: Generator[None, Any, None],
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[], Awaitable[bool]],
@@ -180,10 +178,10 @@ ENTITY_ID_EDGE_CASE_STATES = [
 
 
 @pytest.mark.parametrize("appliance", [TEST_HC_APP], indirect=True)
+@pytest.mark.usefixtures("bypass_throttle")
 async def test_remaining_prog_time_edge_cases(
     appliance: Mock,
     freezer: FrozenDateTimeFactory,
-    bypass_throttle: Generator[None, Any, None],
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[], Awaitable[bool]],

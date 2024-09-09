@@ -9,7 +9,7 @@ forward exercising the triggers.
 
 from __future__ import annotations
 
-from collections.abc import AsyncIterator, Callable
+from collections.abc import AsyncIterator, Callable, Generator
 from contextlib import asynccontextmanager
 import datetime
 import logging
@@ -19,7 +19,6 @@ import zoneinfo
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components import automation, calendar
 from homeassistant.components.calendar.trigger import EVENT_END, EVENT_START
@@ -85,9 +84,7 @@ class FakeSchedule:
 
 
 @pytest.fixture
-def fake_schedule(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory
-) -> Generator[FakeSchedule]:
+def fake_schedule(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> FakeSchedule:
     """Fixture that tests can use to make fake events."""
 
     # Setup start time for all tests
@@ -105,7 +102,7 @@ def mock_test_entity(test_entities: list[MockCalendarEntity]) -> MockCalendarEnt
 @pytest.fixture(name="setup_platform", autouse=True)
 async def mock_setup_platform(
     hass: HomeAssistant,
-    mock_setup_integration: Any,
+    mock_setup_integration: None,
     config_entry: MockConfigEntry,
 ) -> None:
     """Fixture to setup platforms used in the test."""

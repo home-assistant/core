@@ -34,7 +34,7 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @pytest.fixture
-def cloud_stub():
+def cloud_stub() -> Mock:
     """Stub the cloud."""
     return Mock(is_logged_in=True, subscription_expired=False)
 
@@ -51,7 +51,10 @@ def expose_entity(hass: HomeAssistant, entity_id: str, should_expose: bool) -> N
 
 
 async def test_alexa_config_expose_entity_prefs(
-    hass: HomeAssistant, cloud_prefs, cloud_stub, entity_registry: er.EntityRegistry
+    hass: HomeAssistant,
+    cloud_prefs: CloudPreferences,
+    cloud_stub: Mock,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test Alexa config should expose using prefs."""
     assert await async_setup_component(hass, "homeassistant", {})
@@ -133,7 +136,7 @@ async def test_alexa_config_expose_entity_prefs(
 
 
 async def test_alexa_config_report_state(
-    hass: HomeAssistant, cloud_prefs, cloud_stub
+    hass: HomeAssistant, cloud_prefs: CloudPreferences, cloud_stub: Mock
 ) -> None:
     """Test Alexa config should expose using prefs."""
     assert await async_setup_component(hass, "homeassistant", {})
@@ -168,7 +171,9 @@ async def test_alexa_config_report_state(
 
 
 async def test_alexa_config_invalidate_token(
-    hass: HomeAssistant, cloud_prefs, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    cloud_prefs: CloudPreferences,
+    aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test Alexa config should expose using prefs."""
     assert await async_setup_component(hass, "homeassistant", {})
@@ -218,11 +223,11 @@ async def test_alexa_config_invalidate_token(
 )
 async def test_alexa_config_fail_refresh_token(
     hass: HomeAssistant,
-    cloud_prefs,
+    cloud_prefs: CloudPreferences,
     aioclient_mock: AiohttpClientMocker,
     entity_registry: er.EntityRegistry,
-    reject_reason,
-    expected_exception,
+    reject_reason: str,
+    expected_exception: type[Exception],
 ) -> None:
     """Test Alexa config failing to refresh token."""
     assert await async_setup_component(hass, "homeassistant", {})
@@ -342,7 +347,10 @@ def patch_sync_helper():
 
 
 async def test_alexa_update_expose_trigger_sync(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry, cloud_prefs, cloud_stub
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    cloud_prefs: CloudPreferences,
+    cloud_stub: Mock,
 ) -> None:
     """Test Alexa config responds to updating exposed entities."""
     assert await async_setup_component(hass, "homeassistant", {})
@@ -415,11 +423,11 @@ async def test_alexa_update_expose_trigger_sync(
     ]
 
 
+@pytest.mark.usefixtures("mock_cloud_login")
 async def test_alexa_entity_registry_sync(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    mock_cloud_login,
-    cloud_prefs,
+    cloud_prefs: CloudPreferences,
 ) -> None:
     """Test Alexa config responds to entity registry."""
     # Enable exposing new entities to Alexa
@@ -475,7 +483,7 @@ async def test_alexa_entity_registry_sync(
 
 
 async def test_alexa_update_report_state(
-    hass: HomeAssistant, cloud_prefs, cloud_stub
+    hass: HomeAssistant, cloud_prefs: CloudPreferences, cloud_stub: Mock
 ) -> None:
     """Test Alexa config responds to reporting state."""
     assert await async_setup_component(hass, "homeassistant", {})
@@ -502,8 +510,9 @@ async def test_alexa_update_report_state(
     assert len(mock_sync.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("mock_expired_cloud_login")
 def test_enabled_requires_valid_sub(
-    hass: HomeAssistant, mock_expired_cloud_login, cloud_prefs
+    hass: HomeAssistant, cloud_prefs: CloudPreferences
 ) -> None:
     """Test that alexa config enabled requires a valid Cloud sub."""
     assert cloud_prefs.alexa_enabled
@@ -518,7 +527,7 @@ def test_enabled_requires_valid_sub(
 
 
 async def test_alexa_handle_logout(
-    hass: HomeAssistant, cloud_prefs, cloud_stub
+    hass: HomeAssistant, cloud_prefs: CloudPreferences, cloud_stub: Mock
 ) -> None:
     """Test Alexa config responds to logging out."""
     assert await async_setup_component(hass, "homeassistant", {})
@@ -561,7 +570,7 @@ async def test_alexa_handle_logout(
 async def test_alexa_config_migrate_expose_entity_prefs(
     hass: HomeAssistant,
     cloud_prefs: CloudPreferences,
-    cloud_stub,
+    cloud_stub: Mock,
     entity_registry: er.EntityRegistry,
     alexa_settings_version: int,
 ) -> None:
@@ -755,7 +764,7 @@ async def test_alexa_config_migrate_expose_entity_prefs_v2_exposed(
 async def test_alexa_config_migrate_expose_entity_prefs_default_none(
     hass: HomeAssistant,
     cloud_prefs: CloudPreferences,
-    cloud_stub,
+    cloud_stub: Mock,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test migrating Alexa entity config."""
@@ -793,7 +802,7 @@ async def test_alexa_config_migrate_expose_entity_prefs_default_none(
 async def test_alexa_config_migrate_expose_entity_prefs_default(
     hass: HomeAssistant,
     cloud_prefs: CloudPreferences,
-    cloud_stub,
+    cloud_stub: Mock,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test migrating Alexa entity config."""

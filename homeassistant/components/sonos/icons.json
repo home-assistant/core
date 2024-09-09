@@ -44,12 +44,29 @@
     }
   },
   "services": {
-    "snapshot": "mdi:camera",
-    "restore": "mdi:camera-retake",
-    "set_sleep_timer": "mdi:alarm",
-    "clear_sleep_timer": "mdi:alarm-off",
-    "play_queue": "mdi:play",
-    "remove_from_queue": "mdi:playlist-remove",
-    "update_alarm": "mdi:alarm"
+    "snapshot": {
+      "service": "mdi:camera"
+    },
+    "restore": {
+      "service": "mdi:camera-retake"
+    },
+    "set_sleep_timer": {
+      "service": "mdi:alarm"
+    },
+    "clear_sleep_timer": {
+      "service": "mdi:alarm-off"
+    },
+    "play_queue": {
+      "service": "mdi:play"
+    },
+    "remove_from_queue": {
+      "service": "mdi:playlist-remove"
+    },
+    "update_alarm": {
+      "service": "mdi:alarm"
+    },
+    "get_queue": {
+      "service": "mdi:queue-first-in-last-out"
+    }
   }
 }

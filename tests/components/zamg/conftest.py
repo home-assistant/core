@@ -1,10 +1,10 @@
 """Fixtures for Zamg integration tests."""
 
+from collections.abc import Generator
 import json
 from unittest.mock import MagicMock, patch
 
 import pytest
-from typing_extensions import Generator
 from zamg import ZamgData as ZamgDevice
 
 from homeassistant.components.zamg.const import CONF_STATION_ID, DOMAIN

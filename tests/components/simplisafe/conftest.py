@@ -1,10 +1,10 @@
 """Define test fixtures for SimpliSafe."""
 
+from collections.abc import AsyncGenerator
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 from simplipy.system.v3 import SystemV3
-from typing_extensions import AsyncGenerator
 
 from homeassistant.components.simplisafe.const import DOMAIN
 from homeassistant.const import CONF_CODE, CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME

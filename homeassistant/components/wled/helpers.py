@@ -35,3 +35,13 @@ def wled_exception_handler[_WLEDEntityT: WLEDEntity, **_P](
             raise HomeAssistantError("Invalid response from WLED API") from error
 
     return handler
+
+
+def kelvin_to_255(k: int, min_k: int, max_k: int) -> int:
+    """Map color temperature in K from minK-maxK to 0-255."""
+    return int((k - min_k) / (max_k - min_k) * 255)
+
+
+def kelvin_to_255_reverse(v: int, min_k: int, max_k: int) -> int:
+    """Map color temperature from 0-255 to minK-maxK K."""
+    return int(v / 255 * (max_k - min_k) + min_k)

@@ -35,7 +35,6 @@
 # name: test_entity_state_attrs[binary_sensor.i3_rex_charging_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
       'device_class': 'battery_charging',
       'friendly_name': 'i3 (+ REX) Charging status',
     }),
@@ -83,11 +82,8 @@
 # name: test_entity_state_attrs[binary_sensor.i3_rex_check_control_messages-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
-      'car': 'i3 (+ REX)',
       'device_class': 'problem',
       'friendly_name': 'i3 (+ REX) Check control messages',
-      'vin': 'WBY00000000REXI01',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.i3_rex_check_control_messages',
@@ -133,17 +129,14 @@
 # name: test_entity_state_attrs[binary_sensor.i3_rex_condition_based_services-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
       'brake_fluid': 'OK',
       'brake_fluid_date': '2022-10-01',
-      'car': 'i3 (+ REX)',
       'device_class': 'problem',
       'friendly_name': 'i3 (+ REX) Condition based services',
       'vehicle_check': 'OK',
       'vehicle_check_date': '2023-05-01',
       'vehicle_tuv': 'OK',
       'vehicle_tuv_date': '2023-05-01',
-      'vin': 'WBY00000000REXI01',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.i3_rex_condition_based_services',
@@ -189,7 +182,6 @@
 # name: test_entity_state_attrs[binary_sensor.i3_rex_connection_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
       'device_class': 'plug',
       'friendly_name': 'i3 (+ REX) Connection status',
     }),
@@ -237,12 +229,9 @@
 # name: test_entity_state_attrs[binary_sensor.i3_rex_door_lock_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
-      'car': 'i3 (+ REX)',
       'device_class': 'lock',
       'door_lock_state': 'UNLOCKED',
       'friendly_name': 'i3 (+ REX) Door lock state',
-      'vin': 'WBY00000000REXI01',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.i3_rex_door_lock_state',
@@ -288,8 +277,6 @@
 # name: test_entity_state_attrs[binary_sensor.i3_rex_lids-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
-      'car': 'i3 (+ REX)',
       'device_class': 'opening',
       'friendly_name': 'i3 (+ REX) Lids',
       'hood': 'CLOSED',
@@ -299,7 +286,6 @@
       'rightRear': 'CLOSED',
       'sunRoof': 'CLOSED',
       'trunk': 'CLOSED',
-      'vin': 'WBY00000000REXI01',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.i3_rex_lids',
@@ -345,7 +331,6 @@
 # name: test_entity_state_attrs[binary_sensor.i3_rex_pre_entry_climatization-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
       'friendly_name': 'i3 (+ REX) Pre entry climatization',
     }),
     'context': <ANY>,
@@ -392,13 +377,10 @@
 # name: test_entity_state_attrs[binary_sensor.i3_rex_windows-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
-      'car': 'i3 (+ REX)',
       'device_class': 'opening',
       'friendly_name': 'i3 (+ REX) Windows',
       'leftFront': 'CLOSED',
       'rightFront': 'CLOSED',
-      'vin': 'WBY00000000REXI01',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.i3_rex_windows',
@@ -444,7 +426,6 @@
 # name: test_entity_state_attrs[binary_sensor.i4_edrive40_charging_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
       'device_class': 'battery_charging',
       'friendly_name': 'i4 eDrive40 Charging status',
     }),
@@ -492,12 +473,9 @@
 # name: test_entity_state_attrs[binary_sensor.i4_edrive40_check_control_messages-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
-      'car': 'i4 eDrive40',
       'device_class': 'problem',
       'friendly_name': 'i4 eDrive40 Check control messages',
       'tire_pressure': 'LOW',
-      'vin': 'WBA00000000DEMO02',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.i4_edrive40_check_control_messages',
@@ -543,11 +521,9 @@
 # name: test_entity_state_attrs[binary_sensor.i4_edrive40_condition_based_services-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
       'brake_fluid': 'OK',
       'brake_fluid_date': '2024-12-01',
       'brake_fluid_distance': '50000 km',
-      'car': 'i4 eDrive40',
       'device_class': 'problem',
       'friendly_name': 'i4 eDrive40 Condition based services',
       'tire_wear_front': 'OK',
@@ -558,7 +534,6 @@
       'vehicle_tuv': 'OK',
       'vehicle_tuv_date': '2024-12-01',
       'vehicle_tuv_distance': '50000 km',
-      'vin': 'WBA00000000DEMO02',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.i4_edrive40_condition_based_services',
@@ -604,7 +579,6 @@
 # name: test_entity_state_attrs[binary_sensor.i4_edrive40_connection_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
       'device_class': 'plug',
       'friendly_name': 'i4 eDrive40 Connection status',
     }),
@@ -652,12 +626,9 @@
 # name: test_entity_state_attrs[binary_sensor.i4_edrive40_door_lock_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
-      'car': 'i4 eDrive40',
       'device_class': 'lock',
       'door_lock_state': 'LOCKED',
       'friendly_name': 'i4 eDrive40 Door lock state',
-      'vin': 'WBA00000000DEMO02',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.i4_edrive40_door_lock_state',
@@ -703,8 +674,6 @@
 # name: test_entity_state_attrs[binary_sensor.i4_edrive40_lids-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
-      'car': 'i4 eDrive40',
       'device_class': 'opening',
       'friendly_name': 'i4 eDrive40 Lids',
       'hood': 'CLOSED',
@@ -713,7 +682,6 @@
       'rightFront': 'CLOSED',
       'rightRear': 'CLOSED',
       'trunk': 'CLOSED',
-      'vin': 'WBA00000000DEMO02',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.i4_edrive40_lids',
@@ -759,7 +727,6 @@
 # name: test_entity_state_attrs[binary_sensor.i4_edrive40_pre_entry_climatization-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
       'friendly_name': 'i4 eDrive40 Pre entry climatization',
     }),
     'context': <ANY>,
@@ -806,8 +773,6 @@
 # name: test_entity_state_attrs[binary_sensor.i4_edrive40_windows-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
-      'car': 'i4 eDrive40',
       'device_class': 'opening',
       'friendly_name': 'i4 eDrive40 Windows',
       'leftFront': 'CLOSED',
@@ -815,7 +780,6 @@
       'rear': 'CLOSED',
       'rightFront': 'CLOSED',
       'rightRear': 'CLOSED',
-      'vin': 'WBA00000000DEMO02',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.i4_edrive40_windows',
@@ -861,7 +825,6 @@
 # name: test_entity_state_attrs[binary_sensor.ix_xdrive50_charging_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
       'device_class': 'battery_charging',
       'friendly_name': 'iX xDrive50 Charging status',
     }),
@@ -909,12 +872,9 @@
 # name: test_entity_state_attrs[binary_sensor.ix_xdrive50_check_control_messages-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
-      'car': 'iX xDrive50',
       'device_class': 'problem',
       'friendly_name': 'iX xDrive50 Check control messages',
       'tire_pressure': 'LOW',
-      'vin': 'WBA00000000DEMO01',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.ix_xdrive50_check_control_messages',
@@ -960,11 +920,9 @@
 # name: test_entity_state_attrs[binary_sensor.ix_xdrive50_condition_based_services-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
       'brake_fluid': 'OK',
       'brake_fluid_date': '2024-12-01',
       'brake_fluid_distance': '50000 km',
-      'car': 'iX xDrive50',
       'device_class': 'problem',
       'friendly_name': 'iX xDrive50 Condition based services',
       'tire_wear_front': 'OK',
@@ -975,7 +933,6 @@
       'vehicle_tuv': 'OK',
       'vehicle_tuv_date': '2024-12-01',
       'vehicle_tuv_distance': '50000 km',
-      'vin': 'WBA00000000DEMO01',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.ix_xdrive50_condition_based_services',
@@ -1021,7 +978,6 @@
 # name: test_entity_state_attrs[binary_sensor.ix_xdrive50_connection_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
       'device_class': 'plug',
       'friendly_name': 'iX xDrive50 Connection status',
     }),
@@ -1069,12 +1025,9 @@
 # name: test_entity_state_attrs[binary_sensor.ix_xdrive50_door_lock_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
-      'car': 'iX xDrive50',
       'device_class': 'lock',
       'door_lock_state': 'LOCKED',
       'friendly_name': 'iX xDrive50 Door lock state',
-      'vin': 'WBA00000000DEMO01',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.ix_xdrive50_door_lock_state',
@@ -1120,8 +1073,6 @@
 # name: test_entity_state_attrs[binary_sensor.ix_xdrive50_lids-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
-      'car': 'iX xDrive50',
       'device_class': 'opening',
       'friendly_name': 'iX xDrive50 Lids',
       'hood': 'CLOSED',
@@ -1131,7 +1082,6 @@
       'rightRear': 'CLOSED',
       'sunRoof': 'CLOSED',
       'trunk': 'CLOSED',
-      'vin': 'WBA00000000DEMO01',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.ix_xdrive50_lids',
@@ -1177,7 +1127,6 @@
 # name: test_entity_state_attrs[binary_sensor.ix_xdrive50_pre_entry_climatization-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
       'friendly_name': 'iX xDrive50 Pre entry climatization',
     }),
     'context': <ANY>,
@@ -1224,8 +1173,6 @@
 # name: test_entity_state_attrs[binary_sensor.ix_xdrive50_windows-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
-      'car': 'iX xDrive50',
       'device_class': 'opening',
       'friendly_name': 'iX xDrive50 Windows',
       'leftFront': 'CLOSED',
@@ -1233,7 +1180,6 @@
       'rear': 'CLOSED',
       'rightFront': 'CLOSED',
       'rightRear': 'CLOSED',
-      'vin': 'WBA00000000DEMO01',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.ix_xdrive50_windows',
@@ -1279,13 +1225,10 @@
 # name: test_entity_state_attrs[binary_sensor.m340i_xdrive_check_control_messages-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
-      'car': 'M340i xDrive',
       'device_class': 'problem',
       'engine_oil': 'LOW',
       'friendly_name': 'M340i xDrive Check control messages',
       'tire_pressure': 'LOW',
-      'vin': 'WBA00000000DEMO03',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.m340i_xdrive_check_control_messages',
@@ -1331,11 +1274,9 @@
 # name: test_entity_state_attrs[binary_sensor.m340i_xdrive_condition_based_services-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
       'brake_fluid': 'OK',
       'brake_fluid_date': '2024-12-01',
       'brake_fluid_distance': '50000 km',
-      'car': 'M340i xDrive',
       'device_class': 'problem',
       'friendly_name': 'M340i xDrive Condition based services',
       'oil': 'OK',
@@ -1349,7 +1290,6 @@
       'vehicle_tuv': 'OK',
       'vehicle_tuv_date': '2024-12-01',
       'vehicle_tuv_distance': '50000 km',
-      'vin': 'WBA00000000DEMO03',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.m340i_xdrive_condition_based_services',
@@ -1395,12 +1335,9 @@
 # name: test_entity_state_attrs[binary_sensor.m340i_xdrive_door_lock_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
-      'car': 'M340i xDrive',
       'device_class': 'lock',
       'door_lock_state': 'LOCKED',
       'friendly_name': 'M340i xDrive Door lock state',
-      'vin': 'WBA00000000DEMO03',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.m340i_xdrive_door_lock_state',
@@ -1446,8 +1383,6 @@
 # name: test_entity_state_attrs[binary_sensor.m340i_xdrive_lids-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
-      'car': 'M340i xDrive',
       'device_class': 'opening',
       'friendly_name': 'M340i xDrive Lids',
       'hood': 'CLOSED',
@@ -1456,7 +1391,6 @@
       'rightFront': 'CLOSED',
       'rightRear': 'CLOSED',
       'trunk': 'CLOSED',
-      'vin': 'WBA00000000DEMO03',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.m340i_xdrive_lids',
@@ -1502,8 +1436,6 @@
 # name: test_entity_state_attrs[binary_sensor.m340i_xdrive_windows-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
-      'car': 'M340i xDrive',
       'device_class': 'opening',
       'friendly_name': 'M340i xDrive Windows',
       'leftFront': 'CLOSED',
@@ -1511,7 +1443,6 @@
       'rear': 'CLOSED',
       'rightFront': 'CLOSED',
       'rightRear': 'CLOSED',
-      'vin': 'WBA00000000DEMO03',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.m340i_xdrive_windows',

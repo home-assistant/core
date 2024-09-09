@@ -2,7 +2,7 @@
 
 import asyncio
 from datetime import timedelta
-from unittest.mock import patch
+from unittest.mock import ANY, patch
 
 from freezegun import freeze_time
 import pytest
@@ -10,8 +10,9 @@ import pytest
 from homeassistant.components import history
 from homeassistant.components.history import websocket_api
 from homeassistant.components.recorder import Recorder
-from homeassistant.const import EVENT_HOMEASSISTANT_FINAL_WRITE
-from homeassistant.core import HomeAssistant
+from homeassistant.const import EVENT_HOMEASSISTANT_FINAL_WRITE, STATE_OFF, STATE_ON
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -2066,6 +2067,87 @@ async def test_history_stream_historical_only_with_start_time_state_past(
                 ],
                 "sensor.two": [
                     {"lu": pytest.approx(sensor_two_last_updated_timestamp), "s": "off"}
+                ],
+            },
+        },
+        "id": 1,
+        "type": "event",
+    }
+
+
+async def test_history_stream_live_chained_events(
+    hass: HomeAssistant, recorder_mock: Recorder, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test history stream with history with a chained event."""
+    now = dt_util.utcnow()
+    await async_setup_component(hass, "history", {})
+
+    await async_wait_recording_done(hass)
+    hass.states.async_set("binary_sensor.is_light", STATE_OFF)
+
+    client = await hass_ws_client()
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "history/stream",
+            "entity_ids": ["binary_sensor.is_light"],
+            "start_time": now.isoformat(),
+            "include_start_time_state": True,
+            "significant_changes_only": False,
+            "no_attributes": False,
+            "minimal_response": True,
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["id"] == 1
+    assert response["type"] == "result"
+
+    response = await client.receive_json()
+
+    assert response == {
+        "event": {
+            "end_time": ANY,
+            "start_time": ANY,
+            "states": {
+                "binary_sensor.is_light": [
+                    {
+                        "a": {},
+                        "lu": ANY,
+                        "s": STATE_OFF,
+                    },
+                ],
+            },
+        },
+        "id": 1,
+        "type": "event",
+    }
+
+    await async_recorder_block_till_done(hass)
+
+    @callback
+    def auto_off_listener(event):
+        hass.states.async_set("binary_sensor.is_light", STATE_OFF)
+
+    async_track_state_change_event(hass, ["binary_sensor.is_light"], auto_off_listener)
+
+    hass.states.async_set("binary_sensor.is_light", STATE_ON)
+
+    response = await client.receive_json()
+    assert response == {
+        "event": {
+            "states": {
+                "binary_sensor.is_light": [
+                    {
+                        "lu": ANY,
+                        "s": STATE_ON,
+                        "a": {},
+                    },
+                    {
+                        "lu": ANY,
+                        "s": STATE_OFF,
+                        "a": {},
+                    },
                 ],
             },
         },

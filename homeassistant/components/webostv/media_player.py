@@ -239,7 +239,8 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
 
         self._attr_assumed_state = True
         if (
-            self._client.media_state is not None
+            self._client.is_on
+            and self._client.media_state is not None
             and self._client.media_state.get("foregroundAppInfo") is not None
         ):
             self._attr_assumed_state = False

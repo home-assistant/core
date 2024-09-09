@@ -7,6 +7,7 @@ from functools import partial
 import logging
 
 import pypck
+from pypck.connection import PchkConnectionManager
 
 from homeassistant import config_entries
 from homeassistant.const import (
@@ -27,6 +28,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
+    ADD_ENTITIES_CALLBACKS,
     CONF_DIM_MODE,
     CONF_DOMAIN_DATA,
     CONF_SK_NUM_TRIES,
@@ -47,6 +49,7 @@ from .helpers import (
 )
 from .schemas import CONFIG_SCHEMA  # noqa: F401
 from .services import SERVICES
+from .websocket import register_panel_and_ws_api
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -85,7 +88,7 @@ async def async_setup_entry(
     }
 
     # connect to PCHK
-    lcn_connection = pypck.connection.PchkConnectionManager(
+    lcn_connection = PchkConnectionManager(
         config_entry.data[CONF_IP_ADDRESS],
         config_entry.data[CONF_PORT],
         config_entry.data[CONF_USERNAME],
@@ -115,6 +118,7 @@ async def async_setup_entry(
     _LOGGER.debug('LCN connected to "%s"', config_entry.title)
     hass.data[DOMAIN][config_entry.entry_id] = {
         CONNECTION: lcn_connection,
+        ADD_ENTITIES_CALLBACKS: {},
     }
     # Update config_entry with LCN device serials
     await async_update_config_entry(hass, config_entry)
@@ -139,6 +143,8 @@ async def async_setup_entry(
             hass.services.async_register(
                 DOMAIN, service_name, service(hass).async_call_service, service.schema
             )
+
+    await register_panel_and_ws_api(hass)
 
     return True
 

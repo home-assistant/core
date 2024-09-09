@@ -1,12 +1,12 @@
 """The tests for the Xiaomi vacuum platform."""
 
+from collections.abc import Generator
 from datetime import datetime, time, timedelta
 from unittest import mock
 from unittest.mock import MagicMock, patch
 
 from miio import DeviceException
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.vacuum import (
     ATTR_BATTERY_ICON,
@@ -533,7 +533,7 @@ async def test_xiaomi_vacuum_fanspeeds(
     assert "Fan speed step not recognized" in caplog.text
 
 
-async def setup_component(hass, entity_name):
+async def setup_component(hass: HomeAssistant, entity_name: str) -> str:
     """Set up vacuum component."""
     entity_id = f"{DOMAIN}.{entity_name}"
 

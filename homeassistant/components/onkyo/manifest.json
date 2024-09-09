@@ -1,9 +1,9 @@
 {
   "domain": "onkyo",
   "name": "Onkyo",
-  "codeowners": [],
+  "codeowners": ["@arturpragacz"],
   "documentation": "https://www.home-assistant.io/integrations/onkyo",
-  "iot_class": "local_polling",
-  "loggers": ["eiscp"],
-  "requirements": ["onkyo-eiscp==1.2.7"]
+  "iot_class": "local_push",
+  "loggers": ["pyeiscp"],
+  "requirements": ["pyeiscp==0.0.7"]
 }

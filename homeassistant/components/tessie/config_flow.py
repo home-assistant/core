@@ -38,6 +38,7 @@ class TessieConfigFlow(ConfigFlow, domain=DOMAIN):
         """Get configuration from the user."""
         errors: dict[str, str] = {}
         if user_input:
+            self._async_abort_entries_match(dict(user_input))
             try:
                 await get_state_of_all_vehicles(
                     session=async_get_clientsession(self.hass),
@@ -65,7 +66,7 @@ class TessieConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_reauth(
-        self, user_input: Mapping[str, Any]
+        self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle re-auth."""
         self._reauth_entry = self.hass.config_entries.async_get_entry(

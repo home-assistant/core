@@ -1,5 +1,6 @@
 """Tests for the Somfy config flow."""
 
+from collections.abc import Generator
 from http import HTTPStatus
 import logging
 import time
@@ -8,7 +9,6 @@ from unittest.mock import patch
 
 import aiohttp
 import pytest
-from typing_extensions import Generator
 
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.core import HomeAssistant
@@ -873,7 +873,9 @@ async def test_implementation_provider(hass: HomeAssistant, local_impl) -> None:
 
     provider_source = []
 
-    async def async_provide_implementation(hass, domain):
+    async def async_provide_implementation(
+        hass: HomeAssistant, domain: str
+    ) -> list[config_entry_oauth2_flow.AbstractOAuth2Implementation]:
         """Mock implementation provider."""
         return provider_source
 

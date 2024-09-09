@@ -1,11 +1,10 @@
 """IKEA Idasen Desk fixtures."""
 
-from collections.abc import Callable
+from collections.abc import Callable, Generator
 from unittest import mock
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
-from typing_extensions import Generator
 
 
 @pytest.fixture(autouse=True)

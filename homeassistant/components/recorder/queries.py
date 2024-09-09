@@ -594,7 +594,7 @@ def delete_statistics_short_term_rows(
 def delete_event_rows(
     event_ids: Iterable[int],
 ) -> StatementLambdaElement:
-    """Delete statistics_short_term rows."""
+    """Delete event rows."""
     return lambda_stmt(
         lambda: delete(Events)
         .where(Events.event_id.in_(event_ids))

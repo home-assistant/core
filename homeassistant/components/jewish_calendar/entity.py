@@ -28,7 +28,7 @@ class JewishCalendarEntity(Entity):
     ) -> None:
         """Initialize a Jewish Calendar entity."""
         self.entity_description = description
-        self._attr_unique_id = f"{config_entry.entry_id}_{description.key}"
+        self._attr_unique_id = f"{config_entry.entry_id}-{description.key}"
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, config_entry.entry_id)},

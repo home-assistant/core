@@ -8,6 +8,8 @@
     }
   },
   "services": {
-    "see": "mdi:account-eye"
+    "see": {
+      "service": "mdi:account-eye"
+    }
   }
 }

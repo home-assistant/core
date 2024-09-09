@@ -1,9 +1,9 @@
 """The tests for the demo text component."""
 
+from collections.abc import Generator
 from unittest.mock import patch
 
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.text import (
     ATTR_MAX,

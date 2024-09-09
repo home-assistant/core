@@ -1,22 +1,37 @@
 """Tests for HKDevice."""
 
+from collections.abc import Callable
 import dataclasses
+from unittest import mock
 
 from aiohomekit.controller import TransportType
+from aiohomekit.model import Accessory
+from aiohomekit.model.characteristics import CharacteristicsTypes
+from aiohomekit.model.services import Service, ServicesTypes
+from aiohomekit.testing import FakeController
 import pytest
 
 from homeassistant.components.homekit_controller.const import (
+    DEBOUNCE_COOLDOWN,
     DOMAIN,
     IDENTIFIER_ACCESSORY_ID,
     IDENTIFIER_LEGACY_ACCESSORY_ID,
     IDENTIFIER_LEGACY_SERIAL_NUMBER,
 )
 from homeassistant.components.thread import async_add_dataset, dataset_store
+from homeassistant.const import STATE_OFF, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.entity_component import async_update_entity
 
-from .common import setup_accessories_from_file, setup_platform, setup_test_accessories
+from .common import (
+    setup_accessories_from_file,
+    setup_platform,
+    setup_test_accessories,
+    setup_test_component,
+    time_changed,
+)
 
 from tests.common import MockConfigEntry
 
@@ -118,7 +133,7 @@ async def test_migrate_device_id_no_serial_skip_if_other_owner(
     bridge = device_registry.async_get(bridge.id)
 
     assert bridge.identifiers == variant.before
-    assert bridge.config_entries == [entry.entry_id]
+    assert bridge.config_entries == {entry.entry_id}
 
 
 @pytest.mark.parametrize("variant", DEVICE_MIGRATION_TESTS)
@@ -331,3 +346,96 @@ async def test_thread_provision_migration_failed(hass: HomeAssistant) -> None:
         )
 
     assert config_entry.data["Connection"] == "BLE"
+
+
+async def test_poll_firmware_version_only_all_watchable_accessory_mode(
+    hass: HomeAssistant, get_next_aid: Callable[[], int]
+) -> None:
+    """Test that we only poll firmware if available and all chars are watchable accessory mode."""
+
+    def _create_accessory(accessory: Accessory) -> Service:
+        service = accessory.add_service(ServicesTypes.LIGHTBULB, name="TestDevice")
+
+        on_char = service.add_char(CharacteristicsTypes.ON)
+        on_char.value = 0
+
+        brightness = service.add_char(CharacteristicsTypes.BRIGHTNESS)
+        brightness.value = 0
+
+        return service
+
+    helper = await setup_test_component(hass, get_next_aid(), _create_accessory)
+
+    with mock.patch.object(
+        helper.pairing,
+        "get_characteristics",
+        wraps=helper.pairing.get_characteristics,
+    ) as mock_get_characteristics:
+        # Initial state is that the light is off
+        state = await helper.poll_and_get_state()
+        assert state.state == STATE_OFF
+        assert mock_get_characteristics.call_count == 2
+        # Verify only firmware version is polled
+        assert mock_get_characteristics.call_args_list[0][0][0] == {(1, 7)}
+        assert mock_get_characteristics.call_args_list[1][0][0] == {(1, 7)}
+
+        # Test device goes offline
+        helper.pairing.available = False
+        with mock.patch.object(
+            FakeController,
+            "async_reachable",
+            return_value=False,
+        ):
+            state = await helper.poll_and_get_state()
+            assert state.state == STATE_UNAVAILABLE
+            # Tries twice before declaring unavailable
+            assert mock_get_characteristics.call_count == 4
+
+        # Test device comes back online
+        helper.pairing.available = True
+        state = await helper.poll_and_get_state()
+        assert state.state == STATE_OFF
+        assert mock_get_characteristics.call_count == 6
+
+        # Next poll should not happen because its a single
+        # accessory, available, and all chars are watchable
+        state = await helper.poll_and_get_state()
+        assert state.state == STATE_OFF
+        assert mock_get_characteristics.call_count == 8
+
+
+async def test_manual_poll_all_chars(
+    hass: HomeAssistant, get_next_aid: Callable[[], int]
+) -> None:
+    """Test that a manual poll will check all chars."""
+
+    def _create_accessory(accessory: Accessory) -> Service:
+        service = accessory.add_service(ServicesTypes.LIGHTBULB, name="TestDevice")
+
+        on_char = service.add_char(CharacteristicsTypes.ON)
+        on_char.value = 0
+
+        brightness = service.add_char(CharacteristicsTypes.BRIGHTNESS)
+        brightness.value = 0
+
+        return service
+
+    helper = await setup_test_component(hass, get_next_aid(), _create_accessory)
+
+    with mock.patch.object(
+        helper.pairing,
+        "get_characteristics",
+        wraps=helper.pairing.get_characteristics,
+    ) as mock_get_characteristics:
+        # Initial state is that the light is off
+        await helper.poll_and_get_state()
+        # Verify only firmware version is polled
+        assert mock_get_characteristics.call_args_list[0][0][0] == {(1, 7)}
+
+        # Now do a manual poll to ensure all chars are polled
+        mock_get_characteristics.reset_mock()
+        await async_update_entity(hass, helper.entity_id)
+        await time_changed(hass, 60)
+        await time_changed(hass, DEBOUNCE_COOLDOWN)
+        await hass.async_block_till_done()
+        assert len(mock_get_characteristics.call_args_list[0][0][0]) > 1

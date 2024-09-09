@@ -181,6 +181,7 @@ class SomfyHeatingTemperatureInterface(OverkizEntity, ClimateEntity):
                 OverkizState.OVP_HEATING_TEMPERATURE_INTERFACE_SETPOINT_MODE
             ]
         ) and mode.value_as_str:
-            return await self.executor.async_execute_command(
+            await self.executor.async_execute_command(
                 SETPOINT_MODE_TO_OVERKIZ_COMMAND[mode.value_as_str], temperature
             )
+            return

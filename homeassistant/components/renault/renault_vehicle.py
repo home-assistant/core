@@ -76,8 +76,8 @@ class RenaultVehicleProxy:
             identifiers={(DOMAIN, cast(str, details.vin))},
             manufacturer=(details.get_brand_label() or "").capitalize(),
             model=(details.get_model_label() or "").capitalize(),
+            model_id=(details.get_model_code() or ""),
             name=details.registrationNumber or "",
-            sw_version=details.get_model_code() or "",
         )
         self.coordinators: dict[str, RenaultDataUpdateCoordinator] = {}
         self.hvac_target_temperature = 21

@@ -50,8 +50,13 @@ async def async_setup_entry(
 class InsteonFanEntity(InsteonEntity, FanEntity):
     """An INSTEON fan entity."""
 
-    _attr_supported_features = FanEntityFeature.SET_SPEED
+    _attr_supported_features = (
+        FanEntityFeature.SET_SPEED
+        | FanEntityFeature.TURN_OFF
+        | FanEntityFeature.TURN_ON
+    )
     _attr_speed_count = 3
+    _enable_turn_on_off_backwards_compatibility = False
 
     @property
     def percentage(self) -> int | None:
