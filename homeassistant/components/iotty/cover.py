@@ -192,7 +192,7 @@ class IottyShutter(CoverEntity, CoordinatorEntity[IottyDataUpdateCoordinator]):
         await self._iotty_cloud.command(
             self._iotty_device.device_id,
             self._iotty_device.cmd_move_to(),
-            f'{{"percentage": {percentage} }}',
+            {"open_percentage": percentage},
         )
         await self.coordinator.async_request_refresh()
 
