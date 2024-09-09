@@ -23,6 +23,50 @@
     }
   },
   "entity": {
+    "sensor": {
+      "alarm_sensor_fridge": {
+        "default": "mdi:fridge",
+        "state": {
+          "present": "mdi:fridge-alert",
+          "confirmed": "mdi:fridge-alert-outline"
+        }
+      },
+      "alarm_sensor_freezer": {
+        "default": "mdi:snowflake",
+        "state": {
+          "present": "mdi:snowflake-alert",
+          "confirmed": "mdi:snowflake-check"
+        }
+      },
+      "alarm_sensor_temp": {
+        "default": "mdi:thermometer",
+        "state": {
+          "present": "mdi:thermometer-alert",
+          "confirmed": "mdi:thermometer-check"
+        }
+      },
+      "alarm_sensor_coffee_bean_container": {
+        "default": "mdi:thermometer",
+        "state": {
+          "present": "mdi:thermometer-alert",
+          "confirmed": "mdi:thermometer-check"
+        }
+      },
+      "alarm_sensor_coffee_water_tank": {
+        "default": "mdi:water",
+        "state": {
+          "present": "mdi:water-alert",
+          "confirmed": "mdi:water-check"
+        }
+      },
+      "alarm_sensor_coffee_drip_tray": {
+        "default": "mdi:tray",
+        "state": {
+          "present": "mdi:tray-alert",
+          "confirmed": "mdi:tray-full"
+        }
+      }
+    },
     "switch": {
       "refrigeration_dispenser": {
         "default": "mdi:snowflake",

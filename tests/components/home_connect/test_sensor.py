@@ -8,14 +8,11 @@ from homeconnect.api import HomeConnectAPI
 import pytest
 
 from homeassistant.components.home_connect.const import (
-    BSH_DOOR_STATE_CLOSED,
-    BSH_DOOR_STATE_OPEN,
     BSH_EVENT_PRESENT_STATE_CONFIRMED,
     BSH_EVENT_PRESENT_STATE_OFF,
     BSH_EVENT_PRESENT_STATE_PRESENT,
     COFFEE_EVENT_BEAN_CONTAINER_EMPTY,
     REFRIGERATION_EVENT_DOOR_ALARM_FREEZER,
-    REFRIGERATION_STATUS_DOOR_REFRIGERATOR,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
@@ -224,80 +221,59 @@ async def test_remaining_prog_time_edge_cases(
     ("entity_id", "status_key", "event_value_update", "expected", "appliance"),
     [
         (
-            "sensor.fridgefreezer_refrigerator_door",
-            REFRIGERATION_STATUS_DOOR_REFRIGERATOR,
-            BSH_DOOR_STATE_CLOSED,
-            "Closed",
-            "FridgeFreezer",
-        ),
-        (
-            "sensor.fridgefreezer_refrigerator_door",
-            REFRIGERATION_STATUS_DOOR_REFRIGERATOR,
-            BSH_DOOR_STATE_OPEN,
-            "Open",
-            "FridgeFreezer",
-        ),
-        (
             "sensor.fridgefreezer_door_alarm_freezer",
             "EVENT_NOT_IN_STATUS_YET_SO_SET_TO_OFF",
             "",
-            "Off",
+            "off",
             "FridgeFreezer",
         ),
         (
             "sensor.fridgefreezer_door_alarm_freezer",
             REFRIGERATION_EVENT_DOOR_ALARM_FREEZER,
             BSH_EVENT_PRESENT_STATE_OFF,
-            "Off",
+            "off",
             "FridgeFreezer",
         ),
         (
             "sensor.fridgefreezer_door_alarm_freezer",
             REFRIGERATION_EVENT_DOOR_ALARM_FREEZER,
             BSH_EVENT_PRESENT_STATE_PRESENT,
-            "Present",
+            "present",
             "FridgeFreezer",
         ),
         (
             "sensor.fridgefreezer_door_alarm_freezer",
             REFRIGERATION_EVENT_DOOR_ALARM_FREEZER,
             BSH_EVENT_PRESENT_STATE_CONFIRMED,
-            "Confirmed",
-            "FridgeFreezer",
-        ),
-        (
-            "sensor.fridgefreezer_refrigerator_door",
-            REFRIGERATION_STATUS_DOOR_REFRIGERATOR,
-            "",
-            "unavailable",
+            "confirmed",
             "FridgeFreezer",
         ),
         (
             "sensor.coffeemaker_bean_container_empty",
             "EVENT_NOT_IN_STATUS_YET_SO_SET_TO_OFF",
             "",
-            "Off",
+            "off",
             "CoffeeMaker",
         ),
         (
             "sensor.coffeemaker_bean_container_empty",
             COFFEE_EVENT_BEAN_CONTAINER_EMPTY,
             BSH_EVENT_PRESENT_STATE_OFF,
-            "Off",
+            "off",
             "CoffeeMaker",
         ),
         (
             "sensor.coffeemaker_bean_container_empty",
             COFFEE_EVENT_BEAN_CONTAINER_EMPTY,
             BSH_EVENT_PRESENT_STATE_PRESENT,
-            "Present",
+            "present",
             "CoffeeMaker",
         ),
         (
             "sensor.coffeemaker_bean_container_empty",
             COFFEE_EVENT_BEAN_CONTAINER_EMPTY,
             BSH_EVENT_PRESENT_STATE_CONFIRMED,
-            "Confirmed",
+            "confirmed",
             "CoffeeMaker",
         ),
     ],
@@ -316,7 +292,7 @@ async def test_sensors_states(
     setup_credentials: None,
     get_appliances: MagicMock,
 ) -> None:
-    """Tests for Appliance door states."""
+    """Tests for Appliance alarm sensors."""
     appliance.status.update(
         HomeConnectAPI.json2dict(
             load_json_object_fixture("home_connect/status.json")["data"]["status"]
