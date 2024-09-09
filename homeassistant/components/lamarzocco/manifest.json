@@ -22,5 +22,6 @@
   "integration_type": "device",
   "iot_class": "cloud_polling",
   "loggers": ["lmcloud"],
+  "quality_scale": "platinum",
   "requirements": ["lmcloud==1.2.2"]
 }
