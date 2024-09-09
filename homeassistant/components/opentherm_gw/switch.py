@@ -19,7 +19,7 @@ from .entity import OpenThermEntity, OpenThermEntityDescription
 class OpenThermSwitchEntityDescription(
     OpenThermEntityDescription, SwitchEntityDescription
 ):
-    """Describes opentherm_gw switch entity."""
+    """Describes an opentherm_gw switch entity."""
 
     turn_off_action: Callable[[OpenThermGatewayHub], Awaitable[int | None]]
     turn_on_action: Callable[[OpenThermGatewayHub], Awaitable[int | None]]
@@ -67,13 +67,13 @@ class OpenThermSwitch(OpenThermEntity, SwitchEntity):
     entity_description: OpenThermSwitchEntityDescription
 
     async def async_turn_off(self, **kwargs: Any) -> None:
-        """Turn switch on."""
+        """Turn the switch off."""
         value = await self.entity_description.turn_off_action(self._gateway)
         self._attr_is_on = bool(value) if value is not None else None
         self.async_write_ha_state()
 
     async def async_turn_on(self, **kwargs: Any) -> None:
-        """Turn switch on."""
+        """Turn the switch on."""
         value = await self.entity_description.turn_on_action(self._gateway)
         self._attr_is_on = bool(value) if value is not None else None
         self.async_write_ha_state()

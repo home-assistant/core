@@ -154,10 +154,15 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         except YALE_BASE_ERRORS as error:
             raise UpdateFailed from error
 
+        cycle = data.cycle["data"] if data.cycle else None
+        status = data.status["data"] if data.status else None
+        online = data.online["data"] if data.online else None
+        panel_info = data.panel_info["data"] if data.panel_info else None
+
         return {
             "arm_status": arm_status,
-            "cycle": data.cycle,
-            "status": data.status,
-            "online": data.online,
-            "panel_info": data.panel_info,
+            "cycle": cycle,
+            "status": status,
+            "online": online,
+            "panel_info": panel_info,
         }
