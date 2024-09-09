@@ -2,13 +2,14 @@
 
 from collections.abc import Callable
 import logging
+from typing import TYPE_CHECKING
 
 from homeassistant.const import EVENT_HOMEASSISTANT_START
 from homeassistant.core import Context, CoreState, callback
 from homeassistant.helpers import condition, discovery, trigger as trigger_helper
 from homeassistant.helpers.script import Script
 from homeassistant.helpers.trace import trace_get
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import CONF_ACTION, CONF_CONDITION, CONF_TRIGGER, DOMAIN, PLATFORMS
@@ -98,17 +99,24 @@ class TriggerUpdateCoordinator(DataUpdateCoordinator):
             start_event is not None,
         )
 
-    async def _handle_triggered_with_script(self, run_variables, context=None):
+    async def _handle_triggered_with_script(
+        self, run_variables: TemplateVarsType, context=None
+    ) -> None:
         if not self._check_condition(run_variables, context):
             return
         # Create a context referring to the trigger context.
         trigger_context_id = None if context is None else context.id
         script_context = Context(parent_id=trigger_context_id)
+        if TYPE_CHECKING:
+            # This method is only called if there's a script
+            assert self._script is not None
         if script_result := await self._script.async_run(run_variables, script_context):
             run_variables = script_result.variables
         self._execute_update(run_variables, context)
 
-    async def _handle_triggered(self, run_variables, context=None):
+    async def _handle_triggered(
+        self, run_variables: TemplateVarsType, context=None
+    ) -> None:
         if not self._check_condition(run_variables, context):
             return
         self._execute_update(run_variables, context)
@@ -125,7 +133,7 @@ class TriggerUpdateCoordinator(DataUpdateCoordinator):
         return condition_result
 
     @callback
-    def _execute_update(self, run_variables, context=None) -> None:
+    def _execute_update(self, run_variables: TemplateVarsType, context=None) -> None:
         self.async_set_updated_data(
             {"run_variables": run_variables, "context": context}
         )
