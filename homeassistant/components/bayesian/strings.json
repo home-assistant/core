@@ -21,7 +21,8 @@
       "prior_high_error": "[%key:component::bayesian::config::error::prior_high_error%]",
       "threshold_low_error": "[%key:component::bayesian::config::error::threshold_low_error%]",
       "threshold_high_error": "[%key:component::bayesian::config::error::threshold_high_error%]",
-      "equal_probabilities": "[%key:component::bayesian::config::error::equal_probabilities%]"
+      "equal_probabilities": "[%key:component::bayesian::config::error::equal_probabilities%]",
+      "extreme_prob_given_error": "[%key:component::bayesian::config::error::extreme_prob_given_error%]"
     },
     "step": {
       "init": {
@@ -147,7 +148,8 @@
       "prior_high_error": "A prior set to 100% means that it is impossible for the sensor to show 'off', use a high number like 99.9% instead",
       "threshold_low_error": "A threshold set to 0% means that the sensor will always be 'on', use a low number like 0.1% instead",
       "threshold_high_error": "A threshold set to 100% means that the sensor will always be 'off', use a high number like 99.9% instead",
-      "equal_probabilities": "If Probability Given True and Probability Given False are equal, this observation can have no effect, and is therefore redundant"
+      "equal_probabilities": "If Probability Given True and Probability Given False are equal, this observation can have no effect, and is therefore redundant",
+      "extreme_prob_given_error": "If either Probability Given False or True is 0 or 100 this will create certainties that override all other observations, use numbers close to 0 or 100 instead"
     },
     "step": {
       "user": {
@@ -169,8 +171,8 @@
         "description": "One by one, add an observation that will inform the bayesian sensor. Each observation will update the proability of the Bayesian sensor if it is detected, or if its inverse is detected. If the state of the entity becomes `UNAVAILABLE` or `UNKOWN` it will be ignored. If more than one `state` or more than 1 `numeric_range` is configured for the same entity then inverse detections will be ignored.",
         "menu_options": {
           "state": "Observation from state sensor",
-          "numeric_state": "Observation from  from numeric range",
-          "template": "Observation from  from template"
+          "numeric_state": "Observation from numeric range",
+          "template": "Observation from template"
         }
       },
       "state": {

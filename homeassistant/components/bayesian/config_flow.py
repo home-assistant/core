@@ -142,7 +142,6 @@ ADD_ANOTHER_BOX_SCHEMA = vol.Schema({vol.Optional("add_another"): cv.boolean})
 
 STATE_SUBSCHEMA = vol.Schema(
     {
-        vol.Required(CONF_PLATFORM): CONF_STATE,
         vol.Required(CONF_ENTITY_ID): selector.EntitySelector(
             selector.EntitySelectorConfig(
                 domain=[SENSOR_DOMAIN, BINARY_SENSOR_DOMAIN, INPUT_BOLEAN_DOMAIN]
@@ -158,9 +157,6 @@ STATE_SUBSCHEMA = vol.Schema(
 
 NUMERIC_STATE_SUBSCHEMA = vol.Schema(
     {
-        vol.Required(CONF_PLATFORM): str(
-            ObservationTypes.NUMERIC_STATE
-        ),  # TODO, in a separated PR there will be multiple state ranges per entity so the entity ID will not be enough to identify it
         vol.Required(CONF_ENTITY_ID): selector.EntitySelector(
             selector.EntitySelectorConfig(
                 domain=[SENSOR_DOMAIN, INPUT_NUMBER_DOMAIN, NUMBER_DOMAIN]
@@ -181,7 +177,6 @@ NUMERIC_STATE_SUBSCHEMA = vol.Schema(
 
 TEMPLATE_SUBSCHEMA = vol.Schema(
     {
-        vol.Required(CONF_PLATFORM): str(ObservationTypes.TEMPLATE),
         vol.Required(CONF_VALUE_TEMPLATE): selector.TemplateSelector(
             selector.TemplateSelectorConfig(),
         ),
@@ -263,9 +258,7 @@ async def _get_select_observation_schema(
         {
             vol.Required(CONF_INDEX): vol.In(
                 {
-                    str(
-                        index
-                    ): f"{config[CONF_PLATFORM]} observation: {config.get(CONF_NAME)}"  # TODO should we make this prettier rather than including a string literal
+                    str(index): f"{config.get(CONF_NAME)} ({config[CONF_PLATFORM]})"
                     for index, config in enumerate(handler.options[CONF_OBSERVATIONS])
                 },
             )
@@ -275,15 +268,13 @@ async def _get_select_observation_schema(
 
 async def _get_remove_observation_schema(
     handler: SchemaCommonFlowHandler,
-) -> vol.Schema:  # TODO untested, borrowed from scrape
+) -> vol.Schema:
     """Return schema for observation removal."""
     return vol.Schema(
         {
             vol.Required(CONF_INDEX): cv.multi_select(
                 {
-                    str(
-                        index
-                    ): f"{config[CONF_PLATFORM]} observation: {config.get(CONF_NAME)}"
+                    str(index): f"{config.get(CONF_NAME)} ({config[CONF_PLATFORM]})"
                     for index, config in enumerate(handler.options[CONF_OBSERVATIONS])
                 },
             )
@@ -293,17 +284,18 @@ async def _get_remove_observation_schema(
 
 async def _get_edit_observation_schema(
     handler: SchemaCommonFlowHandler,
-) -> vol.Schema:  # TODO
+) -> vol.Schema:
     """Select which schema to return depending on which observation type it is."""
-    # TODO need to remove the add another box
+
     observations: list[dict[str, Any]] = handler.options[CONF_OBSERVATIONS]
     selected_idx = int(handler.options[CONF_INDEX])
+
     if observations[selected_idx][CONF_PLATFORM] == str(ObservationTypes.STATE):
         return STATE_SUBSCHEMA
     if observations[selected_idx][CONF_PLATFORM] == str(ObservationTypes.NUMERIC_STATE):
         return NUMERIC_STATE_SUBSCHEMA
-    if observations[selected_idx][CONF_PLATFORM] == str(ObservationTypes.TEMPLATE):
-        return TEMPLATE_SUBSCHEMA
+
+    return TEMPLATE_SUBSCHEMA
 
 
 async def _choose_observation_step(
@@ -358,19 +350,14 @@ async def _validate_observation_setup(
     if user_input[CONF_P_GIVEN_T] == user_input[CONF_P_GIVEN_F]:
         raise SchemaFlowError("equal_probabilities")
 
-    if user_input[CONF_PLATFORM] == ObservationTypes.STATE:
-        # TODO can we query hass to get the possible states of the entity id and check if to_state is one of them?
-        pass
-    if user_input[CONF_PLATFORM] == ObservationTypes.NUMERIC_STATE:
-        # TODO call validation in https://github.com/home-assistant/core/pull/119281 once merged
-        pass
-    if user_input[CONF_PLATFORM] == ObservationTypes.TEMPLATE:
-        pass
+    if {user_input[CONF_P_GIVEN_T], user_input[CONF_P_GIVEN_F]} & {0, 100}:
+        raise SchemaFlowError("extreme_prob_given_error")
 
     # add_another is really just a variable for controlling the flow
     add_another: bool = user_input.pop("add_another", False)
 
     user_input = _convert_percentages_to_fractions(user_input)
+
     # Standard behavior is to merge the result with the options.
     # In this case, we want to add a sub-item so we update the options directly.
     observations: list[dict[str, Any]] = handler.options.setdefault(
@@ -378,8 +365,14 @@ async def _validate_observation_setup(
     )
     if idx := handler.options.get(CONF_INDEX):
         # if there is an index, that means we are in observation editing mode and we want to overwrite not append
+        user_input[CONF_PLATFORM] = observations[int(idx)][CONF_PLATFORM]
         observations[int(idx)] = user_input
-    else:
+
+        # remove the index so it can not be saved
+        handler.options.pop(CONF_INDEX, None)
+    elif handler.parent_handler.cur_step is not None:
+        # if we are in adding mode we need to record the platform from the step id
+        user_input[CONF_PLATFORM] = handler.parent_handler.cur_step["step_id"]
         observations.append(user_input)
     return {"add_another": True} if add_another else {}
 
@@ -452,7 +445,7 @@ OPTIONS_FLOW: dict[str, SchemaFlowStep] = {
     str(OptionsFlowSteps.REMOVE_OBSERVATION): SchemaFlowFormStep(
         _get_remove_observation_schema,
         suggested_values=None,
-        validate_user_input=_validate_remove_observation,  # TODO implement validate_remove_observation
+        validate_user_input=_validate_remove_observation,
     ),
 }
 OPTIONS_FLOW.update(CONFIG_FLOW)
@@ -500,9 +493,7 @@ def ws_start_preview(
         errors = {}
         key: vol.Marker
         for key, validator in schema.schema.items():
-            if (
-                key.schema not in user_input or key == CONF_PLATFORM
-            ):  # TODO we exclude CONF_PLATFORM because it is associated with a static object not a validator
+            if key.schema not in user_input:
                 continue
             try:
                 validator(user_input[key.schema])
@@ -519,7 +510,6 @@ def ws_start_preview(
             SchemaFlowFormStep, CONFIG_FLOW[str(ObservationTypes.TEMPLATE)]
         )
     else:
-        # TODO untested
         flow_status = hass.config_entries.options.async_get(msg["flow_id"])
         config_entry = hass.config_entries.async_get_entry(flow_status["handler"])
         if not config_entry:
