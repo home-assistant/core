@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
+from libaxion_dmx import AxionDmxApi  # Import the API class
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
-from .axion_dmx_api import AxionDmxApi  # Import the API class
 from .const import CONF_LIGHT_TYPE, DOMAIN
 
 PLATFORMS: list[Platform] = [Platform.LIGHT]

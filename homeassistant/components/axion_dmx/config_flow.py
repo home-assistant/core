@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from libaxion_dmx import AxionDmxApi
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -12,7 +13,6 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
-from .axion_dmx_api import AxionDmxApi
 from .const import _LOGGER, CONF_CHANNEL, CONF_LIGHT_TYPE, DOMAIN
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
