@@ -156,7 +156,9 @@ STATE_SUBSCHEMA = vol.Schema(
 
 NUMERIC_STATE_SUBSCHEMA = vol.Schema(
     {
-        vol.Required(CONF_PLATFORM): str(ObservationTypes.NUMERIC_STATE),#TODO, in a separted PR there will be multiple state ranges per entity so the entity ID will not be enough to identify it
+        vol.Required(CONF_PLATFORM): str(
+            ObservationTypes.NUMERIC_STATE
+        ),  # TODO, in a separated PR there will be multiple state ranges per entity so the entity ID will not be enough to identify it
         vol.Required(CONF_ENTITY_ID): selector.EntitySelector(
             selector.EntitySelectorConfig(
                 domain=[SENSOR_DOMAIN, INPUT_NUMBER_DOMAIN, NUMBER_DOMAIN]
@@ -177,7 +179,6 @@ NUMERIC_STATE_SUBSCHEMA = vol.Schema(
 
 TEMPLATE_SUBSCHEMA = vol.Schema(
     {
-
         vol.Required(CONF_PLATFORM): str(ObservationTypes.TEMPLATE),
         vol.Required(CONF_VALUE_TEMPLATE): selector.TemplateSelector(
             selector.TemplateSelectorConfig(),
@@ -212,6 +213,107 @@ class OptionsFlowSteps(StrEnum):
         return li
 
 
+def _convert_percentages_to_fractions(
+    data: dict[str, str | float | int],
+) -> dict[str, str | float]:
+    """Convert percentage values in a dictionary to fractions."""
+    # TODO ensure does not run on numeric_state above and below
+    return {
+        key: (value / 100 if isinstance(value, (int, float)) else value)
+        for key, value in data.items()
+    }
+
+
+def _convert_fractions_to_percentages(
+    data: dict[str, str | float],
+) -> dict[str, str | float]:
+    """Convert fraction values in a dictionary to percentages."""
+    # TODO ensure does not run on numeric_state above and below
+    return {
+        key: (value * 100 if isinstance(value, (float)) else value)
+        for key, value in data.items()
+    }
+
+
+async def _get_select_observation_schema(
+    handler: SchemaCommonFlowHandler,
+) -> vol.Schema:
+    """Return schema for selecting a observation."""
+    return vol.Schema(
+        {
+            vol.Required("index"): vol.In(
+                {
+                    str(
+                        index
+                    ): f"{config[CONF_PLATFORM]} observation: {config.get(CONF_NAME)}"  # TODO should we make this prettier rather than including a string literal
+                    for index, config in enumerate(handler.options[CONF_OBSERVATIONS])
+                },
+            )
+        }
+    )
+
+
+async def _get_remove_observation_schema(
+    handler: SchemaCommonFlowHandler,
+) -> vol.Schema:  # TODO untested, borrowed from scrape
+    """Return schema for observation removal."""
+    return vol.Schema(
+        {
+            vol.Required("index"): cv.multi_select(
+                {
+                    str(
+                        index
+                    ): f"{config[CONF_PLATFORM]} observation: {config.get(CONF_NAME)}"
+                    for index, config in enumerate(handler.options[CONF_OBSERVATIONS])
+                },
+            )
+        }
+    )
+
+
+async def _get_edit_observation_schema(
+    handler: SchemaCommonFlowHandler,
+) -> vol.Schema:  # TODO
+    """Select which schema to return depending on which observation type it is."""
+    # TODO need to remove the add another box
+    observations: list[dict[str, Any]] = handler.options["observations"]
+    selected_idx = int(handler.options["index"])
+    if observations[selected_idx][CONF_PLATFORM] == str(ObservationTypes.STATE):
+        return STATE_SUBSCHEMA
+    if observations[selected_idx][CONF_PLATFORM] == str(ObservationTypes.NUMERIC_STATE):
+        return NUMERIC_STATE_SUBSCHEMA
+    if observations[selected_idx][CONF_PLATFORM] == str(ObservationTypes.TEMPLATE):
+        return TEMPLATE_SUBSCHEMA
+
+
+async def _choose_observation_step(
+    user_input: dict[str, Any],
+) -> ConfigFlowSteps | None:
+    """Return next step_id for options flow according to template_type."""
+    if user_input.get("add_another", False):
+        return ConfigFlowSteps.OBSERVATION_SELECTOR
+    return None
+
+
+async def _get_base_suggested_values(
+    handler: SchemaCommonFlowHandler,
+) -> dict[str, Any]:
+    """Return suggested values for the sensor base options."""
+
+    return _convert_fractions_to_percentages(dict(handler.options))
+
+
+async def _get_edit_observation_suggested_values(
+    handler: SchemaCommonFlowHandler,
+) -> dict[str, Any]:
+    """Return suggested values for observation editing."""
+
+    idx = int(handler.options["index"])
+    return _convert_fractions_to_percentages(
+        dict(handler.options[CONF_OBSERVATIONS][idx])
+    )
+
+
 async def _validate_user(
     handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
 ) -> dict[str, Any]:
@@ -228,7 +330,7 @@ async def _validate_user(
     return {**user_input}
 
 
-async def validate_observation_setup(
+async def _validate_observation_setup(
     handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
 ) -> dict[str, Any]:
     """Validate observation input."""
@@ -255,42 +357,11 @@ async def validate_observation_setup(
         CONF_OBSERVATIONS, []
     )
     if idx := handler.options.get("index"):
-        #if there is an index, that means we are in observation editing mode and we want to overwrite not append
+        # if there is an index, that means we are in observation editing mode and we want to overwrite not append
         observations[int(idx)] = user_input
     else:
         observations.append(user_input)
     return {"add_another": True} if add_another else {}
-
-
-async def _choose_observation_step(
-    user_input: dict[str, Any],
-) -> ConfigFlowSteps | None:
-    """Return next step_id for options flow according to template_type."""
-    if user_input.get("add_another", False):
-        return ConfigFlowSteps.OBSERVATION_SELECTOR
-    return None
-
-
-def _convert_percentages_to_fractions(
-    data: dict[str, str | float | int],
-) -> dict[str, str | float]:
-    """Convert percentage values in a dictionary to fractions."""
-    #TODO ensure does not run on numeric_state above and below
-    return {
-        key: (value / 100 if isinstance(value, (int, float)) else value)
-        for key, value in data.items()
-    }
-
-
-def _convert_fractions_to_percentages(
-    data: dict[str, str | float],
-) -> dict[str, str | float]:
-    """Convert fraction values in a dictionary to percentages."""
-    #TODO ensure does not run on numeric_state above and below
-    return {
-        key: (value * 100 if isinstance(value, (float)) else value)
-        for key, value in data.items()
-    }
 
 
 CONFIG_FLOW = {
@@ -305,87 +376,23 @@ CONFIG_FLOW = {
     str(ObservationTypes.STATE): SchemaFlowFormStep(
         STATE_SUBSCHEMA.extend(ADD_ANOTHER_BOX_SCHEMA.schema),
         next_step=_choose_observation_step,
-        validate_user_input=validate_observation_setup,
+        validate_user_input=_validate_observation_setup,
         suggested_values=None,
     ),
     str(ObservationTypes.NUMERIC_STATE): SchemaFlowFormStep(
         NUMERIC_STATE_SUBSCHEMA.extend(ADD_ANOTHER_BOX_SCHEMA.schema),
         next_step=_choose_observation_step,
-        validate_user_input=validate_observation_setup,
+        validate_user_input=_validate_observation_setup,
         suggested_values=None,
     ),
     str(ObservationTypes.TEMPLATE): SchemaFlowFormStep(
         TEMPLATE_SUBSCHEMA.extend(ADD_ANOTHER_BOX_SCHEMA.schema),
         next_step=_choose_observation_step,
         preview="template",
-        validate_user_input=validate_observation_setup,
+        validate_user_input=_validate_observation_setup,
         suggested_values=None,
     ),
 }
-
-
-async def _get_base_suggested_values(
-    handler: SchemaCommonFlowHandler,
-) -> dict[str, Any]:
-    """Return suggested values for the sensor base options."""
-
-    return _convert_fractions_to_percentages(dict(handler.options))
-
-
-async def _get_edit_observation_suggested_values(
-    handler: SchemaCommonFlowHandler,
-) -> dict[str, Any]:
-    """Return suggested values for observation editing."""
-
-    idx = int(handler.options["index"])
-    return _convert_fractions_to_percentages(dict(handler.options[CONF_OBSERVATIONS][idx]))
-
-
-async def _get_select_observation_schema(
-    handler: SchemaCommonFlowHandler,
-) -> vol.Schema:
-    """Return schema for selecting a observation."""
-    return vol.Schema(
-        {
-            vol.Required("index"): vol.In(
-                {
-                    str(index): f"{config[CONF_PLATFORM]} observation: {config.get(CONF_NAME)}" #TODO should we make this prettier rather than including a string literal
-                    for index, config in enumerate(handler.options[CONF_OBSERVATIONS])
-                },
-            )
-        }
-    )
-
-
-async def _get_remove_observation_schema(
-    handler: SchemaCommonFlowHandler,
-) -> vol.Schema:  # TODO untested, borrowed from scrape
-    """Return schema for observation removal."""
-    return vol.Schema(
-        {
-            vol.Required("index"): cv.multi_select(
-                {
-                    str(index): f"{config[CONF_PLATFORM]} observation: {config.get(CONF_NAME)}"
-                    for index, config in enumerate(handler.options[CONF_OBSERVATIONS])
-                },
-            )
-        }
-    )
-
-
-async def _get_edit_observation_schema(
-    handler: SchemaCommonFlowHandler,
-) -> vol.Schema:  # TODO
-    """Select which schema to return depending on which observation type it is."""
-    #TODO need to remove the add another box
-    observations: list[dict[str,Any]] = handler.options["observations"]
-    selected_idx = int(handler.options["index"])
-    if observations[selected_idx][CONF_PLATFORM] == str(ObservationTypes.STATE):
-        return STATE_SUBSCHEMA
-    if observations[selected_idx][CONF_PLATFORM] == str(ObservationTypes.NUMERIC_STATE):
-        return NUMERIC_STATE_SUBSCHEMA
-    if observations[selected_idx][CONF_PLATFORM] == str(ObservationTypes.TEMPLATE):
-        return TEMPLATE_SUBSCHEMA
 
 OPTIONS_FLOW: dict[str, SchemaFlowStep] = {
     str(OptionsFlowSteps.INIT): SchemaFlowMenuStep(
@@ -393,8 +400,8 @@ OPTIONS_FLOW: dict[str, SchemaFlowStep] = {
     ),
     str(OptionsFlowSteps.BASE_OPTIONS): SchemaFlowFormStep(
         OPTIONS_SCHEMA,
-        validate_user_input=_validate_user,
         suggested_values=_get_base_suggested_values,
+        validate_user_input=_validate_user,
     ),
     str(OptionsFlowSteps.SELECT_EDIT_OBSERVATION): SchemaFlowFormStep(
         _get_select_observation_schema,
@@ -404,12 +411,12 @@ OPTIONS_FLOW: dict[str, SchemaFlowStep] = {
     str(OptionsFlowSteps.EDIT_OBSERVATION): SchemaFlowFormStep(
         _get_edit_observation_schema,
         suggested_values=_get_edit_observation_suggested_values,
-        validate_user_input=validate_observation_setup
+        validate_user_input=_validate_observation_setup,
     ),
     str(OptionsFlowSteps.REMOVE_OBSERVATION): SchemaFlowFormStep(
         _get_remove_observation_schema,
         suggested_values=None,
-        validate_user_input=validate_remove_observation, #TODO implement validate_remove_observation
+        validate_user_input=_validate_remove_observation,  # TODO implement validate_remove_observation
     ),
 }
 OPTIONS_FLOW.update(CONFIG_FLOW)
