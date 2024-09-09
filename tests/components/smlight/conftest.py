@@ -33,6 +33,18 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
+def mock_config_entry_host() -> MockConfigEntry:
+    """Return the default mocked config entry, no credentials."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: MOCK_HOST,
+        },
+        unique_id="aa:bb:cc:dd:ee:ff",
+    )
+
+
+@pytest.fixture
 def platforms() -> list[Platform]:
     """Platforms, which should be loaded during the test."""
     return PLATFORMS
@@ -76,6 +88,7 @@ def mock_smlight_client(request: pytest.FixtureRequest) -> Generator[MagicMock]:
         api.authenticate.return_value = True
 
         api.cmds = AsyncMock(spec_set=CmdWrapper)
+        api.set_toggle = AsyncMock()
 
         yield api
 
