@@ -1,6 +1,6 @@
 {
   "domain": "ruckus_unleashed",
-  "name": "Ruckus Unleashed",
+  "name": "Ruckus",
   "codeowners": ["@lanrat", "@ms264556", "@gabe565"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/ruckus_unleashed",
