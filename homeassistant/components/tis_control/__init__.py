@@ -13,7 +13,7 @@ from homeassistant.core import HomeAssistant
 
 from .const import DEVICES_DICT, DOMAIN
 
-PLATFORMS: list[Platform] = [Platform.SWITCH]
+PLATFORMS: list[Platform] = [Platform.LIGHT, Platform.SENSOR, Platform.SWITCH]
 type TISConfigEntry = ConfigEntry[TISData]
 
 

@@ -29,7 +29,7 @@ async def async_setup_entry(
     """Set up the TIS switches."""
     # tis_api: TISApi = hass.data[DOMAIN]["tis_api"]
     tis_api: TISApi = entry.runtime_data.api
-    # Fetch all switches from the TIS API
+    # Fetch all switches from the TIS API we only have one type here
     switches: dict = await tis_api.get_entities(platform=Platform.SWITCH)
     if switches:
         # Prepare a list of tuples containing necessary switch details
