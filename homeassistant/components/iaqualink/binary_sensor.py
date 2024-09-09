@@ -26,8 +26,10 @@ async def async_setup_entry(
 ) -> None:
     """Set up discovered binary sensors."""
     async_add_entities(
-        HassAqualinkBinarySensor(dev)
-        for dev in hass.data[AQUALINK_DOMAIN][BINARY_SENSOR_DOMAIN]
+        (
+            HassAqualinkBinarySensor(dev)
+            for dev in hass.data[AQUALINK_DOMAIN][BINARY_SENSOR_DOMAIN]
+        ),
         True,
     )
 
