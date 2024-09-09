@@ -1574,7 +1574,7 @@ async def test_heat_meter_mbus(
     await hass.async_block_till_done()
 
     # check if gas consumption is parsed correctly
-    heat_consumption = hass.states.get("sensor.heat_meter_none")
+    heat_consumption = hass.states.get("sensor.heat_meter_energy")
     assert heat_consumption.state == "745.695"
     assert (
         heat_consumption.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENERGY
