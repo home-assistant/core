@@ -31,7 +31,7 @@ class MonarchMoneyCashFlowEntity(MonarchMoneyEntityBase):
         )
         self.entity_description = description
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, coordinator.subscription_id)},
+            identifiers={(DOMAIN, str(coordinator.subscription_id))},
             name="Cashflow",
         )
 
@@ -62,7 +62,7 @@ class MonarchMoneyAccountEntity(MonarchMoneyEntityBase):
             f"{coordinator.subscription_id}_{account.id}_{description.translation_key}"
         )
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, account.id)},
+            identifiers={(DOMAIN, str(account.id))},
             name=f"{account.institution_name} {account.name}",
             entry_type=DeviceEntryType.SERVICE,
             manufacturer=account.data_provider,
@@ -74,7 +74,7 @@ class MonarchMoneyAccountEntity(MonarchMoneyEntityBase):
     def available(self) -> bool:
         """Return if entity is available."""
         return super().available and (
-            self._account_id in [x.id for x in self.coordinator.data.account_data]
+            self._account_id in self.coordinator.data.account_data
         )
 
     @property

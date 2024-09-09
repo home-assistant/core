@@ -26,7 +26,7 @@ from .const import LOGGER
 class MonarchData:
     """Data class to hold monarch data."""
 
-    account_data: list[MonarchAccount]
+    account_data: dict[int, MonarchAccount]
     cashflow_summary: MonarchCashflowSummary
 
 
@@ -34,7 +34,7 @@ class MonarchMoneyDataUpdateCoordinator(DataUpdateCoordinator[MonarchData]):
     """Data update coordinator for Monarch Money."""
 
     config_entry: ConfigEntry
-    subscription_id: str
+    subscription_id: int
 
     def __init__(
         self,
@@ -64,7 +64,8 @@ class MonarchMoneyDataUpdateCoordinator(DataUpdateCoordinator[MonarchData]):
         """Fetch data for all accounts."""
 
         account_data, cashflow_summary = await asyncio.gather(
-            self.client.get_accounts(), self.client.get_cashflow_summary()
+            self.client.get_accounts_as_dict_with_id_key(),
+            self.client.get_cashflow_summary(),
         )
 
         return MonarchData(account_data=account_data, cashflow_summary=cashflow_summary)
@@ -77,8 +78,7 @@ class MonarchMoneyDataUpdateCoordinator(DataUpdateCoordinator[MonarchData]):
     @property
     def accounts(self) -> list[MonarchAccount]:
         """Return accounts."""
-
-        return self.data.account_data
+        return list(self.data.account_data.values())
 
     @property
     def value_accounts(self) -> list[MonarchAccount]:
@@ -90,9 +90,9 @@ class MonarchMoneyDataUpdateCoordinator(DataUpdateCoordinator[MonarchData]):
         """Return accounts that aren't assets."""
         return [x for x in self.accounts if x.is_balance_account]
 
-    def get_account_for_id(self, account_id: str) -> MonarchAccount:
+    def get_account_for_id(self, account_id: int) -> MonarchAccount:
         """Get account for id."""
-        for account in self.data.account_data:
-            if account.id == account_id:
-                return account
+        if account_id in self.data.account_data:
+            return self.data.account_data[account_id]
+
         raise ValueError(f"Account with id {account_id} not found")

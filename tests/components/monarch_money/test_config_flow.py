@@ -35,7 +35,7 @@ async def test_form_simple(
     assert result["data"] == {
         CONF_TOKEN: "mocked_token",
     }
-    assert result["context"]["unique_id"] == "222260252323873333"
+    assert result["context"]["unique_id"] == 222260252323873333
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -81,7 +81,7 @@ async def test_form_invalid_auth(
     assert result["data"] == {
         CONF_TOKEN: "mocked_token",
     }
-    assert result["context"]["unique_id"] == "222260252323873333"
+    assert result["context"]["unique_id"] == 222260252323873333
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -140,6 +140,6 @@ async def test_form_mfa(
     assert result["data"] == {
         CONF_TOKEN: "mocked_token",
     }
-    assert result["context"]["unique_id"] == "222260252323873333"
+    assert result["context"]["unique_id"] == 222260252323873333
 
     assert len(mock_setup_entry.mock_calls) == 1

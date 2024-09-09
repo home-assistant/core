@@ -40,9 +40,6 @@
       },
       "savings_rate": {
         "name": "Savings rate"
-      },
-      "created": {
-        "name": "First sync"
       }
     }
   }

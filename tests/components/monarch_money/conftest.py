@@ -44,6 +44,10 @@ def mock_config_api() -> Generator[AsyncMock]:
 
     account_json: dict[str, Any] = json.loads(load_fixture("get_accounts.json", DOMAIN))
     account_data = [MonarchAccount(data) for data in account_json["accounts"]]
+    account_data_dict = {
+        int(acc["id"]): MonarchAccount(acc) for acc in account_json["accounts"]
+    }
+
     cashflow_json: dict[str, Any] = json.loads(
         load_fixture("get_cashflow_summary.json", DOMAIN)
     )
@@ -67,6 +71,9 @@ def mock_config_api() -> Generator[AsyncMock]:
         instance.multi_factor_authenticate = AsyncMock(return_value=None)
         instance.get_subscription_details = AsyncMock(return_value=subscription_details)
         instance.get_accounts = AsyncMock(return_value=account_data)
+        instance.get_accounts_as_dict_with_id_key = AsyncMock(
+            return_value=account_data_dict
+        )
         instance.get_cashflow_summary = AsyncMock(return_value=cashflow_summary)
         instance.get_subscription_details = AsyncMock(return_value=subscription_details)
         yield mock_class
