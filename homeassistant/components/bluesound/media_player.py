@@ -58,12 +58,14 @@ from .const import (
     SERVICE_SET_TIMER,
     SERVICE_UNJOIN,
 )
-from .utils import format_unique_id, throttled
+from .utils import format_unique_id
 
 if TYPE_CHECKING:
     from . import BluesoundConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
+
+SCAN_INTERVAL = timedelta(minutes=15)
 
 DATA_BLUESOUND = DOMAIN
 DEFAULT_PORT = 11000
@@ -72,10 +74,6 @@ NODE_OFFLINE_CHECK_TIMEOUT = 180
 NODE_RETRY_INITIATION = timedelta(minutes=3)
 
 SYNC_STATUS_INTERVAL = timedelta(minutes=5)
-
-UPDATE_CAPTURE_INTERVAL = timedelta(minutes=30)
-UPDATE_PRESETS_INTERVAL = timedelta(minutes=30)
-UPDATE_SERVICES_INTERVAL = timedelta(minutes=30)
 
 POLL_TIMEOUT = 120
 
@@ -202,7 +200,7 @@ async def async_setup_entry(
     )
 
     hass.data[DATA_BLUESOUND].append(bluesound_player)
-    async_add_entities([bluesound_player])
+    async_add_entities([bluesound_player], update_before_add=True)
 
 
 async def async_setup_platform(
@@ -428,13 +426,11 @@ class BluesoundPlayer(MediaPlayerEntity):
         for player in self.hass.data[DATA_BLUESOUND]:
             await player.force_update_sync_status()
 
-    @throttled(UPDATE_CAPTURE_INTERVAL)
     async def async_update_captures(self) -> None:
         """Update Capture sources."""
         inputs = await self._player.inputs()
         self._inputs = inputs
 
-    @throttled(UPDATE_PRESETS_INTERVAL)
     async def async_update_presets(self) -> None:
         """Update Presets."""
         presets = await self._player.presets()
