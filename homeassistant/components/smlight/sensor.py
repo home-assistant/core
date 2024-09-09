@@ -43,11 +43,6 @@ class SmInfoEntityDescription(SensorEntityDescription):
 
 INFO: list[SmInfoEntityDescription] = [
     SmInfoEntityDescription(
-        key="device_ip",
-        translation_key="device_ip",
-        value_fn=lambda x: x.device_ip,
-    ),
-    SmInfoEntityDescription(
         key="device_mode",
         translation_key="device_mode",
         value_fn=lambda x: x.coord_mode,

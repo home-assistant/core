@@ -69,9 +69,6 @@
       "socket_uptime": {
         "name": "Zigbee uptime"
       },
-      "device_ip": {
-        "name": "IP address"
-      },
       "device_mode": {
         "name": "Connection mode",
         "state": {
