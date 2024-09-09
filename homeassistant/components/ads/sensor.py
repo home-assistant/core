@@ -66,9 +66,7 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up an ADS sensor device."""
-    ads_hub = hass.data.get(ads.DATA_ADS)
-    if ads_hub is None:
-        raise ValueError("ADS Hub is not initialized.")
+    ads_hub: ads.AdsHub = hass.data[ads.DATA_ADS]
     ads_var = config[CONF_ADS_VAR]
     ads_type = config[CONF_ADS_TYPE]
     name = config[CONF_NAME]
