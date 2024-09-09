@@ -137,7 +137,7 @@ class TriggerUpdateCoordinator(DataUpdateCoordinator):
         return check_conditions
 
     async def _handle_triggered_with_script(self, run_variables, context=None):
-        if not await self._check_condition(run_variables, context):
+        if not self._check_condition(run_variables, context):
             return
         # Create a context referring to the trigger context.
         trigger_context_id = None if context is None else context.id
@@ -147,11 +147,11 @@ class TriggerUpdateCoordinator(DataUpdateCoordinator):
         self._execute_update(run_variables, context)
 
     async def _handle_triggered(self, run_variables, context=None):
-        if not await self._check_condition(run_variables, context):
+        if not self._check_condition(run_variables, context):
             return
         self._execute_update(run_variables, context)
 
-    async def _check_condition(self, run_variables, context=None) -> bool:
+    def _check_condition(self, run_variables, context=None) -> bool:
         condition_result = self._cond_func(run_variables) if self._cond_func else True
         if condition_result is False:
             _LOGGER.debug(
