@@ -11,13 +11,11 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfEnergy
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import AOSmithData
-from .const import DOMAIN
+from . import AOSmithConfigEntry
 from .coordinator import AOSmithEnergyCoordinator, AOSmithStatusCoordinator
 from .entity import AOSmithEnergyEntity, AOSmithStatusEntity
 
@@ -49,10 +47,12 @@ HOT_WATER_STATUS_MAP: dict[HotWaterStatus, str] = {
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: AOSmithConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up A. O. Smith sensor platform."""
-    data: AOSmithData = hass.data[DOMAIN][entry.entry_id]
+    data = entry.runtime_data
 
     async_add_entities(
         AOSmithStatusSensorEntity(data.status_coordinator, description, junction_id)

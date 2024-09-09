@@ -8,11 +8,25 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from elevenlabs.core import ApiError
-from elevenlabs.types import GetVoicesResponse
+from elevenlabs.types import GetVoicesResponse, VoiceSettings
 import pytest
 
 from homeassistant.components import tts
-from homeassistant.components.elevenlabs.const import CONF_MODEL, CONF_VOICE, DOMAIN
+from homeassistant.components.elevenlabs.const import (
+    CONF_MODEL,
+    CONF_OPTIMIZE_LATENCY,
+    CONF_SIMILARITY,
+    CONF_STABILITY,
+    CONF_STYLE,
+    CONF_USE_SPEAKER_BOOST,
+    CONF_VOICE,
+    DEFAULT_OPTIMIZE_LATENCY,
+    DEFAULT_SIMILARITY,
+    DEFAULT_STABILITY,
+    DEFAULT_STYLE,
+    DEFAULT_USE_SPEAKER_BOOST,
+    DOMAIN,
+)
 from homeassistant.components.media_player import (
     ATTR_MEDIA_CONTENT_ID,
     DOMAIN as DOMAIN_MP,
@@ -53,17 +67,32 @@ async def setup_internal_url(hass: HomeAssistant) -> None:
     )
 
 
+@pytest.fixture
+def mock_similarity():
+    """Mock similarity."""
+    return DEFAULT_SIMILARITY / 2
+
+
+@pytest.fixture
+def mock_latency():
+    """Mock latency."""
+    return (DEFAULT_OPTIMIZE_LATENCY + 1) % 5  # 0, 1, 2, 3, 4
+
+
 @pytest.fixture(name="setup")
 async def setup_fixture(
     hass: HomeAssistant,
     config_data: dict[str, Any],
     config_options: dict[str, Any],
+    config_options_voice: dict[str, Any],
     request: pytest.FixtureRequest,
     mock_async_client: AsyncMock,
 ) -> AsyncMock:
     """Set up the test environment."""
     if request.param == "mock_config_entry_setup":
         await mock_config_entry_setup(hass, config_data, config_options)
+    elif request.param == "mock_config_entry_setup_voice":
+        await mock_config_entry_setup(hass, config_data, config_options_voice)
     else:
         raise RuntimeError("Invalid setup fixture")
 
@@ -81,6 +110,18 @@ def config_data_fixture() -> dict[str, Any]:
 def config_options_fixture() -> dict[str, Any]:
     """Return config options."""
     return {}
+
+
+@pytest.fixture(name="config_options_voice")
+def config_options_voice_fixture(mock_similarity, mock_latency) -> dict[str, Any]:
+    """Return config options."""
+    return {
+        CONF_OPTIMIZE_LATENCY: mock_latency,
+        CONF_SIMILARITY: mock_similarity,
+        CONF_STABILITY: DEFAULT_STABILITY,
+        CONF_STYLE: DEFAULT_STYLE,
+        CONF_USE_SPEAKER_BOOST: DEFAULT_USE_SPEAKER_BOOST,
+    }
 
 
 async def mock_config_entry_setup(
@@ -146,6 +187,12 @@ async def test_tts_service_speak(
     """Test tts service."""
     tts_entity = hass.data[tts.DOMAIN].get_entity(service_data[ATTR_ENTITY_ID])
     tts_entity._client.generate.reset_mock()
+    assert tts_entity._voice_settings == VoiceSettings(
+        stability=DEFAULT_STABILITY,
+        similarity_boost=DEFAULT_SIMILARITY,
+        style=DEFAULT_STYLE,
+        use_speaker_boost=DEFAULT_USE_SPEAKER_BOOST,
+    )
 
     await hass.services.async_call(
         tts.DOMAIN,
@@ -161,7 +208,11 @@ async def test_tts_service_speak(
     )
 
     tts_entity._client.generate.assert_called_once_with(
-        text="There is a person at the front door.", voice="voice2", model="model1"
+        text="There is a person at the front door.",
+        voice="voice2",
+        model="model1",
+        voice_settings=tts_entity._voice_settings,
+        optimize_streaming_latency=tts_entity._latency,
     )
 
 
@@ -219,7 +270,11 @@ async def test_tts_service_speak_lang_config(
     )
 
     tts_entity._client.generate.assert_called_once_with(
-        text="There is a person at the front door.", voice="voice1", model="model1"
+        text="There is a person at the front door.",
+        voice="voice1",
+        model="model1",
+        voice_settings=tts_entity._voice_settings,
+        optimize_streaming_latency=tts_entity._latency,
     )
 
 
@@ -266,5 +321,78 @@ async def test_tts_service_speak_error(
     )
 
     tts_entity._client.generate.assert_called_once_with(
-        text="There is a person at the front door.", voice="voice1", model="model1"
+        text="There is a person at the front door.",
+        voice="voice1",
+        model="model1",
+        voice_settings=tts_entity._voice_settings,
+        optimize_streaming_latency=tts_entity._latency,
+    )
+
+
+@pytest.mark.parametrize(
+    "config_data",
+    [
+        {},
+        {tts.CONF_LANG: "de"},
+        {tts.CONF_LANG: "en"},
+        {tts.CONF_LANG: "ja"},
+        {tts.CONF_LANG: "es"},
+    ],
+)
+@pytest.mark.parametrize(
+    ("setup", "tts_service", "service_data"),
+    [
+        (
+            "mock_config_entry_setup_voice",
+            "speak",
+            {
+                ATTR_ENTITY_ID: "tts.mock_title",
+                tts.ATTR_MEDIA_PLAYER_ENTITY_ID: "media_player.something",
+                tts.ATTR_MESSAGE: "There is a person at the front door.",
+                tts.ATTR_OPTIONS: {tts.ATTR_VOICE: "voice2"},
+            },
+        ),
+    ],
+    indirect=["setup"],
+)
+async def test_tts_service_speak_voice_settings(
+    setup: AsyncMock,
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    calls: list[ServiceCall],
+    tts_service: str,
+    service_data: dict[str, Any],
+    mock_similarity: float,
+    mock_latency: int,
+) -> None:
+    """Test tts service."""
+    tts_entity = hass.data[tts.DOMAIN].get_entity(service_data[ATTR_ENTITY_ID])
+    tts_entity._client.generate.reset_mock()
+    assert tts_entity._voice_settings == VoiceSettings(
+        stability=DEFAULT_STABILITY,
+        similarity_boost=mock_similarity,
+        style=DEFAULT_STYLE,
+        use_speaker_boost=DEFAULT_USE_SPEAKER_BOOST,
+    )
+    assert tts_entity._latency == mock_latency
+
+    await hass.services.async_call(
+        tts.DOMAIN,
+        tts_service,
+        service_data,
+        blocking=True,
+    )
+
+    assert len(calls) == 1
+    assert (
+        await retrieve_media(hass, hass_client, calls[0].data[ATTR_MEDIA_CONTENT_ID])
+        == HTTPStatus.OK
+    )
+
+    tts_entity._client.generate.assert_called_once_with(
+        text="There is a person at the front door.",
+        voice="voice2",
+        model="model1",
+        voice_settings=tts_entity._voice_settings,
+        optimize_streaming_latency=tts_entity._latency,
     )

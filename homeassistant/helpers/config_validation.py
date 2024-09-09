@@ -81,6 +81,7 @@ from homeassistant.const import (
     CONF_TARGET,
     CONF_THEN,
     CONF_TIMEOUT,
+    CONF_TRIGGERS,
     CONF_UNTIL,
     CONF_VALUE_TEMPLATE,
     CONF_VARIABLES,
@@ -1781,6 +1782,19 @@ TRIGGER_BASE_SCHEMA = vol.Schema(
 _base_trigger_validator_schema = TRIGGER_BASE_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA)
 
 
+def _base_trigger_list_flatten(triggers: list[Any]) -> list[Any]:
+    """Flatten trigger arrays containing 'triggers:' sublists into a single list of triggers."""
+    flatlist = []
+    for t in triggers:
+        if CONF_TRIGGERS in t and len(t.keys()) == 1:
+            triggerlist = ensure_list(t[CONF_TRIGGERS])
+            flatlist.extend(triggerlist)
+        else:
+            flatlist.append(t)
+
+    return flatlist
+
+
 # This is first round of validation, we don't want to process the config here already,
 # just ensure basics as platform and ID are there.
 def _base_trigger_validator(value: Any) -> Any:
@@ -1788,7 +1802,9 @@ def _base_trigger_validator(value: Any) -> Any:
     return value
 
 
-TRIGGER_SCHEMA = vol.All(ensure_list, [_base_trigger_validator])
+TRIGGER_SCHEMA = vol.All(
+    ensure_list, _base_trigger_list_flatten, [_base_trigger_validator]
+)
 
 _SCRIPT_DELAY_SCHEMA = vol.Schema(
     {
