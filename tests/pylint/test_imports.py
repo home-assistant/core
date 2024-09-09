@@ -316,6 +316,16 @@ def test_bad_namespace_import(
     [
         (
             "homeassistant.components.pylint_test.sensor",
+            "from homeassistant.components.other import DOMAIN as OTHER_DOMAIN",
+            -1,
+        ),
+        (
+            "homeassistant.components.pylint_test.sensor",
+            "from homeassistant.components.other import DOMAIN",
+            49,
+        ),
+        (
+            "homeassistant.components.pylint_test.sensor",
             "import homeassistant.components.other.DOMAIN as OTHER_DOMAIN",
             -1,
         ),
