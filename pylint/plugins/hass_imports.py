@@ -461,7 +461,7 @@ class HassImportsFormatChecker(BaseChecker):
             "Used when a helper should be used via the namespace",
         ),
         "W7426": (
-            "`%s` should not be imported directly. Please use an alias like `%s`",
+            "`%s` should not be imported using an alias, such as `%s as %s`",
             "hass-import-constant-alias",
             "Used when a constant should be imported as an alias",
         ),
@@ -561,7 +561,11 @@ class HassImportsFormatChecker(BaseChecker):
                     self.add_message(
                         "hass-import-constant-alias",
                         node=node,
-                        args=("DOMAIN", f"{node.modname.split(".")[2].upper()}_DOMAIN"),
+                        args=(
+                            "DOMAIN",
+                            "DOMAIN",
+                            f"{node.modname.split(".")[2].upper()}_DOMAIN",
+                        ),
                     )
                     return
 

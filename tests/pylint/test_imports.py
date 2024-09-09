@@ -347,7 +347,7 @@ def test_domain_alias(
             pylint.testutils.MessageTest(
                 msg_id="hass-import-constant-alias",
                 node=import_node,
-                args=("DOMAIN", "OTHER_DOMAIN"),
+                args=("DOMAIN", "DOMAIN", "OTHER_DOMAIN"),
                 line=1,
                 col_offset=0,
                 end_line=1,
