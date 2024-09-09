@@ -31,7 +31,7 @@ class NiceGOConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Nice G.O."""
 
     VERSION = 1
-    reauth_entry: NiceGOConfigEntry | None = None
+    reauth_entry: NiceGOConfigEntry | None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
