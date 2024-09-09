@@ -252,7 +252,7 @@ class RepositoryManager:
             map(
                 slugify,
                 [
-                    parsed_url.netloc,
+                    parsed_url.hostname,
                     *path_segments[:-1],
                     path_segments[-1].replace(".git", ""),
                 ],
