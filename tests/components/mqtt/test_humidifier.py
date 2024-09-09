@@ -12,7 +12,7 @@ from homeassistant.components.humidifier import (
     ATTR_CURRENT_HUMIDITY,
     ATTR_HUMIDITY,
     ATTR_MODE,
-    DOMAIN,
+    DOMAIN as HUMIDIFIER_DOMAIN,
     SERVICE_SET_HUMIDITY,
     SERVICE_SET_MODE,
     HumidifierAction,
@@ -87,7 +87,9 @@ async def async_turn_on(hass: HomeAssistant, entity_id: str = ENTITY_MATCH_ALL) 
     """Turn all or specified humidifier on."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
 
-    await hass.services.async_call(DOMAIN, SERVICE_TURN_ON, data, blocking=True)
+    await hass.services.async_call(
+        HUMIDIFIER_DOMAIN, SERVICE_TURN_ON, data, blocking=True
+    )
 
 
 async def async_turn_off(
@@ -96,7 +98,9 @@ async def async_turn_off(
     """Turn all or specified humidier off."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
 
-    await hass.services.async_call(DOMAIN, SERVICE_TURN_OFF, data, blocking=True)
+    await hass.services.async_call(
+        HUMIDIFIER_DOMAIN, SERVICE_TURN_OFF, data, blocking=True
+    )
 
 
 async def async_set_mode(
@@ -109,7 +113,9 @@ async def async_set_mode(
         if value is not None
     }
 
-    await hass.services.async_call(DOMAIN, SERVICE_SET_MODE, data, blocking=True)
+    await hass.services.async_call(
+        HUMIDIFIER_DOMAIN, SERVICE_SET_MODE, data, blocking=True
+    )
 
 
 async def async_set_humidity(
@@ -122,7 +128,9 @@ async def async_set_humidity(
         if value is not None
     }
 
-    await hass.services.async_call(DOMAIN, SERVICE_SET_HUMIDITY, data, blocking=True)
+    await hass.services.async_call(
+        HUMIDIFIER_DOMAIN, SERVICE_SET_HUMIDITY, data, blocking=True
+    )
 
 
 @pytest.mark.parametrize(
