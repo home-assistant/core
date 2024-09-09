@@ -621,6 +621,7 @@ DISCOVERY_SCHEMAS = [
             # convert to set first to remove the duplicate unknown value
             options=list(set(OPERATIONAL_STATE_MAP.values())),
             measurement_to_ha=lambda x: OPERATIONAL_STATE_MAP[x],
+            icon="mdi:play-pause",
         ),
         entity_class=MatterSensor,
         required_attributes=(clusters.OperationalState.Attributes.OperationalState,),
