@@ -1,4 +1,6 @@
 """Constants."""
 
 DOMAIN = "sky_remote"
-CONF_LEGACY_CONTROL_PORT = "legacy_port"
+
+DEFAULT_PORT = 49160
+LEGACY_PORT = 5900

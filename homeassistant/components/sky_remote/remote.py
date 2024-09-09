@@ -6,12 +6,11 @@ from typing import Any
 
 from homeassistant.components.remote import RemoteEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import RemoteControl
-from .const import CONF_LEGACY_CONTROL_PORT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -23,7 +22,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Sky remote platform."""
     host = config.data[CONF_HOST]
-    port = 49160 if not config.data[CONF_LEGACY_CONTROL_PORT] else 5900
+    port = config.data[CONF_PORT]
     _LOGGER.debug("Setting up Host: %s, Port: %s", host, port)
     async_add_entities([SkyRemote(host, port, config.entry_id)], True)
 
@@ -36,6 +35,7 @@ class SkyRemote(RemoteEntity):
         self._remote = RemoteControl(host, port)
         self._is_on = True
         self._attr_unique_id = unique_id
+        self._attr_name = host
 
     def turn_on(self, activity: str | None = None, **kwargs: Any) -> None:
         """Send the power on command."""
