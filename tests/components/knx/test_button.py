@@ -6,7 +6,11 @@ import logging
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant.components.knx.const import CONF_PAYLOAD_LENGTH, DOMAIN, KNX_ADDRESS
+from homeassistant.components.knx.const import (
+    CONF_PAYLOAD_LENGTH,
+    KNX_ADDRESS,
+    KNX_MODULE_KEY,
+)
 from homeassistant.components.knx.schema import ButtonSchema
 from homeassistant.const import CONF_NAME, CONF_PAYLOAD, CONF_TYPE
 from homeassistant.core import HomeAssistant
@@ -134,4 +138,4 @@ async def test_button_invalid(
         assert record.levelname == "ERROR"
         assert "Setup failed for 'knx': Invalid config." in record.message
     assert hass.states.get("button.test") is None
-    assert hass.data.get(DOMAIN) is None
+    assert hass.data.get(KNX_MODULE_KEY) is None

@@ -19,7 +19,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import KNXModule
-from .const import DATA_KNX_CONFIG, DOMAIN, KNX_ADDRESS
+from .const import DOMAIN, KNX_ADDRESS, KNX_MODULE_KEY
 from .knx_entity import KnxYamlEntity
 
 
@@ -32,8 +32,9 @@ async def async_get_service(
     if discovery_info is None:
         return None
 
-    if platform_config := hass.data[DATA_KNX_CONFIG].get(Platform.NOTIFY):
-        xknx: XKNX = hass.data[DOMAIN].xknx
+    knx_module = hass.data[KNX_MODULE_KEY]
+    if platform_config := knx_module.config_yaml.get(Platform.NOTIFY):
+        xknx: XKNX = hass.data[KNX_MODULE_KEY].xknx
 
         notification_devices = [
             _create_notification_instance(xknx, device_config)
@@ -87,8 +88,8 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up notify(s) for KNX platform."""
-    knx_module: KNXModule = hass.data[DOMAIN]
-    config: list[ConfigType] = hass.data[DATA_KNX_CONFIG][Platform.NOTIFY]
+    knx_module = hass.data[KNX_MODULE_KEY]
+    config: list[ConfigType] = knx_module.config_yaml[Platform.NOTIFY]
 
     async_add_entities(KNXNotify(knx_module, entity_config) for entity_config in config)
 
