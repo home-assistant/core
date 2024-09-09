@@ -7,7 +7,7 @@ import aiohttp
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
-from .conftest import setup_config_entry
+from . import setup_config_entry
 
 from tests.common import MockConfigEntry
 

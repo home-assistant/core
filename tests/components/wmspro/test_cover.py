@@ -47,6 +47,7 @@ async def test_cover_update(
     mock_hub_ping: AsyncMock,
     mock_hub_configuration_prod: AsyncMock,
     mock_hub_status_prod_awning: AsyncMock,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test that a cover entity is created and updated correctly."""
     assert await setup_config_entry(hass, mock_config_entry)
@@ -56,7 +57,7 @@ async def test_cover_update(
 
     entity = hass.states.get("cover.markise")
     assert entity is not None
-    assert entity.name == "Markise"
+    assert entity == snapshot
 
     await async_setup_component(hass, "homeassistant", {})
     await hass.services.async_call(
