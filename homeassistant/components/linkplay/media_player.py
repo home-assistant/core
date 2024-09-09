@@ -20,6 +20,9 @@ from homeassistant.components.media_player import (
     MediaType,
     RepeatMode,
 )
+from homeassistant.components.media_player.browse_media import (
+    async_process_play_media_url,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
@@ -28,7 +31,7 @@ from homeassistant.util.dt import utcnow
 
 from . import LinkPlayConfigEntry
 from .const import DOMAIN
-from .utils import get_info_from_project
+from .utils import MANUFACTURER_GENERIC, get_info_from_project
 
 _LOGGER = logging.getLogger(__name__)
 STATE_MAP: dict[PlayingStatus, MediaPlayerState] = {
@@ -48,6 +51,18 @@ SOURCE_MAP: dict[PlayingMode, str] = {
     PlayingMode.XLR: "XLR",
     PlayingMode.HDMI: "HDMI",
     PlayingMode.OPTICAL_2: "Optical 2",
+    PlayingMode.EXTERN_BLUETOOTH: "External Bluetooth",
+    PlayingMode.PHONO: "Phono",
+    PlayingMode.ARC: "ARC",
+    PlayingMode.COAXIAL_2: "Coaxial 2",
+    PlayingMode.TF_CARD_1: "SD Card 1",
+    PlayingMode.TF_CARD_2: "SD Card 2",
+    PlayingMode.CD: "CD",
+    PlayingMode.DAB: "DAB Radio",
+    PlayingMode.FM: "FM Radio",
+    PlayingMode.RCA: "RCA",
+    PlayingMode.UDISK: "USB",
+    PlayingMode.FOLLOWER: "Follower",
 }
 
 SOURCE_MAP_INV: dict[str, PlayingMode] = {v: k for k, v in SOURCE_MAP.items()}
@@ -141,6 +156,11 @@ class LinkPlayMediaPlayerEntity(MediaPlayerEntity):
         ]
 
         manufacturer, model = get_info_from_project(bridge.device.properties["project"])
+        if model == MANUFACTURER_GENERIC:
+            model_id = None
+        else:
+            model_id = bridge.device.properties["project"]
+
         self._attr_device_info = dr.DeviceInfo(
             configuration_url=bridge.endpoint,
             connections={(dr.CONNECTION_NETWORK_MAC, bridge.device.properties["MAC"])},
@@ -148,6 +168,7 @@ class LinkPlayMediaPlayerEntity(MediaPlayerEntity):
             identifiers={(DOMAIN, bridge.device.uuid)},
             manufacturer=manufacturer,
             model=model,
+            model_id=model_id,
             name=bridge.device.name,
             sw_version=bridge.device.properties["firmware"],
         )
@@ -196,6 +217,16 @@ class LinkPlayMediaPlayerEntity(MediaPlayerEntity):
         await self._bridge.player.resume()
 
     @exception_wrap
+    async def async_media_next_track(self) -> None:
+        """Send next command."""
+        await self._bridge.player.next()
+
+    @exception_wrap
+    async def async_media_previous_track(self) -> None:
+        """Send previous command."""
+        await self._bridge.player.previous()
+
+    @exception_wrap
     async def async_set_repeat(self, repeat: RepeatMode) -> None:
         """Set repeat mode."""
         await self._bridge.player.set_loop_mode(REPEAT_MAP_INV[repeat])
@@ -222,10 +253,14 @@ class LinkPlayMediaPlayerEntity(MediaPlayerEntity):
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
         """Play a piece of media."""
-        media = await media_source.async_resolve_media(
-            self.hass, media_id, self.entity_id
-        )
-        await self._bridge.player.play(media.url)
+        if media_source.is_media_source_id(media_id):
+            play_item = await media_source.async_resolve_media(
+                self.hass, media_id, self.entity_id
+            )
+            media_id = play_item.url
+
+        url = async_process_play_media_url(self.hass, media_id)
+        await self._bridge.player.play(url)
 
     def _update_properties(self) -> None:
         """Update the properties of the media player."""

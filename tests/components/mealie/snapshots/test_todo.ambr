@@ -140,17 +140,3 @@
     'state': '3',
   })
 # ---
-# name: test_get_todo_list_items
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Mealie Supermarket',
-      'supported_features': <TodoListEntityFeature: 15>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'todo.mealie_supermarket',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '3',
-  })
-# ---

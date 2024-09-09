@@ -3,6 +3,7 @@
 from datetime import timedelta
 from unittest.mock import Mock, call
 
+import pytest
 from requests.exceptions import HTTPError
 
 from homeassistant.components.fritzbox.const import (
@@ -12,12 +13,14 @@ from homeassistant.components.fritzbox.const import (
 )
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
+    ATTR_COLOR_MODE,
     ATTR_COLOR_TEMP_KELVIN,
     ATTR_HS_COLOR,
     ATTR_MAX_COLOR_TEMP_KELVIN,
     ATTR_MIN_COLOR_TEMP_KELVIN,
     ATTR_SUPPORTED_COLOR_MODES,
     DOMAIN,
+    ColorMode,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -56,9 +59,11 @@ async def test_setup(hass: HomeAssistant, fritz: Mock) -> None:
     assert state
     assert state.state == STATE_ON
     assert state.attributes[ATTR_FRIENDLY_NAME] == "fake_name"
+    assert state.attributes[ATTR_COLOR_MODE] == ColorMode.COLOR_TEMP
     assert state.attributes[ATTR_COLOR_TEMP_KELVIN] == 2700
     assert state.attributes[ATTR_MIN_COLOR_TEMP_KELVIN] == 2700
     assert state.attributes[ATTR_MAX_COLOR_TEMP_KELVIN] == 6500
+    assert state.attributes[ATTR_HS_COLOR] == (28.395, 65.723)
     assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == ["color_temp", "hs"]
 
 
@@ -99,6 +104,9 @@ async def test_setup_non_color_non_level(hass: HomeAssistant, fritz: Mock) -> No
     assert state.attributes[ATTR_FRIENDLY_NAME] == "fake_name"
     assert ATTR_BRIGHTNESS not in state.attributes
     assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == ["onoff"]
+    assert state.attributes[ATTR_COLOR_MODE] == ColorMode.ONOFF
+    assert state.attributes.get(ATTR_COLOR_TEMP_KELVIN) is None
+    assert state.attributes.get(ATTR_HS_COLOR) is None
 
 
 async def test_setup_color(hass: HomeAssistant, fritz: Mock) -> None:
@@ -120,6 +128,8 @@ async def test_setup_color(hass: HomeAssistant, fritz: Mock) -> None:
     assert state
     assert state.state == STATE_ON
     assert state.attributes[ATTR_FRIENDLY_NAME] == "fake_name"
+    assert state.attributes[ATTR_COLOR_MODE] == ColorMode.HS
+    assert state.attributes[ATTR_COLOR_TEMP_KELVIN] is None
     assert state.attributes[ATTR_BRIGHTNESS] == 100
     assert state.attributes[ATTR_HS_COLOR] == (100, 70)
     assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == ["color_temp", "hs"]
@@ -183,16 +193,16 @@ async def test_turn_on_color_unsupported_api_method(
     device.get_colors.return_value = {
         "Red": [("100", "70", "10"), ("100", "50", "10"), ("100", "30", "10")]
     }
-    mockresponse = Mock()
-    mockresponse.status_code = 400
-
-    error = HTTPError("Bad Request")
-    error.response = mockresponse
-    device.set_unmapped_color.side_effect = error
-
     assert await setup_config_entry(
         hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
     )
+
+    # test fallback to `setcolor`
+    error = HTTPError("Bad Request")
+    error.response = Mock()
+    error.response.status_code = 400
+    device.set_unmapped_color.side_effect = error
+
     await hass.services.async_call(
         DOMAIN,
         SERVICE_TURN_ON,
@@ -204,6 +214,16 @@ async def test_turn_on_color_unsupported_api_method(
     assert device.set_color.call_count == 1
     assert device.set_level.call_args_list == [call(100)]
     assert device.set_color.call_args_list == [call((100, 70))]
+
+    # test for unknown error
+    error.response.status_code = 500
+    with pytest.raises(HTTPError, match="Bad Request"):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_BRIGHTNESS: 100, ATTR_HS_COLOR: (100, 70)},
+            True,
+        )
 
 
 async def test_turn_off(hass: HomeAssistant, fritz: Mock) -> None:

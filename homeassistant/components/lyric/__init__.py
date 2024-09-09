@@ -12,7 +12,7 @@ from aiolyric import Lyric
 from aiolyric.exceptions import LyricAuthenticationException, LyricException
 from aiolyric.objects.device import LyricDevice
 from aiolyric.objects.location import LyricLocation
-from aiolyric.objects.priority import LyricAccessories, LyricRoom
+from aiolyric.objects.priority import LyricAccessory, LyricRoom
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
@@ -80,11 +80,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 await lyric.get_locations()
                 await asyncio.gather(
                     *(
-                        lyric.get_thermostat_rooms(location.locationID, device.deviceID)
+                        lyric.get_thermostat_rooms(
+                            location.location_id, device.device_id
+                        )
                         for location in lyric.locations
                         for device in location.devices
-                        if device.deviceClass == "Thermostat"
-                        and device.deviceID.startswith("LCC")
+                        if device.device_class == "Thermostat"
+                        and device.device_id.startswith("LCC")
                     )
                 )
 
@@ -143,7 +145,7 @@ class LyricEntity(CoordinatorEntity[DataUpdateCoordinator[Lyric]]):
         super().__init__(coordinator)
         self._key = key
         self._location = location
-        self._mac_id = device.macID
+        self._mac_id = device.mac_id
         self._update_thermostat = coordinator.data.update_thermostat
         self._update_fan = coordinator.data.update_fan
 
@@ -155,7 +157,7 @@ class LyricEntity(CoordinatorEntity[DataUpdateCoordinator[Lyric]]):
     @property
     def location(self) -> LyricLocation:
         """Get the Lyric Location."""
-        return self.coordinator.data.locations_dict[self._location.locationID]
+        return self.coordinator.data.locations_dict[self._location.location_id]
 
     @property
     def device(self) -> LyricDevice:
@@ -173,7 +175,7 @@ class LyricDeviceEntity(LyricEntity):
             identifiers={(dr.CONNECTION_NETWORK_MAC, self._mac_id)},
             connections={(dr.CONNECTION_NETWORK_MAC, self._mac_id)},
             manufacturer="Honeywell",
-            model=self.device.deviceModel,
+            model=self.device.device_model,
             name=f"{self.device.name} Thermostat",
         )
 
@@ -187,7 +189,7 @@ class LyricAccessoryEntity(LyricDeviceEntity):
         location: LyricLocation,
         device: LyricDevice,
         room: LyricRoom,
-        accessory: LyricAccessories,
+        accessory: LyricAccessory,
         key: str,
     ) -> None:
         """Initialize the Honeywell Lyric accessory entity."""
@@ -207,7 +209,7 @@ class LyricAccessoryEntity(LyricDeviceEntity):
             },
             manufacturer="Honeywell",
             model="RCHTSENSOR",
-            name=f"{self.room.roomName} Sensor",
+            name=f"{self.room.room_name} Sensor",
             via_device=(dr.CONNECTION_NETWORK_MAC, self._mac_id),
         )
 
@@ -217,7 +219,7 @@ class LyricAccessoryEntity(LyricDeviceEntity):
         return self.coordinator.data.rooms_dict[self._mac_id][self._room_id]
 
     @property
-    def accessory(self) -> LyricAccessories:
+    def accessory(self) -> LyricAccessory:
         """Get the Lyric Device."""
         return next(
             accessory

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections import UserDict
+from collections import UserDict, defaultdict
 from collections.abc import (
     Callable,
     Coroutine,
@@ -434,26 +434,10 @@ class ConfigEntry(Generic[_DataT]):
     def __setattr__(self, key: str, value: Any) -> None:
         """Set an attribute."""
         if key in UPDATE_ENTRY_CONFIG_ENTRY_ATTRS:
-            if key == "unique_id":
-                # Setting unique_id directly will corrupt internal state
-                # There is no deprecation period for this key
-                # as changing them will corrupt internal state
-                # so we raise an error here
-                raise AttributeError(
-                    "unique_id cannot be changed directly, use async_update_entry instead"
-                )
-            report(
-                f'sets "{key}" directly to update a config entry. This is deprecated and will'
-                " stop working in Home Assistant 2024.9, it should be updated to use"
-                " async_update_entry instead",
-                error_if_core=False,
+            raise AttributeError(
+                f"{key} cannot be changed directly, use async_update_entry instead"
             )
-
-        elif key in FROZEN_CONFIG_ENTRY_ATTRS:
-            # These attributes are frozen and cannot be changed
-            # There is no deprecation period for these
-            # as changing them will corrupt internal state
-            # so we raise an error here
+        if key in FROZEN_CONFIG_ENTRY_ATTRS:
             raise AttributeError(f"{key} cannot be changed")
 
         super().__setattr__(key, value)
@@ -1224,8 +1208,12 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager[ConfigFlowResult]):
         super().__init__(hass)
         self.config_entries = config_entries
         self._hass_config = hass_config
-        self._pending_import_flows: dict[str, dict[str, asyncio.Future[None]]] = {}
-        self._initialize_futures: dict[str, list[asyncio.Future[None]]] = {}
+        self._pending_import_flows: defaultdict[
+            str, dict[str, asyncio.Future[None]]
+        ] = defaultdict(dict)
+        self._initialize_futures: defaultdict[str, set[asyncio.Future[None]]] = (
+            defaultdict(set)
+        )
         self._discovery_debouncer = Debouncer[None](
             hass,
             _LOGGER,
@@ -1278,12 +1266,11 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager[ConfigFlowResult]):
         loop = self.hass.loop
 
         if context["source"] == SOURCE_IMPORT:
-            self._pending_import_flows.setdefault(handler, {})[flow_id] = (
-                loop.create_future()
-            )
+            self._pending_import_flows[handler][flow_id] = loop.create_future()
 
         cancel_init_future = loop.create_future()
-        self._initialize_futures.setdefault(handler, []).append(cancel_init_future)
+        handler_init_futures = self._initialize_futures[handler]
+        handler_init_futures.add(cancel_init_future)
         try:
             async with interrupt(
                 cancel_init_future,
@@ -1294,8 +1281,13 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager[ConfigFlowResult]):
         except FlowCancelledError as ex:
             raise asyncio.CancelledError from ex
         finally:
-            self._initialize_futures[handler].remove(cancel_init_future)
-            self._pending_import_flows.get(handler, {}).pop(flow_id, None)
+            handler_init_futures.remove(cancel_init_future)
+            if not handler_init_futures:
+                del self._initialize_futures[handler]
+            if handler in self._pending_import_flows:
+                self._pending_import_flows[handler].pop(flow_id, None)
+                if not self._pending_import_flows[handler]:
+                    del self._pending_import_flows[handler]
 
         if result["type"] != data_entry_flow.FlowResultType.ABORT:
             await self.async_post_init(flow, result)
@@ -1322,10 +1314,17 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager[ConfigFlowResult]):
         try:
             result = await self._async_handle_step(flow, flow.init_step, data)
         finally:
-            init_done = self._pending_import_flows.get(handler, {}).get(flow_id)
-            if init_done and not init_done.done():
-                init_done.set_result(None)
+            self._set_pending_import_done(flow)
         return flow, result
+
+    def _set_pending_import_done(self, flow: ConfigFlow) -> None:
+        """Set pending import flow as done."""
+        if (
+            (handler_import_flows := self._pending_import_flows.get(flow.handler))
+            and (init_done := handler_import_flows.get(flow.flow_id))
+            and not init_done.done()
+        ):
+            init_done.set_result(None)
 
     @callback
     def async_shutdown(self) -> None:
@@ -1347,9 +1346,7 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager[ConfigFlowResult]):
         # We do this to avoid a circular dependency where async_finish_flow sets up a
         # new entry, which needs the integration to be set up, which is waiting for
         # init to be done.
-        init_done = self._pending_import_flows.get(flow.handler, {}).get(flow.flow_id)
-        if init_done and not init_done.done():
-            init_done.set_result(None)
+        self._set_pending_import_done(flow)
 
         # Remove notification if no other discovery config entries in progress
         if not self._async_has_other_discovery_flows(flow.flow_id):
@@ -1728,6 +1725,16 @@ class ConfigEntries:
             if (include_ignore or entry.source != SOURCE_IGNORE)
             and (include_disabled or not entry.disabled_by)
         ]
+
+    @callback
+    def async_loaded_entries(self, domain: str) -> list[ConfigEntry]:
+        """Return loaded entries for a specific domain.
+
+        This will exclude ignored or disabled config entruis.
+        """
+        entries = self._entries.get_entries_for_domain(domain)
+
+        return [entry for entry in entries if entry.state == ConfigEntryState.LOADED]
 
     @callback
     def async_entry_for_domain_unique_id(

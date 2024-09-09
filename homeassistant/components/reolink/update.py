@@ -137,8 +137,7 @@ class ReolinkUpdateEntity(
     async def async_release_notes(self) -> str | None:
         """Return the release notes."""
         new_firmware = self._host.api.firmware_update_available(self._channel)
-        if not isinstance(new_firmware, NewSoftwareVersion):
-            return None
+        assert isinstance(new_firmware, NewSoftwareVersion)
 
         return (
             "If the install button fails, download this"
@@ -229,8 +228,7 @@ class ReolinkHostUpdateEntity(
     async def async_release_notes(self) -> str | None:
         """Return the release notes."""
         new_firmware = self._host.api.firmware_update_available()
-        if not isinstance(new_firmware, NewSoftwareVersion):
-            return None
+        assert isinstance(new_firmware, NewSoftwareVersion)
 
         return (
             "If the install button fails, download this"

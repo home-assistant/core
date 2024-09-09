@@ -285,6 +285,21 @@ def _make_key(
     return (verify_ssl, family)
 
 
+class HomeAssistantTCPConnector(aiohttp.TCPConnector):
+    """Home Assistant TCP Connector.
+
+    Same as aiohttp.TCPConnector but with a longer cleanup_closed timeout.
+
+    By default the cleanup_closed timeout is 2 seconds. This is too short
+    for Home Assistant since we churn through a lot of connections. We set
+    it to 60 seconds to reduce the overhead of aborting TLS connections
+    that are likely already closed.
+    """
+
+    # abort transport after 60 seconds (cleanup broken connections)
+    _cleanup_closed_period = 60.0
+
+
 @callback
 def _async_get_connector(
     hass: HomeAssistant,
@@ -306,7 +321,7 @@ def _async_get_connector(
     else:
         ssl_context = ssl_util.get_default_no_verify_context()
 
-    connector = aiohttp.TCPConnector(
+    connector = HomeAssistantTCPConnector(
         family=family,
         enable_cleanup_closed=ENABLE_CLEANUP_CLOSED,
         ssl=ssl_context,

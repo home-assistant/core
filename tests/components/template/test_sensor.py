@@ -23,7 +23,9 @@ from homeassistant.const import (
 from homeassistant.core import Context, CoreState, HomeAssistant, State, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.template import Template
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.setup import ATTR_COMPONENT, async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -374,7 +376,7 @@ async def test_creating_sensor_loads_group(hass: HomeAssistant) -> None:
     order = []
     after_dep_event = Event()
 
-    async def async_setup_group(hass, config):
+    async def async_setup_group(hass: HomeAssistant, config: ConfigType) -> bool:
         # Make sure group takes longer to load, so that it won't
         # be loaded first by chance
         await after_dep_event.wait()
@@ -383,8 +385,11 @@ async def test_creating_sensor_loads_group(hass: HomeAssistant) -> None:
         return True
 
     async def async_setup_template(
-        hass, config, async_add_entities, discovery_info=None
-    ):
+        hass: HomeAssistant,
+        config: ConfigType,
+        async_add_entities: AddEntitiesCallback,
+        discovery_info: DiscoveryInfoType | None = None,
+    ) -> bool:
         order.append("sensor.template")
         return True
 

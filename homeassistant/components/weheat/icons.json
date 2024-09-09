@@ -1,0 +1,15 @@
+{
+  "entity": {
+    "sensor": {
+      "power_output": {
+        "default": "mdi:heat-wave"
+      },
+      "power_input": {
+        "default": "mdi:lightning-bolt"
+      },
+      "cop": {
+        "default": "mdi:speedometer"
+      }
+    }
+  }
+}
