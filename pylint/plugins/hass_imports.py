@@ -461,7 +461,7 @@ class HassImportsFormatChecker(BaseChecker):
             "Used when a helper should be used via the namespace",
         ),
         "W7426": (
-            "`%s` should not be imported directly. Please use an alias",
+            "`%s` should not be imported directly. Please use an alias like `%s`",
             "hass-import-constant-alias",
             "Used when a constant should be imported as an alias",
         ),
@@ -545,6 +545,7 @@ class HassImportsFormatChecker(BaseChecker):
                 if node.modname.startswith(f"{root}.components.{current_component}."):
                     self.add_message("hass-relative-import", node=node)
                     return
+
         if node.modname.startswith("homeassistant.components.") and not (
             self.current_package.startswith("tests.components.")
             and self.current_package.split(".")[2] == node.modname.split(".")[2]
@@ -558,7 +559,9 @@ class HassImportsFormatChecker(BaseChecker):
                     return
                 if name == "DOMAIN" and (alias is None or alias == "DOMAIN"):
                     self.add_message(
-                        "hass-import-constant-alias", node=node, args="DOMAIN"
+                        "hass-import-constant-alias",
+                        node=node,
+                        args=("DOMAIN", f"{node.modname.split(".")[2].upper()}_DOMAIN"),
                     )
                     return
 
