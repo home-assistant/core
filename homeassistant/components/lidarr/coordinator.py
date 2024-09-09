@@ -99,8 +99,8 @@ class WantedDataUpdateCoordinator(LidarrDataUpdateCoordinator[LidarrAlbum]):
 
 
 class AlbumsDataUpdateCoordinator(LidarrDataUpdateCoordinator[int]):
-    """Wanted update coordinator."""
+    """Albums update coordinator."""
 
     async def _fetch_data(self) -> int:
-        """Fetch the wanted data."""
+        """Fetch the album data."""
         return len(cast(list[LidarrAlbum], await self.api_client.async_get_albums()))
