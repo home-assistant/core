@@ -16,6 +16,7 @@ from homeassistant.helpers.device_registry import DeviceEntryType
 
 from .const import DEFAULT_NAME, DOMAIN
 from .coordinator import (
+    AlbumsDataUpdateCoordinator,
     DiskSpaceDataUpdateCoordinator,
     QueueDataUpdateCoordinator,
     StatusDataUpdateCoordinator,
@@ -35,6 +36,7 @@ class LidarrData:
     queue: QueueDataUpdateCoordinator
     status: StatusDataUpdateCoordinator
     wanted: WantedDataUpdateCoordinator
+    albums: AlbumsDataUpdateCoordinator
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: LidarrConfigEntry) -> bool:
@@ -54,6 +56,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: LidarrConfigEntry) -> bo
         queue=QueueDataUpdateCoordinator(hass, host_configuration, lidarr),
         status=StatusDataUpdateCoordinator(hass, host_configuration, lidarr),
         wanted=WantedDataUpdateCoordinator(hass, host_configuration, lidarr),
+        albums=AlbumsDataUpdateCoordinator(hass, host_configuration, lidarr),
     )
     for field in fields(data):
         coordinator = getattr(data, field.name)

@@ -101,6 +101,14 @@ SENSOR_TYPES: dict[str, LidarrSensorEntityDescription[Any]] = {
             album.title: album.artist.artistName for album in data.records
         },
     ),
+    "albums": LidarrSensorEntityDescription[int](
+        key="albums",
+        translation_key="albums",
+        native_unit_of_measurement="Albums",
+        value_fn=lambda data, _: data,
+        state_class=SensorStateClass.TOTAL,
+        entity_registry_enabled_default=False,
+    ),
 }
 
 

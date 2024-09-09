@@ -32,3 +32,7 @@ async def test_sensors(
     assert state.attributes.get("test") == "test"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "Albums"
     assert state.attributes.get(CONF_STATE_CLASS) == SensorStateClass.TOTAL
+    state = hass.get_states.get("sensor.mock_album")
+    assert state.state == "1"
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "Albums"
+    assert state.attributes.get(CONF_STATE_CLASS) == SensorStateClass.TOTAL
