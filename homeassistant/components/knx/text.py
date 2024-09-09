@@ -23,13 +23,7 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType
 
 from . import KNXModule
-from .const import (
-    CONF_RESPOND_TO_READ,
-    CONF_STATE_ADDRESS,
-    DATA_KNX_CONFIG,
-    DOMAIN,
-    KNX_ADDRESS,
-)
+from .const import CONF_RESPOND_TO_READ, CONF_STATE_ADDRESS, KNX_ADDRESS, KNX_MODULE_KEY
 from .knx_entity import KnxYamlEntity
 
 
@@ -39,8 +33,8 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up sensor(s) for KNX platform."""
-    knx_module: KNXModule = hass.data[DOMAIN]
-    config: list[ConfigType] = hass.data[DATA_KNX_CONFIG][Platform.TEXT]
+    knx_module = hass.data[KNX_MODULE_KEY]
+    config: list[ConfigType] = knx_module.config_yaml[Platform.TEXT]
 
     async_add_entities(KNXText(knx_module, entity_config) for entity_config in config)
 

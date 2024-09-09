@@ -10,7 +10,11 @@
     }
   },
   "services": {
-    "get_gas_prices": "mdi:gas-station",
-    "get_energy_prices": "mdi:lightning-bolt"
+    "get_gas_prices": {
+      "service": "mdi:gas-station"
+    },
+    "get_energy_prices": {
+      "service": "mdi:lightning-bolt"
+    }
   }
 }

@@ -34,7 +34,7 @@ def connection() -> None:
     """Mock Dremel 3D Printer connection."""
     with requests_mock.Mocker() as mock:
         mock.post(
-            f"http://{HOST}:80/command",
+            f"http://{HOST}/command",
             response_list=[
                 {"text": load_fixture("dremel_3d_printer/command_1.json")},
                 {"text": load_fixture("dremel_3d_printer/command_2.json")},
