@@ -28,7 +28,7 @@ from pydeconz.models.sensor.temperature import Temperature
 from pydeconz.models.sensor.time import Time
 
 from homeassistant.components.sensor import (
-    DOMAIN,
+    DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -336,7 +336,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the deCONZ sensors."""
     hub = DeconzHub.get_hub(hass, config_entry)
-    hub.entities[DOMAIN] = set()
+    hub.entities[SENSOR_DOMAIN] = set()
 
     known_device_entities: dict[str, set[str]] = {
         description.key: set()
@@ -393,7 +393,7 @@ async def async_setup_entry(
 class DeconzSensor(DeconzDevice[SensorResources], SensorEntity):
     """Representation of a deCONZ sensor."""
 
-    TYPE = DOMAIN
+    TYPE = SENSOR_DOMAIN
     entity_description: DeconzSensorDescription
 
     def __init__(
