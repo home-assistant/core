@@ -261,6 +261,24 @@ async def test_battery_sensor(
     assert entry.entity_category == EntityCategory.DIAGNOSTIC
 
 
+    """Test battery voltage sensor."""
+    entity_id = "sensor.eve_door_battery_voltage"
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "3558"
+
+    set_node_attribute(eve_contact_sensor_node, 1, 47, 11, 100)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "50"
+
+    entry = entity_registry.async_get(entity_id)
+
+    assert entry
+    assert entry.entity_category == EntityCategory.DIAGNOSTIC
+
 # This tests needs to be adjusted to remove lingering tasks
 @pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_energy_sensors_custom_cluster(
