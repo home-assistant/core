@@ -158,6 +158,22 @@
         "name": "Programmed change has priority over override"
       }
     },
+    "select": {
+      "gpio_mode_n": {
+        "name": "GPIO {gpio_id} mode",
+        "state": {
+          "input": "Input",
+          "ground": "Ground",
+          "vcc": "Vcc (5V)",
+          "led_e": "LED E",
+          "led_f": "LED F",
+          "home": "Home",
+          "away": "Away",
+          "ds1820": "DS1820",
+          "dhw_block": "Block hot water"
+        }
+      }
+    },
     "sensor": {
       "control_setpoint_n": {
         "name": "Control setpoint {circuit_number}"
