@@ -37,7 +37,7 @@ class SmSensorEntityDescription(SensorEntityDescription):
 class SmInfoEntityDescription(SensorEntityDescription):
     """Class describing SMLIGHT information entities."""
 
-    value_fn: Callable[[Info], int | str | None]
+    value_fn: Callable[[Info], StateType]
 
 
 INFO: list[SmInfoEntityDescription] = [
