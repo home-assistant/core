@@ -61,6 +61,8 @@ def setup_platform(
 class OpenHardwareMonitorDevice(SensorEntity):
     """Device used to display information from OpenHardwareMonitor."""
 
+    _attr_state_class = SensorStateClass.MEASUREMENT
+    
     def __init__(self, data, name, path, unit_of_measurement):
         """Initialize an OpenHardwareMonitor sensor."""
         self._name = name
@@ -75,11 +77,6 @@ class OpenHardwareMonitorDevice(SensorEntity):
     def name(self):
         """Return the name of the device."""
         return self._name
-
-    @property
-    def state_class(self):
-        """Return the state class of this entity, from STATE_CLASSES, if any."""
-        return SensorStateClass.MEASUREMENT
 
     @property
     def native_unit_of_measurement(self):
