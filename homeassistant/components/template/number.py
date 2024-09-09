@@ -25,7 +25,7 @@ from homeassistant.const import (
     CONF_UNIT_OF_MEASUREMENT,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv, selector, template
+from homeassistant.helpers import config_validation as cv, selector
 from homeassistant.helpers.device import async_device_info_to_link_from_device_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.script import Script
@@ -59,7 +59,7 @@ NUMBER_SCHEMA = (
             vol.Required(CONF_STEP): cv.template,
             vol.Optional(CONF_MIN, default=DEFAULT_MIN_VALUE): cv.template,
             vol.Optional(CONF_MAX, default=DEFAULT_MAX_VALUE): cv.template,
-            vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.template,
+            vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
             vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
             vol.Optional(CONF_UNIQUE_ID): cv.string,
         }
@@ -165,11 +165,10 @@ class TemplateNumber(TemplateEntity, NumberEntity):
         self._min_value_template = config[CONF_MIN]
         self._max_value_template = config[CONF_MAX]
         self._attr_assumed_state = self._optimistic = config.get(CONF_OPTIMISTIC)
-        self._unit_of_measurement_template = config.get(CONF_UNIT_OF_MEASUREMENT)
+        self._attr_native_unit_of_measurement = config.get(CONF_UNIT_OF_MEASUREMENT)
         self._attr_native_step = DEFAULT_STEP
         self._attr_native_min_value = DEFAULT_MIN_VALUE
         self._attr_native_max_value = DEFAULT_MAX_VALUE
-        self._attr_native_unit_of_measurement = None
         self._attr_device_info = async_device_info_to_link_from_device_id(
             hass,
             config.get(CONF_DEVICE_ID),
@@ -202,12 +201,6 @@ class TemplateNumber(TemplateEntity, NumberEntity):
                 "_attr_native_max_value",
                 self._max_value_template,
                 validator=vol.Coerce(float),
-                none_on_template_error=True,
-            )
-        if self._unit_of_measurement_template is not None:
-            self.add_template_attribute(
-                "_attr_native_unit_of_measurement",
-                self._unit_of_measurement_template,
                 none_on_template_error=True,
             )
         super()._async_setup_templates()
@@ -245,16 +238,14 @@ class TriggerNumberEntity(TriggerEntity, NumberEntity):
         """Initialize the entity."""
         super().__init__(hass, coordinator, config)
 
-        if isinstance(config.get(CONF_UNIT_OF_MEASUREMENT), template.Template):
-            self._to_render_simple.append(CONF_UNIT_OF_MEASUREMENT)
-            self._parse_result.add(CONF_UNIT_OF_MEASUREMENT)
-
         self._command_set_value = Script(
             hass,
             config[CONF_SET_VALUE],
             self._rendered.get(CONF_NAME, DEFAULT_NAME),
             DOMAIN,
         )
+
+        self._attr_native_unit_of_measurement = config.get(CONF_UNIT_OF_MEASUREMENT)
 
     @property
     def native_value(self) -> float | None:
@@ -280,13 +271,6 @@ class TriggerNumberEntity(TriggerEntity, NumberEntity):
         """Return the increment/decrement step."""
         return vol.Any(vol.Coerce(float), None)(
             self._rendered.get(CONF_STEP, super().native_step)
-        )
-
-    @property
-    def native_unit_of_measurement(self) -> str | None:
-        """Return the unit of measurement."""
-        return vol.Any(vol.Coerce(str), None)(
-            self._rendered.get(CONF_UNIT_OF_MEASUREMENT)
         )
 
     async def async_set_native_value(self, value: float) -> None:
