@@ -506,7 +506,7 @@ class HassImportsFormatChecker(BaseChecker):
 
             if module.endswith(".DOMAIN") and (alias is None or alias == "DOMAIN"):
                 # Ensure alias is set for external domains
-                self.add_message("hass-import-constant-alias", node=node)
+                self.add_message("hass-import-constant-alias", node=node, args="DOMAIN")
 
     def _visit_importfrom_relative(
         self, current_package: str, node: nodes.ImportFrom
@@ -564,7 +564,9 @@ class HassImportsFormatChecker(BaseChecker):
                     self.add_message("hass-component-root-import", node=node)
                     return
                 if name == "DOMAIN" and (alias is None or alias == "DOMAIN"):
-                    self.add_message("hass-import-constant-alias", node=node)
+                    self.add_message(
+                        "hass-import-constant-alias", node=node, args="DOMAIN"
+                    )
                     return
 
         if obsolete_imports := _OBSOLETE_IMPORT.get(node.modname):
