@@ -7,3 +7,5 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = "axion_dmx"
 CONF_CHANNEL = "channel"
 CONF_LIGHT_TYPE = "light_type"
+CONF_HOST = "host"
+CONF_PASSWORD = "password"

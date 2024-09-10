@@ -8,7 +8,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
-from .const import CONF_LIGHT_TYPE, DOMAIN
+from .const import CONF_HOST, CONF_LIGHT_TYPE, CONF_PASSWORD, DOMAIN
 
 PLATFORMS: list[Platform] = [Platform.LIGHT]
 
@@ -19,7 +19,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})
 
     # Create API instance
-    api = AxionDmxApi(entry.data["host"], entry.data["password"])
+    api = AxionDmxApi(entry.data[CONF_HOST], entry.data[CONF_PASSWORD])
 
     # Validate the API connection (and authentication)
     if not await api.authenticate():
