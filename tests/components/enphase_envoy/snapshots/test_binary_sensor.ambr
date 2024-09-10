@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_binary_sensor[envoy_eu_batt][binary_sensor.encharge_122327081322_communicating-entry]
+# name: test_binary_sensor[envoy_eu_batt][binary_sensor.encharge_123456_communicating-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -11,7 +11,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.encharge_122327081322_communicating',
+    'entity_id': 'binary_sensor.encharge_123456_communicating',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -28,25 +28,25 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'communicating',
-    'unique_id': '122327081322_communicating',
+    'unique_id': '123456_communicating',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[envoy_eu_batt][binary_sensor.encharge_122327081322_communicating-state]
+# name: test_binary_sensor[envoy_eu_batt][binary_sensor.encharge_123456_communicating-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'connectivity',
-      'friendly_name': 'Encharge 122327081322 Communicating',
+      'friendly_name': 'Encharge 123456 Communicating',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.encharge_122327081322_communicating',
+    'entity_id': 'binary_sensor.encharge_123456_communicating',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_binary_sensor[envoy_eu_batt][binary_sensor.encharge_122327081322_dc_switch-entry]
+# name: test_binary_sensor[envoy_eu_batt][binary_sensor.encharge_123456_dc_switch-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -58,7 +58,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.encharge_122327081322_dc_switch',
+    'entity_id': 'binary_sensor.encharge_123456_dc_switch',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -75,17 +75,17 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'dc_switch',
-    'unique_id': '122327081322_dc_switch',
+    'unique_id': '123456_dc_switch',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[envoy_eu_batt][binary_sensor.encharge_122327081322_dc_switch-state]
+# name: test_binary_sensor[envoy_eu_batt][binary_sensor.encharge_123456_dc_switch-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Encharge 122327081322 DC switch',
+      'friendly_name': 'Encharge 123456 DC switch',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.encharge_122327081322_dc_switch',
+    'entity_id': 'binary_sensor.encharge_123456_dc_switch',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

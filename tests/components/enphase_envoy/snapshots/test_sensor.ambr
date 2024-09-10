@@ -1838,7 +1838,7 @@
     'state': '1970-01-01T00:00:01+00:00',
   })
 # ---
-# name: test_sensor[envoy_eu_batt][sensor.encharge_122327081322_apparent_power-entry]
+# name: test_sensor[envoy_eu_batt][sensor.encharge_123456_apparent_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1850,7 +1850,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.encharge_122327081322_apparent_power',
+    'entity_id': 'sensor.encharge_123456_apparent_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1867,26 +1867,26 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '122327081322_apparent_power_mva',
+    'unique_id': '123456_apparent_power_mva',
     'unit_of_measurement': <UnitOfApparentPower.VOLT_AMPERE: 'VA'>,
   })
 # ---
-# name: test_sensor[envoy_eu_batt][sensor.encharge_122327081322_apparent_power-state]
+# name: test_sensor[envoy_eu_batt][sensor.encharge_123456_apparent_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'apparent_power',
-      'friendly_name': 'Encharge 122327081322 Apparent power',
+      'friendly_name': 'Encharge 123456 Apparent power',
       'unit_of_measurement': <UnitOfApparentPower.VOLT_AMPERE: 'VA'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.encharge_122327081322_apparent_power',
+    'entity_id': 'sensor.encharge_123456_apparent_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
 # ---
-# name: test_sensor[envoy_eu_batt][sensor.encharge_122327081322_battery-entry]
+# name: test_sensor[envoy_eu_batt][sensor.encharge_123456_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1898,7 +1898,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.encharge_122327081322_battery',
+    'entity_id': 'sensor.encharge_123456_battery',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1915,26 +1915,26 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '122327081322_soc',
+    'unique_id': '123456_soc',
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensor[envoy_eu_batt][sensor.encharge_122327081322_battery-state]
+# name: test_sensor[envoy_eu_batt][sensor.encharge_123456_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
-      'friendly_name': 'Encharge 122327081322 Battery',
+      'friendly_name': 'Encharge 123456 Battery',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.encharge_122327081322_battery',
+    'entity_id': 'sensor.encharge_123456_battery',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '4',
   })
 # ---
-# name: test_sensor[envoy_eu_batt][sensor.encharge_122327081322_last_reported-entry]
+# name: test_sensor[envoy_eu_batt][sensor.encharge_123456_last_reported-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1946,7 +1946,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.encharge_122327081322_last_reported',
+    'entity_id': 'sensor.encharge_123456_last_reported',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1963,25 +1963,25 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'last_reported',
-    'unique_id': '122327081322_last_reported',
+    'unique_id': '123456_last_reported',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[envoy_eu_batt][sensor.encharge_122327081322_last_reported-state]
+# name: test_sensor[envoy_eu_batt][sensor.encharge_123456_last_reported-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'timestamp',
-      'friendly_name': 'Encharge 122327081322 Last reported',
+      'friendly_name': 'Encharge 123456 Last reported',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.encharge_122327081322_last_reported',
+    'entity_id': 'sensor.encharge_123456_last_reported',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2024-05-04T06:29:33+00:00',
   })
 # ---
-# name: test_sensor[envoy_eu_batt][sensor.encharge_122327081322_power-entry]
+# name: test_sensor[envoy_eu_batt][sensor.encharge_123456_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1993,7 +1993,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.encharge_122327081322_power',
+    'entity_id': 'sensor.encharge_123456_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2010,26 +2010,26 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '122327081322_real_power_mw',
+    'unique_id': '123456_real_power_mw',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_sensor[envoy_eu_batt][sensor.encharge_122327081322_power-state]
+# name: test_sensor[envoy_eu_batt][sensor.encharge_123456_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'Encharge 122327081322 Power',
+      'friendly_name': 'Encharge 123456 Power',
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.encharge_122327081322_power',
+    'entity_id': 'sensor.encharge_123456_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
 # ---
-# name: test_sensor[envoy_eu_batt][sensor.encharge_122327081322_temperature-entry]
+# name: test_sensor[envoy_eu_batt][sensor.encharge_123456_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2041,7 +2041,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.encharge_122327081322_temperature',
+    'entity_id': 'sensor.encharge_123456_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2058,19 +2058,19 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '122327081322_temperature',
+    'unique_id': '123456_temperature',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_sensor[envoy_eu_batt][sensor.encharge_122327081322_temperature-state]
+# name: test_sensor[envoy_eu_batt][sensor.encharge_123456_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Encharge 122327081322 Temperature',
+      'friendly_name': 'Encharge 123456 Temperature',
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.encharge_122327081322_temperature',
+    'entity_id': 'sensor.encharge_123456_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -2181,7 +2181,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.148',
+    'state': '2.341',
   })
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_battery-entry]
@@ -2337,7 +2337,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.148',
+    'state': '0.101',
   })
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_current_net_power_consumption_l1-entry]
@@ -2395,7 +2395,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.186',
+    'state': '0.021',
   })
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_current_net_power_consumption_l2-entry]
@@ -2453,7 +2453,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '-0.017',
+    'state': '0.031',
   })
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_current_net_power_consumption_l3-entry]
@@ -2511,7 +2511,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '-0.021',
+    'state': '0.051',
   })
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_current_power_consumption-entry]
@@ -2569,7 +2569,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.267',
+    'state': '1.234',
   })
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_current_power_production-entry]
@@ -2627,7 +2627,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.119',
+    'state': '1.234',
   })
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_energy_consumption_last_seven_days-entry]
@@ -2682,7 +2682,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '60.488',
+    'state': '1.234',
   })
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_energy_consumption_today-entry]
@@ -2740,7 +2740,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '11.22',
+    'state': '1.234',
   })
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_energy_production_last_seven_days-entry]
@@ -2795,7 +2795,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '70.188',
+    'state': '1.234',
   })
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_energy_production_today-entry]
@@ -2853,7 +2853,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.105',
+    'state': '1.234',
   })
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_frequency_net_consumption_ct-entry]
@@ -2908,7 +2908,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '50.0',
+    'state': '50.2',
   })
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_frequency_net_consumption_ct_l1-entry]
@@ -2963,7 +2963,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '50.0',
+    'state': '50.2',
   })
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_frequency_net_consumption_ct_l2-entry]
@@ -3018,7 +3018,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '50.0',
+    'state': '50.2',
   })
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_frequency_net_consumption_ct_l3-entry]
@@ -3073,7 +3073,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '50.0',
+    'state': '50.2',
   })
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_frequency_production_ct-entry]
@@ -3128,7 +3128,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '50.0',
+    'state': '50.1',
   })
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_frequency_production_ct_l1-entry]
@@ -3183,7 +3183,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '50.0',
+    'state': '50.1',
   })
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_frequency_production_ct_l2-entry]
@@ -3238,7 +3238,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '50.0',
+    'state': '50.1',
   })
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_frequency_production_ct_l3-entry]
@@ -3293,7 +3293,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '50.0',
+    'state': '50.1',
   })
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_lifetime_balanced_net_energy_consumption-entry]
@@ -3351,7 +3351,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '7967.021',
+    'state': '4.321',
   })
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_lifetime_energy_consumption-entry]
@@ -3409,7 +3409,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '11.230297',
+    'state': '0.001234',
   })
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_lifetime_energy_production-entry]
@@ -3467,7 +3467,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '3.264161',
+    'state': '0.001234',
   })
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_lifetime_net_energy_consumption-entry]
@@ -3525,7 +3525,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '9.671362',
+    'state': '0.021234',
   })
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_lifetime_net_energy_consumption_l1-entry]
@@ -3583,7 +3583,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '3.066805',
+    'state': '0.212341',
   })
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_lifetime_net_energy_consumption_l2-entry]
@@ -3641,7 +3641,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2.426811',
+    'state': '0.212342',
   })
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_lifetime_net_energy_consumption_l3-entry]
@@ -3699,7 +3699,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '4.177747',
+    'state': '0.212343',
   })
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_lifetime_net_energy_production-entry]
@@ -3757,7 +3757,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1.704783',
+    'state': '0.022345',
   })
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_lifetime_net_energy_production_l1-entry]
@@ -3815,7 +3815,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.309331',
+    'state': '0.223451',
   })
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_lifetime_net_energy_production_l2-entry]
@@ -3873,7 +3873,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.678824',
+    'state': '0.223452',
   })
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_lifetime_net_energy_production_l3-entry]
@@ -3931,7 +3931,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.716628',
+    'state': '0.223453',
   })
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_meter_status_flags_active_net_consumption_ct-entry]
@@ -4166,7 +4166,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': '2',
   })
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_meter_status_flags_active_production_ct_l1-entry]
@@ -4213,7 +4213,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': '1',
   })
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_meter_status_flags_active_production_ct_l2-entry]
@@ -4260,7 +4260,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': '1',
   })
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_meter_status_flags_active_production_ct_l3-entry]
@@ -4837,7 +4837,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1.918',
+    'state': '0.3',
   })
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_net_consumption_ct_current_l1-entry]
@@ -4895,7 +4895,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1.566',
+    'state': '0.3',
   })
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_net_consumption_ct_current_l2-entry]
@@ -4953,7 +4953,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.194',
+    'state': '0.3',
   })
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_net_consumption_ct_current_l3-entry]
@@ -5011,7 +5011,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.159',
+    'state': '0.3',
   })
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_powerfactor_net_consumption_ct-entry]
@@ -5065,7 +5065,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.318',
+    'state': '0.21',
   })
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_powerfactor_net_consumption_ct_l1-entry]
@@ -5119,7 +5119,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.493',
+    'state': '0.22',
   })
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_powerfactor_net_consumption_ct_l2-entry]
@@ -5173,7 +5173,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '-0.375',
+    'state': '0.23',
   })
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_powerfactor_net_consumption_ct_l3-entry]
@@ -5227,7 +5227,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '-0.571',
+    'state': '0.24',
   })
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_powerfactor_production_ct-entry]
@@ -5281,7 +5281,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.666',
+    'state': '0.11',
   })
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_powerfactor_production_ct_l1-entry]
@@ -5335,7 +5335,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.636',
+    'state': '0.12',
   })
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_powerfactor_production_ct_l2-entry]
@@ -5389,7 +5389,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.615',
+    'state': '0.13',
   })
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_powerfactor_production_ct_l3-entry]
@@ -5443,7 +5443,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.778',
+    'state': '0.14',
   })
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_production_ct_current-entry]
@@ -5501,7 +5501,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.727',
+    'state': '0.2',
   })
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_production_ct_current_l1-entry]
@@ -5559,7 +5559,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.238',
+    'state': '0.2',
   })
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_production_ct_current_l2-entry]
@@ -5617,7 +5617,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.3',
+    'state': '0.2',
   })
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_production_ct_current_l3-entry]
@@ -5675,7 +5675,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.189',
+    'state': '0.2',
   })
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_reserve_battery_energy-entry]
@@ -5831,7 +5831,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '717.603',
+    'state': '112',
   })
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_voltage_net_consumption_ct_l1-entry]
@@ -5889,7 +5889,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '240.294',
+    'state': '112',
   })
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_voltage_net_consumption_ct_l2-entry]
@@ -5947,7 +5947,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '239.513',
+    'state': '112',
   })
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_voltage_net_consumption_ct_l3-entry]
@@ -6005,7 +6005,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '237.796',
+    'state': '112',
   })
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_voltage_production_ct-entry]
@@ -6063,7 +6063,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '717.827',
+    'state': '111',
   })
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_voltage_production_ct_l1-entry]
@@ -6121,7 +6121,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '240.455',
+    'state': '111',
   })
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_voltage_production_ct_l2-entry]
@@ -6179,7 +6179,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '239.646',
+    'state': '111',
   })
 # ---
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_voltage_production_ct_l3-entry]
@@ -6237,10 +6237,10 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '237.725',
+    'state': '111',
   })
 # ---
-# name: test_sensor[envoy_eu_batt][sensor.inverter_482312082644-entry]
+# name: test_sensor[envoy_eu_batt][sensor.inverter_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -6254,7 +6254,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.inverter_482312082644',
+    'entity_id': 'sensor.inverter_1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -6271,28 +6271,28 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '482312082644',
+    'unique_id': '1',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_sensor[envoy_eu_batt][sensor.inverter_482312082644-state]
+# name: test_sensor[envoy_eu_batt][sensor.inverter_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'Inverter 482312082644',
+      'friendly_name': 'Inverter 1',
       'icon': 'mdi:flash',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.inverter_482312082644',
+    'entity_id': 'sensor.inverter_1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '13',
+    'state': '1',
   })
 # ---
-# name: test_sensor[envoy_eu_batt][sensor.inverter_482312082644_last_reported-entry]
+# name: test_sensor[envoy_eu_batt][sensor.inverter_1_last_reported-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -6304,7 +6304,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.inverter_482312082644_last_reported',
+    'entity_id': 'sensor.inverter_1_last_reported',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -6321,823 +6321,23 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'last_reported',
-    'unique_id': '482312082644_last_reported',
+    'unique_id': '1_last_reported',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[envoy_eu_batt][sensor.inverter_482312082644_last_reported-state]
+# name: test_sensor[envoy_eu_batt][sensor.inverter_1_last_reported-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'timestamp',
-      'friendly_name': 'Inverter 482312082644 Last reported',
+      'friendly_name': 'Inverter 1 Last reported',
       'icon': 'mdi:flash',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.inverter_482312082644_last_reported',
+    'entity_id': 'sensor.inverter_1_last_reported',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2024-05-04T06:19:45+00:00',
-  })
-# ---
-# name: test_sensor[envoy_eu_batt][sensor.inverter_482312083708-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.inverter_482312083708',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
-    'original_icon': 'mdi:flash',
-    'original_name': None,
-    'platform': 'enphase_envoy',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '482312083708',
-    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
-  })
-# ---
-# name: test_sensor[envoy_eu_batt][sensor.inverter_482312083708-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Inverter 482312083708',
-      'icon': 'mdi:flash',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.inverter_482312083708',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '14',
-  })
-# ---
-# name: test_sensor[envoy_eu_batt][sensor.inverter_482312083708_last_reported-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.inverter_482312083708_last_reported',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
-    'original_icon': 'mdi:flash',
-    'original_name': 'Last reported',
-    'platform': 'enphase_envoy',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'last_reported',
-    'unique_id': '482312083708_last_reported',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensor[envoy_eu_batt][sensor.inverter_482312083708_last_reported-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'Inverter 482312083708 Last reported',
-      'icon': 'mdi:flash',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.inverter_482312083708_last_reported',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '2024-05-04T06:17:45+00:00',
-  })
-# ---
-# name: test_sensor[envoy_eu_batt][sensor.inverter_482312083761-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.inverter_482312083761',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
-    'original_icon': 'mdi:flash',
-    'original_name': None,
-    'platform': 'enphase_envoy',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '482312083761',
-    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
-  })
-# ---
-# name: test_sensor[envoy_eu_batt][sensor.inverter_482312083761-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Inverter 482312083761',
-      'icon': 'mdi:flash',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.inverter_482312083761',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '11',
-  })
-# ---
-# name: test_sensor[envoy_eu_batt][sensor.inverter_482312083761_last_reported-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.inverter_482312083761_last_reported',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
-    'original_icon': 'mdi:flash',
-    'original_name': 'Last reported',
-    'platform': 'enphase_envoy',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'last_reported',
-    'unique_id': '482312083761_last_reported',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensor[envoy_eu_batt][sensor.inverter_482312083761_last_reported-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'Inverter 482312083761 Last reported',
-      'icon': 'mdi:flash',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.inverter_482312083761_last_reported',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '2024-05-04T06:30:46+00:00',
-  })
-# ---
-# name: test_sensor[envoy_eu_batt][sensor.inverter_482312084298-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.inverter_482312084298',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
-    'original_icon': 'mdi:flash',
-    'original_name': None,
-    'platform': 'enphase_envoy',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '482312084298',
-    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
-  })
-# ---
-# name: test_sensor[envoy_eu_batt][sensor.inverter_482312084298-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Inverter 482312084298',
-      'icon': 'mdi:flash',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.inverter_482312084298',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '11',
-  })
-# ---
-# name: test_sensor[envoy_eu_batt][sensor.inverter_482312084298_last_reported-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.inverter_482312084298_last_reported',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
-    'original_icon': 'mdi:flash',
-    'original_name': 'Last reported',
-    'platform': 'enphase_envoy',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'last_reported',
-    'unique_id': '482312084298_last_reported',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensor[envoy_eu_batt][sensor.inverter_482312084298_last_reported-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'Inverter 482312084298 Last reported',
-      'icon': 'mdi:flash',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.inverter_482312084298_last_reported',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '2024-05-04T06:29:47+00:00',
-  })
-# ---
-# name: test_sensor[envoy_eu_batt][sensor.inverter_482312084840-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.inverter_482312084840',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
-    'original_icon': 'mdi:flash',
-    'original_name': None,
-    'platform': 'enphase_envoy',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '482312084840',
-    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
-  })
-# ---
-# name: test_sensor[envoy_eu_batt][sensor.inverter_482312084840-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Inverter 482312084840',
-      'icon': 'mdi:flash',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.inverter_482312084840',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '9',
-  })
-# ---
-# name: test_sensor[envoy_eu_batt][sensor.inverter_482312084840_last_reported-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.inverter_482312084840_last_reported',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
-    'original_icon': 'mdi:flash',
-    'original_name': 'Last reported',
-    'platform': 'enphase_envoy',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'last_reported',
-    'unique_id': '482312084840_last_reported',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensor[envoy_eu_batt][sensor.inverter_482312084840_last_reported-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'Inverter 482312084840 Last reported',
-      'icon': 'mdi:flash',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.inverter_482312084840_last_reported',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '2024-05-04T06:26:16+00:00',
-  })
-# ---
-# name: test_sensor[envoy_eu_batt][sensor.inverter_482312086604-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.inverter_482312086604',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
-    'original_icon': 'mdi:flash',
-    'original_name': None,
-    'platform': 'enphase_envoy',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '482312086604',
-    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
-  })
-# ---
-# name: test_sensor[envoy_eu_batt][sensor.inverter_482312086604-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Inverter 482312086604',
-      'icon': 'mdi:flash',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.inverter_482312086604',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '14',
-  })
-# ---
-# name: test_sensor[envoy_eu_batt][sensor.inverter_482312086604_last_reported-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.inverter_482312086604_last_reported',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
-    'original_icon': 'mdi:flash',
-    'original_name': 'Last reported',
-    'platform': 'enphase_envoy',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'last_reported',
-    'unique_id': '482312086604_last_reported',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensor[envoy_eu_batt][sensor.inverter_482312086604_last_reported-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'Inverter 482312086604 Last reported',
-      'icon': 'mdi:flash',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.inverter_482312086604_last_reported',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '2024-05-04T06:18:15+00:00',
-  })
-# ---
-# name: test_sensor[envoy_eu_batt][sensor.inverter_482312087072-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.inverter_482312087072',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
-    'original_icon': 'mdi:flash',
-    'original_name': None,
-    'platform': 'enphase_envoy',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '482312087072',
-    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
-  })
-# ---
-# name: test_sensor[envoy_eu_batt][sensor.inverter_482312087072-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Inverter 482312087072',
-      'icon': 'mdi:flash',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.inverter_482312087072',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '13',
-  })
-# ---
-# name: test_sensor[envoy_eu_batt][sensor.inverter_482312087072_last_reported-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.inverter_482312087072_last_reported',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
-    'original_icon': 'mdi:flash',
-    'original_name': 'Last reported',
-    'platform': 'enphase_envoy',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'last_reported',
-    'unique_id': '482312087072_last_reported',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensor[envoy_eu_batt][sensor.inverter_482312087072_last_reported-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'Inverter 482312087072 Last reported',
-      'icon': 'mdi:flash',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.inverter_482312087072_last_reported',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '2024-05-04T06:17:15+00:00',
-  })
-# ---
-# name: test_sensor[envoy_eu_batt][sensor.inverter_482312087202-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.inverter_482312087202',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
-    'original_icon': 'mdi:flash',
-    'original_name': None,
-    'platform': 'enphase_envoy',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '482312087202',
-    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
-  })
-# ---
-# name: test_sensor[envoy_eu_batt][sensor.inverter_482312087202-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Inverter 482312087202',
-      'icon': 'mdi:flash',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.inverter_482312087202',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '12',
-  })
-# ---
-# name: test_sensor[envoy_eu_batt][sensor.inverter_482312087202_last_reported-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.inverter_482312087202_last_reported',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
-    'original_icon': 'mdi:flash',
-    'original_name': 'Last reported',
-    'platform': 'enphase_envoy',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'last_reported',
-    'unique_id': '482312087202_last_reported',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensor[envoy_eu_batt][sensor.inverter_482312087202_last_reported-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'Inverter 482312087202 Last reported',
-      'icon': 'mdi:flash',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.inverter_482312087202_last_reported',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '2024-05-04T06:29:46+00:00',
-  })
-# ---
-# name: test_sensor[envoy_eu_batt][sensor.inverter_482312087222-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.inverter_482312087222',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
-    'original_icon': 'mdi:flash',
-    'original_name': None,
-    'platform': 'enphase_envoy',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '482312087222',
-    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
-  })
-# ---
-# name: test_sensor[envoy_eu_batt][sensor.inverter_482312087222-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Inverter 482312087222',
-      'icon': 'mdi:flash',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.inverter_482312087222',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '13',
-  })
-# ---
-# name: test_sensor[envoy_eu_batt][sensor.inverter_482312087222_last_reported-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.inverter_482312087222_last_reported',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
-    'original_icon': 'mdi:flash',
-    'original_name': 'Last reported',
-    'platform': 'enphase_envoy',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'last_reported',
-    'unique_id': '482312087222_last_reported',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensor[envoy_eu_batt][sensor.inverter_482312087222_last_reported-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'Inverter 482312087222 Last reported',
-      'icon': 'mdi:flash',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.inverter_482312087222_last_reported',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '2024-05-04T06:16:44+00:00',
+    'state': '1970-01-01T00:00:01+00:00',
   })
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.encharge_123456_apparent_power-entry]
