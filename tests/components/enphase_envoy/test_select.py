@@ -174,10 +174,10 @@ async def test_select_relay_modes(
 
 
 @pytest.mark.parametrize(
-    ("mock_envoy", "use_envoy_serial"),
+    ("mock_envoy", "use_serial"),
     [
-        ("envoy_metered_batt_relay", False),
-        ("envoy_eu_batt", True),
+        ("envoy_metered_batt_relay", "enpower_654321"),
+        ("envoy_eu_batt", "envoy_1234"),
     ],
     indirect=["mock_envoy"],
 )
@@ -185,18 +185,13 @@ async def test_select_storage_modes(
     hass: HomeAssistant,
     mock_envoy: AsyncMock,
     config_entry: MockConfigEntry,
-    use_envoy_serial: bool,
+    use_serial: str,
 ) -> None:
     """Test select platform entities storage mode changes."""
     with patch("homeassistant.components.enphase_envoy.PLATFORMS", [Platform.SELECT]):
         await setup_integration(hass, config_entry)
 
-    sn = (
-        f"envoy_{mock_envoy.serial_number}"
-        if use_envoy_serial
-        else f"enpower_{mock_envoy.data.enpower.serial_number}"
-    )
-    test_entity = f"{Platform.SELECT}.{sn}_storage_mode"
+    test_entity = f"{Platform.SELECT}.{use_serial}_storage_mode"
 
     assert (entity_state := hass.states.get(test_entity))
     assert STORAGE_MODE_MAP[mock_envoy.data.tariff.storage_settings.mode] == (

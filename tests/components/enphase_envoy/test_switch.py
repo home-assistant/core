@@ -113,10 +113,10 @@ async def test_switch_grid_operation(
 
 
 @pytest.mark.parametrize(
-    ("mock_envoy", "use_envoy_serial"),
+    ("mock_envoy", "use_serial"),
     [
-        ("envoy_metered_batt_relay", False),
-        ("envoy_eu_batt", True),
+        ("envoy_metered_batt_relay", "enpower_654321"),
+        ("envoy_eu_batt", "envoy_1234"),
     ],
     indirect=["mock_envoy"],
 )
@@ -124,19 +124,13 @@ async def test_switch_charge_from_grid_operation(
     hass: HomeAssistant,
     mock_envoy: AsyncMock,
     config_entry: MockConfigEntry,
-    use_envoy_serial: bool,
+    use_serial: str,
 ) -> None:
     """Test switch platform operation for charge from grid switches."""
     with patch("homeassistant.components.enphase_envoy.PLATFORMS", [Platform.SWITCH]):
         await setup_integration(hass, config_entry)
 
-    sn = (
-        f"envoy_{mock_envoy.serial_number}"
-        if use_envoy_serial
-        else f"enpower_{mock_envoy.data.enpower.serial_number}"
-    )
-
-    test_entity = f"{Platform.SWITCH}.{sn}_charge_from_grid"
+    test_entity = f"{Platform.SWITCH}.{use_serial}_charge_from_grid"
 
     # validate envoy value is reflected in entity
     assert (entity_state := hass.states.get(test_entity))
