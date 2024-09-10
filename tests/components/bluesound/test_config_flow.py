@@ -12,8 +12,9 @@ from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+from .utils import ValueStore
+
 from tests.common import MockConfigEntry
-from tests.components.bluesound.utils import mock_long_poll
 
 
 async def test_user_flow_success(
@@ -43,7 +44,7 @@ async def test_user_flow_success(
 
 
 async def test_user_flow_cannot_connect(
-    hass: HomeAssistant, player: AsyncMock, mock_setup_entry: AsyncMock, sync_status: SyncStatus
+    hass: HomeAssistant, player: AsyncMock, mock_setup_entry: AsyncMock, sync_status_store: ValueStore[SyncStatus]
 ) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
@@ -63,7 +64,7 @@ async def test_user_flow_cannot_connect(
     assert result["errors"] == {"base": "cannot_connect"}
     assert result["step_id"] == "user"
 
-    player.sync_status.side_effect = mock_long_poll(sync_status)
+    player.sync_status.side_effect = sync_status_store.long_polling_mock()
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
