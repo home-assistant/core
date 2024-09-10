@@ -1,8 +1,18 @@
 """Test opentherm_gw select entities."""
 
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
-from pyotgw.vars import OTGW_GPIO_A, OTGW_GPIO_B
+from pyotgw.vars import (
+    OTGW_GPIO_A,
+    OTGW_GPIO_B,
+    OTGW_LED_A,
+    OTGW_LED_B,
+    OTGW_LED_C,
+    OTGW_LED_D,
+    OTGW_LED_E,
+    OTGW_LED_F,
+)
 import pytest
 
 from homeassistant.components.opentherm_gw import DOMAIN as OPENTHERM_DOMAIN
@@ -13,7 +23,9 @@ from homeassistant.components.opentherm_gw.const import (
 )
 from homeassistant.components.opentherm_gw.select import (
     OpenThermSelectGPIOMode,
+    OpenThermSelectLEDMode,
     PyotgwGPIOMode,
+    PyotgwLEDMode,
 )
 from homeassistant.components.select import (
     ATTR_OPTION,
@@ -29,23 +41,90 @@ from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(
-    ("entity_key", "gpio_id"),
+    (
+        "entity_key",
+        "target_func_name",
+        "target_param_1",
+        "target_param_2",
+        "resulting_state",
+    ),
     [
-        (OTGW_GPIO_A, "A"),
-        (OTGW_GPIO_B, "B"),
+        (
+            OTGW_GPIO_A,
+            "set_gpio_mode",
+            "A",
+            PyotgwGPIOMode.VCC,
+            OpenThermSelectGPIOMode.VCC,
+        ),
+        (
+            OTGW_GPIO_B,
+            "set_gpio_mode",
+            "B",
+            PyotgwGPIOMode.HOME,
+            OpenThermSelectGPIOMode.HOME,
+        ),
+        (
+            OTGW_LED_A,
+            "set_led_mode",
+            "A",
+            PyotgwLEDMode.TX_ANY,
+            OpenThermSelectLEDMode.TX_ANY,
+        ),
+        (
+            OTGW_LED_B,
+            "set_led_mode",
+            "B",
+            PyotgwLEDMode.RX_ANY,
+            OpenThermSelectLEDMode.RX_ANY,
+        ),
+        (
+            OTGW_LED_C,
+            "set_led_mode",
+            "C",
+            PyotgwLEDMode.BOILER_TRAFFIC,
+            OpenThermSelectLEDMode.BOILER_TRAFFIC,
+        ),
+        (
+            OTGW_LED_D,
+            "set_led_mode",
+            "D",
+            PyotgwLEDMode.THERMOSTAT_TRAFFIC,
+            OpenThermSelectLEDMode.THERMOSTAT_TRAFFIC,
+        ),
+        (
+            OTGW_LED_E,
+            "set_led_mode",
+            "E",
+            PyotgwLEDMode.FLAME_ON,
+            OpenThermSelectLEDMode.FLAME_ON,
+        ),
+        (
+            OTGW_LED_F,
+            "set_led_mode",
+            "F",
+            PyotgwLEDMode.BOILER_MAINTENANCE_REQUIRED,
+            OpenThermSelectLEDMode.BOILER_MAINTENANCE_REQUIRED,
+        ),
     ],
 )
-async def test_gpio_mode_select(
+async def test_select_change_value(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
     mock_pyotgw: MagicMock,
     entity_key: str,
-    gpio_id: str,
+    target_func_name: str,
+    target_param_1: str,
+    target_param_2: str | int,
+    resulting_state: str,
 ) -> None:
     """Test GPIO mode selector."""
 
-    mock_pyotgw.return_value.set_gpio_mode = AsyncMock(return_value=PyotgwGPIOMode.VCC)
+    setattr(
+        mock_pyotgw.return_value,
+        target_func_name,
+        AsyncMock(return_value=target_param_2),
+    )
     mock_config_entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -63,29 +142,56 @@ async def test_gpio_mode_select(
     await hass.services.async_call(
         SELECT_DOMAIN,
         SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: select_entity_id, ATTR_OPTION: OpenThermSelectGPIOMode.VCC},
+        {ATTR_ENTITY_ID: select_entity_id, ATTR_OPTION: resulting_state},
         blocking=True,
     )
-    assert hass.states.get(select_entity_id).state == OpenThermSelectGPIOMode.VCC
+    assert hass.states.get(select_entity_id).state == resulting_state
 
-    mock_pyotgw.return_value.set_gpio_mode.assert_awaited_once_with(
-        gpio_id, PyotgwGPIOMode.VCC.value
-    )
+    target = getattr(mock_pyotgw.return_value, target_func_name)
+    target.assert_awaited_once_with(target_param_1, target_param_2)
 
 
 @pytest.mark.parametrize(
-    ("entity_key"),
+    ("entity_key", "test_value", "resulting_state"),
     [
-        (OTGW_GPIO_A),
-        (OTGW_GPIO_B),
+        (OTGW_GPIO_A, PyotgwGPIOMode.AWAY, OpenThermSelectGPIOMode.AWAY),
+        (OTGW_GPIO_B, PyotgwGPIOMode.LED_F, OpenThermSelectGPIOMode.LED_F),
+        (
+            OTGW_LED_A,
+            PyotgwLEDMode.SETPOINT_OVERRIDE_ACTIVE,
+            OpenThermSelectLEDMode.SETPOINT_OVERRIDE_ACTIVE,
+        ),
+        (
+            OTGW_LED_B,
+            PyotgwLEDMode.CENTRAL_HEATING_ON,
+            OpenThermSelectLEDMode.CENTRAL_HEATING_ON,
+        ),
+        (OTGW_LED_C, PyotgwLEDMode.HOT_WATER_ON, OpenThermSelectLEDMode.HOT_WATER_ON),
+        (
+            OTGW_LED_D,
+            PyotgwLEDMode.COMFORT_MODE_ON,
+            OpenThermSelectLEDMode.COMFORT_MODE_ON,
+        ),
+        (
+            OTGW_LED_E,
+            PyotgwLEDMode.TX_ERROR_DETECTED,
+            OpenThermSelectLEDMode.TX_ERROR_DETECTED,
+        ),
+        (
+            OTGW_LED_F,
+            PyotgwLEDMode.RAISED_POWER_MODE_ACTIVE,
+            OpenThermSelectLEDMode.RAISED_POWER_MODE_ACTIVE,
+        ),
     ],
 )
-async def test_gpio_mode_state_update(
+async def test_select_state_update(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
     mock_pyotgw: MagicMock,
     entity_key: str,
+    test_value: Any,
+    resulting_state: str,
 ) -> None:
     """Test GPIO mode selector."""
 
@@ -111,10 +217,10 @@ async def test_gpio_mode_state_update(
         gw_hub.update_signal,
         {
             OpenThermDeviceIdentifier.BOILER: {},
-            OpenThermDeviceIdentifier.GATEWAY: {entity_key: 4},
+            OpenThermDeviceIdentifier.GATEWAY: {entity_key: test_value},
             OpenThermDeviceIdentifier.THERMOSTAT: {},
         },
     )
     await hass.async_block_till_done()
 
-    assert hass.states.get(select_entity_id).state == OpenThermSelectGPIOMode.LED_F
+    assert hass.states.get(select_entity_id).state == resulting_state
