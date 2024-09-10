@@ -10,8 +10,7 @@ from homeassistant.components import zeroconf
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_NAME
 
-from . import CONNECT_TIMEOUT, STREAM_MAGIC_EXCEPTIONS
-from .const import DOMAIN
+from .const import CONNECT_TIMEOUT, DOMAIN, STREAM_MAGIC_EXCEPTIONS
 
 
 class FlowHandler(ConfigFlow, domain=DOMAIN):

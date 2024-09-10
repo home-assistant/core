@@ -23,9 +23,7 @@ async def async_setup_entry(
 ) -> bool:
     """Set up Cambridge Audio integration from a config entry."""
 
-    client = StreamMagicClient(
-        entry.data[CONF_HOST],
-    )
+    client = StreamMagicClient(entry.data[CONF_HOST])
 
     try:
         async with asyncio.timeout(CONNECT_TIMEOUT):

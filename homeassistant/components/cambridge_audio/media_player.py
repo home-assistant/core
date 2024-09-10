@@ -13,7 +13,6 @@ from homeassistant.components.media_player import (
     MediaType,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_PAUSED
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -163,7 +162,7 @@ class CambridgeAudioDevice(CambridgeAudioEntity, MediaPlayerEntity):
 
     async def async_media_play(self) -> None:
         """Play the current media."""
-        if self.state == STATE_PAUSED:
+        if self.state == MediaPlayerState.PAUSED:
             await self.client.play_pause()
 
     async def async_media_next_track(self) -> None:
