@@ -102,7 +102,7 @@ class TriggerUpdateCoordinator(DataUpdateCoordinator):
     async def _handle_triggered_with_script(
         self, run_variables: TemplateVarsType, context: Context | None = None
     ) -> None:
-        if not self._check_condition(run_variables, context):
+        if not self._check_condition(run_variables):
             return
         # Create a context referring to the trigger context.
         trigger_context_id = None if context is None else context.id
@@ -117,11 +117,11 @@ class TriggerUpdateCoordinator(DataUpdateCoordinator):
     async def _handle_triggered(
         self, run_variables: TemplateVarsType, context: Context | None = None
     ) -> None:
-        if not self._check_condition(run_variables, context):
+        if not self._check_condition(run_variables):
             return
         self._execute_update(run_variables, context)
 
-    def _check_condition(self, run_variables, context: Context | None) -> bool | None:
+    def _check_condition(self, run_variables: TemplateVarsType) -> bool | None:
         if not self._cond_func:
             return True
         condition_result = self._cond_func(run_variables)
