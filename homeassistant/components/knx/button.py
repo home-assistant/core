@@ -12,7 +12,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
 
 from . import KNXModule
-from .const import CONF_PAYLOAD_LENGTH, DATA_KNX_CONFIG, DOMAIN, KNX_ADDRESS
+from .const import CONF_PAYLOAD_LENGTH, KNX_ADDRESS, KNX_MODULE_KEY
 from .knx_entity import KnxYamlEntity
 
 
@@ -22,13 +22,10 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the KNX binary sensor platform."""
-    knx_module: KNXModule = hass.data[DOMAIN]
-    config: ConfigType = hass.data[DATA_KNX_CONFIG]
+    knx_module = hass.data[KNX_MODULE_KEY]
+    config: list[ConfigType] = knx_module.config_yaml[Platform.BUTTON]
 
-    async_add_entities(
-        KNXButton(knx_module, entity_config)
-        for entity_config in config[Platform.BUTTON]
-    )
+    async_add_entities(KNXButton(knx_module, entity_config) for entity_config in config)
 
 
 class KNXButton(KnxYamlEntity, ButtonEntity):

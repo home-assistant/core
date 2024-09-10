@@ -6,7 +6,6 @@ from __future__ import annotations
 import difflib
 import importlib
 from operator import itemgetter
-import os
 from pathlib import Path
 import pkgutil
 import re
@@ -82,8 +81,8 @@ URL_PIN = (
 )
 
 
-CONSTRAINT_PATH = os.path.join(
-    os.path.dirname(__file__), "../homeassistant/package_constraints.txt"
+CONSTRAINT_PATH = (
+    Path(__file__).parent.parent / "homeassistant" / "package_constraints.txt"
 )
 CONSTRAINT_BASE = """
 # Constrain pycryptodome to avoid vulnerability
@@ -256,8 +255,7 @@ def explore_module(package: str, explore_children: bool) -> list[str]:
 
 def core_requirements() -> list[str]:
     """Gather core requirements out of pyproject.toml."""
-    with open("pyproject.toml", "rb") as fp:
-        data = tomllib.load(fp)
+    data = tomllib.loads(Path("pyproject.toml").read_text())
     dependencies: list[str] = data["project"]["dependencies"]
     return dependencies
 
@@ -528,7 +526,7 @@ def diff_file(filename: str, content: str) -> list[str]:
 
 def main(validate: bool, ci: bool) -> int:
     """Run the script."""
-    if not os.path.isfile("requirements_all.txt"):
+    if not Path("requirements_all.txt").is_file():
         print("Run this from HA root dir")
         return 1
 
@@ -590,7 +588,7 @@ def main(validate: bool, ci: bool) -> int:
 def _get_hassfest_config() -> Config:
     """Get hassfest config."""
     return Config(
-        root=Path(".").absolute(),
+        root=Path().absolute(),
         specific_integrations=None,
         action="validate",
         requirements=True,

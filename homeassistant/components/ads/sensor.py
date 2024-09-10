@@ -15,14 +15,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 
 from .. import ads
-from . import (
-    ADS_TYPEMAP,
-    CONF_ADS_FACTOR,
-    CONF_ADS_TYPE,
-    CONF_ADS_VAR,
-    STATE_KEY_STATE,
-    AdsEntity,
-)
+from . import ADS_TYPEMAP, CONF_ADS_FACTOR, CONF_ADS_TYPE, CONF_ADS_VAR, STATE_KEY_STATE
+from .entity import AdsEntity
 
 DEFAULT_NAME = "ADS sensor"
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
