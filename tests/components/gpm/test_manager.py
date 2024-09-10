@@ -15,7 +15,7 @@ import pytest
         ("http://user:pass@example.com:1234/abc/", "example_com.abc"),
     ],
 )
-def test_unique_id(mock_integration_manager, repo_url, unique_id) -> None:
+def test_unique_id(integration_manager, repo_url, unique_id) -> None:
     """Test generating of unique_id for given repo_url."""
-    mock_integration_manager.repo_url = repo_url
-    assert mock_integration_manager.unique_id == unique_id
+    integration_manager.repo_url = repo_url
+    assert integration_manager.unique_id == unique_id

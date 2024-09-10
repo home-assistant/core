@@ -4,6 +4,7 @@ from collections.abc import Generator
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from git import Repo
 import pytest
 
 from homeassistant.components.gpm._manager import (
@@ -15,7 +16,7 @@ from homeassistant.core import HomeAssistant
 
 
 @pytest.fixture
-def mock_repo() -> Generator:
+def repo() -> Generator[Repo, None, None]:
     """Mock git.Repo object."""
 
     def clone_from(repo_url: str, working_dir: Path) -> Path:
@@ -34,8 +35,8 @@ def mock_repo() -> Generator:
 
 
 @pytest.fixture
-def mock_integration_manager(
-    hass: HomeAssistant, tmp_path: Path, mock_repo: MagicMock
+def integration_manager(
+    hass: HomeAssistant, tmp_path: Path, repo: Repo
 ) -> Generator[IntegrationRepositoryManager, None, None]:
     """Mock GPM manager."""
     manager = IntegrationRepositoryManager(
@@ -57,6 +58,7 @@ def mock_integration_manager(
     manager.remove = AsyncMock(wraps=manager.remove)
     manager.get_current_version = AsyncMock(return_value="v0.9.9")
     manager.get_latest_version = AsyncMock(return_value="v1.0.0")
+    # every instance is created using homeassistant.components.gpm.get_manager()
     with patch(
         "homeassistant.components.gpm.IntegrationRepositoryManager",
         autospec=True,
@@ -66,8 +68,8 @@ def mock_integration_manager(
 
 
 @pytest.fixture
-def mock_resource_manager(
-    hass: HomeAssistant, tmp_path: Path, mock_repo: MagicMock
+def resource_manager(
+    hass: HomeAssistant, tmp_path: Path, repo: MagicMock
 ) -> Generator[ResourceRepositoryManager, None, None]:
     """Mock the GPM manager."""
     manager = ResourceRepositoryManager(
@@ -92,21 +94,13 @@ def mock_resource_manager(
     manager.remove = AsyncMock(wraps=manager.remove)
     manager.get_current_version = AsyncMock(return_value="v0.9.9")
     manager.get_latest_version = AsyncMock(return_value="v1.0.0")
+    # every instance is created using homeassistant.components.gpm.get_manager()
     with patch(
         "homeassistant.components.gpm.ResourceRepositoryManager",
         autospec=True,
         return_value=manager,
     ) as mock:
         yield mock.return_value
-
-
-@pytest.fixture
-async def mock_cloned_integration_manager(
-    mock_integration_manager: IntegrationRepositoryManager,
-) -> Generator[IntegrationRepositoryManager, None, None]:
-    """Mock GPM manager in cloned state."""
-    await mock_integration_manager.clone()
-    return mock_integration_manager
 
 
 @pytest.fixture
