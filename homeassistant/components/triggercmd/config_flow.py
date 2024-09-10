@@ -71,5 +71,5 @@ class TriggerCMDConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
 
-class InvalidToken(exceptions.HomeAssistantError):
+class InvalidToken(HomeAssistantError):
     """Invalid token."""
