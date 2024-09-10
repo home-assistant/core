@@ -21,7 +21,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .. import ads
-from . import CONF_ADS_VAR, AdsEntity
+from . import CONF_ADS_VAR
+from .entity import AdsEntity
 
 DEFAULT_NAME = "ADS valve"
 
