@@ -166,6 +166,19 @@ DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
         entity_description=MatterSensorEntityDescription(
+            key="PowerSourceBatVoltage",
+            native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+            device_class=SensorDeviceClass.VOLTAGE,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            measurement_to_ha=lambda x: x / 1000,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(clusters.PowerSource.Attributes.BatVoltage,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
             key="EveEnergySensorWatt",
             device_class=SensorDeviceClass.POWER,
             entity_category=EntityCategory.DIAGNOSTIC,
@@ -175,6 +188,7 @@ DISCOVERY_SCHEMAS = [
         ),
         entity_class=MatterSensor,
         required_attributes=(EveCluster.Attributes.Watt,),
+        absent_attributes=(clusters.ElectricalPowerMeasurement.Attributes.ActivePower,),
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
@@ -188,6 +202,7 @@ DISCOVERY_SCHEMAS = [
         ),
         entity_class=MatterSensor,
         required_attributes=(EveCluster.Attributes.Voltage,),
+        absent_attributes=(clusters.ElectricalPowerMeasurement.Attributes.Voltage,),
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
@@ -201,6 +216,9 @@ DISCOVERY_SCHEMAS = [
         ),
         entity_class=MatterSensor,
         required_attributes=(EveCluster.Attributes.WattAccumulated,),
+        absent_attributes=(
+            clusters.ElectricalEnergyMeasurement.Attributes.CumulativeEnergyImported,
+        ),
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
@@ -214,6 +232,9 @@ DISCOVERY_SCHEMAS = [
         ),
         entity_class=MatterSensor,
         required_attributes=(EveCluster.Attributes.Current,),
+        absent_attributes=(
+            clusters.ElectricalPowerMeasurement.Attributes.ActiveCurrent,
+        ),
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
@@ -377,6 +398,7 @@ DISCOVERY_SCHEMAS = [
         required_attributes=(
             ThirdRealityMeteringCluster.Attributes.InstantaneousDemand,
         ),
+        absent_attributes=(clusters.ElectricalPowerMeasurement.Attributes.ActivePower,),
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
@@ -393,6 +415,9 @@ DISCOVERY_SCHEMAS = [
         required_attributes=(
             ThirdRealityMeteringCluster.Attributes.CurrentSummationDelivered,
         ),
+        absent_attributes=(
+            clusters.ElectricalEnergyMeasurement.Attributes.CumulativeEnergyImported,
+        ),
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
@@ -407,6 +432,7 @@ DISCOVERY_SCHEMAS = [
         ),
         entity_class=MatterSensor,
         required_attributes=(NeoCluster.Attributes.Watt,),
+        absent_attributes=(clusters.ElectricalPowerMeasurement.Attributes.ActivePower,),
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
@@ -420,6 +446,9 @@ DISCOVERY_SCHEMAS = [
         ),
         entity_class=MatterSensor,
         required_attributes=(NeoCluster.Attributes.WattAccumulated,),
+        absent_attributes=(
+            clusters.ElectricalEnergyMeasurement.Attributes.CumulativeEnergyImported,
+        ),
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
@@ -434,6 +463,7 @@ DISCOVERY_SCHEMAS = [
         ),
         entity_class=MatterSensor,
         required_attributes=(NeoCluster.Attributes.Voltage,),
+        absent_attributes=(clusters.ElectricalPowerMeasurement.Attributes.Voltage,),
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
@@ -447,6 +477,9 @@ DISCOVERY_SCHEMAS = [
         ),
         entity_class=MatterSensor,
         required_attributes=(NeoCluster.Attributes.Current,),
+        absent_attributes=(
+            clusters.ElectricalPowerMeasurement.Attributes.ActiveCurrent,
+        ),
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
@@ -461,5 +494,68 @@ DISCOVERY_SCHEMAS = [
         entity_class=MatterSensor,
         required_attributes=(clusters.Switch.Attributes.CurrentPosition,),
         allow_multi=True,  # also used for event entity
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="ElectricalPowerMeasurementWatt",
+            device_class=SensorDeviceClass.POWER,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            native_unit_of_measurement=UnitOfPower.WATT,
+            suggested_display_precision=2,
+            state_class=SensorStateClass.MEASUREMENT,
+            measurement_to_ha=lambda x: x / 1000,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(
+            clusters.ElectricalPowerMeasurement.Attributes.ActivePower,
+        ),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="ElectricalPowerMeasurementVoltage",
+            device_class=SensorDeviceClass.VOLTAGE,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+            suggested_display_precision=0,
+            state_class=SensorStateClass.MEASUREMENT,
+            measurement_to_ha=lambda x: x / 1000,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(clusters.ElectricalPowerMeasurement.Attributes.Voltage,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="ElectricalPowerMeasurementActiveCurrent",
+            device_class=SensorDeviceClass.CURRENT,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+            suggested_display_precision=2,
+            state_class=SensorStateClass.MEASUREMENT,
+            measurement_to_ha=lambda x: x / 1000,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(
+            clusters.ElectricalPowerMeasurement.Attributes.ActiveCurrent,
+        ),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="ElectricalEnergyMeasurementCumulativeEnergyImported",
+            device_class=SensorDeviceClass.ENERGY,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+            suggested_display_precision=3,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+            # id 0 of the EnergyMeasurementStruct is the cumulative energy (in mWh)
+            measurement_to_ha=lambda x: x.energy / 1000000,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(
+            clusters.ElectricalEnergyMeasurement.Attributes.CumulativeEnergyImported,
+        ),
     ),
 ]

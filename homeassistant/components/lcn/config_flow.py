@@ -25,6 +25,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
 
+from . import PchkConnectionManager
 from .const import CONF_DIM_MODE, CONF_SK_NUM_TRIES, DIM_MODES, DOMAIN
 from .helpers import purge_device_registry, purge_entity_registry
 
@@ -78,7 +79,7 @@ async def validate_connection(data: ConfigType) -> str | None:
 
     _LOGGER.debug("Validating connection parameters to PCHK host '%s'", host_name)
 
-    connection = pypck.connection.PchkConnectionManager(
+    connection = PchkConnectionManager(
         host, port, username, password, settings=settings
     )
 

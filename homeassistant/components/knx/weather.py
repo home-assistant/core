@@ -20,7 +20,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
 
 from . import KNXModule
-from .const import DATA_KNX_CONFIG, DOMAIN
+from .const import KNX_MODULE_KEY
 from .knx_entity import KnxYamlEntity
 from .schema import WeatherSchema
 
@@ -31,8 +31,8 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up switch(es) for KNX platform."""
-    knx_module: KNXModule = hass.data[DOMAIN]
-    config: list[ConfigType] = hass.data[DATA_KNX_CONFIG][Platform.WEATHER]
+    knx_module = hass.data[KNX_MODULE_KEY]
+    config: list[ConfigType] = knx_module.config_yaml[Platform.WEATHER]
 
     async_add_entities(
         KNXWeather(knx_module, entity_config) for entity_config in config

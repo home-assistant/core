@@ -5,7 +5,7 @@ from typing import Any
 from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
-    DOMAIN,
+    DOMAIN as COVER_DOMAIN,
     CoverDeviceClass,
     CoverEntity,
     CoverEntityFeature,
@@ -122,7 +122,7 @@ async def async_setup_entry(
     """
     data = config_entry.runtime_data
     bridge = data.bridge
-    cover_devices = bridge.get_devices_by_domain(DOMAIN)
+    cover_devices = bridge.get_devices_by_domain(COVER_DOMAIN)
     async_add_entities(
         # default to standard LutronCasetaCover type if the pylutron type is not yet mapped
         PYLUTRON_TYPE_TO_CLASSES.get(cover_device["type"], LutronCasetaShade)(

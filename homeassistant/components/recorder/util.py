@@ -644,47 +644,70 @@ def _is_retryable_error(instance: Recorder, err: OperationalError) -> bool:
     )
 
 
-type _FuncType[_T, **_P, _R] = Callable[Concatenate[_T, _P], _R]
+type _FuncType[**P, R] = Callable[Concatenate[Recorder, P], R]
+type _MethType[Self, **P, R] = Callable[Concatenate[Self, Recorder, P], R]
+type _FuncOrMethType[**_P, _R] = Callable[_P, _R]
 
 
-def retryable_database_job[_RecorderT: Recorder, **_P](
+def retryable_database_job[**_P](
     description: str,
-) -> Callable[[_FuncType[_RecorderT, _P, bool]], _FuncType[_RecorderT, _P, bool]]:
+) -> Callable[[_FuncType[_P, bool]], _FuncType[_P, bool]]:
     """Try to execute a database job.
 
     The job should return True if it finished, and False if it needs to be rescheduled.
     """
 
-    def decorator(
-        job: _FuncType[_RecorderT, _P, bool],
-    ) -> _FuncType[_RecorderT, _P, bool]:
-        @functools.wraps(job)
-        def wrapper(instance: _RecorderT, *args: _P.args, **kwargs: _P.kwargs) -> bool:
-            try:
-                return job(instance, *args, **kwargs)
-            except OperationalError as err:
-                if _is_retryable_error(instance, err):
-                    assert isinstance(err.orig, BaseException)  # noqa: PT017
-                    _LOGGER.info(
-                        "%s; %s not completed, retrying", err.orig.args[1], description
-                    )
-                    time.sleep(instance.db_retry_wait)
-                    # Failed with retryable error
-                    return False
-
-                _LOGGER.warning("Error executing %s: %s", description, err)
-
-            # Failed with permanent error
-            return True
-
-        return wrapper
+    def decorator(job: _FuncType[_P, bool]) -> _FuncType[_P, bool]:
+        return _wrap_func_or_meth(job, description, False)
 
     return decorator
 
 
-def database_job_retry_wrapper[_RecorderT: Recorder, **_P](
+def retryable_database_job_method[_Self, **_P](
+    description: str,
+) -> Callable[[_MethType[_Self, _P, bool]], _MethType[_Self, _P, bool]]:
+    """Try to execute a database job.
+
+    The job should return True if it finished, and False if it needs to be rescheduled.
+    """
+
+    def decorator(job: _MethType[_Self, _P, bool]) -> _MethType[_Self, _P, bool]:
+        return _wrap_func_or_meth(job, description, True)
+
+    return decorator
+
+
+def _wrap_func_or_meth[**_P](
+    job: _FuncOrMethType[_P, bool], description: str, method: bool
+) -> _FuncOrMethType[_P, bool]:
+    recorder_pos = 1 if method else 0
+
+    @functools.wraps(job)
+    def wrapper(*args: _P.args, **kwargs: _P.kwargs) -> bool:
+        instance: Recorder = args[recorder_pos]  # type: ignore[assignment]
+        try:
+            return job(*args, **kwargs)
+        except OperationalError as err:
+            if _is_retryable_error(instance, err):
+                assert isinstance(err.orig, BaseException)  # noqa: PT017
+                _LOGGER.info(
+                    "%s; %s not completed, retrying", err.orig.args[1], description
+                )
+                time.sleep(instance.db_retry_wait)
+                # Failed with retryable error
+                return False
+
+            _LOGGER.warning("Error executing %s: %s", description, err)
+
+        # Failed with permanent error
+        return True
+
+    return wrapper
+
+
+def database_job_retry_wrapper[**_P](
     description: str, attempts: int = 5
-) -> Callable[[_FuncType[_RecorderT, _P, None]], _FuncType[_RecorderT, _P, None]]:
+) -> Callable[[_FuncType[_P, None]], _FuncType[_P, None]]:
     """Try to execute a database job multiple times.
 
     This wrapper handles InnoDB deadlocks and lock timeouts.
@@ -694,10 +717,10 @@ def database_job_retry_wrapper[_RecorderT: Recorder, **_P](
     """
 
     def decorator(
-        job: _FuncType[_RecorderT, _P, None],
-    ) -> _FuncType[_RecorderT, _P, None]:
+        job: _FuncType[_P, None],
+    ) -> _FuncType[_P, None]:
         @functools.wraps(job)
-        def wrapper(instance: _RecorderT, *args: _P.args, **kwargs: _P.kwargs) -> None:
+        def wrapper(instance: Recorder, *args: _P.args, **kwargs: _P.kwargs) -> None:
             for attempt in range(attempts):
                 try:
                     job(instance, *args, **kwargs)

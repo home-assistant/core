@@ -100,7 +100,7 @@ PyTransportNSW==0.1.1
 PyTurboJPEG==1.7.5
 
 # homeassistant.components.vicare
-PyViCare-neo==0.2.1
+PyViCare-neo==0.3.0
 
 # homeassistant.components.xiaomi_aqara
 PyXiaomiGateway==0.14.3
@@ -179,7 +179,7 @@ aioairq==0.3.2
 aioairzone-cloud==0.6.5
 
 # homeassistant.components.airzone
-aioairzone==0.8.2
+aioairzone==0.9.1
 
 # homeassistant.components.ambient_network
 # homeassistant.components.ambient_station
@@ -237,7 +237,7 @@ aioelectricitymaps==0.4.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==25.3.2
+aioesphomeapi==25.4.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -273,10 +273,10 @@ aiokef==0.2.16
 aiolifx-effects==0.3.2
 
 # homeassistant.components.lifx
-aiolifx-themes==0.5.0
+aiolifx-themes==0.5.5
 
 # homeassistant.components.lifx
-aiolifx==1.0.9
+aiolifx==1.1.1
 
 # homeassistant.components.livisi
 aiolivisi==0.0.19
@@ -309,7 +309,7 @@ aionut==4.3.3
 aiooncue==0.3.7
 
 # homeassistant.components.openexchangerates
-aioopenexchangerates==0.4.0
+aioopenexchangerates==0.6.2
 
 # homeassistant.components.nmap_tracker
 aiooui==0.1.6
@@ -350,7 +350,7 @@ aioridwell==2024.01.0
 aioruckus==0.41
 
 # homeassistant.components.russound_rio
-aiorussound==2.3.2
+aiorussound==3.0.4
 
 # homeassistant.components.ruuvi_gateway
 aioruuvigateway==0.1.0
@@ -374,7 +374,7 @@ aiosolaredge==0.2.0
 aiosteamist==1.0.0
 
 # homeassistant.components.switcher_kis
-aioswitcher==4.0.2
+aioswitcher==4.0.3
 
 # homeassistant.components.syncthing
 aiosyncthing==0.5.1
@@ -575,7 +575,7 @@ bleak-retry-connector==3.5.0
 bleak==0.22.2
 
 # homeassistant.components.blebox
-blebox-uniapi==2.4.2
+blebox-uniapi==2.5.0
 
 # homeassistant.components.blink
 blinkpy==0.23.0
@@ -1108,10 +1108,10 @@ hole==0.8.0
 holidays==0.56
 
 # homeassistant.components.frontend
-home-assistant-frontend==20240904.0
+home-assistant-frontend==20240909.1
 
 # homeassistant.components.conversation
-home-assistant-intents==2024.8.29
+home-assistant-intents==2024.9.4
 
 # homeassistant.components.home_connect
 homeconnect==0.8.0
@@ -1597,7 +1597,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.14
 
 # homeassistant.components.plugwise
-plugwise==0.38.3
+plugwise==1.0.0
 
 # homeassistant.components.plum_lightpad
 plumlightpad==0.0.11
@@ -1753,7 +1753,7 @@ pyatag==0.3.5.3
 pyatmo==8.1.0
 
 # homeassistant.components.apple_tv
-pyatv==0.15.0
+pyatv==0.15.1
 
 # homeassistant.components.aussie_broadband
 pyaussiebb==0.0.15
@@ -2124,7 +2124,7 @@ pyownet==0.10.0.post1
 pypca==0.0.7
 
 # homeassistant.components.lcn
-pypck==0.7.21
+pypck==0.7.22
 
 # homeassistant.components.pjlink
 pypjlink2==1.2.1
@@ -2225,11 +2225,14 @@ pysmartapp==0.3.5
 # homeassistant.components.smartthings
 pysmartthings==0.7.8
 
+# homeassistant.components.smarty
+pysmarty2==0.10.1
+
 # homeassistant.components.edl21
 pysml==0.0.12
 
 # homeassistant.components.smlight
-pysmlight==0.0.13
+pysmlight==0.0.15
 
 # homeassistant.components.snmp
 pysnmp==6.2.5
@@ -2606,11 +2609,14 @@ sensorpro-ble==0.5.3
 # homeassistant.components.sensorpush
 sensorpush-ble==1.6.2
 
+# homeassistant.components.sensoterra
+sensoterra==2.0.1
+
 # homeassistant.components.sentry
 sentry-sdk==1.40.3
 
 # homeassistant.components.sfr_box
-sfrbox-api==0.0.8
+sfrbox-api==0.0.10
 
 # homeassistant.components.sharkiq
 sharkiq==1.0.2
@@ -2941,6 +2947,9 @@ weatherflow4py==0.2.23
 # homeassistant.components.webmin
 webmin-xmlrpc==0.0.2
 
+# homeassistant.components.weheat
+weheat==2024.09.05
+
 # homeassistant.components.whirlpool
 whirlpool-sixth-sense==0.18.8
 
@@ -2966,7 +2975,7 @@ wyoming==1.5.4
 xbox-webapi==2.0.11
 
 # homeassistant.components.xiaomi_ble
-xiaomi-ble==0.31.1
+xiaomi-ble==0.32.0
 
 # homeassistant.components.knx
 xknx==3.1.1
@@ -2994,7 +3003,7 @@ yalexs-ble==2.4.3
 
 # homeassistant.components.august
 # homeassistant.components.yale
-yalexs==8.6.3
+yalexs==8.6.4
 
 # homeassistant.components.yeelight
 yeelight==0.7.14
@@ -3021,7 +3030,7 @@ zamg==0.3.6
 zengge==0.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.133.0
+zeroconf==0.134.0
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.1

@@ -60,6 +60,9 @@ COLOR_MODE_MAP = {
 class BleBoxLightEntity(BleBoxEntity[blebox_uniapi.light.Light], LightEntity):
     """Representation of BleBox lights."""
 
+    _attr_max_mireds = 370  # 1,000,000 divided by 2700 Kelvin = 370 Mireds
+    _attr_min_mireds = 154  # 1,000,000 divided by 6500 Kelvin = 154 Mireds
+
     def __init__(self, feature: blebox_uniapi.light.Light) -> None:
         """Initialize a BleBox light."""
         super().__init__(feature)
@@ -87,12 +90,7 @@ class BleBoxLightEntity(BleBoxEntity[blebox_uniapi.light.Light], LightEntity):
 
         Set values to _attr_ibutes if needed.
         """
-        color_mode_tmp = COLOR_MODE_MAP.get(self._feature.color_mode, ColorMode.ONOFF)
-        if color_mode_tmp == ColorMode.COLOR_TEMP:
-            self._attr_min_mireds = 1
-            self._attr_max_mireds = 255
-
-        return color_mode_tmp
+        return COLOR_MODE_MAP.get(self._feature.color_mode, ColorMode.ONOFF)
 
     @property
     def supported_color_modes(self):
