@@ -129,10 +129,33 @@ async def test_announce(
         tts_voice="test-voice",
     )
 
+    entity._attr_tts_options = {"test-option": "test-value"}
+
+    original_announce = entity.async_announce
+    announce_started = asyncio.Event()
+
+    async def async_announce(message, media_id):
+        # Verify state change
+        assert entity.state == AssistSatelliteState.RESPONDING
+        await original_announce(message, media_id)
+        announce_started.set()
+
+    def tts_generate_media_source_id(
+        hass: HomeAssistant,
+        message: str,
+        engine: str | None = None,
+        language: str | None = None,
+        options: dict | None = None,
+        cache: bool | None = None,
+    ):
+        # Check that TTS options are passed here
+        assert options == {"test-option": "test-value", "voice": "test-voice"}
+        return "media-source://bla"
+
     with (
         patch(
             "homeassistant.components.assist_satellite.entity.tts_generate_media_source_id",
-            return_value="media-source://bla",
+            new=tts_generate_media_source_id,
         ),
         patch(
             "homeassistant.components.media_source.async_resolve_media",
@@ -141,6 +164,7 @@ async def test_announce(
                 mime_type="audio/mp3",
             ),
         ),
+        patch.object(entity, "async_announce", new=async_announce),
     ):
         await hass.services.async_call(
             "assist_satellite",
@@ -149,6 +173,7 @@ async def test_announce(
             target={"entity_id": "assist_satellite.test_entity"},
             blocking=True,
         )
+        assert entity.state == AssistSatelliteState.LISTENING_WAKE_WORD
 
     assert entity.announcements[0] == expected_params
 

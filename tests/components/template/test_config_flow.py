@@ -63,7 +63,7 @@ from tests.typing import WebSocketGenerator
                 "device_class": "restart",
                 "press": [
                     {
-                        "service": "input_boolean.toggle",
+                        "action": "input_boolean.toggle",
                         "target": {"entity_id": "input_boolean.test"},
                         "data": {},
                     }
@@ -73,7 +73,7 @@ from tests.typing import WebSocketGenerator
                 "device_class": "restart",
                 "press": [
                     {
-                        "service": "input_boolean.toggle",
+                        "action": "input_boolean.toggle",
                         "target": {"entity_id": "input_boolean.test"},
                         "data": {},
                     }
@@ -410,7 +410,7 @@ def get_suggested(schema, key):
                 "device_class": "restart",
                 "press": [
                     {
-                        "service": "input_boolean.toggle",
+                        "action": "input_boolean.toggle",
                         "target": {"entity_id": "input_boolean.test"},
                         "data": {},
                     }
@@ -419,7 +419,7 @@ def get_suggested(schema, key):
             {
                 "press": [
                     {
-                        "service": "input_boolean.toggle",
+                        "action": "input_boolean.toggle",
                         "target": {"entity_id": "input_boolean.test"},
                         "data": {},
                     }
@@ -764,7 +764,7 @@ EARLY_END_ERROR = "invalid template (TemplateSyntaxError: unexpected 'end of tem
                 ),
                 "unit_of_measurement": (
                     "'None' is not a valid unit for device class 'energy'; "
-                    "expected one of 'GJ', 'kWh', 'MJ', 'MWh', 'Wh'"
+                    "expected one of 'cal', 'Gcal', 'GJ', 'J', 'kcal', 'kJ', 'kWh', 'Mcal', 'MJ', 'MWh', 'Wh'"
                 ),
             },
         ),

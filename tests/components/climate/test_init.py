@@ -27,6 +27,7 @@ from homeassistant.components.climate.const import (
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
     SERVICE_SET_FAN_MODE,
+    SERVICE_SET_HVAC_MODE,
     SERVICE_SET_PRESET_MODE,
     SERVICE_SET_SWING_MODE,
     SERVICE_SET_TEMPERATURE,
@@ -138,6 +139,10 @@ class MockClimateEntity(MockEntity, ClimateEntity):
         """Set swing mode."""
         self._attr_swing_mode = swing_mode
 
+    def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
+        """Set new target hvac mode."""
+        self._attr_hvac_mode = hvac_mode
+
 
 class MockClimateEntityTestMethods(MockClimateEntity):
     """Mock Climate device."""
@@ -237,10 +242,12 @@ def test_deprecated_current_constants(
     )
 
 
-async def test_preset_mode_validation(
-    hass: HomeAssistant, register_test_integration: MockConfigEntry
+async def test_mode_validation(
+    hass: HomeAssistant,
+    register_test_integration: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test mode validation for fan, swing and preset."""
+    """Test mode validation for hvac_mode, fan, swing and preset."""
     climate_entity = MockClimateEntity(name="test", entity_id="climate.test")
 
     setup_test_component_platform(
@@ -250,6 +257,7 @@ async def test_preset_mode_validation(
     await hass.async_block_till_done()
 
     state = hass.states.get("climate.test")
+    assert state.state == "heat"
     assert state.attributes.get(ATTR_PRESET_MODE) == "home"
     assert state.attributes.get(ATTR_FAN_MODE) == "auto"
     assert state.attributes.get(ATTR_SWING_MODE) == "auto"
@@ -285,6 +293,22 @@ async def test_preset_mode_validation(
     assert state.attributes.get(ATTR_PRESET_MODE) == "away"
     assert state.attributes.get(ATTR_FAN_MODE) == "off"
     assert state.attributes.get(ATTR_SWING_MODE) == "off"
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {
+            "entity_id": "climate.test",
+            "hvac_mode": "auto",
+        },
+        blocking=True,
+    )
+
+    assert (
+        "MockClimateEntity sets the hvac_mode auto which is not valid "
+        "for this entity with modes: off, heat. This will stop working "
+        "in 2025.3 and raise an error instead. Please" in caplog.text
+    )
 
     with pytest.raises(
         ServiceValidationError,

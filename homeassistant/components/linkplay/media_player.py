@@ -156,7 +156,9 @@ class LinkPlayMediaPlayerEntity(MediaPlayerEntity):
         ]
 
         manufacturer, model = get_info_from_project(bridge.device.properties["project"])
-        if model != MANUFACTURER_GENERIC:
+        if model == MANUFACTURER_GENERIC:
+            model_id = None
+        else:
             model_id = bridge.device.properties["project"]
 
         self._attr_device_info = dr.DeviceInfo(
@@ -213,6 +215,16 @@ class LinkPlayMediaPlayerEntity(MediaPlayerEntity):
     async def async_media_play(self) -> None:
         """Send play command."""
         await self._bridge.player.resume()
+
+    @exception_wrap
+    async def async_media_next_track(self) -> None:
+        """Send next command."""
+        await self._bridge.player.next()
+
+    @exception_wrap
+    async def async_media_previous_track(self) -> None:
+        """Send previous command."""
+        await self._bridge.player.previous()
 
     @exception_wrap
     async def async_set_repeat(self, repeat: RepeatMode) -> None:

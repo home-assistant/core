@@ -69,7 +69,7 @@ dependencies    = [
     "voluptuous==0.15.2",
     "voluptuous-serialize==2.6.0",
     "voluptuous-openapi==0.0.5",
-    "yarl==1.9.11",
+    "yarl==1.11.1",
 ]
 
 [project.urls]
@@ -109,7 +109,7 @@ init-hook = """\
 load-plugins = [
     "pylint.extensions.code_style",
     "pylint.extensions.typing",
-    "hass_enforce_coordinator_module",
+    "hass_enforce_class_module",
     "hass_enforce_sorted_platforms",
     "hass_enforce_super_call",
     "hass_enforce_type_hints",

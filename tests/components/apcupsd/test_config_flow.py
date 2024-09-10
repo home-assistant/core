@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.apcupsd import DOMAIN
+from homeassistant.components.apcupsd.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SOURCE
 from homeassistant.core import HomeAssistant
