@@ -2,13 +2,12 @@
 
 import logging
 from typing import Generator, Optional
-from unittest.mock import patch, MagicMock, AsyncMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from duwi_open_sdk.device_control import ControlDevice
 from duwi_open_sdk.device_scene_models import CustomerDevice
 from duwi_open_sdk.manager import Manager
-
 from homeassistant.components.duwi import DOMAIN
 from homeassistant.components.duwi.base import DuwiEntity
 from homeassistant.components.duwi.switch import DuwiSwitchEntity
@@ -26,7 +25,9 @@ def mock_send_commands() -> Generator[AsyncMock, None, None]:
         # Simulate sending commands and returning a response
         return {"code": "10000"}
 
-    with patch("duwi_open_sdk.manager.CustomerClient.control", new_callable=AsyncMock) as mock_method:
+    with patch(
+        "duwi_open_sdk.manager.CustomerClient.control", new_callable=AsyncMock
+    ) as mock_method:
         mock_method.side_effect = mock_send_commands
         yield mock_method
 

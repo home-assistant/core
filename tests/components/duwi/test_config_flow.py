@@ -3,19 +3,16 @@
 from __future__ import annotations
 
 import pytest
-from syrupy.assertion import SnapshotAssertion
-
 from homeassistant.components.duwi.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from syrupy.assertion import SnapshotAssertion
 
 
-@pytest.mark.usefixtures(
-    "mock_duwi_login_user", "mock_duwi_login_and_fetch_house"
-)
+@pytest.mark.usefixtures("mock_duwi_login_user", "mock_duwi_login_and_fetch_house")
 async def test_user_flow_success(
-        hass: HomeAssistant,
-        snapshot: SnapshotAssertion,
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test the configuration flow: successful path.
 
@@ -36,8 +33,12 @@ async def test_user_flow_success(
     # Simulate submitting the app credentials step
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={"app_key": "correct_app_key", "app_secret": "correct_app_secret", "phone": "correct_phone",
-                    "password": "correct_password"},
+        user_input={
+            "app_key": "correct_app_key",
+            "app_secret": "correct_app_secret",
+            "phone": "correct_phone",
+            "password": "correct_password",
+        },
     )
 
     # Move to selecting a house
@@ -55,12 +56,10 @@ async def test_user_flow_success(
     snapshot.assert_match(result3)
 
 
-@pytest.mark.usefixtures(
-    "mock_duwi_login_user", "mock_duwi_login_and_fetch_house"
-)
+@pytest.mark.usefixtures("mock_duwi_login_user", "mock_duwi_login_and_fetch_house")
 async def test_user_flow_failed_by_phone_auth(
-        hass: HomeAssistant,
-        snapshot: SnapshotAssertion,
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test the configuration flow: successful path.
 
@@ -80,8 +79,12 @@ async def test_user_flow_failed_by_phone_auth(
     # Simulate submitting the app credentials step
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={"app_key": "correct_app_key", "app_secret": "correct_app_secret", "phone": "error_phone",
-                    "password": "correct_password"},
+        user_input={
+            "app_key": "correct_app_key",
+            "app_secret": "correct_app_secret",
+            "phone": "error_phone",
+            "password": "correct_password",
+        },
     )
 
     # Move to selecting a house

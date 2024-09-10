@@ -21,15 +21,14 @@ def mock_duwi_login_user() -> Generator[AsyncMock, None, None]:
                     "access_token_expire_time": "mocked_access_token_expire_time",
                     "refresh_token": "mocked_refresh_token",
                     "refresh_token_expire_time": "mocked_refresh_token_expire_time",
-                }
+                },
             }
         # Simulate failed authentication
-        return {
-            "code": DuwiCode.LOGIN_ERROR.value,
-            "data": {}
-        }
+        return {"code": DuwiCode.LOGIN_ERROR.value, "data": {}}
 
-    with patch("duwi_open_sdk.manager.CustomerClient.login", new_callable=AsyncMock) as mock_auth:
+    with patch(
+        "duwi_open_sdk.manager.CustomerClient.login", new_callable=AsyncMock
+    ) as mock_auth:
         mock_auth.side_effect = mock_auth_func
         yield mock_auth
 
@@ -53,12 +52,14 @@ def mock_duwi_login_and_fetch_house() -> Generator[AsyncMock, None, None]:
                         "houseNo": "mocked_house_no2",
                         "houseName": "mocked_house_name2",
                         "lanSecretKey": "mocked_lan_secret_key2",
-                    }
+                    },
                 ]
-            }
+            },
         }
 
-    with patch("duwi_open_sdk.manager.CustomerClient.fetch_house_info", new_callable=AsyncMock) as mock_fetch:
+    with patch(
+        "duwi_open_sdk.manager.CustomerClient.fetch_house_info", new_callable=AsyncMock
+    ) as mock_fetch:
         # Set side effects for mocks
         mock_fetch.side_effect = mock_fetch_house_info
 
