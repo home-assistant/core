@@ -51,8 +51,26 @@ def mock_single_site_api() -> Generator:
         channels=[],
         network="Jemena",
         status=SiteStatus.ACTIVE,
-        activeFrom=date(2002, 1, 1),
-        closedOn=None,
+        active_from=date(2002, 1, 1),
+        closed_on=None,
+    )
+
+    with patch("amberelectric.AmberApi") as mock:
+        mock.return_value.get_sites.return_value = [site]
+        yield mock
+
+
+@pytest.fixture(name="single_site_closed_no_close_date_api")
+def single_site_closed_no_close_date_api() -> Generator:
+    """Return a single closed site with no closed date."""
+    site = Site(
+        id="01FG0AGP818PXK0DWHXJRRT2DH",
+        nmi="11111111111",
+        channels=[],
+        network="Jemena",
+        status=SiteStatus.CLOSED,
+        active_from=None,
+        closed_on=None,
     )
 
     with patch("amberelectric.AmberApi") as mock:
@@ -68,9 +86,9 @@ def mock_single_site_pending_api() -> Generator:
         nmi="11111111111",
         channels=[],
         network="Jemena",
-        status="pending",
-        activeFrom=None,
-        closedOn=None,
+        status=SiteStatus.PENDING,
+        active_from=None,
+        closed_on=None,
     )
 
     with patch("amberelectric.AmberApi") as mock:
@@ -88,8 +106,8 @@ def mock_single_site_rejoin_api() -> Generator:
         channels=[],
         network="Jemena",
         status=SiteStatus.CLOSED,
-        activeFrom=date(2002, 1, 1),
-        closedOn=date(2002, 6, 1),
+        active_from=date(2002, 1, 1),
+        closed_on=date(2002, 6, 1),
     )
     site_2 = Site(
         id="01FG0AGP818PXK0DWHXJRRT2DH",
@@ -97,8 +115,8 @@ def mock_single_site_rejoin_api() -> Generator:
         channels=[],
         network="Jemena",
         status=SiteStatus.ACTIVE,
-        activeFrom=date(2003, 1, 1),
-        closedOn=None,
+        active_from=date(2003, 1, 1),
+        closed_on=None,
     )
     site_3 = Site(
         id="01FG0AGP818PXK0DWHXJRRT2DH",
@@ -106,8 +124,8 @@ def mock_single_site_rejoin_api() -> Generator:
         channels=[],
         network="Jemena",
         status=SiteStatus.CLOSED,
-        activeFrom=date(2003, 1, 1),
-        closedOn=date(2003, 6, 1),
+        active_from=date(2003, 1, 1),
+        closed_on=date(2003, 6, 1),
     )
     instance.get_sites.return_value = [site_1, site_2, site_3]
 
@@ -160,6 +178,39 @@ async def test_single_pending_site(
 
 async def test_single_site(hass: HomeAssistant, single_site_api: Mock) -> None:
     """Test single site."""
+    initial_result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert initial_result.get("type") is FlowResultType.FORM
+    assert initial_result.get("step_id") == "user"
+
+    # Test filling in API key
+    enter_api_key_result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+        data={CONF_API_TOKEN: API_KEY},
+    )
+    assert enter_api_key_result.get("type") is FlowResultType.FORM
+    assert enter_api_key_result.get("step_id") == "site"
+
+    select_site_result = await hass.config_entries.flow.async_configure(
+        enter_api_key_result["flow_id"],
+        {CONF_SITE_ID: "01FG0AGP818PXK0DWHXJRRT2DH", CONF_SITE_NAME: "Home"},
+    )
+
+    # Show available sites
+    assert select_site_result.get("type") is FlowResultType.CREATE_ENTRY
+    assert select_site_result.get("title") == "Home"
+    data = select_site_result.get("data")
+    assert data
+    assert data[CONF_API_TOKEN] == API_KEY
+    assert data[CONF_SITE_ID] == "01FG0AGP818PXK0DWHXJRRT2DH"
+
+
+async def test_single_closed_site_no_closed_date(
+    hass: HomeAssistant, single_site_closed_no_close_date_api: Mock
+) -> None:
+    """Test single closed site with no closed date."""
     initial_result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
