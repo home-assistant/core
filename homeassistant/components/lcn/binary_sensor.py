@@ -15,7 +15,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
 
-from . import LcnEntity
 from .const import (
     ADD_ENTITIES_CALLBACKS,
     BINSENSOR_PORTS,
@@ -23,6 +22,7 @@ from .const import (
     DOMAIN,
     SETPOINTS,
 )
+from .entity import LcnEntity
 from .helpers import InputType
 
 

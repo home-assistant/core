@@ -13,7 +13,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
 
-from . import LcnEntity
 from .const import (
     ADD_ENTITIES_CALLBACKS,
     CONF_DOMAIN_DATA,
@@ -23,6 +22,7 @@ from .const import (
     DOMAIN,
     OUTPUT_PORTS,
 )
+from .entity import LcnEntity
 
 PARALLEL_UPDATES = 0
 
