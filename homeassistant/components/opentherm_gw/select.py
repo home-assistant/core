@@ -5,15 +5,22 @@ from dataclasses import dataclass
 from enum import IntEnum, StrEnum
 from functools import partial
 
+from pyotgw.vars import OTGW_GPIO_A, OTGW_GPIO_B
+
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ID, EntityCategory
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import OpenThermGatewayHub
-from .const import DATA_GATEWAYS, DATA_OPENTHERM_GW, GATEWAY_DEVICE_DESCRIPTION
-from .entity import OpenThermEntity, OpenThermEntityDescription
+from .const import (
+    DATA_GATEWAYS,
+    DATA_OPENTHERM_GW,
+    GATEWAY_DEVICE_DESCRIPTION,
+    OpenThermDataSource,
+)
+from .entity import OpenThermEntityDescription, OpenThermStatusEntity
 
 
 class OpenThermSelectGPIOMode(StrEnum):
@@ -65,11 +72,12 @@ class OpenThermSelectEntityDescription(
     """Describes an opentherm_gw select entity."""
 
     select_action: Callable[[OpenThermGatewayHub, str], Awaitable]
+    convert_pyotgw_state_to_ha_state: Callable
 
 
 SELECT_DESCRIPTIONS: tuple[OpenThermSelectEntityDescription, ...] = (
     OpenThermSelectEntityDescription(
-        key="gpio_a_mode",
+        key=OTGW_GPIO_A,
         translation_key="gpio_mode_n",
         translation_placeholders={"gpio_id": "A"},
         device_description=GATEWAY_DEVICE_DESCRIPTION,
@@ -79,14 +87,24 @@ SELECT_DESCRIPTIONS: tuple[OpenThermSelectEntityDescription, ...] = (
             if mode != OpenThermSelectGPIOMode.DS1820
         ],
         select_action=partial(set_gpio_mode, "A"),
+        convert_pyotgw_state_to_ha_state=lambda state: OpenThermSelectGPIOMode[
+            PyotgwGPIOMode(state).name
+        ]
+        if state in PyotgwGPIOMode
+        else None,
     ),
     OpenThermSelectEntityDescription(
-        key="gpio_b_mode",
+        key=OTGW_GPIO_B,
         translation_key="gpio_mode_n",
         translation_placeholders={"gpio_id": "B"},
         device_description=GATEWAY_DEVICE_DESCRIPTION,
         options=list(OpenThermSelectGPIOMode),
         select_action=partial(set_gpio_mode, "B"),
+        convert_pyotgw_state_to_ha_state=lambda state: OpenThermSelectGPIOMode[
+            PyotgwGPIOMode(state).name
+        ]
+        if state in PyotgwGPIOMode
+        else None,
     ),
 )
 
@@ -104,10 +122,9 @@ async def async_setup_entry(
     )
 
 
-class OpenThermSelect(OpenThermEntity, SelectEntity):
+class OpenThermSelect(OpenThermStatusEntity, SelectEntity):
     """Represent an OpenTherm Gateway select."""
 
-    _attr_assumed_state = True
     _attr_current_option = None
     _attr_entity_category = EntityCategory.CONFIG
     entity_description: OpenThermSelectEntityDescription
@@ -118,3 +135,14 @@ class OpenThermSelect(OpenThermEntity, SelectEntity):
         if new_option is not None:
             self._attr_current_option = new_option
             self.async_write_ha_state()
+
+    @callback
+    def receive_report(self, status: dict[OpenThermDataSource, dict]) -> None:
+        """Handle status updates from the component."""
+        state = status[self.entity_description.device_description.data_source].get(
+            self.entity_description.key
+        )
+        self._attr_current_option = (
+            self.entity_description.convert_pyotgw_state_to_ha_state(state)
+        )
+        self.async_write_ha_state()
