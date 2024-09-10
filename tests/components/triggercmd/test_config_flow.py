@@ -28,7 +28,7 @@ async def test_full_flow(
 
     assert result["errors"] == {}
     assert result["step_id"] == "user"
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
 
     with (
         patch(
