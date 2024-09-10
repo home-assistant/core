@@ -179,7 +179,7 @@ aioairq==0.3.2
 aioairzone-cloud==0.6.5
 
 # homeassistant.components.airzone
-aioairzone==0.9.1
+aioairzone==0.9.2
 
 # homeassistant.components.ambient_network
 # homeassistant.components.ambient_station
@@ -198,7 +198,7 @@ aioaseko==0.2.0
 aioasuswrt==1.4.0
 
 # homeassistant.components.husqvarna_automower
-aioautomower==2024.8.0
+aioautomower==2024.9.0
 
 # homeassistant.components.azure_devops
 aioazuredevops==2.2.1
@@ -372,6 +372,9 @@ aiosolaredge==0.2.0
 
 # homeassistant.components.steamist
 aiosteamist==1.0.0
+
+# homeassistant.components.cambridge_audio
+aiostreammagic==2.0.3
 
 # homeassistant.components.switcher_kis
 aioswitcher==4.0.3
@@ -1315,7 +1318,7 @@ lw12==0.9.2
 lxml==5.1.0
 
 # homeassistant.components.matrix
-matrix-nio==0.25.0
+matrix-nio==0.25.1
 
 # homeassistant.components.maxcube
 maxcube-api==0.4.3
@@ -2274,7 +2277,7 @@ pytfiac==0.4
 pythinkingcleaner==0.0.3
 
 # homeassistant.components.motionmount
-python-MotionMount==2.0.0
+python-MotionMount==2.1.0
 
 # homeassistant.components.awair
 python-awair==0.2.4
@@ -2331,7 +2334,7 @@ python-join-api==0.0.9
 python-juicenet==1.1.0
 
 # homeassistant.components.tplink
-python-kasa[speedups]==0.7.2
+python-kasa[speedups]==0.7.3
 
 # homeassistant.components.linkplay
 python-linkplay==0.0.9
@@ -2719,7 +2722,6 @@ streamlabswater==1.0.1
 
 # homeassistant.components.huawei_lte
 # homeassistant.components.solaredge
-# homeassistant.components.thermoworks_smoke
 # homeassistant.components.traccar
 stringcase==1.2.0
 
@@ -2797,14 +2799,11 @@ thermobeacon-ble==0.7.0
 # homeassistant.components.thermopro
 thermopro-ble==0.10.0
 
-# homeassistant.components.thermoworks_smoke
-thermoworks-smoke==0.1.8
-
 # homeassistant.components.thingspeak
 thingspeak==1.0.0
 
 # homeassistant.components.lg_thinq
-thinqconnect==0.9.6
+thinqconnect==0.9.7
 
 # homeassistant.components.tikteck
 tikteck==0.4
@@ -2942,7 +2941,7 @@ watchdog==2.3.1
 waterfurnace==1.1.0
 
 # homeassistant.components.weatherflow_cloud
-weatherflow4py==0.2.23
+weatherflow4py==0.3.4
 
 # homeassistant.components.webmin
 webmin-xmlrpc==0.0.2
