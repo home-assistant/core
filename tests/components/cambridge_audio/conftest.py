@@ -39,9 +39,6 @@ def mock_stream_magic_client() -> Generator[AsyncMock]:
         client = mock_client.return_value
         client.host = "192.168.20.218"
         client.info = Info.from_json(load_fixture("get_info.json", DOMAIN))
-        client.get_info.return_value = Info.from_json(
-            load_fixture("get_info.json", DOMAIN)
-        )
         client.is_connected = Mock(return_value=True)
 
         yield client
