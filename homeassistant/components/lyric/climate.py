@@ -208,10 +208,7 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
         if LYRIC_HVAC_MODE_COOL in device.allowed_modes:
             self._attr_hvac_modes.append(HVACMode.COOL)
 
-        if (
-            LYRIC_HVAC_MODE_HEAT in device.allowed_modes
-            and LYRIC_HVAC_MODE_COOL in device.allowed_modes
-        ):
+        if LYRIC_HVAC_MODE_HEAT_COOL in device.allowed_modes:
             self._attr_hvac_modes.append(HVACMode.HEAT_COOL)
 
         # Setup supported features

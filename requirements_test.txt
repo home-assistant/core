@@ -51,4 +51,4 @@ types-pytz==2024.1.0.20240417
 types-PyYAML==6.0.12.20240311
 types-requests==2.31.0.3
 types-xmltodict==0.13.0.3
-uv==0.2.27
+uv==0.4.8
