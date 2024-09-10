@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import HomeAssistant
 
 from .coordinator import NiceGOUpdateCoordinator
@@ -25,8 +25,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: NiceGOConfigEntry) -> bo
     """Set up Nice G.O. from a config entry."""
 
     coordinator = NiceGOUpdateCoordinator(hass)
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, coordinator.async_ha_stop)
+    )
 
     await coordinator.async_config_entry_first_refresh()
+
     entry.runtime_data = coordinator
 
     entry.async_create_background_task(
@@ -34,6 +38,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: NiceGOConfigEntry) -> bo
         coordinator.client_listen(),
         "nice_go_websocket_task",
     )
+
+    entry.async_on_unload(coordinator.unsubscribe)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
