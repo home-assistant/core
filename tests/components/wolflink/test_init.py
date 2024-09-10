@@ -29,6 +29,8 @@ async def test_unique_id_migration(
         manufacturer=MANUFACTURER,
     ).id
 
+    assert config_entry.version == 1
+    assert config_entry.minor_version == 1
     assert config_entry.unique_id == 1234
     assert (
         hass.config_entries.async_entry_for_domain_unique_id(DOMAIN, 1234)
@@ -45,6 +47,8 @@ async def test_unique_id_migration(
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
 
+    assert config_entry.version == 1
+    assert config_entry.minor_version == 2
     assert config_entry.unique_id == "1234"
     assert (
         hass.config_entries.async_entry_for_domain_unique_id(DOMAIN, "1234")
