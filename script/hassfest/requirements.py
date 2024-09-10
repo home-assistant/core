@@ -30,7 +30,6 @@ PIP_VERSION_RANGE_SEPARATOR = re.compile(r"^(==|>=|<=|~=|!=|<|>|===)?(.*)$")
 
 IGNORE_STANDARD_LIBRARY_VIOLATIONS = {
     # Integrations which have standard library requirements.
-    "electrasmart",
     "slide",
     "suez_water",
 }

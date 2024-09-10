@@ -27,12 +27,11 @@ from homeassistant.components.water_heater import (
     WaterHeaterEntity,
     WaterHeaterEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, STATE_OFF, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from . import AirzoneCloudConfigEntry
 from .coordinator import AirzoneUpdateCoordinator
 from .entity import AirzoneHotWaterEntity
 
@@ -68,10 +67,12 @@ OPERATION_MODE_TO_DHW_PARAMS: Final[dict[str, dict[str, Any]]] = {
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: AirzoneCloudConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Add Airzone Cloud Water Heater from a config_entry."""
-    coordinator: AirzoneUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     async_add_entities(
         AirzoneWaterHeater(

@@ -6,6 +6,7 @@ from datetime import date, datetime, timedelta
 from typing import Final
 
 from holidays import (
+    PUBLIC,
     HolidayBase,
     __version__ as python_holidays_version,
     country_holidays,
@@ -35,6 +36,7 @@ from homeassistant.util import dt as dt_util, slugify
 from .const import (
     ALLOWED_DAYS,
     CONF_ADD_HOLIDAYS,
+    CONF_CATEGORY,
     CONF_EXCLUDES,
     CONF_OFFSET,
     CONF_PROVINCE,
@@ -69,17 +71,28 @@ def validate_dates(holiday_list: list[str]) -> list[str]:
 
 
 def _get_obj_holidays(
-    country: str | None, province: str | None, year: int, language: str | None
+    country: str | None,
+    province: str | None,
+    year: int,
+    language: str | None,
+    categories: list[str] | None,
 ) -> HolidayBase:
     """Get the object for the requested country and year."""
     if not country:
         return HolidayBase()
+
+    set_categories = None
+    if categories:
+        category_list = [PUBLIC]
+        category_list.extend(categories)
+        set_categories = tuple(category_list)
 
     obj_holidays: HolidayBase = country_holidays(
         country,
         subdiv=province,
         years=year,
         language=language,
+        categories=set_categories,
     )
     if (supported_languages := obj_holidays.supported_languages) and language == "en":
         for lang in supported_languages:
@@ -89,6 +102,7 @@ def _get_obj_holidays(
                     subdiv=province,
                     years=year,
                     language=lang,
+                    categories=set_categories,
                 )
             LOGGER.debug("Changing language from %s to %s", language, lang)
     return obj_holidays
@@ -107,10 +121,11 @@ async def async_setup_entry(
     sensor_name: str = entry.options[CONF_NAME]
     workdays: list[str] = entry.options[CONF_WORKDAYS]
     language: str | None = entry.options.get(CONF_LANGUAGE)
+    categories: list[str] | None = entry.options.get(CONF_CATEGORY)
 
     year: int = (dt_util.now() + timedelta(days=days_offset)).year
     obj_holidays: HolidayBase = await hass.async_add_executor_job(
-        _get_obj_holidays, country, province, year, language
+        _get_obj_holidays, country, province, year, language, categories
     )
     calc_add_holidays: list[str] = validate_dates(add_holidays)
     calc_remove_holidays: list[str] = validate_dates(remove_holidays)
@@ -269,7 +284,7 @@ class IsWorkdaySensor(BinarySensorEntity):
 
     def _update_state_and_setup_listener(self) -> None:
         """Update state and setup listener for next interval."""
-        now = dt_util.utcnow()
+        now = dt_util.now()
         self.update_data(now)
         self.unsub = async_track_point_in_utc_time(
             self.hass, self.point_in_time_listener, self.get_next_interval(now)

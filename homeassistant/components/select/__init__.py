@@ -13,10 +13,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.config_validation import (
-    PLATFORM_SCHEMA,
-    PLATFORM_SCHEMA_BASE,
-)
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
@@ -33,13 +29,14 @@ from .const import (
     SERVICE_SELECT_PREVIOUS,
 )
 
-SCAN_INTERVAL = timedelta(seconds=30)
+_LOGGER = logging.getLogger(__name__)
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
+PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
+PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
+SCAN_INTERVAL = timedelta(seconds=30)
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
-
-_LOGGER = logging.getLogger(__name__)
 
 __all__ = [
     "ATTR_CYCLE",
@@ -69,13 +66,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     component.async_register_entity_service(
         SERVICE_SELECT_FIRST,
-        {},
+        None,
         SelectEntity.async_first.__name__,
     )
 
     component.async_register_entity_service(
         SERVICE_SELECT_LAST,
-        {},
+        None,
         SelectEntity.async_last.__name__,
     )
 

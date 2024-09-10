@@ -188,7 +188,7 @@ async def test_callback_exception_gets_logged(
     @callback
     def bad_handler(*args):
         """Record calls."""
-        raise Exception("This is a bad message callback")
+        raise Exception("This is a bad message callback")  # noqa: TRY002
 
     # wrap in partial to test message logging.
     async_dispatcher_connect(hass, "test", partial(bad_handler))
@@ -208,7 +208,7 @@ async def test_coro_exception_gets_logged(
 
     async def bad_async_handler(*args):
         """Record calls."""
-        raise Exception("This is a bad message in a coro")
+        raise Exception("This is a bad message in a coro")  # noqa: TRY002
 
     # wrap in partial to test message logging.
     async_dispatcher_connect(hass, "test", bad_async_handler)

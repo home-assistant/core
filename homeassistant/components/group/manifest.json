@@ -1,15 +1,6 @@
 {
   "domain": "group",
   "name": "Group",
-  "after_dependencies": [
-    "alarm_control_panel",
-    "climate",
-    "device_tracker",
-    "person",
-    "plant",
-    "vacuum",
-    "water_heater"
-  ],
   "codeowners": ["@home-assistant/core"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/group",

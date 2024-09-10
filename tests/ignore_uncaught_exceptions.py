@@ -17,6 +17,12 @@ IGNORE_UNCAUGHT_EXCEPTIONS = [
         # This test explicitly throws an uncaught exception
         # and should not be removed.
         "tests.test_config_entries",
+        "test_config_entry_unloaded_during_platform_setups",
+    ),
+    (
+        # This test explicitly throws an uncaught exception
+        # and should not be removed.
+        "tests.test_config_entries",
         "test_config_entry_unloaded_during_platform_setup",
     ),
     (

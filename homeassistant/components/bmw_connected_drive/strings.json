@@ -83,7 +83,12 @@
         "name": "AC Charging Limit"
       },
       "charging_mode": {
-        "name": "Charging Mode"
+        "name": "Charging Mode",
+        "state": {
+          "immediate_charging": "Immediate charging",
+          "delayed_charging": "Delayed charging",
+          "no_action": "No action"
+        }
       }
     },
     "sensor": {
@@ -97,7 +102,21 @@
         "name": "Charging end time"
       },
       "charging_status": {
-        "name": "Charging status"
+        "name": "Charging status",
+        "state": {
+          "default": "Default",
+          "charging": "Charging",
+          "error": "Error",
+          "complete": "Complete",
+          "fully_charged": "Fully charged",
+          "finished_fully_charged": "Finished, fully charged",
+          "finished_not_full": "Finished, not full",
+          "invalid": "Invalid",
+          "not_charging": "Not charging",
+          "plugged_in": "Plugged in",
+          "waiting_for_charging": "Waiting for charging",
+          "target_reached": "Target reached"
+        }
       },
       "charging_target": {
         "name": "Charging target"
@@ -129,8 +148,33 @@
           "cooling": "Cooling",
           "heating": "Heating",
           "inactive": "Inactive",
-          "standby": "Standby"
+          "standby": "Standby",
+          "ventilation": "Ventilation"
         }
+      },
+      "front_left_current_pressure": {
+        "name": "Front left tire pressure"
+      },
+      "front_right_current_pressure": {
+        "name": "Front right tire pressure"
+      },
+      "rear_left_current_pressure": {
+        "name": "Rear left tire pressure"
+      },
+      "rear_right_current_pressure": {
+        "name": "Rear right tire pressure"
+      },
+      "front_left_target_pressure": {
+        "name": "Front left target pressure"
+      },
+      "front_right_target_pressure": {
+        "name": "Front right target pressure"
+      },
+      "rear_left_target_pressure": {
+        "name": "Rear left target pressure"
+      },
+      "rear_right_target_pressure": {
+        "name": "Rear right target pressure"
       }
     },
     "switch": {
@@ -140,6 +184,20 @@
       "charging": {
         "name": "Charging"
       }
+    }
+  },
+  "selector": {
+    "regions": {
+      "options": {
+        "china": "China",
+        "north_america": "North America",
+        "rest_of_world": "Rest of world"
+      }
+    }
+  },
+  "exceptions": {
+    "invalid_poi": {
+      "message": "Invalid data for point of interest: {poi_exception}"
     }
   }
 }

@@ -16,6 +16,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
@@ -60,6 +61,15 @@ async def async_attach_trigger(
     trigger_info: TriggerInfo,
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
+    async_create_issue(
+        hass,
+        DOMAIN,
+        "deprecated_device_trigger_nanoleaf",
+        is_fixable=False,
+        breaks_in_ha_version="2025.1.0",
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_device_trigger",
+    )
     event_config = event_trigger.TRIGGER_SCHEMA(
         {
             event_trigger.CONF_PLATFORM: CONF_EVENT,

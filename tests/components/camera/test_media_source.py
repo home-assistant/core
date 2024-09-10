@@ -12,14 +12,13 @@ from homeassistant.setup import async_setup_component
 
 
 @pytest.fixture(autouse=True)
-async def setup_media_source(hass):
+async def setup_media_source(hass: HomeAssistant) -> None:
     """Set up media source."""
     assert await async_setup_component(hass, "media_source", {})
 
 
-async def test_device_with_device(
-    hass: HomeAssistant, mock_camera_with_device, mock_camera
-) -> None:
+@pytest.mark.usefixtures("mock_camera_with_device", "mock_camera")
+async def test_device_with_device(hass: HomeAssistant) -> None:
     """Test browsing when camera has a device and a name."""
     item = await media_source.async_browse_media(hass, "media-source://camera")
     assert item.not_shown == 2
@@ -27,9 +26,8 @@ async def test_device_with_device(
     assert item.children[0].title == "Test Camera Device Demo camera without stream"
 
 
-async def test_device_with_no_name(
-    hass: HomeAssistant, mock_camera_with_no_name, mock_camera
-) -> None:
+@pytest.mark.usefixtures("mock_camera_with_no_name", "mock_camera")
+async def test_device_with_no_name(hass: HomeAssistant) -> None:
     """Test browsing when camera has device and name == None."""
     item = await media_source.async_browse_media(hass, "media-source://camera")
     assert item.not_shown == 2
@@ -37,7 +35,8 @@ async def test_device_with_no_name(
     assert item.children[0].title == "Test Camera Device Demo camera without stream"
 
 
-async def test_browsing_hls(hass: HomeAssistant, mock_camera_hls) -> None:
+@pytest.mark.usefixtures("mock_camera_hls")
+async def test_browsing_hls(hass: HomeAssistant) -> None:
     """Test browsing HLS camera media source."""
     item = await media_source.async_browse_media(hass, "media-source://camera")
     assert item is not None
@@ -54,7 +53,8 @@ async def test_browsing_hls(hass: HomeAssistant, mock_camera_hls) -> None:
     assert item.children[0].media_content_type == FORMAT_CONTENT_TYPE["hls"]
 
 
-async def test_browsing_mjpeg(hass: HomeAssistant, mock_camera) -> None:
+@pytest.mark.usefixtures("mock_camera")
+async def test_browsing_mjpeg(hass: HomeAssistant) -> None:
     """Test browsing MJPEG camera media source."""
     item = await media_source.async_browse_media(hass, "media-source://camera")
     assert item is not None
@@ -65,7 +65,8 @@ async def test_browsing_mjpeg(hass: HomeAssistant, mock_camera) -> None:
     assert item.children[0].title == "Demo camera without stream"
 
 
-async def test_browsing_web_rtc(hass: HomeAssistant, mock_camera_web_rtc) -> None:
+@pytest.mark.usefixtures("mock_camera_web_rtc")
+async def test_browsing_web_rtc(hass: HomeAssistant) -> None:
     """Test browsing WebRTC camera media source."""
     # 3 cameras:
     # one only supports WebRTC (no stream source)
@@ -90,7 +91,8 @@ async def test_browsing_web_rtc(hass: HomeAssistant, mock_camera_web_rtc) -> Non
         assert item.children[0].media_content_type == FORMAT_CONTENT_TYPE["hls"]
 
 
-async def test_resolving(hass: HomeAssistant, mock_camera_hls) -> None:
+@pytest.mark.usefixtures("mock_camera_hls")
+async def test_resolving(hass: HomeAssistant) -> None:
     """Test resolving."""
     # Adding stream enables HLS camera
     hass.config.components.add("stream")
@@ -107,7 +109,8 @@ async def test_resolving(hass: HomeAssistant, mock_camera_hls) -> None:
     assert item.mime_type == FORMAT_CONTENT_TYPE["hls"]
 
 
-async def test_resolving_errors(hass: HomeAssistant, mock_camera_hls) -> None:
+@pytest.mark.usefixtures("mock_camera_hls")
+async def test_resolving_errors(hass: HomeAssistant) -> None:
     """Test resolving."""
 
     with pytest.raises(media_source.Unresolvable) as exc_info:

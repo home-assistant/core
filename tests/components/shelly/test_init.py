@@ -117,13 +117,13 @@ async def test_shared_device_mac(
     gen: int,
     mock_block_device: Mock,
     mock_rpc_device: Mock,
-    device_reg: DeviceRegistry,
+    device_registry: DeviceRegistry,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test first time shared device with another domain."""
     config_entry = MockConfigEntry(domain="test", data={}, unique_id="some_id")
     config_entry.add_to_hass(hass)
-    device_reg.async_get_or_create(
+    device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         connections={(CONNECTION_NETWORK_MAC, format_mac(MOCK_MAC))},
     )
@@ -243,13 +243,13 @@ async def test_sleeping_block_device_online(
     device_sleep: int,
     mock_block_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
-    device_reg: DeviceRegistry,
+    device_registry: DeviceRegistry,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test sleeping block device online."""
     config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id="shelly")
     config_entry.add_to_hass(hass)
-    device_reg.async_get_or_create(
+    device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         connections={(CONNECTION_NETWORK_MAC, format_mac(MOCK_MAC))},
     )
@@ -263,7 +263,7 @@ async def test_sleeping_block_device_online(
     assert "will resume when device is online" in caplog.text
 
     mock_block_device.mock_online()
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert "online, resuming setup" in caplog.text
     assert entry.data["sleep_period"] == device_sleep
@@ -279,12 +279,13 @@ async def test_sleeping_rpc_device_online(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test sleeping RPC device online."""
+    monkeypatch.setattr(mock_rpc_device, "connected", False)
     monkeypatch.setitem(mock_rpc_device.status["sys"], "wakeup_period", device_sleep)
     entry = await init_integration(hass, 2, sleep_period=entry_sleep)
     assert "will resume when device is online" in caplog.text
 
     mock_rpc_device.mock_online()
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert "online, resuming setup" in caplog.text
     assert entry.data["sleep_period"] == device_sleep
@@ -297,15 +298,62 @@ async def test_sleeping_rpc_device_online_new_firmware(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test sleeping device Gen2 with firmware 1.0.0 or later."""
+    monkeypatch.setattr(mock_rpc_device, "connected", False)
     entry = await init_integration(hass, 2, sleep_period=None)
     assert "will resume when device is online" in caplog.text
 
     mutate_rpc_device_status(monkeypatch, mock_rpc_device, "sys", "wakeup_period", 1500)
     mock_rpc_device.mock_online()
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert "online, resuming setup" in caplog.text
     assert entry.data["sleep_period"] == 1500
+
+
+async def test_sleeping_rpc_device_online_during_setup(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test sleeping device Gen2 woke up by user during setup."""
+    monkeypatch.setattr(mock_rpc_device, "connected", False)
+    monkeypatch.setitem(mock_rpc_device.status["sys"], "wakeup_period", 1000)
+    await init_integration(hass, 2, sleep_period=1000)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert "will resume when device is online" in caplog.text
+    assert "is online (source: setup)" in caplog.text
+    assert hass.states.get("sensor.test_name_temperature") is not None
+
+
+async def test_sleeping_rpc_device_offline_during_setup(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test sleeping device Gen2 woke up by user during setup."""
+    monkeypatch.setattr(mock_rpc_device, "connected", False)
+    monkeypatch.setitem(mock_rpc_device.status["sys"], "wakeup_period", 1000)
+    monkeypatch.setattr(
+        mock_rpc_device, "initialize", AsyncMock(side_effect=DeviceConnectionError)
+    )
+
+    # Init integration, should fail since device is offline
+    await init_integration(hass, 2, sleep_period=1000)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert "will resume when device is online" in caplog.text
+    assert "is online (source: setup)" in caplog.text
+    assert hass.states.get("sensor.test_name_temperature") is None
+
+    # Create an online event and verify that device is init successfully
+    monkeypatch.setattr(mock_rpc_device, "initialize", AsyncMock())
+    mock_rpc_device.mock_online()
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get("sensor.test_name_temperature") is not None
 
 
 @pytest.mark.parametrize(

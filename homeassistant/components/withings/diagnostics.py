@@ -26,11 +26,30 @@ async def async_get_config_entry_diagnostics(
 
     withings_data = entry.runtime_data
 
+    positional_measurements: dict[str, list[str]] = {}
+    measurements: list[str] = []
+
+    for measurement in withings_data.measurement_coordinator.data:
+        measurement_type, measurement_position = measurement
+        measurement_type_name = measurement_type.name.lower()
+        if measurement_position is not None:
+            measurement_position_name = measurement_position.name.lower()
+            if measurement_type_name not in positional_measurements:
+                positional_measurements[measurement_type_name] = []
+            positional_measurements[measurement_type_name].append(
+                measurement_position_name
+            )
+        else:
+            measurements.append(measurement_type_name)
+
     return {
         "has_valid_external_webhook_url": has_valid_external_webhook_url,
         "has_cloudhooks": has_cloudhooks,
         "webhooks_connected": withings_data.measurement_coordinator.webhooks_connected,
-        "received_measurements": list(withings_data.measurement_coordinator.data),
+        "received_measurements": {
+            "positional": positional_measurements,
+            "non_positional": measurements,
+        },
         "received_sleep_data": withings_data.sleep_coordinator.data is not None,
         "received_workout_data": withings_data.workout_coordinator.data is not None,
         "received_activity_data": withings_data.activity_coordinator.data is not None,

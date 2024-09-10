@@ -100,7 +100,7 @@ async def load_wyoming_info(
                 while True:
                     event = await client.read_event()
                     if event is None:
-                        raise WyomingError(
+                        raise WyomingError(  # noqa: TRY301
                             "Connection closed unexpectedly",
                         )
 

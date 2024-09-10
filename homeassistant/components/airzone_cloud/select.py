@@ -14,12 +14,11 @@ from aioairzone_cloud.const import (
 )
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from . import AirzoneCloudConfigEntry
 from .coordinator import AirzoneUpdateCoordinator
 from .entity import AirzoneEntity, AirzoneZoneEntity
 
@@ -52,10 +51,12 @@ ZONE_SELECT_TYPES: Final[tuple[AirzoneSelectDescription, ...]] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: AirzoneCloudConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Add Airzone Cloud select from a config_entry."""
-    coordinator: AirzoneUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     # Zones
     async_add_entities(

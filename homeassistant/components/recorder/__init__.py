@@ -23,6 +23,7 @@ from homeassistant.helpers.entityfilter import (
 from homeassistant.helpers.integration_platform import (
     async_process_integration_platforms,
 )
+from homeassistant.helpers.recorder import DATA_INSTANCE
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 from homeassistant.util.event_type import EventType
@@ -30,10 +31,9 @@ from homeassistant.util.event_type import EventType
 from . import entity_registry, websocket_api
 from .const import (  # noqa: F401
     CONF_DB_INTEGRITY_CHECK,
-    DATA_INSTANCE,
     DOMAIN,
     INTEGRATION_PLATFORM_COMPILE_STATISTICS,
-    INTEGRATION_PLATFORMS_LOAD_IN_RECORDER_THREAD,
+    INTEGRATION_PLATFORM_METHODS,
     SQLITE_URL_PREFIX,
     SupportedDialect,
 )
@@ -127,15 +127,15 @@ def is_entity_recorded(hass: HomeAssistant, entity_id: str) -> bool:
 
     Async friendly.
     """
-    if DATA_INSTANCE not in hass.data:
-        return False
-    return hass.data[DATA_INSTANCE].entity_filter(entity_id)
+    instance = get_instance(hass)
+    return instance.entity_filter is None or instance.entity_filter(entity_id)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the recorder."""
     conf = config[DOMAIN]
-    entity_filter = convert_include_exclude_filter(conf).get_filter()
+    _filter = convert_include_exclude_filter(conf)
+    entity_filter = None if _filter.empty_filter else _filter.get_filter()
     auto_purge = conf[CONF_AUTO_PURGE]
     auto_repack = conf[CONF_AUTO_REPACK]
     keep_days = conf[CONF_PURGE_KEEP_DAYS]
@@ -189,10 +189,7 @@ async def _async_setup_integration_platform(
         """Process a recorder platform."""
         # If the platform has a compile_statistics method, we need to
         # add it to the recorder queue to be processed.
-        if any(
-            hasattr(platform, _attr)
-            for _attr in INTEGRATION_PLATFORMS_LOAD_IN_RECORDER_THREAD
-        ):
+        if any(hasattr(platform, _attr) for _attr in INTEGRATION_PLATFORM_METHODS):
             instance.queue_task(AddRecorderPlatformTask(domain, platform))
 
     await async_process_integration_platforms(hass, DOMAIN, _process_recorder_platform)

@@ -12,7 +12,10 @@ from fints.client import FinTS3PinTanClient
 from fints.models import SEPAAccount
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+    SensorEntity,
+)
 from homeassistant.const import CONF_NAME, CONF_PIN, CONF_URL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -25,7 +28,7 @@ SCAN_INTERVAL = timedelta(hours=4)
 
 ICON = "mdi:currency-eur"
 
-BankCredentials = namedtuple("BankCredentials", "blz login pin url")
+BankCredentials = namedtuple("BankCredentials", "blz login pin url")  # noqa: PYI024
 
 CONF_BIN = "bank_identification_number"
 CONF_ACCOUNTS = "accounts"
@@ -43,7 +46,7 @@ SCHEMA_ACCOUNTS = vol.Schema(
     }
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_BIN): cv.string,
         vol.Required(CONF_USERNAME): cv.string,

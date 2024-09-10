@@ -100,7 +100,7 @@
     },
     "deprecated_restart": {
       "title": "`modbus.restart` is being removed",
-      "description": "Please use reload yaml via the developer tools in the UI instead of via the `modbus.restart` service."
+      "description": "Please use reload yaml via the developer tools in the UI instead of via the `modbus.restart` action."
     }
   }
 }

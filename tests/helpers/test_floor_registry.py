@@ -1,23 +1,18 @@
 """Tests for the floor registry."""
 
+from datetime import datetime
 from functools import partial
 import re
 from typing import Any
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import area_registry as ar, floor_registry as fr
-from homeassistant.helpers.floor_registry import (
-    EVENT_FLOOR_REGISTRY_UPDATED,
-    STORAGE_KEY,
-    STORAGE_VERSION_MAJOR,
-    FloorRegistry,
-    async_get,
-    async_load,
-)
+from homeassistant.util.dt import utcnow
 
-from tests.common import async_capture_events, flush_store
+from tests.common import ANY, async_capture_events, flush_store
 
 
 async def test_list_floors(floor_registry: fr.FloorRegistry) -> None:
@@ -26,11 +21,13 @@ async def test_list_floors(floor_registry: fr.FloorRegistry) -> None:
     assert len(list(floors)) == len(floor_registry.floors)
 
 
+@pytest.mark.usefixtures("freezer")
 async def test_create_floor(
-    hass: HomeAssistant, floor_registry: fr.FloorRegistry
+    hass: HomeAssistant,
+    floor_registry: fr.FloorRegistry,
 ) -> None:
     """Make sure that we can create floors."""
-    update_events = async_capture_events(hass, EVENT_FLOOR_REGISTRY_UPDATED)
+    update_events = async_capture_events(hass, fr.EVENT_FLOOR_REGISTRY_UPDATED)
     floor = floor_registry.async_create(
         name="First floor",
         icon="mdi:home-floor-1",
@@ -38,11 +35,16 @@ async def test_create_floor(
         level=1,
     )
 
-    assert floor.floor_id == "first_floor"
-    assert floor.name == "First floor"
-    assert floor.icon == "mdi:home-floor-1"
-    assert floor.aliases == {"first", "ground", "ground floor"}
-    assert floor.level == 1
+    assert floor == fr.FloorEntry(
+        floor_id="first_floor",
+        name="First floor",
+        icon="mdi:home-floor-1",
+        aliases={"first", "ground", "ground floor"},
+        level=1,
+        created_at=utcnow(),
+        modified_at=utcnow(),
+        normalized_name=ANY,
+    )
 
     assert len(floor_registry.floors) == 1
 
@@ -59,7 +61,7 @@ async def test_create_floor_with_name_already_in_use(
     hass: HomeAssistant, floor_registry: fr.FloorRegistry
 ) -> None:
     """Make sure that we can't create a floor with a name already in use."""
-    update_events = async_capture_events(hass, EVENT_FLOOR_REGISTRY_UPDATED)
+    update_events = async_capture_events(hass, fr.EVENT_FLOOR_REGISTRY_UPDATED)
     floor_registry.async_create("First floor")
 
     with pytest.raises(
@@ -75,7 +77,7 @@ async def test_create_floor_with_name_already_in_use(
 
 
 async def test_create_floor_with_id_already_in_use(
-    hass: HomeAssistant, floor_registry: fr.FloorRegistry
+    floor_registry: fr.FloorRegistry,
 ) -> None:
     """Make sure that we can't create an floor with an id already in use."""
     floor = floor_registry.async_create("First")
@@ -92,7 +94,7 @@ async def test_delete_floor(
     hass: HomeAssistant, floor_registry: fr.FloorRegistry
 ) -> None:
     """Make sure that we can delete a floor."""
-    update_events = async_capture_events(hass, EVENT_FLOOR_REGISTRY_UPDATED)
+    update_events = async_capture_events(hass, fr.EVENT_FLOOR_REGISTRY_UPDATED)
     floor = floor_registry.async_create("First floor")
     assert len(floor_registry.floors) == 1
 
@@ -124,18 +126,31 @@ async def test_delete_non_existing_floor(floor_registry: fr.FloorRegistry) -> No
 
 
 async def test_update_floor(
-    hass: HomeAssistant, floor_registry: fr.FloorRegistry
+    hass: HomeAssistant,
+    floor_registry: fr.FloorRegistry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Make sure that we can update floors."""
-    update_events = async_capture_events(hass, EVENT_FLOOR_REGISTRY_UPDATED)
+    created_at = datetime.fromisoformat("2024-01-01T01:00:00+00:00")
+    freezer.move_to(created_at)
+
+    update_events = async_capture_events(hass, fr.EVENT_FLOOR_REGISTRY_UPDATED)
     floor = floor_registry.async_create("First floor")
 
+    assert floor == fr.FloorEntry(
+        floor_id="first_floor",
+        name="First floor",
+        icon=None,
+        aliases=set(),
+        level=None,
+        created_at=created_at,
+        modified_at=created_at,
+        normalized_name=ANY,
+    )
     assert len(floor_registry.floors) == 1
-    assert floor.floor_id == "first_floor"
-    assert floor.name == "First floor"
-    assert floor.icon is None
-    assert floor.aliases == set()
-    assert floor.level is None
+
+    modified_at = datetime.fromisoformat("2024-02-01T01:00:00+00:00")
+    freezer.move_to(modified_at)
 
     updated_floor = floor_registry.async_update(
         floor.floor_id,
@@ -146,11 +161,16 @@ async def test_update_floor(
     )
 
     assert updated_floor != floor
-    assert updated_floor.floor_id == "first_floor"
-    assert updated_floor.name == "Second floor"
-    assert updated_floor.icon == "mdi:home-floor-2"
-    assert updated_floor.aliases == {"ground", "downstairs"}
-    assert updated_floor.level == 2
+    assert updated_floor == fr.FloorEntry(
+        floor_id="first_floor",
+        name="Second floor",
+        icon="mdi:home-floor-2",
+        aliases={"ground", "downstairs"},
+        level=2,
+        created_at=created_at,
+        modified_at=modified_at,
+        normalized_name=ANY,
+    )
 
     assert len(floor_registry.floors) == 1
 
@@ -171,7 +191,7 @@ async def test_update_floor_with_same_data(
     hass: HomeAssistant, floor_registry: fr.FloorRegistry
 ) -> None:
     """Make sure that we can reapply the same data to a floor and it won't update."""
-    update_events = async_capture_events(hass, EVENT_FLOOR_REGISTRY_UPDATED)
+    update_events = async_capture_events(hass, fr.EVENT_FLOOR_REGISTRY_UPDATED)
     floor = floor_registry.async_create(
         "First floor",
         icon="mdi:home-floor-1",
@@ -244,15 +264,22 @@ async def test_update_floor_with_normalized_name_already_in_use(
 
 
 async def test_load_floors(
-    hass: HomeAssistant, floor_registry: fr.FloorRegistry
+    hass: HomeAssistant,
+    floor_registry: fr.FloorRegistry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Make sure that we can load/save data correctly."""
+    floor1_created = datetime.fromisoformat("2024-01-01T00:00:00+00:00")
+    freezer.move_to(floor1_created)
     floor1 = floor_registry.async_create(
         "First floor",
         icon="mdi:home-floor-1",
         aliases={"first", "ground"},
         level=1,
     )
+
+    floor2_created = datetime.fromisoformat("2024-02-01T00:00:00+00:00")
+    freezer.move_to(floor2_created)
     floor2 = floor_registry.async_create(
         "Second floor",
         icon="mdi:home-floor-2",
@@ -262,7 +289,7 @@ async def test_load_floors(
 
     assert len(floor_registry.floors) == 2
 
-    registry2 = FloorRegistry(hass)
+    registry2 = fr.FloorRegistry(hass)
     await flush_store(floor_registry._store)
     await registry2.async_load()
 
@@ -270,29 +297,20 @@ async def test_load_floors(
     assert list(floor_registry.floors) == list(registry2.floors)
 
     floor1_registry2 = registry2.async_get_floor_by_name("First floor")
-    assert floor1_registry2.floor_id == floor1.floor_id
-    assert floor1_registry2.name == floor1.name
-    assert floor1_registry2.icon == floor1.icon
-    assert floor1_registry2.aliases == floor1.aliases
-    assert floor1_registry2.level == floor1.level
-    assert floor1_registry2.normalized_name == floor1.normalized_name
+    assert floor1_registry2 == floor1
 
     floor2_registry2 = registry2.async_get_floor_by_name("Second floor")
-    assert floor2_registry2.floor_id == floor2.floor_id
-    assert floor2_registry2.name == floor2.name
-    assert floor2_registry2.icon == floor2.icon
-    assert floor2_registry2.aliases == floor2.aliases
-    assert floor2_registry2.level == floor2.level
-    assert floor2_registry2.normalized_name == floor2.normalized_name
+    assert floor2_registry2 == floor2
 
 
 @pytest.mark.parametrize("load_registries", [False])
 async def test_loading_floors_from_storage(
-    hass: HomeAssistant, hass_storage: Any
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
 ) -> None:
     """Test loading stored floors on start."""
-    hass_storage[STORAGE_KEY] = {
-        "version": STORAGE_VERSION_MAJOR,
+    hass_storage[fr.STORAGE_KEY] = {
+        "version": fr.STORAGE_VERSION_MAJOR,
         "data": {
             "floors": [
                 {
@@ -306,8 +324,8 @@ async def test_loading_floors_from_storage(
         },
     }
 
-    await async_load(hass)
-    registry = async_get(hass)
+    await fr.async_load(hass)
+    registry = fr.async_get(hass)
 
     assert len(registry.floors) == 1
 
@@ -400,3 +418,52 @@ async def test_async_update_thread_safety(
         await hass.async_add_executor_job(
             partial(floor_registry.async_update, any_floor.floor_id, name="new name")
         )
+
+
+@pytest.mark.parametrize("load_registries", [False])
+async def test_migration_from_1_1(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """Test migration from version 1.1."""
+    hass_storage[fr.STORAGE_KEY] = {
+        "version": 1,
+        "data": {
+            "floors": [
+                {
+                    "floor_id": "12345A",
+                    "name": "mock",
+                    "aliases": [],
+                    "icon": None,
+                    "level": None,
+                }
+            ]
+        },
+    }
+
+    await fr.async_load(hass)
+    registry = fr.async_get(hass)
+
+    # Test data was loaded
+    entry = registry.async_get_floor_by_name("mock")
+    assert entry.floor_id == "12345A"
+
+    # Check we store migrated data
+    await flush_store(registry._store)
+    assert hass_storage[fr.STORAGE_KEY] == {
+        "version": fr.STORAGE_VERSION_MAJOR,
+        "minor_version": fr.STORAGE_VERSION_MINOR,
+        "key": fr.STORAGE_KEY,
+        "data": {
+            "floors": [
+                {
+                    "aliases": [],
+                    "icon": None,
+                    "floor_id": "12345A",
+                    "level": None,
+                    "name": "mock",
+                    "created_at": "1970-01-01T00:00:00+00:00",
+                    "modified_at": "1970-01-01T00:00:00+00:00",
+                }
+            ]
+        },
+    }

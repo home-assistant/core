@@ -17,10 +17,6 @@ from homeassistant.const import ATTR_ENTITY_PICTURE, STATE_OFF, STATE_ON, Entity
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.config_validation import (
-    PLATFORM_SCHEMA,
-    PLATFORM_SCHEMA_BASE,
-)
 from homeassistant.helpers.entity import ABCCachedProperties, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -43,11 +39,12 @@ from .const import (
     UpdateEntityFeature,
 )
 
-SCAN_INTERVAL = timedelta(minutes=15)
+_LOGGER = logging.getLogger(__name__)
 
 ENTITY_ID_FORMAT: Final = DOMAIN + ".{}"
-
-_LOGGER = logging.getLogger(__name__)
+PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
+PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
+SCAN_INTERVAL = timedelta(minutes=15)
 
 
 class UpdateDeviceClass(StrEnum):
@@ -98,12 +95,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     component.async_register_entity_service(
         SERVICE_SKIP,
-        {},
+        None,
         async_skip,
     )
     component.async_register_entity_service(
         "clear_skipped",
-        {},
+        None,
         async_clear_skipped,
     )
 
@@ -495,14 +492,14 @@ async def websocket_release_notes(
 
     if entity is None:
         connection.send_error(
-            msg["id"], websocket_api.const.ERR_NOT_FOUND, "Entity not found"
+            msg["id"], websocket_api.ERR_NOT_FOUND, "Entity not found"
         )
         return
 
     if UpdateEntityFeature.RELEASE_NOTES not in entity.supported_features_compat:
         connection.send_error(
             msg["id"],
-            websocket_api.const.ERR_NOT_SUPPORTED,
+            websocket_api.ERR_NOT_SUPPORTED,
             "Entity does not support release notes",
         )
         return

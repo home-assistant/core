@@ -39,8 +39,8 @@
   "documentation": "https://www.home-assistant.io/integrations/unifiprotect",
   "integration_type": "hub",
   "iot_class": "local_push",
-  "loggers": ["pyunifiprotect", "unifi_discovery"],
-  "requirements": ["pyunifiprotect==5.1.2", "unifi-discovery==1.1.8"],
+  "loggers": ["uiprotect", "unifi_discovery"],
+  "requirements": ["uiprotect==6.0.2", "unifi-discovery==1.2.0"],
   "ssdp": [
     {
       "manufacturer": "Ubiquiti Networks",
@@ -53,6 +53,10 @@
     {
       "manufacturer": "Ubiquiti Networks",
       "modelDescription": "UniFi Dream Machine SE"
+    },
+    {
+      "manufacturer": "Ubiquiti Networks",
+      "modelDescription": "UniFi Dream Machine Pro Max"
     }
   ]
 }

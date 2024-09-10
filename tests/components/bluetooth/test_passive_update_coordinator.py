@@ -52,7 +52,13 @@ GENERIC_BLUETOOTH_SERVICE_INFO = BluetoothServiceInfo(
 class MyCoordinator(PassiveBluetoothDataUpdateCoordinator):
     """An example coordinator that subclasses PassiveBluetoothDataUpdateCoordinator."""
 
-    def __init__(self, hass, logger, device_id, mode) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        logger: logging.Logger,
+        device_id: str,
+        mode: BluetoothScanningMode,
+    ) -> None:
         """Initialize the coordinator."""
         super().__init__(hass, logger, device_id, mode)
         self.data: dict[str, Any] = {}

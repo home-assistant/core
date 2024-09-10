@@ -18,6 +18,7 @@ from homeassistant.components.onvif.models import (
     WebHookManagerState,
 )
 from homeassistant.const import HTTP_DIGEST_AUTHENTICATION
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
@@ -150,7 +151,9 @@ def setup_mock_device(mock_device, capabilities=None):
         pullpoint_manager=MagicMock(state=PullPointManagerState.PAUSED),
     )
 
-    def mock_constructor(hass, config):
+    def mock_constructor(
+        hass: HomeAssistant, config: config_entries.ConfigEntry
+    ) -> MagicMock:
         """Fake the controller constructor."""
         return mock_device
 
@@ -158,7 +161,7 @@ def setup_mock_device(mock_device, capabilities=None):
 
 
 async def setup_onvif_integration(
-    hass,
+    hass: HomeAssistant,
     config=None,
     options=None,
     unique_id=MAC,

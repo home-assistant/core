@@ -65,7 +65,11 @@ from homeassistant.helpers.deprecation import (
 )
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
+from homeassistant.helpers.issue_registry import (
+    IssueSeverity,
+    async_create_issue,
+    async_delete_issue,
+)
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.script import (
     ATTR_CUR,
@@ -98,7 +102,7 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 from homeassistant.util.dt import parse_datetime
 
-from .config import AutomationConfig
+from .config import AutomationConfig, ValidationStatus
 from .const import (
     CONF_ACTION,
     CONF_INITIAL_STATE,
@@ -318,8 +322,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         },
         trigger_service_handler,
     )
-    component.async_register_entity_service(SERVICE_TOGGLE, {}, "async_toggle")
-    component.async_register_entity_service(SERVICE_TURN_ON, {}, "async_turn_on")
+    component.async_register_entity_service(SERVICE_TOGGLE, None, "async_toggle")
+    component.async_register_entity_service(SERVICE_TURN_ON, None, "async_turn_on")
     component.async_register_entity_service(
         SERVICE_TURN_OFF,
         {vol.Optional(CONF_STOP_ACTIONS, default=DEFAULT_STOP_ACTIONS): cv.boolean},
@@ -426,11 +430,15 @@ class UnavailableAutomationEntity(BaseAutomationEntity):
         automation_id: str | None,
         name: str,
         raw_config: ConfigType | None,
+        validation_error: str,
+        validation_status: ValidationStatus,
     ) -> None:
         """Initialize an automation entity."""
         self._attr_name = name
         self._attr_unique_id = automation_id
         self.raw_config = raw_config
+        self._validation_error = validation_error
+        self._validation_status = validation_status
 
     @cached_property
     def referenced_labels(self) -> set[str]:
@@ -461,6 +469,30 @@ class UnavailableAutomationEntity(BaseAutomationEntity):
     def referenced_entities(self) -> set[str]:
         """Return a set of referenced entities."""
         return set()
+
+    async def async_added_to_hass(self) -> None:
+        """Create a repair issue to notify the user the automation has errors."""
+        await super().async_added_to_hass()
+        async_create_issue(
+            self.hass,
+            DOMAIN,
+            f"{self.entity_id}_validation_{self._validation_status}",
+            is_fixable=False,
+            severity=IssueSeverity.ERROR,
+            translation_key=f"validation_{self._validation_status}",
+            translation_placeholders={
+                "edit": f"/config/automation/edit/{self.unique_id}",
+                "entity_id": self.entity_id,
+                "error": self._validation_error,
+                "name": self._attr_name or self.entity_id,
+            },
+        )
+
+    async def async_will_remove_from_hass(self) -> None:
+        await super().async_will_remove_from_hass()
+        async_delete_issue(
+            self.hass, DOMAIN, f"{self.entity_id}_validation_{self._validation_status}"
+        )
 
     async def async_trigger(
         self,
@@ -864,7 +896,8 @@ class AutomationEntityConfig:
     list_no: int
     raw_blueprint_inputs: ConfigType | None
     raw_config: ConfigType | None
-    validation_failed: bool
+    validation_error: str | None
+    validation_status: ValidationStatus
 
 
 async def _prepare_automation_config(
@@ -884,14 +917,16 @@ async def _prepare_automation_config(
 
         raw_config = cast(AutomationConfig, config_block).raw_config
         raw_blueprint_inputs = cast(AutomationConfig, config_block).raw_blueprint_inputs
-        validation_failed = cast(AutomationConfig, config_block).validation_failed
+        validation_error = cast(AutomationConfig, config_block).validation_error
+        validation_status = cast(AutomationConfig, config_block).validation_status
         automation_configs.append(
             AutomationEntityConfig(
                 config_block,
                 list_no,
                 raw_blueprint_inputs,
                 raw_config,
-                validation_failed,
+                validation_error,
+                validation_status,
             )
         )
 
@@ -917,12 +952,14 @@ async def _create_automation_entities(
         automation_id: str | None = config_block.get(CONF_ID)
         name = _automation_name(automation_config)
 
-        if automation_config.validation_failed:
+        if automation_config.validation_status != ValidationStatus.OK:
             entities.append(
                 UnavailableAutomationEntity(
                     automation_id,
                     name,
                     automation_config.raw_config,
+                    cast(str, automation_config.validation_error),
+                    automation_config.validation_status,
                 )
             )
             continue
@@ -954,15 +991,15 @@ async def _create_automation_entities(
 
         # Add trigger variables to variables
         variables = None
-        if CONF_TRIGGER_VARIABLES in config_block:
+        if CONF_TRIGGER_VARIABLES in config_block and CONF_VARIABLES in config_block:
             variables = ScriptVariables(
                 dict(config_block[CONF_TRIGGER_VARIABLES].as_dict())
             )
-        if CONF_VARIABLES in config_block:
-            if variables:
-                variables.variables.update(config_block[CONF_VARIABLES].as_dict())
-            else:
-                variables = config_block[CONF_VARIABLES]
+            variables.variables.update(config_block[CONF_VARIABLES].as_dict())
+        elif CONF_TRIGGER_VARIABLES in config_block:
+            variables = config_block[CONF_TRIGGER_VARIABLES]
+        elif CONF_VARIABLES in config_block:
+            variables = config_block[CONF_VARIABLES]
 
         entity = AutomationEntity(
             automation_id,
@@ -1011,29 +1048,32 @@ async def _async_process_config(
         automation_configs_with_id: dict[str, tuple[int, AutomationEntityConfig]] = {}
         automation_configs_without_id: list[tuple[int, AutomationEntityConfig]] = []
 
-        for config_idx, config in enumerate(automation_configs):
-            if automation_id := config.config_block.get(CONF_ID):
-                automation_configs_with_id[automation_id] = (config_idx, config)
+        for config_idx, automation_config in enumerate(automation_configs):
+            if automation_id := automation_config.config_block.get(CONF_ID):
+                automation_configs_with_id[automation_id] = (
+                    config_idx,
+                    automation_config,
+                )
                 continue
-            automation_configs_without_id.append((config_idx, config))
+            automation_configs_without_id.append((config_idx, automation_config))
 
         for automation_idx, automation in enumerate(automations):
             if automation.unique_id:
                 if automation.unique_id not in automation_configs_with_id:
                     continue
-                config_idx, config = automation_configs_with_id.pop(
+                config_idx, automation_config = automation_configs_with_id.pop(
                     automation.unique_id
                 )
-                if automation_matches_config(automation, config):
+                if automation_matches_config(automation, automation_config):
                     automation_matches.add(automation_idx)
                     config_matches.add(config_idx)
                 continue
 
-            for config_idx, config in automation_configs_without_id:
+            for config_idx, automation_config in automation_configs_without_id:
                 if config_idx in config_matches:
                     # Only allow an automation config to match at most once
                     continue
-                if automation_matches_config(automation, config):
+                if automation_matches_config(automation, automation_config):
                     automation_matches.add(automation_idx)
                     config_matches.add(config_idx)
                     # Only allow an automation to match at most once
@@ -1208,7 +1248,7 @@ def websocket_config(
 
     if automation is None:
         connection.send_error(
-            msg["id"], websocket_api.const.ERR_NOT_FOUND, "Entity not found"
+            msg["id"], websocket_api.ERR_NOT_FOUND, "Entity not found"
         )
         return
 

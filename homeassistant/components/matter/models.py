@@ -107,6 +107,3 @@ class MatterDiscoverySchema:
     # [optional] bool to specify if this primary value may be discovered
     # by multiple platforms
     allow_multi: bool = False
-
-    # [optional] bool to specify if this primary value should be polled
-    should_poll: bool = False

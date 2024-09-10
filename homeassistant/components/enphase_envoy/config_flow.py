@@ -12,12 +12,23 @@ from pyenphase import AUTH_TOKEN_MIN_VERSION, Envoy, EnvoyError
 import voluptuous as vol
 
 from homeassistant.components import zeroconf
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlowWithConfigEntry,
+)
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.httpx_client import get_async_client
+from homeassistant.helpers.typing import VolDictType
 
-from .const import DOMAIN, INVALID_AUTH_ERRORS
+from .const import (
+    DOMAIN,
+    INVALID_AUTH_ERRORS,
+    OPTION_DIAGNOSTICS_INCLUDE_FIXTURES,
+    OPTION_DIAGNOSTICS_INCLUDE_FIXTURES_DEFAULT_VALUE,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,10 +61,16 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
         self.protovers: str | None = None
         self._reauth_entry: ConfigEntry | None = None
 
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry: ConfigEntry) -> EnvoyOptionsFlowHandler:
+        """Options flow handler for Enphase_Envoy."""
+        return EnvoyOptionsFlowHandler(config_entry)
+
     @callback
     def _async_generate_schema(self) -> vol.Schema:
         """Generate schema."""
-        schema = {}
+        schema: VolDictType = {}
 
         if self.ip_address:
             schema[vol.Required(CONF_HOST, default=self.ip_address)] = vol.In(
@@ -281,4 +298,34 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
             description_placeholders=description_placeholders,
             errors=errors,
+        )
+
+
+class EnvoyOptionsFlowHandler(OptionsFlowWithConfigEntry):
+    """Envoy config flow options handler."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Manage the options."""
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        OPTION_DIAGNOSTICS_INCLUDE_FIXTURES,
+                        default=self.config_entry.options.get(
+                            OPTION_DIAGNOSTICS_INCLUDE_FIXTURES,
+                            OPTION_DIAGNOSTICS_INCLUDE_FIXTURES_DEFAULT_VALUE,
+                        ),
+                    ): bool,
+                }
+            ),
+            description_placeholders={
+                CONF_SERIAL: self.config_entry.unique_id,
+                CONF_HOST: self.config_entry.data.get("host"),
+            },
         )

@@ -8,7 +8,7 @@ from homeassistant.components.hdmi_cec import KeyPressCommand, KeyReleaseCommand
 class MockHDMIDevice:
     """Mock of a HDMIDevice."""
 
-    def __init__(self, *, logical_address, **values):
+    def __init__(self, *, logical_address, **values) -> None:
         """Mock of a HDMIDevice."""
         self.set_update_callback = Mock(side_effect=self._set_update_callback)
         self.logical_address = logical_address
@@ -21,6 +21,7 @@ class MockHDMIDevice:
         self.turn_off = Mock()
         self.send_command = Mock()
         self.async_send_command = AsyncMock()
+        self._update = None
 
     def __getattr__(self, name):
         """Get attribute from `_values` if not explicitly set."""

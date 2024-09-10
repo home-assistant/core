@@ -3,16 +3,15 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
+from typing import TYPE_CHECKING
 
 from googleapiclient.http import HttpRequest
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.service import async_extract_config_entry_ids
 
-from .api import AsyncConfigEntryAuth
 from .const import (
     ATTR_ENABLED,
     ATTR_END,
@@ -25,6 +24,9 @@ from .const import (
     ATTR_TITLE,
     DOMAIN,
 )
+
+if TYPE_CHECKING:
+    from . import GoogleMailConfigEntry
 
 SERVICE_SET_VACATION = "set_vacation"
 
@@ -47,7 +49,9 @@ SERVICE_VACATION_SCHEMA = vol.All(
 async def async_setup_services(hass: HomeAssistant) -> None:
     """Set up services for Google Mail integration."""
 
-    async def extract_gmail_config_entries(call: ServiceCall) -> list[ConfigEntry]:
+    async def extract_gmail_config_entries(
+        call: ServiceCall,
+    ) -> list[GoogleMailConfigEntry]:
         return [
             entry
             for entry_id in await async_extract_config_entry_ids(hass, call)
@@ -57,10 +61,11 @@ async def async_setup_services(hass: HomeAssistant) -> None:
 
     async def gmail_service(call: ServiceCall) -> None:
         """Call Google Mail service."""
-        auth: AsyncConfigEntryAuth
         for entry in await extract_gmail_config_entries(call):
-            if not (auth := hass.data[DOMAIN].get(entry.entry_id)):
-                raise ValueError(f"Config entry not loaded: {entry.entry_id}")
+            try:
+                auth = entry.runtime_data
+            except AttributeError as ex:
+                raise ValueError(f"Config entry not loaded: {entry.entry_id}") from ex
             service = await auth.get_resource()
 
             _settings = {

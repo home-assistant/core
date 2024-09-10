@@ -356,8 +356,6 @@ async def test_get_integration_with_requirements_pip_install_fails_two_passes(
         integration = await async_get_integration_with_requirements(
             hass, "test_component"
         )
-        assert integration
-        assert integration.domain == "test_component"
 
     assert len(mock_is_installed.mock_calls) == 3
     assert sorted(mock_call[1][0] for mock_call in mock_is_installed.mock_calls) == [
@@ -391,8 +389,6 @@ async def test_get_integration_with_requirements_pip_install_fails_two_passes(
         integration = await async_get_integration_with_requirements(
             hass, "test_component"
         )
-        assert integration
-        assert integration.domain == "test_component"
 
     assert len(mock_is_installed.mock_calls) == 0
     # On another attempt we remember failures and don't try again
@@ -414,8 +410,6 @@ async def test_get_integration_with_requirements_pip_install_fails_two_passes(
         integration = await async_get_integration_with_requirements(
             hass, "test_component"
         )
-        assert integration
-        assert integration.domain == "test_component"
 
     assert len(mock_is_installed.mock_calls) == 2
     assert sorted(mock_call[1][0] for mock_call in mock_is_installed.mock_calls) == [
@@ -608,12 +602,12 @@ async def test_discovery_requirements_ssdp(hass: HomeAssistant) -> None:
     ) as mock_process:
         await async_get_integration_with_requirements(hass, "ssdp_comp")
 
-    assert len(mock_process.mock_calls) == 3
+    assert len(mock_process.mock_calls) == 2
     assert mock_process.mock_calls[0][1][1] == ssdp.requirements
     assert {
+        mock_process.mock_calls[0][1][0],
         mock_process.mock_calls[1][1][0],
-        mock_process.mock_calls[2][1][0],
-    } == {"network", "recorder"}
+    } == {"network", "ssdp"}
 
 
 @pytest.mark.parametrize(
@@ -637,7 +631,7 @@ async def test_discovery_requirements_zeroconf(
     ) as mock_process:
         await async_get_integration_with_requirements(hass, "comp")
 
-    assert len(mock_process.mock_calls) == 3
+    assert len(mock_process.mock_calls) == 2
     assert mock_process.mock_calls[0][1][1] == zeroconf.requirements
 
 

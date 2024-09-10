@@ -5,14 +5,19 @@ from unittest.mock import AsyncMock
 from aioaquacell import ApiException, AuthenticationFailed
 import pytest
 
-from homeassistant.components.aquacell.const import CONF_REFRESH_TOKEN, DOMAIN
+from homeassistant.components.aquacell.const import (
+    CONF_BRAND,
+    CONF_REFRESH_TOKEN,
+    DOMAIN,
+)
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+from . import TEST_CONFIG_ENTRY, TEST_USER_INPUT
+
 from tests.common import MockConfigEntry
-from tests.components.aquacell import TEST_CONFIG_ENTRY, TEST_USER_INPUT
 
 
 async def test_config_flow_already_configured(hass: HomeAssistant) -> None:
@@ -50,7 +55,9 @@ async def test_full_flow(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
+
     assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
     assert result["errors"] == {}
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -64,6 +71,7 @@ async def test_full_flow(
     assert result2["data"][CONF_EMAIL] == TEST_CONFIG_ENTRY[CONF_EMAIL]
     assert result2["data"][CONF_PASSWORD] == TEST_CONFIG_ENTRY[CONF_PASSWORD]
     assert result2["data"][CONF_REFRESH_TOKEN] == TEST_CONFIG_ENTRY[CONF_REFRESH_TOKEN]
+    assert result2["data"][CONF_BRAND] == TEST_CONFIG_ENTRY[CONF_BRAND]
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -71,6 +79,7 @@ async def test_full_flow(
     ("exception", "error"),
     [
         (ApiException, "cannot_connect"),
+        (TimeoutError, "cannot_connect"),
         (AuthenticationFailed, "invalid_auth"),
         (Exception, "unknown"),
     ],
@@ -108,4 +117,5 @@ async def test_form_exceptions(
     assert result3["data"][CONF_EMAIL] == TEST_CONFIG_ENTRY[CONF_EMAIL]
     assert result3["data"][CONF_PASSWORD] == TEST_CONFIG_ENTRY[CONF_PASSWORD]
     assert result3["data"][CONF_REFRESH_TOKEN] == TEST_CONFIG_ENTRY[CONF_REFRESH_TOKEN]
+    assert result3["data"][CONF_BRAND] == TEST_CONFIG_ENTRY[CONF_BRAND]
     assert len(mock_setup_entry.mock_calls) == 1

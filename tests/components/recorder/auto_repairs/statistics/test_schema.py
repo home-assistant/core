@@ -11,11 +11,18 @@ from ...common import async_wait_recording_done
 from tests.typing import RecorderInstanceGenerator
 
 
+@pytest.fixture
+async def mock_recorder_before_hass(
+    async_test_recorder: RecorderInstanceGenerator,
+) -> None:
+    """Set up recorder."""
+
+
 @pytest.mark.parametrize("db_engine", ["mysql"])
 @pytest.mark.parametrize("enable_schema_validation", [True])
 async def test_validate_db_schema_fix_utf8_issue(
-    async_setup_recorder_instance: RecorderInstanceGenerator,
     hass: HomeAssistant,
+    async_test_recorder: RecorderInstanceGenerator,
     caplog: pytest.LogCaptureFixture,
     db_engine: str,
     recorder_dialect_name: None,
@@ -30,8 +37,8 @@ async def test_validate_db_schema_fix_utf8_issue(
             return_value={"statistics_meta.4-byte UTF-8"},
         ),
     ):
-        await async_setup_recorder_instance(hass)
-        await async_wait_recording_done(hass)
+        async with async_test_recorder(hass):
+            await async_wait_recording_done(hass)
 
     assert "Schema validation failed" not in caplog.text
     assert (
@@ -48,8 +55,8 @@ async def test_validate_db_schema_fix_utf8_issue(
 @pytest.mark.parametrize("table", ["statistics_short_term", "statistics"])
 @pytest.mark.parametrize("db_engine", ["mysql", "postgresql"])
 async def test_validate_db_schema_fix_float_issue(
-    async_setup_recorder_instance: RecorderInstanceGenerator,
     hass: HomeAssistant,
+    async_test_recorder: RecorderInstanceGenerator,
     caplog: pytest.LogCaptureFixture,
     table: str,
     db_engine: str,
@@ -68,8 +75,8 @@ async def test_validate_db_schema_fix_float_issue(
             "homeassistant.components.recorder.migration._modify_columns"
         ) as modify_columns_mock,
     ):
-        await async_setup_recorder_instance(hass)
-        await async_wait_recording_done(hass)
+        async with async_test_recorder(hass):
+            await async_wait_recording_done(hass)
 
     assert "Schema validation failed" not in caplog.text
     assert (
@@ -92,8 +99,8 @@ async def test_validate_db_schema_fix_float_issue(
 @pytest.mark.parametrize("enable_schema_validation", [True])
 @pytest.mark.parametrize("db_engine", ["mysql"])
 async def test_validate_db_schema_fix_collation_issue(
-    async_setup_recorder_instance: RecorderInstanceGenerator,
     hass: HomeAssistant,
+    async_test_recorder: RecorderInstanceGenerator,
     caplog: pytest.LogCaptureFixture,
     recorder_dialect_name: None,
     db_engine: str,
@@ -108,8 +115,8 @@ async def test_validate_db_schema_fix_collation_issue(
             return_value={"statistics.utf8mb4_unicode_ci"},
         ),
     ):
-        await async_setup_recorder_instance(hass)
-        await async_wait_recording_done(hass)
+        async with async_test_recorder(hass):
+            await async_wait_recording_done(hass)
 
     assert "Schema validation failed" not in caplog.text
     assert (

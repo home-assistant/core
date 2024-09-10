@@ -17,10 +17,7 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.config_validation import (  # noqa: F401
-    PLATFORM_SCHEMA,
-    PLATFORM_SCHEMA_BASE,
-)
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.deprecation import (
     DeprecatedConstantEnum,
     all_with_deprecated_constants,
@@ -34,13 +31,14 @@ from homeassistant.loader import bind_hass
 
 from .const import DOMAIN
 
-SCAN_INTERVAL = timedelta(seconds=30)
+_LOGGER = logging.getLogger(__name__)
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
+PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
+PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
+SCAN_INTERVAL = timedelta(seconds=30)
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class SwitchDeviceClass(StrEnum):
@@ -81,9 +79,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
     await component.async_setup(config)
 
-    component.async_register_entity_service(SERVICE_TURN_OFF, {}, "async_turn_off")
-    component.async_register_entity_service(SERVICE_TURN_ON, {}, "async_turn_on")
-    component.async_register_entity_service(SERVICE_TOGGLE, {}, "async_toggle")
+    component.async_register_entity_service(SERVICE_TURN_OFF, None, "async_turn_off")
+    component.async_register_entity_service(SERVICE_TURN_ON, None, "async_turn_on")
+    component.async_register_entity_service(SERVICE_TOGGLE, None, "async_toggle")
 
     return True
 

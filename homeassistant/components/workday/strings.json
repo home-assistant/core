@@ -20,7 +20,8 @@
           "add_holidays": "Add holidays",
           "remove_holidays": "Remove Holidays",
           "province": "Subdivision of country",
-          "language": "Language for named holidays"
+          "language": "Language for named holidays",
+          "category": "Additional category as holiday"
         },
         "data_description": {
           "excludes": "List of workdays to exclude, notice the keyword `holiday` and read the documentation on how to use it correctly",
@@ -29,7 +30,8 @@
           "add_holidays": "Add custom holidays as YYYY-MM-DD or as range using `,` as separator",
           "remove_holidays": "Remove holidays as YYYY-MM-DD, as range using `,` as separator or by using partial of name",
           "province": "State, territory, province or region of country",
-          "language": "Language to use when configuring named holiday exclusions"
+          "language": "Language to use when configuring named holiday exclusions",
+          "category": "Select additional categories to include as holidays"
         }
       }
     },
@@ -51,7 +53,8 @@
           "add_holidays": "[%key:component::workday::config::step::options::data::add_holidays%]",
           "remove_holidays": "[%key:component::workday::config::step::options::data::remove_holidays%]",
           "province": "[%key:component::workday::config::step::options::data::province%]",
-          "language": "[%key:component::workday::config::step::options::data::language%]"
+          "language": "[%key:component::workday::config::step::options::data::language%]",
+          "category": "[%key:component::workday::config::step::options::data::category%]"
         },
         "data_description": {
           "excludes": "[%key:component::workday::config::step::options::data_description::excludes%]",
@@ -60,7 +63,8 @@
           "add_holidays": "[%key:component::workday::config::step::options::data_description::add_holidays%]",
           "remove_holidays": "[%key:component::workday::config::step::options::data_description::remove_holidays%]",
           "province": "[%key:component::workday::config::step::options::data_description::province%]",
-          "language": "[%key:component::workday::config::step::options::data_description::language%]"
+          "language": "[%key:component::workday::config::step::options::data_description::language%]",
+          "category": "[%key:component::workday::config::step::options::data_description::category%]"
         }
       }
     },
@@ -76,6 +80,24 @@
     "province": {
       "options": {
         "none": "No subdivision"
+      }
+    },
+    "category": {
+      "options": {
+        "armed_forces": "Armed forces",
+        "bank": "Bank",
+        "government": "Government",
+        "half_day": "Half day",
+        "optional": "Optional",
+        "public": "Public",
+        "school": "School",
+        "unofficial": "Unofficial",
+        "workday": "Workday",
+        "chinese": "Chinese",
+        "christian": "Christian",
+        "hebrew": "Hebrew",
+        "hindu": "Hindu",
+        "islamic": "Islamic"
       }
     },
     "days": {

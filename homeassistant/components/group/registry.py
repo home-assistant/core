@@ -8,13 +8,133 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Protocol
 
-from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.components.climate import HVACMode
+from homeassistant.components.vacuum import STATE_CLEANING, STATE_ERROR, STATE_RETURNING
+from homeassistant.components.water_heater import (
+    STATE_ECO,
+    STATE_ELECTRIC,
+    STATE_GAS,
+    STATE_HEAT_PUMP,
+    STATE_HIGH_DEMAND,
+    STATE_PERFORMANCE,
+)
+from homeassistant.const import (
+    STATE_ALARM_ARMED_AWAY,
+    STATE_ALARM_ARMED_CUSTOM_BYPASS,
+    STATE_ALARM_ARMED_HOME,
+    STATE_ALARM_ARMED_NIGHT,
+    STATE_ALARM_ARMED_VACATION,
+    STATE_ALARM_TRIGGERED,
+    STATE_CLOSED,
+    STATE_HOME,
+    STATE_IDLE,
+    STATE_LOCKED,
+    STATE_LOCKING,
+    STATE_NOT_HOME,
+    STATE_OFF,
+    STATE_OK,
+    STATE_ON,
+    STATE_OPEN,
+    STATE_OPENING,
+    STATE_PAUSED,
+    STATE_PLAYING,
+    STATE_PROBLEM,
+    STATE_UNLOCKED,
+    STATE_UNLOCKING,
+    Platform,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.integration_platform import (
     async_process_integration_platforms,
 )
 
 from .const import DOMAIN, REG_KEY
+
+# EXCLUDED_DOMAINS and ON_OFF_STATES are considered immutable
+# in respect that new platforms should not be added.
+# The only maintenance allowed here is
+# if existing platforms add new ON or OFF states.
+EXCLUDED_DOMAINS: set[Platform | str] = {
+    Platform.AIR_QUALITY,
+    Platform.SENSOR,
+    Platform.WEATHER,
+}
+
+ON_OFF_STATES: dict[Platform | str, tuple[set[str], str, str]] = {
+    Platform.ALARM_CONTROL_PANEL: (
+        {
+            STATE_ON,
+            STATE_ALARM_ARMED_AWAY,
+            STATE_ALARM_ARMED_CUSTOM_BYPASS,
+            STATE_ALARM_ARMED_HOME,
+            STATE_ALARM_ARMED_NIGHT,
+            STATE_ALARM_ARMED_VACATION,
+            STATE_ALARM_TRIGGERED,
+        },
+        STATE_ON,
+        STATE_OFF,
+    ),
+    Platform.CLIMATE: (
+        {
+            STATE_ON,
+            HVACMode.HEAT,
+            HVACMode.COOL,
+            HVACMode.HEAT_COOL,
+            HVACMode.AUTO,
+            HVACMode.FAN_ONLY,
+        },
+        STATE_ON,
+        STATE_OFF,
+    ),
+    Platform.COVER: ({STATE_OPEN}, STATE_OPEN, STATE_CLOSED),
+    Platform.DEVICE_TRACKER: ({STATE_HOME}, STATE_HOME, STATE_NOT_HOME),
+    Platform.LOCK: (
+        {
+            STATE_LOCKING,
+            STATE_OPEN,
+            STATE_OPENING,
+            STATE_UNLOCKED,
+            STATE_UNLOCKING,
+        },
+        STATE_UNLOCKED,
+        STATE_LOCKED,
+    ),
+    Platform.MEDIA_PLAYER: (
+        {
+            STATE_ON,
+            STATE_PAUSED,
+            STATE_PLAYING,
+            STATE_IDLE,
+        },
+        STATE_ON,
+        STATE_OFF,
+    ),
+    "person": ({STATE_HOME}, STATE_HOME, STATE_NOT_HOME),
+    "plant": ({STATE_PROBLEM}, STATE_PROBLEM, STATE_OK),
+    Platform.VACUUM: (
+        {
+            STATE_ON,
+            STATE_CLEANING,
+            STATE_RETURNING,
+            STATE_ERROR,
+        },
+        STATE_ON,
+        STATE_OFF,
+    ),
+    Platform.WATER_HEATER: (
+        {
+            STATE_ON,
+            STATE_ECO,
+            STATE_ELECTRIC,
+            STATE_PERFORMANCE,
+            STATE_HIGH_DEMAND,
+            STATE_HEAT_PUMP,
+            STATE_GAS,
+        },
+        STATE_ON,
+        STATE_OFF,
+    ),
+}
 
 
 async def async_setup(hass: HomeAssistant) -> None:
@@ -61,8 +181,10 @@ class GroupIntegrationRegistry:
         self.on_off_mapping: dict[str, str] = {STATE_ON: STATE_OFF}
         self.off_on_mapping: dict[str, str] = {STATE_OFF: STATE_ON}
         self.on_states_by_domain: dict[str, set[str]] = {}
-        self.exclude_domains: set[str] = set()
+        self.exclude_domains = EXCLUDED_DOMAINS.copy()
         self.state_group_mapping: dict[str, SingleStateType] = {}
+        for domain, on_off_states in ON_OFF_STATES.items():
+            self.on_off_states(domain, *on_off_states)
 
     @callback
     def exclude_domain(self, domain: str) -> None:
@@ -71,7 +193,11 @@ class GroupIntegrationRegistry:
 
     @callback
     def on_off_states(
-        self, domain: str, on_states: set[str], default_on_state: str, off_state: str
+        self,
+        domain: Platform | str,
+        on_states: set[str],
+        default_on_state: str,
+        off_state: str,
     ) -> None:
         """Register on and off states for the current domain.
 

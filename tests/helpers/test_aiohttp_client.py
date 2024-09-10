@@ -1,11 +1,13 @@
 """Test the aiohttp client helper."""
 
+import socket
 from unittest.mock import Mock, patch
 
 import aiohttp
+from aiohttp.test_utils import TestClient
 import pytest
 
-from homeassistant.components.mjpeg.const import (
+from homeassistant.components.mjpeg import (
     CONF_MJPEG_URL,
     CONF_STILL_IMAGE_URL,
     DOMAIN as MJPEG_DOMAIN,
@@ -15,9 +17,10 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
+    EVENT_HOMEASSISTANT_CLOSE,
     HTTP_BASIC_AUTHENTICATION,
 )
-from homeassistant.core import EVENT_HOMEASSISTANT_CLOSE, HomeAssistant
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.aiohttp_client as client
 from homeassistant.util.color import RGBColor
 
@@ -28,10 +31,13 @@ from tests.common import (
     mock_integration,
 )
 from tests.test_util.aiohttp import AiohttpClientMocker
+from tests.typing import ClientSessionGenerator
 
 
 @pytest.fixture(name="camera_client")
-def camera_client_fixture(hass, hass_client):
+async def camera_client_fixture(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> TestClient:
     """Fixture to fetch camera streams."""
     mock_config_entry = MockConfigEntry(
         title="MJPEG Camera",
@@ -46,12 +52,10 @@ def camera_client_fixture(hass, hass_client):
         },
     )
     mock_config_entry.add_to_hass(hass)
-    hass.loop.run_until_complete(
-        hass.config_entries.async_setup(mock_config_entry.entry_id)
-    )
-    hass.loop.run_until_complete(hass.async_block_till_done())
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
-    return hass.loop.run_until_complete(hass_client())
+    return await hass_client()
 
 
 async def test_get_clientsession_with_ssl(hass: HomeAssistant) -> None:
@@ -80,7 +84,14 @@ async def test_get_clientsession_without_ssl(hass: HomeAssistant) -> None:
 
 @pytest.mark.parametrize(
     ("verify_ssl", "expected_family"),
-    [(True, 0), (False, 0), (True, 4), (False, 4), (True, 6), (False, 6)],
+    [
+        (True, socket.AF_UNSPEC),
+        (False, socket.AF_UNSPEC),
+        (True, socket.AF_INET),
+        (False, socket.AF_INET),
+        (True, socket.AF_INET6),
+        (False, socket.AF_INET6),
+    ],
 )
 async def test_get_clientsession(
     hass: HomeAssistant, verify_ssl: bool, expected_family: int
@@ -253,7 +264,7 @@ async def test_warning_close_session_custom(
 
 
 async def test_async_aiohttp_proxy_stream(
-    aioclient_mock: AiohttpClientMocker, camera_client
+    aioclient_mock: AiohttpClientMocker, camera_client: TestClient
 ) -> None:
     """Test that it fetches the given url."""
     aioclient_mock.get("http://example.com/mjpeg_stream", content=b"Frame1Frame2Frame3")
@@ -267,7 +278,7 @@ async def test_async_aiohttp_proxy_stream(
 
 
 async def test_async_aiohttp_proxy_stream_timeout(
-    aioclient_mock: AiohttpClientMocker, camera_client
+    aioclient_mock: AiohttpClientMocker, camera_client: TestClient
 ) -> None:
     """Test that it fetches the given url."""
     aioclient_mock.get("http://example.com/mjpeg_stream", exc=TimeoutError())
@@ -277,7 +288,7 @@ async def test_async_aiohttp_proxy_stream_timeout(
 
 
 async def test_async_aiohttp_proxy_stream_client_err(
-    aioclient_mock: AiohttpClientMocker, camera_client
+    aioclient_mock: AiohttpClientMocker, camera_client: TestClient
 ) -> None:
     """Test that it fetches the given url."""
     aioclient_mock.get("http://example.com/mjpeg_stream", exc=aiohttp.ClientError())

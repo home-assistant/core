@@ -10,7 +10,6 @@ import voluptuous as vol
 
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlow,
@@ -19,6 +18,7 @@ from homeassistant.const import CONF_API_KEY, Platform
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 
+from . import SteamConfigEntry
 from .const import CONF_ACCOUNT, CONF_ACCOUNTS, DOMAIN, LOGGER, PLACEHOLDERS
 
 # To avoid too long request URIs, the amount of ids to request is limited
@@ -38,12 +38,12 @@ class SteamFlowHandler(ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize the flow."""
-        self.entry: ConfigEntry | None = None
+        self.entry: SteamConfigEntry | None = None
 
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: SteamConfigEntry,
     ) -> OptionsFlow:
         """Get the options flow for this handler."""
         return SteamOptionsFlowHandler(config_entry)
@@ -127,7 +127,7 @@ def _batch_ids(ids: list[str]) -> Iterator[list[str]]:
 class SteamOptionsFlowHandler(OptionsFlow):
     """Handle Steam client options."""
 
-    def __init__(self, entry: ConfigEntry) -> None:
+    def __init__(self, entry: SteamConfigEntry) -> None:
         """Initialize options flow."""
         self.entry = entry
         self.options = dict(entry.options)

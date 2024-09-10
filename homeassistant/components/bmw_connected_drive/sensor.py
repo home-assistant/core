@@ -9,6 +9,8 @@ import logging
 
 from bimmer_connected.models import StrEnum, ValueWithUnit
 from bimmer_connected.vehicle import MyBMWVehicle
+from bimmer_connected.vehicle.climate import ClimateActivityState
+from bimmer_connected.vehicle.fuel_and_battery import ChargingState
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -16,21 +18,21 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
     STATE_UNKNOWN,
     UnitOfElectricCurrent,
     UnitOfLength,
+    UnitOfPressure,
     UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from . import BMWBaseEntity
-from .const import CLIMATE_ACTIVITY_STATE, DOMAIN
+from . import BMWConfigEntry
 from .coordinator import BMWDataUpdateCoordinator
+from .entity import BMWBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,11 +45,12 @@ class BMWSensorEntityDescription(SensorEntityDescription):
     is_available: Callable[[MyBMWVehicle], bool] = lambda v: v.is_lsc_enabled
 
 
+TIRES = ["front_left", "front_right", "rear_left", "rear_right"]
+
 SENSOR_TYPES: list[BMWSensorEntityDescription] = [
     BMWSensorEntityDescription(
-        key="ac_current_limit",
+        key="charging_profile.ac_current_limit",
         translation_key="ac_current_limit",
-        key_class="charging_profile",
         device_class=SensorDeviceClass.CURRENT,
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         entity_registry_enabled_default=False,
@@ -55,39 +58,36 @@ SENSOR_TYPES: list[BMWSensorEntityDescription] = [
         is_available=lambda v: v.is_lsc_enabled and v.has_electric_drivetrain,
     ),
     BMWSensorEntityDescription(
-        key="charging_start_time",
+        key="fuel_and_battery.charging_start_time",
         translation_key="charging_start_time",
-        key_class="fuel_and_battery",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_registry_enabled_default=False,
         is_available=lambda v: v.is_lsc_enabled and v.has_electric_drivetrain,
     ),
     BMWSensorEntityDescription(
-        key="charging_end_time",
+        key="fuel_and_battery.charging_end_time",
         translation_key="charging_end_time",
-        key_class="fuel_and_battery",
         device_class=SensorDeviceClass.TIMESTAMP,
         is_available=lambda v: v.is_lsc_enabled and v.has_electric_drivetrain,
     ),
     BMWSensorEntityDescription(
-        key="charging_status",
+        key="fuel_and_battery.charging_status",
         translation_key="charging_status",
-        key_class="fuel_and_battery",
+        device_class=SensorDeviceClass.ENUM,
+        options=[s.value.lower() for s in ChargingState if s != ChargingState.UNKNOWN],
         is_available=lambda v: v.is_lsc_enabled and v.has_electric_drivetrain,
     ),
     BMWSensorEntityDescription(
-        key="charging_target",
+        key="fuel_and_battery.charging_target",
         translation_key="charging_target",
-        key_class="fuel_and_battery",
         device_class=SensorDeviceClass.BATTERY,
         native_unit_of_measurement=PERCENTAGE,
         suggested_display_precision=0,
         is_available=lambda v: v.is_lsc_enabled and v.has_electric_drivetrain,
     ),
     BMWSensorEntityDescription(
-        key="remaining_battery_percent",
+        key="fuel_and_battery.remaining_battery_percent",
         translation_key="remaining_battery_percent",
-        key_class="fuel_and_battery",
         device_class=SensorDeviceClass.BATTERY,
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -103,18 +103,16 @@ SENSOR_TYPES: list[BMWSensorEntityDescription] = [
         suggested_display_precision=0,
     ),
     BMWSensorEntityDescription(
-        key="remaining_range_total",
+        key="fuel_and_battery.remaining_range_total",
         translation_key="remaining_range_total",
-        key_class="fuel_and_battery",
         device_class=SensorDeviceClass.DISTANCE,
         native_unit_of_measurement=UnitOfLength.KILOMETERS,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,
     ),
     BMWSensorEntityDescription(
-        key="remaining_range_electric",
+        key="fuel_and_battery.remaining_range_electric",
         translation_key="remaining_range_electric",
-        key_class="fuel_and_battery",
         device_class=SensorDeviceClass.DISTANCE,
         native_unit_of_measurement=UnitOfLength.KILOMETERS,
         state_class=SensorStateClass.MEASUREMENT,
@@ -122,9 +120,8 @@ SENSOR_TYPES: list[BMWSensorEntityDescription] = [
         is_available=lambda v: v.is_lsc_enabled and v.has_electric_drivetrain,
     ),
     BMWSensorEntityDescription(
-        key="remaining_range_fuel",
+        key="fuel_and_battery.remaining_range_fuel",
         translation_key="remaining_range_fuel",
-        key_class="fuel_and_battery",
         device_class=SensorDeviceClass.DISTANCE,
         native_unit_of_measurement=UnitOfLength.KILOMETERS,
         state_class=SensorStateClass.MEASUREMENT,
@@ -132,42 +129,70 @@ SENSOR_TYPES: list[BMWSensorEntityDescription] = [
         is_available=lambda v: v.is_lsc_enabled and v.has_combustion_drivetrain,
     ),
     BMWSensorEntityDescription(
-        key="remaining_fuel",
+        key="fuel_and_battery.remaining_fuel",
         translation_key="remaining_fuel",
-        key_class="fuel_and_battery",
-        device_class=SensorDeviceClass.VOLUME,
+        device_class=SensorDeviceClass.VOLUME_STORAGE,
         native_unit_of_measurement=UnitOfVolume.LITERS,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,
         is_available=lambda v: v.is_lsc_enabled and v.has_combustion_drivetrain,
     ),
     BMWSensorEntityDescription(
-        key="remaining_fuel_percent",
+        key="fuel_and_battery.remaining_fuel_percent",
         translation_key="remaining_fuel_percent",
-        key_class="fuel_and_battery",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,
         is_available=lambda v: v.is_lsc_enabled and v.has_combustion_drivetrain,
     ),
     BMWSensorEntityDescription(
-        key="activity",
+        key="climate.activity",
         translation_key="climate_status",
-        key_class="climate",
         device_class=SensorDeviceClass.ENUM,
-        options=CLIMATE_ACTIVITY_STATE,
+        options=[
+            s.value.lower()
+            for s in ClimateActivityState
+            if s != ClimateActivityState.UNKNOWN
+        ],
         is_available=lambda v: v.is_remote_climate_stop_enabled,
     ),
+    *[
+        BMWSensorEntityDescription(
+            key=f"tires.{tire}.current_pressure",
+            translation_key=f"{tire}_current_pressure",
+            device_class=SensorDeviceClass.PRESSURE,
+            native_unit_of_measurement=UnitOfPressure.KPA,
+            suggested_unit_of_measurement=UnitOfPressure.BAR,
+            state_class=SensorStateClass.MEASUREMENT,
+            suggested_display_precision=2,
+            is_available=lambda v: v.is_lsc_enabled and v.tires is not None,
+        )
+        for tire in TIRES
+    ],
+    *[
+        BMWSensorEntityDescription(
+            key=f"tires.{tire}.target_pressure",
+            translation_key=f"{tire}_target_pressure",
+            device_class=SensorDeviceClass.PRESSURE,
+            native_unit_of_measurement=UnitOfPressure.KPA,
+            suggested_unit_of_measurement=UnitOfPressure.BAR,
+            state_class=SensorStateClass.MEASUREMENT,
+            suggested_display_precision=2,
+            entity_registry_enabled_default=False,
+            is_available=lambda v: v.is_lsc_enabled and v.tires is not None,
+        )
+        for tire in TIRES
+    ],
 ]
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: BMWConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the MyBMW sensors from config entry."""
-    coordinator: BMWDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data.coordinator
 
     entities = [
         BMWSensor(coordinator, vehicle, description)
@@ -201,13 +226,12 @@ class BMWSensor(BMWBaseEntity, SensorEntity):
         _LOGGER.debug(
             "Updating sensor '%s' of %s", self.entity_description.key, self.vehicle.name
         )
-        if self.entity_description.key_class is None:
-            state = getattr(self.vehicle, self.entity_description.key)
-        else:
-            state = getattr(
-                getattr(self.vehicle, self.entity_description.key_class),
-                self.entity_description.key,
-            )
+
+        key_path = self.entity_description.key.split(".")
+        state = getattr(self.vehicle, key_path.pop(0))
+
+        for key in key_path:
+            state = getattr(state, key)
 
         # For datetime without tzinfo, we assume it to be the same timezone as the HA instance
         if isinstance(state, datetime.datetime) and state.tzinfo is None:
@@ -220,10 +244,6 @@ class BMWSensor(BMWBaseEntity, SensorEntity):
             state = state.value.lower()
             if state == STATE_UNKNOWN:
                 state = None
-
-            # special handling for charging_status to avoid a breaking change
-            if self.entity_description.key == "charging_status" and state:
-                state = state.upper()
 
         self._attr_native_value = state
         super()._handle_coordinator_update()

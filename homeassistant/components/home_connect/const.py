@@ -12,6 +12,8 @@ BSH_POWER_STANDBY = "BSH.Common.EnumType.PowerState.Standby"
 BSH_ACTIVE_PROGRAM = "BSH.Common.Root.ActiveProgram"
 BSH_REMOTE_CONTROL_ACTIVATION_STATE = "BSH.Common.Status.RemoteControlActive"
 BSH_REMOTE_START_ALLOWANCE_STATE = "BSH.Common.Status.RemoteControlStartAllowed"
+BSH_CHILD_LOCK_STATE = "BSH.Common.Setting.ChildLock"
+
 
 BSH_OPERATION_STATE = "BSH.Common.Status.OperationState"
 BSH_OPERATION_STATE_RUN = "BSH.Common.EnumType.OperationState.Run"
@@ -20,6 +22,13 @@ BSH_OPERATION_STATE_FINISHED = "BSH.Common.EnumType.OperationState.Finished"
 
 COOKING_LIGHTING = "Cooking.Common.Setting.Lighting"
 COOKING_LIGHTING_BRIGHTNESS = "Cooking.Common.Setting.LightingBrightness"
+
+
+REFRIGERATION_SUPERMODEFREEZER = "Refrigeration.FridgeFreezer.Setting.SuperModeFreezer"
+REFRIGERATION_SUPERMODEREFRIGERATOR = (
+    "Refrigeration.FridgeFreezer.Setting.SuperModeRefrigerator"
+)
+REFRIGERATION_DISPENSER = "Refrigeration.Common.Setting.Dispenser.Enabled"
 
 BSH_AMBIENT_LIGHT_ENABLED = "BSH.Common.Setting.AmbientLightEnabled"
 BSH_AMBIENT_LIGHT_BRIGHTNESS = "BSH.Common.Setting.AmbientLightBrightness"

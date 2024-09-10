@@ -55,7 +55,7 @@
           "all_updates": "Realtime metrics (WARNING: Greatly increases CPU usage)",
           "override_connection_host": "Override Connection Host",
           "max_media": "Max number of event to load for Media Browser (increases RAM usage)",
-          "allow_ea": "Allow Early Access versions of Protect (WARNING: Will mark your integration as unsupported)"
+          "allow_ea_channel": "Allow Early Access versions of Protect (WARNING: Will mark your integration as unsupported)"
         }
       }
     }
@@ -67,7 +67,7 @@
         "step": {
           "start": {
             "title": "UniFi Protect Early Access enabled",
-            "description": "You are either running an Early Access version of UniFi Protect (v{version}) or opt-ed into a release channel that is not the Official Release Channel. [Home Assistant does not support Early Access versions](https://www.home-assistant.io/integrations/unifiprotect#about-unifi-early-access), so you should immediately switch to the Official Release Channel. Accidentally upgrading to an Early Access version can break your UniFi Protect integration.\n\nBy submitting this form, you have switched back to the Official Release Channel or agree to run an unsupported version of UniFi Protect, which may break your Home Assistant integration at any time."
+            "description": "You are either running an Early Access version of UniFi Protect (v{version}) or opt-ed into a release channel that is not the Official Release Channel.\n\nAs these Early Access releases may not be tested yet, using it may cause the UniFi Protect integration to behave unexpectedly. [Read more about Early Access and Home Assistant]({learn_more}).\n\nSubmit to dismiss this message."
           },
           "confirm": {
             "title": "[%key:component::unifiprotect::issues::ea_channel_warning::fix_flow::step::start::title%]",
@@ -124,10 +124,6 @@
     "deprecate_hdr_switch": {
       "title": "HDR Mode Switch Deprecated",
       "description": "UniFi Protect v3 added a new state for HDR (auto). As a result, the HDR Mode Switch has been replaced with an HDR Mode Select, and it is deprecated.\n\nBelow are the detected automations or scripts that use one or more of the deprecated entities:\n{items}\nThe above list may be incomplete and it does not include any template usages inside of dashboards. Please update any templates, automations or scripts accordingly."
-    },
-    "deprecate_package_sensor": {
-      "title": "Package Event Sensor Deprecated",
-      "description": "The package event sensor never tripped because of the way events are reported in UniFi Protect. As a result, the sensor is deprecated and will be removed.\n\nBelow are the detected automations or scripts that use one or more of the deprecated entities:\n{items}\nThe above list may be incomplete and it does not include any template usages inside of dashboards. Please update any templates, automations or scripts accordingly."
     }
   },
   "entity": {
@@ -135,6 +131,17 @@
       "license_plate": {
         "state": {
           "none": "Clear"
+        }
+      }
+    },
+    "event": {
+      "doorbell": {
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "ring": "Ring"
+            }
+          }
         }
       }
     }
@@ -165,20 +172,6 @@
         "message": {
           "name": "[%key:component::unifiprotect::services::add_doorbell_text::fields::message::name%]",
           "description": "Existing custom message to remove for doorbells."
-        }
-      }
-    },
-    "set_default_doorbell_text": {
-      "name": "Set default doorbell text",
-      "description": "Sets the default doorbell message. This will be the message that is automatically selected when a message \"expires\".",
-      "fields": {
-        "device_id": {
-          "name": "[%key:component::unifiprotect::services::add_doorbell_text::fields::device_id::name%]",
-          "description": "[%key:component::unifiprotect::services::add_doorbell_text::fields::device_id::description%]"
-        },
-        "message": {
-          "name": "Default message",
-          "description": "The default message for your doorbell. Must be less than 30 characters."
         }
       }
     },

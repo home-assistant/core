@@ -92,7 +92,7 @@ async def test_api_error(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
-            data=FIXTURE_USER_INPUT,
+            data=deepcopy(FIXTURE_USER_INPUT),
         )
 
     assert result["type"] is FlowResultType.FORM
@@ -116,7 +116,7 @@ async def test_full_user_flow_implementation(hass: HomeAssistant) -> None:
         result2 = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
-            data=FIXTURE_USER_INPUT,
+            data=deepcopy(FIXTURE_USER_INPUT),
         )
         assert result2["type"] is FlowResultType.CREATE_ENTRY
         assert result2["title"] == FIXTURE_COMPLETE_ENTRY[CONF_USERNAME]
@@ -137,7 +137,8 @@ async def test_options_flow_implementation(hass: HomeAssistant) -> None:
             return_value=True,
         ) as mock_setup_entry,
     ):
-        config_entry = MockConfigEntry(**FIXTURE_CONFIG_ENTRY)
+        config_entry_args = deepcopy(FIXTURE_CONFIG_ENTRY)
+        config_entry = MockConfigEntry(**config_entry_args)
         config_entry.add_to_hass(hass)
 
         await hass.config_entries.async_setup(config_entry.entry_id)
@@ -158,7 +159,7 @@ async def test_options_flow_implementation(hass: HomeAssistant) -> None:
             CONF_READ_ONLY: True,
         }
 
-        assert len(mock_setup_entry.mock_calls) == 1
+        assert len(mock_setup_entry.mock_calls) == 2
 
 
 async def test_reauth(hass: HomeAssistant) -> None:
@@ -187,15 +188,7 @@ async def test_reauth(hass: HomeAssistant) -> None:
 
         assert config_entry.data == config_entry_with_wrong_password["data"]
 
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={
-                "source": config_entries.SOURCE_REAUTH,
-                "unique_id": config_entry.unique_id,
-                "entry_id": config_entry.entry_id,
-            },
-        )
-
+        result = await config_entry.start_reauth_flow(hass)
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "user"
         assert result["errors"] == {}
@@ -209,4 +202,4 @@ async def test_reauth(hass: HomeAssistant) -> None:
         assert result2["reason"] == "reauth_successful"
         assert config_entry.data == FIXTURE_COMPLETE_ENTRY
 
-        assert len(mock_setup_entry.mock_calls) == 1
+        assert len(mock_setup_entry.mock_calls) == 2

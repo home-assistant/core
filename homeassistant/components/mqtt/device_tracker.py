@@ -27,13 +27,14 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.service_info.mqtt import ReceivePayloadType
+from homeassistant.helpers.typing import ConfigType, VolSchemaType
 
 from . import subscription
 from .config import MQTT_BASE_SCHEMA
 from .const import CONF_PAYLOAD_RESET, CONF_STATE_TOPIC
 from .mixins import CONF_JSON_ATTRS_TOPIC, MqttEntity, async_setup_entity_entry_helper
-from .models import MqttValueTemplate, ReceiveMessage, ReceivePayloadType
+from .models import MqttValueTemplate, ReceiveMessage
 from .schemas import MQTT_ENTITY_COMMON_SCHEMA
 from .util import valid_subscribe_topic
 
@@ -103,7 +104,7 @@ class MqttDeviceTracker(MqttEntity, TrackerEntity):
     _value_template: Callable[[ReceivePayloadType], ReceivePayloadType]
 
     @staticmethod
-    def config_schema() -> vol.Schema:
+    def config_schema() -> VolSchemaType:
         """Return the config schema."""
         return DISCOVERY_SCHEMA
 

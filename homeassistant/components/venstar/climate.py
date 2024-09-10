@@ -10,7 +10,7 @@ from homeassistant.components.climate import (
     ATTR_TARGET_TEMP_LOW,
     FAN_AUTO,
     FAN_ON,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as CLIMATE_PLATFORM_SCHEMA,
     PRESET_AWAY,
     PRESET_NONE,
     ClimateEntity,
@@ -48,7 +48,7 @@ from .const import (
 )
 from .coordinator import VenstarDataUpdateCoordinator
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = CLIMATE_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_PASSWORD): cv.string,

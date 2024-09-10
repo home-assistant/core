@@ -6,7 +6,10 @@ import datetime
 
 import voluptuous as vol
 
-from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorEntity
+from homeassistant.components.binary_sensor import (
+    PLATFORM_SCHEMA as BINARY_SENSOR_PLATFORM_SCHEMA,
+    BinarySensorEntity,
+)
 from homeassistant.const import (
     CONF_DISARM_AFTER_TRIGGER,
     CONF_NAME,
@@ -27,7 +30,7 @@ CONF_VARIABLE = "variable"
 CONF_RESET_DELAY_SEC = "reset_delay_sec"
 
 DEFAULT_NAME = "Pilight Binary Sensor"
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_VARIABLE): cv.string,
         vol.Required(CONF_PAYLOAD): vol.Schema(dict),

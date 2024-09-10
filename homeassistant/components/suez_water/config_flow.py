@@ -75,21 +75,6 @@ class SuezWaterConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
 
-    async def async_step_import(self, user_input: dict[str, Any]) -> ConfigFlowResult:
-        """Import the yaml config."""
-        await self.async_set_unique_id(user_input[CONF_USERNAME])
-        self._abort_if_unique_id_configured()
-        try:
-            await self.hass.async_add_executor_job(validate_input, user_input)
-        except CannotConnect:
-            return self.async_abort(reason="cannot_connect")
-        except InvalidAuth:
-            return self.async_abort(reason="invalid_auth")
-        except Exception:
-            _LOGGER.exception("Unexpected exception")
-            return self.async_abort(reason="unknown")
-        return self.async_create_entry(title=user_input[CONF_USERNAME], data=user_input)
-
 
 class CannotConnect(HomeAssistantError):
     """Error to indicate we cannot connect."""

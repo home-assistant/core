@@ -14,7 +14,7 @@ from homeassistant.components.light import (
     LightEntityFeature,
 )
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_registry import RegistryEntryHider
 from homeassistant.setup import async_setup_component
@@ -30,12 +30,6 @@ from tests.common import (
 @pytest.fixture(autouse=True, name="stub_blueprint_populate")
 def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
     """Stub copying the blueprints to the config folder."""
-
-
-@pytest.fixture
-def calls(hass: HomeAssistant) -> list[ServiceCall]:
-    """Track calls to a mock service."""
-    return async_mock_service(hass, "test", "automation")
 
 
 async def test_get_actions(
@@ -66,14 +60,14 @@ async def test_get_actions(
             "entity_id": entity_entry.id,
             "metadata": {"secondary": False},
         }
-        for action in [
+        for action in (
             "brightness_decrease",
             "brightness_increase",
             "flash",
             "turn_off",
             "turn_on",
             "toggle",
-        ]
+        )
     ]
     actions = await async_get_device_automations(
         hass, DeviceAutomationType.ACTION, device_entry.id
@@ -123,7 +117,7 @@ async def test_get_actions_hidden_auxiliary(
             "entity_id": entity_entry.id,
             "metadata": {"secondary": True},
         }
-        for action in ["turn_on", "turn_off", "toggle"]
+        for action in ("turn_on", "turn_off", "toggle")
     ]
     actions = await async_get_device_automations(
         hass, DeviceAutomationType.ACTION, device_entry.id
@@ -471,7 +465,6 @@ async def test_action(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    calls: list[ServiceCall],
 ) -> None:
     """Test for turn_on and turn_off actions."""
     config_entry = MockConfigEntry(domain="test", data={})
@@ -636,7 +629,6 @@ async def test_action_legacy(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    calls: list[ServiceCall],
 ) -> None:
     """Test for turn_on and turn_off actions."""
     config_entry = MockConfigEntry(domain="test", data={})

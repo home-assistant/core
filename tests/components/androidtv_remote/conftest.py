@@ -1,10 +1,9 @@
 """Fixtures for the Android TV Remote integration tests."""
 
-from collections.abc import Callable
+from collections.abc import Callable, Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.androidtv_remote.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState

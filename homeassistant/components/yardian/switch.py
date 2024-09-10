@@ -11,13 +11,14 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import VolDictType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DEFAULT_WATERING_DURATION, DOMAIN
 from .coordinator import YardianUpdateCoordinator
 
 SERVICE_START_IRRIGATION = "start_irrigation"
-SERVICE_SCHEMA_START_IRRIGATION = {
+SERVICE_SCHEMA_START_IRRIGATION: VolDictType = {
     vol.Required("duration"): cv.positive_int,
 }
 

@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, patch
 from pytautulli import exceptions
 
 from homeassistant.components.tautulli.const import DOMAIN
-from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_API_KEY, CONF_SOURCE, CONF_URL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -156,15 +156,7 @@ async def test_flow_reauth(
     """Test reauth flow."""
     with patch("homeassistant.components.tautulli.PLATFORMS", []):
         entry = await setup_integration(hass, aioclient_mock)
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            CONF_SOURCE: SOURCE_REAUTH,
-            "entry_id": entry.entry_id,
-            "unique_id": entry.unique_id,
-        },
-        data=CONF_DATA,
-    )
+    result = await entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
     assert result["errors"] == {}
@@ -193,14 +185,7 @@ async def test_flow_reauth_error(
     """Test reauth flow with invalid authentication."""
     with patch("homeassistant.components.tautulli.PLATFORMS", []):
         entry = await setup_integration(hass, aioclient_mock)
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": SOURCE_REAUTH,
-            "entry_id": entry.entry_id,
-            "unique_id": entry.unique_id,
-        },
-    )
+    result = await entry.start_reauth_flow(hass)
     with patch_config_flow_tautulli(AsyncMock()) as tautullimock:
         tautullimock.side_effect = exceptions.PyTautulliAuthenticationException
         result = await hass.config_entries.flow.async_configure(

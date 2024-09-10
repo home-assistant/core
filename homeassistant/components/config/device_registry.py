@@ -42,7 +42,7 @@ def websocket_list_devices(
     registry = dr.async_get(hass)
     # Build start of response message
     msg_json_prefix = (
-        f'{{"id":{msg["id"]},"type": "{websocket_api.const.TYPE_RESULT}",'
+        f'{{"id":{msg["id"]},"type": "{websocket_api.TYPE_RESULT}",'
         f'"success":true,"result": ['
     ).encode()
     # Concatenate cached entity registry item JSON serializations
@@ -138,10 +138,14 @@ async def websocket_remove_config_entry_from_device(
             "Failed to remove device entry, rejected by integration"
         )
 
-    entry = registry.async_update_device(
-        device_id, remove_config_entry_id=config_entry_id
-    )
+    # Integration might have removed the config entry already, that is fine.
+    if registry.async_get(device_id):
+        entry = registry.async_update_device(
+            device_id, remove_config_entry_id=config_entry_id
+        )
 
-    entry_as_dict = entry.dict_repr if entry else None
+        entry_as_dict = entry.dict_repr if entry else None
+    else:
+        entry_as_dict = None
 
     connection.send_message(websocket_api.result_message(msg["id"], entry_as_dict))

@@ -22,7 +22,7 @@ from tests.typing import ClientSessionGenerator
 THERMOSTAT_ID = 0
 
 
-async def test_ecobee_repair_flow(
+async def test_ecobee_notify_repair_flow(
     hass: HomeAssistant,
     mock_ecobee: MagicMock,
     hass_client: ClientSessionGenerator,

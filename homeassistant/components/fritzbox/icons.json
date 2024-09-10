@@ -1,0 +1,16 @@
+{
+  "entity": {
+    "climate": {
+      "thermostat": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "holiday": "mdi:bag-suitcase-outline",
+              "summer": "mdi:radiator-off"
+            }
+          }
+        }
+      }
+    }
+  }
+}

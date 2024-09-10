@@ -1,5 +1,6 @@
 """Tests for the Airzone integration."""
 
+from copy import deepcopy
 from unittest.mock import patch
 
 from aioairzone.const import (
@@ -55,7 +56,7 @@ from aioairzone.const import (
     API_ZONE_ID,
 )
 
-from homeassistant.components.airzone import DOMAIN
+from homeassistant.components.airzone.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_ID, CONF_PORT
 from homeassistant.core import HomeAssistant
 
@@ -271,6 +272,16 @@ HVAC_MOCK = {
                 },
             ]
         },
+    ]
+}
+
+HVAC_MOCK_NEW_ZONES = {
+    API_SYSTEMS: [
+        {
+            API_DATA: [
+                deepcopy(HVAC_MOCK[API_SYSTEMS][0][API_DATA][0]),
+            ]
+        }
     ]
 }
 

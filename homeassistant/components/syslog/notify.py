@@ -9,7 +9,7 @@ import voluptuous as vol
 from homeassistant.components.notify import (
     ATTR_TITLE,
     ATTR_TITLE_DEFAULT,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA,
     BaseNotificationService,
 )
 from homeassistant.core import HomeAssistant
@@ -59,7 +59,7 @@ SYSLOG_PRIORITY = {
     -2: "LOG_DEBUG",
 }
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_FACILITY, default="syslog"): vol.In(SYSLOG_FACILITY.keys()),
         vol.Optional(CONF_OPTION, default="pid"): vol.In(SYSLOG_OPTION.keys()),

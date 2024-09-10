@@ -47,7 +47,7 @@ from tests.typing import RecorderInstanceGenerator
 
 @pytest.fixture
 async def mock_recorder_before_hass(
-    async_setup_recorder_instance: RecorderInstanceGenerator,
+    async_test_recorder: RecorderInstanceGenerator,
 ) -> None:
     """Set up recorder."""
 
@@ -806,7 +806,9 @@ async def test_get_significant_states_only_minimal_response(
     assert len(hist["sensor.test"]) == 3
 
 
-def record_states(hass) -> tuple[datetime, datetime, dict[str, list[State]]]:
+def record_states(
+    hass: HomeAssistant,
+) -> tuple[datetime, datetime, dict[str, list[State]]]:
     """Record some test states.
 
     We inject a bunch of state updates from media player, zone and
@@ -889,14 +891,17 @@ def record_states(hass) -> tuple[datetime, datetime, dict[str, list[State]]]:
     return zero, four, states
 
 
+@pytest.mark.skip_on_db_engine(["mysql", "postgresql"])
+@pytest.mark.usefixtures("skip_by_db_engine")
 async def test_state_changes_during_period_query_during_migration_to_schema_25(
     hass: HomeAssistant,
     recorder_db_url: str,
 ) -> None:
-    """Test we can query data prior to schema 25 and during migration to schema 25."""
-    if recorder_db_url.startswith(("mysql://", "postgresql://")):
-        # This test doesn't run on MySQL / MariaDB / Postgresql; we can't drop table state_attributes
-        return
+    """Test we can query data prior to schema 25 and during migration to schema 25.
+
+    This test doesn't run on MySQL / MariaDB / Postgresql; we can't drop the
+    state_attributes table.
+    """
 
     instance = recorder.get_instance(hass)
 
@@ -955,14 +960,17 @@ async def test_state_changes_during_period_query_during_migration_to_schema_25(
             assert state.attributes == {"name": "the light"}
 
 
+@pytest.mark.skip_on_db_engine(["mysql", "postgresql"])
+@pytest.mark.usefixtures("skip_by_db_engine")
 async def test_get_states_query_during_migration_to_schema_25(
     hass: HomeAssistant,
     recorder_db_url: str,
 ) -> None:
-    """Test we can query data prior to schema 25 and during migration to schema 25."""
-    if recorder_db_url.startswith(("mysql://", "postgresql://")):
-        # This test doesn't run on MySQL / MariaDB / Postgresql; we can't drop table state_attributes
-        return
+    """Test we can query data prior to schema 25 and during migration to schema 25.
+
+    This test doesn't run on MySQL / MariaDB / Postgresql; we can't drop the
+    state_attributes table.
+    """
 
     instance = recorder.get_instance(hass)
 
@@ -1005,14 +1013,17 @@ async def test_get_states_query_during_migration_to_schema_25(
         assert state.attributes == {"name": "the light"}
 
 
+@pytest.mark.skip_on_db_engine(["mysql", "postgresql"])
+@pytest.mark.usefixtures("skip_by_db_engine")
 async def test_get_states_query_during_migration_to_schema_25_multiple_entities(
     hass: HomeAssistant,
     recorder_db_url: str,
 ) -> None:
-    """Test we can query data prior to schema 25 and during migration to schema 25."""
-    if recorder_db_url.startswith(("mysql://", "postgresql://")):
-        # This test doesn't run on MySQL / MariaDB / Postgresql; we can't drop table state_attributes
-        return
+    """Test we can query data prior to schema 25 and during migration to schema 25.
+
+    This test doesn't run on MySQL / MariaDB / Postgresql; we can't drop the
+    state_attributes table.
+    """
 
     instance = recorder.get_instance(hass)
 

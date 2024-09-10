@@ -11,7 +11,7 @@ from typing import Any, Literal
 
 import aiohttp
 from aiohttp.web import Request
-from reolink_aio.api import Host
+from reolink_aio.api import ALLOWED_SPECIAL_CHARS, Host
 from reolink_aio.enums import SubType
 from reolink_aio.exceptions import NotSupportedError, ReolinkError, SubscriptionError
 
@@ -31,7 +31,12 @@ from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 
 from .const import CONF_USE_HTTPS, DOMAIN
-from .exceptions import ReolinkSetupException, ReolinkWebhookException, UserNotAdmin
+from .exceptions import (
+    PasswordIncompatible,
+    ReolinkSetupException,
+    ReolinkWebhookException,
+    UserNotAdmin,
+)
 
 DEFAULT_TIMEOUT = 30
 FIRST_ONVIF_TIMEOUT = 10
@@ -74,9 +79,13 @@ class ReolinkHost:
         )
 
         self.last_wake: float = 0
-        self._update_cmd: defaultdict[str, defaultdict[int | None, int]] = defaultdict(
+        self.update_cmd: defaultdict[str, defaultdict[int | None, int]] = defaultdict(
             lambda: defaultdict(int)
         )
+        self.firmware_ch_list: list[int | None] = []
+
+        self.starting: bool = True
+        self.credential_errors: int = 0
 
         self.webhook_id: str | None = None
         self._onvif_push_supported: bool = True
@@ -96,16 +105,16 @@ class ReolinkHost:
     @callback
     def async_register_update_cmd(self, cmd: str, channel: int | None = None) -> None:
         """Register the command to update the state."""
-        self._update_cmd[cmd][channel] += 1
+        self.update_cmd[cmd][channel] += 1
 
     @callback
     def async_unregister_update_cmd(self, cmd: str, channel: int | None = None) -> None:
         """Unregister the command to update the state."""
-        self._update_cmd[cmd][channel] -= 1
-        if not self._update_cmd[cmd][channel]:
-            del self._update_cmd[cmd][channel]
-        if not self._update_cmd[cmd]:
-            del self._update_cmd[cmd]
+        self.update_cmd[cmd][channel] -= 1
+        if not self.update_cmd[cmd][channel]:
+            del self.update_cmd[cmd][channel]
+        if not self.update_cmd[cmd]:
+            del self.update_cmd[cmd]
 
     @property
     def unique_id(self) -> str:
@@ -119,6 +128,13 @@ class ReolinkHost:
 
     async def async_init(self) -> None:
         """Connect to Reolink host."""
+        if not self._api.valid_password():
+            raise PasswordIncompatible(
+                "Reolink password contains incompatible special character, "
+                "please change the password to only contain characters: "
+                f"a-z, A-Z, 0-9 or {ALLOWED_SPECIAL_CHARS}"
+            )
+
         await self._api.get_host_data()
 
         if self._api.mac_address is None:
@@ -190,7 +206,10 @@ class ReolinkHost:
         else:
             ir.async_delete_issue(self._hass, DOMAIN, "enable_port")
 
-        self._unique_id = format_mac(self._api.mac_address)
+        if self._api.supported(None, "UID"):
+            self._unique_id = self._api.uid
+        else:
+            self._unique_id = format_mac(self._api.mac_address)
 
         if self._onvif_push_supported:
             try:
@@ -236,25 +255,35 @@ class ReolinkHost:
                     self._async_check_onvif_long_poll,
                 )
 
-        if self._api.sw_version_update_required:
-            ir.async_create_issue(
-                self._hass,
-                DOMAIN,
-                "firmware_update",
-                is_fixable=False,
-                severity=ir.IssueSeverity.WARNING,
-                translation_key="firmware_update",
-                translation_placeholders={
-                    "required_firmware": self._api.sw_version_required.version_string,
-                    "current_firmware": self._api.sw_version,
-                    "model": self._api.model,
-                    "hw_version": self._api.hardware_version,
-                    "name": self._api.nvr_name,
-                    "download_link": "https://reolink.com/download-center/",
-                },
-            )
-        else:
-            ir.async_delete_issue(self._hass, DOMAIN, "firmware_update")
+        ch_list: list[int | None] = [None]
+        if self._api.is_nvr:
+            ch_list.extend(self._api.channels)
+        for ch in ch_list:
+            if not self._api.supported(ch, "firmware"):
+                continue
+
+            key = ch if ch is not None else "host"
+            if self._api.camera_sw_version_update_required(ch):
+                ir.async_create_issue(
+                    self._hass,
+                    DOMAIN,
+                    f"firmware_update_{key}",
+                    is_fixable=False,
+                    severity=ir.IssueSeverity.WARNING,
+                    translation_key="firmware_update",
+                    translation_placeholders={
+                        "required_firmware": self._api.camera_sw_version_required(
+                            ch
+                        ).version_string,
+                        "current_firmware": self._api.camera_sw_version(ch),
+                        "model": self._api.camera_model(ch),
+                        "hw_version": self._api.camera_hardware_version(ch),
+                        "name": self._api.camera_name(ch),
+                        "download_link": "https://reolink.com/download-center/",
+                    },
+                )
+            else:
+                ir.async_delete_issue(self._hass, DOMAIN, f"firmware_update_{key}")
 
     async def _async_check_onvif(self, *_) -> None:
         """Check the ONVIF subscription."""
@@ -349,7 +378,7 @@ class ReolinkHost:
             wake = True
             self.last_wake = time()
 
-        await self._api.get_states(cmd_list=self._update_cmd, wake=wake)
+        await self._api.get_states(cmd_list=self.update_cmd, wake=wake)
 
     async def disconnect(self) -> None:
         """Disconnect from the API, so the connection will be released."""
@@ -408,7 +437,15 @@ class ReolinkHost:
             self._long_poll_task.cancel()
             self._long_poll_task = None
 
-        await self._api.unsubscribe(sub_type=SubType.long_poll)
+        try:
+            await self._api.unsubscribe(sub_type=SubType.long_poll)
+        except ReolinkError as err:
+            _LOGGER.error(
+                "Reolink error while unsubscribing from host %s:%s: %s",
+                self._api.host,
+                self._api.port,
+                err,
+            )
 
     async def stop(self, event=None) -> None:
         """Disconnect the API."""
@@ -482,9 +519,7 @@ class ReolinkHost:
             )
             if sub_type == SubType.push:
                 await self.subscribe()
-            else:
-                await self._api.subscribe(self._webhook_url, sub_type)
-            return
+                return
 
         timer = self._api.renewtimer(sub_type)
         _LOGGER.debug(

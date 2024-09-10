@@ -2,20 +2,17 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-import logging
 from typing import Any
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import TransmissionConfigEntry
 from .const import DOMAIN
 from .coordinator import TransmissionDataUpdateCoordinator
-
-_LOGGING = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -47,14 +44,12 @@ SWITCH_TYPES: tuple[TransmissionSwitchEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: TransmissionConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Transmission switch."""
 
-    coordinator: TransmissionDataUpdateCoordinator = hass.data[DOMAIN][
-        config_entry.entry_id
-    ]
+    coordinator = config_entry.runtime_data
 
     async_add_entities(
         TransmissionSwitch(coordinator, description) for description in SWITCH_TYPES

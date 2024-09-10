@@ -13,6 +13,14 @@
     "action_type": {
       "set_hvac_mode": "Change HVAC mode on {entity_name}",
       "set_preset_mode": "Change preset on {entity_name}"
+    },
+    "extra_fields": {
+      "above": "[%key:common::device_automation::extra_fields::above%]",
+      "below": "[%key:common::device_automation::extra_fields::below%]",
+      "for": "[%key:common::device_automation::extra_fields::for%]",
+      "to": "[%key:common::device_automation::extra_fields::to%]",
+      "preset_mode": "Preset mode",
+      "hvac_mode": "HVAC mode"
     }
   },
   "entity_component": {
@@ -61,13 +69,14 @@
         "hvac_action": {
           "name": "Current action",
           "state": {
-            "off": "[%key:common::state::off%]",
-            "preheating": "Preheating",
-            "heating": "Heating",
             "cooling": "Cooling",
+            "defrosting": "Defrosting",
             "drying": "Drying",
+            "fan": "Fan",
+            "heating": "Heating",
             "idle": "[%key:common::state::idle%]",
-            "fan": "Fan"
+            "off": "[%key:common::state::off%]",
+            "preheating": "Preheating"
           }
         },
         "hvac_modes": {
@@ -257,6 +266,9 @@
     },
     "not_valid_fan_mode": {
       "message": "Fan mode {mode} is not valid. Valid fan modes are: {modes}."
+    },
+    "temp_out_of_range": {
+      "message": "Provided temperature {check_temp} is not valid. Accepted range is {min_temp} to {max_temp}."
     }
   }
 }

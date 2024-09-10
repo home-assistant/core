@@ -4,7 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Generic
 
-from deebot_client.capabilities import CapabilityEvent, VacuumCapabilities
+from deebot_client.capabilities import CapabilityEvent
 from deebot_client.events.water_info import WaterInfoEvent
 
 from homeassistant.components.binary_sensor import (
@@ -16,12 +16,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import EcovacsConfigEntry
-from .entity import (
-    CapabilityDevice,
-    EcovacsCapabilityEntityDescription,
-    EcovacsDescriptionEntity,
-    EventT,
-)
+from .entity import EcovacsCapabilityEntityDescription, EcovacsDescriptionEntity, EventT
 from .util import get_supported_entitites
 
 
@@ -38,7 +33,6 @@ class EcovacsBinarySensorEntityDescription(
 
 ENTITY_DESCRIPTIONS: tuple[EcovacsBinarySensorEntityDescription, ...] = (
     EcovacsBinarySensorEntityDescription[WaterInfoEvent](
-        device_capabilities=VacuumCapabilities,
         capability_fn=lambda caps: caps.water,
         value_fn=lambda e: e.mop_attached,
         key="water_mop_attached",
@@ -62,7 +56,7 @@ async def async_setup_entry(
 
 
 class EcovacsBinarySensor(
-    EcovacsDescriptionEntity[CapabilityDevice, CapabilityEvent[EventT]],
+    EcovacsDescriptionEntity[CapabilityEvent[EventT]],
     BinarySensorEntity,
 ):
     """Ecovacs binary sensor."""

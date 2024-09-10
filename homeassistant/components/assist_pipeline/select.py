@@ -9,11 +9,9 @@ from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import collection, entity_registry as er, restore_state
 
-from .const import DOMAIN
+from .const import DOMAIN, OPTION_PREFERRED
 from .pipeline import AssistDevice, PipelineData, PipelineStorageCollection
 from .vad import VadSensitivity
-
-OPTION_PREFERRED = "preferred"
 
 
 @callback
@@ -109,7 +107,7 @@ class AssistPipelineSelect(SelectEntity, restore_state.RestoreEntity):
         self.async_write_ha_state()
 
     async def _pipelines_updated(
-        self, change_sets: Iterable[collection.CollectionChangeSet]
+        self, change_set: Iterable[collection.CollectionChange]
     ) -> None:
         """Handle pipeline update."""
         self._update_options()

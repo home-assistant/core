@@ -3,8 +3,7 @@
 from unittest.mock import AsyncMock, patch
 
 from homeassistant.components import dhcp
-from homeassistant.components.goalzero import DOMAIN
-from homeassistant.components.goalzero.const import DEFAULT_NAME
+from homeassistant.components.goalzero.const import DEFAULT_NAME, DOMAIN
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import format_mac

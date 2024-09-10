@@ -19,10 +19,20 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.components.statistics import DOMAIN as STATISTICS_DOMAIN
-from homeassistant.components.statistics.sensor import StatisticsSensor
+from homeassistant.components.statistics.sensor import (
+    CONF_KEEP_LAST_SAMPLE,
+    CONF_PERCENTILE,
+    CONF_PRECISION,
+    CONF_SAMPLES_MAX_BUFFER_SIZE,
+    CONF_STATE_CHARACTERISTIC,
+    STAT_MEAN,
+    StatisticsSensor,
+)
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
+    CONF_ENTITY_ID,
+    CONF_NAME,
     DEGREE,
     SERVICE_RELOAD,
     STATE_UNAVAILABLE,
@@ -31,11 +41,11 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from tests.common import async_fire_time_changed, get_fixture_path
+from tests.common import MockConfigEntry, async_fire_time_changed, get_fixture_path
 from tests.components.recorder.common import async_wait_recording_done
 
 VALUES_BINARY = ["on", "off", "on", "off", "on", "off", "on", "off", "on"]
@@ -169,6 +179,35 @@ async def test_sensor_defaults_numeric(hass: HomeAssistant) -> None:
         new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfTemperature.CELSIUS
     )
     assert new_state.attributes.get("source_value_valid") is False
+
+
+@pytest.mark.parametrize(
+    "get_config",
+    [
+        {
+            CONF_NAME: "test",
+            CONF_ENTITY_ID: "sensor.test_monitored",
+            CONF_STATE_CHARACTERISTIC: STAT_MEAN,
+            CONF_SAMPLES_MAX_BUFFER_SIZE: 20.0,
+            CONF_KEEP_LAST_SAMPLE: False,
+            CONF_PERCENTILE: 50.0,
+            CONF_PRECISION: 2.0,
+        }
+    ],
+)
+async def test_sensor_loaded_from_config_entry(
+    hass: HomeAssistant, loaded_entry: MockConfigEntry
+) -> None:
+    """Test the sensor loaded from a config entry."""
+
+    state = hass.states.get("sensor.test")
+    assert state is not None
+    assert state.state == str(round(sum(VALUES_NUMERIC) / len(VALUES_NUMERIC), 2))
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfTemperature.CELSIUS
+    assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
+    assert state.attributes.get("buffer_usage_ratio") == round(9 / 20, 2)
+    assert state.attributes.get("source_value_valid") is True
+    assert "age_coverage_ratio" not in state.attributes
 
 
 async def test_sensor_defaults_binary(hass: HomeAssistant) -> None:
@@ -1314,13 +1353,13 @@ async def test_state_characteristics(hass: HomeAssistant) -> None:
 
         # With all values in buffer
 
-        for i in range(len(VALUES_NUMERIC)):
+        for i, value in enumerate(VALUES_NUMERIC):
             current_time += timedelta(minutes=1)
             freezer.move_to(current_time)
             async_fire_time_changed(hass, current_time)
             hass.states.async_set(
                 "sensor.test_monitored",
-                str(VALUES_NUMERIC[i]),
+                str(value),
                 {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
             )
             hass.states.async_set(
@@ -1615,3 +1654,50 @@ async def test_reload(recorder_mock: Recorder, hass: HomeAssistant) -> None:
 
     assert hass.states.get("sensor.test") is None
     assert hass.states.get("sensor.cputest")
+
+
+async def test_device_id(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test for source entity device for Statistics."""
+    source_config_entry = MockConfigEntry()
+    source_config_entry.add_to_hass(hass)
+    source_device_entry = device_registry.async_get_or_create(
+        config_entry_id=source_config_entry.entry_id,
+        identifiers={("sensor", "identifier_test")},
+        connections={("mac", "30:31:32:33:34:35")},
+    )
+    source_entity = entity_registry.async_get_or_create(
+        "sensor",
+        "test",
+        "source",
+        config_entry=source_config_entry,
+        device_id=source_device_entry.id,
+    )
+    await hass.async_block_till_done()
+    assert entity_registry.async_get("sensor.test_source") is not None
+
+    statistics_config_entry = MockConfigEntry(
+        data={},
+        domain=STATISTICS_DOMAIN,
+        options={
+            "name": "Statistics",
+            "entity_id": "sensor.test_source",
+            "state_characteristic": "mean",
+            "keep_last_sample": False,
+            "percentile": 50.0,
+            "precision": 2.0,
+            "sampling_size": 20.0,
+        },
+        title="Statistics",
+    )
+    statistics_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(statistics_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    statistics_entity = entity_registry.async_get("sensor.statistics")
+    assert statistics_entity is not None
+    assert statistics_entity.device_id == source_entity.device_id

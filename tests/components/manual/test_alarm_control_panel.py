@@ -7,7 +7,12 @@ from freezegun import freeze_time
 import pytest
 
 from homeassistant.components import alarm_control_panel
+from homeassistant.components.alarm_control_panel import AlarmControlPanelEntityFeature
 from homeassistant.components.demo import alarm_control_panel as demo
+from homeassistant.components.manual.alarm_control_panel import (
+    ATTR_NEXT_STATE,
+    ATTR_PREVIOUS_STATE,
+)
 from homeassistant.const import (
     ATTR_CODE,
     ATTR_ENTITY_ID,
@@ -27,7 +32,7 @@ from homeassistant.const import (
     STATE_ALARM_TRIGGERED,
 )
 from homeassistant.core import CoreState, HomeAssistant, State
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -226,7 +231,7 @@ async def test_with_invalid_code(hass: HomeAssistant, service, expected_state) -
 
     assert hass.states.get(entity_id).state == STATE_ALARM_DISARMED
 
-    with pytest.raises(HomeAssistantError, match=r"^Invalid alarm code provided$"):
+    with pytest.raises(ServiceValidationError, match=r"^Invalid alarm code provided$"):
         await hass.services.async_call(
             alarm_control_panel.DOMAIN,
             service,
@@ -1088,7 +1093,7 @@ async def test_disarm_during_trigger_with_invalid_code(hass: HomeAssistant) -> N
 
     assert hass.states.get(entity_id).state == STATE_ALARM_PENDING
 
-    with pytest.raises(HomeAssistantError, match=r"^Invalid alarm code provided$"):
+    with pytest.raises(ServiceValidationError, match=r"^Invalid alarm code provided$"):
         await common.async_alarm_disarm(hass, entity_id=entity_id)
 
     assert hass.states.get(entity_id).state == STATE_ALARM_PENDING
@@ -1132,7 +1137,7 @@ async def test_disarm_with_template_code(hass: HomeAssistant) -> None:
     state = hass.states.get(entity_id)
     assert state.state == STATE_ALARM_ARMED_HOME
 
-    with pytest.raises(HomeAssistantError, match=r"^Invalid alarm code provided$"):
+    with pytest.raises(ServiceValidationError, match=r"^Invalid alarm code provided$"):
         await common.async_alarm_disarm(hass, "def")
 
     state = hass.states.get(entity_id)
@@ -1410,8 +1415,8 @@ async def test_restore_state_triggered(hass: HomeAssistant, previous_state) -> N
 
     state = hass.states.get(entity_id)
     assert state
-    assert state.attributes["previous_state"] == previous_state
-    assert "next_state" not in state.attributes
+    assert state.attributes[ATTR_PREVIOUS_STATE] == previous_state
+    assert state.attributes[ATTR_NEXT_STATE] is None
     assert state.state == STATE_ALARM_TRIGGERED
 
     future = time + timedelta(seconds=121)
@@ -1456,3 +1461,70 @@ async def test_restore_state_triggered_long_ago(hass: HomeAssistant) -> None:
 
     state = hass.states.get(entity_id)
     assert state.state == STATE_ALARM_DISARMED
+
+
+async def test_default_arming_states(hass: HomeAssistant) -> None:
+    """Test default arming_states."""
+    assert await async_setup_component(
+        hass,
+        alarm_control_panel.DOMAIN,
+        {
+            "alarm_control_panel": {
+                "platform": "manual",
+                "name": "test",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("alarm_control_panel.test")
+    assert state.attributes["supported_features"] == (
+        AlarmControlPanelEntityFeature.ARM_HOME
+        | AlarmControlPanelEntityFeature.ARM_AWAY
+        | AlarmControlPanelEntityFeature.ARM_NIGHT
+        | AlarmControlPanelEntityFeature.ARM_VACATION
+        | AlarmControlPanelEntityFeature.TRIGGER
+        | AlarmControlPanelEntityFeature.ARM_CUSTOM_BYPASS
+    )
+
+
+async def test_arming_states(hass: HomeAssistant) -> None:
+    """Test arming_states."""
+    assert await async_setup_component(
+        hass,
+        alarm_control_panel.DOMAIN,
+        {
+            "alarm_control_panel": {
+                "platform": "manual",
+                "name": "test",
+                "arming_states": ["armed_away", "armed_home"],
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("alarm_control_panel.test")
+    assert state.attributes["supported_features"] == (
+        AlarmControlPanelEntityFeature.ARM_HOME
+        | AlarmControlPanelEntityFeature.ARM_AWAY
+        | AlarmControlPanelEntityFeature.TRIGGER
+    )
+
+
+async def test_invalid_arming_states(hass: HomeAssistant) -> None:
+    """Test invalid arming_states."""
+    assert await async_setup_component(
+        hass,
+        alarm_control_panel.DOMAIN,
+        {
+            "alarm_control_panel": {
+                "platform": "manual",
+                "name": "test",
+                "arming_states": ["invalid", "armed_home"],
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("alarm_control_panel.test")
+    assert state is None

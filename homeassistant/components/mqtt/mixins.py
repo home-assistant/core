@@ -16,6 +16,7 @@ from homeassistant.const import (
     ATTR_HW_VERSION,
     ATTR_MANUFACTURER,
     ATTR_MODEL,
+    ATTR_MODEL_ID,
     ATTR_NAME,
     ATTR_SERIAL_NUMBER,
     ATTR_SUGGESTED_AREA,
@@ -25,6 +26,7 @@ from homeassistant.const import (
     CONF_ENTITY_CATEGORY,
     CONF_ICON,
     CONF_MODEL,
+    CONF_MODEL_ID,
     CONF_NAME,
     CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
@@ -53,6 +55,7 @@ from homeassistant.helpers.typing import (
     ConfigType,
     DiscoveryInfoType,
     UndefinedType,
+    VolSchemaType,
 )
 from homeassistant.util.json import json_loads
 from homeassistant.util.yaml import dump as yaml_dump
@@ -156,7 +159,7 @@ class SetupEntity(Protocol):
 
 @callback
 def async_handle_schema_error(
-    discovery_payload: MQTTDiscoveryPayload, err: vol.MultipleInvalid
+    discovery_payload: MQTTDiscoveryPayload, err: vol.Invalid
 ) -> None:
     """Help handling schema errors on MQTT discovery messages."""
     discovery_topic: str = discovery_payload.discovery_data[ATTR_DISCOVERY_TOPIC]
@@ -247,8 +250,8 @@ def async_setup_entity_entry_helper(
     entity_class: type[MqttEntity] | None,
     domain: str,
     async_add_entities: AddEntitiesCallback,
-    discovery_schema: vol.Schema,
-    platform_schema_modern: vol.Schema,
+    discovery_schema: VolSchemaType,
+    platform_schema_modern: VolSchemaType,
     schema_class_mapping: dict[str, type[MqttEntity]] | None = None,
 ) -> None:
     """Set up entity creation dynamically through MQTT discovery."""
@@ -991,6 +994,9 @@ def device_info_from_specifications(
     if CONF_MODEL in specifications:
         info[ATTR_MODEL] = specifications[CONF_MODEL]
 
+    if CONF_MODEL_ID in specifications:
+        info[ATTR_MODEL_ID] = specifications[CONF_MODEL_ID]
+
     if CONF_NAME in specifications:
         info[ATTR_NAME] = specifications[CONF_NAME]
 
@@ -1187,7 +1193,7 @@ class MqttEntity(
 
     @staticmethod
     @abstractmethod
-    def config_schema() -> vol.Schema:
+    def config_schema() -> VolSchemaType:
         """Return the config schema."""
 
     def _set_entity_name(self, config: ConfigType) -> None:

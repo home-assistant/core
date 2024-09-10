@@ -1,8 +1,17 @@
 """The file component."""
 
+from copy import deepcopy
+from typing import Any
+
 from homeassistant.components.notify import migrate_notify_issue
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_FILE_PATH, CONF_NAME, CONF_PLATFORM, Platform
+from homeassistant.const import (
+    CONF_FILE_PATH,
+    CONF_NAME,
+    CONF_PLATFORM,
+    CONF_SCAN_INTERVAL,
+    Platform,
+)
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import (
@@ -63,6 +72,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             if item[CONF_PLATFORM] == DOMAIN:
                 file_config_item = IMPORT_SCHEMA[domain](item)
                 file_config_item[CONF_PLATFORM] = domain
+                if CONF_SCAN_INTERVAL in file_config_item:
+                    del file_config_item[CONF_SCAN_INTERVAL]
                 hass.async_create_task(
                     hass.config_entries.flow.async_init(
                         DOMAIN,
@@ -76,7 +87,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a file component entry."""
-    config = dict(entry.data)
+    config = {**entry.data, **entry.options}
     filepath: str = config[CONF_FILE_PATH]
     if filepath and not await hass.async_add_executor_job(
         hass.config.is_allowed_path, filepath
@@ -90,6 +101,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await hass.config_entries.async_forward_entry_setups(
         entry, [Platform(entry.data[CONF_PLATFORM])]
     )
+    entry.async_on_unload(entry.add_update_listener(update_listener))
     if entry.data[CONF_PLATFORM] == Platform.NOTIFY and CONF_NAME in entry.data:
         # New notify entities are being setup through the config entry,
         # but during the deprecation period we want to keep the legacy notify platform,
@@ -113,3 +125,29 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return await hass.config_entries.async_unload_platforms(
         entry, [entry.data[CONF_PLATFORM]]
     )
+
+
+async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Handle options update."""
+    await hass.config_entries.async_reload(entry.entry_id)
+
+
+async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+    """Migrate config entry."""
+    if config_entry.version > 2:
+        # Downgraded from future
+        return False
+
+    if config_entry.version < 2:
+        # Move optional fields from data to options in config entry
+        data: dict[str, Any] = deepcopy(dict(config_entry.data))
+        options = {}
+        for key, value in config_entry.data.items():
+            if key not in (CONF_FILE_PATH, CONF_PLATFORM, CONF_NAME):
+                data.pop(key)
+                options[key] = value
+
+        hass.config_entries.async_update_entry(
+            config_entry, version=2, data=data, options=options
+        )
+    return True

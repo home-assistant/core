@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
+from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.verisure.const import CONF_GIID, DOMAIN
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD

@@ -52,7 +52,8 @@
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "reauth_unsuccessful": "Re-authentication was unsuccessful, please remove the integration and set it up again.",
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
-      "another_device": "Re-configuration was unsuccessful, the IP address/hostname of another Shelly device was used."
+      "another_device": "Re-configuration was unsuccessful, the IP address/hostname of another Shelly device was used.",
+      "ipv6_not_supported": "IPv6 is not supported."
     }
   },
   "device_automation": {
@@ -175,14 +176,6 @@
     "push_update_failure": {
       "title": "Shelly device {device_name} push update failure",
       "description": "Home Assistant is not receiving push updates from the Shelly device {device_name} with IP address {ip_address}. Check the CoIoT configuration in the web panel of the device and your network configuration."
-    },
-    "deprecated_valve_switch": {
-      "title": "The switch entity for Shelly Gas Valve is deprecated",
-      "description": "The switch entity for Shelly Gas Valve is deprecated. A valve entity {entity} is available and should be used going forward. For this new valve entity you need to use {service} service."
-    },
-    "deprecated_valve_switch_entity": {
-      "title": "Deprecated switch entity for Shelly Gas Valve detected in {info}",
-      "description": "Your Shelly Gas Valve entity `{entity}` is being used in `{info}`. A valve entity is available and should be used going forward.\n\nPlease adjust `{info}` to fix this issue."
     },
     "unsupported_firmware": {
       "title": "Unsupported firmware for device {device_name}",

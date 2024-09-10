@@ -73,9 +73,9 @@
       "charge_mode": {
         "name": "Charge mode",
         "state": {
-          "always": "Instant",
-          "always_charging": "[%key:component::renault::entity::select::charge_mode::state::always%]",
-          "schedule_mode": "Planner",
+          "always": "Always",
+          "always_charging": "Always charging",
+          "schedule_mode": "Schedule mode",
           "scheduled": "Scheduled"
         }
       }
@@ -141,6 +141,7 @@
         "state": {
           "unplugged": "Unplugged",
           "plugged": "Plugged in",
+          "plugged_waiting_for_charge": "Plugged in, waiting for charge",
           "plug_error": "Plug error",
           "plug_unknown": "Plug unknown"
         }

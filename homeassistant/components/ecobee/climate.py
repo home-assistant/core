@@ -39,7 +39,13 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.unit_conversion import TemperatureConverter
 
 from . import EcobeeData
-from .const import _LOGGER, DOMAIN, ECOBEE_MODEL_TO_NAME, MANUFACTURER
+from .const import (
+    _LOGGER,
+    DOMAIN,
+    ECOBEE_AUX_HEAT_ONLY,
+    ECOBEE_MODEL_TO_NAME,
+    MANUFACTURER,
+)
 from .util import ecobee_date, ecobee_time, is_indefinite_hold
 
 ATTR_COOL_TEMP = "cool_temp"
@@ -69,9 +75,6 @@ DEFAULT_MIN_HUMIDITY = 15
 DEFAULT_MAX_HUMIDITY = 50
 HUMIDIFIER_MANUAL_MODE = "manual"
 
-ECOBEE_AUX_HEAT_ONLY = "auxHeatOnly"
-
-
 # Order matters, because for reverse mapping we don't want to map HEAT to AUX
 ECOBEE_HVAC_TO_HASS = collections.OrderedDict(
     [
@@ -79,9 +82,13 @@ ECOBEE_HVAC_TO_HASS = collections.OrderedDict(
         ("cool", HVACMode.COOL),
         ("auto", HVACMode.HEAT_COOL),
         ("off", HVACMode.OFF),
-        ("auxHeatOnly", HVACMode.HEAT),
+        (ECOBEE_AUX_HEAT_ONLY, HVACMode.HEAT),
     ]
 )
+# Reverse key/value pair, drop auxHeatOnly as it doesn't map to specific HASS mode
+HASS_TO_ECOBEE_HVAC = {
+    v: k for k, v in ECOBEE_HVAC_TO_HASS.items() if k != ECOBEE_AUX_HEAT_ONLY
+}
 
 ECOBEE_HVAC_ACTION_TO_HASS = {
     # Map to None if we do not know how to represent.
@@ -379,8 +386,6 @@ class Thermostat(ClimateEntity):
         supported = SUPPORT_FLAGS
         if self.has_humidifier_control:
             supported = supported | ClimateEntityFeature.TARGET_HUMIDITY
-        if self.has_aux_heat:
-            supported = supported | ClimateEntityFeature.AUX_HEAT
         if len(self.hvac_modes) > 1 and HVACMode.OFF in self.hvac_modes:
             supported = (
                 supported | ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
@@ -440,11 +445,6 @@ class Thermostat(ClimateEntity):
             bool(self.settings.get("hasHumidifier"))
             and self.settings.get("humidifierMode") == HUMIDIFIER_MANUAL_MODE
         )
-
-    @property
-    def has_aux_heat(self) -> bool:
-        """Return true if the ecobee has a heat pump."""
-        return bool(self.settings.get(HAS_HEAT_PUMP))
 
     @property
     def target_humidity(self) -> int | None:
@@ -564,24 +564,6 @@ class Thermostat(ClimateEntity):
             "equipment_running": status,
             "fan_min_on_time": self.settings["fanMinOnTime"],
         }
-
-    @property
-    def is_aux_heat(self) -> bool:
-        """Return true if aux heater."""
-        return self.settings["hvacMode"] == ECOBEE_AUX_HEAT_ONLY
-
-    def turn_aux_heat_on(self) -> None:
-        """Turn auxiliary heater on."""
-        _LOGGER.debug("Setting HVAC mode to auxHeatOnly to turn on aux heat")
-        self._last_hvac_mode_before_aux_heat = self.hvac_mode
-        self.data.ecobee.set_hvac_mode(self.thermostat_index, ECOBEE_AUX_HEAT_ONLY)
-        self.update_without_throttle = True
-
-    def turn_aux_heat_off(self) -> None:
-        """Turn auxiliary heater off."""
-        _LOGGER.debug("Setting HVAC mode to last mode to disable aux heat")
-        self.set_hvac_mode(self._last_hvac_mode_before_aux_heat)
-        self.update_without_throttle = True
 
     def set_preset_mode(self, preset_mode: str) -> None:
         """Activate a preset."""
@@ -740,9 +722,7 @@ class Thermostat(ClimateEntity):
 
     def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set HVAC mode (auto, auxHeatOnly, cool, heat, off)."""
-        ecobee_value = next(
-            (k for k, v in ECOBEE_HVAC_TO_HASS.items() if v == hvac_mode), None
-        )
+        ecobee_value = HASS_TO_ECOBEE_HVAC.get(hvac_mode)
         if ecobee_value is None:
             _LOGGER.error("Invalid mode for set_hvac_mode: %s", hvac_mode)
             return

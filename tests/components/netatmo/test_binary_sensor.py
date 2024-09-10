@@ -9,8 +9,9 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
+from .common import snapshot_platform_entities
+
 from tests.common import MockConfigEntry
-from tests.components.netatmo.common import snapshot_platform_entities
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

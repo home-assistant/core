@@ -10,7 +10,7 @@ import requests
 import voluptuous as vol
 
 from homeassistant.components.alarm_control_panel import (
-    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as ALARM_CONTROL_PANEL_PLATFORM_SCHEMA,
     AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
     CodeFormat,
@@ -39,7 +39,7 @@ DEFAULT_MODE = "audible"
 
 SCAN_INTERVAL = datetime.timedelta(seconds=10)
 
-PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = ALARM_CONTROL_PANEL_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -86,6 +86,7 @@ class Concord232Alarm(AlarmControlPanelEntity):
 
         self._attr_name = name
         self._code = code
+        self._alarm_control_panel_option_default_code = code
         self._mode = mode
         self._url = url
         self._alarm = concord232_client.Client(self._url)

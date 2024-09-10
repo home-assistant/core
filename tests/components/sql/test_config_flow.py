@@ -8,7 +8,7 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from homeassistant import config_entries
 from homeassistant.components.recorder import Recorder
-from homeassistant.components.sensor.const import SensorDeviceClass, SensorStateClass
+from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.components.sql.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType

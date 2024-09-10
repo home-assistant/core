@@ -41,7 +41,7 @@ async def test_turn_on(
     powerplug_node: MatterNode,
 ) -> None:
     """Test turning on a switch."""
-    state = hass.states.get("switch.mock_onoffpluginunit_powerplug_switch")
+    state = hass.states.get("switch.mock_onoffpluginunit_switch")
     assert state
     assert state.state == "off"
 
@@ -49,7 +49,7 @@ async def test_turn_on(
         "switch",
         "turn_on",
         {
-            "entity_id": "switch.mock_onoffpluginunit_powerplug_switch",
+            "entity_id": "switch.mock_onoffpluginunit_switch",
         },
         blocking=True,
     )
@@ -64,7 +64,7 @@ async def test_turn_on(
     set_node_attribute(powerplug_node, 1, 6, 0, True)
     await trigger_subscription_callback(hass, matter_client)
 
-    state = hass.states.get("switch.mock_onoffpluginunit_powerplug_switch")
+    state = hass.states.get("switch.mock_onoffpluginunit_switch")
     assert state
     assert state.state == "on"
 
@@ -77,7 +77,7 @@ async def test_turn_off(
     powerplug_node: MatterNode,
 ) -> None:
     """Test turning off a switch."""
-    state = hass.states.get("switch.mock_onoffpluginunit_powerplug_switch")
+    state = hass.states.get("switch.mock_onoffpluginunit_switch")
     assert state
     assert state.state == "off"
 
@@ -85,7 +85,7 @@ async def test_turn_off(
         "switch",
         "turn_off",
         {
-            "entity_id": "switch.mock_onoffpluginunit_powerplug_switch",
+            "entity_id": "switch.mock_onoffpluginunit_switch",
         },
         blocking=True,
     )
@@ -109,7 +109,23 @@ async def test_switch_unit(
     # A switch entity should be discovered as fallback for ANY Matter device (endpoint)
     # that has the OnOff cluster and does not fall into an explicit discovery schema
     # by another platform (e.g. light, lock etc.).
-    state = hass.states.get("switch.mock_switchunit")
+    state = hass.states.get("switch.mock_switchunit_switch")
     assert state
     assert state.state == "off"
-    assert state.attributes["friendly_name"] == "Mock SwitchUnit"
+    assert state.attributes["friendly_name"] == "Mock SwitchUnit Switch"
+
+
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
+async def test_power_switch(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+) -> None:
+    """Test if a Power switch entity is created for a device that supports that."""
+    await setup_integration_with_node_fixture(
+        hass, "room-airconditioner", matter_client
+    )
+    state = hass.states.get("switch.room_airconditioner_power")
+    assert state
+    assert state.state == "off"
+    assert state.attributes["friendly_name"] == "Room AirConditioner Power"

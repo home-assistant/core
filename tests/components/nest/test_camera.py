@@ -4,6 +4,7 @@ These tests fake out the subscriber/devicemanager, and are not using a real
 pubsub subscriber.
 """
 
+from collections.abc import Generator
 import datetime
 from http import HTTPStatus
 from unittest.mock import AsyncMock, Mock, patch
@@ -16,7 +17,7 @@ import pytest
 from homeassistant.components import camera
 from homeassistant.components.camera import STATE_IDLE, STATE_STREAMING, StreamType
 from homeassistant.components.nest.const import DOMAIN
-from homeassistant.components.websocket_api.const import TYPE_RESULT
+from homeassistant.components.websocket_api import TYPE_RESULT
 from homeassistant.const import ATTR_FRIENDLY_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -149,7 +150,7 @@ def make_stream_url_response(
 
 
 @pytest.fixture
-async def mock_create_stream(hass) -> Mock:
+async def mock_create_stream(hass: HomeAssistant) -> Generator[AsyncMock]:
     """Fixture to mock out the create stream call."""
     assert await async_setup_component(hass, "stream", {})
     with patch(
@@ -164,7 +165,9 @@ async def mock_create_stream(hass) -> Mock:
         yield mock_stream
 
 
-async def async_get_image(hass, width=None, height=None):
+async def async_get_image(
+    hass: HomeAssistant, width: int | None = None, height: int | None = None
+) -> bytes:
     """Get the camera image."""
     image = await camera.async_get_image(
         hass, "camera.my_camera", width=width, height=height
@@ -173,7 +176,7 @@ async def async_get_image(hass, width=None, height=None):
     return image.content
 
 
-async def fire_alarm(hass, point_in_time):
+async def fire_alarm(hass: HomeAssistant, point_in_time: datetime.datetime) -> None:
     """Fire an alarm and wait for callbacks to run."""
     with freeze_time(point_in_time):
         async_fire_time_changed(hass, point_in_time)

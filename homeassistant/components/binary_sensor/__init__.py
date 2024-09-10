@@ -14,10 +14,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_ON, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.config_validation import (  # noqa: F401
-    PLATFORM_SCHEMA,
-    PLATFORM_SCHEMA_BASE,
-)
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.deprecation import (
     DeprecatedConstantEnum,
     all_with_deprecated_constants,
@@ -30,11 +27,11 @@ from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
-
 DOMAIN = "binary_sensor"
-SCAN_INTERVAL = timedelta(seconds=30)
-
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
+PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
+PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
+SCAN_INTERVAL = timedelta(seconds=30)
 
 
 class BinarySensorDeviceClass(StrEnum):

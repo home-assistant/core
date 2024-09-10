@@ -17,16 +17,27 @@
         "data": {
           "type": "[%key:component::brother::config::step::user::data::type%]"
         }
+      },
+      "reconfigure_confirm": {
+        "description": "Update configuration for {printer_name}.",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "[%key:component::brother::config::step::user::data_description::host%]"
+        }
       }
     },
     "error": {
       "wrong_host": "Invalid hostname or IP address.",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "snmp_error": "SNMP server turned off or printer not supported."
+      "snmp_error": "SNMP server turned off or printer not supported.",
+      "another_device": "The IP address or hostname of another Brother printer was used."
     },
     "abort": {
       "unsupported_model": "This printer model is not supported.",
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     }
   },
   "entity": {

@@ -8,8 +8,9 @@ import pytest
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
+from . import setup_integration
+
 from tests.common import MockConfigEntry
-from tests.components.linear_garage_door import setup_integration
 
 
 async def test_unload_entry(

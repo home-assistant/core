@@ -26,7 +26,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 from homeassistant.util.enum import try_parse_enum
 
-from .entity import EsphomeEntity, esphome_state_property, platform_async_setup_entry
+from .entity import EsphomeEntity, platform_async_setup_entry
 from .enum_mapper import EsphomeEnumMapper
 
 
@@ -93,15 +93,16 @@ class EsphomeSensor(EsphomeEntity[SensorInfo, SensorState], SensorEntity):
             self._attr_state_class = _STATE_CLASSES.from_esphome(state_class)
 
     @property
-    @esphome_state_property
     def native_value(self) -> datetime | str | None:
         """Return the state of the entity."""
-        state = self._state
-        if state.missing_state or not math.isfinite(state.state):
+        if not self._has_state or (state := self._state).missing_state:
             return None
-        if self._attr_device_class == SensorDeviceClass.TIMESTAMP:
-            return dt_util.utc_from_timestamp(state.state)
-        return f"{state.state:.{self._static_info.accuracy_decimals}f}"
+        state_float = state.state
+        if not math.isfinite(state_float):
+            return None
+        if self.device_class is SensorDeviceClass.TIMESTAMP:
+            return dt_util.utc_from_timestamp(state_float)
+        return f"{state_float:.{self._static_info.accuracy_decimals}f}"
 
 
 class EsphomeTextSensor(EsphomeEntity[TextSensorInfo, TextSensorState], SensorEntity):
@@ -117,17 +118,17 @@ class EsphomeTextSensor(EsphomeEntity[TextSensorInfo, TextSensorState], SensorEn
         )
 
     @property
-    @esphome_state_property
     def native_value(self) -> str | datetime | date | None:
         """Return the state of the entity."""
-        state = self._state
-        if state.missing_state:
+        if not self._has_state or (state := self._state).missing_state:
             return None
-        if self._attr_device_class is SensorDeviceClass.TIMESTAMP:
-            return dt_util.parse_datetime(state.state)
+        state_str = state.state
+        device_class = self.device_class
+        if device_class is SensorDeviceClass.TIMESTAMP:
+            return dt_util.parse_datetime(state_str)
         if (
-            self._attr_device_class is SensorDeviceClass.DATE
-            and (value := dt_util.parse_datetime(state.state)) is not None
+            device_class is SensorDeviceClass.DATE
+            and (value := dt_util.parse_datetime(state_str)) is not None
         ):
             return value.date()
-        return state.state
+        return state_str

@@ -15,6 +15,9 @@
       "locked": "{entity_name} locked",
       "unlocked": "{entity_name} unlocked",
       "open": "{entity_name} opened"
+    },
+    "extra_fields": {
+      "for": "[%key:common::device_automation::extra_fields::for%]"
     }
   },
   "entity_component": {

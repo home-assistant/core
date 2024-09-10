@@ -13,7 +13,7 @@ import voluptuous as vol
 
 from homeassistant.components.image_processing import (
     CONF_CONFIDENCE,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as IMAGE_PROCESSING_PLATFORM_SCHEMA,
     ImageProcessingEntity,
 )
 from homeassistant.const import (
@@ -66,7 +66,7 @@ LABEL_SCHEMA = vol.Schema(
     }
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = IMAGE_PROCESSING_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_URL): cv.string,
         vol.Required(CONF_DETECTOR): cv.string,
@@ -206,8 +206,6 @@ class Doods(ImageProcessingEntity):
                 area_config[CONF_RIGHT],
             ]
             self._covers = area_config[CONF_COVERS]
-
-        template.attach(hass, self._file_out)
 
         self._dconfig = dconfig
         self._matches = {}

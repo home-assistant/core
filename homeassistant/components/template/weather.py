@@ -26,6 +26,7 @@ from homeassistant.components.weather import (
     ATTR_CONDITION_WINDY_VARIANT,
     DOMAIN as WEATHER_DOMAIN,
     ENTITY_ID_FORMAT,
+    PLATFORM_SCHEMA as WEATHER_PLATFORM_SCHEMA,
     Forecast,
     WeatherEntity,
     WeatherEntityFeature,
@@ -39,9 +40,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
-from homeassistant.helpers import template
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
+from homeassistant.helpers import config_validation as cv, template
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
@@ -136,7 +135,7 @@ WEATHER_SCHEMA = vol.Schema(
 
 PLATFORM_SCHEMA = vol.All(
     cv.deprecated(CONF_FORECAST_TEMPLATE),
-    PLATFORM_SCHEMA.extend(WEATHER_SCHEMA.schema),
+    WEATHER_PLATFORM_SCHEMA.extend(WEATHER_SCHEMA.schema),
 )
 
 
@@ -154,7 +153,7 @@ async def async_setup_platform(
         )
         return
 
-    config = rewrite_common_legacy_to_modern_conf(config)
+    config = rewrite_common_legacy_to_modern_conf(hass, config)
     unique_id = config.get(CONF_UNIQUE_ID)
 
     async_add_entities(

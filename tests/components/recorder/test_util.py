@@ -10,7 +10,7 @@ from unittest.mock import MagicMock, Mock, patch
 import pytest
 from sqlalchemy import lambda_stmt, text
 from sqlalchemy.engine.result import ChunkedIteratorResult
-from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.exc import OperationalError, SQLAlchemyError
 from sqlalchemy.sql.elements import TextClause
 from sqlalchemy.sql.lambdas import StatementLambdaElement
 
@@ -26,6 +26,8 @@ from homeassistant.components.recorder.models import (
     process_timestamp,
 )
 from homeassistant.components.recorder.util import (
+    MIN_VERSION_SQLITE,
+    UPCOMING_MIN_VERSION_SQLITE,
     end_incomplete_runs,
     is_second_sunday,
     resolve_period,
@@ -48,7 +50,7 @@ from tests.typing import RecorderInstanceGenerator
 
 @pytest.fixture
 async def mock_recorder_before_hass(
-    async_setup_recorder_instance: RecorderInstanceGenerator,
+    async_test_recorder: RecorderInstanceGenerator,
 ) -> None:
     """Set up recorder."""
 
@@ -73,7 +75,6 @@ async def test_session_scope_not_setup(
 
 async def test_recorder_bad_execute(hass: HomeAssistant, setup_recorder: None) -> None:
     """Bad execute, retry 3 times."""
-    from sqlalchemy.exc import SQLAlchemyError
 
     def to_native(validate_entity_id=True):
         """Raise exception."""
@@ -117,12 +118,18 @@ def test_validate_or_move_away_sqlite_database(
     assert util.validate_or_move_away_sqlite_database(dburl) is True
 
 
+@pytest.mark.skip_on_db_engine(["mysql", "postgresql"])
+@pytest.mark.usefixtures("skip_by_db_engine")
+@pytest.mark.parametrize("persistent_database", [True])
+@pytest.mark.usefixtures("hass_storage")  # Prevent test hass from writing to storage
 async def test_last_run_was_recently_clean(
-    async_setup_recorder_instance: RecorderInstanceGenerator, tmp_path: Path
+    async_setup_recorder_instance: RecorderInstanceGenerator,
 ) -> None:
-    """Test we can check if the last recorder run was recently clean."""
+    """Test we can check if the last recorder run was recently clean.
+
+    This is only implemented for SQLite.
+    """
     config = {
-        recorder.CONF_DB_URL: "sqlite:///" + str(tmp_path / "pytest.db"),
         recorder.CONF_COMMIT_INTERVAL: 1,
     }
     async with async_test_home_assistant() as hass:
@@ -218,9 +225,9 @@ def test_setup_connection_for_dialect_mysql(mysql_version) -> None:
 
 @pytest.mark.parametrize(
     "sqlite_version",
-    ["3.31.0"],
+    [str(UPCOMING_MIN_VERSION_SQLITE)],
 )
-def test_setup_connection_for_dialect_sqlite(sqlite_version) -> None:
+def test_setup_connection_for_dialect_sqlite(sqlite_version: str) -> None:
     """Test setting up the connection for a sqlite dialect."""
     instance_mock = MagicMock()
     execute_args = []
@@ -271,10 +278,10 @@ def test_setup_connection_for_dialect_sqlite(sqlite_version) -> None:
 
 @pytest.mark.parametrize(
     "sqlite_version",
-    ["3.31.0"],
+    [str(UPCOMING_MIN_VERSION_SQLITE)],
 )
 def test_setup_connection_for_dialect_sqlite_zero_commit_interval(
-    sqlite_version,
+    sqlite_version: str,
 ) -> None:
     """Test setting up the connection for a sqlite dialect with a zero commit interval."""
     instance_mock = MagicMock(commit_interval=0)
@@ -498,10 +505,6 @@ def test_supported_pgsql(caplog: pytest.LogCaptureFixture, pgsql_version) -> Non
             "2.0.0",
             "Version 2.0.0 of SQLite is not supported; minimum supported version is 3.31.0.",
         ),
-        (
-            "dogs",
-            "Version dogs of SQLite is not supported; minimum supported version is 3.31.0.",
-        ),
     ],
 )
 def test_fail_outdated_sqlite(
@@ -720,14 +723,72 @@ async def test_no_issue_for_mariadb_with_MDEV_25020(
     assert database_engine.optimizer.slow_range_in_select is False
 
 
+async def test_issue_for_old_sqlite(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test we create and delete an issue for old sqlite versions."""
+    instance_mock = MagicMock()
+    instance_mock.hass = hass
+    execute_args = []
+    close_mock = MagicMock()
+    min_version = str(MIN_VERSION_SQLITE)
+
+    def execute_mock(statement):
+        nonlocal execute_args
+        execute_args.append(statement)
+
+    def fetchall_mock():
+        nonlocal execute_args
+        if execute_args[-1] == "SELECT sqlite_version()":
+            return [[min_version]]
+        return None
+
+    def _make_cursor_mock(*_):
+        return MagicMock(execute=execute_mock, close=close_mock, fetchall=fetchall_mock)
+
+    dbapi_connection = MagicMock(cursor=_make_cursor_mock)
+
+    database_engine = await hass.async_add_executor_job(
+        util.setup_connection_for_dialect,
+        instance_mock,
+        "sqlite",
+        dbapi_connection,
+        True,
+    )
+    await hass.async_block_till_done()
+
+    issue = issue_registry.async_get_issue(DOMAIN, "sqlite_too_old")
+    assert issue is not None
+    assert issue.translation_placeholders == {
+        "min_version": str(UPCOMING_MIN_VERSION_SQLITE),
+        "server_version": min_version,
+    }
+
+    min_version = str(UPCOMING_MIN_VERSION_SQLITE)
+    database_engine = await hass.async_add_executor_job(
+        util.setup_connection_for_dialect,
+        instance_mock,
+        "sqlite",
+        dbapi_connection,
+        True,
+    )
+    await hass.async_block_till_done()
+
+    issue = issue_registry.async_get_issue(DOMAIN, "sqlite_too_old")
+    assert issue is None
+    assert database_engine is not None
+
+
+@pytest.mark.skip_on_db_engine(["mysql", "postgresql"])
+@pytest.mark.usefixtures("skip_by_db_engine")
 async def test_basic_sanity_check(
     hass: HomeAssistant, setup_recorder: None, recorder_db_url: str
 ) -> None:
-    """Test the basic sanity checks with a missing table."""
-    if recorder_db_url.startswith(("mysql://", "postgresql://")):
-        # This test is specific for SQLite
-        return
+    """Test the basic sanity checks with a missing table.
 
+    This test is specific for SQLite.
+    """
     cursor = util.get_instance(hass).engine.raw_connection().cursor()
 
     assert util.basic_sanity_check(cursor) is True
@@ -738,17 +799,18 @@ async def test_basic_sanity_check(
         util.basic_sanity_check(cursor)
 
 
+@pytest.mark.skip_on_db_engine(["mysql", "postgresql"])
+@pytest.mark.usefixtures("skip_by_db_engine")
 async def test_combined_checks(
     hass: HomeAssistant,
     setup_recorder: None,
     caplog: pytest.LogCaptureFixture,
     recorder_db_url: str,
 ) -> None:
-    """Run Checks on the open database."""
-    if recorder_db_url.startswith(("mysql://", "postgresql://")):
-        # This test is specific for SQLite
-        return
+    """Run Checks on the open database.
 
+    This test is specific for SQLite.
+    """
     instance = util.get_instance(hass)
     instance.db_retry_wait = 0
 
@@ -830,14 +892,15 @@ async def test_end_incomplete_runs(
     assert "Ended unfinished session" in caplog.text
 
 
+@pytest.mark.skip_on_db_engine(["mysql", "postgresql"])
+@pytest.mark.usefixtures("skip_by_db_engine")
 async def test_periodic_db_cleanups(
     hass: HomeAssistant, setup_recorder: None, recorder_db_url: str
 ) -> None:
-    """Test periodic db cleanups."""
-    if recorder_db_url.startswith(("mysql://", "postgresql://")):
-        # This test is specific for SQLite
-        return
+    """Test periodic db cleanups.
 
+    This test is specific for SQLite.
+    """
     with patch.object(util.get_instance(hass).engine, "connect") as connect_mock:
         util.periodic_db_cleanups(util.get_instance(hass))
 
@@ -848,18 +911,22 @@ async def test_periodic_db_cleanups(
     assert str(text_obj) == "PRAGMA wal_checkpoint(TRUNCATE);"
 
 
+@pytest.mark.skip_on_db_engine(["mysql", "postgresql"])
+@pytest.mark.usefixtures("skip_by_db_engine")
+@pytest.mark.parametrize("persistent_database", [True])
 async def test_write_lock_db(
     async_setup_recorder_instance: RecorderInstanceGenerator,
     hass: HomeAssistant,
-    tmp_path: Path,
+    recorder_db_url: str,
 ) -> None:
-    """Test database write lock."""
-    from sqlalchemy.exc import OperationalError
+    """Test database write lock.
 
-    # Use file DB, in memory DB cannot do write locks.
-    config = {
-        recorder.CONF_DB_URL: "sqlite:///" + str(tmp_path / "pytest.db?timeout=0.1")
-    }
+    This is only supported for SQLite.
+
+    Use file DB, in memory DB cannot do write locks.
+    """
+
+    config = {recorder.CONF_DB_URL: recorder_db_url + "?timeout=0.1"}
     instance = await async_setup_recorder_instance(hass, config)
     await hass.async_block_till_done()
 
@@ -923,7 +990,7 @@ async def test_execute_stmt_lambda_element(
     all_calls = 0
 
     class MockExecutor:
-        def __init__(self, stmt):
+        def __init__(self, stmt) -> None:
             assert isinstance(stmt, StatementLambdaElement)
 
         def all(self):

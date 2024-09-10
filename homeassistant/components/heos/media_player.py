@@ -13,7 +13,7 @@ from pyheos import HeosError, const as heos_const
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
     ATTR_MEDIA_ENQUEUE,
-    DOMAIN,
+    DOMAIN as MEDIA_PLAYER_DOMAIN,
     BrowseMedia,
     MediaPlayerEnqueue,
     MediaPlayerEntity,
@@ -83,7 +83,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Add media players for a config entry."""
-    players = hass.data[HEOS_DOMAIN][DOMAIN]
+    players = hass.data[HEOS_DOMAIN][MEDIA_PLAYER_DOMAIN]
     devices = [HeosMediaPlayer(player) for player in players.values()]
     async_add_entities(devices, True)
 
@@ -377,7 +377,7 @@ class HeosMediaPlayer(MediaPlayerEntity):
         return self._media_position_updated_at
 
     @property
-    def media_image_url(self) -> str:
+    def media_image_url(self) -> str | None:
         """Image url of current playing media."""
         # May be an empty string, if so, return None
         image_url = self._player.now_playing_media.image_url

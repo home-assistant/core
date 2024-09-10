@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterable
+from collections.abc import Generator
 import dataclasses
 import logging
 from unittest.mock import Mock, patch
@@ -89,7 +89,7 @@ MOCK_DISCOVERY = ssdp.SsdpServiceInfo(
 
 
 @pytest.fixture(autouse=True)
-def mock_get_mac_address() -> Iterable[Mock]:
+def mock_get_mac_address() -> Generator[Mock]:
     """Mock the get_mac_address function to prevent network access and assist tests."""
     with patch(
         "homeassistant.components.dlna_dmr.config_flow.get_mac_address", autospec=True
@@ -99,7 +99,7 @@ def mock_get_mac_address() -> Iterable[Mock]:
 
 
 @pytest.fixture(autouse=True)
-def mock_setup_entry() -> Iterable[Mock]:
+def mock_setup_entry() -> Generator[Mock]:
     """Mock async_setup_entry."""
     with patch(
         "homeassistant.components.dlna_dmr.async_setup_entry", return_value=True
@@ -238,7 +238,9 @@ async def test_user_flow_embedded_st(
     embedded_device.device_type = MOCK_DEVICE_TYPE
     embedded_device.name = MOCK_DEVICE_NAME
     embedded_device.services = upnp_device.services
+    embedded_device.all_services = upnp_device.all_services
     upnp_device.services = {}
+    upnp_device.all_services = []
     upnp_device.all_devices.append(embedded_device)
 
     result = await hass.config_entries.flow.async_init(
@@ -598,12 +600,12 @@ async def test_ssdp_ignore_device(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "alternative_integration"
 
-    for manufacturer, model in [
+    for manufacturer, model in (
         ("XBMC Foundation", "Kodi"),
         ("Samsung", "Smart TV"),
         ("LG Electronics.", "LG TV"),
         ("Royal Philips Electronics", "Philips TV DMR"),
-    ]:
+    ):
         discovery = dataclasses.replace(MOCK_DISCOVERY)
         discovery.upnp = dict(discovery.upnp)
         discovery.upnp[ssdp.ATTR_UPNP_MANUFACTURER] = manufacturer

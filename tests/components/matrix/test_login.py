@@ -6,12 +6,7 @@ import pytest
 from homeassistant.components.matrix import MatrixBot
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 
-from tests.components.matrix.conftest import (
-    TEST_DEVICE_ID,
-    TEST_MXID,
-    TEST_PASSWORD,
-    TEST_TOKEN,
-)
+from .conftest import TEST_DEVICE_ID, TEST_MXID, TEST_PASSWORD, TEST_TOKEN
 
 
 @dataclass

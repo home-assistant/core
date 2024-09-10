@@ -150,6 +150,8 @@ HC_HASS_TO_HOMEKIT_ACTION = {
     HVACAction.COOLING: HC_HEAT_COOL_COOL,
     HVACAction.DRYING: HC_HEAT_COOL_COOL,
     HVACAction.FAN: HC_HEAT_COOL_COOL,
+    HVACAction.PREHEATING: HC_HEAT_COOL_HEAT,
+    HVACAction.DEFROSTING: HC_HEAT_COOL_HEAT,
 }
 
 FAN_STATE_INACTIVE = 0
@@ -624,8 +626,9 @@ class Thermostat(HomeAccessory):
 
         # Set current operation mode for supported thermostats
         if hvac_action := attributes.get(ATTR_HVAC_ACTION):
-            homekit_hvac_action = HC_HASS_TO_HOMEKIT_ACTION[hvac_action]
-            self.char_current_heat_cool.set_value(homekit_hvac_action)
+            self.char_current_heat_cool.set_value(
+                HC_HASS_TO_HOMEKIT_ACTION.get(hvac_action, HC_HEAT_COOL_OFF)
+            )
 
         # Update current temperature
         current_temp = _get_current_temperature(new_state, self._unit)

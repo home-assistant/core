@@ -12,8 +12,9 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
+from .common import MockTimeEntity
+
 from tests.common import setup_test_component_platform
-from tests.components.time.common import MockTimeEntity
 
 
 async def test_date(hass: HomeAssistant) -> None:

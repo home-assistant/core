@@ -22,10 +22,7 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers.config_validation import (
-    PLATFORM_SCHEMA,
-    PLATFORM_SCHEMA_BASE,
-)
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
@@ -53,10 +50,12 @@ from .websocket_api import async_setup as async_setup_ws_api
 _LOGGER = logging.getLogger(__name__)
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
+PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
+PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
+SCAN_INTERVAL = timedelta(seconds=30)
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
-SCAN_INTERVAL = timedelta(seconds=30)
 
 __all__ = [
     "ATTR_MAX",

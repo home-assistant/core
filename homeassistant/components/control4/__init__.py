@@ -50,7 +50,8 @@ PLATFORMS = [Platform.LIGHT, Platform.MEDIA_PLAYER]
 
 async def call_c4_api_retry(func, *func_args):
     """Call C4 API function and retry on failure."""
-    for i in range(API_RETRY_TIMES):
+    # Ruff doesn't understand this loop - the exception is always raised after the retries
+    for i in range(API_RETRY_TIMES):  # noqa: RET503
         try:
             return await func(*func_args)
         except client_exceptions.ClientError as exception:
@@ -120,7 +121,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     director_all_items = json.loads(director_all_items)
     entry_data[CONF_DIRECTOR_ALL_ITEMS] = director_all_items
 
-    entry_data[CONF_UI_CONFIGURATION] = json.loads(await director.getUiConfiguration())
+    # Check if OS version is 3 or higher to get UI configuration
+    entry_data[CONF_UI_CONFIGURATION] = None
+    if int(entry_data[CONF_DIRECTOR_SW_VERSION].split(".")[0]) >= 3:
+        entry_data[CONF_UI_CONFIGURATION] = json.loads(
+            await director.getUiConfiguration()
+        )
 
     # Load options from config entry
     entry_data[CONF_SCAN_INTERVAL] = entry.options.get(

@@ -1,13 +1,7 @@
 """Support for MQTT vacuums."""
 
-# The legacy schema for MQTT vacuum was deprecated with HA Core 2023.8.0
-# and was removed with HA Core 2024.2.0
-# The use of the schema attribute with MQTT vacuum was deprecated with HA Core 2024.2
-# the attribute will be remove with HA Core 2024.8
-
 from __future__ import annotations
 
-from collections.abc import Callable
 import logging
 from typing import Any, cast
 
@@ -30,30 +24,20 @@ from homeassistant.const import (
     STATE_IDLE,
     STATE_PAUSED,
 )
-from homeassistant.core import HomeAssistant, async_get_hass, callback
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.json import json_dumps
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, VolSchemaType
 from homeassistant.util.json import json_loads_object
 
 from . import subscription
 from .config import MQTT_BASE_SCHEMA
-from .const import (
-    CONF_COMMAND_TOPIC,
-    CONF_RETAIN,
-    CONF_SCHEMA,
-    CONF_STATE_TOPIC,
-    DOMAIN,
-)
+from .const import CONF_COMMAND_TOPIC, CONF_RETAIN, CONF_STATE_TOPIC
 from .mixins import MqttEntity, async_setup_entity_entry_helper
 from .models import ReceiveMessage
 from .schemas import MQTT_ENTITY_COMMON_SCHEMA
 from .util import valid_publish_topic
-
-LEGACY = "legacy"
-STATE = "state"
 
 BATTERY = "battery_level"
 FAN_SPEED = "fan_speed"
@@ -157,39 +141,7 @@ MQTT_VACUUM_ATTRIBUTES_BLOCKED = frozenset(
 MQTT_VACUUM_DOCS_URL = "https://www.home-assistant.io/integrations/vacuum.mqtt/"
 
 
-def _fail_legacy_config(discovery: bool) -> Callable[[ConfigType], ConfigType]:
-    @callback
-    def _fail_legacy_config_callback(config: ConfigType) -> ConfigType:
-        """Fail the legacy schema."""
-        if CONF_SCHEMA not in config:
-            return config
-
-        if config[CONF_SCHEMA] == "legacy":
-            raise vol.Invalid(
-                "The support for the `legacy` MQTT vacuum schema has been removed"
-            )
-
-        if discovery:
-            return config
-
-        translation_key = "deprecation_mqtt_schema_vacuum_yaml"
-        hass = async_get_hass()
-        async_create_issue(
-            hass,
-            DOMAIN,
-            translation_key,
-            breaks_in_ha_version="2024.8.0",
-            is_fixable=False,
-            translation_key=translation_key,
-            learn_more_url=MQTT_VACUUM_DOCS_URL,
-            severity=IssueSeverity.WARNING,
-        )
-        return config
-
-    return _fail_legacy_config_callback
-
-
-VACUUM_BASE_SCHEMA = MQTT_BASE_SCHEMA.extend(
+PLATFORM_SCHEMA_MODERN = MQTT_BASE_SCHEMA.extend(
     {
         vol.Optional(CONF_FAN_SPEED_LIST, default=[]): vol.All(
             cv.ensure_list, [cv.string]
@@ -213,21 +165,10 @@ VACUUM_BASE_SCHEMA = MQTT_BASE_SCHEMA.extend(
         ),
         vol.Optional(CONF_COMMAND_TOPIC): valid_publish_topic,
         vol.Optional(CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
-        vol.Optional(CONF_SCHEMA): vol.All(vol.Lower, vol.Any(LEGACY, STATE)),
     }
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
-DISCOVERY_SCHEMA = vol.All(
-    _fail_legacy_config(discovery=True),
-    VACUUM_BASE_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA),
-    cv.deprecated(CONF_SCHEMA),
-)
-
-PLATFORM_SCHEMA_MODERN = vol.All(
-    _fail_legacy_config(discovery=False),
-    VACUUM_BASE_SCHEMA,
-    cv.deprecated(CONF_SCHEMA),
-)
+DISCOVERY_SCHEMA = PLATFORM_SCHEMA_MODERN.extend({}, extra=vol.ALLOW_EXTRA)
 
 
 async def async_setup_entry(
@@ -272,7 +213,7 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
         MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
     @staticmethod
-    def config_schema() -> vol.Schema:
+    def config_schema() -> VolSchemaType:
         """Return the config schema."""
         return DISCOVERY_SCHEMA
 

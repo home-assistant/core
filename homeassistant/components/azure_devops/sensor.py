@@ -8,32 +8,39 @@ from datetime import datetime
 import logging
 from typing import Any
 
-from aioazuredevops.builds import DevOpsBuild
+from aioazuredevops.helper import WorkItemState, WorkItemTypeAndState
+from aioazuredevops.models.build import Build
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
 
-from . import AzureDevOpsEntity
-from .const import CONF_ORG, DOMAIN
+from . import AzureDevOpsConfigEntry
+from .coordinator import AzureDevOpsDataUpdateCoordinator
+from .entity import AzureDevOpsEntity
 
 _LOGGER = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True, kw_only=True)
 class AzureDevOpsBuildSensorEntityDescription(SensorEntityDescription):
-    """Class describing Azure DevOps base build sensor entities."""
+    """Class describing Azure DevOps build sensor entities."""
 
-    attr_fn: Callable[[DevOpsBuild], dict[str, Any] | None] = lambda _: None
-    value_fn: Callable[[DevOpsBuild], datetime | StateType]
+    attr_fn: Callable[[Build], dict[str, Any] | None] = lambda _: None
+    value_fn: Callable[[Build], datetime | StateType]
+
+
+@dataclass(frozen=True, kw_only=True)
+class AzureDevOpsWorkItemSensorEntityDescription(SensorEntityDescription):
+    """Class describing Azure DevOps work item sensor entities."""
+
+    value_fn: Callable[[WorkItemState], datetime | StateType]
 
 
 BASE_BUILD_SENSOR_DESCRIPTIONS: tuple[AzureDevOpsBuildSensorEntityDescription, ...] = (
@@ -117,6 +124,16 @@ BASE_BUILD_SENSOR_DESCRIPTIONS: tuple[AzureDevOpsBuildSensorEntityDescription, .
     ),
 )
 
+BASE_WORK_ITEM_SENSOR_DESCRIPTIONS: tuple[
+    AzureDevOpsWorkItemSensorEntityDescription, ...
+] = (
+    AzureDevOpsWorkItemSensorEntityDescription(
+        key="work_item_count",
+        translation_key="work_item_count",
+        value_fn=lambda work_item_state: len(work_item_state.work_items),
+    ),
+)
+
 
 def parse_datetime(value: str | None) -> datetime | None:
     """Parse datetime string."""
@@ -128,25 +145,37 @@ def parse_datetime(value: str | None) -> datetime | None:
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: AzureDevOpsConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Azure DevOps sensor based on a config entry."""
-    coordinator, project = hass.data[DOMAIN][entry.entry_id]
-    initial_builds: list[DevOpsBuild] = coordinator.data
+    coordinator = entry.runtime_data
+    initial_builds: list[Build] = coordinator.data.builds
 
-    async_add_entities(
+    entities: list[SensorEntity] = [
         AzureDevOpsBuildSensor(
             coordinator,
             description,
-            entry.data[CONF_ORG],
-            project.name,
             key,
         )
         for description in BASE_BUILD_SENSOR_DESCRIPTIONS
         for key, build in enumerate(initial_builds)
         if build.project and build.definition
+    ]
+
+    entities.extend(
+        AzureDevOpsWorkItemSensor(
+            coordinator,
+            description,
+            key,
+            state_key,
+        )
+        for description in BASE_WORK_ITEM_SENSOR_DESCRIPTIONS
+        for key, work_item_type_state in enumerate(coordinator.data.work_items)
+        for state_key, _ in enumerate(work_item_type_state.state_items)
     )
+
+    async_add_entities(entities)
 
 
 class AzureDevOpsBuildSensor(AzureDevOpsEntity, SensorEntity):
@@ -156,25 +185,28 @@ class AzureDevOpsBuildSensor(AzureDevOpsEntity, SensorEntity):
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator[list[DevOpsBuild]],
+        coordinator: AzureDevOpsDataUpdateCoordinator,
         description: AzureDevOpsBuildSensorEntityDescription,
-        organization: str,
-        project_name: str,
         item_key: int,
     ) -> None:
         """Initialize."""
-        super().__init__(coordinator, organization, project_name)
+        super().__init__(coordinator)
         self.entity_description = description
         self.item_key = item_key
-        self._attr_unique_id = f"{organization}_{self.build.project.project_id}_{self.build.definition.build_id}_{description.key}"
+        self._attr_unique_id = (
+            f"{coordinator.data.organization}_"
+            f"{coordinator.data.project.id}_"
+            f"{self.build.definition.build_id}_"
+            f"{description.key}"
+        )
         self._attr_translation_placeholders = {
             "definition_name": self.build.definition.name
         }
 
     @property
-    def build(self) -> DevOpsBuild:
+    def build(self) -> Build:
         """Return the build."""
-        return self.coordinator.data[self.item_key]
+        return self.coordinator.data.builds[self.item_key]
 
     @property
     def native_value(self) -> datetime | StateType:
@@ -185,3 +217,48 @@ class AzureDevOpsBuildSensor(AzureDevOpsEntity, SensorEntity):
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return the state attributes of the entity."""
         return self.entity_description.attr_fn(self.build)
+
+
+class AzureDevOpsWorkItemSensor(AzureDevOpsEntity, SensorEntity):
+    """Define a Azure DevOps work item sensor."""
+
+    entity_description: AzureDevOpsWorkItemSensorEntityDescription
+
+    def __init__(
+        self,
+        coordinator: AzureDevOpsDataUpdateCoordinator,
+        description: AzureDevOpsWorkItemSensorEntityDescription,
+        wits_key: int,
+        state_key: int,
+    ) -> None:
+        """Initialize."""
+        super().__init__(coordinator)
+        self.entity_description = description
+        self.wits_key = wits_key
+        self.state_key = state_key
+        self._attr_unique_id = (
+            f"{coordinator.data.organization}_"
+            f"{coordinator.data.project.id}_"
+            f"{self.work_item_type.name}_"
+            f"{self.work_item_state.name}_"
+            f"{description.key}"
+        )
+        self._attr_translation_placeholders = {
+            "item_type": self.work_item_type.name,
+            "item_state": self.work_item_state.name,
+        }
+
+    @property
+    def work_item_type(self) -> WorkItemTypeAndState:
+        """Return the work item."""
+        return self.coordinator.data.work_items[self.wits_key]
+
+    @property
+    def work_item_state(self) -> WorkItemState:
+        """Return the work item state."""
+        return self.work_item_type.state_items[self.state_key]
+
+    @property
+    def native_value(self) -> datetime | StateType:
+        """Return the state."""
+        return self.entity_description.value_fn(self.work_item_state)

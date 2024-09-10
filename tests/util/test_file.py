@@ -17,17 +17,17 @@ def test_write_utf8_file_atomic_private(tmpdir: py.path.local, func) -> None:
     test_file = Path(test_dir / "test.json")
 
     func(test_file, '{"some":"data"}', False)
-    with open(test_file) as fh:
+    with open(test_file, encoding="utf8") as fh:
         assert fh.read() == '{"some":"data"}'
     assert os.stat(test_file).st_mode & 0o777 == 0o644
 
     func(test_file, '{"some":"data"}', True)
-    with open(test_file) as fh:
+    with open(test_file, encoding="utf8") as fh:
         assert fh.read() == '{"some":"data"}'
     assert os.stat(test_file).st_mode & 0o777 == 0o600
 
     func(test_file, b'{"some":"data"}', True, mode="wb")
-    with open(test_file) as fh:
+    with open(test_file, encoding="utf8") as fh:
         assert fh.read() == '{"some":"data"}'
     assert os.stat(test_file).st_mode & 0o777 == 0o600
 

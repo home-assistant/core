@@ -1,18 +1,18 @@
 {
   "system_health": {
     "info": {
-      "agent_version": "Agent Version",
+      "agent_version": "Agent version",
       "board": "Board",
-      "disk_total": "Disk Total",
-      "disk_used": "Disk Used",
-      "docker_version": "Docker Version",
+      "disk_total": "Disk total",
+      "disk_used": "Disk used",
+      "docker_version": "Docker version",
       "healthy": "Healthy",
-      "host_os": "Host Operating System",
-      "installed_addons": "Installed Add-ons",
+      "host_os": "Host operating system",
+      "installed_addons": "Installed add-ons",
       "supervisor_api": "Supervisor API",
-      "supervisor_version": "Supervisor Version",
+      "supervisor_version": "Supervisor version",
       "supported": "Supported",
-      "update_channel": "Update Channel",
+      "update_channel": "Update channel",
       "version_api": "Version API"
     }
   },
@@ -289,7 +289,7 @@
     },
     "addon_update": {
       "name": "Update add-on.",
-      "description": "Updates an add-on. This service should be used with caution since add-on updates can contain breaking changes. It is highly recommended that you review release notes/change logs before updating an add-on.",
+      "description": "Updates an add-on. This action should be used with caution since add-on updates can contain breaking changes. It is highly recommended that you review release notes/change logs before updating an add-on.",
       "fields": {
         "addon": {
           "name": "[%key:component::hassio::services::addon_start::fields::addon::name%]",

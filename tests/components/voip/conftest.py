@@ -14,10 +14,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
+from tests.components.tts.conftest import (
+    mock_tts_cache_dir_fixture_autouse,  # noqa: F401
+)
 
 
 @pytest.fixture(autouse=True)
-async def load_homeassistant(hass) -> None:
+async def load_homeassistant(hass: HomeAssistant) -> None:
     """Load the homeassistant integration."""
     assert await async_setup_component(hass, "homeassistant", {})
 

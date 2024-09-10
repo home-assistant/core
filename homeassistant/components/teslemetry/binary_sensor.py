@@ -26,6 +26,8 @@ from .entity import (
 )
 from .models import TeslemetryEnergyData, TeslemetryVehicleData
 
+PARALLEL_UPDATES = 0
+
 
 @dataclass(frozen=True, kw_only=True)
 class TeslemetryBinarySensorEntityDescription(BinarySensorEntityDescription):

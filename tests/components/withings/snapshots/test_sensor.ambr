@@ -965,6 +965,276 @@
     'state': '60',
   })
 # ---
+# name: test_all_entities[sensor.henk_fat_free_mass_in_left_arm-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.henk_fat_free_mass_in_left_arm',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.WEIGHT: 'weight'>,
+    'original_icon': None,
+    'original_name': 'Fat free mass in left arm',
+    'platform': 'withings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'fat_free_mass_for_segments_left_arm',
+    'unique_id': 'withings_12345_fat_free_mass_for_segments_left_arm',
+    'unit_of_measurement': <UnitOfMass.KILOGRAMS: 'kg'>,
+  })
+# ---
+# name: test_all_entities[sensor.henk_fat_free_mass_in_left_arm-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'weight',
+      'friendly_name': 'henk Fat free mass in left arm',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfMass.KILOGRAMS: 'kg'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.henk_fat_free_mass_in_left_arm',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '5.05',
+  })
+# ---
+# name: test_all_entities[sensor.henk_fat_free_mass_in_left_leg-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.henk_fat_free_mass_in_left_leg',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.WEIGHT: 'weight'>,
+    'original_icon': None,
+    'original_name': 'Fat free mass in left leg',
+    'platform': 'withings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'fat_free_mass_for_segments_left_leg',
+    'unique_id': 'withings_12345_fat_free_mass_for_segments_left_leg',
+    'unit_of_measurement': <UnitOfMass.KILOGRAMS: 'kg'>,
+  })
+# ---
+# name: test_all_entities[sensor.henk_fat_free_mass_in_left_leg-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'weight',
+      'friendly_name': 'henk Fat free mass in left leg',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfMass.KILOGRAMS: 'kg'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.henk_fat_free_mass_in_left_leg',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '13.84',
+  })
+# ---
+# name: test_all_entities[sensor.henk_fat_free_mass_in_right_arm-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.henk_fat_free_mass_in_right_arm',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.WEIGHT: 'weight'>,
+    'original_icon': None,
+    'original_name': 'Fat free mass in right arm',
+    'platform': 'withings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'fat_free_mass_for_segments_right_arm',
+    'unique_id': 'withings_12345_fat_free_mass_for_segments_right_arm',
+    'unit_of_measurement': <UnitOfMass.KILOGRAMS: 'kg'>,
+  })
+# ---
+# name: test_all_entities[sensor.henk_fat_free_mass_in_right_arm-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'weight',
+      'friendly_name': 'henk Fat free mass in right arm',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfMass.KILOGRAMS: 'kg'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.henk_fat_free_mass_in_right_arm',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '5.18',
+  })
+# ---
+# name: test_all_entities[sensor.henk_fat_free_mass_in_right_leg-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.henk_fat_free_mass_in_right_leg',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.WEIGHT: 'weight'>,
+    'original_icon': None,
+    'original_name': 'Fat free mass in right leg',
+    'platform': 'withings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'fat_free_mass_for_segments_right_leg',
+    'unique_id': 'withings_12345_fat_free_mass_for_segments_right_leg',
+    'unit_of_measurement': <UnitOfMass.KILOGRAMS: 'kg'>,
+  })
+# ---
+# name: test_all_entities[sensor.henk_fat_free_mass_in_right_leg-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'weight',
+      'friendly_name': 'henk Fat free mass in right leg',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfMass.KILOGRAMS: 'kg'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.henk_fat_free_mass_in_right_leg',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '14.05',
+  })
+# ---
+# name: test_all_entities[sensor.henk_fat_free_mass_in_torso-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.henk_fat_free_mass_in_torso',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.WEIGHT: 'weight'>,
+    'original_icon': None,
+    'original_name': 'Fat free mass in torso',
+    'platform': 'withings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'fat_free_mass_for_segments_torso',
+    'unique_id': 'withings_12345_fat_free_mass_for_segments_torso',
+    'unit_of_measurement': <UnitOfMass.KILOGRAMS: 'kg'>,
+  })
+# ---
+# name: test_all_entities[sensor.henk_fat_free_mass_in_torso-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'weight',
+      'friendly_name': 'henk Fat free mass in torso',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfMass.KILOGRAMS: 'kg'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.henk_fat_free_mass_in_torso',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '40.49',
+  })
+# ---
 # name: test_all_entities[sensor.henk_fat_mass-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -1017,6 +1287,276 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '5',
+  })
+# ---
+# name: test_all_entities[sensor.henk_fat_mass_in_left_arm-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.henk_fat_mass_in_left_arm',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.WEIGHT: 'weight'>,
+    'original_icon': None,
+    'original_name': 'Fat mass in left arm',
+    'platform': 'withings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'fat_mass_for_segments_left_arm',
+    'unique_id': 'withings_12345_fat_mass_for_segments_left_arm',
+    'unit_of_measurement': <UnitOfMass.KILOGRAMS: 'kg'>,
+  })
+# ---
+# name: test_all_entities[sensor.henk_fat_mass_in_left_arm-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'weight',
+      'friendly_name': 'henk Fat mass in left arm',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfMass.KILOGRAMS: 'kg'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.henk_fat_mass_in_left_arm',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1.03',
+  })
+# ---
+# name: test_all_entities[sensor.henk_fat_mass_in_left_leg-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.henk_fat_mass_in_left_leg',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.WEIGHT: 'weight'>,
+    'original_icon': None,
+    'original_name': 'Fat mass in left leg',
+    'platform': 'withings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'fat_mass_for_segments_left_leg',
+    'unique_id': 'withings_12345_fat_mass_for_segments_left_leg',
+    'unit_of_measurement': <UnitOfMass.KILOGRAMS: 'kg'>,
+  })
+# ---
+# name: test_all_entities[sensor.henk_fat_mass_in_left_leg-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'weight',
+      'friendly_name': 'henk Fat mass in left leg',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfMass.KILOGRAMS: 'kg'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.henk_fat_mass_in_left_leg',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2.45',
+  })
+# ---
+# name: test_all_entities[sensor.henk_fat_mass_in_right_arm-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.henk_fat_mass_in_right_arm',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.WEIGHT: 'weight'>,
+    'original_icon': None,
+    'original_name': 'Fat mass in right arm',
+    'platform': 'withings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'fat_mass_for_segments_right_arm',
+    'unique_id': 'withings_12345_fat_mass_for_segments_right_arm',
+    'unit_of_measurement': <UnitOfMass.KILOGRAMS: 'kg'>,
+  })
+# ---
+# name: test_all_entities[sensor.henk_fat_mass_in_right_arm-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'weight',
+      'friendly_name': 'henk Fat mass in right arm',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfMass.KILOGRAMS: 'kg'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.henk_fat_mass_in_right_arm',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.99',
+  })
+# ---
+# name: test_all_entities[sensor.henk_fat_mass_in_right_leg-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.henk_fat_mass_in_right_leg',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.WEIGHT: 'weight'>,
+    'original_icon': None,
+    'original_name': 'Fat mass in right leg',
+    'platform': 'withings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'fat_mass_for_segments_right_leg',
+    'unique_id': 'withings_12345_fat_mass_for_segments_right_leg',
+    'unit_of_measurement': <UnitOfMass.KILOGRAMS: 'kg'>,
+  })
+# ---
+# name: test_all_entities[sensor.henk_fat_mass_in_right_leg-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'weight',
+      'friendly_name': 'henk Fat mass in right leg',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfMass.KILOGRAMS: 'kg'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.henk_fat_mass_in_right_leg',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2.33',
+  })
+# ---
+# name: test_all_entities[sensor.henk_fat_mass_in_torso-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.henk_fat_mass_in_torso',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.WEIGHT: 'weight'>,
+    'original_icon': None,
+    'original_name': 'Fat mass in torso',
+    'platform': 'withings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'fat_mass_for_segments_torso',
+    'unique_id': 'withings_12345_fat_mass_for_segments_torso',
+    'unit_of_measurement': <UnitOfMass.KILOGRAMS: 'kg'>,
+  })
+# ---
+# name: test_all_entities[sensor.henk_fat_mass_in_torso-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'weight',
+      'friendly_name': 'henk Fat mass in torso',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfMass.KILOGRAMS: 'kg'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.henk_fat_mass_in_torso',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '10.99',
   })
 # ---
 # name: test_all_entities[sensor.henk_fat_ratio-entry]
@@ -1938,6 +2478,276 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '50',
+  })
+# ---
+# name: test_all_entities[sensor.henk_muscle_mass_in_left_arm-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.henk_muscle_mass_in_left_arm',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.WEIGHT: 'weight'>,
+    'original_icon': None,
+    'original_name': 'Muscle mass in left arm',
+    'platform': 'withings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'muscle_mass_for_segments_left_arm',
+    'unique_id': 'withings_12345_muscle_mass_for_segments_left_arm',
+    'unit_of_measurement': <UnitOfMass.KILOGRAMS: 'kg'>,
+  })
+# ---
+# name: test_all_entities[sensor.henk_muscle_mass_in_left_arm-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'weight',
+      'friendly_name': 'henk Muscle mass in left arm',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfMass.KILOGRAMS: 'kg'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.henk_muscle_mass_in_left_arm',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '4.77',
+  })
+# ---
+# name: test_all_entities[sensor.henk_muscle_mass_in_left_leg-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.henk_muscle_mass_in_left_leg',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.WEIGHT: 'weight'>,
+    'original_icon': None,
+    'original_name': 'Muscle mass in left leg',
+    'platform': 'withings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'muscle_mass_for_segments_left_leg',
+    'unique_id': 'withings_12345_muscle_mass_for_segments_left_leg',
+    'unit_of_measurement': <UnitOfMass.KILOGRAMS: 'kg'>,
+  })
+# ---
+# name: test_all_entities[sensor.henk_muscle_mass_in_left_leg-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'weight',
+      'friendly_name': 'henk Muscle mass in left leg',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfMass.KILOGRAMS: 'kg'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.henk_muscle_mass_in_left_leg',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '13.09',
+  })
+# ---
+# name: test_all_entities[sensor.henk_muscle_mass_in_right_arm-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.henk_muscle_mass_in_right_arm',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.WEIGHT: 'weight'>,
+    'original_icon': None,
+    'original_name': 'Muscle mass in right arm',
+    'platform': 'withings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'muscle_mass_for_segments_right_arm',
+    'unique_id': 'withings_12345_muscle_mass_for_segments_right_arm',
+    'unit_of_measurement': <UnitOfMass.KILOGRAMS: 'kg'>,
+  })
+# ---
+# name: test_all_entities[sensor.henk_muscle_mass_in_right_arm-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'weight',
+      'friendly_name': 'henk Muscle mass in right arm',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfMass.KILOGRAMS: 'kg'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.henk_muscle_mass_in_right_arm',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '4.89',
+  })
+# ---
+# name: test_all_entities[sensor.henk_muscle_mass_in_right_leg-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.henk_muscle_mass_in_right_leg',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.WEIGHT: 'weight'>,
+    'original_icon': None,
+    'original_name': 'Muscle mass in right leg',
+    'platform': 'withings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'muscle_mass_for_segments_right_leg',
+    'unique_id': 'withings_12345_muscle_mass_for_segments_right_leg',
+    'unit_of_measurement': <UnitOfMass.KILOGRAMS: 'kg'>,
+  })
+# ---
+# name: test_all_entities[sensor.henk_muscle_mass_in_right_leg-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'weight',
+      'friendly_name': 'henk Muscle mass in right leg',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfMass.KILOGRAMS: 'kg'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.henk_muscle_mass_in_right_leg',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '13.29',
+  })
+# ---
+# name: test_all_entities[sensor.henk_muscle_mass_in_torso-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.henk_muscle_mass_in_torso',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.WEIGHT: 'weight'>,
+    'original_icon': None,
+    'original_name': 'Muscle mass in torso',
+    'platform': 'withings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'muscle_mass_for_segments_torso',
+    'unique_id': 'withings_12345_muscle_mass_for_segments_torso',
+    'unit_of_measurement': <UnitOfMass.KILOGRAMS: 'kg'>,
+  })
+# ---
+# name: test_all_entities[sensor.henk_muscle_mass_in_torso-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'weight',
+      'friendly_name': 'henk Muscle mass in torso',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfMass.KILOGRAMS: 'kg'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.henk_muscle_mass_in_torso',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '38.7',
   })
 # ---
 # name: test_all_entities[sensor.henk_pause_during_last_workout-entry]

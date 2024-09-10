@@ -29,6 +29,7 @@
       "cannot_connect": "Failed to connect, check the IP address of the camera",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "not_admin": "User needs to be admin, user \"{username}\" has authorisation level \"{userlevel}\"",
+      "password_incompatible": "Password contains incompatible special character, only these characters are allowed: a-z, A-Z, 0-9 or {special_chars}",
       "unknown": "[%key:common::config_flow::error::unknown%]",
       "webhook_exception": "Home Assistant URL is not available, go to Settings > System > Network > Home Assistant URL and correct the URLs, see {more_info}"
     },
@@ -47,6 +48,14 @@
           "protocol": "Streaming protocol to use for the camera entities. RTSP supports 4K streams (h265 encoding) while RTMP and FLV do not. FLV is the least demanding on the camera."
         }
       }
+    }
+  },
+  "exceptions": {
+    "service_entry_ex": {
+      "message": "Reolink {service_name} error: config entry not found or not loaded"
+    },
+    "service_not_chime": {
+      "message": "Reolink play_chime error: {device_name} is not a chime"
     }
   },
   "issues": {
@@ -69,6 +78,10 @@
     "firmware_update": {
       "title": "Reolink firmware update required",
       "description": "\"{name}\" with model \"{model}\" and hardware version \"{hw_version}\" is running a old firmware version \"{current_firmware}\", while at least firmware version \"{required_firmware}\" is required for proper operation of the Reolink integration. The latest firmware can be downloaded from the [Reolink download center]({download_link})."
+    },
+    "hdr_switch_deprecated": {
+      "title": "Reolink HDR switch deprecated",
+      "description": "The Reolink HDR switch entity is deprecated and will be removed in HA 2025.2.0. It has been replaced by a HDR select entity offering options `on`, `off` and `auto`. To remove this issue, please adjust automations accordingly and disable the HDR switch entity."
     }
   },
   "services": {
@@ -80,6 +93,36 @@
           "name": "Speed",
           "description": "PTZ move speed."
         }
+      }
+    },
+    "play_chime": {
+      "name": "Play chime",
+      "description": "Play a ringtone on a chime.",
+      "fields": {
+        "device_id": {
+          "name": "Target chime",
+          "description": "The chime to play the ringtone on."
+        },
+        "ringtone": {
+          "name": "Ringtone",
+          "description": "Ringtone to play."
+        }
+      }
+    }
+  },
+  "selector": {
+    "ringtone": {
+      "options": {
+        "citybird": "[%key:component::reolink::entity::select::motion_tone::state::citybird%]",
+        "originaltune": "[%key:component::reolink::entity::select::motion_tone::state::originaltune%]",
+        "pianokey": "[%key:component::reolink::entity::select::motion_tone::state::pianokey%]",
+        "loop": "[%key:component::reolink::entity::select::motion_tone::state::loop%]",
+        "attraction": "[%key:component::reolink::entity::select::motion_tone::state::attraction%]",
+        "hophop": "[%key:component::reolink::entity::select::motion_tone::state::hophop%]",
+        "goodday": "[%key:component::reolink::entity::select::motion_tone::state::goodday%]",
+        "operetta": "[%key:component::reolink::entity::select::motion_tone::state::operetta%]",
+        "moonlight": "[%key:component::reolink::entity::select::motion_tone::state::moonlight%]",
+        "waybackhome": "[%key:component::reolink::entity::select::motion_tone::state::waybackhome%]"
       }
     }
   },
@@ -478,6 +521,62 @@
           "alwaysonatnight": "Auto & always on at night",
           "alwayson": "Always on"
         }
+      },
+      "hdr": {
+        "name": "HDR",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]",
+          "auto": "Auto"
+        }
+      },
+      "motion_tone": {
+        "name": "Motion ringtone",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "citybird": "City bird",
+          "originaltune": "Original tune",
+          "pianokey": "Piano key",
+          "loop": "Loop",
+          "attraction": "Attraction",
+          "hophop": "Hop hop",
+          "goodday": "Good day",
+          "operetta": "Operetta",
+          "moonlight": "Moonlight",
+          "waybackhome": "Way back home"
+        }
+      },
+      "people_tone": {
+        "name": "Person ringtone",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "citybird": "[%key:component::reolink::entity::select::motion_tone::state::citybird%]",
+          "originaltune": "[%key:component::reolink::entity::select::motion_tone::state::originaltune%]",
+          "pianokey": "[%key:component::reolink::entity::select::motion_tone::state::pianokey%]",
+          "loop": "[%key:component::reolink::entity::select::motion_tone::state::loop%]",
+          "attraction": "[%key:component::reolink::entity::select::motion_tone::state::attraction%]",
+          "hophop": "[%key:component::reolink::entity::select::motion_tone::state::hophop%]",
+          "goodday": "[%key:component::reolink::entity::select::motion_tone::state::goodday%]",
+          "operetta": "[%key:component::reolink::entity::select::motion_tone::state::operetta%]",
+          "moonlight": "[%key:component::reolink::entity::select::motion_tone::state::moonlight%]",
+          "waybackhome": "[%key:component::reolink::entity::select::motion_tone::state::waybackhome%]"
+        }
+      },
+      "visitor_tone": {
+        "name": "Visitor ringtone",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "citybird": "[%key:component::reolink::entity::select::motion_tone::state::citybird%]",
+          "originaltune": "[%key:component::reolink::entity::select::motion_tone::state::originaltune%]",
+          "pianokey": "[%key:component::reolink::entity::select::motion_tone::state::pianokey%]",
+          "loop": "[%key:component::reolink::entity::select::motion_tone::state::loop%]",
+          "attraction": "[%key:component::reolink::entity::select::motion_tone::state::attraction%]",
+          "hophop": "[%key:component::reolink::entity::select::motion_tone::state::hophop%]",
+          "goodday": "[%key:component::reolink::entity::select::motion_tone::state::goodday%]",
+          "operetta": "[%key:component::reolink::entity::select::motion_tone::state::operetta%]",
+          "moonlight": "[%key:component::reolink::entity::select::motion_tone::state::moonlight%]",
+          "waybackhome": "[%key:component::reolink::entity::select::motion_tone::state::waybackhome%]"
+        }
       }
     },
     "sensor": {
@@ -544,6 +643,9 @@
       "record": {
         "name": "Record"
       },
+      "manual_record": {
+        "name": "Manual record"
+      },
       "buzzer": {
         "name": "Buzzer on event"
       },
@@ -551,13 +653,16 @@
         "name": "Doorbell button sound"
       },
       "hdr": {
-        "name": "HDR"
+        "name": "[%key:component::reolink::entity::select::hdr::name%]"
       },
       "pir_enabled": {
         "name": "PIR enabled"
       },
       "pir_reduce_alarm": {
         "name": "PIR reduce false alarm"
+      },
+      "led": {
+        "name": "LED"
       }
     }
   }

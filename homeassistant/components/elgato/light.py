@@ -40,7 +40,7 @@ async def async_setup_entry(
     platform = async_get_current_platform()
     platform.async_register_entity_service(
         SERVICE_IDENTIFY,
-        {},
+        None,
         ElgatoLight.async_identify.__name__,
     )
 
@@ -59,7 +59,15 @@ class ElgatoLight(ElgatoEntity, LightEntity):
         self._attr_unique_id = coordinator.data.info.serial_number
 
         # Elgato Light supporting color, have a different temperature range
-        if self.coordinator.data.settings.power_on_hue is not None:
+        if (
+            self.coordinator.data.info.product_name
+            in (
+                "Elgato Light Strip",
+                "Elgato Light Strip Pro",
+            )
+            or self.coordinator.data.settings.power_on_hue
+            or self.coordinator.data.state.hue is not None
+        ):
             self._attr_supported_color_modes = {ColorMode.COLOR_TEMP, ColorMode.HS}
             self._attr_min_mireds = 153
             self._attr_max_mireds = 285

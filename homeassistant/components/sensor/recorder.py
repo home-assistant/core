@@ -33,6 +33,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, State, split_entity_id
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import entity_sources
+from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 from homeassistant.loader import async_suggest_report_issue
 from homeassistant.util import dt as dt_util
 from homeassistant.util.enum import try_parse_enum
@@ -80,6 +81,7 @@ def _get_sensor_states(hass: HomeAssistant) -> list[State]:
     # We check for state class first before calling the filter
     # function as the filter function is much more expensive
     # than checking the state class
+    entity_filter = instance.entity_filter
     return [
         state
         for state in hass.states.all(DOMAIN)
@@ -88,7 +90,7 @@ def _get_sensor_states(hass: HomeAssistant) -> list[State]:
             type(state_class) is SensorStateClass
             or try_parse_enum(SensorStateClass, state_class)
         )
-        and instance.entity_filter(state.entity_id)
+        and (not entity_filter or entity_filter(state.entity_id))
     ]
 
 
@@ -108,7 +110,7 @@ def _time_weighted_average(
     for fstate, state in fstates:
         # The recorder will give us the last known state, which may be well
         # before the requested start time for the statistics
-        start_time = start if state.last_updated < start else state.last_updated
+        start_time = max(state.last_updated, start)
         if old_start_time is None:
             # Adjust start time, if there was no last known state
             start = start_time
@@ -219,13 +221,13 @@ def _normalize_states(
                     LINK_DEV_STATISTICS,
                 )
             return None, []
-        state_unit = fstates[0][1].attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+
         return state_unit, fstates
 
     converter = statistics.STATISTIC_UNIT_TO_UNIT_CONVERTER[statistics_unit]
     valid_fstates: list[tuple[float, State]] = []
     convert: Callable[[float], float] | None = None
-    last_unit: str | None | object = object()
+    last_unit: str | None | UndefinedType = UNDEFINED
     valid_units = converter.VALID_UNITS
 
     for fstate, state in fstates:
@@ -639,32 +641,31 @@ def list_statistic_ids(
     result: dict[str, StatisticMetaData] = {}
 
     for state in entities:
-        state_class = state.attributes[ATTR_STATE_CLASS]
-        state_unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        entity_id = state.entity_id
+        if statistic_ids is not None and entity_id not in statistic_ids:
+            continue
 
+        attributes = state.attributes
+        state_class = attributes[ATTR_STATE_CLASS]
         provided_statistics = DEFAULT_STATISTICS[state_class]
         if statistic_type is not None and statistic_type not in provided_statistics:
             continue
 
-        if statistic_ids is not None and state.entity_id not in statistic_ids:
-            continue
-
         if (
-            "sum" in provided_statistics
-            and ATTR_LAST_RESET not in state.attributes
-            and state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
+            (has_sum := "sum" in provided_statistics)
+            and ATTR_LAST_RESET not in attributes
+            and state_class == SensorStateClass.MEASUREMENT
         ):
             continue
 
-        result[state.entity_id] = {
+        result[entity_id] = {
             "has_mean": "mean" in provided_statistics,
-            "has_sum": "sum" in provided_statistics,
+            "has_sum": has_sum,
             "name": None,
             "source": RECORDER_DOMAIN,
-            "statistic_id": state.entity_id,
-            "unit_of_measurement": state_unit,
+            "statistic_id": entity_id,
+            "unit_of_measurement": attributes.get(ATTR_UNIT_OF_MEASUREMENT),
         }
-        continue
 
     return result
 
@@ -680,6 +681,7 @@ def validate_statistics(
     sensor_entity_ids = {i.entity_id for i in sensor_states}
     sensor_statistic_ids = set(metadatas)
     instance = get_instance(hass)
+    entity_filter = instance.entity_filter
 
     for state in sensor_states:
         entity_id = state.entity_id
@@ -689,7 +691,7 @@ def validate_statistics(
         state_unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
 
         if metadata := metadatas.get(entity_id):
-            if not instance.entity_filter(state.entity_id):
+            if entity_filter and not entity_filter(state.entity_id):
                 # Sensor was previously recorded, but no longer is
                 validation_result[entity_id].append(
                     statistics.ValidationIssue(
@@ -739,7 +741,7 @@ def validate_statistics(
                     )
                 )
         elif state_class is not None:
-            if not instance.entity_filter(state.entity_id):
+            if entity_filter and not entity_filter(state.entity_id):
                 # Sensor is not recorded
                 validation_result[entity_id].append(
                     statistics.ValidationIssue(

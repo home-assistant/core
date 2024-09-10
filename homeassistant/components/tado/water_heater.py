@@ -9,14 +9,14 @@ from homeassistant.components.water_heater import (
     WaterHeaterEntity,
     WaterHeaterEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import VolDictType
 
-from . import TadoConnector
+from . import TadoConfigEntry
 from .const import (
     CONST_HVAC_HEAT,
     CONST_MODE_AUTO,
@@ -26,13 +26,13 @@ from .const import (
     CONST_OVERLAY_MANUAL,
     CONST_OVERLAY_TADO_MODE,
     CONST_OVERLAY_TIMER,
-    DATA,
-    DOMAIN,
     SIGNAL_TADO_UPDATE_RECEIVED,
     TYPE_HOT_WATER,
 )
 from .entity import TadoZoneEntity
-from .helper import decide_overlay_mode
+from .helper import decide_duration, decide_overlay_mode
+from .repairs import manage_water_heater_fallback_issue
+from .tado_connector import TadoConnector
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -54,7 +54,7 @@ WATER_HEATER_MAP_TADO = {
 SERVICE_WATER_HEATER_TIMER = "set_water_heater_timer"
 ATTR_TIME_PERIOD = "time_period"
 
-WATER_HEATER_TIMER_SCHEMA = {
+WATER_HEATER_TIMER_SCHEMA: VolDictType = {
     vol.Required(ATTR_TIME_PERIOD, default="01:00:00"): vol.All(
         cv.time_period, cv.positive_timedelta, lambda td: td.total_seconds()
     ),
@@ -63,11 +63,11 @@ WATER_HEATER_TIMER_SCHEMA = {
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant, entry: TadoConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the Tado water heater platform."""
 
-    tado = hass.data[DOMAIN][entry.entry_id][DATA]
+    tado: TadoConnector = entry.runtime_data.tadoconnector
     entities = await hass.async_add_executor_job(_generate_entities, tado)
 
     platform = entity_platform.async_get_current_platform()
@@ -80,14 +80,22 @@ async def async_setup_entry(
 
     async_add_entities(entities, True)
 
+    manage_water_heater_fallback_issue(
+        hass=hass,
+        water_heater_names=[e.zone_name for e in entities],
+        integration_overlay_fallback=tado.fallback,
+    )
 
-def _generate_entities(tado: TadoConnector) -> list[WaterHeaterEntity]:
+
+def _generate_entities(tado: TadoConnector) -> list:
     """Create all water heater entities."""
     entities = []
 
     for zone in tado.zones:
         if zone["type"] == TYPE_HOT_WATER:
-            entity = create_water_heater_entity(tado, zone["name"], zone["id"], zone)
+            entity = create_water_heater_entity(
+                tado, zone["name"], zone["id"], str(zone["name"])
+            )
             entities.append(entity)
 
     return entities
@@ -283,7 +291,12 @@ class TadoWaterHeater(TadoZoneEntity, WaterHeaterEntity):
             duration=duration,
             zone_id=self.zone_id,
         )
-
+        duration = decide_duration(
+            tado=self._tado,
+            duration=duration,
+            zone_id=self.zone_id,
+            overlay_mode=overlay_mode,
+        )
         _LOGGER.debug(
             "Switching to %s for zone %s (%d) with temperature %s",
             self._current_tado_hvac_mode,
