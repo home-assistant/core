@@ -158,12 +158,12 @@ class RpcShellyCover(ShellyRpcEntity, CoverEntity):
         self._id = id_
         if self.status["pos_control"]:
             self._attr_supported_features |= CoverEntityFeature.SET_POSITION
-        if coordinator.device.config.get("slat", {}).get("enable"):
+        if coordinator.device.config[f"cover:{id_}"].get("slat", {}).get("enable"):
             self._attr_supported_features |= (
                 CoverEntityFeature.OPEN_TILT
                 | CoverEntityFeature.CLOSE_TILT
-                | CoverEntityFeature.SET_TILT_POSITION
                 | CoverEntityFeature.STOP_TILT
+                | CoverEntityFeature.SET_TILT_POSITION
             )
 
     @property
