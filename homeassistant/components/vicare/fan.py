@@ -129,7 +129,7 @@ class ViCareFan(ViCareEntity, FanEntity):
         device: PyViCareDevice,
     ) -> None:
         """Initialize the fan entity."""
-        super().__init__(device_config, device, self._attr_translation_key)
+        super().__init__(self._attr_translation_key, device_config, device)
 
     def update(self) -> None:
         """Update state of fan."""

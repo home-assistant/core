@@ -24,7 +24,8 @@
           "pitch": "Default pitch of the voice",
           "gain": "Default volume gain (in dB) of the voice",
           "profiles": "Default audio profiles",
-          "text_type": "Default text type"
+          "text_type": "Default text type",
+          "stt_model": "STT model"
         }
       }
     }

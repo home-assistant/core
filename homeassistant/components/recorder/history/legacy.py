@@ -169,19 +169,6 @@ def _lambda_stmt_and_join_attributes(
             ),
             False,
         )
-    # If we in the process of migrating schema we do
-    # not want to join the state_attributes table as we
-    # do not know if it will be there yet
-    if schema_version < 25:
-        if include_last_changed:
-            return (
-                lambda_stmt(lambda: select(*_QUERY_STATES_PRE_SCHEMA_25)),
-                False,
-            )
-        return (
-            lambda_stmt(lambda: select(*_QUERY_STATES_PRE_SCHEMA_25_NO_LAST_CHANGED)),
-            False,
-        )
 
     if schema_version >= 31:
         if include_last_changed:
