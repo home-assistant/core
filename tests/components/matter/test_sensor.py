@@ -430,12 +430,17 @@ async def test_eve_weather_sensor_custom_cluster(
     eve_weather_sensor_node: MatterNode,
 ) -> None:
     """Test weather sensor created from (Eve) custom cluster."""
-    # power sensor on Eve custom cluster
-    entity_id = "sensor.eve_weather_sensor_node_pressure"
-    state = hass.states.get(entity_id)
+    # Pressure sensor on Eve custom cluster
+    state = hass.states.get("sensor.eve_weather_sensor_pressure")
     assert state
-    assert state.state == "0.0"
+    assert state.state == "1010"
 
+    set_node_attribute(air_quality_sensor_node, 1, 319486977, 0, 319422484)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("sensor.eve_weather_sensor_pressure")
+    assert state
+    assert state.state == "1008.5"
 
 # This tests needs to be adjusted to remove lingering tasks
 @pytest.mark.parametrize("expected_lingering_tasks", [True])
