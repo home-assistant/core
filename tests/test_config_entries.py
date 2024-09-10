@@ -5040,9 +5040,7 @@ async def test_update_entry_and_reload(
 
 
 @pytest.mark.parametrize("unique_id", [["blah", "bleh"], {"key": "value"}])
-async def test_unhashable_unique_id(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, unique_id: Any
-) -> None:
+async def test_unhashable_unique_id(hass: HomeAssistant, unique_id: Any) -> None:
     """Test the ConfigEntryItems user dict handles unhashable unique_id."""
     entries = config_entries.ConfigEntryItems(hass)
     entry = config_entries.ConfigEntry(
@@ -5057,15 +5055,15 @@ async def test_unhashable_unique_id(
         version=1,
     )
 
-    entries[entry.entry_id] = entry
-    assert (
-        "Config entry 'title' from integration test has an invalid unique_id "
-        f"'{unique_id!s}'"
-    ) in caplog.text
+    with pytest.raises(
+        TypeError,
+        match="Config entry 'title' from integration test has an invalid unique_id",
+    ):
+        entries[entry.entry_id] = entry
 
     assert entry.entry_id in entries
     assert entries[entry.entry_id] is entry
-    assert entries.get_entry_by_domain_and_unique_id("test", unique_id) == entry
+    assert entries.get_entry_by_domain_and_unique_id("test", unique_id) is None
     del entries[entry.entry_id]
     assert not entries
     assert entries.get_entry_by_domain_and_unique_id("test", unique_id) is None

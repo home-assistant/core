@@ -1530,7 +1530,10 @@ class ConfigEntryItems(UserDict[str, ConfigEntry]):
                 # Guard against integrations using unhashable unique_id
                 # In HA Core 2024.9, we should remove the guard and instead fail
                 if not isinstance(entry.unique_id, Hashable):  # type: ignore[unreachable]
-                    unique_id_hash = str(entry.unique_id)
+                    raise TypeError(
+                        f"Config entry '{entry.title}' from integration {entry.domain} "
+                        f"has an invalid unique_id '{entry.unique_id}'"
+                    )
                 # Checks for other non-string was added in HA Core 2024.10
                 # In HA Core 2025.10, we should remove the error and instead fail
                 report_issue = async_suggest_report_issue(
@@ -1561,7 +1564,8 @@ class ConfigEntryItems(UserDict[str, ConfigEntry]):
         if (unique_id := entry.unique_id) is not None:
             # Check type first to avoid expensive isinstance call
             if type(unique_id) is not str and not isinstance(unique_id, Hashable):  # noqa: E721
-                unique_id = str(entry.unique_id)  # type: ignore[unreachable]
+                # It was not indexed - so no need to unindex
+                return  # type: ignore[unreachable]
             del self._domain_unique_id_index[domain][unique_id]
             if not self._domain_unique_id_index[domain]:
                 del self._domain_unique_id_index[domain]
