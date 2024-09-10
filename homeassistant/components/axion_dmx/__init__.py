@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from libaxion_dmx import AxionDmxApi  # Import the API class
+from libaxion_dmx import AxionDmxApi
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
