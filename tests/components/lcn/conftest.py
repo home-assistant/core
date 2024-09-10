@@ -1,16 +1,15 @@
 """Test configuration and mocks for LCN component."""
 
-from collections.abc import AsyncGenerator
 import json
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 import pypck
-from pypck.connection import PchkConnectionManager
 import pypck.module
 from pypck.module import GroupConnection, ModuleConnection
 import pytest
 
+from homeassistant.components.lcn import PchkConnectionManager
 from homeassistant.components.lcn.const import DOMAIN
 from homeassistant.components.lcn.helpers import AddressType, generate_unique_id
 from homeassistant.const import CONF_ADDRESS, CONF_DEVICES, CONF_ENTITIES, CONF_HOST
@@ -54,11 +53,19 @@ class MockPchkConnectionManager(PchkConnectionManager):
     async def async_close(self) -> None:
         """Mock closing a connection to PCHK."""
 
-    @patch.object(pypck.connection, "ModuleConnection", MockModuleConnection)
-    @patch.object(pypck.connection, "GroupConnection", MockGroupConnection)
     def get_address_conn(self, addr, request_serials=False):
         """Get LCN address connection."""
         return super().get_address_conn(addr, request_serials)
+
+    @patch.object(pypck.connection, "ModuleConnection", MockModuleConnection)
+    def get_module_conn(self, addr, request_serials=False):
+        """Get LCN module connection."""
+        return super().get_module_conn(addr, request_serials)
+
+    @patch.object(pypck.connection, "GroupConnection", MockGroupConnection)
+    def get_group_conn(self, addr):
+        """Get LCN group connection."""
+        return super().get_group_conn(addr)
 
     scan_modules = AsyncMock()
     send_command = AsyncMock()
@@ -76,11 +83,10 @@ def create_config_entry(name: str) -> MockConfigEntry:
     options = {}
 
     title = entry_data[CONF_HOST]
-    unique_id = fixture_filename
     return MockConfigEntry(
+        entry_id=fixture_filename,
         domain=DOMAIN,
         title=title,
-        unique_id=unique_id,
         data=entry_data,
         options=options,
     )
@@ -98,10 +104,9 @@ def create_config_entry_myhome() -> MockConfigEntry:
     return create_config_entry("myhome")
 
 
-@pytest.fixture(name="lcn_connection")
 async def init_integration(
     hass: HomeAssistant, entry: MockConfigEntry
-) -> AsyncGenerator[MockPchkConnectionManager]:
+) -> MockPchkConnectionManager:
     """Set up the LCN integration in Home Assistant."""
     hass.http = Mock()  # needs to be mocked as hass.http.register_static_path is called when registering the frontend
     lcn_connection = None
@@ -113,12 +118,13 @@ async def init_integration(
 
     entry.add_to_hass(hass)
     with patch(
-        "pypck.connection.PchkConnectionManager",
+        "homeassistant.components.lcn.PchkConnectionManager",
         side_effect=lcn_connection_factory,
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
-        yield lcn_connection
+
+    return lcn_connection
 
 
 async def setup_component(hass: HomeAssistant) -> None:

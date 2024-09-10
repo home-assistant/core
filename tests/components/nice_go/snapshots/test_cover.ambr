@@ -28,7 +28,7 @@
     'previous_unique_id': None,
     'supported_features': <CoverEntityFeature: 3>,
     'translation_key': None,
-    'unique_id': '1-cover',
+    'unique_id': '1',
     'unit_of_measurement': None,
   })
 # ---
@@ -76,7 +76,7 @@
     'previous_unique_id': None,
     'supported_features': <CoverEntityFeature: 3>,
     'translation_key': None,
-    'unique_id': '2-cover',
+    'unique_id': '2',
     'unit_of_measurement': None,
   })
 # ---

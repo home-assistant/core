@@ -202,31 +202,53 @@ def discovery_info_fixture() -> Any:
     return mock_discovery_info()
 
 
+@pytest.fixture(name="discovery_info_side_effect")
+def discovery_info_side_effect_fixture() -> Any | None:
+    """Return the discovery info from the supervisor."""
+    return None
+
+
 @pytest.fixture(name="get_addon_discovery_info")
-def get_addon_discovery_info_fixture(discovery_info: Any) -> Generator[AsyncMock]:
+def get_addon_discovery_info_fixture(
+    discovery_info: dict[str, Any], discovery_info_side_effect: Any | None
+) -> Generator[AsyncMock]:
     """Mock get add-on discovery info."""
     # pylint: disable-next=import-outside-toplevel
     from .hassio.common import mock_get_addon_discovery_info
 
-    yield from mock_get_addon_discovery_info(discovery_info)
+    yield from mock_get_addon_discovery_info(discovery_info, discovery_info_side_effect)
+
+
+@pytest.fixture(name="addon_store_info_side_effect")
+def addon_store_info_side_effect_fixture() -> Any | None:
+    """Return the add-on store info side effect."""
+    return None
 
 
 @pytest.fixture(name="addon_store_info")
-def addon_store_info_fixture() -> Generator[AsyncMock]:
+def addon_store_info_fixture(
+    addon_store_info_side_effect: Any | None,
+) -> Generator[AsyncMock]:
     """Mock Supervisor add-on store info."""
     # pylint: disable-next=import-outside-toplevel
     from .hassio.common import mock_addon_store_info
 
-    yield from mock_addon_store_info()
+    yield from mock_addon_store_info(addon_store_info_side_effect)
+
+
+@pytest.fixture(name="addon_info_side_effect")
+def addon_info_side_effect_fixture() -> Any | None:
+    """Return the add-on info side effect."""
+    return None
 
 
 @pytest.fixture(name="addon_info")
-def addon_info_fixture() -> Generator[AsyncMock]:
+def addon_info_fixture(addon_info_side_effect: Any | None) -> Generator[AsyncMock]:
     """Mock Supervisor add-on info."""
     # pylint: disable-next=import-outside-toplevel
     from .hassio.common import mock_addon_info
 
-    yield from mock_addon_info()
+    yield from mock_addon_info(addon_info_side_effect)
 
 
 @pytest.fixture(name="addon_not_installed")
@@ -262,33 +284,64 @@ def addon_running_fixture(
     return mock_addon_running(addon_store_info, addon_info)
 
 
+@pytest.fixture(name="install_addon_side_effect")
+def install_addon_side_effect_fixture(
+    addon_store_info: AsyncMock, addon_info: AsyncMock
+) -> Any | None:
+    """Return the install add-on side effect."""
+
+    # pylint: disable-next=import-outside-toplevel
+    from .hassio.common import mock_install_addon_side_effect
+
+    return mock_install_addon_side_effect(addon_store_info, addon_info)
+
+
 @pytest.fixture(name="install_addon")
 def install_addon_fixture(
-    addon_store_info: AsyncMock, addon_info: AsyncMock
+    install_addon_side_effect: Any | None,
 ) -> Generator[AsyncMock]:
     """Mock install add-on."""
     # pylint: disable-next=import-outside-toplevel
     from .hassio.common import mock_install_addon
 
-    yield from mock_install_addon(addon_store_info, addon_info)
+    yield from mock_install_addon(install_addon_side_effect)
+
+
+@pytest.fixture(name="start_addon_side_effect")
+def start_addon_side_effect_fixture(
+    addon_store_info: AsyncMock, addon_info: AsyncMock
+) -> Any | None:
+    """Return the start add-on options side effect."""
+    # pylint: disable-next=import-outside-toplevel
+    from .hassio.common import mock_start_addon_side_effect
+
+    return mock_start_addon_side_effect(addon_store_info, addon_info)
 
 
 @pytest.fixture(name="start_addon")
-def start_addon_fixture() -> Generator[AsyncMock]:
+def start_addon_fixture(start_addon_side_effect: Any | None) -> Generator[AsyncMock]:
     """Mock start add-on."""
     # pylint: disable-next=import-outside-toplevel
     from .hassio.common import mock_start_addon
 
-    yield from mock_start_addon()
+    yield from mock_start_addon(start_addon_side_effect)
+
+
+@pytest.fixture(name="restart_addon_side_effect")
+def restart_addon_side_effect_fixture() -> Any | None:
+    """Return the restart add-on options side effect."""
+    return None
 
 
 @pytest.fixture(name="restart_addon")
-def restart_addon_fixture() -> Generator[AsyncMock]:
+def restart_addon_fixture(
+    restart_addon_side_effect: Any | None,
+) -> Generator[AsyncMock]:
     """Mock restart add-on."""
     # pylint: disable-next=import-outside-toplevel
     from .hassio.common import mock_restart_addon
 
-    yield from mock_restart_addon()
+    yield from mock_restart_addon(restart_addon_side_effect)
 
 
 @pytest.fixture(name="stop_addon")
@@ -300,13 +353,35 @@ def stop_addon_fixture() -> Generator[AsyncMock]:
     yield from mock_stop_addon()
 
 
+@pytest.fixture(name="addon_options")
+def addon_options_fixture(addon_info: AsyncMock) -> dict[str, Any]:
+    """Mock add-on options."""
+    # pylint: disable-next=import-outside-toplevel
+    from .hassio.common import mock_addon_options
+
+    return mock_addon_options(addon_info)
+
+
+@pytest.fixture(name="set_addon_options_side_effect")
+def set_addon_options_side_effect_fixture(
+    addon_options: dict[str, Any],
+) -> Any | None:
+    """Return the set add-on options side effect."""
+    # pylint: disable-next=import-outside-toplevel
+    from .hassio.common import mock_set_addon_options_side_effect
+
+    return mock_set_addon_options_side_effect(addon_options)
+
+
 @pytest.fixture(name="set_addon_options")
-def set_addon_options_fixture() -> Generator[AsyncMock]:
+def set_addon_options_fixture(
+    set_addon_options_side_effect: Any | None,
+) -> Generator[AsyncMock]:
     """Mock set add-on options."""
     # pylint: disable-next=import-outside-toplevel
     from .hassio.common import mock_set_addon_options
 
-    yield from mock_set_addon_options()
+    yield from mock_set_addon_options(set_addon_options_side_effect)
 
 
 @pytest.fixture(name="uninstall_addon")

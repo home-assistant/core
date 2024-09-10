@@ -9,6 +9,6 @@
   "wifi_connected": false,
   "wifi_status": 255,
   "disable_leds": false,
-  "night_mode": false,
+  "night_mode": true,
   "auto_zigbee": false
 }

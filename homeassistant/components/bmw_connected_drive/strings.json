@@ -148,7 +148,8 @@
           "cooling": "Cooling",
           "heating": "Heating",
           "inactive": "Inactive",
-          "standby": "Standby"
+          "standby": "Standby",
+          "ventilation": "Ventilation"
         }
       },
       "front_left_current_pressure": {
