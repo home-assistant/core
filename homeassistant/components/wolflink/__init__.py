@@ -31,7 +31,7 @@ PLATFORMS = [Platform.SENSOR]
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Wolf SmartSet Service from a config entry."""
 
-    if type(entry.unique_id) is int:  # type: ignore[comparison-overlap]
+    if isinstance(entry.unique_id, int):
         hass.config_entries.async_update_entry(entry, unique_id=str(entry.unique_id))
 
     username = entry.data[CONF_USERNAME]
