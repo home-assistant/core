@@ -640,7 +640,7 @@ async def test_dishwasher_sensor(
     dishwasher_node: MatterNode,
 ) -> None:
     """Test dishwasher sensor."""
-    # OperationalState Cluster OperationalState Cluster attribute 1/96/4
+    # OperationalState Cluster / OperationalState attribute (1/96/4)
     state = hass.states.get("sensor.dishwasher_operationalstate")
     assert state
     assert state.state == "0"
