@@ -14,6 +14,7 @@ core: &core
 base_platforms: &base_platforms
   - homeassistant/components/air_quality/**
   - homeassistant/components/alarm_control_panel/**
+  - homeassistant/components/assist_satellite/**
   - homeassistant/components/binary_sensor/**
   - homeassistant/components/button/**
   - homeassistant/components/calendar/**

@@ -5,26 +5,6 @@
       'battery_percent': 100,
     }),
     'calendar': dict({
-      'events': list([
-        dict({
-          'end': '2024-03-02T00:00:00',
-          'rrule': 'FREQ=WEEKLY;BYDAY=MO,WE,FR',
-          'schedule_no': 1,
-          'start': '2024-03-01T19:00:00',
-          'uid': '1140_300_MO,WE,FR',
-          'work_area_id': None,
-          'work_area_name': None,
-        }),
-        dict({
-          'end': '2024-03-02T08:00:00',
-          'rrule': 'FREQ=WEEKLY;BYDAY=TU,TH,SA',
-          'schedule_no': 2,
-          'start': '2024-03-02T00:00:00',
-          'uid': '0_480_TU,TH,SA',
-          'work_area_id': None,
-          'work_area_name': None,
-        }),
-      ]),
       'tasks': list([
         dict({
           'duration': 300,
@@ -135,15 +115,24 @@
     'work_areas': dict({
       '0': dict({
         'cutting_height': 50,
+        'enabled': False,
+        'last_time_completed_naive': '1970-01-20T22:43:59.269000',
         'name': 'my_lawn',
+        'progress': 20,
       }),
       '123456': dict({
         'cutting_height': 50,
+        'enabled': True,
+        'last_time_completed_naive': '1970-01-20T22:44:09.269000',
         'name': 'Front lawn',
+        'progress': 40,
       }),
       '654321': dict({
         'cutting_height': 25,
+        'enabled': True,
+        'last_time_completed_naive': '1970-01-20T22:27:29.269000',
         'name': 'Back lawn',
+        'progress': 30,
       }),
     }),
   })

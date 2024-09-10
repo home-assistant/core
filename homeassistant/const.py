@@ -41,6 +41,7 @@ class Platform(StrEnum):
 
     AIR_QUALITY = "air_quality"
     ALARM_CONTROL_PANEL = "alarm_control_panel"
+    ASSIST_SATELLITE = "assist_satellite"
     BINARY_SENSOR = "binary_sensor"
     BUTTON = "button"
     CALENDAR = "calendar"
@@ -281,6 +282,7 @@ CONF_THEN: Final = "then"
 CONF_TIMEOUT: Final = "timeout"
 CONF_TIME_ZONE: Final = "time_zone"
 CONF_TOKEN: Final = "token"
+CONF_TRIGGERS: Final = "triggers"
 CONF_TRIGGER_TIME: Final = "trigger_time"
 CONF_TTL: Final = "ttl"
 CONF_TYPE: Final = "type"
@@ -691,11 +693,17 @@ _DEPRECATED_POWER_VOLT_AMPERE_REACTIVE: Final = DeprecatedConstantEnum(
 class UnitOfEnergy(StrEnum):
     """Energy units."""
 
-    GIGA_JOULE = "GJ"
-    KILO_WATT_HOUR = "kWh"
+    JOULE = "J"
+    KILO_JOULE = "kJ"
     MEGA_JOULE = "MJ"
-    MEGA_WATT_HOUR = "MWh"
+    GIGA_JOULE = "GJ"
     WATT_HOUR = "Wh"
+    KILO_WATT_HOUR = "kWh"
+    MEGA_WATT_HOUR = "MWh"
+    CALORIE = "cal"
+    KILO_CALORIE = "kcal"
+    MEGA_CALORIE = "Mcal"
+    GIGA_CALORIE = "Gcal"
 
 
 _DEPRECATED_ENERGY_KILO_WATT_HOUR: Final = DeprecatedConstantEnum(
