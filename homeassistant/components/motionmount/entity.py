@@ -86,8 +86,10 @@ class MotionMountEntity(Entity):
         try:
             await self.mm.connect()
         except (ConnectionError, TimeoutError, socket.gaierror):
-            # We're not interested in exceptions here. In case of a failed connection the try/except from the caller will report it
-            # The purpose of `ensureConnected()` is only to make sure we try to reconnect, where failures should not be logged each time
+            # We're not interested in exceptions here. In case of a failed connection
+            # the try/except from the caller will report it.
+            # The purpose of `_ensure_connected()` is only to make sure we try to
+            # reconnect, where failures should not be logged each time
             return False
         else:
             _LOGGER.warning("Successfully reconnected to MotionMount")
