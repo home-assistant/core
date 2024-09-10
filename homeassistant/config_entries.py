@@ -276,7 +276,7 @@ def _validate_item(*, disabled_by: ConfigEntryDisabler | Any | None = None) -> N
 
     # Deprecated in 2022.1, stopped working in 2024.10
     if disabled_by is not None and not isinstance(disabled_by, ConfigEntryDisabler):
-        raise ValueError(
+        raise TypeError(
             f"disabled_by must be a ConfigEntryDisabler value, got {disabled_by}"
         )
 

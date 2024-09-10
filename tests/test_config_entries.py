@@ -4300,7 +4300,7 @@ async def test_loading_old_data(
 async def test_deprecated_disabled_by_str_ctor() -> None:
     """Test deprecated str disabled_by constructor enumizes and logs a warning."""
     with pytest.raises(
-        ValueError, match="disabled_by must be a ConfigEntryDisabler value, got user"
+        TypeError, match="disabled_by must be a ConfigEntryDisabler value, got user"
     ):
         MockConfigEntry(disabled_by=config_entries.ConfigEntryDisabler.USER.value)
 
@@ -4308,14 +4308,13 @@ async def test_deprecated_disabled_by_str_ctor() -> None:
 async def test_deprecated_disabled_by_str_set(
     hass: HomeAssistant,
     manager: config_entries.ConfigEntries,
-    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test deprecated str set disabled_by enumizes and logs a warning."""
     entry = MockConfigEntry(domain="comp")
     entry.add_to_manager(manager)
     hass.config.components.add("comp")
     with pytest.raises(
-        ValueError, match="disabled_by must be a ConfigEntryDisabler value, got user"
+        TypeError, match="disabled_by must be a ConfigEntryDisabler value, got user"
     ):
         await manager.async_set_disabled_by(
             entry.entry_id, config_entries.ConfigEntryDisabler.USER.value
