@@ -59,7 +59,6 @@ class DuwiEntity(Entity):
     async def _send_command(self, commands: dict[str, Any]) -> None:
         """Send command to the device."""
         self.device.value.update(commands)
-        self.is_control = False
         await self.device_manager.send_commands(
             self.device.device_no, self.device.is_group, commands
         )
