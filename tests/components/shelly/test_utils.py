@@ -274,7 +274,7 @@ async def test_get_rpc_channel_name_single_component(
 
     assert (
         get_rpc_channel_name(mock_rpc_device, f"{component}:0")
-        == f"Test name {component.title()}"
+        == f"Test name {component.title()} 0"
     )
 
 

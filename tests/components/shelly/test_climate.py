@@ -609,7 +609,7 @@ async def test_rpc_climate_hvac_mode(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test climate hvac mode service."""
-    entity_id = "climate.test_name_thermostat"
+    entity_id = "climate.test_name_thermostat_0"
 
     await init_integration(hass, 2, model=MODEL_WALL_DISPLAY)
 
@@ -654,7 +654,7 @@ async def test_rpc_climate_without_humidity(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test climate entity without the humidity value."""
-    entity_id = "climate.test_name_thermostat"
+    entity_id = "climate.test_name_thermostat_0"
     new_status = deepcopy(mock_rpc_device.status)
     new_status.pop("humidity:0")
     monkeypatch.setattr(mock_rpc_device, "status", new_status)
@@ -677,7 +677,7 @@ async def test_rpc_climate_set_temperature(
     hass: HomeAssistant, mock_rpc_device: Mock, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Test climate set target temperature."""
-    entity_id = "climate.test_name_thermostat"
+    entity_id = "climate.test_name_thermostat_0"
 
     await init_integration(hass, 2, model=MODEL_WALL_DISPLAY)
 
@@ -717,7 +717,7 @@ async def test_rpc_climate_hvac_mode_cool(
     hass: HomeAssistant, mock_rpc_device: Mock, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Test climate with hvac mode cooling."""
-    entity_id = "climate.test_name_thermostat"
+    entity_id = "climate.test_name_thermostat_0"
     new_config = deepcopy(mock_rpc_device.config)
     new_config["thermostat:0"]["type"] = "cooling"
     monkeypatch.setattr(mock_rpc_device, "config", new_config)
@@ -736,7 +736,7 @@ async def test_wall_display_thermostat_mode(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test Wall Display in thermostat mode."""
-    climate_entity_id = "climate.test_name_thermostat"
+    climate_entity_id = "climate.test_name_thermostat_0"
     switch_entity_id = "switch.test_switch_0"
 
     await init_integration(hass, 2, model=MODEL_WALL_DISPLAY)
@@ -763,7 +763,7 @@ async def test_wall_display_thermostat_mode_external_actuator(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test Wall Display in thermostat mode with an external actuator."""
-    climate_entity_id = "climate.test_name_thermostat"
+    climate_entity_id = "climate.test_name_thermostat_0"
     switch_entity_id = "switch.test_switch_0"
 
     new_status = deepcopy(mock_rpc_device.status)

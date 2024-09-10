@@ -312,11 +312,6 @@ def get_model_name(info: dict[str, Any]) -> str:
     return cast(str, MODEL_NAMES.get(info["type"], info["type"]))
 
 
-def get_rpc_key_ids(keys_dict: dict[str, Any], key: str) -> list[int]:
-    """Return list of key ids for RPC device from a dict."""
-    return [int(k.split(":")[1]) for k in keys_dict if k.startswith(f"{key}:")]
-
-
 def get_rpc_channel_name(device: RpcDevice, key: str) -> str:
     """Get name based on device and channel name."""
     key = key.replace("emdata", "em")
@@ -327,13 +322,10 @@ def get_rpc_channel_name(device: RpcDevice, key: str) -> str:
         entity_name = device.config[key].get("name")
 
     if entity_name is None:
-        component = key.split(":")[0]
         if key.startswith(
             ("cover:", "input:", "light:", "rgb:", "rgbw:", "switch:", "thermostat:")
         ):
-            if len(get_rpc_key_ids(device.config, component)) > 1:
-                return f"{device_name} {key.replace(':', ' ').title()}"
-            return f"{device_name} {component.title()}"
+            return f"{device_name} {key.replace(':', ' ').title()}"
         if key.startswith("em1"):
             return f"{device_name} EM{key.split(':')[-1]}"
         if key.startswith(("boolean:", "enum:", "number:", "text:")):
@@ -369,6 +361,11 @@ def get_rpc_key_instances(keys_dict: dict[str, Any], key: str) -> list[str]:
         key = "cover"
 
     return [k for k in keys_dict if k.startswith(f"{key}:")]
+
+
+def get_rpc_key_ids(keys_dict: dict[str, Any], key: str) -> list[int]:
+    """Return list of key ids for RPC device from a dict."""
+    return [int(k.split(":")[1]) for k in keys_dict if k.startswith(f"{key}:")]
 
 
 def is_rpc_momentary_input(

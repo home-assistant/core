@@ -1293,7 +1293,7 @@ async def test_rpc_rgbw_sensors(
 
     await init_integration(hass, 2)
 
-    entity_id = f"sensor.test_name_{light_type}_power"
+    entity_id = f"sensor.test_name_{light_type}_0_power"
 
     state = hass.states.get(entity_id)
     assert state
@@ -1304,7 +1304,7 @@ async def test_rpc_rgbw_sensors(
     assert entry
     assert entry.unique_id == f"123456789ABC-{light_type}:0-power_{light_type}"
 
-    entity_id = f"sensor.test_name_{light_type}_energy"
+    entity_id = f"sensor.test_name_{light_type}_0_energy"
 
     state = hass.states.get(entity_id)
     assert state
@@ -1315,7 +1315,7 @@ async def test_rpc_rgbw_sensors(
     assert entry
     assert entry.unique_id == f"123456789ABC-{light_type}:0-energy_{light_type}"
 
-    entity_id = f"sensor.test_name_{light_type}_current"
+    entity_id = f"sensor.test_name_{light_type}_0_current"
 
     state = hass.states.get(entity_id)
     assert state
@@ -1328,7 +1328,7 @@ async def test_rpc_rgbw_sensors(
     assert entry
     assert entry.unique_id == f"123456789ABC-{light_type}:0-current_{light_type}"
 
-    entity_id = f"sensor.test_name_{light_type}_voltage"
+    entity_id = f"sensor.test_name_{light_type}_0_voltage"
 
     state = hass.states.get(entity_id)
     assert state
@@ -1341,7 +1341,7 @@ async def test_rpc_rgbw_sensors(
     assert entry
     assert entry.unique_id == f"123456789ABC-{light_type}:0-voltage_{light_type}"
 
-    entity_id = f"sensor.test_name_{light_type}_device_temperature"
+    entity_id = f"sensor.test_name_{light_type}_0_device_temperature"
 
     state = hass.states.get(entity_id)
     assert state
