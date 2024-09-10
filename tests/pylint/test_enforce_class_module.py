@@ -1,4 +1,4 @@
-"""Tests for pylint hass_enforce_coordinator_module plugin."""
+"""Tests for pylint hass_enforce_class_module plugin."""
 
 from __future__ import annotations
 
@@ -74,7 +74,7 @@ def test_enforce_coordinator_module_bad_simple(
     with assert_adds_messages(
         linter,
         MessageTest(
-            msg_id="hass-enforce-coordinator-module",
+            msg_id="hass-enforce-class-module",
             line=5,
             node=root_node.body[1],
             args=None,
@@ -111,7 +111,7 @@ def test_enforce_coordinator_module_bad_nested(
     with assert_adds_messages(
         linter,
         MessageTest(
-            msg_id="hass-enforce-coordinator-module",
+            msg_id="hass-enforce-class-module",
             line=5,
             node=root_node.body[1],
             args=None,
@@ -121,7 +121,7 @@ def test_enforce_coordinator_module_bad_nested(
             end_col_offset=21,
         ),
         MessageTest(
-            msg_id="hass-enforce-coordinator-module",
+            msg_id="hass-enforce-class-module",
             line=8,
             node=root_node.body[2],
             args=None,

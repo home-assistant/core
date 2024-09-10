@@ -1,4 +1,4 @@
-"""Config flow for Ruckus Unleashed integration."""
+"""Config flow for Ruckus integration."""
 
 from collections.abc import Mapping
 import logging
@@ -59,8 +59,8 @@ async def validate_input(hass: HomeAssistant, data):
     }
 
 
-class RuckusUnleashedConfigFlow(ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for Ruckus Unleashed."""
+class RuckusConfigFlow(ConfigFlow, domain=DOMAIN):
+    """Handle a config flow for Ruckus."""
 
     VERSION = 1
 

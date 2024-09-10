@@ -25,8 +25,8 @@ from homeassistant.const import (
     ATTR_IDENTIFIERS,
     ATTR_MANUFACTURER,
     ATTR_MODEL,
+    ATTR_MODEL_ID,
     ATTR_NAME,
-    ATTR_SW_VERSION,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -268,7 +268,7 @@ async def test_service_invalid_device_id2(
         manufacturer=extra_vehicle[ATTR_MANUFACTURER],
         name=extra_vehicle[ATTR_NAME],
         model=extra_vehicle[ATTR_MODEL],
-        sw_version=extra_vehicle[ATTR_SW_VERSION],
+        model_id=extra_vehicle[ATTR_MODEL_ID],
     )
     device_id = device_registry.async_get_device(
         identifiers=extra_vehicle[ATTR_IDENTIFIERS]
