@@ -1533,6 +1533,8 @@ class ConfigEntryItems(UserDict[str, ConfigEntry]):
                 # In HA Core 2024.9, we should remove the guard and instead fail
                 if not isinstance(entry.unique_id, Hashable):
                     unique_id_hash = str(entry.unique_id)  # type: ignore[unreachable]
+                # Checks for other non-string was added in HA Core 2024.10
+                # In HA Core 2025.10, we should remove the error and instead fail
                 report_issue = async_suggest_report_issue(
                     self._hass, integration_domain=entry.domain
                 )
