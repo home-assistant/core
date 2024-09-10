@@ -172,6 +172,23 @@
           "ds1820": "DS1820",
           "dhw_block": "Block hot water"
         }
+      },
+      "led_mode_n": {
+        "name": "LED {led_id} mode",
+        "state": {
+          "receive_any": "Receiving on any interface",
+          "transmit_any": "Transmitting on any interface",
+          "thermostat_traffic": "Traffic on the thermostat interface",
+          "boiler_traffic": "Traffic on the boiler interface",
+          "setpoint_override_active": "Setpoint override is active",
+          "flame_on": "Boiler flame is on",
+          "central_heating_on": "Central heating is on",
+          "hot_water_on": "Hot water is on",
+          "comfort_mode_on": "Comfort mode is on",
+          "transmit_error_detected": "Transmit error detected",
+          "boiler_maintenance_required": "Boiler maintenance required",
+          "raised_power_mode_active": "Raised power mode active"
+        }
       }
     },
     "sensor": {
