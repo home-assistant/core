@@ -14,7 +14,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
 
 from . import KNXModule
-from .const import DATA_KNX_CONFIG, DOMAIN, KNX_ADDRESS
+from .const import KNX_ADDRESS, KNX_MODULE_KEY
 from .knx_entity import KnxYamlEntity
 from .schema import SceneSchema
 
@@ -25,8 +25,8 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up scene(s) for KNX platform."""
-    knx_module: KNXModule = hass.data[DOMAIN]
-    config: list[ConfigType] = hass.data[DATA_KNX_CONFIG][Platform.SCENE]
+    knx_module = hass.data[KNX_MODULE_KEY]
+    config: list[ConfigType] = knx_module.config_yaml[Platform.SCENE]
 
     async_add_entities(KNXScene(knx_module, entity_config) for entity_config in config)
 

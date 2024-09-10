@@ -9,7 +9,7 @@ from iaqualink.device import AqualinkLight
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_EFFECT,
-    DOMAIN,
+    DOMAIN as LIGHT_DOMAIN,
     ColorMode,
     LightEntity,
     LightEntityFeature,
@@ -32,7 +32,8 @@ async def async_setup_entry(
 ) -> None:
     """Set up discovered lights."""
     async_add_entities(
-        (HassAqualinkLight(dev) for dev in hass.data[AQUALINK_DOMAIN][DOMAIN]), True
+        (HassAqualinkLight(dev) for dev in hass.data[AQUALINK_DOMAIN][LIGHT_DOMAIN]),
+        True,
     )
 
 

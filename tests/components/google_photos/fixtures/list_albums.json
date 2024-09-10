@@ -3,6 +3,7 @@
     {
       "id": "album-media-id-1",
       "title": "Album title",
+      "productUrl": "http://photos.google.com/album-media-id-1",
       "isWriteable": true,
       "mediaItemsCount": 7,
       "coverPhotoBaseUrl": "http://img.example.com/id3",

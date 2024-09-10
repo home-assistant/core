@@ -40,7 +40,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_bsblan() -> Generator[MagicMock]:
+def mock_bsblan() -> Generator[MagicMock, None, None]:
     """Return a mocked BSBLAN client."""
     with (
         patch("homeassistant.components.bsblan.BSBLAN", autospec=True) as bsblan_mock,
@@ -52,7 +52,6 @@ def mock_bsblan() -> Generator[MagicMock]:
             load_fixture("device.json", DOMAIN)
         )
         bsblan.state.return_value = State.from_json(load_fixture("state.json", DOMAIN))
-
         bsblan.static_values.return_value = StaticState.from_json(
             load_fixture("static.json", DOMAIN)
         )

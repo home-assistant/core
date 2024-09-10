@@ -107,6 +107,24 @@
         "name": "Tire pressure warning rear right"
       }
     },
+    "climate": {
+      "climate_state_cabin_overheat_protection": {
+        "name": "Cabin overheat protection"
+      },
+      "driver_temp": {
+        "name": "[%key:component::climate::title%]",
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "off": "Normal",
+              "keep": "Keep mode",
+              "dog": "Dog mode",
+              "camp": "Camp mode"
+            }
+          }
+        }
+      }
+    },
     "device_tracker": {
       "location": {
         "name": "Location"
@@ -272,7 +290,28 @@
   },
   "exceptions": {
     "update_failed": {
-      "message": "{endpoint} data request failed. {message}"
+      "message": "{endpoint} data request failed: {message}"
+    },
+    "command_failed": {
+      "message": "Command failed: {message}"
+    },
+    "command_error": {
+      "message": "Command returned an error: {error}"
+    },
+    "command_reason": {
+      "message": "Command was unsuccessful: {reason}"
+    },
+    "command_no_reason": {
+      "message": "Command was unsuccessful but did not return a reason why."
+    },
+    "invalid_cop_temp": {
+      "message": "Cabin overheat protection does not support that temperature."
+    },
+    "invalid_hvac_mode": {
+      "message": "Climate mode {hvac_mode} is not supported."
+    },
+    "missing_temperature": {
+      "message": "Temperature is required for this action."
     }
   }
 }

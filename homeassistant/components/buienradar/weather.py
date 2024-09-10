@@ -130,7 +130,7 @@ class BrWeather(WeatherEntity):
     _attr_should_poll = False
     _attr_supported_features = WeatherEntityFeature.FORECAST_DAILY
 
-    def __init__(self, config, coordinates):
+    def __init__(self, config, coordinates) -> None:
         """Initialize the platform with a data instance and station name."""
         self._stationname = config.get(CONF_NAME, "Buienradar")
         self._attr_name = self._stationname or f"BR {'(unknown station)'}"
