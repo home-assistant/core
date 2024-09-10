@@ -32,6 +32,7 @@ from homeassistant.core import (
     callback,
 )
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device import async_device_info_to_link_from_entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
@@ -82,6 +83,7 @@ async def async_setup_platform(
     async_add_entities(
         [
             MoldIndicator(
+                hass,
                 name,
                 hass.config.units is METRIC_SYSTEM,
                 indoor_temp_sensor,
@@ -109,6 +111,7 @@ async def async_setup_entry(
     async_add_entities(
         [
             MoldIndicator(
+                hass,
                 name,
                 hass.config.units is METRIC_SYSTEM,
                 indoor_temp_sensor,
@@ -131,6 +134,7 @@ class MoldIndicator(SensorEntity):
 
     def __init__(
         self,
+        hass: HomeAssistant,
         name: str,
         is_metric: bool,
         indoor_temp_sensor: str,
@@ -158,6 +162,10 @@ class MoldIndicator(SensorEntity):
         self._outdoor_temp: float | None = None
         self._indoor_hum: float | None = None
         self._crit_temp: float | None = None
+        self._attr_device_info = async_device_info_to_link_from_entity(
+            hass,
+            indoor_humidity_sensor,
+        )
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
