@@ -3,14 +3,27 @@
     "error_cannot_connect": "Failed to connect to Cambridge Audio device. Please make sure the device is powered up and connected to the network. Try power-cycling the device if it does not connect."
   },
   "config": {
+    "flow_title": "{name}",
     "step": {
-      "confirm": {
-        "description": "[%key:common::config_flow::description::confirm_setup%]"
+      "user": {
+        "description": "Set up your Cambridge Audio Streamer to integrate with Home Assistant.",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of the Cambridge Audio Streamer."
+        }
+      },
+      "discovery_confirm": {
+        "description": "Do you want to setup {name}?"
       }
     },
+    "error": {
+      "cannot_connect": "[%key:component::cambridge_audio::common::error_cannot_connect%]"
+    },
     "abort": {
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
-      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
+      "cannot_connect": "[%key:component::cambridge_audio::common::error_cannot_connect%]",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
   }
 }

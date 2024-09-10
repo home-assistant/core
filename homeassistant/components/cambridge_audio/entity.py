@@ -18,10 +18,10 @@ class CambridgeAudioEntity(Entity):
         """Initialize Cambridge Audio entity."""
         self.client = client
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, client.info.udn)},
+            identifiers={(DOMAIN, client.info.unit_id)},
             name=client.info.name,
             manufacturer="Cambridge Audio",
             model=client.info.model,
-            serial_number=client.info.udn,
+            serial_number=client.info.unit_id,
             configuration_url=f"http://{client.host}",
         )

@@ -1,22 +1,17 @@
 """Config flow for Cambridge Audio."""
 
+import asyncio
 from typing import Any
 
-from aiostreammagic import StreamMagicClient, StreamMagicError
+from aiostreammagic import StreamMagicClient
 import voluptuous as vol
 
 from homeassistant.components import zeroconf
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_HOST, CONF_MODEL
-from homeassistant.helpers import config_validation as cv
+from homeassistant.const import CONF_HOST, CONF_NAME
 
+from . import CONNECT_TIMEOUT, STREAM_MAGIC_EXCEPTIONS
 from .const import DOMAIN
-
-DATA_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_HOST): cv.string,
-    }
-)
 
 
 class FlowHandler(ConfigFlow, domain=DOMAIN):
@@ -33,17 +28,20 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
-        host = discovery_info.host
-        self.data[CONF_MODEL] = discovery_info.properties["model"]
+        self.data[CONF_HOST] = host = discovery_info.host
 
         await self.async_set_unique_id(discovery_info.properties["serial"])
         self._abort_if_unique_id_configured(updates={CONF_HOST: host})
         self.client = StreamMagicClient(host)
-        await self.client.connect()
+        async with asyncio.timeout(CONNECT_TIMEOUT):
+            await self.client.connect()
+
+        self.data[CONF_NAME] = self.client.info.name
 
         self.context["title_placeholders"] = {
-            "model": self.data[CONF_MODEL],
+            "name": self.data[CONF_NAME],
         }
+        await self.client.disconnect()
         return await self.async_step_discovery_confirm()
 
     async def async_step_discovery_confirm(
@@ -52,7 +50,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         """Confirm discovery."""
         if user_input is not None:
             return self.async_create_entry(
-                title=self.data[CONF_MODEL],
+                title=self.data[CONF_NAME],
                 data={CONF_HOST: self.data[CONF_HOST]},
             )
 
@@ -60,7 +58,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="discovery_confirm",
             description_placeholders={
-                "model": self.data[CONF_MODEL],
+                "name": self.data[CONF_NAME],
             },
         )
 
@@ -69,22 +67,24 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
         errors: dict[str, str] = {}
-        if user_input is not None:
-            host = user_input[CONF_HOST]
-            client = StreamMagicClient(host)
+        if user_input:
+            self.client = StreamMagicClient(user_input[CONF_HOST])
             try:
-                await client.connect()
-            except StreamMagicError:
+                async with asyncio.timeout(CONNECT_TIMEOUT):
+                    await self.client.connect()
+            except STREAM_MAGIC_EXCEPTIONS:
                 errors["base"] = "cannot_connect"
             else:
-                await self.async_set_unique_id(client.info.udn)
+                await self.async_set_unique_id(self.client.info.unit_id)
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
-                    title=client.info.name,
-                    data={CONF_HOST: host},
+                    title=self.client.info.name,
+                    data={CONF_HOST: user_input[CONF_HOST]},
                 )
+            finally:
+                await self.client.disconnect()
         return self.async_show_form(
             step_id="user",
-            data_schema=DATA_SCHEMA,
+            data_schema=vol.Schema({vol.Required(CONF_HOST): str}),
             errors=errors,
         )

@@ -13,6 +13,7 @@ STREAM_MAGIC_EXCEPTIONS = (
     StreamMagicConnectionError,
     StreamMagicError,
     asyncio.CancelledError,
+    TimeoutError,
 )
 
 CONNECT_TIMEOUT = 5
