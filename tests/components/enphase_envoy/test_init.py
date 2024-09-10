@@ -232,7 +232,7 @@ async def test_config_no_unique_id(
     hass: HomeAssistant,
     mock_envoy: AsyncMock,
 ) -> None:
-    """Test enphase_envoy init if config entry has no unieuqe id."""
+    """Test enphase_envoy init if config entry has no unique id."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         entry_id="45a36e55aaddb2007c5f6602e0c38e72",
