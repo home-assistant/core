@@ -19,7 +19,7 @@ from homeassistant.components.analytics.const import (
     ATTR_STATISTICS,
     ATTR_USAGE,
 )
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import IntegrationNotFound
@@ -863,7 +863,7 @@ async def test_not_check_config_entries_if_yaml(
         domain="ignored_integration",
         state=ConfigEntryState.LOADED,
         source="ignore",
-        disabled_by="user",
+        disabled_by=ConfigEntryDisabler.USER,
     )
     mock_config_entry.add_to_hass(hass)
 
