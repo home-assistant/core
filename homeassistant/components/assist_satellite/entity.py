@@ -254,7 +254,9 @@ class AssistSatelliteEntity(entity.Entity):
         # Set entity state based on pipeline events
         self._run_has_tts = False
 
-        self._pipeline_task = self.hass.async_create_background_task(
+        assert self.platform.config_entry is not None
+        self._pipeline_task = self.platform.config_entry.async_create_background_task(
+            self.hass,
             async_pipeline_from_audio_stream(
                 self.hass,
                 context=self._context,
@@ -279,7 +281,7 @@ class AssistSatelliteEntity(entity.Entity):
                 start_stage=start_stage,
                 end_stage=end_stage,
             ),
-            name=f"{self.name}_pipeline",
+            f"{self.entity_id}_pipeline",
         )
 
         try:
