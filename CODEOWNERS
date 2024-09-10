@@ -858,8 +858,8 @@ build.json @home-assistant/supervisor
 /tests/components/lupusec/ @majuss @suaveolent
 /homeassistant/components/lutron/ @cdheiser @wilburCForce
 /tests/components/lutron/ @cdheiser @wilburCForce
-/homeassistant/components/lutron_caseta/ @swails @bdraco @danaues @eclair4151
-/tests/components/lutron_caseta/ @swails @bdraco @danaues @eclair4151
+/homeassistant/components/lutron_caseta/ @swails @danaues @eclair4151
+/tests/components/lutron_caseta/ @swails @danaues @eclair4151
 /homeassistant/components/lyric/ @timmo001
 /tests/components/lyric/ @timmo001
 /homeassistant/components/madvr/ @iloveicedgreentea
