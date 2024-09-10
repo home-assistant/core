@@ -9,7 +9,7 @@ from airgradient import (
     ConfigurationControl,
 )
 
-from homeassistant.components.airgradient import DOMAIN
+from homeassistant.components.airgradient.const import DOMAIN
 from homeassistant.components.zeroconf import ZeroconfServiceInfo
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_HOST

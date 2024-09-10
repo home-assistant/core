@@ -30,7 +30,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'boiler_temperature',
-    'unique_id': 'gateway0-boiler_temperature',
+    'unique_id': 'gateway0_deviceSerialVitodens300W-boiler_temperature',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -81,7 +81,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'burner_hours',
-    'unique_id': 'gateway0-burner_hours-0',
+    'unique_id': 'gateway0_deviceSerialVitodens300W-burner_hours-0',
     'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
   })
 # ---
@@ -131,7 +131,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'burner_modulation',
-    'unique_id': 'gateway0-burner_modulation-0',
+    'unique_id': 'gateway0_deviceSerialVitodens300W-burner_modulation-0',
     'unit_of_measurement': '%',
   })
 # ---
@@ -181,7 +181,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'burner_starts',
-    'unique_id': 'gateway0-burner_starts-0',
+    'unique_id': 'gateway0_deviceSerialVitodens300W-burner_starts-0',
     'unit_of_measurement': None,
   })
 # ---
@@ -230,7 +230,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'hotwater_gas_consumption_heating_this_month',
-    'unique_id': 'gateway0-hotwater_gas_consumption_heating_this_month',
+    'unique_id': 'gateway0_deviceSerialVitodens300W-hotwater_gas_consumption_heating_this_month',
     'unit_of_measurement': None,
   })
 # ---
@@ -279,7 +279,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'hotwater_gas_consumption_heating_this_week',
-    'unique_id': 'gateway0-hotwater_gas_consumption_heating_this_week',
+    'unique_id': 'gateway0_deviceSerialVitodens300W-hotwater_gas_consumption_heating_this_week',
     'unit_of_measurement': None,
   })
 # ---
@@ -328,7 +328,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'hotwater_gas_consumption_heating_this_year',
-    'unique_id': 'gateway0-hotwater_gas_consumption_heating_this_year',
+    'unique_id': 'gateway0_deviceSerialVitodens300W-hotwater_gas_consumption_heating_this_year',
     'unit_of_measurement': None,
   })
 # ---
@@ -377,7 +377,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'hotwater_gas_consumption_today',
-    'unique_id': 'gateway0-hotwater_gas_consumption_today',
+    'unique_id': 'gateway0_deviceSerialVitodens300W-hotwater_gas_consumption_today',
     'unit_of_measurement': None,
   })
 # ---
@@ -426,7 +426,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'hotwater_max_temperature',
-    'unique_id': 'gateway0-hotwater_max_temperature',
+    'unique_id': 'gateway0_deviceSerialVitodens300W-hotwater_max_temperature',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -477,7 +477,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'hotwater_min_temperature',
-    'unique_id': 'gateway0-hotwater_min_temperature',
+    'unique_id': 'gateway0_deviceSerialVitodens300W-hotwater_min_temperature',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -528,7 +528,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'power consumption this month',
-    'unique_id': 'gateway0-power consumption this month',
+    'unique_id': 'gateway0_deviceSerialVitodens300W-power consumption this month',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -579,7 +579,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'power_consumption_this_year',
-    'unique_id': 'gateway0-power consumption this year',
+    'unique_id': 'gateway0_deviceSerialVitodens300W-power consumption this year',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -630,7 +630,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'power_consumption_today',
-    'unique_id': 'gateway0-power consumption today',
+    'unique_id': 'gateway0_deviceSerialVitodens300W-power consumption today',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -681,7 +681,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'gas_consumption_heating_this_month',
-    'unique_id': 'gateway0-gas_consumption_heating_this_month',
+    'unique_id': 'gateway0_deviceSerialVitodens300W-gas_consumption_heating_this_month',
     'unit_of_measurement': None,
   })
 # ---
@@ -730,7 +730,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'gas_consumption_heating_this_week',
-    'unique_id': 'gateway0-gas_consumption_heating_this_week',
+    'unique_id': 'gateway0_deviceSerialVitodens300W-gas_consumption_heating_this_week',
     'unit_of_measurement': None,
   })
 # ---
@@ -779,7 +779,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'gas_consumption_heating_this_year',
-    'unique_id': 'gateway0-gas_consumption_heating_this_year',
+    'unique_id': 'gateway0_deviceSerialVitodens300W-gas_consumption_heating_this_year',
     'unit_of_measurement': None,
   })
 # ---
@@ -828,7 +828,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'gas_consumption_heating_today',
-    'unique_id': 'gateway0-gas_consumption_heating_today',
+    'unique_id': 'gateway0_deviceSerialVitodens300W-gas_consumption_heating_today',
     'unit_of_measurement': None,
   })
 # ---
@@ -877,7 +877,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'outside_temperature',
-    'unique_id': 'gateway0-outside_temperature',
+    'unique_id': 'gateway0_deviceSerialVitodens300W-outside_temperature',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -928,7 +928,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'power_consumption_this_week',
-    'unique_id': 'gateway0-power consumption this week',
+    'unique_id': 'gateway0_deviceSerialVitodens300W-power consumption this week',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -979,7 +979,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'supply_temperature',
-    'unique_id': 'gateway0-supply_temperature-0',
+    'unique_id': 'gateway0_deviceSerialVitodens300W-supply_temperature-0',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -1030,7 +1030,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'supply_temperature',
-    'unique_id': 'gateway0-supply_temperature-1',
+    'unique_id': 'gateway0_deviceSerialVitodens300W-supply_temperature-1',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---

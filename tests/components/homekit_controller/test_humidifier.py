@@ -6,7 +6,11 @@ from aiohomekit.model import Accessory
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import Service, ServicesTypes
 
-from homeassistant.components.humidifier import DOMAIN, MODE_AUTO, MODE_NORMAL
+from homeassistant.components.humidifier import (
+    DOMAIN as HUMIDIFIER_DOMAIN,
+    MODE_AUTO,
+    MODE_NORMAL,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -74,7 +78,7 @@ async def test_humidifier_active_state(
     helper = await setup_test_component(hass, get_next_aid(), create_humidifier_service)
 
     await hass.services.async_call(
-        DOMAIN, "turn_on", {"entity_id": helper.entity_id}, blocking=True
+        HUMIDIFIER_DOMAIN, "turn_on", {"entity_id": helper.entity_id}, blocking=True
     )
 
     helper.async_assert_service_values(
@@ -83,7 +87,7 @@ async def test_humidifier_active_state(
     )
 
     await hass.services.async_call(
-        DOMAIN, "turn_off", {"entity_id": helper.entity_id}, blocking=True
+        HUMIDIFIER_DOMAIN, "turn_off", {"entity_id": helper.entity_id}, blocking=True
     )
 
     helper.async_assert_service_values(
@@ -101,7 +105,7 @@ async def test_dehumidifier_active_state(
     )
 
     await hass.services.async_call(
-        DOMAIN, "turn_on", {"entity_id": helper.entity_id}, blocking=True
+        HUMIDIFIER_DOMAIN, "turn_on", {"entity_id": helper.entity_id}, blocking=True
     )
 
     helper.async_assert_service_values(
@@ -110,7 +114,7 @@ async def test_dehumidifier_active_state(
     )
 
     await hass.services.async_call(
-        DOMAIN, "turn_off", {"entity_id": helper.entity_id}, blocking=True
+        HUMIDIFIER_DOMAIN, "turn_off", {"entity_id": helper.entity_id}, blocking=True
     )
 
     helper.async_assert_service_values(
@@ -208,7 +212,7 @@ async def test_humidifier_set_humidity(
     helper = await setup_test_component(hass, get_next_aid(), create_humidifier_service)
 
     await hass.services.async_call(
-        DOMAIN,
+        HUMIDIFIER_DOMAIN,
         "set_humidity",
         {"entity_id": helper.entity_id, "humidity": 20},
         blocking=True,
@@ -228,7 +232,7 @@ async def test_dehumidifier_set_humidity(
     )
 
     await hass.services.async_call(
-        DOMAIN,
+        HUMIDIFIER_DOMAIN,
         "set_humidity",
         {"entity_id": helper.entity_id, "humidity": 20},
         blocking=True,
@@ -246,7 +250,7 @@ async def test_humidifier_set_mode(
     helper = await setup_test_component(hass, get_next_aid(), create_humidifier_service)
 
     await hass.services.async_call(
-        DOMAIN,
+        HUMIDIFIER_DOMAIN,
         "set_mode",
         {"entity_id": helper.entity_id, "mode": MODE_AUTO},
         blocking=True,
@@ -260,7 +264,7 @@ async def test_humidifier_set_mode(
     )
 
     await hass.services.async_call(
-        DOMAIN,
+        HUMIDIFIER_DOMAIN,
         "set_mode",
         {"entity_id": helper.entity_id, "mode": MODE_NORMAL},
         blocking=True,
@@ -283,7 +287,7 @@ async def test_dehumidifier_set_mode(
     )
 
     await hass.services.async_call(
-        DOMAIN,
+        HUMIDIFIER_DOMAIN,
         "set_mode",
         {"entity_id": helper.entity_id, "mode": MODE_AUTO},
         blocking=True,
@@ -297,7 +301,7 @@ async def test_dehumidifier_set_mode(
     )
 
     await hass.services.async_call(
-        DOMAIN,
+        HUMIDIFIER_DOMAIN,
         "set_mode",
         {"entity_id": helper.entity_id, "mode": MODE_NORMAL},
         blocking=True,

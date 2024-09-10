@@ -793,8 +793,7 @@ class ShellyRpcPollingCoordinator(ShellyCoordinatorBase[RpcDevice]):
 
         LOGGER.debug("Polling Shelly RPC Device - %s", self.name)
         try:
-            await self.device.update_status()
-            await self.device.get_dynamic_components()
+            await self.device.poll()
         except (DeviceConnectionError, RpcCallError) as err:
             raise UpdateFailed(f"Device disconnected: {err!r}") from err
         except InvalidAuthError:
