@@ -172,9 +172,7 @@ class MonarchMoneySensor(MonarchMoneyAccountEntity, SensorEntity):
     @property
     def native_value(self) -> StateType | datetime | None:
         """Return the state."""
-        if self.entity_description.value_fn is not None:
-            return self.entity_description.value_fn(self.account_data)
-        return None
+        return self.entity_description.value_fn(self.account_data)
 
     @property
     def entity_picture(self) -> str | None:

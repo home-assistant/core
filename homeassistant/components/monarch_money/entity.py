@@ -80,4 +80,4 @@ class MonarchMoneyAccountEntity(MonarchMoneyEntityBase):
     @property
     def account_data(self) -> MonarchAccount:
         """Return the account data."""
-        return self.coordinator.data[self._account_id]
+        return self.coordinator.data.account_data[self._account_id]

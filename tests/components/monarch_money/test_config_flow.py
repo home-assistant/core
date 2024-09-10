@@ -6,6 +6,7 @@ from monarchmoney import LoginFailedException, RequireMFAException
 
 from homeassistant import config_entries
 from homeassistant.components.monarch_money.const import CONF_MFA_CODE, DOMAIN
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
