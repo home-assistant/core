@@ -15,7 +15,7 @@ from typedmonarchmoney.models import (
 from homeassistant.components.monarch_money.const import DOMAIN
 from homeassistant.const import CONF_TOKEN
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry, load_fixture, load_json_object_fixture
 
 
 @pytest.fixture
@@ -42,10 +42,10 @@ async def mock_config_entry() -> MockConfigEntry:
 def mock_config_api() -> Generator[AsyncMock]:
     """Mock the MonarchMoney class."""
 
-    account_json: dict[str, Any] = json.loads(load_fixture("get_accounts.json", DOMAIN))
+    account_json: dict[str, Any] = load_json_object_fixture("get_accounts.json", DOMAIN)
     account_data = [MonarchAccount(data) for data in account_json["accounts"]]
-    account_data_dict = {
-        int(acc["id"]): MonarchAccount(acc) for acc in account_json["accounts"]
+    account_data_dict: dict[str, MonarchAccount] = {
+        acc["id"]: MonarchAccount(acc) for acc in account_json["accounts"]
     }
 
     cashflow_json: dict[str, Any] = json.loads(

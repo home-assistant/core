@@ -40,7 +40,7 @@ def _perform_async_update(coordinator):
     """Return a callable method to cause hass to update the state of the entity."""
 
     async def async_callback():
-        await coordinator._async_update_data
+        await coordinator._async_update_data()
 
     return async_callback
 
