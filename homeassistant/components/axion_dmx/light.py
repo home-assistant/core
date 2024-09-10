@@ -22,7 +22,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 import homeassistant.util.color as color_util
 
-from .const import _LOGGER, DOMAIN
+from .const import _LOGGER, CONF_CHANNEL, CONF_LIGHT_TYPE
 
 
 async def async_setup_entry(
@@ -31,9 +31,9 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Axion Lighting platform."""
-    api = hass.data[DOMAIN][config_entry.entry_id]["api"]
-    channel = hass.data[DOMAIN][config_entry.entry_id]["channel"]
-    light_type = hass.data[DOMAIN][config_entry.entry_id]["light_type"]
+    api = config_entry.runtime_data["api"]
+    channel = config_entry.data[CONF_CHANNEL]
+    light_type = config_entry.data[CONF_LIGHT_TYPE]
 
     async def async_update_data():
         """Fetch data from API endpoint."""

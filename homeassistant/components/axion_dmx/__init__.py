@@ -8,7 +8,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
-from .const import CONF_HOST, CONF_LIGHT_TYPE, CONF_PASSWORD, DOMAIN
+from .const import CONF_HOST, CONF_PASSWORD, DOMAIN
 
 PLATFORMS: list[Platform] = [Platform.LIGHT]
 
@@ -16,7 +16,7 @@ PLATFORMS: list[Platform] = [Platform.LIGHT]
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Axion Lighting from a config entry."""
 
-    hass.data.setdefault(DOMAIN, {})
+    entry.runtime_data = {}
 
     # Create API instance
     api = AxionDmxApi(entry.data[CONF_HOST], entry.data[CONF_PASSWORD])
@@ -25,12 +25,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if not await api.authenticate():
         return False
 
-    # Store an API object for your platforms to access
-    hass.data[DOMAIN][entry.entry_id] = {
-        "api": api,
-        "channel": entry.data["channel"],
-        "light_type": entry.data[CONF_LIGHT_TYPE],
-    }
+    # Store the API object in runtime_data
+    entry.runtime_data["api"] = api
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
