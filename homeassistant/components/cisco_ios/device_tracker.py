@@ -9,7 +9,7 @@ from pexpect import pxssh
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
-    DOMAIN,
+    DOMAIN as DEVICE_TRACKER_DOMAIN,
     PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
     DeviceScanner,
 )
@@ -34,7 +34,7 @@ PLATFORM_SCHEMA = vol.All(
 
 def get_scanner(hass: HomeAssistant, config: ConfigType) -> CiscoDeviceScanner | None:
     """Validate the configuration and return a Cisco scanner."""
-    scanner = CiscoDeviceScanner(config[DOMAIN])
+    scanner = CiscoDeviceScanner(config[DEVICE_TRACKER_DOMAIN])
 
     return scanner if scanner.success_init else None
 

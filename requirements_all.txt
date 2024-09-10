@@ -309,7 +309,7 @@ aionut==4.3.3
 aiooncue==0.3.7
 
 # homeassistant.components.openexchangerates
-aioopenexchangerates==0.4.0
+aioopenexchangerates==0.6.2
 
 # homeassistant.components.nmap_tracker
 aiooui==0.1.6
@@ -1108,7 +1108,7 @@ hole==0.8.0
 holidays==0.56
 
 # homeassistant.components.frontend
-home-assistant-frontend==20240906.0
+home-assistant-frontend==20240909.1
 
 # homeassistant.components.conversation
 home-assistant-intents==2024.9.4
@@ -2804,7 +2804,7 @@ thermoworks-smoke==0.1.8
 thingspeak==1.0.0
 
 # homeassistant.components.lg_thinq
-thinqconnect==0.9.6
+thinqconnect==0.9.7
 
 # homeassistant.components.tikteck
 tikteck==0.4

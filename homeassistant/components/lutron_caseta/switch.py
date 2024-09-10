@@ -2,7 +2,7 @@
 
 from typing import Any
 
-from homeassistant.components.switch import DOMAIN, SwitchEntity
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -22,7 +22,7 @@ async def async_setup_entry(
     """
     data = config_entry.runtime_data
     bridge = data.bridge
-    switch_devices = bridge.get_devices_by_domain(DOMAIN)
+    switch_devices = bridge.get_devices_by_domain(SWITCH_DOMAIN)
     async_add_entities(
         LutronCasetaLight(switch_device, data) for switch_device in switch_devices
     )

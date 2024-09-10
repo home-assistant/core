@@ -21,7 +21,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import UNDEFINED
 from homeassistant.util.ulid import ulid_now
 
-from .const import DOMAIN
+from .const import DOMAIN, KNX_MODULE_KEY
 from .storage.config_store import ConfigStoreException
 from .storage.const import CONF_DATA
 from .storage.entity_store_schema import (
@@ -37,7 +37,6 @@ from .telegrams import SIGNAL_KNX_TELEGRAM, TelegramDict
 
 if TYPE_CHECKING:
     from . import KNXModule
-
 
 URL_BASE: Final = "/knx_static"
 
@@ -126,7 +125,7 @@ def provide_knx(
         ) -> None:
             """Add KNX Module to call function."""
             try:
-                knx: KNXModule = hass.data[DOMAIN]
+                knx = hass.data[KNX_MODULE_KEY]
             except KeyError:
                 _send_not_loaded_error(connection, msg["id"])
                 return
@@ -142,7 +141,7 @@ def provide_knx(
         ) -> None:
             """Add KNX Module to call function."""
             try:
-                knx: KNXModule = hass.data[DOMAIN]
+                knx = hass.data[KNX_MODULE_KEY]
             except KeyError:
                 _send_not_loaded_error(connection, msg["id"])
                 return
