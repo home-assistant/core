@@ -160,8 +160,8 @@ class ThinQBinarySensorEntity(ThinQEntity, BinarySensorEntity):
         """Update status itself."""
         super()._update_status()
 
-        if self.entity_description.on_key is not None:
-            self._attr_is_on = self.data.value == self.entity_description.on_key
+        if (key := self.entity_description.on_key) is not None:
+            self._attr_is_on = self.data.value == key
         else:
             self._attr_is_on = self.data.is_on
 
