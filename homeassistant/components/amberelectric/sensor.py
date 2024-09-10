@@ -104,29 +104,6 @@ class AmberPriceSensor(AmberSensor):
             data["range_min"] = format_cents_to_dollars(interval.range.min)
             data["range_max"] = format_cents_to_dollars(interval.range.max)
 
-        if interval.advanced_price is not None:
-            if interval.channel_type == ChannelType.FEEDIN:
-                data["advanced_price_low"] = -1 * format_cents_to_dollars(
-                    interval.advanced_price.low
-                )
-                data["advanced_price_predicted"] = -1 * format_cents_to_dollars(
-                    interval.advanced_price.predicted
-                )
-                data["advanced_price_high"] = -1 * format_cents_to_dollars(
-                    interval.advanced_price.high
-                )
-
-            else:
-                data["advanced_price_low"] = format_cents_to_dollars(
-                    interval.advanced_price.low
-                )
-                data["advanced_price_predicted"] = format_cents_to_dollars(
-                    interval.advanced_price.predicted
-                )
-                data["advanced_price_high"] = format_cents_to_dollars(
-                    interval.advanced_price.high
-                )
-
         return data
 
 
@@ -180,28 +157,6 @@ class AmberForecastSensor(AmberSensor):
             if interval.range is not None:
                 datum["range_min"] = format_cents_to_dollars(interval.range.min)
                 datum["range_max"] = format_cents_to_dollars(interval.range.max)
-
-            if interval.advanced_price is not None:
-                if interval.channel_type == ChannelType.FEEDIN:
-                    datum["advanced_price_low"] = -1 * format_cents_to_dollars(
-                        interval.advanced_price.low
-                    )
-                    datum["advanced_price_predicted"] = -1 * format_cents_to_dollars(
-                        interval.advanced_price.predicted
-                    )
-                    datum["advanced_price_high"] = -1 * format_cents_to_dollars(
-                        interval.advanced_price.high
-                    )
-                else:
-                    datum["advanced_price_low"] = format_cents_to_dollars(
-                        interval.advanced_price.low
-                    )
-                    datum["advanced_price_predicted"] = format_cents_to_dollars(
-                        interval.advanced_price.predicted
-                    )
-                    datum["advanced_price_high"] = format_cents_to_dollars(
-                        interval.advanced_price.high
-                    )
 
             data["forecasts"].append(datum)
 
@@ -272,15 +227,6 @@ async def async_setup_entry(
         )
         entities.append(
             AmberPriceDescriptorSensor(coordinator, description, channel_type)
-        )
-
-    for channel_type in current:
-        description = SensorEntityDescription(
-            key="advanced",
-            name=f"{entry.title} - {friendly_channel_type(channel_type)} Advanced Price",
-            native_unit_of_measurement=UNIT,
-            state_class=SensorStateClass.MEASUREMENT,
-            translation_key=channel_type,
         )
 
     for channel_type in forecasts:
