@@ -90,5 +90,5 @@ class MotionMountEntity(Entity):
             # The purpose of `ensureConnected()` is only to make sure we try to reconnect, where failures should not be logged each time
             return False
         else:
-            _LOGGER.info("Successfully reconnected to MotionMount")
+            _LOGGER.warning("Successfully reconnected to MotionMount")
             return True
