@@ -1527,10 +1527,12 @@ class ConfigEntryItems(UserDict[str, ConfigEntry]):
         self._domain_index.setdefault(entry.domain, []).append(entry)
         if entry.unique_id is not None:
             unique_id_hash = entry.unique_id
-            # Guard against integrations using unhashable unique_id
-            # In HA Core 2024.9, we should remove the guard and instead fail
-            if not isinstance(entry.unique_id, Hashable):
-                unique_id_hash = str(entry.unique_id)  # type: ignore[unreachable]
+            # Check type first to avoid expensive isinstance call
+            if type(entry.unique_id) is not str:  # noqa: E721
+                # Guard against integrations using unhashable unique_id
+                # In HA Core 2024.9, we should remove the guard and instead fail
+                if not isinstance(entry.unique_id, Hashable):
+                    unique_id_hash = str(entry.unique_id)  # type: ignore[unreachable]
                 report_issue = async_suggest_report_issue(
                     self._hass, integration_domain=entry.domain
                 )
