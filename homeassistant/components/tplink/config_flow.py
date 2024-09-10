@@ -396,7 +396,7 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
             CONF_USES_HTTP: device.config.uses_http,
         }
         if device.config.aes_keys:
-            data[CONF_AES_KEYS] = dict[str, str], device.config.aes_keys
+            data[CONF_AES_KEYS] = device.config.aes_keys
         if device.credentials_hash:
             data[CONF_CREDENTIALS_HASH] = device.credentials_hash
         return self.async_create_entry(
