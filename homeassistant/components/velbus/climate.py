@@ -14,8 +14,9 @@ from homeassistant.components.climate import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
 
 from .const import DOMAIN, PRESET_MODES
 from .entity import VelbusEntity, api_call
