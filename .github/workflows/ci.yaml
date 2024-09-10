@@ -434,13 +434,17 @@ jobs:
     runs-on: ubuntu-24.04
     needs:
       - info
-      - pre-commit
+    if: |
+      github.event.inputs.pylint-only != 'true'
+      && github.event.inputs.mypy-only != 'true'
+      && github.event.inputs.audit-licenses-only != 'true'
     strategy:
       fail-fast: false
       matrix:
         file:
           - Dockerfile
           - Dockerfile.dev
+          - script/hassfest/docker/Dockerfile
     steps:
       - name: Check out code from GitHub
         uses: actions/checkout@v4.1.7

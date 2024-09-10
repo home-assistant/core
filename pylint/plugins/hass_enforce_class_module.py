@@ -7,15 +7,15 @@ from pylint.checkers import BaseChecker
 from pylint.lint import PyLinter
 
 
-class HassEnforceCoordinatorModule(BaseChecker):
+class HassEnforceClassModule(BaseChecker):
     """Checker for coordinators own module."""
 
-    name = "hass_enforce_coordinator_module"
+    name = "hass_enforce_class_module"
     priority = -1
     msgs = {
         "C7461": (
             "Derived data update coordinator is recommended to be placed in the 'coordinator' module",
-            "hass-enforce-coordinator-module",
+            "hass-enforce-class-module",
             "Used when derived data update coordinator should be placed in its own module.",
         ),
     }
@@ -31,10 +31,10 @@ class HassEnforceCoordinatorModule(BaseChecker):
         is_coordinator_module = root_name.endswith(".coordinator")
         for ancestor in node.ancestors():
             if ancestor.name == "DataUpdateCoordinator" and not is_coordinator_module:
-                self.add_message("hass-enforce-coordinator-module", node=node)
+                self.add_message("hass-enforce-class-module", node=node)
                 return
 
 
 def register(linter: PyLinter) -> None:
     """Register the checker."""
-    linter.register_checker(HassEnforceCoordinatorModule(linter))
+    linter.register_checker(HassEnforceClassModule(linter))
