@@ -17,15 +17,9 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from tests.common import MockConfigEntry
+from .const import CONFIG
 
-CONFIG = {
-    DEVICE_NAME: "test-device",
-    DEVICE_ID: 1234,
-    DEVICE_GATEWAY: 5678,
-    CONF_USERNAME: "test-username",
-    CONF_PASSWORD: "test-password",
-}
+from tests.common import MockConfigEntry
 
 INPUT_CONFIG = {
     CONF_USERNAME: CONFIG[CONF_USERNAME],

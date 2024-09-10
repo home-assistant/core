@@ -1,30 +1,15 @@
-"""Test the Wolf SmartSet Service config flow."""
+"""Test the Wolf SmartSet Service."""
 
 from unittest.mock import patch
 
 from httpx import RequestError
-from wolf_comm.models import Device
 
-from homeassistant.components.wolflink.const import (
-    DEVICE_GATEWAY,
-    DEVICE_ID,
-    DEVICE_NAME,
-    DOMAIN,
-)
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.components.wolflink.const import DEVICE_ID, DOMAIN
 from homeassistant.core import HomeAssistant
 
+from .const import CONFIG
+
 from tests.common import MockConfigEntry
-
-CONFIG = {
-    DEVICE_NAME: "test-device",
-    DEVICE_ID: 1234,
-    DEVICE_GATEWAY: 5678,
-    CONF_USERNAME: "test-username",
-    CONF_PASSWORD: "test-password",
-}
-
-DEVICE = Device(CONFIG[DEVICE_ID], CONFIG[DEVICE_GATEWAY], CONFIG[DEVICE_NAME])
 
 
 async def test_unique_id_migration(hass: HomeAssistant) -> None:
