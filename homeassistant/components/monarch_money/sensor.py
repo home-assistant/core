@@ -159,7 +159,7 @@ class MonarchMoneyCashFlowSensor(MonarchMoneyCashFlowEntity, SensorEntity):
     entity_description: MonarchMoneyCashflowSensorEntityDescription
 
     @property
-    def native_value(self) -> StateType | datetime:
+    def native_value(self) -> StateType:
         """Return the state."""
         return self.entity_description.summary_fn(self.summary_data)
 
