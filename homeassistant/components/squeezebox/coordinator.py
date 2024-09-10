@@ -37,7 +37,7 @@ class LMSStatusDataUpdateCoordinator(DataUpdateCoordinator):
             always_update=False,
         )
         self.lms = lms
-        self.newversion_regex_pre = re.compile("^.*\(")
+        self.newversion_regex_pre = re.compile('^.*\\(')
         self.newversion_regex_post = re.compile("<.*$")
         self.newplugins_regex = re.compile(".* - ")
 
