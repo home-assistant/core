@@ -41,7 +41,6 @@ async def test_full_flow(
         DOMAIN,
         context={"source": SOURCE_USER},
     )
-    await hass.async_block_till_done()
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
@@ -49,7 +48,6 @@ async def test_full_flow(
         result["flow_id"],
         {CONF_HOST: "192.168.20.218"},
     )
-    await hass.async_block_till_done()
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Cambridge Audio CXNv2"
     assert result["data"] == {
@@ -70,7 +68,6 @@ async def test_flow_errors(
         DOMAIN,
         context={"source": SOURCE_USER},
     )
-    await hass.async_block_till_done()
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
@@ -78,7 +75,6 @@ async def test_flow_errors(
         result["flow_id"],
         {CONF_HOST: "192.168.20.218"},
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
@@ -89,7 +85,6 @@ async def test_flow_errors(
         result["flow_id"],
         {CONF_HOST: "192.168.20.218"},
     )
-    await hass.async_block_till_done()
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
@@ -106,7 +101,6 @@ async def test_duplicate(
         DOMAIN,
         context={"source": SOURCE_USER},
     )
-    await hass.async_block_till_done()
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
@@ -114,7 +108,6 @@ async def test_duplicate(
         result["flow_id"],
         {CONF_HOST: "192.168.20.218"},
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
@@ -131,7 +124,6 @@ async def test_zeroconf_flow(
         context={"source": SOURCE_ZEROCONF},
         data=ZEROCONF_DISCOVERY,
     )
-    await hass.async_block_till_done()
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "discovery_confirm"
 
@@ -139,10 +131,64 @@ async def test_zeroconf_flow(
         result["flow_id"],
         {},
     )
-    await hass.async_block_till_done()
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Cambridge Audio CXNv2"
     assert result["data"] == {
         CONF_HOST: "192.168.20.218",
     }
     assert result["result"].unique_id == "0020c2d8"
+
+
+async def test_zeroconf_flow_errors(
+    hass: HomeAssistant,
+    mock_stream_magic_client: AsyncMock,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test zeroconf flow."""
+    mock_stream_magic_client.connect.side_effect = StreamMagicError
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=ZEROCONF_DISCOVERY,
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
+
+    mock_stream_magic_client.connect.side_effect = None
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=ZEROCONF_DISCOVERY,
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "discovery_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Cambridge Audio CXNv2"
+    assert result["data"] == {
+        CONF_HOST: "192.168.20.218",
+    }
+    assert result["result"].unique_id == "0020c2d8"
+
+
+async def test_zero_conf_duplicate(
+    hass: HomeAssistant,
+    mock_stream_magic_client: AsyncMock,
+    mock_setup_entry: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test duplicate flow."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=ZEROCONF_DISCOVERY,
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"

@@ -1,7 +1,4 @@
 {
-  "common": {
-    "error_cannot_connect": "Failed to connect to Cambridge Audio device. Please make sure the device is powered up and connected to the network. Try power-cycling the device if it does not connect."
-  },
   "config": {
     "flow_title": "{name}",
     "step": {
@@ -19,10 +16,10 @@
       }
     },
     "error": {
-      "cannot_connect": "[%key:component::cambridge_audio::common::error_cannot_connect%]"
+      "cannot_connect": "Failed to connect to Cambridge Audio device. Please make sure the device is powered up and connected to the network. Try power-cycling the device if it does not connect."
     },
     "abort": {
-      "cannot_connect": "[%key:component::cambridge_audio::common::error_cannot_connect%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
   }

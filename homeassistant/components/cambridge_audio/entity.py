@@ -12,7 +12,6 @@ class CambridgeAudioEntity(Entity):
     """Defines a base Cambridge Audio entity."""
 
     _attr_has_entity_name = True
-    _attr_name = None
 
     def __init__(self, client: StreamMagicClient) -> None:
         """Initialize Cambridge Audio entity."""

@@ -13,7 +13,7 @@ from homeassistant.const import CONF_HOST, CONF_NAME
 from .const import CONNECT_TIMEOUT, DOMAIN, STREAM_MAGIC_EXCEPTIONS
 
 
-class FlowHandler(ConfigFlow, domain=DOMAIN):
+class CambridgeAudioConfigFlow(ConfigFlow, domain=DOMAIN):
     """Cambridge Audio configuration flow."""
 
     VERSION = 1
@@ -21,7 +21,6 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize the config flow."""
         self.data: dict[str, Any] = {}
-        self.client: StreamMagicClient | None = None
 
     async def async_step_zeroconf(
         self, discovery_info: zeroconf.ZeroconfServiceInfo
@@ -31,16 +30,19 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
 
         await self.async_set_unique_id(discovery_info.properties["serial"])
         self._abort_if_unique_id_configured(updates={CONF_HOST: host})
-        self.client = StreamMagicClient(host)
-        async with asyncio.timeout(CONNECT_TIMEOUT):
-            await self.client.connect()
+        client = StreamMagicClient(host)
+        try:
+            async with asyncio.timeout(CONNECT_TIMEOUT):
+                await client.connect()
+        except STREAM_MAGIC_EXCEPTIONS:
+            return self.async_abort(reason="cannot_connect")
 
-        self.data[CONF_NAME] = self.client.info.name
+        self.data[CONF_NAME] = client.info.name
 
         self.context["title_placeholders"] = {
             "name": self.data[CONF_NAME],
         }
-        await self.client.disconnect()
+        await client.disconnect()
         return await self.async_step_discovery_confirm()
 
     async def async_step_discovery_confirm(
@@ -67,21 +69,23 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         """Handle a flow initialized by the user."""
         errors: dict[str, str] = {}
         if user_input:
-            self.client = StreamMagicClient(user_input[CONF_HOST])
+            client = StreamMagicClient(user_input[CONF_HOST])
             try:
                 async with asyncio.timeout(CONNECT_TIMEOUT):
-                    await self.client.connect()
+                    await client.connect()
             except STREAM_MAGIC_EXCEPTIONS:
                 errors["base"] = "cannot_connect"
             else:
-                await self.async_set_unique_id(self.client.info.unit_id)
+                await self.async_set_unique_id(
+                    client.info.unit_id, raise_on_progress=False
+                )
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
-                    title=self.client.info.name,
+                    title=client.info.name,
                     data={CONF_HOST: user_input[CONF_HOST]},
                 )
             finally:
-                await self.client.disconnect()
+                await client.disconnect()
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema({vol.Required(CONF_HOST): str}),

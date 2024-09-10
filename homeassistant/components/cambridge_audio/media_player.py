@@ -38,6 +38,7 @@ async def async_setup_entry(
 class CambridgeAudioDevice(CambridgeAudioEntity, MediaPlayerEntity):
     """Representation of a Cambridge Audio Media Player Device."""
 
+    _attr_name = None
     _attr_media_content_type = MediaType.MUSIC
 
     def __init__(self, client: StreamMagicClient) -> None:
