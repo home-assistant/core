@@ -81,7 +81,7 @@ class ServerStatusUpdatePlugins(LMSStatusEntity, UpdateEntity):
 
     auto_update = True
     supported_features = UpdateEntityFeature.INSTALL
-    title: str = SERVER_MODEL + " plugins"
+    title: str = SERVER_MODEL + " Plugins"
     installed_version = "current"
 
     @property
