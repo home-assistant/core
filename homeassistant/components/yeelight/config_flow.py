@@ -53,7 +53,6 @@ class YeelightConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    _discovered_devices: dict[str, Any] = {}
     _discovered_ip: str
     _discovered_model: str
 
@@ -62,6 +61,10 @@ class YeelightConfigFlow(ConfigFlow, domain=DOMAIN):
     def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlowHandler:
         """Return the options flow."""
         return OptionsFlowHandler(config_entry)
+
+    def __init__(self) -> None:
+        """Initialize the config flow."""
+        self._discovered_devices: dict[str, Any] = {}
 
     async def async_step_homekit(
         self, discovery_info: zeroconf.ZeroconfServiceInfo
