@@ -122,6 +122,16 @@ async def air_purifier_node_fixture(
     )
 
 
+@pytest.fixture(name="dishwasher")
+async def dishwasher_node_fixture(
+    hass: HomeAssistant, matter_client: MagicMock
+) -> MatterNode:
+    """Fixture for an dishwasher node."""
+    return await setup_integration_with_node_fixture(
+        hass, "silabs-dishwasher", matter_client
+    )
+
+
 # This tests needs to be adjusted to remove lingering tasks
 @pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_sensor_null_value(
