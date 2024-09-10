@@ -26,8 +26,8 @@ from . import (
     DATA_ADS,
     STATE_KEY_POSITION,
     STATE_KEY_STATE,
-    AdsEntity,
 )
+from .entity import AdsEntity
 
 DEFAULT_NAME = "ADS Cover"
 

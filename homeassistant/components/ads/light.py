@@ -25,8 +25,8 @@ from . import (
     DATA_ADS,
     STATE_KEY_BRIGHTNESS,
     STATE_KEY_STATE,
-    AdsEntity,
 )
+from .entity import AdsEntity
 
 DEFAULT_NAME = "ADS Light"
 PLATFORM_SCHEMA = LIGHT_PLATFORM_SCHEMA.extend(
