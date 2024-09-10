@@ -39,7 +39,9 @@ async def test_intercept_wake_word(
         wake_word_phrase="ok, nabu",
     )
 
-    msg = await ws_client.receive_json()
+    async with asyncio.timeout(1):
+        msg = await ws_client.receive_json()
+
     assert msg["id"] == subscription_id
     assert msg["type"] == "event"
     assert msg["event"] == {"wake_word_phrase": "ok, nabu"}
@@ -61,7 +63,9 @@ async def test_intercept_wake_word_requires_on_device_wake_word(
         }
     )
 
-    msg = await ws_client.receive_json()
+    async with asyncio.timeout(1):
+        msg = await ws_client.receive_json()
+
     assert msg["success"]
     assert msg["result"] is None
 
@@ -71,9 +75,11 @@ async def test_intercept_wake_word_requires_on_device_wake_word(
         start_stage=PipelineStage.WAKE_WORD,
     )
 
-    response = await ws_client.receive_json()
-    assert not response["success"]
-    assert response["error"] == {
+    async with asyncio.timeout(1):
+        msg = await ws_client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"] == {
         "code": "home_assistant_error",
         "message": "Only on-device wake words currently supported",
     }
@@ -95,7 +101,9 @@ async def test_intercept_wake_word_requires_wake_word_phrase(
         }
     )
 
-    msg = await ws_client.receive_json()
+    async with asyncio.timeout(1):
+        msg = await ws_client.receive_json()
+
     assert msg["success"]
     assert msg["result"] is None
 
@@ -105,9 +113,11 @@ async def test_intercept_wake_word_requires_wake_word_phrase(
         # We are not passing wake word phrase
     )
 
-    response = await ws_client.receive_json()
-    assert not response["success"]
-    assert response["error"] == {
+    async with asyncio.timeout(1):
+        msg = await ws_client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"] == {
         "code": "home_assistant_error",
         "message": "No wake word phrase provided",
     }
@@ -131,10 +141,12 @@ async def test_intercept_wake_word_require_admin(
             "entity_id": ENTITY_ID,
         }
     )
-    response = await ws_client.receive_json()
 
-    assert not response["success"]
-    assert response["error"] == {
+    async with asyncio.timeout(1):
+        msg = await ws_client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"] == {
         "code": "unauthorized",
         "message": "Unauthorized",
     }
@@ -155,7 +167,8 @@ async def test_intercept_wake_word_invalid_satellite(
             "entity_id": "assist_satellite.invalid",
         }
     )
-    msg = await ws_client.receive_json()
+    async with asyncio.timeout(1):
+        msg = await ws_client.receive_json()
 
     assert not msg["success"]
     assert msg["error"] == {
@@ -180,7 +193,9 @@ async def test_intercept_wake_word_twice(
         }
     )
 
-    msg = await ws_client.receive_json()
+    async with asyncio.timeout(1):
+        msg = await ws_client.receive_json()
+
     assert msg["success"]
     assert msg["result"] is None
 
@@ -194,14 +209,18 @@ async def test_intercept_wake_word_twice(
     )
 
     # Should get an error from previous subscription
-    msg = await task
+    async with asyncio.timeout(1):
+        msg = await task
+
     assert not msg["success"]
     assert msg["error"] == {
         "code": "home_assistant_error",
-        "message": "Only one interception is allowed",
+        "message": "Wake word interception already in progress",
     }
 
     # Response to second subscription
-    msg = await ws_client.receive_json()
+    async with asyncio.timeout(1):
+        msg = await ws_client.receive_json()
+
     assert msg["success"]
     assert msg["result"] is None

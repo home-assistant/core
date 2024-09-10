@@ -25,13 +25,13 @@ from homeassistant.components.media_player import async_process_play_media_url
 from homeassistant.components.tts.media_source import (
     generate_media_source_id as tts_generate_media_source_id,
 )
-from homeassistant.core import CALLBACK_TYPE, Context, callback
+from homeassistant.core import Context, callback
 from homeassistant.helpers import entity
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.util import ulid
 
 from .const import AssistSatelliteEntityFeature
-from .errors import SatelliteBusyError
+from .errors import AssistSatelliteError, SatelliteBusyError
 
 _CONVERSATION_TIMEOUT_SEC: Final = 5 * 60  # 5 minutes
 
@@ -72,7 +72,7 @@ class AssistSatelliteEntity(entity.Entity):
 
     _run_has_tts: bool = False
     _is_announcing = False
-    _wake_word_listener: Callable[[str | None, str], None] | None = None
+    _wake_word_intercept_future: asyncio.Future[str | None] | None = None
     _attr_tts_options: dict[str, Any] | None = None
     _pipeline_task: asyncio.Task | None = None
 
@@ -99,25 +99,24 @@ class AssistSatelliteEntity(entity.Entity):
         """Options passed for text-to-speech."""
         return self._attr_tts_options
 
-    def async_intercept_wake_word(
-        self, wake_word_listener: Callable[[str | None, str], None]
-    ) -> CALLBACK_TYPE:
-        """Set a listener to intercept the next wake word from the satellite.
+    async def async_intercept_wake_word(self) -> str | None:
+        """Intercept the next wake word from the satellite.
 
-        Returns a callback to remove the listener.
+        Returns the detected wake word phrase or None.
         """
-        if self._wake_word_listener is not None:
-            # Cancel existing interception
-            self._wake_word_listener(None, "Only one interception is allowed")
+        if self._wake_word_intercept_future is not None:
+            raise SatelliteBusyError("Wake word interception already in progress")
 
-        self._wake_word_listener = wake_word_listener
+        # Will cause next wake word to be intercepted in
+        # async_accept_pipeline_from_satellite
+        self._wake_word_intercept_future = asyncio.Future()
 
-        @callback
-        def unsubscribe() -> None:
-            if self._wake_word_listener == wake_word_listener:
-                self._wake_word_listener = None
+        _LOGGER.debug("Next wake word will be intercepted: %s", self.entity_id)
 
-        return unsubscribe
+        try:
+            return await self._wake_word_intercept_future
+        finally:
+            self._wake_word_intercept_future = None
 
     async def async_internal_announce(
         self,
@@ -205,10 +204,11 @@ class AssistSatelliteEntity(entity.Entity):
             PipelineStage.STT,
         ):
             if start_stage == PipelineStage.WAKE_WORD:
-                self._wake_word_listener(
-                    None, "Only on-device wake words currently supported"
+                self._wake_word_intercept_future.set_exception(
+                    AssistSatelliteError(
+                        "Only on-device wake words currently supported"
+                    )
                 )
-                self._wake_word_listener = None
                 return
 
             # Intercepting wake word and immediately end pipeline
@@ -218,14 +218,12 @@ class AssistSatelliteEntity(entity.Entity):
                 self.entity_id,
             )
 
-            try:
-                if wake_word_phrase is None:
-                    self._wake_word_listener(None, "No wake word phrase provided")
-                else:
-                    self._wake_word_listener(wake_word_phrase, "")
-            finally:
-                self._wake_word_listener = None
-
+            if wake_word_phrase is None:
+                self._wake_word_intercept_future.set_exception(
+                    AssistSatelliteError("No wake word phrase provided")
+                )
+            else:
+                self._wake_word_intercept_future.set_result(wake_word_phrase)
             self._internal_on_pipeline_event(PipelineEvent(PipelineEventType.RUN_END))
             return
 
