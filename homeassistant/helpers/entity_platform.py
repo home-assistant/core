@@ -6,7 +6,6 @@ import asyncio
 from collections.abc import Awaitable, Callable, Coroutine, Iterable
 from contextvars import ContextVar
 from datetime import timedelta
-from functools import partial
 from logging import Logger, getLogger
 from typing import TYPE_CHECKING, Any, Protocol
 
@@ -20,7 +19,6 @@ from homeassistant.core import (
     CALLBACK_TYPE,
     DOMAIN as HOMEASSISTANT_DOMAIN,
     CoreState,
-    HassJob,
     HomeAssistant,
     ServiceCall,
     SupportsResponse,
@@ -41,7 +39,6 @@ from homeassistant.util.async_ import create_eager_task
 from homeassistant.util.hass_dict import HassKey
 
 from . import (
-    config_validation as cv,
     device_registry as dev_reg,
     entity_registry as ent_reg,
     service,
@@ -997,24 +994,16 @@ class EntityPlatform:
         if self.hass.services.has_service(self.platform_name, name):
             return
 
-        if schema is None or isinstance(schema, dict):
-            schema = cv.make_entity_service_schema(schema)
-
-        service_func: str | HassJob[..., Any]
-        service_func = func if isinstance(func, str) else HassJob(func)
-
-        self.hass.services.async_register(
+        service.async_register_entity_service(
+            self.hass,
             self.platform_name,
             name,
-            partial(
-                service.entity_service_call,
-                self.hass,
-                self.domain_platform_entities,
-                service_func,
-                required_features=required_features,
-            ),
-            schema,
-            supports_response,
+            entities=self.domain_platform_entities,
+            func=func,
+            job_type=None,
+            required_features=required_features,
+            schema=schema,
+            supports_response=supports_response,
         )
 
     async def _async_update_entity_states(self) -> None:

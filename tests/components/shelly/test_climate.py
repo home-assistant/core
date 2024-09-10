@@ -254,13 +254,14 @@ async def test_block_restored_climate(
     monkeypatch.setattr(mock_block_device.blocks[DEVICE_BLOCK_ID], "valveError", 0)
     monkeypatch.delattr(mock_block_device.blocks[EMETER_BLOCK_ID], "targetTemp")
     entry = await init_integration(hass, 1, sleep_period=1000, skip_setup=True)
-    register_device(device_registry, entry)
+    device = register_device(device_registry, entry)
     entity_id = register_entity(
         hass,
         CLIMATE_DOMAIN,
         "test_name",
         "sensor_0",
         entry,
+        device_id=device.id,
     )
     attrs = {"current_temperature": 20.5, "temperature": 4.0}
     extra_data = {"last_target_temp": 22.0}
@@ -321,13 +322,14 @@ async def test_block_restored_climate_us_customery(
     monkeypatch.setattr(mock_block_device.blocks[DEVICE_BLOCK_ID], "valveError", 0)
     monkeypatch.delattr(mock_block_device.blocks[EMETER_BLOCK_ID], "targetTemp")
     entry = await init_integration(hass, 1, sleep_period=1000, skip_setup=True)
-    register_device(device_registry, entry)
+    device = register_device(device_registry, entry)
     entity_id = register_entity(
         hass,
         CLIMATE_DOMAIN,
         "test_name",
         "sensor_0",
         entry,
+        device_id=device.id,
     )
     attrs = {"current_temperature": 67, "temperature": 39}
     extra_data = {"last_target_temp": 10.0}
@@ -390,13 +392,14 @@ async def test_block_restored_climate_unavailable(
     monkeypatch.delattr(mock_block_device.blocks[DEVICE_BLOCK_ID], "targetTemp")
     monkeypatch.setattr(mock_block_device.blocks[DEVICE_BLOCK_ID], "valveError", 0)
     entry = await init_integration(hass, 1, sleep_period=1000, skip_setup=True)
-    register_device(device_registry, entry)
+    device = register_device(device_registry, entry)
     entity_id = register_entity(
         hass,
         CLIMATE_DOMAIN,
         "test_name",
         "sensor_0",
         entry,
+        device_id=device.id,
     )
     mock_restore_cache(hass, [State(entity_id, STATE_UNAVAILABLE)])
 
@@ -417,13 +420,14 @@ async def test_block_restored_climate_set_preset_before_online(
     monkeypatch.delattr(mock_block_device.blocks[DEVICE_BLOCK_ID], "targetTemp")
     monkeypatch.setattr(mock_block_device.blocks[DEVICE_BLOCK_ID], "valveError", 0)
     entry = await init_integration(hass, 1, sleep_period=1000, skip_setup=True)
-    register_device(device_registry, entry)
+    device = register_device(device_registry, entry)
     entity_id = register_entity(
         hass,
         CLIMATE_DOMAIN,
         "test_name",
         "sensor_0",
         entry,
+        device_id=device.id,
     )
     mock_restore_cache(hass, [State(entity_id, HVACMode.HEAT)])
 
@@ -518,13 +522,14 @@ async def test_block_restored_climate_auth_error(
     monkeypatch.delattr(mock_block_device.blocks[DEVICE_BLOCK_ID], "targetTemp")
     monkeypatch.setattr(mock_block_device.blocks[DEVICE_BLOCK_ID], "valveError", 0)
     entry = await init_integration(hass, 1, sleep_period=1000, skip_setup=True)
-    register_device(device_registry, entry)
+    device = register_device(device_registry, entry)
     entity_id = register_entity(
         hass,
         CLIMATE_DOMAIN,
         "test_name",
         "sensor_0",
         entry,
+        device_id=device.id,
     )
     mock_restore_cache(hass, [State(entity_id, HVACMode.HEAT)])
 

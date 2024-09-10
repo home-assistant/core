@@ -37,6 +37,21 @@
         },
         "title": "Template image"
       },
+      "number": {
+        "data": {
+          "device_id": "[%key:common::config_flow::data::device%]",
+          "name": "[%key:common::config_flow::data::name%]",
+          "state": "[%key:component::template::config::step::sensor::data::state%]",
+          "step": "Step value",
+          "set_value": "Actions on set value",
+          "max": "Maximum value",
+          "min": "Minimum value"
+        },
+        "data_description": {
+          "device_id": "[%key:component::template::config::step::sensor::data_description::device_id%]"
+        },
+        "title": "Template number"
+      },
       "select": {
         "data": {
           "device_id": "[%key:common::config_flow::data::device%]",
@@ -70,6 +85,7 @@
           "binary_sensor": "Template a binary sensor",
           "button": "Template a button",
           "image": "Template a image",
+          "number": "Template a number",
           "select": "Template a select",
           "sensor": "Template a sensor",
           "switch": "Template a switch"
@@ -124,6 +140,21 @@
           "device_id": "[%key:component::template::config::step::sensor::data_description::device_id%]"
         },
         "title": "[%key:component::template::config::step::image::title%]"
+      },
+      "number": {
+        "data": {
+          "device_id": "[%key:common::config_flow::data::device%]",
+          "name": "[%key:common::config_flow::data::name%]",
+          "state": "[%key:component::template::config::step::sensor::data::state%]",
+          "step": "[%key:component::template::config::step::number::data::step%]",
+          "set_value": "[%key:component::template::config::step::number::data::set_value%]",
+          "max": "[%key:component::template::config::step::number::data::max%]",
+          "min": "[%key:component::template::config::step::number::data::min%]"
+        },
+        "data_description": {
+          "device_id": "[%key:component::template::config::step::sensor::data_description::device_id%]"
+        },
+        "title": "[%key:component::template::config::step::number::title%]"
       },
       "select": {
         "data": {

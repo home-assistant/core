@@ -42,7 +42,6 @@ class AutomowerButtonEntity(AutomowerAvailableEntity, ButtonEntity):
     """Defining the AutomowerButtonEntity."""
 
     _attr_translation_key = "confirm_error"
-    _attr_entity_registry_enabled_default = False
 
     def __init__(
         self,

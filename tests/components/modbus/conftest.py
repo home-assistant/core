@@ -37,7 +37,7 @@ TEST_PORT_SERIAL = "usb01"
 class ReadResult:
     """Storage class for register read results."""
 
-    def __init__(self, register_words):
+    def __init__(self, register_words) -> None:
         """Init."""
         self.registers = register_words
         self.bits = register_words

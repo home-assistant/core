@@ -33,6 +33,7 @@ from homeassistant.core import (
     Context,
     EntityServiceResponse,
     HassJob,
+    HassJobType,
     HomeAssistant,
     ServiceCall,
     ServiceResponse,
@@ -63,7 +64,7 @@ from . import (
 )
 from .group import expand_entity_ids
 from .selector import TargetSelector
-from .typing import ConfigType, TemplateVarsType, VolSchemaType
+from .typing import ConfigType, TemplateVarsType, VolDictType, VolSchemaType
 
 if TYPE_CHECKING:
     from .entity import Entity
@@ -1240,3 +1241,55 @@ class ReloadServiceHelper[_T]:
                 self._service_running = False
                 self._pending_reload_targets -= reload_targets
                 self._service_condition.notify_all()
+
+
+@callback
+def async_register_entity_service(
+    hass: HomeAssistant,
+    domain: str,
+    name: str,
+    *,
+    entities: dict[str, Entity],
+    func: str | Callable[..., Any],
+    job_type: HassJobType | None,
+    required_features: Iterable[int] | None = None,
+    schema: VolDictType | VolSchemaType | None,
+    supports_response: SupportsResponse = SupportsResponse.NONE,
+) -> None:
+    """Help registering an entity service.
+
+    This is called by EntityComponent.async_register_entity_service and
+    EntityPlatform.async_register_entity_service and should not be called
+    directly by integrations.
+    """
+    if schema is None or isinstance(schema, dict):
+        schema = cv.make_entity_service_schema(schema)
+    elif not cv.is_entity_service_schema(schema):
+        # pylint: disable-next=import-outside-toplevel
+        from .frame import report
+
+        report(
+            (
+                "registers an entity service with a non entity service schema "
+                "which will stop working in HA Core 2025.9"
+            ),
+            error_if_core=False,
+        )
+
+    service_func: str | HassJob[..., Any]
+    service_func = func if isinstance(func, str) else HassJob(func)
+
+    hass.services.async_register(
+        domain,
+        name,
+        partial(
+            entity_service_call,
+            hass,
+            entities,
+            service_func,
+            required_features=required_features,
+        ),
+        schema,
+        supports_response,
+        job_type=job_type,
+    )

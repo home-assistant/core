@@ -55,7 +55,7 @@ def validate_config(config):
 class MockMediaPlayer(media_player.MediaPlayerEntity):
     """Mock media player for testing."""
 
-    def __init__(self, hass, name):
+    def __init__(self, hass: HomeAssistant, name: str) -> None:
         """Initialize the media player."""
         self.hass = hass
         self._name = name

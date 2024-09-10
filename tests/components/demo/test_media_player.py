@@ -497,7 +497,7 @@ async def test_media_image_proxy(
     class MockResponse:
         """Test response."""
 
-        def __init__(self):
+        def __init__(self) -> None:
             """Test response init."""
             self.status = 200
             self.headers = {"Content-Type": "sometype"}

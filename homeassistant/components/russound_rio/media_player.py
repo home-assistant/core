@@ -84,14 +84,16 @@ async def async_setup_entry(
     """Set up the Russound RIO platform."""
     russ = entry.runtime_data
 
+    await russ.init_sources()
+    sources = russ.sources
+    for source in sources.values():
+        await source.watch()
+
     # Discover controllers
     controllers = await russ.enumerate_controllers()
 
     entities = []
     for controller in controllers.values():
-        sources = controller.sources
-        for source in sources.values():
-            await source.watch()
         for zone in controller.zones.values():
             await zone.watch()
             mp = RussoundZoneDevice(zone, sources)
@@ -140,7 +142,13 @@ class RussoundZoneDevice(RussoundBaseEntity, MediaPlayerEntity):
 
     async def async_added_to_hass(self) -> None:
         """Register callback handlers."""
+        await super().async_added_to_hass()
         self._zone.add_callback(self._callback_handler)
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Remove callbacks."""
+        await super().async_will_remove_from_hass()
+        self._zone.remove_callback(self._callback_handler)
 
     def _current_source(self) -> Source:
         return self._zone.fetch_current_source()
@@ -148,7 +156,7 @@ class RussoundZoneDevice(RussoundBaseEntity, MediaPlayerEntity):
     @property
     def state(self) -> MediaPlayerState | None:
         """Return the state of the device."""
-        status = self._zone.status
+        status = self._zone.properties.status
         if status == "ON":
             return MediaPlayerState.ON
         if status == "OFF":
@@ -168,22 +176,22 @@ class RussoundZoneDevice(RussoundBaseEntity, MediaPlayerEntity):
     @property
     def media_title(self):
         """Title of current playing media."""
-        return self._current_source().song_name
+        return self._current_source().properties.song_name
 
     @property
     def media_artist(self):
         """Artist of current playing media, music track only."""
-        return self._current_source().artist_name
+        return self._current_source().properties.artist_name
 
     @property
     def media_album_name(self):
         """Album name of current playing media, music track only."""
-        return self._current_source().album_name
+        return self._current_source().properties.album_name
 
     @property
     def media_image_url(self):
         """Image url of current playing media."""
-        return self._current_source().cover_art_url
+        return self._current_source().properties.cover_art_url
 
     @property
     def volume_level(self):
@@ -192,7 +200,7 @@ class RussoundZoneDevice(RussoundBaseEntity, MediaPlayerEntity):
         Value is returned based on a range (0..50).
         Therefore float divide by 50 to get to the required range.
         """
-        return float(self._zone.volume or "0") / 50.0
+        return float(self._zone.properties.volume or "0") / 50.0
 
     @command
     async def async_turn_off(self) -> None:
@@ -208,7 +216,7 @@ class RussoundZoneDevice(RussoundBaseEntity, MediaPlayerEntity):
     async def async_set_volume_level(self, volume: float) -> None:
         """Set the volume level."""
         rvol = int(volume * 50.0)
-        await self._zone.set_volume(rvol)
+        await self._zone.set_volume(str(rvol))
 
     @command
     async def async_select_source(self, source: str) -> None:
