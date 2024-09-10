@@ -15,6 +15,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.exceptions import ServiceValidationError
 
 from .const import DOMAIN, PRESET_MODES
 from .entity import VelbusEntity, api_call
@@ -87,6 +88,12 @@ class VelbusClimate(VelbusEntity, ClimateEntity):
     @api_call
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the new hvac mode."""
-        if hvac_mode not in self.hvac_mode:
-            await self._channel.set_mode(hvac_mode)
-            self.async_write_ha_state()
+        if hvac_mode not in self._attr_hvac_modes:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_hvac_mode",
+                translation_placeholders={"hvac_mode": hvac_mode}
+            )
+        await self._channel.set_mode(hvac_mode)
+        self.async_write_ha_state()
+
