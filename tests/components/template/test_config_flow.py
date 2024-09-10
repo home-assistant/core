@@ -63,7 +63,7 @@ from tests.typing import WebSocketGenerator
                 "device_class": "restart",
                 "press": [
                     {
-                        "service": "input_boolean.toggle",
+                        "action": "input_boolean.toggle",
                         "target": {"entity_id": "input_boolean.test"},
                         "data": {},
                     }
@@ -73,7 +73,7 @@ from tests.typing import WebSocketGenerator
                 "device_class": "restart",
                 "press": [
                     {
-                        "service": "input_boolean.toggle",
+                        "action": "input_boolean.toggle",
                         "target": {"entity_id": "input_boolean.test"},
                         "data": {},
                     }
@@ -410,7 +410,7 @@ def get_suggested(schema, key):
                 "device_class": "restart",
                 "press": [
                     {
-                        "service": "input_boolean.toggle",
+                        "action": "input_boolean.toggle",
                         "target": {"entity_id": "input_boolean.test"},
                         "data": {},
                     }
@@ -419,7 +419,7 @@ def get_suggested(schema, key):
             {
                 "press": [
                     {
-                        "service": "input_boolean.toggle",
+                        "action": "input_boolean.toggle",
                         "target": {"entity_id": "input_boolean.test"},
                         "data": {},
                     }
