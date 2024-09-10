@@ -761,6 +761,9 @@ dropmqttapi==1.0.3
 # homeassistant.components.dsmr
 dsmr-parser==1.4.2
 
+# homeassistant.components.duwi
+duwi-open-sdk == 0.2.4
+
 # homeassistant.components.dwd_weather_warnings
 dwdwfsapi==1.0.7
 
