@@ -128,6 +128,7 @@ async def async_migrate_devices(
     device_serial: str | None = await hass.async_add_executor_job(
         get_device_serial, device.api
     )
+    device_model = device.config.getModel()
 
     old_identifier = gateway_serial
     new_identifier = (
@@ -136,7 +137,10 @@ async def async_migrate_devices(
 
     # Migrate devices
     for device_entry in dr.async_entries_for_config_entry(registry, entry.entry_id):
-        if device_entry.identifiers == {(DOMAIN, old_identifier)}:
+        if (
+            device_entry.identifiers == {(DOMAIN, old_identifier)}
+            and device_entry.model == device_model
+        ):
             _LOGGER.debug("Migrating device %s", device_entry.name)
             registry.async_update_device(
                 device_entry.id,
