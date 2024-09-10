@@ -15,7 +15,7 @@ from homeassistant.data_entry_flow import FlowResultType
 async def test_form_simple(
     hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_config_api: AsyncMock
 ) -> None:
-    """Test we get the form."""
+    """Test simple case (no MFA / no errors)."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -41,16 +41,40 @@ async def test_form_simple(
 
 
 async def test_add_duplicate_entry(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_config_api: AsyncMock
+    hass: HomeAssistant,
+    mock_config_entry,
+    mock_setup_entry: AsyncMock,
+    mock_config_api: AsyncMock,
 ) -> None:
-    """Test duplicate case."""
-    assert False
+    """Test a duplicate error config flow."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] == {}
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_EMAIL: "test-username",
+            CONF_PASSWORD: "test-password",
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
 
 
 async def test_form_invalid_auth(
     hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_config_api: AsyncMock
 ) -> None:
-    """Test we get the form."""
+    """Test config flow with a login error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
