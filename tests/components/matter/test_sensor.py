@@ -442,6 +442,7 @@ async def test_eve_weather_sensor_custom_cluster(
     assert state
     assert state.state == "1008.5"
 
+
 # This tests needs to be adjusted to remove lingering tasks
 @pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_air_quality_sensor(
