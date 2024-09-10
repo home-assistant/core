@@ -103,6 +103,12 @@ def resource_manager(
         yield mock.return_value
 
 
+@pytest.fixture(params=["integration", "resource"])
+def manager(request: pytest.FixtureRequest) -> None:
+    """Fixture for both integration and resource managers."""
+    return request.getfixturevalue(f"{request.param}_manager")
+
+
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
