@@ -271,6 +271,16 @@ class ConfigFlowResult(FlowResult, total=False):
     version: int
 
 
+def _validate_item(*, disabled_by: ConfigEntryDisabler | Any | None = None) -> None:
+    """Validate config entry item."""
+
+    # Deprecated in 2022.1, stopped working in 2024.10
+    if disabled_by is not None and not isinstance(disabled_by, ConfigEntryDisabler):
+        raise TypeError(
+            f"disabled_by must be a ConfigEntryDisabler value, got {disabled_by}"
+        )
+
+
 class ConfigEntry(Generic[_DataT]):
     """Hold a configuration entry."""
 
@@ -369,18 +379,7 @@ class ConfigEntry(Generic[_DataT]):
         _setter(self, "unique_id", unique_id)
 
         # Config entry is disabled
-        if isinstance(disabled_by, str) and not isinstance(
-            disabled_by, ConfigEntryDisabler
-        ):
-            report(  # type: ignore[unreachable]
-                (
-                    "uses str for config entry disabled_by. This is deprecated and will"
-                    " stop working in Home Assistant 2022.3, it should be updated to"
-                    " use ConfigEntryDisabler instead"
-                ),
-                error_if_core=False,
-            )
-            disabled_by = ConfigEntryDisabler(disabled_by)
+        _validate_item(disabled_by=disabled_by)
         _setter(self, "disabled_by", disabled_by)
 
         # Supports unload
@@ -1958,19 +1957,7 @@ class ConfigEntries:
         if (entry := self.async_get_entry(entry_id)) is None:
             raise UnknownEntry
 
-        if isinstance(disabled_by, str) and not isinstance(
-            disabled_by, ConfigEntryDisabler
-        ):
-            report(  # type: ignore[unreachable]
-                (
-                    "uses str for config entry disabled_by. This is deprecated and will"
-                    " stop working in Home Assistant 2022.3, it should be updated to"
-                    " use ConfigEntryDisabler instead"
-                ),
-                error_if_core=False,
-            )
-            disabled_by = ConfigEntryDisabler(disabled_by)
-
+        _validate_item(disabled_by=disabled_by)
         if entry.disabled_by is disabled_by:
             return True
 
