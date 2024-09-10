@@ -23,7 +23,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DOMAIN as DAIKIN_DOMAIN
 from .const import (
@@ -132,19 +131,6 @@ SENSOR_TYPES: tuple[DaikinSensorEntityDescription, ...] = (
         value_func=lambda device: round(device.today_total_energy_consumption, 2),
     ),
 )
-
-
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Old way of setting up the Daikin sensors.
-
-    Can only be called when a user accidentally mentions the platform in their
-    config. But even in that case it would have been ignored.
-    """
 
 
 async def async_setup_entry(
