@@ -58,9 +58,10 @@ class MotionMountPresets(MotionMountEntity, SelectEntity):
 
         try:
             self._presets = await self.mm.get_presets()
-            self._update_options(self._presets)
         except (TimeoutError, socket.gaierror) as ex:
             _LOGGER.warning("Failed to communicate with MotionMount: %s", ex)
+        else:
+            self._update_options(self._presets)
 
     @property
     def current_option(self) -> str | None:
@@ -89,9 +90,10 @@ class MotionMountPresets(MotionMountEntity, SelectEntity):
         if not await self._ensure_connected():
             return
 
+        index = int(option[:1])
         try:
-            index = int(option[:1])
             await self.mm.go_to_preset(index)
-            self._attr_current_option = option
         except (TimeoutError, socket.gaierror) as ex:
             raise HomeAssistantError("Failed to communicate with MotionMount") from ex
+        else:
+            self._attr_current_option = option
