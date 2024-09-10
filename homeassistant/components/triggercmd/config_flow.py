@@ -52,7 +52,7 @@ class TriggerCMDConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input is not None:
             try:
-                title = await validate_input(self.hass, user_input)
+                identifier = await validate_input(self.hass, user_input)
             except InvalidToken:
                 errors[CONF_TOKEN] = "invalid_token"
             except TRIGGERcmdConnectionError:
