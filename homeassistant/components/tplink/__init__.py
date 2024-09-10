@@ -61,7 +61,7 @@ from .models import TPLinkData
 
 type TPLinkConfigEntry = ConfigEntry[TPLinkData]
 
-DISCOVERY_INTERVAL = timedelta(minutes=2)
+DISCOVERY_INTERVAL = timedelta(minutes=15)
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 _LOGGER = logging.getLogger(__name__)
