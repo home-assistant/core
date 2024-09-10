@@ -122,7 +122,7 @@ async def air_purifier_node_fixture(
     )
 
 
-@pytest.fixture(name="dishwasher")
+@pytest.fixture(name="dishwasher_node")
 async def dishwasher_node_fixture(
     hass: HomeAssistant, matter_client: MagicMock
 ) -> MatterNode:
@@ -632,3 +632,22 @@ async def test_smoke_alarm(
     state = hass.states.get("sensor.smoke_sensor_voltage")
     assert state
     assert state.state == "0.0"
+
+
+async def test_dishwasher_sensor(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    dishwasher_node: MatterNode,
+) -> None:
+    """Test dishwasher sensor."""
+    # OperationalState Cluster OperationalState Cluster attribute 1/96/4
+    state = hass.states.get("sensor.dishwasher_operationalstate")
+    assert state
+    assert state.state == "0"
+
+    set_node_attribute(dishwasher_node, 1, 96, 1, 4)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("sensor.dishwasher_operationalstate")
+    assert state
+    assert state.state == "0"
