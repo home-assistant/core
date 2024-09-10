@@ -440,5 +440,11 @@ async def test_tts_service_speak_without_options(
     )
 
     tts_entity._client.generate.assert_called_once_with(
-        text="There is a person at the front door.", voice="voice1", model="model1"
+        text="There is a person at the front door.",
+        voice="voice1",
+        optimize_streaming_latency=0,
+        voice_settings=VoiceSettings(
+            stability=0.5, similarity_boost=0.75, style=0.0, use_speaker_boost=True
+        ),
+        model="model1",
     )
