@@ -250,9 +250,6 @@ def delete_statistics_meta_duplicates(instance: Recorder, session: Session) -> N
     """
     deleted_statistics_rows = _delete_statistics_meta_duplicates(session)
     if deleted_statistics_rows:
-        statistics_meta_manager = instance.statistics_meta_manager
-        statistics_meta_manager.reset()
-        statistics_meta_manager.load(session)
         _LOGGER.info(
             "Deleted %s duplicated statistics_meta rows", deleted_statistics_rows
         )
