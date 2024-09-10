@@ -36,6 +36,7 @@ from homeassistant.core import (
     DOMAIN as HOMEASSISTANT_DOMAIN,
     Event,
     EventStateChangedData,
+    EventStateReportedData,
     HomeAssistant,
     State,
     callback,
@@ -45,6 +46,7 @@ from homeassistant.helpers.device import async_device_info_to_link_from_entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import (
     async_track_state_change_event,
+    async_track_state_report_event,
     async_track_time_interval,
 )
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -71,7 +73,6 @@ from . import (
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_SAVED_HUMIDITY = "saved_humidity"
-
 
 PLATFORM_SCHEMA = HUMIDIFIER_PLATFORM_SCHEMA.extend(HYGROSTAT_SCHEMA.schema)
 
@@ -222,18 +223,21 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
         """Run when entity about to be added."""
         await super().async_added_to_hass()
 
-        # Add listener
         self.async_on_remove(
             async_track_state_change_event(
-                self.hass, self._sensor_entity_id, self._async_sensor_changed_event
+                self.hass, self._sensor_entity_id, self._async_sensor_event
+            )
+        )
+        self.async_on_remove(
+            async_track_state_report_event(
+                self.hass, self._sensor_entity_id, self._async_sensor_event
             )
         )
         self.async_on_remove(
             async_track_state_change_event(
-                self.hass, self._switch_entity_id, self._async_switch_changed_event
+                self.hass, self._switch_entity_id, self._async_switch_event
             )
         )
-
         if self._keep_alive:
             self.async_on_remove(
                 async_track_time_interval(
@@ -253,7 +257,8 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
                     sensor_state.state if sensor_state is not None else "None",
                 )
                 return
-            await self._async_sensor_changed(self._sensor_entity_id, None, sensor_state)
+
+            await self._async_sensor_update(sensor_state)
 
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, _async_startup)
 
@@ -391,25 +396,23 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
         # Get default humidity from super class
         return super().max_humidity
 
-    async def _async_sensor_changed_event(
-        self, event: Event[EventStateChangedData]
+    async def _async_sensor_event(
+        self, event: Event[EventStateChangedData] | Event[EventStateReportedData]
     ) -> None:
         """Handle ambient humidity changes."""
-        data = event.data
-        await self._async_sensor_changed(
-            data["entity_id"], data["old_state"], data["new_state"]
-        )
-
-    async def _async_sensor_changed(
-        self, entity_id: str, old_state: State | None, new_state: State | None
-    ) -> None:
-        """Handle ambient humidity changes."""
+        new_state = event.data["new_state"]
         if new_state is None:
             return
+
+        await self._async_sensor_update(new_state)
+
+    async def _async_sensor_update(self, new_state: State) -> None:
+        """Update state based on humidity sensor."""
 
         if self._sensor_stale_duration:
             if self._remove_stale_tracking:
                 self._remove_stale_tracking()
+
             self._remove_stale_tracking = async_track_time_interval(
                 self.hass,
                 self._async_sensor_not_responding,
@@ -426,23 +429,18 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
         state = self.hass.states.get(self._sensor_entity_id)
         _LOGGER.debug(
             "Sensor has not been updated for %s",
-            now - state.last_updated if now and state else "---",
+            now - state.last_reported if now and state else "---",
         )
         _LOGGER.warning("Sensor is stalled, call the emergency stop")
         await self._async_update_humidity("Stalled")
 
     @callback
-    def _async_switch_changed_event(self, event: Event[EventStateChangedData]) -> None:
+    def _async_switch_event(self, event: Event[EventStateChangedData]) -> None:
         """Handle humidifier switch state changes."""
-        data = event.data
-        self._async_switch_changed(
-            data["entity_id"], data["old_state"], data["new_state"]
-        )
+        self._async_switch_changed(event.data["new_state"])
 
     @callback
-    def _async_switch_changed(
-        self, entity_id: str, old_state: State | None, new_state: State | None
-    ) -> None:
+    def _async_switch_changed(self, new_state: State | None) -> None:
         """Handle humidifier switch state changes."""
         if new_state is None:
             return

@@ -32,6 +32,7 @@ from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
     entity_registry as er,
+    issue_registry as ir,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import ConfigType
@@ -68,6 +69,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+# *_SCHEMA required for deprecated import from configuration.yaml, can be removed in 2025.4.0
 CLIMATE_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_PRECISION): vol.In(
@@ -90,7 +92,13 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.BUTTON, Platform.CLIMATE, Platform.SENSOR]
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.BUTTON,
+    Platform.CLIMATE,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
 
 
 async def options_updated(hass: HomeAssistant, entry: ConfigEntry) -> None:
@@ -153,8 +161,20 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     return True
 
 
+# Deprecated import from configuration.yaml, can be removed in 2025.4.0
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the OpenTherm Gateway component."""
+    if DOMAIN in config:
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            "deprecated_import_from_configuration_yaml",
+            breaks_in_ha_version="2025.4.0",
+            is_fixable=False,
+            is_persistent=False,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="deprecated_import_from_configuration_yaml",
+        )
     if not hass.config_entries.async_entries(DOMAIN) and DOMAIN in config:
         conf = config[DOMAIN]
         for device_id, device_config in conf.items():
