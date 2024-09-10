@@ -79,10 +79,8 @@ class AdsValve(AdsEntity, ValveEntity):
         """Open the valve."""
         self._ads_hub.write_by_name(self._ads_var, True, pyads.PLCTYPE_BOOL)
         self._attr_is_closed = False
-        self.hass.add_job(self.async_write_ha_state)
 
     def close_valve(self, **kwargs) -> None:
         """Close the valve."""
         self._ads_hub.write_by_name(self._ads_var, False, pyads.PLCTYPE_BOOL)
         self._attr_is_closed = True
-        self.hass.add_job(self.async_write_ha_state)
