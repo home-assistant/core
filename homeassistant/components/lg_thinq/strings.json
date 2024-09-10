@@ -42,6 +42,18 @@
       },
       "sabbath_mode": {
         "name": "Sabbath"
+      },
+      "machine_clean_reminder": {
+        "name": "Machine clean reminder"
+      },
+      "signal_level": {
+        "name": "Chime sound"
+      },
+      "clean_light_reminder": {
+        "name": "Clean indicator light"
+      },
+      "operation_mode": {
+        "name": "Power"
       }
     }
   }
