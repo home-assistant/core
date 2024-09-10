@@ -176,7 +176,7 @@ async def test_zeroconf_flow_errors(
     assert result["result"].unique_id == "0020c2d8"
 
 
-async def test_zero_conf_duplicate(
+async def test_zeroconf_duplicate(
     hass: HomeAssistant,
     mock_stream_magic_client: AsyncMock,
     mock_setup_entry: AsyncMock,
