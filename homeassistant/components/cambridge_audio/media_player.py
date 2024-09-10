@@ -24,6 +24,12 @@ BASE_FEATURES = (
     | MediaPlayerEntityFeature.TURN_ON
 )
 
+PREAMP_FEATURES = (
+    MediaPlayerEntityFeature.VOLUME_MUTE
+    | MediaPlayerEntityFeature.VOLUME_SET
+    | MediaPlayerEntityFeature.VOLUME_STEP
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -63,6 +69,8 @@ class CambridgeAudioDevice(CambridgeAudioEntity, MediaPlayerEntity):
         """Supported features for the media player."""
         controls = self.client.now_playing.controls
         features = BASE_FEATURES
+        if self.client.state.pre_amp_mode:
+            features |= PREAMP_FEATURES
         if "play_pause" in controls:
             features |= MediaPlayerEntityFeature.PLAY | MediaPlayerEntityFeature.PAUSE
         if "play" in controls:
@@ -145,6 +153,17 @@ class CambridgeAudioDevice(CambridgeAudioEntity, MediaPlayerEntity):
         """Last time the media position was updated."""
         return self.client.position_last_updated
 
+    @property
+    def is_volume_muted(self) -> bool | None:
+        """Volume mute status."""
+        return self.client.state.mute
+
+    @property
+    def volume_level(self) -> float | None:
+        """Current pre-amp volume level."""
+        volume = self.client.state.volume_percent or 0
+        return volume / 100
+
     async def async_media_play_pause(self) -> None:
         """Toggle play/pause the current media."""
         await self.client.play_pause()
@@ -188,3 +207,22 @@ class CambridgeAudioDevice(CambridgeAudioEntity, MediaPlayerEntity):
     async def async_turn_off(self) -> None:
         """Power off the device."""
         await self.client.power_off()
+
+    async def async_volume_up(self) -> None:
+        """Step the volume up."""
+        await self.client.volume_up()
+
+    async def async_volume_down(self) -> None:
+        """Step the volume down."""
+        await self.client.volume_down()
+
+    async def async_set_volume_level(self, volume: float) -> None:
+        """Set the volume level."""
+        await self.client.set_volume(int(volume * 100))
+
+    async def async_mute_volume(self, mute: bool) -> None:
+        """Set the mute state."""
+        if mute:
+            await self.client.mute()
+        else:
+            await self.client.unmute()
