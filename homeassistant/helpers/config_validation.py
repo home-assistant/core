@@ -1786,7 +1786,7 @@ def _base_trigger_list_flatten(triggers: list[Any]) -> list[Any]:
     """Flatten trigger arrays containing 'triggers:' sublists into a single list of triggers."""
     flatlist = []
     for t in triggers:
-        if CONF_TRIGGERS in t and len(t.keys()) == 1:
+        if CONF_TRIGGERS in t and len(t) == 1:
             triggerlist = ensure_list(t[CONF_TRIGGERS])
             flatlist.extend(triggerlist)
         else:

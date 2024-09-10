@@ -18,7 +18,7 @@ from homeassistant.components.light import (
     ATTR_HS_COLOR,
     ATTR_TRANSITION,
     ATTR_XY_COLOR,
-    DOMAIN,
+    DOMAIN as LIGHT_DOMAIN,
     EFFECT_COLORLOOP,
     FLASH_LONG,
     FLASH_SHORT,
@@ -125,7 +125,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the deCONZ lights and groups from a config entry."""
     hub = DeconzHub.get_hub(hass, config_entry)
-    hub.entities[DOMAIN] = set()
+    hub.entities[LIGHT_DOMAIN] = set()
 
     @callback
     def async_add_light(_: EventType, light_id: str) -> None:
@@ -170,7 +170,7 @@ class DeconzBaseLight[_LightDeviceT: Group | Light](
 ):
     """Representation of a deCONZ light."""
 
-    TYPE = DOMAIN
+    TYPE = LIGHT_DOMAIN
     _attr_color_mode = ColorMode.UNKNOWN
 
     def __init__(self, device: _LightDeviceT, hub: DeconzHub) -> None:
