@@ -5,7 +5,16 @@ from dataclasses import dataclass
 from enum import IntEnum, StrEnum
 from functools import partial
 
-from pyotgw.vars import OTGW_GPIO_A, OTGW_GPIO_B
+from pyotgw.vars import (
+    OTGW_GPIO_A,
+    OTGW_GPIO_B,
+    OTGW_LED_A,
+    OTGW_LED_B,
+    OTGW_LED_C,
+    OTGW_LED_D,
+    OTGW_LED_E,
+    OTGW_LED_F,
+)
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -37,6 +46,23 @@ class OpenThermSelectGPIOMode(StrEnum):
     DHW_BLOCK = "dhw_block"
 
 
+class OpenThermSelectLEDMode(StrEnum):
+    """OpenThermGateway LED modes."""
+
+    RX_ANY = "receive_any"
+    TX_ANY = "transmit_any"
+    THERMOSTAT_TRAFFIC = "thermostat_traffic"
+    BOILER_TRAFFIC = "boiler_traffic"
+    SETPOINT_OVERRIDE_ACTIVE = "setpoint_override_active"
+    FLAME_ON = "flame_on"
+    CENTRAL_HEATING_ON = "central_heating_on"
+    HOT_WATER_ON = "hot_water_on"
+    COMFORT_MODE_ON = "comfort_mode_on"
+    TX_ERROR_DETECTED = "transmit_error_detected"
+    BOILER_MAINTENANCE_REQUIRED = "boiler_maintenance_required"
+    RAISED_POWER_MODE_ACTIVE = "raised_power_mode_active"
+
+
 class PyotgwGPIOMode(IntEnum):
     """pyotgw GPIO modes."""
 
@@ -51,6 +77,34 @@ class PyotgwGPIOMode(IntEnum):
     DHW_BLOCK = 8
 
 
+class PyotgwLEDMode(StrEnum):
+    """pyotgw LED modes."""
+
+    RX_ANY = "R"
+    TX_ANY = "X"
+    THERMOSTAT_TRAFFIC = "T"
+    BOILER_TRAFFIC = "B"
+    SETPOINT_OVERRIDE_ACTIVE = "O"
+    FLAME_ON = "F"
+    CENTRAL_HEATING_ON = "H"
+    HOT_WATER_ON = "W"
+    COMFORT_MODE_ON = "C"
+    TX_ERROR_DETECTED = "E"
+    BOILER_MAINTENANCE_REQUIRED = "M"
+    RAISED_POWER_MODE_ACTIVE = "P"
+
+
+def pyotgw_led_mode_to_ha_led_mode(
+    pyotgw_led_mode: PyotgwLEDMode,
+) -> OpenThermSelectLEDMode | None:
+    """Convert pyotgw LED mode to Home Assistant LED mode."""
+    return (
+        OpenThermSelectLEDMode[PyotgwLEDMode(pyotgw_led_mode).name]
+        if pyotgw_led_mode in PyotgwLEDMode
+        else None
+    )
+
+
 async def set_gpio_mode(
     gpio_id: str, gw_hub: OpenThermGatewayHub, mode: str
 ) -> OpenThermSelectGPIOMode | None:
@@ -61,6 +115,20 @@ async def set_gpio_mode(
     return (
         OpenThermSelectGPIOMode[PyotgwGPIOMode(value).name]
         if value in PyotgwGPIOMode
+        else None
+    )
+
+
+async def set_led_mode(
+    led_id: str, gw_hub: OpenThermGatewayHub, mode: str
+) -> OpenThermSelectLEDMode | None:
+    """Set gpio mode, return selected option or None."""
+    value = await gw_hub.gateway.set_led_mode(
+        led_id, PyotgwLEDMode[OpenThermSelectLEDMode(mode).name]
+    )
+    return (
+        OpenThermSelectLEDMode[PyotgwLEDMode(value).name]
+        if value in PyotgwLEDMode
         else None
     )
 
@@ -105,6 +173,60 @@ SELECT_DESCRIPTIONS: tuple[OpenThermSelectEntityDescription, ...] = (
             if state in PyotgwGPIOMode
             else None
         ),
+    ),
+    OpenThermSelectEntityDescription(
+        key=OTGW_LED_A,
+        translation_key="led_mode_n",
+        translation_placeholders={"led_id": "A"},
+        device_description=GATEWAY_DEVICE_DESCRIPTION,
+        options=list(OpenThermSelectLEDMode),
+        select_action=partial(set_led_mode, "A"),
+        convert_pyotgw_state_to_ha_state=pyotgw_led_mode_to_ha_led_mode,
+    ),
+    OpenThermSelectEntityDescription(
+        key=OTGW_LED_B,
+        translation_key="led_mode_n",
+        translation_placeholders={"led_id": "B"},
+        device_description=GATEWAY_DEVICE_DESCRIPTION,
+        options=list(OpenThermSelectLEDMode),
+        select_action=partial(set_led_mode, "B"),
+        convert_pyotgw_state_to_ha_state=pyotgw_led_mode_to_ha_led_mode,
+    ),
+    OpenThermSelectEntityDescription(
+        key=OTGW_LED_C,
+        translation_key="led_mode_n",
+        translation_placeholders={"led_id": "C"},
+        device_description=GATEWAY_DEVICE_DESCRIPTION,
+        options=list(OpenThermSelectLEDMode),
+        select_action=partial(set_led_mode, "C"),
+        convert_pyotgw_state_to_ha_state=pyotgw_led_mode_to_ha_led_mode,
+    ),
+    OpenThermSelectEntityDescription(
+        key=OTGW_LED_D,
+        translation_key="led_mode_n",
+        translation_placeholders={"led_id": "D"},
+        device_description=GATEWAY_DEVICE_DESCRIPTION,
+        options=list(OpenThermSelectLEDMode),
+        select_action=partial(set_led_mode, "D"),
+        convert_pyotgw_state_to_ha_state=pyotgw_led_mode_to_ha_led_mode,
+    ),
+    OpenThermSelectEntityDescription(
+        key=OTGW_LED_E,
+        translation_key="led_mode_n",
+        translation_placeholders={"led_id": "E"},
+        device_description=GATEWAY_DEVICE_DESCRIPTION,
+        options=list(OpenThermSelectLEDMode),
+        select_action=partial(set_led_mode, "E"),
+        convert_pyotgw_state_to_ha_state=pyotgw_led_mode_to_ha_led_mode,
+    ),
+    OpenThermSelectEntityDescription(
+        key=OTGW_LED_F,
+        translation_key="led_mode_n",
+        translation_placeholders={"led_id": "F"},
+        device_description=GATEWAY_DEVICE_DESCRIPTION,
+        options=list(OpenThermSelectLEDMode),
+        select_action=partial(set_led_mode, "F"),
+        convert_pyotgw_state_to_ha_state=pyotgw_led_mode_to_ha_led_mode,
     ),
 )
 
