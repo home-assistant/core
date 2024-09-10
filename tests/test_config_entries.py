@@ -5093,7 +5093,7 @@ async def test_hashable_non_string_unique_id(
     entries[entry.entry_id] = entry
     assert (
         "Config entry 'title' from integration test has an invalid unique_id"
-    ) not in caplog.text
+    ) in caplog.text
 
     assert entry.entry_id in entries
     assert entries[entry.entry_id] is entry
