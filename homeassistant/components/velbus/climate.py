@@ -17,7 +17,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-
 from .const import DOMAIN, PRESET_MODES
 from .entity import VelbusEntity, api_call
 
@@ -97,4 +96,3 @@ class VelbusClimate(VelbusEntity, ClimateEntity):
             )
         await self._channel.set_mode(hvac_mode)
         self.async_write_ha_state()
-
