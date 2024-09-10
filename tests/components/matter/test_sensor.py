@@ -430,17 +430,14 @@ async def test_eve_weather_sensor_custom_cluster(
     eve_weather_sensor_node: MatterNode,
 ) -> None:
     """Test weather sensor created from (Eve) custom cluster."""
-    # Pressure sensor on Eve custom cluster
-    state = hass.states.get("sensor.eve_weather_sensor_pressure")
-    assert state
-    assert state.state == "1010"
-
-    set_node_attribute(eve_weather_sensor_node, 1, 319486977, 0, 319422484)
-    await trigger_subscription_callback(hass, matter_client)
-
-    state = hass.states.get("sensor.eve_weather_sensor_pressure")
+    # pressure sensor on Eve custom cluster
+    entity_id = "sensor.eve_weather_sensor_node_pressure"
+    state = hass.states.get(entity_id)
     assert state
     assert state.state == "1008.5"
+    assert state.attributes["unit_of_measurement"] == "HPA"
+    assert state.attributes["device_class"] == "pressure"
+    assert state.attributes["friendly_name"] == "Eve Weather Pressure"
 
 
 # This tests needs to be adjusted to remove lingering tasks
