@@ -125,7 +125,7 @@ async def test_new_pipeline_cancels_pipeline(
             new=async_pipeline_from_audio_stream,
         ),
     ):
-        hass.async_add_job(
+        hass.async_create_task(
             entity.async_accept_pipeline_from_satellite(
                 object(),  # type: ignore[arg-type]
             )
@@ -287,7 +287,7 @@ async def test_announce_cancels_pipeline(
         ),
         patch.object(entity, "async_announce") as mock_async_announce,
     ):
-        hass.async_add_job(
+        hass.async_create_task(
             entity.async_accept_pipeline_from_satellite(
                 object(),  # type: ignore[arg-type]
             )
