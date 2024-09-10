@@ -1,4 +1,4 @@
-"""Plugin for checking if coordinator is in its own module."""
+"""Plugin for checking if class is in correct module."""
 
 from __future__ import annotations
 
@@ -49,7 +49,7 @@ _MODULES = [
 
 
 class HassEnforceClassModule(BaseChecker):
-    """Checker for coordinators own module."""
+    """Checker for class in correct module."""
 
     name = "hass_enforce_class_module"
     priority = -1

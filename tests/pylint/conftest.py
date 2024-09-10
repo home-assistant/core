@@ -113,13 +113,11 @@ def hass_enforce_class_module_fixture() -> ModuleType:
     )
 
 
-@pytest.fixture(name="enforce_coordinator_module_checker")
-def enforce_coordinator_module_fixture(
-    hass_enforce_class_module, linter
-) -> BaseChecker:
+@pytest.fixture(name="enforce_class_module_checker")
+def enforce_class_module_fixture(hass_enforce_class_module, linter) -> BaseChecker:
     """Fixture to provide a hass_enforce_class_module checker."""
-    enforce_coordinator_module_checker = (
-        hass_enforce_class_module.HassEnforceClassModule(linter)
+    enforce_class_module_checker = hass_enforce_class_module.HassEnforceClassModule(
+        linter
     )
-    enforce_coordinator_module_checker.module = "homeassistant.components.pylint_test"
-    return enforce_coordinator_module_checker
+    enforce_class_module_checker.module = "homeassistant.components.pylint_test"
+    return enforce_class_module_checker
