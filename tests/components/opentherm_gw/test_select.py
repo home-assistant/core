@@ -8,7 +8,7 @@ from homeassistant.components.opentherm_gw import DOMAIN as OPENTHERM_DOMAIN
 from homeassistant.components.opentherm_gw.const import OpenThermDeviceIdentifier
 from homeassistant.components.opentherm_gw.select import (
     OpenThermSelectGPIOMode,
-    pyotgwGPIOMode,
+    PyotgwGPIOMode,
 )
 from homeassistant.components.select import (
     ATTR_OPTION,
@@ -39,7 +39,7 @@ async def test_gpio_mode_select(
 ) -> None:
     """Test GPIO mode selector."""
 
-    mock_pyotgw.return_value.set_gpio_mode = AsyncMock(return_value=pyotgwGPIOMode.VCC)
+    mock_pyotgw.return_value.set_gpio_mode = AsyncMock(return_value=PyotgwGPIOMode.VCC)
     mock_config_entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -63,5 +63,5 @@ async def test_gpio_mode_select(
     assert hass.states.get(select_entity_id).state == OpenThermSelectGPIOMode.VCC
 
     mock_pyotgw.return_value.set_gpio_mode.assert_awaited_once_with(
-        gpio_id, pyotgwGPIOMode.VCC.value
+        gpio_id, PyotgwGPIOMode.VCC.value
     )

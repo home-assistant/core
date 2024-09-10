@@ -30,7 +30,7 @@ class OpenThermSelectGPIOMode(StrEnum):
     DHW_BLOCK = "dhw_block"
 
 
-class pyotgwGPIOMode(IntEnum):
+class PyotgwGPIOMode(IntEnum):
     """pyotgw GPIO modes."""
 
     INPUT = 0
@@ -49,11 +49,11 @@ async def set_gpio_mode(
 ) -> OpenThermSelectGPIOMode | None:
     """Set gpio mode, return selected option or None."""
     value = await gw_hub.gateway.set_gpio_mode(
-        gpio_id, pyotgwGPIOMode[OpenThermSelectGPIOMode(mode).name]
+        gpio_id, PyotgwGPIOMode[OpenThermSelectGPIOMode(mode).name]
     )
     return (
-        OpenThermSelectGPIOMode[pyotgwGPIOMode(value).name]
-        if value in pyotgwGPIOMode
+        OpenThermSelectGPIOMode[PyotgwGPIOMode(value).name]
+        if value in PyotgwGPIOMode
         else None
     )
 
