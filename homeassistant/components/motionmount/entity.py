@@ -75,7 +75,7 @@ class MotionMountEntity(Entity):
         self.mm.remove_listener(self.update_name)
         await super().async_will_remove_from_hass()
 
-    async def _ensureConnected(self) -> bool:
+    async def _ensure_connected(self) -> bool:
         """Make sure there is a connection with the MotionMount.
 
         Returns false if the connection failed to be ensured.

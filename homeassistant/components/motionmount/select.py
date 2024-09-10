@@ -53,7 +53,7 @@ class MotionMountPresets(MotionMountEntity, SelectEntity):
 
     async def async_update(self) -> None:
         """Get latest state from MotionMount."""
-        if not await self._ensureConnected():
+        if not await self._ensure_connected():
             return
 
         try:
@@ -86,7 +86,7 @@ class MotionMountPresets(MotionMountEntity, SelectEntity):
 
     async def async_select_option(self, option: str) -> None:
         """Set the new option."""
-        if not await self._ensureConnected():
+        if not await self._ensure_connected():
             return
 
         try:
