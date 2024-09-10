@@ -29,7 +29,6 @@ from zwave_js_server.exceptions import (
     SetValueFailed,
 )
 from zwave_js_server.firmware import controller_firmware_update_otw, update_firmware
-from zwave_js_server.model.command_class import CommandClassInfoDataType
 from zwave_js_server.model.controller import (
     ControllerStatistics,
     InclusionGrant,
@@ -2527,19 +2526,10 @@ async def websocket_node_capabilities(
 ) -> None:
     """Get node endpoints with their support command classes."""
 
-    def map_command_class(command_class: CommandClassInfoDataType) -> dict:
-        """Map and return only required fields."""
-        copy = dict(command_class.copy())
-        copy["is_secure"] = copy.pop("isSecure")
-        return copy
-
     connection.send_result(
         msg[ID],
         {
-            idx: [
-                map_command_class(command_class)
-                for command_class in endpoint.data["commandClasses"]
-            ]
+            idx: [command_class.to_dict() for command_class in endpoint.command_classes]
             for idx, endpoint in node.endpoints.items()
         },
     )
