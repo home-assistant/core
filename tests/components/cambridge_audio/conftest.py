@@ -42,10 +42,6 @@ def mock_stream_magic_client() -> Generator[AsyncMock]:
         client.get_info.return_value = Info.from_json(
             load_fixture("get_info.json", DOMAIN)
         )
-        # client.get_config.return_value = Config.from_json(
-        #     load_fixture("get_config_local.json", DOMAIN)
-        # )
-        # client.get_latest_firmware_version.return_value = "3.1.4"
         client.is_connected = Mock(return_value=True)
 
         yield client

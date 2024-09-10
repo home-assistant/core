@@ -1,4 +1,4 @@
-"""Base class for AirGradient entities."""
+"""Base class for Cambridge Audio entities."""
 
 from aiostreammagic import StreamMagicClient
 
