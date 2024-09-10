@@ -87,7 +87,7 @@
     },
     "update": {
       "newversion": {
-        "name": "LMS version"
+        "name": "Lyrion Music Server"
       },
       "newplugins": {
 	"name": "Updated plugins"
