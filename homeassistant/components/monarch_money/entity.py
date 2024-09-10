@@ -80,7 +80,4 @@ class MonarchMoneyAccountEntity(MonarchMoneyEntityBase):
     @property
     def account_data(self) -> MonarchAccount:
         """Return the account data."""
-        if account := self.coordinator.get_account_for_id(self._account_id):
-            return account
-
-        raise ValueError("Account not found")
+        return self.coordinator.data[self._account_id]
