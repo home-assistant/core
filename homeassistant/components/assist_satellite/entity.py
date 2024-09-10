@@ -169,12 +169,14 @@ class AssistSatelliteEntity(entity.Entity):
             raise SatelliteBusyError
 
         self._is_announcing = True
+        self._set_state(AssistSatelliteState.RESPONDING)
 
         try:
             # Block until announcement is finished
             await self.async_announce(message, media_id)
         finally:
             self._is_announcing = False
+            self.tts_response_finished()
 
     async def async_announce(self, message: str, media_id: str) -> None:
         """Announce media on the satellite.
