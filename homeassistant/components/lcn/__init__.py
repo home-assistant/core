@@ -9,7 +9,7 @@ import logging
 import pypck
 from pypck.connection import PchkConnectionManager
 
-from homeassistant import config_entries
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_ADDRESS,
     CONF_DEVICE_ID,
@@ -38,6 +38,7 @@ from .const import (
 )
 from .helpers import (
     AddressType,
+    DeviceConnectionType,
     InputType,
     async_update_config_entry,
     generate_unique_id,
@@ -67,16 +68,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         hass.async_create_task(
             hass.config_entries.flow.async_init(
                 DOMAIN,
-                context={"source": config_entries.SOURCE_IMPORT},
+                context={"source": SOURCE_IMPORT},
                 data=config_entry_data,
             )
         )
     return True
 
 
-async def async_setup_entry(
-    hass: HomeAssistant, config_entry: config_entries.ConfigEntry
-) -> bool:
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up a connection to PCHK host from a config entry."""
     hass.data.setdefault(DOMAIN, {})
     if config_entry.entry_id in hass.data[DOMAIN]:
@@ -149,9 +148,7 @@ async def async_setup_entry(
     return True
 
 
-async def async_unload_entry(
-    hass: HomeAssistant, config_entry: config_entries.ConfigEntry
-) -> bool:
+async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Close connection to PCHK host represented by config_entry."""
     # forward unloading to platforms
     unload_ok = await hass.config_entries.async_unload_platforms(
@@ -172,7 +169,7 @@ async def async_unload_entry(
 
 def async_host_input_received(
     hass: HomeAssistant,
-    config_entry: config_entries.ConfigEntry,
+    config_entry: ConfigEntry,
     device_registry: dr.DeviceRegistry,
     inp: pypck.inputs.Input,
 ) -> None:
@@ -248,16 +245,17 @@ class LcnEntity(Entity):
     """Parent class for all entities associated with the LCN component."""
 
     _attr_should_poll = False
+    device_connection: DeviceConnectionType
 
     def __init__(
         self,
         config: ConfigType,
-        config_entry: config_entries.ConfigEntry,
+        config_entry: ConfigEntry,
     ) -> None:
         """Initialize the LCN device."""
         self.config = config
         self.config_entry = config_entry
-        self.address: AddressType = self.config[CONF_ADDRESS]
+        self.address: AddressType = config[CONF_ADDRESS]
         self._unregister_for_inputs: Callable | None = None
         self._name: str = config[CONF_NAME]
 
@@ -292,7 +290,6 @@ class LcnEntity(Entity):
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
-        # pylint: disable-next=attribute-defined-outside-init
         self.device_connection = get_device_connection(
             self.hass, self.config[CONF_ADDRESS], self.config_entry
         )
