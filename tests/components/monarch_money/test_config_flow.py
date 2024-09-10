@@ -30,7 +30,7 @@ async def test_form_simple(
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Monarch Money"
     assert result["data"] == {
         CONF_TOKEN: "mocked_token",
