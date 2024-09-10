@@ -83,7 +83,10 @@ def ftth_get_info() -> Generator[FtthInfo]:
 @pytest.fixture
 def system_get_info() -> Generator[SystemInfo]:
     """Fixture for SFRBox.system_get_info."""
-    info = SystemInfo(**json.loads(load_fixture("system_getInfo.json", DOMAIN)))
+    fixture_data = json.loads(load_fixture("system_getInfo.json", DOMAIN))
+    assert type(fixture_data["temperature"]) is int
+    info = SystemInfo(**fixture_data)
+    assert type(info.temperature) is float
     with patch(
         "homeassistant.components.sfr_box.coordinator.SFRBox.system_get_info",
         return_value=info,
