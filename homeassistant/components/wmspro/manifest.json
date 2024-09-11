@@ -7,6 +7,9 @@
   "dhcp": [
     {
       "macaddress": "0023D5*"
+    },
+    {
+      "registered_devices": true
     }
   ],
   "documentation": "https://www.home-assistant.io/integrations/wmspro",

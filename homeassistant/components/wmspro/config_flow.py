@@ -10,6 +10,7 @@ import voluptuous as vol
 from wmspro.webcontrol import WebControlPro
 
 from homeassistant.components import dhcp
+from homeassistant.components.dhcp import DhcpServiceInfo
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -31,10 +32,28 @@ class WebControlProConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    async def async_step_dhcp(
+        self, discovery_info: dhcp.DhcpServiceInfo
+    ) -> ConfigFlowResult:
+        """Handle the DHCP discovery step."""
+        unique_id = format_mac(discovery_info.macaddress)
+        await self.async_set_unique_id(unique_id)
+        self._abort_if_unique_id_configured()
+
+        for entry in self.hass.config_entries.async_entries(DOMAIN):
+            if not entry.unique_id and entry.data[CONF_HOST] in (
+                discovery_info.hostname,
+                discovery_info.ip,
+            ):
+                self.hass.config_entries.async_update_entry(entry, unique_id=unique_id)
+                return self.async_abort(reason="already_configured")
+
+        return await self.async_step_user()
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle the initial step."""
+        """Handle the user-based step."""
         errors: dict[str, str] = {}
         if user_input is not None:
             self._async_abort_entries_match(user_input)
@@ -55,9 +74,8 @@ class WebControlProConfigFlow(ConfigFlow, domain=DOMAIN):
                     return self.async_create_entry(title=host, data=user_input)
 
         if self.source == dhcp.DOMAIN:
-            await self.async_set_unique_id(format_mac(self.init_data.macaddress))
-            data_values = {CONF_HOST: self.init_data.hostname}
-            self._abort_if_unique_id_configured(updates=data_values)
+            discovery_info: DhcpServiceInfo = self.init_data
+            data_values = {CONF_HOST: discovery_info.hostname or discovery_info.ip}
         else:
             data_values = {CONF_HOST: SUGGESTED_HOST}
 
