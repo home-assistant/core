@@ -1,6 +1,5 @@
 """Test the Flipr binary sensor."""
 
-import logging
 from unittest.mock import AsyncMock
 
 from homeassistant.core import HomeAssistant
@@ -9,8 +8,6 @@ from homeassistant.helpers import entity_registry as er
 from . import setup_integration
 
 from tests.common import MockConfigEntry
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def test_sensors(
@@ -25,7 +22,6 @@ async def test_sensors(
 
     # Check entity unique_id value that is generated in FliprEntity base class.
     entity = entity_registry.async_get("binary_sensor.flipr_myfliprid_ph_status")
-    _LOGGER.debug("Found entity = %s", entity)
     assert entity.unique_id == "myfliprid-ph_status"
 
     state = hass.states.get("binary_sensor.flipr_myfliprid_ph_status")

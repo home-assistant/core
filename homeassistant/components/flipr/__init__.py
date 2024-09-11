@@ -32,7 +32,6 @@ type FliprConfigEntry = ConfigEntry[FliprData]
 
 async def async_setup_entry(hass: HomeAssistant, entry: FliprConfigEntry) -> bool:
     """Set up flipr from a config entry."""
-    hass.data.setdefault(DOMAIN, {})
 
     # Detect invalid old config entry and raise error if found
     detect_invalid_old_configuration(hass, entry)
