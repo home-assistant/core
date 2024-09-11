@@ -45,7 +45,7 @@ async def test_full_flow(
         )
 
     assert result["data"] == {CONF_TOKEN: invalid_token_with_length_100_or_more}
-    assert result["context"]["unique_id"] == invalid_token_id
+    assert result["result"].unique_id == invalid_token_id
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
