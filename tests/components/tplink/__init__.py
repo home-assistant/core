@@ -21,11 +21,13 @@ from kasa.protocol import BaseProtocol
 from syrupy import SnapshotAssertion
 
 from homeassistant.components.tplink import (
+    CONF_AES_KEYS,
     CONF_ALIAS,
+    CONF_CONNECTION_PARAMETERS,
     CONF_CREDENTIALS_HASH,
-    CONF_DEVICE_CONFIG,
     CONF_HOST,
     CONF_MODEL,
+    CONF_USES_HTTP,
     Credentials,
 )
 from homeassistant.components.tplink.const import DOMAIN
@@ -54,35 +56,42 @@ DHCP_FORMATTED_MAC_ADDRESS = MAC_ADDRESS.replace(":", "")
 MAC_ADDRESS2 = "11:22:33:44:55:66"
 DEFAULT_ENTRY_TITLE = f"{ALIAS} {MODEL}"
 CREDENTIALS_HASH_LEGACY = ""
+CONN_PARAMS_LEGACY = DeviceConnectionParameters(
+    DeviceFamily.IotSmartPlugSwitch, DeviceEncryptionType.Xor
+)
 DEVICE_CONFIG_LEGACY = DeviceConfig(IP_ADDRESS)
 DEVICE_CONFIG_DICT_LEGACY = DEVICE_CONFIG_LEGACY.to_dict(exclude_credentials=True)
 CREDENTIALS = Credentials("foo", "bar")
 CREDENTIALS_HASH_AES = "AES/abcdefghijklmnopqrstuvabcdefghijklmnopqrstuv=="
 CREDENTIALS_HASH_KLAP = "KLAP/abcdefghijklmnopqrstuv=="
+CONN_PARAMS_KLAP = DeviceConnectionParameters(
+    DeviceFamily.SmartTapoPlug, DeviceEncryptionType.Klap
+)
 DEVICE_CONFIG_KLAP = DeviceConfig(
     IP_ADDRESS,
     credentials=CREDENTIALS,
-    connection_type=DeviceConnectionParameters(
-        DeviceFamily.SmartTapoPlug, DeviceEncryptionType.Klap
-    ),
+    connection_type=CONN_PARAMS_KLAP,
     uses_http=True,
 )
+CONN_PARAMS_AES = DeviceConnectionParameters(
+    DeviceFamily.SmartTapoPlug, DeviceEncryptionType.Aes
+)
+AES_KEYS = {"private": "foo", "public": "bar"}
 DEVICE_CONFIG_AES = DeviceConfig(
     IP_ADDRESS2,
     credentials=CREDENTIALS,
-    connection_type=DeviceConnectionParameters(
-        DeviceFamily.SmartTapoPlug, DeviceEncryptionType.Aes
-    ),
+    connection_type=CONN_PARAMS_AES,
     uses_http=True,
+    aes_keys=AES_KEYS,
 )
 DEVICE_CONFIG_DICT_KLAP = DEVICE_CONFIG_KLAP.to_dict(exclude_credentials=True)
 DEVICE_CONFIG_DICT_AES = DEVICE_CONFIG_AES.to_dict(exclude_credentials=True)
-
 CREATE_ENTRY_DATA_LEGACY = {
     CONF_HOST: IP_ADDRESS,
     CONF_ALIAS: ALIAS,
     CONF_MODEL: MODEL,
-    CONF_DEVICE_CONFIG: DEVICE_CONFIG_DICT_LEGACY,
+    CONF_CONNECTION_PARAMETERS: CONN_PARAMS_LEGACY.to_dict(),
+    CONF_USES_HTTP: False,
 }
 
 CREATE_ENTRY_DATA_KLAP = {
@@ -90,23 +99,18 @@ CREATE_ENTRY_DATA_KLAP = {
     CONF_ALIAS: ALIAS,
     CONF_MODEL: MODEL,
     CONF_CREDENTIALS_HASH: CREDENTIALS_HASH_KLAP,
-    CONF_DEVICE_CONFIG: DEVICE_CONFIG_DICT_KLAP,
+    CONF_CONNECTION_PARAMETERS: CONN_PARAMS_KLAP.to_dict(),
+    CONF_USES_HTTP: True,
 }
 CREATE_ENTRY_DATA_AES = {
     CONF_HOST: IP_ADDRESS2,
     CONF_ALIAS: ALIAS,
     CONF_MODEL: MODEL,
     CONF_CREDENTIALS_HASH: CREDENTIALS_HASH_AES,
-    CONF_DEVICE_CONFIG: DEVICE_CONFIG_DICT_AES,
+    CONF_CONNECTION_PARAMETERS: CONN_PARAMS_AES.to_dict(),
+    CONF_USES_HTTP: True,
+    CONF_AES_KEYS: AES_KEYS,
 }
-CONNECTION_TYPE_KLAP = DeviceConnectionParameters(
-    DeviceFamily.SmartTapoPlug, DeviceEncryptionType.Klap
-)
-CONNECTION_TYPE_KLAP_DICT = CONNECTION_TYPE_KLAP.to_dict()
-CONNECTION_TYPE_AES = DeviceConnectionParameters(
-    DeviceFamily.SmartTapoPlug, DeviceEncryptionType.Aes
-)
-CONNECTION_TYPE_AES_DICT = CONNECTION_TYPE_AES.to_dict()
 
 
 def _load_feature_fixtures():
@@ -452,11 +456,11 @@ MODULE_TO_MOCK_GEN = {
 }
 
 
-def _patch_discovery(device=None, no_device=False):
+def _patch_discovery(device=None, no_device=False, ip_address=IP_ADDRESS):
     async def _discovery(*args, **kwargs):
         if no_device:
             return {}
-        return {IP_ADDRESS: _mocked_device()}
+        return {ip_address: device if device else _mocked_device()}
 
     return patch("homeassistant.components.tplink.Discover.discover", new=_discovery)
 

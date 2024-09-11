@@ -238,6 +238,8 @@ build.json @home-assistant/supervisor
 /tests/components/button/ @home-assistant/core
 /homeassistant/components/calendar/ @home-assistant/core
 /tests/components/calendar/ @home-assistant/core
+/homeassistant/components/cambridge_audio/ @noahhusby
+/tests/components/cambridge_audio/ @noahhusby
 /homeassistant/components/camera/ @home-assistant/core
 /tests/components/camera/ @home-assistant/core
 /homeassistant/components/cast/ @emontnemery
@@ -358,6 +360,8 @@ build.json @home-assistant/supervisor
 /tests/components/dsmr/ @Robbie1221
 /homeassistant/components/dsmr_reader/ @sorted-bits @glodenox @erwindouna
 /tests/components/dsmr_reader/ @sorted-bits @glodenox @erwindouna
+/homeassistant/components/duke_energy/ @hunterjm
+/tests/components/duke_energy/ @hunterjm
 /homeassistant/components/duotecno/ @cereal2nd
 /tests/components/duotecno/ @cereal2nd
 /homeassistant/components/dwd_weather_warnings/ @runningman84 @stephan192 @andarotajo
@@ -1537,6 +1541,8 @@ build.json @home-assistant/supervisor
 /tests/components/transmission/ @engrbm87 @JPHutchins
 /homeassistant/components/trend/ @jpbede
 /tests/components/trend/ @jpbede
+/homeassistant/components/triggercmd/ @rvmey
+/tests/components/triggercmd/ @rvmey
 /homeassistant/components/tts/ @home-assistant/core
 /tests/components/tts/ @home-assistant/core
 /homeassistant/components/tuya/ @Tuya @zlinoliver @frenck
