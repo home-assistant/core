@@ -13,6 +13,6 @@ from .coordinator import SpotifyCoordinator
 class SpotifyData:
     """Class to hold Spotify data."""
 
-    coordinator: "SpotifyCoordinator"
+    coordinator: SpotifyCoordinator
     session: OAuth2Session
     devices: DataUpdateCoordinator[list[dict[str, Any]]]
