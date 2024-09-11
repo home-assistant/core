@@ -97,14 +97,13 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             LOGGER.error("Migration failed with error %s", ex)
             return False
 
-        entry.minor_version = 2
-
         hass.config_entries.async_update_entry(
             entry,
+            minor_version=2,
             unique_id=slugify(construct_mastodon_username(instance, account)),
         )
 
-        LOGGER.info(
+        LOGGER.debug(
             "Entry %s successfully migrated to version %s.%s",
             entry.entry_id,
             entry.version,

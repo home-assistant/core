@@ -229,12 +229,12 @@ DISCOVERY_SCHEMAS = [
             entity_category=EntityCategory.CONFIG,
             translation_key="startup_on_off",
             options=["On", "Off", "Toggle", "Previous"],
-            measurement_to_ha=lambda x: {
+            measurement_to_ha=lambda x: {  # pylint: disable=unnecessary-lambda
                 0: "Off",
                 1: "On",
                 2: "Toggle",
                 None: "Previous",
-            }[x],
+            }.get(x),
             ha_to_native_value=lambda x: {
                 "Off": 0,
                 "On": 1,

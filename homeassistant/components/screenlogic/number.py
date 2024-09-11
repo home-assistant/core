@@ -9,7 +9,7 @@ from screenlogicpy.const.msg import CODE
 from screenlogicpy.device_const.system import EQUIPMENT_FLAG
 
 from homeassistant.components.number import (
-    DOMAIN,
+    DOMAIN as NUMBER_DOMAIN,
     NumberEntity,
     NumberEntityDescription,
     NumberMode,
@@ -111,7 +111,7 @@ async def async_setup_entry(
             chem_number_description.key,
         )
         if EQUIPMENT_FLAG.INTELLICHEM not in gateway.equipment_flags:
-            cleanup_excluded_entity(coordinator, DOMAIN, chem_number_data_path)
+            cleanup_excluded_entity(coordinator, NUMBER_DOMAIN, chem_number_data_path)
             continue
         if gateway.get_data(*chem_number_data_path):
             entities.append(
@@ -124,7 +124,7 @@ async def async_setup_entry(
             scg_number_description.key,
         )
         if EQUIPMENT_FLAG.CHLORINATOR not in gateway.equipment_flags:
-            cleanup_excluded_entity(coordinator, DOMAIN, scg_number_data_path)
+            cleanup_excluded_entity(coordinator, NUMBER_DOMAIN, scg_number_data_path)
             continue
         if gateway.get_data(*scg_number_data_path):
             entities.append(ScreenLogicSCGNumber(coordinator, scg_number_description))

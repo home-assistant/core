@@ -55,7 +55,7 @@ async def test_lock_service_calls(
     client = load_config_entry[1]
 
     data = deepcopy(get_data.cycle)
-    data["data"] = data.pop("device_status")
+    data["data"] = data["data"].pop("device_status")
 
     client.auth.get_authenticated = Mock(return_value=data)
     client.auth.post_authenticated = Mock(return_value={"code": "000"})
@@ -109,7 +109,7 @@ async def test_lock_service_call_fails(
     client = load_config_entry[1]
 
     data = deepcopy(get_data.cycle)
-    data["data"] = data.pop("device_status")
+    data["data"] = data["data"].pop("device_status")
 
     client.auth.get_authenticated = Mock(return_value=data)
     client.auth.post_authenticated = Mock(side_effect=UnknownError("test_side_effect"))
@@ -161,7 +161,7 @@ async def test_lock_service_call_fails_with_incorrect_status(
     client = load_config_entry[1]
 
     data = deepcopy(get_data.cycle)
-    data["data"] = data.pop("device_status")
+    data["data"] = data["data"].pop("device_status")
 
     client.auth.get_authenticated = Mock(return_value=data)
     client.auth.post_authenticated = Mock(return_value={"code": "FFF"})

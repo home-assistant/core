@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import argparse
 from operator import attrgetter
-import pathlib
+from pathlib import Path
 import sys
 from time import monotonic
 
@@ -63,9 +63,9 @@ ALL_PLUGIN_NAMES = [
 ]
 
 
-def valid_integration_path(integration_path: pathlib.Path | str) -> pathlib.Path:
+def valid_integration_path(integration_path: Path | str) -> Path:
     """Test if it's a valid integration."""
-    path = pathlib.Path(integration_path)
+    path = Path(integration_path)
     if not path.is_dir():
         raise argparse.ArgumentTypeError(f"{integration_path} is not a directory.")
 
@@ -107,6 +107,12 @@ def get_config() -> Config:
         default=ALL_PLUGIN_NAMES,
         help="Comma-separate list of plugins to run. Valid plugin names: %(default)s",
     )
+    parser.add_argument(
+        "--core-integrations-path",
+        type=Path,
+        default=Path("homeassistant/components"),
+        help="Path to core integrations",
+    )
     parsed = parser.parse_args()
 
     if parsed.action is None:
@@ -117,18 +123,16 @@ def get_config() -> Config:
             "Generate is not allowed when limiting to specific integrations"
         )
 
-    if (
-        not parsed.integration_path
-        and not pathlib.Path("requirements_all.txt").is_file()
-    ):
+    if not parsed.integration_path and not Path("requirements_all.txt").is_file():
         raise RuntimeError("Run from Home Assistant root")
 
     return Config(
-        root=pathlib.Path(".").absolute(),
+        root=Path().absolute(),
         specific_integrations=parsed.integration_path,
         action=parsed.action,
         requirements=parsed.requirements,
         plugins=set(parsed.plugins),
+        core_integrations_path=parsed.core_integrations_path,
     )
 
 
@@ -146,12 +150,12 @@ def main() -> int:
         integrations = {}
 
         for int_path in config.specific_integrations:
-            integration = Integration(int_path)
+            integration = Integration(int_path, config)
             integration.load_manifest()
             integrations[integration.domain] = integration
 
     else:
-        integrations = Integration.load_dir(pathlib.Path("homeassistant/components"))
+        integrations = Integration.load_dir(config.core_integrations_path, config)
         plugins += HASS_PLUGINS
 
     for plugin in plugins:

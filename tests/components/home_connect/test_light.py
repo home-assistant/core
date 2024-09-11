@@ -13,7 +13,7 @@ from homeassistant.components.home_connect.const import (
     COOKING_LIGHTING,
     COOKING_LIGHTING_BRIGHTNESS,
 )
-from homeassistant.components.light import DOMAIN
+from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     SERVICE_TURN_OFF,
@@ -176,7 +176,7 @@ async def test_light_functionality(
     appliance.status.update(status)
     service_data["entity_id"] = entity_id
     await hass.services.async_call(
-        DOMAIN,
+        LIGHT_DOMAIN,
         service,
         service_data,
         blocking=True,
@@ -294,5 +294,5 @@ async def test_switch_exception_handling(
 
     problematic_appliance.status.update(status)
     service_data["entity_id"] = entity_id
-    await hass.services.async_call(DOMAIN, service, service_data, blocking=True)
+    await hass.services.async_call(LIGHT_DOMAIN, service, service_data, blocking=True)
     assert getattr(problematic_appliance, mock_attr).call_count == len(attr_side_effect)
