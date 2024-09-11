@@ -43,18 +43,6 @@ async def test_water_heater(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
-def mock_as_local(input_time):
-    """Mock conversion of UTC time to local."""
-    new_hour = input_time.hour + 1
-    return input_time.replace(hour=new_hour % 24)
-
-
-def mock_as_utc(input_time):
-    """Mock conversion of UTC time to local."""
-    new_hour = input_time.hour + 2
-    return input_time.replace(hour=new_hour % 24)
-
-
 async def test_get_profile(
     hass: HomeAssistant,
     mock_osoenergy_client: MagicMock,
@@ -62,43 +50,39 @@ async def test_get_profile(
 ) -> None:
     """Test getting the heater profile."""
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    with patch(
-        "homeassistant.components.osoenergy.water_heater.dt_util.as_local",
-        side_effect=mock_as_local,
-    ):
-        profile = await hass.services.async_call(
-            DOMAIN,
-            SERVICE_GET_PROFILE,
-            {ATTR_ENTITY_ID: "water_heater.test_device"},
-            blocking=True,
-            return_response=True,
-        )
-        assert profile.get("water_heater.test_device").get("profile") == [
-            60,
-            10,
-            60,
-            60,
-            60,
-            60,
-            60,
-            60,
-            60,
-            60,
-            60,
-            60,
-            60,
-            60,
-            60,
-            60,
-            60,
-            60,
-            60,
-            60,
-            60,
-            60,
-            60,
-            60,
-        ]
+    profile = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_GET_PROFILE,
+        {ATTR_ENTITY_ID: "water_heater.test_device"},
+        blocking=True,
+        return_response=True,
+    )
+    assert profile.get("water_heater.test_device").get("profile") == [
+        60,
+        60,
+        60,
+        60,
+        60,
+        60,
+        60,
+        60,
+        60,
+        60,
+        60,
+        60,
+        60,
+        60,
+        60,
+        60,
+        60,
+        10,
+        60,
+        60,
+        60,
+        60,
+        60,
+        60,
+    ]
 
 
 async def test_set_profile(
@@ -108,16 +92,12 @@ async def test_set_profile(
 ) -> None:
     """Test getting the heater profile."""
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    with patch(
-        "homeassistant.components.osoenergy.water_heater.dt_util.as_utc",
-        side_effect=mock_as_utc,
-    ):
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_SET_PROFILE,
-            {ATTR_ENTITY_ID: "water_heater.test_device", "hour_01": 45},
-            blocking=True,
-        )
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_PROFILE,
+        {ATTR_ENTITY_ID: "water_heater.test_device", "hour_01": 45},
+        blocking=True,
+    )
 
     mock_osoenergy_client().hotwater.set_profile.assert_called_once_with(
         ANY,
@@ -125,12 +105,12 @@ async def test_set_profile(
             10,
             60,
             60,
+            60,
+            60,
+            60,
+            60,
+            60,
             45,
-            60,
-            60,
-            60,
-            60,
-            60,
             60,
             60,
             60,

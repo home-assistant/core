@@ -13,10 +13,20 @@
     }
   },
   "services": {
-    "get_profile": "mdi:thermometer-lines",
-    "set_profile": "mdi:thermometer-lines",
-    "set_v40_min": "mdi:car-coolant-level",
-    "turn_off": "mdi:water-boiler-off",
-    "turn_on": "mdi:water-boiler"
+    "get_profile": {
+      "service": "mdi:thermometer-lines"
+    },
+    "set_profile": {
+      "service": "mdi:thermometer-lines"
+    },
+    "set_v40_min": {
+      "service": "mdi:car-coolant-level"
+    },
+    "turn_off": {
+      "service": "mdi:water-boiler-off"
+    },
+    "turn_on": {
+      "service": "mdi:water-boiler"
+    }
   }
 }
