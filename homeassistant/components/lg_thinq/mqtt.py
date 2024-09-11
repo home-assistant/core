@@ -58,7 +58,7 @@ class ThinQMQTT:
             try:
                 await self.client.async_disconnect()
             except Exception as exc:  # noqa: BLE001
-                _LOGGER.error("Failed to disconnect: %s", exc)
+                _LOGGER.exception("Failed to disconnect: %s", exc)
 
     async def async_refresh_subscribe(self, now: datetime | None = None) -> None:
         """Update event subscribes."""
