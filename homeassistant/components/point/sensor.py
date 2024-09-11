@@ -18,7 +18,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import parse_datetime
 
 from . import MinutPointEntity
-from .const import DATA_CONFIG_ENTRY_CLIENT, DOMAIN as POINT_DOMAIN, POINT_DISCOVERY_NEW
+from .const import DOMAIN as POINT_DOMAIN, POINT_DISCOVERY_NEW
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -54,7 +54,7 @@ async def async_setup_entry(
 
     async def async_discover_sensor(device_id):
         """Discover and add a discovered sensor."""
-        client = config_entry.runtime_data[DATA_CONFIG_ENTRY_CLIENT]
+        client = config_entry.runtime_data.client
         async_add_entities(
             [
                 MinutPointSensor(client, device_id, description)

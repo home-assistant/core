@@ -1,6 +1,5 @@
 """Support for Minut Point."""
 
-import asyncio
 from http import HTTPStatus
 import logging
 
@@ -43,19 +42,16 @@ from homeassistant.util.dt import as_local, parse_datetime, utc_from_timestamp
 from . import api
 from .const import (
     CONF_WEBHOOK_URL,
-    DATA_CONFIG_ENTRY_CLIENT,
     DOMAIN,
     EVENT_RECEIVED,
     POINT_DISCOVERY_NEW,
     SCAN_INTERVAL,
     SIGNAL_UPDATE_ENTITY,
     SIGNAL_WEBHOOK,
+    PointData,
 )
 
 _LOGGER = logging.getLogger(__name__)
-
-DATA_CONFIG_ENTRY_LOCK = "point_config_entry_lock"
-CONFIG_ENTRY_IS_SETUP = "point_config_entry_is_setup"
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
@@ -116,7 +112,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: PointConfigEntry) -> bool:
     """Set up Minut Point from a config entry."""
-    hass.data.setdefault(DOMAIN, {})
 
     if "auth_implementation" not in entry.data:
         # Config entry is imported from old implementation without native oauth2.
@@ -142,7 +137,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: PointConfigEntry) -> boo
     auth = api.AsyncConfigEntryAuth(
         aiohttp_client.async_get_clientsession(hass), session
     )
-    entry.runtime_data = auth
 
     try:
         await auth.async_get_access_token()
@@ -153,15 +147,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: PointConfigEntry) -> boo
     except ClientError as err:
         raise ConfigEntryNotReady from err
 
-    pointSession = PointSession(auth)
+    point_session = PointSession(auth)
 
-    client = MinutPointClient(hass, entry, pointSession)
+    client = MinutPointClient(hass, entry, point_session)
     hass.async_create_task(client.update())
-    entry.runtime_data[DATA_CONFIG_ENTRY_CLIENT] = client
-    entry.runtime_data[DATA_CONFIG_ENTRY_LOCK] = asyncio.Lock()
-    entry.runtime_data[CONFIG_ENTRY_IS_SETUP] = set()
+    entry.runtime_data = PointData(client)  # type: ignore[assignment]
 
-    await async_setup_webhook(hass, entry, pointSession)
+    await async_setup_webhook(hass, entry, point_session)
     # Entries are added in the client.update() function.
 
     return True
@@ -198,7 +190,7 @@ async def async_setup_webhook(
 async def async_unload_entry(hass: HomeAssistant, entry: PointConfigEntry) -> bool:
     """Unload a config entry."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        session: PointSession = entry.runtime_data[DATA_CONFIG_ENTRY_CLIENT]
+        session: PointSession = entry.runtime_data.client
         if CONF_WEBHOOK_ID in entry.data:
             webhook.async_unregister(hass, entry.data[CONF_WEBHOOK_ID])
             await session.remove_webhook()
@@ -252,17 +244,12 @@ class MinutPointClient:
         async def new_device(device_id, platform):
             """Load new device."""
             config_entries_key = f"{platform}.{DOMAIN}"
-            async with self._config_entry.runtime_data[DATA_CONFIG_ENTRY_LOCK]:
-                if (
-                    config_entries_key
-                    not in self._config_entry.runtime_data[CONFIG_ENTRY_IS_SETUP]
-                ):
+            async with self._config_entry.runtime_data.lock:
+                if config_entries_key not in self._config_entry.runtime_data.entries:
                     await self._hass.config_entries.async_forward_entry_setup(
                         self._config_entry, platform
                     )
-                    self._config_entry.runtime_data[CONFIG_ENTRY_IS_SETUP].add(
-                        config_entries_key
-                    )
+                    self._config_entry.runtime_data.entries.add(config_entries_key)
 
             async_dispatcher_send(
                 self._hass, POINT_DISCOVERY_NEW.format(platform, DOMAIN), device_id
