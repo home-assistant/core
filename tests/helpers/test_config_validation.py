@@ -25,6 +25,7 @@ from homeassistant.helpers import (
     selector,
     template,
 )
+from homeassistant.helpers.config_validation import TRIGGER_SCHEMA
 
 
 def test_boolean() -> None:
@@ -671,10 +672,12 @@ def test_template(hass: HomeAssistant) -> None:
         "Hello",
         "{{ beer }}",
         "{% if 1 == 1 %}Hello{% else %}World{% endif %}",
-        # Function added as an extension by Home Assistant
+        # Function 'expand' added as an extension by Home Assistant
         "{{ expand('group.foo')|map(attribute='entity_id')|list }}",
-        # Filter added as an extension by Home Assistant
+        # Filter 'expand' added as an extension by Home Assistant
         "{{ ['group.foo']|expand|map(attribute='entity_id')|list }}",
+        # Non existing function 'no_such_function' is not detected by Jinja2
+        "{{ no_such_function('group.foo')|map(attribute='entity_id')|list }}",
     )
     for value in options:
         schema(value)
@@ -700,8 +703,11 @@ async def test_template_no_hass(hass: HomeAssistant) -> None:
         "Hello",
         "{{ beer }}",
         "{% if 1 == 1 %}Hello{% else %}World{% endif %}",
-        # Function added as an extension by Home Assistant
+        # Function 'expand' added as an extension by Home Assistant, no error
+        # because non existing functions are not detected by Jinja2
         "{{ expand('group.foo')|map(attribute='entity_id')|list }}",
+        # Non existing function 'no_such_function' is not detected by Jinja2
+        "{{ no_such_function('group.foo')|map(attribute='entity_id')|list }}",
     )
     for value in options:
         await hass.async_add_executor_job(schema, value)
@@ -725,10 +731,12 @@ def test_dynamic_template(hass: HomeAssistant) -> None:
     options = (
         "{{ beer }}",
         "{% if 1 == 1 %}Hello{% else %}World{% endif %}",
-        # Function added as an extension by Home Assistant
+        # Function 'expand' added as an extension by Home Assistant
         "{{ expand('group.foo')|map(attribute='entity_id')|list }}",
-        # Filter added as an extension by Home Assistant
+        # Filter 'expand' added as an extension by Home Assistant
         "{{ ['group.foo']|expand|map(attribute='entity_id')|list }}",
+        # Non existing function 'no_such_function' is not detected by Jinja2
+        "{{ no_such_function('group.foo')|map(attribute='entity_id')|list }}",
     )
     for value in options:
         schema(value)
@@ -754,8 +762,11 @@ async def test_dynamic_template_no_hass(hass: HomeAssistant) -> None:
     options = (
         "{{ beer }}",
         "{% if 1 == 1 %}Hello{% else %}World{% endif %}",
-        # Function added as an extension by Home Assistant
+        # Function 'expand' added as an extension by Home Assistant, no error
+        # because non existing functions are not detected by Jinja2
         "{{ expand('group.foo')|map(attribute='entity_id')|list }}",
+        # Non existing function 'no_such_function' is not detected by Jinja2
+        "{{ no_such_function('group.foo')|map(attribute='entity_id')|list }}",
     )
     for value in options:
         await hass.async_add_executor_job(schema, value)
@@ -1805,6 +1816,82 @@ async def test_async_validate(hass: HomeAssistant, tmpdir: py.path.local) -> Non
             "string": [hass.loop_thread_id],
         }
         validator_calls = {}
+
+
+async def test_nested_trigger_list() -> None:
+    """Test triggers within nested lists are flattened."""
+
+    trigger_config = [
+        {
+            "triggers": {
+                "platform": "event",
+                "event_type": "trigger_1",
+            },
+        },
+        {
+            "platform": "event",
+            "event_type": "trigger_2",
+        },
+        {"triggers": []},
+        {"triggers": None},
+        {
+            "triggers": [
+                {
+                    "platform": "event",
+                    "event_type": "trigger_3",
+                },
+                {
+                    "platform": "event",
+                    "event_type": "trigger_4",
+                },
+            ],
+        },
+    ]
+
+    validated_triggers = TRIGGER_SCHEMA(trigger_config)
+
+    assert validated_triggers == [
+        {
+            "platform": "event",
+            "event_type": "trigger_1",
+        },
+        {
+            "platform": "event",
+            "event_type": "trigger_2",
+        },
+        {
+            "platform": "event",
+            "event_type": "trigger_3",
+        },
+        {
+            "platform": "event",
+            "event_type": "trigger_4",
+        },
+    ]
+
+
+async def test_nested_trigger_list_extra() -> None:
+    """Test triggers key with extra keys is not modified."""
+
+    trigger_config = [
+        {
+            "platform": "other",
+            "triggers": [
+                {
+                    "platform": "event",
+                    "event_type": "trigger_1",
+                },
+                {
+                    "platform": "event",
+                    "event_type": "trigger_2",
+                },
+            ],
+        },
+    ]
+
+    validated_triggers = TRIGGER_SCHEMA(trigger_config)
+
+    assert validated_triggers == trigger_config
 
 
 async def test_is_entity_service_schema(

@@ -18,7 +18,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.color import rgb_hex_to_rgb_list
 
-from .. import mysensors
+from . import setup_mysensors_platform
 from .const import MYSENSORS_DISCOVERY, DiscoveryInfo, SensorType
 from .device import MySensorsChildEntity
 from .helpers import on_unload
@@ -38,7 +38,7 @@ async def async_setup_entry(
 
     async def async_discover(discovery_info: DiscoveryInfo) -> None:
         """Discover and add a MySensors light."""
-        mysensors.setup_mysensors_platform(
+        setup_mysensors_platform(
             hass,
             Platform.LIGHT,
             discovery_info,
@@ -57,7 +57,7 @@ async def async_setup_entry(
     )
 
 
-class MySensorsLight(mysensors.device.MySensorsChildEntity, LightEntity):
+class MySensorsLight(MySensorsChildEntity, LightEntity):
     """Representation of a MySensors Light child node."""
 
     def __init__(self, *args: Any) -> None:

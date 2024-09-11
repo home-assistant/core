@@ -119,6 +119,15 @@ class IRobotEntity(Entity):
         return self.vacuum_state.get("bbchg3", {})
 
     @property
+    def last_mission(self):
+        """Return last mission start time."""
+        if (
+            ts := self.vacuum_state.get("cleanMissionStatus", {}).get("mssnStrtTm")
+        ) is None or ts == 0:
+            return None
+        return dt_util.utc_from_timestamp(ts)
+
+    @property
     def _robot_state(self):
         """Return the state of the vacuum cleaner."""
         clean_mission_status = self.vacuum_state.get("cleanMissionStatus", {})

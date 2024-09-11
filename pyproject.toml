@@ -54,7 +54,6 @@ dependencies    = [
     "pyOpenSSL==24.2.1",
     "orjson==3.10.7",
     "packaging>=23.1",
-    "pip>=21.3.1",
     "psutil-home-assistant==0.0.1",
     "python-slugify==8.0.4",
     "PyYAML==6.0.2",
@@ -66,10 +65,11 @@ dependencies    = [
     # Temporary setting an upper bound, to prevent compat issues with urllib3>=2
     # https://github.com/home-assistant/core/issues/97248
     "urllib3>=1.26.5,<2",
+    "uv==0.4.9",
     "voluptuous==0.15.2",
     "voluptuous-serialize==2.6.0",
     "voluptuous-openapi==0.0.5",
-    "yarl==1.9.7",
+    "yarl==1.11.1",
 ]
 
 [project.urls]
@@ -109,7 +109,7 @@ init-hook = """\
 load-plugins = [
     "pylint.extensions.code_style",
     "pylint.extensions.typing",
-    "hass_enforce_coordinator_module",
+    "hass_enforce_class_module",
     "hass_enforce_sorted_platforms",
     "hass_enforce_super_call",
     "hass_enforce_type_hints",
@@ -734,6 +734,7 @@ select = [
     "PIE", # flake8-pie
     "PL", # pylint
     "PT", # flake8-pytest-style
+    "PTH", # flake8-pathlib
     "PYI", # flake8-pyi
     "RET", # flake8-return
     "RSE", # flake8-raise
@@ -904,6 +905,10 @@ split-on-trailing-comma = false
 "homeassistant/__main__.py" = ["T201"]
 "homeassistant/scripts/*" = ["T201"]
 "script/*" = ["T20"]
+
+# Temporary
+"homeassistant/**" = ["PTH"]
+"tests/**" = ["PTH"]
 
 [tool.ruff.lint.mccabe]
 max-complexity = 25
