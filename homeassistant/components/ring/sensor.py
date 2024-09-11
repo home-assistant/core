@@ -6,14 +6,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any, Generic, cast
 
-from ring_doorbell import (
-    RingCapability,
-    RingChime,
-    RingDoorBell,
-    RingEventKind,
-    RingGeneric,
-    RingOther,
-)
+from ring_doorbell import RingCapability, RingEventKind, RingGeneric
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,

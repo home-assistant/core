@@ -88,13 +88,12 @@ class RingNumber(RingEntity[RingDeviceT], NumberEntity):
 
     @exception_wrap
     async def async_set_native_value(self, value: float) -> None:
-        "TODO: what."
+        """Call setter on Ring device."""
         async_setter = getattr(self._device, f"async_set_{self.entity_description.key}")
         await async_setter(int(value))
 
         self._no_updates_until = time.monotonic() + SKIP_UPDATES_DELAY_SECONDS
 
-        # TODO: is this really necessary?
         self._attr_native_value = value
         self.async_write_ha_state()
 
@@ -104,7 +103,7 @@ class RingNumberEntityDescription(NumberEntityDescription, Generic[RingDeviceT])
     """Describes Ring number entity."""
 
     value_fn: Callable[[RingDeviceT], StateType]
-    setter_fn: Callable[[RingDeviceT], Awaitable[None]]
+    setter_fn: Callable[[RingDeviceT, float], Awaitable[None]]
     exists_fn: Callable[[RingGeneric], bool]
 
 
