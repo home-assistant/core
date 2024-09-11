@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import asyncio
 from functools import partial
-import logging
 import os
 
 from aiohttp import ClientTimeout
@@ -68,9 +67,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 push_server_timeout=ClientTimeout(total=PUSH_SERVER_TIMEOUT),
             ),
         )
-        framework_logger = logging.getLogger("domika_ha_framework")
-        for handler in LOGGER.handlers:
-            framework_logger.addHandler(handler)
     except Exception:  # noqa: BLE001
         LOGGER.exception("Can't setup %s entry", DOMAIN)
         return False
