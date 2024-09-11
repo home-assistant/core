@@ -11,7 +11,12 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import GPMConfigEntry
-from ._manager import IntegrationRepositoryManager, RepositoryManager, UpdateStrategy
+from ._manager import (
+    IntegrationRepositoryManager,
+    RepositoryManager,
+    UpdateStrategy,
+    VersionAlreadyInstalledError,
+)
 from .const import GIT_SHORT_HASH_LEN
 
 SCAN_INTERVAL = timedelta(hours=3)
@@ -78,9 +83,7 @@ class GPMUpdateEntity(UpdateEntity):
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
         """Install an update."""
-        to_install = version or self.latest_version
-        if to_install == self.installed_version:
-            raise HomeAssistantError(
-                f"Version `{self.installed_version}` of `{self.name}` is already downloaded"
-            )
-        await self.manager.checkout(to_install)
+        try:
+            await self.manager.update(version)
+        except VersionAlreadyInstalledError as e:
+            raise HomeAssistantError(e) from e

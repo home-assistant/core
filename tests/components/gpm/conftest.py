@@ -161,6 +161,7 @@ def _testing_manager(hass: HomeAssistant, data: Mapping[str, str]) -> Repository
         "fetch",
         "checkout",
         "install",
+        "update",
         "uninstall",
         "is_cloned",
         "is_installed",

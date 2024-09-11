@@ -223,6 +223,14 @@ class RepositoryManager:
 
     @ensure_installed
     @abstractmethod
+    async def update(self, version: str) -> None:
+        """Update / downgrade the installed GIT repo."""
+        current_version = await self.get_current_version()
+        if current_version == version:
+            raise VersionAlreadyInstalledError(version)
+
+    @ensure_installed
+    @abstractmethod
     async def uninstall(self) -> None:
         """Uninstall the GIT repo."""
 
@@ -330,14 +338,12 @@ class IntegrationRepositoryManager(RepositoryManager):
             raise AlreadyInstalledError(install_path) from None
         await self._create_restart_issue("install")
 
-    @RepositoryManager.ensure_cloned
-    async def checkout(self, ref: str) -> None:
-        """Checkout the specified reference."""
-        current_ref = await self.get_current_version()
-        is_changing = current_ref != ref
-        await super().checkout(ref)
-        if is_changing:
-            await self._create_restart_issue("update")
+    @RepositoryManager.ensure_installed
+    async def update(self, version: str) -> None:
+        """Update / downgrade the installed integration."""
+        await super().update(version)
+        await self.checkout(version)
+        await self._create_restart_issue("update")
 
     @RepositoryManager.ensure_installed
     async def uninstall(self) -> None:
@@ -448,24 +454,17 @@ class ResourceRepositoryManager(RepositoryManager):
         await self._refresh_frontend()
 
     @RepositoryManager.ensure_installed
-    async def update(self, ref: str):
+    async def update(self, version: str):
         """Update / downgrade the installed resource."""
+        await super().update(version)
         old_resource_url = await self.get_resource_url()
         old_install_path = await self.get_install_path()
         await self.hass.async_add_executor_job(old_install_path.unlink)
-        await super().checkout(ref)
+        await self.checkout(version)
         await self._download_resource()
         new_resource_url = await self.get_resource_url()
         await self._update_resource(old_resource_url, new_resource_url)
         await self._refresh_frontend()
-
-    @RepositoryManager.ensure_cloned
-    async def checkout(self, ref: str) -> None:
-        """Checkout the specified reference."""
-        if await self.is_installed():
-            await self.update(ref)
-        else:
-            await super().checkout(ref)
 
     async def _download_resource(self):
         download_url = await self.get_download_url()
@@ -633,6 +632,16 @@ class AlreadyInstalledError(GPMError):
 
     def __str__(self) -> str:
         return f"`{self.install_path}` already exists"
+
+
+class VersionAlreadyInstalledError(GPMError):
+    """Raised during update when the version is already installed."""
+
+    def __init__(self, version: str) -> None:
+        self.version = version
+
+    def __str__(self) -> str:
+        return f"`{self.version}` is already installed"
 
 
 class ResourceInstallError(GPMError):
