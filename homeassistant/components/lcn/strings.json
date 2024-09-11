@@ -26,7 +26,8 @@
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]",
           "sk_num_tries": "Segment coupler scan attempts",
-          "dim_mode": "Dimming mode"
+          "dim_mode": "Dimming mode",
+          "acknowledge": "Request acknowledgement from modules"
         }
       },
       "reconfigure": {
@@ -38,7 +39,8 @@
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]",
           "sk_num_tries": "Segment coupler scan attempts",
-          "dim_mode": "Dimming mode"
+          "dim_mode": "Dimming mode",
+          "acknowledge": "Request acknowledgement from modules"
         }
       }
     },
