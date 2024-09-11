@@ -68,11 +68,19 @@ class HassEnforceClassModule(BaseChecker):
         # we only want to check components
         if not root_name.startswith("homeassistant.components."):
             return
+        parts = root_name.split(".")
+        current_module = parts[3] if len(parts) > 3 else ""
 
         ancestors: list[ClassDef] | None = None
 
         for match in _MODULES:
-            if root_name.endswith(f".{match.expected_module}"):
+            # Allow module.py
+            # Allow module_*.py, such as light_entities.py
+            # Allow module/sub_module.py
+            # Allow module_*/sub_module.py
+            if current_module == match.expected_module or current_module.startswith(
+                f"{match.expected_module}_"
+            ):
                 continue
 
             if ancestors is None:
