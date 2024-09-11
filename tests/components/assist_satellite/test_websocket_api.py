@@ -1,6 +1,9 @@
 """Test WebSocket API."""
 
 import asyncio
+from unittest.mock import patch
+
+import pytest
 
 from homeassistant.components.assist_pipeline import PipelineStage
 from homeassistant.config_entries import ConfigEntry
@@ -199,7 +202,7 @@ async def test_intercept_wake_word_twice(
     assert msg["success"]
     assert msg["result"] is None
 
-    task = asyncio.create_task(ws_client.receive_json())
+    task = hass.async_create_task(ws_client.receive_json())
 
     await ws_client.send_json_auto_id(
         {
@@ -224,3 +227,49 @@ async def test_intercept_wake_word_twice(
 
     assert msg["success"]
     assert msg["result"] is None
+
+
+async def test_intercept_wake_word_unsubscribe(
+    hass: HomeAssistant,
+    init_components: ConfigEntry,
+    entity: MockAssistSatellite,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test that closing the websocket connection stops interception."""
+    ws_client = await hass_ws_client(hass)
+
+    await ws_client.send_json_auto_id(
+        {
+            "type": "assist_satellite/intercept_wake_word",
+            "entity_id": ENTITY_ID,
+        }
+    )
+
+    # Wait for interception to start
+    for _ in range(3):
+        await asyncio.sleep(0)
+
+    async def receive_json():
+        with pytest.raises(TypeError):
+            # Raises TypeError when connection is closed
+            await ws_client.receive_json()
+
+    task = hass.async_create_task(receive_json())
+
+    # Close connection
+    await ws_client.close()
+    await task
+
+    with (
+        patch(
+            "homeassistant.components.assist_satellite.entity.async_pipeline_from_audio_stream",
+        ) as mock_pipeline_from_audio_stream,
+    ):
+        # Start a pipeline with a wake word
+        await entity.async_accept_pipeline_from_satellite(
+            object(),
+            wake_word_phrase="ok, nabu",  # type: ignore[arg-type]
+        )
+
+        # Wake word should not be intercepted
+        mock_pipeline_from_audio_stream.assert_called_once()

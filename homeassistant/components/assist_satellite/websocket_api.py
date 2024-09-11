@@ -56,8 +56,6 @@ async def websocket_intercept_wake_word(
         except HomeAssistantError as err:
             connection.send_error(msg["id"], "home_assistant_error", str(err))
 
-    task = hass.async_create_background_task(
-        intercept_wake_word(), "intercept_wake_word"
-    )
+    task = hass.async_create_task(intercept_wake_word(), "intercept_wake_word")
     connection.subscriptions[msg["id"]] = task.cancel
     connection.send_message(websocket_api.result_message(msg["id"]))
