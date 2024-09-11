@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, cast
+from typing import Any
 
 from iottycloud.device import Device
 from iottycloud.shutter import Shutter, ShutterState
@@ -16,12 +16,10 @@ from homeassistant.components.cover import (
     CoverEntityFeature,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import IottyConfigEntry
 from .api import IottyProxy
-from .const import DOMAIN
 from .coordinator import IottyDataUpdateCoordinator
 from .entity import IottyEntity
 
@@ -97,6 +95,12 @@ class IottyShutter(IottyEntity, CoverEntity):
 
     _attr_device_class = CoverDeviceClass.SHUTTER
     _iotty_device: Shutter
+    _attr_supported_features: CoverEntityFeature = CoverEntityFeature(0) | (
+        CoverEntityFeature.OPEN
+        | CoverEntityFeature.CLOSE
+        | CoverEntityFeature.STOP
+        | CoverEntityFeature.SET_POSITION
+    )
 
     def __init__(
         self,
@@ -110,15 +114,6 @@ class IottyShutter(IottyEntity, CoverEntity):
         )
 
         self._iotty_device = iotty_device
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device info."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, cast(str, self._attr_unique_id))},
-            name=self._iotty_device.name,
-            manufacturer="iotty",
-        )
 
     @property
     def current_cover_position(self) -> int | None:
@@ -155,12 +150,7 @@ class IottyShutter(IottyEntity, CoverEntity):
     @property
     def supported_features(self) -> CoverEntityFeature:
         """Flag supported features."""
-        return CoverEntityFeature(0) | (
-            CoverEntityFeature.OPEN
-            | CoverEntityFeature.CLOSE
-            | CoverEntityFeature.STOP
-            | CoverEntityFeature.SET_POSITION
-        )
+        return self._attr_supported_features
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
@@ -203,6 +193,5 @@ class IottyShutter(IottyEntity, CoverEntity):
             if device.device_id == self._iotty_device.device_id
         )
         if isinstance(device, Shutter):
-            self._iotty_device.status = device.status
-            self._iotty_device.percentage = device.percentage
+            self._iotty_device = device
         self.async_write_ha_state()
