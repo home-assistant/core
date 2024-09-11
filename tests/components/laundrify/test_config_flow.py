@@ -93,10 +93,11 @@ async def test_form_unkown_exception(
     assert result["errors"] == {"base": "unknown"}
 
 
-async def test_step_reauth(hass: HomeAssistant) -> None:
+async def test_step_reauth(
+    hass: HomeAssistant, laundrify_config_entry: MockConfigEntry
+) -> None:
     """Test the reauth form is shown."""
-    config_entry = create_entry(hass)
-    result = await config_entry.start_reauth_flow(hass)
+    result = await laundrify_config_entry.start_reauth_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
