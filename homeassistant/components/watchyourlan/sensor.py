@@ -70,7 +70,7 @@ class WatchYourLANOnlineStatusBinarySensor(
         super().__init__(coordinator)
         self.device = device
         self._attr_unique_id = f"{self.device.get('Mac')}_online_status"
-        mac_address = self.device.get("Mac", "Unknown")
+        mac_address = self.device["Mac"]
         self._attr_device_info = DeviceInfo(
             connections={(CONNECTION_NETWORK_MAC, mac_address)},
             name=self.device.get("Name")
