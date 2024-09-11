@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 
 from pysmlight import Api2, Info, Sensors
+from pysmlight.const import Settings, SettingsProp
 from pysmlight.exceptions import SmlightAuthError, SmlightConnectionError
 
 from homeassistant.config_entries import ConfigEntry
@@ -44,6 +45,10 @@ class SmDataUpdateCoordinator(DataUpdateCoordinator[SmData]):
         self.client = Api2(host=host, session=async_get_clientsession(hass))
         self.legacy_api: int = 0
 
+        self.config_entry.async_create_background_task(
+            hass, self.client.sse.client(), "smlight-sse-client"
+        )
+
     async def _async_setup(self) -> None:
         """Authenticate if needed during initial setup."""
         if await self.client.check_auth_needed():
@@ -77,6 +82,13 @@ class SmDataUpdateCoordinator(DataUpdateCoordinator[SmData]):
                 severity=IssueSeverity.ERROR,
                 translation_key="unsupported_firmware",
             )
+
+    def update_setting(self, setting: Settings, value: bool | int) -> None:
+        """Update the sensor value from event."""
+        prop = SettingsProp[setting.name].value
+        setattr(self.data.sensors, prop, value)
+
+        self.async_set_updated_data(self.data)
 
     async def _async_update_data(self) -> SmData:
         """Fetch data from the SMLIGHT device."""

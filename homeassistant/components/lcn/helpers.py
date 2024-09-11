@@ -84,7 +84,7 @@ DOMAIN_LOOKUP = {
 
 def get_device_connection(
     hass: HomeAssistant, address: AddressType, config_entry: ConfigEntry
-) -> DeviceConnectionType | None:
+) -> DeviceConnectionType:
     """Return a lcn device_connection."""
     host_connection = hass.data[DOMAIN][config_entry.entry_id][CONNECTION]
     addr = pypck.lcn_addr.LcnAddr(*address)
