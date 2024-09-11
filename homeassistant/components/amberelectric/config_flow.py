@@ -27,10 +27,10 @@ def generate_site_selector_name(site: Site) -> str:
     nmi = str(site.nmi)
     if site.status == SiteStatus.CLOSED:
         if site.closed_on is None:
-            return nmi + " (Closed)"
-        return nmi + " (Closed: " + site.closed_on.isoformat() + ")"
+            return f"{nmi} (Closed)"
+        return f"{nmi} (Closed: {site.closed_on.isoformat()})"
     if site.status == "pending":
-        return nmi + " (Pending)"
+        return f"{nmi} (Pending)"
     return nmi
 
 
