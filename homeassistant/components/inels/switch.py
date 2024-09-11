@@ -133,7 +133,6 @@ class InelsBusSwitch(InelsBaseEntity, SwitchEntity):
 
         self._attr_unique_id = slugify(f"{self._attr_unique_id}_{description.key}")
         self.entity_id = f"{Platform.SWITCH}.{self._attr_unique_id}"
-        self._attr_name = f"{self._attr_name} {description.name}"
 
     @property
     def available(self) -> bool:
