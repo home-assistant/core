@@ -15,12 +15,11 @@ DB_DRIVER = "aiosqlite"
 DB_NAME = "Domika.db"
 
 if os.getenv("DOMIKA_DEBUG") == "1":
-    PUSH_SERVER_URL = os.getenv("DOMIKA_PUSH_SERVER_URL")
     PUSH_INTERVAL = timedelta(seconds=int(os.getenv("DOMIKA_PUSH_INTERVAL") or 30))
 else:
-    PUSH_SERVER_URL = "http://pns.domika.app:8000/api/v1"
     PUSH_INTERVAL = timedelta(minutes=15)
 
+PUSH_SERVER_URL = "https://pns.domika.app:8000/api/v1"
 # Seconds
 PUSH_SERVER_TIMEOUT = 10
 
