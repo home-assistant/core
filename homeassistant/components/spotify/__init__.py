@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 from datetime import timedelta
 from typing import Any
 
@@ -23,6 +22,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .browse_media import async_browse_media
 from .const import DOMAIN, LOGGER, SPOTIFY_SCOPES
 from .coordinator import SpotifyCoordinator
+from .models import SpotifyData
 from .util import (
     is_spotify_media_type,
     resolve_spotify_media_type,
@@ -41,15 +41,6 @@ __all__ = [
 
 
 type SpotifyConfigEntry = ConfigEntry[SpotifyData]
-
-
-@dataclass
-class SpotifyData:
-    """Class to hold Spotify data."""
-
-    coordinator: SpotifyCoordinator
-    session: OAuth2Session
-    devices: DataUpdateCoordinator[list[dict[str, Any]]]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: SpotifyConfigEntry) -> bool:
