@@ -127,7 +127,7 @@ async def test_async_setup_from_configuration_yaml(hass: HomeAssistant) -> None:
         assert async_setup_entry.await_count == 2
 
 
-@patch("pypck.connection.PchkConnectionManager", MockPchkConnectionManager)
+@patch("homeassistant.components.lcn.PchkConnectionManager", MockPchkConnectionManager)
 async def test_migrate_1_1(hass: HomeAssistant, entry) -> None:
     """Test migration config entry."""
     hass.http = Mock()
