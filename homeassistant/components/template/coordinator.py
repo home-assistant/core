@@ -121,7 +121,7 @@ class TriggerUpdateCoordinator(DataUpdateCoordinator):
             return
         self._execute_update(run_variables, context)
 
-    def _check_condition(self, run_variables: TemplateVarsType) -> bool | None:
+    def _check_condition(self, run_variables: TemplateVarsType) -> bool:
         if not self._cond_func:
             return True
         condition_result = self._cond_func(run_variables)
