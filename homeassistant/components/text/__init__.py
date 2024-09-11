@@ -263,6 +263,7 @@ class TextExtraStoredData(ExtraStoredData):
             return None
 
 
+# pylint: disable-next=hass-enforce-class-module
 class RestoreText(TextEntity, RestoreEntity):
     """Mixin class for restoring previous text state."""
 

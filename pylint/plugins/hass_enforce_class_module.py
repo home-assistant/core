@@ -41,10 +41,10 @@ _MODULES: dict[str, set[str]] = {
     "lock": {"LockEntity", "LockEntityDescription"},
     "media_player": {"MediaPlayerEntity", "MediaPlayerEntityDescription"},
     "notify": {"NotifyEntity", "NotifyEntityDescription"},
-    "number": {"NumberEntity", "NumberEntityDescription"},
+    "number": {"NumberEntity", "NumberEntityDescription", "RestoreNumber"},
     "remote": {"RemoteEntity", "RemoteEntityDescription"},
     "select": {"SelectEntity", "SelectEntityDescription"},
-    "sensor": {"SensorEntity", "SensorEntityDescription"},
+    "sensor": {"RestoreSensor", "SensorEntity", "SensorEntityDescription"},
     "siren": {"SirenEntity", "SirenEntityDescription"},
     "stt": {"SpeechToTextEntity"},
     "switch": {"SwitchEntity", "SwitchEntityDescription"},
@@ -56,7 +56,12 @@ _MODULES: dict[str, set[str]] = {
     "vacuum": {"VacuumEntity", "VacuumEntityDescription"},
     "wake_word": {"WakeWordDetectionEntity"},
     "water_heater": {"WaterHeaterEntity"},
-    "weather": {"WeatherEntity", "WeatherEntityDescription"},
+    "weather": {
+        "CoordinatorWeatherEntity",
+        "SingleCoordinatorWeatherEntity",
+        "WeatherEntity",
+        "WeatherEntityDescription",
+    },
 }
 
 

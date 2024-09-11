@@ -194,6 +194,7 @@ class ImageProcessingEntity(Entity):
         await self.async_process_image(image.content)
 
 
+# pylint: disable-next=hass-enforce-class-module
 class ImageProcessingFaceEntity(ImageProcessingEntity):
     """Base entity class for face image processing."""
 

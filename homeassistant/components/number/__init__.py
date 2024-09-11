@@ -520,6 +520,7 @@ class NumberExtraStoredData(ExtraStoredData):
             return None
 
 
+# pylint: disable-next=hass-enforce-class-module
 class RestoreNumber(NumberEntity, RestoreEntity):
     """Mixin class for restoring previous number state."""
 
