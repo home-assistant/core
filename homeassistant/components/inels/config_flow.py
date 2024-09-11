@@ -29,12 +29,6 @@ class INelsConfigFlow(ConfigFlow, domain=DOMAIN):
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
 
-        return await self.async_step_setup()
-
-    async def async_step_setup(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle the setup step."""
         errors: dict[str, str] = {}
 
         if user_input is not None:
@@ -57,7 +51,7 @@ class INelsConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = connect_val_to_error(test_connect)
 
         return self.async_show_form(
-            step_id="setup",
+            step_id="user",
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_HOST): str,
