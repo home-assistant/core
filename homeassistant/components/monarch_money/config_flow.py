@@ -93,7 +93,6 @@ async def validate_login(
     assert subs is not None
     subscription_id = subs.id
     return {
-        "title": "Monarch Money",
         CONF_TOKEN: monarch_client.token,
         CONF_ID: subscription_id,
     }

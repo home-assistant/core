@@ -29,7 +29,6 @@ async def test_form_simple(
             CONF_PASSWORD: "test-password",
         },
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Monarch Money"
@@ -120,7 +119,7 @@ async def test_form_invalid_auth(
 async def test_form_mfa(
     hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_config_api: AsyncMock
 ) -> None:
-    """Test we get the form."""
+    """Test MFA enabled on account configuration."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
