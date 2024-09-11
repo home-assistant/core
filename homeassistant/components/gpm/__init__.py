@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+import logging
 from typing import cast
 
 from homeassistant.components.http import StaticPathConfig
@@ -32,6 +33,8 @@ PLATFORMS: list[Platform] = [Platform.UPDATE]
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 type GPMConfigEntry = ConfigEntry[RepositoryManager]  # noqa: F821
+
+_LOGGER = logging.getLogger(__name__)
 
 
 def get_manager(hass: HomeAssistant, data: Mapping[str, str]) -> RepositoryManager:
@@ -64,7 +67,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: GPMConfigEntry) -> bool:
     """Set up GPM from a config entry."""
-    entry.runtime_data = get_manager(hass, entry.data)
+    manager = get_manager(hass, entry.data)
+    if not await manager.is_installed():
+        _LOGGER.warning(
+            "Repository `%s` is not installed despite existing config entry, running install now",
+            entry.data[CONF_URL],
+        )
+        await manager.install()
+    entry.runtime_data = manager
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
