@@ -71,7 +71,7 @@ class WatchYourLANOnlineStatusBinarySensor(
         """Initialize the binary sensor for online/offline state."""
         super().__init__(coordinator)
         self.device = device
-        self._attr_unique_id = f"{self.device.get('ID')}_online_status"
+        self._attr_unique_id = f"{self.device.get('Mac')}_online_status"
         mac_address = self.device.get("Mac", "Unknown")
         self._attr_device_info = DeviceInfo(
             connections={(CONNECTION_NETWORK_MAC, mac_address)},
@@ -117,9 +117,7 @@ class WatchYourLANGenericSensor(
         self.entity_description = description
         self._attr_unique_id = f"{self.device.get('ID')}_{description.key}"
         self._attr_device_info = DeviceInfo(
-            connections={
-                (CONNECTION_NETWORK_MAC, self.device.get("Mac", "00:00:00:00:00:00"))
-            },
+            connections={(CONNECTION_NETWORK_MAC, self.device["Mac"])},
             name=self.device.get("Name")
             or f"WatchYourLAN {self.device.get('ID', 'Unknown')}",
             manufacturer=self.device.get("Hw", "Unknown Manufacturer"),
