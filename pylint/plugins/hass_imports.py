@@ -460,6 +460,11 @@ class HassImportsFormatChecker(BaseChecker):
             "hass-helper-namespace-import",
             "Used when a helper should be used via the namespace",
         ),
+        "W7426": (
+            "`%s` should be imported using an alias, such as `%s as %s`",
+            "hass-import-constant-alias",
+            "Used when a constant should be imported as an alias",
+        ),
     }
     options = ()
 
@@ -540,19 +545,30 @@ class HassImportsFormatChecker(BaseChecker):
                 if node.modname.startswith(f"{root}.components.{current_component}."):
                     self.add_message("hass-relative-import", node=node)
                     return
-        if node.modname.startswith("homeassistant.components.") and (
-            node.modname.endswith(".const")
-            or "const" in {names[0] for names in node.names}
+
+        if node.modname.startswith("homeassistant.components.") and not (
+            self.current_package.startswith("tests.components.")
+            and self.current_package.split(".")[2] == node.modname.split(".")[2]
         ):
-            if (
-                self.current_package.startswith("tests.components.")
-                and self.current_package.split(".")[2] == node.modname.split(".")[2]
-            ):
-                # Ignore check if the component being tested matches
-                # the component being imported from
+            if node.modname.endswith(".const"):
+                self.add_message("hass-component-root-import", node=node)
                 return
-            self.add_message("hass-component-root-import", node=node)
-            return
+            for name, alias in node.names:
+                if name == "const":
+                    self.add_message("hass-component-root-import", node=node)
+                    return
+                if name == "DOMAIN" and (alias is None or alias == "DOMAIN"):
+                    self.add_message(
+                        "hass-import-constant-alias",
+                        node=node,
+                        args=(
+                            "DOMAIN",
+                            "DOMAIN",
+                            f"{node.modname.split(".")[2].upper()}_DOMAIN",
+                        ),
+                    )
+                    return
+
         if obsolete_imports := _OBSOLETE_IMPORT.get(node.modname):
             for name_tuple in node.names:
                 for obsolete_import in obsolete_imports:
