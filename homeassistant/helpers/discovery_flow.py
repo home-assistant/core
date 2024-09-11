@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Coroutine
+import dataclasses
 from typing import Any, NamedTuple
 
 from homeassistant.config_entries import ConfigFlowResult
@@ -18,10 +19,24 @@ DISCOVERY_FLOW_DISPATCHER: HassKey[FlowDispatcher] = HassKey(
 )
 
 
+@dataclasses.dataclass(kw_only=True, slots=True)
+class DiscoveryKey:
+    """Serializable discovery key."""
+
+    domain: str
+    key: str | list[str]
+    version: int
+
+
 @bind_hass
 @callback
 def async_create_flow(
-    hass: HomeAssistant, domain: str, context: dict[str, Any], data: Any
+    hass: HomeAssistant,
+    domain: str,
+    context: dict[str, Any],
+    data: Any,
+    *,
+    discovery_key: DiscoveryKey | None = None,
 ) -> None:
     """Create a discovery flow."""
     dispatcher: FlowDispatcher | None = None
@@ -30,6 +45,9 @@ def async_create_flow(
     elif hass.state is not CoreState.running:
         dispatcher = hass.data[DISCOVERY_FLOW_DISPATCHER] = FlowDispatcher(hass)
         dispatcher.async_setup()
+
+    if discovery_key:
+        context = context | {"discovery_key": dataclasses.asdict(discovery_key)}
 
     if not dispatcher or dispatcher.started:
         if init_coro := _async_init_flow(hass, domain, context, data):
