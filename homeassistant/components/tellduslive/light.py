@@ -10,8 +10,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .. import tellduslive
-from .entry import TelldusLiveEntity
+from .const import DOMAIN, TELLDUS_DISCOVERY_NEW
+from .entity import TelldusLiveEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,12 +25,12 @@ async def async_setup_entry(
 
     async def async_discover_light(device_id):
         """Discover and add a discovered sensor."""
-        client = hass.data[tellduslive.DOMAIN]
+        client = hass.data[DOMAIN]
         async_add_entities([TelldusLiveLight(client, device_id)])
 
     async_dispatcher_connect(
         hass,
-        tellduslive.TELLDUS_DISCOVERY_NEW.format(light.DOMAIN, tellduslive.DOMAIN),
+        TELLDUS_DISCOVERY_NEW.format(light.DOMAIN, DOMAIN),
         async_discover_light,
     )
 

@@ -1,17 +1,26 @@
 """The tests for the Ring sensor platform."""
 
 import logging
+from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from ring_doorbell import Ring
 
-from homeassistant.components.ring.const import SCAN_INTERVAL
-from homeassistant.components.sensor import ATTR_STATE_CLASS, SensorStateClass
+from homeassistant.components.ring.const import DOMAIN, SCAN_INTERVAL
+from homeassistant.components.sensor import (
+    ATTR_STATE_CLASS,
+    DOMAIN as SENSOR_DOMAIN,
+    SensorStateClass,
+)
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.setup import async_setup_component
 
 from .common import setup_platform
+from .device_mocks import FRONT_DEVICE_ID, FRONT_DOOR_DEVICE_ID, INGRESS_DEVICE_ID
 
 from tests.common import async_fire_time_changed
 
@@ -107,13 +116,23 @@ async def test_health_sensor(
 
 
 @pytest.mark.parametrize(
-    ("device_name", "sensor_name", "expected_value"),
+    ("device_id", "device_name", "sensor_name", "expected_value"),
     [
-        ("front_door", "last_motion", "2017-03-05T15:03:40+00:00"),
-        ("front_door", "last_ding", "2018-03-05T15:03:40+00:00"),
-        ("front_door", "last_activity", "2018-03-05T15:03:40+00:00"),
-        ("front", "last_motion", "2017-03-05T15:03:40+00:00"),
-        ("ingress", "last_activity", "2024-02-02T11:21:24+00:00"),
+        (
+            FRONT_DOOR_DEVICE_ID,
+            "front_door",
+            "last_motion",
+            "2017-03-05T15:03:40+00:00",
+        ),
+        (FRONT_DOOR_DEVICE_ID, "front_door", "last_ding", "2018-03-05T15:03:40+00:00"),
+        (
+            FRONT_DOOR_DEVICE_ID,
+            "front_door",
+            "last_activity",
+            "2018-03-05T15:03:40+00:00",
+        ),
+        (FRONT_DEVICE_ID, "front", "last_motion", "2017-03-05T15:03:40+00:00"),
+        (INGRESS_DEVICE_ID, "ingress", "last_activity", "2024-02-02T11:21:24+00:00"),
     ],
     ids=[
         "doorbell-motion",
@@ -125,14 +144,31 @@ async def test_health_sensor(
 )
 async def test_history_sensor(
     hass: HomeAssistant,
-    mock_ring_client,
+    mock_ring_client: Ring,
+    mock_config_entry: ConfigEntry,
+    entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
-    device_name,
-    sensor_name,
-    expected_value,
+    device_id: int,
+    device_name: str,
+    sensor_name: str,
+    expected_value: str,
 ) -> None:
     """Test the Ring sensors."""
-    await setup_platform(hass, "sensor")
+    # Create the entity so it is not ignored by the deprecation check
+    mock_config_entry.add_to_hass(hass)
+
+    entity_id = f"sensor.{device_name}_{sensor_name}"
+    unique_id = f"{device_id}-{sensor_name}"
+
+    entity_registry.async_get_or_create(
+        domain=SENSOR_DOMAIN,
+        platform=DOMAIN,
+        unique_id=unique_id,
+        suggested_object_id=f"{device_name}_{sensor_name}",
+        config_entry=mock_config_entry,
+    )
+    with patch("homeassistant.components.ring.PLATFORMS", [Platform.SENSOR]):
+        assert await async_setup_component(hass, DOMAIN, {})
 
     entity_id = f"sensor.{device_name}_{sensor_name}"
     sensor_state = hass.states.get(entity_id)
