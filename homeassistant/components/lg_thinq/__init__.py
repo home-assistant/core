@@ -31,9 +31,7 @@ from .mqtt import ThinQMQTT
 class ThinqData:
     """A class that holds runtime data."""
 
-    coordinator_map: dict[str, DeviceDataUpdateCoordinator] = field(
-        default_factory=dict
-    )
+    coordinators: dict[str, DeviceDataUpdateCoordinator] = field(default_factory=dict)
     mqtt_client: ThinQMQTT | None = None
 
 
@@ -96,7 +94,7 @@ async def async_setup_coordinators(
     ]
     task_result = await asyncio.gather(*task_list)
     for coordinator in task_result:
-        entry.runtime_data.coordinator_map[coordinator.unique_id] = coordinator
+        entry.runtime_data.coordinators[coordinator.unique_id] = coordinator
 
 
 @callback
@@ -104,7 +102,7 @@ def async_cleanup_device_registry(hass: HomeAssistant, entry: ThinqConfigEntry) 
     """Clean up device registry."""
     new_device_unique_ids = [
         coordinator.unique_id
-        for coordinator in entry.runtime_data.coordinator_map.values()
+        for coordinator in entry.runtime_data.coordinators.values()
     ]
     device_registry = dr.async_get(hass)
     existing_entries = dr.async_entries_for_config_entry(
@@ -123,9 +121,7 @@ async def async_setup_mqtt(
     hass: HomeAssistant, entry: ThinqConfigEntry, thinq_api: ThinQApi, client_id: str
 ) -> None:
     """Set up MQTT connection."""
-    mqtt_client = ThinQMQTT(
-        hass, thinq_api, client_id, entry.runtime_data.coordinator_map
-    )
+    mqtt_client = ThinQMQTT(hass, thinq_api, client_id, entry.runtime_data.coordinators)
     entry.runtime_data.mqtt_client = mqtt_client
 
     # Try to connect.
