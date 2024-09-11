@@ -75,6 +75,7 @@ async def test_async_step_user_integration_invalid_url(
         result["flow_id"],
         {CONF_URL: "https://github.com/user/awesome-component"},
     )
+    await hass.async_block_till_done()
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert mock_setup_entry.call_count == 1
 
@@ -274,5 +275,6 @@ async def test_async_step_resource_invalid_template(
         result["flow_id"],
         {CONF_DOWNLOAD_URL: "https://example.com/bundle_{{version}}.js"},
     )
+    await hass.async_block_till_done()
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert mock_setup_entry.call_count == 1

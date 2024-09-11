@@ -15,7 +15,7 @@ async def test_integration_properties(
     integration_manager: IntegrationRepositoryManager,
 ) -> None:
     """Test properties of integration fetched during async_update."""
-    await integration_manager.clone()
+    await integration_manager.install()
     entity = GPMUpdateEntity(integration_manager)
     await entity.async_update()
     assert entity.installed_version == "v0.9.9"
@@ -31,6 +31,7 @@ async def test_integration_properties(
 
 async def test_resource_properties(resource_manager: ResourceRepositoryManager) -> None:
     """Test properties of resource fetched during async_update."""
+    await resource_manager.install()
     entity = GPMUpdateEntity(resource_manager)
     await entity.async_update()
     assert entity.installed_version == "v0.9.9"
@@ -43,7 +44,7 @@ async def test_resource_properties(resource_manager: ResourceRepositoryManager) 
 
 async def test_versions_substr(manager: RepositoryManager) -> None:
     """Test that GIT commit SHAs are shortened in UI."""
-    await manager.clone()
+    await manager.install()
     manager.update_strategy = UpdateStrategy.LATEST_COMMIT
     manager.get_current_version.return_value = (
         "d98061dd815fbf3ead679d9f744328f5217da68a"
@@ -55,12 +56,12 @@ async def test_versions_substr(manager: RepositoryManager) -> None:
     assert entity.latest_version == "690a323"
 
 
-@pytest.mark.parametrize("version", ["0.8.8", "1.0.0", "2.0.0beta5", None])
+@pytest.mark.parametrize("version", ["v0.8.8", "v1.0.0", "v2.0.0beta2", None])
 async def test_install(
     manager: RepositoryManager, version: str | None, request: pytest.FixtureRequest
 ) -> None:
     """Test update installation."""
-    await manager.clone()
+    await manager.install()
     entity = GPMUpdateEntity(manager)
     await entity.async_update()
     await entity.async_install(version=version, backup=False)
@@ -69,7 +70,7 @@ async def test_install(
 
 async def test_install_same_version(manager: RepositoryManager) -> None:
     """Test failed update installation."""
-    await manager.clone()
+    await manager.install()
     entity = GPMUpdateEntity(manager)
     await entity.async_update()
     with pytest.raises(HomeAssistantError):
