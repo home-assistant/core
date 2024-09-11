@@ -46,8 +46,6 @@ async def async_setup_entry(
     coordinator: WatchYourLANUpdateCoordinator = entry.runtime_data
 
     entities: Sequence[SensorEntity | BinarySensorEntity] = [
-        WatchYourLANDeviceCountSensor(coordinator)
-    ] + [
         WatchYourLANOnlineStatusBinarySensor(coordinator, device)
         if description.key == "online_status"
         else WatchYourLANGenericSensor(coordinator, device, description)
@@ -140,53 +138,3 @@ class WatchYourLANGenericSensor(
             "iface": "Iface",
         }
         return field_mapping.get(self.entity_description.key, "")
-
-
-class WatchYourLANDeviceCountSensor(
-    CoordinatorEntity[WatchYourLANUpdateCoordinator], SensorEntity
-):
-    """Sensor that tracks the total number of devices."""
-
-    def __init__(self, coordinator: WatchYourLANUpdateCoordinator) -> None:
-        """Initialize the device count sensor."""
-        super().__init__(coordinator)
-
-    @property
-    def name(self) -> str:
-        """Return the name of the sensor."""
-        return "WatchYourLAN Total Devices"
-
-    @property
-    def native_value(self) -> int:
-        """Return the state of the sensor."""
-        return (
-            len(self.coordinator.data) if isinstance(self.coordinator.data, list) else 0
-        )
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return additional details such as known/unknown devices and devices per network interface."""
-        if isinstance(self.coordinator.data, list):
-            online_count = sum(
-                1 for device in self.coordinator.data if device.get("Now") == 1
-            )
-            offline_count = len(self.coordinator.data) - online_count
-            known_count = sum(
-                1 for device in self.coordinator.data if device.get("Known") == 1
-            )
-            unknown_count = len(self.coordinator.data) - known_count
-
-            iface_counts: dict[str, int] = {}
-            for device in self.coordinator.data:
-                iface = device.get("Iface", "Unknown")
-                iface_counts[iface] = iface_counts.get(iface, 0) + 1
-
-            return {
-                "online": online_count,
-                "offline": offline_count,
-                "total": len(self.coordinator.data),
-                "known": known_count,
-                "unknown": unknown_count,
-                "devices_per_iface": iface_counts,
-            }
-        return {}
