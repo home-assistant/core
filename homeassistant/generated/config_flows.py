@@ -139,6 +139,7 @@ FLOWS = {
         "drop_connect",
         "dsmr",
         "dsmr_reader",
+        "duke_energy",
         "dunehd",
         "duotecno",
         "dwd_weather_warnings",

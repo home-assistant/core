@@ -209,6 +209,9 @@ aiodiscover==2.1.0
 # homeassistant.components.dnsip
 aiodns==3.2.0
 
+# homeassistant.components.duke_energy
+aiodukeenergy==0.2.2
+
 # homeassistant.components.eafm
 aioeafm==0.1.2
 
