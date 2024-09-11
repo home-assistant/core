@@ -50,8 +50,10 @@ class DukeEnergyConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                email = auth["email"].lower()
                 username = auth["cdp_internal_user_id"].lower()
+                await self.async_set_unique_id(username)
+                self._abort_if_unique_id_configured()
+                email = auth["email"].lower()
                 data = {
                     CONF_EMAIL: email,
                     CONF_USERNAME: username,
