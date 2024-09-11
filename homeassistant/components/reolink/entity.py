@@ -50,7 +50,7 @@ class ReolinkHostCoordinatorEntity(CoordinatorEntity[DataUpdateCoordinator[None]
     """
 
     _attr_has_entity_name = True
-    entity_description: ReolinkHostEntityDescription | ReolinkChannelEntityDescription
+    entity_description: ReolinkHostEntityDescription | ReolinkChannelEntityDescription | ReolinkChimeEntityDescription
 
     def __init__(
         self,
@@ -110,7 +110,7 @@ class ReolinkHostCoordinatorEntity(CoordinatorEntity[DataUpdateCoordinator[None]
 class ReolinkChannelCoordinatorEntity(ReolinkHostCoordinatorEntity):
     """Parent class for Reolink hardware camera entities connected to a channel of the NVR."""
 
-    entity_description: ReolinkChannelEntityDescription
+    entity_description: ReolinkChannelEntityDescription | ReolinkChimeEntityDescription
 
     def __init__(
         self,
