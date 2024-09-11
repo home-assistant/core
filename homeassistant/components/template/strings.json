@@ -45,7 +45,8 @@
           "step": "Step value",
           "set_value": "Actions on set value",
           "max": "Maximum value",
-          "min": "Minimum value"
+          "min": "Minimum value",
+          "unit_of_measurement": "[%key:component::template::config::step::sensor::data::unit_of_measurement%]"
         },
         "data_description": {
           "device_id": "[%key:component::template::config::step::sensor::data_description::device_id%]"
