@@ -49,7 +49,7 @@ async def async_setup_entry(
     )
 
 
-class ServerStatusUpdate(UpdateEntity):
+class ServerStatusUpdate(LMSStatusEntity, UpdateEntity):
     """LMS Status update sensors via cooridnatior."""
 
     @property
@@ -58,7 +58,7 @@ class ServerStatusUpdate(UpdateEntity):
         return str(self.coordinator.data[self.entity_description.key])
 
 
-class ServerStatusUpdateLMS(LMSStatusEntity, ServerStatusUpdate):
+class ServerStatusUpdateLMS(ServerStatusUpdate):
     """LMS Status update sensor from LMS via cooridnatior."""
 
     title: str = SERVER_MODEL
@@ -69,7 +69,7 @@ class ServerStatusUpdateLMS(LMSStatusEntity, ServerStatusUpdate):
         return str(self.coordinator.data[STATUS_QUERY_VERSION])
 
 
-class ServerStatusUpdatePlugins(LMSStatusEntity, ServerStatusUpdate):
+class ServerStatusUpdatePlugins(ServerStatusUpdate):
     """LMS Plugings update sensor from LMS via cooridnatior."""
 
     auto_update = True
