@@ -8,8 +8,12 @@ from inelsmqtt import InelsMqtt
 from inelsmqtt.const import MQTT_TRANSPORT
 import voluptuous as vol
 
-from homeassistant import config_entries
-from homeassistant.config_entries import ConfigFlowResult
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
 
@@ -18,7 +22,7 @@ from .const import DOMAIN, TITLE
 CONNECTION_TIMEOUT = 5
 
 
-class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class INelsConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle of iNELS config flow."""
 
     VERSION = 1
@@ -26,7 +30,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
+        config_entry: ConfigEntry,
     ) -> InelsOptionsFlowHandler:
         """Get the options flow for this handler."""
         return InelsOptionsFlowHandler(config_entry)
@@ -83,10 +87,10 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
 
-class InelsOptionsFlowHandler(config_entries.OptionsFlow):
+class InelsOptionsFlowHandler(OptionsFlow):
     """Handle iNELS options."""
 
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+    def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize options flow."""
         self.config_entry = config_entry
 
