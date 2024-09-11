@@ -16,7 +16,7 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.util.hass_dict import HassKey
 
 from .const import DOMAIN, StreamType
-from .util import get_camera_from_entity_id
+from .helper import get_camera_from_entity_id
 
 if TYPE_CHECKING:
     from . import Camera

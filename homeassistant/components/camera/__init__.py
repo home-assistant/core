@@ -77,9 +77,9 @@ from .const import (  # noqa: F401
     SERVICE_RECORD,
     StreamType,
 )
+from .helper import get_camera_from_entity_id
 from .img_util import scale_jpeg_camera_image
 from .prefs import CameraPreferences, DynamicStreamSettings  # noqa: F401
-from .util import get_camera_from_entity_id
 from .webrtc import (
     CameraWebRTCProvider,
     async_get_supported_providers,
