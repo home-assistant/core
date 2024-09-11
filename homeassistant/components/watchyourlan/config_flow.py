@@ -42,19 +42,17 @@ class WatchYourLANConfigFlow(ConfigFlow, domain=DOMAIN):
                     verify_ssl=user_input[CONF_VERIFY_SSL],
                 )
                 hosts = await api_client.get_all_hosts()
-                if not hosts:
-                    errors["base"] = "cannot_connect"
             except (ConnectError, HTTPStatusError) as exc:
                 _LOGGER.error("Connection error during setup: %s", exc)
                 errors["base"] = "cannot_connect"
             except Exception:  # noqa: BLE001
                 errors["base"] = "unknown"
-            else:
-                # Return a config entry on successful connection
-                if not errors:
-                    return self.async_create_entry(
-                        title="WatchYourLAN", data={"url": user_input[CONF_URL]}
-                    )
+            if not hosts:
+                errors["base"] = "cannot_connect"
+            if not errors:
+                return self.async_create_entry(
+                    title="WatchYourLAN", data={"url": user_input[CONF_URL]}
+                )
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
