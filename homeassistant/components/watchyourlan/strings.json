@@ -15,5 +15,21 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
+  },
+  "entity": {
+    "sensor": {
+      "online_status": {
+        "name": "Online Status"
+      },
+      "ip_address": {
+        "name": "IP Address"
+      },
+      "mac_address": {
+        "name": "MAC Address"
+      },
+      "iface": {
+        "name": "Network Interface"
+      }
+    }
   }
 }

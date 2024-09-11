@@ -8,7 +8,7 @@ import voluptuous as vol
 from watchyourlanclient import WatchYourLANClient
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_SSL, CONF_URL
+from homeassistant.const import CONF_URL, CONF_VERIFY_SSL
 
 from .const import DOMAIN
 
@@ -18,7 +18,7 @@ _LOGGER = logging.getLogger(__name__)
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_URL): str,
-        vol.Optional(CONF_SSL, default=False): bool,
+        vol.Optional(CONF_VERIFY_SSL, default=False): bool,
     }
 )
 
@@ -39,7 +39,7 @@ class WatchYourLANConfigFlow(ConfigFlow, domain=DOMAIN):
                 api_client = WatchYourLANClient(
                     base_url=user_input[CONF_URL],
                     async_mode=True,
-                    verify_ssl=user_input[CONF_SSL],
+                    verify_ssl=user_input[CONF_VERIFY_SSL],
                 )
                 hosts = await api_client.get_all_hosts()
                 if not hosts:

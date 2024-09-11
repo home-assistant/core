@@ -7,6 +7,7 @@ from typing import Any
 from httpx import ConnectError, HTTPStatusError
 from watchyourlanclient import WatchYourLANClient
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -17,7 +18,7 @@ _LOGGER = logging.getLogger(__name__)
 class WatchYourLANUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
     """Class to manage fetching data from the WatchYourLAN API."""
 
-    def __init__(self, hass: HomeAssistant) -> None:
+    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
         """Initialize the coordinator."""
         # Set up a regular polling interval (e.g., every 60 seconds)
         update_interval = timedelta(seconds=60)  # Poll every 60 seconds
@@ -29,11 +30,10 @@ class WatchYourLANUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]])
             update_interval=update_interval,
         )
 
-        # Ensure self.config_entry is not None before accessing its data
-        if self.config_entry is None:
-            raise ValueError("config_entry is None, cannot access configuration data")
+        # Store the ConfigEntry instance
+        self.config_entry = config_entry
 
-        # Use self.config_entry directly, as it's available from the superclass
+        # Initialize the WatchYourLANClient with the base URL from the config
         self.api_client = WatchYourLANClient(
             base_url=self.config_entry.data[CONF_URL], async_mode=True
         )
