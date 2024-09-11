@@ -17,7 +17,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import Throttle, dt as dt_util
 
-from .const import (
+from ..const import (
     CONF_PLANT_ID,
     DEFAULT_PLANT_ID,
     DEFAULT_URL,
@@ -25,12 +25,12 @@ from .const import (
     DOMAIN,
     LOGIN_INVALID_AUTH_CODE,
 )
-from .sensor_types.inverter import INVERTER_SENSOR_TYPES
-from .sensor_types.mix import MIX_SENSOR_TYPES
-from .sensor_types.sensor_entity_description import GrowattSensorEntityDescription
-from .sensor_types.storage import STORAGE_SENSOR_TYPES
-from .sensor_types.tlx import TLX_SENSOR_TYPES
-from .sensor_types.total import TOTAL_SENSOR_TYPES
+from .inverter import INVERTER_SENSOR_TYPES
+from .mix import MIX_SENSOR_TYPES
+from .sensor_entity_description import GrowattSensorEntityDescription
+from .storage import STORAGE_SENSOR_TYPES
+from .tlx import TLX_SENSOR_TYPES
+from .total import TOTAL_SENSOR_TYPES
 
 _LOGGER = logging.getLogger(__name__)
 
