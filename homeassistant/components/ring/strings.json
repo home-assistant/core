@@ -47,6 +47,11 @@
         "name": "[%key:component::light::title%]"
       }
     },
+    "number": {
+      "volume": {
+        "name": "Volume"
+      }
+    },
     "siren": {
       "siren": {
         "name": "[%key:component::siren::title%]"

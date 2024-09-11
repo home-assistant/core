@@ -189,12 +189,6 @@ SENSOR_TYPES: tuple[RingSensorEntityDescription[Any], ...] = (
         else None,
         exists_fn=lambda device: device.has_capability(RingCapability.HISTORY),
     ),
-    RingSensorEntityDescription[RingDoorBell | RingChime](
-        key="volume",
-        translation_key="volume",
-        value_fn=lambda device: device.volume,
-        exists_fn=lambda device: isinstance(device, (RingDoorBell, RingChime)),
-    ),
     RingSensorEntityDescription[RingOther](
         key="doorbell_volume",
         translation_key="doorbell_volume",

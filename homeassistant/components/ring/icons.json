@@ -1,5 +1,10 @@
 {
   "entity": {
+    "number": {
+      "volume": {
+        "default": "mdi:bell-ring"
+      }
+    },
     "sensor": {
       "last_activity": {
         "default": "mdi:history"
