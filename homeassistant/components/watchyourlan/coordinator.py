@@ -17,10 +17,10 @@ _LOGGER = logging.getLogger(__name__)
 
 class WatchYourLANUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
     """Class to manage fetching data from the WatchYourLAN API."""
-    
+
     config_entry: ConfigEntry
 
-    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the coordinator."""
         # Set up a regular polling interval (e.g., every 60 seconds)
         update_interval = timedelta(seconds=60)  # Poll every 60 seconds
@@ -31,9 +31,6 @@ class WatchYourLANUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]])
             name="WatchYourLAN",
             update_interval=update_interval,
         )
-
-        # Store the ConfigEntry instance
-        self.config_entry = config_entry
 
         # Initialize the WatchYourLANClient with the base URL from the config
         self.api_client = WatchYourLANClient(
