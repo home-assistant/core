@@ -2,6 +2,7 @@
 
 from aiostreammagic import StreamMagicClient
 
+from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
@@ -24,3 +25,16 @@ class CambridgeAudioEntity(Entity):
             serial_number=client.info.unit_id,
             configuration_url=f"http://{client.host}",
         )
+
+    @callback
+    async def _state_update_callback(self, _client: StreamMagicClient) -> None:
+        """Call when the device is notified of changes."""
+        self.async_write_ha_state()
+
+    async def async_added_to_hass(self) -> None:
+        """Register callback handlers."""
+        await self.client.register_state_update_callbacks(self._state_update_callback)
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Remove callbacks."""
+        await self.client.unregister_state_update_callbacks(self._state_update_callback)

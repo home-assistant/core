@@ -70,18 +70,6 @@ class CambridgeAudioDevice(CambridgeAudioEntity, MediaPlayerEntity):
         super().__init__(client)
         self._attr_unique_id = client.info.unit_id
 
-    async def _state_update_callback(self, _client: StreamMagicClient) -> None:
-        """Call when the device is notified of changes."""
-        self.schedule_update_ha_state()
-
-    async def async_added_to_hass(self) -> None:
-        """Register callback handlers."""
-        await self.client.register_state_update_callbacks(self._state_update_callback)
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Remove callbacks."""
-        await self.client.unregister_state_update_callbacks(self._state_update_callback)
-
     @property
     def supported_features(self) -> MediaPlayerEntityFeature:
         """Supported features for the media player."""
