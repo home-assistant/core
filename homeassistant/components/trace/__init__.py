@@ -163,7 +163,7 @@ async def async_restore_traces(hass: HomeAssistant) -> None:
 
     hass.data[DATA_TRACES_RESTORED] = True
 
-    store: Store[dict[str, list]] = hass.data[DATA_TRACE_STORE]
+    store = hass.data[DATA_TRACE_STORE]
     try:
         restored_traces = await store.async_load() or {}
     except HomeAssistantError:
