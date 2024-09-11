@@ -49,7 +49,6 @@ DEVIE_TYPE_CLIMATE_MAP: dict[DeviceType, tuple[ThinQClimateEntityDescription, ..
         ThinQClimateEntityDescription(
             key=ExtendedProperty.CLIMATE_SYSTEM_BOILER,
             name=None,
-            translation_key=ExtendedProperty.CLIMATE_SYSTEM_BOILER,
             min_temp=16,
             max_temp=30,
             step=1,
@@ -122,10 +121,7 @@ class ThinQClimateEntity(ThinQEntity, ClimateEntity):
         )
         self._attr_hvac_modes = [HVACMode.OFF]
         self._attr_hvac_mode = HVACMode.OFF
-        self._attr_fan_modes = []
-        self._attr_fan_mode = None
         self._attr_preset_modes = []
-        self._attr_preset_mode = None
         self._attr_temperature_unit = UnitOfTemperature.CELSIUS
         self._requested_hvac_mode: str | None = None
 
@@ -313,7 +309,7 @@ class ThinQClimateEntity(ThinQEntity, ClimateEntity):
             kwargs,
         )
 
-        if isinstance((temperature := kwargs.get(ATTR_TEMPERATURE)), float):
+        if (temperature := kwargs.get(ATTR_TEMPERATURE)) is not None:
             if (
                 target_temp := self._round_by_step(temperature)
             ) != self.target_temperature:
@@ -323,7 +319,7 @@ class ThinQClimateEntity(ThinQEntity, ClimateEntity):
                     )
                 )
 
-        if isinstance((temperature_low := kwargs.get(ATTR_TARGET_TEMP_LOW)), float):
+        if (temperature_low := kwargs.get(ATTR_TARGET_TEMP_LOW)) is not None:
             if (
                 target_temp_low := self._round_by_step(temperature_low)
             ) != self.target_temperature_low:
@@ -333,7 +329,7 @@ class ThinQClimateEntity(ThinQEntity, ClimateEntity):
                     )
                 )
 
-        if isinstance((temperature_high := kwargs.get(ATTR_TARGET_TEMP_HIGH)), float):
+        if (temperature_high := kwargs.get(ATTR_TARGET_TEMP_HIGH)) is not None:
             if (
                 target_temp_high := self._round_by_step(temperature_high)
             ) != self.target_temperature_high:
