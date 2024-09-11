@@ -7,11 +7,11 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import HomeAssistantOverkizData
-from .const import DOMAIN
-from .cover_entities.awning import Awning
-from .cover_entities.generic_cover import OverkizGenericCover
-from .cover_entities.vertical_cover import LowSpeedCover, VerticalCover
+from .. import HomeAssistantOverkizData
+from ..const import DOMAIN
+from .awning import Awning
+from .generic_cover import OverkizGenericCover
+from .vertical_cover import LowSpeedCover, VerticalCover
 
 
 async def async_setup_entry(
