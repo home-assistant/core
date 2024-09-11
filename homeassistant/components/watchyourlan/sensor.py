@@ -29,10 +29,6 @@ ENTITY_DESCRIPTIONS = [
         translation_key="ip_address",
     ),
     SensorEntityDescription(
-        key="mac_address",
-        translation_key="mac_address",
-    ),
-    SensorEntityDescription(
         key="iface",
         translation_key="iface",
     ),
