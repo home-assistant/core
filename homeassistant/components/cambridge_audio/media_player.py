@@ -201,7 +201,10 @@ class CambridgeAudioDevice(CambridgeAudioEntity, MediaPlayerEntity):
     async def async_media_pause(self) -> None:
         """Pause the current media."""
         controls = self.client.now_playing.controls
-        if "pause" not in controls and "play_pause" in controls:
+        if (
+            TransportControl.PAUSE not in controls
+            and TransportControl.PLAY_PAUSE in controls
+        ):
             await self.client.play_pause()
         else:
             await self.client.pause()
@@ -213,7 +216,10 @@ class CambridgeAudioDevice(CambridgeAudioEntity, MediaPlayerEntity):
     async def async_media_play(self) -> None:
         """Play the current media."""
         controls = self.client.now_playing.controls
-        if "play" not in controls and "play_pause" in controls:
+        if (
+            TransportControl.PLAY not in controls
+            and TransportControl.PLAY_PAUSE in controls
+        ):
             await self.client.play_pause()
         else:
             await self.client.play()
