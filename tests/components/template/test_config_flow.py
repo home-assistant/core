@@ -63,7 +63,7 @@ from tests.typing import WebSocketGenerator
                 "device_class": "restart",
                 "press": [
                     {
-                        "service": "input_boolean.toggle",
+                        "action": "input_boolean.toggle",
                         "target": {"entity_id": "input_boolean.test"},
                         "data": {},
                     }
@@ -73,7 +73,7 @@ from tests.typing import WebSocketGenerator
                 "device_class": "restart",
                 "press": [
                     {
-                        "service": "input_boolean.toggle",
+                        "action": "input_boolean.toggle",
                         "target": {"entity_id": "input_boolean.test"},
                         "data": {},
                     }
@@ -89,6 +89,36 @@ from tests.typing import WebSocketGenerator
             {},
             {"verify_ssl": True},
             {"verify_ssl": True},
+            {},
+        ),
+        (
+            "number",
+            {"state": "{{ states('number.one') }}"},
+            "30.0",
+            {"one": "30.0", "two": "20.0"},
+            {},
+            {
+                "min": "0",
+                "max": "100",
+                "step": "0.1",
+                "unit_of_measurement": "cm",
+                "set_value": {
+                    "action": "input_number.set_value",
+                    "target": {"entity_id": "input_number.test"},
+                    "data": {"value": "{{ value }}"},
+                },
+            },
+            {
+                "min": 0,
+                "max": 100,
+                "step": 0.1,
+                "unit_of_measurement": "cm",
+                "set_value": {
+                    "action": "input_number.set_value",
+                    "target": {"entity_id": "input_number.test"},
+                    "data": {"value": "{{ value }}"},
+                },
+            },
             {},
         ),
         (
@@ -225,6 +255,20 @@ async def test_config_flow(
             },
             {"verify_ssl": True},
             {"verify_ssl": True},
+        ),
+        (
+            "number",
+            {"state": "{{ states('number.one') }}"},
+            {
+                "min": "0",
+                "max": "100",
+                "step": "0.1",
+            },
+            {
+                "min": 0,
+                "max": 100,
+                "step": 0.1,
+            },
         ),
         (
             "select",
@@ -368,7 +412,7 @@ def get_suggested(schema, key):
                 "device_class": "restart",
                 "press": [
                     {
-                        "service": "input_boolean.toggle",
+                        "action": "input_boolean.toggle",
                         "target": {"entity_id": "input_boolean.test"},
                         "data": {},
                     }
@@ -377,7 +421,7 @@ def get_suggested(schema, key):
             {
                 "press": [
                     {
-                        "service": "input_boolean.toggle",
+                        "action": "input_boolean.toggle",
                         "target": {"entity_id": "input_boolean.test"},
                         "data": {},
                     }
@@ -401,6 +445,36 @@ def get_suggested(schema, key):
                 "verify_ssl": True,
             },
             "url",
+        ),
+        (
+            "number",
+            {"state": "{{ states('number.one') }}"},
+            {"state": "{{ states('number.two') }}"},
+            ["30.0", "20.0"],
+            {"one": "30.0", "two": "20.0"},
+            {
+                "min": 0,
+                "max": 100,
+                "step": 0.1,
+                "unit_of_measurement": "cm",
+                "set_value": {
+                    "action": "input_number.set_value",
+                    "target": {"entity_id": "input_number.test"},
+                    "data": {"value": "{{ value }}"},
+                },
+            },
+            {
+                "min": 0,
+                "max": 100,
+                "step": 0.1,
+                "unit_of_measurement": "cm",
+                "set_value": {
+                    "action": "input_number.set_value",
+                    "target": {"entity_id": "input_number.test"},
+                    "data": {"value": "{{ value }}"},
+                },
+            },
+            "state",
         ),
         (
             "select",
@@ -694,7 +768,7 @@ EARLY_END_ERROR = "invalid template (TemplateSyntaxError: unexpected 'end of tem
                 ),
                 "unit_of_measurement": (
                     "'None' is not a valid unit for device class 'energy'; "
-                    "expected one of 'GJ', 'kWh', 'MJ', 'MWh', 'Wh'"
+                    "expected one of 'cal', 'Gcal', 'GJ', 'J', 'kcal', 'kJ', 'kWh', 'Mcal', 'MJ', 'MWh', 'Wh'"
                 ),
             },
         ),
@@ -1155,6 +1229,20 @@ async def test_option_flow_sensor_preview_config_entry_removed(
             },
             {},
             {},
+        ),
+        (
+            "number",
+            {"state": "{{ states('number.one') }}"},
+            {
+                "min": 0,
+                "max": 100,
+                "step": 0.1,
+            },
+            {
+                "min": 0,
+                "max": 100,
+                "step": 0.1,
+            },
         ),
         (
             "select",

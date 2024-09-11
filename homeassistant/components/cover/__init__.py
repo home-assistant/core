@@ -158,11 +158,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     await component.async_setup(config)
 
     component.async_register_entity_service(
-        SERVICE_OPEN_COVER, {}, "async_open_cover", [CoverEntityFeature.OPEN]
+        SERVICE_OPEN_COVER, None, "async_open_cover", [CoverEntityFeature.OPEN]
     )
 
     component.async_register_entity_service(
-        SERVICE_CLOSE_COVER, {}, "async_close_cover", [CoverEntityFeature.CLOSE]
+        SERVICE_CLOSE_COVER, None, "async_close_cover", [CoverEntityFeature.CLOSE]
     )
 
     component.async_register_entity_service(
@@ -177,33 +177,33 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
 
     component.async_register_entity_service(
-        SERVICE_STOP_COVER, {}, "async_stop_cover", [CoverEntityFeature.STOP]
+        SERVICE_STOP_COVER, None, "async_stop_cover", [CoverEntityFeature.STOP]
     )
 
     component.async_register_entity_service(
         SERVICE_TOGGLE,
-        {},
+        None,
         "async_toggle",
         [CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE],
     )
 
     component.async_register_entity_service(
         SERVICE_OPEN_COVER_TILT,
-        {},
+        None,
         "async_open_cover_tilt",
         [CoverEntityFeature.OPEN_TILT],
     )
 
     component.async_register_entity_service(
         SERVICE_CLOSE_COVER_TILT,
-        {},
+        None,
         "async_close_cover_tilt",
         [CoverEntityFeature.CLOSE_TILT],
     )
 
     component.async_register_entity_service(
         SERVICE_STOP_COVER_TILT,
-        {},
+        None,
         "async_stop_cover_tilt",
         [CoverEntityFeature.STOP_TILT],
     )
@@ -221,7 +221,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     component.async_register_entity_service(
         SERVICE_TOGGLE_COVER_TILT,
-        {},
+        None,
         "async_toggle_tilt",
         [CoverEntityFeature.OPEN_TILT | CoverEntityFeature.CLOSE_TILT],
     )

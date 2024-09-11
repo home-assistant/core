@@ -22,7 +22,7 @@ PLATFORMS = [Platform.CLIMATE]
 
 
 @dataclasses.dataclass
-class HomeAssistantBSBLANData:
+class BSBLanData:
     """BSBLan data stored in the Home Assistant data object."""
 
     coordinator: BSBLanUpdateCoordinator
@@ -57,7 +57,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     info = await bsblan.info()
     static = await bsblan.static_values()
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = HomeAssistantBSBLANData(
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = BSBLanData(
         client=bsblan,
         coordinator=coordinator,
         device=device,

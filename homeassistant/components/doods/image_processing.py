@@ -207,8 +207,6 @@ class Doods(ImageProcessingEntity):
             ]
             self._covers = area_config[CONF_COVERS]
 
-        template.attach(hass, self._file_out)
-
         self._dconfig = dconfig
         self._matches = {}
         self._total_matches = 0

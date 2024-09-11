@@ -42,7 +42,7 @@ async def async_setup_entry(
         SERVICE_LIGHT_FADE_START, UPB_BRIGHTNESS_RATE_SCHEMA, "async_light_fade_start"
     )
     platform.async_register_entity_service(
-        SERVICE_LIGHT_FADE_STOP, {}, "async_light_fade_stop"
+        SERVICE_LIGHT_FADE_STOP, None, "async_light_fade_stop"
     )
     platform.async_register_entity_service(
         SERVICE_LIGHT_BLINK, UPB_BLINK_RATE_SCHEMA, "async_light_blink"

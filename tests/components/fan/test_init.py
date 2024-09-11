@@ -38,7 +38,7 @@ from tests.common import (
 class BaseFan(FanEntity):
     """Implementation of the abstract FanEntity."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the fan."""
 
 

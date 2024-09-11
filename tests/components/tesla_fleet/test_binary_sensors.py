@@ -1,8 +1,10 @@
 """Test the Tesla Fleet binary sensor platform."""
 
+from unittest.mock import AsyncMock
+
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 from tesla_fleet_api.exceptions import VehicleOffline
 
 from homeassistant.components.tesla_fleet.coordinator import VEHICLE_INTERVAL
@@ -34,7 +36,7 @@ async def test_binary_sensor_refresh(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
-    mock_vehicle_data,
+    mock_vehicle_data: AsyncMock,
     freezer: FrozenDateTimeFactory,
     normal_config_entry: MockConfigEntry,
 ) -> None:
@@ -53,7 +55,7 @@ async def test_binary_sensor_refresh(
 
 async def test_binary_sensor_offline(
     hass: HomeAssistant,
-    mock_vehicle_data,
+    mock_vehicle_data: AsyncMock,
     normal_config_entry: MockConfigEntry,
 ) -> None:
     """Tests that the binary sensor entities are correct when offline."""

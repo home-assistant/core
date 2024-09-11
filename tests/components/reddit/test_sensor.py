@@ -66,7 +66,7 @@ INVALID_SORT_BY_CONFIG = {
 class ObjectView:
     """Use dict properties as attributes."""
 
-    def __init__(self, d):
+    def __init__(self, d) -> None:
         """Set dict as internal dict."""
         self.__dict__ = d
 

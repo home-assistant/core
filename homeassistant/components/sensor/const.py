@@ -14,7 +14,6 @@ from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     LIGHT_LUX,
     PERCENTAGE,
-    POWER_VOLT_AMPERE_REACTIVE,
     SIGNAL_STRENGTH_DECIBELS,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     UnitOfApparentPower,
@@ -31,6 +30,7 @@ from homeassistant.const import (
     UnitOfPower,
     UnitOfPrecipitationDepth,
     UnitOfPressure,
+    UnitOfReactivePower,
     UnitOfSoundPressure,
     UnitOfSpeed,
     UnitOfTemperature,
@@ -182,7 +182,7 @@ class SensorDeviceClass(StrEnum):
 
     Use this device class for sensors measuring energy consumption, for example
     electric energy consumption.
-    Unit of measurement: `Wh`, `kWh`, `MWh`, `MJ`, `GJ`
+    Unit of measurement: `J`, `kJ`, `MJ`, `GJ`, `Wh`, `kWh`, `MWh`, `cal`, `kcal`, `Mcal`, `Gcal`
     """
 
     ENERGY_STORAGE = "energy_storage"
@@ -563,7 +563,7 @@ DEVICE_CLASS_UNITS: dict[SensorDeviceClass, set[type[StrEnum] | str | None]] = {
     SensorDeviceClass.PRECIPITATION: set(UnitOfPrecipitationDepth),
     SensorDeviceClass.PRECIPITATION_INTENSITY: set(UnitOfVolumetricFlux),
     SensorDeviceClass.PRESSURE: set(UnitOfPressure),
-    SensorDeviceClass.REACTIVE_POWER: {POWER_VOLT_AMPERE_REACTIVE},
+    SensorDeviceClass.REACTIVE_POWER: {UnitOfReactivePower.VOLT_AMPERE_REACTIVE},
     SensorDeviceClass.SIGNAL_STRENGTH: {
         SIGNAL_STRENGTH_DECIBELS,
         SIGNAL_STRENGTH_DECIBELS_MILLIWATT,

@@ -11,7 +11,10 @@ from homeassistant.core import HomeAssistant
 from .const import CONF_ACCESS_URL
 from .coordinator import SimpleFinDataUpdateCoordinator
 
-PLATFORMS: list[str] = [Platform.SENSOR]
+PLATFORMS: list[str] = [
+    Platform.BINARY_SENSOR,
+    Platform.SENSOR,
+]
 
 
 type SimpleFinConfigEntry = ConfigEntry[SimpleFinDataUpdateCoordinator]

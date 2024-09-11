@@ -58,7 +58,7 @@ async def async_setup_entry(
             translation_key="request_timeout",
             translation_placeholders={
                 "config_title": entry.title,
-                "error": e,
+                "error": str(e),
             },
         ) from e
     except OpendataTransportError as e:
@@ -68,7 +68,7 @@ async def async_setup_entry(
             translation_placeholders={
                 **PLACEHOLDERS,
                 "config_title": entry.title,
-                "error": e,
+                "error": str(e),
             },
         ) from e
 
