@@ -31,6 +31,11 @@ from .const import ENTITY_ID
 from tests.common import MockConfigEntry
 
 
+async def mock_state_update(client: AsyncMock):
+    """Trigger a callback in the media player."""
+    await client.register_state_update_callbacks.call_args[0][0](client)
+
+
 async def test_entity_supported_features(
     hass: HomeAssistant,
     mock_stream_magic_client: AsyncMock,
@@ -38,7 +43,7 @@ async def test_entity_supported_features(
 ) -> None:
     """Test entity attributes."""
     await setup_integration(hass, mock_config_entry)
-    await mock_stream_magic_client.mock_state_update()
+    await mock_state_update(mock_stream_magic_client)
     await hass.async_block_till_done()
 
     state = hass.states.get(ENTITY_ID)
@@ -78,7 +83,7 @@ async def test_entity_supported_features(
         TransportControl.TOGGLE_SHUFFLE,
         TransportControl.SEEK,
     ]
-    await mock_stream_magic_client.mock_state_update()
+    await mock_state_update(mock_stream_magic_client)
     await hass.async_block_till_done()
 
     state = hass.states.get(ENTITY_ID)
@@ -92,7 +97,7 @@ async def test_entity_supported_features(
     )
 
     mock_stream_magic_client.state.pre_amp_mode = True
-    await mock_stream_magic_client.mock_state_update()
+    await mock_state_update(mock_stream_magic_client)
     await hass.async_block_till_done()
 
     state = hass.states.get(ENTITY_ID)
@@ -130,7 +135,7 @@ async def test_entity_state(
     await setup_integration(hass, mock_config_entry)
     mock_stream_magic_client.state.power = power_state
     mock_stream_magic_client.play_state.state = play_state
-    await mock_stream_magic_client.mock_state_update()
+    await mock_state_update(mock_stream_magic_client)
     await hass.async_block_till_done()
 
     state = hass.states.get(ENTITY_ID)
@@ -159,7 +164,7 @@ async def test_media_play_pause_stop(
         TransportControl.PLAY,
         TransportControl.PAUSE,
     ]
-    await mock_stream_magic_client.mock_state_update()
+    await mock_state_update(mock_stream_magic_client)
     await hass.async_block_till_done()
 
     await hass.services.async_call(MP_DOMAIN, SERVICE_MEDIA_PAUSE, data, True)

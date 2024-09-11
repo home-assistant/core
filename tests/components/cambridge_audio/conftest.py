@@ -54,11 +54,6 @@ def mock_stream_magic_client() -> Generator[AsyncMock]:
         client.position_last_updated = client.play_state.position
         client.unregister_state_update_callbacks = AsyncMock(return_value=True)
 
-        async def mock_state_update_callback():
-            await client.register_state_update_callbacks.call_args[0][0](client)
-
-        client.mock_state_update = Mock(side_effect=mock_state_update_callback)
-
         yield client
 
 
