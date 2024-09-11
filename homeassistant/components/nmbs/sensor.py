@@ -261,7 +261,7 @@ class NMBSSensor(SensorEntity):
             attrs["via_arrival_platform"] = via["arrival"]["platform"]
             attrs["via_transfer_platform"] = via["departure"]["platform"]
             attrs["via_transfer_time"] = get_delay_in_minutes(
-                via["timeBetween"]
+                via["timebetween"]
             ) + get_delay_in_minutes(via["departure"]["delay"])
 
         if delay > 0:

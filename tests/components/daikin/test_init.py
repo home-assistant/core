@@ -27,8 +27,8 @@ def mock_daikin():
         """Mock the init function in pydaikin."""
         return Appliance
 
-    with patch("homeassistant.components.daikin.Appliance") as Appliance:
-        Appliance.factory.side_effect = mock_daikin_factory
+    with patch("homeassistant.components.daikin.DaikinFactory") as Appliance:
+        Appliance.side_effect = mock_daikin_factory
         type(Appliance).update_status = AsyncMock()
         type(Appliance).device_ip = PropertyMock(return_value=HOST)
         type(Appliance).inside_temperature = PropertyMock(return_value=22)
@@ -208,7 +208,7 @@ async def test_client_connection_error(hass: HomeAssistant, mock_daikin) -> None
     )
     config_entry.add_to_hass(hass)
 
-    mock_daikin.factory.side_effect = ClientConnectionError
+    mock_daikin.side_effect = ClientConnectionError
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
@@ -224,7 +224,7 @@ async def test_timeout_error(hass: HomeAssistant, mock_daikin) -> None:
     )
     config_entry.add_to_hass(hass)
 
-    mock_daikin.factory.side_effect = TimeoutError
+    mock_daikin.side_effect = TimeoutError
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 

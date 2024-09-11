@@ -26,7 +26,6 @@ from homeassistant.helpers.selector import (
     TextSelector,
 )
 
-from . import receiver as rcver
 from .const import (
     BRAND_NAME,
     CONF_RECEIVER_MAX_VOLUME,
@@ -40,6 +39,7 @@ from .const import (
     OPTION_SOURCE_PREFIX,
     OPTION_SOURCES,
 )
+from .receiver import Receiver, ReceiverInfo, async_discover, async_interview
 
 CONF_SCHEMA_CONFIGURE = vol.Schema(
     {
@@ -62,7 +62,7 @@ CONF_SCHEMA_CONFIGURE = vol.Schema(
 _LOGGER = logging.getLogger(__name__)
 
 
-def get_unique_id(receiver_info: rcver.ReceiverInfo):
+def get_unique_id(receiver_info: ReceiverInfo):
     """Generate the unique HA id from the receiver info."""
 
     # QUESTION: I think this can be {self._receiver_info.identifier}_main
@@ -83,8 +83,8 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize the config flow."""
-        self._discovered_infos: dict[str, rcver.Receiver] = {}
-        self._receiver_info: rcver.ReceiverInfo
+        self._discovered_infos: dict[str, Receiver] = {}
+        self._receiver_info: ReceiverInfo
 
     def _createOnkyoEntry(
         self, config: ReceiverConfig, host: str, name: str, options: dict | None = None
@@ -130,7 +130,7 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
             for entry in self._async_current_entries(include_ignore=False)
         }
 
-        infos = await rcver.async_discover()
+        infos = await async_discover()
         _LOGGER.debug("Discovered devices: %s", infos)
 
         self._discovered_infos = {}
@@ -161,10 +161,10 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
-            info: rcver.ReceiverInfo | None
+            info: ReceiverInfo | None
             host = user_input[CONF_HOST]
             try:
-                info = await rcver.async_interview(host)
+                info = await async_interview(host)
             except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
@@ -245,9 +245,9 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
             _LOGGER.error("Import error, host is not set")
             return self.async_abort(reason="cannot_connect")
 
-        info: rcver.ReceiverInfo | None
+        info: ReceiverInfo | None
         try:
-            info = await rcver.async_interview(host)
+            info = await async_interview(host)
         except Exception:
             _LOGGER.exception("Unexpected exception")
             return self.async_abort(reason="cannot_connect")

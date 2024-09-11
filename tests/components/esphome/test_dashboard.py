@@ -6,7 +6,7 @@ from unittest.mock import patch
 from aioesphomeapi import DeviceInfo, InvalidAuthAPIError
 
 from homeassistant.components.esphome import CONF_NOISE_PSK, coordinator, dashboard
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -16,7 +16,10 @@ from tests.common import MockConfigEntry
 
 
 async def test_dashboard_storage(
-    hass: HomeAssistant, init_integration, mock_dashboard, hass_storage: dict[str, Any]
+    hass: HomeAssistant,
+    init_integration,
+    mock_dashboard: dict[str, Any],
+    hass_storage: dict[str, Any],
 ) -> None:
     """Test dashboard storage."""
     assert hass_storage[dashboard.STORAGE_KEY]["data"] == {
@@ -147,7 +150,7 @@ async def test_new_info_reload_config_entries(
 
 
 async def test_new_dashboard_fix_reauth(
-    hass: HomeAssistant, mock_client, mock_config_entry, mock_dashboard
+    hass: HomeAssistant, mock_client, mock_config_entry: MockConfigEntry, mock_dashboard
 ) -> None:
     """Test config entries waiting for reauth are triggered."""
     mock_client.device_info.side_effect = (
@@ -159,14 +162,7 @@ async def test_new_dashboard_fix_reauth(
         "homeassistant.components.esphome.coordinator.ESPHomeDashboardAPI.get_encryption_key",
         return_value=VALID_NOISE_PSK,
     ) as mock_get_encryption_key:
-        result = await hass.config_entries.flow.async_init(
-            "esphome",
-            context={
-                "source": SOURCE_REAUTH,
-                "entry_id": mock_config_entry.entry_id,
-                "unique_id": mock_config_entry.unique_id,
-            },
-        )
+        result = await mock_config_entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
     assert len(mock_get_encryption_key.mock_calls) == 0
@@ -197,7 +193,9 @@ async def test_new_dashboard_fix_reauth(
     assert mock_config_entry.data[CONF_NOISE_PSK] == VALID_NOISE_PSK
 
 
-async def test_dashboard_supports_update(hass: HomeAssistant, mock_dashboard) -> None:
+async def test_dashboard_supports_update(
+    hass: HomeAssistant, mock_dashboard: dict[str, Any]
+) -> None:
     """Test dashboard supports update."""
     dash = dashboard.async_get_dashboard(hass)
 

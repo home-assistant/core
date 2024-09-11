@@ -95,5 +95,21 @@
         }
       ]
     }
+  },
+  "Washer": {
+    "data": {
+      "settings": [
+        {
+          "key": "BSH.Common.Setting.PowerState",
+          "value": "BSH.Common.EnumType.PowerState.On",
+          "type": "BSH.Common.EnumType.PowerState"
+        },
+        {
+          "key": "BSH.Common.Setting.ChildLock",
+          "value": false,
+          "type": "Boolean"
+        }
+      ]
+    }
   }
 }

@@ -1,10 +1,10 @@
 """The tests for the Demo component."""
 
+from collections.abc import Generator
 import json
 from unittest.mock import patch
 
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.demo import DOMAIN
 from homeassistant.core import HomeAssistant

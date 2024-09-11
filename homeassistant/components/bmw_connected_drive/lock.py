@@ -10,14 +10,13 @@ from bimmer_connected.vehicle import MyBMWVehicle
 from bimmer_connected.vehicle.doors_windows import LockState
 
 from homeassistant.components.lock import LockEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import BMWBaseEntity
-from .const import DOMAIN
+from . import BMWConfigEntry
 from .coordinator import BMWDataUpdateCoordinator
+from .entity import BMWBaseEntity
 
 DOOR_LOCK_STATE = "door_lock_state"
 _LOGGER = logging.getLogger(__name__)
@@ -25,11 +24,11 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: BMWConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the MyBMW lock from config entry."""
-    coordinator: BMWDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data.coordinator
 
     if not coordinator.read_only:
         async_add_entities(
@@ -97,8 +96,6 @@ class BMWLock(BMWBaseEntity, LockEntity):
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         _LOGGER.debug("Updating lock data of %s", self.vehicle.name)
-        # Set default attributes
-        self._attr_extra_state_attributes = self._attrs
 
         # Only update the HA state machine if the vehicle reliably reports its lock state
         if self.door_lock_state_available:
@@ -106,8 +103,8 @@ class BMWLock(BMWBaseEntity, LockEntity):
                 LockState.LOCKED,
                 LockState.SECURED,
             }
-            self._attr_extra_state_attributes["door_lock_state"] = (
-                self.vehicle.doors_and_windows.door_lock_state.value
-            )
+            self._attr_extra_state_attributes = {
+                DOOR_LOCK_STATE: self.vehicle.doors_and_windows.door_lock_state.value
+            }
 
         super()._handle_coordinator_update()

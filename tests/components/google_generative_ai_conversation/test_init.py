@@ -14,11 +14,9 @@ from homeassistant.exceptions import HomeAssistantError
 from tests.common import MockConfigEntry
 
 
+@pytest.mark.usefixtures("mock_init_component")
 async def test_generate_content_service_without_images(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_init_component,
-    snapshot: SnapshotAssertion,
+    hass: HomeAssistant, snapshot: SnapshotAssertion
 ) -> None:
     """Test generate content service."""
     stubbed_generated_content = (
@@ -46,11 +44,9 @@ async def test_generate_content_service_without_images(
     assert [tuple(mock_call) for mock_call in mock_model.mock_calls] == snapshot
 
 
+@pytest.mark.usefixtures("mock_init_component")
 async def test_generate_content_service_with_image(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_init_component,
-    snapshot: SnapshotAssertion,
+    hass: HomeAssistant, snapshot: SnapshotAssertion
 ) -> None:
     """Test generate content service."""
     stubbed_generated_content = (
@@ -134,11 +130,9 @@ async def test_generate_content_response_has_empty_parts(
             )
 
 
+@pytest.mark.usefixtures("mock_init_component")
 async def test_generate_content_service_with_image_not_allowed_path(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_init_component,
-    snapshot: SnapshotAssertion,
 ) -> None:
     """Test generate content service with an image in a not allowed path."""
     with (
@@ -165,11 +159,9 @@ async def test_generate_content_service_with_image_not_allowed_path(
         )
 
 
+@pytest.mark.usefixtures("mock_init_component")
 async def test_generate_content_service_with_image_not_exists(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_init_component,
-    snapshot: SnapshotAssertion,
 ) -> None:
     """Test generate content service with an image that does not exist."""
     with (
@@ -192,12 +184,8 @@ async def test_generate_content_service_with_image_not_exists(
         )
 
 
-async def test_generate_content_service_with_non_image(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_init_component,
-    snapshot: SnapshotAssertion,
-) -> None:
+@pytest.mark.usefixtures("mock_init_component")
+async def test_generate_content_service_with_non_image(hass: HomeAssistant) -> None:
     """Test generate content service with a non image."""
     with (
         patch("pathlib.Path.exists", return_value=True),
@@ -254,5 +242,4 @@ async def test_config_entry_error(
         assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
         assert mock_config_entry.state == state
-        mock_config_entry.async_get_active_flows(hass, {"reauth"})
         assert any(mock_config_entry.async_get_active_flows(hass, {"reauth"})) == reauth

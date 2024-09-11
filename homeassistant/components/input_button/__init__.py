@@ -123,7 +123,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         schema=RELOAD_SERVICE_SCHEMA,
     )
 
-    component.async_register_entity_service(SERVICE_PRESS, {}, "_async_press_action")
+    component.async_register_entity_service(SERVICE_PRESS, None, "_async_press_action")
 
     return True
 
@@ -174,10 +174,9 @@ class InputButton(collection.CollectionEntity, ButtonEntity, RestoreEntity):
     async def async_press(self) -> None:
         """Press the button.
 
-        Left emtpty intentionally.
+        Left empty intentionally.
         The input button itself doesn't trigger anything.
         """
-        return None
 
     async def async_update_config(self, config: ConfigType) -> None:
         """Handle when the config is updated."""

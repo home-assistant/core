@@ -2,13 +2,12 @@
 
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Generator
 from time import time
 from unittest.mock import AsyncMock, patch
 
 from electrickiwi_api.model import AccountBalance, Hop, HopIntervals
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.application_credentials import (
     ClientCredential,

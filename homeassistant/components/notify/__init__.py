@@ -91,14 +91,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async def persistent_notification(service: ServiceCall) -> None:
         """Send notification via the built-in persistent_notify integration."""
         message: Template = service.data[ATTR_MESSAGE]
-        message.hass = hass
         check_templates_warn(hass, message)
 
         title = None
         title_tpl: Template | None
         if title_tpl := service.data.get(ATTR_TITLE):
             check_templates_warn(hass, title_tpl)
-            title_tpl.hass = hass
             title = title_tpl.async_render(parse_result=False)
 
         notification_id = None

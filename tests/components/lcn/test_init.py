@@ -1,6 +1,6 @@
 """Test init of LCN integration."""
 
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from pypck.connection import (
     PchkAuthenticationError,
@@ -31,6 +31,7 @@ async def test_async_setup_entry(hass: HomeAssistant, entry, lcn_connection) -> 
 
 async def test_async_setup_multiple_entries(hass: HomeAssistant, entry, entry2) -> None:
     """Test a successful setup and unload of multiple entries."""
+    hass.http = Mock()
     with patch("pypck.connection.PchkConnectionManager", MockPchkConnectionManager):
         for config_entry in (entry, entry2):
             config_entry.add_to_hass(hass)

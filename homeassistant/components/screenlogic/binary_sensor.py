@@ -2,7 +2,6 @@
 
 from copy import copy
 import dataclasses
-import logging
 
 from screenlogicpy.const.common import ON_OFF
 from screenlogicpy.const.data import ATTR, DEVICE, GROUP, VALUE
@@ -15,12 +14,10 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN as SL_DOMAIN
 from .coordinator import ScreenlogicDataUpdateCoordinator
 from .entity import (
     ScreenLogicEntity,
@@ -28,9 +25,8 @@ from .entity import (
     ScreenLogicPushEntity,
     ScreenLogicPushEntityDescription,
 )
+from .types import ScreenLogicConfigEntry
 from .util import cleanup_excluded_entity
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
@@ -171,13 +167,11 @@ SUPPORTED_SCG_SENSORS = [
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: ScreenLogicConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up entry."""
-    coordinator: ScreenlogicDataUpdateCoordinator = hass.data[SL_DOMAIN][
-        config_entry.entry_id
-    ]
+    coordinator = config_entry.runtime_data
     gateway = coordinator.gateway
 
     entities: list[ScreenLogicBinarySensor] = [

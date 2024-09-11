@@ -1,8 +1,10 @@
 """Support for Onkyo Receivers."""
 
+from __future__ import annotations
+
 import asyncio
 import logging
-from typing import Any
+from typing import Any, Literal
 
 import voluptuous as vol
 
@@ -14,7 +16,7 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
     MediaType,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntryState
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_NAME
 from homeassistant.core import (
     DOMAIN as HOMEASSISTANT_DOMAIN,
@@ -27,8 +29,9 @@ from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.util.hass_dict import HassKey
 
-from . import OnkyoConfigEntry, receiver as rcver
+from . import OnkyoConfigEntry
 from .const import (
     CONF_RECEIVER_MAX_VOLUME,
     CONF_RECEIVER_MAX_VOLUME_DEFAULT,
@@ -40,8 +43,11 @@ from .const import (
     OPTION_SOURCES,
     ZONES,
 )
+from .receiver import Receiver, async_discover
 
 _LOGGER = logging.getLogger(__name__)
+
+DATA_MP_ENTITIES: HassKey[list[dict[str, OnkyoMediaPlayer]]] = HassKey(DOMAIN)
 
 SUPPORT_ONKYO_WO_VOLUME = (
     MediaPlayerEntityFeature.TURN_ON
@@ -127,6 +133,33 @@ PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
 )
 
 
+async def async_register_services(hass: HomeAssistant) -> None:
+    """Register Onkyo services."""
+
+    async def async_service_handle(service: ServiceCall) -> None:
+        """Handle for services."""
+        entity_ids = service.data[ATTR_ENTITY_ID]
+
+        targets: list[OnkyoMediaPlayer] = []
+        for receiver_entities in hass.data[DATA_MP_ENTITIES]:
+            targets.extend(
+                entity
+                for entity in receiver_entities.values()
+                if entity.entity_id in entity_ids
+            )
+
+        for target in targets:
+            if service.service == SERVICE_SELECT_HDMI_OUTPUT:
+                await target.async_select_output(service.data[ATTR_HDMI_OUTPUT])
+
+    hass.services.async_register(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_SELECT_HDMI_OUTPUT,
+        async_service_handle,
+        schema=ONKYO_SELECT_OUTPUT_SCHEMA,
+    )
+
+
 async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
@@ -143,7 +176,7 @@ async def async_setup_platform(
         )
         results.append((host, result))
     else:
-        for info in await rcver.async_discover():
+        for info in await async_discover():
             host = info.host
 
             # Migrate legacy entities.
@@ -217,35 +250,6 @@ async def async_setup_platform(
         )
 
 
-async def async_register_services(hass: HomeAssistant) -> None:
-    """Register Onkyo services."""
-
-    async def async_service_handle(service: ServiceCall) -> None:
-        """Handle for services."""
-        entity_ids = service.data[ATTR_ENTITY_ID]
-
-        targets: list[OnkyoMediaPlayer] = []
-        for entry in hass.config_entries.async_entries(DOMAIN):
-            if entry.state is not ConfigEntryState.LOADED:
-                continue
-
-            receiver = entry.runtime_data
-            targets.extend(
-                entity for entity in receiver.entities if entity.entity_id in entity_ids
-            )
-
-        for target in targets:
-            if service.service == SERVICE_SELECT_HDMI_OUTPUT:
-                await target.async_select_output(service.data[ATTR_HDMI_OUTPUT])
-
-    hass.services.async_register(
-        MEDIA_PLAYER_DOMAIN,
-        SERVICE_SELECT_HDMI_OUTPUT,
-        async_service_handle,
-        schema=ONKYO_SELECT_OUTPUT_SCHEMA,
-    )
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: OnkyoConfigEntry,
@@ -253,44 +257,48 @@ async def async_setup_entry(
 ) -> None:
     """Set up MediaPlayer for config entry."""
     receiver = entry.runtime_data
-    receiver.entities = {}
+    all_entities = hass.data.setdefault(DATA_MP_ENTITIES, [])
+
+    entities: dict[str, OnkyoMediaPlayer] = {}
+    all_entities.append(entities)
 
     volume_resolution = entry.data[CONF_VOLUME_RESOLUTION]
     max_volume = entry.options[OPTION_MAX_VOLUME]
     sources = entry.options[OPTION_SOURCES]
 
-    def connect_callback(receiver: rcver.Receiver) -> None:
-        if receiver.first_connect:
-            # Add the main zone to entities, since it is always active.
-            main_entity = OnkyoMediaPlayer(
-                receiver, sources, "main", max_volume, volume_resolution
-            )
-            receiver.entities["main"] = main_entity
-            async_add_entities([main_entity])
-        else:
-            for entity in receiver.entities.values():
+    def connect_callback(receiver: Receiver) -> None:
+        if not receiver.first_connect:
+            for entity in entities.values():
                 if entity.enabled:
                     entity.backfill_state()
 
-    def update_callback(
-        receiver: rcver.Receiver, message: tuple[str, str, Any]
-    ) -> None:
+    def update_callback(receiver: Receiver, message: tuple[str, str, Any]) -> None:
         zone, _, value = message
-        entity = receiver.entities.get(zone)
+        entity = entities.get(zone)
         if entity is not None:
             if entity.enabled:
                 entity.process_update(message)
         elif zone in ZONES and value != "N/A":
             # When we receive the status for a zone, and the value is not "N/A",
             # then zone is available on the receiver, so we create the entity for it.
-            zone_entity = OnkyoMediaPlayer(
-                receiver, sources, zone, max_volume, volume_resolution
+            _LOGGER.debug(
+                "Discovered %s on %s (%s)",
+                ZONES[zone],
+                receiver.model_name,
+                receiver.host,
             )
-            receiver.entities[zone] = zone_entity
+            zone_entity = OnkyoMediaPlayer(
+                receiver,
+                zone,
+                volume_resolution=volume_resolution,
+                max_volume=max_volume,
+                sources=sources,
+            )
+            entities[zone] = zone_entity
             async_add_entities([zone_entity])
 
-    receiver.callbacks["connect"].append(connect_callback)
-    receiver.callbacks["update"].append(update_callback)
+    receiver.callbacks.connect.append(connect_callback)
+    receiver.callbacks.update.append(update_callback)
 
 
 class OnkyoMediaPlayer(MediaPlayerEntity):
@@ -305,11 +313,12 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
 
     def __init__(
         self,
-        receiver: rcver.Receiver,
-        sources: dict[str, str],
+        receiver: Receiver,
         zone: str,
-        max_volume: int,
+        *,
         volume_resolution: int,
+        max_volume: int,
+        sources: dict[str, str],
     ) -> None:
         """Initialize the Onkyo Receiver."""
         self._receiver = receiver
@@ -347,12 +356,12 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
     @callback
     def _update_receiver(self, propname: str, value: Any) -> None:
         """Update a property in the receiver."""
-        self._receiver.update_property(self._zone, propname, value)
+        self._receiver.conn.update_property(self._zone, propname, value)
 
     @callback
     def _query_receiver(self, propname: str) -> None:
         """Cause the receiver to send an update about a property."""
-        self._receiver.query_property(self._zone, propname)
+        self._receiver.conn.query_property(self._zone, propname)
 
     async def async_turn_on(self) -> None:
         """Turn the media player on."""
@@ -371,7 +380,7 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
         will give 80% volume on the receiver. Then we convert that to the correct
         scale for the receiver.
         """
-        # HA_VOL * (MAX VOL / 100) * MAX_RECEIVER_VOL
+        # HA_VOL * (MAX VOL / 100) * VOL_RESOLUTION
         self._update_receiver(
             "volume", int(volume * (self._max_volume / 100) * self._volume_resolution)
         )
@@ -451,7 +460,7 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
                 self._attr_extra_state_attributes.pop(ATTR_VIDEO_OUT, None)
         elif command in ["volume", "master-volume"] and value != "N/A":
             self._supports_volume = True
-            # AMP_VOL / (MAX_RECEIVER_VOL * (MAX_VOL / 100))
+            # AMP_VOL / (VOL_RESOLUTION * (MAX_VOL / 100))
             self._attr_volume_level = value / (
                 self._volume_resolution * self._max_volume / 100
             )
@@ -479,19 +488,23 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
         self.async_write_ha_state()
 
     @callback
-    def _parse_source(self, source):
+    def _parse_source(self, source_raw: str | int | tuple[str]) -> None:
         # source is either a tuple of values or a single value,
         # so we convert to a tuple, when it is a single value.
-        if not isinstance(source, tuple):
-            source = (source,)
+        if isinstance(source_raw, str | int):
+            source = (str(source_raw),)
+        else:
+            source = source_raw
         for value in source:
             if value in self._source_mapping:
                 self._attr_source = self._source_mapping[value]
-                break
-            self._attr_source = "_".join(source)
+                return
+        self._attr_source = "_".join(source)
 
     @callback
-    def _parse_audio_information(self, audio_information):
+    def _parse_audio_information(
+        self, audio_information: tuple[str] | Literal["N/A"]
+    ) -> None:
         # If audio information is not available, N/A is returned,
         # so only update the audio information, when it is not N/A.
         if audio_information == "N/A":
@@ -507,7 +520,9 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
         }
 
     @callback
-    def _parse_video_information(self, video_information):
+    def _parse_video_information(
+        self, video_information: tuple[str] | Literal["N/A"]
+    ) -> None:
         # If video information is not available, N/A is returned,
         # so only update the video information, when it is not N/A.
         if video_information == "N/A":
@@ -522,11 +537,11 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
             if len(value) > 0
         }
 
-    def _query_av_info_delayed(self):
+    def _query_av_info_delayed(self) -> None:
         if self._zone == "main" and not self._query_timer:
 
             @callback
-            def _query_av_info():
+            def _query_av_info() -> None:
                 if self._supports_audio_info:
                     self._query_receiver("audio-information")
                 if self._supports_video_info:

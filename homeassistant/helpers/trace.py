@@ -3,13 +3,11 @@
 from __future__ import annotations
 
 from collections import deque
-from collections.abc import Callable, Coroutine
+from collections.abc import Callable, Coroutine, Generator
 from contextlib import contextmanager
 from contextvars import ContextVar
 from functools import wraps
 from typing import Any
-
-from typing_extensions import Generator
 
 from homeassistant.core import ServiceResponse
 import homeassistant.util.dt as dt_util
@@ -36,7 +34,7 @@ class TraceElement:
         """Container for trace data."""
         self._child_key: str | None = None
         self._child_run_id: str | None = None
-        self._error: Exception | None = None
+        self._error: BaseException | None = None
         self.path: str = path
         self._result: dict[str, Any] | None = None
         self.reuse_by_child = False
@@ -54,7 +52,7 @@ class TraceElement:
         self._child_key = child_key
         self._child_run_id = child_run_id
 
-    def set_error(self, ex: Exception) -> None:
+    def set_error(self, ex: BaseException | None) -> None:
         """Set error."""
         self._error = ex
 

@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
-from ipaddress import IPv4Address
+from ipaddress import IPv4Address, IPv6Address, ip_address
+import re
 from types import MappingProxyType
 from typing import Any, cast
 
@@ -22,6 +23,7 @@ from aioshelly.const import (
     RPC_GENERATIONS,
 )
 from aioshelly.rpc_device import RpcDevice, WsServer
+from yarl import URL
 
 from homeassistant.components import network
 from homeassistant.components.http import HomeAssistantView
@@ -35,9 +37,11 @@ from homeassistant.helpers import (
     singleton,
 )
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
+from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.util.dt import utcnow
 
 from .const import (
+    API_WS_URL,
     BASIC_INPUTS_EVENTS_TYPES,
     CONF_COAP_PORT,
     CONF_GEN,
@@ -52,6 +56,7 @@ from .const import (
     SHBTN_MODELS,
     SHIX3_1_INPUTS_EVENTS_TYPES,
     UPTIME_DEVIATION,
+    VIRTUAL_COMPONENTS_MAP,
 )
 
 
@@ -252,7 +257,7 @@ class ShellyReceiver(HomeAssistantView):
     """Handle pushes from Shelly Gen2 devices."""
 
     requires_auth = False
-    url = "/api/shelly/ws"
+    url = API_WS_URL
     name = "api:shelly:ws"
 
     def __init__(self, ws_server: WsServer) -> None:
@@ -321,6 +326,8 @@ def get_rpc_channel_name(device: RpcDevice, key: str) -> str:
             return f"{device_name} {key.replace(':', '_')}"
         if key.startswith("em1"):
             return f"{device_name} EM{key.split(':')[-1]}"
+        if key.startswith(("boolean:", "enum:", "number:", "text:")):
+            return key.replace(":", " ").title()
         return device_name
 
     return entity_name
@@ -482,6 +489,20 @@ def get_http_port(data: MappingProxyType[str, Any]) -> int:
     return cast(int, data.get(CONF_PORT, DEFAULT_HTTP_PORT))
 
 
+def get_host(host: str) -> str:
+    """Get the device IP address or hostname."""
+    try:
+        ip_object = ip_address(host)
+    except ValueError:
+        # host contains hostname
+        return host
+
+    if isinstance(ip_object, IPv6Address):
+        return f"[{host}]"
+
+    return host
+
+
 @callback
 def async_remove_shelly_rpc_entities(
     hass: HomeAssistant, domain: str, mac: str, keys: list[str]
@@ -497,3 +518,71 @@ def async_remove_shelly_rpc_entities(
 def is_rpc_thermostat_mode(ident: int, status: dict[str, Any]) -> bool:
     """Return True if 'thermostat:<IDent>' is present in the status."""
     return f"thermostat:{ident}" in status
+
+
+def get_virtual_component_ids(config: dict[str, Any], platform: str) -> list[str]:
+    """Return a list of virtual component IDs for a platform."""
+    component = VIRTUAL_COMPONENTS_MAP.get(platform)
+
+    if not component:
+        return []
+
+    ids: list[str] = []
+
+    for comp_type in component["types"]:
+        ids.extend(
+            k
+            for k, v in config.items()
+            if k.startswith(comp_type) and v["meta"]["ui"]["view"] in component["modes"]
+        )
+
+    return ids
+
+
+@callback
+def async_remove_orphaned_virtual_entities(
+    hass: HomeAssistant,
+    config_entry_id: str,
+    mac: str,
+    platform: str,
+    virt_comp_type: str,
+    virt_comp_ids: list[str],
+) -> None:
+    """Remove orphaned virtual entities."""
+    orphaned_entities = []
+    entity_reg = er.async_get(hass)
+    device_reg = dr.async_get(hass)
+
+    if not (
+        devices := device_reg.devices.get_devices_for_config_entry_id(config_entry_id)
+    ):
+        return
+
+    device_id = devices[0].id
+    entities = er.async_entries_for_device(entity_reg, device_id, True)
+    for entity in entities:
+        if not entity.entity_id.startswith(platform):
+            continue
+        if virt_comp_type not in entity.unique_id:
+            continue
+        # we are looking for the component ID, e.g. boolean:201
+        if not (match := re.search(r"[a-z]+:\d+", entity.unique_id)):
+            continue
+        virt_comp_id = match.group()
+        if virt_comp_id not in virt_comp_ids:
+            orphaned_entities.append(f"{virt_comp_id}-{virt_comp_type}")
+
+    if orphaned_entities:
+        async_remove_shelly_rpc_entities(hass, platform, mac, orphaned_entities)
+
+
+def get_rpc_ws_url(hass: HomeAssistant) -> str | None:
+    """Return the RPC websocket URL."""
+    try:
+        raw_url = get_url(hass, prefer_external=False, allow_cloud=False)
+    except NoURLAvailableError:
+        LOGGER.debug("URL not available, skipping outbound websocket setup")
+        return None
+    url = URL(raw_url)
+    ws_url = url.with_scheme("wss" if url.scheme == "https" else "ws")
+    return str(ws_url.joinpath(API_WS_URL.removeprefix("/")))

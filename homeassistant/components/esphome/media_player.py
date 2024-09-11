@@ -29,6 +29,7 @@ from homeassistant.core import callback
 from .entity import (
     EsphomeEntity,
     convert_api_error_ha_error,
+    esphome_float_state_property,
     esphome_state_property,
     platform_async_setup_entry,
 )
@@ -79,7 +80,7 @@ class EsphomeMediaPlayer(
         return self._state.muted
 
     @property
-    @esphome_state_property
+    @esphome_float_state_property
     def volume_level(self) -> float | None:
         """Volume level of the media player (0..1)."""
         return self._state.volume

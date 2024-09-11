@@ -1,17 +1,9 @@
 """Fixtrues for the Nextcloud integration tests."""
 
-from unittest.mock import AsyncMock, Mock, patch
+from collections.abc import Generator
+from unittest.mock import AsyncMock, patch
 
 import pytest
-from typing_extensions import Generator
-
-
-@pytest.fixture
-def mock_nextcloud_monitor() -> Mock:
-    """Mock of NextcloudMonitor."""
-    return Mock(
-        update=Mock(return_value=True),
-    )
 
 
 @pytest.fixture

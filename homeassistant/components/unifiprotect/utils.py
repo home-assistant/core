@@ -2,14 +2,13 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterable
+from collections.abc import Generator, Iterable
 import contextlib
 from pathlib import Path
 import socket
 from typing import TYPE_CHECKING
 
 from aiohttp import CookieJar
-from typing_extensions import Generator
 from uiprotect import ProtectApiClient
 from uiprotect.data import (
     Bootstrap,

@@ -2,9 +2,13 @@
 
 from typing import Any
 
-from airgradient import AirGradientClient, AirGradientError, ConfigurationControl
+from airgradient import (
+    AirGradientClient,
+    AirGradientError,
+    AirGradientParseError,
+    ConfigurationControl,
+)
 from awesomeversion import AwesomeVersion
-from mashumaro import MissingField
 import voluptuous as vol
 
 from homeassistant.components import zeroconf
@@ -83,12 +87,14 @@ class AirGradientConfigFlow(ConfigFlow, domain=DOMAIN):
             self.client = AirGradientClient(user_input[CONF_HOST], session=session)
             try:
                 current_measures = await self.client.get_current_measures()
+            except AirGradientParseError:
+                return self.async_abort(reason="invalid_version")
             except AirGradientError:
                 errors["base"] = "cannot_connect"
-            except MissingField:
-                return self.async_abort(reason="invalid_version")
             else:
-                await self.async_set_unique_id(current_measures.serial_number)
+                await self.async_set_unique_id(
+                    current_measures.serial_number, raise_on_progress=False
+                )
                 self._abort_if_unique_id_configured()
                 await self.set_configuration_source()
                 return self.async_create_entry(

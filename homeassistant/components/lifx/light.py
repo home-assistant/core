@@ -36,6 +36,7 @@ from .const import (
     DATA_LIFX_MANAGER,
     DOMAIN,
     INFRARED_BRIGHTNESS,
+    LIFX_CEILING_PRODUCT_IDS,
 )
 from .coordinator import FirmwareEffect, LIFXUpdateCoordinator
 from .entity import LIFXEntity
@@ -45,6 +46,7 @@ from .manager import (
     SERVICE_EFFECT_MORPH,
     SERVICE_EFFECT_MOVE,
     SERVICE_EFFECT_PULSE,
+    SERVICE_EFFECT_SKY,
     SERVICE_EFFECT_STOP,
     LIFXManager,
 )
@@ -97,7 +99,10 @@ async def async_setup_entry(
         "set_hev_cycle_state",
     )
     if lifx_features(device)["matrix"]:
-        entity: LIFXLight = LIFXMatrix(coordinator, manager, entry)
+        if device.product in LIFX_CEILING_PRODUCT_IDS:
+            entity: LIFXLight = LIFXCeiling(coordinator, manager, entry)
+        else:
+            entity = LIFXMatrix(coordinator, manager, entry)
     elif lifx_features(device)["extended_multizone"]:
         entity = LIFXExtendedMultiZone(coordinator, manager, entry)
     elif lifx_features(device)["multizone"]:
@@ -497,5 +502,18 @@ class LIFXMatrix(LIFXColor):
         SERVICE_EFFECT_FLAME,
         SERVICE_EFFECT_PULSE,
         SERVICE_EFFECT_MORPH,
+        SERVICE_EFFECT_STOP,
+    ]
+
+
+class LIFXCeiling(LIFXMatrix):
+    """Representation of a LIFX Ceiling device."""
+
+    _attr_effect_list = [
+        SERVICE_EFFECT_COLORLOOP,
+        SERVICE_EFFECT_FLAME,
+        SERVICE_EFFECT_PULSE,
+        SERVICE_EFFECT_MORPH,
+        SERVICE_EFFECT_SKY,
         SERVICE_EFFECT_STOP,
     ]

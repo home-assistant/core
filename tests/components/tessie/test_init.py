@@ -50,11 +50,21 @@ async def test_connection_failure(
     assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_fleet_error(hass: HomeAssistant) -> None:
-    """Test init with a fleet error."""
+async def test_products_error(hass: HomeAssistant) -> None:
+    """Test init with a fleet error on products."""
 
     with patch(
         "homeassistant.components.tessie.Tessie.products", side_effect=TeslaFleetError
+    ):
+        entry = await setup_platform(hass)
+        assert entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_scopes_error(hass: HomeAssistant) -> None:
+    """Test init with a fleet error on scopes."""
+
+    with patch(
+        "homeassistant.components.tessie.Tessie.scopes", side_effect=TeslaFleetError
     ):
         entry = await setup_platform(hass)
         assert entry.state is ConfigEntryState.SETUP_RETRY

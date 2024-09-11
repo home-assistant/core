@@ -251,9 +251,7 @@ async def test_controlling_validation_state_via_topic(
     ],
 )
 async def test_attribute_validation_max_greater_then_min(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    mqtt_mock_entry: MqttMockHAClientGenerator, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test the validation of min and max configuration attributes."""
     assert await mqtt_mock_entry()
@@ -276,9 +274,7 @@ async def test_attribute_validation_max_greater_then_min(
     ],
 )
 async def test_attribute_validation_max_not_greater_then_max_state_length(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
+    mqtt_mock_entry: MqttMockHAClientGenerator, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test the max value of of max configuration attribute."""
     assert await mqtt_mock_entry()
@@ -436,13 +432,7 @@ async def test_default_availability_payload(
         }
     }
     await help_test_default_availability_payload(
-        hass,
-        mqtt_mock_entry,
-        text.DOMAIN,
-        config,
-        True,
-        "state-topic",
-        "some state",
+        hass, mqtt_mock_entry, text.DOMAIN, config, True, "state-topic", "some state"
     )
 
 
@@ -461,13 +451,7 @@ async def test_custom_availability_payload(
     }
 
     await help_test_custom_availability_payload(
-        hass,
-        mqtt_mock_entry,
-        text.DOMAIN,
-        config,
-        True,
-        "state-topic",
-        "1",
+        hass, mqtt_mock_entry, text.DOMAIN, config, True, "state-topic", "1"
     )
 
 
@@ -505,11 +489,7 @@ async def test_update_with_json_attrs_not_dict(
 ) -> None:
     """Test attributes get extracted from a JSON result."""
     await help_test_update_with_json_attrs_not_dict(
-        hass,
-        mqtt_mock_entry,
-        caplog,
-        text.DOMAIN,
-        DEFAULT_CONFIG,
+        hass, mqtt_mock_entry, caplog, text.DOMAIN, DEFAULT_CONFIG
     )
 
 
@@ -520,11 +500,7 @@ async def test_update_with_json_attrs_bad_json(
 ) -> None:
     """Test attributes get extracted from a JSON result."""
     await help_test_update_with_json_attrs_bad_json(
-        hass,
-        mqtt_mock_entry,
-        caplog,
-        text.DOMAIN,
-        DEFAULT_CONFIG,
+        hass, mqtt_mock_entry, caplog, text.DOMAIN, DEFAULT_CONFIG
     )
 
 
@@ -754,8 +730,7 @@ async def test_publishing_with_custom_encoding(
 
 
 async def test_reloadable(
-    hass: HomeAssistant,
-    mqtt_client_mock: MqttMockPahoClient,
+    hass: HomeAssistant, mqtt_client_mock: MqttMockPahoClient
 ) -> None:
     """Test reloading the MQTT platform."""
     domain = text.DOMAIN
@@ -805,8 +780,7 @@ async def test_setup_manual_entity_from_yaml(
 
 
 async def test_unload_entry(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test unloading the config entry."""
     domain = text.DOMAIN

@@ -1,6 +1,6 @@
 """Test Hue services."""
 
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from homeassistant.components import hue
 from homeassistant.components.hue import bridge
@@ -48,7 +48,7 @@ SCENE_RESPONSE = {
 }
 
 
-async def test_hue_activate_scene(hass: HomeAssistant, mock_api_v1) -> None:
+async def test_hue_activate_scene(hass: HomeAssistant, mock_api_v1: Mock) -> None:
     """Test successful hue_activate_scene."""
     config_entry = MockConfigEntry(
         domain=hue.DOMAIN,
@@ -83,7 +83,9 @@ async def test_hue_activate_scene(hass: HomeAssistant, mock_api_v1) -> None:
     assert mock_api_v1.mock_requests[2]["path"] == "groups/group_1/action"
 
 
-async def test_hue_activate_scene_transition(hass: HomeAssistant, mock_api_v1) -> None:
+async def test_hue_activate_scene_transition(
+    hass: HomeAssistant, mock_api_v1: Mock
+) -> None:
     """Test successful hue_activate_scene with transition."""
     config_entry = MockConfigEntry(
         domain=hue.DOMAIN,
@@ -119,7 +121,7 @@ async def test_hue_activate_scene_transition(hass: HomeAssistant, mock_api_v1) -
 
 
 async def test_hue_activate_scene_group_not_found(
-    hass: HomeAssistant, mock_api_v1
+    hass: HomeAssistant, mock_api_v1: Mock
 ) -> None:
     """Test failed hue_activate_scene due to missing group."""
     config_entry = MockConfigEntry(
@@ -151,7 +153,7 @@ async def test_hue_activate_scene_group_not_found(
 
 
 async def test_hue_activate_scene_scene_not_found(
-    hass: HomeAssistant, mock_api_v1
+    hass: HomeAssistant, mock_api_v1: Mock
 ) -> None:
     """Test failed hue_activate_scene due to missing scene."""
     config_entry = MockConfigEntry(
@@ -184,10 +186,10 @@ async def test_hue_activate_scene_scene_not_found(
 
 async def test_hue_multi_bridge_activate_scene_all_respond(
     hass: HomeAssistant,
-    mock_bridge_v1,
-    mock_bridge_v2,
-    mock_config_entry_v1,
-    mock_config_entry_v2,
+    mock_bridge_v1: Mock,
+    mock_bridge_v2: Mock,
+    mock_config_entry_v1: MockConfigEntry,
+    mock_config_entry_v2: MockConfigEntry,
 ) -> None:
     """Test that makes multiple bridges successfully activate a scene."""
     await setup_component(hass)
@@ -218,10 +220,10 @@ async def test_hue_multi_bridge_activate_scene_all_respond(
 
 async def test_hue_multi_bridge_activate_scene_one_responds(
     hass: HomeAssistant,
-    mock_bridge_v1,
-    mock_bridge_v2,
-    mock_config_entry_v1,
-    mock_config_entry_v2,
+    mock_bridge_v1: Mock,
+    mock_bridge_v2: Mock,
+    mock_config_entry_v1: MockConfigEntry,
+    mock_config_entry_v2: MockConfigEntry,
 ) -> None:
     """Test that makes only one bridge successfully activate a scene."""
     await setup_component(hass)
@@ -251,10 +253,10 @@ async def test_hue_multi_bridge_activate_scene_one_responds(
 
 async def test_hue_multi_bridge_activate_scene_zero_responds(
     hass: HomeAssistant,
-    mock_bridge_v1,
-    mock_bridge_v2,
-    mock_config_entry_v1,
-    mock_config_entry_v2,
+    mock_bridge_v1: Mock,
+    mock_bridge_v2: Mock,
+    mock_config_entry_v1: MockConfigEntry,
+    mock_config_entry_v2: MockConfigEntry,
 ) -> None:
     """Test that makes no bridge successfully activate a scene."""
     await setup_component(hass)

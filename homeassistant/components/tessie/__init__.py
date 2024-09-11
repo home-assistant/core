@@ -6,6 +6,7 @@ import logging
 
 from aiohttp import ClientError, ClientResponseError
 from tesla_fleet_api import EnergySpecific, Tessie
+from tesla_fleet_api.const import Scope
 from tesla_fleet_api.exceptions import TeslaFleetError
 from tessie_api import get_state_of_all_vehicles
 
@@ -94,41 +95,59 @@ async def async_setup_entry(hass: HomeAssistant, entry: TessieConfigEntry) -> bo
 
     # Energy Sites
     tessie = Tessie(session, api_key)
+    energysites: list[TessieEnergyData] = []
+
     try:
-        products = (await tessie.products())["response"]
+        scopes = await tessie.scopes()
     except TeslaFleetError as e:
         raise ConfigEntryNotReady from e
 
-    energysites: list[TessieEnergyData] = []
-    for product in products:
-        if "energy_site_id" in product:
-            site_id = product["energy_site_id"]
-            api = EnergySpecific(tessie.energy, site_id)
-            energysites.append(
-                TessieEnergyData(
-                    api=api,
-                    id=site_id,
-                    live_coordinator=TessieEnergySiteLiveCoordinator(hass, api),
-                    info_coordinator=TessieEnergySiteInfoCoordinator(hass, api),
-                    device=DeviceInfo(
-                        identifiers={(DOMAIN, str(site_id))},
-                        manufacturer="Tesla",
-                        name=product.get("site_name", "Energy Site"),
-                    ),
-                )
-            )
+    if Scope.ENERGY_DEVICE_DATA in scopes:
+        try:
+            products = (await tessie.products())["response"]
+        except TeslaFleetError as e:
+            raise ConfigEntryNotReady from e
 
-    # Populate coordinator data before forwarding to platforms
-    await asyncio.gather(
-        *(
-            energysite.live_coordinator.async_config_entry_first_refresh()
-            for energysite in energysites
-        ),
-        *(
-            energysite.info_coordinator.async_config_entry_first_refresh()
-            for energysite in energysites
-        ),
-    )
+        for product in products:
+            if "energy_site_id" in product:
+                site_id = product["energy_site_id"]
+                if not (
+                    product["components"]["battery"]
+                    or product["components"]["solar"]
+                    or "wall_connectors" in product["components"]
+                ):
+                    _LOGGER.debug(
+                        "Skipping Energy Site %s as it has no components",
+                        site_id,
+                    )
+                    continue
+
+                api = EnergySpecific(tessie.energy, site_id)
+                energysites.append(
+                    TessieEnergyData(
+                        api=api,
+                        id=site_id,
+                        live_coordinator=TessieEnergySiteLiveCoordinator(hass, api),
+                        info_coordinator=TessieEnergySiteInfoCoordinator(hass, api),
+                        device=DeviceInfo(
+                            identifiers={(DOMAIN, str(site_id))},
+                            manufacturer="Tesla",
+                            name=product.get("site_name", "Energy Site"),
+                        ),
+                    )
+                )
+
+        # Populate coordinator data before forwarding to platforms
+        await asyncio.gather(
+            *(
+                energysite.live_coordinator.async_config_entry_first_refresh()
+                for energysite in energysites
+            ),
+            *(
+                energysite.info_coordinator.async_config_entry_first_refresh()
+                for energysite in energysites
+            ),
+        )
 
     entry.runtime_data = TessieData(vehicles, energysites)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

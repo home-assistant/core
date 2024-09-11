@@ -264,10 +264,10 @@ async def test_service_calls(
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_TEMPERATURE,
-            {ATTR_ENTITY_ID: entity_id, ATTR_TEMPERATURE: 15},
+            {ATTR_ENTITY_ID: entity_id, ATTR_TEMPERATURE: 16},
             blocking=True,
         )
-        mock_instance.set_temp.assert_called_once_with(15)
+        mock_instance.set_temp.assert_called_once_with(16)
 
         mock_instance.set_mode.reset_mock()
         await hass.services.async_call(

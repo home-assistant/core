@@ -195,7 +195,7 @@ async def test_hvac_mode(ecobee_fixture, thermostat) -> None:
 
 async def test_hvac_modes(thermostat) -> None:
     """Test operation list property."""
-    assert ["heat_cool", "heat", "cool", "off"] == thermostat.hvac_modes
+    assert thermostat.hvac_modes == ["heat_cool", "heat", "cool", "off"]
 
 
 async def test_hvac_mode2(ecobee_fixture, thermostat) -> None:
@@ -208,51 +208,51 @@ async def test_hvac_mode2(ecobee_fixture, thermostat) -> None:
 async def test_extra_state_attributes(ecobee_fixture, thermostat) -> None:
     """Test device state attributes property."""
     ecobee_fixture["equipmentStatus"] = "heatPump2"
-    assert {
+    assert thermostat.extra_state_attributes == {
         "fan": "off",
         "climate_mode": "Climate1",
         "fan_min_on_time": 10,
         "equipment_running": "heatPump2",
-    } == thermostat.extra_state_attributes
+    }
 
     ecobee_fixture["equipmentStatus"] = "auxHeat2"
-    assert {
+    assert thermostat.extra_state_attributes == {
         "fan": "off",
         "climate_mode": "Climate1",
         "fan_min_on_time": 10,
         "equipment_running": "auxHeat2",
-    } == thermostat.extra_state_attributes
+    }
 
     ecobee_fixture["equipmentStatus"] = "compCool1"
-    assert {
+    assert thermostat.extra_state_attributes == {
         "fan": "off",
         "climate_mode": "Climate1",
         "fan_min_on_time": 10,
         "equipment_running": "compCool1",
-    } == thermostat.extra_state_attributes
+    }
     ecobee_fixture["equipmentStatus"] = ""
-    assert {
+    assert thermostat.extra_state_attributes == {
         "fan": "off",
         "climate_mode": "Climate1",
         "fan_min_on_time": 10,
         "equipment_running": "",
-    } == thermostat.extra_state_attributes
+    }
 
     ecobee_fixture["equipmentStatus"] = "Unknown"
-    assert {
+    assert thermostat.extra_state_attributes == {
         "fan": "off",
         "climate_mode": "Climate1",
         "fan_min_on_time": 10,
         "equipment_running": "Unknown",
-    } == thermostat.extra_state_attributes
+    }
 
     ecobee_fixture["program"]["currentClimateRef"] = "c2"
-    assert {
+    assert thermostat.extra_state_attributes == {
         "fan": "off",
         "climate_mode": "Climate2",
         "fan_min_on_time": 10,
         "equipment_running": "Unknown",
-    } == thermostat.extra_state_attributes
+    }
 
 
 async def test_is_aux_heat_on(hass: HomeAssistant) -> None:

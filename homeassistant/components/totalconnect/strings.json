@@ -56,6 +56,15 @@
         "name": "Partition {partition_id}"
       }
     },
+    "binary_sensor": {
+      "police": {
+        "name": "Police emergency",
+        "state": {
+          "off": "No emergency",
+          "on": "Police emergency"
+        }
+      }
+    },
     "button": {
       "clear_bypass": {
         "name": "Clear bypass"

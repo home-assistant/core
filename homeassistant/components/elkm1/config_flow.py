@@ -21,7 +21,7 @@ from homeassistant.const import (
 )
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.typing import DiscoveryInfoType
+from homeassistant.helpers.typing import DiscoveryInfoType, VolDictType
 from homeassistant.util import slugify
 from homeassistant.util.network import is_ip_address
 
@@ -52,7 +52,7 @@ PROTOCOL_MAP = {
 
 VALIDATE_TIMEOUT = 35
 
-BASE_SCHEMA = {
+BASE_SCHEMA: VolDictType = {
     vol.Optional(CONF_USERNAME, default=""): str,
     vol.Optional(CONF_PASSWORD, default=""): str,
 }
@@ -335,10 +335,10 @@ class Elkm1ConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_import(self, user_input: dict[str, Any]) -> ConfigFlowResult:
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Handle import."""
         _LOGGER.debug("Elk is importing from yaml")
-        url = _make_url_from_data(user_input)
+        url = _make_url_from_data(import_data)
 
         if self._url_already_configured(url):
             return self.async_abort(reason="address_already_configured")
@@ -357,7 +357,7 @@ class Elkm1ConfigFlow(ConfigFlow, domain=DOMAIN):
             )
             self._abort_if_unique_id_configured()
 
-        errors, result = await self._async_create_or_error(user_input, True)
+        errors, result = await self._async_create_or_error(import_data, True)
         if errors:
             return self.async_abort(reason=list(errors.values())[0])
         assert result is not None

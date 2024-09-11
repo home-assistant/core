@@ -1,13 +1,13 @@
 """Test the onboarding views."""
 
 import asyncio
+from collections.abc import AsyncGenerator
 from http import HTTPStatus
 import os
 from typing import Any
 from unittest.mock import Mock, patch
 
 import pytest
-from typing_extensions import AsyncGenerator
 
 from homeassistant.components import onboarding
 from homeassistant.components.onboarding import const, views
@@ -28,7 +28,7 @@ from tests.typing import ClientSessionGenerator
 
 
 @pytest.fixture(autouse=True)
-def auth_active(hass):
+def auth_active(hass: HomeAssistant) -> None:
     """Ensure auth is always active."""
     hass.loop.run_until_complete(
         register_auth_provider(hass, {"type": "homeassistant"})

@@ -1,10 +1,11 @@
 """Support for Blinkstick lights."""
 
+# mypy: ignore-errors
 from __future__ import annotations
 
 from typing import Any
 
-from blinkstick import blinkstick
+# from blinkstick import blinkstick
 import voluptuous as vol
 
 from homeassistant.components.light import (

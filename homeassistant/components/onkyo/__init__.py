@@ -7,14 +7,14 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from . import receiver as rcver
 from .const import DOMAIN
+from .receiver import Receiver, async_interview
 
 PLATFORMS = [Platform.MEDIA_PLAYER]
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
-type OnkyoConfigEntry = ConfigEntry[rcver.Receiver]
+type OnkyoConfigEntry = ConfigEntry[Receiver]
 
 
 async def async_setup(hass: HomeAssistant, _: ConfigType) -> bool:
@@ -32,17 +32,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: OnkyoConfigEntry) -> boo
 
     host = entry.data[CONF_HOST]
 
-    info = await rcver.async_interview(host)
+    info = await async_interview(host)
     if info is None:
         raise ConfigEntryNotReady(f"Unable to connect to : {host}")
 
-    receiver = await rcver.async_setup(info)
+    receiver = await Receiver.async_create(info)
 
     entry.runtime_data = receiver
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    await receiver.connect()
+    await receiver.conn.connect()
 
     return True
 
@@ -52,7 +52,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: OnkyoConfigEntry) -> bo
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     receiver = entry.runtime_data
-    receiver.close()
+    receiver.conn.close()
 
     return unload_ok
 

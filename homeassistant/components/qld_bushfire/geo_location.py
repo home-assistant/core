@@ -223,14 +223,14 @@ class QldBushfireLocationEvent(GeolocationEvent):
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device state attributes."""
-        attributes = {}
-        for key, value in (
-            (ATTR_EXTERNAL_ID, self._external_id),
-            (ATTR_CATEGORY, self._category),
-            (ATTR_PUBLICATION_DATE, self._publication_date),
-            (ATTR_UPDATED_DATE, self._updated_date),
-            (ATTR_STATUS, self._status),
-        ):
-            if value or isinstance(value, bool):
-                attributes[key] = value
-        return attributes
+        return {
+            key: value
+            for key, value in (
+                (ATTR_EXTERNAL_ID, self._external_id),
+                (ATTR_CATEGORY, self._category),
+                (ATTR_PUBLICATION_DATE, self._publication_date),
+                (ATTR_UPDATED_DATE, self._updated_date),
+                (ATTR_STATUS, self._status),
+            )
+            if value or isinstance(value, bool)
+        }

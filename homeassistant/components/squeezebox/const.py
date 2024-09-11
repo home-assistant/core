@@ -1,10 +1,12 @@
 """Constants for the Squeezebox component."""
 
-DOMAIN = "squeezebox"
-ENTRY_PLAYERS = "entry_players"
-KNOWN_PLAYERS = "known_players"
-PLAYER_DISCOVERY_UNSUB = "player_discovery_unsub"
-DISCOVERY_TASK = "discovery_task"
-DEFAULT_PORT = 9000
-SQUEEZEBOX_SOURCE_STRINGS = ("source:", "wavin:", "spotify:")
 CONF_HTTPS = "https"
+DISCOVERY_TASK = "discovery_task"
+DOMAIN = "squeezebox"
+DEFAULT_PORT = 9000
+KNOWN_PLAYERS = "known_players"
+SENSOR_UPDATE_INTERVAL = 60
+STATUS_API_TIMEOUT = 10
+STATUS_QUERY_LIBRARYNAME = "libraryname"
+STATUS_QUERY_UUID = "uuid"
+SQUEEZEBOX_SOURCE_STRINGS = ("source:", "wavin:", "spotify:")

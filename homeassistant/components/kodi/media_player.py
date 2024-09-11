@@ -529,10 +529,11 @@ class KodiEntity(MediaPlayerEntity):
         return not self._connection.can_subscribe
 
     @property
-    def volume_level(self):
+    def volume_level(self) -> float | None:
         """Volume level of the media player (0..1)."""
         if "volume" in self._app_properties:
             return int(self._app_properties["volume"]) / 100.0
+        return None
 
     @property
     def is_volume_muted(self):
@@ -641,12 +642,10 @@ class KodiEntity(MediaPlayerEntity):
         if self.state == MediaPlayerState.OFF:
             return state_attr
 
-        hdr_type = (
-            self._item.get("streamdetails", {}).get("video", [{}])[0].get("hdrtype")
-        )
-        if hdr_type == "":
-            state_attr["dynamic_range"] = "sdr"
-        else:
+        state_attr["dynamic_range"] = "sdr"
+        if (video_details := self._item.get("streamdetails", {}).get("video")) and (
+            hdr_type := video_details[0].get("hdrtype")
+        ):
             state_attr["dynamic_range"] = hdr_type
 
         return state_attr

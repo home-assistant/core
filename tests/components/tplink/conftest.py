@@ -1,18 +1,20 @@
 """tplink conftest."""
 
+from collections.abc import Generator
 import copy
 from unittest.mock import DEFAULT, AsyncMock, patch
 
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.tplink import DOMAIN
 from homeassistant.core import HomeAssistant
 
 from . import (
     CREATE_ENTRY_DATA_LEGACY,
-    CREDENTIALS_HASH_AUTH,
-    DEVICE_CONFIG_AUTH,
+    CREDENTIALS_HASH_AES,
+    CREDENTIALS_HASH_KLAP,
+    DEVICE_CONFIG_AES,
+    DEVICE_CONFIG_KLAP,
     IP_ADDRESS,
     IP_ADDRESS2,
     MAC_ADDRESS,
@@ -20,7 +22,7 @@ from . import (
     _mocked_device,
 )
 
-from tests.common import MockConfigEntry, mock_device_registry, mock_registry
+from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -32,14 +34,14 @@ def mock_discovery():
         discover_single=DEFAULT,
     ) as mock_discovery:
         device = _mocked_device(
-            device_config=copy.deepcopy(DEVICE_CONFIG_AUTH),
-            credentials_hash=CREDENTIALS_HASH_AUTH,
+            device_config=copy.deepcopy(DEVICE_CONFIG_KLAP),
+            credentials_hash=CREDENTIALS_HASH_KLAP,
             alias=None,
         )
         devices = {
             "127.0.0.1": _mocked_device(
-                device_config=copy.deepcopy(DEVICE_CONFIG_AUTH),
-                credentials_hash=CREDENTIALS_HASH_AUTH,
+                device_config=copy.deepcopy(DEVICE_CONFIG_KLAP),
+                credentials_hash=CREDENTIALS_HASH_KLAP,
                 alias=None,
             )
         }
@@ -55,12 +57,15 @@ def mock_connect():
     with patch("homeassistant.components.tplink.Device.connect") as mock_connect:
         devices = {
             IP_ADDRESS: _mocked_device(
-                device_config=DEVICE_CONFIG_AUTH, credentials_hash=CREDENTIALS_HASH_AUTH
+                device_config=DEVICE_CONFIG_KLAP,
+                credentials_hash=CREDENTIALS_HASH_KLAP,
+                ip_address=IP_ADDRESS,
             ),
             IP_ADDRESS2: _mocked_device(
-                device_config=DEVICE_CONFIG_AUTH,
-                credentials_hash=CREDENTIALS_HASH_AUTH,
+                device_config=DEVICE_CONFIG_AES,
+                credentials_hash=CREDENTIALS_HASH_AES,
                 mac=MAC_ADDRESS2,
+                ip_address=IP_ADDRESS2,
             ),
         }
 
@@ -70,18 +75,6 @@ def mock_connect():
 
         mock_connect.side_effect = get_device
         yield {"connect": mock_connect, "mock_devices": devices}
-
-
-@pytest.fixture(name="device_reg")
-def device_reg_fixture(hass):
-    """Return an empty, loaded, registry."""
-    return mock_device_registry(hass)
-
-
-@pytest.fixture(name="entity_reg")
-def entity_reg_fixture(hass):
-    """Return an empty, loaded, registry."""
-    return mock_registry(hass)
 
 
 @pytest.fixture

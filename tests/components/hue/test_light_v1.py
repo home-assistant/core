@@ -175,7 +175,7 @@ LIGHT_GAMUT = color.GamutType(
 LIGHT_GAMUT_TYPE = "A"
 
 
-async def setup_bridge(hass: HomeAssistant, mock_bridge_v1):
+async def setup_bridge(hass: HomeAssistant, mock_bridge_v1: Mock) -> None:
     """Load the Hue light platform with the provided bridge."""
     hass.config.components.add(hue.DOMAIN)
     config_entry = create_config_entry()
@@ -192,7 +192,7 @@ async def setup_bridge(hass: HomeAssistant, mock_bridge_v1):
 
 
 async def test_not_load_groups_if_old_bridge(
-    hass: HomeAssistant, mock_bridge_v1
+    hass: HomeAssistant, mock_bridge_v1: Mock
 ) -> None:
     """Test that we don't try to load groups if bridge runs old software."""
     mock_bridge_v1.api.config.apiversion = "1.12.0"
@@ -203,7 +203,7 @@ async def test_not_load_groups_if_old_bridge(
     assert len(hass.states.async_all()) == 0
 
 
-async def test_no_lights_or_groups(hass: HomeAssistant, mock_bridge_v1) -> None:
+async def test_no_lights_or_groups(hass: HomeAssistant, mock_bridge_v1: Mock) -> None:
     """Test the update_lights function when no lights are found."""
     mock_bridge_v1.mock_light_responses.append({})
     mock_bridge_v1.mock_group_responses.append({})
@@ -212,7 +212,7 @@ async def test_no_lights_or_groups(hass: HomeAssistant, mock_bridge_v1) -> None:
     assert len(hass.states.async_all()) == 0
 
 
-async def test_lights(hass: HomeAssistant, mock_bridge_v1) -> None:
+async def test_lights(hass: HomeAssistant, mock_bridge_v1: Mock) -> None:
     """Test the update_lights function with some lights."""
     mock_bridge_v1.mock_light_responses.append(LIGHT_RESPONSE)
 
@@ -232,7 +232,7 @@ async def test_lights(hass: HomeAssistant, mock_bridge_v1) -> None:
     assert lamp_2.state == "off"
 
 
-async def test_lights_color_mode(hass: HomeAssistant, mock_bridge_v1) -> None:
+async def test_lights_color_mode(hass: HomeAssistant, mock_bridge_v1: Mock) -> None:
     """Test that lights only report appropriate color mode."""
     mock_bridge_v1.mock_light_responses.append(LIGHT_RESPONSE)
     mock_bridge_v1.mock_group_responses.append(GROUP_RESPONSE)
@@ -278,7 +278,7 @@ async def test_lights_color_mode(hass: HomeAssistant, mock_bridge_v1) -> None:
 
 
 async def test_groups(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry, mock_bridge_v1
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, mock_bridge_v1: Mock
 ) -> None:
     """Test the update_lights function with some lights."""
     mock_bridge_v1.mock_light_responses.append({})
@@ -303,7 +303,7 @@ async def test_groups(
     assert entity_registry.async_get("light.group_2").unique_id == "2"
 
 
-async def test_new_group_discovered(hass: HomeAssistant, mock_bridge_v1) -> None:
+async def test_new_group_discovered(hass: HomeAssistant, mock_bridge_v1: Mock) -> None:
     """Test if 2nd update has a new group."""
     mock_bridge_v1.allow_groups = True
     mock_bridge_v1.mock_light_responses.append({})
@@ -350,7 +350,7 @@ async def test_new_group_discovered(hass: HomeAssistant, mock_bridge_v1) -> None
     assert new_group.attributes["color_temp"] == 250
 
 
-async def test_new_light_discovered(hass: HomeAssistant, mock_bridge_v1) -> None:
+async def test_new_light_discovered(hass: HomeAssistant, mock_bridge_v1: Mock) -> None:
     """Test if 2nd update has a new light."""
     mock_bridge_v1.mock_light_responses.append(LIGHT_RESPONSE)
 
@@ -396,7 +396,7 @@ async def test_new_light_discovered(hass: HomeAssistant, mock_bridge_v1) -> None
     assert light.state == "off"
 
 
-async def test_group_removed(hass: HomeAssistant, mock_bridge_v1) -> None:
+async def test_group_removed(hass: HomeAssistant, mock_bridge_v1: Mock) -> None:
     """Test if 2nd update has removed group."""
     mock_bridge_v1.allow_groups = True
     mock_bridge_v1.mock_light_responses.append({})
@@ -427,7 +427,7 @@ async def test_group_removed(hass: HomeAssistant, mock_bridge_v1) -> None:
     assert removed_group is None
 
 
-async def test_light_removed(hass: HomeAssistant, mock_bridge_v1) -> None:
+async def test_light_removed(hass: HomeAssistant, mock_bridge_v1: Mock) -> None:
     """Test if 2nd update has removed light."""
     mock_bridge_v1.mock_light_responses.append(LIGHT_RESPONSE)
 
@@ -456,7 +456,7 @@ async def test_light_removed(hass: HomeAssistant, mock_bridge_v1) -> None:
     assert removed_light is None
 
 
-async def test_other_group_update(hass: HomeAssistant, mock_bridge_v1) -> None:
+async def test_other_group_update(hass: HomeAssistant, mock_bridge_v1: Mock) -> None:
     """Test changing one group that will impact the state of other light."""
     mock_bridge_v1.allow_groups = True
     mock_bridge_v1.mock_light_responses.append({})
@@ -509,7 +509,7 @@ async def test_other_group_update(hass: HomeAssistant, mock_bridge_v1) -> None:
     assert group_2.state == "off"
 
 
-async def test_other_light_update(hass: HomeAssistant, mock_bridge_v1) -> None:
+async def test_other_light_update(hass: HomeAssistant, mock_bridge_v1: Mock) -> None:
     """Test changing one light that will impact state of other light."""
     mock_bridge_v1.mock_light_responses.append(LIGHT_RESPONSE)
 
@@ -562,7 +562,7 @@ async def test_other_light_update(hass: HomeAssistant, mock_bridge_v1) -> None:
     assert lamp_2.attributes["brightness"] == 100
 
 
-async def test_update_timeout(hass: HomeAssistant, mock_bridge_v1) -> None:
+async def test_update_timeout(hass: HomeAssistant, mock_bridge_v1: Mock) -> None:
     """Test bridge marked as not available if timeout error during update."""
     mock_bridge_v1.api.lights.update = Mock(side_effect=TimeoutError)
     mock_bridge_v1.api.groups.update = Mock(side_effect=TimeoutError)
@@ -571,7 +571,7 @@ async def test_update_timeout(hass: HomeAssistant, mock_bridge_v1) -> None:
     assert len(hass.states.async_all()) == 0
 
 
-async def test_update_unauthorized(hass: HomeAssistant, mock_bridge_v1) -> None:
+async def test_update_unauthorized(hass: HomeAssistant, mock_bridge_v1: Mock) -> None:
     """Test bridge marked as not authorized if unauthorized during update."""
     mock_bridge_v1.api.lights.update = Mock(side_effect=aiohue.Unauthorized)
     await setup_bridge(hass, mock_bridge_v1)
@@ -580,7 +580,7 @@ async def test_update_unauthorized(hass: HomeAssistant, mock_bridge_v1) -> None:
     assert len(mock_bridge_v1.handle_unauthorized_error.mock_calls) == 1
 
 
-async def test_light_turn_on_service(hass: HomeAssistant, mock_bridge_v1) -> None:
+async def test_light_turn_on_service(hass: HomeAssistant, mock_bridge_v1: Mock) -> None:
     """Test calling the turn on service on a light."""
     mock_bridge_v1.mock_light_responses.append(LIGHT_RESPONSE)
 
@@ -633,7 +633,9 @@ async def test_light_turn_on_service(hass: HomeAssistant, mock_bridge_v1) -> Non
     }
 
 
-async def test_light_turn_off_service(hass: HomeAssistant, mock_bridge_v1) -> None:
+async def test_light_turn_off_service(
+    hass: HomeAssistant, mock_bridge_v1: Mock
+) -> None:
     """Test calling the turn on service on a light."""
     mock_bridge_v1.mock_light_responses.append(LIGHT_RESPONSE)
 
@@ -775,7 +777,7 @@ async def test_group_features(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
-    mock_bridge_v1,
+    mock_bridge_v1: Mock,
 ) -> None:
     """Test group features."""
     color_temp_type = "Color temperature light"

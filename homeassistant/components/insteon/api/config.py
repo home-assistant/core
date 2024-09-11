@@ -211,7 +211,7 @@ async def websocket_update_modem_config(
     """Get the schema for the modem configuration."""
     config = msg["config"]
     config_entry = get_insteon_config_entry(hass)
-    is_connected = devices.modem.connected
+    is_connected = devices.modem is not None and devices.modem.connected
 
     if not await _async_connect(**config):
         connection.send_error(

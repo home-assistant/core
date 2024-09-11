@@ -70,8 +70,16 @@ class DiscovergyConfigFlow(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle the initial step."""
-        self._existing_entry = await self.async_set_unique_id(self.context["unique_id"])
-        return await self._validate_and_save(entry_data, step_id="reauth")
+        self._existing_entry = self.hass.config_entries.async_get_entry(
+            self.context["entry_id"]
+        )
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle the reauth step."""
+        return await self._validate_and_save(user_input, step_id="reauth_confirm")
 
     async def _validate_and_save(
         self, user_input: Mapping[str, Any] | None = None, step_id: str = "user"

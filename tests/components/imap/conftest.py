@@ -1,10 +1,10 @@
 """Fixtures for imap tests."""
 
+from collections.abc import AsyncGenerator, Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from aioimaplib import AUTH, LOGOUT, NONAUTH, SELECTED, STARTED, Response
 import pytest
-from typing_extensions import AsyncGenerator, Generator
 
 from .const import EMPTY_SEARCH_RESPONSE, TEST_FETCH_RESPONSE_TEXT_PLAIN
 

@@ -4,8 +4,8 @@ from copy import deepcopy
 from unittest.mock import patch
 
 import pytest
-from roborock import RoomMapping
-from roborock.code_mappings import DyadError, RoborockDyadStateCode
+from roborock import RoborockCategory, RoomMapping
+from roborock.code_mappings import DyadError, RoborockDyadStateCode, ZeoError, ZeoState
 from roborock.roborock_message import RoborockDyadDataProtocol, RoborockZeoProtocol
 from roborock.version_a01_apis import RoborockMqttClientA01
 
@@ -38,14 +38,22 @@ class A01Mock(RoborockMqttClientA01):
     def __init__(self, user_data, device_info, category) -> None:
         """Initialize the A01Mock."""
         super().__init__(user_data, device_info, category)
-        self.protocol_responses = {
-            RoborockDyadDataProtocol.STATUS: RoborockDyadStateCode.drying.name,
-            RoborockDyadDataProtocol.POWER: 100,
-            RoborockDyadDataProtocol.MESH_LEFT: 111,
-            RoborockDyadDataProtocol.BRUSH_LEFT: 222,
-            RoborockDyadDataProtocol.ERROR: DyadError.none.name,
-            RoborockDyadDataProtocol.TOTAL_RUN_TIME: 213,
-        }
+        if category == RoborockCategory.WET_DRY_VAC:
+            self.protocol_responses = {
+                RoborockDyadDataProtocol.STATUS: RoborockDyadStateCode.drying.name,
+                RoborockDyadDataProtocol.POWER: 100,
+                RoborockDyadDataProtocol.MESH_LEFT: 111,
+                RoborockDyadDataProtocol.BRUSH_LEFT: 222,
+                RoborockDyadDataProtocol.ERROR: DyadError.none.name,
+                RoborockDyadDataProtocol.TOTAL_RUN_TIME: 213,
+            }
+        elif category == RoborockCategory.WASHING_MACHINE:
+            self.protocol_responses: list[RoborockZeoProtocol] = {
+                RoborockZeoProtocol.STATE: ZeoState.drying.name,
+                RoborockZeoProtocol.COUNTDOWN: 0,
+                RoborockZeoProtocol.WASHING_LEFT: 253,
+                RoborockZeoProtocol.ERROR: ZeoError.none.name,
+            }
 
     async def update_values(
         self, dyad_data_protocols: list[RoborockDyadDataProtocol | RoborockZeoProtocol]

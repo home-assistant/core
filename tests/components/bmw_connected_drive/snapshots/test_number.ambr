@@ -40,7 +40,6 @@
 # name: test_entity_state_attrs[number.i4_edrive40_target_soc-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
       'device_class': 'battery',
       'friendly_name': 'i4 eDrive40 Target SoC',
       'max': 100.0,
@@ -97,7 +96,6 @@
 # name: test_entity_state_attrs[number.ix_xdrive50_target_soc-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by MyBMW',
       'device_class': 'battery',
       'friendly_name': 'iX xDrive50 Target SoC',
       'max': 100.0,

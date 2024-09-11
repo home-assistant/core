@@ -6,7 +6,7 @@ from unittest.mock import patch
 
 import pytest
 from pytrafikverket.exceptions import InvalidAuthentication, NoCameraFound, UnknownError
-from pytrafikverket.trafikverket_camera import CameraInfo
+from pytrafikverket.models import CameraInfoModel
 
 from homeassistant import config_entries
 from homeassistant.components.trafikverket_camera.const import DOMAIN
@@ -17,7 +17,7 @@ from homeassistant.data_entry_flow import FlowResultType
 from tests.common import MockConfigEntry
 
 
-async def test_form(hass: HomeAssistant, get_camera: CameraInfo) -> None:
+async def test_form(hass: HomeAssistant, get_camera: CameraInfoModel) -> None:
     """Test we get the form."""
 
     result = await hass.config_entries.flow.async_init(
@@ -56,7 +56,9 @@ async def test_form(hass: HomeAssistant, get_camera: CameraInfo) -> None:
 
 
 async def test_form_multiple_cameras(
-    hass: HomeAssistant, get_cameras: list[CameraInfo], get_camera2: CameraInfo
+    hass: HomeAssistant,
+    get_cameras: list[CameraInfoModel],
+    get_camera2: CameraInfoModel,
 ) -> None:
     """Test we get the form with multiple cameras."""
 
@@ -108,7 +110,7 @@ async def test_form_multiple_cameras(
 
 
 async def test_form_no_location_data(
-    hass: HomeAssistant, get_camera_no_location: CameraInfo
+    hass: HomeAssistant, get_camera_no_location: CameraInfoModel
 ) -> None:
     """Test we get the form."""
 
@@ -206,15 +208,7 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
     )
     entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "unique_id": entry.unique_id,
-            "entry_id": entry.entry_id,
-        },
-        data=entry.data,
-    )
+    result = await entry.start_reauth_flow(hass)
     assert result["step_id"] == "reauth_confirm"
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
@@ -278,15 +272,7 @@ async def test_reauth_flow_error(
     entry.add_to_hass(hass)
     await hass.async_block_till_done()
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "unique_id": entry.unique_id,
-            "entry_id": entry.entry_id,
-        },
-        data=entry.data,
-    )
+    result = await entry.start_reauth_flow(hass)
 
     with patch(
         "homeassistant.components.trafikverket_camera.config_flow.TrafikverketCamera.async_get_cameras",

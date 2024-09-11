@@ -4,9 +4,11 @@ from __future__ import annotations
 
 import asyncio
 from datetime import timedelta
+from functools import cached_property
 import logging
 
 from roborock import HomeDataRoom
+from roborock.code_mappings import RoborockCategory
 from roborock.containers import DeviceData, HomeDataDevice, HomeDataProduct, NetworkInfo
 from roborock.exceptions import RoborockException
 from roborock.roborock_message import RoborockDyadDataProtocol, RoborockZeoProtocol
@@ -21,6 +23,7 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import slugify
 
 from .const import DOMAIN
 from .models import RoborockA01HassDeviceInfo, RoborockHassDeviceInfo, RoborockMapInfo
@@ -142,10 +145,15 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
                         self._home_data_rooms.get(room.iot_id, "Unknown")
                     )
 
-    @property
+    @cached_property
     def duid(self) -> str:
         """Get the unique id of the device as specified by Roborock."""
         return self.roborock_device_info.device.duid
+
+    @cached_property
+    def duid_slug(self) -> str:
+        """Get the slug of the duid."""
+        return slugify(self.duid)
 
 
 class RoborockDataUpdateCoordinatorA01(
@@ -172,14 +180,27 @@ class RoborockDataUpdateCoordinatorA01(
             model=product_info.model,
             sw_version=device.fv,
         )
-        self.request_protocols: list[RoborockDyadDataProtocol | RoborockZeoProtocol] = [
-            RoborockDyadDataProtocol.STATUS,
-            RoborockDyadDataProtocol.POWER,
-            RoborockDyadDataProtocol.MESH_LEFT,
-            RoborockDyadDataProtocol.BRUSH_LEFT,
-            RoborockDyadDataProtocol.ERROR,
-            RoborockDyadDataProtocol.TOTAL_RUN_TIME,
-        ]
+        self.request_protocols: list[
+            RoborockDyadDataProtocol | RoborockZeoProtocol
+        ] = []
+        if product_info.category == RoborockCategory.WET_DRY_VAC:
+            self.request_protocols = [
+                RoborockDyadDataProtocol.STATUS,
+                RoborockDyadDataProtocol.POWER,
+                RoborockDyadDataProtocol.MESH_LEFT,
+                RoborockDyadDataProtocol.BRUSH_LEFT,
+                RoborockDyadDataProtocol.ERROR,
+                RoborockDyadDataProtocol.TOTAL_RUN_TIME,
+            ]
+        elif product_info.category == RoborockCategory.WASHING_MACHINE:
+            self.request_protocols = [
+                RoborockZeoProtocol.STATE,
+                RoborockZeoProtocol.COUNTDOWN,
+                RoborockZeoProtocol.WASHING_LEFT,
+                RoborockZeoProtocol.ERROR,
+            ]
+        else:
+            _LOGGER.warning("The device you added is not yet supported")
         self.roborock_device_info = RoborockA01HassDeviceInfo(device, product_info)
 
     async def _async_update_data(
@@ -191,7 +212,12 @@ class RoborockDataUpdateCoordinatorA01(
         """Disconnect from API."""
         await self.api.async_release()
 
-    @property
+    @cached_property
     def duid(self) -> str:
         """Get the unique id of the device as specified by Roborock."""
         return self.roborock_device_info.device.duid
+
+    @cached_property
+    def duid_slug(self) -> str:
+        """Get the slug of the duid."""
+        return slugify(self.duid)

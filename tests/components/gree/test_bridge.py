@@ -5,8 +5,12 @@ from datetime import timedelta
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant.components.climate import DOMAIN
-from homeassistant.components.gree.const import COORDINATORS, DOMAIN as GREE
+from homeassistant.components.climate import DOMAIN, HVACMode
+from homeassistant.components.gree.const import (
+    COORDINATORS,
+    DOMAIN as GREE,
+    UPDATE_INTERVAL,
+)
 from homeassistant.core import HomeAssistant
 import homeassistant.util.dt as dt_util
 
@@ -69,3 +73,30 @@ async def test_discovery_after_setup(
     device_infos = [x.device.device_info for x in hass.data[GREE][COORDINATORS]]
     assert device_infos[0].ip == "1.1.1.2"
     assert device_infos[1].ip == "2.2.2.1"
+
+
+async def test_coordinator_updates(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, discovery, device
+) -> None:
+    """Test gree devices update their state."""
+    await async_setup_gree(hass)
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all(DOMAIN)) == 1
+
+    callback = device().add_handler.call_args_list[0][0][1]
+
+    async def fake_update_state(*args) -> None:
+        """Fake update state."""
+        device().power = True
+        callback()
+
+    device().update_state.side_effect = fake_update_state
+
+    freezer.tick(timedelta(seconds=UPDATE_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID_1)
+    assert state is not None
+    assert state.state != HVACMode.OFF

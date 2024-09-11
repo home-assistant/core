@@ -7,14 +7,13 @@ from homewizard_energy.models import Data
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.homewizard import DOMAIN
 from homeassistant.components.homewizard.const import UPDATE_INTERVAL
-from homeassistant.const import STATE_UNAVAILABLE, Platform
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 import homeassistant.util.dt as dt_util
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import async_fire_time_changed
 
 pytestmark = [
     pytest.mark.usefixtures("init_integration"),
@@ -815,49 +814,3 @@ async def test_entities_not_created_for_device(
     """Ensures entities for a specific device are not created."""
     for entity_id in entity_ids:
         assert not hass.states.get(entity_id)
-
-
-async def test_gas_meter_migrated(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    init_integration: MockConfigEntry,
-    snapshot: SnapshotAssertion,
-) -> None:
-    """Test old gas meter sensor is migrated."""
-    entity_registry.async_get_or_create(
-        Platform.SENSOR,
-        DOMAIN,
-        "aabbccddeeff_total_gas_m3",
-    )
-
-    await hass.config_entries.async_reload(init_integration.entry_id)
-    await hass.async_block_till_done()
-
-    entity_id = "sensor.homewizard_aabbccddeeff_total_gas_m3"
-
-    assert (entity_entry := entity_registry.async_get(entity_id))
-    assert snapshot(name=f"{entity_id}:entity-registry") == entity_entry
-
-    # Make really sure this happens
-    assert entity_entry.previous_unique_id == "aabbccddeeff_total_gas_m3"
-
-
-async def test_gas_unique_id_removed(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    init_integration: MockConfigEntry,
-    snapshot: SnapshotAssertion,
-) -> None:
-    """Test old gas meter id sensor is removed."""
-    entity_registry.async_get_or_create(
-        Platform.SENSOR,
-        DOMAIN,
-        "aabbccddeeff_gas_unique_id",
-    )
-
-    await hass.config_entries.async_reload(init_integration.entry_id)
-    await hass.async_block_till_done()
-
-    entity_id = "sensor.homewizard_aabbccddeeff_gas_unique_id"
-
-    assert not entity_registry.async_get(entity_id)

@@ -6,8 +6,9 @@ import asyncio
 from collections import deque
 from datetime import timedelta
 import logging
+from typing import cast
 
-import aiohttp
+from aiohttp import web
 import voluptuous as vol
 
 from homeassistant.components import webhook
@@ -76,12 +77,14 @@ async def async_setup_platform(
     async_add_entities(cameras)
 
 
-async def handle_webhook(hass, webhook_id, request):
+async def handle_webhook(
+    hass: HomeAssistant, webhook_id: str, request: web.Request
+) -> None:
     """Handle incoming webhook POST with image files."""
     try:
         async with asyncio.timeout(5):
             data = dict(await request.post())
-    except (TimeoutError, aiohttp.web.HTTPException) as error:
+    except (TimeoutError, web.HTTPException) as error:
         _LOGGER.error("Could not get information from POST <%s>", error)
         return
 
@@ -91,9 +94,8 @@ async def handle_webhook(hass, webhook_id, request):
         _LOGGER.warning("Webhook call without POST parameter <%s>", camera.image_field)
         return
 
-    await camera.update_image(
-        data[camera.image_field].file.read(), data[camera.image_field].filename
-    )
+    image_data = cast(web.FileField, data[camera.image_field])
+    await camera.update_image(image_data.file.read(), image_data.filename)
 
 
 class PushCamera(Camera):

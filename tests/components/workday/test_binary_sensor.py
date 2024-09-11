@@ -39,6 +39,8 @@ from . import (
     TEST_CONFIG_YESTERDAY,
     TEST_LANGUAGE_CHANGE,
     TEST_LANGUAGE_NO_CHANGE,
+    TEST_NO_OPTIONAL_CATEGORY,
+    TEST_OPTIONAL_CATEGORY,
     init_integration,
 )
 
@@ -400,3 +402,23 @@ async def test_language_difference_no_change_other_language(
     """Test skipping if no difference in language naming."""
     await init_integration(hass, TEST_LANGUAGE_NO_CHANGE)
     assert "Changing language from en to en_US" not in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("config", "end_state"),
+    [(TEST_OPTIONAL_CATEGORY, "off"), (TEST_NO_OPTIONAL_CATEGORY, "on")],
+)
+async def test_optional_category(
+    hass: HomeAssistant,
+    config: dict[str, Any],
+    end_state: str,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test setup from various configs."""
+    # CH, subdiv FR has optional holiday Jan 2nd
+    freezer.move_to(datetime(2024, 1, 2, 12, tzinfo=UTC))  # Tuesday
+    await init_integration(hass, config)
+
+    state = hass.states.get("binary_sensor.workday_sensor")
+    assert state is not None
+    assert state.state == end_state

@@ -2,7 +2,6 @@
 
 from copy import deepcopy
 import json
-import logging
 from typing import Any
 from unittest.mock import patch
 
@@ -100,35 +99,6 @@ CONFIG_ALL_SERVICES = help_custom_config(
         },
     ),
 )
-
-
-async def test_warning_schema_option(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test the warning on use of deprecated schema option."""
-    await mqtt_mock_entry()
-    # Send discovery message with deprecated schema option
-    async_fire_mqtt_message(
-        hass,
-        f"homeassistant/{vacuum.DOMAIN}/bla/config",
-        '{"name": "test", "schema": "state", "o": {"name": "Bla2MQTT", "sw": "0.99", "url":"https://example.com/support"}}',
-    )
-    await hass.async_block_till_done()
-    await hass.async_block_till_done(wait_background_tasks=True)
-
-    state = hass.states.get("vacuum.test")
-    assert state is not None
-    with caplog.at_level(logging.WARNING):
-        assert (
-            "The `schema` option is deprecated for MQTT vacuum, but it was used in a "
-            "discovery payload. Please contact the maintainer of the integration or "
-            "service that supplies the config, and suggest to remove the option."
-            in caplog.text
-        )
-        assert "https://example.com/support" in caplog.text
-        assert "at discovery topic homeassistant/vacuum/bla/config" in caplog.text
 
 
 @pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])
@@ -507,11 +477,7 @@ async def test_update_with_json_attrs_not_dict(
 ) -> None:
     """Test attributes get extracted from a JSON result."""
     await help_test_update_with_json_attrs_not_dict(
-        hass,
-        mqtt_mock_entry,
-        caplog,
-        vacuum.DOMAIN,
-        DEFAULT_CONFIG_2,
+        hass, mqtt_mock_entry, caplog, vacuum.DOMAIN, DEFAULT_CONFIG_2
     )
 
 
@@ -522,11 +488,7 @@ async def test_update_with_json_attrs_bad_json(
 ) -> None:
     """Test attributes get extracted from a JSON result."""
     await help_test_update_with_json_attrs_bad_json(
-        hass,
-        mqtt_mock_entry,
-        caplog,
-        vacuum.DOMAIN,
-        DEFAULT_CONFIG_2,
+        hass, mqtt_mock_entry, caplog, vacuum.DOMAIN, DEFAULT_CONFIG_2
     )
 
 
@@ -682,20 +644,8 @@ async def test_entity_debug_info_message(
 @pytest.mark.parametrize(
     ("service", "topic", "parameters", "payload", "template"),
     [
-        (
-            vacuum.SERVICE_START,
-            "command_topic",
-            None,
-            "start",
-            None,
-        ),
-        (
-            vacuum.SERVICE_CLEAN_SPOT,
-            "command_topic",
-            None,
-            "clean_spot",
-            None,
-        ),
+        (vacuum.SERVICE_START, "command_topic", None, "start", None),
+        (vacuum.SERVICE_CLEAN_SPOT, "command_topic", None, "clean_spot", None),
         (
             vacuum.SERVICE_SET_FAN_SPEED,
             "set_fan_speed_topic",
@@ -710,13 +660,7 @@ async def test_entity_debug_info_message(
             "custom command",
             None,
         ),
-        (
-            vacuum.SERVICE_STOP,
-            "command_topic",
-            None,
-            "stop",
-            None,
-        ),
+        (vacuum.SERVICE_STOP, "command_topic", None, "stop", None),
     ],
 )
 async def test_publishing_with_custom_encoding(
@@ -760,8 +704,7 @@ async def test_publishing_with_custom_encoding(
 
 
 async def test_reloadable(
-    hass: HomeAssistant,
-    mqtt_client_mock: MqttMockPahoClient,
+    hass: HomeAssistant, mqtt_client_mock: MqttMockPahoClient
 ) -> None:
     """Test reloading the MQTT platform."""
     domain = vacuum.DOMAIN

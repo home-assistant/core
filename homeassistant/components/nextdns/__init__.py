@@ -15,14 +15,16 @@ from nextdns import (
     AnalyticsStatus,
     ApiError,
     ConnectionStatus,
+    InvalidApiKeyError,
     NextDns,
     Settings,
 )
+from tenacity import RetryError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
@@ -84,10 +86,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: NextDnsConfigEntry) -> b
 
     websession = async_get_clientsession(hass)
     try:
-        async with asyncio.timeout(10):
-            nextdns = await NextDns.create(websession, api_key)
-    except (ApiError, ClientConnectorError, TimeoutError) as err:
+        nextdns = await NextDns.create(websession, api_key)
+    except (ApiError, ClientConnectorError, RetryError, TimeoutError) as err:
         raise ConfigEntryNotReady from err
+    except InvalidApiKeyError as err:
+        raise ConfigEntryAuthFailed from err
 
     tasks = []
     coordinators = {}

@@ -1,10 +1,10 @@
 """Test the Lovelace initialization."""
 
+from collections.abc import Generator
 from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component

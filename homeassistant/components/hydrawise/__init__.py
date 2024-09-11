@@ -10,7 +10,12 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from .const import DOMAIN, SCAN_INTERVAL
 from .coordinator import HydrawiseDataUpdateCoordinator
 
-PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR, Platform.SWITCH]
+PLATFORMS: list[Platform] = [
+    Platform.BINARY_SENSOR,
+    Platform.SENSOR,
+    Platform.SWITCH,
+    Platform.VALVE,
+]
 
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:

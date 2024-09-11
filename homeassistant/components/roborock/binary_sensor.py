@@ -15,7 +15,6 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util import slugify
 
 from . import RoborockConfigEntry
 from .coordinator import RoborockDataUpdateCoordinator
@@ -97,7 +96,7 @@ class RoborockBinarySensorEntity(RoborockCoordinatedEntityV1, BinarySensorEntity
     ) -> None:
         """Initialize the entity."""
         super().__init__(
-            f"{description.key}_{slugify(coordinator.duid)}",
+            f"{description.key}_{coordinator.duid_slug}",
             coordinator,
         )
         self.entity_description = description

@@ -3,10 +3,8 @@
 DOMAIN = "onkyo"
 BRAND_NAME = "Onkyo"
 
-SINGLE_DEVICE_DISCOVER_RETRY_INTERVAL = 1  # second
-SINGLE_DEVICE_DISCOVER_RETRIES = 10
-DEVICE_DISCOVERY_RETRY_INTERVAL = 1  # second
-DEVICE_DISCOVERY_RETRIES = 5
+DEVICE_INTERVIEW_TIMEOUT = 5
+DEVICE_DISCOVERY_TIMEOUT = 5
 
 OPTION_SOURCE_PREFIX = "source."
 OPTION_SOURCES = "sources"
@@ -32,7 +30,7 @@ CONF_SOURCES_DEFAULT = {
     "video7": "Video 7",
     "fm": "Radio",
 }
-# NOTE: this should be kept in sync with strings.json for dynamic options generation
+# this should be kept in sync with strings.json for dynamic options generation
 # to work correctly.
 CONF_SOURCES_ALLOWED = [
     "aiplay",
@@ -92,4 +90,4 @@ CONF_SOURCES_ALLOWED = [
     "xm",
 ]
 
-ZONES = {"zone2": "Zone 2", "zone3": "Zone 3", "zone4": "Zone 4"}
+ZONES = {"main": "Main", "zone2": "Zone 2", "zone3": "Zone 3", "zone4": "Zone 4"}

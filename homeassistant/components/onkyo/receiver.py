@@ -1,28 +1,99 @@
-"""Management of connection with an Onkyo Receiver."""
+"""Onkyo receiver."""
+
+from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable, Iterable
-from dataclasses import dataclass
+import contextlib
+from dataclasses import dataclass, field
 import logging
-from typing import Any, TypedDict
+from typing import Any
 
 import pyeiscp
-from pyeiscp import Connection as Receiver
 
-from .const import (
-    DEVICE_DISCOVERY_RETRIES,
-    DEVICE_DISCOVERY_RETRY_INTERVAL,
-    SINGLE_DEVICE_DISCOVER_RETRIES,
-    SINGLE_DEVICE_DISCOVER_RETRY_INTERVAL,
-    ZONES,
-)
+from .const import DEVICE_DISCOVERY_TIMEOUT, DEVICE_INTERVIEW_TIMEOUT, ZONES
 
 _LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
+class Callbacks:
+    """Onkyo Receiver Callbacks."""
+
+    connect: list[Callable[[Receiver], None]] = field(default_factory=list)
+    update: list[Callable[[Receiver, tuple[str, str, Any]], None]] = field(
+        default_factory=list
+    )
+
+
+@dataclass
+class Receiver:
+    """Onkyo receiver."""
+
+    conn: pyeiscp.Connection
+    model_name: str
+    identifier: str
+    host: str
+    first_connect: bool = True
+    callbacks: Callbacks = field(default_factory=Callbacks)
+
+    @classmethod
+    async def async_create(cls, info: ReceiverInfo) -> Receiver:
+        """Set up Onkyo Receiver."""
+
+        receiver: Receiver | None = None
+
+        def on_connect(_origin: str) -> None:
+            assert receiver is not None
+            receiver.on_connect()
+
+        def on_update(message: tuple[str, str, Any], _origin: str) -> None:
+            assert receiver is not None
+            receiver.on_update(message)
+
+        _LOGGER.debug("Creating receiver: %s (%s)", info.model_name, info.host)
+
+        connection = await pyeiscp.Connection.create(
+            host=info.host,
+            port=info.port,
+            connect_callback=on_connect,
+            update_callback=on_update,
+            auto_connect=False,
+        )
+
+        return (
+            receiver := cls(
+                conn=connection,
+                model_name=info.model_name,
+                identifier=info.identifier,
+                host=info.host,
+            )
+        )
+
+    def on_connect(self) -> None:
+        """Receiver (re)connected."""
+        _LOGGER.debug("Receiver (re)connected: %s (%s)", self.model_name, self.host)
+
+        # Discover what zones are available for the receiver by querying the power.
+        # If we get a response for the specific zone, it means it is available.
+        for zone in ZONES:
+            self.conn.query_property(zone, "power")
+
+        for callback in self.callbacks.connect:
+            callback(self)
+
+        self.first_connect = False
+
+    def on_update(self, message: tuple[str, str, Any]) -> None:
+        """Process new message from the receiver."""
+        _LOGGER.debug("Received update callback from %s: %s", self.model_name, message)
+        for callback in self.callbacks.update:
+            callback(self, message)
+
+
+@dataclass
 class ReceiverInfo:
-    """Onkyo Receiver information."""
+    """Onkyo receiver information."""
 
     host: str
     port: int
@@ -36,24 +107,26 @@ async def async_interview(host: str) -> ReceiverInfo | None:
 
     receiver_info: ReceiverInfo | None = None
 
-    async def _callback(conn: pyeiscp.Connection):
+    event = asyncio.Event()
+
+    async def _callback(conn: pyeiscp.Connection) -> None:
         """Receiver interviewed, connection not yet active."""
         nonlocal receiver_info
-        info = ReceiverInfo(host, conn.port, conn.name, conn.identifier)
-        _LOGGER.debug("Receiver interviewed: %s (%s)", info.model_name, info.host)
-        receiver_info = info
+        if receiver_info is None:
+            info = ReceiverInfo(host, conn.port, conn.name, conn.identifier)
+            _LOGGER.debug("Receiver interviewed: %s (%s)", info.model_name, info.host)
+            receiver_info = info
+            event.set()
 
-    await pyeiscp.Connection.discover(host=host, discovery_callback=_callback)
+    timeout = DEVICE_INTERVIEW_TIMEOUT
 
-    # info is obtained via UDP message and is delivered via above callback.
-    # Wait here for a bit while that arrives.
-    retry_time = SINGLE_DEVICE_DISCOVER_RETRIES
-    while not receiver_info and retry_time > 0:
-        _LOGGER.debug("Waiting for info on receiver with ip %s to arrive", host)
-        await asyncio.sleep(SINGLE_DEVICE_DISCOVER_RETRY_INTERVAL)
-        retry_time -= 1
+    await pyeiscp.Connection.discover(
+        host=host, discovery_callback=_callback, timeout=timeout
+    )
 
-    _LOGGER.debug("Receiver interviewed")
+    with contextlib.suppress(asyncio.TimeoutError):
+        await asyncio.wait_for(event.wait(), timeout)
+
     return receiver_info
 
 
@@ -63,81 +136,16 @@ async def async_discover() -> Iterable[ReceiverInfo]:
 
     receiver_infos: list[ReceiverInfo] = []
 
-    async def _callback(conn: pyeiscp.Connection):
+    async def _callback(conn: pyeiscp.Connection) -> None:
         """Receiver discovered, connection not yet active."""
         info = ReceiverInfo(conn.host, conn.port, conn.name, conn.identifier)
         _LOGGER.debug("Receiver discovered: %s (%s)", info.model_name, info.host)
         receiver_infos.append(info)
 
-    await pyeiscp.Connection.discover(discovery_callback=_callback)
+    timeout = DEVICE_DISCOVERY_TIMEOUT
 
-    # info is obtained via UDP message and is delivered via above callback.
-    # Wait here for a bit while that arrives.
-    wait_time = DEVICE_DISCOVERY_RETRIES
-    while wait_time > 0:
-        _LOGGER.debug("Waiting for discovery info on all receivers to arrive")
-        await asyncio.sleep(DEVICE_DISCOVERY_RETRY_INTERVAL)
-        wait_time -= 1
+    await pyeiscp.Connection.discover(discovery_callback=_callback, timeout=timeout)
+
+    await asyncio.sleep(timeout)
 
     return receiver_infos
-
-
-class Callbacks(TypedDict):
-    """Onkyo Receiver Callbacks."""
-
-    connect: list[Callable[[Receiver], None]]
-    update: list[Callable[[Receiver, tuple[str, str, Any]], None]]
-
-
-async def async_setup(info: ReceiverInfo) -> Receiver:
-    """Set up Onkyo Receiver."""
-
-    receiver: Receiver | None = None
-
-    callbacks: Callbacks = {
-        "connect": [],
-        "update": [],
-    }
-
-    def _connect_callback(_origin: str) -> None:
-        """Receiver (re)connected."""
-        assert receiver is not None
-        _LOGGER.debug(
-            "Receiver (re)connected: %s (%s)", receiver.identifier, receiver.host
-        )
-
-        # Discover what zones are available for the receiver by querying the power.
-        # If we get a response for the specific zone, it means it is available.
-        for zone in ZONES:
-            receiver.query_property(zone, "power")
-
-        for callback in callbacks["connect"]:
-            callback(receiver)
-
-        receiver.first_connect = False
-
-    def _update_callback(message: tuple[str, str, Any], _origin: str) -> None:
-        """Process new message from the receiver."""
-        assert receiver is not None
-        _LOGGER.debug(
-            "Received update callback from %s: %s", receiver.identifier, message
-        )
-        for callback in callbacks["update"]:
-            callback(receiver, message)
-
-    _LOGGER.debug("Creating receiver: %s (%s)", info.model_name, info.host)
-    receiver = await pyeiscp.Connection.create(
-        host=info.host,
-        port=info.port,
-        connect_callback=_connect_callback,
-        update_callback=_update_callback,
-        auto_connect=False,
-    )
-
-    receiver.callbacks = callbacks
-    receiver.first_connect = True
-
-    receiver.model_name = info.model_name
-    receiver.identifier = info.identifier
-
-    return receiver

@@ -81,7 +81,7 @@ BINARY_SENSOR_TYPES: tuple[RenaultBinarySensorEntityDescription, ...] = tuple(
             key="hvac_status",
             coordinator="hvac_status",
             on_key="hvacStatus",
-            on_value=2,
+            on_value="on",
             translation_key="hvac_status",
         ),
         RenaultBinarySensorEntityDescription(

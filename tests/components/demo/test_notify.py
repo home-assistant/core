@@ -1,9 +1,9 @@
 """The tests for the notify demo platform."""
 
+from collections.abc import Generator
 from unittest.mock import patch
 
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components import notify
 from homeassistant.components.demo import DOMAIN
@@ -81,6 +81,6 @@ async def test_calling_notify_from_script_loaded_from_yaml(
     await hass.services.async_call("script", "test")
     await hass.async_block_till_done()
     assert len(events) == 1
-    assert {
+    assert events[0].data == {
         "message": "Test 123 4",
-    } == events[0].data
+    }

@@ -1,11 +1,11 @@
 """Test the Google Tasks config flow."""
 
+from collections.abc import Generator
 from unittest.mock import Mock, patch
 
 from googleapiclient.errors import HttpError
 from httplib2 import Response
 import pytest
-from typing_extensions import Generator
 
 from homeassistant import config_entries
 from homeassistant.components.google_tasks.const import (

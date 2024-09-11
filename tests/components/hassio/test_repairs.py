@@ -1,5 +1,6 @@
 """Test supervisor repairs."""
 
+from collections.abc import Generator
 from http import HTTPStatus
 import os
 from unittest.mock import patch
@@ -18,18 +19,18 @@ from tests.typing import ClientSessionGenerator
 
 
 @pytest.fixture(autouse=True)
-async def fixture_supervisor_environ():
+def fixture_supervisor_environ() -> Generator[None]:
     """Mock os environ for supervisor."""
     with patch.dict(os.environ, MOCK_ENVIRON):
         yield
 
 
+@pytest.mark.usefixtures("all_setup_requests")
 async def test_supervisor_issue_repair_flow(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     hass_client: ClientSessionGenerator,
     issue_registry: ir.IssueRegistry,
-    all_setup_requests,
 ) -> None:
     """Test fix flow for supervisor issue."""
     mock_resolution_info(
@@ -103,12 +104,12 @@ async def test_supervisor_issue_repair_flow(
     )
 
 
+@pytest.mark.usefixtures("all_setup_requests")
 async def test_supervisor_issue_repair_flow_with_multiple_suggestions(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     hass_client: ClientSessionGenerator,
     issue_registry: ir.IssueRegistry,
-    all_setup_requests,
 ) -> None:
     """Test fix flow for supervisor issue with multiple suggestions."""
     mock_resolution_info(
@@ -197,12 +198,12 @@ async def test_supervisor_issue_repair_flow_with_multiple_suggestions(
     )
 
 
+@pytest.mark.usefixtures("all_setup_requests")
 async def test_supervisor_issue_repair_flow_with_multiple_suggestions_and_confirmation(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     hass_client: ClientSessionGenerator,
     issue_registry: ir.IssueRegistry,
-    all_setup_requests,
 ) -> None:
     """Test fix flow for supervisor issue with multiple suggestions and choice requires confirmation."""
     mock_resolution_info(
@@ -310,12 +311,12 @@ async def test_supervisor_issue_repair_flow_with_multiple_suggestions_and_confir
     )
 
 
+@pytest.mark.usefixtures("all_setup_requests")
 async def test_supervisor_issue_repair_flow_skip_confirmation(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     hass_client: ClientSessionGenerator,
     issue_registry: ir.IssueRegistry,
-    all_setup_requests,
 ) -> None:
     """Test confirmation skipped for fix flow for supervisor issue with one suggestion."""
     mock_resolution_info(
@@ -389,12 +390,12 @@ async def test_supervisor_issue_repair_flow_skip_confirmation(
     )
 
 
+@pytest.mark.usefixtures("all_setup_requests")
 async def test_mount_failed_repair_flow_error(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     hass_client: ClientSessionGenerator,
     issue_registry: ir.IssueRegistry,
-    all_setup_requests,
 ) -> None:
     """Test repair flow fails when repair fails to apply."""
     mock_resolution_info(
@@ -461,12 +462,12 @@ async def test_mount_failed_repair_flow_error(
     assert issue_registry.async_get_issue(domain="hassio", issue_id="1234")
 
 
+@pytest.mark.usefixtures("all_setup_requests")
 async def test_mount_failed_repair_flow(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     hass_client: ClientSessionGenerator,
     issue_registry: ir.IssueRegistry,
-    all_setup_requests,
 ) -> None:
     """Test repair flow for mount_failed issue."""
     mock_resolution_info(
@@ -562,12 +563,12 @@ async def test_mount_failed_repair_flow(
 @pytest.mark.parametrize(
     "all_setup_requests", [{"include_addons": True}], indirect=True
 )
+@pytest.mark.usefixtures("all_setup_requests")
 async def test_supervisor_issue_docker_config_repair_flow(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     hass_client: ClientSessionGenerator,
     issue_registry: ir.IssueRegistry,
-    all_setup_requests,
 ) -> None:
     """Test fix flow for supervisor issue."""
     mock_resolution_info(
@@ -669,12 +670,12 @@ async def test_supervisor_issue_docker_config_repair_flow(
     )
 
 
+@pytest.mark.usefixtures("all_setup_requests")
 async def test_supervisor_issue_repair_flow_multiple_data_disks(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     hass_client: ClientSessionGenerator,
     issue_registry: ir.IssueRegistry,
-    all_setup_requests,
 ) -> None:
     """Test fix flow for multiple data disks supervisor issue."""
     mock_resolution_info(
@@ -785,12 +786,12 @@ async def test_supervisor_issue_repair_flow_multiple_data_disks(
 @pytest.mark.parametrize(
     "all_setup_requests", [{"include_addons": True}], indirect=True
 )
+@pytest.mark.usefixtures("all_setup_requests")
 async def test_supervisor_issue_detached_addon_removed(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     hass_client: ClientSessionGenerator,
     issue_registry: ir.IssueRegistry,
-    all_setup_requests,
 ) -> None:
     """Test fix flow for supervisor issue."""
     mock_resolution_info(

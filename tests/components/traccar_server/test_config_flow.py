@@ -1,11 +1,11 @@
 """Test the Traccar Server config flow."""
 
+from collections.abc import Generator
 from typing import Any
 from unittest.mock import AsyncMock
 
 import pytest
 from pytraccar import TraccarException
-from typing_extensions import Generator
 
 from homeassistant import config_entries
 from homeassistant.components.traccar.device_tracker import PLATFORM_SCHEMA

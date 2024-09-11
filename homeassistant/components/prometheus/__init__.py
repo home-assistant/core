@@ -16,6 +16,8 @@ import voluptuous as vol
 from homeassistant import core as hacore
 from homeassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE,
+    ATTR_FAN_MODE,
+    ATTR_FAN_MODES,
     ATTR_HVAC_ACTION,
     ATTR_HVAC_MODES,
     ATTR_TARGET_TEMP_HIGH,
@@ -26,7 +28,16 @@ from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
     ATTR_CURRENT_TILT_POSITION,
 )
-from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.fan import (
+    ATTR_DIRECTION,
+    ATTR_OSCILLATING,
+    ATTR_PERCENTAGE,
+    ATTR_PRESET_MODE,
+    ATTR_PRESET_MODES,
+    DIRECTION_FORWARD,
+    DIRECTION_REVERSE,
+)
+from homeassistant.components.http import KEY_HASS, HomeAssistantView
 from homeassistant.components.humidifier import ATTR_AVAILABLE_MODES, ATTR_HUMIDITY
 from homeassistant.components.light import ATTR_BRIGHTNESS
 from homeassistant.components.sensor import SensorDeviceClass
@@ -40,6 +51,16 @@ from homeassistant.const import (
     CONTENT_TYPE_TEXT_PLAIN,
     EVENT_STATE_CHANGED,
     PERCENTAGE,
+    STATE_ALARM_ARMED_AWAY,
+    STATE_ALARM_ARMED_CUSTOM_BYPASS,
+    STATE_ALARM_ARMED_HOME,
+    STATE_ALARM_ARMED_NIGHT,
+    STATE_ALARM_ARMED_VACATION,
+    STATE_ALARM_ARMING,
+    STATE_ALARM_DISARMED,
+    STATE_ALARM_DISARMING,
+    STATE_ALARM_PENDING,
+    STATE_ALARM_TRIGGERED,
     STATE_CLOSED,
     STATE_CLOSING,
     STATE_ON,
@@ -315,10 +336,7 @@ class PrometheusMetrics:
         return "".join(
             [
                 c
-                if c in string.ascii_letters
-                or c in string.digits
-                or c == "_"
-                or c == ":"
+                if c in string.ascii_letters + string.digits + "_:"
                 else f"u{hex(ord(c))}"
                 for c in metric
             ]
@@ -547,6 +565,34 @@ class PrometheusMetrics:
                     float(mode == current_mode)
                 )
 
+        preset_mode = state.attributes.get(ATTR_PRESET_MODE)
+        available_preset_modes = state.attributes.get(ATTR_PRESET_MODES)
+        if preset_mode and available_preset_modes:
+            preset_metric = self._metric(
+                "climate_preset_mode",
+                prometheus_client.Gauge,
+                "Preset mode enum",
+                ["mode"],
+            )
+            for mode in available_preset_modes:
+                preset_metric.labels(**dict(self._labels(state), mode=mode)).set(
+                    float(mode == preset_mode)
+                )
+
+        fan_mode = state.attributes.get(ATTR_FAN_MODE)
+        available_fan_modes = state.attributes.get(ATTR_FAN_MODES)
+        if fan_mode and available_fan_modes:
+            fan_mode_metric = self._metric(
+                "climate_fan_mode",
+                prometheus_client.Gauge,
+                "Fan mode enum",
+                ["mode"],
+            )
+            for mode in available_fan_modes:
+                fan_mode_metric.labels(**dict(self._labels(state), mode=mode)).set(
+                    float(mode == fan_mode)
+                )
+
     def _handle_humidifier(self, state: State) -> None:
         humidifier_target_humidity_percent = state.attributes.get(ATTR_HUMIDITY)
         if humidifier_target_humidity_percent:
@@ -684,6 +730,63 @@ class PrometheusMetrics:
 
         self._handle_attributes(state)
 
+    def _handle_fan(self, state: State) -> None:
+        metric = self._metric(
+            "fan_state", prometheus_client.Gauge, "State of the fan (0/1)"
+        )
+
+        try:
+            value = self.state_as_number(state)
+            metric.labels(**self._labels(state)).set(value)
+        except ValueError:
+            pass
+
+        fan_speed_percent = state.attributes.get(ATTR_PERCENTAGE)
+        if fan_speed_percent is not None:
+            fan_speed_metric = self._metric(
+                "fan_speed_percent",
+                prometheus_client.Gauge,
+                "Fan speed percent (0-100)",
+            )
+            fan_speed_metric.labels(**self._labels(state)).set(float(fan_speed_percent))
+
+        fan_is_oscillating = state.attributes.get(ATTR_OSCILLATING)
+        if fan_is_oscillating is not None:
+            fan_oscillating_metric = self._metric(
+                "fan_is_oscillating",
+                prometheus_client.Gauge,
+                "Whether the fan is oscillating (0/1)",
+            )
+            fan_oscillating_metric.labels(**self._labels(state)).set(
+                float(fan_is_oscillating)
+            )
+
+        fan_preset_mode = state.attributes.get(ATTR_PRESET_MODE)
+        available_modes = state.attributes.get(ATTR_PRESET_MODES)
+        if fan_preset_mode and available_modes:
+            fan_preset_metric = self._metric(
+                "fan_preset_mode",
+                prometheus_client.Gauge,
+                "Fan preset mode enum",
+                ["mode"],
+            )
+            for mode in available_modes:
+                fan_preset_metric.labels(**dict(self._labels(state), mode=mode)).set(
+                    float(mode == fan_preset_mode)
+                )
+
+        fan_direction = state.attributes.get(ATTR_DIRECTION)
+        if fan_direction is not None:
+            fan_direction_metric = self._metric(
+                "fan_direction_reversed",
+                prometheus_client.Gauge,
+                "Fan direction reversed (bool)",
+            )
+            if fan_direction == DIRECTION_FORWARD:
+                fan_direction_metric.labels(**self._labels(state)).set(0)
+            elif fan_direction == DIRECTION_REVERSE:
+                fan_direction_metric.labels(**self._labels(state)).set(1)
+
     def _handle_zwave(self, state: State) -> None:
         self._battery(state)
 
@@ -714,6 +817,35 @@ class PrometheusMetrics:
         value = self.state_as_number(state)
         metric.labels(**self._labels(state)).set(value)
 
+    def _handle_alarm_control_panel(self, state: State) -> None:
+        current_state = state.state
+
+        if current_state:
+            metric = self._metric(
+                "alarm_control_panel_state",
+                prometheus_client.Gauge,
+                "State of the alarm control panel (0/1)",
+                ["state"],
+            )
+
+            alarm_states = [
+                STATE_ALARM_ARMED_AWAY,
+                STATE_ALARM_ARMED_CUSTOM_BYPASS,
+                STATE_ALARM_ARMED_HOME,
+                STATE_ALARM_ARMED_NIGHT,
+                STATE_ALARM_ARMED_VACATION,
+                STATE_ALARM_DISARMED,
+                STATE_ALARM_TRIGGERED,
+                STATE_ALARM_PENDING,
+                STATE_ALARM_ARMING,
+                STATE_ALARM_DISARMING,
+            ]
+
+            for alarm_state in alarm_states:
+                metric.labels(**dict(self._labels(state), state=alarm_state)).set(
+                    float(alarm_state == current_state)
+                )
+
 
 class PrometheusView(HomeAssistantView):
     """Handle Prometheus requests."""
@@ -729,7 +861,11 @@ class PrometheusView(HomeAssistantView):
         """Handle request for Prometheus metrics."""
         _LOGGER.debug("Received Prometheus metrics request")
 
+        hass = request.app[KEY_HASS]
+        body = await hass.async_add_executor_job(
+            prometheus_client.generate_latest, prometheus_client.REGISTRY
+        )
         return web.Response(
-            body=prometheus_client.generate_latest(prometheus_client.REGISTRY),
+            body=body,
             content_type=CONTENT_TYPE_TEXT_PLAIN,
         )

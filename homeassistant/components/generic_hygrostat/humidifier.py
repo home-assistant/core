@@ -33,7 +33,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import (
-    DOMAIN as HA_DOMAIN,
+    DOMAIN as HOMEASSISTANT_DOMAIN,
     Event,
     EventStateChangedData,
     HomeAssistant,
@@ -41,6 +41,7 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.helpers import condition, config_validation as cv
+from homeassistant.helpers.device import async_device_info_to_link_from_entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import (
     async_track_state_change_event,
@@ -139,6 +140,7 @@ async def _async_setup_config(
     async_add_entities(
         [
             GenericHygrostat(
+                hass,
                 name,
                 switch_entity_id,
                 sensor_entity_id,
@@ -167,6 +169,7 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
 
     def __init__(
         self,
+        hass: HomeAssistant,
         name: str,
         switch_entity_id: str,
         sensor_entity_id: str,
@@ -188,6 +191,10 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
         self._name = name
         self._switch_entity_id = switch_entity_id
         self._sensor_entity_id = sensor_entity_id
+        self._attr_device_info = async_device_info_to_link_from_entity(
+            hass,
+            switch_entity_id,
+        )
         self._device_class = device_class or HumidifierDeviceClass.HUMIDIFIER
         self._min_cycle_duration = min_cycle_duration
         self._dry_tolerance = dry_tolerance
@@ -547,12 +554,14 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
     async def _async_device_turn_on(self) -> None:
         """Turn humidifier toggleable device on."""
         data = {ATTR_ENTITY_ID: self._switch_entity_id}
-        await self.hass.services.async_call(HA_DOMAIN, SERVICE_TURN_ON, data)
+        await self.hass.services.async_call(HOMEASSISTANT_DOMAIN, SERVICE_TURN_ON, data)
 
     async def _async_device_turn_off(self) -> None:
         """Turn humidifier toggleable device off."""
         data = {ATTR_ENTITY_ID: self._switch_entity_id}
-        await self.hass.services.async_call(HA_DOMAIN, SERVICE_TURN_OFF, data)
+        await self.hass.services.async_call(
+            HOMEASSISTANT_DOMAIN, SERVICE_TURN_OFF, data
+        )
 
     async def async_set_mode(self, mode: str) -> None:
         """Set new mode.
