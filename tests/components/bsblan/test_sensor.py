@@ -7,7 +7,7 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.const import Platform
+from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.entity_registry as er
 
@@ -30,6 +30,9 @@ async def test_sensor_entity_properties(
     """Test the sensor entity properties."""
     await setup_with_selected_platforms(hass, mock_config_entry, [Platform.SENSOR])
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+    state = hass.states.get(ENTITY_CURRENT_TEMP)
+    assert state.state == "18.6"
 
     # Test when current_temperature is "---"
     mock_current_temp = MagicMock()
@@ -85,55 +88,36 @@ async def test_sensor_update(
 
 
 @pytest.mark.parametrize(
-    ("entity_id", "expected_name"),
+    ("value", "expected_state"),
     [
-        (ENTITY_CURRENT_TEMP, "BSB-LAN Current Temperature"),
-        (ENTITY_OUTSIDE_TEMP, "BSB-LAN Outside Temperature"),
+        (18.6, "18.6"),
+        (42, "42.0"),
+        (None, STATE_UNKNOWN),
+        ("---", STATE_UNKNOWN),
+        ("not a number", STATE_UNKNOWN),
     ],
 )
-async def test_sensor_names(
+async def test_current_temperature_scenarios(
     hass: HomeAssistant,
     mock_bsblan: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    entity_id: str,
-    expected_name: str,
-) -> None:
-    """Test sensor names."""
-    await setup_with_selected_platforms(hass, mock_config_entry, [Platform.SENSOR])
-
-    state = hass.states.get(entity_id)
-    assert state.name == expected_name
-
-
-@pytest.mark.parametrize(
-    ("entity_id", "expected_name"),
-    [
-        (ENTITY_CURRENT_TEMP, "BSB-LAN Current Temperature"),
-    ],
-)
-async def test_sensor_names_translation_key_None(
-    hass: HomeAssistant,
-    mock_bsblan: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-    entity_id: str,
-    expected_name: str,
     freezer: FrozenDateTimeFactory,
+    value,
+    expected_state,
 ) -> None:
-    """Test sensor names."""
+    """Test various scenarios for current temperature sensor."""
     await setup_with_selected_platforms(hass, mock_config_entry, [Platform.SENSOR])
 
-    mock_sensor = MagicMock()
-    mock_sensor.description.key = "current_temperature"
-    mock_sensor.description.translation_key = None
-    mock_bsblan.sensor.return_value.current_temperature = mock_sensor
+    # Set up the mock value
+    mock_current_temp = MagicMock()
+    mock_current_temp.value = value
+    mock_bsblan.sensor.return_value.current_temperature = mock_current_temp
 
     # Trigger an update
     freezer.tick(timedelta(minutes=1))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    # Get the updated state
-    state = hass.states.get(entity_id)
-
-    # Assert the state name matches the expected fallback name
-    assert state.name == expected_name
+    # Check the state
+    state = hass.states.get(ENTITY_CURRENT_TEMP)
+    assert state.state == expected_state
