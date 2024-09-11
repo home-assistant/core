@@ -103,6 +103,8 @@ class RepositoryManager:
 
     async def is_installed(self) -> bool:
         """Return True if the GIT repo is installed."""
+        if not await self.is_cloned():
+            return False
         try:
             install_path = await self.get_install_path()
             return await self.hass.async_add_executor_job(install_path.exists)
@@ -211,7 +213,12 @@ class RepositoryManager:
         _LOGGER.info("Checking out %s", ref)
         self._current_version_cache = None
         repo = await self._get_repo()
-        await self.hass.async_add_executor_job(repo.git.checkout, ref)
+        try:
+            await self.hass.async_add_executor_job(repo.git.checkout, ref)
+        except GitCommandError as e:
+            if "did not match any file(s) known to git" in e.stderr:
+                raise CheckoutError(ref, "reference not found") from e
+            raise CheckoutError(ref, e.stderr) from e
 
     @abstractmethod
     async def install(self) -> None:
@@ -225,6 +232,7 @@ class RepositoryManager:
     @abstractmethod
     async def update(self, version: str) -> None:
         """Update / downgrade the installed GIT repo."""
+        _LOGGER.info("Updating to %s", version)
         current_version = await self.get_current_version()
         if current_version == version:
             raise VersionAlreadyInstalledError(version)
@@ -459,8 +467,9 @@ class ResourceRepositoryManager(RepositoryManager):
         await super().update(version)
         old_resource_url = await self.get_resource_url()
         old_install_path = await self.get_install_path()
-        await self.hass.async_add_executor_job(old_install_path.unlink)
+        # checkout first - in case it fails, we don't want to remove the resource
         await self.checkout(version)
+        await self.hass.async_add_executor_job(old_install_path.unlink)
         await self._download_resource()
         new_resource_url = await self.get_resource_url()
         await self._update_resource(old_resource_url, new_resource_url)
@@ -632,6 +641,17 @@ class AlreadyInstalledError(GPMError):
 
     def __str__(self) -> str:
         return f"`{self.install_path}` already exists"
+
+
+class CheckoutError(GPMError):
+    """Raised when checkout of the GIT repo fails."""
+
+    def __init__(self, ref: str, reason: str) -> None:
+        self.ref = ref
+        self.reason = reason
+
+    def __str__(self) -> str:
+        return f"Cannot check out `{self.ref}`: {self.reason}"
 
 
 class VersionAlreadyInstalledError(GPMError):

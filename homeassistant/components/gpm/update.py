@@ -12,6 +12,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import GPMConfigEntry
 from ._manager import (
+    CheckoutError,
     IntegrationRepositoryManager,
     RepositoryManager,
     UpdateStrategy,
@@ -87,3 +88,5 @@ class GPMUpdateEntity(UpdateEntity):
             await self.manager.update(version)
         except VersionAlreadyInstalledError as e:
             raise HomeAssistantError(e) from e
+        except CheckoutError as e:
+            raise HomeAssistantError(f"Version `{version}` not found") from e
