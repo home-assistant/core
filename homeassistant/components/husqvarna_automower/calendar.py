@@ -55,7 +55,7 @@ class AutomowerCalendarEntity(AutomowerBaseEntity, CalendarEntity):
         if not program_event:
             return None
         return CalendarEvent(
-            summary=program_event.program_id,
+            summary=program_event.schedule_name,
             start=program_event.start.replace(tzinfo=dt_util.DEFAULT_TIME_ZONE),
             end=program_event.end.replace(tzinfo=dt_util.DEFAULT_TIME_ZONE),
             rrule=program_event.rrule_str,
@@ -77,7 +77,7 @@ class AutomowerCalendarEntity(AutomowerBaseEntity, CalendarEntity):
         )
         return [
             CalendarEvent(
-                summary=program_event.program_id,
+                summary=program_event.schedule_name,
                 start=program_event.start.replace(tzinfo=start_date.tzinfo),
                 end=program_event.end.replace(tzinfo=start_date.tzinfo),
                 rrule=program_event.rrule_str,
