@@ -19,11 +19,11 @@ class FliprDataUpdateCoordinator(DataUpdateCoordinator):
     config_entry: ConfigEntry
 
     def __init__(
-        self, hass: HomeAssistant, entry: ConfigEntry, flipr_or_hub_id: str
+        self, hass: HomeAssistant, client: FliprAPIRestClient, flipr_or_hub_id: str
     ) -> None:
         """Initialize."""
         self.device_id = flipr_or_hub_id
-        self.client: FliprAPIRestClient = entry.runtime_data.client
+        self.client = client
 
         super().__init__(
             hass,

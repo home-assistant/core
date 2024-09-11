@@ -24,7 +24,6 @@ _LOGGER = logging.getLogger(__name__)
 class FliprData:
     """The Flipr data class."""
 
-    client: FliprAPIRestClient
     flipr_coordinators: list[FliprDataUpdateCoordinator]
 
 
@@ -49,15 +48,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: FliprConfigEntry) -> boo
 
     _LOGGER.debug("List of devices ids : %s", ids)
 
-    entry.runtime_data = FliprData(client=client, flipr_coordinators=[])
-
     flipr_coordinators = []
     for flipr_id in ids["flipr"]:
-        flipr_coordinator = FliprDataUpdateCoordinator(hass, entry, flipr_id)
+        flipr_coordinator = FliprDataUpdateCoordinator(hass, client, flipr_id)
         await flipr_coordinator.async_config_entry_first_refresh()
         flipr_coordinators.append(flipr_coordinator)
 
-    entry.runtime_data.flipr_coordinators = flipr_coordinators
+    entry.runtime_data = FliprData(flipr_coordinators)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -85,7 +82,7 @@ def detect_invalid_old_configuration(hass: HomeAssistant, entry: ConfigEntry):
             hass,
             DOMAIN,
             "duplicate_config",
-            breaks_in_ha_version="2024.10.0",
+            breaks_in_ha_version="2025.4.0",
             is_fixable=False,
             severity=ir.IssueSeverity.ERROR,
             translation_key="duplicate_config",
@@ -101,8 +98,10 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     _LOGGER.debug("Migration of flipr config from version %s", entry.version)
 
     if entry.version == 1:
-        # In version 1, we have flipr id as config entry unique id and one device per config entry.
-        # We need to migrate to a new config entry that may contain multiple devices. So we change the entry data to match config_flow evolution.
+        # In version 1, we have flipr device as config entry unique id
+        # and one device per config entry.
+        # We need to migrate to a new config entry that may contain multiple devices.
+        # So we change the entry data to match config_flow evolution.
         login = entry.data[CONF_EMAIL]
 
         hass.config_entries.async_update_entry(entry, version=2, unique_id=login)

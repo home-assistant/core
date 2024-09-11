@@ -43,8 +43,8 @@
   },
   "issues": {
     "duplicate_config": {
-      "title": "Duplicate conflicting flipr configurations",
-      "description": "You have many fliprs configured with the same account. In the new version of flipr integration, the configuration has changed internaly. Please remove the fliprs you have and then reconfigure the integration. You will not loose any data nor automation since the flipr entities will be recreated with the same names."
+      "title": "Multiple flipr configurations with the same account",
+      "description": "The Flipr integration has been updated to work account based rather than device based. This means that if you have 2 devices, you only need one configuration. For every account you have, please delete all but one configuration and restart Home Assistant for it to set up the devices linked to your account."
     }
   }
 }
