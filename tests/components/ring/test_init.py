@@ -14,7 +14,7 @@ from homeassistant.components.ring.coordinator import RingEventListener
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import CONF_TOKEN, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er, issue_registry as ir
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from .device_mocks import FRONT_DOOR_DEVICE_ID
@@ -231,33 +231,6 @@ async def test_error_on_device_update(
 
     assert log_msg in caplog.text
     assert hass.config_entries.async_get_entry(mock_config_entry.entry_id)
-
-
-async def test_issue_deprecated_service_ring_update(
-    hass: HomeAssistant,
-    issue_registry: ir.IssueRegistry,
-    caplog: pytest.LogCaptureFixture,
-    mock_ring_client,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test the issue is raised on deprecated service ring.update."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    await hass.services.async_call(DOMAIN, "update", {}, blocking=True)
-
-    issue = issue_registry.async_get_issue("ring", "deprecated_service_ring_update")
-    assert issue
-    assert issue.issue_domain == "ring"
-    assert issue.issue_id == "deprecated_service_ring_update"
-    assert issue.translation_key == "deprecated_service_ring_update"
-
-    assert (
-        "Detected use of service 'ring.update'. "
-        "This is deprecated and will stop working in Home Assistant 2024.10. "
-        "Use 'homeassistant.update_entity' instead which updates all ring entities"
-    ) in caplog.text
 
 
 @pytest.mark.parametrize(
