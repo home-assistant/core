@@ -172,6 +172,8 @@ class ReolinkChannelCoordinatorEntity(ReolinkHostCoordinatorEntity):
 class ReolinkChimeCoordinatorEntity(ReolinkChannelCoordinatorEntity):
     """Parent class for Reolink chime entities connected."""
 
+    entity_description: ReolinkChimeEntityDescription
+
     def __init__(
         self,
         reolink_data: ReolinkData,
