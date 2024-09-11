@@ -1,0 +1,27 @@
+{
+  "state": "PLAYING",
+  "source": {
+    "id": "SPOTIFY",
+    "name": "Spotify"
+  },
+  "allow_apd": false,
+  "listening_on": "Listening on Cambridge Audio CXNv2 - Spotify",
+  "display": {
+    "line1": "Holiday",
+    "line2": "Green Day",
+    "line3": "Greatest Hits: God's Favorite Band",
+    "mqa": "none",
+    "playback_source": "holid",
+    "class": "stream.service.spotify",
+    "art_url": "https://i.scdn.co/image/ab67616d0000b2737f213369d5265a60af5f7e82",
+    "progress": {
+      "position": 85,
+      "duration": 232
+    }
+  },
+  "queue": {
+    "shuffle": "all",
+    "repeat": "all"
+  },
+  "controls": ["pause", "play_pause"]
+}

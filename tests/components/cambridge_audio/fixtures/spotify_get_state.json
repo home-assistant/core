@@ -1,0 +1,11 @@
+{
+  "source": "SPOTIFY",
+  "power": true,
+  "pre_amp_mode": true,
+  "pre_amp_state": "on",
+  "mute": false,
+  "volume_step": 21,
+  "volume_percent": 70,
+  "volume_db": -14,
+  "cbus": "off"
+}
