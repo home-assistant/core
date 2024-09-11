@@ -189,24 +189,6 @@ SENSOR_TYPES: tuple[RingSensorEntityDescription[Any], ...] = (
         else None,
         exists_fn=lambda device: device.has_capability(RingCapability.HISTORY),
     ),
-    RingSensorEntityDescription[RingOther](
-        key="doorbell_volume",
-        translation_key="doorbell_volume",
-        value_fn=lambda device: device.doorbell_volume,
-        exists_fn=lambda device: isinstance(device, RingOther),
-    ),
-    RingSensorEntityDescription[RingOther](
-        key="mic_volume",
-        translation_key="mic_volume",
-        value_fn=lambda device: device.mic_volume,
-        exists_fn=lambda device: isinstance(device, RingOther),
-    ),
-    RingSensorEntityDescription[RingOther](
-        key="voice_volume",
-        translation_key="voice_volume",
-        value_fn=lambda device: device.voice_volume,
-        exists_fn=lambda device: isinstance(device, RingOther),
-    ),
     RingSensorEntityDescription[RingGeneric](
         key="wifi_signal_category",
         translation_key="wifi_signal_category",

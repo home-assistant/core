@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 import time
 from typing import Any, Generic, cast
 
-from ring_doorbell import RingChime, RingDoorBell, RingGeneric
+from ring_doorbell import RingChime, RingDoorBell, RingGeneric, RingOther
+import ring_doorbell.const
 
 from homeassistant.components.number import (
     NumberEntity,
@@ -103,7 +104,8 @@ class RingNumberEntityDescription(NumberEntityDescription, Generic[RingDeviceT])
     """Describes Ring number entity."""
 
     value_fn: Callable[[RingDeviceT], StateType]
-    exists_fn: Callable[[RingGeneric], bool] = lambda _: True
+    setter_fn: Callable[[RingDeviceT], Awaitable[None]]
+    exists_fn: Callable[[RingGeneric], bool]
 
 
 NUMBER_TYPES: tuple[RingNumberEntityDescription[Any], ...] = (
@@ -111,20 +113,55 @@ NUMBER_TYPES: tuple[RingNumberEntityDescription[Any], ...] = (
         key="volume",
         translation_key="volume",
         mode=NumberMode.SLIDER,
-        native_min_value=0,
-        native_max_value=10,
+        native_min_value=ring_doorbell.const.CHIME_VOL_MIN,
+        native_max_value=ring_doorbell.const.CHIME_VOL_MAX,
         native_step=1,
         value_fn=lambda device: device.volume,
+        setter_fn=lambda device, value: device.async_set_volume(int(value)),
         exists_fn=lambda device: isinstance(device, RingChime),
     ),
     RingNumberEntityDescription[RingDoorBell](
         key="volume",
         translation_key="volume",
         mode=NumberMode.SLIDER,
-        native_min_value=0,
-        native_max_value=11,
+        native_min_value=ring_doorbell.const.DOORBELL_VOL_MIN,
+        native_max_value=ring_doorbell.const.DOORBELL_VOL_MAX,
         native_step=1,
         value_fn=lambda device: device.volume,
+        setter_fn=lambda device, value: device.async_set_volume(int(value)),
         exists_fn=lambda device: isinstance(device, RingDoorBell),
+    ),
+    RingNumberEntityDescription[RingOther](
+        key="doorbell_volume",
+        translation_key="doorbell_volume",
+        mode=NumberMode.SLIDER,
+        native_min_value=ring_doorbell.const.OTHER_DOORBELL_VOL_MIN,
+        native_max_value=ring_doorbell.const.OTHER_DOORBELL_VOL_MAX,
+        native_step=1,
+        value_fn=lambda device: device.doorbell_volume,
+        setter_fn=lambda device, value: device.async_set_doorbell_volume(int(value)),
+        exists_fn=lambda device: isinstance(device, RingOther),
+    ),
+    RingNumberEntityDescription[RingOther](
+        key="mic_volume",
+        translation_key="mic_volume",
+        mode=NumberMode.SLIDER,
+        native_min_value=ring_doorbell.const.MIC_VOL_MIN,
+        native_max_value=ring_doorbell.const.MIC_VOL_MAX,
+        native_step=1,
+        value_fn=lambda device: device.mic_volume,
+        setter_fn=lambda device, value: device.async_set_mic_volume(int(value)),
+        exists_fn=lambda device: isinstance(device, RingOther),
+    ),
+    RingNumberEntityDescription[RingOther](
+        key="voice_volume",
+        translation_key="voice_volume",
+        mode=NumberMode.SLIDER,
+        native_min_value=ring_doorbell.const.VOICE_VOL_MIN,
+        native_max_value=ring_doorbell.const.VOICE_VOL_MAX,
+        native_step=1,
+        value_fn=lambda device: device.voice_volume,
+        setter_fn=lambda device, value: device.async_set_voice_volume(int(value)),
+        exists_fn=lambda device: isinstance(device, RingOther),
     ),
 )
