@@ -177,9 +177,8 @@ class LinkPlayMediaPlayerEntity(MediaPlayerEntity):
         ]
 
         manufacturer, model = get_info_from_project(bridge.device.properties["project"])
-        if model == MANUFACTURER_GENERIC:
-            model_id = None
-        else:
+        model_id = None
+        if model != MANUFACTURER_GENERIC:
             model_id = bridge.device.properties["project"]
 
         self._attr_device_info = dr.DeviceInfo(
