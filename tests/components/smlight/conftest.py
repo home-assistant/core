@@ -4,7 +4,7 @@ from collections.abc import AsyncGenerator, Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from pysmlight.sse import sseClient
-from pysmlight.web import CmdWrapper, Info, Sensors
+from pysmlight.web import CmdWrapper, Firmware, Info, Sensors
 import pytest
 
 from homeassistant.components.smlight import PLATFORMS
@@ -12,7 +12,11 @@ from homeassistant.components.smlight.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry, load_json_object_fixture
+from tests.common import (
+    MockConfigEntry,
+    load_json_array_fixture,
+    load_json_object_fixture,
+)
 
 MOCK_HOST = "slzb-06.local"
 MOCK_USERNAME = "test-user"
@@ -82,6 +86,18 @@ def mock_smlight_client(request: pytest.FixtureRequest) -> Generator[MagicMock]:
         api.get_sensors.return_value = Sensors.from_dict(
             load_json_object_fixture("sensors.json", DOMAIN)
         )
+
+        def get_firmware_side_effect(*args, **kwargs) -> list[Firmware]:
+            """Return the firmware version."""
+            fw_list = []
+            if kwargs.get("mode") == "zigbee":
+                fw_list = load_json_array_fixture("zb_firmware.json", DOMAIN)
+            else:
+                fw_list = load_json_array_fixture("esp_firmware.json", DOMAIN)
+
+            return [Firmware.from_dict(fw) for fw in fw_list]
+
+        api.get_firmware_version.side_effect = get_firmware_side_effect
 
         api.check_auth_needed.return_value = False
         api.authenticate.return_value = True
