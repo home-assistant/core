@@ -99,7 +99,7 @@ async def test_api_errors(
     expected_error,
 ) -> None:
     """Test the failure scenarios."""
-    mock_api.authenticate = AsyncMock(side_effect=side_effect)
+    mock_api.authenticate.side_effect = side_effect
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
@@ -107,3 +107,12 @@ async def test_api_errors(
     )
     assert result.get("type") is FlowResultType.FORM
     assert result.get("errors") == {"base": expected_error}
+
+    mock_api.authenticate.side_effect = None
+
+    # test with all provided
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_USERNAME: "test-username", CONF_PASSWORD: "test-password"},
+    )
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
