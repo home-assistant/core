@@ -298,7 +298,8 @@ async def test_temperature_features_is_valid(
         blocking=True,
     )
     assert (
-        "MockClimateTempEntity set_temperature action was used with temperature but the entity does not "
+        "MockClimateTempEntity set_temperature action was used "
+        "with temperature but the entity does not "
         "implement the ClimateEntityFeature.TARGET_TEMPERATURE feature. Please"
     ) in caplog.text
 
@@ -313,7 +314,8 @@ async def test_temperature_features_is_valid(
         blocking=True,
     )
     assert (
-        "MockClimateTempRangeEntity set_temperature action was used with target_temp_low but the entity does not "
+        "MockClimateTempRangeEntity set_temperature action was used with "
+        "target_temp_low but the entity does not "
         "implement the ClimateEntityFeature.TARGET_TEMPERATURE_RANGE feature. Please"
     ) in caplog.text
 
