@@ -30,23 +30,6 @@ from .const import ENTITY_ID
 
 from tests.common import MockConfigEntry
 
-# async def test_entity_attributes(
-#     hass: HomeAssistant,
-#     mock_stream_magic_client: AsyncMock,
-#     mock_config_entry: MockConfigEntry,
-# ) -> None:
-#     """Test entity attributes."""
-#     await setup_integration(hass, mock_config_entry)
-#     await mock_stream_magic_client.mock_state_update()
-#     await hass.async_block_till_done()
-#
-#     # Attributes when device is on
-#     state = hass.states.get(ENTITY_ID)
-#     attrs = state.attributes
-#     assert state.state == STATE_PLAYING
-#     assert attrs[ATTR_DEVICE_CLASS] == MediaPlayerDeviceClass.RECEIVER
-#     assert (MediaPlayerEntityFeature.VOLUME_SET, MediaPlayerEntityFeature) in attrs[ATTR_SUPPORTED_FEATURES]
-
 
 async def test_entity_supported_features(
     hass: HomeAssistant,
