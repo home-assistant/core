@@ -11,7 +11,9 @@ from .const import DOMAIN, LOGGER
 
 
 class InelsBaseEntity(Entity):
-    """Base Inels device."""
+    """Base iNELS device."""
+
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -20,15 +22,23 @@ class InelsBaseEntity(Entity):
         index: int,
     ) -> None:
         """Init base entity."""
-        self._device: Device = device
+        self._device = device
         self._device_id = self._device.unique_id
-        self._attr_name = self._device.title
-
         self._parent_id = self._device.parent_id
-        self._attr_unique_id = self._device_id  # f"{self._parent_id}-{self._device_id}"
+        self._attr_unique_id = self._device_id
 
         self._key = key
         self._index = index
+
+        info = self._device.info()
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self._device.unique_id)},
+            manufacturer=info.manufacturer,
+            model=info.model_number,
+            name=self._device.title,
+            sw_version=info.sw_version,
+            via_device=(DOMAIN, self._parent_id),
+        )
 
         self._device.add_ha_callback(self.key, self.index, self._callback)
 
@@ -37,8 +47,6 @@ class InelsBaseEntity(Entity):
         self._device.mqtt.subscribe_listener(
             self._device.state_topic, self._device.unique_id, self._device.callback
         )
-
-        self.async_on_remove(lambda: LOGGER.info("Entity %s to be removed", self.name))
 
     def _callback(self) -> None:
         """Get data from broker into the HA."""
@@ -59,23 +67,9 @@ class InelsBaseEntity(Entity):
         return False
 
     @property
-    def device_info(self) -> DeviceInfo:
-        """Return device info."""
-        info = self._device.info()
-        return DeviceInfo(
-            identifiers={(DOMAIN, self._device.unique_id)},
-            manufacturer=info.manufacturer,
-            model=info.model_number,
-            name=self._device.title,
-            sw_version=info.sw_version,
-            via_device=(DOMAIN, self._parent_id),
-        )
-
-    @property
     def available(self) -> bool:
         """Return if entity is available."""
-
-        return self._device.is_available and super().available
+        return bool(self._device.is_available)
 
     @property
     def key(self) -> str:
