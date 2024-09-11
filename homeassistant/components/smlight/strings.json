@@ -19,7 +19,7 @@
       },
       "reauth_confirm": {
         "title": "[%key:common::config_flow::title::reauth%]",
-        "description": "Please enter the correct username and password for host: {host}",
+        "description": "Please enter the correct username and password",
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
@@ -42,6 +42,14 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "ethernet": {
+        "name": "Ethernet"
+      },
+      "wifi": {
+        "name": "Wi-Fi"
+      }
+    },
     "sensor": {
       "zigbee_temperature": {
         "name": "Zigbee chip temp"
@@ -72,6 +80,23 @@
       "zigbee_flash_mode": {
         "name": "Zigbee flash mode"
       }
+    },
+    "switch": {
+      "auto_zigbee_update": {
+        "name": "Auto Zigbee update"
+      },
+      "disable_led": {
+        "name": "Disable LEDs"
+      },
+      "night_mode": {
+        "name": "LED night mode"
+      }
+    }
+  },
+  "issues": {
+    "unsupported_firmware": {
+      "title": "SLZB core firmware update required",
+      "description": "Your SMLIGHT SLZB-06x device is running an unsupported core firmware version. Please update it to the latest version to enjoy all the features of this integration."
     }
   }
 }

@@ -252,7 +252,7 @@ jobs:
           python -m venv venv
           . venv/bin/activate
           python --version
-          pip install "$(grep '^uv' < requirements_test.txt)"
+          pip install "$(grep '^uv' < requirements.txt)"
           uv pip install "$(cat requirements_test.txt | grep pre-commit)"
       - name: Restore pre-commit environment from cache
         id: cache-precommit
@@ -434,13 +434,17 @@ jobs:
     runs-on: ubuntu-24.04
     needs:
       - info
-      - pre-commit
+    if: |
+      github.event.inputs.pylint-only != 'true'
+      && github.event.inputs.mypy-only != 'true'
+      && github.event.inputs.audit-licenses-only != 'true'
     strategy:
       fail-fast: false
       matrix:
         file:
           - Dockerfile
           - Dockerfile.dev
+          - script/hassfest/docker/Dockerfile
     steps:
       - name: Check out code from GitHub
         uses: actions/checkout@v4.1.7
@@ -472,7 +476,7 @@ jobs:
       - name: Generate partial uv restore key
         id: generate-uv-key
         run: |
-          uv_version=$(cat requirements_test.txt | grep uv | cut -d '=' -f 3)
+          uv_version=$(cat requirements.txt | grep uv | cut -d '=' -f 3)
           echo "version=${uv_version}" >> $GITHUB_OUTPUT
           echo "key=uv-${{ env.UV_CACHE_VERSION }}-${uv_version}-${{
             env.HA_SHORT_VERSION }}-$(date -u '+%Y-%m-%dT%H:%M:%s')" >> $GITHUB_OUTPUT
@@ -521,7 +525,7 @@ jobs:
           python -m venv venv
           . venv/bin/activate
           python --version
-          pip install "$(grep '^uv' < requirements_test.txt)"
+          pip install "$(grep '^uv' < requirements.txt)"
           uv pip install -U "pip>=21.3.1" setuptools wheel
           uv pip install -r requirements.txt
           python -m script.gen_requirements_all ci

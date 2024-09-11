@@ -5,7 +5,10 @@ from __future__ import annotations
 from http import HTTPStatus
 import logging
 
-from homeassistant.components.binary_sensor import DOMAIN, BinarySensorEntity
+from homeassistant.components.binary_sensor import (
+    DOMAIN as BINARY_SENSOR_DOMAIN,
+    BinarySensorEntity,
+)
 from homeassistant.components.http import KEY_HASS, HomeAssistantView
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -55,7 +58,7 @@ class MyStromView(HomeAssistantView):
             )
 
         button_id = data[button_action]
-        entity_id = f"{DOMAIN}.{button_id}_{button_action}"
+        entity_id = f"{BINARY_SENSOR_DOMAIN}.{button_id}_{button_action}"
         if entity_id not in self.buttons:
             _LOGGER.info(
                 "New myStrom button/action detected: %s/%s", button_id, button_action

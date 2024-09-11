@@ -42,8 +42,9 @@ class SchlageLockEntity(SchlageEntity, LockEntity):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        self._update_attrs()
-        return super()._handle_coordinator_update()
+        if self.device_id in self.coordinator.data.locks:
+            self._update_attrs()
+        super()._handle_coordinator_update()
 
     def _update_attrs(self) -> None:
         """Update our internal state attributes."""
