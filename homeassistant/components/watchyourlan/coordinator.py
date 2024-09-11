@@ -17,6 +17,8 @@ _LOGGER = logging.getLogger(__name__)
 
 class WatchYourLANUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
     """Class to manage fetching data from the WatchYourLAN API."""
+    
+    config_entry: ConfigEntry
 
     def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
         """Initialize the coordinator."""
