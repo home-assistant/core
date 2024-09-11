@@ -22,6 +22,8 @@ from homeassistant.const import CONF_TYPE, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
+from . import TESTING_VERSIONS
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -47,7 +49,7 @@ def repo() -> Generator[None, None, None]:
         component_dir.mkdir(parents=True)
         repo.index.add([component_dir])
         repo.index.commit("Initial commit")
-        for tag in "v0.8.8", "v0.9.9", "v1.0.0", "v2.0.0beta2":
+        for tag in TESTING_VERSIONS:
             repo.index.commit(f"New version: {tag}")
             repo.create_tag(tag)
         return repo
