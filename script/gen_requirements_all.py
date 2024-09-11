@@ -205,6 +205,12 @@ tuf>=4.0.0
 
 # https://github.com/jd/tenacity/issues/471
 tenacity!=8.4.0
+
+# pyasn1.compat.octets was removed in pyasn1 0.6.1 and breaks some integrations
+# and tests that import it directly
+# https://github.com/pyasn1/pyasn1/pull/60
+# https://github.com/lextudio/pysnmp/issues/114
+pyasn1==0.6.0
 """
 
 GENERATED_MESSAGE = (
