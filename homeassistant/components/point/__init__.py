@@ -185,25 +185,14 @@ async def async_setup_webhook(
             },
         )
 
-    if await session.update_webhook(
+    await session.update_webhook(
         entry.data[CONF_WEBHOOK_URL],
         entry.data[CONF_WEBHOOK_ID],
         ["*"],
-    ):
-        webhook.async_register(
-            hass, DOMAIN, "Point", entry.data[CONF_WEBHOOK_ID], handle_webhook
-        )
-    else:
-        _LOGGER.warning(
-            "Error registering webhook at: %s", entry.data[CONF_WEBHOOK_URL]
-        )
-        data = {**entry.data}
-        data.pop(CONF_WEBHOOK_ID, None)
-        data.pop(CONF_WEBHOOK_URL, None)
-        hass.config_entries.async_update_entry(
-            entry,
-            data=data,
-        )
+    )
+    webhook.async_register(
+        hass, DOMAIN, "Point", entry.data[CONF_WEBHOOK_ID], handle_webhook
+    )
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: PointConfigEntry) -> bool:

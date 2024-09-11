@@ -5,16 +5,14 @@ import logging
 from typing import Any
 
 from homeassistant.config_entries import ConfigFlowResult
-from homeassistant.helpers import config_entry_oauth2_flow
+from homeassistant.helpers.config_entry_oauth2_flow import AbstractOAuth2FlowHandler
 
 from .const import DOMAIN
 
 DATA_FLOW_IMPL = "point_flow_implementation"
 
 
-class OAuth2FlowHandler(
-    AbstractOAuth2FlowHandler, domain=DOMAIN
-):
+class OAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
     """Config flow to handle Minut Point OAuth2 authentication."""
 
     DOMAIN = DOMAIN
