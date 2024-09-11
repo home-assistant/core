@@ -14,7 +14,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .conftest import configure_squeezebox
+from .conftest import configure_squeezebox_integration
 
 from tests.common import MockConfigEntry
 
@@ -72,7 +72,7 @@ async def test_binary_sensor(
             return_value=copy.deepcopy(FAKE_QUERY_RESPONSE),
         ),
     ):
-        await configure_squeezebox(hass, config_entry, lms)
+        await configure_squeezebox_integration(hass, config_entry, lms)
 
     state = hass.states.get("binary_sensor.1_2_3_4_needs_restart")
 

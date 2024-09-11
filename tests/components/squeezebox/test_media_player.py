@@ -113,9 +113,6 @@ async def test_squeezebox_player_rediscovery(
     freezer.tick(timedelta(seconds=DISCOVERY_INTERVAL))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
-    freezer.tick(timedelta(seconds=SENSOR_UPDATE_INTERVAL))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
     assert hass.states.get("media_player.test_player").state == MediaPlayerState.IDLE
 
 
