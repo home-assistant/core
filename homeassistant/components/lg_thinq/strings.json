@@ -54,6 +54,9 @@
       },
       "operation_mode": {
         "name": "Power"
+      },
+      "one_touch_filter": {
+        "name": "Fresh air filter"
       }
     }
   }

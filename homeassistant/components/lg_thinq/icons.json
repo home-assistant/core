@@ -35,6 +35,9 @@
       },
       "operation_mode": {
         "default": "mdi:power"
+      },
+      "one_touch_filter": {
+        "default": "mdi:air-filter"
       }
     }
   }
