@@ -20,7 +20,7 @@ from .coordinator import DeviceDataUpdateCoordinator, async_setup_device_coordin
 
 type ThinqConfigEntry = ConfigEntry[dict[str, DeviceDataUpdateCoordinator]]
 
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.SWITCH]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.NUMBER, Platform.SWITCH]
 
 _LOGGER = logging.getLogger(__name__)
 
