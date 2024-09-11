@@ -6,7 +6,7 @@ import logging
 
 from homeassistant.helpers.entity import Entity
 
-from . import STATE_KEY_STATE
+from .const import STATE_KEY_STATE
 
 _LOGGER = logging.getLogger(__name__)
 
