@@ -133,7 +133,9 @@ class TriggerUpdateCoordinator(DataUpdateCoordinator):
         return condition_result
 
     @callback
-    def _execute_update(self, run_variables: TemplateVarsType, context=None) -> None:
+    def _execute_update(
+        self, run_variables: TemplateVarsType, context: Context | None = None
+    ) -> None:
         self.async_set_updated_data(
             {"run_variables": run_variables, "context": context}
         )
