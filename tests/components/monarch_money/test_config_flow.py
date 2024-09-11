@@ -4,7 +4,6 @@ from unittest.mock import AsyncMock
 
 from monarchmoney import LoginFailedException, RequireMFAException
 
-from homeassistant import config_entries
 from homeassistant.components.monarch_money.const import CONF_MFA_CODE, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, CONF_TOKEN
@@ -35,7 +34,7 @@ async def test_form_simple(
     assert result["data"] == {
         CONF_TOKEN: "mocked_token",
     }
-    assert result["context"]["unique_id"] == "222260252323873333"
+    assert result["result"].unique_id == "222260252323873333"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -49,11 +48,8 @@ async def test_add_duplicate_entry(
     mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
-    assert result["errors"] == {}
-
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
@@ -64,7 +60,6 @@ async def test_add_duplicate_entry(
             CONF_PASSWORD: "test-password",
         },
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
@@ -75,9 +70,9 @@ async def test_form_invalid_auth(
 ) -> None:
     """Test config flow with a login error."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     # Change the login mock to raise an MFA required error
@@ -92,9 +87,8 @@ async def test_form_invalid_auth(
             CONF_PASSWORD: "test-password",
         },
     )
-    await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_auth"}
 
     mock_config_api.return_value.login.side_effect = None
@@ -105,9 +99,8 @@ async def test_form_invalid_auth(
             CONF_PASSWORD: "test-password",
         },
     )
-    await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Monarch Money"
     assert result["data"] == {
         CONF_TOKEN: "mocked_token",
@@ -121,9 +114,9 @@ async def test_form_mfa(
 ) -> None:
     """Test MFA enabled on account configuration."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     # Change the login mock to raise an MFA required error
@@ -136,9 +129,8 @@ async def test_form_mfa(
             CONF_PASSWORD: "test-password",
         },
     )
-    await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "mfa_required"}
     assert result["step_id"] == "user"
 
@@ -150,9 +142,8 @@ async def test_form_mfa(
             CONF_MFA_CODE: "123456",
         },
     )
-    await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "bad_mfa"}
     assert result["step_id"] == "user"
 
@@ -164,9 +155,8 @@ async def test_form_mfa(
             CONF_MFA_CODE: "123456",
         },
     )
-    await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Monarch Money"
     assert result["data"] == {
         CONF_TOKEN: "mocked_token",
