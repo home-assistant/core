@@ -78,8 +78,6 @@ class LaundrifyPowerSensor(SensorEntity):
             if power is not None:
                 self._attr_available = True
                 self._attr_native_value = power
-            else:
-                raise LaundrifyDeviceException("Received invalid power value (None).")
         except LaundrifyDeviceException as err:
             _LOGGER.debug("Couldn't load power for %s: %s", self._attr_unique_id, err)
             self._attr_available = False
