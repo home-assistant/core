@@ -19,14 +19,11 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import (
-    CONF_ADS_VAR,
-    CONF_ADS_VAR_BRIGHTNESS,
-    DATA_ADS,
-    STATE_KEY_BRIGHTNESS,
-    STATE_KEY_STATE,
-)
+from .const import CONF_ADS_VAR, DATA_ADS, STATE_KEY_STATE
 from .entity import AdsEntity
+
+CONF_ADS_VAR_BRIGHTNESS = "adsvar_brightness"
+STATE_KEY_BRIGHTNESS = "brightness"
 
 DEFAULT_NAME = "ADS Light"
 PLATFORM_SCHEMA = LIGHT_PLATFORM_SCHEMA.extend(
@@ -45,11 +42,11 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the light platform for ADS."""
-    ads_hub = hass.data.get(DATA_ADS)
+    ads_hub = hass.data[DATA_ADS]
 
-    ads_var_enable = config[CONF_ADS_VAR]
-    ads_var_brightness = config.get(CONF_ADS_VAR_BRIGHTNESS)
-    name = config[CONF_NAME]
+    ads_var_enable: str = config[CONF_ADS_VAR]
+    ads_var_brightness: str | None = config.get(CONF_ADS_VAR_BRIGHTNESS)
+    name: str = config[CONF_NAME]
 
     add_entities([AdsLight(ads_hub, ads_var_enable, ads_var_brightness, name)])
 

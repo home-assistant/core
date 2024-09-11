@@ -15,11 +15,11 @@ from homeassistant.core import HomeAssistant, ServiceCall
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
+from .const import CONF_ADS_VAR, DATA_ADS, DOMAIN
 from .hub import AdsHub
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_ADS = "data_ads"
 
 # Supported Types
 ADSTYPE_BOOL = "bool"
@@ -63,15 +63,7 @@ ADS_TYPEMAP = {
 CONF_ADS_FACTOR = "factor"
 CONF_ADS_TYPE = "adstype"
 CONF_ADS_VALUE = "value"
-CONF_ADS_VAR = "adsvar"
-CONF_ADS_VAR_BRIGHTNESS = "adsvar_brightness"
-CONF_ADS_VAR_POSITION = "adsvar_position"
 
-STATE_KEY_STATE = "state"
-STATE_KEY_BRIGHTNESS = "brightness"
-STATE_KEY_POSITION = "position"
-
-DOMAIN = "ads"
 
 SERVICE_WRITE_DATA_BY_NAME = "write_data_by_name"
 
