@@ -32,6 +32,7 @@ from .entity import (
     ReolinkChannelCoordinatorEntity,
     ReolinkChannelEntityDescription,
     ReolinkChimeCoordinatorEntity,
+    ReolinkChimeEntityDescription,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -52,14 +53,13 @@ class ReolinkSelectEntityDescription(
 @dataclass(frozen=True, kw_only=True)
 class ReolinkChimeSelectEntityDescription(
     SelectEntityDescription,
-    ReolinkChannelEntityDescription,
+    ReolinkChimeEntityDescription,
 ):
     """A class that describes select entities for a chime."""
 
     get_options: list[str]
     method: Callable[[Chime, str], Any]
     value: Callable[[Chime], str]
-    supported: Callable[[Chime], bool] = lambda chime: True
 
 
 def _get_quick_reply_id(api: Host, ch: int, mess: str) -> int:

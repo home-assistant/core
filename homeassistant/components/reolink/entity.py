@@ -34,6 +34,14 @@ class ReolinkHostEntityDescription(EntityDescription):
     supported: Callable[[Host], bool] = lambda api: True
 
 
+@dataclass(frozen=True, kw_only=True)
+class ReolinkChimeEntityDescription(EntityDescription):
+    """A class that describes entities for a chime."""
+
+    cmd_key: str | None = None
+    supported: Callable[[Chime], bool] = lambda chime: True
+
+
 class ReolinkHostCoordinatorEntity(CoordinatorEntity[DataUpdateCoordinator[None]]):
     """Parent class for entities that control the Reolink NVR itself, without a channel.
 
