@@ -50,7 +50,11 @@ class ReolinkHostCoordinatorEntity(CoordinatorEntity[DataUpdateCoordinator[None]
     """
 
     _attr_has_entity_name = True
-    entity_description: ReolinkHostEntityDescription | ReolinkChannelEntityDescription | ReolinkChimeEntityDescription
+    entity_description: (
+        ReolinkHostEntityDescription
+        | ReolinkChannelEntityDescription
+        | ReolinkChimeEntityDescription
+    )
 
     def __init__(
         self,

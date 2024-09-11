@@ -26,6 +26,7 @@ from .entity import (
     ReolinkChannelCoordinatorEntity,
     ReolinkChannelEntityDescription,
     ReolinkChimeCoordinatorEntity,
+    ReolinkChimeEntityDescription,
 )
 
 
@@ -46,7 +47,7 @@ class ReolinkNumberEntityDescription(
 @dataclass(frozen=True, kw_only=True)
 class ReolinkChimeNumberEntityDescription(
     NumberEntityDescription,
-    ReolinkChannelEntityDescription,
+    ReolinkChimeEntityDescription,
 ):
     """A class that describes number entities for a chime."""
 

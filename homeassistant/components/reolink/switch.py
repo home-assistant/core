@@ -23,6 +23,7 @@ from .entity import (
     ReolinkChannelCoordinatorEntity,
     ReolinkChannelEntityDescription,
     ReolinkChimeCoordinatorEntity,
+    ReolinkChimeEntityDescription,
     ReolinkHostCoordinatorEntity,
     ReolinkHostEntityDescription,
 )
@@ -53,7 +54,7 @@ class ReolinkNVRSwitchEntityDescription(
 @dataclass(frozen=True, kw_only=True)
 class ReolinkChimeSwitchEntityDescription(
     SwitchEntityDescription,
-    ReolinkChannelEntityDescription,
+    ReolinkChimeEntityDescription,
 ):
     """A class that describes switch entities for a chime."""
 
