@@ -74,13 +74,8 @@ class HassEnforceClassModule(BaseChecker):
         ancestors: list[ClassDef] | None = None
 
         for match in _MODULES:
-            # Allow module.py
-            # Allow module_*.py, such as light_entities.py
-            # Allow module/sub_module.py
-            # Allow module_*/sub_module.py
-            if current_module == match.expected_module or current_module.startswith(
-                f"{match.expected_module}_"
-            ):
+            # Allow module.py and module/sub_module.py
+            if current_module == match.expected_module:
                 continue
 
             if ancestors is None:
