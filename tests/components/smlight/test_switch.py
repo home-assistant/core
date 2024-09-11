@@ -1,5 +1,6 @@
 """Tests for the SMLIGHT switch platform."""
 
+from collections.abc import Callable
 from unittest.mock import MagicMock
 
 from pysmlight import SettingsEvent
@@ -79,13 +80,20 @@ async def test_switches(
     assert len(mock_smlight_client.set_toggle.mock_calls) == 1
     mock_smlight_client.set_toggle.assert_called_once_with(_page, _toggle, True)
 
-    # Mock the event that would be received from the Smlight API
-    mock_event = SettingsEvent(
-        page=_page.value,
-        origin="ha",
-        setting={_toggle: True},
+    event_function: Callable[[SettingsEvent], None] = next(
+        (
+            call_args[0][1]
+            for call_args in mock_smlight_client.sse.register_settings_cb.call_args_list
+            if setting == call_args[0][0]
+        ),
+        None,
     )
-    mock_smlight_client._settings_callbacks[setting](mock_event)
+
+    async def _call_event_function(state: bool = True):
+        event_function(SettingsEvent(page=_page, origin="ha", setting={_toggle: state}))
+        await hass.async_block_till_done()
+
+    await _call_event_function(state=True)
 
     state = hass.states.get(entity_id)
     assert state.state == STATE_ON
@@ -100,8 +108,7 @@ async def test_switches(
     assert len(mock_smlight_client.set_toggle.mock_calls) == 2
     mock_smlight_client.set_toggle.assert_called_with(_page, _toggle, False)
 
-    mock_event.setting[_toggle] = False
-    mock_smlight_client._settings_callbacks[setting](mock_event)
+    await _call_event_function(state=False)
 
     state = hass.states.get(entity_id)
     assert state.state == STATE_OFF
