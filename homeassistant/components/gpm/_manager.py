@@ -203,7 +203,7 @@ class RepositoryManager:
         """Return the remote of the GIT repo."""
         # this function exists mainly to be mocked in tests
         repo = await self._get_repo()
-        return repo.remotes[0]
+        return await self.hass.async_add_executor_job(lambda: repo.remotes[0])
 
     @ensure_cloned
     async def checkout(self, ref: str) -> None:
