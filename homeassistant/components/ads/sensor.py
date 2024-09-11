@@ -62,6 +62,7 @@ def setup_platform(
 ) -> None:
     """Set up an ADS sensor device."""
     ads_hub = hass.data[DATA_ADS]
+
     ads_var: str = config[CONF_ADS_VAR]
     ads_type: str = config[CONF_ADS_TYPE]
     name: str = config[CONF_NAME]
