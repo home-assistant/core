@@ -271,6 +271,7 @@ async def test_library_sensor_values(
     assert library_music_sensor.attributes["last_added_timestamp"] == str(TIMESTAMP)
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize(
     "session_fixture",
     [
@@ -317,6 +318,7 @@ async def test_plex_sensors_special_sessions(
         assert sensor.state is not None
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_plex_sensors_values(
     hass: HomeAssistant,
     setup_plex_server,

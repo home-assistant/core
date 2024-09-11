@@ -155,6 +155,7 @@ class PlexMediaSensor(SensorEntity):
 
     entity_description: PlexSensorEntityDescription
     _attr_has_entity_name = True
+    _attr_entity_registry_enabled_default = False
 
     def __init__(
         self,
