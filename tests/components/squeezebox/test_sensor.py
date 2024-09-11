@@ -1,20 +1,32 @@
 """Test squeezebox sensors."""
 
-from unittest.mock import MagicMock
+from unittest.mock import patch
 
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
-from .conftest import configure_squeezebox_integration
+from .conftest import FAKE_QUERY_RESPONSE
 
 from tests.common import MockConfigEntry
 
 
-async def test_sensor(
-    hass: HomeAssistant, config_entry: MockConfigEntry, lms: MagicMock
-) -> None:
-    """Test binary sensor states and attributes."""
+async def test_sensor(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
+    """Test sensor states and attributes."""
 
-    await configure_squeezebox_integration(hass, config_entry, lms)
+    # Setup component
+    with (
+        patch(
+            "homeassistant.components.squeezebox.PLATFORMS",
+            [Platform.SENSOR],
+        ),
+        patch(
+            "homeassistant.components.squeezebox.Server.async_query",
+            return_value=FAKE_QUERY_RESPONSE,
+        ),
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
     state = hass.states.get("sensor.fakelib_player_count")
 
     assert state is not None
