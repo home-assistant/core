@@ -12,7 +12,7 @@ DOMAIN: Final = "deluge"
 LOGGER = logging.getLogger(__package__)
 
 
-class DelugeGetSessionStatusKeys(enum.StrEnum):
+class DelugeGetSessionStatusKeys(enum.Enum):
     """Enum representing the keys that get passed into the Deluge RPC `core.get_session_status` xml rpc method.
 
     You can call `core.get_session_status` with no keys (so an empty list in deluge-client.DelugeRPCClient.call)
