@@ -138,6 +138,13 @@ class _EventEntityRegistryUpdatedData_Update(TypedDict):
     old_entity_id: NotRequired[str]
 
 
+class EntityRegistryEntryIcon(TypedDict):
+    """Icon state definition for entity registry."""
+
+    default: str
+    state: dict[str, str] | None
+
+
 type EventEntityRegistryUpdatedData = (
     _EventEntityRegistryUpdatedData_CreateRemove
     | _EventEntityRegistryUpdatedData_Update
@@ -1035,7 +1042,7 @@ class EntityRegistry(BaseRegistry):
         disabled_by: RegistryEntryDisabler | None | UndefinedType = UNDEFINED,
         entity_category: EntityCategory | None | UndefinedType = UNDEFINED,
         hidden_by: RegistryEntryHider | None | UndefinedType = UNDEFINED,
-        icon: str | None | UndefinedType = UNDEFINED,
+        icon: str | EntityRegistryEntryIcon | None | UndefinedType = UNDEFINED,
         has_entity_name: bool | UndefinedType = UNDEFINED,
         labels: set[str] | UndefinedType = UNDEFINED,
         name: str | None | UndefinedType = UNDEFINED,
@@ -1162,7 +1169,7 @@ class EntityRegistry(BaseRegistry):
         disabled_by: RegistryEntryDisabler | None | UndefinedType = UNDEFINED,
         entity_category: EntityCategory | None | UndefinedType = UNDEFINED,
         hidden_by: RegistryEntryHider | None | UndefinedType = UNDEFINED,
-        icon: str | None | UndefinedType = UNDEFINED,
+        icon: EntityRegistryEntryIcon | str | UndefinedType = UNDEFINED,
         has_entity_name: bool | UndefinedType = UNDEFINED,
         labels: set[str] | UndefinedType = UNDEFINED,
         name: str | None | UndefinedType = UNDEFINED,

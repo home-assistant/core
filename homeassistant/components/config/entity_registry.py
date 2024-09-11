@@ -163,7 +163,16 @@ def websocket_get_entities(
         # remove the entity from the category.
         vol.Optional("categories"): cv.schema_with_slug_keys(vol.Any(str, None)),
         vol.Optional("device_class"): vol.Any(str, None),
-        vol.Optional("icon"): vol.Any(str, None),
+        vol.Optional("icon"): vol.Any(
+            vol.Schema(
+                {
+                    vol.Required("default"): str,
+                    vol.Optional("state"): dict,
+                }
+            ),
+            str,
+            None,
+        ),
         vol.Optional("labels"): [str],
         vol.Optional("name"): vol.Any(str, None),
         vol.Optional("new_entity_id"): str,
