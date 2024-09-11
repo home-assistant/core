@@ -62,14 +62,6 @@ CONF_SCHEMA_CONFIGURE = vol.Schema(
 _LOGGER = logging.getLogger(__name__)
 
 
-def get_unique_id(receiver_info: ReceiverInfo):
-    """Generate the unique HA id from the receiver info."""
-
-    # QUESTION: I think this can be {self._receiver_info.identifier}_main
-    # since there is a unique id conversion in the import flow.
-    return f"{receiver_info.model_name}_{receiver_info.identifier}"
-
-
 @dataclass
 class ReceiverConfig:
     """Onkyo Receiver configuration."""
@@ -208,7 +200,7 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._receiver_info.model_name,
             )
 
-        unique_id = get_unique_id(self._receiver_info)
+        unique_id = self._receiver_info.identifier
         _LOGGER.debug(
             "Found receiver with ip %s, setting unique_id to %s",
             self._receiver_info.host,
@@ -259,7 +251,7 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
             )
             return self.async_abort(reason="cannot_connect")
 
-        unique_id = get_unique_id(info)
+        unique_id = info.identifier
         await self.async_set_unique_id(unique_id, raise_on_progress=False)
         self._abort_if_unique_id_configured()
 
