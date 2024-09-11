@@ -17,7 +17,8 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import CONF_ADS_VAR, DATA_ADS, STATE_KEY_STATE, AdsEntity
+from . import CONF_ADS_VAR, DATA_ADS, STATE_KEY_STATE
+from .entity import AdsEntity
 
 DEFAULT_NAME = "ADS Switch"
 

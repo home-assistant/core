@@ -101,6 +101,7 @@ from tests.typing import WebSocketGenerator
                 "min": "0",
                 "max": "100",
                 "step": "0.1",
+                "unit_of_measurement": "cm",
                 "set_value": {
                     "action": "input_number.set_value",
                     "target": {"entity_id": "input_number.test"},
@@ -111,6 +112,7 @@ from tests.typing import WebSocketGenerator
                 "min": 0,
                 "max": 100,
                 "step": 0.1,
+                "unit_of_measurement": "cm",
                 "set_value": {
                     "action": "input_number.set_value",
                     "target": {"entity_id": "input_number.test"},
@@ -454,6 +456,7 @@ def get_suggested(schema, key):
                 "min": 0,
                 "max": 100,
                 "step": 0.1,
+                "unit_of_measurement": "cm",
                 "set_value": {
                     "action": "input_number.set_value",
                     "target": {"entity_id": "input_number.test"},
@@ -464,6 +467,7 @@ def get_suggested(schema, key):
                 "min": 0,
                 "max": 100,
                 "step": 0.1,
+                "unit_of_measurement": "cm",
                 "set_value": {
                     "action": "input_number.set_value",
                     "target": {"entity_id": "input_number.test"},
@@ -764,7 +768,7 @@ EARLY_END_ERROR = "invalid template (TemplateSyntaxError: unexpected 'end of tem
                 ),
                 "unit_of_measurement": (
                     "'None' is not a valid unit for device class 'energy'; "
-                    "expected one of 'GJ', 'kWh', 'MJ', 'MWh', 'Wh'"
+                    "expected one of 'cal', 'Gcal', 'GJ', 'J', 'kcal', 'kJ', 'kWh', 'Mcal', 'MJ', 'MWh', 'Wh'"
                 ),
             },
         ),
