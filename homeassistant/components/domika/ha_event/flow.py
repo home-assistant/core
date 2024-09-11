@@ -1,12 +1,16 @@
 """HA event flow."""
 
 from collections.abc import Sequence
+import logging
 import uuid
 
 import domika_ha_framework.database.core as database_core
 from domika_ha_framework.errors import DomikaFrameworkBaseError
 import domika_ha_framework.push_data.flow as push_data_flow
-from domika_ha_framework.push_data.models import DomikaPushDataCreate
+from domika_ha_framework.push_data.models import (
+    DomikaPushDataCreate,
+    DomikaPushedEvents,
+)
 import domika_ha_framework.subscription.flow as subscription_flow
 from domika_ha_framework.utils import flatten_json
 
@@ -95,12 +99,14 @@ async def register_event(
                     app_session_ids,
                 )
 
-            await push_data_flow.register_event(
+            pushed_events = await push_data_flow.register_event(
                 session,
                 async_get_clientsession(hass),
                 push_data=events,
                 critical_push_needed=critical_push_needed,
             )
+            if LOGGER.isEnabledFor(logging.DEBUG):
+                _log_pushed_events(pushed_events)
     except DomikaFrameworkBaseError:
         LOGGER.exception(
             "Can't register event entity: %s attributes %s. Framework error",
@@ -112,8 +118,36 @@ async def register_event(
 async def push_registered_events(hass: HomeAssistant) -> None:
     """Push registered events to the push server."""
     async with database_core.get_session() as session:
-        await push_data_flow.push_registered_events(
+        pushed_events = await push_data_flow.push_registered_events(
             session, async_get_clientsession(hass)
+        )
+        if LOGGER.isEnabledFor(logging.DEBUG):
+            _log_pushed_events(pushed_events)
+
+
+def _log_pushed_events(
+    pushed_events: list[DomikaPushedEvents],
+    max_events_msg_len: int = 1000,
+) -> None:
+    for pushed_event in pushed_events:
+        attributes_count = 0
+        for entity in pushed_event.events.values():
+            attributes_count += len(entity)
+
+        # Entities with their changed attributes.
+        data = str(pushed_event.events)
+        data = (
+            data[:max_events_msg_len] + "..."
+            if len(data) > max_events_msg_len
+            else data
+        )
+
+        LOGGER.debug(
+            "Pushed %s changed attributes in %s entities for %s push_session_id: %s",
+            attributes_count,
+            len(pushed_event.events),
+            pushed_event.push_session_id,
+            data,
         )
 
 
