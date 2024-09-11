@@ -6,6 +6,7 @@ import logging
 
 from thinqconnect import DeviceType
 from thinqconnect.devices.const import Property as ThinQProperty
+from thinqconnect.integration import ActiveMode
 
 from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
@@ -91,7 +92,9 @@ async def async_setup_entry(
             for description in descriptions:
                 entities.extend(
                     ThinQBinarySensorEntity(coordinator, description, property_id)
-                    for property_id in coordinator.api.get_active_idx(description.key)
+                    for property_id in coordinator.api.get_active_idx(
+                        description.key, ActiveMode.READ_ONLY
+                    )
                 )
 
     if entities:

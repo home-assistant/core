@@ -15,10 +15,10 @@ class VoIPEntity(entity.Entity):
     _attr_has_entity_name = True
     _attr_should_poll = False
 
-    def __init__(self, device: VoIPDevice) -> None:
+    def __init__(self, voip_device: VoIPDevice) -> None:
         """Initialize VoIP entity."""
-        self._device = device
-        self._attr_unique_id = f"{device.voip_id}-{self.entity_description.key}"
+        self.voip_device = voip_device
+        self._attr_unique_id = f"{voip_device.voip_id}-{self.entity_description.key}"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, device.voip_id)},
+            identifiers={(DOMAIN, voip_device.voip_id)},
         )

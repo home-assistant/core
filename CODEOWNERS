@@ -238,6 +238,8 @@ build.json @home-assistant/supervisor
 /tests/components/button/ @home-assistant/core
 /homeassistant/components/calendar/ @home-assistant/core
 /tests/components/calendar/ @home-assistant/core
+/homeassistant/components/cambridge_audio/ @noahhusby
+/tests/components/cambridge_audio/ @noahhusby
 /homeassistant/components/camera/ @home-assistant/core
 /tests/components/camera/ @home-assistant/core
 /homeassistant/components/cast/ @emontnemery
@@ -858,8 +860,8 @@ build.json @home-assistant/supervisor
 /tests/components/lupusec/ @majuss @suaveolent
 /homeassistant/components/lutron/ @cdheiser @wilburCForce
 /tests/components/lutron/ @cdheiser @wilburCForce
-/homeassistant/components/lutron_caseta/ @swails @bdraco @danaues @eclair4151
-/tests/components/lutron_caseta/ @swails @bdraco @danaues @eclair4151
+/homeassistant/components/lutron_caseta/ @swails @danaues @eclair4151
+/tests/components/lutron_caseta/ @swails @danaues @eclair4151
 /homeassistant/components/lyric/ @timmo001
 /tests/components/lyric/ @timmo001
 /homeassistant/components/madvr/ @iloveicedgreentea
@@ -1640,6 +1642,8 @@ build.json @home-assistant/supervisor
 /tests/components/webostv/ @thecode
 /homeassistant/components/websocket_api/ @home-assistant/core
 /tests/components/websocket_api/ @home-assistant/core
+/homeassistant/components/weheat/ @jesperraemaekers
+/tests/components/weheat/ @jesperraemaekers
 /homeassistant/components/wemo/ @esev
 /tests/components/wemo/ @esev
 /homeassistant/components/whirlpool/ @abmantis @mkmer

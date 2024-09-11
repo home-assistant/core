@@ -2,18 +2,22 @@
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from ring_doorbell import AuthenticationError, RingError, RingTimeout
+from ring_doorbell import AuthenticationError, Ring, RingError, RingTimeout
 
 from homeassistant.components import ring
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.ring import DOMAIN
-from homeassistant.components.ring.const import SCAN_INTERVAL
+from homeassistant.components.ring.const import CONF_LISTEN_CREDENTIALS, SCAN_INTERVAL
+from homeassistant.components.ring.coordinator import RingEventListener
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import CONF_TOKEN, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
+
+from .device_mocks import FRONT_DOOR_DEVICE_ID
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -413,3 +417,63 @@ async def test_token_updated(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert mock_config_entry.data[CONF_TOKEN] == {"access_token": "new-mock-token"}
+
+
+async def test_listen_token_updated(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_ring_client,
+    mock_ring_event_listener_class,
+) -> None:
+    """Test that the listener token value is updated in the config entry.
+
+    This simulates the api calling the callback.
+    """
+    mock_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    assert mock_ring_event_listener_class.call_count == 1
+    token_updater = mock_ring_event_listener_class.call_args.args[2]
+
+    assert mock_config_entry.data.get(CONF_LISTEN_CREDENTIALS) is None
+    token_updater({"listen_access_token": "mock-token"})
+    assert mock_config_entry.data.get(CONF_LISTEN_CREDENTIALS) == {
+        "listen_access_token": "mock-token"
+    }
+
+
+async def test_no_listen_start(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    entity_registry: er.EntityRegistry,
+    mock_ring_event_listener_class: type[RingEventListener],
+    mock_ring_client: Ring,
+) -> None:
+    """Test behaviour if listener doesn't start."""
+    mock_entry = MockConfigEntry(
+        domain=DOMAIN,
+        version=1,
+        data={"username": "foo", "token": {}},
+    )
+    # Create a binary sensor entity so it is not ignored by the deprecation check
+    # and the listener will start
+    entity_registry.async_get_or_create(
+        domain=BINARY_SENSOR_DOMAIN,
+        platform=DOMAIN,
+        unique_id=f"{FRONT_DOOR_DEVICE_ID}-motion",
+        suggested_object_id=f"{FRONT_DOOR_DEVICE_ID}_motion",
+        config_entry=mock_entry,
+    )
+    mock_ring_event_listener_class.do_not_start = True
+
+    mock_ring_event_listener_class.return_value.started = False
+
+    mock_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert "Ring event listener failed to start after 10 seconds" in [
+        record.message for record in caplog.records if record.levelname == "WARNING"
+    ]

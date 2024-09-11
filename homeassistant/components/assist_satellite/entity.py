@@ -3,6 +3,7 @@
 from abc import abstractmethod
 import asyncio
 from collections.abc import AsyncIterable
+import contextlib
 from enum import StrEnum
 import logging
 import time
@@ -72,8 +73,10 @@ class AssistSatelliteEntity(entity.Entity):
     _run_has_tts: bool = False
     _is_announcing = False
     _wake_word_intercept_future: asyncio.Future[str | None] | None = None
+    _attr_tts_options: dict[str, Any] | None = None
+    _pipeline_task: asyncio.Task | None = None
 
-    __assist_satellite_state: AssistSatelliteState | None = None
+    __assist_satellite_state = AssistSatelliteState.LISTENING_WAKE_WORD
 
     @final
     @property
@@ -90,6 +93,11 @@ class AssistSatelliteEntity(entity.Entity):
     def vad_sensitivity_entity_id(self) -> str | None:
         """Entity ID of the VAD sensitivity to use for the next conversation."""
         return self._attr_vad_sensitivity_entity_id
+
+    @property
+    def tts_options(self) -> dict[str, Any] | None:
+        """Options passed for text-to-speech."""
+        return self._attr_tts_options
 
     async def async_intercept_wake_word(self) -> str | None:
         """Intercept the next wake word from the satellite.
@@ -125,6 +133,8 @@ class AssistSatelliteEntity(entity.Entity):
 
         Calls async_announce with message and media id.
         """
+        await self._cancel_running_pipeline()
+
         if message is None:
             message = ""
 
@@ -136,6 +146,9 @@ class AssistSatelliteEntity(entity.Entity):
             tts_options: dict[str, Any] = {}
             if pipeline.tts_voice is not None:
                 tts_options[tts.ATTR_VOICE] = pipeline.tts_voice
+
+            if self.tts_options is not None:
+                tts_options.update(self.tts_options)
 
             media_id = tts_generate_media_source_id(
                 self.hass,
@@ -160,12 +173,14 @@ class AssistSatelliteEntity(entity.Entity):
             raise SatelliteBusyError
 
         self._is_announcing = True
+        self._set_state(AssistSatelliteState.RESPONDING)
 
         try:
             # Block until announcement is finished
             await self.async_announce(message, media_id)
         finally:
             self._is_announcing = False
+            self._set_state(AssistSatelliteState.LISTENING_WAKE_WORD)
 
     async def async_announce(self, message: str, media_id: str) -> None:
         """Announce media on the satellite.
@@ -182,6 +197,8 @@ class AssistSatelliteEntity(entity.Entity):
         wake_word_phrase: str | None = None,
     ) -> None:
         """Triggers an Assist pipeline in Home Assistant from a satellite."""
+        await self._cancel_running_pipeline()
+
         if self._wake_word_intercept_future and start_stage in (
             PipelineStage.WAKE_WORD,
             PipelineStage.STT,
@@ -237,30 +254,49 @@ class AssistSatelliteEntity(entity.Entity):
         # Set entity state based on pipeline events
         self._run_has_tts = False
 
-        await async_pipeline_from_audio_stream(
+        assert self.platform.config_entry is not None
+        self._pipeline_task = self.platform.config_entry.async_create_background_task(
             self.hass,
-            context=self._context,
-            event_callback=self._internal_on_pipeline_event,
-            stt_metadata=stt.SpeechMetadata(
-                language="",  # set in async_pipeline_from_audio_stream
-                format=stt.AudioFormats.WAV,
-                codec=stt.AudioCodecs.PCM,
-                bit_rate=stt.AudioBitRates.BITRATE_16,
-                sample_rate=stt.AudioSampleRates.SAMPLERATE_16000,
-                channel=stt.AudioChannels.CHANNEL_MONO,
+            async_pipeline_from_audio_stream(
+                self.hass,
+                context=self._context,
+                event_callback=self._internal_on_pipeline_event,
+                stt_metadata=stt.SpeechMetadata(
+                    language="",  # set in async_pipeline_from_audio_stream
+                    format=stt.AudioFormats.WAV,
+                    codec=stt.AudioCodecs.PCM,
+                    bit_rate=stt.AudioBitRates.BITRATE_16,
+                    sample_rate=stt.AudioSampleRates.SAMPLERATE_16000,
+                    channel=stt.AudioChannels.CHANNEL_MONO,
+                ),
+                stt_stream=audio_stream,
+                pipeline_id=self._resolve_pipeline(),
+                conversation_id=self._conversation_id,
+                device_id=device_id,
+                tts_audio_output=self.tts_options,
+                wake_word_phrase=wake_word_phrase,
+                audio_settings=AudioSettings(
+                    silence_seconds=self._resolve_vad_sensitivity()
+                ),
+                start_stage=start_stage,
+                end_stage=end_stage,
             ),
-            stt_stream=audio_stream,
-            pipeline_id=self._resolve_pipeline(),
-            conversation_id=self._conversation_id,
-            device_id=device_id,
-            tts_audio_output="wav",
-            wake_word_phrase=wake_word_phrase,
-            audio_settings=AudioSettings(
-                silence_seconds=self._resolve_vad_sensitivity()
-            ),
-            start_stage=start_stage,
-            end_stage=end_stage,
+            f"{self.entity_id}_pipeline",
         )
+
+        try:
+            await self._pipeline_task
+        finally:
+            self._pipeline_task = None
+
+    async def _cancel_running_pipeline(self) -> None:
+        """Cancel the current pipeline if it's running."""
+        if self._pipeline_task is not None:
+            self._pipeline_task.cancel()
+            with contextlib.suppress(asyncio.CancelledError):
+                await self._pipeline_task
+
+            self._pipeline_task = None
 
     @abstractmethod
     def on_pipeline_event(self, event: PipelineEvent) -> None:

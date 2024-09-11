@@ -82,10 +82,10 @@ def get_fixture_data() -> dict[str, Any]:
 def get_update_data(loaded_fixture: dict[str, Any]) -> YaleSmartAlarmData:
     """Load update data and return."""
 
-    status = loaded_fixture["STATUS"]
-    cycle = loaded_fixture["CYCLE"]
-    online = loaded_fixture["ONLINE"]
-    panel_info = loaded_fixture["PANEL INFO"]
+    status = {"data": loaded_fixture["STATUS"]}
+    cycle = {"data": loaded_fixture["CYCLE"]}
+    online = {"data": loaded_fixture["ONLINE"]}
+    panel_info = {"data": loaded_fixture["PANEL INFO"]}
     return YaleSmartAlarmData(
         status=status,
         cycle=cycle,
@@ -98,14 +98,14 @@ def get_update_data(loaded_fixture: dict[str, Any]) -> YaleSmartAlarmData:
 def get_diag_data(loaded_fixture: dict[str, Any]) -> YaleSmartAlarmData:
     """Load all data and return."""
 
-    devices = loaded_fixture["DEVICES"]
-    mode = loaded_fixture["MODE"]
-    status = loaded_fixture["STATUS"]
-    cycle = loaded_fixture["CYCLE"]
-    online = loaded_fixture["ONLINE"]
-    history = loaded_fixture["HISTORY"]
-    panel_info = loaded_fixture["PANEL INFO"]
-    auth_check = loaded_fixture["AUTH CHECK"]
+    devices = {"data": loaded_fixture["DEVICES"]}
+    mode = {"data": loaded_fixture["MODE"]}
+    status = {"data": loaded_fixture["STATUS"]}
+    cycle = {"data": loaded_fixture["CYCLE"]}
+    online = {"data": loaded_fixture["ONLINE"]}
+    history = {"data": loaded_fixture["HISTORY"]}
+    panel_info = {"data": loaded_fixture["PANEL INFO"]}
+    auth_check = {"data": loaded_fixture["AUTH CHECK"]}
     return YaleSmartAlarmData(
         devices=devices,
         mode=mode,
