@@ -41,7 +41,7 @@ async def test_sensor_entity_properties(
     await hass.async_block_till_done()
 
     state = hass.states.get(ENTITY_CURRENT_TEMP)
-    assert state.state == "unknown"
+    assert state.state == STATE_UNKNOWN
 
     # Test outside_temperature
     mock_outside_temp = MagicMock()
