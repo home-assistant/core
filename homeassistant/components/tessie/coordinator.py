@@ -58,6 +58,12 @@ class TessieStateUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.api_key = api_key
         self.vin = vin
         self.session = async_get_clientsession(hass)
+
+        # Tessie always returns cached data with a status of "online"
+        # We need to check the timestamp to determine if the vehicle is actually asleep
+        if data["vehicle_state"]["timestamp"] < (time() - 60) * 1000:
+            data["state"] = TessieStatus.ASLEEP
+
         self.data = flatten(data)
 
     async def _async_update_data(self) -> dict[str, Any]:

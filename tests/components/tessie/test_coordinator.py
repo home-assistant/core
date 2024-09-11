@@ -1,7 +1,7 @@
 """Test the Tessie sensor platform."""
 
 from copy import deepcopy
-from datetime import datetime, timedelta
+from datetime import timedelta
 from unittest.mock import AsyncMock
 
 from freezegun.api import FrozenDateTimeFactory
@@ -28,35 +28,36 @@ from tests.common import async_fire_time_changed
 WAIT = timedelta(seconds=TESSIE_SYNC_INTERVAL)
 
 
-async def test_coordinator(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
+async def test_coordinator(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, mock_get_state: AsyncMock
+) -> None:
     """Tests that the coordinator updates vehicles."""
 
     await setup_platform(hass, [Platform.BINARY_SENSOR])
 
+    # Since the fixture data is old, the status will be offline
+    assert hass.states.get("binary_sensor.test_status").state == STATE_OFF
+
+    # Trigger a coordinator refresh
     freezer.tick(WAIT)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
+    mock_get_state.assert_called_once()
 
     # Since the fixture data is old, the status will be offline
     assert hass.states.get("binary_sensor.test_status").state == STATE_OFF
 
-
-async def test_coordinator_online(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory, mock_get_state: AsyncMock
-) -> None:
-    """Tests that the coordinator updates vehicles with recent data."""
-
-    await setup_platform(hass, [Platform.BINARY_SENSOR])
-
     # Update the fixture to be "current"
-    future = datetime.now()
+    mock_get_state.reset_mock()
+    future = freezer.tick(WAIT)
     data = deepcopy(TEST_VEHICLE_STATE_ONLINE)
     data["vehicle_state"]["timestamp"] = int(future.timestamp() * 1000)
     mock_get_state.return_value = data
 
-    freezer.move_to(future)
+    # Trigger a coordinator refresh
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
+    mock_get_state.assert_called_once()
 
     # Since the timestamp is now current, the state will be online
     assert hass.states.get("binary_sensor.test_status").state == STATE_ON
@@ -73,6 +74,7 @@ async def test_coordinator_clienterror(
     freezer.tick(WAIT)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
+    mock_get_state.assert_called_once()
 
     assert hass.states.get("binary_sensor.test_status").state == STATE_UNAVAILABLE
 
@@ -88,6 +90,7 @@ async def test_coordinator_auth(
     freezer.tick(WAIT)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
+    mock_get_state.assert_called_once()
 
 
 async def test_coordinator_connection(
