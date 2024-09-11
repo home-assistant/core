@@ -303,7 +303,14 @@ async def test_zeroconf_match_macaddress(hass: HomeAssistant) -> None:
     assert len(mock_service_browser.mock_calls) == 1
     assert len(mock_config_flow.mock_calls) == 1
     assert mock_config_flow.mock_calls[0][1][0] == "shelly"
-    assert mock_config_flow.mock_calls[0][2]["context"] == {"source": "zeroconf"}
+    assert mock_config_flow.mock_calls[0][2]["context"] == {
+        "discovery_key": {
+            "domain": "zeroconf",
+            "key": ["_http._tcp.local.", "Shelly108._http._tcp.local."],
+            "version": 1,
+        },
+        "source": "zeroconf",
+    }
 
 
 @pytest.mark.usefixtures("mock_async_zeroconf")
@@ -542,6 +549,11 @@ async def test_homekit_match_partial_space(hass: HomeAssistant) -> None:
     assert mock_config_flow.mock_calls[1][2]["context"] == {
         "source": "zeroconf",
         "alternative_domain": "lifx",
+        "discovery_key": {
+            "domain": "zeroconf",
+            "key": ["_hap._tcp.local.", "_name._hap._tcp.local."],
+            "version": 1,
+        },
     }
 
 
