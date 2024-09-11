@@ -18,12 +18,12 @@ from homeassistant.components.cover import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import IottyConfigEntry
 from .api import IottyProxy
 from .const import DOMAIN
 from .coordinator import IottyDataUpdateCoordinator
+from .entity import IottyEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -92,14 +92,10 @@ async def async_setup_entry(
     coordinator.async_add_listener(async_update_data)
 
 
-class IottyShutter(CoverEntity, CoordinatorEntity[IottyDataUpdateCoordinator]):
+class IottyShutter(IottyEntity, CoverEntity):
     """Haas entity class for iotty Shutter."""
 
-    _attr_has_entity_name = True
-    _attr_name = None
-    _attr_entity_category = None
     _attr_device_class = CoverDeviceClass.SHUTTER
-    _iotty_cloud: IottyProxy
     _iotty_device: Shutter
 
     def __init__(
@@ -109,17 +105,11 @@ class IottyShutter(CoverEntity, CoordinatorEntity[IottyDataUpdateCoordinator]):
         iotty_device: Shutter,
     ) -> None:
         """Initialize the Shutter device."""
-        super().__init__(coordinator=coordinator)
-
-        _LOGGER.debug(
-            "Creating new COVER (%s) %s",
-            iotty_device.device_type,
-            iotty_device.device_id,
+        super().__init__(
+            coordinator=coordinator, iotty_cloud=iotty_cloud, iotty_device=iotty_device
         )
 
-        self._iotty_cloud = iotty_cloud
         self._iotty_device = iotty_device
-        self._attr_unique_id = iotty_device.device_id
 
     @property
     def device_info(self) -> DeviceInfo:
