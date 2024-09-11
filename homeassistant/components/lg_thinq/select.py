@@ -204,7 +204,11 @@ async def async_setup_entry(
 ) -> None:
     """Set up an entry for select platform."""
     entities: list[ThinQSelectEntity] = []
+<<<<<<< HEAD
     for coordinator in entry.runtime_data.coordinators.values():
+=======
+    for coordinator in entry.runtime_data.values():
+>>>>>>> Add select platform to LG ThinQ integration
         if (
             descriptions := DEVICE_TYPE_SELECT_MAP.get(
                 coordinator.api.device.device_type
