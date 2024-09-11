@@ -165,7 +165,6 @@ EXCEPTIONS = {
     "sensirion-ble",  # https://github.com/akx/sensirion-ble/pull/9
     "sharp_aquos_rc",  # https://github.com/jmoore987/sharp_aquos_rc/pull/14
     "tapsaff",  # https://github.com/bazwilliams/python-taps-aff/pull/5
-    "tellsticknet",  # https://github.com/molobrakos/tellsticknet/pull/33
     "vincenty",  # Public domain
     "zeversolar",  # https://github.com/kvanzuijlen/zeversolar/pull/46
 }

@@ -100,6 +100,7 @@ FLOWS = {
         "bthome",
         "buienradar",
         "caldav",
+        "cambridge_audio",
         "canary",
         "cast",
         "ccm15",
