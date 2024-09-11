@@ -165,8 +165,7 @@ async def test_login_flow_validates_mfa(hass: HomeAssistant) -> None:
     assert notify_call.domain == "notify"
     assert notify_call.service == "test-notify"
     message = notify_call.data["message"]
-    message.hass = hass
-    assert MOCK_CODE in message.async_render()
+    assert MOCK_CODE in message
 
     with patch("pyotp.HOTP.verify", return_value=False):
         result = await hass.auth.login_flow.async_configure(
@@ -224,8 +223,7 @@ async def test_login_flow_validates_mfa(hass: HomeAssistant) -> None:
     assert notify_call.domain == "notify"
     assert notify_call.service == "test-notify"
     message = notify_call.data["message"]
-    message.hass = hass
-    assert MOCK_CODE in message.async_render()
+    assert MOCK_CODE in message
 
     with patch("pyotp.HOTP.verify", return_value=True):
         result = await hass.auth.login_flow.async_configure(
@@ -264,8 +262,7 @@ async def test_setup_user_notify_service(hass: HomeAssistant) -> None:
     assert notify_call.domain == "notify"
     assert notify_call.service == "test1"
     message = notify_call.data["message"]
-    message.hass = hass
-    assert MOCK_CODE in message.async_render()
+    assert MOCK_CODE in message
 
     with patch("pyotp.HOTP.at", return_value=MOCK_CODE_2):
         step = await flow.async_step_setup({"code": "invalid"})
@@ -281,8 +278,7 @@ async def test_setup_user_notify_service(hass: HomeAssistant) -> None:
     assert notify_call.domain == "notify"
     assert notify_call.service == "test1"
     message = notify_call.data["message"]
-    message.hass = hass
-    assert MOCK_CODE_2 in message.async_render()
+    assert MOCK_CODE_2 in message
 
     with patch("pyotp.HOTP.verify", return_value=True):
         step = await flow.async_step_setup({"code": MOCK_CODE_2})

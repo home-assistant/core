@@ -1293,11 +1293,21 @@ def enable_nightly_purge() -> bool:
 
 
 @pytest.fixture
-def enable_migrate_context_ids() -> bool:
+def enable_migrate_event_context_ids() -> bool:
     """Fixture to control enabling of recorder's context id migration.
 
     To enable context id migration, tests can be marked with:
-    @pytest.mark.parametrize("enable_migrate_context_ids", [True])
+    @pytest.mark.parametrize("enable_migrate_event_context_ids", [True])
+    """
+    return False
+
+
+@pytest.fixture
+def enable_migrate_state_context_ids() -> bool:
+    """Fixture to control enabling of recorder's context id migration.
+
+    To enable context id migration, tests can be marked with:
+    @pytest.mark.parametrize("enable_migrate_state_context_ids", [True])
     """
     return False
 
@@ -1465,7 +1475,8 @@ async def async_test_recorder(
     enable_statistics: bool,
     enable_missing_statistics: bool,
     enable_schema_validation: bool,
-    enable_migrate_context_ids: bool,
+    enable_migrate_event_context_ids: bool,
+    enable_migrate_state_context_ids: bool,
     enable_migrate_event_type_ids: bool,
     enable_migrate_entity_ids: bool,
     enable_migrate_event_ids: bool,
@@ -1527,12 +1538,12 @@ async def async_test_recorder(
     )
     migrate_states_context_ids = (
         migration.StatesContextIDMigration.migrate_data
-        if enable_migrate_context_ids
+        if enable_migrate_state_context_ids
         else None
     )
     migrate_events_context_ids = (
         migration.EventsContextIDMigration.migrate_data
-        if enable_migrate_context_ids
+        if enable_migrate_event_context_ids
         else None
     )
     migrate_event_type_ids = (
