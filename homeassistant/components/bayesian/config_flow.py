@@ -72,6 +72,32 @@ class ObservationTypes(StrEnum):
         return [c.value for c in ObservationTypes]
 
 
+class ConfigFlowSteps(StrEnum):
+    """StrEnum for all the different config steps."""
+
+    USER = "user"
+    OBSERVATION_SELECTOR = "observation_selector"
+
+
+class OptionsFlowSteps(StrEnum):
+    """StrEnum for all the different options flow steps."""
+
+    INIT = "init"
+    BASE_OPTIONS = "base_options"
+    ADD_OBSERVATION = str(ConfigFlowSteps.OBSERVATION_SELECTOR)
+    SELECT_EDIT_OBSERVATION = "select_edit_observation"
+    EDIT_OBSERVATION = "edit_observation"
+    REMOVE_OBSERVATION = "remove_observation"
+
+    @staticmethod
+    def list_primary_steps() -> list[str]:
+        """Return a list of the values."""
+        li = [c.value for c in OptionsFlowSteps]
+        li.remove("init")
+        li.remove("edit_observation")
+        return li
+
+
 OPTIONS_SCHEMA = vol.Schema(
     {
         vol.Required(
@@ -181,32 +207,6 @@ TEMPLATE_SUBSCHEMA = vol.Schema(
         ),
     },
 ).extend(SUBSCHEMA_BOILERPLATE.schema)
-
-
-class ConfigFlowSteps(StrEnum):
-    """StrEnum for all the different config steps."""
-
-    USER = "user"
-    OBSERVATION_SELECTOR = "observation_selector"
-
-
-class OptionsFlowSteps(StrEnum):
-    """StrEnum for all the different options flow steps."""
-
-    INIT = "init"
-    BASE_OPTIONS = "base_options"
-    ADD_OBSERVATION = str(ConfigFlowSteps.OBSERVATION_SELECTOR)
-    SELECT_EDIT_OBSERVATION = "select_edit_observation"
-    EDIT_OBSERVATION = "edit_observation"
-    REMOVE_OBSERVATION = "remove_observation"
-
-    @staticmethod
-    def list_primary_steps() -> list[str]:
-        """Return a list of the values."""
-        li = [c.value for c in OptionsFlowSteps]
-        li.remove("init")
-        li.remove("edit_observation")
-        return li
 
 
 def _convert_percentages_to_fractions(

@@ -10,10 +10,12 @@ from pytest_unordered import unordered
 from homeassistant import config_entries
 from homeassistant.components.bayesian import DOMAIN
 from homeassistant.components.bayesian.config_flow import (
+    ConfigFlowSteps,
     ObservationTypes,
     OptionsFlowSteps,
 )
 from homeassistant.components.bayesian.const import (
+    CONF_INDEX,
     CONF_OBSERVATIONS,
     CONF_P_GIVEN_F,
     CONF_P_GIVEN_T,
@@ -48,7 +50,7 @@ async def test_config_flow(hass: HomeAssistant) -> None:
         result0 = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
-        assert result0["step_id"] == "user"
+        assert result0["step_id"] == str(ConfigFlowSteps.USER)
         assert result0["type"] is FlowResultType.FORM
 
         result1 = await hass.config_entries.flow.async_configure(
@@ -61,15 +63,15 @@ async def test_config_flow(hass: HomeAssistant) -> None:
             },
         )
         await hass.async_block_till_done()
-        assert result1["step_id"] == "observation_selector"
+        assert result1["step_id"] == str(ConfigFlowSteps.OBSERVATION_SELECTOR)
         assert result1["type"] is FlowResultType.MENU
 
         result2 = await hass.config_entries.flow.async_configure(
-            result1["flow_id"], {"next_step_id": "numeric_state"}
+            result1["flow_id"], {"next_step_id": str(ObservationTypes.NUMERIC_STATE)}
         )
         await hass.async_block_till_done()
 
-        assert result2["step_id"] == "numeric_state"
+        assert result2["step_id"] == str(ObservationTypes.NUMERIC_STATE)
         assert result2["type"] is FlowResultType.FORM
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"],
@@ -84,15 +86,15 @@ async def test_config_flow(hass: HomeAssistant) -> None:
         )
 
         await hass.async_block_till_done()
-        assert result3["step_id"] == "observation_selector"
+        assert result3["step_id"] == str(ConfigFlowSteps.OBSERVATION_SELECTOR)
         assert result3["type"] is FlowResultType.MENU
 
         result4 = await hass.config_entries.flow.async_configure(
-            result3["flow_id"], {"next_step_id": "state"}
+            result3["flow_id"], {"next_step_id": str(ObservationTypes.STATE)}
         )
         await hass.async_block_till_done()
 
-        assert result4["step_id"] == "state"
+        assert result4["step_id"] == str(ObservationTypes.STATE)
         assert result4["type"] is FlowResultType.FORM
         result5 = await hass.config_entries.flow.async_configure(
             result4["flow_id"],
@@ -106,15 +108,15 @@ async def test_config_flow(hass: HomeAssistant) -> None:
             },
         )
         await hass.async_block_till_done()
-        assert result5["step_id"] == "observation_selector"
+        assert result5["step_id"] == str(ConfigFlowSteps.OBSERVATION_SELECTOR)
         assert result5["type"] is FlowResultType.MENU
 
         result6 = await hass.config_entries.flow.async_configure(
-            result5["flow_id"], {"next_step_id": "template"}
+            result5["flow_id"], {"next_step_id": str(ObservationTypes.TEMPLATE)}
         )
         await hass.async_block_till_done()
 
-        assert result6["step_id"] == "template"
+        assert result6["step_id"] == str(ObservationTypes.TEMPLATE)
         assert result6["type"] is FlowResultType.FORM
         result7 = await hass.config_entries.flow.async_configure(
             result6["flow_id"],
@@ -144,7 +146,7 @@ False
             CONF_DEVICE_CLASS: "occupancy",
             CONF_OBSERVATIONS: [
                 {
-                    CONF_PLATFORM: "numeric_state",
+                    CONF_PLATFORM: str(ObservationTypes.NUMERIC_STATE),
                     CONF_ENTITY_ID: "sensor.office_illuminance_lux",
                     CONF_ABOVE: 40,
                     CONF_P_GIVEN_T: 0.85,
@@ -152,7 +154,7 @@ False
                     CONF_NAME: "Office is bright",
                 },
                 {
-                    CONF_PLATFORM: "state",
+                    CONF_PLATFORM: str(ObservationTypes.STATE),
                     CONF_ENTITY_ID: "sensor.work_laptop",
                     CONF_TO_STATE: "on",
                     CONF_P_GIVEN_T: 0.6,
@@ -160,7 +162,7 @@ False
                     CONF_NAME: "Work laptop on network",
                 },
                 {
-                    CONF_PLATFORM: "template",
+                    CONF_PLATFORM: str(ObservationTypes.TEMPLATE),
                     CONF_VALUE_TEMPLATE: '{% set current_time = now().time() %}\n{% set start_time = strptime("07:00", "%H:%M").time() %}\n{% set end_time = strptime("18:30", "%H:%M").time() %}\n{% if start_time <= current_time <= end_time %}\nTrue\n{% else %}\nFalse\n{% endif %}',
                     CONF_P_GIVEN_T: 0.45,
                     CONF_P_GIVEN_F: 0.05,
@@ -181,7 +183,7 @@ async def test_single_state_observation(hass: HomeAssistant) -> None:
         result0 = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
-        assert result0["step_id"] == "user"
+        assert result0["step_id"] == str(ConfigFlowSteps.USER)
         assert result0["type"] is FlowResultType.FORM
 
         result1 = await hass.config_entries.flow.async_configure(
@@ -194,15 +196,15 @@ async def test_single_state_observation(hass: HomeAssistant) -> None:
             },
         )
         await hass.async_block_till_done()
-        assert result1["step_id"] == "observation_selector"
+        assert result1["step_id"] == str(ConfigFlowSteps.OBSERVATION_SELECTOR)
         assert result1["type"] is FlowResultType.MENU
 
         result2 = await hass.config_entries.flow.async_configure(
-            result1["flow_id"], {"next_step_id": "state"}
+            result1["flow_id"], {"next_step_id": str(ObservationTypes.STATE)}
         )
         await hass.async_block_till_done()
 
-        assert result2["step_id"] == "state"
+        assert result2["step_id"] == str(ObservationTypes.STATE)
         assert result2["type"] is FlowResultType.FORM
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"],
@@ -246,7 +248,7 @@ async def test_single_numeric_state_observation(hass: HomeAssistant) -> None:
         result0 = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
-        assert result0["step_id"] == "user"
+        assert result0["step_id"] == str(ConfigFlowSteps.USER)
         assert result0["type"] is FlowResultType.FORM
 
         result1 = await hass.config_entries.flow.async_configure(
@@ -258,15 +260,15 @@ async def test_single_numeric_state_observation(hass: HomeAssistant) -> None:
             },
         )
         await hass.async_block_till_done()
-        assert result1["step_id"] == "observation_selector"
+        assert result1["step_id"] == str(ConfigFlowSteps.OBSERVATION_SELECTOR)
         assert result1["type"] is FlowResultType.MENU
 
         result2 = await hass.config_entries.flow.async_configure(
-            result1["flow_id"], {"next_step_id": "numeric_state"}
+            result1["flow_id"], {"next_step_id": str(ObservationTypes.NUMERIC_STATE)}
         )
         await hass.async_block_till_done()
 
-        assert result2["step_id"] == "numeric_state"
+        assert result2["step_id"] == str(ObservationTypes.NUMERIC_STATE)
         assert result2["type"] is FlowResultType.FORM
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"],
@@ -288,7 +290,7 @@ async def test_single_numeric_state_observation(hass: HomeAssistant) -> None:
             CONF_PRIOR: 0.2,
             CONF_OBSERVATIONS: [
                 {
-                    CONF_PLATFORM: "numeric_state",
+                    CONF_PLATFORM: str(ObservationTypes.NUMERIC_STATE),
                     CONF_ENTITY_ID: "sensor.outside_temperature",
                     CONF_ABOVE: 20,
                     CONF_BELOW: 35,
@@ -311,7 +313,7 @@ async def test_single_template_observation(hass: HomeAssistant) -> None:
         result0 = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
-        assert result0["step_id"] == "user"
+        assert result0["step_id"] == str(ConfigFlowSteps.USER)
         assert result0["type"] is FlowResultType.FORM
 
         result1 = await hass.config_entries.flow.async_configure(
@@ -324,14 +326,14 @@ async def test_single_template_observation(hass: HomeAssistant) -> None:
             },
         )
         await hass.async_block_till_done()
-        assert result1["step_id"] == "observation_selector"
+        assert result1["step_id"] == str(ConfigFlowSteps.OBSERVATION_SELECTOR)
         assert result1["type"] is FlowResultType.MENU
 
         result2 = await hass.config_entries.flow.async_configure(
-            result1["flow_id"], {"next_step_id": "template"}
+            result1["flow_id"], {"next_step_id": str(ObservationTypes.TEMPLATE)}
         )
         await hass.async_block_till_done()
-        assert result2["step_id"] == "template"
+        assert result2["step_id"] == str(ObservationTypes.TEMPLATE)
         assert result2["type"] is FlowResultType.FORM
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"],
@@ -352,7 +354,7 @@ async def test_single_template_observation(hass: HomeAssistant) -> None:
             CONF_DEVICE_CLASS: "occupancy",
             CONF_OBSERVATIONS: [
                 {
-                    CONF_PLATFORM: "template",
+                    CONF_PLATFORM: str(ObservationTypes.TEMPLATE),
                     CONF_VALUE_TEMPLATE: "{{is_state('device_tracker.paulus','not_home') and ((as_timestamp(now()) - as_timestamp(states.device_tracker.paulus.last_changed)) > 300)}}",
                     CONF_P_GIVEN_T: 0.05,
                     CONF_P_GIVEN_F: 0.99,
@@ -377,7 +379,7 @@ async def test_basic_options(hass: HomeAssistant) -> None:
             CONF_DEVICE_CLASS: "occupancy",
             CONF_OBSERVATIONS: [
                 {
-                    CONF_PLATFORM: "numeric_state",
+                    CONF_PLATFORM: str(ObservationTypes.NUMERIC_STATE),
                     CONF_ENTITY_ID: "sensor.office_illuminance_lux",
                     CONF_ABOVE: 40,
                     CONF_P_GIVEN_T: 0.85,
@@ -396,13 +398,13 @@ async def test_basic_options(hass: HomeAssistant) -> None:
 
     result0 = await hass.config_entries.options.async_init(config_entry.entry_id)
     assert result0["type"] is FlowResultType.MENU
-    assert result0["step_id"] == "init"
+    assert result0["step_id"] == str(OptionsFlowSteps.INIT)
 
     result1 = await hass.config_entries.options.async_configure(
-        result0["flow_id"], {"next_step_id": "base_options"}
+        result0["flow_id"], {"next_step_id": str(OptionsFlowSteps.BASE_OPTIONS)}
     )
     await hass.async_block_till_done()
-    assert result1["step_id"] == "base_options"
+    assert result1["step_id"] == str(OptionsFlowSteps.BASE_OPTIONS)
     assert result1["type"] is FlowResultType.FORM
 
     await hass.config_entries.options.async_configure(
@@ -421,7 +423,7 @@ async def test_basic_options(hass: HomeAssistant) -> None:
         CONF_DEVICE_CLASS: "presence",
         CONF_OBSERVATIONS: [
             {
-                CONF_PLATFORM: "numeric_state",
+                CONF_PLATFORM: str(ObservationTypes.NUMERIC_STATE),
                 CONF_ENTITY_ID: "sensor.office_illuminance_lux",
                 CONF_ABOVE: 40,
                 CONF_P_GIVEN_T: 0.85,
@@ -448,7 +450,7 @@ async def test_add_single_state_obvservation(hass: HomeAssistant) -> None:
             CONF_DEVICE_CLASS: "occupancy",
             CONF_OBSERVATIONS: [
                 {
-                    CONF_PLATFORM: "numeric_state",
+                    CONF_PLATFORM: str(ObservationTypes.NUMERIC_STATE),
                     CONF_ENTITY_ID: "sensor.office_illuminance_lux",
                     CONF_ABOVE: 40,
                     CONF_P_GIVEN_T: 0.85,
@@ -467,7 +469,7 @@ async def test_add_single_state_obvservation(hass: HomeAssistant) -> None:
 
     result0 = await hass.config_entries.options.async_init(config_entry.entry_id)
     assert result0["type"] is FlowResultType.MENU
-    assert result0["step_id"] == "init"
+    assert result0["step_id"] == str(OptionsFlowSteps.INIT)
 
     result1 = await hass.config_entries.options.async_configure(
         result0["flow_id"], {"next_step_id": str(OptionsFlowSteps.ADD_OBSERVATION)}
@@ -503,7 +505,7 @@ async def test_add_single_state_obvservation(hass: HomeAssistant) -> None:
         CONF_DEVICE_CLASS: "occupancy",
         CONF_OBSERVATIONS: [
             {
-                CONF_PLATFORM: "numeric_state",
+                CONF_PLATFORM: str(ObservationTypes.NUMERIC_STATE),
                 CONF_ENTITY_ID: "sensor.office_illuminance_lux",
                 CONF_ABOVE: 40,
                 CONF_P_GIVEN_T: 0.85,
@@ -511,7 +513,7 @@ async def test_add_single_state_obvservation(hass: HomeAssistant) -> None:
                 CONF_NAME: "Office is bright",
             },
             {
-                CONF_PLATFORM: "state",
+                CONF_PLATFORM: str(ObservationTypes.STATE),
                 CONF_ENTITY_ID: "sensor.work_laptop",
                 CONF_TO_STATE: "on",
                 CONF_P_GIVEN_T: 0.6,
@@ -535,7 +537,7 @@ async def test_editing_observations(hass: HomeAssistant) -> None:
             CONF_DEVICE_CLASS: "occupancy",
             CONF_OBSERVATIONS: [
                 {
-                    CONF_PLATFORM: "numeric_state",
+                    CONF_PLATFORM: str(ObservationTypes.NUMERIC_STATE),
                     CONF_ENTITY_ID: "sensor.office_illuminance_lux",
                     CONF_ABOVE: 40,
                     CONF_P_GIVEN_T: 0.85,
@@ -543,7 +545,7 @@ async def test_editing_observations(hass: HomeAssistant) -> None:
                     CONF_NAME: "Office is bright",
                 },
                 {
-                    CONF_PLATFORM: "state",
+                    CONF_PLATFORM: str(ObservationTypes.STATE),
                     CONF_ENTITY_ID: "sensor.work_laptop",
                     CONF_TO_STATE: "on",
                     CONF_P_GIVEN_T: 0.6,
@@ -551,7 +553,7 @@ async def test_editing_observations(hass: HomeAssistant) -> None:
                     CONF_NAME: "Work laptop on network",
                 },
                 {
-                    CONF_PLATFORM: "template",
+                    CONF_PLATFORM: str(ObservationTypes.TEMPLATE),
                     CONF_VALUE_TEMPLATE: '{% set current_time = now().time() %}\n{% set start_time = strptime("07:00", "%H:%M").time() %}\n{% set end_time = strptime("18:30", "%H:%M").time() %}\n{% if start_time <= current_time <= end_time %}\nTrue\n{% else %}\nFalse\n{% endif %}',
                     CONF_P_GIVEN_T: 0.45,
                     CONF_P_GIVEN_F: 0.05,
@@ -569,7 +571,7 @@ async def test_editing_observations(hass: HomeAssistant) -> None:
 
     result0 = await hass.config_entries.options.async_init(config_entry.entry_id)
     assert result0["type"] is FlowResultType.MENU
-    assert result0["step_id"] == "init"
+    assert result0["step_id"] == str(OptionsFlowSteps.INIT)
 
     result1 = await hass.config_entries.options.async_configure(
         result0["flow_id"],
@@ -578,7 +580,7 @@ async def test_editing_observations(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     assert result1["step_id"] == str(OptionsFlowSteps.SELECT_EDIT_OBSERVATION)
     assert result1["type"] is FlowResultType.FORM
-    assert result1["data_schema"].schema["index"].container == {
+    assert result1["data_schema"].schema[CONF_INDEX].container == {
         "0": "Office is bright (numeric_state)",
         "1": "Work laptop on network (state)",
         "2": "Daylight hours (template)",
@@ -586,7 +588,7 @@ async def test_editing_observations(hass: HomeAssistant) -> None:
 
     # First test edit a state observation
     result2 = await hass.config_entries.options.async_configure(
-        result1["flow_id"], {"index": "1"}
+        result1["flow_id"], {CONF_INDEX: "1"}
     )
     await hass.async_block_till_done()
     assert result2["step_id"] == str(OptionsFlowSteps.EDIT_OBSERVATION)
@@ -610,7 +612,7 @@ async def test_editing_observations(hass: HomeAssistant) -> None:
         CONF_DEVICE_CLASS: "occupancy",
         CONF_OBSERVATIONS: [
             {
-                CONF_PLATFORM: "numeric_state",
+                CONF_PLATFORM: str(ObservationTypes.NUMERIC_STATE),
                 CONF_ENTITY_ID: "sensor.office_illuminance_lux",
                 CONF_ABOVE: 40,
                 CONF_P_GIVEN_T: 0.85,
@@ -618,7 +620,7 @@ async def test_editing_observations(hass: HomeAssistant) -> None:
                 CONF_NAME: "Office is bright",
             },
             {
-                CONF_PLATFORM: "state",
+                CONF_PLATFORM: str(ObservationTypes.STATE),
                 CONF_ENTITY_ID: "sensor.desktop",
                 CONF_TO_STATE: "on",
                 CONF_P_GIVEN_T: 0.7,
@@ -626,7 +628,7 @@ async def test_editing_observations(hass: HomeAssistant) -> None:
                 CONF_NAME: "Desktop on network",
             },
             {
-                CONF_PLATFORM: "template",
+                CONF_PLATFORM: str(ObservationTypes.TEMPLATE),
                 CONF_VALUE_TEMPLATE: '{% set current_time = now().time() %}\n{% set start_time = strptime("07:00", "%H:%M").time() %}\n{% set end_time = strptime("18:30", "%H:%M").time() %}\n{% if start_time <= current_time <= end_time %}\nTrue\n{% else %}\nFalse\n{% endif %}',
                 CONF_P_GIVEN_T: 0.45,
                 CONF_P_GIVEN_F: 0.05,
@@ -642,13 +644,13 @@ async def test_editing_observations(hass: HomeAssistant) -> None:
         {"next_step_id": str(OptionsFlowSteps.SELECT_EDIT_OBSERVATION)},
     )
     await hass.async_block_till_done()
-    assert result1["data_schema"].schema["index"].container == {
+    assert result1["data_schema"].schema[CONF_INDEX].container == {
         "0": "Office is bright (numeric_state)",
         "1": "Desktop on network (state)",
         "2": "Daylight hours (template)",
     }
     result2 = await hass.config_entries.options.async_configure(
-        result1["flow_id"], {"index": "0"}
+        result1["flow_id"], {CONF_INDEX: "0"}
     )
     await hass.async_block_till_done()
     assert result2["step_id"] == str(OptionsFlowSteps.EDIT_OBSERVATION)
@@ -672,7 +674,7 @@ async def test_editing_observations(hass: HomeAssistant) -> None:
         CONF_DEVICE_CLASS: "occupancy",
         CONF_OBSERVATIONS: [
             {
-                CONF_PLATFORM: "numeric_state",
+                CONF_PLATFORM: str(ObservationTypes.NUMERIC_STATE),
                 CONF_ENTITY_ID: "sensor.office_illuminance_lumens",
                 CONF_ABOVE: 2000,
                 CONF_P_GIVEN_T: 0.8,
@@ -680,7 +682,7 @@ async def test_editing_observations(hass: HomeAssistant) -> None:
                 CONF_NAME: "Office is bright",
             },
             {
-                CONF_PLATFORM: "state",
+                CONF_PLATFORM: str(ObservationTypes.STATE),
                 CONF_ENTITY_ID: "sensor.desktop",
                 CONF_TO_STATE: "on",
                 CONF_P_GIVEN_T: 0.7,
@@ -688,7 +690,7 @@ async def test_editing_observations(hass: HomeAssistant) -> None:
                 CONF_NAME: "Desktop on network",
             },
             {
-                CONF_PLATFORM: "template",
+                CONF_PLATFORM: str(ObservationTypes.TEMPLATE),
                 CONF_VALUE_TEMPLATE: '{% set current_time = now().time() %}\n{% set start_time = strptime("07:00", "%H:%M").time() %}\n{% set end_time = strptime("18:30", "%H:%M").time() %}\n{% if start_time <= current_time <= end_time %}\nTrue\n{% else %}\nFalse\n{% endif %}',
                 CONF_P_GIVEN_T: 0.45,
                 CONF_P_GIVEN_F: 0.05,
@@ -704,13 +706,13 @@ async def test_editing_observations(hass: HomeAssistant) -> None:
         {"next_step_id": str(OptionsFlowSteps.SELECT_EDIT_OBSERVATION)},
     )
     await hass.async_block_till_done()
-    assert result1["data_schema"].schema["index"].container == {
+    assert result1["data_schema"].schema[CONF_INDEX].container == {
         "0": "Office is bright (numeric_state)",
         "1": "Desktop on network (state)",
         "2": "Daylight hours (template)",
     }
     result2 = await hass.config_entries.options.async_configure(
-        result1["flow_id"], {"index": "2"}
+        result1["flow_id"], {CONF_INDEX: "2"}
     )
     await hass.async_block_till_done()
     assert result2["step_id"] == str(OptionsFlowSteps.EDIT_OBSERVATION)
@@ -742,7 +744,7 @@ False
         CONF_DEVICE_CLASS: "occupancy",
         CONF_OBSERVATIONS: [
             {
-                CONF_PLATFORM: "numeric_state",
+                CONF_PLATFORM: str(ObservationTypes.NUMERIC_STATE),
                 CONF_ENTITY_ID: "sensor.office_illuminance_lumens",
                 CONF_ABOVE: 2000,
                 CONF_P_GIVEN_T: 0.8,
@@ -750,7 +752,7 @@ False
                 CONF_NAME: "Office is bright",
             },
             {
-                CONF_PLATFORM: "state",
+                CONF_PLATFORM: str(ObservationTypes.STATE),
                 CONF_ENTITY_ID: "sensor.desktop",
                 CONF_TO_STATE: "on",
                 CONF_P_GIVEN_T: 0.7,
@@ -758,7 +760,7 @@ False
                 CONF_NAME: "Desktop on network",
             },
             {
-                CONF_PLATFORM: "template",
+                CONF_PLATFORM: str(ObservationTypes.TEMPLATE),
                 CONF_VALUE_TEMPLATE: '{% set current_time = now().time() %}\n{% set start_time = strptime("07:00", "%H:%M").time() %}\n{% set end_time = strptime("17:30", "%H:%M").time() %}\n{% if start_time <= current_time <= end_time %}\nTrue\n{% else %}\nFalse\n{% endif %}',
                 CONF_P_GIVEN_T: 0.55,
                 CONF_P_GIVEN_F: 0.13,
@@ -781,7 +783,7 @@ async def test_delete_observations(hass: HomeAssistant) -> None:
             CONF_DEVICE_CLASS: "occupancy",
             CONF_OBSERVATIONS: [
                 {
-                    CONF_PLATFORM: "numeric_state",
+                    CONF_PLATFORM: str(ObservationTypes.NUMERIC_STATE),
                     CONF_ENTITY_ID: "sensor.office_illuminance_lux",
                     CONF_ABOVE: 40,
                     CONF_P_GIVEN_T: 0.85,
@@ -789,7 +791,7 @@ async def test_delete_observations(hass: HomeAssistant) -> None:
                     CONF_NAME: "Office is bright",
                 },
                 {
-                    CONF_PLATFORM: "state",
+                    CONF_PLATFORM: str(ObservationTypes.STATE),
                     CONF_ENTITY_ID: "sensor.work_laptop",
                     CONF_TO_STATE: "on",
                     CONF_P_GIVEN_T: 0.6,
@@ -797,7 +799,7 @@ async def test_delete_observations(hass: HomeAssistant) -> None:
                     CONF_NAME: "Work laptop on network",
                 },
                 {
-                    CONF_PLATFORM: "template",
+                    CONF_PLATFORM: str(ObservationTypes.TEMPLATE),
                     CONF_VALUE_TEMPLATE: '{% set current_time = now().time() %}\n{% set start_time = strptime("07:00", "%H:%M").time() %}\n{% set end_time = strptime("18:30", "%H:%M").time() %}\n{% if start_time <= current_time <= end_time %}\nTrue\n{% else %}\nFalse\n{% endif %}',
                     CONF_P_GIVEN_T: 0.45,
                     CONF_P_GIVEN_F: 0.05,
@@ -815,7 +817,7 @@ async def test_delete_observations(hass: HomeAssistant) -> None:
 
     result0 = await hass.config_entries.options.async_init(config_entry.entry_id)
     assert result0["type"] is FlowResultType.MENU
-    assert result0["step_id"] == "init"
+    assert result0["step_id"] == str(OptionsFlowSteps.INIT)
 
     result1 = await hass.config_entries.options.async_configure(
         result0["flow_id"],
@@ -824,7 +826,7 @@ async def test_delete_observations(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     assert result1["step_id"] == str(OptionsFlowSteps.REMOVE_OBSERVATION)
     assert result1["type"] is FlowResultType.FORM
-    assert result1["data_schema"].schema["index"].options == {
+    assert result1["data_schema"].schema[CONF_INDEX].options == {
         "0": "Office is bright (numeric_state)",
         "1": "Work laptop on network (state)",
         "2": "Daylight hours (template)",
@@ -832,7 +834,7 @@ async def test_delete_observations(hass: HomeAssistant) -> None:
 
     # First test delete a state observation
     await hass.config_entries.options.async_configure(
-        result1["flow_id"], {"index": ["1"]}
+        result1["flow_id"], {CONF_INDEX: ["1"]}
     )
     await hass.async_block_till_done()
 
@@ -843,7 +845,7 @@ async def test_delete_observations(hass: HomeAssistant) -> None:
         CONF_DEVICE_CLASS: "occupancy",
         CONF_OBSERVATIONS: [
             {
-                CONF_PLATFORM: "numeric_state",
+                CONF_PLATFORM: str(ObservationTypes.NUMERIC_STATE),
                 CONF_ENTITY_ID: "sensor.office_illuminance_lux",
                 CONF_ABOVE: 40,
                 CONF_P_GIVEN_T: 0.85,
@@ -851,7 +853,7 @@ async def test_delete_observations(hass: HomeAssistant) -> None:
                 CONF_NAME: "Office is bright",
             },
             {
-                CONF_PLATFORM: "template",
+                CONF_PLATFORM: str(ObservationTypes.TEMPLATE),
                 CONF_VALUE_TEMPLATE: '{% set current_time = now().time() %}\n{% set start_time = strptime("07:00", "%H:%M").time() %}\n{% set end_time = strptime("18:30", "%H:%M").time() %}\n{% if start_time <= current_time <= end_time %}\nTrue\n{% else %}\nFalse\n{% endif %}',
                 CONF_P_GIVEN_T: 0.45,
                 CONF_P_GIVEN_F: 0.05,
@@ -869,13 +871,13 @@ async def test_delete_observations(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     assert result1["step_id"] == str(OptionsFlowSteps.REMOVE_OBSERVATION)
     assert result1["type"] is FlowResultType.FORM
-    assert result1["data_schema"].schema["index"].options == {
+    assert result1["data_schema"].schema[CONF_INDEX].options == {
         "0": "Office is bright (numeric_state)",
         "1": "Daylight hours (template)",
     }
 
     await hass.config_entries.options.async_configure(
-        result1["flow_id"], {"index": ["0", "1"]}
+        result1["flow_id"], {CONF_INDEX: ["0", "1"]}
     )
     await hass.async_block_till_done()
 
@@ -896,7 +898,7 @@ async def test_invalid_configs(hass: HomeAssistant) -> None:
         result0 = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
-        assert result0["step_id"] == "user"
+        assert result0["step_id"] == str(ConfigFlowSteps.USER)
         assert result0["type"] is FlowResultType.FORM
 
         # priors should never be Zero, because then the sensor can never return 'on'
@@ -912,7 +914,7 @@ async def test_invalid_configs(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
         assert result1["errors"] == {"base": "prior_low_error"}
         # Confirm that the config flow did not progress
-        assert result1["step_id"] != "observation_selector"
+        assert result1["step_id"] != str(ConfigFlowSteps.OBSERVATION_SELECTOR)
 
         # priors should never be 1 because then the sensor can never be 'off'
         result1 = await hass.config_entries.flow.async_configure(
@@ -962,15 +964,15 @@ async def test_invalid_configs(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
         assert result1.get("errors") is None
 
-        assert result1["step_id"] == "observation_selector"
+        assert result1["step_id"] == str(ConfigFlowSteps.OBSERVATION_SELECTOR)
         assert result1["type"] is FlowResultType.MENU
 
         result2 = await hass.config_entries.flow.async_configure(
-            result1["flow_id"], {"next_step_id": "state"}
+            result1["flow_id"], {"next_step_id": str(ObservationTypes.STATE)}
         )
         await hass.async_block_till_done()
 
-        assert result2["step_id"] == "state"
+        assert result2["step_id"] == str(ObservationTypes.STATE)
         assert result2["type"] is FlowResultType.FORM
 
         # Observations with equal probabilities have no effect
@@ -987,7 +989,7 @@ async def test_invalid_configs(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
         assert result3["errors"] == {"base": "equal_probabilities"}
-        assert result3["step_id"] != "observation_selector"
+        assert result3["step_id"] != str(ConfigFlowSteps.OBSERVATION_SELECTOR)
 
         # Observations with a probability of 0 will create certainties
         result3 = await hass.config_entries.flow.async_configure(
@@ -1060,7 +1062,7 @@ async def test_config_flow_preview(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["step_id"] == "user"
+    assert result["step_id"] == str(ConfigFlowSteps.USER)
     assert result["type"] is FlowResultType.FORM
 
     result = await hass.config_entries.flow.async_configure(
@@ -1073,18 +1075,18 @@ async def test_config_flow_preview(
         },
     )
     await hass.async_block_till_done()
-    assert result["step_id"] == "observation_selector"
+    assert result["step_id"] == str(ConfigFlowSteps.OBSERVATION_SELECTOR)
     assert result["type"] is FlowResultType.MENU
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"next_step_id": "template"}
+        result["flow_id"], {"next_step_id": str(ObservationTypes.TEMPLATE)}
     )
     await hass.async_block_till_done()
 
-    assert result["step_id"] == "template"
+    assert result["step_id"] == str(ObservationTypes.TEMPLATE)
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
-    assert result["preview"] == "template"
+    assert result["preview"] == str(ObservationTypes.TEMPLATE)
 
     await client.send_json_auto_id(
         {
@@ -1112,7 +1114,7 @@ async def test_config_flow_preview(
             "entities": unordered([f"{template_type}.{_id}" for _id in listeners[0]]),
             "time": False,
         },
-        "state": result_as_boolean(template_states[0]),
+        str(ObservationTypes.STATE): result_as_boolean(template_states[0]),
     }
 
     for input_entity in input_entities:
@@ -1133,7 +1135,7 @@ async def test_config_flow_preview(
                 ),
                 "time": False,
             },
-            "state": result_as_boolean(template_state),
+            str(ObservationTypes.STATE): result_as_boolean(template_state),
         }
     assert len(hass.states.async_all()) == 2
 
@@ -1193,7 +1195,7 @@ async def test_options_flow_preview(
     client = await hass_ws_client(hass)
     input_entities = ["one", "two"]
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
-    assert result["step_id"] == "init"
+    assert result["step_id"] == str(OptionsFlowSteps.INIT)
     assert result["type"] is FlowResultType.MENU
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], {"next_step_id": str(OptionsFlowSteps.ADD_OBSERVATION)}
@@ -1238,7 +1240,7 @@ async def test_options_flow_preview(
             "entities": unordered([f"{template_type}.{_id}" for _id in listeners[0]]),
             "time": False,
         },
-        "state": result_as_boolean(template_states[0]),
+        str(ObservationTypes.STATE): result_as_boolean(template_states[0]),
     }
 
     for input_entity in input_entities:
@@ -1259,7 +1261,7 @@ async def test_options_flow_preview(
                 ),
                 "time": False,
             },
-            "state": result_as_boolean(template_state),
+            str(ObservationTypes.STATE): result_as_boolean(template_state),
         }
     # length is the two pytest entities and the bayesian sensor
     assert len(hass.states.async_all()) == 3
@@ -1304,7 +1306,7 @@ async def test_bad_config_flow_preview(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["step_id"] == "user"
+    assert result["step_id"] == str(ConfigFlowSteps.USER)
     assert result["type"] is FlowResultType.FORM
 
     result = await hass.config_entries.flow.async_configure(
@@ -1317,18 +1319,18 @@ async def test_bad_config_flow_preview(
         },
     )
     await hass.async_block_till_done()
-    assert result["step_id"] == "observation_selector"
+    assert result["step_id"] == str(ConfigFlowSteps.OBSERVATION_SELECTOR)
     assert result["type"] is FlowResultType.MENU
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"next_step_id": "template"}
+        result["flow_id"], {"next_step_id": str(ObservationTypes.TEMPLATE)}
     )
     await hass.async_block_till_done()
 
-    assert result["step_id"] == "template"
+    assert result["step_id"] == str(ObservationTypes.TEMPLATE)
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
-    assert result["preview"] == "template"
+    assert result["preview"] == str(ObservationTypes.TEMPLATE)
 
     await client.send_json_auto_id(
         {
@@ -1387,7 +1389,7 @@ async def test_config_flow_preview_template_startup_error(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["step_id"] == "user"
+    assert result["step_id"] == str(ConfigFlowSteps.USER)
     assert result["type"] is FlowResultType.FORM
 
     result = await hass.config_entries.flow.async_configure(
@@ -1400,18 +1402,18 @@ async def test_config_flow_preview_template_startup_error(
         },
     )
     await hass.async_block_till_done()
-    assert result["step_id"] == "observation_selector"
+    assert result["step_id"] == str(ConfigFlowSteps.OBSERVATION_SELECTOR)
     assert result["type"] is FlowResultType.MENU
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"next_step_id": "template"}
+        result["flow_id"], {"next_step_id": str(ObservationTypes.TEMPLATE)}
     )
     await hass.async_block_till_done()
 
-    assert result["step_id"] == "template"
+    assert result["step_id"] == str(ObservationTypes.TEMPLATE)
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
-    assert result["preview"] == "template"
+    assert result["preview"] == str(ObservationTypes.TEMPLATE)
 
     await client.send_json_auto_id(
         {
@@ -1437,7 +1439,9 @@ async def test_config_flow_preview_template_startup_error(
 
     msg = await client.receive_json()
     assert msg["type"] == "event"
-    assert msg["event"]["state"] == result_as_boolean(template_states[0])
+    assert msg["event"][str(ObservationTypes.STATE)] == result_as_boolean(
+        template_states[0]
+    )
 
     for input_entity in input_entities:
         hass.states.async_set(
@@ -1446,4 +1450,6 @@ async def test_config_flow_preview_template_startup_error(
 
     msg = await client.receive_json()
     assert msg["type"] == "event"
-    assert msg["event"]["state"] == result_as_boolean(template_states[1])
+    assert msg["event"][str(ObservationTypes.STATE)] == result_as_boolean(
+        template_states[1]
+    )
