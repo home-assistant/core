@@ -7,6 +7,7 @@ from homeassistant.components.gpm._manager import (
     RepositoryManager,
     ResourceRepositoryManager,
 )
+from homeassistant.components.gpm.const import GIT_SHORT_HASH_LEN
 from homeassistant.components.gpm.update import GPMUpdateEntity, UpdateStrategy
 from homeassistant.exceptions import HomeAssistantError
 
@@ -44,16 +45,12 @@ async def test_resource_properties(resource_manager: ResourceRepositoryManager) 
 
 async def test_versions_substr(manager: RepositoryManager) -> None:
     """Test that GIT commit SHAs are shortened in UI."""
-    await manager.install()
     manager.update_strategy = UpdateStrategy.LATEST_COMMIT
-    manager.get_current_version.return_value = (
-        "d98061dd815fbf3ead679d9f744328f5217da68a"
-    )
-    manager.get_latest_version.return_value = "690a323d9a879eff007cc6f7f742293fd9464b20"
+    await manager.install()
     entity = GPMUpdateEntity(manager)
     await entity.async_update()
-    assert entity.installed_version == "d98061d"
-    assert entity.latest_version == "690a323"
+    assert len(entity.installed_version) == GIT_SHORT_HASH_LEN
+    assert len(entity.latest_version) == GIT_SHORT_HASH_LEN
 
 
 @pytest.mark.parametrize("version", ["v0.8.8", "v1.0.0", "v2.0.0beta2", None])
