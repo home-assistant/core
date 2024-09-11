@@ -18,7 +18,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import CONF_ADS_VAR, DATA_ADS
+from .const import CONF_ADS_VAR, DATA_ADS
 from .entity import AdsEntity
 from .hub import AdsHub
 
@@ -40,10 +40,11 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up an ADS valve device."""
-    ads_hub: AdsHub = hass.data[DATA_ADS]
-    ads_var = config[CONF_ADS_VAR]
-    name = config[CONF_NAME]
-    device_class = config.get(CONF_DEVICE_CLASS)
+    ads_hub = hass.data[DATA_ADS]
+
+    ads_var: str = config[CONF_ADS_VAR]
+    name: str = config[CONF_NAME]
+    device_class: ValveDeviceClass | None = config.get(CONF_DEVICE_CLASS)
     supported_features: ValveEntityFeature = (
         ValveEntityFeature.OPEN | ValveEntityFeature.CLOSE
     )
