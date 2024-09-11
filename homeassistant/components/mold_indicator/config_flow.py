@@ -110,7 +110,7 @@ class MoldIndicatorConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "statistics/start_preview",
+        vol.Required("type"): "mold_indicator/start_preview",
         vol.Required("flow_id"): str,
         vol.Required("flow_type"): vol.Any("config_flow", "options_flow"),
         vol.Required("user_input"): dict,
@@ -129,15 +129,12 @@ def ws_start_preview(
         flow_sets = hass.config_entries.flow._handler_progress_index.get(  # noqa: SLF001
             flow_status["handler"]
         )
-        options = {}
         assert flow_sets
-        for active_flow in flow_sets:
-            options = active_flow._common_handler.options  # type: ignore [attr-defined] # noqa: SLF001
         config_entry = hass.config_entries.async_get_entry(flow_status["handler"])
         indoor_temp = msg["user_input"].get(CONF_INDOOR_TEMP)
         outdoor_temp = msg["user_input"].get(CONF_OUTDOOR_TEMP)
         indoor_hum = msg["user_input"].get(CONF_INDOOR_HUMIDITY)
-        name = options[CONF_NAME]
+        name = msg["user_input"].get(CONF_NAME)
     else:
         flow_status = hass.config_entries.options.async_get(msg["flow_id"])
         config_entry = hass.config_entries.async_get_entry(flow_status["handler"])
@@ -158,6 +155,7 @@ def ws_start_preview(
         )
 
     preview_entity = MoldIndicator(
+        hass,
         name,
         hass.config.units is METRIC_SYSTEM,
         indoor_temp,

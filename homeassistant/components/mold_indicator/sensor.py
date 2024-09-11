@@ -20,7 +20,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_NAME,
-    EVENT_HOMEASSISTANT_START,
     PERCENTAGE,
     STATE_UNKNOWN,
     UnitOfTemperature,
@@ -158,16 +157,16 @@ class MoldIndicator(SensorEntity):
             indoor_humidity_sensor,
             outdoor_temp_sensor,
         }
-
         self._dewpoint: float | None = None
         self._indoor_temp: float | None = None
         self._outdoor_temp: float | None = None
         self._indoor_hum: float | None = None
         self._crit_temp: float | None = None
-        self._attr_device_info = async_device_info_to_link_from_entity(
-            hass,
-            indoor_humidity_sensor,
-        )
+        if indoor_humidity_sensor:
+            self._attr_device_info = async_device_info_to_link_from_entity(
+                hass,
+                indoor_humidity_sensor,
+            )
         self._preview_callback: Callable[[str, Mapping[str, Any]], None] | None = None
 
     @callback
@@ -178,10 +177,10 @@ class MoldIndicator(SensorEntity):
         """Render a preview."""
         # Abort early if there is no source entity_id's or calibration factor
         if (
-            not self._indoor_temp
-            or self._outdoor_temp
-            or self._indoor_hum
-            or self._calib_factor
+            not self._outdoor_temp_sensor
+            or not self._indoor_temp_sensor
+            or not self._indoor_humidity_sensor
+            or not self._calib_factor
         ):
             self._attr_available = False
             calculated_state = self._async_calculate_state()
@@ -190,10 +189,16 @@ class MoldIndicator(SensorEntity):
 
         self._preview_callback = preview_callback
 
+        self._async_setup_sensor()
         return self._call_on_remove_callbacks
 
     async def async_added_to_hass(self) -> None:
-        """Register callbacks."""
+        """Run when entity about to be added to hass."""
+        self._async_setup_sensor()
+
+    @callback
+    def _async_setup_sensor(self) -> None:
+        """Set up the sensor and start tracking state changes."""
 
         @callback
         def mold_indicator_sensors_state_listener(
@@ -217,11 +222,11 @@ class MoldIndicator(SensorEntity):
                         calculated_state.state, calculated_state.attributes
                     )
                 # only write state to the state machine if we are not in preview mode
-                if not self._preview_callback:
+                else:
                     self.async_schedule_update_ha_state(True)
 
         @callback
-        def mold_indicator_startup(event: Event) -> None:
+        def mold_indicator_startup() -> None:
             """Add listeners and get 1st state."""
             _LOGGER.debug("Startup for %s", self.entity_id)
 
@@ -256,10 +261,20 @@ class MoldIndicator(SensorEntity):
 
             if schedule_update and not self._preview_callback:
                 self.async_schedule_update_ha_state(True)
+            if self._preview_callback:
+                # re-calculate dewpoint and mold indicator
+                self._calc_dewpoint()
+                self._calc_moldindicator()
+                if self._state is None:
+                    self._attr_available = False
+                else:
+                    self._attr_available = True
+                calculated_state = self._async_calculate_state()
+                self._preview_callback(
+                    calculated_state.state, calculated_state.attributes
+                )
 
-        self.hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_START, mold_indicator_startup
-        )
+        mold_indicator_startup()
 
     def _update_sensor(
         self, entity: str, old_state: State | None, new_state: State | None
