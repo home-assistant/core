@@ -29,7 +29,6 @@ from homeassistant.const import (
     CONF_VALUE_TEMPLATE,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er, selector
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.schema_config_entry_flow import (
@@ -342,16 +341,23 @@ async def _validate_user(
     return {**user_input}
 
 
-async def _validate_observation_setup(
-    handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
-) -> dict[str, Any]:
-    """Validate observation input."""
-
+def _validate_probabilities_given(
+    user_input: dict[str, Any],
+) -> None:
+    """Raise errors for invalid probability_given_true/false."""
     if user_input[CONF_P_GIVEN_T] == user_input[CONF_P_GIVEN_F]:
         raise SchemaFlowError("equal_probabilities")
 
     if {user_input[CONF_P_GIVEN_T], user_input[CONF_P_GIVEN_F]} & {0, 100}:
         raise SchemaFlowError("extreme_prob_given_error")
+
+
+async def _validate_observation_setup(
+    handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
+) -> dict[str, Any]:
+    """Validate observation input."""
+
+    _validate_probabilities_given(user_input)
 
     # add_another is really just a variable for controlling the flow
     add_another: bool = user_input.pop("add_another", False)
@@ -383,14 +389,13 @@ async def _validate_remove_observation(
 ) -> dict[str, Any]:
     """Delete an observation."""
     observations: list[dict[str, Any]] = handler.options[CONF_OBSERVATIONS]
-    indexes: set[str] = set(user_input[CONF_INDEX])
+    indexes: set[int] = {int(x) for x in user_input[CONF_INDEX]}
 
     # Standard behavior is to merge the result with the options.
     # In this case, we want to remove sub-items so we update the options directly.
-    for index in indexes:
-        observations.pop(int(index))
-    _LOGGER.warning(observations)
-    _LOGGER.warning(handler.options[CONF_OBSERVATIONS])
+    # Remove the last indexes first so subsequent items to be removed aren't shifted
+    for index in sorted(indexes, reverse=True):
+        observations.pop(index)
     return {}
 
 
@@ -490,7 +495,7 @@ def ws_start_preview(
 ) -> None:
     """Generate a preview."""
 
-    def _validate(schema: vol.Schema, user_input: dict[str, Any]) -> Any:
+    def _validate(schema: vol.Schema, user_input: dict[str, Any]) -> dict:
         errors = {}
         key: vol.Marker
         for key, validator in schema.schema.items():
@@ -504,6 +509,7 @@ def ws_start_preview(
         return errors
 
     user_input: dict[str, Any] = msg["user_input"]
+
     entity_registry_entry: er.RegistryEntry | None = None
     if msg["flow_type"] == "config_flow":
         flow_status = hass.config_entries.flow.async_get(msg["flow_id"])
@@ -512,9 +518,6 @@ def ws_start_preview(
         )
     else:
         flow_status = hass.config_entries.options.async_get(msg["flow_id"])
-        config_entry = hass.config_entries.async_get_entry(flow_status["handler"])
-        if not config_entry:
-            raise HomeAssistantError
         form_step = cast(
             SchemaFlowFormStep, OPTIONS_FLOW[str(ObservationTypes.TEMPLATE)]
         )
