@@ -1,5 +1,7 @@
 """Websocket commands for the Backup integration."""
 
+import asyncio
+from pathlib import Path
 from typing import Any
 
 import voluptuous as vol
@@ -14,6 +16,10 @@ from .manager import BackupManager
 @callback
 def async_register_websocket_handlers(hass: HomeAssistant, with_hassio: bool) -> None:
     """Register websocket commands."""
+    websocket_api.async_register_command(hass, backup_agents_download)
+    websocket_api.async_register_command(hass, backup_agents_list)
+    websocket_api.async_register_command(hass, backup_agents_list_synced_backups)
+
     if with_hassio:
         websocket_api.async_register_command(hass, handle_backup_end)
         websocket_api.async_register_command(hass, handle_backup_start)
@@ -75,6 +81,7 @@ async def handle_create(
     manager: BackupManager = hass.data[DOMAIN]
     backup = await manager.generate_backup()
     connection.send_result(msg["id"], backup)
+    await manager.sync_backup(backup=backup)
 
 
 @websocket_api.ws_require_user(only_supervisor=True)
@@ -116,6 +123,71 @@ async def handle_backup_end(
         await manager.post_backup_actions()
     except Exception as err:  # noqa: BLE001
         connection.send_error(msg["id"], "post_backup_actions_failed", str(err))
+        return
+
+    connection.send_result(msg["id"])
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command({vol.Required("type"): "backup/agents/list"})
+@websocket_api.async_response
+async def backup_agents_list(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """List backup agents."""
+    manager: BackupManager = hass.data[DOMAIN]
+    await manager.load_platforms()
+    connection.send_result(msg["id"], list(manager.sync_agents))
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command({vol.Required("type"): "backup/agents/synced"})
+@websocket_api.async_response
+async def backup_agents_list_synced_backups(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Return a list of synced backups."""
+    manager: BackupManager = hass.data[DOMAIN]
+    await manager.load_platforms()
+    backups = await asyncio.gather(
+        *[agent.async_list_backups() for agent in manager.sync_agents.values()]
+    )
+    connection.send_result(msg["id"], [b.as_dict() for bl in backups for b in bl])
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "backup/agents/download",
+        vol.Required("agent"): str,
+        vol.Required("sync_id"): str,
+    }
+)
+@websocket_api.async_response
+async def backup_agents_download(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Download a synced backup."""
+    manager: BackupManager = hass.data[DOMAIN]
+    await manager.load_platforms()
+
+    if not (agent := manager.sync_agents.get(msg["agent"])):
+        connection.send_error(
+            msg["id"], "unknown_agent", f"Agent {msg['agent']} not found"
+        )
+        return
+    try:
+        await agent.async_download_backup(
+            id=msg["sync_id"], path=Path(hass.config.path("backup"))
+        )
+    except Exception as err:  # noqa: BLE001
+        connection.send_error(msg["id"], "backup_agents_download", str(err))
         return
 
     connection.send_result(msg["id"])
