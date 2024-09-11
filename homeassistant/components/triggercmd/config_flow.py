@@ -9,9 +9,9 @@ import jwt
 from triggercmd import TRIGGERcmdConnectionError, client
 import voluptuous as vol
 
-from homeassistant import exceptions
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 
 from .const import CONF_TOKEN, DOMAIN
 
@@ -64,7 +64,7 @@ class TriggerCMDConfigFlow(ConfigFlow, domain=DOMAIN):
                 await self.async_set_unique_id(identifier)
                 self._abort_if_unique_id_configured()
 
-                return self.async_create_entry(title=title, data=user_input)
+                return self.async_create_entry(title="TRIGGERcmd Hub", data=user_input)
 
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
