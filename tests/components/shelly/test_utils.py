@@ -240,10 +240,22 @@ async def test_get_rpc_channel_name(mock_rpc_device: Mock) -> None:
 
 
 @pytest.mark.parametrize(
-    ("component"), ["cover", "input", "light", "rgb", "rgbw", "switch", "thermostat"]
+    ("component", "expected"),
+    [
+        ("cover", "Cover"),
+        ("input", "Input"),
+        ("light", "Light"),
+        ("rgb", "RGB light"),
+        ("rgbw", "RGBW light"),
+        ("switch", "Switch"),
+        ("thermostat", "Thermostat"),
+    ],
 )
 async def test_get_rpc_channel_name_multiple_components(
-    mock_rpc_device: Mock, monkeypatch: pytest.MonkeyPatch, component: str
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    component: str,
+    expected: str,
 ) -> None:
     """Test get RPC channel name when there is more components of the same type."""
     config = {
@@ -254,27 +266,11 @@ async def test_get_rpc_channel_name_multiple_components(
 
     assert (
         get_rpc_channel_name(mock_rpc_device, f"{component}:0")
-        == f"Test name {component.title()} 0"
+        == f"Test name {expected} 0"
     )
     assert (
         get_rpc_channel_name(mock_rpc_device, f"{component}:1")
-        == f"Test name {component.title()} 1"
-    )
-
-
-@pytest.mark.parametrize(
-    ("component"), ["cover", "input", "light", "rgb", "rgbw", "switch", "thermostat"]
-)
-async def test_get_rpc_channel_name_single_component(
-    mock_rpc_device: Mock, monkeypatch: pytest.MonkeyPatch, component: str
-) -> None:
-    """Test get RPC channel name when there is only one component of the same type."""
-    config = {f"{component}:0": {"name": None}}
-    monkeypatch.setattr(mock_rpc_device, "config", config)
-
-    assert (
-        get_rpc_channel_name(mock_rpc_device, f"{component}:0")
-        == f"Test name {component.title()} 0"
+        == f"Test name {expected} 1"
     )
 
 
