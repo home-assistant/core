@@ -23,7 +23,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .entity import CambridgeAudioEntity
+from .entity import CambridgeAudioEntity, command
 
 BASE_FEATURES = (
     MediaPlayerEntityFeature.SELECT_SOURCE
@@ -182,10 +182,12 @@ class CambridgeAudioDevice(CambridgeAudioEntity, MediaPlayerEntity):
             mode_repeat = RepeatMode.ALL
         return mode_repeat
 
+    @command
     async def async_media_play_pause(self) -> None:
         """Toggle play/pause the current media."""
         await self.client.play_pause()
 
+    @command
     async def async_media_pause(self) -> None:
         """Pause the current media."""
         controls = self.client.now_playing.controls
@@ -197,10 +199,12 @@ class CambridgeAudioDevice(CambridgeAudioEntity, MediaPlayerEntity):
         else:
             await self.client.pause()
 
+    @command
     async def async_media_stop(self) -> None:
         """Stop the current media."""
         await self.client.stop()
 
+    @command
     async def async_media_play(self) -> None:
         """Play the current media."""
         controls = self.client.now_playing.controls
@@ -212,14 +216,17 @@ class CambridgeAudioDevice(CambridgeAudioEntity, MediaPlayerEntity):
         else:
             await self.client.play()
 
+    @command
     async def async_media_next_track(self) -> None:
         """Skip to the next track."""
         await self.client.next_track()
 
+    @command
     async def async_media_previous_track(self) -> None:
         """Skip to the previous track."""
         await self.client.previous_track()
 
+    @command
     async def async_select_source(self, source: str) -> None:
         """Select the source."""
         for src in self.client.sources:
@@ -227,34 +234,42 @@ class CambridgeAudioDevice(CambridgeAudioEntity, MediaPlayerEntity):
                 await self.client.set_source_by_id(src.id)
                 break
 
+    @command
     async def async_turn_on(self) -> None:
         """Power on the device."""
         await self.client.power_on()
 
+    @command
     async def async_turn_off(self) -> None:
         """Power off the device."""
         await self.client.power_off()
 
+    @command
     async def async_volume_up(self) -> None:
         """Step the volume up."""
         await self.client.volume_up()
 
+    @command
     async def async_volume_down(self) -> None:
         """Step the volume down."""
         await self.client.volume_down()
 
+    @command
     async def async_set_volume_level(self, volume: float) -> None:
         """Set the volume level."""
         await self.client.set_volume(int(volume * 100))
 
+    @command
     async def async_mute_volume(self, mute: bool) -> None:
         """Set the mute state."""
         await self.client.set_mute(mute)
 
+    @command
     async def async_media_seek(self, position: float) -> None:
         """Seek to a position in the current media."""
         await self.client.media_seek(int(position))
 
+    @command
     async def async_set_shuffle(self, shuffle: bool) -> None:
         """Set the shuffle mode for the current queue."""
         shuffle_mode = ShuffleMode.OFF
@@ -262,6 +277,7 @@ class CambridgeAudioDevice(CambridgeAudioEntity, MediaPlayerEntity):
             shuffle_mode = ShuffleMode.ALL
         await self.client.set_shuffle(shuffle_mode)
 
+    @command
     async def async_set_repeat(self, repeat: RepeatMode) -> None:
         """Set the repeat mode for the current queue."""
         repeat_mode = CambridgeRepeatMode.OFF
