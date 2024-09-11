@@ -18,6 +18,10 @@ class ValueStore[T: Etag]:
         self._event = asyncio.Event()
         self._event.set()
 
+    def trigger(self):
+        """Trigger the event without changing the value."""
+        self._event.set()
+
     def set(self, value: T):
         """Set the value and notify all waiting."""
         self._value = value

@@ -2,7 +2,9 @@
 
 import asyncio
 import dataclasses
+
 from pyblu import Player, Status
+from pyblu.errors import PlayerUnreachableError
 
 from homeassistant.components.media_player import MediaPlayerState
 from homeassistant.core import HomeAssistant
@@ -155,8 +157,35 @@ async def test_status_updated(
     status = dataclasses.replace(status, state="pause", volume=50, etag="changed")
     status_store.set(status)
 
-    await hass.async_block_till_done()
+    await asyncio.sleep(0)
+    for _ in range(10):
+        post_state = hass.states.get("media_player.player_name")
+        if post_state.state == MediaPlayerState.PAUSED:
+            break
+        await asyncio.sleep(1)
 
-    post_state = hass.states.get("media_player.player_name")
     assert post_state.state == MediaPlayerState.PAUSED
     assert post_state.attributes["volume_level"] == 0.5
+
+
+async def test_unavailable_when_offline(
+    hass: HomeAssistant,
+    setup_config_entry: None,
+    player: Player,
+    status_store: ValueStore[Status],
+) -> None:
+    """Test that the media player goes unavailable when the player is unreachable."""
+    pre_state = hass.states.get("media_player.player_name")
+    assert pre_state.state == "playing"
+
+    player.status.side_effect = PlayerUnreachableError("Player not reachable")
+    status_store.trigger()
+
+    await asyncio.sleep(0)
+    for _ in range(10):
+        post_state = hass.states.get("media_player.player_name")
+        if post_state.state == "unavailable":
+            break
+        await asyncio.sleep(1)
+
+    assert post_state.state == "unavailable"
