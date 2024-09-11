@@ -2,6 +2,7 @@
 
 import contextlib
 import logging
+from zoneinfo import ZoneInfo
 
 import voluptuous as vol
 from zha.application.const import BAUD_RATES, RadioType
@@ -12,8 +13,13 @@ from zigpy.config import CONF_DATABASE, CONF_DEVICE, CONF_DEVICE_PATH
 from zigpy.exceptions import NetworkSettingsInconsistent, TransientConnectionError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_TYPE, EVENT_HOMEASSISTANT_STOP, Platform
-from homeassistant.core import Event, HomeAssistant
+from homeassistant.const import (
+    CONF_TYPE,
+    EVENT_CORE_CONFIG_UPDATE,
+    EVENT_HOMEASSISTANT_STOP,
+    Platform,
+)
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.config_validation as cv
@@ -202,6 +208,15 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     config_entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_shutdown)
+    )
+
+    @callback
+    def update_config(event: Event) -> None:
+        """Handle Core config update."""
+        zha_gateway.config.local_timezone = ZoneInfo(hass.config.time_zone)
+
+    config_entry.async_on_unload(
+        hass.bus.async_listen(EVENT_CORE_CONFIG_UPDATE, update_config)
     )
 
     await ha_zha_data.gateway_proxy.async_initialize_devices_and_entities()

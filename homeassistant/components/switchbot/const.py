@@ -64,11 +64,13 @@ HASS_SENSOR_TYPE_TO_SWITCHBOT_MODEL = {
 
 # Config Defaults
 DEFAULT_RETRY_COUNT = 3
+DEFAULT_LOCK_NIGHTLATCH = False
 
 # Config Options
 CONF_RETRY_COUNT = "retry_count"
 CONF_KEY_ID = "key_id"
 CONF_ENCRYPTION_KEY = "encryption_key"
+CONF_LOCK_NIGHTLATCH = "lock_force_nightlatch"
 
 # Deprecated config Entry Options to be removed in 2023.4
 CONF_TIME_BETWEEN_UPDATE_COMMAND = "update_time"

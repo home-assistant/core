@@ -1,12 +1,13 @@
 """Test Home Assistant package util methods."""
 
 import asyncio
+from collections.abc import Generator
 from importlib.metadata import metadata
 import logging
 import os
 from subprocess import PIPE
 import sys
-from unittest.mock import MagicMock, call, patch
+from unittest.mock import MagicMock, Mock, call, patch
 
 import pytest
 
@@ -24,7 +25,7 @@ TEST_ZIP_REQ = "file://{}#{}".format(
 
 
 @pytest.fixture
-def mock_sys():
+def mock_sys() -> Generator[MagicMock]:
     """Mock sys."""
     with patch("homeassistant.util.package.sys", spec=object) as sys_mock:
         sys_mock.executable = "python3"
@@ -32,19 +33,19 @@ def mock_sys():
 
 
 @pytest.fixture
-def deps_dir():
+def deps_dir() -> str:
     """Return path to deps directory."""
     return os.path.abspath("/deps_dir")
 
 
 @pytest.fixture
-def lib_dir(deps_dir):
+def lib_dir(deps_dir) -> str:
     """Return path to lib directory."""
     return os.path.join(deps_dir, "lib_dir")
 
 
 @pytest.fixture
-def mock_popen(lib_dir):
+def mock_popen(lib_dir) -> Generator[MagicMock]:
     """Return a Popen mock."""
     with patch("homeassistant.util.package.Popen") as popen_mock:
         popen_mock.return_value.__enter__ = popen_mock
@@ -57,7 +58,7 @@ def mock_popen(lib_dir):
 
 
 @pytest.fixture
-def mock_env_copy():
+def mock_env_copy() -> Generator[Mock]:
     """Mock os.environ.copy."""
     with patch("homeassistant.util.package.os.environ.copy") as env_copy:
         env_copy.return_value = {}
@@ -65,14 +66,14 @@ def mock_env_copy():
 
 
 @pytest.fixture
-def mock_venv():
+def mock_venv() -> Generator[MagicMock]:
     """Mock homeassistant.util.package.is_virtual_env."""
     with patch("homeassistant.util.package.is_virtual_env") as mock:
         mock.return_value = True
         yield mock
 
 
-def mock_async_subprocess():
+def mock_async_subprocess() -> Generator[MagicMock]:
     """Return an async Popen mock."""
     async_popen = MagicMock()
 
@@ -85,13 +86,14 @@ def mock_async_subprocess():
     return async_popen
 
 
-def test_install(mock_sys, mock_popen, mock_env_copy, mock_venv) -> None:
+@pytest.mark.usefixtures("mock_sys", "mock_venv")
+def test_install(mock_popen: MagicMock, mock_env_copy: MagicMock) -> None:
     """Test an install attempt on a package that doesn't exist."""
     env = mock_env_copy()
     assert package.install_package(TEST_NEW_REQ, False)
     assert mock_popen.call_count == 2
     assert mock_popen.mock_calls[0] == call(
-        [mock_sys.executable, "-m", "pip", "install", "--quiet", TEST_NEW_REQ],
+        ["uv", "pip", "install", "--quiet", TEST_NEW_REQ],
         stdin=PIPE,
         stdout=PIPE,
         stderr=PIPE,
@@ -101,15 +103,33 @@ def test_install(mock_sys, mock_popen, mock_env_copy, mock_venv) -> None:
     assert mock_popen.return_value.communicate.call_count == 1
 
 
-def test_install_upgrade(mock_sys, mock_popen, mock_env_copy, mock_venv) -> None:
+@pytest.mark.usefixtures("mock_sys", "mock_venv")
+def test_install_with_timeout(mock_popen: MagicMock, mock_env_copy: MagicMock) -> None:
+    """Test an install attempt on a package that doesn't exist with a timeout set."""
+    env = mock_env_copy()
+    assert package.install_package(TEST_NEW_REQ, False, timeout=10)
+    assert mock_popen.call_count == 2
+    env["HTTP_TIMEOUT"] = "10"
+    assert mock_popen.mock_calls[0] == call(
+        ["uv", "pip", "install", "--quiet", TEST_NEW_REQ],
+        stdin=PIPE,
+        stdout=PIPE,
+        stderr=PIPE,
+        env=env,
+        close_fds=False,
+    )
+    assert mock_popen.return_value.communicate.call_count == 1
+
+
+@pytest.mark.usefixtures("mock_sys", "mock_venv")
+def test_install_upgrade(mock_popen, mock_env_copy) -> None:
     """Test an upgrade attempt on a package."""
     env = mock_env_copy()
     assert package.install_package(TEST_NEW_REQ)
     assert mock_popen.call_count == 2
     assert mock_popen.mock_calls[0] == call(
         [
-            mock_sys.executable,
-            "-m",
+            "uv",
             "pip",
             "install",
             "--quiet",
@@ -133,8 +153,7 @@ def test_install_target(mock_sys, mock_popen, mock_env_copy, mock_venv) -> None:
     mock_venv.return_value = False
     mock_sys.platform = "linux"
     args = [
-        mock_sys.executable,
-        "-m",
+        "uv",
         "pip",
         "install",
         "--quiet",
@@ -150,16 +169,16 @@ def test_install_target(mock_sys, mock_popen, mock_env_copy, mock_venv) -> None:
     assert mock_popen.return_value.communicate.call_count == 1
 
 
-def test_install_target_venv(mock_sys, mock_popen, mock_env_copy, mock_venv) -> None:
+@pytest.mark.usefixtures("mock_sys", "mock_popen", "mock_env_copy", "mock_venv")
+def test_install_target_venv() -> None:
     """Test an install with a target in a virtual environment."""
     target = "target_folder"
     with pytest.raises(AssertionError):
         package.install_package(TEST_NEW_REQ, False, target=target)
 
 
-def test_install_error(
-    caplog: pytest.LogCaptureFixture, mock_sys, mock_popen, mock_venv
-) -> None:
+@pytest.mark.usefixtures("mock_sys", "mock_venv")
+def test_install_error(caplog: pytest.LogCaptureFixture, mock_popen) -> None:
     """Test an install that errors out."""
     caplog.set_level(logging.WARNING)
     mock_popen.return_value.returncode = 1
@@ -169,7 +188,8 @@ def test_install_error(
         assert record.levelname == "ERROR"
 
 
-def test_install_constraint(mock_sys, mock_popen, mock_env_copy, mock_venv) -> None:
+@pytest.mark.usefixtures("mock_sys", "mock_venv")
+def test_install_constraint(mock_popen, mock_env_copy) -> None:
     """Test install with constraint file on not installed package."""
     env = mock_env_copy()
     constraints = "constraints_file.txt"
@@ -177,8 +197,7 @@ def test_install_constraint(mock_sys, mock_popen, mock_env_copy, mock_venv) -> N
     assert mock_popen.call_count == 2
     assert mock_popen.mock_calls[0] == call(
         [
-            mock_sys.executable,
-            "-m",
+            "uv",
             "pip",
             "install",
             "--quiet",

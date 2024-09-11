@@ -18,14 +18,13 @@ class EmoncmsCoordinator(DataUpdateCoordinator[list[dict[str, Any]] | None]):
         self,
         hass: HomeAssistant,
         emoncms_client: EmoncmsClient,
-        scan_interval: timedelta,
     ) -> None:
         """Initialize the emoncms data coordinator."""
         super().__init__(
             hass,
             LOGGER,
             name="emoncms_coordinator",
-            update_interval=scan_interval,
+            update_interval=timedelta(seconds=60),
         )
         self.emoncms_client = emoncms_client
 

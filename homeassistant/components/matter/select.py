@@ -27,7 +27,6 @@ type SelectCluster = (
     | clusters.RvcRunMode
     | clusters.RvcCleanMode
     | clusters.DishwasherMode
-    | clusters.MicrowaveOvenMode
     | clusters.EnergyEvseMode
     | clusters.DeviceEnergyManagementMode
 )
@@ -202,18 +201,6 @@ DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.SELECT,
         entity_description=MatterSelectEntityDescription(
-            key="MatterMicrowaveOvenMode",
-            translation_key="mode",
-        ),
-        entity_class=MatterModeSelectEntity,
-        required_attributes=(
-            clusters.MicrowaveOvenMode.Attributes.CurrentMode,
-            clusters.MicrowaveOvenMode.Attributes.SupportedModes,
-        ),
-    ),
-    MatterDiscoverySchema(
-        platform=Platform.SELECT,
-        entity_description=MatterSelectEntityDescription(
             key="MatterEnergyEvseMode",
             translation_key="mode",
         ),
@@ -242,12 +229,12 @@ DISCOVERY_SCHEMAS = [
             entity_category=EntityCategory.CONFIG,
             translation_key="startup_on_off",
             options=["On", "Off", "Toggle", "Previous"],
-            measurement_to_ha=lambda x: {
+            measurement_to_ha=lambda x: {  # pylint: disable=unnecessary-lambda
                 0: "Off",
                 1: "On",
                 2: "Toggle",
                 None: "Previous",
-            }[x],
+            }.get(x),
             ha_to_native_value=lambda x: {
                 "Off": 0,
                 "On": 1,

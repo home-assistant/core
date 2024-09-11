@@ -101,7 +101,7 @@ async def async_setup_integration(hass: HomeAssistant, mock_bridge) -> MockConfi
 class MockBridge:
     """Mock Lutron bridge that emulates configured connected status."""
 
-    def __init__(self, can_connect=True):
+    def __init__(self, can_connect=True) -> None:
         """Initialize MockBridge instance with configured mock connectivity."""
         self.can_connect = can_connect
         self.is_currently_connected = False

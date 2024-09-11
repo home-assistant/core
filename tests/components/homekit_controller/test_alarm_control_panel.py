@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 
+from aiohomekit.model import Accessory
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import ServicesTypes
 
@@ -11,7 +12,7 @@ from homeassistant.helpers import entity_registry as er
 from .common import setup_test_component
 
 
-def create_security_system_service(accessory):
+def create_security_system_service(accessory: Accessory) -> None:
     """Define a security-system characteristics as per page 219 of HAP spec."""
     service = accessory.add_service(ServicesTypes.SECURITY_SYSTEM)
 

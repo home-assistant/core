@@ -8,7 +8,7 @@ import bthomehub5_devicelist
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
-    DOMAIN,
+    DOMAIN as DEVICE_TRACKER_DOMAIN,
     PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
     DeviceScanner,
 )
@@ -30,7 +30,7 @@ def get_scanner(
     hass: HomeAssistant, config: ConfigType
 ) -> BTHomeHub5DeviceScanner | None:
     """Return a BT Home Hub 5 scanner if successful."""
-    scanner = BTHomeHub5DeviceScanner(config[DOMAIN])
+    scanner = BTHomeHub5DeviceScanner(config[DEVICE_TRACKER_DOMAIN])
 
     return scanner if scanner.success_init else None
 
