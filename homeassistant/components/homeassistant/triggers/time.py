@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from datetime import datetime, timedelta
 from functools import partial
+from typing import NamedTuple
 
 import voluptuous as vol
 
@@ -35,11 +36,9 @@ from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as dt_util
 
-_TIME_TRIGGER_ENTITY_REFERENCE = vol.All(
-    str, cv.entity_domain(["input_datetime", "sensor"])
-)
+_TIME_TRIGGER_ENTITY = vol.All(str, cv.entity_domain(["input_datetime", "sensor"]))
 
-_TIME_TRIGGER_WITH_OFFSET_SCHEMA = vol.Schema(
+_TIME_TRIGGER_ENTITY_WITH_OFFSET = vol.Schema(
     {
         vol.Required(CONF_ENTITY_ID): cv.entity_domain(["sensor"]),
         vol.Optional(CONF_OFFSET): cv.time_period,
@@ -48,11 +47,11 @@ _TIME_TRIGGER_WITH_OFFSET_SCHEMA = vol.Schema(
 
 _TIME_TRIGGER_SCHEMA = vol.Any(
     cv.time,
-    _TIME_TRIGGER_ENTITY_REFERENCE,
-    _TIME_TRIGGER_WITH_OFFSET_SCHEMA,
+    _TIME_TRIGGER_ENTITY,
+    _TIME_TRIGGER_ENTITY_WITH_OFFSET,
     msg=(
         "Expected HH:MM, HH:MM:SS, an Entity ID with domain 'input_datetime' or "
-        "'sensor', or a combined entry specifying an Entity ID and an offset."
+        "'sensor', or a combination of a timestamp sensor entity and an offset."
     ),
 )
 
@@ -62,6 +61,13 @@ TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
         vol.Required(CONF_AT): vol.All(cv.ensure_list, [_TIME_TRIGGER_SCHEMA]),
     }
 )
+
+
+class TrackEntity(NamedTuple):
+    """Represents a tracking entity for a time trigger."""
+
+    entity_id: str
+    callback: Callable
 
 
 async def async_attach_trigger(
@@ -193,13 +199,13 @@ async def async_attach_trigger(
         if remove:
             entities[(entity_id, offset)] = remove
 
-    to_track: list[tuple[str, Callable]] = []
+    to_track: list[TrackEntity] = []
 
     for at_time in config[CONF_AT]:
         if isinstance(at_time, str):
             # entity
             update_entity_trigger(at_time, new_state=hass.states.get(at_time))
-            to_track.append((at_time, update_entity_trigger_event))
+            to_track.append(TrackEntity(at_time, update_entity_trigger_event))
         elif isinstance(at_time, dict) and CONF_OFFSET in at_time:
             # entity with offset
             entity_id: str = at_time.get(CONF_ENTITY_ID, "")
@@ -208,7 +214,9 @@ async def async_attach_trigger(
                 entity_id, new_state=hass.states.get(entity_id), offset=offset
             )
             to_track.append(
-                (entity_id, partial(update_entity_trigger_event, offset=offset))
+                TrackEntity(
+                    entity_id, partial(update_entity_trigger_event, offset=offset)
+                )
             )
         else:
             # datetime.time
@@ -222,8 +230,11 @@ async def async_attach_trigger(
                 )
             )
 
-    # Track state changes of all entities
-    removes.extend((async_track_state_change_event(hass, *entry)) for entry in to_track)
+    # Besides time, we also track state changes of requested entities.
+    removes.extend(
+        (async_track_state_change_event(hass, entry.entity_id, entry.callback))
+        for entry in to_track
+    )
 
     @callback
     def remove_track_time_changes() -> None:
