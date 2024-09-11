@@ -26,6 +26,7 @@ from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_plat
     [
         "envoy",
         "envoy_1p_metered",
+        "envoy_eu_batt",
         "envoy_metered_batt_relay",
         "envoy_nobatt_metered_3p",
         "envoy_tot_cons_metered",
@@ -59,6 +60,7 @@ PRODUCTION_NAMES: tuple[str, ...] = (
     [
         "envoy",
         "envoy_1p_metered",
+        "envoy_eu_batt",
         "envoy_metered_batt_relay",
         "envoy_nobatt_metered_3p",
         "envoy_tot_cons_metered",
@@ -148,6 +150,7 @@ CONSUMPTION_NAMES: tuple[str, ...] = (
     ("mock_envoy"),
     [
         "envoy_1p_metered",
+        "envoy_eu_batt",
         "envoy_metered_batt_relay",
         "envoy_nobatt_metered_3p",
     ],
@@ -189,6 +192,7 @@ NET_CONSUMPTION_NAMES: tuple[str, ...] = (
     ("mock_envoy"),
     [
         "envoy_1p_metered",
+        "envoy_eu_batt",
         "envoy_metered_batt_relay",
         "envoy_nobatt_metered_3p",
         "envoy_tot_cons_metered",
@@ -735,6 +739,7 @@ async def test_sensor_storage_phase_disabled_by_integration(
     [
         "envoy",
         "envoy_1p_metered",
+        "envoy_eu_batt",
         "envoy_metered_batt_relay",
         "envoy_nobatt_metered_3p",
         "envoy_tot_cons_metered",
@@ -767,6 +772,7 @@ async def test_sensor_inverter_data(
     [
         "envoy",
         "envoy_1p_metered",
+        "envoy_eu_batt",
         "envoy_metered_batt_relay",
         "envoy_nobatt_metered_3p",
         "envoy_tot_cons_metered",
