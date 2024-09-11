@@ -53,7 +53,7 @@
         "name": "Clean indicator light"
       },
       "operation_mode": {
-        "name": "Power"
+        "name": "[%key:component::binary_sensor::entity_component::power::name%]"
       },
       "one_touch_filter": {
         "name": "Fresh air filter"
