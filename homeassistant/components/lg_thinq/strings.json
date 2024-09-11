@@ -591,6 +591,233 @@
           "temperature_number": "[%key:component::lg_thinq::entity::sensor::target_temperature::state::temperature_number%]"
         }
       }
+    },
+    "select": {
+      "wind_strength": {
+        "name": "Speed",
+        "state": {
+          "slow": "Slow",
+          "low": "Low",
+          "mid": "Medium",
+          "high": "High",
+          "power": "Turbo",
+          "turbo": "Turbo",
+          "auto": "Auto",
+          "wind_1": "Step 1",
+          "wind_2": "Step 2",
+          "wind_3": "Step 3",
+          "wind_4": "Step 4",
+          "wind_5": "Step 5",
+          "wind_6": "Step 6",
+          "wind_7": "Step 7",
+          "wind_8": "Step 8",
+          "wind_9": "Step 9",
+          "wind_10": "Step 10"
+        }
+      },
+      "monitoring_enabled": {
+        "name": "Air quality sensor",
+        "state": {
+          "on_working": "Turns on with product",
+          "always": "Always on"
+        }
+      },
+      "current_job_mode": {
+        "name": "Operating mode",
+        "state": {
+          "air_clean": "Purifying",
+          "auto": "Auto",
+          "baby_care": "Baby care mode",
+          "circulator": "Booster",
+          "clean": "Single",
+          "direct_clean": "Direct mode",
+          "dual_clean": "Daul",
+          "fast": "Turbo",
+          "heat_pump": "Heat pump",
+          "humidify": "Mist",
+          "humidify_and_air_clean": "Mist & purifying",
+          "humidity": "Humid",
+          "nature_clean": "Natural mode",
+          "pet_clean": "Pet mode",
+          "silent": "Silent",
+          "sleep": "Sleep",
+          "smart": "Smart mode",
+          "space_clean": "Diffusion mode",
+          "spot_clean": "Wide mode",
+          "turbo": "Turbo",
+          "up_feature": "Additional mode",
+          "vacation": "Vacation"
+        }
+      },
+      "operation_mode": {
+        "name": "Operation",
+        "state": {
+          "cancel": "Cancel",
+          "power_off": "Power off",
+          "preheating": "Preheating",
+          "start": "Start",
+          "stop": "Stop",
+          "wake_up": "Sleep mode off"
+        }
+      },
+      "operation_mode_for_location": {
+        "name": "{location} operation",
+        "state": {
+          "cancel": "Cancel",
+          "power_off": "Power off",
+          "preheating": "Preheating",
+          "start": "Start",
+          "stop": "Stop",
+          "wake_up": "Sleep mode off"
+        }
+      },
+      "air_clean_operation_mode": {
+        "name": "Air purify",
+        "state": {
+          "start": "Start",
+          "stop": "Stop"
+        }
+      },
+      "cook_mode": {
+        "name": "Cook mode",
+        "state": {
+          "bake": "Bake",
+          "convection_bake": "Convection bake",
+          "convection_roast": "Convection roast",
+          "roast": "Roast",
+          "crisp_convection": "Crisp convection"
+        }
+      },
+      "cook_mode_for_location": {
+        "name": "{location} cook mode",
+        "state": {
+          "bake": "Bake",
+          "convection_bake": "Convection bake",
+          "convection_roast": "Convection roast",
+          "roast": "Roast",
+          "crisp_convection": "Crisp convection"
+        }
+      },
+      "light_brightness": {
+        "name": "Light"
+      },
+      "optimal_humidity": {
+        "name": "Ventilation",
+        "state": {
+          "on": "On",
+          "off": "Off"
+        }
+      },
+      "hot_water_mode": {
+        "name": "Hot water",
+        "state": {
+          "on": "On",
+          "off": "Off"
+        }
+      },
+      "warm_mode": {
+        "name": "Heating",
+        "state": {
+          "warm_on": "On",
+          "warm_off": "Off"
+        }
+      },
+      "humidity_warm_mode": {
+        "name": "Warm mist",
+        "state": {
+          "warm_on": "On",
+          "warm_off": "Off"
+        }
+      },
+      "wind_angle": {
+        "name": "Rotation",
+        "state": {
+          "off": "Off",
+          "angle_45": "45",
+          "angle_60": "60",
+          "angle_90": "90",
+          "angle_140": "140"
+        }
+      },
+      "display_light": {
+        "name": "Display brightness",
+        "state": {
+          "off": "Off",
+          "level_1": "Brightness 1",
+          "level_2": "Brightness 2",
+          "level_3": "Brightness 3"
+        }
+      },
+      "uv_nano": {
+        "name": "UVnano",
+        "state": {
+          "on": "On",
+          "off": "Off"
+        }
+      },
+      "power_save_enabled": {
+        "name": "Energy saving",
+        "state": {
+          "true": "On",
+          "false": "Off"
+        }
+      },
+      "rapid_freeze": {
+        "name": "Quick freeze",
+        "state": {
+          "true": "On",
+          "false": "Off"
+        }
+      },
+      "express_mode": {
+        "name": "Ice plus",
+        "state": {
+          "true": "On",
+          "false": "Off"
+        }
+      },
+      "fresh_air_filter": {
+        "name": "Fresh air filter",
+        "state": {
+          "off": "Off",
+          "auto": "Auto",
+          "power": "Power",
+          "replace": "Replace filter",
+          "smart_power": "Smart safe storage",
+          "smart_off": "Off",
+          "smart_on": "Smart safe storage"
+        }
+      },
+      "auto_mode": {
+        "name": "Auto mode",
+        "state": {
+          "auto_on": "On",
+          "auto_off": "Off"
+        }
+      },
+      "sleep_mode": {
+        "name": "Sleep mode",
+        "state": {
+          "sleep_on": "On",
+          "sleep_off": "Off"
+        }
+      },
+      "hygiene_dry_mode": {
+        "name": "Drying mode",
+        "state": {
+          "off": "Off",
+          "fast": "Fast",
+          "silent": "Silent",
+          "normal": "Delicate"
+        }
+      },
+      "mood_lamp_state": {
+        "name": "Mood light",
+        "state": {
+          "on": "On",
+          "off": "Off"
+        }
+      }
     }
   }
 }

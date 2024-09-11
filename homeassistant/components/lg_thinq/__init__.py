@@ -44,6 +44,7 @@ PLATFORMS = [
     Platform.FAN,
     Platform.NUMBER,
     Platform.SENSOR,
+    Platform.SELECT,
     Platform.SWITCH,
     Platform.VACUUM,
 ]
