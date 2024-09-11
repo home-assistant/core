@@ -13,7 +13,9 @@ from homeassistant.components.gpm import get_manager
 from homeassistant.components.gpm._manager import (
     IntegrationRepositoryManager,
     RepositoryManager,
+    RepositoryType,
     ResourceRepositoryManager,
+    UpdateStrategy,
 )
 from homeassistant.components.gpm.const import CONF_DOWNLOAD_URL, CONF_UPDATE_STRATEGY
 from homeassistant.const import CONF_TYPE, CONF_URL
@@ -48,7 +50,6 @@ def repo() -> Generator[None, None, None]:
         for tag in "v0.8.8", "v0.9.9", "v1.0.0", "v2.0.0beta2":
             repo.index.commit(f"New version: {tag}")
             repo.create_tag(tag)
-        repo.git.checkout("v0.9.9")
         return repo
 
     remote_mock = MagicMock(spec=Remote)
@@ -126,9 +127,9 @@ def _testing_integration_manager(
     return _testing_manager(
         hass,
         {
-            CONF_TYPE: "integration",
+            CONF_TYPE: RepositoryType.INTEGRATION,
             CONF_URL: "https://github.com/user/awesome-component",
-            CONF_UPDATE_STRATEGY: "latest_tag",
+            CONF_UPDATE_STRATEGY: UpdateStrategy.LATEST_TAG,
         },
     )
 
@@ -139,9 +140,9 @@ def _testing_resource_manager(
     return _testing_manager(
         hass,
         {
-            CONF_TYPE: "resource",
+            CONF_TYPE: RepositoryType.RESOURCE,
             CONF_URL: "https://github.com/user/awesome-card",
-            CONF_UPDATE_STRATEGY: "latest_tag",
+            CONF_UPDATE_STRATEGY: UpdateStrategy.LATEST_TAG,
             CONF_DOWNLOAD_URL: "https://github.com/user/awesome-card/releases/download/{{ version }}/bundle.js",
         },
     )

@@ -16,6 +16,8 @@ async def test_integration_properties(
     integration_manager: IntegrationRepositoryManager,
 ) -> None:
     """Test properties of integration fetched during async_update."""
+    await integration_manager.clone()
+    await integration_manager.checkout("v0.9.9")
     await integration_manager.install()
     entity = GPMUpdateEntity(integration_manager)
     await entity.async_update()
@@ -32,6 +34,8 @@ async def test_integration_properties(
 
 async def test_resource_properties(resource_manager: ResourceRepositoryManager) -> None:
     """Test properties of resource fetched during async_update."""
+    await resource_manager.clone()
+    await resource_manager.checkout("v0.9.9")
     await resource_manager.install()
     entity = GPMUpdateEntity(resource_manager)
     await entity.async_update()
@@ -58,7 +62,10 @@ async def test_install(
     manager: RepositoryManager, version: str | None, request: pytest.FixtureRequest
 ) -> None:
     """Test update installation."""
+    await manager.clone()
+    await manager.checkout("v0.9.9")
     await manager.install()
+    manager.checkout.reset_mock()
     entity = GPMUpdateEntity(manager)
     await entity.async_update()
     await entity.async_install(version=version, backup=False)
@@ -67,7 +74,10 @@ async def test_install(
 
 async def test_install_same_version(manager: RepositoryManager) -> None:
     """Test failed update installation."""
+    await manager.clone()
+    await manager.checkout("v0.9.9")
     await manager.install()
+    manager.checkout.reset_mock()
     entity = GPMUpdateEntity(manager)
     await entity.async_update()
     with pytest.raises(HomeAssistantError):

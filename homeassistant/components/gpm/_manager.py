@@ -218,6 +218,8 @@ class RepositoryManager:
         """Install the GIT repo."""
         if not await self.is_cloned():
             await self.clone()
+            latest_version = await self.get_latest_version()
+            await self.checkout(latest_version)
 
     @ensure_installed
     @abstractmethod
