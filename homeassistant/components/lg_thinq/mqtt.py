@@ -26,13 +26,13 @@ class ThinQMQTT:
         hass: HomeAssistant,
         thinq_api: ThinQApi,
         client_id: str,
-        coordinator_map: dict[str, DeviceDataUpdateCoordinator],
+        coordinators: dict[str, DeviceDataUpdateCoordinator],
     ) -> None:
         """Initialize a mqtt."""
         self.hass = hass
         self.thinq_api = thinq_api
         self.client_id = client_id
-        self.coordinator_map = coordinator_map
+        self.coordinators = coordinators
         self.client: ThinQMQTTClient | None = None
 
     async def async_connect(self) -> bool:
@@ -69,7 +69,7 @@ class ThinQMQTT:
                 self.hass.async_create_task(
                     self.thinq_api.async_post_event_subscribe(coordinator.device_id)
                 )
-                for coordinator in self.coordinator_map.values()
+                for coordinator in self.coordinators.values()
             ]
             if tasks:
                 await asyncio.gather(*tasks)
@@ -89,13 +89,13 @@ class ThinQMQTT:
                 self.hass.async_create_task(
                     self.thinq_api.async_post_push_subscribe(coordinator.device_id)
                 )
-                for coordinator in self.coordinator_map.values()
+                for coordinator in self.coordinators.values()
             ]
             tasks.extend(
                 self.hass.async_create_task(
                     self.thinq_api.async_post_event_subscribe(coordinator.device_id)
                 )
-                for coordinator in self.coordinator_map.values()
+                for coordinator in self.coordinators.values()
             )
             if tasks:
                 await asyncio.gather(*tasks)
@@ -113,13 +113,13 @@ class ThinQMQTT:
                 self.hass.async_create_task(
                     self.thinq_api.async_delete_push_subscribe(coordinator.device_id)
                 )
-                for coordinator in self.coordinator_map.values()
+                for coordinator in self.coordinators.values()
             ]
             tasks.extend(
                 self.hass.async_create_task(
                     self.thinq_api.async_delete_event_subscribe(coordinator.device_id)
                 )
-                for coordinator in self.coordinator_map.values()
+                for coordinator in self.coordinators.values()
             )
             if tasks:
                 await asyncio.gather(*tasks)
@@ -152,7 +152,7 @@ class ThinQMQTT:
         _LOGGER.debug("async_handle_device_event: message=%s", message)
 
         device_id = str(message.get("deviceId", ""))
-        coordinator = self.coordinator_map.get(device_id)
+        coordinator = self.coordinators.get(device_id)
         if coordinator is None:
             _LOGGER.error("Failed to handle device event: No device")
             return
