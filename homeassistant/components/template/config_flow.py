@@ -116,6 +116,11 @@ def generate_schema(domain: str, flow_type: str) -> vol.Schema:
             vol.Required(CONF_STEP, default=DEFAULT_STEP): selector.NumberSelector(
                 selector.NumberSelectorConfig(mode=selector.NumberSelectorMode.BOX),
             ),
+            vol.Optional(CONF_UNIT_OF_MEASUREMENT): selector.TextSelector(
+                selector.TextSelectorConfig(
+                    type=selector.TextSelectorType.TEXT, multiline=False
+                )
+            ),
             vol.Optional(CONF_SET_VALUE): selector.ActionSelector(),
         }
 

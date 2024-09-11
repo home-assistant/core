@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Coroutine
+from collections.abc import Callable, Coroutine
 import logging
 from typing import Any
 
@@ -94,11 +94,18 @@ class ThinQEntity(CoordinatorEntity[DeviceDataUpdateCoordinator]):
         await super().async_added_to_hass()
         self._handle_coordinator_update()
 
-    async def async_call_api(self, target: Coroutine[Any, Any, Any]) -> None:
+    async def async_call_api(
+        self,
+        target: Coroutine[Any, Any, Any],
+        on_fail_method: Callable[[], None] | None = None,
+    ) -> None:
         """Call the given api and handle exception."""
         try:
             await target
         except ThinQAPIException as exc:
+            if on_fail_method:
+                on_fail_method()
+
             raise ServiceValidationError(
                 exc.message,
                 translation_domain=DOMAIN,
