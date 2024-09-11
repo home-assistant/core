@@ -13,8 +13,14 @@
     }
   },
   "services": {
-    "get_gas_prices": "mdi:gas-station",
-    "get_energy_usage_prices": "mdi:transmission-tower-import",
-    "get_energy_return_prices": "mdi:transmission-tower-export"
+    "get_gas_prices": {
+      "service": "mdi:gas-station"
+    },
+    "get_energy_usage_prices": {
+      "service": "mdi:transmission-tower-import"
+    },
+    "get_energy_return_prices": {
+      "service": "mdi:transmission-tower-export"
+    }
   }
 }

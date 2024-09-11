@@ -33,6 +33,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, State, split_entity_id
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import entity_sources
+from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 from homeassistant.loader import async_suggest_report_issue
 from homeassistant.util import dt as dt_util
 from homeassistant.util.enum import try_parse_enum
@@ -220,13 +221,13 @@ def _normalize_states(
                     LINK_DEV_STATISTICS,
                 )
             return None, []
-        state_unit = fstates[0][1].attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+
         return state_unit, fstates
 
     converter = statistics.STATISTIC_UNIT_TO_UNIT_CONVERTER[statistics_unit]
     valid_fstates: list[tuple[float, State]] = []
     convert: Callable[[float], float] | None = None
-    last_unit: str | None | object = object()
+    last_unit: str | None | UndefinedType = UNDEFINED
     valid_units = converter.VALID_UNITS
 
     for fstate, state in fstates:

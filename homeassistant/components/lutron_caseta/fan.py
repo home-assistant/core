@@ -6,7 +6,11 @@ from typing import Any
 
 from pylutron_caseta import FAN_HIGH, FAN_LOW, FAN_MEDIUM, FAN_MEDIUM_HIGH, FAN_OFF
 
-from homeassistant.components.fan import DOMAIN, FanEntity, FanEntityFeature
+from homeassistant.components.fan import (
+    DOMAIN as FAN_DOMAIN,
+    FanEntity,
+    FanEntityFeature,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.percentage import (
@@ -33,7 +37,7 @@ async def async_setup_entry(
     """
     data = config_entry.runtime_data
     bridge = data.bridge
-    fan_devices = bridge.get_devices_by_domain(DOMAIN)
+    fan_devices = bridge.get_devices_by_domain(FAN_DOMAIN)
     async_add_entities(LutronCasetaFan(fan_device, data) for fan_device in fan_devices)
 
 
