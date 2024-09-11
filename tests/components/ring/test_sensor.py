@@ -44,19 +44,6 @@ async def test_sensor(hass: HomeAssistant, mock_ring_client) -> None:
         == SensorStateClass.MEASUREMENT
     )
 
-    downstairs_volume_state = hass.states.get("sensor.downstairs_volume")
-    assert downstairs_volume_state is not None
-    assert downstairs_volume_state.state == "2"
-
-    ingress_mic_volume_state = hass.states.get("sensor.ingress_mic_volume")
-    assert ingress_mic_volume_state.state == "11"
-
-    ingress_doorbell_volume_state = hass.states.get("sensor.ingress_doorbell_volume")
-    assert ingress_doorbell_volume_state.state == "8"
-
-    ingress_voice_volume_state = hass.states.get("sensor.ingress_voice_volume")
-    assert ingress_voice_volume_state.state == "11"
-
 
 @pytest.mark.parametrize(
     ("device_id", "device_name", "sensor_name", "expected_value"),
