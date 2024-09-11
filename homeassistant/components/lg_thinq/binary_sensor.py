@@ -52,7 +52,6 @@ BINARY_SENSOR_DESC: dict[ThinQProperty, ThinQBinarySensorEntityDescription] = {
     ThinQProperty.DOOR_STATE: ThinQBinarySensorEntityDescription(
         key=ThinQProperty.DOOR_STATE,
         device_class=BinarySensorDeviceClass.DOOR,
-        translation_key=ThinQProperty.DOOR_STATE,
         on_key="open",
     ),
     ThinQProperty.MACHINE_CLEAN_REMINDER: ThinQBinarySensorEntityDescription(
