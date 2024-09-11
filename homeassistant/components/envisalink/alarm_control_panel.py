@@ -119,7 +119,7 @@ class EnvisalinkAlarm(EnvisalinkDevice, AlarmControlPanelEntity):
         self._partition_number = partition_number
         self._panic_type = panic_type
         self._alarm_control_panel_option_default_code = code
-        self._attr_code_format = CodeFormat.NUMBER
+        self._attr_code_format = CodeFormat.NUMBER if not code else None
 
         _LOGGER.debug("Setting up alarm: %s", alarm_name)
         super().__init__(alarm_name, info, controller)

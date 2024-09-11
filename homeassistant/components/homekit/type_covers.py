@@ -17,7 +17,7 @@ from homeassistant.components.cover import (
     ATTR_CURRENT_TILT_POSITION,
     ATTR_POSITION,
     ATTR_TILT_POSITION,
-    DOMAIN,
+    DOMAIN as COVER_DOMAIN,
     CoverEntityFeature,
 )
 from homeassistant.const import (
@@ -181,11 +181,11 @@ class GarageDoorOpener(HomeAccessory):
         if value == HK_DOOR_OPEN:
             if self.char_current_state.value != value:
                 self.char_current_state.set_value(HK_DOOR_OPENING)
-            self.async_call_service(DOMAIN, SERVICE_OPEN_COVER, params)
+            self.async_call_service(COVER_DOMAIN, SERVICE_OPEN_COVER, params)
         elif value == HK_DOOR_CLOSED:
             if self.char_current_state.value != value:
                 self.char_current_state.set_value(HK_DOOR_CLOSING)
-            self.async_call_service(DOMAIN, SERVICE_CLOSE_COVER, params)
+            self.async_call_service(COVER_DOMAIN, SERVICE_CLOSE_COVER, params)
 
     @callback
     def async_update_state(self, new_state: State) -> None:
@@ -248,7 +248,7 @@ class OpeningDeviceBase(HomeAccessory):
         if value != 1:
             return
         self.async_call_service(
-            DOMAIN, SERVICE_STOP_COVER, {ATTR_ENTITY_ID: self.entity_id}
+            COVER_DOMAIN, SERVICE_STOP_COVER, {ATTR_ENTITY_ID: self.entity_id}
         )
 
     def set_tilt(self, value: float) -> None:
@@ -261,7 +261,9 @@ class OpeningDeviceBase(HomeAccessory):
 
         params = {ATTR_ENTITY_ID: self.entity_id, ATTR_TILT_POSITION: value}
 
-        self.async_call_service(DOMAIN, SERVICE_SET_COVER_TILT_POSITION, params, value)
+        self.async_call_service(
+            COVER_DOMAIN, SERVICE_SET_COVER_TILT_POSITION, params, value
+        )
 
     @callback
     def async_update_state(self, new_state: State) -> None:
@@ -322,7 +324,7 @@ class OpeningDevice(OpeningDeviceBase, HomeAccessory):
         """Move cover to value if call came from HomeKit."""
         _LOGGER.debug("%s: Set position to %d", self.entity_id, value)
         params = {ATTR_ENTITY_ID: self.entity_id, ATTR_POSITION: value}
-        self.async_call_service(DOMAIN, SERVICE_SET_COVER_POSITION, params, value)
+        self.async_call_service(COVER_DOMAIN, SERVICE_SET_COVER_POSITION, params, value)
 
     @callback
     def async_update_state(self, new_state: State) -> None:
@@ -423,7 +425,7 @@ class WindowCoveringBasic(OpeningDeviceBase, HomeAccessory):
             service, position = (SERVICE_STOP_COVER, 50)
 
         params = {ATTR_ENTITY_ID: self.entity_id}
-        self.async_call_service(DOMAIN, service, params)
+        self.async_call_service(COVER_DOMAIN, service, params)
 
         # Snap the current/target position to the expected final position.
         self.char_current_position.set_value(position)

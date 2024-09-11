@@ -57,6 +57,7 @@ from .const import (
     DEFAULT_TIME_BETWEEN_UPDATE,
     DEVICE_NAME_ELECTRICITY,
     DEVICE_NAME_GAS,
+    DEVICE_NAME_HEAT,
     DEVICE_NAME_WATER,
     DOMAIN,
     DSMR_PROTOCOL,
@@ -75,6 +76,7 @@ class DSMRSensorEntityDescription(SensorEntityDescription):
     dsmr_versions: set[str] | None = None
     is_gas: bool = False
     is_water: bool = False
+    is_heat: bool = False
     obis_reference: str
 
 
@@ -82,6 +84,7 @@ class MbusDeviceType(IntEnum):
     """Types of mbus devices (13757-3:2013)."""
 
     GAS = 3
+    HEAT = 4
     WATER = 7
 
 
@@ -396,6 +399,16 @@ SENSORS_MBUS_DEVICE_TYPE: dict[int, tuple[DSMRSensorEntityDescription, ...]] = {
             state_class=SensorStateClass.TOTAL_INCREASING,
         ),
     ),
+    MbusDeviceType.HEAT: (
+        DSMRSensorEntityDescription(
+            key="heat_reading",
+            translation_key="heat_meter_reading",
+            obis_reference="MBUS_METER_READING",
+            is_heat=True,
+            device_class=SensorDeviceClass.ENERGY,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+        ),
+    ),
     MbusDeviceType.WATER: (
         DSMRSensorEntityDescription(
             key="water_reading",
@@ -490,6 +503,10 @@ def create_mbus_entities(
             continue
         type_ = int(device_type.value)
 
+        if type_ not in SENSORS_MBUS_DEVICE_TYPE:
+            LOGGER.warning("Unsupported MBUS_DEVICE_TYPE (%d)", type_)
+            continue
+
         if identifier := getattr(device, "MBUS_EQUIPMENT_IDENTIFIER", None):
             serial_ = identifier.value
             rename_old_gas_to_mbus(hass, entry, serial_)
@@ -554,7 +571,10 @@ async def async_setup_entry(
                 )
                 for description in SENSORS
                 if is_supported_description(telegram, description, dsmr_version)
-                and (not description.is_gas or CONF_SERIAL_ID_GAS in entry.data)
+                and (
+                    (not description.is_gas and not description.is_heat)
+                    or CONF_SERIAL_ID_GAS in entry.data
+                )
             ]
         )
         async_add_entities(entities)
@@ -743,6 +763,10 @@ class DSMREntity(SensorEntity):
             if serial_id:
                 device_serial = serial_id
             device_name = DEVICE_NAME_WATER
+        if entity_description.is_heat:
+            if serial_id:
+                device_serial = serial_id
+            device_name = DEVICE_NAME_HEAT
         if device_serial is None:
             device_serial = entry.entry_id
 

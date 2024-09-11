@@ -5,6 +5,7 @@ from __future__ import annotations
 import contextlib
 import logging
 from pathlib import Path
+from typing import Final
 
 import voluptuous as vol
 from xknx import XKNX
@@ -59,9 +60,9 @@ from .const import (
     CONF_KNX_TUNNELING_TCP,
     CONF_KNX_TUNNELING_TCP_SECURE,
     DATA_HASS_CONFIG,
-    DATA_KNX_CONFIG,
     DOMAIN,
     KNX_ADDRESS,
+    KNX_MODULE_KEY,
     SUPPORTED_PLATFORMS_UI,
     SUPPORTED_PLATFORMS_YAML,
     TELEGRAM_LOG_DEFAULT,
@@ -97,6 +98,7 @@ from .websocket import register_panel
 
 _LOGGER = logging.getLogger(__name__)
 
+_KNX_YAML_CONFIG: Final = "knx_yaml_config"
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -148,7 +150,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Start the KNX integration."""
     hass.data[DATA_HASS_CONFIG] = config
     if (conf := config.get(DOMAIN)) is not None:
-        hass.data[DATA_KNX_CONFIG] = dict(conf)
+        hass.data[_KNX_YAML_CONFIG] = dict(conf)
 
     register_knx_services(hass)
     return True
@@ -156,16 +158,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Load a config entry."""
-    # `config` is None when reloading the integration
-    # or no `knx` key in configuration.yaml
-    if (config := hass.data.get(DATA_KNX_CONFIG)) is None:
+    # `_KNX_YAML_CONFIG` is only set in async_setup.
+    # It's None when reloading the integration or no `knx` key in configuration.yaml
+    config = hass.data.pop(_KNX_YAML_CONFIG, None)
+    if config is None:
         _conf = await async_integration_yaml_config(hass, DOMAIN)
         if not _conf or DOMAIN not in _conf:
-            _LOGGER.warning(
-                "No `knx:` key found in configuration.yaml. See "
-                "https://www.home-assistant.io/integrations/knx/ "
-                "for KNX entity configuration documentation"
-            )
             # generate defaults
             config = CONFIG_SCHEMA({DOMAIN: {}})[DOMAIN]
         else:
@@ -176,22 +174,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except XKNXException as ex:
         raise ConfigEntryNotReady from ex
 
-    hass.data[DATA_KNX_CONFIG] = config
-    hass.data[DOMAIN] = knx_module
+    hass.data[KNX_MODULE_KEY] = knx_module
 
     if CONF_KNX_EXPOSE in config:
         for expose_config in config[CONF_KNX_EXPOSE]:
             knx_module.exposures.append(
                 create_knx_exposure(hass, knx_module.xknx, expose_config)
             )
+    configured_platforms_yaml = {
+        platform for platform in SUPPORTED_PLATFORMS_YAML if platform in config
+    }
     await hass.config_entries.async_forward_entry_setups(
         entry,
         {
             Platform.SENSOR,  # always forward sensor for system entities (telegram counter, etc.)
             *SUPPORTED_PLATFORMS_UI,  # forward all platforms that support UI entity management
-            *{  # forward yaml-only managed platforms on demand
-                platform for platform in SUPPORTED_PLATFORMS_YAML if platform in config
-            },
+            *configured_platforms_yaml,  # forward yaml-only managed platforms on demand,
         },
     )
 
@@ -210,30 +208,30 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unloading the KNX platforms."""
-    #  if not loaded directly return
-    if not hass.data.get(DOMAIN):
+    knx_module = hass.data.get(KNX_MODULE_KEY)
+    if not knx_module:
+        #  if not loaded directly return
         return True
 
-    knx_module: KNXModule = hass.data[DOMAIN]
     for exposure in knx_module.exposures:
         exposure.async_remove()
 
+    configured_platforms_yaml = {
+        platform
+        for platform in SUPPORTED_PLATFORMS_YAML
+        if platform in knx_module.config_yaml
+    }
     unload_ok = await hass.config_entries.async_unload_platforms(
         entry,
         {
             Platform.SENSOR,  # always unload system entities (telegram counter, etc.)
             *SUPPORTED_PLATFORMS_UI,  # unload all platforms that support UI entity management
-            *{  # unload yaml-only managed platforms if configured
-                platform
-                for platform in SUPPORTED_PLATFORMS_YAML
-                if platform in hass.data[DATA_KNX_CONFIG]
-            },
+            *configured_platforms_yaml,  # unload yaml-only managed platforms if configured,
         },
     )
     if unload_ok:
         await knx_module.stop()
         hass.data.pop(DOMAIN)
-        hass.data.pop(DATA_KNX_CONFIG)
 
     return unload_ok
 
@@ -267,7 +265,7 @@ async def async_remove_config_entry_device(
     hass: HomeAssistant, config_entry: ConfigEntry, device_entry: DeviceEntry
 ) -> bool:
     """Remove a config entry from a device."""
-    knx_module: KNXModule = hass.data[DOMAIN]
+    knx_module = hass.data[KNX_MODULE_KEY]
     if not device_entry.identifiers.isdisjoint(
         knx_module.interface_device.device_info["identifiers"]
     ):
@@ -287,7 +285,7 @@ class KNXModule:
     ) -> None:
         """Initialize KNX module."""
         self.hass = hass
-        self.config = config
+        self.config_yaml = config
         self.connected = False
         self.exposures: list[KNXExposeSensor | KNXExposeTime] = []
         self.service_exposures: dict[str, KNXExposeSensor | KNXExposeTime] = {}
@@ -489,7 +487,7 @@ class KNXModule:
     def register_event_callback(self) -> TelegramQueue.Callback:
         """Register callback for knx_event within XKNX TelegramQueue."""
         address_filters = []
-        for filter_set in self.config[CONF_EVENT]:
+        for filter_set in self.config_yaml[CONF_EVENT]:
             _filters = list(map(AddressFilter, filter_set[KNX_ADDRESS]))
             address_filters.extend(_filters)
             if (dpt := filter_set.get(CONF_TYPE)) and (
