@@ -769,11 +769,7 @@ async def test_form_reauth(hass: HomeAssistant) -> None:
     """Test reauthenticate."""
     entry, _, _ = await setup_onvif_integration(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_REAUTH, "entry_id": entry.entry_id},
-        data=entry.data,
-    )
+    result = await entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
     assert (

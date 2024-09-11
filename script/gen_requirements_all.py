@@ -6,7 +6,6 @@ from __future__ import annotations
 import difflib
 import importlib
 from operator import itemgetter
-import os
 from pathlib import Path
 import pkgutil
 import re
@@ -15,7 +14,7 @@ import tomllib
 from typing import Any
 
 from homeassistant.util.yaml.loader import load_yaml
-from script.hassfest.model import Integration
+from script.hassfest.model import Config, Integration
 
 # Requirements which can't be installed on all systems because they rely on additional
 # system packages. Requirements listed in EXCLUDED_REQUIREMENTS_ALL will be commented-out
@@ -82,8 +81,8 @@ URL_PIN = (
 )
 
 
-CONSTRAINT_PATH = os.path.join(
-    os.path.dirname(__file__), "../homeassistant/package_constraints.txt"
+CONSTRAINT_PATH = (
+    Path(__file__).parent.parent / "homeassistant" / "package_constraints.txt"
 )
 CONSTRAINT_BASE = """
 # Constrain pycryptodome to avoid vulnerability
@@ -129,12 +128,6 @@ hyperframe>=5.2.0
 
 # Ensure we run compatible with musllinux build env
 numpy==1.26.0
-
-# Prevent dependency conflicts between sisyphus-control and aioambient
-# until upper bounds for sisyphus-control have been updated
-# https://github.com/jkeljo/sisyphus-control/issues/6
-python-engineio>=3.13.1,<4.0
-python-socketio>=4.6.0,<5.0
 
 # Constrain multidict to avoid typing issues
 # https://github.com/home-assistant/core/pull/67046
@@ -212,6 +205,12 @@ tuf>=4.0.0
 
 # https://github.com/jd/tenacity/issues/471
 tenacity!=8.4.0
+
+# pyasn1.compat.octets was removed in pyasn1 0.6.1 and breaks some integrations
+# and tests that import it directly
+# https://github.com/pyasn1/pyasn1/pull/60
+# https://github.com/lextudio/pysnmp/issues/114
+pyasn1==0.6.0
 """
 
 GENERATED_MESSAGE = (
@@ -262,8 +261,7 @@ def explore_module(package: str, explore_children: bool) -> list[str]:
 
 def core_requirements() -> list[str]:
     """Gather core requirements out of pyproject.toml."""
-    with open("pyproject.toml", "rb") as fp:
-        data = tomllib.load(fp)
+    data = tomllib.loads(Path("pyproject.toml").read_text())
     dependencies: list[str] = data["project"]["dependencies"]
     return dependencies
 
@@ -276,7 +274,9 @@ def gather_recursive_requirements(
         seen = set()
 
     seen.add(domain)
-    integration = Integration(Path(f"homeassistant/components/{domain}"))
+    integration = Integration(
+        Path(f"homeassistant/components/{domain}"), _get_hassfest_config()
+    )
     integration.load_manifest()
     reqs = {x for x in integration.requirements if x not in CONSTRAINT_BASE}
     for dep_domain in integration.dependencies:
@@ -342,7 +342,8 @@ def gather_requirements_from_manifests(
     errors: list[str], reqs: dict[str, list[str]]
 ) -> None:
     """Gather all of the requirements from manifests."""
-    integrations = Integration.load_dir(Path("homeassistant/components"))
+    config = _get_hassfest_config()
+    integrations = Integration.load_dir(config.core_integrations_path, config)
     for domain in sorted(integrations):
         integration = integrations[domain]
 
@@ -531,7 +532,7 @@ def diff_file(filename: str, content: str) -> list[str]:
 
 def main(validate: bool, ci: bool) -> int:
     """Run the script."""
-    if not os.path.isfile("requirements_all.txt"):
+    if not Path("requirements_all.txt").is_file():
         print("Run this from HA root dir")
         return 1
 
@@ -588,6 +589,17 @@ def main(validate: bool, ci: bool) -> int:
         Path(filename).write_text(content)
 
     return 0
+
+
+def _get_hassfest_config() -> Config:
+    """Get hassfest config."""
+    return Config(
+        root=Path().absolute(),
+        specific_integrations=None,
+        action="validate",
+        requirements=True,
+        core_integrations_path=Path("homeassistant/components"),
+    )
 
 
 if __name__ == "__main__":

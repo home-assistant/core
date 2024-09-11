@@ -8,16 +8,12 @@ from ring_doorbell import Auth, AuthenticationError, Requires2FAError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
-from homeassistant.const import (
-    APPLICATION_NAME,
-    CONF_PASSWORD,
-    CONF_TOKEN,
-    CONF_USERNAME,
-    __version__ as ha_version,
-)
+from homeassistant.const import CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
+from . import get_auth_agent_id
 from .const import CONF_2FA, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -31,11 +27,15 @@ STEP_REAUTH_DATA_SCHEMA = vol.Schema({vol.Required(CONF_PASSWORD): str})
 async def validate_input(hass: HomeAssistant, data: dict[str, str]) -> dict[str, Any]:
     """Validate the user input allows us to connect."""
 
-    auth = Auth(f"{APPLICATION_NAME}/{ha_version}")
+    user_agent, hardware_id = await get_auth_agent_id(hass)
+    auth = Auth(
+        user_agent,
+        http_client_session=async_get_clientsession(hass),
+        hardware_id=hardware_id,
+    )
 
     try:
-        token = await hass.async_add_executor_job(
-            auth.fetch_token,
+        token = await auth.async_fetch_token(
             data[CONF_USERNAME],
             data[CONF_PASSWORD],
             data.get(CONF_2FA),
@@ -62,6 +62,8 @@ class RingConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
+            await self.async_set_unique_id(user_input[CONF_USERNAME])
+            self._abort_if_unique_id_configured()
             try:
                 token = await validate_input(self.hass, user_input)
             except Require2FA:
@@ -74,7 +76,6 @@ class RingConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                await self.async_set_unique_id(user_input[CONF_USERNAME])
                 return self.async_create_entry(
                     title=user_input[CONF_USERNAME],
                     data={CONF_USERNAME: user_input[CONF_USERNAME], CONF_TOKEN: token},
