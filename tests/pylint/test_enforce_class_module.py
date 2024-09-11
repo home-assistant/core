@@ -41,21 +41,41 @@ from . import assert_adds_messages, assert_no_messages
         ),
     ],
 )
-def test_enforce_coordinator_module_good(
-    linter: UnittestLinter, enforce_coordinator_module_checker: BaseChecker, code: str
+@pytest.mark.parametrize(
+    "path",
+    [
+        "homeassistant.components.pylint_test.coordinator",
+        "homeassistant.components.pylint_test.coordinator.my_coordinator",
+    ],
+)
+def test_enforce_class_module_good(
+    linter: UnittestLinter,
+    enforce_class_module_checker: BaseChecker,
+    code: str,
+    path: str,
 ) -> None:
     """Good test cases."""
-    root_node = astroid.parse(code, "homeassistant.components.pylint_test.coordinator")
+    root_node = astroid.parse(code, path)
     walker = ASTWalker(linter)
-    walker.add_checker(enforce_coordinator_module_checker)
+    walker.add_checker(enforce_class_module_checker)
 
     with assert_no_messages(linter):
         walker.walk(root_node)
 
 
-def test_enforce_coordinator_module_bad_simple(
+@pytest.mark.parametrize(
+    "path",
+    [
+        "homeassistant.components.pylint_test",
+        "homeassistant.components.pylint_test.my_coordinator",
+        "homeassistant.components.pylint_test.coordinator_other",
+        "homeassistant.components.pylint_test.sensor",
+    ],
+)
+def test_enforce_class_module_bad_simple(
     linter: UnittestLinter,
-    enforce_coordinator_module_checker: BaseChecker,
+    enforce_class_module_checker: BaseChecker,
+    path: str,
 ) -> None:
     """Bad test case with coordinator extending directly."""
     root_node = astroid.parse(
@@ -66,10 +86,10 @@ def test_enforce_coordinator_module_bad_simple(
     class TestCoordinator(DataUpdateCoordinator):
         pass
     """,
-        "homeassistant.components.pylint_test",
+        path,
     )
     walker = ASTWalker(linter)
-    walker.add_checker(enforce_coordinator_module_checker)
+    walker.add_checker(enforce_class_module_checker)
 
     with assert_adds_messages(
         linter,
@@ -77,7 +97,7 @@ def test_enforce_coordinator_module_bad_simple(
             msg_id="hass-enforce-class-module",
             line=5,
             node=root_node.body[1],
-            args=None,
+            args=("DataUpdateCoordinator", "coordinator"),
             confidence=UNDEFINED,
             col_offset=0,
             end_line=5,
@@ -87,9 +107,19 @@ def test_enforce_coordinator_module_bad_simple(
         walker.walk(root_node)
 
 
-def test_enforce_coordinator_module_bad_nested(
+@pytest.mark.parametrize(
+    "path",
+    [
+        "homeassistant.components.pylint_test",
+        "homeassistant.components.pylint_test.my_coordinator",
+        "homeassistant.components.pylint_test.coordinator_other",
+        "homeassistant.components.pylint_test.sensor",
+    ],
+)
+def test_enforce_class_module_bad_nested(
     linter: UnittestLinter,
-    enforce_coordinator_module_checker: BaseChecker,
+    enforce_class_module_checker: BaseChecker,
+    path: str,
 ) -> None:
     """Bad test case with nested coordinators."""
     root_node = astroid.parse(
@@ -103,10 +133,10 @@ def test_enforce_coordinator_module_bad_nested(
     class NopeCoordinator(TestCoordinator):
         pass
     """,
-        "homeassistant.components.pylint_test",
+        path,
     )
     walker = ASTWalker(linter)
-    walker.add_checker(enforce_coordinator_module_checker)
+    walker.add_checker(enforce_class_module_checker)
 
     with assert_adds_messages(
         linter,
@@ -114,7 +144,7 @@ def test_enforce_coordinator_module_bad_nested(
             msg_id="hass-enforce-class-module",
             line=5,
             node=root_node.body[1],
-            args=None,
+            args=("DataUpdateCoordinator", "coordinator"),
             confidence=UNDEFINED,
             col_offset=0,
             end_line=5,
@@ -124,7 +154,7 @@ def test_enforce_coordinator_module_bad_nested(
             msg_id="hass-enforce-class-module",
             line=8,
             node=root_node.body[2],
-            args=None,
+            args=("DataUpdateCoordinator", "coordinator"),
             confidence=UNDEFINED,
             col_offset=0,
             end_line=8,

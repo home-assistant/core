@@ -20,7 +20,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 
 from .. import ads
-from . import ADS_TYPEMAP, CONF_ADS_FACTOR, CONF_ADS_TYPE, CONF_ADS_VAR, STATE_KEY_STATE
+from . import ADS_TYPEMAP, CONF_ADS_FACTOR, CONF_ADS_TYPE
+from .const import CONF_ADS_VAR, DATA_ADS, STATE_KEY_STATE
 from .entity import AdsEntity
 
 DEFAULT_NAME = "ADS sensor"
@@ -60,14 +61,15 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up an ADS sensor device."""
-    ads_hub: ads.AdsHub = hass.data[ads.DATA_ADS]
-    ads_var = config[CONF_ADS_VAR]
-    ads_type = config[CONF_ADS_TYPE]
-    name = config[CONF_NAME]
-    factor = config.get(CONF_ADS_FACTOR)
-    device_class = config.get(CONF_DEVICE_CLASS)
-    state_class = config.get(CONF_STATE_CLASS)
-    unit_of_measurement = config.get(CONF_UNIT_OF_MEASUREMENT)
+    ads_hub = hass.data[DATA_ADS]
+
+    ads_var: str = config[CONF_ADS_VAR]
+    ads_type: str = config[CONF_ADS_TYPE]
+    name: str = config[CONF_NAME]
+    factor: int | None = config.get(CONF_ADS_FACTOR)
+    device_class: SensorDeviceClass | None = config.get(CONF_DEVICE_CLASS)
+    state_class: SensorStateClass | None = config.get(CONF_STATE_CLASS)
+    unit_of_measurement: str | None = config.get(CONF_UNIT_OF_MEASUREMENT)
 
     entity = AdsSensor(
         ads_hub,

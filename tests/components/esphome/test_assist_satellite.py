@@ -36,7 +36,7 @@ from homeassistant.components.esphome.assist_satellite import (
     VoiceAssistantUDPServer,
 )
 from homeassistant.components.media_source import PlayMedia
-from homeassistant.const import Platform
+from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er, intent as intent_helper
 import homeassistant.helpers.device_registry as dr
@@ -1038,3 +1038,38 @@ async def test_announce_media_id(
                 blocking=True,
             )
             await done.wait()
+
+
+async def test_satellite_unloaded_on_disconnect(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: Callable[
+        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
+        Awaitable[MockESPHomeDevice],
+    ],
+) -> None:
+    """Test that the assist satellite platform is unloaded on disconnect."""
+    mock_device: MockESPHomeDevice = await mock_esphome_device(
+        mock_client=mock_client,
+        entity_info=[],
+        user_service=[],
+        states=[],
+        device_info={
+            "voice_assistant_feature_flags": VoiceAssistantFeature.VOICE_ASSISTANT
+        },
+    )
+    await hass.async_block_till_done()
+
+    satellite = get_satellite_entity(hass, mock_device.device_info.mac_address)
+    assert satellite is not None
+
+    state = hass.states.get(satellite.entity_id)
+    assert state is not None
+    assert state.state != STATE_UNAVAILABLE
+
+    # Device will be unavailable after disconnect
+    await mock_device.mock_disconnect(True)
+
+    state = hass.states.get(satellite.entity_id)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
