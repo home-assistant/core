@@ -16,7 +16,7 @@ from urllib.parse import urlparse
 
 from aiohttp import ClientError
 from awesomeversion import AwesomeVersion
-from git import GitCommandError, Repo
+from git import GitCommandError, Remote, Repo
 
 from homeassistant.components.lovelace.const import (  # pylint: disable=hass-component-root-import
     DOMAIN as LOVELACE_DOMAIN,
@@ -196,8 +196,14 @@ class RepositoryManager:
         """Fetch the latest changes from the remote."""
         _LOGGER.info("Fetching %s", self.working_dir)
         self._latest_version_cache = None
+        remote = await self._get_remote()
+        await self.hass.async_add_executor_job(remote.fetch)
+
+    async def _get_remote(self) -> Remote:
+        """Return the remote of the GIT repo."""
+        # this function exists mainly to be mocked in tests
         repo = await self._get_repo()
-        await self.hass.async_add_executor_job(lambda: repo.remotes[0].fetch())  # pylint: disable=unnecessary-lambda
+        return repo.remotes[0]
 
     @ensure_cloned
     async def checkout(self, ref: str) -> None:
@@ -207,10 +213,11 @@ class RepositoryManager:
         repo = await self._get_repo()
         await self.hass.async_add_executor_job(repo.git.checkout, ref)
 
-    @ensure_cloned
     @abstractmethod
     async def install(self) -> None:
         """Install the GIT repo."""
+        if not await self.is_cloned():
+            await self.clone()
 
     @ensure_installed
     @abstractmethod
@@ -304,9 +311,9 @@ class IntegrationRepositoryManager(RepositoryManager):
         )
         self._component_dir: Path | None = None
 
-    @RepositoryManager.ensure_cloned
     async def install(self) -> None:
         """Install the GIT repo as a HA integration."""
+        await super().install()
         component_dir = await self.get_component_dir()
         install_path = await self.get_install_path()
         _LOGGER.info("Installing %s to %s", component_dir, install_path)
@@ -396,8 +403,6 @@ class IntegrationRepositoryManager(RepositoryManager):
 class ResourceRepositoryManager(RepositoryManager):
     """Manage GIT repo as a HA resource."""
 
-    _resource_storage: ResourceStorageCollection | None = None
-
     def __init__(
         self,
         hass: HomeAssistant,
@@ -421,11 +426,12 @@ class ResourceRepositoryManager(RepositoryManager):
             return False
         return await super().is_installed()
 
-    @RepositoryManager.ensure_cloned
     async def install(self) -> None:
         """Install the GIT repo as a HA resource."""
+        await super().install()
         await self._download_resource()
         resource_url = await self.get_resource_url()
+        _LOGGER.info("Installing %s", resource_url)
         await self._add_resource(resource_url)
         await self._refresh_frontend()
 
@@ -433,8 +439,9 @@ class ResourceRepositoryManager(RepositoryManager):
     async def uninstall(self) -> None:
         """Uninstall the GIT repo."""
         resource_url = await self.get_resource_url()
-        await self._remove_resource(resource_url)
         install_path = await self.get_install_path()
+        _LOGGER.info("Uninstalling resource %s, path %s", resource_url, install_path)
+        await self._remove_resource(resource_url)
         await self.hass.async_add_executor_job(install_path.unlink)
         await self._refresh_frontend()
 
@@ -462,18 +469,11 @@ class ResourceRepositoryManager(RepositoryManager):
         download_url = await self.get_download_url()
         install_path = await self.get_install_path()
         _LOGGER.info("Downloading %s to %s", download_url, install_path)
-        session = async_get_clientsession(self.hass)
         await self.hass.async_add_executor_job(
             lambda: install_path.parent.mkdir(parents=True, exist_ok=True)
         )
         try:
-            async with (
-                session.get(download_url, raise_for_status=True) as response,
-                async_open(self.hass, install_path, "wb") as file,
-            ):
-                # use larger chunks to prevent spawning too many jobs
-                async for chunk in response.content.iter_chunked(DOWNLOAD_CHUNK_SIZE):
-                    await self.hass.async_add_executor_job(file.write, chunk)
+            await async_download(self.hass, download_url, install_path)
         except (ClientError, OSError) as e:
             raise ResourceInstallError from e
 
@@ -482,8 +482,6 @@ class ResourceRepositoryManager(RepositoryManager):
         cls, hass: HomeAssistant
     ) -> ResourceStorageCollection:
         """Return the Lovelace resource storage."""
-        if cls._resource_storage:
-            return cls._resource_storage
         try:
             res: ResourceStorageCollection = hass.data[LOVELACE_DOMAIN]["resources"]
         except KeyError as e:
@@ -494,7 +492,6 @@ class ResourceRepositoryManager(RepositoryManager):
             raise ResourcesUpdateError("Unexpected structure")
         if not res.loaded:
             await res.async_load()
-        cls._resource_storage = res
         return res
 
     async def _add_resource(self, resource_url: str) -> None:
@@ -654,6 +651,7 @@ class ResourcesUpdateError(GPMError):
 async def async_open(
     hass: HomeAssistant, path: Path, *args, **kwargs
 ) -> AsyncGenerator:
+    """Asynchronously open a file."""
     f = None
     try:
         f = await hass.async_add_executor_job(path.open, *args, **kwargs)  # type: ignore[arg-type]
@@ -661,3 +659,16 @@ async def async_open(
     finally:
         if f:
             f.close()
+
+
+async def async_download(hass: HomeAssistant, url: str, path: Path) -> None:
+    """Asynchronously download a file from URL to a local path."""
+    # this functions exists mainly to be mocked in tests
+    session = async_get_clientsession(hass)
+    async with (
+        session.get(url, raise_for_status=True) as response,
+        async_open(hass, path, "wb") as file,
+    ):
+        # use larger chunks to prevent spawning too many jobs
+        async for chunk in response.content.iter_chunked(DOWNLOAD_CHUNK_SIZE):
+            await hass.async_add_executor_job(file.write, chunk)
