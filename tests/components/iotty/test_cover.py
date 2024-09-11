@@ -10,7 +10,6 @@ from iottycloud.verbs import (
     STATUS_OPENING,
     STATUS_STATIONATRY,
 )
-from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
@@ -205,7 +204,6 @@ async def test_devices_insertion_ok(
     local_oauth_impl: ClientSession,
     mock_get_devices_twoshutters,
     mock_get_status_filled_stationary_0,
-    snapshot: SnapshotAssertion,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test iotty cover insertion."""
@@ -220,7 +218,10 @@ async def test_devices_insertion_ok(
 
     # Should have two devices
     assert hass.states.async_entity_ids_count() == 2
-    assert hass.states.async_entity_ids() == snapshot
+    assert hass.states.async_entity_ids() == [
+        "cover.test_shutter_0_test_serial_sh_0",
+        "cover.test_shutter_1_test_serial_sh_1",
+    ]
 
     mock_get_devices_twoshutters.return_value = test_sh_one_added
 
@@ -230,4 +231,8 @@ async def test_devices_insertion_ok(
 
     # Should have three devices
     assert hass.states.async_entity_ids_count() == 3
-    assert hass.states.async_entity_ids() == snapshot
+    assert hass.states.async_entity_ids() == [
+        "cover.test_shutter_0_test_serial_sh_0",
+        "cover.test_shutter_1_test_serial_sh_1",
+        "cover.test_shutter_2_test_serial_sh_2",
+    ]
