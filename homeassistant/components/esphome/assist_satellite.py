@@ -74,6 +74,8 @@ _TIMER_EVENT_TYPES: EsphomeEnumMapper[VoiceAssistantTimerEventType, TimerEventTy
     )
 )
 
+_ANNOUNCEMENT_TIMEOUT_SEC = 5 * 60  # 5 minutes
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -183,6 +185,12 @@ class EsphomeAssistSatellite(
                 )
             )
 
+        if feature_flags & VoiceAssistantFeature.ANNOUNCE:
+            # Device supports announcements
+            self._attr_supported_features |= (
+                assist_satellite.AssistSatelliteEntityFeature.ANNOUNCE
+            )
+
     async def async_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass."""
         await super().async_will_remove_from_hass()
@@ -250,6 +258,20 @@ class EsphomeAssistSatellite(
             }
 
         self.cli.send_voice_assistant_event(event_type, data_to_send)
+
+    async def async_announce(self, message: str, media_id: str) -> None:
+        """Announce media on the satellite.
+
+        Should block until the announcement is done playing.
+        """
+        _LOGGER.debug(
+            "Waiting for announcement to finished (message=%s, media_id=%s)",
+            message,
+            media_id,
+        )
+        await self.cli.send_voice_assistant_announcement_await_response(
+            media_id, _ANNOUNCEMENT_TIMEOUT_SEC, message
+        )
 
     async def handle_pipeline_start(
         self,

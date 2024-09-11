@@ -9,6 +9,7 @@ from total_connect_client.location import TotalConnectLocation
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
+    CodeFormat,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -22,11 +23,11 @@ from homeassistant.const import (
     STATE_ALARM_TRIGGERED,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from .const import CODE_REQUIRED, DOMAIN
 from .coordinator import TotalConnectDataUpdateCoordinator
 from .entity import TotalConnectLocationEntity
 
@@ -39,13 +40,10 @@ async def async_setup_entry(
 ) -> None:
     """Set up TotalConnect alarm panels based on a config entry."""
     coordinator: TotalConnectDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    code_required = entry.options.get(CODE_REQUIRED, False)
 
     async_add_entities(
-        TotalConnectAlarm(
-            coordinator,
-            location,
-            partition_id,
-        )
+        TotalConnectAlarm(coordinator, location, partition_id, code_required)
         for location in coordinator.client.locations.values()
         for partition_id in location.partitions
     )
@@ -74,13 +72,13 @@ class TotalConnectAlarm(TotalConnectLocationEntity, AlarmControlPanelEntity):
         | AlarmControlPanelEntityFeature.ARM_AWAY
         | AlarmControlPanelEntityFeature.ARM_NIGHT
     )
-    _attr_code_arm_required = False
 
     def __init__(
         self,
         coordinator: TotalConnectDataUpdateCoordinator,
         location: TotalConnectLocation,
         partition_id: int,
+        require_code: bool,
     ) -> None:
         """Initialize the TotalConnect status."""
         super().__init__(coordinator, location)
@@ -99,6 +97,10 @@ class TotalConnectAlarm(TotalConnectLocationEntity, AlarmControlPanelEntity):
             self._attr_translation_key = "partition"
             self._attr_translation_placeholders = {"partition_id": str(partition_id)}
             self._attr_unique_id = f"{location.location_id}_{partition_id}"
+
+        self._attr_code_arm_required = require_code
+        if require_code:
+            self._attr_code_format = CodeFormat.NUMBER
 
     @property
     def state(self) -> str | None:
@@ -150,6 +152,7 @@ class TotalConnectAlarm(TotalConnectLocationEntity, AlarmControlPanelEntity):
 
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
+        self._check_usercode(code)
         try:
             await self.hass.async_add_executor_job(self._disarm)
         except UsercodeInvalid as error:
@@ -163,12 +166,13 @@ class TotalConnectAlarm(TotalConnectLocationEntity, AlarmControlPanelEntity):
             ) from error
         await self.coordinator.async_request_refresh()
 
-    def _disarm(self, code=None):
+    def _disarm(self) -> None:
         """Disarm synchronous."""
         ArmingHelper(self._partition).disarm()
 
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
+        self._check_usercode(code)
         try:
             await self.hass.async_add_executor_job(self._arm_home)
         except UsercodeInvalid as error:
@@ -182,12 +186,13 @@ class TotalConnectAlarm(TotalConnectLocationEntity, AlarmControlPanelEntity):
             ) from error
         await self.coordinator.async_request_refresh()
 
-    def _arm_home(self):
+    def _arm_home(self) -> None:
         """Arm home synchronous."""
         ArmingHelper(self._partition).arm_stay()
 
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
+        self._check_usercode(code)
         try:
             await self.hass.async_add_executor_job(self._arm_away)
         except UsercodeInvalid as error:
@@ -201,12 +206,13 @@ class TotalConnectAlarm(TotalConnectLocationEntity, AlarmControlPanelEntity):
             ) from error
         await self.coordinator.async_request_refresh()
 
-    def _arm_away(self, code=None):
+    def _arm_away(self) -> None:
         """Arm away synchronous."""
         ArmingHelper(self._partition).arm_away()
 
     async def async_alarm_arm_night(self, code: str | None = None) -> None:
         """Send arm night command."""
+        self._check_usercode(code)
         try:
             await self.hass.async_add_executor_job(self._arm_night)
         except UsercodeInvalid as error:
@@ -220,11 +226,11 @@ class TotalConnectAlarm(TotalConnectLocationEntity, AlarmControlPanelEntity):
             ) from error
         await self.coordinator.async_request_refresh()
 
-    def _arm_night(self, code=None):
+    def _arm_night(self) -> None:
         """Arm night synchronous."""
         ArmingHelper(self._partition).arm_stay_night()
 
-    async def async_alarm_arm_home_instant(self, code: str | None = None) -> None:
+    async def async_alarm_arm_home_instant(self) -> None:
         """Send arm home instant command."""
         try:
             await self.hass.async_add_executor_job(self._arm_home_instant)
@@ -243,7 +249,7 @@ class TotalConnectAlarm(TotalConnectLocationEntity, AlarmControlPanelEntity):
         """Arm home instant synchronous."""
         ArmingHelper(self._partition).arm_stay_instant()
 
-    async def async_alarm_arm_away_instant(self, code: str | None = None) -> None:
+    async def async_alarm_arm_away_instant(self) -> None:
         """Send arm away instant command."""
         try:
             await self.hass.async_add_executor_job(self._arm_away_instant)
@@ -258,6 +264,16 @@ class TotalConnectAlarm(TotalConnectLocationEntity, AlarmControlPanelEntity):
             ) from error
         await self.coordinator.async_request_refresh()
 
-    def _arm_away_instant(self, code=None):
+    def _arm_away_instant(self):
         """Arm away instant synchronous."""
         ArmingHelper(self._partition).arm_away_instant()
+
+    def _check_usercode(self, code):
+        """Check if the run-time entered code matches configured code."""
+        if (
+            self._attr_code_arm_required
+            and self.coordinator.client.usercodes[self._location.location_id] != code
+        ):
+            raise ServiceValidationError(
+                translation_domain=DOMAIN, translation_key="invalid_pin"
+            )
