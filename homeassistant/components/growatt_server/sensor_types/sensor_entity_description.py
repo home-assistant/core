@@ -15,6 +15,7 @@ class GrowattRequiredKeysMixin:
 
 
 @dataclass(frozen=True)
+# pylint: disable-next=hass-enforce-class-module
 class GrowattSensorEntityDescription(SensorEntityDescription, GrowattRequiredKeysMixin):
     """Describes Growatt sensor entity."""
 
