@@ -34,8 +34,9 @@ POWER_SENSOR_DESCRIPTION = SensorEntityDescription(
 ENERGY_SENSOR_DESCRIPTION = SensorEntityDescription(
     key="energy",
     device_class=SensorDeviceClass.ENERGY,
-    native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+    native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
     state_class=SensorStateClass.TOTAL,
+    suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
     suggested_display_precision=2,
     has_entity_name=True,
 )
@@ -102,7 +103,7 @@ class LaundrifyEnergySensor(
     @property
     def native_value(self) -> float:
         """Return the state of the sensor."""
-        return float(self._device.totalEnergy) / 1000
+        return float(self._device.totalEnergy)
 
     @callback
     def _handle_coordinator_update(self) -> None:
