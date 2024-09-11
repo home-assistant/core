@@ -24,6 +24,7 @@ class WolfLinkConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Wolf SmartSet Service."""
 
     VERSION = 1
+    MINOR_VERSION = 2
 
     def __init__(self) -> None:
         """Initialize with empty username and password."""
@@ -66,7 +67,7 @@ class WolfLinkConfigFlow(ConfigFlow, domain=DOMAIN):
                 device for device in self.fetched_systems if device.name == device_name
             ]
             device_id = system[0].id
-            await self.async_set_unique_id(device_id)
+            await self.async_set_unique_id(str(device_id))
             self._abort_if_unique_id_configured()
             return self.async_create_entry(
                 title=user_input[DEVICE_NAME],

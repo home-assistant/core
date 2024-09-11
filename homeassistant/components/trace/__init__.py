@@ -9,7 +9,7 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.json import ExtendedJSONEncoder
@@ -43,11 +43,6 @@ CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 type TraceData = dict[str, LimitedSizeDict[str, BaseTrace]]
 
 
-@callback
-def _get_data(hass: HomeAssistant) -> TraceData:
-    return hass.data[DATA_TRACE]  # type: ignore[no-any-return]
-
-
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Initialize the trace integration."""
     hass.data[DATA_TRACE] = {}
@@ -62,7 +57,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         _LOGGER.debug("Storing traces")
         try:
             await store.async_save(
-                {key: list(traces.values()) for key, traces in _get_data(hass).items()}
+                {
+                    key: list(traces.values())
+                    for key, traces in hass.data[DATA_TRACE].items()
+                }
             )
         except HomeAssistantError as exc:
             _LOGGER.error("Error storing traces", exc_info=exc)
@@ -80,7 +78,7 @@ async def async_get_trace(
     # Restore saved traces if not done
     await async_restore_traces(hass)
 
-    return _get_data(hass)[key][run_id].as_extended_dict()
+    return hass.data[DATA_TRACE][key][run_id].as_extended_dict()
 
 
 async def async_list_contexts(
@@ -90,11 +88,11 @@ async def async_list_contexts(
     # Restore saved traces if not done
     await async_restore_traces(hass)
 
-    values: Mapping[str, LimitedSizeDict[str, BaseTrace] | None]
+    values: Mapping[str, LimitedSizeDict[str, BaseTrace] | None] | TraceData
     if key is not None:
-        values = {key: _get_data(hass).get(key)}
+        values = {key: hass.data[DATA_TRACE].get(key)}
     else:
-        values = _get_data(hass)
+        values = hass.data[DATA_TRACE]
 
     def _trace_id(run_id: str, key: str) -> dict[str, str]:
         """Make trace_id for the response."""
@@ -111,7 +109,7 @@ async def async_list_contexts(
 
 def _get_debug_traces(hass: HomeAssistant, key: str) -> list[dict[str, Any]]:
     """Return a serializable list of debug traces for a script or automation."""
-    if traces_for_key := _get_data(hass).get(key):
+    if traces_for_key := hass.data[DATA_TRACE].get(key):
         return [trace.as_short_dict() for trace in traces_for_key.values()]
     return []
 
@@ -125,7 +123,7 @@ async def async_list_traces(
 
     if not wanted_key:
         traces: list[dict[str, Any]] = []
-        for key in _get_data(hass):
+        for key in hass.data[DATA_TRACE]:
             domain = key.split(".", 1)[0]
             if domain == wanted_domain:
                 traces.extend(_get_debug_traces(hass, key))
@@ -140,7 +138,7 @@ def async_store_trace(
 ) -> None:
     """Store a trace if its key is valid."""
     if key := trace.key:
-        traces = _get_data(hass)
+        traces = hass.data[DATA_TRACE]
         if key not in traces:
             traces[key] = LimitedSizeDict(size_limit=stored_traces)
         else:
@@ -151,7 +149,7 @@ def async_store_trace(
 def _async_store_restored_trace(hass: HomeAssistant, trace: RestoredTrace) -> None:
     """Store a restored trace and move it to the end of the LimitedSizeDict."""
     key = trace.key
-    traces = _get_data(hass)
+    traces = hass.data[DATA_TRACE]
     if key not in traces:
         traces[key] = LimitedSizeDict()
     traces[key][trace.run_id] = trace
@@ -165,7 +163,7 @@ async def async_restore_traces(hass: HomeAssistant) -> None:
 
     hass.data[DATA_TRACES_RESTORED] = True
 
-    store: Store[dict[str, list]] = hass.data[DATA_TRACE_STORE]
+    store = hass.data[DATA_TRACE_STORE]
     try:
         restored_traces = await store.async_load() or {}
     except HomeAssistantError:
@@ -176,7 +174,7 @@ async def async_restore_traces(hass: HomeAssistant) -> None:
         # Add stored traces in reversed order to prioritize the newest traces
         for json_trace in reversed(traces):
             if (
-                (stored_traces := _get_data(hass).get(key))
+                (stored_traces := hass.data[DATA_TRACE].get(key))
                 and stored_traces.size_limit is not None
                 and len(stored_traces) >= stored_traces.size_limit
             ):

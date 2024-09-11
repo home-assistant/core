@@ -157,6 +157,7 @@ class EventManager:
             # tns1:RuleEngine/CellMotionDetector/Motion//.
             # tns1:RuleEngine/CellMotionDetector/Motion
             # tns1:RuleEngine/CellMotionDetector/Motion/
+            # tns1:UserAlarm/IVA/HumanShapeDetect
             #
             # Our parser expects the topic to be
             # tns1:RuleEngine/CellMotionDetector/Motion
