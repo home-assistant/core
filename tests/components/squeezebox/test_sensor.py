@@ -1,5 +1,6 @@
 """Test squeezebox sensors."""
 
+import copy
 from unittest.mock import patch
 
 from homeassistant.const import Platform
@@ -19,7 +20,7 @@ async def test_sensor(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.squeezebox.Server.async_query",
-            return_value=FAKE_QUERY_RESPONSE,
+            return_value=copy.deepcopy(FAKE_QUERY_RESPONSE),
         ),
     ):
         await setup_mocked_integration(hass)
