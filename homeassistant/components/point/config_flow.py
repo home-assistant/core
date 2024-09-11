@@ -13,7 +13,7 @@ DATA_FLOW_IMPL = "point_flow_implementation"
 
 
 class OAuth2FlowHandler(
-    config_entry_oauth2_flow.AbstractOAuth2FlowHandler, domain=DOMAIN
+    AbstractOAuth2FlowHandler, domain=DOMAIN
 ):
     """Config flow to handle Minut Point OAuth2 authentication."""
 
