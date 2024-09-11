@@ -79,6 +79,10 @@ BINARY_SENSOR_DESC: dict[ThinQProperty, ThinQBinarySensorEntityDescription] = {
         translation_key="operation_mode",
         on_key="power_on",
     ),
+    ThinQProperty.ONE_TOUCH_FILTER: ThinQBinarySensorEntityDescription(
+        key=ThinQProperty.ONE_TOUCH_FILTER,
+        translation_key=ThinQProperty.ONE_TOUCH_FILTER,
+    ),
 }
 
 DEVICE_TYPE_BINARY_SENSOR_MAP: dict[
@@ -101,6 +105,9 @@ DEVICE_TYPE_BINARY_SENSOR_MAP: dict[
         BINARY_SENSOR_DESC[ThinQProperty.ECO_FRIENDLY_MODE],
         BINARY_SENSOR_DESC[ThinQProperty.POWER_SAVE_ENABLED],
         BINARY_SENSOR_DESC[ThinQProperty.SABBATH_MODE],
+    ),
+    DeviceType.KIMCHI_REFRIGERATOR: (
+        BINARY_SENSOR_DESC[ThinQProperty.ONE_TOUCH_FILTER],
     ),
     DeviceType.STYLER: (BINARY_SENSOR_DESC[ThinQProperty.REMOTE_CONTROL_ENABLED],),
     DeviceType.WASHCOMBO_MAIN: (
