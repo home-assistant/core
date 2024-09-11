@@ -1,7 +1,10 @@
 """The tests for the Ring button platform."""
 
+from unittest.mock import Mock
+
 import pytest
 import ring_doorbell
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import Platform
@@ -9,7 +12,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
-from .common import setup_platform
+from .common import MockConfigEntry, setup_platform
+
+from tests.common import snapshot_platform
 
 
 async def test_entity_registry(
@@ -22,6 +27,20 @@ async def test_entity_registry(
 
     entry = entity_registry.async_get("siren.downstairs_siren")
     assert entry.unique_id == "123456-siren"
+
+
+async def test_states(
+    hass: HomeAssistant,
+    mock_ring_client: Mock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test states."""
+
+    mock_config_entry.add_to_hass(hass)
+    await setup_platform(hass, Platform.SIREN)
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
 async def test_sirens_report_correctly(hass: HomeAssistant, mock_ring_client) -> None:
