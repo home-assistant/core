@@ -6,6 +6,7 @@ import logging
 from unittest.mock import AsyncMock, patch
 
 from laundrify_aio import LaundrifyDevice
+from laundrify_aio.exceptions import LaundrifyDeviceException
 import pytest
 
 from homeassistant.components.laundrify.const import DOMAIN, MANUFACTURER, MODELS
@@ -95,8 +96,11 @@ async def test_laundrify_sensor_update_failure(
     caplog.set_level(logging.DEBUG)
     sensor = laundrify_sensor
 
-    # test get_power() returning None which should cause a LaundrifyDeviceException
-    with patch("laundrify_aio.LaundrifyDevice.get_power", return_value=None):
+    # test get_power() to raise a LaundrifyDeviceException
+    with patch(
+        "laundrify_aio.LaundrifyDevice.get_power",
+        side_effect=LaundrifyDeviceException("Raising error to test update failure."),
+    ):
         future = utcnow() + timedelta(minutes=2)
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
