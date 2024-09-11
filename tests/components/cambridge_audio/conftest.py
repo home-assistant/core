@@ -43,12 +43,12 @@ def mock_stream_magic_client() -> Generator[AsyncMock]:
             Source.from_dict(x)
             for x in load_json_array_fixture("get_sources.json", DOMAIN)
         ]
-        client.state = State.from_json(load_fixture("airplay_get_state.json", DOMAIN))
+        client.state = State.from_json(load_fixture("get_state.json", DOMAIN))
         client.play_state = PlayState.from_json(
-            load_fixture("airplay_get_play_state.json", DOMAIN)
+            load_fixture("get_play_state.json", DOMAIN)
         )
         client.now_playing = NowPlaying.from_json(
-            load_fixture("airplay_get_now_playing.json", DOMAIN)
+            load_fixture("get_now_playing.json", DOMAIN)
         )
         client.is_connected = Mock(return_value=True)
         client.position_last_updated = client.play_state.position

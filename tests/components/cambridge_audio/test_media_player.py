@@ -2,9 +2,20 @@
 
 from unittest.mock import AsyncMock
 
+from aiostreammagic import TransportControl
 import pytest
 
+from homeassistant.components.media_player import (
+    DOMAIN as MP_DOMAIN,
+    MediaPlayerEntityFeature,
+)
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_SUPPORTED_FEATURES,
+    SERVICE_MEDIA_NEXT_TRACK,
+    SERVICE_MEDIA_PAUSE,
+    SERVICE_MEDIA_PLAY,
+    SERVICE_MEDIA_PREVIOUS_TRACK,
     STATE_BUFFERING,
     STATE_IDLE,
     STATE_OFF,
@@ -13,7 +24,6 @@ from homeassistant.const import (
     STATE_STANDBY,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
 
 from . import setup_integration
 from .const import ENTITY_ID
@@ -24,11 +34,9 @@ from tests.common import MockConfigEntry
 #     hass: HomeAssistant,
 #     mock_stream_magic_client: AsyncMock,
 #     mock_config_entry: MockConfigEntry,
-#     monkeypatch: pytest.MonkeyPatch,
-#     device_registry: dr.DeviceRegistry,
 # ) -> None:
 #     """Test entity attributes."""
-#     entry = await setup_integration(hass, mock_config_entry)
+#     await setup_integration(hass, mock_config_entry)
 #     await mock_stream_magic_client.mock_state_update()
 #     await hass.async_block_till_done()
 #
@@ -37,71 +45,81 @@ from tests.common import MockConfigEntry
 #     attrs = state.attributes
 #     assert state.state == STATE_PLAYING
 #     assert attrs[ATTR_DEVICE_CLASS] == MediaPlayerDeviceClass.RECEIVER
-#     await mock_stream_magic_client.mock_state_update()
-#     await hass.async_block_till_done()
-#     await mock_stream_magic_client.mock_state_update()
-#     await hass.async_block_till_done()
-#
-#     await mock_stream_magic_client.mock_state_update()
-#     await hass.async_block_till_done()
-#
-#     assert False
-#     # assert attrs[ATTR_MEDIA_VOLUME_MUTED] is False
-#     # assert attrs[ATTR_MEDIA_VOLUME_LEVEL] == 0.37
-#     # assert attrs[ATTR_INPUT_SOURCE] == "Live TV"
-#     # assert attrs[ATTR_INPUT_SOURCE_LIST] == ["Input01", "Input02", "Live TV"]
-#     # assert attrs[ATTR_MEDIA_CONTENT_TYPE] == MediaType.CHANNEL
-#     # assert attrs[ATTR_MEDIA_TITLE] == "Channel 1"
-#     # assert attrs[ATTR_SOUND_OUTPUT] == "speaker"
-#
-#     # mock_stream_magic_client.state = State.from_json(
-#     #     load_fixture("airplay_get_state.json", DOMAIN)
-#     # )
-#     # mock_stream_magic_client.play_state = PlayState.from_json(
-#     #     load_fixture("airplay_get_play_state.json", DOMAIN)
-#     # )
-#     # mock_stream_magic_client.now_playing = NowPlaying.from_json(
-#     #     load_fixture("airplay_get_now_playing.json", DOMAIN)
-#     # )
-#
-#     # assert [
-#     #     MediaPlayerEntityFeature.VOLUME_MUTE,
-#     #     MediaPlayerEntityFeature.VOLUME_SET,
-#     #     MediaPlayerEntityFeature.VOLUME_STEP,
-#     # ] in attrs[ATTR_SUPPORTED_FEATURES]
-#
-#     # # Volume level not available
-#     # monkeypatch.setattr(client, "volume", None)
-#     # await client.mock_state_update()
-#     # attrs = hass.states.get(ENTITY_ID).attributes
-#     #
-#     # assert attrs.get(ATTR_MEDIA_VOLUME_LEVEL) is None
-#     #
-#     # # Channel change
-#     # monkeypatch.setattr(client, "current_channel", CHANNEL_2)
-#     # await client.mock_state_update()
-#     # attrs = hass.states.get(ENTITY_ID).attributes
-#     #
-#     # assert attrs[ATTR_MEDIA_TITLE] == "Channel Name 2"
-#     #
-#     # # Device Info
-#     # device = device_registry.async_get_device(identifiers={(DOMAIN, entry.unique_id)})
-#     #
-#     # assert device
-#     # assert device.identifiers == {(DOMAIN, entry.unique_id)}
-#     # assert device.manufacturer == "LG"
-#     # assert device.name == TV_NAME
-#     # assert device.sw_version == "major.minor"
-#     # assert device.model == "TVFAKE"
-#     #
-#     # # Sound output when off
-#     # monkeypatch.setattr(client, "sound_output", None)
-#     # monkeypatch.setattr(client, "is_on", False)
-#     # await client.mock_state_update()
-#     # state = hass.states.get(ENTITY_ID)
-#     #
-#     # assert state.state == STATE_OFF
-#     # assert state.attributes.get(ATTR_SOUND_OUTPUT) is None
+#     assert (MediaPlayerEntityFeature.VOLUME_SET, MediaPlayerEntityFeature) in attrs[ATTR_SUPPORTED_FEATURES]
+
+
+async def test_entity_supported_features(
+    hass: HomeAssistant,
+    mock_stream_magic_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test entity attributes."""
+    await setup_integration(hass, mock_config_entry)
+    await mock_stream_magic_client.mock_state_update()
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    attrs = state.attributes
+
+    # Ensure volume isn't available when pre-amp is disabled
+    assert not mock_stream_magic_client.state.pre_amp_mode
+    assert (
+        MediaPlayerEntityFeature.VOLUME_SET
+        | MediaPlayerEntityFeature.VOLUME_STEP
+        | MediaPlayerEntityFeature.VOLUME_MUTE
+        not in attrs[ATTR_SUPPORTED_FEATURES]
+    )
+
+    # Check for basic media controls
+    assert {
+        TransportControl.PLAY_PAUSE,
+        TransportControl.TRACK_NEXT,
+        TransportControl.TRACK_PREVIOUS,
+    }.issubset(mock_stream_magic_client.now_playing.controls)
+    assert (
+        MediaPlayerEntityFeature.PLAY
+        | MediaPlayerEntityFeature.PAUSE
+        | MediaPlayerEntityFeature.NEXT_TRACK
+        | MediaPlayerEntityFeature.PREVIOUS_TRACK
+        in attrs[ATTR_SUPPORTED_FEATURES]
+    )
+    assert (
+        MediaPlayerEntityFeature.SHUFFLE_SET
+        | MediaPlayerEntityFeature.REPEAT_SET
+        | MediaPlayerEntityFeature.SEEK
+        not in attrs[ATTR_SUPPORTED_FEATURES]
+    )
+
+    mock_stream_magic_client.now_playing.controls = [
+        TransportControl.TOGGLE_REPEAT,
+        TransportControl.TOGGLE_SHUFFLE,
+        TransportControl.SEEK,
+    ]
+    await mock_stream_magic_client.mock_state_update()
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    attrs = state.attributes
+
+    assert (
+        MediaPlayerEntityFeature.SHUFFLE_SET
+        | MediaPlayerEntityFeature.REPEAT_SET
+        | MediaPlayerEntityFeature.SEEK
+        in attrs[ATTR_SUPPORTED_FEATURES]
+    )
+
+    mock_stream_magic_client.state.pre_amp_mode = True
+    await mock_stream_magic_client.mock_state_update()
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    attrs = state.attributes
+    assert (
+        MediaPlayerEntityFeature.VOLUME_SET
+        | MediaPlayerEntityFeature.VOLUME_STEP
+        | MediaPlayerEntityFeature.VOLUME_MUTE
+        in attrs[ATTR_SUPPORTED_FEATURES]
+    )
 
 
 @pytest.mark.parametrize(
@@ -121,8 +139,6 @@ async def test_entity_state(
     hass: HomeAssistant,
     mock_stream_magic_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    monkeypatch: pytest.MonkeyPatch,
-    device_registry: dr.DeviceRegistry,
     power_state: bool,
     play_state: str,
     media_player_state: str,
@@ -136,3 +152,54 @@ async def test_entity_state(
 
     state = hass.states.get(ENTITY_ID)
     assert state.state == media_player_state
+
+
+async def test_media_play_pause_stop(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_stream_magic_client: AsyncMock,
+) -> None:
+    """Test media next previous track service."""
+    await setup_integration(hass, mock_config_entry)
+
+    data = {ATTR_ENTITY_ID: ENTITY_ID}
+
+    # Test for play/pause command when separate play and pause controls are unavailable
+    await hass.services.async_call(MP_DOMAIN, SERVICE_MEDIA_PAUSE, data, True)
+    mock_stream_magic_client.play_pause.assert_called_once()
+
+    await hass.services.async_call(MP_DOMAIN, SERVICE_MEDIA_PLAY, data, True)
+    assert mock_stream_magic_client.play_pause.call_count == 2
+
+    # Test for separate play and pause controls
+    mock_stream_magic_client.now_playing.controls = [
+        TransportControl.PLAY,
+        TransportControl.PAUSE,
+    ]
+    await mock_stream_magic_client.mock_state_update()
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(MP_DOMAIN, SERVICE_MEDIA_PAUSE, data, True)
+    mock_stream_magic_client.pause.assert_called_once()
+
+    await hass.services.async_call(MP_DOMAIN, SERVICE_MEDIA_PLAY, data, True)
+    mock_stream_magic_client.play.assert_called_once()
+
+
+async def test_media_next_previous_track(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_stream_magic_client: AsyncMock,
+) -> None:
+    """Test media next previous track service."""
+    await setup_integration(hass, mock_config_entry)
+
+    data = {ATTR_ENTITY_ID: ENTITY_ID}
+
+    await hass.services.async_call(MP_DOMAIN, SERVICE_MEDIA_NEXT_TRACK, data, True)
+
+    mock_stream_magic_client.next_track.assert_called_once()
+
+    await hass.services.async_call(MP_DOMAIN, SERVICE_MEDIA_PREVIOUS_TRACK, data, True)
+
+    mock_stream_magic_client.previous_track.assert_called_once()
