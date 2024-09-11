@@ -53,7 +53,7 @@ class ServerStatusUpdate(UpdateEntity):
     """LMS Status update sensors via cooridnatior."""
 
     @property
-    def latest_version(self) -> StateType:
+    def latest_version(self) -> str:
         """LMS Status directly from coordinator data."""
         return str(self.coordinator.data[self.entity_description.key])
 
