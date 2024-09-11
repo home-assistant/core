@@ -18,6 +18,7 @@ from homeassistant.components.cover import (
     SERVICE_SET_COVER_POSITION,
     SERVICE_SET_COVER_TILT_POSITION,
     SERVICE_STOP_COVER,
+    SERVICE_STOP_COVER_TILT,
     STATE_CLOSED,
     STATE_CLOSING,
     STATE_OPEN,
@@ -251,8 +252,14 @@ async def test_rpc_cover_tilt(
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
-    mutate_rpc_device_status(monkeypatch, mock_rpc_device, "cover:0", "slat_pos", 0)
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_STOP_COVER_TILT,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    mutate_rpc_device_status(monkeypatch, mock_rpc_device, "cover:0", "slat_pos", 10)
     mock_rpc_device.mock_update()
 
     state = hass.states.get(entity_id)
-    assert state.attributes[ATTR_CURRENT_TILT_POSITION] == 0
+    assert state.attributes[ATTR_CURRENT_TILT_POSITION] == 10
