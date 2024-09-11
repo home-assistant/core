@@ -54,7 +54,6 @@ dependencies    = [
     "pyOpenSSL==24.2.1",
     "orjson==3.10.7",
     "packaging>=23.1",
-    "pip>=21.3.1",
     "psutil-home-assistant==0.0.1",
     "python-slugify==8.0.4",
     "PyYAML==6.0.2",
@@ -66,6 +65,7 @@ dependencies    = [
     # Temporary setting an upper bound, to prevent compat issues with urllib3>=2
     # https://github.com/home-assistant/core/issues/97248
     "urllib3>=1.26.5,<2",
+    "uv==0.4.9",
     "voluptuous==0.15.2",
     "voluptuous-serialize==2.6.0",
     "voluptuous-openapi==0.0.5",
