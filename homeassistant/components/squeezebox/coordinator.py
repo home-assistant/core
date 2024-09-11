@@ -14,6 +14,7 @@ from homeassistant.util import dt as dt_util
 from .const import (
     SENSOR_UPDATE_INTERVAL,
     STATUS_API_TIMEOUT,
+    STATUS_QUERY_VERSION,
     STATUS_SENSOR_LASTSCAN,
     STATUS_SENSOR_NEEDSRESTART,
     STATUS_SENSOR_NEWPLUGINS,
@@ -37,8 +38,10 @@ class LMSStatusDataUpdateCoordinator(DataUpdateCoordinator):
             always_update=False,
         )
         self.lms = lms
-        self.newversion_regex_pre = re.compile('^.*\\(')
-        self.newversion_regex_post = re.compile("<.*$")
+        self.newversion_regex_pre = re.compile("^.*\\(")
+        self.newversion_regex_post = re.compile("\\)\\. <.*$")
+        self.newversion_regex_windows_pre = re.compile("^<ul><li>[\\S]+ ")
+        self.newversion_regex_windows_post = re.compile("[\\D]*</li><li>.*$")
         self.newplugins_regex = re.compile(".* - ")
 
     async def _async_update_data(self) -> dict:
@@ -74,14 +77,27 @@ class LMSStatusDataUpdateCoordinator(DataUpdateCoordinator):
 
         # Updates
         # newversion str not always present
-        # Sample text 'A new version of Logitech Media Server is available (8.5.2 - 0). <a href="updateinfo.html?installerFile=/var/lib/squeezeboxserver/cache/updates/logitechmediaserver_8.5.2_amd64.deb" target="update">Click here for further information</a>.'
+        # Sample text:-
+        # 'A new version of Logitech Media Server is available (8.5.2 - 0). <a href="updateinfo.html?installerFile=/var/lib/squeezeboxserver/cache/updates/logitechmediaserver_8.5.2_amd64.deb" target="update">Click here for further information</a>.'
+        # '<ul><li>Version %s - %s is available for installation.</li><li>:og in to your computer running Logitech Media Server (%s).</li><li>Execute <code>%s</code> and follow the instructions.</li></ul>'
         data[STATUS_SENSOR_NEWVERSION] = (
-            self.newversion_regex_pre.sub("(", self.newversion_regex_post.sub("...", data[STATUS_SENSOR_NEWVERSION]))
+            self.newversion_regex_pre.sub(
+                "",
+                self.newversion_regex_post.sub(
+                    "",
+                    self.newversion_regex_windows_pre.sub(
+                        "",
+                        self.newversion_regex_windows_post.sub(
+                            "", data[STATUS_SENSOR_NEWVERSION]
+                        ),
+                    ),
+                ),
+            )
             if STATUS_SENSOR_NEWVERSION in data
-            else None
+            else data[STATUS_QUERY_VERSION]
         )
         # newplugins str not always present
-        # newplugins': newplugins': 'Plugins have been updated - Restart Required (BBC Sounds)
+        # newplugins': 'Plugins have been updated - Restart Required (BBC Sounds)
         data[STATUS_SENSOR_NEWPLUGINS] = (
             self.newplugins_regex.sub("", data[STATUS_SENSOR_NEWPLUGINS])
             if STATUS_SENSOR_NEWPLUGINS in data
