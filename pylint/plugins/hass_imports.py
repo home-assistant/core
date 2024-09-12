@@ -394,6 +394,28 @@ _OBSOLETE_IMPORT: dict[str, list[ObsoleteImportMatch]] = {
     ],
 }
 
+_IGNORE_ROOT_IMPORT = (
+    "assist_pipeline",
+    "automation",
+    "bluetooth",
+    "cast",
+    "device_automation",
+    "device_tracker",
+    "ffmpeg",
+    "ffmpeg_motion",
+    "google_assistant",
+    "hardware",
+    "homeassistant",
+    "homeassistant_hardware",
+    "http",
+    "manual",
+    "recorder",
+    "script",
+    "sensor",
+    "stream",
+    "zha",
+)
+
 
 # Blacklist of imports that should be using the namespace
 @dataclass
@@ -547,41 +569,15 @@ class HassImportsFormatChecker(BaseChecker):
                     self.add_message("hass-relative-import", node=node)
                     return
 
-        module_parts = node.modname.split(".")
-        module_integration = "" if len(module_parts) < 3 else module_parts[2]
-        if node.modname.startswith("homeassistant.components.") and not (
-            # Exceptions that need investigating
-            module_integration
-            in (
-                "assist_pipeline",
-                "automation",
-                "bluetooth",
-                "cast",
-                "device_automation",
-                "device_tracker",
-                "ffmpeg",
-                "ffmpeg_motion",
-                "google_assistant",
-                "hardware",
-                "homeassistant",
-                "homeassistant_hardware",
-                "http",
-                "manual",
-                "recorder",
-                "script",
-                "sensor",
-                "stream",
-                "zha",
+        if (
+            node.modname.startswith("homeassistant.components.")
+            and (module_parts := node.modname.split("."))
+            and (module_integration := module_parts[2])
+            and module_integration not in _IGNORE_ROOT_IMPORT
+            and not (
+                self.current_package.startswith("tests.components.")
+                and self.current_package.split(".")[2] == module_integration
             )
-            # Exceptions currently in progress
-            or module_integration
-            in (
-                "diagnostics",  # 125821
-                "websocket_api",  # 125834
-            )
-            # Tests for the corresponding component
-            or self.current_package.startswith("tests.components.")
-            and self.current_package.split(".")[2] == module_integration
         ):
             if len(module_parts) > 3:
                 self.add_message("hass-component-root-import", node=node)
