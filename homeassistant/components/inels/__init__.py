@@ -8,7 +8,7 @@ from inelsmqtt import InelsMqtt
 from inelsmqtt.discovery import InelsDiscovery
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -62,25 +62,16 @@ async def _async_config_entry_updated(hass: HomeAssistant, entry: ConfigEntry) -
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up iNELS from a config entry."""
-    if CONF_HOST not in entry.data:
-        LOGGER.error("MQTT broker is not configured")
-        return False
 
     inels_data: dict[str, Any] = {
         BROKER_CONFIG: entry.data,
     }
 
-    mqtt: InelsMqtt = await hass.async_add_executor_job(
-        InelsMqtt, inels_data[BROKER_CONFIG]
-    )
-
+    mqtt = InelsMqtt(inels_data[BROKER_CONFIG])
     inels_data[BROKER] = mqtt
 
-    entry.async_on_unload(entry.add_update_listener(async_reload_entry))
-
-    if isinstance(  # None -> no error, int -> error code
-        await hass.async_add_executor_job(inels_data[BROKER].test_connection), int
-    ):
+    conn_result = await hass.async_add_executor_job(inels_data[BROKER].test_connection)
+    if isinstance(conn_result, int):  # None -> no error, int -> error code
         return False
 
     if hass.data.get(DOMAIN) is None:
@@ -95,7 +86,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await hass.async_add_executor_job(mqtt.close)
         raise ConfigEntryNotReady from exc
 
-    LOGGER.info("Finished discovery, setting up platforms")
+    LOGGER.debug("Finished discovery, setting up platforms")
 
     # save entity ids of old entities
     old_entries: dict[str, list[str]] = {}
@@ -113,7 +104,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data[DOMAIN][entry.entry_id] = inels_data
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    LOGGER.info("Platform setup complete")
 
     LOGGER.info("Cleaning up entities/devices")
     await async_remove_old_entities(hass, entry)
