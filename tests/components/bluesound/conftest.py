@@ -2,10 +2,9 @@
 
 from collections.abc import AsyncGenerator, Generator
 from dataclasses import dataclass
+import ipaddress
 from typing import Any
 from unittest.mock import AsyncMock, patch
-import re
-import ipaddress
 
 from pyblu import Input, Player, Preset, Status, SyncStatus
 import pytest

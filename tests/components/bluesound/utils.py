@@ -9,6 +9,7 @@ class Etag(Protocol):
 
     etag: str
 
+
 class ValueStore[T: Etag]:
     """Store a value and notify all waiting when it changes."""
 

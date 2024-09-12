@@ -3,14 +3,12 @@
 import asyncio
 import dataclasses
 
-from pyblu import Player, Status
 from pyblu.errors import PlayerUnreachableError
 
 from homeassistant.components.media_player import MediaPlayerState
 from homeassistant.core import HomeAssistant
 
 from .conftest import PlayerMocks
-from .utils import ValueStore
 
 
 async def test_pause(

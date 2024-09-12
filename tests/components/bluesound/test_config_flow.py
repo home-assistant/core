@@ -2,7 +2,6 @@
 
 from unittest.mock import AsyncMock
 
-from pyblu import SyncStatus
 from pyblu.errors import PlayerUnreachableError
 
 from homeassistant.components.bluesound.const import DOMAIN
@@ -13,7 +12,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import PlayerMocks
-from .utils import ValueStore
 
 from tests.common import MockConfigEntry
 

@@ -1,25 +1,19 @@
-"""Tests for the Bluesound Media Player platform."""
+"""Test custom actions."""
 
-import asyncio
-import dataclasses
 from unittest.mock import call
 
-from pyblu import Player, Status
-from pyblu.errors import PlayerUnreachableError
 import pytest
 
-from homeassistant.components.media_player import MediaPlayerState
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 
 from .conftest import PlayerMocks
-from .utils import ValueStore
 
 
 async def test_set_sleep_timer(
     hass: HomeAssistant, setup_config_entry: None, player_mocks: PlayerMocks
 ) -> None:
-    """Test the media player pause."""
+    """Test the set sleep timer action."""
     await hass.services.async_call(
         "bluesound",
         "set_sleep_timer",
@@ -33,7 +27,7 @@ async def test_set_sleep_timer(
 async def test_clear_sleep_timer(
     hass: HomeAssistant, setup_config_entry: None, player_mocks: PlayerMocks
 ) -> None:
-    """Test the media player pause."""
+    """Test the clear sleep timer action."""
 
     player_mocks.player_data.player.sleep_timer.side_effect = [15, 30, 45, 60, 90, 0]
 
@@ -50,7 +44,7 @@ async def test_clear_sleep_timer(
 async def test_join_cannot_join_to_self(
     hass: HomeAssistant, setup_config_entry: None, player_mocks: PlayerMocks
 ) -> None:
-    """Test the media player pause."""
+    """Test that joining to self is not allowed."""
     with pytest.raises(ServiceValidationError) as exc:
         await hass.services.async_call(
             "bluesound",
