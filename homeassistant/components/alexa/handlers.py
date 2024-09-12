@@ -232,7 +232,11 @@ async def async_api_turn_off(
 
     service = SERVICE_TURN_OFF
     if entity.domain == cover.DOMAIN:
-        service = cover.SERVICE_CLOSE_COVER
+        supported = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        if supported & cover.CoverEntityFeature.STOP:
+            service = cover.SERVICE_STOP_COVER
+        else:
+            service = cover.SERVICE_CLOSE_COVER
     elif domain == climate.DOMAIN:
         service = climate.SERVICE_TURN_OFF
     elif domain == fan.DOMAIN:
