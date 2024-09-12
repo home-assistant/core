@@ -74,8 +74,8 @@ async def eve_energy_plug_node_fixture(
     )
 
 
-@pytest.fixture(name="eve-thermo_node")
-async def eve_energy_plug_patched_node_fixture(
+@pytest.fixture(name="eve_thermo_node")
+async def eve_thermo_node_fixture(
     hass: HomeAssistant, matter_client: MagicMock
 ) -> MatterNode:
     """Fixture for a Eve Thermo node."""
