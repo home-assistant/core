@@ -382,7 +382,8 @@ async def async_setup_entry(
                 TuyaBinarySensorEntityDescription(
                     name=fault_label,
                     translation_key=fault_label,
-                    key=DPCode.FAULT,
+                    key=f"{DPCode.FAULT}_{fault_label}",
+                    dpcode=DPCode.FAULT,
                     fault_key=fault_label,
                     fault_keys=fault_labels,
                     device_class=BinarySensorDeviceClass.PROBLEM,
@@ -434,9 +435,35 @@ class TuyaBinarySensorEntity(TuyaEntity, BinarySensorEntity):
         """Init Tuya binary sensor."""
         super().__init__(device, device_manager)
         self.entity_description = description
-        self._attr_unique_id = (
-            f"{super().unique_id}{description.key}{description.fault_key or ''}"
+        self._attr_unique_id = f"{super().unique_id}{description.key}"
+
+    def _is_fault_sensor(self) -> bool:
+        """Return true if sensor is a fault sensor."""
+        return (
+            DPCode.FAULT
+            in (self.entity_description.dpcode or self.entity_description.key)
+            and self.entity_description.fault_key is not None
+            and self.entity_description.fault_keys is not None
+            and self.entity_description.fault_key in self.entity_description.fault_keys
         )
+
+    def _is_fault_active(self) -> bool:
+        """Return true if fault sensor is active."""
+        dpcode = self.entity_description.dpcode or self.entity_description.key
+        fault_key = self.entity_description.fault_key
+        fault_keys = self.entity_description.fault_keys
+
+        # Tuya documentation on bitmaps:
+        # https://support.tuya.com/en/help/_detail/K9mc4euc6tq9i
+
+        # Suppose a product has four types of failure:
+        # * No fault: decimal - > 0, binary - > 0000;
+        # * The first kind of fault occurs: decimal - > 1; binary - > 0001;
+        # * The first and second faults occur at the same time: decimal - > 3; binary - > 0011;
+        # * All faults occur simultaneously: decimal - > 15; binary - > 1111;
+        fault_bitmap = bin(self.device.status[dpcode])[2:].zfill(len(fault_keys))
+        fault_index = len(fault_keys) - fault_keys.index(fault_key) - 1
+        return fault_bitmap[fault_index] == "1"
 
     @property
     def is_on(self) -> bool:
@@ -445,42 +472,8 @@ class TuyaBinarySensorEntity(TuyaEntity, BinarySensorEntity):
         if dpcode not in self.device.status:
             return False
 
-        if dpcode == DPCode.FAULT:
-            fault_key = self.entity_description.fault_key
-            if fault_key is None:
-                LOGGER.warning("Fault key not defined")
-                return False
-
-            fault_keys = self.entity_description.fault_keys
-            if fault_keys is None:
-                LOGGER.warning("Fault keys not defined")
-                return False
-
-            if fault_key not in fault_keys:
-                LOGGER.warning(
-                    "Fault key %s not found in fault keys %s",
-                    fault_key,
-                    fault_keys,
-                )
-                return False
-
-            if not isinstance(self.device.status[dpcode], int):
-                LOGGER.warning(
-                    "Fault status is not an integer: %s", self.device.status[dpcode]
-                )
-                return False
-
-            # Tuya documentation on bitmaps:
-            # https://support.tuya.com/en/help/_detail/K9mc4euc6tq9i
-
-            # Suppose a product has four types of failure:
-            # * No fault: decimal - > 0, binary - > 0000;
-            # * The first kind of fault occurs: decimal - > 1; binary - > 0001;
-            # * The first and second faults occur at the same time: decimal - > 3; binary - > 0011;
-            # * All faults occur simultaneously: decimal - > 15; binary - > 1111;
-            fault_bitmap = bin(self.device.status[dpcode])[2:].zfill(len(fault_keys))
-            fault_index = len(fault_keys) - fault_keys.index(fault_key) - 1
-            return fault_bitmap[fault_index] == "1"
+        if self._is_fault_sensor():
+            return self._is_fault_active()
 
         if isinstance(self.entity_description.on_value, set):
             return self.device.status[dpcode] in self.entity_description.on_value
