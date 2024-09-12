@@ -1,6 +1,5 @@
 """Test the Flipr switch for Hub."""
 
-import logging
 from unittest.mock import AsyncMock
 
 from flipr_api.exceptions import FliprError
@@ -19,8 +18,6 @@ from .conftest import MOCK_HUB_STATE_OFF
 
 from tests.common import MockConfigEntry
 
-_LOGGER = logging.getLogger(__name__)
-
 SWITCH_ENTITY_ID = "switch.flipr_hub_myhubid_state"
 
 
@@ -38,11 +35,9 @@ async def test_entities(
 
     # Check entity unique_id value that is generated in FliprEntity base class.
     entity = entity_registry.async_get(SWITCH_ENTITY_ID)
-    _LOGGER.debug("Found entity = %s", entity)
     assert entity.unique_id == "myhubid-hubState"
 
     state = hass.states.get(SWITCH_ENTITY_ID)
-    _LOGGER.debug("Found state = %s", state)
     assert state
     assert state.state == STATE_ON
 
