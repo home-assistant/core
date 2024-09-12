@@ -1,10 +1,7 @@
 """Platform for light integration."""
 
 import asyncio
-from datetime import timedelta
 from typing import Any
-
-from requests.exceptions import RequestException
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -18,11 +15,19 @@ from homeassistant.components.light import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 import homeassistant.util.color as color_util
 
-from .const import _LOGGER, CONF_CHANNEL, CONF_LIGHT_TYPE
+from .const import (
+    _LOGGER,
+    AXION_MANUFACTURER_NAME,
+    AXION_MODEL_NAME,
+    CONF_CHANNEL,
+    CONF_LIGHT_TYPE,
+    DOMAIN,
+)
+from .coordinator import AxionDataUpdateCoordinator
 
 
 async def async_setup_entry(
@@ -35,20 +40,7 @@ async def async_setup_entry(
     channel = config_entry.data[CONF_CHANNEL]
     light_type = config_entry.data[CONF_LIGHT_TYPE]
 
-    async def async_update_data():
-        """Fetch data from API endpoint."""
-        try:
-            return await api.get_level(channel)
-        except RequestException as err:
-            raise UpdateFailed("Error communicating with API") from err
-
-    coordinator = DataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        name="light",
-        update_method=async_update_data,
-        update_interval=timedelta(seconds=5),
-    )
+    coordinator = AxionDataUpdateCoordinator(hass, api, channel)
     await coordinator.async_config_entry_first_refresh()
 
     async_add_entities([AxionDMXLight(coordinator, api, channel, light_type)], True)
@@ -57,7 +49,17 @@ async def async_setup_entry(
 class AxionDMXLight(LightEntity):
     """Representation of an Axion Light."""
 
-    def __init__(self, coordinator, api, channel, light_type) -> None:
+    _attr_has_entity_name = True
+    _attr_name = None
+    _attr_should_poll = False
+
+    def __init__(
+        self,
+        coordinator: AxionDataUpdateCoordinator,
+        api: Any,
+        channel: int,
+        light_type: str,
+    ) -> None:
         """Initialize an Axion Light."""
         self.coordinator = coordinator
         self.api = api
@@ -66,17 +68,23 @@ class AxionDMXLight(LightEntity):
         self._name = f"Axion Light {channel}"
         self._unique_id = f"axion_dmx_light_{channel}"
         self._is_on = False
-        self._brightness = 255
-        self._hs_color = (0, 0)  # Default to white
-        self._last_hs_color = (0, 0)
-        self._rgbw_color = (0, 0, 0, 0)  # Default values for RGBW
-        self._last_rgbw = (0, 0, 0, 0)
-        self._rgbww_color = (0, 0, 0, 0, 0)  # Default values for RGBWW
-        self._last_rgbww = (0, 0, 0, 0, 0)
-        self._color_temp = 1
+        self._attr_brightness = 255
+        self._attr_hs_color = (0, 0)  # Default to white
+        self._last_hs_color: tuple[float, float] | None = (0, 0)
+        self._attr_rgbw_color = (0, 0, 0, 0)  # Default values for RGBW
+        self._last_rgbw: tuple[int, int, int, int] | None = (0, 0, 0, 0)
+        self._attr_rgbww_color = (0, 0, 0, 0, 0)  # Default values for RGBWW
+        self._last_rgbww: tuple[int, int, int, int, int] | None = (0, 0, 0, 0, 0)
+        self._attr_color_temp = 1
         self._last_color_temp = 1
         self._attr_color_mode = ColorMode.BRIGHTNESS
         self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self._unique_id)},
+            name=self._name,
+            manufacturer=AXION_MANUFACTURER_NAME,
+            model=AXION_MODEL_NAME,
+        )
 
         if light_type == "RGB":
             self._attr_color_mode = ColorMode.HS
@@ -95,54 +103,14 @@ class AxionDMXLight(LightEntity):
             self._attr_supported_color_modes.add(ColorMode.COLOR_TEMP)
 
     @property
-    def name(self) -> str:
-        """Return the display name of this light."""
-        return self._name
-
-    @property
     def is_on(self) -> bool:
         """Return true if light is on."""
         return self._is_on
 
     @property
-    def brightness(self) -> int:
-        """Return the brightness of the light."""
-        return self._brightness
-
-    @property
-    def color_mode(self) -> str:
-        """Return the current color mode of this light."""
-        return self._attr_color_mode if self._attr_color_mode is not None else ""
-
-    @property
-    def hs_color(self) -> tuple[float, float] | None:
-        """Return the color of the light."""
-        return self._hs_color
-
-    @property
-    def rgbw_color(self) -> tuple[int, int, int, int] | None:
-        """Return the rgbw color value."""
-        return self._rgbw_color
-
-    @property
-    def rgbww_color(self) -> tuple[int, int, int, int, int] | None:
-        """Return the rgbww color value."""
-        return self._rgbww_color
-
-    @property
-    def color_temp(self) -> int:
-        """Return the color temperature of the light."""
-        return color_util.color_temperature_kelvin_to_mired(self._color_temp)
-
-    @property
     def unique_id(self) -> str:
         """Return the unique ID of this light."""
         return self._unique_id
-
-    @property
-    def supported_color_modes(self) -> set[ColorMode] | set[str] | None:
-        """Flag supported color modes."""
-        return self._attr_supported_color_modes
 
     @property
     def supported_features(self) -> LightEntityFeature:
@@ -155,7 +123,7 @@ class AxionDMXLight(LightEntity):
         self._is_on = True
 
         # Handling brightness
-        self._brightness = kwargs.get(ATTR_BRIGHTNESS, 255)
+        self._attr_brightness = kwargs.get(ATTR_BRIGHTNESS, 255)
 
         # Function to scale color values by brightness
         def scale_brightness(color_value, brightness, max_brightness):
@@ -202,85 +170,98 @@ class AxionDMXLight(LightEntity):
         if self._light_type in ["RGB", "RGBW", "RGBWW"]:
             if ATTR_HS_COLOR in kwargs:
                 self._attr_color_mode = ColorMode.HS
-                self._hs_color = kwargs[ATTR_HS_COLOR]
-                _LOGGER.debug(f"RGB before scaling - {self._hs_color}")
-                rgb = color_util.color_hs_to_RGB(*self._hs_color)
+                self._attr_hs_color = kwargs[ATTR_HS_COLOR]
+                _LOGGER.debug(f"RGB before scaling - {self._attr_hs_color}")
+                if self._attr_hs_color is not None:
+                    rgb = color_util.color_hs_to_RGB(*self._attr_hs_color)
             elif ATTR_RGBW_COLOR in kwargs:
                 self._attr_color_mode = ColorMode.RGBW
-                self._rgbw_color = rgbw = kwargs[ATTR_RGBW_COLOR]
-                _LOGGER.debug(f"RGBW before scaling - {self._rgbw_color}")
+                self._attr_rgbw_color = rgbw = kwargs[ATTR_RGBW_COLOR]
+                _LOGGER.debug(f"RGBW before scaling - {self._attr_rgbw_color}")
             elif ATTR_RGBWW_COLOR in kwargs:
                 self._attr_color_mode = ColorMode.RGBWW
-                self._rgbww_color = rgbww = kwargs[ATTR_RGBWW_COLOR]
-                _LOGGER.debug(f"RGBWW before scaling - {self._rgbww_color}")
+                self._attr_rgbww_color = rgbww = kwargs[ATTR_RGBWW_COLOR]
+                _LOGGER.debug(f"RGBWW before scaling - {self._attr_rgbww_color}")
 
             if rgb is not None:
                 # Scale the previously known RGB values
-                scaled_rgb = [scale_brightness(c, self._brightness, 255) for c in rgb]
+                scaled_rgb = [
+                    scale_brightness(c, self._attr_brightness, 255) for c in rgb
+                ]
                 _LOGGER.debug(f"RGB after scaling - {scaled_rgb}")
                 await self.api.set_color(self._channel, scaled_rgb)
-                self._last_hs_color = self._hs_color
+                self._last_hs_color = self._attr_hs_color
             elif rgbw is not None:
                 # Scale the previously known RGBW values
-                scaled_rgbw = [scale_brightness(c, self._brightness, 255) for c in rgbw]
+                scaled_rgbw = [
+                    scale_brightness(c, self._attr_brightness, 255) for c in rgbw
+                ]
                 _LOGGER.debug(f"RGBW after scaling - {scaled_rgbw}")
                 await self.api.set_rgbw(self._channel, scaled_rgbw)
-                self._last_rgbw = self._rgbw_color
+                self._last_rgbw = self._attr_rgbw_color
             elif rgbww is not None:
                 # Scale the previously known RGBWW values
                 scaled_rgbww = [
-                    scale_brightness(c, self._brightness, 255) for c in rgbww
+                    scale_brightness(c, self._attr_brightness, 255) for c in rgbww
                 ]
                 _LOGGER.debug(f"RGBWW after scaling - {scaled_rgbww}")
                 await self.api.set_rgbww(self._channel, scaled_rgbww)
-                self._last_rgbww = self._rgbww_color
+                self._last_rgbww = self._attr_rgbww_color
             else:
                 _LOGGER.debug("No color is specified, use the last known color")
                 # If no color is specified, use the last known color
                 if self._light_type == "RGB":
                     _LOGGER.debug(f"Using the last RGB - {self._last_hs_color}")
-                    rgb = color_util.color_hs_to_RGB(*self._last_hs_color)
-                    scaled_rgb = [
-                        scale_brightness(c, self._brightness, 255) for c in rgb
-                    ]
+                    if self._last_hs_color is not None:
+                        rgb = color_util.color_hs_to_RGB(*self._last_hs_color)
+                    if rgb is not None:
+                        scaled_rgb = [
+                            scale_brightness(c, self._attr_brightness, 255) for c in rgb
+                        ]
                     await self.api.set_color(self._channel, scaled_rgb)
                 elif self._light_type == "RGBW":
                     _LOGGER.debug(f"Using the last RGBW - {self._last_rgbw}")
                     rgbw = self._last_rgbw
-                    scaled_rgbw = [
-                        scale_brightness(c, self._brightness, 255) for c in rgbw
-                    ]
+                    if rgbw is not None:
+                        scaled_rgbw = [
+                            scale_brightness(c, self._attr_brightness, 255)
+                            for c in rgbw
+                        ]
                     await self.api.set_rgbw(self._channel, scaled_rgbw)
                 elif self._light_type == "RGBWW":
                     _LOGGER.debug(f"Using the last RGBWW - {self._last_rgbww}")
                     rgbww = self._last_rgbww
-                    scaled_rgbww = [
-                        scale_brightness(c, self._brightness, 255) for c in rgbww
-                    ]
+                    if rgbww is not None:
+                        scaled_rgbww = [
+                            scale_brightness(c, self._attr_brightness, 255)
+                            for c in rgbww
+                        ]
                     await self.api.set_rgbww(self._channel, scaled_rgbww)
         elif self._light_type == "Tunable White":
             if ATTR_COLOR_TEMP in kwargs:
                 self._attr_color_mode = ColorMode.COLOR_TEMP
-                self._color_temp = color_util.color_temperature_mired_to_kelvin(
+                self._attr_color_temp = color_util.color_temperature_mired_to_kelvin(
                     kwargs[ATTR_COLOR_TEMP]
                 )
             else:
-                self._color_temp = self._last_color_temp
+                self._attr_color_temp = self._last_color_temp
 
             warm_white_level, cold_white_level = get_tunable_white_levels(
-                self._color_temp,
+                self._attr_color_temp,
                 warm_white_k=1800,  # Fixed value for warm white LED
                 cool_white_k=6000,  # Fixed value for cold white LED
                 max_level=255,
-                brightness=self._brightness,
+                brightness=self._attr_brightness
+                if self._attr_brightness is not None
+                else 255,
             )
-            self._last_color_temp = self._color_temp
+            self._last_color_temp = self._attr_color_temp
             _LOGGER.debug(f"Setting Warm Light level - {warm_white_level}")
             await self.api.set_level(self._channel, warm_white_level)
             _LOGGER.debug(f"Setting Cold White level - {cold_white_level}")
             await self.api.set_level(self._channel + 1, cold_white_level)
         else:
-            await self.api.set_level(self._channel, self._brightness)
+            await self.api.set_level(self._channel, self._attr_brightness)
 
         # Add a small delay to allow the controller to process the command
         await asyncio.sleep(0.5)
@@ -295,14 +276,14 @@ class AxionDMXLight(LightEntity):
         await self.api.set_level(self._channel, 0)
 
         if self._light_type in ["RGB", "RGBW", "RGBWW"]:
-            self._last_hs_color = self._hs_color
+            self._last_hs_color = self._attr_hs_color
             await self.api.set_level((self._channel + 1), 0)
             await self.api.set_level((self._channel + 2), 0)
             if self._light_type in ["RGBW", "RGBWW"]:
-                self._last_rgbw = self._rgbw_color
+                self._last_rgbw = self._attr_rgbw_color
                 await self.api.set_level((self._channel + 3), 0)
                 if self._light_type == "RGBWW":
-                    self._last_rgbww = self._rgbww_color
+                    self._last_rgbww = self._attr_rgbww_color
                     await self.api.set_level((self._channel + 4), 0)
         elif self._light_type == "Tunable White":
             await self.api.set_level(self._channel + 1, 0)
@@ -318,7 +299,7 @@ class AxionDMXLight(LightEntity):
         """Fetch new state data for this light."""
         level = await self.api.get_level(self._channel)
         self._is_on = level > 0
-        self._brightness = level
+        self._attr_brightness = level
 
         if self._light_type in ["RGB", "RGBW", "RGBWW"]:
             # Assuming the RGB values are stored in a way to fetch them
@@ -326,29 +307,26 @@ class AxionDMXLight(LightEntity):
             g = await self.api.get_level(self._channel + 1)
             b = await self.api.get_level(self._channel + 2)
             hs_color = color_util.color_RGB_to_hs(r, g, b)
-            self._hs_color = (int(hs_color[0]), int(hs_color[1]))
+            self._attr_hs_color = (int(hs_color[0]), int(hs_color[1]))
 
             # Determine if the light is on based on any of the RGB channels being non-zero
             self._is_on = any([r, g, b])
-            self._brightness = max(r, g, b)
+            self._attr_brightness = max(r, g, b)
 
             if self._light_type in ["RGBW", "RGBWW"]:
                 w1 = await self.api.get_level(self._channel + 3)
-                self._rgbw_color = (r, g, b, w1)
+                self._attr_rgbw_color = (r, g, b, w1)
                 self._is_on = any([r, g, b, w1])
-                self._brightness = max(r, g, b, w1)
+                self._attr_brightness = max(r, g, b, w1)
 
                 if self._light_type == "RGBWW":
                     w2 = await self.api.get_level(self._channel + 4)
-                    self._rgbww_color = (r, g, b, w1, w2)
+                    self._attr_rgbww_color = (r, g, b, w1, w2)
                     self._is_on = any([r, g, b, w1, w2])
-                    self._brightness = max(r, g, b, w1, w2)
+                    self._attr_brightness = max(r, g, b, w1, w2)
 
         elif self._light_type == "Tunable White":
             cold_white_level = await self.api.get_level(self._channel)
             warm_white_level = await self.api.get_level(self._channel + 1)
             self._is_on = any([cold_white_level, warm_white_level])
-            self._brightness = max(cold_white_level, warm_white_level)
-
-        # # Make sure to update the state in Home Assistant
-        # self.async_write_ha_state()
+            self._attr_brightness = max(cold_white_level, warm_white_level)
