@@ -1,4 +1,4 @@
-"""Platform for sensor integration for squeezebox."""
+"""Platform for update integration for squeezebox."""
 
 from __future__ import annotations
 
