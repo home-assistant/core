@@ -47,12 +47,14 @@ async def test_config_flow(hass: HomeAssistant) -> None:
     with patch(
         "homeassistant.components.bayesian.async_setup_entry", return_value=True
     ) as mock_setup_entry:
+        # Open config flow
         result0 = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
         assert result0["step_id"] == str(ConfigFlowSteps.USER)
         assert result0["type"] is FlowResultType.FORM
 
+        # Enter basic settings
         result1 = await hass.config_entries.flow.async_configure(
             result0["flow_id"],
             {
@@ -63,9 +65,12 @@ async def test_config_flow(hass: HomeAssistant) -> None:
             },
         )
         await hass.async_block_till_done()
+
+        # Confirm the next page is the observation type selector
         assert result1["step_id"] == str(ConfigFlowSteps.OBSERVATION_SELECTOR)
         assert result1["type"] is FlowResultType.MENU
 
+        # Set up a numeric state observation first
         result2 = await hass.config_entries.flow.async_configure(
             result1["flow_id"], {"next_step_id": str(ObservationTypes.NUMERIC_STATE)}
         )
@@ -73,6 +78,9 @@ async def test_config_flow(hass: HomeAssistant) -> None:
 
         assert result2["step_id"] == str(ObservationTypes.NUMERIC_STATE)
         assert result2["type"] is FlowResultType.FORM
+
+        # Set up a numeric range with only 'Above'
+        # Also indirectly tests the conversion of proabilities to fractions
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"],
             {
@@ -84,11 +92,13 @@ async def test_config_flow(hass: HomeAssistant) -> None:
                 "add_another": True,
             },
         )
-
         await hass.async_block_till_done()
+
+        # Since "add_another" was True, we should return to the observation selector
         assert result3["step_id"] == str(ConfigFlowSteps.OBSERVATION_SELECTOR)
         assert result3["type"] is FlowResultType.MENU
 
+        # Add a state observation
         result4 = await hass.config_entries.flow.async_configure(
             result3["flow_id"], {"next_step_id": str(ObservationTypes.STATE)}
         )
@@ -108,9 +118,12 @@ async def test_config_flow(hass: HomeAssistant) -> None:
             },
         )
         await hass.async_block_till_done()
+
+        # Since "add_another" was True, we should return to the observation selector
         assert result5["step_id"] == str(ConfigFlowSteps.OBSERVATION_SELECTOR)
         assert result5["type"] is FlowResultType.MENU
 
+        # Lastly, add a template observation
         result6 = await hass.config_entries.flow.async_configure(
             result5["flow_id"], {"next_step_id": str(ObservationTypes.TEMPLATE)}
         )
@@ -138,6 +151,7 @@ False
             },
         )
 
+        # Since add_another is false, we should now be done.
         assert result7["version"] == 1
         assert result7["options"] == {
             CONF_NAME: "Office occupied",
@@ -175,7 +189,11 @@ False
 
 
 async def test_single_state_observation(hass: HomeAssistant) -> None:
-    """Test we get the form."""
+    """Test a Bayesian sensor with just one state observation added.
+
+    Technically a subset of the tests in test_config_flow() but may help to
+    narrow down errors more quickly.
+    """
 
     with patch(
         "homeassistant.components.bayesian.async_setup_entry", return_value=True
@@ -240,7 +258,11 @@ async def test_single_state_observation(hass: HomeAssistant) -> None:
 
 
 async def test_single_numeric_state_observation(hass: HomeAssistant) -> None:
-    """Test we get the form."""
+    """Test a Bayesian sensor with just one numeric_state observation added.
+
+    Technically a subset of the tests in test_config_flow() but may help to
+    narrow down errors more quickly.
+    """
 
     with patch(
         "homeassistant.components.bayesian.async_setup_entry", return_value=True
@@ -305,7 +327,11 @@ async def test_single_numeric_state_observation(hass: HomeAssistant) -> None:
 
 
 async def test_single_template_observation(hass: HomeAssistant) -> None:
-    """Test we get the form."""
+    """Test a Bayesian sensor with just one template observation added.
+
+    Technically a subset of the tests in test_config_flow() but may help to
+    narrow down errors more quickly.
+    """
 
     with patch(
         "homeassistant.components.bayesian.async_setup_entry", return_value=True
@@ -367,8 +393,8 @@ async def test_single_template_observation(hass: HomeAssistant) -> None:
 
 
 async def test_basic_options(hass: HomeAssistant) -> None:
-    """Test reconfiguring the basic options."""
-    # Setup the config entry
+    """Test reconfiguring the basic options using an options flow."""
+
     config_entry = MockConfigEntry(
         data={},
         domain=DOMAIN,
@@ -390,16 +416,22 @@ async def test_basic_options(hass: HomeAssistant) -> None:
         },
         title="Office occupied",
     )
+    # Setup the mock config entry
     config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
+    # Give the sensor a real value
     hass.states.async_set("sensor.office_illuminance_lux", 50)
 
+    # Start the options flow
     result0 = await hass.config_entries.options.async_init(config_entry.entry_id)
+
+    # Confirm the first page is the menu of options flow functions
     assert result0["type"] is FlowResultType.MENU
     assert result0["step_id"] == str(OptionsFlowSteps.INIT)
 
+    # Choose to reconfigure the basic options
     result1 = await hass.config_entries.options.async_configure(
         result0["flow_id"], {"next_step_id": str(OptionsFlowSteps.BASE_OPTIONS)}
     )
@@ -407,6 +439,7 @@ async def test_basic_options(hass: HomeAssistant) -> None:
     assert result1["step_id"] == str(OptionsFlowSteps.BASE_OPTIONS)
     assert result1["type"] is FlowResultType.FORM
 
+    # Change all possible settings (name can be changed elsewhere in the UI)
     await hass.config_entries.options.async_configure(
         result1["flow_id"],
         {
@@ -416,6 +449,8 @@ async def test_basic_options(hass: HomeAssistant) -> None:
         },
     )
     await hass.async_block_till_done()
+
+    # Confirm the changes stuck
     assert hass.config_entries.async_get_entry(config_entry.entry_id).options == {
         CONF_NAME: "Office occupied",
         CONF_PROBABILITY_THRESHOLD: 0.49,
@@ -461,6 +496,7 @@ async def test_add_single_state_obvservation(hass: HomeAssistant) -> None:
         },
         title="Office occupied",
     )
+    # Add the config entry
     config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
@@ -478,7 +514,7 @@ async def test_add_single_state_obvservation(hass: HomeAssistant) -> None:
     assert result1["step_id"] == str(OptionsFlowSteps.ADD_OBSERVATION)
     assert result1["type"] is FlowResultType.MENU
 
-    # First test adding a single state observation
+    # Test adding a single state observation
     result2 = await hass.config_entries.options.async_configure(
         result1["flow_id"], {"next_step_id": CONF_STATE}
     )
@@ -563,12 +599,15 @@ async def test_editing_observations(hass: HomeAssistant) -> None:
         },
         title="Office occupied",
     )
+
+    # Set up the mock entry
     config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
     hass.states.async_set("sensor.office_illuminance_lux", 50)
 
+    # Move through the options flow steps to edit an observation
     result0 = await hass.config_entries.options.async_init(config_entry.entry_id)
     assert result0["type"] is FlowResultType.MENU
     assert result0["step_id"] == str(OptionsFlowSteps.INIT)
@@ -591,9 +630,12 @@ async def test_editing_observations(hass: HomeAssistant) -> None:
         result1["flow_id"], {CONF_INDEX: "1"}
     )
     await hass.async_block_till_done()
+
+    # Confirm that we get the edit observation page
     assert result2["step_id"] == str(OptionsFlowSteps.EDIT_OBSERVATION)
     assert result2["type"] is FlowResultType.FORM
 
+    # Edit all settings
     await hass.config_entries.options.async_configure(
         result2["flow_id"],
         {
@@ -605,6 +647,8 @@ async def test_editing_observations(hass: HomeAssistant) -> None:
         },
     )
     await hass.async_block_till_done()
+
+    # Confirm the changes to the state config
     assert hass.config_entries.async_get_entry(config_entry.entry_id).options == {
         CONF_NAME: "Office occupied",
         CONF_PROBABILITY_THRESHOLD: 0.5,
@@ -637,7 +681,7 @@ async def test_editing_observations(hass: HomeAssistant) -> None:
         ],
     }
 
-    # Next test edit a numeric_state observation
+    # Next test editing a numeric_state observation
     result0 = await hass.config_entries.options.async_init(config_entry.entry_id)
     result1 = await hass.config_entries.options.async_configure(
         result0["flow_id"],
@@ -730,7 +774,7 @@ True
 {% else %}
 False
 {% endif %}
-""",
+""",  # changed the end_time
             CONF_P_GIVEN_T: 55,
             CONF_P_GIVEN_F: 13,
             CONF_NAME: "Office hours",
@@ -809,12 +853,14 @@ async def test_delete_observations(hass: HomeAssistant) -> None:
         },
         title="Office occupied",
     )
+    # Set up the config entry
     config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
     hass.states.async_set("sensor.office_illuminance_lux", 50)
 
+    # Move through the options flow to removing observations
     result0 = await hass.config_entries.options.async_init(config_entry.entry_id)
     assert result0["type"] is FlowResultType.MENU
     assert result0["step_id"] == str(OptionsFlowSteps.INIT)
@@ -824,6 +870,8 @@ async def test_delete_observations(hass: HomeAssistant) -> None:
         {"next_step_id": str(OptionsFlowSteps.REMOVE_OBSERVATION)},
     )
     await hass.async_block_till_done()
+
+    # Confirm the remove observation page shows correctly with all obs present
     assert result1["step_id"] == str(OptionsFlowSteps.REMOVE_OBSERVATION)
     assert result1["type"] is FlowResultType.FORM
     assert result1["data_schema"].schema[CONF_INDEX].options == {
@@ -832,7 +880,7 @@ async def test_delete_observations(hass: HomeAssistant) -> None:
         "2": "Daylight hours (template)",
     }
 
-    # First test delete a state observation
+    # First test deleting a single state observation
     await hass.config_entries.options.async_configure(
         result1["flow_id"], {CONF_INDEX: ["1"]}
     )
@@ -862,7 +910,7 @@ async def test_delete_observations(hass: HomeAssistant) -> None:
         ],
     }
 
-    # next delete all remaining observations
+    # next delete the two remaining observations
     result0 = await hass.config_entries.options.async_init(config_entry.entry_id)
     result1 = await hass.config_entries.options.async_configure(
         result0["flow_id"],
@@ -1059,6 +1107,8 @@ async def test_config_flow_preview(
     """Test the config flow preview."""
     client = await hass_ws_client(hass)
     input_entities = ["one", "two"]
+
+    # Start the config flow
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -1078,6 +1128,7 @@ async def test_config_flow_preview(
     assert result["step_id"] == str(ConfigFlowSteps.OBSERVATION_SELECTOR)
     assert result["type"] is FlowResultType.MENU
 
+    # Choose to add a template
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"next_step_id": str(ObservationTypes.TEMPLATE)}
     )
@@ -1088,6 +1139,7 @@ async def test_config_flow_preview(
     assert result["errors"] is None
     assert result["preview"] == str(ObservationTypes.TEMPLATE)
 
+    # Send a valid config to the websocket
     await client.send_json_auto_id(
         {
             "type": "template/start_preview",
@@ -1114,15 +1166,18 @@ async def test_config_flow_preview(
             "entities": unordered([f"{template_type}.{_id}" for _id in listeners[0]]),
             "time": False,
         },
+        # Since bayesian coerces templates to bool, we need to do the same
         str(ObservationTypes.STATE): result_as_boolean(template_states[0]),
     }
 
+    # set the states of the entities
     for input_entity in input_entities:
         hass.states.async_set(
             f"{template_type}.{input_entity}", input_states[input_entity], {}
         )
         await hass.async_block_till_done()
 
+    # Run through the remaining template states
     for template_state in template_states[1:]:
         msg = await client.receive_json(timeout=3)
         assert msg["event"] == {
@@ -1188,12 +1243,15 @@ async def test_options_flow_preview(
         },
         title="Office occupied",
     )
+    # Setup the config entry
     config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
     client = await hass_ws_client(hass)
     input_entities = ["one", "two"]
+
+    # Start an run through the options flow to adding a template observation
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     assert result["step_id"] == str(OptionsFlowSteps.INIT)
     assert result["type"] is FlowResultType.MENU
@@ -1209,11 +1267,13 @@ async def test_options_flow_preview(
     )
     await hass.async_block_till_done()
 
+    # Confirm we have arrived at adding a template observation
     assert result["step_id"] == str(ObservationTypes.TEMPLATE)
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
     assert result["preview"] == str(ObservationTypes.TEMPLATE)
 
+    # Send a valid config to the websocket
     await client.send_json_auto_id(
         {
             "type": "template/start_preview",
@@ -1240,15 +1300,18 @@ async def test_options_flow_preview(
             "entities": unordered([f"{template_type}.{_id}" for _id in listeners[0]]),
             "time": False,
         },
+        # Since bayesian coerces the template result to bool, we need to as well
         str(ObservationTypes.STATE): result_as_boolean(template_states[0]),
     }
 
+    # Set up the input entities
     for input_entity in input_entities:
         hass.states.async_set(
             f"{template_type}.{input_entity}", input_states[input_entity], {}
         )
         await hass.async_block_till_done()
 
+    # test the remaining states
     for template_state in template_states[1:]:
         msg = await client.receive_json(timeout=3)
         assert msg["event"] == {
@@ -1263,7 +1326,7 @@ async def test_options_flow_preview(
             },
             str(ObservationTypes.STATE): result_as_boolean(template_state),
         }
-    # length is the two pytest entities and the bayesian sensor
+    # length is the two input entities and the mock config bayesian sensor
     assert len(hass.states.async_all()) == 3
 
 
@@ -1301,8 +1364,11 @@ async def test_bad_config_flow_preview(
     template_states: str,
     listeners: list[list[str]],
 ) -> None:
-    """Test the config flow preview."""
+    """Test the config flow preview with unfinished templates."""
+
     client = await hass_ws_client(hass)
+
+    # Move through the config flow to adding a template
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -1327,11 +1393,13 @@ async def test_bad_config_flow_preview(
     )
     await hass.async_block_till_done()
 
+    # Confirm we have arrived at adding a template
     assert result["step_id"] == str(ObservationTypes.TEMPLATE)
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
     assert result["preview"] == str(ObservationTypes.TEMPLATE)
 
+    # Send an invalid config
     await client.send_json_auto_id(
         {
             "type": "template/start_preview",
@@ -1386,6 +1454,8 @@ async def test_config_flow_preview_template_startup_error(
     """Tests an error when using states('') syntax without default."""
     client = await hass_ws_client(hass)
     input_entities = ["one", "two"]
+
+    # Move through the config flow to adding a template
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -1410,6 +1480,7 @@ async def test_config_flow_preview_template_startup_error(
     )
     await hass.async_block_till_done()
 
+    # Confirm we have arrived at adding a template
     assert result["step_id"] == str(ObservationTypes.TEMPLATE)
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
@@ -1439,9 +1510,7 @@ async def test_config_flow_preview_template_startup_error(
 
     msg = await client.receive_json()
     assert msg["type"] == "event"
-    assert msg["event"][str(ObservationTypes.STATE)] == result_as_boolean(
-        template_states[0]
-    )
+    assert msg["event"]["state"] == result_as_boolean(template_states[0])
 
     for input_entity in input_entities:
         hass.states.async_set(
@@ -1450,6 +1519,4 @@ async def test_config_flow_preview_template_startup_error(
 
     msg = await client.receive_json()
     assert msg["type"] == "event"
-    assert msg["event"][str(ObservationTypes.STATE)] == result_as_boolean(
-        template_states[1]
-    )
+    assert msg["event"]["state"] == result_as_boolean(template_states[1])
