@@ -351,6 +351,47 @@ async def async_setup_entry(
     """Set up Tuya binary sensor dynamically through Tuya discovery."""
     hass_data = entry.runtime_data
 
+    def _get_fault_labels(device: CustomerDevice) -> list[str]:
+        """Return fault labels for the device."""
+        if DPCode.FAULT not in device.status_range:
+            return []
+
+        fault_type = DPType(device.status_range[DPCode.FAULT].type)
+        if fault_type != DPType.BITMAP:
+            return []
+
+        fault_values = json.loads(device.status_range[DPCode.FAULT].values)
+        if "label" not in fault_values:
+            return []
+
+        fault_labels = fault_values["label"]
+        if not isinstance(fault_labels, list) or not all(
+            isinstance(label, str) for label in fault_labels
+        ):
+            return []
+
+        return fault_labels
+
+    def _get_fault_sensors(device: CustomerDevice) -> list[TuyaBinarySensorEntity]:
+        """Return fault sensors for the device."""
+        fault_labels = _get_fault_labels(device)
+        return [
+            TuyaBinarySensorEntity(
+                device,
+                hass_data.manager,
+                TuyaBinarySensorEntityDescription(
+                    name=fault_label,
+                    translation_key=fault_label,
+                    key=DPCode.FAULT,
+                    fault_key=fault_label,
+                    fault_keys=fault_labels,
+                    device_class=BinarySensorDeviceClass.PROBLEM,
+                    entity_category=EntityCategory.DIAGNOSTIC,
+                ),
+            )
+            for fault_label in fault_labels
+        ]
+
     @callback
     def async_discover_device(device_ids: list[str]) -> None:
         """Discover and add a discovered Tuya binary sensor."""
@@ -367,33 +408,8 @@ async def async_setup_entry(
                             )
                         )
 
-            if DPCode.FAULT in device.status:
-                if DPCode.FAULT not in device.status_range:
-                    continue
-
-                fault_type = DPType(device.status_range[DPCode.FAULT].type)
-                if fault_type != DPType.BITMAP:
-                    continue
-
-                fault_values = json.loads(device.status_range[DPCode.FAULT].values)
-                if "label" not in fault_values:
-                    continue
-
-                fault_labels = fault_values["label"]
-                for fault_label in fault_labels:
-                    entity_description = TuyaBinarySensorEntityDescription(
-                        name=fault_label,
-                        translation_key=fault_label,
-                        key=DPCode.FAULT,
-                        fault_key=fault_label,
-                        fault_keys=fault_labels,
-                        device_class=BinarySensorDeviceClass.PROBLEM,
-                        entity_category=EntityCategory.DIAGNOSTIC,
-                    )
-                    entity = TuyaBinarySensorEntity(
-                        device, hass_data.manager, entity_description
-                    )
-                    entities.append(entity)
+            if fault_sensors := _get_fault_sensors(device):
+                entities.extend(fault_sensors)
 
         async_add_entities(entities)
 
