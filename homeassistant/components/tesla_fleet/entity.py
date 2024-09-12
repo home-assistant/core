@@ -86,8 +86,7 @@ class TeslaFleetEntity(
         if not self.scoped:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
-                translation_key="missing_scope",
-                translation_placeholders={"scope": scope},
+                translation_key=f"missing_scope_{scope.name.lower()}",
             )
 
 
