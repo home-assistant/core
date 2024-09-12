@@ -13,8 +13,8 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 _LOGGER = logging.getLogger(__name__)
 
 
-class FliprDataUpdateCoordinator(DataUpdateCoordinator):
-    """Class to hold Flipr data retrieval."""
+class BaseDataUpdateCoordinator(DataUpdateCoordinator):
+    """Parent class to hold Flipr and Hub data retrieval."""
 
     config_entry: ConfigEntry
 
@@ -32,11 +32,30 @@ class FliprDataUpdateCoordinator(DataUpdateCoordinator):
             update_interval=timedelta(minutes=15),
         )
 
+
+class FliprDataUpdateCoordinator(BaseDataUpdateCoordinator):
+    """Class to hold Flipr data retrieval."""
+
     async def _async_update_data(self):
         """Fetch data from API endpoint."""
         try:
             data = await self.hass.async_add_executor_job(
                 self.client.get_pool_measure_latest, self.device_id
+            )
+        except FliprError as error:
+            raise UpdateFailed(error) from error
+
+        return data
+
+
+class HubDataUpdateCoordinator(BaseDataUpdateCoordinator):
+    """Class to hold Flipr hub data retrieval."""
+
+    async def _async_update_data(self):
+        """Fetch data from API endpoint."""
+        try:
+            data = await self.hass.async_add_executor_job(
+                self.client.get_hub_state, self.device_id
             )
         except FliprError as error:
             raise UpdateFailed(error) from error
