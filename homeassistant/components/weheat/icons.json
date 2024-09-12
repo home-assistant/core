@@ -30,6 +30,9 @@
       },
       "heat_pump_state": {
         "default": "mdi:state-machine"
+      },
+      "electricity_used": {
+        "default": "mdi:flash"
       }
     }
   }

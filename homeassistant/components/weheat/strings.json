@@ -60,9 +60,7 @@
         "name": "DHW bottom temperature"
       },
       "heat_pump_state": {
-        "name": "State",
         "state": {
-          "undefined": "Unknown",
           "standby": "[%key:common::state::standby%]",
           "water_check": "Checking water temperature",
           "heating": "Heating",
@@ -73,6 +71,9 @@
           "self_test": "Self test",
           "manual_control": "Manual control"
         }
+      },
+      "electricity_used": {
+        "name": "Electricity used"
       }
     }
   }

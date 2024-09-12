@@ -11,7 +11,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import UnitOfPower, UnitOfTemperature
+from homeassistant.const import UnitOfEnergy, UnitOfPower, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -117,9 +117,20 @@ SENSORS = [
     WeHeatSensorEntityDescription(
         translation_key="heat_pump_state",
         key="heat_pump_state",
+        name=None,
         device_class=SensorDeviceClass.ENUM,
         options=[s.name.lower() for s in HeatPump.State],
-        value_fn=lambda status: status.heat_pump_state.name.lower(),
+        value_fn=lambda status: status.heat_pump_state.name.lower()
+        if status.heat_pump_state
+        else None,
+    ),
+    WeHeatSensorEntityDescription(
+        translation_key="electricity_used",
+        key="electricity_used",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_fn=lambda status: status.energy_total,
     ),
 ]
 
