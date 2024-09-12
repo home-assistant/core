@@ -6,7 +6,6 @@ from typing import TYPE_CHECKING
 
 from aioesphomeapi import BinarySensorInfo, BinarySensorState, EntityInfo
 
-from homeassistant.components.assist_satellite import DOMAIN as ASSIST_SATELLITE_DOMAIN
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
@@ -94,12 +93,15 @@ class EsphomeAssistInProgressBinarySensor(EsphomeAssistEntity, BinarySensorEntit
             DOMAIN,
             f"assist_in_progress_deprecated_{self.registry_entry.id}",
             breaks_in_ha_version="2025.3",
-            is_fixable=False,
+            data={
+                "entity_id": self.entity_id,
+                "entity_uuid": self.registry_entry.id,
+                "integration_name": "ESPHome",
+            },
+            is_fixable=True,
             severity=ir.IssueSeverity.WARNING,
             translation_key="assist_in_progress_deprecated",
             translation_placeholders={
-                "assist_satellite_domain": ASSIST_SATELLITE_DOMAIN,
-                "entity_id": self.entity_id,
                 "integration_name": "ESPHome",
             },
         )

@@ -95,7 +95,13 @@
   "issues": {
     "assist_in_progress_deprecated": {
       "title": "[%key:component::assist_pipeline::issues::assist_in_progress_deprecated::title%]",
-      "description": "[%key:component::assist_pipeline::issues::assist_in_progress_deprecated::description%]"
+      "fix_flow": {
+        "step": {
+          "confirm_disable_entity": {
+            "description": "[%key:component::assist_pipeline::issues::assist_in_progress_deprecated::fix_flow::step::confirm_disable_entity::description%]"
+          }
+        }
+      }
     },
     "ble_firmware_outdated": {
       "title": "Update {name} with ESPHome {version} or later",
