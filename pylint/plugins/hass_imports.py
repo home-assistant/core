@@ -553,6 +553,7 @@ class HassImportsFormatChecker(BaseChecker):
             # Exceptions that need investigating
             module_integration
             in (
+                "assist_pipeline",
                 "bluetooth",
                 "device_tracker",
                 "homeassistant",
