@@ -1,4 +1,4 @@
-"""Test squeezebox binary sensors."""
+"""Test squeezebox update platform."""
 
 import copy
 from unittest.mock import patch
