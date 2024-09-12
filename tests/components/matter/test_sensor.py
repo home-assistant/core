@@ -79,9 +79,7 @@ async def eve_energy_plug_patched_node_fixture(
     hass: HomeAssistant, matter_client: MagicMock
 ) -> MatterNode:
     """Fixture for a Eve Thermo node."""
-    return await setup_integration_with_node_fixture(
-        hass, "eve-thermo", matter_client
-    )
+    return await setup_integration_with_node_fixture(hass, "eve-thermo", matter_client)
 
 
 @pytest.fixture(name="eve_energy_plug_patched_node")
@@ -92,6 +90,7 @@ async def eve_energy_plug_patched_node_fixture(
     return await setup_integration_with_node_fixture(
         hass, "eve-energy-plug-patched", matter_client
     )
+
 
 @pytest.fixture(name="air_quality_sensor_node")
 async def air_quality_sensor_node_fixture(
