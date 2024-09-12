@@ -212,7 +212,7 @@ def get_all_appliances():
             .get("programs", [])
         ]
         appliance.get_status.return_value = HomeConnectAppliance.json2dict(
-            api_status.get("data", {}).get("status", [])
+            api_status.get(ha_type, {}).get("data", {}).get("status", [])
         )
         appliance.get_settings.return_value = HomeConnectAppliance.json2dict(
             api_settings.get(ha_type, {}).get("data", {}).get("settings", [])

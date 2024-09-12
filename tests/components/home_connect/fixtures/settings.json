@@ -1,7 +1,120 @@
 {
+  "CleaningRobot": {
+    "data": {
+      "settings": [
+        {
+          "key": "BSH.Common.Setting.PowerState",
+          "value": "BSH.Common.EnumType.PowerState.On",
+          "type": "BSH.Common.EnumType.PowerState",
+          "constraints": {
+            "allowedvalues": [
+              "BSH.Common.EnumType.PowerState.On",
+              "BSH.Common.EnumType.PowerState.Standby"
+            ]
+          }
+        },
+        {
+          "key": "ConsumerProducts.CleaningRobot.Setting.CurrentMap",
+          "value": "ConsumerProducts.CleaningRobot.EnumType.AvailableMaps.Map1",
+          "type": "ConsumerProducts.CleaningRobot.EnumType.AvailableMaps",
+          "constraints": {
+            "allowedvalues": [
+              "ConsumerProducts.CleaningRobot.EnumType.AvailableMaps.TempMap",
+              "ConsumerProducts.CleaningRobot.EnumType.AvailableMaps.Map1",
+              "ConsumerProducts.CleaningRobot.EnumType.AvailableMaps.Map2",
+              "ConsumerProducts.CleaningRobot.EnumType.AvailableMaps.Map3"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "CoffeeMachine": {
+    "data": {
+      "settings": [
+        {
+          "key": "BSH.Common.Setting.PowerState",
+          "value": "BSH.Common.EnumType.PowerState.On",
+          "type": "BSH.Common.EnumType.PowerState",
+          "constraints": {
+            "allowedvalues": [
+              "BSH.Common.EnumType.PowerState.On",
+              "BSH.Common.EnumType.PowerState.Standby"
+            ]
+          }
+        },
+        {
+          "key": "ConsumerProducts.CoffeeMaker.Setting.CupWarmer",
+          "value": true,
+          "type": "Boolean"
+        }
+      ]
+    }
+  },
+  "CookProcesor": {
+    "data": {
+      "settings": [
+        {
+          "key": "BSH.Common.Setting.PowerState",
+          "value": "BSH.Common.EnumType.PowerState.On",
+          "type": "BSH.Common.EnumType.PowerState",
+          "constraints": {
+            "allowedvalues": [
+              "BSH.Common.EnumType.PowerState.On",
+              "BSH.Common.EnumType.PowerState.Standby"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "Cooktop": {
+    "data": {
+      "settings": [
+        {
+          "key": "BSH.Common.Setting.PowerState",
+          "value": "BSH.Common.EnumType.PowerState.On",
+          "type": "BSH.Common.EnumType.PowerState",
+          "constraints": {
+            "allowedvalues": [
+              "BSH.Common.EnumType.PowerState.On",
+              "BSH.Common.EnumType.PowerState.Off"
+            ]
+          }
+        },
+        {
+          "key": "BSH.Common.Setting.ChildLock",
+          "value": false,
+          "type": "Boolean"
+        },
+        {
+          "key": "BSH.Common.Setting.AlarmClock",
+          "value": 213,
+          "unit": "seconds",
+          "type": "Int"
+        }
+      ]
+    }
+  },
   "Dishwasher": {
     "data": {
       "settings": [
+        {
+          "key": "BSH.Common.Setting.PowerState",
+          "value": "BSH.Common.EnumType.PowerState.On",
+          "type": "BSH.Common.EnumType.PowerState",
+          "constraints": {
+            "allowedvalues": [
+              "BSH.Common.EnumType.PowerState.On",
+              "BSH.Common.EnumType.PowerState.Off"
+            ]
+          }
+        },
+        {
+          "key": "BSH.Common.Setting.ChildLock",
+          "value": false,
+          "type": "Boolean"
+        },
         {
           "key": "BSH.Common.Setting.AmbientLightEnabled",
           "value": true,
@@ -22,11 +135,20 @@
           "key": "BSH.Common.Setting.AmbientLightCustomColor",
           "value": "#4a88f8",
           "type": "String"
-        },
+        }
+      ]
+    }
+  },
+  "Dryer": {
+    "data": {
+      "settings": [
         {
           "key": "BSH.Common.Setting.PowerState",
           "value": "BSH.Common.EnumType.PowerState.On",
-          "type": "BSH.Common.EnumType.PowerState"
+          "type": "BSH.Common.EnumType.PowerState",
+          "constraints": {
+            "allowedvalues": ["BSH.Common.EnumType.PowerState.On"]
+          }
         },
         {
           "key": "BSH.Common.Setting.ChildLock",
@@ -36,9 +158,243 @@
       ]
     }
   },
+  "Freezer": {
+    "data": {
+      "settings": [
+        {
+          "key": "BSH.Common.Setting.PowerState",
+          "value": "BSH.Common.EnumType.PowerState.On",
+          "type": "BSH.Common.EnumType.PowerState",
+          "constraints": {
+            "allowedvalues": ["BSH.Common.EnumType.PowerState.On"]
+          }
+        },
+        {
+          "key": "BSH.Common.Setting.ChildLock",
+          "value": false,
+          "type": "Boolean"
+        },
+        {
+          "key": "Refrigeration.FridgeFreezer.Setting.SetpointTemperatureFreezer",
+          "value": -24,
+          "unit": "°C",
+          "type": "Double",
+          "constraints": {
+            "min": -24,
+            "max": -16
+          }
+        },
+        {
+          "key": "Refrigeration.FridgeFreezer.Setting.SuperModeFreezer",
+          "value": false,
+          "type": "Boolean"
+        },
+        {
+          "key": "Refrigeration.Common.Setting.EcoMode",
+          "value": false,
+          "type": "Boolean"
+        },
+        {
+          "key": "Refrigeration.Common.Setting.SabbathMode",
+          "value": false,
+          "type": "Boolean"
+        },
+        {
+          "key": "Refrigeration.Common.Setting.Dispenser.Enabled",
+          "value": false,
+          "type": "Boolean"
+        },
+        {
+          "key": "Refrigeration.Common.Setting.Light.External.Brightness",
+          "value": 70,
+          "unit": "%",
+          "type": "Double",
+          "constraints": {
+            "min": 0,
+            "max": 100
+          }
+        },
+        {
+          "key": "Refrigeration.Common.Setting.Light.Internal.Brightness",
+          "value": 70,
+          "unit": "%",
+          "type": "Double",
+          "constraints": {
+            "min": 0,
+            "max": 100
+          }
+        },
+        {
+          "key": "Refrigeration.Common.Setting.Light.External.Power",
+          "value": true,
+          "type": "Boolean"
+        },
+        {
+          "key": "Refrigeration.Common.Setting.Light.Internal.Power",
+          "value": true,
+          "type": "Boolean"
+        }
+      ]
+    }
+  },
+  "FridgeFreezer": {
+    "data": {
+      "settings": [
+        {
+          "key": "BSH.Common.Setting.PowerState",
+          "value": "BSH.Common.EnumType.PowerState.On",
+          "type": "BSH.Common.EnumType.PowerState",
+          "constraints": {
+            "allowedvalues": ["BSH.Common.EnumType.PowerState.On"]
+          }
+        },
+        {
+          "key": "BSH.Common.Setting.ChildLock",
+          "value": false,
+          "type": "Boolean"
+        },
+        {
+          "key": "Refrigeration.FridgeFreezer.Setting.SetpointTemperatureRefrigerator",
+          "value": 8,
+          "unit": "°C",
+          "type": "Double",
+          "constraints": {
+            "min": 2,
+            "max": 8
+          }
+        },
+        {
+          "key": "Refrigeration.FridgeFreezer.Setting.SetpointTemperatureFreezer",
+          "value": -24,
+          "unit": "°C",
+          "type": "Double",
+          "constraints": {
+            "min": -24,
+            "max": -16
+          }
+        },
+        {
+          "key": "Refrigeration.Common.Setting.BottleCooler.SetpointTemperature",
+          "value": 2,
+          "unit": "°C",
+          "type": "Double",
+          "constraints": {
+            "min": -1,
+            "max": 3
+          }
+        },
+        {
+          "key": "Refrigeration.Common.Setting.ChillerLeft.SetpointTemperature",
+          "value": 2,
+          "unit": "°C",
+          "type": "Double",
+          "constraints": {
+            "min": -1,
+            "max": 3
+          }
+        },
+        {
+          "key": "Refrigeration.Common.Setting.ChillerCommon.SetpointTemperature",
+          "value": 2,
+          "unit": "°C",
+          "type": "Double",
+          "constraints": {
+            "min": -1,
+            "max": 3
+          }
+        },
+        {
+          "key": "Refrigeration.Common.Setting.ChillerRight.SetpointTemperature",
+          "value": 2,
+          "unit": "°C",
+          "type": "Double",
+          "constraints": {
+            "min": -1,
+            "max": 3
+          }
+        },
+        {
+          "key": "Refrigeration.FridgeFreezer.Setting.SuperModeRefrigerator",
+          "value": false,
+          "type": "Boolean"
+        },
+        {
+          "key": "Refrigeration.FridgeFreezer.Setting.SuperModeFreezer",
+          "value": false,
+          "type": "Boolean"
+        },
+        {
+          "key": "Refrigeration.Common.Setting.EcoMode",
+          "value": false,
+          "type": "Boolean"
+        },
+        {
+          "key": "Refrigeration.Common.Setting.SabbathMode",
+          "value": false,
+          "type": "Boolean"
+        },
+        {
+          "key": "Refrigeration.Common.Setting.VacationMode",
+          "value": false,
+          "type": "Boolean"
+        },
+        {
+          "key": "Refrigeration.Common.Setting.FreshMode",
+          "value": false,
+          "type": "Boolean"
+        },
+        {
+          "key": "Refrigeration.Common.Setting.Dispenser.Enabled",
+          "value": false,
+          "type": "Boolean"
+        },
+        {
+          "key": "Refrigeration.Common.Setting.Light.External.Brightness",
+          "value": 70,
+          "unit": "%",
+          "type": "Double",
+          "constraints": {
+            "min": 0,
+            "max": 100
+          }
+        },
+        {
+          "key": "Refrigeration.Common.Setting.Light.Internal.Brightness",
+          "value": 70,
+          "unit": "%",
+          "type": "Double",
+          "constraints": {
+            "min": 0,
+            "max": 100
+          }
+        },
+        {
+          "key": "Refrigeration.Common.Setting.Light.External.Power",
+          "value": true,
+          "type": "Boolean"
+        },
+        {
+          "key": "Refrigeration.Common.Setting.Light.Internal.Power",
+          "value": true,
+          "type": "Boolean"
+        }
+      ]
+    }
+  },
   "Hood": {
     "data": {
       "settings": [
+        {
+          "key": "BSH.Common.Setting.PowerState",
+          "value": "BSH.Common.EnumType.PowerState.On",
+          "type": "BSH.Common.EnumType.PowerState",
+          "constraints": {
+            "allowedvalues": [
+              "BSH.Common.EnumType.PowerState.On",
+              "BSH.Common.EnumType.PowerState.Off"
+            ]
+          }
+        },
         {
           "key": "Cooking.Common.Setting.Lighting",
           "value": true,
@@ -91,7 +447,169 @@
         {
           "key": "BSH.Common.Setting.PowerState",
           "value": "BSH.Common.EnumType.PowerState.On",
-          "type": "BSH.Common.EnumType.PowerState"
+          "type": "BSH.Common.EnumType.PowerState",
+          "constraints": {
+            "allowedvalues": [
+              "BSH.Common.EnumType.PowerState.On",
+              "BSH.Common.EnumType.PowerState.Standby"
+            ]
+          }
+        },
+        {
+          "key": "BSH.Common.Setting.ChildLock",
+          "value": false,
+          "type": "Boolean"
+        },
+        {
+          "key": "Cooking.Oven.Setting.SabbathMode",
+          "value": false,
+          "type": "Boolean"
+        }
+      ]
+    }
+  },
+  "Refrigerator": {
+    "data": {
+      "settings": [
+        {
+          "key": "BSH.Common.Setting.PowerState",
+          "value": "BSH.Common.EnumType.PowerState.On",
+          "type": "BSH.Common.EnumType.PowerState",
+          "constraints": {
+            "allowedvalues": ["BSH.Common.EnumType.PowerState.On"]
+          }
+        },
+        {
+          "key": "BSH.Common.Setting.ChildLock",
+          "value": false,
+          "type": "Boolean"
+        },
+        {
+          "key": "Refrigeration.FridgeFreezer.Setting.SetpointTemperatureRefrigerator",
+          "value": 8,
+          "unit": "°C",
+          "type": "Double",
+          "constraints": {
+            "min": 2,
+            "max": 8
+          }
+        },
+        {
+          "key": "Refrigeration.Common.Setting.BottleCooler.SetpointTemperature",
+          "value": 2,
+          "unit": "°C",
+          "type": "Double",
+          "constraints": {
+            "min": -1,
+            "max": 3
+          }
+        },
+        {
+          "key": "Refrigeration.Common.Setting.ChillerLeft.SetpointTemperature",
+          "value": 2,
+          "unit": "°C",
+          "type": "Double",
+          "constraints": {
+            "min": -1,
+            "max": 3
+          }
+        },
+        {
+          "key": "Refrigeration.Common.Setting.ChillerCommon.SetpointTemperature",
+          "value": 2,
+          "unit": "°C",
+          "type": "Double",
+          "constraints": {
+            "min": -1,
+            "max": 3
+          }
+        },
+        {
+          "key": "Refrigeration.Common.Setting.ChillerRight.SetpointTemperature",
+          "value": 2,
+          "unit": "°C",
+          "type": "Double",
+          "constraints": {
+            "min": -1,
+            "max": 3
+          }
+        },
+        {
+          "key": "Refrigeration.FridgeFreezer.Setting.SuperModeRefrigerator",
+          "value": false,
+          "type": "Boolean"
+        },
+        {
+          "key": "Refrigeration.Common.Setting.EcoMode",
+          "value": false,
+          "type": "Boolean"
+        },
+        {
+          "key": "Refrigeration.Common.Setting.SabbathMode",
+          "value": false,
+          "type": "Boolean"
+        },
+        {
+          "key": "Refrigeration.Common.Setting.VacationMode",
+          "value": false,
+          "type": "Boolean"
+        },
+        {
+          "key": "Refrigeration.Common.Setting.FreshMode",
+          "value": false,
+          "type": "Boolean"
+        },
+        {
+          "key": "Refrigeration.Common.Setting.Light.External.Brightness",
+          "value": 70,
+          "unit": "%",
+          "type": "Double",
+          "constraints": {
+            "min": 0,
+            "max": 100
+          }
+        },
+        {
+          "key": "Refrigeration.Common.Setting.Light.Internal.Brightness",
+          "value": 70,
+          "unit": "%",
+          "type": "Double",
+          "constraints": {
+            "min": 0,
+            "max": 100
+          }
+        },
+        {
+          "key": "Refrigeration.Common.Setting.Light.External.Power",
+          "value": true,
+          "type": "Boolean"
+        },
+        {
+          "key": "Refrigeration.Common.Setting.Light.Internal.Power",
+          "value": true,
+          "type": "Boolean"
+        }
+      ]
+    }
+  },
+  "WarmingDrawer": {
+    "data": {
+      "settings": [
+        {
+          "key": "BSH.Common.Setting.PowerState",
+          "value": "BSH.Common.EnumType.PowerState.On",
+          "type": "BSH.Common.EnumType.PowerState",
+          "constraints": {
+            "allowedvalues": [
+              "BSH.Common.EnumType.PowerState.On",
+              "BSH.Common.EnumType.PowerState.Standby"
+            ]
+          }
+        },
+        {
+          "key": "BSH.Common.Setting.ChildLock",
+          "value": false,
+          "type": "Boolean"
         }
       ]
     }
@@ -102,7 +620,15 @@
         {
           "key": "BSH.Common.Setting.PowerState",
           "value": "BSH.Common.EnumType.PowerState.On",
-          "type": "BSH.Common.EnumType.PowerState"
+          "type": "BSH.Common.EnumType.PowerState",
+          "constraints": {
+            "allowedvalues": ["BSH.Common.EnumType.PowerState.On"]
+          }
+        },
+        {
+          "key": "BSH.Common.Setting.ChildLock",
+          "value": false,
+          "type": "Boolean"
         },
         {
           "key": "BSH.Common.Setting.ChildLock",
@@ -112,32 +638,105 @@
       ]
     }
   },
-  "FridgeFreezer": {
+  "WasherDryer": {
     "data": {
       "settings": [
         {
-          "key": "Refrigeration.FridgeFreezer.Setting.SuperModeFreezer",
-          "value": false,
-          "type": "Boolean",
+          "key": "BSH.Common.Setting.PowerState",
+          "value": "BSH.Common.EnumType.PowerState.On",
+          "type": "BSH.Common.EnumType.PowerState",
           "constraints": {
-            "access": "readWrite"
+            "allowedvalues": ["BSH.Common.EnumType.PowerState.On"]
           }
         },
         {
-          "key": "Refrigeration.FridgeFreezer.Setting.SuperModeRefrigerator",
+          "key": "BSH.Common.Setting.ChildLock",
           "value": false,
-          "type": "Boolean",
+          "type": "Boolean"
+        }
+      ]
+    }
+  },
+  "WineCooler": {
+    "data": {
+      "settings": [
+        {
+          "key": "BSH.Common.Setting.PowerState",
+          "value": "BSH.Common.EnumType.PowerState.On",
+          "type": "BSH.Common.EnumType.PowerState",
           "constraints": {
-            "access": "readWrite"
+            "allowedvalues": ["BSH.Common.EnumType.PowerState.On"]
           }
         },
         {
-          "key": "Refrigeration.Common.Setting.Dispenser.Enabled",
+          "key": "BSH.Common.Setting.ChildLock",
           "value": false,
-          "type": "Boolean",
+          "type": "Boolean"
+        },
+        {
+          "key": "Refrigeration.Common.Setting.WineCompartment.SetpointTemperature",
+          "value": 11,
+          "unit": "°C",
+          "type": "Double",
           "constraints": {
-            "access": "readWrite"
+            "min": 5,
+            "max": 20
           }
+        },
+        {
+          "key": "Refrigeration.Common.Setting.WineCompartment2.SetpointTemperature",
+          "value": 11,
+          "unit": "°C",
+          "type": "Double",
+          "constraints": {
+            "min": 5,
+            "max": 20
+          }
+        },
+        {
+          "key": "Refrigeration.Common.Setting.WineCompartment3.SetpointTemperature",
+          "value": 11,
+          "unit": "°C",
+          "type": "Double",
+          "constraints": {
+            "min": 5,
+            "max": 20
+          }
+        },
+        {
+          "key": "Refrigeration.Common.Setting.SabbathMode",
+          "value": false,
+          "type": "Boolean"
+        },
+        {
+          "key": "Refrigeration.Common.Setting.Light.External.Brightness",
+          "value": 70,
+          "unit": "%",
+          "type": "Double",
+          "constraints": {
+            "min": 0,
+            "max": 100
+          }
+        },
+        {
+          "key": "Refrigeration.Common.Setting.Light.Internal.Brightness",
+          "value": 70,
+          "unit": "%",
+          "type": "Double",
+          "constraints": {
+            "min": 0,
+            "max": 100
+          }
+        },
+        {
+          "key": "Refrigeration.Common.Setting.Light.External.Power",
+          "value": true,
+          "type": "Boolean"
+        },
+        {
+          "key": "Refrigeration.Common.Setting.Light.Internal.Power",
+          "value": true,
+          "type": "Boolean"
         }
       ]
     }

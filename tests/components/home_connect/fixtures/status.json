@@ -1,16 +1,760 @@
 {
-  "data": {
-    "status": [
-      { "key": "BSH.Common.Status.RemoteControlActive", "value": true },
-      { "key": "BSH.Common.Status.RemoteControlStartAllowed", "value": true },
-      {
-        "key": "BSH.Common.Status.OperationState",
-        "value": "BSH.Common.EnumType.OperationState.Ready"
-      },
-      {
-        "key": "BSH.Common.Status.DoorState",
-        "value": "BSH.Common.EnumType.DoorState.Closed"
-      }
-    ]
+  "CleaningRobot": {
+    "data": {
+      "status": [
+        {
+          "key": "BSH.Common.Status.BatteryLevel",
+          "value": 31,
+          "unit": "%"
+        },
+        {
+          "key": "BSH.Common.Status.BatteryChargingState",
+          "value": "BSH.Common.EnumType.BatteryChargingState.Discharging",
+          "constraints": {
+            "allowedvalues": [
+              "BSH.Common.EnumType.BatteryChargingState.Discharging",
+              "BSH.Common.EnumType.BatteryChargingState.Charging"
+            ]
+          }
+        },
+        {
+          "key": "BSH.Common.Status.BatteryChargingState",
+          "value": "BSH.Common.EnumType.ChargingConnection.Disconnected",
+          "constraints": {
+            "allowedvalues": [
+              "BSH.Common.EnumType.ChargingConnection.Disconnected",
+              "BSH.Common.EnumType.ChargingConnection.Connected"
+            ]
+          }
+        },
+        {
+          "key": "BSH.Common.Status.Video.CameraState",
+          "value": "BSH.Common.EnumType.Video.CameraState.Ready",
+          "constraints": {
+            "allowedvalues": [
+              "BSH.Common.EnumType.Video.CameraState.Disabled",
+              "BSH.Common.EnumType.Video.CameraState.Sleeping",
+              "BSH.Common.EnumType.Video.CameraState.Ready",
+              "BSH.Common.EnumType.Video.CameraState.StreamingLocal",
+              "BSH.Common.EnumType.Video.CameraState.StreamingCloud",
+              "BSH.Common.EnumType.Video.CameraState.StreamingLocalAndCloud",
+              "BSH.Common.EnumType.Video.CameraState.Error"
+            ]
+          }
+        },
+        {
+          "key": "ConsumerProducts.CleaningRobot.Status.LastSelectedMap",
+          "value": "ConsumerProducts.CleaningRobot.EnumType.AvailableMaps.Map1",
+          "constraints": {
+            "allowedvalues": [
+              "ConsumerProducts.CleaningRobot.EnumType.AvailableMaps.TempMap",
+              "ConsumerProducts.CleaningRobot.EnumType.AvailableMaps.Map1",
+              "ConsumerProducts.CleaningRobot.EnumType.AvailableMaps.Map2",
+              "ConsumerProducts.CleaningRobot.EnumType.AvailableMaps.Map3"
+            ]
+          }
+        },
+        {
+          "key": "ConsumerProducts.CleaningRobot.Status.DustBoxInserted",
+          "value": true
+        },
+        {
+          "key": "ConsumerProducts.CleaningRobot.Status.Lost",
+          "value": false
+        },
+        {
+          "key": "ConsumerProducts.CleaningRobot.Status.Lifted",
+          "value": false
+        },
+        {
+          "key": "BSH.Common.Setting.PowerState",
+          "value": "BSH.Common.EnumType.PowerState.On",
+          "constraints": {
+            "allowedvalues": [
+              "BSH.Common.EnumType.PowerState.On",
+              "BSH.Common.EnumType.PowerState.Standby"
+            ]
+          }
+        },
+        {
+          "key": "BSH.Common.Status.OperationState",
+          "value": "BSH.Common.EnumType.OperationState.Ready",
+          "constraints": {
+            "allowedvalues": [
+              "BSH.Common.EnumType.OperationState.Inactive",
+              "BSH.Common.EnumType.OperationState.Ready",
+              "BSH.Common.EnumType.OperationState.Run",
+              "BSH.Common.EnumType.OperationState.Pause",
+              "BSH.Common.EnumType.OperationState.ActionRequired",
+              "BSH.Common.EnumType.OperationState.Finished",
+              "BSH.Common.EnumType.OperationState.Error"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "CoffeeMachine": {
+    "data": {
+      "status": [
+        {
+          "key": "BSH.Common.Status.RemoteControlStartAllowed",
+          "value": true
+        },
+        {
+          "key": "BSH.Common.Status.LocalControlActive",
+          "value": true
+        },
+        {
+          "key": "BSH.Common.Status.OperationState",
+          "value": "BSH.Common.EnumType.OperationState.Ready",
+          "constraints": {
+            "allowedvalues": [
+              "BSH.Common.EnumType.OperationState.Inactive",
+              "BSH.Common.EnumType.OperationState.Ready",
+              "BSH.Common.EnumType.OperationState.Run",
+              "BSH.Common.EnumType.OperationState.ActionRequired",
+              "BSH.Common.EnumType.OperationState.Finished",
+              "BSH.Common.EnumType.OperationState.Error",
+              "BSH.Common.EnumType.OperationState.Aborting"
+            ]
+          }
+        },
+        {
+          "key": "ConsumerProducts.CoffeeMaker.Status.BeverageCounterCoffee",
+          "value": 0
+        },
+        {
+          "key": "ConsumerProducts.CoffeeMaker.Status.BeverageCounterPowderCoffee",
+          "value": 0
+        },
+        {
+          "key": "ConsumerProducts.CoffeeMaker.Status.BeverageCounterHotWater",
+          "value": 0
+        },
+        {
+          "key": "ConsumerProducts.CoffeeMaker.Status.BeverageCounterHotWaterCups",
+          "value": 0
+        },
+        {
+          "key": "ConsumerProducts.CoffeeMaker.Status.BeverageCounterHotMilk",
+          "value": 0
+        },
+        {
+          "key": "ConsumerProducts.CoffeeMaker.Status.BeverageCounterFrothyMilk",
+          "value": 0
+        },
+        {
+          "key": "ConsumerProducts.CoffeeMaker.Status.BeverageCounterMilk",
+          "value": 0
+        },
+        {
+          "key": "ConsumerProducts.CoffeeMaker.Status.BeverageCounterCoffeeAndMilk",
+          "value": 0
+        },
+        {
+          "key": "ConsumerProducts.CoffeeMaker.Status.BeverageCounterRistrettoEspresso",
+          "value": 0
+        }
+      ]
+    }
+  },
+  "CookProcesor": {
+    "data": {
+      "status": [
+        {
+          "key": "BSH.Common.Status.OperationState",
+          "value": "BSH.Common.EnumType.OperationState.Ready",
+          "constraints": {
+            "allowedvalues": [
+              "BSH.Common.EnumType.OperationState.Inactive",
+              "BSH.Common.EnumType.OperationState.Ready",
+              "BSH.Common.EnumType.OperationState.Run",
+              "BSH.Common.EnumType.OperationState.Pause",
+              "BSH.Common.EnumType.OperationState.ActionRequired",
+              "BSH.Common.EnumType.OperationState.Finished",
+              "BSH.Common.EnumType.OperationState.Error",
+              "BSH.Common.EnumType.OperationState.Aborting"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "Cooktop": {
+    "data": {
+      "status": [
+        {
+          "key": "BSH.Common.Status.RemoteControlActive",
+          "value": true
+        },
+        {
+          "key": "BSH.Common.Status.LocalControlActive",
+          "value": true
+        },
+        {
+          "key": "BSH.Common.Status.OperationState",
+          "value": "BSH.Common.EnumType.OperationState.Ready",
+          "constraints": {
+            "allowedvalues": [
+              "BSH.Common.EnumType.OperationState.Inactive",
+              "BSH.Common.EnumType.OperationState.Ready",
+              "BSH.Common.EnumType.OperationState.DelayedStart",
+              "BSH.Common.EnumType.OperationState.Run",
+              "BSH.Common.EnumType.OperationState.Pause",
+              "BSH.Common.EnumType.OperationState.ActionRequired",
+              "BSH.Common.EnumType.OperationState.Finished",
+              "BSH.Common.EnumType.OperationState.Error",
+              "BSH.Common.EnumType.OperationState.Aborting"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "Dishwasher": {
+    "data": {
+      "status": [
+        {
+          "key": "BSH.Common.Status.RemoteControlActive",
+          "value": true
+        },
+        {
+          "key": "BSH.Common.Status.RemoteControlStartAllowed",
+          "value": true
+        },
+        {
+          "key": "BSH.Common.Status.OperationState",
+          "value": "BSH.Common.EnumType.OperationState.Ready",
+          "constraints": {
+            "allowedvalues": [
+              "BSH.Common.EnumType.OperationState.Inactive",
+              "BSH.Common.EnumType.OperationState.Ready",
+              "BSH.Common.EnumType.OperationState.DelayedStart",
+              "BSH.Common.EnumType.OperationState.Run",
+              "BSH.Common.EnumType.OperationState.ActionRequired",
+              "BSH.Common.EnumType.OperationState.Finished",
+              "BSH.Common.EnumType.OperationState.Aborting"
+            ]
+          }
+        },
+        {
+          "key": "BSH.Common.Status.DoorState",
+          "value": "BSH.Common.EnumType.DoorState.Closed",
+          "constraints": {
+            "allowedvalues": [
+              "BSH.Common.EnumType.DoorState.Closed",
+              "BSH.Common.EnumType.DoorState.Open"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "Dryer": {
+    "data": {
+      "status": [
+        {
+          "key": "BSH.Common.Status.RemoteControlActive",
+          "value": true
+        },
+        {
+          "key": "BSH.Common.Status.RemoteControlStartAllowed",
+          "value": true
+        },
+        {
+          "key": "BSH.Common.Status.LocalControlActive",
+          "value": true
+        },
+        {
+          "key": "BSH.Common.Status.OperationState",
+          "value": "BSH.Common.EnumType.OperationState.Ready",
+          "constraints": {
+            "allowedvalues": [
+              "BSH.Common.EnumType.OperationState.Inactive",
+              "BSH.Common.EnumType.OperationState.Ready",
+              "BSH.Common.EnumType.OperationState.DelayedStart",
+              "BSH.Common.EnumType.OperationState.Run",
+              "BSH.Common.EnumType.OperationState.Pause",
+              "BSH.Common.EnumType.OperationState.ActionRequired",
+              "BSH.Common.EnumType.OperationState.Finished",
+              "BSH.Common.EnumType.OperationState.Error",
+              "BSH.Common.EnumType.OperationState.Aborting"
+            ]
+          }
+        },
+        {
+          "key": "BSH.Common.Status.DoorState",
+          "value": "BSH.Common.EnumType.DoorState.Closed",
+          "constraints": {
+            "allowedvalues": [
+              "BSH.Common.EnumType.DoorState.Closed",
+              "BSH.Common.EnumType.DoorState.Locked",
+              "BSH.Common.EnumType.DoorState.Open"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "Freezer": {
+    "data": {
+      "status": [
+        {
+          "key": "BSH.Common.Status.DoorState",
+          "value": "BSH.Common.EnumType.DoorState.Closed",
+          "constraints": {
+            "allowedvalues": [
+              "BSH.Common.EnumType.DoorState.Closed",
+              "BSH.Common.EnumType.DoorState.Open"
+            ]
+          }
+        },
+        {
+          "key": "Refrigeration.Common.Status.Door.Freezer",
+          "value": "BSH.Common.EnumType.DoorState.Closed",
+          "constraints": {
+            "allowedvalues": [
+              "BSH.Common.EnumType.DoorState.Closed",
+              "BSH.Common.EnumType.DoorState.Open"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "FridgeFreezer": {
+    "data": {
+      "status": [
+        {
+          "key": "BSH.Common.Status.DoorState",
+          "value": "BSH.Common.EnumType.DoorState.Closed",
+          "constraints": {
+            "allowedvalues": [
+              "BSH.Common.EnumType.DoorState.Closed",
+              "BSH.Common.EnumType.DoorState.Open"
+            ]
+          }
+        },
+        {
+          "key": "Refrigeration.Common.Status.Door.BottleCooler",
+          "value": "BSH.Common.EnumType.DoorState.Closed",
+          "constraints": {
+            "allowedvalues": [
+              "BSH.Common.EnumType.DoorState.Closed",
+              "BSH.Common.EnumType.DoorState.Open"
+            ]
+          }
+        },
+        {
+          "key": "Refrigeration.Common.Status.Door.ChillerCommon",
+          "value": "BSH.Common.EnumType.DoorState.Closed",
+          "constraints": {
+            "allowedvalues": [
+              "BSH.Common.EnumType.DoorState.Closed",
+              "BSH.Common.EnumType.DoorState.Open"
+            ]
+          }
+        },
+        {
+          "key": "Refrigeration.Common.Status.Door.Chiller",
+          "value": "BSH.Common.EnumType.DoorState.Closed",
+          "constraints": {
+            "allowedvalues": [
+              "BSH.Common.EnumType.DoorState.Closed",
+              "BSH.Common.EnumType.DoorState.Open"
+            ]
+          }
+        },
+        {
+          "key": "Refrigeration.Common.Status.Door.ChillerLeft",
+          "value": "BSH.Common.EnumType.DoorState.Closed",
+          "constraints": {
+            "allowedvalues": [
+              "BSH.Common.EnumType.DoorState.Closed",
+              "BSH.Common.EnumType.DoorState.Open"
+            ]
+          }
+        },
+        {
+          "key": "Refrigeration.Common.Status.Door.ChillerRight",
+          "value": "BSH.Common.EnumType.DoorState.Closed",
+          "constraints": {
+            "allowedvalues": [
+              "BSH.Common.EnumType.DoorState.Closed",
+              "BSH.Common.EnumType.DoorState.Open"
+            ]
+          }
+        },
+        {
+          "key": "Refrigeration.Common.Status.Door.FlexCompartment",
+          "value": "BSH.Common.EnumType.DoorState.Closed",
+          "constraints": {
+            "allowedvalues": [
+              "BSH.Common.EnumType.DoorState.Closed",
+              "BSH.Common.EnumType.DoorState.Open"
+            ]
+          }
+        },
+        {
+          "key": "Refrigeration.Common.Status.Door.Freezer",
+          "value": "BSH.Common.EnumType.DoorState.Closed",
+          "constraints": {
+            "allowedvalues": [
+              "BSH.Common.EnumType.DoorState.Closed",
+              "BSH.Common.EnumType.DoorState.Open"
+            ]
+          }
+        },
+        {
+          "key": "Refrigeration.Common.Status.Door.Refrigerator",
+          "value": "BSH.Common.EnumType.DoorState.Closed",
+          "constraints": {
+            "allowedvalues": [
+              "BSH.Common.EnumType.DoorState.Closed",
+              "BSH.Common.EnumType.DoorState.Open"
+            ]
+          }
+        },
+        {
+          "key": "Refrigeration.Common.Status.Door.Refrigerator2",
+          "value": "BSH.Common.EnumType.DoorState.Closed",
+          "constraints": {
+            "allowedvalues": [
+              "BSH.Common.EnumType.DoorState.Closed",
+              "BSH.Common.EnumType.DoorState.Open"
+            ]
+          }
+        },
+        {
+          "key": "Refrigeration.Common.Status.Door.Refrigerator3",
+          "value": "BSH.Common.EnumType.DoorState.Closed",
+          "constraints": {
+            "allowedvalues": [
+              "BSH.Common.EnumType.DoorState.Closed",
+              "BSH.Common.EnumType.DoorState.Open"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "Hood": {
+    "data": {
+      "status": [
+        {
+          "key": "BSH.Common.Status.RemoteControlActive",
+          "value": true
+        },
+        {
+          "key": "BSH.Common.Status.RemoteControlStartAllowed",
+          "value": true
+        },
+        {
+          "key": "BSH.Common.Status.LocalControlActive",
+          "value": true
+        },
+        {
+          "key": "BSH.Common.Status.OperationState",
+          "value": "BSH.Common.EnumType.OperationState.Ready",
+          "constraints": {
+            "allowedvalues": [
+              "BSH.Common.EnumType.OperationState.Inactive",
+              "BSH.Common.EnumType.OperationState.Run"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "Oven": {
+    "data": {
+      "status": [
+        {
+          "key": "BSH.Common.Status.RemoteControlActive",
+          "value": true
+        },
+        {
+          "key": "BSH.Common.Status.RemoteControlStartAllowed",
+          "value": true
+        },
+        {
+          "key": "BSH.Common.Status.LocalControlActive",
+          "value": true
+        },
+        {
+          "key": "BSH.Common.Status.OperationState",
+          "value": "BSH.Common.EnumType.OperationState.Ready",
+          "constraints": {
+            "allowedvalues": [
+              "BSH.Common.EnumType.OperationState.Inactive",
+              "BSH.Common.EnumType.OperationState.Ready",
+              "BSH.Common.EnumType.OperationState.DelayedStart",
+              "BSH.Common.EnumType.OperationState.Run",
+              "BSH.Common.EnumType.OperationState.Pause",
+              "BSH.Common.EnumType.OperationState.ActionRequired",
+              "BSH.Common.EnumType.OperationState.Finished",
+              "BSH.Common.EnumType.OperationState.Error",
+              "BSH.Common.EnumType.OperationState.Aborting"
+            ]
+          }
+        },
+        {
+          "key": "BSH.Common.Status.DoorState",
+          "value": "BSH.Common.EnumType.DoorState.Closed",
+          "constraints": {
+            "allowedvalues": [
+              "BSH.Common.EnumType.DoorState.Closed",
+              "BSH.Common.EnumType.DoorState.Locked",
+              "BSH.Common.EnumType.DoorState.Open"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "Refrigerator": {
+    "data": {
+      "status": [
+        {
+          "key": "BSH.Common.Status.DoorState",
+          "value": "BSH.Common.EnumType.DoorState.Closed",
+          "constraints": {
+            "allowedvalues": [
+              "BSH.Common.EnumType.DoorState.Closed",
+              "BSH.Common.EnumType.DoorState.Open"
+            ]
+          }
+        },
+        {
+          "key": "Refrigeration.Common.Status.Door.BottleCooler",
+          "value": "BSH.Common.EnumType.DoorState.Closed",
+          "constraints": {
+            "allowedvalues": [
+              "BSH.Common.EnumType.DoorState.Closed",
+              "BSH.Common.EnumType.DoorState.Open"
+            ]
+          }
+        },
+        {
+          "key": "Refrigeration.Common.Status.Door.ChillerCommon",
+          "value": "BSH.Common.EnumType.DoorState.Closed",
+          "constraints": {
+            "allowedvalues": [
+              "BSH.Common.EnumType.DoorState.Closed",
+              "BSH.Common.EnumType.DoorState.Open"
+            ]
+          }
+        },
+        {
+          "key": "Refrigeration.Common.Status.Door.Chiller",
+          "value": "BSH.Common.EnumType.DoorState.Closed",
+          "constraints": {
+            "allowedvalues": [
+              "BSH.Common.EnumType.DoorState.Closed",
+              "BSH.Common.EnumType.DoorState.Open"
+            ]
+          }
+        },
+        {
+          "key": "Refrigeration.Common.Status.Door.ChillerLeft",
+          "value": "BSH.Common.EnumType.DoorState.Closed",
+          "constraints": {
+            "allowedvalues": [
+              "BSH.Common.EnumType.DoorState.Closed",
+              "BSH.Common.EnumType.DoorState.Open"
+            ]
+          }
+        },
+        {
+          "key": "Refrigeration.Common.Status.Door.ChillerRight",
+          "value": "BSH.Common.EnumType.DoorState.Closed",
+          "constraints": {
+            "allowedvalues": [
+              "BSH.Common.EnumType.DoorState.Closed",
+              "BSH.Common.EnumType.DoorState.Open"
+            ]
+          }
+        },
+        {
+          "key": "Refrigeration.Common.Status.Door.Refrigerator",
+          "value": "BSH.Common.EnumType.DoorState.Closed",
+          "constraints": {
+            "allowedvalues": [
+              "BSH.Common.EnumType.DoorState.Closed",
+              "BSH.Common.EnumType.DoorState.Open"
+            ]
+          }
+        },
+        {
+          "key": "Refrigeration.Common.Status.Door.Refrigerator2",
+          "value": "BSH.Common.EnumType.DoorState.Closed",
+          "constraints": {
+            "allowedvalues": [
+              "BSH.Common.EnumType.DoorState.Closed",
+              "BSH.Common.EnumType.DoorState.Open"
+            ]
+          }
+        },
+        {
+          "key": "Refrigeration.Common.Status.Door.Refrigerator3",
+          "value": "BSH.Common.EnumType.DoorState.Closed",
+          "constraints": {
+            "allowedvalues": [
+              "BSH.Common.EnumType.DoorState.Closed",
+              "BSH.Common.EnumType.DoorState.Open"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "WarmingDrawer": {
+    "data": {
+      "status": [
+        {
+          "key": "BSH.Common.Status.RemoteControlActive",
+          "value": true
+        },
+        {
+          "key": "BSH.Common.Status.RemoteControlStartAllowed",
+          "value": true
+        },
+        {
+          "key": "BSH.Common.Status.LocalControlActive",
+          "value": true
+        },
+        {
+          "key": "BSH.Common.Status.OperationState",
+          "value": "BSH.Common.EnumType.OperationState.Ready",
+          "constraints": {
+            "allowedvalues": [
+              "BSH.Common.EnumType.OperationState.Inactive",
+              "BSH.Common.EnumType.OperationState.Ready",
+              "BSH.Common.EnumType.OperationState.Run",
+              "BSH.Common.EnumType.OperationState.Error"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "Washer": {
+    "data": {
+      "status": [
+        {
+          "key": "BSH.Common.Status.RemoteControlActive",
+          "value": true
+        },
+        {
+          "key": "BSH.Common.Status.RemoteControlStartAllowed",
+          "value": true
+        },
+        {
+          "key": "BSH.Common.Status.LocalControlActive",
+          "value": true
+        },
+        {
+          "key": "BSH.Common.Status.OperationState",
+          "value": "BSH.Common.EnumType.OperationState.Ready",
+          "constraints": {
+            "allowedvalues": [
+              "BSH.Common.EnumType.OperationState.Inactive",
+              "BSH.Common.EnumType.OperationState.Ready",
+              "BSH.Common.EnumType.OperationState.DelayedStart",
+              "BSH.Common.EnumType.OperationState.Run",
+              "BSH.Common.EnumType.OperationState.Pause",
+              "BSH.Common.EnumType.OperationState.ActionRequired",
+              "BSH.Common.EnumType.OperationState.Finished",
+              "BSH.Common.EnumType.OperationState.Error",
+              "BSH.Common.EnumType.OperationState.Aborting"
+            ]
+          }
+        },
+        {
+          "key": "BSH.Common.Status.DoorState",
+          "value": "BSH.Common.EnumType.DoorState.Closed",
+          "constraints": {
+            "allowedvalues": [
+              "BSH.Common.EnumType.DoorState.Closed",
+              "BSH.Common.EnumType.DoorState.Locked",
+              "BSH.Common.EnumType.DoorState.Open"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "WasherDryer": {
+    "data": {
+      "status": [
+        {
+          "key": "BSH.Common.Status.RemoteControlActive",
+          "value": true
+        },
+        {
+          "key": "BSH.Common.Status.RemoteControlStartAllowed",
+          "value": true
+        },
+        {
+          "key": "BSH.Common.Status.LocalControlActive",
+          "value": true
+        },
+        {
+          "key": "BSH.Common.Status.OperationState",
+          "value": "BSH.Common.EnumType.OperationState.Ready",
+          "constraints": {
+            "allowedvalues": [
+              "BSH.Common.EnumType.OperationState.Inactive",
+              "BSH.Common.EnumType.OperationState.Ready",
+              "BSH.Common.EnumType.OperationState.DelayedStart",
+              "BSH.Common.EnumType.OperationState.Run",
+              "BSH.Common.EnumType.OperationState.Pause",
+              "BSH.Common.EnumType.OperationState.ActionRequired",
+              "BSH.Common.EnumType.OperationState.Finished",
+              "BSH.Common.EnumType.OperationState.Error",
+              "BSH.Common.EnumType.OperationState.Aborting"
+            ]
+          }
+        },
+        {
+          "key": "BSH.Common.Status.DoorState",
+          "value": "BSH.Common.EnumType.DoorState.Closed",
+          "constraints": {
+            "allowedvalues": [
+              "BSH.Common.EnumType.DoorState.Closed",
+              "BSH.Common.EnumType.DoorState.Locked",
+              "BSH.Common.EnumType.DoorState.Open"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "WineCooler": {
+    "data": {
+      "status": [
+        {
+          "key": "BSH.Common.Status.DoorState",
+          "value": "BSH.Common.EnumType.DoorState.Closed",
+          "constraints": {
+            "allowedvalues": [
+              "BSH.Common.EnumType.DoorState.Closed",
+              "BSH.Common.EnumType.DoorState.Open"
+            ]
+          }
+        },
+        {
+          "key": "Refrigeration.Common.Status.Door.WineCompartment",
+          "value": "BSH.Common.EnumType.DoorState.Closed",
+          "constraints": {
+            "allowedvalues": [
+              "BSH.Common.EnumType.DoorState.Closed",
+              "BSH.Common.EnumType.DoorState.Open"
+            ]
+          }
+        }
+      ]
+    }
   }
 }
