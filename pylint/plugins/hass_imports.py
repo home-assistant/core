@@ -552,7 +552,13 @@ class HassImportsFormatChecker(BaseChecker):
         if node.modname.startswith("homeassistant.components.") and not (
             # Exceptions that need investigating
             module_integration
-            in ("bluetooth", "homeassistant", "homeassistant_hardware", "recorder")
+            in (
+                "bluetooth",
+                "device_tracker",
+                "homeassistant",
+                "homeassistant_hardware",
+                "recorder",
+            )
             # Tests for the corresponding component
             or self.current_package.startswith("tests.components.")
             and self.current_package.split(".")[2] == module_integration
