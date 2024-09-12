@@ -40,7 +40,6 @@ def create_deprecated_sensor_entities(
         device_id,
     ):
         unique_id = f"{device_id}-{description}"
-        print(f"CREATE {unique_id=}")
         entity_registry.async_get_or_create(
             domain=SENSOR_DOMAIN,
             platform=DOMAIN,
