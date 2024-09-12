@@ -12,7 +12,7 @@ from homeassistant.config_entries import (
     ConfigFlow,
     ConfigFlowResult,
 )
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_UUID
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PIN, CONF_PORT, CONF_UUID
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
@@ -34,7 +34,7 @@ class MotionMountFlowHandler(ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Set up the instance."""
-        self.discovery_info: dict[str, Any] = {}
+        self.connection_data: dict[str, Any] = {}
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -43,23 +43,16 @@ class MotionMountFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return self._show_setup_form()
 
+        self.connection_data.update(user_input)
         info = {}
         try:
-            info = await self._validate_input(user_input)
+            info = await self._validate_input_connect(self.connection_data)
         except (ConnectionError, socket.gaierror):
             return self.async_abort(reason="cannot_connect")
         except TimeoutError:
             return self.async_abort(reason="time_out")
         except motionmount.NotConnectedError:
             return self.async_abort(reason="not_connected")
-        except motionmount.MotionMountResponseError:
-            # This is most likely due to missing support for the mac address property
-            # Abort if the handler has config entries already
-            if self._async_current_entries():
-                return self.async_abort(reason="already_configured")
-
-            # Otherwise we try to continue with the generic uid
-            info[CONF_UUID] = DEFAULT_DISCOVERY_UNIQUE_ID
 
         # If the device mac is valid we use it, otherwise we use the default id
         if info.get(CONF_UUID, EMPTY_MAC) != EMPTY_MAC:
@@ -67,17 +60,25 @@ class MotionMountFlowHandler(ConfigFlow, domain=DOMAIN):
         else:
             unique_id = DEFAULT_DISCOVERY_UNIQUE_ID
 
-        name = info.get(CONF_NAME, user_input[CONF_HOST])
+        name = info.get(CONF_NAME, self.connection_data[CONF_HOST])
+        self.connection_data[CONF_NAME] = name
 
         await self.async_set_unique_id(unique_id)
         self._abort_if_unique_id_configured(
             updates={
-                CONF_HOST: user_input[CONF_HOST],
-                CONF_PORT: user_input[CONF_PORT],
+                CONF_HOST: self.connection_data[CONF_HOST],
+                CONF_PORT: self.connection_data[CONF_PORT],
             }
         )
 
-        return self.async_create_entry(title=name, data=user_input)
+        if not info[CONF_PIN]:
+            # We need a pin to authenticate
+            return await self.async_step_auth()
+        # No pin is needed
+        return self.async_create_entry(
+            title=self.connection_data[CONF_NAME],
+            data=self.connection_data,
+        )
 
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
@@ -91,7 +92,7 @@ class MotionMountFlowHandler(ConfigFlow, domain=DOMAIN):
         name = discovery_info.name.removesuffix(f".{zctype}")
         unique_id = discovery_info.properties.get("mac")
 
-        self.discovery_info.update(
+        self.connection_data.update(
             {
                 CONF_HOST: host,
                 CONF_PORT: port,
@@ -114,16 +115,13 @@ class MotionMountFlowHandler(ConfigFlow, domain=DOMAIN):
         self.context.update({"title_placeholders": {"name": name}})
 
         try:
-            info = await self._validate_input(self.discovery_info)
+            info = await self._validate_input_connect(self.connection_data)
         except (ConnectionError, socket.gaierror):
             return self.async_abort(reason="cannot_connect")
         except TimeoutError:
             return self.async_abort(reason="time_out")
         except motionmount.NotConnectedError:
             return self.async_abort(reason="not_connected")
-        except motionmount.MotionMountResponseError:
-            info = {}
-            # We continue as we want to be able to connect with older FW that does not support MAC address
 
         # If the device supplied as with a valid MAC we use that
         if info.get(CONF_UUID, EMPTY_MAC) != EMPTY_MAC:
@@ -137,6 +135,10 @@ class MotionMountFlowHandler(ConfigFlow, domain=DOMAIN):
         else:
             await self._async_handle_discovery_without_unique_id()
 
+        if not info[CONF_PIN]:
+            # We need a pin to authenticate
+            return await self.async_step_auth()
+        # No pin is needed
         return await self.async_step_zeroconf_confirm()
 
     async def async_step_zeroconf_confirm(
@@ -146,16 +148,44 @@ class MotionMountFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return self.async_show_form(
                 step_id="zeroconf_confirm",
-                description_placeholders={CONF_NAME: self.discovery_info[CONF_NAME]},
+                description_placeholders={CONF_NAME: self.connection_data[CONF_NAME]},
                 errors={},
             )
 
         return self.async_create_entry(
-            title=self.discovery_info[CONF_NAME],
-            data=self.discovery_info,
+            title=self.connection_data[CONF_NAME],
+            data=self.connection_data,
         )
 
-    async def _validate_input(self, data: dict) -> dict[str, Any]:
+    async def async_step_auth(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle authentication form."""
+        errors = {}
+
+        if user_input is not None:
+            self.connection_data[CONF_PIN] = user_input[CONF_PIN]
+
+            # Validate pin code
+            if await self._validate_input_pin(self.connection_data):
+                return self.async_create_entry(
+                    title=self.connection_data[CONF_NAME],
+                    data=self.connection_data,
+                )
+
+            errors[CONF_PIN] = "Pin is not correct"
+
+        return self.async_show_form(
+            step_id="auth",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_PIN): vol.All(int, vol.Range(min=1, max=9999)),
+                }
+            ),
+            errors=errors,
+        )
+
+    async def _validate_input_connect(self, data: dict) -> dict[str, Any]:
         """Validate the user input allows us to connect."""
 
         mm = motionmount.MotionMount(data[CONF_HOST], data[CONF_PORT])
@@ -164,7 +194,23 @@ class MotionMountFlowHandler(ConfigFlow, domain=DOMAIN):
         finally:
             await mm.disconnect()
 
-        return {CONF_UUID: format_mac(mm.mac.hex()), CONF_NAME: mm.name}
+        return {
+            CONF_UUID: format_mac(mm.mac.hex()),
+            CONF_NAME: mm.name,
+            CONF_PIN: mm.is_authenticated,
+        }
+
+    async def _validate_input_pin(self, data: dict) -> bool:
+        """Validate the user input allows us to authenticate."""
+
+        mm = motionmount.MotionMount(data[CONF_HOST], data[CONF_PORT])
+        try:
+            await mm.connect()
+            await mm.authenticate(data[CONF_PIN])
+        finally:
+            await mm.disconnect()
+
+        return mm.is_authenticated
 
     def _show_setup_form(
         self, errors: dict[str, str] | None = None
