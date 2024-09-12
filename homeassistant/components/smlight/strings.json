@@ -72,7 +72,7 @@
       "device_mode": {
         "name": "Connection mode",
         "state": {
-          "lan": "Ethernet",
+          "eth": "Ethernet",
           "wifi": "Wi-Fi",
           "usb": "USB"
         }
@@ -89,8 +89,7 @@
         "state": {
           "coordinator": "Coordinator",
           "router": "Router",
-          "thread": "Thread",
-          "unknown": "Unknown"
+          "thread": "Thread"
         }
       }
     },

@@ -64,7 +64,7 @@ INFO: list[SmInfoEntityDescription] = [
         translation_key="zigbee_type",
         device_class=SensorDeviceClass.ENUM,
         lookup=ZB_TYPES,
-        options=["coordinator", "router", "thread", "unknown"],
+        options=["coordinator", "router", "thread"],
         value_fn=lambda x: x.zb_type,
     ),
 ]
