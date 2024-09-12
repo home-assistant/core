@@ -58,6 +58,14 @@
       "one_touch_filter": {
         "name": "Fresh air filter"
       }
+    },
+    "event": {
+      "error": {
+        "name": "Error"
+      },
+      "notification": {
+        "name": "Notification"
+      }
     }
   }
 }
