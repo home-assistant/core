@@ -433,9 +433,9 @@ async def test_eve_weather_sensor_custom_cluster(
     # pressure sensor on Eve custom cluster
     state = hass.states.get("sensor.eve_weather_sensor_pressure")
     assert state
-    assert state.state == "1010"
+    assert state.state == "1008.5"
 
-    set_node_attribute(eve_weather_sensor_node, 1, 319486977, 0, 319422484)
+    set_node_attribute(eve_weather_sensor_node, 1, 319486977, 319422484, 1008.5)
     await trigger_subscription_callback(hass, matter_client)
 
     state = hass.states.get("sensor.eve_weather_sensor_pressure")
