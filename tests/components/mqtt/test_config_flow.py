@@ -13,9 +13,11 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import mqtt
-from homeassistant.components.hassio import HassioServiceInfo
-from homeassistant.components.hassio.addon_manager import AddonError
-from homeassistant.components.hassio.handler import HassioAPIError
+from homeassistant.components.hassio import (
+    AddonError,
+    HassioAPIError,
+    HassioServiceInfo,
+)
 from homeassistant.components.mqtt.config_flow import PWD_NOT_CHANGED
 from homeassistant.const import (
     CONF_CLIENT_ID,
