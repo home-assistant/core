@@ -6,12 +6,14 @@ import pytest
 from pytile.errors import InvalidAuthError, TileError
 
 from homeassistant.components.tile import DOMAIN
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_REAUTH, SOURCE_USER
+from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import TEST_PASSWORD, TEST_USERNAME
+
+from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(
@@ -77,12 +79,10 @@ async def test_import_entry(hass: HomeAssistant, config, mock_pytile) -> None:
 
 
 async def test_step_reauth(
-    hass: HomeAssistant, config, config_entry, setup_config_entry
+    hass: HomeAssistant, config, config_entry: MockConfigEntry, setup_config_entry
 ) -> None:
     """Test that the reauth step works."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_REAUTH}, data=config
-    )
+    result = await config_entry.start_reauth_flow(hass)
     assert result["step_id"] == "reauth_confirm"
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])

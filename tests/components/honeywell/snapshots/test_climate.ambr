@@ -1,7 +1,6 @@
 # serializer version: 1
 # name: test_static_attributes
   ReadOnlyDict({
-    'aux_heat': 'off',
     'current_humidity': 50,
     'current_temperature': 20,
     'fan_action': 'idle',
@@ -30,7 +29,7 @@
       'away',
       'hold',
     ]),
-    'supported_features': <ClimateEntityFeature: 479>,
+    'supported_features': <ClimateEntityFeature: 415>,
     'target_temp_high': None,
     'target_temp_low': None,
     'temperature': None,
