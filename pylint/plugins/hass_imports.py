@@ -559,6 +559,8 @@ class HassImportsFormatChecker(BaseChecker):
                 "homeassistant_hardware",
                 "http",
                 "recorder",
+                "script",
+                "sensor",
             )
             # Tests for the corresponding component
             or self.current_package.startswith("tests.components.")
