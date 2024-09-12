@@ -74,7 +74,7 @@
           },
           "preset_mode": {
             "state": {
-              "air_cleean": "Air purify",
+              "air_clean": "Air purify",
               "aroma": "Aroma",
               "energy_saving": "Energy saving"
             }
