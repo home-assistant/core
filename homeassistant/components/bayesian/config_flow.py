@@ -252,7 +252,7 @@ def _convert_fractions_to_percentages(
 async def _get_select_observation_schema(
     handler: SchemaCommonFlowHandler,
 ) -> vol.Schema:
-    """Return schema for selecting a observation."""
+    """Return schema for selecting a observation for editing."""
     return vol.Schema(
         {
             vol.Required(CONF_INDEX): vol.In(
@@ -281,23 +281,51 @@ async def _get_remove_observation_schema(
     )
 
 
-async def _get_edit_observation_schema(
+async def _get_flow_step_for_editing(
+    user_input: dict[str, Any],
+) -> str:
+    """Choose which observation config flow step to show depending on observation type."""
+
+    observations: list[dict[str, Any]] = user_input[CONF_OBSERVATIONS]
+    selected_idx = int(user_input[CONF_INDEX])
+
+    return str(observations[selected_idx][CONF_PLATFORM])
+
+
+async def _get_state_schema(
     handler: SchemaCommonFlowHandler,
 ) -> vol.Schema:
-    """Select which schema to return depending on which observation type it is."""
+    """Return the state schema, without an add_another box if editing."""
 
-    observations: list[dict[str, Any]] = handler.options[CONF_OBSERVATIONS]
-    selected_idx = int(handler.options[CONF_INDEX])
+    if handler.options.get(CONF_INDEX) is None:
+        return STATE_SUBSCHEMA.extend(ADD_ANOTHER_BOX_SCHEMA.schema)
 
-    if observations[selected_idx][CONF_PLATFORM] == str(ObservationTypes.STATE):
-        return STATE_SUBSCHEMA
-    if observations[selected_idx][CONF_PLATFORM] == str(ObservationTypes.NUMERIC_STATE):
-        return NUMERIC_STATE_SUBSCHEMA
+    return STATE_SUBSCHEMA
+
+
+async def _get_numeric_state_schema(
+    handler: SchemaCommonFlowHandler,
+) -> vol.Schema:
+    """Return the numeric state schema, without an add_another box if editing."""
+
+    if handler.options.get(CONF_INDEX) is None:
+        return NUMERIC_STATE_SUBSCHEMA.extend(ADD_ANOTHER_BOX_SCHEMA.schema)
+
+    return NUMERIC_STATE_SUBSCHEMA
+
+
+async def _get_template_schema(
+    handler: SchemaCommonFlowHandler,
+) -> vol.Schema:
+    """Return the template schema, without an add_another box if editing."""
+
+    if handler.options.get(CONF_INDEX) is None:
+        return TEMPLATE_SUBSCHEMA.extend(ADD_ANOTHER_BOX_SCHEMA.schema)
 
     return TEMPLATE_SUBSCHEMA
 
 
-async def _choose_observation_step(
+async def _add_more_or_end(
     user_input: dict[str, Any],
 ) -> ConfigFlowSteps | None:
     """Return next step_id for options flow according to template_type."""
@@ -314,15 +342,15 @@ async def _get_base_suggested_values(
     return _convert_fractions_to_percentages(dict(handler.options))
 
 
-async def _get_edit_observation_suggested_values(
+async def _get_observation_values_if_editing(
     handler: SchemaCommonFlowHandler,
 ) -> dict[str, Any]:
-    """Return suggested values for observation editing."""
-
-    idx = int(handler.options[CONF_INDEX])
-    return _convert_fractions_to_percentages(
-        dict(handler.options[CONF_OBSERVATIONS][idx])
-    )
+    """Return suggested values for observation if editing."""
+    if idx := handler.options.get(CONF_INDEX):
+        return _convert_fractions_to_percentages(
+            dict(handler.options[CONF_OBSERVATIONS][int(idx)])
+        )
+    return {}
 
 
 async def _validate_user(
@@ -356,7 +384,6 @@ async def _validate_observation_setup(
     handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
 ) -> dict[str, Any]:
     """Validate observation input."""
-
     _validate_probabilities_given(user_input)
 
     # add_another is really just a variable for controlling the flow
@@ -409,23 +436,23 @@ CONFIG_FLOW = {
         ObservationTypes.list()
     ),
     str(ObservationTypes.STATE): SchemaFlowFormStep(
-        STATE_SUBSCHEMA.extend(ADD_ANOTHER_BOX_SCHEMA.schema),
-        next_step=_choose_observation_step,
+        _get_state_schema,
+        next_step=_add_more_or_end,
         validate_user_input=_validate_observation_setup,
-        suggested_values=None,
+        suggested_values=_get_observation_values_if_editing,
     ),
     str(ObservationTypes.NUMERIC_STATE): SchemaFlowFormStep(
-        NUMERIC_STATE_SUBSCHEMA.extend(ADD_ANOTHER_BOX_SCHEMA.schema),
-        next_step=_choose_observation_step,
+        _get_numeric_state_schema,
+        next_step=_add_more_or_end,
         validate_user_input=_validate_observation_setup,
-        suggested_values=None,
+        suggested_values=_get_observation_values_if_editing,
     ),
     str(ObservationTypes.TEMPLATE): SchemaFlowFormStep(
-        TEMPLATE_SUBSCHEMA.extend(ADD_ANOTHER_BOX_SCHEMA.schema),
-        next_step=_choose_observation_step,
+        _get_template_schema,
+        next_step=_add_more_or_end,
         preview="template",
         validate_user_input=_validate_observation_setup,
-        suggested_values=None,
+        suggested_values=_get_observation_values_if_editing,
     ),
 }
 
@@ -441,13 +468,8 @@ OPTIONS_FLOW: dict[str, SchemaFlowStep] = {
     str(OptionsFlowSteps.SELECT_EDIT_OBSERVATION): SchemaFlowFormStep(
         _get_select_observation_schema,
         suggested_values=None,
-        next_step=str(OptionsFlowSteps.EDIT_OBSERVATION),
+        next_step=_get_flow_step_for_editing,
     ),
-    # str(OptionsFlowSteps.EDIT_OBSERVATION): SchemaFlowFormStep(
-    #    _get_edit_observation_schema,
-    #    suggested_values=_get_edit_observation_suggested_values,
-    #    validate_user_input=_validate_observation_setup,
-    # ),
     str(OptionsFlowSteps.REMOVE_OBSERVATION): SchemaFlowFormStep(
         _get_remove_observation_schema,
         suggested_values=None,
