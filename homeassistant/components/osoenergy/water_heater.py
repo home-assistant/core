@@ -41,28 +41,6 @@ CURRENT_OPERATION_MAP: dict[str, Any] = {
         "extraenergy": STATE_HIGH_DEMAND,
     },
 }
-SCHEMA_GET_PROFILE = cv.make_entity_service_schema({})
-SCHEMA_SET_PROFILE = cv.make_entity_service_schema(
-    {
-        vol.Optional(f"hour_{hour:02d}"): vol.All(
-            vol.Coerce(int), vol.Range(min=10, max=75)
-        )
-        for hour in range(24)
-    }
-)
-SCHEMA_SET_V40MIN = cv.make_entity_service_schema(
-    {
-        vol.Required(ATTR_V40MIN): vol.All(
-            vol.Coerce(float), vol.Range(min=200, max=2000)
-        ),
-    }
-)
-SCHEMA_TURN_OFF = cv.make_entity_service_schema(
-    {vol.Required(ATTR_UNTIL_TEMP_LIMIT): vol.All(cv.boolean)}
-)
-SCHEMA_TURN_ON = cv.make_entity_service_schema(
-    {vol.Required(ATTR_UNTIL_TEMP_LIMIT): vol.All(cv.boolean)}
-)
 SERVICE_GET_PROFILE = "get_profile"
 SERVICE_SET_PROFILE = "set_profile"
 SERVICE_SET_V40MIN = "set_v40_min"
@@ -84,32 +62,45 @@ async def async_setup_entry(
 
     platform.async_register_entity_service(
         SERVICE_GET_PROFILE,
-        SCHEMA_GET_PROFILE,
+        {},
         OSOEnergyWaterHeater.async_get_profile.__name__,
         supports_response=SupportsResponse.ONLY,
     )
 
+    service_set_profile_schema = cv.make_entity_service_schema(
+        {
+            vol.Optional(f"hour_{hour:02d}"): vol.All(
+                vol.Coerce(int), vol.Range(min=10, max=75)
+            )
+            for hour in range(24)
+        }
+    )
+
     platform.async_register_entity_service(
         SERVICE_SET_PROFILE,
-        SCHEMA_SET_PROFILE,
+        service_set_profile_schema,
         OSOEnergyWaterHeater.async_set_profile.__name__,
     )
 
     platform.async_register_entity_service(
         SERVICE_SET_V40MIN,
-        SCHEMA_SET_V40MIN,
+        {
+            vol.Required(ATTR_V40MIN): vol.All(
+                vol.Coerce(float), vol.Range(min=200, max=550)
+            ),
+        },
         OSOEnergyWaterHeater.async_set_v40_min.__name__,
     )
 
     platform.async_register_entity_service(
         SERVICE_TURN_OFF,
-        SCHEMA_TURN_OFF,
+        {vol.Required(ATTR_UNTIL_TEMP_LIMIT): vol.All(cv.boolean)},
         OSOEnergyWaterHeater.async_oso_turn_off.__name__,
     )
 
     platform.async_register_entity_service(
         SERVICE_TURN_ON,
-        SCHEMA_TURN_ON,
+        {vol.Required(ATTR_UNTIL_TEMP_LIMIT): vol.All(cv.boolean)},
         OSOEnergyWaterHeater.async_oso_turn_on.__name__,
     )
 
