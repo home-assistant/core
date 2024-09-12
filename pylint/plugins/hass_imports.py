@@ -489,9 +489,7 @@ class HassImportsFormatChecker(BaseChecker):
             if module.startswith(f"{self.current_package}."):
                 self.add_message("hass-relative-import", node=node)
                 continue
-            if module.startswith("homeassistant.components.") and module.endswith(
-                "const"
-            ):
+            if module.startswith("homeassistant.components.") and len(module.split(".")) > 3:
                 if (
                     self.current_package.startswith("tests.components.")
                     and self.current_package.split(".")[2] == module.split(".")[2]
