@@ -1,5 +1,6 @@
 """Test squeezebox binary sensors."""
 
+from copy import deepcopy
 from unittest.mock import patch
 
 from homeassistant.const import Platform
@@ -22,7 +23,7 @@ async def test_binary_sensor(
         ),
         patch(
             "homeassistant.components.squeezebox.Server.async_query",
-            return_value=FAKE_QUERY_RESPONSE,
+            return_value=deepcopy(FAKE_QUERY_RESPONSE),
         ),
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
