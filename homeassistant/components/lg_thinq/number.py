@@ -171,25 +171,33 @@ class ThinQNumberEntity(ThinQEntity, NumberEntity):
 
         # Undate range.
         if (
-            min_value := self.entity_description.native_min_value or self.data.min
-        ) is not None:
+            self.entity_description.native_min_value is None
+            and (min_value := self.data.min) is not None
+        ):
             self._attr_native_min_value = min_value
 
         if (
-            max_value := self.entity_description.native_max_value or self.data.max
-        ) is not None:
+            self.entity_description.native_max_value is None
+            and (max_value := self.data.max) is not None
+        ):
             self._attr_native_max_value = max_value
 
-        if (step := self.entity_description.native_step or self.data.step) is not None:
+        if (
+            self.entity_description.native_step is None
+            and (step := self.data.step) is not None
+        ):
             self._attr_native_step = step
 
         _LOGGER.debug(
-            "[%s:%s] update status: %s -> %s, unit:%s",
+            "[%s:%s] update status: %s -> %s, unit:%s, min:%s, max:%s, step:%s",
             self.coordinator.device_name,
             self.property_id,
             self.data.value,
             self.native_value,
             self.native_unit_of_measurement,
+            self.native_min_value,
+            self.native_max_value,
+            self.native_step,
         )
 
     async def async_set_native_value(self, value: float) -> None:
