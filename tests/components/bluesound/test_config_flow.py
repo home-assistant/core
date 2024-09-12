@@ -12,13 +12,14 @@ from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+from .conftest import PlayerMocks
 from .utils import ValueStore
 
 from tests.common import MockConfigEntry
 
 
 async def test_user_flow_success(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, player: AsyncMock
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, player_mocks: PlayerMocks
 ) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
@@ -36,15 +37,17 @@ async def test_user_flow_success(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "player-name"
+    assert result["title"] == "player-name1111"
     assert result["data"] == {CONF_HOST: "1.1.1.1", CONF_PORT: 11000}
-    assert result["result"].unique_id == "00:11:22:33:44:55-11000"
+    assert result["result"].unique_id == "ff:ff:01:01:01:01-11000"
 
     mock_setup_entry.assert_called_once()
 
 
 async def test_user_flow_cannot_connect(
-    hass: HomeAssistant, player: AsyncMock, mock_setup_entry: AsyncMock, sync_status_store: ValueStore[SyncStatus]
+    hass: HomeAssistant,
+    player_mocks: PlayerMocks,
+    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
@@ -52,7 +55,9 @@ async def test_user_flow_cannot_connect(
         context={"source": SOURCE_USER},
     )
 
-    player.sync_status.side_effect = PlayerUnreachableError("Player not reachable")
+    player_mocks.player_data.player.sync_status.side_effect = PlayerUnreachableError(
+        "Player not reachable"
+    )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
@@ -64,7 +69,9 @@ async def test_user_flow_cannot_connect(
     assert result["errors"] == {"base": "cannot_connect"}
     assert result["step_id"] == "user"
 
-    player.sync_status.side_effect = sync_status_store.long_polling_mock()
+    player_mocks.player_data.player.sync_status.side_effect = (
+        player_mocks.player_data.sync_status_store.long_polling_mock()
+    )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
@@ -73,7 +80,7 @@ async def test_user_flow_cannot_connect(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "player-name"
+    assert result["title"] == "player-name1111"
     assert result["data"] == {
         CONF_HOST: "1.1.1.1",
         CONF_PORT: 11000,
@@ -84,7 +91,7 @@ async def test_user_flow_cannot_connect(
 
 async def test_user_flow_aleady_configured(
     hass: HomeAssistant,
-    player: AsyncMock,
+    player_mocks: PlayerMocks,
     config_entry: MockConfigEntry,
 ) -> None:
     """Test we handle already configured."""
@@ -97,7 +104,7 @@ async def test_user_flow_aleady_configured(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_HOST: "1.1.1.1",
+            CONF_HOST: "1.1.1.2",
             CONF_PORT: 11000,
         },
     )
@@ -105,13 +112,13 @@ async def test_user_flow_aleady_configured(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
-    assert config_entry.data[CONF_HOST] == "1.1.1.1"
+    assert config_entry.data[CONF_HOST] == "1.1.1.2"
 
-    player.sync_status.assert_called_once()
+    player_mocks.player_data_for_already_configured.player.sync_status.assert_called_once()
 
 
 async def test_import_flow_success(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, player: AsyncMock
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, player_mocks: PlayerMocks
 ) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
@@ -121,19 +128,21 @@ async def test_import_flow_success(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "player-name"
+    assert result["title"] == "player-name1111"
     assert result["data"] == {CONF_HOST: "1.1.1.1", CONF_PORT: 11000}
-    assert result["result"].unique_id == "00:11:22:33:44:55-11000"
+    assert result["result"].unique_id == "ff:ff:01:01:01:01-11000"
 
     mock_setup_entry.assert_called_once()
-    player.sync_status.assert_called_once()
+    player_mocks.player_data.player.sync_status.assert_called_once()
 
 
 async def test_import_flow_cannot_connect(
-    hass: HomeAssistant, player: AsyncMock
+    hass: HomeAssistant, player_mocks: PlayerMocks
 ) -> None:
     """Test we handle cannot connect error."""
-    player.sync_status.side_effect = PlayerUnreachableError("Player not reachable")
+    player_mocks.player_data.player.sync_status.side_effect = PlayerUnreachableError(
+        "Player not reachable"
+    )
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_IMPORT},
@@ -143,12 +152,12 @@ async def test_import_flow_cannot_connect(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
 
-    player.sync_status.assert_called_once()
+    player_mocks.player_data.player.sync_status.assert_called_once()
 
 
 async def test_import_flow_already_configured(
     hass: HomeAssistant,
-    player: AsyncMock,
+    player_mocks: PlayerMocks,
     config_entry: MockConfigEntry,
 ) -> None:
     """Test we handle already configured."""
@@ -156,17 +165,17 @@ async def test_import_flow_already_configured(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_IMPORT},
-        data={CONF_HOST: "1.1.1.1", CONF_PORT: 11000},
+        data={CONF_HOST: "1.1.1.2", CONF_PORT: 11000},
     )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
-    player.sync_status.assert_called_once()
+    player_mocks.player_data_for_already_configured.player.sync_status.assert_called_once()
 
 
 async def test_zeroconf_flow_success(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, player: AsyncMock
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, player_mocks: PlayerMocks
 ) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
@@ -176,7 +185,7 @@ async def test_zeroconf_flow_success(
             ip_address="1.1.1.1",
             ip_addresses=["1.1.1.1"],
             port=11000,
-            hostname="player-name",
+            hostname="player-name1111",
             type="_musc._tcp.local.",
             name="player-name._musc._tcp.local.",
             properties={},
@@ -187,25 +196,27 @@ async def test_zeroconf_flow_success(
     assert result["step_id"] == "confirm"
 
     mock_setup_entry.assert_not_called()
-    player.sync_status.assert_called_once()
+    player_mocks.player_data.player.sync_status.assert_called_once()
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={}
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "player-name"
+    assert result["title"] == "player-name1111"
     assert result["data"] == {CONF_HOST: "1.1.1.1", CONF_PORT: 11000}
-    assert result["result"].unique_id == "00:11:22:33:44:55-11000"
+    assert result["result"].unique_id == "ff:ff:01:01:01:01-11000"
 
     mock_setup_entry.assert_called_once()
 
 
 async def test_zeroconf_flow_cannot_connect(
-    hass: HomeAssistant, player: AsyncMock
+    hass: HomeAssistant, player_mocks: PlayerMocks
 ) -> None:
     """Test we handle cannot connect error."""
-    player.sync_status.side_effect = PlayerUnreachableError("Player not reachable")
+    player_mocks.player_data.player.sync_status.side_effect = PlayerUnreachableError(
+        "Player not reachable"
+    )
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
@@ -213,7 +224,7 @@ async def test_zeroconf_flow_cannot_connect(
             ip_address="1.1.1.1",
             ip_addresses=["1.1.1.1"],
             port=11000,
-            hostname="player-name",
+            hostname="player-name1111",
             type="_musc._tcp.local.",
             name="player-name._musc._tcp.local.",
             properties={},
@@ -223,12 +234,12 @@ async def test_zeroconf_flow_cannot_connect(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
 
-    player.sync_status.assert_called_once()
+    player_mocks.player_data.player.sync_status.assert_called_once()
 
 
 async def test_zeroconf_flow_already_configured(
     hass: HomeAssistant,
-    player: AsyncMock,
+    player_mocks: PlayerMocks,
     config_entry: MockConfigEntry,
 ) -> None:
     """Test we handle already configured and update the host."""
@@ -237,10 +248,10 @@ async def test_zeroconf_flow_already_configured(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
         data=ZeroconfServiceInfo(
-            ip_address="1.1.1.1",
-            ip_addresses=["1.1.1.1"],
+            ip_address="1.1.1.2",
+            ip_addresses=["1.1.1.2"],
             port=11000,
-            hostname="player-name",
+            hostname="player-name1112",
             type="_musc._tcp.local.",
             name="player-name._musc._tcp.local.",
             properties={},
@@ -250,6 +261,6 @@ async def test_zeroconf_flow_already_configured(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
-    assert config_entry.data[CONF_HOST] == "1.1.1.1"
+    assert config_entry.data[CONF_HOST] == "1.1.1.2"
 
-    player.sync_status.assert_called_once()
+    player_mocks.player_data_for_already_configured.player.sync_status.assert_called_once()
