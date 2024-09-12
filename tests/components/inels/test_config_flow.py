@@ -72,6 +72,65 @@ def mock_mqtt_client_test_connection():
         yield mock_try
 
 
+async def test_user_config_flow_finished_successfully(
+    hass: HomeAssistant, mock_try_connection, default_config
+) -> None:
+    """Test if we can finish config flow."""
+    mock_try_connection.return_value = None
+
+    result = await hass.config_entries.flow.async_init(
+        inels.DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result[CONF_TYPE] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        default_config,
+    )
+
+    assert result[CONF_TYPE] == "create_entry"
+    assert result["result"].data == default_config
+
+    assert len(mock_try_connection.mock_calls) == 1
+
+
+@pytest.mark.parametrize(
+    ("error_code", "expected_error"),
+    [
+        (1, "mqtt_version"),
+        (2, "forbidden_id"),
+        (3, "cannot_connect"),
+        (4, "invalid_auth"),
+        (5, "unauthorized"),
+        (6, "unknown"),
+    ],
+)
+async def test_user_config_flow_errors(
+    hass: HomeAssistant, mock_try_connection, error_code, expected_error, default_config
+) -> None:
+    """Test the config flow."""
+    mock_try_connection.return_value = error_code
+
+    result = await hass.config_entries.flow.async_init(
+        inels.DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result[CONF_TYPE] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        default_config,
+    )
+
+    assert result[CONF_TYPE] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["errors"]["base"] == expected_error
+
+    assert len(mock_try_connection.mock_calls) == 1
+
+
 async def test_config_setup(
     hass: HomeAssistant, mock_try_connection, mock_is_available, default_config
 ) -> None:
