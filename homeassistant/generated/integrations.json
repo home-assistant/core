@@ -3802,6 +3802,12 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
+    "monarch_money": {
+      "name": "Monarch Money",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "monessen": {
       "name": "Monessen",
       "integration_type": "virtual",
@@ -6458,6 +6464,12 @@
       "name": "Travis-CI",
       "integration_type": "hub",
       "config_flow": false,
+      "iot_class": "cloud_polling"
+    },
+    "triggercmd": {
+      "name": "TRIGGERcmd",
+      "integration_type": "hub",
+      "config_flow": true,
       "iot_class": "cloud_polling"
     },
     "tuya": {

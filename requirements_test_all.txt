@@ -359,7 +359,7 @@ aiosolaredge==0.2.0
 aiosteamist==1.0.0
 
 # homeassistant.components.cambridge_audio
-aiostreammagic==2.2.3
+aiostreammagic==2.2.5
 
 # homeassistant.components.switcher_kis
 aioswitcher==4.0.3
@@ -851,7 +851,7 @@ google-cloud-texttospeech==2.17.2
 google-generativeai==0.7.2
 
 # homeassistant.components.nest
-google-nest-sdm==5.0.0
+google-nest-sdm==5.0.1
 
 # homeassistant.components.google_photos
 google-photos-library-api==0.8.0
@@ -1017,7 +1017,7 @@ ismartgate==5.0.1
 israel-rail-api==0.1.2
 
 # homeassistant.components.abode
-jaraco.abode==5.2.1
+jaraco.abode==6.2.0
 
 # homeassistant.components.jellyfin
 jellyfin-apiclient-python==1.9.2
@@ -1442,7 +1442,7 @@ pybalboa==1.0.2
 pyblackbird==0.6
 
 # homeassistant.components.bluesound
-pyblu==1.0.1
+pyblu==1.0.2
 
 # homeassistant.components.neato
 pybotvac==0.0.25
@@ -2242,6 +2242,9 @@ tplink-omada-client==1.4.2
 # homeassistant.components.transmission
 transmission-rpc==7.0.3
 
+# homeassistant.components.triggercmd
+triggercmd==0.0.27
+
 # homeassistant.components.twinkly
 ttls==1.8.3
 
@@ -2259,6 +2262,9 @@ twilio==6.32.0
 
 # homeassistant.components.twitch
 twitchAPI==4.2.1
+
+# homeassistant.components.monarch_money
+typedmonarchmoney==0.3.1
 
 # homeassistant.components.ukraine_alarm
 uasiren==0.0.1

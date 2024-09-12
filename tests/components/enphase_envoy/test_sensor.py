@@ -1,6 +1,7 @@
 """Test Enphase Envoy sensors."""
 
 from itertools import chain
+import logging
 from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -1002,3 +1003,36 @@ async def test_sensor_missing_data(
     # test the original inverter is now unknown
     assert (entity_state := hass.states.get("sensor.inverter_1"))
     assert entity_state.state == STATE_UNKNOWN
+
+
+@pytest.mark.parametrize(
+    ("mock_envoy"),
+    [
+        "envoy_metered_batt_relay",
+    ],
+    indirect=["mock_envoy"],
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_fw_update(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_envoy: AsyncMock,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test enphase_envoy sensor update over fw update."""
+    logging.getLogger("homeassistant.components.enphase_envoy").setLevel(logging.DEBUG)
+    with patch("homeassistant.components.enphase_envoy.PLATFORMS", [Platform.SENSOR]):
+        await setup_integration(hass, config_entry)
+
+    # force HA to detect changed data by changing raw
+    mock_envoy.firmware = "0.0.0"
+
+    # Move time to next update
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert "firmware changed from: " in caplog.text
+    assert "to: 0.0.0, reloading enphase envoy integration" in caplog.text

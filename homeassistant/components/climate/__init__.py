@@ -933,6 +933,44 @@ async def async_service_temperature_set(
     entity: ClimateEntity, service_call: ServiceCall
 ) -> None:
     """Handle set temperature service."""
+    if (
+        ATTR_TEMPERATURE in service_call.data
+        and not entity.supported_features & ClimateEntityFeature.TARGET_TEMPERATURE
+    ):
+        report_issue = async_suggest_report_issue(
+            entity.hass,
+            integration_domain=entity.platform.platform_name,
+            module=type(entity).__module__,
+        )
+        _LOGGER.warning(
+            (
+                "%s::%s set_temperature action was used with temperature but the entity does not "
+                "implement the ClimateEntityFeature.TARGET_TEMPERATURE feature. Please %s"
+            ),
+            entity.platform.platform_name,
+            entity.__class__.__name__,
+            report_issue,
+        )
+    if (
+        ATTR_TARGET_TEMP_LOW in service_call.data
+        and not entity.supported_features
+        & ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+    ):
+        report_issue = async_suggest_report_issue(
+            entity.hass,
+            integration_domain=entity.platform.platform_name,
+            module=type(entity).__module__,
+        )
+        _LOGGER.warning(
+            (
+                "%s::%s set_temperature action was used with target_temp_low but the entity does not "
+                "implement the ClimateEntityFeature.TARGET_TEMPERATURE_RANGE feature. Please %s"
+            ),
+            entity.platform.platform_name,
+            entity.__class__.__name__,
+            report_issue,
+        )
+
     hass = entity.hass
     kwargs = {}
     min_temp = entity.min_temp
