@@ -76,17 +76,9 @@ class BSBLanSensor(BSBLanEntity, SensorEntity):
         self._attr_unique_id = f"{data.device.MAC}-{description.key}"
 
     @property
-    def native_value(self) -> float | None:
+    def native_value(self) -> StateType:
         """Return the state of the sensor."""
-        try:
-            value = self.entity_description.value_fn(self.coordinator.data)
-        except AttributeError:
+        value = self.entity_description.value_fn(self.coordinator.data)
+        if value == "---":
             return None
-
-        if value is None:
-            return None
-
-        try:
-            return float(value)
-        except ValueError:
-            return None
+        return value
