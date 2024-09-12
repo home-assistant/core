@@ -87,7 +87,7 @@ async def test_user_setup_found_token_device(
         assert result2["type"] is FlowResultType.FORM
         assert result2["step_id"] == "credentials"
 
-        with patch('aiohttp.ClientSession.post') as mock_post:
+        with patch("aiohttp.ClientSession.post") as mock_post:
             # Setup mock response for successful validation
             mock_response = mock_post.return_value.__aenter__.return_value
             mock_response.status = 200
@@ -100,7 +100,10 @@ async def test_user_setup_found_token_device(
 
             assert result3["type"] is FlowResultType.CREATE_ENTRY
             assert result3["title"] == "Switcher"
-            assert result3["result"].data == {CONF_USERNAME: DUMMY_USERNAME, CONF_TOKEN: DUMMY_TOKEN}
+            assert result3["result"].data == {
+                CONF_USERNAME: DUMMY_USERNAME,
+                CONF_TOKEN: DUMMY_TOKEN,
+            }
 
         # Reset the config entries
         await hass.config_entries.async_remove(result3["result"].entry_id)
@@ -119,7 +122,7 @@ async def test_user_setup_found_token_device(
         assert result2["type"] is FlowResultType.FORM
         assert result2["step_id"] == "credentials"
 
-        with patch('aiohttp.ClientSession.post') as mock_post:
+        with patch("aiohttp.ClientSession.post") as mock_post:
             # Setup mock response for failed validation
             mock_response = mock_post.return_value.__aenter__.return_value
             mock_response.status = 200
@@ -187,7 +190,7 @@ async def test_reauth_successful(
     )
     entry.add_to_hass(hass)
 
-    with patch('aiohttp.ClientSession.post') as mock_post:
+    with patch("aiohttp.ClientSession.post") as mock_post:
         # Setup mock response for successful validation
         mock_response = mock_post.return_value.__aenter__.return_value
         mock_response.status = 200
@@ -234,7 +237,7 @@ async def test_reauth_invalid_auth(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
-    with patch('aiohttp.ClientSession.post') as mock_post:
+    with patch("aiohttp.ClientSession.post") as mock_post:
         # Setup mock response for failed validation
         mock_response = mock_post.return_value.__aenter__.return_value
         mock_response.status = 200
