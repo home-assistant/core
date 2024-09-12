@@ -90,7 +90,7 @@ class AdsCover(AdsEntity, CoverEntity):
     def __init__(
         self,
         ads_hub: AdsHub,
-        ads_var_is_closed: str | None,
+        ads_var_is_closed: str,
         ads_var_position: str | None,
         ads_var_pos_set: str | None,
         ads_var_open: str | None,
