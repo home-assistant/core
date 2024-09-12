@@ -557,6 +557,7 @@ class HassImportsFormatChecker(BaseChecker):
                 "device_tracker",
                 "homeassistant",
                 "homeassistant_hardware",
+                "http",
                 "recorder",
             )
             # Tests for the corresponding component
