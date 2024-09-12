@@ -25,7 +25,7 @@ from .const import (
     DATA_TRACES_RESTORED,
     DEFAULT_STORED_TRACES,
 )
-from .models import ActionTrace, BaseTrace, RestoredTrace
+from .models import ActionTrace, BaseTrace, RestoredTrace, TraceData
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,8 +39,6 @@ TRACE_CONFIG_SCHEMA = {
 }
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
-
-type TraceData = dict[str, LimitedSizeDict[str, BaseTrace]]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
