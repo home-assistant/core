@@ -556,6 +556,7 @@ class HassImportsFormatChecker(BaseChecker):
                 "assist_pipeline",
                 "automation",
                 "bluetooth",
+                "cast",
                 "device_automation",
                 "device_tracker",
                 "ffmpeg",
@@ -571,6 +572,12 @@ class HassImportsFormatChecker(BaseChecker):
                 "sensor",
                 "stream",
                 "zha",
+            )
+            # Exceptions currently in progress
+            or module_integration
+            in (
+                "diagnostics",  # 125821
+                "websocket_api",  # 125834
             )
             # Tests for the corresponding component
             or self.current_package.startswith("tests.components.")
