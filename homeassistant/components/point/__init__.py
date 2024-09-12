@@ -55,7 +55,7 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
-type PointConfigEntry = ConfigEntry[api.AsyncConfigEntryAuth]
+type PointConfigEntry = ConfigEntry[PointData]
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -151,7 +151,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: PointConfigEntry) -> boo
 
     client = MinutPointClient(hass, entry, point_session)
     hass.async_create_task(client.update())
-    entry.runtime_data = PointData(client)  # type: ignore[assignment]
+    entry.runtime_data = PointData(client)
 
     await async_setup_webhook(hass, entry, point_session)
     # Entries are added in the client.update() function.
