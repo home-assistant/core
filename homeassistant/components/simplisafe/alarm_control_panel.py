@@ -147,7 +147,6 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanelEntity):
         self._last_event = None
         self._set_state_from_system_data()
 
-
     @callback
     def _is_code_valid(self, code: str | None, state: str) -> bool:
         """Validate that a code matches the required one."""
