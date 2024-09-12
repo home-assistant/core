@@ -1704,6 +1704,24 @@ async def test_entity_last_reset_setup(
     )
 
 
+async def test_trigger_entity_parses_state_value(hass: HomeAssistant) -> None:
+    """Test static last_reset marked as static_rendered."""
+
+    tse = TriggerSensorEntity(
+        hass,
+        None,
+        {
+            "name": Template("Static last_reset entity", hass),
+            "state": Template("{{ states('sensor.test_state') | int(0) }}", hass),
+            "state_class": "total",
+        },
+    )
+
+    tse._render_templates({})
+
+    assert tse._rendered["state"] == 0
+
+
 async def test_entity_last_reset_static_value(hass: HomeAssistant) -> None:
     """Test static last_reset marked as static_rendered."""
 
