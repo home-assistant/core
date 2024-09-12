@@ -557,6 +557,8 @@ class HassImportsFormatChecker(BaseChecker):
                 "automation",
                 "bluetooth",
                 "device_tracker",
+                "ffmpeg",
+                "ffmpeg_motion",
                 "google_assistant",
                 "homeassistant",
                 "homeassistant_hardware",
