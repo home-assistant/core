@@ -12,7 +12,7 @@
   "services": {
     "reload": {
       "name": "[%key:common::action::reload%]",
-      "description": "Reloads bayesian sensors from the YAML-configuration."
+      "description": "Reloads Bayesian sensors from the YAML-configuration."
     }
   },
   "options": {
@@ -154,7 +154,7 @@
     "step": {
       "user": {
         "title": "Add a Bayesian Sensor",
-        "description": "Create a binary sensor which combines the state from multiple sensors.",
+        "description": "Create a binary sensor which combines the state from multiple sensors to estimate the whether an event is occurring, or something is true. See [the documentation](https://www.home-assistant.io/integrations/bayesian/) for more details.",
         "data": {
           "probability_threshold": "Probability Threshold",
           "prior": "Prior",
@@ -162,13 +162,14 @@
           "name": "[%key:common::config_flow::data::name%]"
         },
         "data_description": {
-          "probability_threshold": "The probability above which the sensor will show as 'on'",
-          "prior": "The baseline probabilty the sensor should be on, if you knew nothing else about the state of the entities below"
+          "probability_threshold": "The probability above which the sensor will show as 'on'. 50% should produce the most accurate result. Use numbers greater than 50% if avoiding false positives is important, or vice-versa.",
+          "prior": "The baseline probabilty the sensor should be 'on', this is usually the percentage of time it is true. For example, for a sensor 'Everyone sleeping' it might be 8 hours a day, 33%.",
+          "device_class": "Choose the device class you would like the sensor to show as."
         }
       },
       "observation_selector": {
         "title": "Add an observation",
-        "description": "One by one, add an observation that will inform the bayesian sensor. Each observation will update the proability of the Bayesian sensor if it is detected, or if its inverse is detected. If the state of the entity becomes `UNAVAILABLE` or `UNKOWN` it will be ignored. If more than one `state` or more than 1 `numeric_range` is configured for the same entity then inverse detections will be ignored.",
+        "description": "One by one, add observations that will inform the Bayesian sensor. Each observation will update the proability of the Bayesian sensor if it is detected, or if its inverse is detected. If the state of the entity becomes `UNAVAILABLE` or `UNKOWN` it will be ignored. If more than one `state` or more than one `numeric_range` is configured for the same entity then inverse detections will be ignored.",
         "menu_options": {
           "state": "Observation from state sensor",
           "numeric_state": "Observation from numeric range",
@@ -182,21 +183,21 @@
           "name": "[%key:common::config_flow::data::name%]",
           "entity_id": "Entity",
           "to_state": "To state",
-          "prob_given_true": "Probability Given True",
-          "prob_given_false": "Probability Given False",
+          "prob_given_true": "Probability when Bayesian sensor on",
+          "prob_given_false": "Probability when Bayesian sensor off",
           "add_another": "Add another observation?"
         },
         "data_description": {
-          "name": "This name will be used for to identify this observation for editing in the future",
+          "name": "This name will be used for to identify this observation for editing in the future.",
           "entity_id": "The entity of interest.",
-          "to_state": "The state of the sensor to be detected",
-          "prob_given_true": "The probability of detecting the above state when the Bayesian sensor should be on",
-          "prob_given_false": "The probability of *not* detecting the above state when the Bayesian sensor should be on"
+          "to_state": "The state of the sensor to be detected.",
+          "prob_given_true": "The estimated probability or proportion of time this observation is true when the Bayesian sensor should be 'on'.",
+          "prob_given_false": "The estimated probability or proportion of time this observation is true when the Bayesian sensor should be 'off'."
         }
       },
       "numeric_state": {
         "title": "[%key:component::bayesian::config::step::state::title%]",
-        "description": "Add an observation which examines the value of a numeric entity.",
+        "description": "Add an observation which detects whether a numeric sensor is within a chosen range.",
         "data": {
           "name": "[%key:common::config_flow::data::name%]",
           "entity_id": "[%key:component::bayesian::config::step::state::data::entity_id%]",
@@ -210,14 +211,14 @@
           "name": "[%key:component::bayesian::config::step::state::data_description::name%]",
           "entity_id": "[%key:component::bayesian::config::step::state::data_description::entity_id%]",
           "above": "Optional - the lower end of the numeric range. Values exactly matching this will not count",
-          "below": "Optional - the upper end of the numeric range. Values matching this will only count if more than one range is configured for the same entity.",
+          "below": "Optional - the upper end of the numeric range. Values exactly matching this will only count if more than one range is configured for the same entity.",
           "prob_given_true": "[%key:component::bayesian::config::step::state::data_description::prob_given_true%]",
           "prob_given_false": "[%key:component::bayesian::config::step::state::data_description::prob_given_true%]"
         }
       },
       "template": {
         "title": "[%key:component::bayesian::config::step::state::title%]",
-        "description": "Add an observation with evaluates a template.",
+        "description": "Add an observation which evaluates whether a template is observerd (`true`) or not (`false`).",
         "data": {
           "name": "[%key:common::config_flow::data::name%]",
           "value_template": "Template",
@@ -227,7 +228,7 @@
         },
         "data_description": {
           "name": "[%key:component::bayesian::config::step::state::data_description::name%]",
-          "value_template": "A template that evaluates to `true` will update the prior accordingly, A template that returns `false` or `None` will update the prior with inverse probabilities. A template the returns an error will not update probabilities",
+          "value_template": "A template that evaluates to `true` will update the prior accordingly, A template that returns `false` or `None` will update the prior with inverse probabilities. A template the returns an error will not update probabilities. Results are coerced into being `true` or `false`",
           "prob_given_true": "[%key:component::bayesian::config::step::state::data_description::prob_given_true%]",
           "prob_given_false": "[%key:component::bayesian::config::step::state::data_description::prob_given_true%]"
         }
