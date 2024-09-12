@@ -13,7 +13,7 @@ CLIENT_PREFIX: Final = "home-assistant"
 CONF_CONNECT_CLIENT_ID: Final = "connect_client_id"
 
 # MQTT
-MQTT_SUBSCRIPTION_INTERVAL: Final = timedelta(days=180)
+MQTT_SUBSCRIPTION_INTERVAL: Final = timedelta(days=1)
 
 # MQTT: Message types
 DEVICE_PUSH_MESSAGE: Final = "DEVICE_PUSH"

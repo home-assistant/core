@@ -8,7 +8,7 @@ import json
 import logging
 from typing import Any
 
-from thinqconnect import ThinQApi, ThinQMQTTClient
+from thinqconnect import ThinQApi, ThinQAPIException, ThinQMQTTClient
 
 from homeassistant.core import Event, HomeAssistant
 
@@ -46,8 +46,8 @@ class ThinQMQTT:
 
             # Connect to server and create certificate.
             return await self.client.async_prepare_mqtt()
-        except Exception as exc:  # noqa: BLE001
-            _LOGGER.error("Failed to connect: %s", exc)
+        except (ThinQAPIException, TypeError, ValueError):
+            _LOGGER.exception("Failed to connect")
             return False
 
     async def async_disconnect(self, event: Event | None = None) -> None:
@@ -57,24 +57,35 @@ class ThinQMQTT:
         if self.client is not None:
             try:
                 await self.client.async_disconnect()
-            except Exception as exc:  # noqa: BLE001
-                _LOGGER.exception("Failed to disconnect: %s", exc)
+            except (ThinQAPIException, TypeError, ValueError):
+                _LOGGER.exception("Failed to disconnect")
+
+    def _get_failed_device_count(
+        self, results: list[dict | BaseException | None]
+    ) -> int:
+        """Check if there exists errors while performing tasks and then return count."""
+        # Note that result code '1207' means 'Already subscribed push'
+        # and is not actually fail.
+        return sum(
+            isinstance(result, (TypeError, ValueError))
+            or (isinstance(result, ThinQAPIException) and result.code != "1207")
+            for result in results
+        )
 
     async def async_refresh_subscribe(self, now: datetime | None = None) -> None:
         """Update event subscribes."""
         _LOGGER.debug("async_refresh_subscribe: now=%s", now)
 
-        try:
-            tasks = [
-                self.hass.async_create_task(
-                    self.thinq_api.async_post_event_subscribe(coordinator.device_id)
-                )
-                for coordinator in self.coordinators.values()
-            ]
-            if tasks:
-                await asyncio.gather(*tasks)
-        except Exception as exc:  # noqa: BLE001
-            _LOGGER.error("Failed to refresh subscription: %s", exc)
+        tasks = [
+            self.hass.async_create_task(
+                self.thinq_api.async_post_event_subscribe(coordinator.device_id)
+            )
+            for coordinator in self.coordinators.values()
+        ]
+        if tasks:
+            results = await asyncio.gather(*tasks, return_exceptions=True)
+            if (count := self._get_failed_device_count(results)) > 0:
+                _LOGGER.error("Failed to refresh subscription on %s devices", count)
 
     async def async_start_subscribes(self) -> None:
         """Start push/event subscribes."""
@@ -84,47 +95,45 @@ class ThinQMQTT:
             _LOGGER.error("Failed to start subscription: No client")
             return
 
-        try:
-            tasks = [
-                self.hass.async_create_task(
-                    self.thinq_api.async_post_push_subscribe(coordinator.device_id)
-                )
-                for coordinator in self.coordinators.values()
-            ]
-            tasks.extend(
-                self.hass.async_create_task(
-                    self.thinq_api.async_post_event_subscribe(coordinator.device_id)
-                )
-                for coordinator in self.coordinators.values()
+        tasks = [
+            self.hass.async_create_task(
+                self.thinq_api.async_post_push_subscribe(coordinator.device_id)
             )
-            if tasks:
-                await asyncio.gather(*tasks)
-        except Exception as exc:  # noqa: BLE001
-            _LOGGER.error("Failed to start subscription: %s", exc)
-        finally:
-            await self.client.async_connect_mqtt()
+            for coordinator in self.coordinators.values()
+        ]
+        tasks.extend(
+            self.hass.async_create_task(
+                self.thinq_api.async_post_event_subscribe(coordinator.device_id)
+            )
+            for coordinator in self.coordinators.values()
+        )
+        if tasks:
+            results = await asyncio.gather(*tasks, return_exceptions=True)
+            if (count := self._get_failed_device_count(results)) > 0:
+                _LOGGER.error("Failed to start subscription on %s devices", count)
+
+        await self.client.async_connect_mqtt()
 
     async def async_end_subscribes(self) -> None:
         """Start push/event unsubscribes."""
         _LOGGER.debug("async_end_subscribes")
 
-        try:
-            tasks = [
-                self.hass.async_create_task(
-                    self.thinq_api.async_delete_push_subscribe(coordinator.device_id)
-                )
-                for coordinator in self.coordinators.values()
-            ]
-            tasks.extend(
-                self.hass.async_create_task(
-                    self.thinq_api.async_delete_event_subscribe(coordinator.device_id)
-                )
-                for coordinator in self.coordinators.values()
+        tasks = [
+            self.hass.async_create_task(
+                self.thinq_api.async_delete_push_subscribe(coordinator.device_id)
             )
-            if tasks:
-                await asyncio.gather(*tasks)
-        except Exception as exc:  # noqa: BLE001
-            _LOGGER.error("Failed to delete subscription: %s", exc)
+            for coordinator in self.coordinators.values()
+        ]
+        tasks.extend(
+            self.hass.async_create_task(
+                self.thinq_api.async_delete_event_subscribe(coordinator.device_id)
+            )
+            for coordinator in self.coordinators.values()
+        )
+        if tasks:
+            results = await asyncio.gather(*tasks, return_exceptions=True)
+            if (count := self._get_failed_device_count(results)) > 0:
+                _LOGGER.error("Failed to end subscription on %s devices", count)
 
     def on_message_received(
         self,
