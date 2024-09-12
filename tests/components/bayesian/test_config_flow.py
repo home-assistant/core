@@ -632,7 +632,7 @@ async def test_editing_observations(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     # Confirm that we get the edit observation page
-    assert result2["step_id"] == str(OptionsFlowSteps.EDIT_OBSERVATION)
+    assert result2["step_id"] == str(ObservationTypes.STATE)
     assert result2["type"] is FlowResultType.FORM
 
     # Edit all settings
@@ -697,7 +697,7 @@ async def test_editing_observations(hass: HomeAssistant) -> None:
         result1["flow_id"], {CONF_INDEX: "0"}
     )
     await hass.async_block_till_done()
-    assert result2["step_id"] == str(OptionsFlowSteps.EDIT_OBSERVATION)
+    assert result2["step_id"] == str(ObservationTypes.NUMERIC_STATE)
     assert result2["type"] is FlowResultType.FORM
 
     await hass.config_entries.options.async_configure(
@@ -759,7 +759,7 @@ async def test_editing_observations(hass: HomeAssistant) -> None:
         result1["flow_id"], {CONF_INDEX: "2"}
     )
     await hass.async_block_till_done()
-    assert result2["step_id"] == str(OptionsFlowSteps.EDIT_OBSERVATION)
+    assert result2["step_id"] == str(ObservationTypes.TEMPLATE)
     assert result2["type"] is FlowResultType.FORM
 
     await hass.config_entries.options.async_configure(

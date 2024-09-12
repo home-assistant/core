@@ -443,11 +443,11 @@ OPTIONS_FLOW: dict[str, SchemaFlowStep] = {
         suggested_values=None,
         next_step=str(OptionsFlowSteps.EDIT_OBSERVATION),
     ),
-    str(OptionsFlowSteps.EDIT_OBSERVATION): SchemaFlowFormStep(
-        _get_edit_observation_schema,
-        suggested_values=_get_edit_observation_suggested_values,
-        validate_user_input=_validate_observation_setup,
-    ),
+    # str(OptionsFlowSteps.EDIT_OBSERVATION): SchemaFlowFormStep(
+    #    _get_edit_observation_schema,
+    #    suggested_values=_get_edit_observation_suggested_values,
+    #    validate_user_input=_validate_observation_setup,
+    # ),
     str(OptionsFlowSteps.REMOVE_OBSERVATION): SchemaFlowFormStep(
         _get_remove_observation_schema,
         suggested_values=None,
