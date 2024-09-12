@@ -75,7 +75,7 @@ class AxionDMXLight(LightEntity):
         self._last_rgbw: tuple[int, int, int, int] | None = (0, 0, 0, 0)
         self._attr_rgbww_color = (0, 0, 0, 0, 0)  # Default values for RGBWW
         self._last_rgbww: tuple[int, int, int, int, int] | None = (0, 0, 0, 0, 0)
-        self._attr_color_temp = 1
+        self._color_temp = 1
         self._last_color_temp = 1
         self._attr_color_mode = ColorMode.BRIGHTNESS
         self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
@@ -111,6 +111,11 @@ class AxionDMXLight(LightEntity):
     def unique_id(self) -> str:
         """Return the unique ID of this light."""
         return self._unique_id
+
+    @property
+    def color_temp(self) -> int:
+        """Return the color temperature of the light."""
+        return color_util.color_temperature_kelvin_to_mired(self._color_temp)
 
     @property
     def supported_features(self) -> LightEntityFeature:
@@ -240,14 +245,14 @@ class AxionDMXLight(LightEntity):
         elif self._light_type == "Tunable White":
             if ATTR_COLOR_TEMP in kwargs:
                 self._attr_color_mode = ColorMode.COLOR_TEMP
-                self._attr_color_temp = color_util.color_temperature_mired_to_kelvin(
+                self._color_temp = color_util.color_temperature_mired_to_kelvin(
                     kwargs[ATTR_COLOR_TEMP]
                 )
             else:
-                self._attr_color_temp = self._last_color_temp
+                self._color_temp = self._last_color_temp
 
             warm_white_level, cold_white_level = get_tunable_white_levels(
-                self._attr_color_temp,
+                self._color_temp,
                 warm_white_k=1800,  # Fixed value for warm white LED
                 cool_white_k=6000,  # Fixed value for cold white LED
                 max_level=255,
@@ -255,7 +260,7 @@ class AxionDMXLight(LightEntity):
                 if self._attr_brightness is not None
                 else 255,
             )
-            self._last_color_temp = self._attr_color_temp
+            self._last_color_temp = self._color_temp
             _LOGGER.debug(f"Setting Warm Light level - {warm_white_level}")
             await self.api.set_level(self._channel, warm_white_level)
             _LOGGER.debug(f"Setting Cold White level - {cold_white_level}")
