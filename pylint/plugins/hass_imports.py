@@ -550,6 +550,11 @@ class HassImportsFormatChecker(BaseChecker):
         if node.modname.startswith("homeassistant.components.") and not (
             self.current_package.startswith("tests.components.")
             and self.current_package.split(".")[2] == node.modname.split(".")[2]
+            # Exceptions that need investigating
+            or node.modname.startswith("homeassistant.components.bluetooth")
+            or node.modname.startswith(
+                "homeassistant.components.homeassistant.triggers"
+            )
         ):
             if len(node.modname.split(".")) > 3:
                 self.add_message("hass-component-root-import", node=node)
