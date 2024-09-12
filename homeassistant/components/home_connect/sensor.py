@@ -46,7 +46,7 @@ async def async_setup_entry(
     def get_entities():
         """Get a list of entities."""
         entities: list[HomeConnectSensorEntity] = []
-        hc_api = cast(ConfigEntryAuth, hass.data[DOMAIN][config_entry.entry_id])
+        hc_api: ConfigEntryAuth = hass.data[DOMAIN][config_entry.entry_id]
         for device in hc_api.devices:
             entities += [
                 HomeConnectSensorEntity(device, desc)
