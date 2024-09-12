@@ -1,6 +1,6 @@
 """Test the Switcher config flow."""
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -53,7 +53,7 @@ async def test_user_setup(
         assert mock_bridge.is_running is False
         assert result2["type"] is FlowResultType.CREATE_ENTRY
         assert result2["title"] == "Switcher"
-        assert result2["result"].data == {"username": None, "token": None}
+        assert result2["result"].data == {CONF_USERNAME: None, CONF_TOKEN: None}
 
         await hass.async_block_till_done()
 
@@ -87,22 +87,12 @@ async def test_user_setup_found_token_device(
         assert result2["type"] is FlowResultType.FORM
         assert result2["step_id"] == "credentials"
 
-        mock_response = MagicMock()
-        mock_response.status = 200
-        mock_response.json = AsyncMock(return_value={"result": "true"})
-        mock_response.__aenter__.return_value = mock_response
-        mock_response.__aexit__.return_value = AsyncMock()
+        with patch('aiohttp.ClientSession.post') as mock_post:
+            # Setup mock response for successful validation
+            mock_response = mock_post.return_value.__aenter__.return_value
+            mock_response.status = 200
+            mock_response.json.return_value = {"result": "true"}
 
-        with (
-            patch(
-                "aioswitcher.device.tools.validate_token",
-                return_value=True,
-            ),
-            patch(
-                "aioswitcher.device.tools.aiohttp.ClientSession.post",
-                new=AsyncMock(return_value=mock_response),
-            ),
-        ):
             result3 = await hass.config_entries.flow.async_configure(
                 result2["flow_id"],
                 {CONF_USERNAME: DUMMY_USERNAME, CONF_TOKEN: DUMMY_TOKEN},
@@ -110,28 +100,38 @@ async def test_user_setup_found_token_device(
 
             assert result3["type"] is FlowResultType.CREATE_ENTRY
             assert result3["title"] == "Switcher"
-            assert result3["result"].data == {"username": None, "token": None}
+            assert result3["result"].data == {CONF_USERNAME: DUMMY_USERNAME, CONF_TOKEN: DUMMY_TOKEN}
 
-        with (
-            patch(
-                "aioswitcher.device.tools.validate_token",
-                return_value=False,
-            ),
-            patch(
-                "aioswitcher.device.tools.aiohttp.ClientSession.post",
-                new=AsyncMock(return_value=mock_response),
-            ),
-        ):
-            result4 = await hass.config_entries.flow.async_configure(
+        # Reset the config entries
+        await hass.config_entries.async_remove(result3["result"].entry_id)
+        await hass.async_block_till_done()
+
+        # Now test with invalid credentials
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "confirm"
+
+        result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+        assert result2["type"] is FlowResultType.FORM
+        assert result2["step_id"] == "credentials"
+
+        with patch('aiohttp.ClientSession.post') as mock_post:
+            # Setup mock response for failed validation
+            mock_response = mock_post.return_value.__aenter__.return_value
+            mock_response.status = 200
+            mock_response.json.return_value = {"result": "false"}
+
+            result3 = await hass.config_entries.flow.async_configure(
                 result2["flow_id"],
                 {CONF_USERNAME: DUMMY_USERNAME, CONF_TOKEN: DUMMY_TOKEN},
             )
 
-            await hass.async_block_till_done()
-
-            assert result4["type"] is FlowResultType.FORM
-            assert result4["step_id"] == "credentials"
-            assert result4["errors"] == {"base": "invalid_auth"}
+        assert result3["type"] is FlowResultType.FORM
+        assert result3["errors"] == {"base": "invalid_auth"}
 
 
 async def test_user_setup_abort_no_devices_found(
@@ -183,27 +183,16 @@ async def test_reauth_successful(
     """Test starting a reauthentication flow."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        unique_id="test-token",
         data={CONF_USERNAME: DUMMY_USERNAME, CONF_TOKEN: DUMMY_TOKEN},
     )
     entry.add_to_hass(hass)
 
-    mock_response = MagicMock()
-    mock_response.status = 200
-    mock_response.json = AsyncMock(return_value={"result": "true"})
-    mock_response.__aenter__.return_value = mock_response
-    mock_response.__aexit__.return_value = AsyncMock()
+    with patch('aiohttp.ClientSession.post') as mock_post:
+        # Setup mock response for successful validation
+        mock_response = mock_post.return_value.__aenter__.return_value
+        mock_response.status = 200
+        mock_response.json.return_value = {"result": "true"}
 
-    with (
-        patch(
-            "aioswitcher.device.tools.validate_token",
-            return_value=True,
-        ),
-        patch(
-            "aioswitcher.device.tools.aiohttp.ClientSession.post",
-            new=AsyncMock(return_value=mock_response),
-        ),
-    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={
@@ -216,11 +205,45 @@ async def test_reauth_successful(
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "reauth_confirm"
 
-        # Currently not working
-        # result = await hass.config_entries.flow.async_configure(
-        #     result["flow_id"],
-        #     user_input=user_input,
-        # )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=user_input,
+        )
 
-        # assert result["type"] is FlowResultType.ABORT
-        # assert result["reason"] == "reauth_successful"
+        assert result["type"] is FlowResultType.ABORT
+        assert result["reason"] == "reauth_successful"
+
+
+async def test_reauth_invalid_auth(hass: HomeAssistant) -> None:
+    """Test reauthentication flow with invalid credentials."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_USERNAME: DUMMY_USERNAME, CONF_TOKEN: DUMMY_TOKEN},
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "entry_id": entry.entry_id,
+        },
+        data=entry.data,
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    with patch('aiohttp.ClientSession.post') as mock_post:
+        # Setup mock response for failed validation
+        mock_response = mock_post.return_value.__aenter__.return_value
+        mock_response.status = 200
+        mock_response.json.return_value = {"result": "false"}
+
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_USERNAME: "invalid_user", CONF_TOKEN: "invalid_token"},
+        )
+
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"] == {"base": "invalid_auth"}
