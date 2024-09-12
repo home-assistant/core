@@ -1,7 +1,6 @@
 """HTTP view that converts audio from a URL to a preferred format."""
 
 import asyncio
-from collections import defaultdict
 from dataclasses import dataclass, field
 from http import HTTPStatus
 import logging
@@ -28,7 +27,7 @@ def async_create_proxy_url(
     channels: int | None = None,
     width: int | None = None,
 ) -> str:
-    """Create a one-time use proxy URL that automatically converts the media."""
+    """Create a use proxy URL that automatically converts the media."""
     data: FFmpegProxyData = hass.data[DATA_FFMPEG_PROXY]
     return data.async_create_proxy_url(
         device_id, media_url, media_format, rate, channels, width
@@ -39,7 +38,10 @@ def async_create_proxy_url(
 class FFmpegConversionInfo:
     """Information for ffmpeg conversion."""
 
-    url: str
+    convert_id: str
+    """Unique id for media conversion."""
+
+    media_url: str
     """Source URL of media to convert."""
 
     media_format: str
@@ -59,10 +61,8 @@ class FFmpegConversionInfo:
 class FFmpegProxyData:
     """Data for ffmpeg proxy conversion."""
 
-    # device_id -> convert_id -> info
-    conversions: dict[str, dict[str, FFmpegConversionInfo]] = field(
-        default_factory=lambda: defaultdict(dict)
-    )
+    # device_id -> info
+    conversions: dict[str, FFmpegConversionInfo] = field(default_factory=dict)
 
     # device_id -> process
     processes: dict[str, asyncio.subprocess.Process] = field(default_factory=dict)
@@ -81,6 +81,7 @@ class FFmpegProxyData:
         self.conversions[device_id][convert_id] = FFmpegConversionInfo(
             media_url, media_format, rate, channels, width
         )
+        self.conversions[device_id] = convert_info
         _LOGGER.debug("Media URL allowed by proxy: %s", media_url)
 
         return f"/api/esphome/ffmpeg_proxy/{device_id}/{convert_id}.{media_format}"
@@ -128,7 +129,7 @@ class FFmpegConvertResponse(web.StreamResponse):
 
         command_args = [
             "-i",
-            self.convert_info.url,
+            self.convert_info.media_url,
             "-f",
             self.convert_info.media_format,
         ]
@@ -189,6 +190,10 @@ class FFmpegConvertResponse(web.StreamResponse):
             else:
                 _LOGGER.debug("Conversion completed: %s", self.convert_info)
 
+            # Clean up
+            self.proxy_data.conversions.pop(self.device_id)
+            self.proxy_data.processes.pop(self.device_id)
+
         return writer
 
 
@@ -208,19 +213,18 @@ class FFmpegProxyView(HomeAssistantView):
         self, request: web.Request, device_id: str, filename: str
     ) -> web.StreamResponse:
         """Start a get request."""
-
-        # {id}.mp3 -> id
-        convert_id = filename.rsplit(".")[0]
-
-        try:
-            convert_info = self.proxy_data.conversions[device_id].pop(convert_id)
-        except KeyError:
-            _LOGGER.error(
-                "Unrecognized convert id %s for device: %s", convert_id, device_id
-            )
+        if (convert_info := self.proxy_data.conversions.get(device_id)) is None:
             return web.Response(
-                body="Convert id not recognized", status=HTTPStatus.BAD_REQUEST
+                body="No proxy URL for device", status=HTTPStatus.BAD_REQUEST
             )
+
+        # {id}.mp3 -> id, mp3
+        convert_id, media_format = filename.rsplit(".")
+
+        if (convert_info.convert_id != convert_id) or (
+            convert_info.media_format != media_format
+        ):
+            return web.Response(body="Invalid proxy URL", status=HTTPStatus.BAD_REQUEST)
 
         # Stop any existing process
         proc = self.proxy_data.processes.pop(device_id, None)
