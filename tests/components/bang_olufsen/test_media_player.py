@@ -479,7 +479,7 @@ async def test_async_update_beolink_line_in(
     source_change_callback(BangOlufsenSource.LINE_IN)
     beolink_callback(WebsocketNotificationTag(value="beolinkListeners"))
 
-    states = hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID)
+    assert (states := hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID))
     assert states.attributes["group_members"] == []
 
     assert mock_mozart_client.get_beolink_listeners.call_count == 1
@@ -513,8 +513,7 @@ async def test_async_update_beolink_listener(
         )
     )
 
-    states = hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID)
-
+    assert (states := hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID))
     assert states.attributes["group_members"] == [
         TEST_MEDIA_PLAYER_ENTITY_ID_2,
         TEST_MEDIA_PLAYER_ENTITY_ID,
@@ -1294,7 +1293,7 @@ async def test_async_join_players_invalid(
     mock_config_entry_2: MockConfigEntry,
     source: Source,
     group_members: list[str],
-    expected_result: Callable,
+    expected_result: AbstractContextManager,
     error_type: str,
 ) -> None:
     """Test async_join_players with an invalid media_player entity."""
