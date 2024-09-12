@@ -569,6 +569,7 @@ class HassImportsFormatChecker(BaseChecker):
                 "script",
                 "sensor",
                 "stream",
+                "zha",
             )
             # Tests for the corresponding component
             or self.current_package.startswith("tests.components.")
