@@ -17,7 +17,7 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import ThinqConfigEntry
+from . import ThinqConfigEntry, get_coordinators
 from .entity import ThinQEntity
 
 
@@ -139,7 +139,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up an entry for binary sensor platform."""
     entities: list[ThinQBinarySensorEntity] = []
-    for coordinator in entry.runtime_data.values():
+    for coordinator in get_coordinators(entry).values():
         if (
             descriptions := DEVICE_TYPE_BINARY_SENSOR_MAP.get(
                 coordinator.api.device.device_type

@@ -17,7 +17,7 @@ from homeassistant.components.switch import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import ThinqConfigEntry
+from . import ThinqConfigEntry, get_coordinators
 from .entity import ThinQEntity
 
 DEVICE_TYPE_SWITCH_MAP: dict[DeviceType, tuple[SwitchEntityDescription, ...]] = {
@@ -61,7 +61,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up an entry for switch platform."""
     entities: list[ThinQSwitchEntity] = []
-    for coordinator in entry.runtime_data.values():
+    for coordinator in get_coordinators(entry).values():
         if (
             descriptions := DEVICE_TYPE_SWITCH_MAP.get(
                 coordinator.api.device.device_type

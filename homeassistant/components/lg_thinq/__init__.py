@@ -25,6 +25,11 @@ PLATFORMS = [Platform.BINARY_SENSOR, Platform.SWITCH]
 _LOGGER = logging.getLogger(__name__)
 
 
+def get_coordinators(entry: ThinqConfigEntry) -> dict[str, DeviceDataUpdateCoordinator]:
+    """Return coordinators."""
+    return entry.runtime_data
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ThinqConfigEntry) -> bool:
     """Set up an entry."""
     entry.runtime_data = {}
