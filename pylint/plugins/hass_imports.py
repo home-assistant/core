@@ -554,8 +554,10 @@ class HassImportsFormatChecker(BaseChecker):
             module_integration
             in (
                 "assist_pipeline",
+                "automation",
                 "bluetooth",
                 "device_tracker",
+                "google_assistant",
                 "homeassistant",
                 "homeassistant_hardware",
                 "http",
