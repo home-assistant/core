@@ -1274,7 +1274,7 @@ async def test_async_join_players(
         (
             BangOlufsenSource.LINE_IN,
             [TEST_MEDIA_PLAYER_ENTITY_ID_2],
-            pytest.raises(HomeAssistantError),
+            pytest.raises(ServiceValidationError),
             "invalid_source",
         ),
         # Invalid media_player entity
