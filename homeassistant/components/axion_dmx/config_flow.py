@@ -7,10 +7,8 @@ from typing import Any
 from libaxion_dmx import AxionDmxApi
 import voluptuous as vol
 
-from homeassistant import config_entries
-from homeassistant.config_entries import ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD
-from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import _LOGGER, CONF_CHANNEL, CONF_LIGHT_TYPE, DOMAIN
@@ -27,17 +25,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
-async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
-    """Validate the user input allows us to connect."""
-    api = AxionDmxApi(data[CONF_HOST], data[CONF_PASSWORD])
-
-    if not await api.authenticate():
-        raise InvalidAuth
-
-    return {"title": f"Axion DMX Light - Channel {data[CONF_CHANNEL]}"}
-
-
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class AxionConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Axion Lighting."""
 
     VERSION = 1
@@ -48,8 +36,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
+            # Validate the user input and authenticate
             try:
-                info = await validate_input(self.hass, user_input)
+                await self._validate_and_authenticate(user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
@@ -58,11 +47,22 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception: %s", e)
                 errors["base"] = "unknown"
             else:
-                return self.async_create_entry(title=info["title"], data=user_input)
+                # Return the validated entry data
+                return self.async_create_entry(
+                    title=f"Axion DMX Light - Channel {user_input[CONF_CHANNEL]}",
+                    data=user_input,
+                )
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
+
+    async def _validate_and_authenticate(self, user_input: dict[str, Any]) -> None:
+        """Validate and authenticate the Axion DMX API."""
+        api = AxionDmxApi(user_input[CONF_HOST], user_input[CONF_PASSWORD])
+
+        if not await api.authenticate():
+            raise InvalidAuth
 
 
 class CannotConnect(HomeAssistantError):
