@@ -84,9 +84,10 @@ def is_installed(requirement_str: str) -> bool:
         return False
 
 
-_SYSTEM_PYTHON = "SYSTEM_PYTHON"
-_UV_SYSTEM_PYTHON = "UV_" + _SYSTEM_PYTHON
-_PIP_SYSTEM_PYTHON = "PIP_" + _SYSTEM_PYTHON
+_UV_ENV_PYTHON_VARS = (
+    "UV_SYSTEM_PYTHON",
+    "UV_PYTHON",
+)
 
 
 def install_package(
@@ -116,16 +117,17 @@ def install_package(
         abs_target = os.path.abspath(target)
         env["PYTHONUSERBASE"] = abs_target
         args += ["--target", abs_target]
-    elif not_venv and _UV_SYSTEM_PYTHON not in env:
+    elif (
+        not_venv
+        and not (any(var in env for var in _UV_ENV_PYTHON_VARS))
+        and (abs_target := site.getusersitepackages())
+    ):
         # Pip compatibility
-        if system_python := env.get(_PIP_SYSTEM_PYTHON):
-            env[_UV_SYSTEM_PYTHON] = system_python
-        elif abs_target := site.getusersitepackages():
-            # Uv has currently no support for --user
-            # See https://github.com/astral-sh/uv/issues/2077
-            # Using workaround to install to site-packages
-            # https://github.com/astral-sh/uv/issues/2077#issuecomment-2150406001
-            args += ["--python", sys.executable, "--target", abs_target]
+        # Uv has currently no support for --user
+        # See https://github.com/astral-sh/uv/issues/2077
+        # Using workaround to install to site-packages
+        # https://github.com/astral-sh/uv/issues/2077#issuecomment-2150406001
+        args += ["--python", sys.executable, "--target", abs_target]
 
     _LOGGER.debug("Running uv pip command: args=%s", args)
     with Popen(
