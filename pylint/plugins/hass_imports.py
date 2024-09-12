@@ -560,6 +560,7 @@ class HassImportsFormatChecker(BaseChecker):
                 "ffmpeg",
                 "ffmpeg_motion",
                 "google_assistant",
+                "hardware",
                 "homeassistant",
                 "homeassistant_hardware",
                 "http",
