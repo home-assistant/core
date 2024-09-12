@@ -31,7 +31,7 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up Comelit sensors."""
+    """Set up Comelit switches."""
 
     if config_entry.data.get(CONF_TYPE, BRIDGE) == BRIDGE:
         await async_setup_bridge_entry(hass, config_entry, async_add_entities)
