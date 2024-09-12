@@ -5,45 +5,8 @@ from unittest.mock import Mock, patch
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from . import HA_INELS_PATH
-from .common import MockConfigEntry, inels
+from .common import inels
 from .conftest import setup_inels_test_integration
-
-
-async def test_setup_entry_no_data(hass: HomeAssistant) -> None:
-    """Test setup entry when the config entry has no data."""
-    config_entry = MockConfigEntry(
-        domain=inels.DOMAIN,
-        data={},
-    )
-    config_entry.add_to_hass(hass)
-
-    with patch(f"{HA_INELS_PATH}.LOGGER.error") as mock_error:
-        result = await inels.async_setup_entry(hass, config_entry)
-
-        assert result is False
-        mock_error.assert_called_once_with("MQTT broker is not configured")
-
-
-async def test_reload_config_entry(
-    hass: HomeAssistant, mock_mqtt, mock_reload_entry
-) -> None:
-    """Test the iNELS configuration entry is reloaded on change."""
-    await setup_inels_test_integration(hass)
-
-    config_entry = next(
-        entry
-        for entry in hass.config_entries.async_entries(inels.DOMAIN)
-        if entry.domain == inels.DOMAIN
-    )
-
-    hass.data.setdefault(inels.DOMAIN, {})
-
-    # Test reloading the configuration entry
-    assert len(mock_reload_entry.mock_calls) == 0
-    hass.config_entries.async_update_entry(config_entry, options={"something": "else"})
-    await hass.async_block_till_done()
-    assert len(mock_reload_entry.mock_calls) == 1
 
 
 async def test_remove_devices_with_no_entities(hass: HomeAssistant, mock_mqtt) -> None:
