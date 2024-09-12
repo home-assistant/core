@@ -7,7 +7,7 @@ from asyncio import CancelledError, Task
 from contextlib import suppress
 from datetime import datetime, timedelta
 import logging
-from typing import TYPE_CHECKING, Any, NamedTuple, cast
+from typing import TYPE_CHECKING, Any, NamedTuple
 
 from pyblu import Input, Player, Preset, Status, SyncStatus
 from pyblu.errors import PlayerUnreachableError
@@ -693,7 +693,7 @@ class BluesoundPlayer(MediaPlayerEntity):
             reverse=True,
         )
         return [
-            cast(str, entity.name)
+            entity._sync_status.name  # noqa: SLF001 has to be done because this was accessible as entity.name before
             for entity in sorted_entities
             if entity.bluesound_device_name in device_group
         ]
