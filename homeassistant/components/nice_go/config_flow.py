@@ -90,13 +90,12 @@ class NiceGOConfigFlow(ConfigFlow, domain=DOMAIN):
             assert self.reauth_entry is not None
 
         if user_input is not None:
-            new_input = {**self.reauth_entry.data, **user_input}
             hub = NiceGOApi()
 
             try:
                 refresh_token = await hub.authenticate(
-                    new_input[CONF_EMAIL],
-                    new_input[CONF_PASSWORD],
+                    user_input[CONF_EMAIL],
+                    user_input[CONF_PASSWORD],
                     async_get_clientsession(self.hass),
                 )
             except AuthFailedError:
@@ -107,14 +106,20 @@ class NiceGOConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 return self.async_update_reload_and_abort(
                     self.reauth_entry,
-                    data={**new_input, CONF_REFRESH_TOKEN: refresh_token},
+                    data={
+                        **user_input,
+                        CONF_REFRESH_TOKEN: refresh_token,
+                        CONF_REFRESH_TOKEN_CREATION_TIME: datetime.now().timestamp(),
+                    },
+                    title=user_input[CONF_EMAIL],
+                    unique_id=user_input[CONF_EMAIL],
                 )
 
         return self.async_show_form(
             step_id="reauth_confirm",
             data_schema=self.add_suggested_values_to_schema(
                 STEP_USER_DATA_SCHEMA,
-                user_input or self.reauth_entry.data,
+                user_input or {CONF_EMAIL: self.reauth_entry.data[CONF_EMAIL]},
             ),
             description_placeholders={CONF_NAME: self.reauth_entry.title},
             errors=errors,
