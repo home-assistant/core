@@ -12,10 +12,10 @@ from aioesphomeapi import (
 )
 import pytest
 
-from homeassistant.components.esphome import DomainData
+from homeassistant.components.esphome import DOMAIN, DomainData
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
 
 from .conftest import MockESPHomeDevice
 
@@ -49,6 +49,7 @@ async def test_assist_in_progress(
 async def test_assist_in_progress_disabled_by_default(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
     mock_voice_assistant_v1_entry,
 ) -> None:
     """Test assist in progress binary sensor is added disabled."""
@@ -58,6 +59,39 @@ async def test_assist_in_progress_disabled_by_default(
     assert entity_entry
     assert entity_entry.disabled
     assert entity_entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+
+    # Test no issue for disabled entity
+    assert len(issue_registry.issues) == 0
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_assist_in_progress_issue(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    mock_voice_assistant_v1_entry,
+) -> None:
+    """Test assist in progress binary sensor."""
+
+    state = hass.states.get("binary_sensor.test_assist_in_progress")
+    assert state is not None
+
+    entity_entry = entity_registry.async_get("binary_sensor.test_assist_in_progress")
+    issue = issue_registry.async_get_issue(
+        DOMAIN, f"assist_in_progress_deprecated_{entity_entry.id}"
+    )
+    assert issue is not None
+
+    # Test issue goes away after disabling the entity
+    entity_registry.async_update_entity(
+        "binary_sensor.test_assist_in_progress",
+        disabled_by=er.RegistryEntryDisabler.USER,
+    )
+    await hass.async_block_till_done()
+    issue = issue_registry.async_get_issue(
+        DOMAIN, f"assist_in_progress_deprecated_{entity_entry.id}"
+    )
+    assert issue is None
 
 
 @pytest.mark.parametrize(
