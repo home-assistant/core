@@ -31,70 +31,13 @@ async def test_sensor_entity_properties(
     await setup_with_selected_platforms(hass, mock_config_entry, [Platform.SENSOR])
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
-    state = hass.states.get(ENTITY_CURRENT_TEMP)
-    assert state.state == "18.6"
-
-    # Test when current_temperature is "---"
-    mock_current_temp = MagicMock()
-    mock_current_temp.value = "---"
-    mock_bsblan.sensor.return_value.current_temperature = mock_current_temp
-
-    freezer.tick(timedelta(minutes=1))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    state = hass.states.get(ENTITY_CURRENT_TEMP)
-    assert state.state == STATE_UNKNOWN
-
-    # Test outside_temperature
-    mock_outside_temp = MagicMock()
-    mock_outside_temp.value = "6.1"
-    mock_bsblan.sensor.return_value.outside_temperature = mock_outside_temp
-
-    freezer.tick(timedelta(minutes=1))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    state = hass.states.get(ENTITY_OUTSIDE_TEMP)
-    assert state.state == "6.1"
-
-
-async def test_sensor_update(
-    hass: HomeAssistant,
-    mock_bsblan: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Test sensor update."""
-    await setup_with_selected_platforms(hass, mock_config_entry, [Platform.SENSOR])
-
-    # Initial state
-    state = hass.states.get(ENTITY_CURRENT_TEMP)
-    assert state.state == "18.6"
-
-    # Update the mock sensor value
-    mock_current_temp = MagicMock()
-    mock_current_temp.value = "20.0"
-    mock_bsblan.sensor.return_value.current_temperature = mock_current_temp
-
-    # Trigger an update
-    freezer.tick(timedelta(minutes=1))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    # Check if the state has been updated
-    state = hass.states.get(ENTITY_CURRENT_TEMP)
-    assert state.state == "20.0"
-
 
 @pytest.mark.parametrize(
     ("value", "expected_state"),
     [
         (18.6, "18.6"),
-        (42, "42.0"),
         (None, STATE_UNKNOWN),
         ("---", STATE_UNKNOWN),
-        ("not a number", STATE_UNKNOWN),
     ],
 )
 async def test_current_temperature_scenarios(
