@@ -248,7 +248,7 @@ DISCOVERY_SCHEMAS = [
             key="EveWeatherPressure",
             device_class=SensorDeviceClass.PRESSURE,
             native_unit_of_measurement=UnitOfPressure.HPA,
-            suggested_display_precision=0,
+            suggested_display_precision=1,
             state_class=SensorStateClass.MEASUREMENT,
         ),
         entity_class=MatterSensor,
