@@ -6,7 +6,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        'lan',
+        'eth',
         'wifi',
         'usb',
       ]),
@@ -44,7 +44,7 @@
       'device_class': 'enum',
       'friendly_name': 'Mock Title Connection mode',
       'options': list([
-        'lan',
+        'eth',
         'wifi',
         'usb',
       ]),
@@ -54,7 +54,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'lan',
+    'state': 'eth',
   })
 # ---
 # name: test_sensors[sensor.mock_title_core_chip_temp-entry]
@@ -374,7 +374,6 @@
         'coordinator',
         'router',
         'thread',
-        'unknown',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -413,7 +412,6 @@
         'coordinator',
         'router',
         'thread',
-        'unknown',
       ]),
     }),
     'context': <ANY>,
