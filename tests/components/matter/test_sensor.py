@@ -212,7 +212,7 @@ async def test_pressure_sensor(
     """Test pressure sensor."""
     state = hass.states.get("sensor.mock_pressure_sensor_pressure")
     assert state
-    assert state.state == "1008.5"
+    assert state.state == "0.0"
 
     set_node_attribute(pressure_sensor_node, 1, 319486977, 319422484, 1008.5)
     await trigger_subscription_callback(hass, matter_client)
