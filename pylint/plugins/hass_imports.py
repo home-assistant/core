@@ -561,6 +561,7 @@ class HassImportsFormatChecker(BaseChecker):
                 "homeassistant",
                 "homeassistant_hardware",
                 "http",
+                "manual",
                 "recorder",
                 "script",
                 "sensor",
