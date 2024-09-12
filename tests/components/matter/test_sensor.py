@@ -394,6 +394,27 @@ async def test_energy_sensors(
 
 # This tests needs to be adjusted to remove lingering tasks
 @pytest.mark.parametrize("expected_lingering_tasks", [True])
+async def test_eve_thermo_sensor(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    eve_thermo_node: MatterNode,
+) -> None:
+    """Test Eve Thermo."""
+    # Valve position
+    state = hass.states.get("sensor.eve_thermo_valveposition")
+    assert state
+    assert state.state == "10"
+
+    set_node_attribute(eve_thermo_node, 1, 319486977, 0, 319422488)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("sensor.eve_thermo_valveposition")
+    assert state
+    assert state.state == "0"
+
+
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_air_quality_sensor(
     hass: HomeAssistant,
     matter_client: MagicMock,
