@@ -556,6 +556,7 @@ class HassImportsFormatChecker(BaseChecker):
                 "assist_pipeline",
                 "automation",
                 "bluetooth",
+                "device_automation",
                 "device_tracker",
                 "ffmpeg",
                 "ffmpeg_motion",
