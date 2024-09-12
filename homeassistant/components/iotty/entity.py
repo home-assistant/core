@@ -22,6 +22,7 @@ class IottyEntity(CoordinatorEntity[IottyDataUpdateCoordinator]):
     _attr_name = None
     _iotty_device_name: str
     _iotty_cloud: IottyProxy
+    _iotty_device: Device
 
     def __init__(
         self,
@@ -41,6 +42,7 @@ class IottyEntity(CoordinatorEntity[IottyDataUpdateCoordinator]):
         self._iotty_cloud = iotty_cloud
         self._attr_unique_id = iotty_device.device_id
         self._iotty_device_name = iotty_device.name
+        self._iotty_device = iotty_device
 
     @property
     def device_info(self) -> DeviceInfo:

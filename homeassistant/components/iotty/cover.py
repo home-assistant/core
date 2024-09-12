@@ -113,8 +113,6 @@ class IottyShutter(IottyEntity, CoverEntity):
             coordinator=coordinator, iotty_cloud=iotty_cloud, iotty_device=iotty_device
         )
 
-        self._iotty_device = iotty_device
-
     @property
     def current_cover_position(self) -> int | None:
         """Return the current position of the shutter.

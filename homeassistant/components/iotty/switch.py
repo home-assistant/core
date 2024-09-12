@@ -102,8 +102,6 @@ class IottyLightSwitch(IottyEntity, SwitchEntity):
             coordinator=coordinator, iotty_cloud=iotty_cloud, iotty_device=iotty_device
         )
 
-        self._iotty_device = iotty_device
-
     @property
     def is_on(self) -> bool:
         """Return true if the LightSwitch is on."""
