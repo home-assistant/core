@@ -98,8 +98,9 @@ class EsphomeAssistInProgressBinarySensor(EsphomeAssistEntity, BinarySensorEntit
             severity=ir.IssueSeverity.WARNING,
             translation_key="assist_in_progress_deprecated",
             translation_placeholders={
-                "entity_id": self.entity_id,
                 "assist_satellite_domain": ASSIST_SATELLITE_DOMAIN,
+                "entity_id": self.entity_id,
+                "integration_name": "ESPHome",
             },
         )
 
