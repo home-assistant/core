@@ -110,6 +110,9 @@ class MockClimateEntity(MockEntity, ClimateEntity):
     _attr_swing_mode = "auto"
     _attr_swing_modes = ["auto", "off"]
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_target_temperature = 20
+    _attr_target_temperature_high = 25
+    _attr_target_temperature_low = 15
 
     @property
     def hvac_mode(self) -> HVACMode:
@@ -142,6 +145,14 @@ class MockClimateEntity(MockEntity, ClimateEntity):
     def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         self._attr_hvac_mode = hvac_mode
+
+    def set_temperature(self, **kwargs: Any) -> None:
+        """Set new target temperature."""
+        if ATTR_TEMPERATURE in kwargs:
+            self._attr_target_temperature = kwargs[ATTR_TEMPERATURE]
+        if ATTR_TARGET_TEMP_HIGH in kwargs:
+            self._attr_target_temperature_high = kwargs[ATTR_TARGET_TEMP_HIGH]
+            self._attr_target_temperature_low = kwargs[ATTR_TARGET_TEMP_LOW]
 
 
 class MockClimateEntityTestMethods(MockClimateEntity):
@@ -240,6 +251,73 @@ def test_deprecated_current_constants(
         enum,
         "2025.1",
     )
+
+
+async def test_temperature_features_is_valid(
+    hass: HomeAssistant,
+    register_test_integration: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test correct features for setting temperature."""
+
+    class MockClimateTempEntity(MockClimateEntity):
+        @property
+        def supported_features(self) -> int:
+            """Return supported features."""
+            return ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+
+    class MockClimateTempRangeEntity(MockClimateEntity):
+        @property
+        def supported_features(self) -> int:
+            """Return supported features."""
+            return ClimateEntityFeature.TARGET_TEMPERATURE
+
+    climate_temp_entity = MockClimateTempEntity(
+        name="test", entity_id="climate.test_temp"
+    )
+    climate_temp_range_entity = MockClimateTempRangeEntity(
+        name="test", entity_id="climate.test_range"
+    )
+
+    setup_test_component_platform(
+        hass,
+        DOMAIN,
+        entities=[climate_temp_entity, climate_temp_range_entity],
+        from_config_entry=True,
+    )
+    await hass.config_entries.async_setup(register_test_integration.entry_id)
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {
+            "entity_id": "climate.test_temp",
+            "temperature": 20,
+        },
+        blocking=True,
+    )
+    assert (
+        "MockClimateTempEntity set_temperature action was used "
+        "with temperature but the entity does not "
+        "implement the ClimateEntityFeature.TARGET_TEMPERATURE feature. Please"
+    ) in caplog.text
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {
+            "entity_id": "climate.test_range",
+            "target_temp_low": 20,
+            "target_temp_high": 25,
+        },
+        blocking=True,
+    )
+    assert (
+        "MockClimateTempRangeEntity set_temperature action was used with "
+        "target_temp_low but the entity does not "
+        "implement the ClimateEntityFeature.TARGET_TEMPERATURE_RANGE feature. Please"
+    ) in caplog.text
 
 
 async def test_mode_validation(
