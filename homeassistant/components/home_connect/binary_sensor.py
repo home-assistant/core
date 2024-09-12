@@ -39,7 +39,7 @@ _LOGGER = logging.getLogger(__name__)
 class HomeConnectBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Entity Description class for binary sensors."""
 
-    state_key: str | None = None
+    state_key: str | None
     device_class: BinarySensorDeviceClass | None = BinarySensorDeviceClass.DOOR
     boolean_map: dict[str, bool] = field(
         default_factory=lambda: {
@@ -53,20 +53,14 @@ BINARY_SENSORS: tuple[HomeConnectBinarySensorEntityDescription, ...] = (
     HomeConnectBinarySensorEntityDescription(
         key="Chiller Door",
         state_key=REFRIGERATION_STATUS_DOOR_CHILLER,
-        translation_key="door_sensor",
-        translation_placeholders={"name": "Chiller Door"},
     ),
     HomeConnectBinarySensorEntityDescription(
         key="Freezer Door",
         state_key=REFRIGERATION_STATUS_DOOR_FREEZER,
-        translation_key="door_sensor",
-        translation_placeholders={"name": "Freezer Door"},
     ),
     HomeConnectBinarySensorEntityDescription(
         key="Refrigerator Door",
         state_key=REFRIGERATION_STATUS_DOOR_REFRIGERATOR,
-        translation_key="door_sensor",
-        translation_placeholders={"name": "Refrigerator Door"},
     ),
 )
 

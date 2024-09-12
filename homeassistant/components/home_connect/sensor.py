@@ -54,54 +54,36 @@ SENSORS: tuple[HomeConnectSensorEntityDescription, ...] = (
     HomeConnectSensorEntityDescription(
         key="Door Alarm Freezer",
         translation_key="alarm_sensor_freezer",
-        translation_placeholders={
-            "name": "Door Alarm Freezer",
-        },
         state_key=REFRIGERATION_EVENT_DOOR_ALARM_FREEZER,
         appliance_types=("FridgeFreezer", "Freezer"),
     ),
     HomeConnectSensorEntityDescription(
         key="Door Alarm Refrigerator",
         translation_key="alarm_sensor_fridge",
-        translation_placeholders={
-            "name": "Door Alarm Refrigerator",
-        },
         state_key=REFRIGERATION_EVENT_DOOR_ALARM_REFRIGERATOR,
         appliance_types=("FridgeFreezer", "Refrigerator"),
     ),
     HomeConnectSensorEntityDescription(
         key="Temperature Alarm Freezer",
         translation_key="alarm_sensor_temp",
-        translation_placeholders={
-            "name": "Temperature Alarm Freezer",
-        },
         state_key=REFRIGERATION_EVENT_TEMP_ALARM_FREEZER,
         appliance_types=("FridgeFreezer", "Freezer"),
     ),
     HomeConnectSensorEntityDescription(
         key="Bean Container Empty",
         translation_key="alarm_sensor_coffee_bean_container",
-        translation_placeholders={
-            "name": "Bean Container Empty",
-        },
         state_key=COFFEE_EVENT_BEAN_CONTAINER_EMPTY,
         appliance_types=("CoffeeMaker",),
     ),
     HomeConnectSensorEntityDescription(
         key="Water Tank Empty",
         translation_key="alarm_sensor_coffee_water_tank",
-        translation_placeholders={
-            "name": "Water Tank Empty",
-        },
         state_key=COFFEE_EVENT_WATER_TANK_EMPTY,
         appliance_types=("CoffeeMaker",),
     ),
     HomeConnectSensorEntityDescription(
         key="Drip Tray Full",
         translation_key="alarm_sensor_coffee_drip_tray",
-        translation_placeholders={
-            "name": "Drip Tray Full",
-        },
         state_key=COFFEE_EVENT_DRIP_TRAY_FULL,
         appliance_types=("CoffeeMaker",),
     ),

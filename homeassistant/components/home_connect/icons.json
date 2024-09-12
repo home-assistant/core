@@ -27,43 +27,43 @@
       "alarm_sensor_fridge": {
         "default": "mdi:fridge",
         "state": {
-          "present": "mdi:fridge-alert",
-          "confirmed": "mdi:fridge-alert-outline"
+          "confirmed": "mdi:fridge-alert-outline",
+          "present": "mdi:fridge-alert"
         }
       },
       "alarm_sensor_freezer": {
         "default": "mdi:snowflake",
         "state": {
-          "present": "mdi:snowflake-alert",
-          "confirmed": "mdi:snowflake-check"
+          "confirmed": "mdi:snowflake-check",
+          "present": "mdi:snowflake-alert"
         }
       },
       "alarm_sensor_temp": {
         "default": "mdi:thermometer",
         "state": {
-          "present": "mdi:thermometer-alert",
-          "confirmed": "mdi:thermometer-check"
+          "confirmed": "mdi:thermometer-check",
+          "present": "mdi:thermometer-alert"
         }
       },
       "alarm_sensor_coffee_bean_container": {
-        "default": "mdi:thermometer",
+        "default": "mdi:coffee-maker",
         "state": {
-          "present": "mdi:thermometer-alert",
-          "confirmed": "mdi:thermometer-check"
+          "confirmed": "mdi:coffee-maker-check",
+          "present": "mdi:coffee-maker-outline"
         }
       },
       "alarm_sensor_coffee_water_tank": {
         "default": "mdi:water",
         "state": {
-          "present": "mdi:water-alert",
-          "confirmed": "mdi:water-check"
+          "confirmed": "mdi:water-check",
+          "present": "mdi:water-alert"
         }
       },
       "alarm_sensor_coffee_drip_tray": {
         "default": "mdi:tray",
         "state": {
-          "present": "mdi:tray-alert",
-          "confirmed": "mdi:tray-full"
+          "confirmed": "mdi:tray-full",
+          "present": "mdi:tray-alert"
         }
       }
     },
