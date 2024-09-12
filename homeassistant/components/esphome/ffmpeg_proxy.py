@@ -78,7 +78,7 @@ class FFmpegProxyData:
     ) -> str:
         """Create a one-time use proxy URL that automatically converts the media."""
         if (convert_info := self.conversions.pop(device_id, None)) is not None:
-            # Stop existing conversion
+            # Stop existing conversion before overwriting info
             if (convert_info.proc is not None) and (
                 convert_info.proc.returncode is None
             ):
@@ -137,22 +137,20 @@ class FFmpegConvertResponse(web.StreamResponse):
         writer = await super().prepare(request)
         assert writer is not None
 
-        proc = self.convert_info.proc
-        if proc is None:
-            command_args = [
-                "-i",
-                self.convert_info.media_url,
-                "-f",
-                self.convert_info.media_format,
-            ]
+        command_args = [
+            "-i",
+            self.convert_info.media_url,
+            "-f",
+            self.convert_info.media_format,
+        ]
 
-            if self.convert_info.rate is not None:
-                # Sample rate
-                command_args.extend(["-ar", str(self.convert_info.rate)])
+        if self.convert_info.rate is not None:
+            # Sample rate
+            command_args.extend(["-ar", str(self.convert_info.rate)])
 
-            if self.convert_info.channels is not None:
-                # Number of channels
-                command_args.extend(["-ac", str(self.convert_info.channels)])
+        if self.convert_info.channels is not None:
+            # Number of channels
+            command_args.extend(["-ac", str(self.convert_info.channels)])
 
         if self.convert_info.width == 2:
             # 16-bit samples
@@ -161,16 +159,16 @@ class FFmpegConvertResponse(web.StreamResponse):
         # Output to stdout
         command_args.append("pipe:")
 
-            _LOGGER.debug("%s %s", self.manager.binary, " ".join(command_args))
-            proc = await asyncio.create_subprocess_exec(
-                self.manager.binary,
-                *command_args,
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE,
-            )
+        _LOGGER.debug("%s %s", self.manager.binary, " ".join(command_args))
+        proc = await asyncio.create_subprocess_exec(
+            self.manager.binary,
+            *command_args,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+        )
 
-            # Only one conversion process per device is allowed
-            self.convert_info.proc = proc
+        # Only one conversion process per device is allowed
+        self.convert_info.proc = proc
 
         assert proc.stdout is not None
         assert proc.stderr is not None
@@ -241,6 +239,13 @@ class FFmpegProxyView(HomeAssistantView):
             convert_info.media_format != media_format
         ):
             return web.Response(body="Invalid proxy URL", status=HTTPStatus.BAD_REQUEST)
+
+        # Stop previous process if the URL is being reused.
+        # We could continue from where the previous connection left off, but
+        # there would be no media header.
+        if (convert_info.proc is not None) and (convert_info.proc.returncode is None):
+            convert_info.proc.kill()
+            convert_info.proc = None
 
         # Stream converted audio back to client
         return FFmpegConvertResponse(
