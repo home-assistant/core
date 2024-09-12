@@ -17,13 +17,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import SunWEGData
-from .const import CONF_PLANT_ID, DEFAULT_PLANT_ID, DOMAIN, DeviceType
-from .sensor_types.inverter import INVERTER_SENSOR_TYPES
-from .sensor_types.phase import PHASE_SENSOR_TYPES
-from .sensor_types.sensor_entity_description import SunWEGSensorEntityDescription
-from .sensor_types.string import STRING_SENSOR_TYPES
-from .sensor_types.total import TOTAL_SENSOR_TYPES
+from .. import SunWEGData
+from ..const import CONF_PLANT_ID, DEFAULT_PLANT_ID, DOMAIN, DeviceType
+from .inverter import INVERTER_SENSOR_TYPES
+from .phase import PHASE_SENSOR_TYPES
+from .sensor_entity_description import SunWEGSensorEntityDescription
+from .string import STRING_SENSOR_TYPES
+from .total import TOTAL_SENSOR_TYPES
 
 _LOGGER = logging.getLogger(__name__)
 
