@@ -148,7 +148,10 @@ class SolarLogConfigFlow(ConfigFlow, domain=DOMAIN):
             assert entry is not None
 
         if user_input is not None:
-            if not user_input["has_password"] or user_input[CONF_PASSWORD] == "":
+            if (
+                not user_input["has_password"]
+                or user_input.get(CONF_PASSWORD, "") == ""
+            ):
                 user_input[CONF_PASSWORD] = ""
                 user_input["has_password"] = False
                 return self.async_update_reload_and_abort(
@@ -158,7 +161,7 @@ class SolarLogConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
 
             if await self._test_extended_data(
-                entry.data[CONF_HOST], user_input[CONF_PASSWORD]
+                entry.data[CONF_HOST], user_input.get(CONF_PASSWORD, "")
             ):
                 # if password has been provided, only save if extended data is available
                 return self.async_update_reload_and_abort(
@@ -194,7 +197,7 @@ class SolarLogConfigFlow(ConfigFlow, domain=DOMAIN):
         assert self._entry is not None
 
         if user_input and await self._test_extended_data(
-            self._entry.data[CONF_HOST], user_input[CONF_PASSWORD]
+            self._entry.data[CONF_HOST], user_input.get(CONF_PASSWORD, "")
         ):
             return self.async_update_reload_and_abort(
                 self._entry, data={**self._entry.data, **user_input}
