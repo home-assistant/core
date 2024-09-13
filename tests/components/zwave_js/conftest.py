@@ -477,6 +477,12 @@ def basic_cc_sensor_state_fixture():
     return json.loads(load_fixture("zwave_js/basic_cc_sensor_state.json"))
 
 
+@pytest.fixture(name="window_covering_outbound_bottom_state", scope="package")
+def window_covering_outbound_bottom_state_fixture():
+    """Load node with Window Covering CC fixture data, with only the outbound bottom position supported."""
+    return json.loads(load_fixture("zwave_js/window_covering_outbound_bottom.json"))
+
+
 # model fixtures
 
 
@@ -1159,5 +1165,15 @@ def light_device_class_is_null_fixture(client, light_device_class_is_null_state)
 def basic_cc_sensor_fixture(client, basic_cc_sensor_state):
     """Mock a node with a Basic CC."""
     node = Node(client, copy.deepcopy(basic_cc_sensor_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="window_covering_outbound_bottom")
+def window_covering_outbound_bottom_fixture(
+    client, window_covering_outbound_bottom_state
+):
+    """Load node with Window Covering CC fixture data, with only the outbound bottom position supported."""
+    node = Node(client, copy.deepcopy(window_covering_outbound_bottom_state))
     client.driver.controller.nodes[node.node_id] = node
     return node
