@@ -1,15 +1,14 @@
 """Test the laundrify sensor platform."""
 
 from datetime import timedelta
-import json
 import logging
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
 from laundrify_aio import LaundrifyDevice
 from laundrify_aio.exceptions import LaundrifyDeviceException
 import pytest
 
-from homeassistant.components.laundrify.const import DOMAIN, MANUFACTURER, MODELS
+from homeassistant.components.laundrify.const import DOMAIN, MODELS
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -22,22 +21,7 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.util import slugify
 from homeassistant.util.dt import utcnow
 
-from tests.common import MockConfigEntry, async_fire_time_changed, load_fixture
-
-
-@pytest.fixture(name="mock_device")
-def laundrify_sensor_fixture() -> LaundrifyDevice:
-    """Return a default Laundrify power sensor mock."""
-    # Load test data from machines.json
-    machine_data = json.loads(load_fixture("laundrify/machines.json"))[0]
-
-    mock_device = AsyncMock(spec=LaundrifyDevice)
-    mock_device.id = machine_data["id"]
-    mock_device.manufacturer = MANUFACTURER
-    mock_device.model = machine_data["model"]
-    mock_device.name = machine_data["name"]
-    mock_device.firmwareVersion = machine_data["firmwareVersion"]
-    return mock_device
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_laundrify_sensor_init(
