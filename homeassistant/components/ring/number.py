@@ -2,7 +2,6 @@
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-import time
 from typing import Any, Generic, cast
 
 from ring_doorbell import RingChime, RingDoorBell, RingGeneric, RingOther
@@ -19,7 +18,7 @@ from homeassistant.helpers.typing import StateType
 
 from . import RingConfigEntry
 from .coordinator import RingDataCoordinator
-from .entity import RingDeviceT, RingEntity, exception_wrap
+from .entity import RingDeviceT, RingEntity, refresh_after
 
 SKIP_UPDATES_DELAY_SECONDS = 5
 
@@ -65,7 +64,6 @@ class RingNumber(RingEntity[RingDeviceT], NumberEntity):
         super().__init__(device, coordinator)
         self.entity_description = description
         self._attr_unique_id = f"{device.id}-{description.key}"
-        self._no_updates_until = time.monotonic()
         self._update_native_value()
 
     def _update_native_value(self) -> None:
@@ -77,9 +75,6 @@ class RingNumber(RingEntity[RingDeviceT], NumberEntity):
     def _handle_coordinator_update(self) -> None:
         """Call update method."""
 
-        if self._no_updates_until > time.monotonic():
-            return
-
         self._device = cast(
             RingDeviceT,
             self._get_coordinator_data().get_device(self._device.device_api_id),
@@ -89,12 +84,10 @@ class RingNumber(RingEntity[RingDeviceT], NumberEntity):
 
         super()._handle_coordinator_update()
 
-    @exception_wrap
+    @refresh_after
     async def async_set_native_value(self, value: float) -> None:
         """Call setter on Ring device."""
         await self.entity_description.setter_fn(self._device, value)
-
-        self._no_updates_until = time.monotonic() + SKIP_UPDATES_DELAY_SECONDS
 
         self._attr_native_value = value
         self.async_write_ha_state()
