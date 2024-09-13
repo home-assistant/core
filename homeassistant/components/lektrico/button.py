@@ -41,7 +41,6 @@ BUTTONS_FOR_CHARGERS: tuple[LektricoButtonEntityDescription, ...] = (
     ),
     LektricoButtonEntityDescription(
         key="reboot",
-        translation_key="reboot",
         device_class=ButtonDeviceClass.RESTART,
         entity_category=EntityCategory.CONFIG,
         press_fn=lambda device: device.send_reset(),
@@ -51,7 +50,6 @@ BUTTONS_FOR_CHARGERS: tuple[LektricoButtonEntityDescription, ...] = (
 BUTTONS_FOR_LB_DEVICES: tuple[LektricoButtonEntityDescription, ...] = (
     LektricoButtonEntityDescription(
         key="reboot",
-        translation_key="reboot",
         device_class=ButtonDeviceClass.RESTART,
         entity_category=EntityCategory.CONFIG,
         press_fn=lambda device: device.send_reset(),
