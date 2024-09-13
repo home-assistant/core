@@ -15,8 +15,10 @@ from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntityFeature,
     CodeFormat,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_CODE,
+    CONF_DEVICE_ID,
     CONF_NAME,
     CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
@@ -34,12 +36,14 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
+from homeassistant.helpers import selector
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.script import Script
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.util import slugify
 
 from .const import DOMAIN
 from .template_entity import TemplateEntity, rewrite_common_legacy_to_modern_conf
@@ -105,6 +109,25 @@ PLATFORM_SCHEMA = ALARM_CONTROL_PANEL_PLATFORM_SCHEMA.extend(
     }
 )
 
+ALARM_CONTROL_PANEL_CONFIG_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_NAME): cv.template,
+        vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+        vol.Optional(CONF_DISARM_ACTION): cv.SCRIPT_SCHEMA,
+        vol.Optional(CONF_ARM_AWAY_ACTION): cv.SCRIPT_SCHEMA,
+        vol.Optional(CONF_ARM_CUSTOM_BYPASS_ACTION): cv.SCRIPT_SCHEMA,
+        vol.Optional(CONF_ARM_HOME_ACTION): cv.SCRIPT_SCHEMA,
+        vol.Optional(CONF_ARM_NIGHT_ACTION): cv.SCRIPT_SCHEMA,
+        vol.Optional(CONF_ARM_VACATION_ACTION): cv.SCRIPT_SCHEMA,
+        vol.Optional(CONF_TRIGGER_ACTION): cv.SCRIPT_SCHEMA,
+        vol.Optional(CONF_CODE_ARM_REQUIRED, default=True): cv.boolean,
+        vol.Optional(CONF_CODE_FORMAT, default=TemplateCodeFormat.number.name): cv.enum(
+            TemplateCodeFormat
+        ),
+        vol.Optional(CONF_DEVICE_ID): selector.DeviceSelector(),
+    }
+)
+
 
 async def _async_create_entities(
     hass: HomeAssistant, config: dict[str, Any]
@@ -126,6 +149,27 @@ async def _async_create_entities(
         )
 
     return alarm_control_panels
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Initialize config entry."""
+    _options = dict(config_entry.options)
+    _options.pop("template_type")
+    validated_config = ALARM_CONTROL_PANEL_CONFIG_SCHEMA(_options)
+    async_add_entities(
+        [
+            AlarmControlPanelTemplate(
+                hass,
+                slugify(_options[CONF_NAME]),
+                validated_config,
+                config_entry.entry_id,
+            )
+        ]
+    )
 
 
 async def async_setup_platform(
