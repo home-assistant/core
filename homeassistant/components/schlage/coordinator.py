@@ -37,6 +37,8 @@ class SchlageData:
 class SchlageDataUpdateCoordinator(DataUpdateCoordinator[SchlageData]):
     """The Schlage data update coordinator."""
 
+    config_entry: ConfigEntry
+
     def __init__(self, hass: HomeAssistant, username: str, api: Schlage) -> None:
         """Initialize the class."""
         super().__init__(
@@ -84,7 +86,6 @@ class SchlageDataUpdateCoordinator(DataUpdateCoordinator[SchlageData]):
         if self.data is None:
             return
 
-        self.config_entry: ConfigEntry
         device_registry = dr.async_get(self.hass)
         devices = dr.async_entries_for_config_entry(
             device_registry, self.config_entry.entry_id
