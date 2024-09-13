@@ -19,13 +19,15 @@ class WebControlProGenericEntity(Entity):
 
     def __init__(self, config_entry_id: str, dest: Destination) -> None:
         """Initialize the entity with destination channel."""
+        dest_id_str = str(dest.id)
         self._dest = dest
+        self._attr_unique_id = dest_id_str
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self.unique_id)},
+            identifiers={(DOMAIN, dest_id_str)},
             manufacturer=MANUFACTURER,
             model=dest.animationType.name,
             name=dest.name,
-            serial_number=dest.id,
+            serial_number=dest_id_str,
             suggested_area=dest.room.name,
             via_device=(DOMAIN, config_entry_id),
             configuration_url=f"http://{dest.host}/control",
@@ -34,11 +36,6 @@ class WebControlProGenericEntity(Entity):
     async def async_update(self) -> None:
         """Update the entity."""
         await self._dest.refresh()
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique ID."""
-        return str(self._dest.id)
 
     @property
     def available(self) -> bool:

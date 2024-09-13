@@ -25,7 +25,7 @@
     'name': 'Markise',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
-    'serial_number': 58717,
+    'serial_number': '58717',
     'suggested_area': 'Terrasse',
     'sw_version': None,
     'via_device_id': <ANY>,

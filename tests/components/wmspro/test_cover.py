@@ -10,6 +10,7 @@ from homeassistant.const import (
     SERVICE_CLOSE_COVER,
     SERVICE_OPEN_COVER,
     SERVICE_SET_COVER_POSITION,
+    SERVICE_STOP_COVER,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -194,7 +195,7 @@ async def test_cover_move_and_stop(
 
         await hass.services.async_call(
             Platform.COVER,
-            "set_cover_position",
+            SERVICE_SET_COVER_POSITION,
             {ATTR_ENTITY_ID: entity.entity_id, "position": 80},
             blocking=True,
         )
@@ -213,7 +214,7 @@ async def test_cover_move_and_stop(
 
         await hass.services.async_call(
             Platform.COVER,
-            "stop_cover",
+            SERVICE_STOP_COVER,
             {ATTR_ENTITY_ID: entity.entity_id},
             blocking=True,
         )

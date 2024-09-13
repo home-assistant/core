@@ -8,9 +8,7 @@ import pytest
 from homeassistant.components.wmspro.const import DOMAIN
 from homeassistant.const import CONF_HOST
 
-from . import responses
-
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, load_json_object_fixture
 
 
 @pytest.fixture
@@ -57,7 +55,7 @@ def mock_hub_configuration_test() -> Generator[AsyncMock]:
     """Override WebControlPro.configuration."""
     with patch(
         "wmspro.webcontrol.WebControlPro._getConfiguration",
-        return_value=responses.example_config_test(),
+        return_value=load_json_object_fixture("example_config_test.json", DOMAIN),
     ) as mock_hub_configuration:
         yield mock_hub_configuration
 
@@ -67,7 +65,7 @@ def mock_hub_configuration_prod() -> Generator[AsyncMock]:
     """Override WebControlPro._getConfiguration."""
     with patch(
         "wmspro.webcontrol.WebControlPro._getConfiguration",
-        return_value=responses.example_config_prod(),
+        return_value=load_json_object_fixture("example_config_prod.json", DOMAIN),
     ) as mock_hub_configuration:
         yield mock_hub_configuration
 
@@ -77,7 +75,9 @@ def mock_hub_status_prod_awning() -> Generator[AsyncMock]:
     """Override WebControlPro._getStatus."""
     with patch(
         "wmspro.webcontrol.WebControlPro._getStatus",
-        return_value=responses.example_status_prod_awning(),
+        return_value=load_json_object_fixture(
+            "example_status_prod_awning.json", DOMAIN
+        ),
     ) as mock_dest_refresh:
         yield mock_dest_refresh
 
