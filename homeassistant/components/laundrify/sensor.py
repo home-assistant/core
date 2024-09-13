@@ -13,6 +13,7 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfEnergy, UnitOfPower
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -46,9 +47,8 @@ class LaundrifyBaseSensor(SensorEntity):
 
     def __init__(self, device: LaundrifyDevice) -> None:
         """Initialize the sensor."""
-        super().__init__()
         self._device = device
-        self._attr_device_info = {"identifiers": {(DOMAIN, device.id)}}
+        self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, device.id)})
         self._attr_unique_id = f"{device.id}_{self._attr_device_class}"
 
 
