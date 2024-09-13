@@ -96,14 +96,13 @@ class HomeConnectLight(HomeConnectInteractiveEntity, LightEntity):
             else ColorMode.ONOFF
         )
 
-        match(self._brightness_key, self._custom_color_key):
+        match (self._brightness_key, self._custom_color_key):
             case (None, None):
                 self._attr_supported_color_modes = {ColorMode.ONOFF}
             case (_, None):
                 self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
             case (_, _):
                 self._attr_supported_color_modes = {ColorMode.HS, ColorMode.RGB}
-
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Switch the light on, change brightness, change color."""

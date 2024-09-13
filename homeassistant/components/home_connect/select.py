@@ -123,7 +123,9 @@ class HomeConnectProgramSelectEntity(HomeConnectSelectEntity):
 
     async def async_update(self) -> None:
         """Update the program selection status."""
-        original_value = self.device.appliance.status.get(BSH_ACTIVE_PROGRAM, {}).get(ATTR_VALUE)
+        original_value = self.device.appliance.status.get(BSH_ACTIVE_PROGRAM, {}).get(
+            ATTR_VALUE
+        )
         self._attr_current_option = bsh_key_to_translation_key(original_value)
         _LOGGER.debug("Updated, new program: %s", original_value)
 

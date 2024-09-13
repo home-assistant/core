@@ -60,9 +60,7 @@ class HomeConnectTimeEntity(HomeConnectInteractiveEntity, TimeEntity):
         """Update the Time setting status."""
         seconds = self.status.get(ATTR_VALUE, None)
         self._attr_native_value = time(
-            seconds // 3600,
-            (seconds % 3600) // 60,
-            seconds % 60
+            seconds // 3600, (seconds % 3600) // 60, seconds % 60
         )
         _LOGGER.debug("Updated, new value: %s", self._attr_native_value)
 

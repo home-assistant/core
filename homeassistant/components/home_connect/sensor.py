@@ -131,7 +131,9 @@ class HomeConnectSensorEntity(HomeConnectEntity, SensorEntity):
                         BSH_OPERATION_STATE_FINISHED,
                     ]
                 ):
-                    seconds = self.entity_description.sign * float(self.status[ATTR_VALUE])
+                    seconds = self.entity_description.sign * float(
+                        self.status[ATTR_VALUE]
+                    )
                     self._attr_native_value = dt_util.utcnow() + timedelta(
                         seconds=seconds
                     )

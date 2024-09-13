@@ -221,7 +221,9 @@ def get_all_appliances():
         appliance.status.update(appliance.get_status.return_value)
         appliance.status.update(appliance.get_settings.return_value)
         appliance.set_setting.side_effect = (
-            lambda x, y, appliance=appliance: appliance.status.update({x: {ATTR_VALUE: y}})
+            lambda x, y, appliance=appliance: appliance.status.update(
+                {x: {ATTR_VALUE: y}}
+            )
         )
         appliance.start_program.side_effect = (
             lambda x, appliance=appliance: appliance.status.update(

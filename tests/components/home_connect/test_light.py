@@ -28,7 +28,9 @@ from tests.common import MockConfigEntry, load_json_object_fixture
 TEST_HC_APP = "Hood"
 BSH_AMBIENT_LIGHT_BRIGHTNESS = "BSH.Common.Setting.AmbientLightBrightness"
 BSH_AMBIENT_LIGHT_COLOR = "BSH.Common.Setting.AmbientLightColor"
-BSH_AMBIENT_LIGHT_ENABLE_CUSTOM_COLOR = "BSH.Common.EnumType.AmbientLightColor.CustomColor"
+BSH_AMBIENT_LIGHT_ENABLE_CUSTOM_COLOR = (
+    "BSH.Common.EnumType.AmbientLightColor.CustomColor"
+)
 BSH_AMBIENT_LIGHT_CUSTOM_COLOR = "BSH.Common.Setting.AmbientLightCustomColor"
 BSH_AMBIENT_LIGHT_ENABLED = "BSH.Common.Setting.AmbientLightEnabled"
 COOKING_LIGHTING = "Cooking.Common.Setting.Lighting"
