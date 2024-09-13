@@ -368,7 +368,7 @@ async def test_pipeline_api_audio(
             )
             mock_tts_streaming_task.cancel.assert_called_once()
             await satellite.handle_audio(b"test-mic")
-            await satellite.handle_pipeline_stop()
+            await satellite.handle_pipeline_stop(abort=False)
             await pipeline_finished.wait()
 
             await tts_finished.wait()
@@ -563,7 +563,7 @@ async def test_pipeline_udp_audio(
             # Wait for audio chunk to be delivered
             await mic_audio_event.wait()
 
-            await satellite.handle_pipeline_stop()
+            await satellite.handle_pipeline_stop(abort=False)
             await pipeline_finished.wait()
 
             await tts_finished.wait()
@@ -1073,3 +1073,80 @@ async def test_satellite_unloaded_on_disconnect(
     state = hass.states.get(satellite.entity_id)
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
+
+
+async def test_pipeline_abort(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: Callable[
+        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
+        Awaitable[MockESPHomeDevice],
+    ],
+) -> None:
+    """Test aborting a pipeline (no further processing)."""
+    mock_device: MockESPHomeDevice = await mock_esphome_device(
+        mock_client=mock_client,
+        entity_info=[],
+        user_service=[],
+        states=[],
+        device_info={
+            "voice_assistant_feature_flags": VoiceAssistantFeature.VOICE_ASSISTANT
+            | VoiceAssistantFeature.API_AUDIO
+        },
+    )
+    await hass.async_block_till_done()
+
+    satellite = get_satellite_entity(hass, mock_device.device_info.mac_address)
+    assert satellite is not None
+
+    chunks = []
+    chunk_received = asyncio.Event()
+    pipeline_aborted = asyncio.Event()
+
+    async def async_pipeline_from_audio_stream(*args, **kwargs):
+        stt_stream = kwargs["stt_stream"]
+
+        try:
+            async for chunk in stt_stream:
+                chunks.append(chunk)
+                chunk_received.set()
+        except asyncio.CancelledError:
+            # Aborting cancels the pipeline task
+            pipeline_aborted.set()
+            raise
+
+    pipeline_finished = asyncio.Event()
+    original_handle_pipeline_finished = satellite.handle_pipeline_finished
+
+    def handle_pipeline_finished():
+        original_handle_pipeline_finished()
+        pipeline_finished.set()
+
+    with (
+        patch(
+            "homeassistant.components.assist_satellite.entity.async_pipeline_from_audio_stream",
+            new=async_pipeline_from_audio_stream,
+        ),
+        patch.object(satellite, "handle_pipeline_finished", handle_pipeline_finished),
+    ):
+        async with asyncio.timeout(1):
+            await satellite.handle_pipeline_start(
+                conversation_id="",
+                flags=VoiceAssistantCommandFlag(0),  # stt
+                audio_settings=VoiceAssistantAudioSettings(),
+                wake_word_phrase="",
+            )
+
+            await satellite.handle_audio(b"before-abort")
+            await chunk_received.wait()
+
+            # Abort the pipeline, no further processing
+            await satellite.handle_pipeline_stop(abort=True)
+            await pipeline_aborted.wait()
+
+            # This chunk should not make it into the STT stream
+            await satellite.handle_audio(b"after-abort")
+            await pipeline_finished.wait()
+
+            # Only first chunk
+            assert chunks == [b"before-abort"]

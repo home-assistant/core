@@ -350,9 +350,12 @@ class EsphomeAssistSatellite(
         """Handle incoming audio chunk from API."""
         self._audio_queue.put_nowait(data)
 
-    async def handle_pipeline_stop(self) -> None:
+    async def handle_pipeline_stop(self, abort: bool) -> None:
         """Handle request for pipeline to stop."""
-        self._stop_pipeline()
+        if abort:
+            self._abort_pipeline()
+        else:
+            self._stop_pipeline()
 
     def handle_pipeline_finished(self) -> None:
         """Handle when pipeline has finished running."""
@@ -466,9 +469,16 @@ class EsphomeAssistSatellite(
             yield chunk
 
     def _stop_pipeline(self) -> None:
-        """Request pipeline to be stopped."""
+        """Request pipeline to be stopped by ending the audio stream and continue processing."""
         self._audio_queue.put_nowait(None)
         _LOGGER.debug("Requested pipeline stop")
+
+    def _abort_pipeline(self) -> None:
+        """Request pipeline to be aborted (no further processing)."""
+        _LOGGER.debug("Requested pipeline abort")
+        if self._pipeline_task is not None:
+            self._pipeline_task.cancel()
+            self._pipeline_task = None
 
     async def _start_udp_server(self) -> int:
         """Start a UDP server on a random free port."""
