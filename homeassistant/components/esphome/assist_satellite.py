@@ -14,6 +14,7 @@ import wave
 
 from aioesphomeapi import (
     MediaPlayerFormatPurpose,
+    VoiceAssistantAnnounceFinished,
     VoiceAssistantAudioSettings,
     VoiceAssistantCommandFlag,
     VoiceAssistantEventType,
@@ -166,6 +167,7 @@ class EsphomeAssistSatellite(
                     handle_start=self.handle_pipeline_start,
                     handle_stop=self.handle_pipeline_stop,
                     handle_audio=self.handle_audio,
+                    handle_announcement_finished=self.handle_announcement_finished,
                 )
             )
         else:
@@ -174,6 +176,7 @@ class EsphomeAssistSatellite(
                 self.cli.subscribe_voice_assistant(
                     handle_start=self.handle_pipeline_start,
                     handle_stop=self.handle_pipeline_stop,
+                    handle_announcement_finished=self.handle_announcement_finished,
                 )
             )
 
@@ -193,6 +196,10 @@ class EsphomeAssistSatellite(
             self._attr_supported_features |= (
                 assist_satellite.AssistSatelliteEntityFeature.ANNOUNCE
             )
+
+        if not (feature_flags & VoiceAssistantFeature.SPEAKER):
+            # Will use media player for TTS/announcements
+            self._update_tts_format()
 
     async def async_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass."""
@@ -381,6 +388,12 @@ class EsphomeAssistSatellite(
             timer_info.seconds_left,
             timer_info.is_active,
         )
+
+    async def handle_announcement_finished(
+        self, announce_finished: VoiceAssistantAnnounceFinished
+    ) -> None:
+        """Handle announcement finished message (also sent for TTS)."""
+        self.tts_response_finished()
 
     def _update_tts_format(self) -> None:
         """Update the TTS format from the first media player."""
