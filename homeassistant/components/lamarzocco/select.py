@@ -5,12 +5,14 @@ from dataclasses import dataclass
 from typing import Any
 
 from lmcloud.const import MachineModel, PrebrewMode, SteamLevel
+from lmcloud.exceptions import RequestNotSuccessful
 from lmcloud.lm_machine import LaMarzoccoMachine
 from lmcloud.models import LaMarzoccoMachineConfig
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import LaMarzoccoConfigEntry
@@ -113,7 +115,17 @@ class LaMarzoccoSelectEntity(LaMarzoccoEntity, SelectEntity):
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         if option != self.current_option:
-            await self.entity_description.select_option_fn(
-                self.coordinator.device, option
-            )
+            try:
+                await self.entity_description.select_option_fn(
+                    self.coordinator.device, option
+                )
+            except RequestNotSuccessful as exc:
+                raise HomeAssistantError(
+                    "Updating selection failed.",
+                    translation_key="select_option_error",
+                    translation_placeholders={
+                        "key": self.entity_description.key,
+                        "option": option,
+                    },
+                ) from exc
             self.async_write_ha_state()

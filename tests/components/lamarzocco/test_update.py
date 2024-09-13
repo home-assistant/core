@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock
 
 from lmcloud.const import FirmwareType
+from lmcloud.exceptions import RequestNotSuccessful
 import pytest
 from syrupy import SnapshotAssertion
 
@@ -54,15 +55,24 @@ async def test_update_entites(
     mock_lamarzocco.update_firmware.assert_called_once_with(component)
 
 
+@pytest.mark.parametrize(
+    ("attr", "value"),
+    [
+        ("side_effect", RequestNotSuccessful("Boom")),
+        ("return_value", False),
+    ],
+)
 async def test_update_error(
     hass: HomeAssistant,
     mock_lamarzocco: MagicMock,
+    attr: str,
+    value: bool | Exception,
 ) -> None:
     """Test error during update."""
     state = hass.states.get(f"update.{mock_lamarzocco.serial_number}_machine_firmware")
     assert state
 
-    mock_lamarzocco.update_firmware.return_value = False
+    setattr(mock_lamarzocco.update_firmware, attr, value)
 
     with pytest.raises(HomeAssistantError, match="Update failed"):
         await hass.services.async_call(

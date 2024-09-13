@@ -4,10 +4,12 @@ from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from typing import Any
 
+from lmcloud.exceptions import RequestNotSuccessful
 from lmcloud.lm_machine import LaMarzoccoMachine
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import LaMarzoccoConfigEntry
@@ -55,5 +57,14 @@ class LaMarzoccoButtonEntity(LaMarzoccoEntity, ButtonEntity):
 
     async def async_press(self) -> None:
         """Press button."""
-        await self.entity_description.press_fn(self.coordinator.device)
+        try:
+            await self.entity_description.press_fn(self.coordinator.device)
+        except RequestNotSuccessful as exc:
+            raise HomeAssistantError(
+                "Button action failed.",
+                translation_key="button_error",
+                translation_placeholders={
+                    "key": self.entity_description.key,
+                },
+            ) from exc
         await self.coordinator.async_request_refresh()

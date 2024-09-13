@@ -11,6 +11,7 @@ from lmcloud.const import (
     PhysicalKey,
     PrebrewMode,
 )
+from lmcloud.exceptions import RequestNotSuccessful
 from lmcloud.lm_machine import LaMarzoccoMachine
 from lmcloud.models import LaMarzoccoMachineConfig
 
@@ -27,6 +28,7 @@ from homeassistant.const import (
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import LaMarzoccoConfigEntry
@@ -220,7 +222,19 @@ class LaMarzoccoNumberEntity(LaMarzoccoEntity, NumberEntity):
     async def async_set_native_value(self, value: float) -> None:
         """Set the value."""
         if value != self.native_value:
-            await self.entity_description.set_value_fn(self.coordinator.device, value)
+            try:
+                await self.entity_description.set_value_fn(
+                    self.coordinator.device, value
+                )
+            except RequestNotSuccessful as exc:
+                raise HomeAssistantError(
+                    "Failed to set value.",
+                    translation_key="number_exception",
+                    translation_placeholders={
+                        "key": self.entity_description.key,
+                        "value": str(value),
+                    },
+                ) from exc
             self.async_write_ha_state()
 
 
@@ -258,7 +272,18 @@ class LaMarzoccoKeyNumberEntity(LaMarzoccoEntity, NumberEntity):
     async def async_set_native_value(self, value: float) -> None:
         """Set the value."""
         if value != self.native_value:
-            await self.entity_description.set_value_fn(
-                self.coordinator.device, value, PhysicalKey(self.pyhsical_key)
-            )
+            try:
+                await self.entity_description.set_value_fn(
+                    self.coordinator.device, value, PhysicalKey(self.pyhsical_key)
+                )
+            except RequestNotSuccessful as exc:
+                raise HomeAssistantError(
+                    "Failed to set value.",
+                    translation_key="number_exception_key",
+                    translation_placeholders={
+                        "key": self.entity_description.key,
+                        "value": str(value),
+                        "physical_key": str(self.pyhsical_key),
+                    },
+                ) from exc
             self.async_write_ha_state()

@@ -180,5 +180,31 @@
       "title": "Unsupported gateway firmware",
       "description": "Gateway firmware {gateway_version} is no longer supported by this integration, please update."
     }
+  },
+  "exceptions": {
+    "auto_on_off_error": {
+      "message": "Error while setting auto on/off to {state} for {id}"
+    },
+    "button_error": {
+      "message": "Error while executing button {key}"
+    },
+    "number_exception": {
+      "message": "Error while setting value {value} for number {key}"
+    },
+    "number_exception_key": {
+      "message": "Error while setting value {value} for number {key}, key {physical_key}"
+    },
+    "select_option_error": {
+      "message": "Error while setting select option {option} for {key}"
+    },
+    "switch_on_error": {
+      "message": "Error while turning on switch {key}"
+    },
+    "switch_off_error": {
+      "message": "Error while turning off switch {key}"
+    },
+    "update_failed": {
+      "message": "Error while updating {key}"
+    }
   }
 }
