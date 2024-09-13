@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import AsyncGenerator, Callable
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from http import HTTPMethod
 from typing import Any
 from unittest.mock import MagicMock, patch
@@ -13,9 +13,15 @@ from evohomeasync2 import EvohomeClient
 from evohomeasync2.broker import Broker
 import pytest
 
-from homeassistant.components.evohome import CONF_PASSWORD, CONF_USERNAME, DOMAIN
+from homeassistant.components.evohome import (
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    DOMAIN,
+    EvoBroker,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
+import homeassistant.util.dt as dt_util
 from homeassistant.util.json import JsonArrayType, JsonObjectType
 
 from .const import ACCESS_TOKEN, REFRESH_TOKEN, USERNAME
@@ -147,6 +153,9 @@ async def setup_evohome(
         assert isinstance(mock_client.call_args.kwargs["session"], ClientSession)
 
         assert mock_client.account_info is not None
+
+        broker: EvoBroker = hass.data[DOMAIN]["broker"]
+        dt_util.set_default_time_zone(timezone(broker.loc_utc_offset))
 
         try:
             yield mock_client
