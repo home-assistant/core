@@ -6,7 +6,6 @@ play_preset:
       domain: media_player
   fields:
     preset_number:
-      name: Preset number
       example: 1
       required: true
       default: 1
@@ -25,7 +24,6 @@ send_command:
       domain: media_player
   fields:
     command:
-      name: Command
       description: The raw HTTP command to send to the LinnkPlay device
       example: Update
       required: true
