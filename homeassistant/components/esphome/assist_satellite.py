@@ -476,6 +476,7 @@ class EsphomeAssistSatellite(
     def _abort_pipeline(self) -> None:
         """Request pipeline to be aborted (no further processing)."""
         _LOGGER.debug("Requested pipeline abort")
+        self._audio_queue.put_nowait(None)
         if self._pipeline_task is not None:
             self._pipeline_task.cancel()
             self._pipeline_task = None
