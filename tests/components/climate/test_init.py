@@ -300,7 +300,9 @@ async def test_temperature_features_is_valid(
     assert (
         "MockClimateTempEntity set_temperature action was used "
         "with temperature but the entity does not "
-        "implement the ClimateEntityFeature.TARGET_TEMPERATURE feature. Please"
+        "implement the ClimateEntityFeature.TARGET_TEMPERATURE feature. "
+        "This will stop working in 2025.4 and raise an error instead. "
+        "Please"
     ) in caplog.text
 
     await hass.services.async_call(
@@ -316,7 +318,9 @@ async def test_temperature_features_is_valid(
     assert (
         "MockClimateTempRangeEntity set_temperature action was used with "
         "target_temp_low but the entity does not "
-        "implement the ClimateEntityFeature.TARGET_TEMPERATURE_RANGE feature. Please"
+        "implement the ClimateEntityFeature.TARGET_TEMPERATURE_RANGE feature. "
+        "This will stop working in 2025.4 and raise an error instead. "
+        "Please"
     ) in caplog.text
 
 
@@ -385,7 +389,8 @@ async def test_mode_validation(
     assert (
         "MockClimateEntity sets the hvac_mode auto which is not valid "
         "for this entity with modes: off, heat. This will stop working "
-        "in 2025.3 and raise an error instead. Please" in caplog.text
+        "in 2025.4 and raise an error instead. "
+        "Please" in caplog.text
     )
 
     with pytest.raises(
