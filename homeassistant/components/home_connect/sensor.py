@@ -40,7 +40,7 @@ _LOGGER = logging.getLogger(__name__)
 
 @dataclass(frozen=True, kw_only=True)
 class HomeConnectSensorEntityDescription(SensorEntityDescription):
-    """Entity Description class for binary sensors."""
+    """Entity Description class for sensors."""
 
     device_class: SensorDeviceClass | None = SensorDeviceClass.ENUM
     options: list[str] | None = field(
