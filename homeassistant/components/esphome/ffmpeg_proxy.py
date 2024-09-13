@@ -229,7 +229,7 @@ class FFmpegProxyView(HomeAssistantView):
         """Start a get request."""
         if (convert_info := self.proxy_data.conversions.get(device_id)) is None:
             return web.Response(
-                body="No proxy URL for device", status=HTTPStatus.BAD_REQUEST
+                body="No proxy URL for device", status=HTTPStatus.NOT_FOUND
             )
 
         # {id}.mp3 -> id, mp3

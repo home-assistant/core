@@ -61,7 +61,7 @@ async def test_proxy_view(
 
         # Should fail because we haven't allowed the URL yet
         req = await client.get(url)
-        assert req.status == HTTPStatus.BAD_REQUEST
+        assert req.status == HTTPStatus.NOT_FOUND
 
         # Allow the URL
         with patch(
