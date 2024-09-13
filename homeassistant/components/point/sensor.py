@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 
 from homeassistant.components.sensor import (
-    DOMAIN,
+    DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -64,7 +64,9 @@ async def async_setup_entry(
         )
 
     async_dispatcher_connect(
-        hass, POINT_DISCOVERY_NEW.format(DOMAIN, POINT_DOMAIN), async_discover_sensor
+        hass,
+        POINT_DISCOVERY_NEW.format(SENSOR_DOMAIN, POINT_DOMAIN),
+        async_discover_sensor,
     )
 
 

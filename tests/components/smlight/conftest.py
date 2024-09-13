@@ -3,6 +3,7 @@
 from collections.abc import AsyncGenerator, Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from pysmlight.sse import sseClient
 from pysmlight.web import CmdWrapper, Info, Sensors
 import pytest
 
@@ -89,6 +90,7 @@ def mock_smlight_client(request: pytest.FixtureRequest) -> Generator[MagicMock]:
 
         api.cmds = AsyncMock(spec_set=CmdWrapper)
         api.set_toggle = AsyncMock()
+        api.sse = MagicMock(spec_set=sseClient)
 
         yield api
 

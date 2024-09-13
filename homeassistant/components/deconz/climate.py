@@ -13,7 +13,7 @@ from pydeconz.models.sensor.thermostat import (
 )
 
 from homeassistant.components.climate import (
-    DOMAIN,
+    DOMAIN as CLIMATE_DOMAIN,
     FAN_AUTO,
     FAN_HIGH,
     FAN_LOW,
@@ -81,7 +81,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the deCONZ climate devices."""
     hub = DeconzHub.get_hub(hass, config_entry)
-    hub.entities[DOMAIN] = set()
+    hub.entities[CLIMATE_DOMAIN] = set()
 
     @callback
     def async_add_climate(_: EventType, climate_id: str) -> None:
@@ -98,7 +98,7 @@ async def async_setup_entry(
 class DeconzThermostat(DeconzDevice[Thermostat], ClimateEntity):
     """Representation of a deCONZ thermostat."""
 
-    TYPE = DOMAIN
+    TYPE = CLIMATE_DOMAIN
 
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _enable_turn_on_off_backwards_compatibility = False

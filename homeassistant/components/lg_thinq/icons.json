@@ -23,6 +23,21 @@
       },
       "sabbath_mode": {
         "default": "mdi:food-off-outline"
+      },
+      "machine_clean_reminder": {
+        "default": "mdi:tune-vertical-variant"
+      },
+      "signal_level": {
+        "default": "mdi:tune-vertical-variant"
+      },
+      "clean_light_reminder": {
+        "default": "mdi:tune-vertical-variant"
+      },
+      "operation_mode": {
+        "default": "mdi:power"
+      },
+      "one_touch_filter": {
+        "default": "mdi:air-filter"
       }
     }
   }
