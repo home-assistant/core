@@ -8,6 +8,10 @@ from homeassistant.components.homeassistant_hardware.util import guess_firmware_
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
+from .const import DOMAIN
+
+__all__ = ["DOMAIN"]
+
 _LOGGER = logging.getLogger(__name__)
 
 
