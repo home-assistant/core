@@ -3,7 +3,6 @@
 import asyncio
 import copy
 import io
-import json
 from typing import Any
 from unittest.mock import DEFAULT, AsyncMock, patch
 
@@ -19,7 +18,6 @@ from homeassistant.util.json import JsonArrayType
 
 from tests.common import (
     MockConfigEntry,
-    load_fixture,
     load_json_array_fixture,
     load_json_object_fixture,
 )
@@ -125,8 +123,8 @@ def lock_august_asl03_state_fixture() -> dict[str, Any]:
 @pytest.fixture(name="climate_radio_thermostat_ct100_plus_state", scope="package")
 def climate_radio_thermostat_ct100_plus_state_fixture() -> dict[str, Any]:
     """Load the climate radio thermostat ct100 plus node state fixture data."""
-    return json.loads(
-        load_fixture("zwave_js/climate_radio_thermostat_ct100_plus_state.json")
+    return load_json_object_fixture(
+        "climate_radio_thermostat_ct100_plus_state.json", DOMAIN
     )
 
 
@@ -141,10 +139,8 @@ def climate_radio_thermostat_ct100_plus_different_endpoints_state_fixture() -> (
 
     This device is a radio thermostat ct100.
     """
-    return json.loads(
-        load_fixture(
-            "zwave_js/climate_radio_thermostat_ct100_plus_different_endpoints_state.json"
-        )
+    return load_json_object_fixture(
+        "climate_radio_thermostat_ct100_plus_different_endpoints_state.json", DOMAIN
     )
 
 
@@ -157,8 +153,8 @@ def climate_adc_t3000_state_fixture() -> dict[str, Any]:
 @pytest.fixture(name="climate_airzone_aidoo_control_hvac_unit_state", scope="package")
 def climate_airzone_aidoo_control_hvac_unit_state_fixture() -> dict[str, Any]:
     """Load the climate Airzone Aidoo Control HVAC Unit state fixture data."""
-    return json.loads(
-        load_fixture("zwave_js/climate_airzone_aidoo_control_hvac_unit_state.json")
+    return load_json_object_fixture(
+        "climate_airzone_aidoo_control_hvac_unit_state.json", DOMAIN
     )
 
 
@@ -195,9 +191,7 @@ def climate_heatit_z_trm2fx_state_fixture() -> dict[str, Any]:
 @pytest.fixture(name="climate_heatit_z_trm3_no_value_state", scope="package")
 def climate_heatit_z_trm3_no_value_state_fixture() -> dict[str, Any]:
     """Load the climate HEATIT Z-TRM3 thermostat node w/no value state fixture data."""
-    return json.loads(
-        load_fixture("zwave_js/climate_heatit_z_trm3_no_value_state.json")
-    )
+    return load_json_object_fixture("climate_heatit_z_trm3_no_value_state.json", DOMAIN)
 
 
 @pytest.fixture(name="nortek_thermostat_state", scope="package")
@@ -345,10 +339,8 @@ def climate_radio_thermostat_ct101_multiple_temp_units_state_fixture() -> (
     dict[str, Any]
 ):
     """Load the climate multiple temp units node state fixture data."""
-    return json.loads(
-        load_fixture(
-            "zwave_js/climate_radio_thermostat_ct101_multiple_temp_units_state.json"
-        )
+    return load_json_object_fixture(
+        "climate_radio_thermostat_ct101_multiple_temp_units_state.json", DOMAIN
     )
 
 
@@ -362,10 +354,9 @@ def climate_radio_thermostat_ct100_mode_and_setpoint_on_different_endpoints_stat
     dict[str, Any]
 ):
     """Load climate device w/ mode+setpoint on diff endpoints node state fixture data."""
-    return json.loads(
-        load_fixture(
-            "zwave_js/climate_radio_thermostat_ct100_mode_and_setpoint_on_different_endpoints_state.json"
-        )
+    return load_json_object_fixture(
+        "climate_radio_thermostat_ct100_mode_and_setpoint_on_different_endpoints_state.json",
+        DOMAIN,
     )
 
 
@@ -402,8 +393,8 @@ def aeotec_zw164_siren_state_fixture() -> dict[str, Any]:
 @pytest.fixture(name="lock_popp_electric_strike_lock_control_state", scope="package")
 def lock_popp_electric_strike_lock_control_state_fixture() -> dict[str, Any]:
     """Load the popp electric strike lock control node state fixture data."""
-    return json.loads(
-        load_fixture("zwave_js/lock_popp_electric_strike_lock_control_state.json")
+    return load_json_object_fixture(
+        "lock_popp_electric_strike_lock_control_state.json", DOMAIN
     )
 
 
@@ -800,8 +791,8 @@ def nortek_thermostat_added_event_fixture(client) -> Node:
 @pytest.fixture(name="nortek_thermostat_removed_event")
 def nortek_thermostat_removed_event_fixture(client) -> Node:
     """Mock a Nortek thermostat node removed event."""
-    event_data = json.loads(
-        load_fixture("zwave_js/nortek_thermostat_removed_event.json")
+    event_data = load_json_object_fixture(
+        "nortek_thermostat_removed_event.json", DOMAIN
     )
     return Event("node removed", event_data)
 
