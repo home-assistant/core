@@ -81,7 +81,7 @@
 # name: test_all_entities[button.1p7k_500006_charge_stop-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': '1p7k_500006 Charge Stop',
+      'friendly_name': '1p7k_500006 Charge stop',
     }),
     'context': <ANY>,
     'entity_id': 'button.1p7k_500006_charge_stop',
