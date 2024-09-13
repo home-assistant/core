@@ -27,7 +27,8 @@ async def test_update_lms(
             return_value=copy.deepcopy(FAKE_QUERY_RESPONSE),
         ),
     ):
-        await setup_mocked_integration(hass)
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
     state = hass.states.get("update.fakelib_lyrion_music_server")
 
     assert state is not None
