@@ -419,10 +419,7 @@ class ZWaveWindowCovering(CoverPositionMixin, CoverTiltMixin):
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
-        if self._up_value:
-            await self._async_set_value(self._up_value, True)
-        else:
-            await super().async_open_cover(**kwargs)
+        await self._async_set_value(self._up_value, True)
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
