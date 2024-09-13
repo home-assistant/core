@@ -20,7 +20,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .browse_media import async_browse_media
-from .const import DOMAIN, LOGGER, SPOTIFY_SCOPES
+from .const import DOMAIN, LOGGER, MEDIA_PLAYER_PREFIX, SPOTIFY_SCOPES
 from .models import HomeAssistantSpotifyData
 from .util import (
     is_spotify_media_type,
@@ -31,11 +31,12 @@ from .util import (
 PLATFORMS = [Platform.MEDIA_PLAYER]
 
 __all__ = [
-    "async_browse_media",
     "DOMAIN",
-    "spotify_uri_from_media_browser_url",
+    "MEDIA_PLAYER_PREFIX",
+    "async_browse_media",
     "is_spotify_media_type",
     "resolve_spotify_media_type",
+    "spotify_uri_from_media_browser_url",
 ]
 
 

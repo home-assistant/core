@@ -10,7 +10,7 @@ from homeassistant.components.forked_daapd.browse_media import (
     is_owntone_media_content_id,
 )
 from homeassistant.components.media_player import BrowseMedia, MediaClass, MediaType
-from homeassistant.components.spotify.const import (  # pylint: disable=hass-component-root-import
+from homeassistant.components.spotify import (
     MEDIA_PLAYER_PREFIX as SPOTIFY_MEDIA_PLAYER_PREFIX,
 )
 from homeassistant.components.websocket_api import TYPE_RESULT
