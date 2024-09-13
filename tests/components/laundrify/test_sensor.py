@@ -4,11 +4,16 @@ from datetime import timedelta
 import logging
 from unittest.mock import patch
 
+from freezegun.api import FrozenDateTimeFactory
 from laundrify_aio import LaundrifyDevice
 from laundrify_aio.exceptions import LaundrifyDeviceException
 import pytest
 
-from homeassistant.components.laundrify.const import DOMAIN, MODELS
+from homeassistant.components.laundrify.const import (
+    DEFAULT_POLL_INTERVAL,
+    DOMAIN,
+    MODELS,
+)
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -19,7 +24,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.util import slugify
-from homeassistant.util.dt import utcnow
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -48,6 +52,7 @@ async def test_laundrify_sensor_init(
 
 async def test_laundrify_sensor_update(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     mock_device: LaundrifyDevice,
     laundrify_config_entry: MockConfigEntry,
 ) -> None:
@@ -58,8 +63,8 @@ async def test_laundrify_sensor_update(
     assert state.state == STATE_UNKNOWN
 
     with patch("laundrify_aio.LaundrifyDevice.get_power", return_value=95):
-        future = utcnow() + timedelta(minutes=2)
-        async_fire_time_changed(hass, future)
+        freezer.tick(timedelta(seconds=DEFAULT_POLL_INTERVAL))
+        async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
         state = hass.states.get(f"sensor.{device_slug}_power")
@@ -70,6 +75,7 @@ async def test_laundrify_sensor_update(
 async def test_laundrify_sensor_update_failure(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
+    freezer: FrozenDateTimeFactory,
     mock_device: LaundrifyDevice,
     laundrify_config_entry: MockConfigEntry,
 ) -> None:
@@ -81,8 +87,8 @@ async def test_laundrify_sensor_update_failure(
         "laundrify_aio.LaundrifyDevice.get_power",
         side_effect=LaundrifyDeviceException("Raising error to test update failure."),
     ):
-        future = utcnow() + timedelta(minutes=2)
-        async_fire_time_changed(hass, future)
+        freezer.tick(timedelta(seconds=DEFAULT_POLL_INTERVAL))
+        async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
         assert f"Couldn't load power for {mock_device.id}_power" in caplog.text
