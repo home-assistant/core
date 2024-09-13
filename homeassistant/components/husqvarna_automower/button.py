@@ -1,21 +1,64 @@
 """Creates a button entity for Husqvarna Automower integration."""
 
+from collections.abc import Awaitable, Callable
+from dataclasses import dataclass
 import logging
+from typing import Any
 
-from aioautomower.exceptions import ApiException
+from aioautomower.model import MowerAttributes
+from aioautomower.session import AutomowerSession
 
-from homeassistant.components.button import ButtonEntity
+from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from . import AutomowerConfigEntry
-from .const import DOMAIN
 from .coordinator import AutomowerDataUpdateCoordinator
-from .entity import AutomowerAvailableEntity, AutomowerControlEntity
+from .entity import (
+    AutomowerAvailableEntity,
+    _check_error_free,
+    handle_sending_exception,
+)
 
 _LOGGER = logging.getLogger(__name__)
+
+
+async def async_set_time(
+    session: AutomowerSession,
+    mower_id: str,
+) -> None:
+    """Set cutting height for work area."""
+    await session.commands.set_datetime(
+        mower_id,
+        (dt_util.now(dt_util.DEFAULT_TIME_ZONE)).replace(tzinfo=None),
+    )
+
+
+@dataclass(frozen=True, kw_only=True)
+class AutomowerButtonEntityDescription(ButtonEntityDescription):
+    """Describes Automower number entity."""
+
+    available_fn: Callable[[MowerAttributes], bool] = lambda _: True
+    exists_fn: Callable[[MowerAttributes], bool] = lambda _: True
+    press_fn: Callable[[AutomowerSession, str], Awaitable[Any]]
+
+
+BUTTON_TYPES: tuple[AutomowerButtonEntityDescription, ...] = (
+    AutomowerButtonEntityDescription(
+        key="confirm_error",
+        translation_key="confirm_error",
+        available_fn=lambda data: data.mower.is_error_confirmable,
+        exists_fn=lambda data: data.capabilities.can_confirm_error,
+        press_fn=lambda session, mower_id: session.commands.error_confirm(mower_id),
+    ),
+    AutomowerButtonEntityDescription(
+        key="sync_clock",
+        translation_key="sync_clock",
+        available_fn=_check_error_free,
+        press_fn=async_set_time,
+    ),
+)
 
 
 async def async_setup_entry(
@@ -27,13 +70,10 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
     entities: list[ButtonEntity] = []
     entities.extend(
-        AutomowerButtonEntity(mower_id, coordinator)
+        AutomowerButtonEntity(mower_id, coordinator, description)
         for mower_id in coordinator.data
-        if coordinator.data[mower_id].capabilities.can_confirm_error
-    )
-    entities.extend(
-        AutomowerSetDateTimeButtonEntity(mower_id, coordinator)
-        for mower_id in coordinator.data
+        for description in BUTTON_TYPES
+        if description.exists_fn(coordinator.data[mower_id])
     )
     async_add_entities(entities)
 
@@ -41,58 +81,25 @@ async def async_setup_entry(
 class AutomowerButtonEntity(AutomowerAvailableEntity, ButtonEntity):
     """Defining the AutomowerButtonEntity."""
 
-    _attr_translation_key = "confirm_error"
+    entity_description: AutomowerButtonEntityDescription
 
     def __init__(
         self,
         mower_id: str,
         coordinator: AutomowerDataUpdateCoordinator,
+        description: AutomowerButtonEntityDescription,
     ) -> None:
-        """Set up button platform."""
+        """Set up AutomowerNumberEntity."""
         super().__init__(mower_id, coordinator)
-        self._attr_unique_id = f"{mower_id}_confirm_error"
+        self.entity_description = description
+        self._attr_unique_id = f"{mower_id}_{description.key}"
 
     @property
     def available(self) -> bool:
-        """Return True if the device and entity is available."""
-        return super().available and self.mower_attributes.mower.is_error_confirmable
+        """Return the translation key of the work area."""
+        return self.entity_description.available_fn(self.mower_attributes)
 
+    @handle_sending_exception()
     async def async_press(self) -> None:
-        """Handle the button press."""
-        try:
-            await self.coordinator.api.commands.error_confirm(self.mower_id)
-        except ApiException as exception:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="command_send_failed",
-                translation_placeholders={"exception": str(exception)},
-            ) from exception
-
-
-class AutomowerSetDateTimeButtonEntity(AutomowerControlEntity, ButtonEntity):
-    """Defining the AutomowerButtonEntity."""
-
-    _attr_translation_key = "sync_clock"
-
-    def __init__(
-        self,
-        mower_id: str,
-        coordinator: AutomowerDataUpdateCoordinator,
-    ) -> None:
-        """Set up button platform."""
-        super().__init__(mower_id, coordinator)
-        self._attr_unique_id = f"{mower_id}_sync_clock"
-
-    async def async_press(self) -> None:
-        """Handle the button press."""
-        try:
-            await self.coordinator.api.commands.set_datetime(
-                self.mower_id,
-                (dt_util.now(dt_util.DEFAULT_TIME_ZONE)).replace(tzinfo=None),
-            )
-        except ApiException as exception:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="command_send_failed",
-                translation_placeholders={"exception": str(exception)},
-            ) from exception
+        """Change to new number value."""
+        await self.entity_description.press_fn(self.coordinator.api, self.mower_id)
