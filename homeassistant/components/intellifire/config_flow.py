@@ -13,8 +13,14 @@ from intellifire4py.local_api import IntelliFireAPILocal
 from intellifire4py.model import IntelliFireCommonFireplaceData
 import voluptuous as vol
 
+from homeassistant import config_entries
 from homeassistant.components.dhcp import DhcpServiceInfo
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_HOST,
@@ -22,6 +28,8 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_USERNAME,
 )
+from homeassistant.core import callback
+from homeassistant.helpers import selector
 
 from .const import (
     API_MODE_LOCAL,
@@ -87,7 +95,8 @@ class IntelliFireConfigFlow(ConfigFlow, domain=DOMAIN):
         self._configured_serials: list[str] = []
 
         # Define a cloud api interface we can use
-        self.cloud_api_interface = IntelliFireCloudInterface()
+        LOGGER.error("Remove the following line before submission")
+        self.cloud_api_interface = IntelliFireCloudInterface(use_http=True)
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -273,3 +282,68 @@ class IntelliFireConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="not_intellifire_device")
 
         return await self.async_step_cloud_api()
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
+        """Create the options flow."""
+        return IntelliFireOptionsFlowHandler(config_entry)
+
+
+class IntelliFireOptionsFlowHandler(config_entries.OptionsFlow):
+    """Options flow for IntelliFire component."""
+
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+        """Initialize the Met OptionsFlow."""
+        self._config_entry = config_entry
+        self._errors: dict[str, Any] = {}
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Configure options for Met."""
+        LOGGER.debug("[options] STEP: init")
+        return await self.async_step_options()
+
+    async def async_step_options(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Create the options step for a account."""
+
+        if user_input is not None:
+            # Update config entry with data from user input
+            # LOGGER.error("OptionsFlow::Updating existing entry")
+            # self.hass.config_entries.async_update_entry(
+            #     self._config_entry, data=self._config_entry.data, options=user_input
+            # )
+            LOGGER.debug("OptionsFlow::Calling Create Entry")
+            return self.async_create_entry(
+                title=self._config_entry.title, data=user_input
+            )
+
+        existing_read = self._config_entry.options.get(CONF_READ_MODE, API_MODE_LOCAL)
+        existing_control = self._config_entry.options.get(
+            CONF_CONTROL_MODE, API_MODE_LOCAL
+        )
+
+        cloud_local_options = selector.SelectSelectorConfig(
+            options=[
+                selector.SelectOptionDict(value="local", label="Local"),
+                selector.SelectOptionDict(value="cloud", label="Cloud"),
+            ]
+        )
+
+        return self.async_show_form(
+            step_id="options",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_READ_MODE, default=existing_read
+                    ): selector.SelectSelector(cloud_local_options),
+                    vol.Required(
+                        CONF_CONTROL_MODE, default=existing_control
+                    ): selector.SelectSelector(cloud_local_options),
+                }
+            ),
+            errors=self._errors,
+        )

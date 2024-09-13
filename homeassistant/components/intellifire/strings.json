@@ -16,6 +16,10 @@
           "username": "[%key:common::config_flow::data::email%]",
           "password": "[%key:common::config_flow::data::password%]"
         }
+      },
+      "options": {
+        "title": "Configure fireplace",
+        "description": "Select fireplace by serial number:"
       }
     },
     "error": {
@@ -25,6 +29,20 @@
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "not_intellifire_device": "Not an IntelliFire device.",
       "no_available_devices": "All available devices have already been configured."
+    }
+  },
+  "options": {
+    "step": {
+      "options": {
+        "data": {
+          "cloud_read": "Read mode",
+          "cloud_control": "Control mode"
+        },
+        "data_description": {
+          "cloud_read": "Select endpoint to use for reading data.",
+          "cloud_control": "Select endpoint to use for controlling device."
+        }
+      }
     }
   },
   "entity": {

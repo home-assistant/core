@@ -76,7 +76,8 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
             password = config_entry.data[CONF_PASSWORD]
 
             # Create a Cloud Interface
-            async with IntelliFireCloudInterface() as cloud_interface:
+            LOGGER.error("Remove the following line")
+            async with IntelliFireCloudInterface(use_http=True) as cloud_interface:
                 await cloud_interface.login_with_credentials(
                     username=username, password=password
                 )
