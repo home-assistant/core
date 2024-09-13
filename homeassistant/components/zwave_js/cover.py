@@ -342,13 +342,19 @@ class ZWaveWindowCovering(CoverPositionMixin, CoverTiltMixin):
         super().__init__(config_entry, driver, info)
         pos_value: ZwaveValue | None = None
         tilt_value: ZwaveValue | None = None
-        self._up_value: ZwaveValue | None = self.get_zwave_value(
-            WINDOW_COVERING_LEVEL_CHANGE_UP_PROPERTY,
-            value_property_key=info.primary_value.property_key,
+        self._up_value = cast(
+            ZwaveValue,
+            self.get_zwave_value(
+                WINDOW_COVERING_LEVEL_CHANGE_UP_PROPERTY,
+                value_property_key=info.primary_value.property_key,
+            ),
         )
-        self._down_value: ZwaveValue | None = self.get_zwave_value(
-            WINDOW_COVERING_LEVEL_CHANGE_DOWN_PROPERTY,
-            value_property_key=info.primary_value.property_key,
+        self._down_value = cast(
+            ZwaveValue,
+            self.get_zwave_value(
+                WINDOW_COVERING_LEVEL_CHANGE_DOWN_PROPERTY,
+                value_property_key=info.primary_value.property_key,
+            ),
         )
 
         # If primary value is for position, we have to search for a tilt value
@@ -420,18 +426,11 @@ class ZWaveWindowCovering(CoverPositionMixin, CoverTiltMixin):
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
-        if self._down_value:
-            await self._async_set_value(self._down_value, True)
-        else:
-            await super().async_close_cover(**kwargs)
+        await self._async_set_value(self._down_value, True)
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
-        if self._up_value:
-            # It does not matter if the up or down value is used
-            await self._async_set_value(self._up_value, False)
-        else:
-            await super().async_stop_cover(**kwargs)
+        await self._async_set_value(self._up_value, False)
 
 
 class ZwaveMotorizedBarrier(ZWaveBaseEntity, CoverEntity):
