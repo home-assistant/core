@@ -73,7 +73,7 @@ class ServerStatusUpdatePlugins(ServerStatusUpdate):
 
     auto_update = True
     supported_features = UpdateEntityFeature.INSTALL
-    release_summary = "The install button will restart the service if possible to install the pending plugin updates. Allow enough time for the service to restart it will become briefly unavailable"
+    release_summary = "Named Plugins will be updated on the next restart. For some installation types, the service will be restarted automatically after the Install button has been selected. Allow enough time for the service to restart. It will become briefly unavailable."
     title: str = SERVER_MODEL + " Plugins"
     installed_version = "current"
 
