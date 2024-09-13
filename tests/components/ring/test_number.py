@@ -10,7 +10,7 @@ from .common import setup_platform
 
 
 @pytest.mark.parametrize(
-    ("entity", "unique_id"),
+    ("entity_id", "unique_id"),
     [
         ("number.downstairs_volume", "123456-volume"),
         ("number.front_door_volume", "987654-volume"),
@@ -23,18 +23,18 @@ async def test_entity_registry(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     mock_ring_client,
-    entity,
+    entity_id,
     unique_id,
 ) -> None:
     """Tests that the devices are registered in the entity registry."""
     await setup_platform(hass, Platform.NUMBER)
 
-    entry = entity_registry.async_get(entity)
+    entry = entity_registry.async_get(entity_id)
     assert entry is not None and entry.unique_id == unique_id
 
 
 @pytest.mark.parametrize(
-    ("entity", "initial_state"),
+    ("entity_id", "initial_state"),
     [
         ("number.downstairs_volume", "2.0"),
         ("number.front_door_volume", "1.0"),
@@ -46,18 +46,18 @@ async def test_entity_registry(
 async def test_initial_state(
     hass: HomeAssistant,
     mock_ring_client,
-    entity,
+    entity_id,
     initial_state,
 ) -> None:
     """Tests that the initial state of a device is correct."""
     await setup_platform(hass, Platform.NUMBER)
 
-    state = hass.states.get(entity)
+    state = hass.states.get(entity_id)
     assert state is not None and state.state == initial_state
 
 
 @pytest.mark.parametrize(
-    ("entity", "new_value"),
+    ("entity_id", "new_value"),
     [
         ("number.downstairs_volume", "4.0"),
         ("number.front_door_volume", "3.0"),
@@ -69,13 +69,13 @@ async def test_initial_state(
 async def test_volume_can_be_changed(
     hass: HomeAssistant,
     mock_ring_client,
-    entity,
+    entity_id,
     new_value,
 ) -> None:
     """Tests the volume can be changed correctly."""
     await setup_platform(hass, Platform.NUMBER)
 
-    state = hass.states.get(entity)
+    state = hass.states.get(entity_id)
     assert state is not None
     old_value = state.state
 
@@ -85,10 +85,10 @@ async def test_volume_can_be_changed(
     await hass.services.async_call(
         "number",
         "set_value",
-        {"entity_id": entity, "value": new_value},
+        {"entity_id": entity_id, "value": new_value},
         blocking=True,
     )
 
     await hass.async_block_till_done()
-    state = hass.states.get(entity)
+    state = hass.states.get(entity_id)
     assert state is not None and state.state == new_value
