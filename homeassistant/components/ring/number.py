@@ -92,8 +92,7 @@ class RingNumber(RingEntity[RingDeviceT], NumberEntity):
     @exception_wrap
     async def async_set_native_value(self, value: float) -> None:
         """Call setter on Ring device."""
-        async_setter = getattr(self._device, f"async_set_{self.entity_description.key}")
-        await async_setter(int(value))
+        await self.entity_description.setter_fn(self._device, value)
 
         self._no_updates_until = time.monotonic() + SKIP_UPDATES_DELAY_SECONDS
 
