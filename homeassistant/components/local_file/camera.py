@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import logging
 import mimetypes
-import os
 
 import voluptuous as vol
 
@@ -26,6 +25,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import slugify
 
 from .const import DEFAULT_NAME, DOMAIN, SERVICE_UPDATE_FILE_PATH
+from .util import check_file_path_access
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,13 +35,6 @@ PLATFORM_SCHEMA = CAMERA_PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     }
 )
-
-
-def check_file_path_access(file_path: str) -> bool:
-    """Check that filepath given is readable."""
-    if not os.access(file_path, os.R_OK):
-        return False
-    return True
 
 
 async def async_setup_entry(

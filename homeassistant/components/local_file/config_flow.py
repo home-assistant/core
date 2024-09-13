@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-import os
 from typing import Any, cast
 
 import voluptuous as vol
@@ -18,13 +17,7 @@ from homeassistant.helpers.schema_config_entry_flow import (
 from homeassistant.helpers.selector import TextSelector
 
 from .const import DEFAULT_NAME, DOMAIN
-
-
-def check_file_path_access(file_path: str) -> bool:
-    """Check that filepath given is readable."""
-    if not os.access(file_path, os.R_OK):
-        return False
-    return True
+from .util import check_file_path_access
 
 
 async def validate_options(
@@ -57,10 +50,12 @@ DATA_SCHEMA_SETUP = vol.Schema(
 
 CONFIG_FLOW = {
     "user": SchemaFlowFormStep(
-        schema=DATA_SCHEMA_SETUP, validate_user_input=validate_options
+        schema=DATA_SCHEMA_SETUP,
+        validate_user_input=validate_options,
     ),
     "import": SchemaFlowFormStep(
         schema=DATA_SCHEMA_SETUP,
+        validate_user_input=validate_options,
     ),
 }
 OPTIONS_FLOW = {
