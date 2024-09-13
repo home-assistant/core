@@ -36,6 +36,7 @@ async def test_config_flow(hass: HomeAssistant, platform) -> None:
                 "source": input_sensor_entity_id,
                 "time_window": {"seconds": 0},
                 "unit_time": "min",
+                "max_sub_interval": {"minutes": 1},
             },
         )
         await hass.async_block_till_done()
@@ -49,6 +50,7 @@ async def test_config_flow(hass: HomeAssistant, platform) -> None:
         "source": "sensor.input",
         "time_window": {"seconds": 0.0},
         "unit_time": "min",
+        "max_sub_interval": {"minutes": 1.0},
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -60,6 +62,7 @@ async def test_config_flow(hass: HomeAssistant, platform) -> None:
         "source": "sensor.input",
         "time_window": {"seconds": 0.0},
         "unit_time": "min",
+        "max_sub_interval": {"minutes": 1.0},
     }
     assert config_entry.title == "My derivative"
 
