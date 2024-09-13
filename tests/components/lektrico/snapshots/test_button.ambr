@@ -69,7 +69,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Charge Stop',
+    'original_name': 'Charge stop',
     'platform': 'lektrico',
     'previous_unique_id': None,
     'supported_features': 0,
