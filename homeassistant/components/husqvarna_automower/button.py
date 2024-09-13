@@ -28,7 +28,7 @@ async def async_set_time(
     session: AutomowerSession,
     mower_id: str,
 ) -> None:
-    """Set cutting height for work area."""
+    """Set datetime for the mower."""
     await session.commands.set_datetime(
         mower_id,
         (dt_util.now(dt_util.DEFAULT_TIME_ZONE)).replace(tzinfo=None),
@@ -37,7 +37,7 @@ async def async_set_time(
 
 @dataclass(frozen=True, kw_only=True)
 class AutomowerButtonEntityDescription(ButtonEntityDescription):
-    """Describes Automower number entity."""
+    """Describes Automower button entity."""
 
     available_fn: Callable[[MowerAttributes], bool] = lambda _: True
     exists_fn: Callable[[MowerAttributes], bool] = lambda _: True
@@ -89,17 +89,17 @@ class AutomowerButtonEntity(AutomowerAvailableEntity, ButtonEntity):
         coordinator: AutomowerDataUpdateCoordinator,
         description: AutomowerButtonEntityDescription,
     ) -> None:
-        """Set up AutomowerNumberEntity."""
+        """Set up AutomowerButtonEntity."""
         super().__init__(mower_id, coordinator)
         self.entity_description = description
         self._attr_unique_id = f"{mower_id}_{description.key}"
 
     @property
     def available(self) -> bool:
-        """Return the translation key of the work area."""
+        """Return the available attribute of the entity."""
         return self.entity_description.available_fn(self.mower_attributes)
 
     @handle_sending_exception()
     async def async_press(self) -> None:
-        """Change to new number value."""
+        """Send a command to the mower."""
         await self.entity_description.press_fn(self.coordinator.api, self.mower_id)
