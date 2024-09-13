@@ -69,8 +69,6 @@ class RingNumber(RingEntity[RingDeviceT], NumberEntity):
         self._update_native_value()
 
     def _update_native_value(self) -> None:
-        # History values can drop off the last 10 events so only update
-        # the value if it's not None
         native_value = self.entity_description.value_fn(self._device)
         if native_value is not None:
             self._attr_native_value = float(native_value)
