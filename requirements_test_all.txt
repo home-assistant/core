@@ -472,7 +472,7 @@ auroranoaa==0.0.3
 aurorapy==0.2.7
 
 # homeassistant.components.autarco
-autarco==2.0.0
+autarco==3.0.0
 
 # homeassistant.components.axis
 axis==62
