@@ -386,7 +386,7 @@ aioswitcher==4.0.3
 aiosyncthing==0.5.1
 
 # homeassistant.components.tankerkoenig
-aiotankerkoenig==0.4.1
+aiotankerkoenig==0.4.2
 
 # homeassistant.components.tractive
 aiotractive==0.6.0
