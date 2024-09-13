@@ -37,6 +37,23 @@ async def async_get_config_entry_diagnostics(
                     }
                     for inverter in coordinator.data.inverters.values()
                 ],
+                **(
+                    {
+                        "battery": {
+                            "flow_now": coordinator.data.battery.flow_now,
+                            "net_charged_now": coordinator.data.battery.net_charged_now,
+                            "state_of_charge": coordinator.data.battery.state_of_charge,
+                            "discharged_today": coordinator.data.battery.discharged_today,
+                            "discharged_month": coordinator.data.battery.discharged_month,
+                            "discharged_total": coordinator.data.battery.discharged_total,
+                            "charged_today": coordinator.data.battery.charged_today,
+                            "charged_month": coordinator.data.battery.charged_month,
+                            "charged_total": coordinator.data.battery.charged_total,
+                        }
+                    }
+                    if coordinator.data.battery is not None
+                    else {}
+                ),
             }
             for coordinator in autarco_data
         ],
