@@ -98,9 +98,7 @@ class IottyLightSwitch(IottyEntity, SwitchEntity):
         iotty_device: LightSwitch,
     ) -> None:
         """Initialize the LightSwitch device."""
-        super().__init__(
-            coordinator=coordinator, iotty_cloud=iotty_cloud, iotty_device=iotty_device
-        )
+        super().__init__(coordinator, iotty_cloud, iotty_device)
 
     @property
     def is_on(self) -> bool:

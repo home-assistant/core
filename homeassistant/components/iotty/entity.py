@@ -1,7 +1,6 @@
 """Base class for iotty entities."""
 
 import logging
-from typing import cast
 
 from iottycloud.lightswitch import Device
 
@@ -43,12 +42,8 @@ class IottyEntity(CoordinatorEntity[IottyDataUpdateCoordinator]):
         self._attr_unique_id = iotty_device.device_id
         self._iotty_device_name = iotty_device.name
         self._iotty_device = iotty_device
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device info."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, cast(str, self._attr_unique_id))},
-            name=self._iotty_device_name,
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, iotty_device.device_id)},
+            name=iotty_device.name,
             manufacturer="iotty",
         )

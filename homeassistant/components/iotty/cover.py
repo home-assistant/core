@@ -109,9 +109,7 @@ class IottyShutter(IottyEntity, CoverEntity):
         iotty_device: Shutter,
     ) -> None:
         """Initialize the Shutter device."""
-        super().__init__(
-            coordinator=coordinator, iotty_cloud=iotty_cloud, iotty_device=iotty_device
-        )
+        super().__init__(coordinator, iotty_cloud, iotty_device)
 
     @property
     def current_cover_position(self) -> int | None:
