@@ -16,6 +16,8 @@ from homeassistant.components.squeezebox.const import (
     STATUS_QUERY_MAC,
     STATUS_QUERY_UUID,
     STATUS_QUERY_VERSION,
+    STATUS_SENSOR_NEWVERSION,
+    STATUS_SENSOR_NEWPLUGINS,
     STATUS_SENSOR_INFO_TOTAL_ALBUMS,
     STATUS_SENSOR_INFO_TOTAL_ARTISTS,
     STATUS_SENSOR_INFO_TOTAL_DURATION,
@@ -59,6 +61,8 @@ FAKE_QUERY_RESPONSE = {
     STATUS_SENSOR_RESCAN: 1,
     STATUS_SENSOR_LASTSCAN: 0,
     STATUS_QUERY_LIBRARYNAME: "FakeLib",
+    STATUS_SENSOR_NEWVERSION: 'A new version of Logitech Media Server is available (8.5.2 - 0). <a href="updateinfo.html?installerFile=/var/lib/squeezeboxserver/cache/updates/logitechmediaserver_8.5.2_amd64.deb" target="update">Click here for further information</a>.',
+    STATUS_SENSOR_NEWPLUGINS: "Plugins have been updated - Restart Required (Big Sounds)",
     STATUS_SENSOR_INFO_TOTAL_ALBUMS: 4,
     STATUS_SENSOR_INFO_TOTAL_ARTISTS: 2,
     STATUS_SENSOR_INFO_TOTAL_DURATION: 500,
@@ -250,7 +254,9 @@ def mock_pysqueezebox_server(
         mock_lms.uuid = uuid
         mock_lms.name = TEST_SERVER_NAME
         mock_lms.async_query = AsyncMock(return_value={"uuid": format_mac(uuid)})
-        mock_lms.async_status = AsyncMock(return_value={"uuid": format_mac(uuid)})
+        mock_lms.async_status = AsyncMock(
+            return_value={"uuid": format_mac(uuid), "version": FAKE_VERSION}
+        )
         return mock_lms
 
 
@@ -284,4 +290,4 @@ async def configured_players(
     """Fixture mocking calls to two pysqueezebox Players from a configured squeezebox."""
     lms = lms_factory(2, uuid=SERVER_UUIDS[0])
     await configure_squeezebox_media_player_platform(hass, config_entry, lms)
-    return await lms.async_get_player
+    return await lms.async_get_players()
