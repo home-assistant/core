@@ -117,8 +117,10 @@ async def test_sync_clock(
         blocking=True,
     )
     mocked_method = getattr(mock_automower_client.commands, "set_datetime")
+    # datetime(2024, 2, 29, 11, tzinfo=datetime.UTC) is in local time of the tests
+    # datetime(2024, 2, 29, 12)
     mocked_method.assert_called_once_with(
-        TEST_MOWER_ID, datetime.datetime(2024, 2, 29, 11, tzinfo=datetime.UTC)
+        TEST_MOWER_ID, datetime.datetime(2024, 2, 29, 12)
     )
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
