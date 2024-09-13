@@ -182,6 +182,13 @@ class DeviceWithPrograms(HomeConnectDevice):
         programs = self.get_programs_available()
         return [{ATTR_DEVICE: self, "program_name": p} for p in programs]
 
+    def get_program_select(self):
+        """Get a dictionary with info about programs."""
+        return {
+            ATTR_DEVICE: self,
+            "programs": self.get_programs_available(),
+        }
+
     def get_program_sensors(self) -> list[dict[str, Any]]:
         """Get a dictionary with info about program sensors.
 
@@ -327,9 +334,11 @@ class Dryer(
         op_state_sensor = self.get_opstate_sensor()
         program_sensors = self.get_program_sensors()
         program_switches = self.get_program_switches()
+        program_select = self.get_program_select()
         return {
             "binary_sensor": [door_entity, remote_control, remote_start],
             "switch": program_switches,
+            "select": program_select,
             "sensor": program_sensors + op_state_sensor,
         }
 
@@ -352,9 +361,11 @@ class Dishwasher(
         op_state_sensor = self.get_opstate_sensor()
         program_sensors = self.get_program_sensors()
         program_switches = self.get_program_switches()
+        program_select = self.get_program_select()
         return {
             "binary_sensor": [door_entity, remote_control, remote_start],
             "switch": program_switches,
+            "select": program_select,
             "sensor": program_sensors + op_state_sensor,
         }
 
@@ -378,9 +389,11 @@ class Oven(
         op_state_sensor = self.get_opstate_sensor()
         program_sensors = self.get_program_sensors()
         program_switches = self.get_program_switches()
+        program_select = self.get_program_select()
         return {
             "binary_sensor": [door_entity, remote_control, remote_start],
             "switch": program_switches,
+            "select": program_select,
             "sensor": program_sensors + op_state_sensor,
         }
 
@@ -402,9 +415,11 @@ class Washer(
         op_state_sensor = self.get_opstate_sensor()
         program_sensors = self.get_program_sensors()
         program_switches = self.get_program_switches()
+        program_select = self.get_program_select()
         return {
             "binary_sensor": [door_entity, remote_control, remote_start],
             "switch": program_switches,
+            "select": program_select,
             "sensor": program_sensors + op_state_sensor,
         }
 
@@ -426,9 +441,11 @@ class WasherDryer(
         op_state_sensor = self.get_opstate_sensor()
         program_sensors = self.get_program_sensors()
         program_switches = self.get_program_switches()
+        program_select = self.get_program_select()
         return {
             "binary_sensor": [door_entity, remote_control, remote_start],
             "switch": program_switches,
+            "select": program_select,
             "sensor": program_sensors + op_state_sensor,
         }
 
@@ -444,9 +461,11 @@ class CoffeeMaker(DeviceWithOpState, DeviceWithPrograms, DeviceWithRemoteStart):
         op_state_sensor = self.get_opstate_sensor()
         program_sensors = self.get_program_sensors()
         program_switches = self.get_program_switches()
+        program_select = self.get_program_select()
         return {
             "binary_sensor": [remote_start],
             "switch": program_switches,
+            "select": program_select,
             "sensor": program_sensors + op_state_sensor,
         }
 
@@ -470,9 +489,11 @@ class Hood(
         op_state_sensor = self.get_opstate_sensor()
         program_sensors = self.get_program_sensors()
         program_switches = self.get_program_switches()
+        program_select = self.get_program_select()
         return {
             "binary_sensor": [remote_control, remote_start],
             "switch": program_switches,
+            "select": program_select,
             "sensor": program_sensors + op_state_sensor,
             "light": [light_entity, ambientlight_entity],
         }
@@ -514,9 +535,11 @@ class Hob(DeviceWithOpState, DeviceWithPrograms, DeviceWithRemoteControl):
         op_state_sensor = self.get_opstate_sensor()
         program_sensors = self.get_program_sensors()
         program_switches = self.get_program_switches()
+        program_select = self.get_program_select()
         return {
             "binary_sensor": [remote_control],
             "switch": program_switches,
+            "select": program_select,
             "sensor": program_sensors + op_state_sensor,
         }
 
