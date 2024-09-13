@@ -1,9 +1,12 @@
 """Fixtures for Weheat tests."""
 
+from collections.abc import Generator
+from time import time
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from weheat.abstractions.discovery import HeatPumpDiscovery
+from weheat.abstractions.heat_pump import HeatPump
 
 from homeassistant.components.application_credentials import (
     DOMAIN as APPLICATION_CREDENTIALS,
@@ -11,18 +14,12 @@ from homeassistant.components.application_credentials import (
     async_import_client_credential,
 )
 from homeassistant.components.weheat.const import DOMAIN
-from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from .const import (
-    CLIENT_ID,
-    CLIENT_SECRET,
-    MOCK_ACCESS_TOKEN,
-    TEST_HP_UUID,
-    TEST_MODEL,
-    TEST_SN,
-)
+from .const import CLIENT_ID, CLIENT_SECRET, TEST_HP_UUID, TEST_MODEL, TEST_SN
+
+from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)
@@ -48,23 +45,73 @@ def mock_setup_entry():
 @pytest.fixture
 def mock_heat_pump_info() -> HeatPumpDiscovery.HeatPumpInfo:
     """Create a HeatPumpInfo with default settings."""
-    return HeatPumpDiscovery.HeatPumpInfo(
-        TEST_HP_UUID, None, TEST_MODEL, TEST_SN, False
+    return HeatPumpDiscovery.HeatPumpInfo(TEST_HP_UUID, None, TEST_MODEL, TEST_SN, True)
+
+
+@pytest.fixture
+def mock_config_entry() -> MockConfigEntry:
+    """Mock a config entry."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        title="Weheat",
+        data={
+            "id": "12345",
+            "auth_implementation": DOMAIN,
+            "token": {
+                "refresh_token": "mock-refresh-token",
+                "access_token": "mock-access-token",
+                "type": "Bearer",
+                "expires_in": 60,
+                "expires_at": time() + 60,
+            },
+        },
+        unique_id="123456789",
     )
 
 
 @pytest.fixture
-def mock_session() -> MagicMock:
-    """Create a session."""
-    session = MagicMock()
-    session.async_ensure_token_valid = AsyncMock()
-    session.token = {CONF_ACCESS_TOKEN: MOCK_ACCESS_TOKEN}
-    return session
+def mock_weheat_discover(mock_heat_pump_info) -> Generator[AsyncMock]:
+    """Mock an Weheat discovery."""
+    with (
+        patch(
+            "homeassistant.components.weheat.HeatPumpDiscovery.discover_active",
+            autospec=True,
+        ) as mock_discover,
+    ):
+        mock_discover.return_value = [mock_heat_pump_info]
+
+        yield mock_discover
 
 
 @pytest.fixture
-def mock_coordinator(mock_heat_pump_info: MagicMock) -> MagicMock:
-    """Create a coordinator with heat_pump_info."""
-    coordinator = MagicMock()
-    coordinator.heat_pump_info = mock_heat_pump_info
-    return coordinator
+def mock_weheat_heat_pump_instance() -> MagicMock:
+    """Mock an Weheat heat pump instance with a set of default values."""
+    mock_heat_pump_instance = MagicMock(spec_set=HeatPump)
+
+    mock_heat_pump_instance.water_inlet_temperature = 11
+    mock_heat_pump_instance.water_outlet_temperature = 22
+    mock_heat_pump_instance.water_house_in_temperature = 33
+    mock_heat_pump_instance.air_inlet_temperature = 44
+    mock_heat_pump_instance.thermostat_water_setpoint = 55
+    mock_heat_pump_instance.power_input = 66
+    mock_heat_pump_instance.power_output = 77
+    mock_heat_pump_instance.dhw_top_temperature = 88
+    mock_heat_pump_instance.dhw_bottom_temperature = 99
+    mock_heat_pump_instance.cop = 4.5
+    mock_heat_pump_instance.heat_pump_state = HeatPump.State.HEATING
+    mock_heat_pump_instance.energy_total = 12345
+
+    return mock_heat_pump_instance
+
+
+@pytest.fixture
+def mock_weheat_heat_pump(mock_weheat_heat_pump_instance) -> Generator[AsyncMock]:
+    """Mock the coordinator HeatPump data."""
+    with (
+        patch(
+            "homeassistant.components.weheat.coordinator.HeatPump",
+        ) as mock_heat_pump,
+    ):
+        mock_heat_pump.return_value = mock_weheat_heat_pump_instance
+
+        yield mock_weheat_heat_pump_instance
