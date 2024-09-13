@@ -28,7 +28,7 @@ class SolarLogConfigFlow(ConfigFlow, domain=DOMAIN):
 
     _entry: SolarlogConfigEntry | None = None
     VERSION = 1
-    MINOR_VERSION = 2
+    MINOR_VERSION = 3
 
     def __init__(self) -> None:
         """Initialize the config flow."""
@@ -93,10 +93,6 @@ class SolarLogConfigFlow(ConfigFlow, domain=DOMAIN):
                     self._user_input = user_input
                     return await self.async_step_password()
 
-                user_input["extended_data"] = await self._test_extended_data(
-                    user_input[CONF_HOST]
-                )
-
                 return self.async_create_entry(
                     title=user_input[CONF_NAME], data=user_input
                 )
@@ -125,7 +121,6 @@ class SolarLogConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._user_input[CONF_HOST], user_input[CONF_PASSWORD]
             ):
                 self._user_input |= user_input
-                self._user_input |= {"extended_data": True}
                 return self.async_create_entry(
                     title=self._user_input[CONF_NAME], data=self._user_input
                 )
@@ -195,7 +190,7 @@ class SolarLogConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle reauthorization flow."""
-        errors: dict[str, str] = {}
+
         assert self._entry is not None
 
         if user_input and await self._test_extended_data(
@@ -216,5 +211,5 @@ class SolarLogConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="reauth_confirm",
             data_schema=data_schema,
-            errors=errors,
+            errors=self._errors,
         )

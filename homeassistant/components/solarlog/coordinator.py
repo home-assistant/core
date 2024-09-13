@@ -57,13 +57,7 @@ class SolarLogCoordinator(DataUpdateCoordinator[SolarlogData]):
         _LOGGER.debug("Start async_setup")
         logged_in = False
         if self.solarlog.password != "":
-            try:
-                logged_in = await self.solarlog.login()
-            except SolarLogAuthenticationError as ex:
-                raise ConfigEntryAuthFailed from ex
-            except SolarLogUpdateError as ex:
-                raise ConfigEntryNotReady from ex
-            _LOGGER.debug("Login-status: %s", logged_in)
+            logged_in = await self.renew_authentication()
         if logged_in or await self.solarlog.test_extended_data_available():
             device_list = await self.solarlog.update_device_list()
             self.solarlog.set_enabled_devices({key: True for key in device_list})
@@ -77,12 +71,15 @@ class SolarLogCoordinator(DataUpdateCoordinator[SolarlogData]):
             if self.solarlog.extended_data:
                 await self.solarlog.update_device_list()
                 data.inverter_data = await self.solarlog.update_inverter_data()
-        except SolarLogConnectionError as err:
-            raise ConfigEntryNotReady(err) from err
+        except SolarLogConnectionError as ex:
+            raise ConfigEntryNotReady(ex) from ex
         except SolarLogAuthenticationError as ex:
+            if await self.renew_authentication():
+                # login was successful, retry data update
+                raise ConfigEntryNotReady from ex
             raise ConfigEntryAuthFailed from ex
-        except SolarLogUpdateError as err:
-            raise UpdateFailed(err) from err
+        except SolarLogUpdateError as ex:
+            raise UpdateFailed(ex) from ex
 
         _LOGGER.debug("Data successfully updated")
 
@@ -90,14 +87,14 @@ class SolarLogCoordinator(DataUpdateCoordinator[SolarlogData]):
 
     async def renew_authentication(self) -> bool:
         """Renew access token for SolarLog API."""
-
+        logged_in = False
         try:
-            await self.solarlog.login()
+            logged_in = await self.solarlog.login()
         except SolarLogAuthenticationError as ex:
             raise ConfigEntryAuthFailed from ex
         except (SolarLogConnectionError, SolarLogUpdateError) as ex:
             raise ConfigEntryNotReady from ex
 
-        _LOGGER.debug("Credentials successfully updated")
+        _LOGGER.debug("Credentials successfully updated? %s", logged_in)
 
-        return True
+        return logged_in

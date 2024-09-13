@@ -2,12 +2,19 @@
 
 from unittest.mock import AsyncMock
 
-from solarlog_cli.solarlog_exceptions import SolarLogConnectionError
+import pytest
+from solarlog_cli.solarlog_exceptions import (
+    SolarLogAuthenticationError,
+    SolarLogConnectionError,
+    SolarLogError,
+    SolarLogUpdateError,
+)
 
 from homeassistant.components.solarlog.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.entity_registry import EntityRegistry
 
@@ -32,19 +39,85 @@ async def test_load_unload(
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 
 
-async def test_raise_config_entry_not_ready_when_offline(
+@pytest.mark.parametrize(
+    ("exception", "error"),
+    [
+        (SolarLogAuthenticationError, ConfigEntryState.SETUP_ERROR),
+        (SolarLogUpdateError, ConfigEntryState.SETUP_RETRY),
+    ],
+)
+async def test_setup_error(
     hass: HomeAssistant,
+    exception: SolarLogError,
+    error: str,
     mock_config_entry: MockConfigEntry,
     mock_solarlog_connector: AsyncMock,
 ) -> None:
-    """Config entry state is SETUP_RETRY when Solarlog is offline."""
+    """Test errors in setting up coordinator (i.e. login error)."""
 
-    mock_solarlog_connector.update_data.side_effect = SolarLogConnectionError
+    mock_solarlog_connector.login.side_effect = exception
 
     await setup_platform(hass, mock_config_entry, [Platform.SENSOR])
     await hass.async_block_till_done()
 
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.state == error
+
+    if error == ConfigEntryState.SETUP_RETRY:
+        assert len(hass.config_entries.flow.async_progress()) == 0
+
+
+@pytest.mark.parametrize(
+    ("login_side_effect", "login_return_value", "entry_state"),
+    [
+        (SolarLogAuthenticationError, False, ConfigEntryState.SETUP_ERROR),
+        (ConfigEntryNotReady, False, ConfigEntryState.SETUP_RETRY),
+        (None, False, ConfigEntryState.SETUP_ERROR),
+        (None, True, ConfigEntryState.SETUP_RETRY),
+    ],
+)
+async def test_auth_error_during_first_refresh(
+    hass: HomeAssistant,
+    login_side_effect: Exception | None,
+    login_return_value: bool,
+    entry_state: str,
+    mock_config_entry: MockConfigEntry,
+    mock_solarlog_connector: AsyncMock,
+) -> None:
+    """Test the correct exceptions are thrown for auth error during first refresh."""
+
+    mock_solarlog_connector.password.return_value = ""
+    mock_solarlog_connector.update_data.side_effect = SolarLogAuthenticationError
+
+    mock_solarlog_connector.login.return_value = login_return_value
+    mock_solarlog_connector.login.side_effect = login_side_effect
+
+    await setup_platform(hass, mock_config_entry, [Platform.SENSOR])
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state == entry_state
+
+
+@pytest.mark.parametrize(
+    ("exception"),
+    [
+        (SolarLogConnectionError),
+        (SolarLogUpdateError),
+    ],
+)
+async def test_other_exceptions_during_first_refresh(
+    hass: HomeAssistant,
+    exception: SolarLogError,
+    mock_config_entry: MockConfigEntry,
+    mock_solarlog_connector: AsyncMock,
+) -> None:
+    """Test the correct exceptions are thrown during first refresh."""
+
+    mock_solarlog_connector.update_data.side_effect = exception
+
+    await setup_platform(hass, mock_config_entry, [Platform.SENSOR])
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state == ConfigEntryState.SETUP_RETRY
 
     assert len(hass.config_entries.flow.async_progress()) == 0
 
@@ -92,6 +165,6 @@ async def test_migrate_config_entry(
     assert entity_migrated.unique_id == f"{entry.entry_id}_last_updated"
 
     assert entry.version == 1
-    assert entry.minor_version == 2
+    assert entry.minor_version == 3
     assert entry.data[CONF_HOST] == HOST
-    assert entry.data["extended_data"] is False
+    assert entry.data["has_password"] is False
