@@ -171,7 +171,7 @@ class SolarLogConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="reconfigure",
             data_schema=vol.Schema(
                 {
-                    vol.Required(
+                    vol.Optional(
                         "has_password", default=entry.data["has_password"]
                     ): bool,
                     vol.Optional(CONF_PASSWORD): str,
@@ -202,10 +202,10 @@ class SolarLogConfigFlow(ConfigFlow, domain=DOMAIN):
 
         data_schema = vol.Schema(
             {
-                vol.Required(
+                vol.Optional(
                     "has_password", default=self._entry.data["has_password"]
                 ): bool,
-                vol.Required(CONF_PASSWORD): str,
+                vol.Optional(CONF_PASSWORD): str,
             }
         )
         return self.async_show_form(
