@@ -12,7 +12,7 @@ from . import FAKE_QUERY_RESPONSE, setup_mocked_integration
 
 async def test_update_lms(
     hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
+    config_entry: MockConfigEntry,
 ) -> None:
     """Test binary sensor states and attributes."""
 
