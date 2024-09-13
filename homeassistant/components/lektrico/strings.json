@@ -28,9 +28,6 @@
       },
       "charge_stop": {
         "name": "Charge stop"
-      },
-      "reboot": {
-        "name": "Reboot"
       }
     },
     "sensor": {
