@@ -11,14 +11,13 @@ from ring_doorbell import Auth, Ring, RingDevices
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import APPLICATION_NAME, CONF_TOKEN
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
     instance_id,
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
 from .const import CONF_LISTEN_CREDENTIALS, DOMAIN, PLATFORMS
 from .coordinator import RingDataCoordinator, RingListenCoordinator
@@ -100,45 +99,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: RingConfigEntry) -> bool
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    if hass.services.has_service(DOMAIN, "update"):
-        return True
-
-    async def async_refresh_all(_: ServiceCall) -> None:
-        """Refresh all ring data."""
-        _LOGGER.warning(
-            "Detected use of service 'ring.update'. "
-            "This is deprecated and will stop working in Home Assistant 2024.10. "
-            "Use 'homeassistant.update_entity' instead which updates all ring entities",
-        )
-        async_create_issue(
-            hass,
-            DOMAIN,
-            "deprecated_service_ring_update",
-            breaks_in_ha_version="2024.10.0",
-            is_fixable=True,
-            is_persistent=False,
-            issue_domain=DOMAIN,
-            severity=IssueSeverity.WARNING,
-            translation_key="deprecated_service_ring_update",
-        )
-        for loaded_entry in hass.config_entries.async_loaded_entries(DOMAIN):
-            await loaded_entry.runtime_data.devices_coordinator.async_refresh()
-
-    # register service
-    hass.services.async_register(DOMAIN, "update", async_refresh_all)
-
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload Ring entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-    if len(hass.config_entries.async_loaded_entries(DOMAIN)) == 1:
-        # This is the last loaded entry, clean up service
-        hass.services.async_remove(DOMAIN, "update")
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 async def async_remove_config_entry_device(

@@ -38,7 +38,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
-from .. import mysensors
+from . import setup_mysensors_platform
 from .const import (
     ATTR_GATEWAY_ID,
     ATTR_NODE_ID,
@@ -49,6 +49,7 @@ from .const import (
     DiscoveryInfo,
     NodeDiscoveryInfo,
 )
+from .device import MySensorNodeEntity, MySensorsChildEntity
 from .helpers import on_unload
 
 SENSORS: dict[str, SensorEntityDescription] = {
@@ -215,7 +216,7 @@ async def async_setup_entry(
 
     async def async_discover(discovery_info: DiscoveryInfo) -> None:
         """Discover and add a MySensors sensor."""
-        mysensors.setup_mysensors_platform(
+        setup_mysensors_platform(
             hass,
             Platform.SENSOR,
             discovery_info,
@@ -252,7 +253,7 @@ async def async_setup_entry(
     )
 
 
-class MyBatterySensor(mysensors.device.MySensorNodeEntity, SensorEntity):
+class MyBatterySensor(MySensorNodeEntity, SensorEntity):
     """Battery sensor of MySensors node."""
 
     _attr_device_class = SensorDeviceClass.BATTERY
@@ -277,7 +278,7 @@ class MyBatterySensor(mysensors.device.MySensorNodeEntity, SensorEntity):
         self.async_write_ha_state()
 
 
-class MySensorsSensor(mysensors.device.MySensorsChildEntity, SensorEntity):
+class MySensorsSensor(MySensorsChildEntity, SensorEntity):
     """Representation of a MySensors Sensor child node."""
 
     _attr_force_update = True

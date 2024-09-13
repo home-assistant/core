@@ -22,10 +22,13 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.setup import async_setup_component
 
 from . import setup_integration
 
 from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.typing import WebSocketGenerator
 
 
 async def test_with_pre_v7_firmware(
@@ -189,8 +192,7 @@ async def test_coordinator_token_refresh_error(
     hass: HomeAssistant,
     mock_envoy: AsyncMock,
 ) -> None:
-    """Test coordinator with token provided from config."""
-    # 63, 69-79  _async_try_refresh_token
+    """Test coordinator with expired token and failure to refresh."""
     token = encode(
         # some time in 2021
         payload={"name": "envoy", "exp": 1627314600},
@@ -210,12 +212,122 @@ async def test_coordinator_token_refresh_error(
             CONF_TOKEN: token,
         },
     )
-    # token refresh without username and password specified in
-    # EnvoyTokenAuthwill force token refresh error
+    # override fresh token in conftest mock_envoy.auth
     mock_envoy.auth = EnvoyTokenAuth("127.0.0.1", token=token, envoy_serial="1234")
-    await setup_integration(hass, entry)
+    # force token refresh to fail.
+    with patch(
+        "pyenphase.auth.EnvoyTokenAuth._obtain_token",
+        side_effect=EnvoyError,
+    ):
+        await setup_integration(hass, entry)
+
     await hass.async_block_till_done(wait_background_tasks=True)
     assert entry.state is ConfigEntryState.LOADED
 
     assert (entity_state := hass.states.get("sensor.inverter_1"))
     assert entity_state.state == "1"
+
+
+async def test_config_no_unique_id(
+    hass: HomeAssistant,
+    mock_envoy: AsyncMock,
+) -> None:
+    """Test enphase_envoy init if config entry has no unique id."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        entry_id="45a36e55aaddb2007c5f6602e0c38e72",
+        title="Envoy 1234",
+        unique_id=None,
+        data={
+            CONF_HOST: "1.1.1.1",
+            CONF_NAME: "Envoy 1234",
+            CONF_USERNAME: "test-username",
+            CONF_PASSWORD: "test-password",
+        },
+    )
+    await setup_integration(hass, entry)
+    assert entry.state is ConfigEntryState.LOADED
+    assert entry.unique_id == mock_envoy.serial_number
+
+
+async def test_config_different_unique_id(
+    hass: HomeAssistant,
+    mock_envoy: AsyncMock,
+) -> None:
+    """Test enphase_envoy init if config entry has different unique id."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        entry_id="45a36e55aaddb2007c5f6602e0c38e72",
+        title="Envoy 1234",
+        unique_id=4321,
+        data={
+            CONF_HOST: "1.1.1.1",
+            CONF_NAME: "Envoy 1234",
+            CONF_USERNAME: "test-username",
+            CONF_PASSWORD: "test-password",
+        },
+    )
+    await setup_integration(hass, entry)
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.parametrize(
+    ("mock_envoy"),
+    [
+        "envoy_metered_batt_relay",
+    ],
+    indirect=["mock_envoy"],
+)
+async def test_remove_config_entry_device(
+    hass: HomeAssistant,
+    mock_envoy: AsyncMock,
+    config_entry: MockConfigEntry,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test removing enphase_envoy config entry device."""
+    assert await async_setup_component(hass, "config", {})
+    await setup_integration(hass, config_entry)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    # use client to send remove_device command
+    hass_client = await hass_ws_client(hass)
+
+    # add device that will pass remove test
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, "delete_this_device")},
+    )
+    response = await hass_client.remove_device(device_entry.id, config_entry.entry_id)
+    assert response["success"]
+
+    # inverters are not allowed to be removed
+    entity = entity_registry.entities["sensor.inverter_1"]
+    device_entry = device_registry.async_get(entity.device_id)
+    response = await hass_client.remove_device(device_entry.id, config_entry.entry_id)
+    assert not response["success"]
+
+    # envoy itself is not allowed to be removed
+    entity = entity_registry.entities["sensor.envoy_1234_current_power_production"]
+    device_entry = device_registry.async_get(entity.device_id)
+    response = await hass_client.remove_device(device_entry.id, config_entry.entry_id)
+    assert not response["success"]
+
+    # encharge can not be removed
+    entity = entity_registry.entities["sensor.encharge_123456_power"]
+    device_entry = device_registry.async_get(entity.device_id)
+    response = await hass_client.remove_device(device_entry.id, config_entry.entry_id)
+    assert not response["success"]
+
+    # enpower can not be removed
+    entity = entity_registry.entities["sensor.enpower_654321_temperature"]
+    device_entry = device_registry.async_get(entity.device_id)
+    response = await hass_client.remove_device(device_entry.id, config_entry.entry_id)
+    assert not response["success"]
+
+    # relays can be removed
+    entity = entity_registry.entities["switch.nc1_fixture"]
+    device_entry = device_registry.async_get(entity.device_id)
+    response = await hass_client.remove_device(device_entry.id, config_entry.entry_id)
+    assert response["success"]

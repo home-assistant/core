@@ -37,6 +37,7 @@ class WyomingSatelliteAssistInProgress(WyomingSatelliteEntity, BinarySensorEntit
     """Entity to represent Assist is in progress for satellite."""
 
     entity_description = BinarySensorEntityDescription(
+        entity_registry_enabled_default=False,
         key="assist_in_progress",
         translation_key="assist_in_progress",
     )

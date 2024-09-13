@@ -126,7 +126,7 @@ jobs:
         env:
           UV_PRERELEASE: allow
         run: |
-          python3 -m pip install "$(grep '^uv' < requirements_test.txt)"
+          python3 -m pip install "$(grep '^uv' < requirements.txt)"
           uv pip install packaging tomli
           uv pip install .
           python3 script/version_bump.py nightly --set-nightly-version "${{ needs.init.outputs.version }}"

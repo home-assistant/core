@@ -93,6 +93,55 @@ async def test_entity_state(
     assert state.state == AssistSatelliteState.LISTENING_WAKE_WORD
 
 
+async def test_new_pipeline_cancels_pipeline(
+    hass: HomeAssistant,
+    init_components: ConfigEntry,
+    entity: MockAssistSatellite,
+) -> None:
+    """Test that a new pipeline run cancels any running pipeline."""
+    pipeline1_started = asyncio.Event()
+    pipeline1_finished = asyncio.Event()
+    pipeline1_cancelled = asyncio.Event()
+    pipeline2_finished = asyncio.Event()
+
+    async def async_pipeline_from_audio_stream(*args, **kwargs):
+        if not pipeline1_started.is_set():
+            # First pipeline run
+            pipeline1_started.set()
+
+            # Wait for pipeline to be cancelled
+            try:
+                await pipeline1_finished.wait()
+            except asyncio.CancelledError:
+                pipeline1_cancelled.set()
+                raise
+        else:
+            # Second pipeline run
+            pipeline2_finished.set()
+
+    with (
+        patch(
+            "homeassistant.components.assist_satellite.entity.async_pipeline_from_audio_stream",
+            new=async_pipeline_from_audio_stream,
+        ),
+    ):
+        hass.async_create_task(
+            entity.async_accept_pipeline_from_satellite(
+                object(),  # type: ignore[arg-type]
+            )
+        )
+
+        async with asyncio.timeout(1):
+            await pipeline1_started.wait()
+
+            # Start a second pipeline
+            await entity.async_accept_pipeline_from_satellite(
+                object(),  # type: ignore[arg-type]
+            )
+            await pipeline1_cancelled.wait()
+            await pipeline2_finished.wait()
+
+
 @pytest.mark.parametrize(
     ("service_data", "expected_params"),
     [
@@ -208,6 +257,48 @@ async def test_announce_busy(
     # Avoid lingering task
     got_error.set()
     await announce_task
+
+
+async def test_announce_cancels_pipeline(
+    hass: HomeAssistant,
+    init_components: ConfigEntry,
+    entity: MockAssistSatellite,
+) -> None:
+    """Test that announcements cancel any running pipeline."""
+    media_id = "https://www.home-assistant.io/resolved.mp3"
+    pipeline_started = asyncio.Event()
+    pipeline_finished = asyncio.Event()
+    pipeline_cancelled = asyncio.Event()
+
+    async def async_pipeline_from_audio_stream(*args, **kwargs):
+        pipeline_started.set()
+
+        # Wait for pipeline to be cancelled
+        try:
+            await pipeline_finished.wait()
+        except asyncio.CancelledError:
+            pipeline_cancelled.set()
+            raise
+
+    with (
+        patch(
+            "homeassistant.components.assist_satellite.entity.async_pipeline_from_audio_stream",
+            new=async_pipeline_from_audio_stream,
+        ),
+        patch.object(entity, "async_announce") as mock_async_announce,
+    ):
+        hass.async_create_task(
+            entity.async_accept_pipeline_from_satellite(
+                object(),  # type: ignore[arg-type]
+            )
+        )
+
+        async with asyncio.timeout(1):
+            await pipeline_started.wait()
+            await entity.async_internal_announce(None, media_id)
+            await pipeline_cancelled.wait()
+
+        mock_async_announce.assert_called_once()
 
 
 async def test_context_refresh(

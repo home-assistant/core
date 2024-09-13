@@ -15,7 +15,7 @@ import voluptuous as vol
 import voluptuous_serialize
 
 from homeassistant.components import websocket_api
-from homeassistant.components.websocket_api.connection import ActiveConnection
+from homeassistant.components.websocket_api import ActiveConnection
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_DEVICE_ID,

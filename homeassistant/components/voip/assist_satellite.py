@@ -8,7 +8,7 @@ from functools import partial
 import io
 import logging
 from pathlib import Path
-from typing import TYPE_CHECKING, Final
+from typing import TYPE_CHECKING, Any, Final
 import wave
 
 from voip_utils import RtpDatagramProtocol
@@ -119,6 +119,16 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
     def vad_sensitivity_entity_id(self) -> str | None:
         """Return the entity ID of the VAD sensitivity to use for the next conversation."""
         return self.voip_device.get_vad_sensitivity_entity_id(self.hass)
+
+    @property
+    def tts_options(self) -> dict[str, Any] | None:
+        """Options passed for text-to-speech."""
+        return {
+            tts.ATTR_PREFERRED_FORMAT: "wav",
+            tts.ATTR_PREFERRED_SAMPLE_RATE: 16000,
+            tts.ATTR_PREFERRED_SAMPLE_CHANNELS: 1,
+            tts.ATTR_PREFERRED_SAMPLE_BYTES: 2,
+        }
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
