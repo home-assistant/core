@@ -6,7 +6,7 @@ from pypck.connection import PchkAuthenticationError, PchkLicenseError
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.lcn.const import CONF_ACKNOWLEDGE, DOMAIN
+from homeassistant.components.lcn.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -128,26 +128,21 @@ async def test_async_setup_from_configuration_yaml(hass: HomeAssistant) -> None:
 
 
 @patch("homeassistant.components.lcn.PchkConnectionManager", MockPchkConnectionManager)
-async def test_migrate_1_1(hass: HomeAssistant, entry) -> None:
+async def test_migrate_1_1(hass: HomeAssistant, entry, entry_v1_1) -> None:
     """Test migration config entry."""
-    hass.http = Mock()
-    entry.add_to_hass(hass)
-    data = {**entry.data}
-
-    # diff 1.2 -> 1.1
-    data.pop(CONF_ACKNOWLEDGE)
+    entry_v1_1.add_to_hass(hass)
 
     hass.config_entries.async_update_entry(
-        entry,
+        entry_v1_1,
         version=1,
         minor_version=1,
-        data=data,
     )
 
-    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.config_entries.async_setup(entry_v1_1.entry_id)
     await hass.async_block_till_done()
-    entry = hass.config_entries.async_get_entry(entry.entry_id)
-    assert entry.state is ConfigEntryState.LOADED
+    entry_migrated = hass.config_entries.async_get_entry(entry_v1_1.entry_id)
 
-    assert CONF_ACKNOWLEDGE in entry.data
-    assert entry.data[CONF_ACKNOWLEDGE] is False
+    assert entry_migrated.state is ConfigEntryState.LOADED
+    assert entry_migrated.version == 1
+    assert entry_migrated.minor_version == 2
+    assert entry_migrated.data == entry.data

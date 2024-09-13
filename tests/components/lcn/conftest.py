@@ -98,6 +98,12 @@ def create_config_entry_pchk() -> MockConfigEntry:
     return create_config_entry("pchk")
 
 
+@pytest.fixture(name="entry_v1_1")
+def create_config_entry_pchk_v1_1() -> MockConfigEntry:
+    """Return one specific config entry with v1.1."""
+    return create_config_entry("pchk_v1_1")
+
+
 @pytest.fixture(name="entry2")
 def create_config_entry_myhome() -> MockConfigEntry:
     """Return one specific config entry."""
