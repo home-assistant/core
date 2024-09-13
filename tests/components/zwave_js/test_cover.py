@@ -1010,7 +1010,7 @@ async def test_window_covering_open_close(
 
     # Test opening
     await hass.services.async_call(
-        DOMAIN,
+        COVER_DOMAIN,
         SERVICE_OPEN_COVER,
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
@@ -1031,7 +1031,7 @@ async def test_window_covering_open_close(
 
     # Test stop after opening
     await hass.services.async_call(
-        DOMAIN,
+        COVER_DOMAIN,
         SERVICE_STOP_COVER,
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
@@ -1053,7 +1053,7 @@ async def test_window_covering_open_close(
 
     # Test closing
     await hass.services.async_call(
-        DOMAIN,
+        COVER_DOMAIN,
         SERVICE_CLOSE_COVER,
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
@@ -1074,7 +1074,7 @@ async def test_window_covering_open_close(
 
     # Test stop after closing
     await hass.services.async_call(
-        DOMAIN,
+        COVER_DOMAIN,
         SERVICE_STOP_COVER,
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
