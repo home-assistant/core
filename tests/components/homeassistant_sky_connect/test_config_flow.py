@@ -5,7 +5,7 @@ from unittest.mock import Mock, patch
 import pytest
 
 from homeassistant.components import usb
-from homeassistant.components.hassio.addon_manager import AddonInfo, AddonState
+from homeassistant.components.hassio import AddonInfo, AddonState
 from homeassistant.components.homeassistant_hardware.firmware_config_flow import (
     STEP_PICK_FIRMWARE_ZIGBEE,
 )

@@ -14,6 +14,9 @@ BSH_REMOTE_CONTROL_ACTIVATION_STATE = "BSH.Common.Status.RemoteControlActive"
 BSH_REMOTE_START_ALLOWANCE_STATE = "BSH.Common.Status.RemoteControlStartAllowed"
 BSH_CHILD_LOCK_STATE = "BSH.Common.Setting.ChildLock"
 
+BSH_EVENT_PRESENT_STATE_PRESENT = "BSH.Common.EnumType.EventPresentState.Present"
+BSH_EVENT_PRESENT_STATE_CONFIRMED = "BSH.Common.EnumType.EventPresentState.Confirmed"
+BSH_EVENT_PRESENT_STATE_OFF = "BSH.Common.EnumType.EventPresentState.Off"
 
 BSH_OPERATION_STATE = "BSH.Common.Status.OperationState"
 BSH_OPERATION_STATE_RUN = "BSH.Common.EnumType.OperationState.Run"
@@ -23,12 +26,35 @@ BSH_OPERATION_STATE_FINISHED = "BSH.Common.EnumType.OperationState.Finished"
 COOKING_LIGHTING = "Cooking.Common.Setting.Lighting"
 COOKING_LIGHTING_BRIGHTNESS = "Cooking.Common.Setting.LightingBrightness"
 
+COFFEE_EVENT_BEAN_CONTAINER_EMPTY = (
+    "ConsumerProducts.CoffeeMaker.Event.BeanContainerEmpty"
+)
+COFFEE_EVENT_WATER_TANK_EMPTY = "ConsumerProducts.CoffeeMaker.Event.WaterTankEmpty"
+COFFEE_EVENT_DRIP_TRAY_FULL = "ConsumerProducts.CoffeeMaker.Event.DripTrayFull"
 
 REFRIGERATION_SUPERMODEFREEZER = "Refrigeration.FridgeFreezer.Setting.SuperModeFreezer"
 REFRIGERATION_SUPERMODEREFRIGERATOR = (
     "Refrigeration.FridgeFreezer.Setting.SuperModeRefrigerator"
 )
 REFRIGERATION_DISPENSER = "Refrigeration.Common.Setting.Dispenser.Enabled"
+
+REFRIGERATION_STATUS_DOOR_CHILLER = "Refrigeration.Common.Status.Door.ChillerCommon"
+REFRIGERATION_STATUS_DOOR_FREEZER = "Refrigeration.Common.Status.Door.Freezer"
+REFRIGERATION_STATUS_DOOR_REFRIGERATOR = "Refrigeration.Common.Status.Door.Refrigerator"
+
+REFRIGERATION_STATUS_DOOR_CLOSED = "Refrigeration.Common.EnumType.Door.States.Closed"
+REFRIGERATION_STATUS_DOOR_OPEN = "Refrigeration.Common.EnumType.Door.States.Open"
+
+REFRIGERATION_EVENT_DOOR_ALARM_REFRIGERATOR = (
+    "Refrigeration.FridgeFreezer.Event.DoorAlarmRefrigerator"
+)
+REFRIGERATION_EVENT_DOOR_ALARM_FREEZER = (
+    "Refrigeration.FridgeFreezer.Event.DoorAlarmFreezer"
+)
+REFRIGERATION_EVENT_TEMP_ALARM_FREEZER = (
+    "Refrigeration.FridgeFreezer.Event.TemperatureAlarmFreezer"
+)
+
 
 BSH_AMBIENT_LIGHT_ENABLED = "BSH.Common.Setting.AmbientLightEnabled"
 BSH_AMBIENT_LIGHT_BRIGHTNESS = "BSH.Common.Setting.AmbientLightBrightness"

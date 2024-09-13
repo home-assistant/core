@@ -240,7 +240,7 @@ aioelectricitymaps==0.4.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==25.4.0
+aioesphomeapi==26.0.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -249,7 +249,7 @@ aioflo==2021.11.0
 aioftp==0.21.3
 
 # homeassistant.components.github
-aiogithubapi==23.11.0
+aiogithubapi==24.6.0
 
 # homeassistant.components.guardian
 aioguardian==2022.07.0
@@ -377,7 +377,7 @@ aiosolaredge==0.2.0
 aiosteamist==1.0.0
 
 # homeassistant.components.cambridge_audio
-aiostreammagic==2.2.3
+aiostreammagic==2.3.0
 
 # homeassistant.components.switcher_kis
 aioswitcher==4.0.3
@@ -386,7 +386,7 @@ aioswitcher==4.0.3
 aiosyncthing==0.5.1
 
 # homeassistant.components.tankerkoenig
-aiotankerkoenig==0.4.1
+aiotankerkoenig==0.4.2
 
 # homeassistant.components.tractive
 aiotractive==0.6.0
@@ -517,7 +517,7 @@ auroranoaa==0.0.3
 aurorapy==0.2.7
 
 # homeassistant.components.autarco
-autarco==2.0.0
+autarco==3.0.0
 
 # homeassistant.components.avea
 # avea==1.5.1
@@ -1297,7 +1297,7 @@ linear-garage-door==0.2.9
 linode-api==4.1.9b1
 
 # homeassistant.components.lamarzocco
-lmcloud==1.2.2
+lmcloud==1.2.3
 
 # homeassistant.components.google_maps
 locationsharinglib==5.0.1
@@ -1831,7 +1831,7 @@ pydelijn==1.1.0
 pydexcom==0.2.3
 
 # homeassistant.components.discovergy
-pydiscovergy==3.0.1
+pydiscovergy==3.0.2
 
 # homeassistant.components.doods
 pydoods==1.0.2
@@ -3041,7 +3041,7 @@ zeroconf==0.134.0
 zeversolar==0.3.1
 
 # homeassistant.components.zha
-zha==0.0.32
+zha==0.0.33
 
 # homeassistant.components.zhong_hong
 zhong-hong-hvac==1.0.12
@@ -3053,7 +3053,7 @@ ziggo-mediabox-xl==1.1.0
 zm-py==0.5.4
 
 # homeassistant.components.zwave_js
-zwave-js-server-python==0.57.0
+zwave-js-server-python==0.58.0
 
 # homeassistant.components.zwave_me
 zwave-me-ws==0.4.3
