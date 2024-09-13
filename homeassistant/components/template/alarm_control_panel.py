@@ -159,7 +159,6 @@ async def async_setup_entry(
     """Initialize config entry."""
     _options = dict(config_entry.options)
     _options.pop("template_type")
-    # _options[CONF_CODE_FORMAT] = TemplateCodeFormat(_options[CONF_CODE_FORMAT])
     validated_config = ALARM_CONTROL_PANEL_CONFIG_SCHEMA(_options)
     async_add_entities(
         [
