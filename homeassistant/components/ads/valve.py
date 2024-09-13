@@ -45,11 +45,8 @@ def setup_platform(
     ads_var: str = config[CONF_ADS_VAR]
     name: str = config[CONF_NAME]
     device_class: ValveDeviceClass | None = config.get(CONF_DEVICE_CLASS)
-    supported_features: ValveEntityFeature = (
-        ValveEntityFeature.OPEN | ValveEntityFeature.CLOSE
-    )
 
-    entity = AdsValve(ads_hub, ads_var, name, device_class, supported_features)
+    entity = AdsValve(ads_hub, ads_var, name, device_class)
 
     add_entities([entity])
 
@@ -57,18 +54,18 @@ def setup_platform(
 class AdsValve(AdsEntity, ValveEntity):
     """Representation of an ADS valve entity."""
 
+    _attr_supported_features = ValveEntityFeature.OPEN | ValveEntityFeature.CLOSE
+
     def __init__(
         self,
         ads_hub: AdsHub,
         ads_var: str,
         name: str,
         device_class: ValveDeviceClass | None,
-        supported_features: ValveEntityFeature,
     ) -> None:
         """Initialize AdsValve entity."""
         super().__init__(ads_hub, name, ads_var)
         self._attr_device_class = device_class
-        self._attr_supported_features = supported_features
         self._attr_reports_position = False
         self._attr_is_closed = True
 
