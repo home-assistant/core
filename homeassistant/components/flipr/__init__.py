@@ -13,7 +13,7 @@ from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import issue_registry as ir
 
 from .const import DOMAIN
-from .coordinator import FliprDataUpdateCoordinator, HubDataUpdateCoordinator
+from .coordinator import FliprDataUpdateCoordinator, FliprHubDataUpdateCoordinator
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR, Platform.SWITCH]
 
@@ -25,7 +25,7 @@ class FliprData:
     """The Flipr data class."""
 
     flipr_coordinators: list[FliprDataUpdateCoordinator]
-    hub_coordinators: list[HubDataUpdateCoordinator]
+    hub_coordinators: list[FliprHubDataUpdateCoordinator]
 
 
 type FliprConfigEntry = ConfigEntry[FliprData]
@@ -56,7 +56,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: FliprConfigEntry) -> boo
 
     hub_coordinators = []
     for hub_id in ids["hub"]:
-        hub_coordinator = HubDataUpdateCoordinator(hass, client, hub_id)
+        hub_coordinator = FliprHubDataUpdateCoordinator(hass, client, hub_id)
         await hub_coordinator.async_config_entry_first_refresh()
         hub_coordinators.append(hub_coordinator)
 

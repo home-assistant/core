@@ -8,7 +8,7 @@ from .const import ATTRIBUTION, DOMAIN, MANUFACTURER
 from .coordinator import BaseDataUpdateCoordinator
 
 
-class FliprEntity(CoordinatorEntity):
+class FliprEntity(CoordinatorEntity[BaseDataUpdateCoordinator]):
     """Implements a common class elements representing the Flipr component."""
 
     _attr_attribution = ATTRIBUTION

@@ -29,13 +29,13 @@ async def async_setup_entry(
     coordinators = config_entry.runtime_data.hub_coordinators
 
     async_add_entities(
-        HubSwitch(coordinator, description, True)
+        FliprHubSwitch(coordinator, description, True)
         for description in SWITCH_TYPES
         for coordinator in coordinators
     )
 
 
-class HubSwitch(FliprEntity, SwitchEntity):
+class FliprHubSwitch(FliprEntity, SwitchEntity):
     """Switch representing Hub state."""
 
     @property
@@ -48,7 +48,7 @@ class HubSwitch(FliprEntity, SwitchEntity):
         """Turn off the switch."""
         _LOGGER.debug("Switching off %s", self.device_id)
         data = await self.hass.async_add_executor_job(
-            self.coordinator.client.set_hub_state,  # type: ignore[attr-defined]
+            self.coordinator.client.set_hub_state,
             self.device_id,
             False,
         )
@@ -59,7 +59,7 @@ class HubSwitch(FliprEntity, SwitchEntity):
         """Turn on the switch."""
         _LOGGER.debug("Switching on %s", self.device_id)
         data = await self.hass.async_add_executor_job(
-            self.coordinator.client.set_hub_state,  # type: ignore[attr-defined]
+            self.coordinator.client.set_hub_state,
             self.device_id,
             True,
         )

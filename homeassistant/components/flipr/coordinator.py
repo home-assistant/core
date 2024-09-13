@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 import logging
+from typing import Any
 
 from flipr_api import FliprAPIRestClient
 from flipr_api.exceptions import FliprError
@@ -13,7 +14,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 _LOGGER = logging.getLogger(__name__)
 
 
-class BaseDataUpdateCoordinator(DataUpdateCoordinator):
+class BaseDataUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
     """Parent class to hold Flipr and Hub data retrieval."""
 
     config_entry: ConfigEntry
@@ -33,10 +34,10 @@ class BaseDataUpdateCoordinator(DataUpdateCoordinator):
         )
 
 
-class FliprDataUpdateCoordinator(BaseDataUpdateCoordinator):
+class FliprDataUpdateCoordinator(BaseDataUpdateCoordinator[dict[str, Any]]):
     """Class to hold Flipr data retrieval."""
 
-    async def _async_update_data(self):
+    async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from API endpoint."""
         try:
             data = await self.hass.async_add_executor_job(
@@ -48,10 +49,10 @@ class FliprDataUpdateCoordinator(BaseDataUpdateCoordinator):
         return data
 
 
-class HubDataUpdateCoordinator(BaseDataUpdateCoordinator):
+class FliprHubDataUpdateCoordinator(BaseDataUpdateCoordinator[dict[str, Any]]):
     """Class to hold Flipr hub data retrieval."""
 
-    async def _async_update_data(self):
+    async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from API endpoint."""
         try:
             data = await self.hass.async_add_executor_job(
