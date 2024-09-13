@@ -82,6 +82,7 @@ BINARY_SENSOR_DESC: dict[ThinQProperty, ThinQBinarySensorEntityDescription] = {
     ThinQProperty.ONE_TOUCH_FILTER: ThinQBinarySensorEntityDescription(
         key=ThinQProperty.ONE_TOUCH_FILTER,
         translation_key=ThinQProperty.ONE_TOUCH_FILTER,
+        on_key="on",
     ),
 }
 
