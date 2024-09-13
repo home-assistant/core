@@ -4,10 +4,7 @@ from http import HTTPStatus
 from unittest.mock import MagicMock
 
 from homeassistant.components.recorder import Recorder
-from homeassistant.components.repairs.websocket_api import (
-    RepairsFlowIndexView,
-    RepairsFlowResourceView,
-)
+from homeassistant.components.repairs import INDEX_VIEW_URL, RESOURCE_VIEW_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 
@@ -40,7 +37,7 @@ async def test_repair_flow(
     )
     assert len(issue_registry.issues) == 1
 
-    url = RepairsFlowIndexView.url
+    url = INDEX_VIEW_URL
     resp = await http_client.post(
         url, json={"handler": "notify", "issue_id": f"migrate_notify_tibber_{service}"}
     )
@@ -51,7 +48,7 @@ async def test_repair_flow(
     assert data["step_id"] == "confirm"
 
     # Simulate the users confirmed the repair flow
-    url = RepairsFlowResourceView.url.format(flow_id=flow_id)
+    url = RESOURCE_VIEW_URL.format(flow_id=flow_id)
     resp = await http_client.post(url)
     assert resp.status == HTTPStatus.OK
     data = await resp.json()

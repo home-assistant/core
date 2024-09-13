@@ -8,12 +8,10 @@ from unittest.mock import AsyncMock, Mock
 
 from uiprotect.data import Camera, CloudAccount, ModelType, Version
 
-from homeassistant.components.repairs.issue_handler import (
+from homeassistant.components.repairs import (
+    INDEX_VIEW_URL,
+    RESOURCE_VIEW_URL,
     async_process_repairs_platforms,
-)
-from homeassistant.components.repairs.websocket_api import (
-    RepairsFlowIndexView,
-    RepairsFlowResourceView,
 )
 from homeassistant.components.unifiprotect.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH
@@ -52,7 +50,7 @@ async def test_ea_warning_ignore(
             issue = i
     assert issue is not None
 
-    url = RepairsFlowIndexView.url
+    url = INDEX_VIEW_URL
     resp = await client.post(
         url, json={"handler": DOMAIN, "issue_id": "ea_channel_warning"}
     )
@@ -66,7 +64,7 @@ async def test_ea_warning_ignore(
     }
     assert data["step_id"] == "start"
 
-    url = RepairsFlowResourceView.url.format(flow_id=flow_id)
+    url = RESOURCE_VIEW_URL.format(flow_id=flow_id)
     resp = await client.post(url)
     assert resp.status == HTTPStatus.OK
     data = await resp.json()
@@ -78,7 +76,7 @@ async def test_ea_warning_ignore(
     }
     assert data["step_id"] == "confirm"
 
-    url = RepairsFlowResourceView.url.format(flow_id=flow_id)
+    url = RESOURCE_VIEW_URL.format(flow_id=flow_id)
     resp = await client.post(url)
     assert resp.status == HTTPStatus.OK
     data = await resp.json()
@@ -114,7 +112,7 @@ async def test_ea_warning_fix(
             issue = i
     assert issue is not None
 
-    url = RepairsFlowIndexView.url
+    url = INDEX_VIEW_URL
     resp = await client.post(
         url, json={"handler": DOMAIN, "issue_id": "ea_channel_warning"}
     )
@@ -139,7 +137,7 @@ async def test_ea_warning_fix(
     ufp.ws_msg(mock_msg)
     await hass.async_block_till_done()
 
-    url = RepairsFlowResourceView.url.format(flow_id=flow_id)
+    url = RESOURCE_VIEW_URL.format(flow_id=flow_id)
     resp = await client.post(url)
     assert resp.status == HTTPStatus.OK
     data = await resp.json()
@@ -176,7 +174,7 @@ async def test_cloud_user_fix(
             issue = i
     assert issue is not None
 
-    url = RepairsFlowIndexView.url
+    url = INDEX_VIEW_URL
     resp = await client.post(url, json={"handler": DOMAIN, "issue_id": "cloud_user"})
     assert resp.status == HTTPStatus.OK
     data = await resp.json()
@@ -184,7 +182,7 @@ async def test_cloud_user_fix(
     flow_id = data["flow_id"]
     assert data["step_id"] == "confirm"
 
-    url = RepairsFlowResourceView.url.format(flow_id=flow_id)
+    url = RESOURCE_VIEW_URL.format(flow_id=flow_id)
     resp = await client.post(url)
     assert resp.status == HTTPStatus.OK
     data = await resp.json()
@@ -228,7 +226,7 @@ async def test_rtsp_read_only_ignore(
             issue = i
     assert issue is not None
 
-    url = RepairsFlowIndexView.url
+    url = INDEX_VIEW_URL
     resp = await client.post(url, json={"handler": DOMAIN, "issue_id": issue_id})
     assert resp.status == HTTPStatus.OK
     data = await resp.json()
@@ -236,7 +234,7 @@ async def test_rtsp_read_only_ignore(
     flow_id = data["flow_id"]
     assert data["step_id"] == "start"
 
-    url = RepairsFlowResourceView.url.format(flow_id=flow_id)
+    url = RESOURCE_VIEW_URL.format(flow_id=flow_id)
     resp = await client.post(url)
     assert resp.status == HTTPStatus.OK
     data = await resp.json()
@@ -244,7 +242,7 @@ async def test_rtsp_read_only_ignore(
     flow_id = data["flow_id"]
     assert data["step_id"] == "confirm"
 
-    url = RepairsFlowResourceView.url.format(flow_id=flow_id)
+    url = RESOURCE_VIEW_URL.format(flow_id=flow_id)
     resp = await client.post(url)
     assert resp.status == HTTPStatus.OK
     data = await resp.json()
@@ -287,7 +285,7 @@ async def test_rtsp_read_only_fix(
             issue = i
     assert issue is not None
 
-    url = RepairsFlowIndexView.url
+    url = INDEX_VIEW_URL
     resp = await client.post(url, json={"handler": DOMAIN, "issue_id": issue_id})
     assert resp.status == HTTPStatus.OK
     data = await resp.json()
@@ -295,7 +293,7 @@ async def test_rtsp_read_only_fix(
     flow_id = data["flow_id"]
     assert data["step_id"] == "start"
 
-    url = RepairsFlowResourceView.url.format(flow_id=flow_id)
+    url = RESOURCE_VIEW_URL.format(flow_id=flow_id)
     resp = await client.post(url)
     assert resp.status == HTTPStatus.OK
     data = await resp.json()
@@ -337,7 +335,7 @@ async def test_rtsp_writable_fix(
             issue = i
     assert issue is not None
 
-    url = RepairsFlowIndexView.url
+    url = INDEX_VIEW_URL
     resp = await client.post(url, json={"handler": DOMAIN, "issue_id": issue_id})
     assert resp.status == HTTPStatus.OK
     data = await resp.json()
@@ -345,7 +343,7 @@ async def test_rtsp_writable_fix(
     flow_id = data["flow_id"]
     assert data["step_id"] == "start"
 
-    url = RepairsFlowResourceView.url.format(flow_id=flow_id)
+    url = RESOURCE_VIEW_URL.format(flow_id=flow_id)
     resp = await client.post(url)
     assert resp.status == HTTPStatus.OK
     data = await resp.json()
@@ -398,7 +396,7 @@ async def test_rtsp_writable_fix_when_not_setup(
     await hass.config_entries.async_unload(ufp.entry.entry_id)
     await hass.async_block_till_done()
 
-    url = RepairsFlowIndexView.url
+    url = INDEX_VIEW_URL
     resp = await client.post(url, json={"handler": DOMAIN, "issue_id": issue_id})
     assert resp.status == HTTPStatus.OK
     data = await resp.json()
@@ -406,7 +404,7 @@ async def test_rtsp_writable_fix_when_not_setup(
     flow_id = data["flow_id"]
     assert data["step_id"] == "start"
 
-    url = RepairsFlowResourceView.url.format(flow_id=flow_id)
+    url = RESOURCE_VIEW_URL.format(flow_id=flow_id)
     resp = await client.post(url)
     assert resp.status == HTTPStatus.OK
     data = await resp.json()

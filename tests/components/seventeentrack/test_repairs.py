@@ -5,8 +5,7 @@ from unittest.mock import AsyncMock
 
 from freezegun.api import FrozenDateTimeFactory
 
-from homeassistant.components.repairs import DOMAIN as REPAIRS_DOMAIN
-from homeassistant.components.repairs.websocket_api import RepairsFlowIndexView
+from homeassistant.components.repairs import DOMAIN as REPAIRS_DOMAIN, INDEX_VIEW_URL
 from homeassistant.components.seventeentrack import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
@@ -50,7 +49,7 @@ async def test_repair(
     client = await hass_client()
 
     resp = await client.post(
-        RepairsFlowIndexView.url,
+        INDEX_VIEW_URL,
         json={"handler": DOMAIN, "issue_id": repair_issue.issue_id},
     )
 
@@ -70,7 +69,7 @@ async def test_repair(
         "preview": None,
     }
 
-    resp = await client.post(RepairsFlowIndexView.url + f"/{flow_id}")
+    resp = await client.post(INDEX_VIEW_URL + f"/{flow_id}")
     assert resp.status == HTTPStatus.OK
     data = await resp.json()
 

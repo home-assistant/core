@@ -7,13 +7,20 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from . import issue_handler, websocket_api
-from .const import DOMAIN
-from .issue_handler import ConfirmRepairFlow, RepairsFlowManager
+from .const import DOMAIN, INDEX_VIEW_URL, RESOURCE_VIEW_URL
+from .issue_handler import (
+    ConfirmRepairFlow,
+    RepairsFlowManager,
+    async_process_repairs_platforms,
+)
 from .models import RepairsFlow
 
 __all__ = [
+    "async_process_repairs_platforms",
     "ConfirmRepairFlow",
     "DOMAIN",
+    "INDEX_VIEW_URL",
+    "RESOURCE_VIEW_URL",
     "repairs_flow_manager",
     "RepairsFlow",
     "RepairsFlowManager",

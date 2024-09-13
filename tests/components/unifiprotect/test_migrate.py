@@ -7,9 +7,7 @@ from unittest.mock import patch
 from uiprotect.data import Camera
 
 from homeassistant.components.automation import DOMAIN as AUTOMATION_DOMAIN
-from homeassistant.components.repairs.issue_handler import (
-    async_process_repairs_platforms,
-)
+from homeassistant.components.repairs import async_process_repairs_platforms
 from homeassistant.components.script import DOMAIN as SCRIPT_DOMAIN
 from homeassistant.components.unifiprotect.const import DOMAIN
 from homeassistant.const import SERVICE_RELOAD, Platform
