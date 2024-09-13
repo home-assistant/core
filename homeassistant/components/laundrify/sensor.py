@@ -74,13 +74,14 @@ class LaundrifyPowerSensor(SensorEntity):
         """Fetch latest power measurement from the device."""
         try:
             power = await self._device.get_power()
-            _LOGGER.debug("%s: %s", self._attr_unique_id, power)
-            if power is not None:
-                self._attr_available = True
-                self._attr_native_value = power
         except LaundrifyDeviceException as err:
             _LOGGER.debug("Couldn't load power for %s: %s", self._attr_unique_id, err)
             self._attr_available = False
+        else:
+            _LOGGER.debug("Retrieved power for %s: %s", self._attr_unique_id, power)
+            if power is not None:
+                self._attr_available = True
+                self._attr_native_value = power
 
 
 class LaundrifyEnergySensor(
