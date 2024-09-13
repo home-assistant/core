@@ -5,7 +5,13 @@ from dataclasses import dataclass
 import logging
 from typing import Any, Generic, cast
 
-from ring_doorbell import RingChime, RingEventKind, RingGeneric
+from ring_doorbell import (
+    RingCapability,
+    RingChime,
+    RingEventKind,
+    RingGeneric,
+    RingStickUpCam,
+)
 
 from homeassistant.components.siren import (
     ATTR_TONE,
@@ -60,6 +66,14 @@ SIRENS: tuple[RingSirenEntityDescription[Any], ...] = (
         turn_on_fn=lambda device, kwargs: device.async_test_sound(
             kind=str(kwargs.get(ATTR_TONE) or "") or RingEventKind.DING.value
         ),
+    ),
+    RingSirenEntityDescription[RingStickUpCam](
+        key="siren",
+        translation_key="siren",
+        exists_fn=lambda device: device.has_capability(RingCapability.SIREN),
+        is_on_fn=lambda device: device.siren > 0,
+        turn_on_fn=lambda device, _: device.async_set_siren(1),
+        turn_off_fn=lambda device: device.async_set_siren(0),
     ),
 )
 
