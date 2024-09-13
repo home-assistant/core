@@ -88,9 +88,7 @@ class AutomowerSetDateTimeButtonEntity(AutomowerControlEntity, ButtonEntity):
         try:
             await self.coordinator.api.commands.set_datetime(
                 self.mower_id,
-                (dt_util.now(dt_util.DEFAULT_TIME_ZONE))
-                .astimezone(dt_util.DEFAULT_TIME_ZONE)
-                .replace(tzinfo=None),
+                (dt_util.now(dt_util.DEFAULT_TIME_ZONE)).replace(tzinfo=None),
             )
         except ApiException as exception:
             raise HomeAssistantError(
