@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock
 
 from aiostreammagic import TransportControl
+from aiostreammagic.models import CallbackType
 import pytest
 
 from homeassistant.components.media_player import (
@@ -33,7 +34,9 @@ from tests.common import MockConfigEntry
 
 async def mock_state_update(client: AsyncMock) -> None:
     """Trigger a callback in the media player."""
-    await client.register_state_update_callbacks.call_args[0][0](client)
+    await client.register_state_update_callbacks.call_args[0][0](
+        client, CallbackType.STATE
+    )
 
 
 async def test_entity_supported_features(
