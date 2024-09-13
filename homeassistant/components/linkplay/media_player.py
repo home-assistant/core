@@ -22,7 +22,7 @@ from homeassistant.components.media_player import (
     RepeatMode,
     async_process_play_media_url,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceResponse, SupportsResponse
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
     config_validation as cv,
@@ -115,9 +115,18 @@ SEEKABLE_FEATURES: MediaPlayerEntityFeature = (
 SERVICE_PLAY_PRESET = "play_preset"
 ATTR_PRESET_NUMBER = "preset_number"
 
+SERVICE_COMMAND = "send_command"
+ATTR_COMMAND = "command"
+
 SERVICE_PLAY_PRESET_SCHEMA = cv.make_entity_service_schema(
     {
         vol.Required(ATTR_PRESET_NUMBER): cv.positive_int,
+    }
+)
+
+SERVICE_COMMAND_SCHEMA = cv.make_entity_service_schema(
+    {
+        vol.Required(ATTR_COMMAND): cv.string,
     }
 )
 
@@ -131,8 +140,18 @@ async def async_setup_entry(
 
     # register services
     platform = entity_platform.async_get_current_platform()
+
     platform.async_register_entity_service(
-        SERVICE_PLAY_PRESET, SERVICE_PLAY_PRESET_SCHEMA, "async_play_preset"
+        SERVICE_PLAY_PRESET,
+        SERVICE_PLAY_PRESET_SCHEMA,
+        "async_play_preset",
+    )
+
+    platform.async_register_entity_service(
+        SERVICE_COMMAND,
+        SERVICE_COMMAND_SCHEMA,
+        "async_send_command",
+        supports_response=SupportsResponse.OPTIONAL,
     )
 
     # add entities
@@ -284,6 +303,11 @@ class LinkPlayMediaPlayerEntity(MediaPlayerEntity):
     async def async_play_preset(self, preset_number: int) -> None:
         """Play preset number."""
         await self._bridge.player.play_preset(preset_number)
+
+    @exception_wrap
+    async def async_send_command(self, command: str) -> ServiceResponse:
+        """Send generic HTTP API command."""
+        return await self._bridge.json_request(command)
 
     def _update_properties(self) -> None:
         """Update the properties of the media player."""
