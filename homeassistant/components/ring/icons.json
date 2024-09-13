@@ -51,10 +51,5 @@
         "default": "mdi:alarm-bell"
       }
     }
-  },
-  "services": {
-    "update": {
-      "service": "mdi:refresh"
-    }
   }
 }
