@@ -9,13 +9,7 @@ from homeassistant.components.notify import (
     DOMAIN as NOTIFY_DOMAIN,
     migrate_notify_issue,
 )
-from homeassistant.components.repairs.issue_handler import (
-    async_process_repairs_platforms,
-)
-from homeassistant.components.repairs.websocket_api import (
-    RepairsFlowIndexView,
-    RepairsFlowResourceView,
-)
+from homeassistant.components.repairs import issue_handler, websocket_api
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
@@ -41,7 +35,7 @@ async def test_notify_migration_repair_flow(
     """Test the notify service repair flow is triggered."""
     await async_setup_component(hass, NOTIFY_DOMAIN, {})
     await hass.async_block_till_done()
-    await async_process_repairs_platforms(hass)
+    await issue_handler.async_process_repairs_platforms(hass)
 
     http_client = await hass_client()
     await hass.async_block_till_done()
@@ -66,7 +60,7 @@ async def test_notify_migration_repair_flow(
     )
     assert len(issue_registry.issues) == 1
 
-    url = RepairsFlowIndexView.url
+    url = websocket_api.RepairsFlowIndexView.url
     resp = await http_client.post(
         url, json={"handler": NOTIFY_DOMAIN, "issue_id": translation_key}
     )
@@ -76,7 +70,7 @@ async def test_notify_migration_repair_flow(
     flow_id = data["flow_id"]
     assert data["step_id"] == "confirm"
 
-    url = RepairsFlowResourceView.url.format(flow_id=flow_id)
+    url = websocket_api.RepairsFlowResourceView.url.format(flow_id=flow_id)
     resp = await http_client.post(url)
     assert resp.status == HTTPStatus.OK
     data = await resp.json()

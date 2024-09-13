@@ -5,13 +5,7 @@ from __future__ import annotations
 from http import HTTPStatus
 
 from homeassistant.components.doorbird.const import DOMAIN
-from homeassistant.components.repairs.issue_handler import (
-    async_process_repairs_platforms,
-)
-from homeassistant.components.repairs.websocket_api import (
-    RepairsFlowIndexView,
-    RepairsFlowResourceView,
-)
+from homeassistant.components.repairs import issue_handler, websocket_api
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
@@ -40,10 +34,10 @@ async def test_change_schedule_fails(
     issue_id = issue.issue_id
     assert issue.domain == DOMAIN
 
-    await async_process_repairs_platforms(hass)
+    await issue_handler.async_process_repairs_platforms(hass)
     client = await hass_client()
 
-    url = RepairsFlowIndexView.url
+    url = websocket_api.RepairsFlowIndexView.url
     resp = await client.post(url, json={"handler": DOMAIN, "issue_id": issue_id})
     assert resp.status == HTTPStatus.OK
     data = await resp.json()
@@ -53,7 +47,7 @@ async def test_change_schedule_fails(
     assert "404" in placeholders["error"]
     assert data["step_id"] == "confirm"
 
-    url = RepairsFlowResourceView.url.format(flow_id=flow_id)
+    url = websocket_api.RepairsFlowResourceView.url.format(flow_id=flow_id)
     resp = await client.post(url)
     assert resp.status == HTTPStatus.OK
     data = await resp.json()

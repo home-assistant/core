@@ -2,13 +2,10 @@
 
 from http import HTTPStatus
 
-from homeassistant.components.repairs import DOMAIN as REPAIRS_DOMAIN
-from homeassistant.components.repairs.issue_handler import (
-    async_process_repairs_platforms,
-)
-from homeassistant.components.repairs.websocket_api import (
-    RepairsFlowIndexView,
-    RepairsFlowResourceView,
+from homeassistant.components.repairs import (
+    DOMAIN as REPAIRS_DOMAIN,
+    issue_handler,
+    websocket_api,
 )
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -35,7 +32,7 @@ async def test_integration_not_found_confirm_step(
     entry2.add_to_hass(hass)
     issue_id = "integration_not_found.test1"
 
-    await async_process_repairs_platforms(hass)
+    await issue_handler.async_process_repairs_platforms(hass)
     ws_client = await hass_ws_client(hass)
     http_client = await hass_client()
 
@@ -48,7 +45,7 @@ async def test_integration_not_found_confirm_step(
     assert issue["issue_id"] == issue_id
     assert issue["translation_placeholders"] == {"domain": "test1"}
 
-    url = RepairsFlowIndexView.url
+    url = websocket_api.RepairsFlowIndexView.url
     resp = await http_client.post(
         url, json={"handler": HOMEASSISTANT_DOMAIN, "issue_id": issue_id}
     )
@@ -59,7 +56,7 @@ async def test_integration_not_found_confirm_step(
     assert data["step_id"] == "init"
     assert data["description_placeholders"] == {"domain": "test1"}
 
-    url = RepairsFlowResourceView.url.format(flow_id=flow_id)
+    url = websocket_api.RepairsFlowResourceView.url.format(flow_id=flow_id)
 
     # Show menu
     resp = await http_client.post(url)
@@ -105,7 +102,7 @@ async def test_integration_not_found_ignore_step(
     entry1.add_to_hass(hass)
     issue_id = "integration_not_found.test1"
 
-    await async_process_repairs_platforms(hass)
+    await issue_handler.async_process_repairs_platforms(hass)
     ws_client = await hass_ws_client(hass)
     http_client = await hass_client()
 
@@ -118,7 +115,7 @@ async def test_integration_not_found_ignore_step(
     assert issue["issue_id"] == issue_id
     assert issue["translation_placeholders"] == {"domain": "test1"}
 
-    url = RepairsFlowIndexView.url
+    url = websocket_api.RepairsFlowIndexView.url
     resp = await http_client.post(
         url, json={"handler": HOMEASSISTANT_DOMAIN, "issue_id": issue_id}
     )
@@ -129,7 +126,7 @@ async def test_integration_not_found_ignore_step(
     assert data["step_id"] == "init"
     assert data["description_placeholders"] == {"domain": "test1"}
 
-    url = RepairsFlowResourceView.url.format(flow_id=flow_id)
+    url = websocket_api.RepairsFlowResourceView.url.format(flow_id=flow_id)
 
     # Show menu
     resp = await http_client.post(url)

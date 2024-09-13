@@ -5,10 +5,7 @@ from http import HTTPStatus
 from homeassistant.components.knx.const import DOMAIN, KNX_ADDRESS
 from homeassistant.components.knx.schema import NotifySchema
 from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
-from homeassistant.components.repairs.websocket_api import (
-    RepairsFlowIndexView,
-    RepairsFlowResourceView,
-)
+from homeassistant.components.repairs import websocket_api
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.issue_registry as ir
@@ -60,7 +57,7 @@ async def test_knx_notify_service_issue(
 
     # Test confirm step in repair flow
     resp = await http_client.post(
-        RepairsFlowIndexView.url,
+        websocket_api.RepairsFlowIndexView.url,
         json={"handler": "notify", "issue_id": f"migrate_notify_{DOMAIN}_notify"},
     )
     assert resp.status == HTTPStatus.OK
@@ -70,7 +67,7 @@ async def test_knx_notify_service_issue(
     assert data["step_id"] == "confirm"
 
     resp = await http_client.post(
-        RepairsFlowResourceView.url.format(flow_id=flow_id),
+        websocket_api.RepairsFlowResourceView.url.format(flow_id=flow_id),
     )
     assert resp.status == HTTPStatus.OK
     data = await resp.json()

@@ -7,9 +7,7 @@ from unittest.mock import patch
 from uiprotect.data import Camera
 
 from homeassistant.components.automation import DOMAIN as AUTOMATION_DOMAIN
-from homeassistant.components.repairs.issue_handler import (
-    async_process_repairs_platforms,
-)
+from homeassistant.components.repairs import issue_handler
 from homeassistant.components.script import DOMAIN as SCRIPT_DOMAIN
 from homeassistant.components.unifiprotect.const import DOMAIN
 from homeassistant.const import SERVICE_RELOAD, Platform
@@ -32,7 +30,7 @@ async def test_deprecated_entity(
 
     await init_entry(hass, ufp, [doorbell])
 
-    await async_process_repairs_platforms(hass)
+    await issue_handler.async_process_repairs_platforms(hass)
     ws_client = await hass_ws_client(hass)
 
     await ws_client.send_json({"id": 1, "type": "repairs/list_issues"})
@@ -63,7 +61,7 @@ async def test_deprecated_entity_no_automations(
 
     await init_entry(hass, ufp, [doorbell])
 
-    await async_process_repairs_platforms(hass)
+    await issue_handler.async_process_repairs_platforms(hass)
     ws_client = await hass_ws_client(hass)
 
     await ws_client.send_json({"id": 1, "type": "repairs/list_issues"})
@@ -127,7 +125,7 @@ async def test_deprecate_entity_automation(
     await _load_automation(hass, entry.entity_id)
     await init_entry(hass, ufp, [doorbell])
 
-    await async_process_repairs_platforms(hass)
+    await issue_handler.async_process_repairs_platforms(hass)
     ws_client = await hass_ws_client(hass)
 
     await ws_client.send_json({"id": 1, "type": "repairs/list_issues"})
@@ -195,7 +193,7 @@ async def test_deprecate_entity_script(
     await _load_script(hass, entry.entity_id)
     await init_entry(hass, ufp, [doorbell])
 
-    await async_process_repairs_platforms(hass)
+    await issue_handler.async_process_repairs_platforms(hass)
     ws_client = await hass_ws_client(hass)
 
     await ws_client.send_json({"id": 1, "type": "repairs/list_issues"})

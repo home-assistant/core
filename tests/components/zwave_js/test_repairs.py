@@ -7,13 +7,7 @@ from unittest.mock import patch
 from zwave_js_server.event import Event
 from zwave_js_server.model.node import Node
 
-from homeassistant.components.repairs.issue_handler import (
-    async_process_repairs_platforms,
-)
-from homeassistant.components.repairs.websocket_api import (
-    RepairsFlowIndexView,
-    RepairsFlowResourceView,
-)
+from homeassistant.components.repairs import issue_handler, websocket_api
 from homeassistant.components.zwave_js import DOMAIN
 from homeassistant.components.zwave_js.helpers import get_device_id
 from homeassistant.core import HomeAssistant
@@ -71,7 +65,7 @@ async def test_device_config_file_changed_confirm_step(
     assert device
     issue_id = f"device_config_file_changed.{device.id}"
 
-    await async_process_repairs_platforms(hass)
+    await issue_handler.async_process_repairs_platforms(hass)
     ws_client = await hass_ws_client(hass)
     http_client = await hass_client()
 
@@ -84,7 +78,7 @@ async def test_device_config_file_changed_confirm_step(
     assert issue["issue_id"] == issue_id
     assert issue["translation_placeholders"] == {"device_name": device.name}
 
-    url = RepairsFlowIndexView.url
+    url = websocket_api.RepairsFlowIndexView.url
     resp = await http_client.post(url, json={"handler": DOMAIN, "issue_id": issue_id})
     assert resp.status == HTTPStatus.OK
     data = await resp.json()
@@ -93,7 +87,7 @@ async def test_device_config_file_changed_confirm_step(
     assert data["step_id"] == "init"
     assert data["description_placeholders"] == {"device_name": device.name}
 
-    url = RepairsFlowResourceView.url.format(flow_id=flow_id)
+    url = websocket_api.RepairsFlowResourceView.url.format(flow_id=flow_id)
 
     # Show menu
     resp = await http_client.post(url)
@@ -146,7 +140,7 @@ async def test_device_config_file_changed_ignore_step(
     assert device
     issue_id = f"device_config_file_changed.{device.id}"
 
-    await async_process_repairs_platforms(hass)
+    await issue_handler.async_process_repairs_platforms(hass)
     ws_client = await hass_ws_client(hass)
     http_client = await hass_client()
 
@@ -159,7 +153,7 @@ async def test_device_config_file_changed_ignore_step(
     assert issue["issue_id"] == issue_id
     assert issue["translation_placeholders"] == {"device_name": device.name}
 
-    url = RepairsFlowIndexView.url
+    url = websocket_api.RepairsFlowIndexView.url
     resp = await http_client.post(url, json={"handler": DOMAIN, "issue_id": issue_id})
     assert resp.status == HTTPStatus.OK
     data = await resp.json()
@@ -168,7 +162,7 @@ async def test_device_config_file_changed_ignore_step(
     assert data["step_id"] == "init"
     assert data["description_placeholders"] == {"device_name": device.name}
 
-    url = RepairsFlowResourceView.url.format(flow_id=flow_id)
+    url = websocket_api.RepairsFlowResourceView.url.format(flow_id=flow_id)
 
     # Show menu
     resp = await http_client.post(url)
@@ -216,7 +210,7 @@ async def test_invalid_issue(
         translation_key="invalid_issue",
     )
 
-    await async_process_repairs_platforms(hass)
+    await issue_handler.async_process_repairs_platforms(hass)
     ws_client = await hass_ws_client(hass)
     http_client = await hass_client()
 
@@ -228,7 +222,7 @@ async def test_invalid_issue(
     issue = msg["result"]["issues"][0]
     assert issue["issue_id"] == "invalid_issue_id"
 
-    url = RepairsFlowIndexView.url
+    url = websocket_api.RepairsFlowIndexView.url
     resp = await http_client.post(
         url, json={"handler": DOMAIN, "issue_id": "invalid_issue_id"}
     )
@@ -239,7 +233,7 @@ async def test_invalid_issue(
     assert data["step_id"] == "confirm"
 
     # Apply fix
-    url = RepairsFlowResourceView.url.format(flow_id=flow_id)
+    url = websocket_api.RepairsFlowResourceView.url.format(flow_id=flow_id)
     resp = await http_client.post(url)
 
     assert resp.status == HTTPStatus.OK
@@ -274,11 +268,11 @@ async def test_abort_confirm(
     assert device
     issue_id = f"device_config_file_changed.{device.id}"
 
-    await async_process_repairs_platforms(hass)
+    await issue_handler.async_process_repairs_platforms(hass)
     await hass_ws_client(hass)
     http_client = await hass_client()
 
-    url = RepairsFlowIndexView.url
+    url = websocket_api.RepairsFlowIndexView.url
     resp = await http_client.post(url, json={"handler": DOMAIN, "issue_id": issue_id})
     assert resp.status == HTTPStatus.OK
     data = await resp.json()
@@ -290,7 +284,7 @@ async def test_abort_confirm(
     await hass.config_entries.async_unload(integration.entry_id)
 
     # Apply fix
-    url = RepairsFlowResourceView.url.format(flow_id=flow_id)
+    url = websocket_api.RepairsFlowResourceView.url.format(flow_id=flow_id)
     resp = await http_client.post(url, json={"next_step_id": "confirm"})
 
     assert resp.status == HTTPStatus.OK
