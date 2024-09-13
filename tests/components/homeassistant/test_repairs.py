@@ -6,8 +6,8 @@ from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 from tests.components.repairs import (
+    async_process_repairs_platforms,
     process_repair_fix_flow,
-    process_repairs_platforms,
     start_repair_fix_flow,
 )
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
@@ -31,7 +31,7 @@ async def test_integration_not_found_confirm_step(
     entry2.add_to_hass(hass)
     issue_id = "integration_not_found.test1"
 
-    await process_repairs_platforms(hass)
+    await async_process_repairs_platforms(hass)
     ws_client = await hass_ws_client(hass)
     http_client = await hass_client()
 
@@ -89,7 +89,7 @@ async def test_integration_not_found_ignore_step(
     entry1.add_to_hass(hass)
     issue_id = "integration_not_found.test1"
 
-    await process_repairs_platforms(hass)
+    await async_process_repairs_platforms(hass)
     ws_client = await hass_ws_client(hass)
     http_client = await hass_client()
 

@@ -13,8 +13,8 @@ import homeassistant.helpers.device_registry as dr
 import homeassistant.helpers.issue_registry as ir
 
 from tests.components.repairs import (
+    async_process_repairs_platforms,
     process_repair_fix_flow,
-    process_repairs_platforms,
     start_repair_fix_flow,
 )
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
@@ -68,7 +68,7 @@ async def test_device_config_file_changed_confirm_step(
     assert device
     issue_id = f"device_config_file_changed.{device.id}"
 
-    await process_repairs_platforms(hass)
+    await async_process_repairs_platforms(hass)
     ws_client = await hass_ws_client(hass)
     http_client = await hass_client()
 
@@ -134,7 +134,7 @@ async def test_device_config_file_changed_ignore_step(
     assert device
     issue_id = f"device_config_file_changed.{device.id}"
 
-    await process_repairs_platforms(hass)
+    await async_process_repairs_platforms(hass)
     ws_client = await hass_ws_client(hass)
     http_client = await hass_client()
 
@@ -195,7 +195,7 @@ async def test_invalid_issue(
         translation_key="invalid_issue",
     )
 
-    await process_repairs_platforms(hass)
+    await async_process_repairs_platforms(hass)
     ws_client = await hass_ws_client(hass)
     http_client = await hass_client()
 
@@ -244,7 +244,7 @@ async def test_abort_confirm(
     assert device
     issue_id = f"device_config_file_changed.{device.id}"
 
-    await process_repairs_platforms(hass)
+    await async_process_repairs_platforms(hass)
     await hass_ws_client(hass)
     http_client = await hass_client()
 

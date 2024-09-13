@@ -10,8 +10,8 @@ from homeassistant.helpers import issue_registry as ir
 from .common import setup_platform
 
 from tests.components.repairs import (
+    async_process_repairs_platforms,
     process_repair_fix_flow,
-    process_repairs_platforms,
     start_repair_fix_flow,
 )
 from tests.typing import ClientSessionGenerator
@@ -27,7 +27,7 @@ async def test_ecobee_notify_repair_flow(
 ) -> None:
     """Test the ecobee notify service repair flow is triggered."""
     await setup_platform(hass, NOTIFY_DOMAIN)
-    await process_repairs_platforms(hass)
+    await async_process_repairs_platforms(hass)
 
     http_client = await hass_client()
 

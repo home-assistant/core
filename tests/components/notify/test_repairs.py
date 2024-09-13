@@ -14,8 +14,8 @@ from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, MockModule, mock_integration
 from tests.components.repairs import (
+    async_process_repairs_platforms,
     process_repair_fix_flow,
-    process_repairs_platforms,
     start_repair_fix_flow,
 )
 from tests.typing import ClientSessionGenerator
@@ -38,7 +38,7 @@ async def test_notify_migration_repair_flow(
     """Test the notify service repair flow is triggered."""
     await async_setup_component(hass, NOTIFY_DOMAIN, {})
     await hass.async_block_till_done()
-    await process_repairs_platforms(hass)
+    await async_process_repairs_platforms(hass)
 
     http_client = await hass_client()
     await hass.async_block_till_done()

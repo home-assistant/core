@@ -14,8 +14,8 @@ from homeassistant.core import HomeAssistant
 from .utils import MockUFPFixture, init_entry
 
 from tests.components.repairs import (
+    async_process_repairs_platforms,
     process_repair_fix_flow,
-    process_repairs_platforms,
     start_repair_fix_flow,
 )
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
@@ -34,7 +34,7 @@ async def test_ea_warning_ignore(
     version = ufp.api.bootstrap.nvr.version
     assert version.is_prerelease
     await init_entry(hass, ufp, [])
-    await process_repairs_platforms(hass)
+    await async_process_repairs_platforms(hass)
     ws_client = await hass_ws_client(hass)
     client = await hass_client()
 
@@ -85,7 +85,7 @@ async def test_ea_warning_fix(
     version = ufp.api.bootstrap.nvr.version
     assert version.is_prerelease
     await init_entry(hass, ufp, [])
-    await process_repairs_platforms(hass)
+    await async_process_repairs_platforms(hass)
     ws_client = await hass_ws_client(hass)
     client = await hass_client()
 
@@ -139,7 +139,7 @@ async def test_cloud_user_fix(
     user.cloud_account = cloud_account
     ufp.api.bootstrap.users[ufp.api.bootstrap.auth_user_id] = user
     await init_entry(hass, ufp, [])
-    await process_repairs_platforms(hass)
+    await async_process_repairs_platforms(hass)
     ws_client = await hass_ws_client(hass)
     client = await hass_client()
 
@@ -183,7 +183,7 @@ async def test_rtsp_read_only_ignore(
     ufp.api.get_camera = AsyncMock(return_value=doorbell)
 
     await init_entry(hass, ufp, [doorbell])
-    await process_repairs_platforms(hass)
+    await async_process_repairs_platforms(hass)
     ws_client = await hass_ws_client(hass)
     client = await hass_client()
 
@@ -230,7 +230,7 @@ async def test_rtsp_read_only_fix(
         user.all_permissions = []
 
     await init_entry(hass, ufp, [doorbell])
-    await process_repairs_platforms(hass)
+    await async_process_repairs_platforms(hass)
     ws_client = await hass_ws_client(hass)
     client = await hass_client()
 
@@ -273,7 +273,7 @@ async def test_rtsp_writable_fix(
         channel.is_rtsp_enabled = False
 
     await init_entry(hass, ufp, [doorbell])
-    await process_repairs_platforms(hass)
+    await async_process_repairs_platforms(hass)
     ws_client = await hass_ws_client(hass)
     client = await hass_client()
 
@@ -323,7 +323,7 @@ async def test_rtsp_writable_fix_when_not_setup(
         channel.is_rtsp_enabled = False
 
     await init_entry(hass, ufp, [doorbell])
-    await process_repairs_platforms(hass)
+    await async_process_repairs_platforms(hass)
     ws_client = await hass_ws_client(hass)
     client = await hass_client()
 

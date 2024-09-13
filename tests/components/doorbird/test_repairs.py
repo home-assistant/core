@@ -12,8 +12,8 @@ from . import mock_not_found_exception
 from .conftest import DoorbirdMockerType
 
 from tests.components.repairs import (
+    async_process_repairs_platforms,
     process_repair_fix_flow,
-    process_repairs_platforms,
     start_repair_fix_flow,
 )
 from tests.typing import ClientSessionGenerator
@@ -36,7 +36,7 @@ async def test_change_schedule_fails(
     issue_id = issue.issue_id
     assert issue.domain == DOMAIN
 
-    await process_repairs_platforms(hass)
+    await async_process_repairs_platforms(hass)
     client = await hass_client()
 
     data = await start_repair_fix_flow(client, DOMAIN, issue_id)

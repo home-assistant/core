@@ -5,7 +5,7 @@ from typing import Any
 
 from aiohttp.test_utils import TestClient
 
-from homeassistant.components.repairs.issue_handler import (
+from homeassistant.components.repairs.issue_handler import (  # noqa: F401
     async_process_repairs_platforms,
 )
 from homeassistant.components.repairs.websocket_api import (
@@ -39,11 +39,6 @@ async def get_repairs(
     assert msg["result"]
 
     return msg["result"]["issues"]
-
-
-async def process_repairs_platforms(hass: HomeAssistant) -> dict[str, Any]:
-    """Start a flow from an issue."""
-    return await async_process_repairs_platforms(hass)
 
 
 async def start_repair_fix_flow(
