@@ -15,8 +15,14 @@ from zwave_js_server.version import VersionInfo
 
 from homeassistant.components.zwave_js.const import DOMAIN
 from homeassistant.core import HomeAssistant
+from homeassistant.util.json import JsonArrayType
 
-from tests.common import MockConfigEntry, load_fixture, load_json_object_fixture
+from tests.common import (
+    MockConfigEntry,
+    load_fixture,
+    load_json_array_fixture,
+    load_json_object_fixture,
+)
 
 # State fixtures
 
@@ -57,9 +63,9 @@ def log_config_state_fixture() -> dict[str, Any]:
 
 
 @pytest.fixture(name="config_entry_diagnostics", scope="package")
-def config_entry_diagnostics_fixture() -> dict[str, Any]:
+def config_entry_diagnostics_fixture() -> JsonArrayType:
     """Load the config entry diagnostics fixture data."""
-    return load_json_object_fixture("config_entry_diagnostics.json", DOMAIN)
+    return load_json_array_fixture("config_entry_diagnostics.json", DOMAIN)
 
 
 @pytest.fixture(name="config_entry_diagnostics_redacted", scope="package")
