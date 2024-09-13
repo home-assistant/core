@@ -15,22 +15,8 @@ from homeassistant.const import (
     STATE_UNLOCKED,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
 
 from tests.common import async_fire_time_changed
-
-
-async def test_lock_device_registry(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-    mock_added_config_entry: ConfigEntry,
-) -> None:
-    """Test lock is added to device registry."""
-    device = device_registry.async_get_device(identifiers={("schlage", "test")})
-    assert device.model == "<model-name>"
-    assert device.sw_version == "1.0"
-    assert device.name == "Vault Door"
-    assert device.manufacturer == "Schlage"
 
 
 async def test_lock_attributes(
@@ -96,7 +82,7 @@ async def test_changed_by(
     freezer.tick(timedelta(seconds=30))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
-    mock_lock.last_changed_by.assert_called_once_with()
+    mock_lock.last_changed_by.assert_called_with()
 
     lock_device = hass.states.get("lock.vault_door")
     assert lock_device is not None

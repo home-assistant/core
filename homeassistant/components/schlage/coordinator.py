@@ -10,7 +10,8 @@ from pyschlage import Lock, Schlage
 from pyschlage.exceptions import Error as SchlageError, NotAuthorizedError
 from pyschlage.log import LockLog
 
-from homeassistant.core import HomeAssistant
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
 import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -43,6 +44,7 @@ class SchlageDataUpdateCoordinator(DataUpdateCoordinator[SchlageData]):
         )
         self.api = api
         self.new_locks_callbacks: list[Callable[[dict[str, LockData]], None]] = []
+        self.async_add_listener(self._add_remove_locks)
 
     async def _async_update_data(self) -> SchlageData:
         """Fetch the latest data from the Schlage API."""
@@ -58,9 +60,7 @@ class SchlageDataUpdateCoordinator(DataUpdateCoordinator[SchlageData]):
                 for lock in locks
             )
         )
-        new_data = SchlageData(locks={ld.lock.device_id: ld for ld in lock_data})
-        self._add_remove_locks(new_data)
-        return new_data
+        return SchlageData(locks={ld.lock.device_id: ld for ld in lock_data})
 
     def _get_lock_data(self, lock: Lock) -> LockData:
         logs: list[LockLog] = []
@@ -78,25 +78,29 @@ class SchlageDataUpdateCoordinator(DataUpdateCoordinator[SchlageData]):
 
         return LockData(lock=lock, logs=logs)
 
-    def _add_remove_locks(self, new_data: SchlageData) -> None:
+    @callback
+    def _add_remove_locks(self) -> None:
         """Add newly discovered locks and remove nonexistent locks."""
-        previous_locks = set(self.data.locks.keys() if self.data else [])
-        current_locks = set(new_data.locks.keys())
+        if self.data is None:
+            return
+
+        self.config_entry: ConfigEntry
+        device_registry = dr.async_get(self.hass)
+        devices = dr.async_entries_for_config_entry(
+            device_registry, self.config_entry.entry_id
+        )
+        previous_locks = {device.id for device in devices}
+        current_locks = set(self.data.locks.keys())
         if removed_locks := previous_locks - current_locks:
             LOGGER.debug("Removed locks: %s", ", ".join(removed_locks))
-            assert self.config_entry is not None
-            device_registry = dr.async_get(self.hass)
             for device_id in removed_locks:
-                if device := device_registry.async_get_device(
-                    identifiers={(DOMAIN, device_id)}
-                ):
-                    device_registry.async_update_device(
-                        device_id=device.id,
-                        remove_config_entry_id=self.config_entry.entry_id,
-                    )
+                device_registry.async_update_device(
+                    device_id=device_id,
+                    remove_config_entry_id=self.config_entry.entry_id,
+                )
 
         if new_lock_ids := current_locks - previous_locks:
             LOGGER.debug("New locks found: %s", ", ".join(new_lock_ids))
-            new_locks = {lock_id: new_data.locks[lock_id] for lock_id in new_lock_ids}
-            for callback in self.new_locks_callbacks:
-                callback(new_locks)
+            new_locks = {lock_id: self.data.locks[lock_id] for lock_id in new_lock_ids}
+            for new_lock_callback in self.new_locks_callbacks:
+                new_lock_callback(new_locks)
