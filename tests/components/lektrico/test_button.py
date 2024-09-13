@@ -1,4 +1,4 @@
-"""Tests for the Lektrico sensor platform."""
+"""Tests for the Lektrico button platform."""
 
 from unittest.mock import AsyncMock, patch
 

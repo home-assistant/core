@@ -6,10 +6,13 @@ from typing import Any
 
 from lektricowifi import Device
 
-from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
+from homeassistant.components.button import (
+    ButtonDeviceClass,
+    ButtonEntity,
+    ButtonEntityDescription,
+)
 from homeassistant.const import ATTR_SERIAL_NUMBER, CONF_TYPE, EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import IntegrationError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import LektricoConfigEntry, LektricoDeviceDataUpdateCoordinator
@@ -39,6 +42,7 @@ BUTTONS_FOR_CHARGERS: tuple[LektricoButtonEntityDescription, ...] = (
     LektricoButtonEntityDescription(
         key="reboot",
         translation_key="reboot",
+        device_class=ButtonDeviceClass.RESTART,
         entity_category=EntityCategory.CONFIG,
         press_fn=lambda device: device.send_reset(),
     ),
@@ -48,6 +52,7 @@ BUTTONS_FOR_LB_DEVICES: tuple[LektricoButtonEntityDescription, ...] = (
     LektricoButtonEntityDescription(
         key="reboot",
         translation_key="reboot",
+        device_class=ButtonDeviceClass.RESTART,
         entity_category=EntityCategory.CONFIG,
         press_fn=lambda device: device.send_reset(),
     ),
@@ -65,10 +70,8 @@ async def async_setup_entry(
     buttons_to_be_used: tuple[LektricoButtonEntityDescription, ...]
     if coordinator.device_type in (Device.TYPE_1P7K, Device.TYPE_3P22K):
         buttons_to_be_used = BUTTONS_FOR_CHARGERS
-    elif coordinator.device_type in (Device.TYPE_EM, Device.TYPE_3EM):
-        buttons_to_be_used = BUTTONS_FOR_LB_DEVICES
     else:
-        raise IntegrationError
+        buttons_to_be_used = BUTTONS_FOR_LB_DEVICES
 
     async_add_entities(
         LektricoButton(
