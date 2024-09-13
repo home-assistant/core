@@ -39,13 +39,9 @@ async def async_setup_entry(
     async_add_entities(sensor_entities)
 
 
-class LaundrifyPowerSensor(SensorEntity):
-    """Representation of a Power sensor."""
+class LaundrifyBaseSensor(SensorEntity):
+    """Base class for Laundrify sensors."""
 
-    _attr_device_class = SensorDeviceClass.POWER
-    _attr_native_unit_of_measurement = UnitOfPower.WATT
-    _attr_state_class = SensorStateClass.MEASUREMENT
-    _attr_suggested_display_precision = 0
     _attr_has_entity_name = True
 
     def __init__(self, device: LaundrifyDevice) -> None:
@@ -53,7 +49,16 @@ class LaundrifyPowerSensor(SensorEntity):
         super().__init__()
         self._device = device
         self._attr_device_info = {"identifiers": {(DOMAIN, device.id)}}
-        self._attr_unique_id = f"{device.id}_power"
+        self._attr_unique_id = f"{device.id}_{self._attr_device_class}"
+
+
+class LaundrifyPowerSensor(LaundrifyBaseSensor):
+    """Representation of a Power sensor."""
+
+    _attr_device_class = SensorDeviceClass.POWER
+    _attr_native_unit_of_measurement = UnitOfPower.WATT
+    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_suggested_display_precision = 0
 
     async def async_update(self) -> None:
         """Fetch latest power measurement from the device."""
@@ -70,7 +75,7 @@ class LaundrifyPowerSensor(SensorEntity):
 
 
 class LaundrifyEnergySensor(
-    CoordinatorEntity[LaundrifyUpdateCoordinator], SensorEntity
+    CoordinatorEntity[LaundrifyUpdateCoordinator], LaundrifyBaseSensor
 ):
     """Representation of an Energy sensor."""
 
@@ -79,16 +84,13 @@ class LaundrifyEnergySensor(
     _attr_state_class = SensorStateClass.TOTAL
     _attr_suggested_unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
     _attr_suggested_display_precision = 2
-    _attr_has_entity_name = True
 
     def __init__(
         self, coordinator: LaundrifyUpdateCoordinator, device: LaundrifyDevice
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator)
-        self._device = device
-        self._attr_device_info = {"identifiers": {(DOMAIN, device.id)}}
-        self._attr_unique_id = f"{device.id}_energy"
+        CoordinatorEntity.__init__(self, coordinator)
+        LaundrifyBaseSensor.__init__(self, device)
 
     @property
     def native_value(self) -> float:
