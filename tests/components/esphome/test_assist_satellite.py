@@ -744,7 +744,7 @@ async def test_pipeline_media_player(
                 wake_word_phrase="",
             )
 
-            await satellite.handle_pipeline_stop()
+            await satellite.handle_pipeline_stop(abort=False)
             await pipeline_finished.wait()
 
             assert satellite.state == AssistSatelliteState.RESPONDING
