@@ -75,7 +75,8 @@ class SolarLogCoordinator(DataUpdateCoordinator[SolarlogData]):
             raise ConfigEntryNotReady(ex) from ex
         except SolarLogAuthenticationError as ex:
             if await self.renew_authentication():
-                # login was successful, retry data update
+                # login was successful, update availability of extended data, retry data update
+                await self.solarlog.test_extended_data_available()
                 raise ConfigEntryNotReady from ex
             raise ConfigEntryAuthFailed from ex
         except SolarLogUpdateError as ex:
