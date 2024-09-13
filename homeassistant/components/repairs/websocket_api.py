@@ -21,7 +21,7 @@ from homeassistant.helpers.data_entry_flow import (
     FlowManagerResourceView,
 )
 
-from .const import DOMAIN, INDEX_VIEW_URL, RESOURCE_VIEW_URL
+from .const import DOMAIN
 
 
 @callback
@@ -111,7 +111,7 @@ def ws_list_issues(
 class RepairsFlowIndexView(FlowManagerIndexView):
     """View to create issue fix flows."""
 
-    url = INDEX_VIEW_URL
+    url = "/api/repairs/issues/fix"
     name = "api:repairs:issues:fix"
 
     @require_admin(error=Unauthorized(permission=POLICY_EDIT))
@@ -146,7 +146,7 @@ class RepairsFlowIndexView(FlowManagerIndexView):
 class RepairsFlowResourceView(FlowManagerResourceView):
     """View to interact with the option flow manager."""
 
-    url = RESOURCE_VIEW_URL
+    url = "/api/repairs/issues/fix/{flow_id}"
     name = "api:repairs:issues:fix:resource"
 
     @require_admin(error=Unauthorized(permission=POLICY_EDIT))

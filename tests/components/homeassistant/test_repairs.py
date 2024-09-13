@@ -1,17 +1,15 @@
 """Test the Homeassistant repairs module."""
 
-from http import HTTPStatus
-
-from homeassistant.components.repairs import (
-    DOMAIN as REPAIRS_DOMAIN,
-    INDEX_VIEW_URL,
-    RESOURCE_VIEW_URL,
-    async_process_repairs_platforms,
-)
+from homeassistant.components.repairs import DOMAIN as REPAIRS_DOMAIN
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
+from tests.components.repairs import (
+    process_repair_fix_flow,
+    process_repairs_platforms,
+    start_repair_fix_flow,
+)
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
@@ -33,7 +31,7 @@ async def test_integration_not_found_confirm_step(
     entry2.add_to_hass(hass)
     issue_id = "integration_not_found.test1"
 
-    await async_process_repairs_platforms(hass)
+    await process_repairs_platforms(hass)
     ws_client = await hass_ws_client(hass)
     http_client = await hass_client()
 
@@ -46,32 +44,20 @@ async def test_integration_not_found_confirm_step(
     assert issue["issue_id"] == issue_id
     assert issue["translation_placeholders"] == {"domain": "test1"}
 
-    url = INDEX_VIEW_URL
-    resp = await http_client.post(
-        url, json={"handler": HOMEASSISTANT_DOMAIN, "issue_id": issue_id}
-    )
-    assert resp.status == HTTPStatus.OK
-    data = await resp.json()
+    data = await start_repair_fix_flow(http_client, HOMEASSISTANT_DOMAIN, issue_id)
 
     flow_id = data["flow_id"]
     assert data["step_id"] == "init"
     assert data["description_placeholders"] == {"domain": "test1"}
 
-    url = RESOURCE_VIEW_URL.format(flow_id=flow_id)
-
-    # Show menu
-    resp = await http_client.post(url)
-
-    assert resp.status == HTTPStatus.OK
-    data = await resp.json()
+    data = await process_repair_fix_flow(http_client, flow_id)
 
     assert data["type"] == "menu"
 
     # Apply fix
-    resp = await http_client.post(url, json={"next_step_id": "confirm"})
-
-    assert resp.status == HTTPStatus.OK
-    data = await resp.json()
+    data = await process_repair_fix_flow(
+        http_client, flow_id, json={"next_step_id": "confirm"}
+    )
 
     assert data["type"] == "create_entry"
 
@@ -103,7 +89,7 @@ async def test_integration_not_found_ignore_step(
     entry1.add_to_hass(hass)
     issue_id = "integration_not_found.test1"
 
-    await async_process_repairs_platforms(hass)
+    await process_repairs_platforms(hass)
     ws_client = await hass_ws_client(hass)
     http_client = await hass_client()
 
@@ -116,32 +102,21 @@ async def test_integration_not_found_ignore_step(
     assert issue["issue_id"] == issue_id
     assert issue["translation_placeholders"] == {"domain": "test1"}
 
-    url = INDEX_VIEW_URL
-    resp = await http_client.post(
-        url, json={"handler": HOMEASSISTANT_DOMAIN, "issue_id": issue_id}
-    )
-    assert resp.status == HTTPStatus.OK
-    data = await resp.json()
+    data = await start_repair_fix_flow(http_client, HOMEASSISTANT_DOMAIN, issue_id)
 
     flow_id = data["flow_id"]
     assert data["step_id"] == "init"
     assert data["description_placeholders"] == {"domain": "test1"}
 
-    url = RESOURCE_VIEW_URL.format(flow_id=flow_id)
-
     # Show menu
-    resp = await http_client.post(url)
-
-    assert resp.status == HTTPStatus.OK
-    data = await resp.json()
+    data = await process_repair_fix_flow(http_client, flow_id)
 
     assert data["type"] == "menu"
 
     # Apply fix
-    resp = await http_client.post(url, json={"next_step_id": "ignore"})
-
-    assert resp.status == HTTPStatus.OK
-    data = await resp.json()
+    data = await process_repair_fix_flow(
+        http_client, flow_id, json={"next_step_id": "ignore"}
+    )
 
     assert data["type"] == "abort"
     assert data["reason"] == "issue_ignored"

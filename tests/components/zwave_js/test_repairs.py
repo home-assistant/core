@@ -1,23 +1,22 @@
 """Test the Z-Wave JS repairs module."""
 
 from copy import deepcopy
-from http import HTTPStatus
 from unittest.mock import patch
 
 from zwave_js_server.event import Event
 from zwave_js_server.model.node import Node
 
-from homeassistant.components.repairs import (
-    INDEX_VIEW_URL,
-    RESOURCE_VIEW_URL,
-    async_process_repairs_platforms,
-)
 from homeassistant.components.zwave_js import DOMAIN
 from homeassistant.components.zwave_js.helpers import get_device_id
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.device_registry as dr
 import homeassistant.helpers.issue_registry as ir
 
+from tests.components.repairs import (
+    process_repair_fix_flow,
+    process_repairs_platforms,
+    start_repair_fix_flow,
+)
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
@@ -69,7 +68,7 @@ async def test_device_config_file_changed_confirm_step(
     assert device
     issue_id = f"device_config_file_changed.{device.id}"
 
-    await async_process_repairs_platforms(hass)
+    await process_repairs_platforms(hass)
     ws_client = await hass_ws_client(hass)
     http_client = await hass_client()
 
@@ -82,30 +81,21 @@ async def test_device_config_file_changed_confirm_step(
     assert issue["issue_id"] == issue_id
     assert issue["translation_placeholders"] == {"device_name": device.name}
 
-    url = INDEX_VIEW_URL
-    resp = await http_client.post(url, json={"handler": DOMAIN, "issue_id": issue_id})
-    assert resp.status == HTTPStatus.OK
-    data = await resp.json()
+    data = await start_repair_fix_flow(http_client, DOMAIN, issue_id)
 
     flow_id = data["flow_id"]
     assert data["step_id"] == "init"
     assert data["description_placeholders"] == {"device_name": device.name}
 
-    url = RESOURCE_VIEW_URL.format(flow_id=flow_id)
-
     # Show menu
-    resp = await http_client.post(url)
-
-    assert resp.status == HTTPStatus.OK
-    data = await resp.json()
+    data = await process_repair_fix_flow(http_client, flow_id)
 
     assert data["type"] == "menu"
 
     # Apply fix
-    resp = await http_client.post(url, json={"next_step_id": "confirm"})
-
-    assert resp.status == HTTPStatus.OK
-    data = await resp.json()
+    data = await process_repair_fix_flow(
+        http_client, flow_id, json={"next_step_id": "confirm"}
+    )
 
     assert data["type"] == "create_entry"
 
@@ -144,7 +134,7 @@ async def test_device_config_file_changed_ignore_step(
     assert device
     issue_id = f"device_config_file_changed.{device.id}"
 
-    await async_process_repairs_platforms(hass)
+    await process_repairs_platforms(hass)
     ws_client = await hass_ws_client(hass)
     http_client = await hass_client()
 
@@ -157,30 +147,21 @@ async def test_device_config_file_changed_ignore_step(
     assert issue["issue_id"] == issue_id
     assert issue["translation_placeholders"] == {"device_name": device.name}
 
-    url = INDEX_VIEW_URL
-    resp = await http_client.post(url, json={"handler": DOMAIN, "issue_id": issue_id})
-    assert resp.status == HTTPStatus.OK
-    data = await resp.json()
+    data = await start_repair_fix_flow(http_client, DOMAIN, issue_id)
 
     flow_id = data["flow_id"]
     assert data["step_id"] == "init"
     assert data["description_placeholders"] == {"device_name": device.name}
 
-    url = RESOURCE_VIEW_URL.format(flow_id=flow_id)
-
     # Show menu
-    resp = await http_client.post(url)
-
-    assert resp.status == HTTPStatus.OK
-    data = await resp.json()
+    data = await process_repair_fix_flow(http_client, flow_id)
 
     assert data["type"] == "menu"
 
     # Ignore the issue
-    resp = await http_client.post(url, json={"next_step_id": "ignore"})
-
-    assert resp.status == HTTPStatus.OK
-    data = await resp.json()
+    data = await process_repair_fix_flow(
+        http_client, flow_id, json={"next_step_id": "ignore"}
+    )
 
     assert data["type"] == "abort"
     assert data["reason"] == "issue_ignored"
@@ -214,7 +195,7 @@ async def test_invalid_issue(
         translation_key="invalid_issue",
     )
 
-    await async_process_repairs_platforms(hass)
+    await process_repairs_platforms(hass)
     ws_client = await hass_ws_client(hass)
     http_client = await hass_client()
 
@@ -226,22 +207,13 @@ async def test_invalid_issue(
     issue = msg["result"]["issues"][0]
     assert issue["issue_id"] == "invalid_issue_id"
 
-    url = INDEX_VIEW_URL
-    resp = await http_client.post(
-        url, json={"handler": DOMAIN, "issue_id": "invalid_issue_id"}
-    )
-    assert resp.status == HTTPStatus.OK
-    data = await resp.json()
+    data = await start_repair_fix_flow(http_client, DOMAIN, "invalid_issue_id")
 
     flow_id = data["flow_id"]
     assert data["step_id"] == "confirm"
 
     # Apply fix
-    url = RESOURCE_VIEW_URL.format(flow_id=flow_id)
-    resp = await http_client.post(url)
-
-    assert resp.status == HTTPStatus.OK
-    data = await resp.json()
+    data = await process_repair_fix_flow(http_client, flow_id)
 
     assert data["type"] == "create_entry"
 
@@ -272,14 +244,11 @@ async def test_abort_confirm(
     assert device
     issue_id = f"device_config_file_changed.{device.id}"
 
-    await async_process_repairs_platforms(hass)
+    await process_repairs_platforms(hass)
     await hass_ws_client(hass)
     http_client = await hass_client()
 
-    url = INDEX_VIEW_URL
-    resp = await http_client.post(url, json={"handler": DOMAIN, "issue_id": issue_id})
-    assert resp.status == HTTPStatus.OK
-    data = await resp.json()
+    data = await start_repair_fix_flow(http_client, DOMAIN, issue_id)
 
     flow_id = data["flow_id"]
     assert data["step_id"] == "init"
@@ -288,11 +257,9 @@ async def test_abort_confirm(
     await hass.config_entries.async_unload(integration.entry_id)
 
     # Apply fix
-    url = RESOURCE_VIEW_URL.format(flow_id=flow_id)
-    resp = await http_client.post(url, json={"next_step_id": "confirm"})
-
-    assert resp.status == HTTPStatus.OK
-    data = await resp.json()
+    data = await process_repair_fix_flow(
+        http_client, flow_id, json={"next_step_id": "confirm"}
+    )
 
     assert data["type"] == "abort"
     assert data["reason"] == "cannot_connect"

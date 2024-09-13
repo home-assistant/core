@@ -3,22 +3,21 @@
 from __future__ import annotations
 
 from copy import copy, deepcopy
-from http import HTTPStatus
 from unittest.mock import AsyncMock, Mock
 
 from uiprotect.data import Camera, CloudAccount, ModelType, Version
 
-from homeassistant.components.repairs import (
-    INDEX_VIEW_URL,
-    RESOURCE_VIEW_URL,
-    async_process_repairs_platforms,
-)
 from homeassistant.components.unifiprotect.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.core import HomeAssistant
 
 from .utils import MockUFPFixture, init_entry
 
+from tests.components.repairs import (
+    process_repair_fix_flow,
+    process_repairs_platforms,
+    start_repair_fix_flow,
+)
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
@@ -35,7 +34,7 @@ async def test_ea_warning_ignore(
     version = ufp.api.bootstrap.nvr.version
     assert version.is_prerelease
     await init_entry(hass, ufp, [])
-    await async_process_repairs_platforms(hass)
+    await process_repairs_platforms(hass)
     ws_client = await hass_ws_client(hass)
     client = await hass_client()
 
@@ -50,12 +49,7 @@ async def test_ea_warning_ignore(
             issue = i
     assert issue is not None
 
-    url = INDEX_VIEW_URL
-    resp = await client.post(
-        url, json={"handler": DOMAIN, "issue_id": "ea_channel_warning"}
-    )
-    assert resp.status == HTTPStatus.OK
-    data = await resp.json()
+    data = await start_repair_fix_flow(client, DOMAIN, "ea_channel_warning")
 
     flow_id = data["flow_id"]
     assert data["description_placeholders"] == {
@@ -64,10 +58,7 @@ async def test_ea_warning_ignore(
     }
     assert data["step_id"] == "start"
 
-    url = RESOURCE_VIEW_URL.format(flow_id=flow_id)
-    resp = await client.post(url)
-    assert resp.status == HTTPStatus.OK
-    data = await resp.json()
+    data = await process_repair_fix_flow(client, flow_id)
 
     flow_id = data["flow_id"]
     assert data["description_placeholders"] == {
@@ -76,10 +67,7 @@ async def test_ea_warning_ignore(
     }
     assert data["step_id"] == "confirm"
 
-    url = RESOURCE_VIEW_URL.format(flow_id=flow_id)
-    resp = await client.post(url)
-    assert resp.status == HTTPStatus.OK
-    data = await resp.json()
+    data = await process_repair_fix_flow(client, flow_id)
 
     assert data["type"] == "create_entry"
 
@@ -97,7 +85,7 @@ async def test_ea_warning_fix(
     version = ufp.api.bootstrap.nvr.version
     assert version.is_prerelease
     await init_entry(hass, ufp, [])
-    await async_process_repairs_platforms(hass)
+    await process_repairs_platforms(hass)
     ws_client = await hass_ws_client(hass)
     client = await hass_client()
 
@@ -112,12 +100,7 @@ async def test_ea_warning_fix(
             issue = i
     assert issue is not None
 
-    url = INDEX_VIEW_URL
-    resp = await client.post(
-        url, json={"handler": DOMAIN, "issue_id": "ea_channel_warning"}
-    )
-    assert resp.status == HTTPStatus.OK
-    data = await resp.json()
+    data = await start_repair_fix_flow(client, DOMAIN, "ea_channel_warning")
 
     flow_id = data["flow_id"]
     assert data["description_placeholders"] == {
@@ -137,10 +120,7 @@ async def test_ea_warning_fix(
     ufp.ws_msg(mock_msg)
     await hass.async_block_till_done()
 
-    url = RESOURCE_VIEW_URL.format(flow_id=flow_id)
-    resp = await client.post(url)
-    assert resp.status == HTTPStatus.OK
-    data = await resp.json()
+    data = await process_repair_fix_flow(client, flow_id)
 
     assert data["type"] == "create_entry"
 
@@ -159,7 +139,7 @@ async def test_cloud_user_fix(
     user.cloud_account = cloud_account
     ufp.api.bootstrap.users[ufp.api.bootstrap.auth_user_id] = user
     await init_entry(hass, ufp, [])
-    await async_process_repairs_platforms(hass)
+    await process_repairs_platforms(hass)
     ws_client = await hass_ws_client(hass)
     client = await hass_client()
 
@@ -174,18 +154,12 @@ async def test_cloud_user_fix(
             issue = i
     assert issue is not None
 
-    url = INDEX_VIEW_URL
-    resp = await client.post(url, json={"handler": DOMAIN, "issue_id": "cloud_user"})
-    assert resp.status == HTTPStatus.OK
-    data = await resp.json()
+    data = await start_repair_fix_flow(client, DOMAIN, "cloud_user")
 
     flow_id = data["flow_id"]
     assert data["step_id"] == "confirm"
 
-    url = RESOURCE_VIEW_URL.format(flow_id=flow_id)
-    resp = await client.post(url)
-    assert resp.status == HTTPStatus.OK
-    data = await resp.json()
+    data = await process_repair_fix_flow(client, flow_id)
 
     assert data["type"] == "create_entry"
     await hass.async_block_till_done()
@@ -209,7 +183,7 @@ async def test_rtsp_read_only_ignore(
     ufp.api.get_camera = AsyncMock(return_value=doorbell)
 
     await init_entry(hass, ufp, [doorbell])
-    await async_process_repairs_platforms(hass)
+    await process_repairs_platforms(hass)
     ws_client = await hass_ws_client(hass)
     client = await hass_client()
 
@@ -226,26 +200,17 @@ async def test_rtsp_read_only_ignore(
             issue = i
     assert issue is not None
 
-    url = INDEX_VIEW_URL
-    resp = await client.post(url, json={"handler": DOMAIN, "issue_id": issue_id})
-    assert resp.status == HTTPStatus.OK
-    data = await resp.json()
+    data = await start_repair_fix_flow(client, DOMAIN, issue_id)
 
     flow_id = data["flow_id"]
     assert data["step_id"] == "start"
 
-    url = RESOURCE_VIEW_URL.format(flow_id=flow_id)
-    resp = await client.post(url)
-    assert resp.status == HTTPStatus.OK
-    data = await resp.json()
+    data = await process_repair_fix_flow(client, flow_id)
 
     flow_id = data["flow_id"]
     assert data["step_id"] == "confirm"
 
-    url = RESOURCE_VIEW_URL.format(flow_id=flow_id)
-    resp = await client.post(url)
-    assert resp.status == HTTPStatus.OK
-    data = await resp.json()
+    data = await process_repair_fix_flow(client, flow_id)
 
     assert data["type"] == "create_entry"
 
@@ -265,7 +230,7 @@ async def test_rtsp_read_only_fix(
         user.all_permissions = []
 
     await init_entry(hass, ufp, [doorbell])
-    await async_process_repairs_platforms(hass)
+    await process_repairs_platforms(hass)
     ws_client = await hass_ws_client(hass)
     client = await hass_client()
 
@@ -285,18 +250,12 @@ async def test_rtsp_read_only_fix(
             issue = i
     assert issue is not None
 
-    url = INDEX_VIEW_URL
-    resp = await client.post(url, json={"handler": DOMAIN, "issue_id": issue_id})
-    assert resp.status == HTTPStatus.OK
-    data = await resp.json()
+    data = await start_repair_fix_flow(client, DOMAIN, issue_id)
 
     flow_id = data["flow_id"]
     assert data["step_id"] == "start"
 
-    url = RESOURCE_VIEW_URL.format(flow_id=flow_id)
-    resp = await client.post(url)
-    assert resp.status == HTTPStatus.OK
-    data = await resp.json()
+    data = await process_repair_fix_flow(client, flow_id)
 
     assert data["type"] == "create_entry"
 
@@ -314,7 +273,7 @@ async def test_rtsp_writable_fix(
         channel.is_rtsp_enabled = False
 
     await init_entry(hass, ufp, [doorbell])
-    await async_process_repairs_platforms(hass)
+    await process_repairs_platforms(hass)
     ws_client = await hass_ws_client(hass)
     client = await hass_client()
 
@@ -335,18 +294,12 @@ async def test_rtsp_writable_fix(
             issue = i
     assert issue is not None
 
-    url = INDEX_VIEW_URL
-    resp = await client.post(url, json={"handler": DOMAIN, "issue_id": issue_id})
-    assert resp.status == HTTPStatus.OK
-    data = await resp.json()
+    data = await start_repair_fix_flow(client, DOMAIN, issue_id)
 
     flow_id = data["flow_id"]
     assert data["step_id"] == "start"
 
-    url = RESOURCE_VIEW_URL.format(flow_id=flow_id)
-    resp = await client.post(url)
-    assert resp.status == HTTPStatus.OK
-    data = await resp.json()
+    data = await process_repair_fix_flow(client, flow_id)
 
     assert data["type"] == "create_entry"
 
@@ -370,7 +323,7 @@ async def test_rtsp_writable_fix_when_not_setup(
         channel.is_rtsp_enabled = False
 
     await init_entry(hass, ufp, [doorbell])
-    await async_process_repairs_platforms(hass)
+    await process_repairs_platforms(hass)
     ws_client = await hass_ws_client(hass)
     client = await hass_client()
 
@@ -396,18 +349,12 @@ async def test_rtsp_writable_fix_when_not_setup(
     await hass.config_entries.async_unload(ufp.entry.entry_id)
     await hass.async_block_till_done()
 
-    url = INDEX_VIEW_URL
-    resp = await client.post(url, json={"handler": DOMAIN, "issue_id": issue_id})
-    assert resp.status == HTTPStatus.OK
-    data = await resp.json()
+    data = await start_repair_fix_flow(client, DOMAIN, issue_id)
 
     flow_id = data["flow_id"]
     assert data["step_id"] == "start"
 
-    url = RESOURCE_VIEW_URL.format(flow_id=flow_id)
-    resp = await client.post(url)
-    assert resp.status == HTTPStatus.OK
-    data = await resp.json()
+    data = await process_repair_fix_flow(client, flow_id)
 
     assert data["type"] == "create_entry"
 
