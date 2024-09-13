@@ -16,14 +16,14 @@ from .issue_handler import (
 from .models import RepairsFlow
 
 __all__ = [
-    "async_process_repairs_platforms",
-    "ConfirmRepairFlow",
     "DOMAIN",
     "INDEX_VIEW_URL",
     "RESOURCE_VIEW_URL",
-    "repairs_flow_manager",
+    "ConfirmRepairFlow",
     "RepairsFlow",
     "RepairsFlowManager",
+    "async_process_repairs_platforms",
+    "repairs_flow_manager",
 ]
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
