@@ -56,6 +56,7 @@ from homeassistant.const import (
     SERVICE_VOLUME_SET,
     SERVICE_VOLUME_UP,
     STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
@@ -65,7 +66,7 @@ from homeassistant.util.dt import utcnow
 
 from .conftest import FAKE_VALID_ITEM_ID, TEST_MAC
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 async def test_device_registry(
@@ -81,14 +82,14 @@ async def test_device_registry(
 
 
 async def test_entity_registry(
-    hass: HomeAssistant, entity_registry: EntityRegistry, configured_player: MagicMock
+    hass: HomeAssistant,
+    entity_registry: EntityRegistry,
+    configured_player: MagicMock,
+    snapshot: SnapshotAssertion,
+    config_entry: MockConfigEntry,
 ) -> None:
     """Test squeezebox media_player entity registered in the entity registry."""
-    assert entity_registry.async_get("media_player.test_player")
-    assert (
-        entity_registry.async_get("media_player.test_player").unique_id
-        == configured_player.player_id
-    )
+    await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
 
 async def test_squeezebox_player_rediscovery(
@@ -663,7 +664,7 @@ async def test_squeezebox_invalid_state(
     freezer.tick(timedelta(seconds=SENSOR_UPDATE_INTERVAL))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
-    assert hass.states.get("media_player.test_player").state == MediaPlayerState.IDLE
+    assert hass.states.get("media_player.test_player").state == STATE_UNKNOWN
 
 
 async def test_squeezebox_server_discovery(

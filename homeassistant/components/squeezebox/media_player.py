@@ -246,7 +246,7 @@ class SqueezeBoxEntity(MediaPlayerEntity):
                 self._remove_dispatcher()
 
     @property
-    def state(self) -> MediaPlayerState:
+    def state(self) -> MediaPlayerState | None:
         """Return the state of the device."""
         if not self._player.power:
             return MediaPlayerState.OFF
@@ -255,7 +255,7 @@ class SqueezeBoxEntity(MediaPlayerEntity):
         _LOGGER.error(
             "Received unknown mode %s from player %s", self._player.mode, self.name
         )
-        return MediaPlayerState.IDLE
+        return None
 
     async def async_update(self) -> None:
         """Update the Player() object."""
@@ -283,6 +283,7 @@ class SqueezeBoxEntity(MediaPlayerEntity):
         """Volume level of the media player (0..1)."""
         if self._player.volume:
             return int(float(self._player.volume)) / 100.0
+
         return None
 
     @property
@@ -327,7 +328,7 @@ class SqueezeBoxEntity(MediaPlayerEntity):
     @property
     def media_image_url(self) -> str | None:
         """Image url of current playing media."""
-        return str(self._player.image_url)
+        return str(self._player.image_url) if self._player.image_url else None
 
     @property
     def media_title(self) -> str | None:

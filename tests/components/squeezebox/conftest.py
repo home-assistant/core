@@ -214,6 +214,14 @@ def mock_pysqueezebox_player(uuid: str) -> MagicMock:
         )
         mock_player.name = TEST_PLAYER_NAME
         mock_player.player_id = uuid
+        mock_player.mode = "stop"
+        mock_player.playlist = None
+        mock_player.album = None
+        mock_player.artist = None
+        mock_player.remote_title = None
+        mock_player.title = None
+        mock_player.image_url = None
+
         return mock_player
 
 
@@ -235,7 +243,7 @@ def mock_pysqueezebox_server(
     player_factory: MagicMock, player_count: int, uuid: str
 ) -> MagicMock:
     """Create a mock Lyrion Media Server with the given number of mock players attached."""
-    with patch("pysqueezebox.Server", autospec=True) as mock_lms:
+    with patch("homeassistant.components.squeezebox.Server", autospec=True) as mock_lms:
         players = [player_factory(TEST_MAC[index]) for index in range(player_count)]
         mock_lms.async_get_players = AsyncMock(return_value=players)
 
