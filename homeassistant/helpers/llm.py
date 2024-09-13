@@ -15,7 +15,7 @@ import voluptuous as vol
 from voluptuous_openapi import UNSUPPORTED, convert
 
 from homeassistant.components.climate import INTENT_GET_TEMPERATURE
-from homeassistant.components.conversation.trace import (
+from homeassistant.components.conversation import (
     ConversationTraceEventType,
     async_conversation_trace_append,
 )
