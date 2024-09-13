@@ -205,7 +205,7 @@ class MockESPHomeDevice:
             Coroutine[Any, Any, int | None],
         ]
         self.voice_assistant_handle_stop_callback: Callable[
-            [], Coroutine[Any, Any, None]
+            [bool], Coroutine[Any, Any, None]
         ]
         self.voice_assistant_handle_audio_callback: (
             Callable[
@@ -287,7 +287,7 @@ class MockESPHomeDevice:
             [str, int, VoiceAssistantAudioSettings, str | None],
             Coroutine[Any, Any, int | None],
         ],
-        handle_stop: Callable[[], Coroutine[Any, Any, None]],
+        handle_stop: Callable[[bool], Coroutine[Any, Any, None]],
         handle_audio: (
             Callable[
                 [bytes],
@@ -313,9 +313,9 @@ class MockESPHomeDevice:
             conversation_id, flags, settings, wake_word_phrase
         )
 
-    async def mock_voice_assistant_handle_stop(self) -> None:
+    async def mock_voice_assistant_handle_stop(self, abort: bool) -> None:
         """Mock voice assistant handle stop."""
-        await self.voice_assistant_handle_stop_callback()
+        await self.voice_assistant_handle_stop_callback(abort)
 
     async def mock_voice_assistant_handle_audio(self, audio: bytes) -> None:
         """Mock voice assistant handle audio."""
@@ -394,7 +394,7 @@ async def _mock_generic_device_entry(
             [str, int, VoiceAssistantAudioSettings, str | None],
             Coroutine[Any, Any, int | None],
         ],
-        handle_stop: Callable[[], Coroutine[Any, Any, None]],
+        handle_stop: Callable[[bool], Coroutine[Any, Any, None]],
         handle_audio: (
             Callable[
                 [bytes],
