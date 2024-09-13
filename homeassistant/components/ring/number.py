@@ -1,7 +1,5 @@
 """Component providing HA number support for Ring Door Bell/Chimes."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 import time
@@ -41,6 +39,15 @@ async def async_setup_entry(
         for device in ring_data.devices.all_devices
         if description.exists_fn(device)
     )
+
+
+@dataclass(frozen=True, kw_only=True)
+class RingNumberEntityDescription(NumberEntityDescription, Generic[RingDeviceT]):
+    """Describes Ring number entity."""
+
+    value_fn: Callable[[RingDeviceT], StateType]
+    setter_fn: Callable[[RingDeviceT, float], Awaitable[None]]
+    exists_fn: Callable[[RingGeneric], bool]
 
 
 class RingNumber(RingEntity[RingDeviceT], NumberEntity):
@@ -94,15 +101,6 @@ class RingNumber(RingEntity[RingDeviceT], NumberEntity):
 
         self._attr_native_value = value
         self.async_write_ha_state()
-
-
-@dataclass(frozen=True, kw_only=True)
-class RingNumberEntityDescription(NumberEntityDescription, Generic[RingDeviceT]):
-    """Describes Ring number entity."""
-
-    value_fn: Callable[[RingDeviceT], StateType]
-    setter_fn: Callable[[RingDeviceT, float], Awaitable[None]]
-    exists_fn: Callable[[RingGeneric], bool]
 
 
 NUMBER_TYPES: tuple[RingNumberEntityDescription[Any], ...] = (
