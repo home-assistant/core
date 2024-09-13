@@ -479,7 +479,6 @@ class EsphomeAssistSatellite(
         self._audio_queue.put_nowait(None)
         if self._pipeline_task is not None:
             self._pipeline_task.cancel()
-            self._pipeline_task = None
 
     async def _start_udp_server(self) -> int:
         """Start a UDP server on a random free port."""
