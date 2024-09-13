@@ -119,7 +119,7 @@ def evo_config() -> dict[str, str]:
 
 @patch("evohomeasync.broker.Broker._make_request", block_request)
 @patch("evohomeasync2.broker.Broker._client", block_request)
-async def setup_evohome(
+async def evohome(
     hass: HomeAssistant,
     test_config: dict[str, str],
     install: str = "default",
@@ -153,14 +153,3 @@ async def setup_evohome(
         finally:
             # wait for DataUpdateCoordinator to quiesce
             await hass.async_block_till_done()
-
-
-async def evohome(
-    hass: HomeAssistant,
-    test_config: dict[str, str],
-    install: str = "default",
-) -> AsyncGenerator[MagicMock]:
-    """Mock the evohome integration and return its client."""
-
-    async for mock_client in setup_evohome(hass, test_config, install=install):
-        yield mock_client
