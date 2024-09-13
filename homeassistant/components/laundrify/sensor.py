@@ -8,7 +8,6 @@ from laundrify_aio.exceptions import LaundrifyDeviceException
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
-    SensorEntityDescription,
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -21,25 +20,6 @@ from .const import DOMAIN
 from .coordinator import LaundrifyUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
-
-POWER_SENSOR_DESCRIPTION = SensorEntityDescription(
-    key="power",
-    device_class=SensorDeviceClass.POWER,
-    native_unit_of_measurement=UnitOfPower.WATT,
-    state_class=SensorStateClass.MEASUREMENT,
-    suggested_display_precision=0,
-    has_entity_name=True,
-)
-
-ENERGY_SENSOR_DESCRIPTION = SensorEntityDescription(
-    key="energy",
-    device_class=SensorDeviceClass.ENERGY,
-    native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
-    state_class=SensorStateClass.TOTAL,
-    suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-    suggested_display_precision=2,
-    has_entity_name=True,
-)
 
 
 async def async_setup_entry(
@@ -62,13 +42,18 @@ async def async_setup_entry(
 class LaundrifyPowerSensor(SensorEntity):
     """Representation of a Power sensor."""
 
+    _attr_device_class = SensorDeviceClass.POWER
+    _attr_native_unit_of_measurement = UnitOfPower.WATT
+    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_suggested_display_precision = 0
+    _attr_has_entity_name = True
+
     def __init__(self, device: LaundrifyDevice) -> None:
         """Initialize the sensor."""
         super().__init__()
-        self.entity_description = POWER_SENSOR_DESCRIPTION
         self._device = device
         self._attr_device_info = {"identifiers": {(DOMAIN, device.id)}}
-        self._attr_unique_id = f"{device.id}_{POWER_SENSOR_DESCRIPTION.key}"
+        self._attr_unique_id = f"{device.id}_power"
 
     async def async_update(self) -> None:
         """Fetch latest power measurement from the device."""
@@ -89,15 +74,21 @@ class LaundrifyEnergySensor(
 ):
     """Representation of an Energy sensor."""
 
+    _attr_device_class = SensorDeviceClass.ENERGY
+    _attr_native_unit_of_measurement = UnitOfEnergy.WATT_HOUR
+    _attr_state_class = SensorStateClass.TOTAL
+    _attr_suggested_unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
+    _attr_suggested_display_precision = 2
+    _attr_has_entity_name = True
+
     def __init__(
         self, coordinator: LaundrifyUpdateCoordinator, device: LaundrifyDevice
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
-        self.entity_description = ENERGY_SENSOR_DESCRIPTION
         self._device = device
         self._attr_device_info = {"identifiers": {(DOMAIN, device.id)}}
-        self._attr_unique_id = f"{device.id}_{ENERGY_SENSOR_DESCRIPTION.key}"
+        self._attr_unique_id = f"{device.id}_energy"
 
     @property
     def native_value(self) -> float:
