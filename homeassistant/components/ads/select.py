@@ -63,7 +63,7 @@ class AdsSelect(AdsEntity, SelectEntity):
         """Initialize the AdsSelect entity."""
         super().__init__(ads_hub, name, ads_var)
         self._attr_options = options
-        self._attr_current_option = options[0]  # Default to first option
+        self._attr_current_option = None
 
     async def async_added_to_hass(self) -> None:
         """Register device notification."""
