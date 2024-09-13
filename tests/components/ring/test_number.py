@@ -4,7 +4,12 @@ from unittest.mock import Mock
 
 import pytest
 
-from homeassistant.const import Platform
+from homeassistant.components.number import (
+    ATTR_VALUE,
+    DOMAIN as NUMBER_DOMAIN,
+    SERVICE_SET_VALUE,
+)
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -85,9 +90,9 @@ async def test_volume_can_be_changed(
     assert old_value != new_value
 
     await hass.services.async_call(
-        "number",
-        "set_value",
-        {"entity_id": entity_id, "value": new_value},
+        NUMBER_DOMAIN,
+        SERVICE_SET_VALUE,
+        {ATTR_ENTITY_ID: entity_id, ATTR_VALUE: new_value},
         blocking=True,
     )
 
