@@ -35,14 +35,12 @@ async def async_setup_entry(
     ring_data = entry.runtime_data
     devices_coordinator = ring_data.devices_coordinator
 
-    entities = [
+    async_add_entities(
         RingNumber(device, devices_coordinator, description)
         for description in NUMBER_TYPES
         for device in ring_data.devices.all_devices
         if description.exists_fn(device)
-    ]
-
-    async_add_entities(entities)
+    )
 
 
 class RingNumber(RingEntity[RingDeviceT], NumberEntity):
