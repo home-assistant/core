@@ -119,12 +119,12 @@ def evo_config() -> dict[str, str]:
 
 @patch("evohomeasync.broker.Broker._make_request", block_request)
 @patch("evohomeasync2.broker.Broker._client", block_request)
-async def xsetup_evohome(
+async def setup_evohome(
     hass: HomeAssistant,
     test_config: dict[str, str],
     install: str = "default",
 ) -> AsyncGenerator[MagicMock]:
-    """Set up the evohome integration and return its client.
+    """Mock the evohome integration and return its client.
 
     The class is mocked here to check the client was instantiated with the correct args.
     """
@@ -155,39 +155,12 @@ async def xsetup_evohome(
             await hass.async_block_till_done()
 
 
-@patch("evohomeasync.broker.Broker._make_request", block_request)
-@patch("evohomeasync2.broker.Broker._client", block_request)
 async def evohome(
     hass: HomeAssistant,
     test_config: dict[str, str],
     install: str = "default",
 ) -> AsyncGenerator[MagicMock]:
-    """Set up the evohome integration and return its client.
+    """Mock the evohome integration and return its client."""
 
-    The class is mocked here to check the client was instantiated with the correct args.
-    """
-
-    with (
-        patch("homeassistant.components.evohome.evo.EvohomeClient") as mock_client,
-        patch("homeassistant.components.evohome.ev1.EvohomeClient", return_value=None),
-        patch("evohomeasync2.broker.Broker.get", mock_get_factory(install)),
-    ):
-        mock_client.side_effect = EvohomeClient
-
-        assert await async_setup_component(hass, DOMAIN, {DOMAIN: test_config})
-        await hass.async_block_till_done()
-
-        mock_client.assert_called_once()
-
-        assert mock_client.call_args.args[0] == test_config[CONF_USERNAME]
-        assert mock_client.call_args.args[1] == test_config[CONF_PASSWORD]
-
-        assert isinstance(mock_client.call_args.kwargs["session"], ClientSession)
-
-        assert mock_client.account_info is not None
-
-        try:
-            yield mock_client
-        finally:
-            # wait for DataUpdateCoordinator to quiesce
-            await hass.async_block_till_done()
+    async for mock_client in setup_evohome(hass, test_config, install=install):
+        yield mock_client
