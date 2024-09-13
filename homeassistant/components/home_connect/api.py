@@ -20,6 +20,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
+from homeassistant.helpers.deprecation import deprecated_function
 from homeassistant.helpers.dispatcher import dispatcher_send
 
 from .const import (
@@ -174,6 +175,10 @@ class DeviceWithPrograms(HomeConnectDevice):
             programs_available = []
         return programs_available
 
+    @deprecated_function(
+        "get_program_select",
+        breaks_in_ha_version="2025.4",
+    )
     def get_program_switches(self) -> list[dict[str, Any]]:
         """Get a dictionary with info about program switches.
 
