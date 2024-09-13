@@ -14,7 +14,7 @@ import slugify as unicode_slug
 import voluptuous as vol
 from voluptuous_openapi import UNSUPPORTED, convert
 
-from homeassistant.components.climate.intent import INTENT_GET_TEMPERATURE
+from homeassistant.components.climate import INTENT_GET_TEMPERATURE
 from homeassistant.components.conversation.trace import (
     ConversationTraceEventType,
     async_conversation_trace_append,
