@@ -12,7 +12,7 @@ from syrupy.assertion import SnapshotAssertion
 from voip_utils import CallInfo
 
 from homeassistant.components import assist_pipeline, assist_satellite, tts, voip
-from homeassistant.components.assist_satellite.entity import (
+from homeassistant.components.assist_satellite import (
     AssistSatelliteEntity,
     AssistSatelliteState,
 )

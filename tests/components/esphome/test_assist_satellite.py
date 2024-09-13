@@ -25,7 +25,7 @@ import pytest
 
 from homeassistant.components import assist_satellite, tts
 from homeassistant.components.assist_pipeline import PipelineEvent, PipelineEventType
-from homeassistant.components.assist_satellite.entity import (
+from homeassistant.components.assist_satellite import (
     AssistSatelliteEntity,
     AssistSatelliteEntityFeature,
     AssistSatelliteState,
