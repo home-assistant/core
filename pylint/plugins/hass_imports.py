@@ -400,9 +400,6 @@ _IGNORE_ROOT_IMPORT = (
     "bluetooth",
     "camera",
     "cast",
-    "climate",
-    "conversation",
-    "cover",
     "device_automation",
     "device_tracker",
     "ffmpeg",
@@ -419,7 +416,6 @@ _IGNORE_ROOT_IMPORT = (
     "script",
     "sensor",
     "stream",
-    "weather",
     "zha",
 )
 
