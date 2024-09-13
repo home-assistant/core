@@ -16,6 +16,7 @@ import homeassistant.util.dt as dt_util
 from . import RingConfigEntry
 from .coordinator import RingDataCoordinator
 from .entity import (
+    DeprecatedInfo,
     RingDeviceT,
     RingEntity,
     RingEntityDescription,
@@ -49,6 +50,9 @@ SWITCHES: Sequence[RingSwitchEntityDescription[Any]] = (
         is_on_fn=lambda device: device.siren > 0,
         turn_on_fn=lambda device: device.async_set_siren(1),
         turn_off_fn=lambda device: device.async_set_siren(0),
+        deprecated_info=DeprecatedInfo(
+            new_platform=Platform.SIREN, breaks_in_ha_version="2025.4.0"
+        ),
     ),
 )
 
