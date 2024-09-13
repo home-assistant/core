@@ -49,50 +49,6 @@ class RingNumberEntityDescription(NumberEntityDescription, Generic[RingDeviceT])
     exists_fn: Callable[[RingGeneric], bool]
 
 
-class RingNumber(RingEntity[RingDeviceT], NumberEntity):
-    """A number implementation for Ring device."""
-
-    entity_description: RingNumberEntityDescription[RingDeviceT]
-
-    def __init__(
-        self,
-        device: RingDeviceT,
-        coordinator: RingDataCoordinator,
-        description: RingNumberEntityDescription[RingDeviceT],
-    ) -> None:
-        """Initialize a number for Ring device."""
-        super().__init__(device, coordinator)
-        self.entity_description = description
-        self._attr_unique_id = f"{device.id}-{description.key}"
-        self._update_native_value()
-
-    def _update_native_value(self) -> None:
-        native_value = self.entity_description.value_fn(self._device)
-        if native_value is not None:
-            self._attr_native_value = float(native_value)
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Call update method."""
-
-        self._device = cast(
-            RingDeviceT,
-            self._get_coordinator_data().get_device(self._device.device_api_id),
-        )
-
-        self._update_native_value()
-
-        super()._handle_coordinator_update()
-
-    @refresh_after
-    async def async_set_native_value(self, value: float) -> None:
-        """Call setter on Ring device."""
-        await self.entity_description.setter_fn(self._device, value)
-
-        self._attr_native_value = value
-        self.async_write_ha_state()
-
-
 NUMBER_TYPES: tuple[RingNumberEntityDescription[Any], ...] = (
     RingNumberEntityDescription[RingChime](
         key="volume",
@@ -150,3 +106,47 @@ NUMBER_TYPES: tuple[RingNumberEntityDescription[Any], ...] = (
         exists_fn=lambda device: isinstance(device, RingOther),
     ),
 )
+
+
+class RingNumber(RingEntity[RingDeviceT], NumberEntity):
+    """A number implementation for Ring device."""
+
+    entity_description: RingNumberEntityDescription[RingDeviceT]
+
+    def __init__(
+        self,
+        device: RingDeviceT,
+        coordinator: RingDataCoordinator,
+        description: RingNumberEntityDescription[RingDeviceT],
+    ) -> None:
+        """Initialize a number for Ring device."""
+        super().__init__(device, coordinator)
+        self.entity_description = description
+        self._attr_unique_id = f"{device.id}-{description.key}"
+        self._update_native_value()
+
+    def _update_native_value(self) -> None:
+        native_value = self.entity_description.value_fn(self._device)
+        if native_value is not None:
+            self._attr_native_value = float(native_value)
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Call update method."""
+
+        self._device = cast(
+            RingDeviceT,
+            self._get_coordinator_data().get_device(self._device.device_api_id),
+        )
+
+        self._update_native_value()
+
+        super()._handle_coordinator_update()
+
+    @refresh_after
+    async def async_set_native_value(self, value: float) -> None:
+        """Call setter on Ring device."""
+        await self.entity_description.setter_fn(self._device, value)
+
+        self._attr_native_value = value
+        self.async_write_ha_state()
