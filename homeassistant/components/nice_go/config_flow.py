@@ -111,7 +111,6 @@ class NiceGOConfigFlow(ConfigFlow, domain=DOMAIN):
                         CONF_REFRESH_TOKEN: refresh_token,
                         CONF_REFRESH_TOKEN_CREATION_TIME: datetime.now().timestamp(),
                     },
-                    title=user_input[CONF_EMAIL],
                     unique_id=user_input[CONF_EMAIL],
                 )
 
