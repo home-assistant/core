@@ -138,9 +138,9 @@ class AutarcoSolarSensorEntity(
         super().__init__(coordinator)
 
         self.entity_description = description
-        self._attr_unique_id = f"{coordinator.site.site_id}_solar_{description.key}"
+        self._attr_unique_id = f"{coordinator.account_site.site_id}_solar_{description.key}"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, f"{coordinator.site.site_id}_solar")},
+            identifiers={(DOMAIN, f"{coordinator.account_site.site_id}_solar")},
             entry_type=DeviceEntryType.SERVICE,
             manufacturer="Autarco",
             name="Solar",

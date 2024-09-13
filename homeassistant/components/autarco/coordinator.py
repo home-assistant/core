@@ -29,7 +29,7 @@ class AutarcoDataUpdateCoordinator(DataUpdateCoordinator[AutarcoData]):
         self,
         hass: HomeAssistant,
         client: Autarco,
-        site: AccountSite,
+        account_site: AccountSite,
     ) -> None:
         """Initialize global Autarco data updater."""
         super().__init__(
@@ -39,7 +39,7 @@ class AutarcoDataUpdateCoordinator(DataUpdateCoordinator[AutarcoData]):
             update_interval=SCAN_INTERVAL,
         )
         self.client = client
-        self.site = site
+        self.account_site = account_site
 
     async def _async_update_data(self) -> AutarcoData:
         """Fetch data from Autarco API."""

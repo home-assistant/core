@@ -18,9 +18,9 @@ async def async_get_config_entry_diagnostics(
     return {
         "sites_data": [
             {
-                "id": coordinator.site.site_id,
-                "name": coordinator.site.system_name,
-                "health": coordinator.site.health,
+                "id": coordinator.account_site.site_id,
+                "name": coordinator.account_site.system_name,
+                "health": coordinator.account_site.health,
                 "solar": {
                     "power_production": coordinator.data.solar.power_production,
                     "energy_production_today": coordinator.data.solar.energy_production_today,
