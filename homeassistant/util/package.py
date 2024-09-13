@@ -103,7 +103,18 @@ def install_package(
     """
     _LOGGER.info("Attempting install of %s", package)
     env = os.environ.copy()
-    args = ["uv", "pip", "install", "--quiet", package]
+    args = [
+        "uv",
+        "pip",
+        "install",
+        "--quiet",
+        package,
+        # We need to use unsafe-first-match for custom components
+        # which can use a different version of a package than the one
+        # we have built the wheel for.
+        "--index-strategy",
+        "unsafe-first-match",
+    ]
     if timeout:
         env["HTTP_TIMEOUT"] = str(timeout)
     if upgrade:

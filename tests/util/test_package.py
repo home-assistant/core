@@ -93,7 +93,15 @@ def test_install(mock_popen: MagicMock, mock_env_copy: MagicMock) -> None:
     assert package.install_package(TEST_NEW_REQ, False)
     assert mock_popen.call_count == 2
     assert mock_popen.mock_calls[0] == call(
-        ["uv", "pip", "install", "--quiet", TEST_NEW_REQ],
+        [
+            "uv",
+            "pip",
+            "install",
+            "--quiet",
+            TEST_NEW_REQ,
+            "--index-strategy",
+            "unsafe-first-match",
+        ],
         stdin=PIPE,
         stdout=PIPE,
         stderr=PIPE,
@@ -111,7 +119,15 @@ def test_install_with_timeout(mock_popen: MagicMock, mock_env_copy: MagicMock) -
     assert mock_popen.call_count == 2
     env["HTTP_TIMEOUT"] = "10"
     assert mock_popen.mock_calls[0] == call(
-        ["uv", "pip", "install", "--quiet", TEST_NEW_REQ],
+        [
+            "uv",
+            "pip",
+            "install",
+            "--quiet",
+            TEST_NEW_REQ,
+            "--index-strategy",
+            "unsafe-first-match",
+        ],
         stdin=PIPE,
         stdout=PIPE,
         stderr=PIPE,
@@ -134,6 +150,8 @@ def test_install_upgrade(mock_popen, mock_env_copy) -> None:
             "install",
             "--quiet",
             TEST_NEW_REQ,
+            "--index-strategy",
+            "unsafe-first-match",
             "--upgrade",
         ],
         stdin=PIPE,
@@ -164,6 +182,8 @@ def test_install_target(
         "install",
         "--quiet",
         TEST_NEW_REQ,
+        "--index-strategy",
+        "unsafe-first-match",
         "--target",
         abs_target,
     ]
@@ -205,6 +225,8 @@ def test_install_pip_compatibility_no_workaround(
         "install",
         "--quiet",
         TEST_NEW_REQ,
+        "--index-strategy",
+        "unsafe-first-match",
     ]
 
     assert package.install_package(TEST_NEW_REQ, False)
@@ -234,6 +256,8 @@ def test_install_pip_compatibility_use_workaround(
         "install",
         "--quiet",
         TEST_NEW_REQ,
+        "--index-strategy",
+        "unsafe-first-match",
         "--python",
         python,
         "--target",
@@ -284,6 +308,8 @@ def test_install_constraint(mock_popen, mock_env_copy) -> None:
             "install",
             "--quiet",
             TEST_NEW_REQ,
+            "--index-strategy",
+            "unsafe-first-match",
             "--constraint",
             constraints,
         ],
