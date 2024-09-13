@@ -476,7 +476,7 @@
   "services": {
     "start_program": {
       "name": "Start program",
-      "description": "Selects a program and starts it.",
+      "description": "Selects a program and starts it. To get information about the available programs, options and values visit [Programs and Options section at Home Connect API Documentation](https://api-docs.home-connect.com/programs-and-options/).",
       "fields": {
         "device_id": {
           "name": "Device ID",
@@ -493,7 +493,7 @@
     },
     "select_program": {
       "name": "Select program",
-      "description": "Selects a program without starting it.",
+      "description": "Selects a program without starting it. To get information about the available programs, options and values visit [Programs and Options section at Home Connect API Documentation](https://api-docs.home-connect.com/programs-and-options/).",
       "fields": {
         "device_id": {
           "name": "Device ID",
@@ -539,7 +539,7 @@
     },
     "set_option_active": {
       "name": "Set active program option",
-      "description": "Sets an option for the active program.",
+      "description": "Sets an option for the active program. To get information about the available options and values visit [Programs and Options section at Home Connect API Documentation](https://api-docs.home-connect.com/programs-and-options/).",
       "fields": {
         "device_id": {
           "name": "Device ID",
@@ -557,7 +557,7 @@
     },
     "set_option_selected": {
       "name": "Set selected program option",
-      "description": "Sets an option for the selected program.",
+      "description": "Sets an option for the selected program. To get information about the available options and values visit [Programs and Options section at Home Connect API Documentation](https://api-docs.home-connect.com/programs-and-options/).",
       "fields": {
         "device_id": {
           "name": "Device ID",
@@ -575,7 +575,7 @@
     },
     "change_setting": {
       "name": "Change setting",
-      "description": "Changes a setting.",
+      "description": "Changes a setting. To get information about the available settings and values visit [Settings section at Home Connect API Documentation](https://api-docs.home-connect.com/settings/).",
       "fields": {
         "device_id": {
           "name": "Device ID",
