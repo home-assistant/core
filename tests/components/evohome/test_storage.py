@@ -17,7 +17,7 @@ from homeassistant.components.evohome import (
 from homeassistant.core import HomeAssistant
 import homeassistant.util.dt as dt_util
 
-from .conftest import evohome
+from .conftest import setup_evohome
 from .const import ACCESS_TOKEN, REFRESH_TOKEN, SESSION_ID, USERNAME
 
 
@@ -96,7 +96,7 @@ async def test_auth_tokens_null(
 
     hass_storage[DOMAIN] = DOMAIN_STORAGE_BASE | {"data": TEST_STORAGE_NULL[idx]}
 
-    async for mock_client in evohome(hass, evo_config, install=install):
+    async for mock_client in setup_evohome(hass, evo_config, install=install):
         # Confirm client was instantiated without tokens, as cache was empty...
         assert SZ_REFRESH_TOKEN not in mock_client.call_args.kwargs
         assert SZ_ACCESS_TOKEN not in mock_client.call_args.kwargs
@@ -127,7 +127,7 @@ async def test_auth_tokens_same(
 
     hass_storage[DOMAIN] = DOMAIN_STORAGE_BASE | {"data": TEST_STORAGE_DATA[idx]}
 
-    async for mock_client in evohome(hass, evo_config, install=install):
+    async for mock_client in setup_evohome(hass, evo_config, install=install):
         # Confirm client was instantiated with the cached tokens...
         assert mock_client.call_args.kwargs[SZ_REFRESH_TOKEN] == REFRESH_TOKEN
         assert mock_client.call_args.kwargs[SZ_ACCESS_TOKEN] == ACCESS_TOKEN
@@ -166,7 +166,7 @@ async def test_auth_tokens_past(
 
     hass_storage[DOMAIN] = DOMAIN_STORAGE_BASE | {"data": test_data}
 
-    async for mock_client in evohome(hass, evo_config, install=install):
+    async for mock_client in setup_evohome(hass, evo_config, install=install):
         # Confirm client was instantiated with the cached tokens...
         assert mock_client.call_args.kwargs[SZ_REFRESH_TOKEN] == REFRESH_TOKEN
         assert mock_client.call_args.kwargs[SZ_ACCESS_TOKEN] == ACCESS_TOKEN
@@ -199,7 +199,7 @@ async def test_auth_tokens_diff(
 
     hass_storage[DOMAIN] = DOMAIN_STORAGE_BASE | {"data": TEST_STORAGE_DATA[idx]}
 
-    async for mock_client in evohome(
+    async for mock_client in setup_evohome(
         hass, evo_config | {CONF_USERNAME: USERNAME_DIFF}, install=install
     ):
         # Confirm client was instantiated without tokens, as username was different...

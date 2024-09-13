@@ -8,7 +8,7 @@ from syrupy import SnapshotAssertion
 
 from homeassistant.core import HomeAssistant
 
-from .conftest import evohome
+from .conftest import setup_evohome
 from .const import TEST_INSTALLS
 
 
@@ -25,7 +25,7 @@ async def test_entities(
     # some extended state attrs are relative the current time
     freezer.move_to("2024-07-10 12:00:00+00:00")
 
-    async for _ in evohome(hass, evo_config, install=install):
+    async for _ in setup_evohome(hass, evo_config, install=install):
         pass
 
     assert hass.states.async_all() == snapshot
