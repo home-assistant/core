@@ -25,9 +25,7 @@ from homeassistant.const import (
 from homeassistant.core import Event, HomeAssistant, State, callback
 from homeassistant.setup import async_setup_component
 
-from tests.common import assert_setup_component, mock_restore_cache
-
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, assert_setup_component, mock_restore_cache
 
 TEMPLATE_NAME = "alarm_control_panel.test_template_panel"
 PANEL_NAME = "alarm_control_panel.test"
