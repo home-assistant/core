@@ -999,7 +999,11 @@ async def test_nice_ibt4zwave_cover(
 async def test_window_covering_open_close(
     hass: HomeAssistant, client, window_covering_outbound_bottom, integration
 ) -> None:
-    """Tests that a Window Covering device with position support opens/closes with the start/stop level change properties."""
+    """Test Window Covering device open and close commands.
+
+    A Window Covering device with position support
+    should be able to open/close with the start/stop level change properties.
+    """
     entity_id = "cover.node_2_outbound_bottom"
     state = hass.states.get(entity_id)
 
