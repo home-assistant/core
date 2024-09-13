@@ -7,7 +7,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import FAKE_QUERY_RESPONSE, setup_mocked_integration
+from . import FAKE_QUERY_RESPONSE
 
 
 async def test_update_lms(
