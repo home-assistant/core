@@ -9,6 +9,7 @@ from homeconnect.api import HomeConnectError
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.deprecation import deprecated_class
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .api import ConfigEntryAuth
@@ -169,6 +170,10 @@ class HomeConnectSwitch(HomeConnectEntity, SwitchEntity):
         )
 
 
+@deprecated_class(
+    "homeassistant.components.home_connect.select.HomeConnectProgramSelectEntity",
+    breaks_in_ha_version="2025.5",
+)
 class HomeConnectProgramSwitch(HomeConnectEntity, SwitchEntity):
     """Switch class for Home Connect."""
 
