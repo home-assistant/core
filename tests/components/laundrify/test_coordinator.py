@@ -14,7 +14,7 @@ from tests.common import async_fire_time_changed
 
 
 def get_coord_entity(hass: HomeAssistant, mock_device: LaundrifyDevice) -> State:
-    """Get the coordinated power sensor entity."""
+    """Get the coordinated energy sensor entity."""
     device_slug = slugify(mock_device.name, separator="_")
     return hass.states.get(f"sensor.{device_slug}_energy")
 
