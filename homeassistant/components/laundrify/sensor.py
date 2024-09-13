@@ -13,7 +13,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfEnergy, UnitOfPower
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -100,11 +100,6 @@ class LaundrifyEnergySensor(
 
     @property
     def native_value(self) -> float:
-        """Return the state of the sensor."""
-        return float(self._device.totalEnergy)
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        self._device = self.coordinator.data[self._device.id]
-        self.async_write_ha_state()
+        """Return the total energy of the device."""
+        device = self.coordinator.data[self._device.id]
+        return float(device.totalEnergy)
