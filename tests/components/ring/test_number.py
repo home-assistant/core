@@ -1,4 +1,6 @@
-"""The tests for the Ring switch platform."""
+"""The tests for the Ring number platform."""
+
+from unittest.mock import Mock
 
 import pytest
 
@@ -22,9 +24,9 @@ from .common import setup_platform
 async def test_entity_registry(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    mock_ring_client,
-    entity_id,
-    unique_id,
+    mock_ring_client: Mock,
+    entity_id: str,
+    unique_id: str,
 ) -> None:
     """Tests that the devices are registered in the entity registry."""
     await setup_platform(hass, Platform.NUMBER)
@@ -45,9 +47,9 @@ async def test_entity_registry(
 )
 async def test_initial_state(
     hass: HomeAssistant,
-    mock_ring_client,
-    entity_id,
-    initial_state,
+    mock_ring_client: Mock,
+    entity_id: str,
+    initial_state: str,
 ) -> None:
     """Tests that the initial state of a device is correct."""
     await setup_platform(hass, Platform.NUMBER)
@@ -68,9 +70,9 @@ async def test_initial_state(
 )
 async def test_volume_can_be_changed(
     hass: HomeAssistant,
-    mock_ring_client,
-    entity_id,
-    new_value,
+    mock_ring_client: Mock,
+    entity_id: str,
+    new_value: str,
 ) -> None:
     """Tests the volume can be changed correctly."""
     await setup_platform(hass, Platform.NUMBER)
