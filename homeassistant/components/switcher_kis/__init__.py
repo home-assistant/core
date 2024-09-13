@@ -8,11 +8,11 @@ from aioswitcher.bridge import SwitcherBridge
 from aioswitcher.device import SwitcherBase
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
+from homeassistant.const import CONF_TOKEN, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 
-from .const import CONF_TOKEN, DOMAIN
+from .const import DOMAIN
 from .coordinator import SwitcherDataUpdateCoordinator
 
 PLATFORMS = [
@@ -31,6 +31,8 @@ type SwitcherConfigEntry = ConfigEntry[dict[str, SwitcherDataUpdateCoordinator]]
 
 async def async_setup_entry(hass: HomeAssistant, entry: SwitcherConfigEntry) -> bool:
     """Set up Switcher from a config entry."""
+
+    token = entry.data.get(CONF_TOKEN)
 
     @callback
     def on_device_data_callback(device: SwitcherBase) -> None:
@@ -54,7 +56,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SwitcherConfigEntry) -> 
             device.token_needed,
         )
 
-        if device.token_needed and not entry.data.get(CONF_TOKEN):
+        if device.token_needed and not token:
             entry.async_start_reauth(hass)
             return
 

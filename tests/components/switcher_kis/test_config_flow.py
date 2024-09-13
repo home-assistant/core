@@ -5,11 +5,8 @@ from unittest.mock import AsyncMock, patch
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.switcher_kis.const import (
-    CONF_TOKEN,
-    CONF_USERNAME,
-    DOMAIN,
-)
+from homeassistant.components.switcher_kis.const import DOMAIN
+from homeassistant.const import CONF_TOKEN, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 

@@ -4,18 +4,27 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, Final
 
 from aioswitcher.bridge import SwitcherBase
 from aioswitcher.device.tools import validate_token
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.const import CONF_TOKEN, CONF_USERNAME
 
-from .const import CONF_TOKEN, CONF_USERNAME, DOMAIN
+from .const import DOMAIN
 from .utils import async_discover_devices
 
 _LOGGER = logging.getLogger(__name__)
+
+
+CONFIG_SCHEMA: Final = vol.Schema(
+    {
+        vol.Required(CONF_USERNAME, default=""): str,
+        vol.Required(CONF_TOKEN, default=""): str,
+    }
+)
 
 
 class SwitcherFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -67,13 +76,8 @@ class SwitcherFlowHandler(ConfigFlow, domain=DOMAIN):
         else:
             user_input = {}
 
-        schema = {
-            vol.Required(CONF_USERNAME, default=user_input.get(CONF_USERNAME, "")): str,
-            vol.Required(CONF_TOKEN, default=user_input.get(CONF_TOKEN, "")): str,
-        }
-
         return self.async_show_form(
-            step_id="credentials", data_schema=vol.Schema(schema), errors=errors
+            step_id="credentials", data_schema=CONFIG_SCHEMA, errors=errors
         )
 
     async def async_step_reauth(
@@ -100,13 +104,9 @@ class SwitcherFlowHandler(ConfigFlow, domain=DOMAIN):
                 )
             errors["base"] = "invalid_auth"
 
-        schema = {
-            vol.Required(CONF_USERNAME): str,
-            vol.Required(CONF_TOKEN): str,
-        }
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=vol.Schema(schema),
+            data_schema=CONFIG_SCHEMA,
             errors=errors,
         )
 
