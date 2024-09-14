@@ -232,10 +232,23 @@ async def async_api_turn_off(
 
     service = SERVICE_TURN_OFF
     if entity.domain == cover.DOMAIN:
+        open_and_close = cover.CoverEntityFeature.OPEN | cover.CoverEntityFeature.CLOSE
+
         supported = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+
+        # Only actually use the stop_cover service if the following conditions are met:
+        # AND:
+        #  - the cover has the STOP feature
+        #  - OR:
+        #    - the cover has open AND close
+        #    - the cover has set_position
+        #
+        # This ensures that the cover does not get stuck (although calling close for a cover
+        # which does not support closing could still result in an error)
+        # See https://github.com/home-assistant/core/pull/125851
         if supported & cover.CoverEntityFeature.STOP and (
-                (supported & (cover.CoverEntityFeature.OPEN | cover.CoverEntityFeature.CLOSE)) or
-                (supported & cover.CoverEntityFeature.SET_POSITION)
+            (supported & open_and_close == open_and_close)
+            or (supported & cover.CoverEntityFeature.SET_POSITION)
         ):
             service = cover.SERVICE_STOP_COVER
         else:
