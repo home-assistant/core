@@ -5344,49 +5344,15 @@ async def test_unhashable_unique_id_fails(
         entries[entry.entry_id] = entry
 
     assert entry.entry_id not in entries
-    with pytest.raises(
-        HomeAssistantError,
-        match=f"The entry unique id {unique_id_string} is not a string.",
-    ):
-        entries.get_entry_by_domain_and_unique_id("test", unique_id)
+
+    assert not entries.get_entry_by_domain_and_unique_id("test", unique_id)
 
 
-@pytest.mark.parametrize("unique_id", [123])
-async def test_hashable_non_string_unique_id_fails(
+@pytest.mark.parametrize("unique_id", [["blah", "bleh"], {"key": "value"}])
+async def test_unhashable_unique_id_fails_fails_on_update(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture, unique_id: Any
 ) -> None:
-    """Test the ConfigEntryItems user dict raises on hashable non string unique_id."""
-    entries = config_entries.ConfigEntryItems(hass)
-    entry = config_entries.ConfigEntry(
-        data={},
-        discovery_keys={},
-        domain="test",
-        entry_id="mock_id",
-        minor_version=1,
-        options={},
-        source="test",
-        title="title",
-        unique_id=unique_id,
-        version=1,
-    )
-
-    with pytest.raises(
-        HomeAssistantError, match=f"The entry unique id {unique_id} is not a string."
-    ):
-        entries[entry.entry_id] = entry
-
-    assert entry.entry_id not in entries
-    with pytest.raises(
-        HomeAssistantError, match=f"The entry unique id {unique_id} is not a string."
-    ):
-        entries.get_entry_by_domain_and_unique_id("test", unique_id)
-
-
-@pytest.mark.parametrize("unique_id", [123])
-async def test_hashable_non_string_unique_id_fails_on_update(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, unique_id: Any
-) -> None:
-    """Test the ConfigEntryItems user dict raises on hashable non string unique_id update."""
+    """Test the ConfigEntryItems user dict raises fails non-hashable unique_id on update."""
     entries = config_entries.ConfigEntryItems(hass)
     entry = config_entries.ConfigEntry(
         data={},
@@ -5402,10 +5368,44 @@ async def test_hashable_non_string_unique_id_fails_on_update(
 
     entries[entry.entry_id] = entry
     assert entry.entry_id in entries
+
+    unique_id_string = re.escape(str(unique_id))
     with pytest.raises(
-        HomeAssistantError, match=f"The entry unique id {unique_id} is not a string."
+        HomeAssistantError,
+        match=f"The entry unique id {unique_id_string} is not a string.",
     ):
         entries.update_unique_id(entry, unique_id)
+
+
+@pytest.mark.parametrize("unique_id", [123])
+async def test_hashable_non_string_unique_id(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, unique_id: Any
+) -> None:
+    """Test the ConfigEntryItems user dict handles hashable non string unique_id."""
+    entries = config_entries.ConfigEntryItems(hass)
+    entry = config_entries.ConfigEntry(
+        data={},
+        domain="test",
+        entry_id="mock_id",
+        minor_version=1,
+        options={},
+        source="test",
+        title="title",
+        unique_id=unique_id,
+        version=1,
+    )
+
+    entries[entry.entry_id] = entry
+    assert (
+        "Config entry 'title' from integration test has an invalid unique_id"
+    ) in caplog.text
+
+    assert entry.entry_id in entries
+    assert entries[entry.entry_id] is entry
+    assert entries.get_entry_by_domain_and_unique_id("test", unique_id) == entry
+    del entries[entry.entry_id]
+    assert not entries
+    assert entries.get_entry_by_domain_and_unique_id("test", unique_id) is None
 
 
 @pytest.mark.parametrize(
