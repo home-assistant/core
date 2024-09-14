@@ -34,7 +34,8 @@ class MotionMountEntity(Entity):
         self._attr_device_info = DeviceInfo(
             name=mm.name,
             manufacturer="Vogel's",
-            model="TVM 7675",
+            model="MotionMount SIGNATURE Pro",
+            model_id="TVM 7675 Pro",
         )
 
         if mac == EMPTY_MAC:

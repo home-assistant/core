@@ -1,7 +1,7 @@
 """Test helpers."""
 
 from collections.abc import Generator
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from solarlog_cli.solarlog_models import InverterData, SolarlogData
@@ -53,6 +53,7 @@ def mock_solarlog_connector():
     data.inverter_data = INVERTER_DATA
 
     mock_solarlog_api = AsyncMock()
+    mock_solarlog_api.set_enabled_devices = MagicMock()
     mock_solarlog_api.test_connection.return_value = True
     mock_solarlog_api.update_data.return_value = data
     mock_solarlog_api.update_device_list.return_value = INVERTER_DATA

@@ -5,7 +5,11 @@ from typing import Any
 import pytest
 
 from homeassistant import setup
-from homeassistant.components.cover import ATTR_POSITION, ATTR_TILT_POSITION, DOMAIN
+from homeassistant.components.cover import (
+    ATTR_POSITION,
+    ATTR_TILT_POSITION,
+    DOMAIN as COVER_DOMAIN,
+)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_CLOSE_COVER,
@@ -51,13 +55,13 @@ OPEN_CLOSE_COVER_CONFIG = {
 }
 
 
-@pytest.mark.parametrize(("count", "domain"), [(1, DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, COVER_DOMAIN)])
 @pytest.mark.parametrize(
     ("config", "states"),
     [
         (
             {
-                DOMAIN: {
+                COVER_DOMAIN: {
                     "platform": "template",
                     "covers": {
                         "test_template_cover": {
@@ -102,7 +106,7 @@ OPEN_CLOSE_COVER_CONFIG = {
         ),
         (
             {
-                DOMAIN: {
+                COVER_DOMAIN: {
                     "platform": "template",
                     "covers": {
                         "test_template_cover": {
@@ -152,13 +156,13 @@ async def test_template_state_text(
         assert text in caplog.text
 
 
-@pytest.mark.parametrize(("count", "domain"), [(1, DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, COVER_DOMAIN)])
 @pytest.mark.parametrize(
     ("config", "entity", "set_state", "test_state", "attr"),
     [
         (
             {
-                DOMAIN: {
+                COVER_DOMAIN: {
                     "platform": "template",
                     "covers": {
                         "test_template_cover": {
@@ -178,7 +182,7 @@ async def test_template_state_text(
         ),
         (
             {
-                DOMAIN: {
+                COVER_DOMAIN: {
                     "platform": "template",
                     "covers": {
                         "test_template_cover": {
@@ -218,12 +222,12 @@ async def test_template_state_text_ignored_if_none_or_empty(
     assert "ERROR" not in caplog.text
 
 
-@pytest.mark.parametrize(("count", "domain"), [(1, DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, COVER_DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
         {
-            DOMAIN: {
+            COVER_DOMAIN: {
                 "platform": "template",
                 "covers": {
                     "test_template_cover": {
@@ -241,12 +245,12 @@ async def test_template_state_boolean(hass: HomeAssistant, start_ha) -> None:
     assert state.state == STATE_OPEN
 
 
-@pytest.mark.parametrize(("count", "domain"), [(1, DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, COVER_DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
         {
-            DOMAIN: {
+            COVER_DOMAIN: {
                 "platform": "template",
                 "covers": {
                     "test_template_cover": {
@@ -281,12 +285,12 @@ async def test_template_position(
         assert "ValueError" not in caplog.text
 
 
-@pytest.mark.parametrize(("count", "domain"), [(1, DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, COVER_DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
         {
-            DOMAIN: {
+            COVER_DOMAIN: {
                 "platform": "template",
                 "covers": {
                     "test_template_cover": {
@@ -304,13 +308,13 @@ async def test_template_not_optimistic(hass: HomeAssistant, start_ha) -> None:
     assert state.state == STATE_UNKNOWN
 
 
-@pytest.mark.parametrize(("count", "domain"), [(1, DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, COVER_DOMAIN)])
 @pytest.mark.parametrize(
     ("config", "tilt_position"),
     [
         (
             {
-                DOMAIN: {
+                COVER_DOMAIN: {
                     "platform": "template",
                     "covers": {
                         "test_template_cover": {
@@ -325,7 +329,7 @@ async def test_template_not_optimistic(hass: HomeAssistant, start_ha) -> None:
         ),
         (
             {
-                DOMAIN: {
+                COVER_DOMAIN: {
                     "platform": "template",
                     "covers": {
                         "test_template_cover": {
@@ -348,12 +352,12 @@ async def test_template_tilt(
     assert state.attributes.get("current_tilt_position") == tilt_position
 
 
-@pytest.mark.parametrize(("count", "domain"), [(1, DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, COVER_DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
         {
-            DOMAIN: {
+            COVER_DOMAIN: {
                 "platform": "template",
                 "covers": {
                     "test_template_cover": {
@@ -365,7 +369,7 @@ async def test_template_tilt(
             }
         },
         {
-            DOMAIN: {
+            COVER_DOMAIN: {
                 "platform": "template",
                 "covers": {
                     "test_template_cover": {
@@ -391,18 +395,18 @@ async def test_template_out_of_bounds(hass: HomeAssistant, start_ha) -> None:
     assert state.attributes.get("current_position") is None
 
 
-@pytest.mark.parametrize(("count", "domain"), [(0, DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(0, COVER_DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
         {
-            DOMAIN: {
+            COVER_DOMAIN: {
                 "platform": "template",
                 "covers": {"test_template_cover": {"value_template": "{{ 1 == 1 }}"}},
             }
         },
         {
-            DOMAIN: {
+            COVER_DOMAIN: {
                 "platform": "template",
                 "covers": {
                     "test_template_cover": {
@@ -428,12 +432,12 @@ async def test_template_open_or_position(
     assert "Invalid config for 'cover' from integration 'template'" in caplog_setup_text
 
 
-@pytest.mark.parametrize(("count", "domain"), [(1, DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, COVER_DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
         {
-            DOMAIN: {
+            COVER_DOMAIN: {
                 "platform": "template",
                 "covers": {
                     "test_template_cover": {
@@ -453,7 +457,7 @@ async def test_open_action(
     assert state.state == STATE_CLOSED
 
     await hass.services.async_call(
-        DOMAIN, SERVICE_OPEN_COVER, {ATTR_ENTITY_ID: ENTITY_COVER}, blocking=True
+        COVER_DOMAIN, SERVICE_OPEN_COVER, {ATTR_ENTITY_ID: ENTITY_COVER}, blocking=True
     )
     await hass.async_block_till_done()
 
@@ -462,12 +466,12 @@ async def test_open_action(
     assert calls[0].data["caller"] == "cover.test_template_cover"
 
 
-@pytest.mark.parametrize(("count", "domain"), [(1, DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, COVER_DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
         {
-            DOMAIN: {
+            COVER_DOMAIN: {
                 "platform": "template",
                 "covers": {
                     "test_template_cover": {
@@ -494,12 +498,12 @@ async def test_close_stop_action(
     assert state.state == STATE_OPEN
 
     await hass.services.async_call(
-        DOMAIN, SERVICE_CLOSE_COVER, {ATTR_ENTITY_ID: ENTITY_COVER}, blocking=True
+        COVER_DOMAIN, SERVICE_CLOSE_COVER, {ATTR_ENTITY_ID: ENTITY_COVER}, blocking=True
     )
     await hass.async_block_till_done()
 
     await hass.services.async_call(
-        DOMAIN, SERVICE_STOP_COVER, {ATTR_ENTITY_ID: ENTITY_COVER}, blocking=True
+        COVER_DOMAIN, SERVICE_STOP_COVER, {ATTR_ENTITY_ID: ENTITY_COVER}, blocking=True
     )
     await hass.async_block_till_done()
 
@@ -554,7 +558,7 @@ async def test_set_position(
     assert state.state == STATE_UNKNOWN
 
     await hass.services.async_call(
-        DOMAIN, SERVICE_OPEN_COVER, {ATTR_ENTITY_ID: ENTITY_COVER}, blocking=True
+        COVER_DOMAIN, SERVICE_OPEN_COVER, {ATTR_ENTITY_ID: ENTITY_COVER}, blocking=True
     )
     await hass.async_block_till_done()
     state = hass.states.get("cover.test_template_cover")
@@ -565,7 +569,7 @@ async def test_set_position(
     assert calls[-1].data["position"] == 100
 
     await hass.services.async_call(
-        DOMAIN, SERVICE_CLOSE_COVER, {ATTR_ENTITY_ID: ENTITY_COVER}, blocking=True
+        COVER_DOMAIN, SERVICE_CLOSE_COVER, {ATTR_ENTITY_ID: ENTITY_COVER}, blocking=True
     )
     await hass.async_block_till_done()
     state = hass.states.get("cover.test_template_cover")
@@ -576,7 +580,7 @@ async def test_set_position(
     assert calls[-1].data["position"] == 0
 
     await hass.services.async_call(
-        DOMAIN, SERVICE_TOGGLE, {ATTR_ENTITY_ID: ENTITY_COVER}, blocking=True
+        COVER_DOMAIN, SERVICE_TOGGLE, {ATTR_ENTITY_ID: ENTITY_COVER}, blocking=True
     )
     await hass.async_block_till_done()
     state = hass.states.get("cover.test_template_cover")
@@ -587,7 +591,7 @@ async def test_set_position(
     assert calls[-1].data["position"] == 100
 
     await hass.services.async_call(
-        DOMAIN, SERVICE_TOGGLE, {ATTR_ENTITY_ID: ENTITY_COVER}, blocking=True
+        COVER_DOMAIN, SERVICE_TOGGLE, {ATTR_ENTITY_ID: ENTITY_COVER}, blocking=True
     )
     await hass.async_block_till_done()
     state = hass.states.get("cover.test_template_cover")
@@ -598,7 +602,7 @@ async def test_set_position(
     assert calls[-1].data["position"] == 0
 
     await hass.services.async_call(
-        DOMAIN,
+        COVER_DOMAIN,
         SERVICE_SET_COVER_POSITION,
         {ATTR_ENTITY_ID: ENTITY_COVER, ATTR_POSITION: 25},
         blocking=True,
@@ -612,12 +616,12 @@ async def test_set_position(
     assert calls[-1].data["position"] == 25
 
 
-@pytest.mark.parametrize(("count", "domain"), [(1, DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, COVER_DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
         {
-            DOMAIN: {
+            COVER_DOMAIN: {
                 "platform": "template",
                 "covers": {
                     "test_template_cover": {
@@ -658,7 +662,7 @@ async def test_set_tilt_position(
 ) -> None:
     """Test the set_tilt_position command."""
     await hass.services.async_call(
-        DOMAIN,
+        COVER_DOMAIN,
         service,
         attr,
         blocking=True,
@@ -671,12 +675,12 @@ async def test_set_tilt_position(
     assert calls[-1].data["tilt_position"] == tilt_position
 
 
-@pytest.mark.parametrize(("count", "domain"), [(1, DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, COVER_DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
         {
-            DOMAIN: {
+            COVER_DOMAIN: {
                 "platform": "template",
                 "covers": {
                     "test_template_cover": {
@@ -695,7 +699,7 @@ async def test_set_position_optimistic(
     assert state.attributes.get("current_position") is None
 
     await hass.services.async_call(
-        DOMAIN,
+        COVER_DOMAIN,
         SERVICE_SET_COVER_POSITION,
         {ATTR_ENTITY_ID: ENTITY_COVER, ATTR_POSITION: 42},
         blocking=True,
@@ -711,19 +715,19 @@ async def test_set_position_optimistic(
         (SERVICE_TOGGLE, STATE_OPEN),
     ):
         await hass.services.async_call(
-            DOMAIN, service, {ATTR_ENTITY_ID: ENTITY_COVER}, blocking=True
+            COVER_DOMAIN, service, {ATTR_ENTITY_ID: ENTITY_COVER}, blocking=True
         )
         await hass.async_block_till_done()
         state = hass.states.get("cover.test_template_cover")
         assert state.state == test_state
 
 
-@pytest.mark.parametrize(("count", "domain"), [(1, DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, COVER_DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
         {
-            DOMAIN: {
+            COVER_DOMAIN: {
                 "platform": "template",
                 "covers": {
                     "test_template_cover": {
@@ -744,7 +748,7 @@ async def test_set_tilt_position_optimistic(
     assert state.attributes.get("current_tilt_position") is None
 
     await hass.services.async_call(
-        DOMAIN,
+        COVER_DOMAIN,
         SERVICE_SET_COVER_TILT_POSITION,
         {ATTR_ENTITY_ID: ENTITY_COVER, ATTR_TILT_POSITION: 42},
         blocking=True,
@@ -760,19 +764,19 @@ async def test_set_tilt_position_optimistic(
         (SERVICE_TOGGLE_COVER_TILT, 100.0),
     ):
         await hass.services.async_call(
-            DOMAIN, service, {ATTR_ENTITY_ID: ENTITY_COVER}, blocking=True
+            COVER_DOMAIN, service, {ATTR_ENTITY_ID: ENTITY_COVER}, blocking=True
         )
         await hass.async_block_till_done()
         state = hass.states.get("cover.test_template_cover")
         assert state.attributes.get("current_tilt_position") == pos
 
 
-@pytest.mark.parametrize(("count", "domain"), [(1, DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, COVER_DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
         {
-            DOMAIN: {
+            COVER_DOMAIN: {
                 "platform": "template",
                 "covers": {
                     "test_template_cover": {
@@ -800,12 +804,12 @@ async def test_icon_template(hass: HomeAssistant, start_ha) -> None:
     assert state.attributes["icon"] == "mdi:check"
 
 
-@pytest.mark.parametrize(("count", "domain"), [(1, DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, COVER_DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
         {
-            DOMAIN: {
+            COVER_DOMAIN: {
                 "platform": "template",
                 "covers": {
                     "test_template_cover": {
@@ -835,12 +839,12 @@ async def test_entity_picture_template(hass: HomeAssistant, start_ha) -> None:
     assert state.attributes["entity_picture"] == "/local/cover.png"
 
 
-@pytest.mark.parametrize(("count", "domain"), [(1, DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, COVER_DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
         {
-            DOMAIN: {
+            COVER_DOMAIN: {
                 "platform": "template",
                 "covers": {
                     "test_template_cover": {
@@ -868,12 +872,12 @@ async def test_availability_template(hass: HomeAssistant, start_ha) -> None:
     assert hass.states.get("cover.test_template_cover").state != STATE_UNAVAILABLE
 
 
-@pytest.mark.parametrize(("count", "domain"), [(1, DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, COVER_DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
         {
-            DOMAIN: {
+            COVER_DOMAIN: {
                 "platform": "template",
                 "covers": {
                     "test_template_cover": {
@@ -893,12 +897,12 @@ async def test_availability_without_availability_template(
     assert state.state != STATE_UNAVAILABLE
 
 
-@pytest.mark.parametrize(("count", "domain"), [(1, DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, COVER_DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
         {
-            DOMAIN: {
+            COVER_DOMAIN: {
                 "platform": "template",
                 "covers": {
                     "test_template_cover": {
@@ -919,12 +923,12 @@ async def test_invalid_availability_template_keeps_component_available(
     assert "UndefinedError: 'x' is undefined" in caplog_setup_text
 
 
-@pytest.mark.parametrize(("count", "domain"), [(1, DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, COVER_DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
         {
-            DOMAIN: {
+            COVER_DOMAIN: {
                 "platform": "template",
                 "covers": {
                     "test_template_cover": {
@@ -943,12 +947,12 @@ async def test_device_class(hass: HomeAssistant, start_ha) -> None:
     assert state.attributes.get("device_class") == "door"
 
 
-@pytest.mark.parametrize(("count", "domain"), [(0, DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(0, COVER_DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
         {
-            DOMAIN: {
+            COVER_DOMAIN: {
                 "platform": "template",
                 "covers": {
                     "test_template_cover": {
@@ -967,12 +971,12 @@ async def test_invalid_device_class(hass: HomeAssistant, start_ha) -> None:
     assert not state
 
 
-@pytest.mark.parametrize(("count", "domain"), [(1, DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, COVER_DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
         {
-            DOMAIN: {
+            COVER_DOMAIN: {
                 "platform": "template",
                 "covers": {
                     "test_template_cover_01": {
@@ -995,12 +999,12 @@ async def test_unique_id(hass: HomeAssistant, start_ha) -> None:
     assert len(hass.states.async_all()) == 1
 
 
-@pytest.mark.parametrize(("count", "domain"), [(1, DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, COVER_DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
         {
-            DOMAIN: {
+            COVER_DOMAIN: {
                 "platform": "template",
                 "covers": {
                     "garage_door": {
@@ -1029,12 +1033,12 @@ async def test_state_gets_lowercased(hass: HomeAssistant, start_ha) -> None:
     assert hass.states.get("cover.garage_door").state == STATE_CLOSED
 
 
-@pytest.mark.parametrize(("count", "domain"), [(1, DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, COVER_DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
         {
-            DOMAIN: {
+            COVER_DOMAIN: {
                 "platform": "template",
                 "covers": {
                     "office": {
