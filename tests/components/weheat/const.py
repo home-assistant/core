@@ -9,3 +9,8 @@ CONF_REFRESH_TOKEN = "refresh_token"
 CONF_AUTH_IMPLEMENTATION = "auth_implementation"
 MOCK_REFRESH_TOKEN = "mock_refresh_token"
 MOCK_ACCESS_TOKEN = "mock_access_token"
+
+TEST_HP_UUID = "0000-1111-2222-3333"
+TEST_NAME = "Test Heat Pump"
+TEST_MODEL = "Test Model"
+TEST_SN = "SN-Test-This"
