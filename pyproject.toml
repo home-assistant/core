@@ -709,7 +709,6 @@ select = [
     "B904", # Use raise from to specify exception cause
     "B905", # zip() without an explicit strict= parameter
     "BLE",
-    "F541", # f-string without any placeholders
     "C", # complexity
     "COM818", # Trailing comma on bare tuple prohibited
     "D", # docstrings
@@ -717,6 +716,7 @@ select = [
     "DTZ004", # Use datetime.fromtimestamp(ts, tz=) instead of datetime.utcfromtimestamp(ts)
     "E", # pycodestyle
     "F", # pyflakes/autoflake
+    "F541", # f-string without any placeholders
     "FLY", # flynt
     "FURB", # refurb
     "G", # flake8-logging-format
