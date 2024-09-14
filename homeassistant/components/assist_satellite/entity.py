@@ -28,7 +28,6 @@ from homeassistant.components.tts import (
 from homeassistant.core import Context, callback
 from homeassistant.helpers import entity
 from homeassistant.helpers.entity import EntityDescription
-from homeassistant.util import ulid
 
 from .const import AssistSatelliteEntityFeature
 from .errors import AssistSatelliteError, SatelliteBusyError
@@ -240,16 +239,11 @@ class AssistSatelliteEntity(entity.Entity):
         assert self._context is not None
 
         # Reset conversation id if necessary
-        if (self._conversation_id_time is None) or (
+        if self._conversation_id_time and (
             (time.monotonic() - self._conversation_id_time) > _CONVERSATION_TIMEOUT_SEC
         ):
             self._conversation_id = None
-
-        if self._conversation_id is None:
-            self._conversation_id = ulid.ulid()
-
-        # Update timeout
-        self._conversation_id_time = time.monotonic()
+            self._conversation_id_time = None
 
         # Set entity state based on pipeline events
         self._run_has_tts = False
@@ -311,6 +305,11 @@ class AssistSatelliteEntity(entity.Entity):
             self._set_state(AssistSatelliteState.LISTENING_COMMAND)
         elif event.type is PipelineEventType.INTENT_START:
             self._set_state(AssistSatelliteState.PROCESSING)
+        elif event.type is PipelineEventType.INTENT_END:
+            assert event.data is not None
+            # Update timeout
+            self._conversation_id_time = time.monotonic()
+            self._conversation_id = event.data["intent_output"]["conversation_id"]
         elif event.type is PipelineEventType.TTS_START:
             # Wait until tts_response_finished is called to return to waiting state
             self._run_has_tts = True
