@@ -67,7 +67,9 @@ class ReolinkHost:
         self._hass: HomeAssistant = hass
         self._unique_id: str = ""
 
-        get_aiohttp_session = lambda: async_get_clientsession(hass, verify_ssl=False) 
+        def get_aiohttp_session() -> aiohttp.ClientSession:
+            """Return the HA aiohttp session."""
+            return async_get_clientsession(hass, verify_ssl=False)
 
         self._api = Host(
             config[CONF_HOST],
