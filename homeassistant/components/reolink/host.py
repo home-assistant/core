@@ -29,6 +29,7 @@ from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.network import NoURLAvailableError, get_url
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_USE_HTTPS, DOMAIN
 from .exceptions import (
@@ -64,9 +65,9 @@ class ReolinkHost:
     ) -> None:
         """Initialize Reolink Host. Could be either NVR, or Camera."""
         self._hass: HomeAssistant = hass
-
-        self._clientsession: aiohttp.ClientSession | None = None
         self._unique_id: str = ""
+
+        get_aiohttp_session = lambda: async_get_clientsession(hass, verify_ssl=False) 
 
         self._api = Host(
             config[CONF_HOST],
@@ -76,6 +77,7 @@ class ReolinkHost:
             use_https=config.get(CONF_USE_HTTPS),
             protocol=options[CONF_PROTOCOL],
             timeout=DEFAULT_TIMEOUT,
+            aiohttp_get_session_callback = get_aiohttp_session,
         )
 
         self.last_wake: float = 0
