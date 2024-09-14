@@ -81,6 +81,7 @@ async def test_options(hass: HomeAssistant, platform) -> None:
             "time_window": {"seconds": 0.0},
             "unit_prefix": "k",
             "unit_time": "min",
+            "max_sub_interval": {"seconds": 30},
         },
         title="My derivative",
     )
