@@ -281,6 +281,6 @@ class CambridgeAudioDevice(CambridgeAudioEntity, MediaPlayerEntity):
     async def async_set_repeat(self, repeat: RepeatMode) -> None:
         """Set the repeat mode for the current queue."""
         repeat_mode = CambridgeRepeatMode.OFF
-        if repeat:
+        if repeat in {RepeatMode.ALL, RepeatMode.ONE}:
             repeat_mode = CambridgeRepeatMode.ALL
         await self.client.set_repeat(repeat_mode)
