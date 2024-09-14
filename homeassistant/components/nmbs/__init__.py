@@ -7,7 +7,7 @@ from pyrail import iRail
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 
 from .const import CONF_STATION_FROM, CONF_STATION_LIVE, CONF_STATION_TO, DOMAIN
@@ -47,7 +47,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             else None
         )
         if station is None and station_type in entry.data:
-            raise ConfigEntryNotReady(
+            raise ConfigEntryError(
                 f"Station {entry.data[station_type]} cannot be found."
             )
 

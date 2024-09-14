@@ -6,7 +6,6 @@ from pyrail import iRail
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_TYPE
 from homeassistant.helpers.selector import (
     BooleanSelector,
     SelectOptionDict,
@@ -19,7 +18,6 @@ from .const import (
     CONF_EXCLUDE_VIAS,
     CONF_SHOW_ON_MAP,
     CONF_STATION_FROM,
-    CONF_STATION_LIVE,
     CONF_STATION_TO,
     DOMAIN,
 )
@@ -36,6 +34,7 @@ class NMBSConfigFlow(ConfigFlow, domain=DOMAIN):
     async def _fetch_stations_choices(self):
         """Fetch the stations."""
 
+        self.hass.data.setdefault(DOMAIN, {})
         if "stations" not in self.hass.data[DOMAIN]:
             stations = await self.hass.async_add_executor_job(
                 self.api_client.get_stations
@@ -51,48 +50,6 @@ class NMBSConfigFlow(ConfigFlow, domain=DOMAIN):
         ]
 
     async def async_step_user(
-        self, _: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle the initial step."""
-
-        return self.async_show_menu(
-            step_id="user", menu_options={"liveboard", "connection"}
-        )
-
-    async def async_step_liveboard(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle the step to setup a liveboard."""
-
-        errors: dict = {}
-        if user_input is not None:
-            await self.async_set_unique_id(user_input[CONF_STATION_LIVE])
-            self._abort_if_unique_id_configured()
-
-            user_input[CONF_TYPE] = "liveboard"
-            config_entry_name = user_input[CONF_STATION_LIVE]
-            return self.async_create_entry(
-                title=config_entry_name,
-                data=user_input,
-            )
-
-        return self.async_show_form(
-            step_id="liveboard",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_STATION_LIVE): SelectSelector(
-                        SelectSelectorConfig(
-                            options=await self._fetch_stations_choices(),
-                            mode=SelectSelectorMode.DROPDOWN,
-                        )
-                    ),
-                    vol.Optional(CONF_SHOW_ON_MAP, default=False): BooleanSelector(),
-                },
-            ),
-            errors=errors,
-        )
-
-    async def async_step_connection(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the step to setup a connection between 2 stations."""
@@ -104,7 +61,6 @@ class NMBSConfigFlow(ConfigFlow, domain=DOMAIN):
             )
             self._abort_if_unique_id_configured()
 
-            user_input[CONF_TYPE] = "connection"
             config_entry_name = f"Train from {user_input[CONF_STATION_FROM]} to {user_input[CONF_STATION_TO]}"
             return self.async_create_entry(
                 title=config_entry_name,
@@ -113,7 +69,7 @@ class NMBSConfigFlow(ConfigFlow, domain=DOMAIN):
 
         choices = await self._fetch_stations_choices()
         return self.async_show_form(
-            step_id="connection",
+            step_id="user",
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_STATION_FROM): SelectSelector(
@@ -137,8 +93,4 @@ class NMBSConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, user_input: dict[str, Any]) -> ConfigFlowResult:
         """Import configuration from yaml."""
-
-        if user_input[CONF_TYPE] == "liveboard":
-            return await self.async_step_liveboard(user_input)
-
-        return await self.async_step_connection(user_input)
+        return await self.async_step_user(user_input)

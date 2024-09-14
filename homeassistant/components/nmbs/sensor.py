@@ -18,7 +18,6 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PLATFORM,
     CONF_SHOW_ON_MAP,
-    CONF_TYPE,
     UnitOfTime,
 )
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
@@ -95,7 +94,6 @@ async def async_setup_platform(
         if CONF_EXCLUDE_VIAS not in config:
             config[CONF_EXCLUDE_VIAS] = False
 
-        config[CONF_TYPE] = "connection"
         hass.async_create_task(
             hass.config_entries.flow.async_init(
                 DOMAIN,
@@ -103,16 +101,6 @@ async def async_setup_platform(
                 data=config,
             )
         )
-        if CONF_STATION_LIVE in config:
-            liveboard = config.copy()
-            liveboard[CONF_TYPE] = "liveboard"
-            hass.async_create_task(
-                hass.config_entries.flow.async_init(
-                    DOMAIN,
-                    context={"source": SOURCE_IMPORT},
-                    data=liveboard,
-                )
-            )
 
     async_create_issue(
         hass,
@@ -138,29 +126,24 @@ async def async_setup_entry(
     """Set up NMBS sensor entities based on a config entry."""
     api_client = iRail()
 
-    nmbs_type = config_entry.data[CONF_TYPE]
     name = config_entry.data.get(CONF_NAME, None)
     show_on_map = config_entry.data[CONF_SHOW_ON_MAP]
+    station_from = config_entry.data[CONF_STATION_FROM]
+    station_to = config_entry.data[CONF_STATION_TO]
+    excl_vias = config_entry.data[CONF_EXCLUDE_VIAS]
 
-    if nmbs_type == "connection":
-        station_from = config_entry.data[CONF_STATION_FROM]
-        station_to = config_entry.data[CONF_STATION_TO]
-        excl_vias = config_entry.data[CONF_EXCLUDE_VIAS]
-        async_add_entities(
-            [
-                NMBSSensor(
-                    api_client, name, show_on_map, station_from, station_to, excl_vias
-                )
-            ]
-        )
+    # setup the connection from station to station
+    async_add_entities(
+        [NMBSSensor(api_client, name, show_on_map, station_from, station_to, excl_vias)]
+    )
 
-    if nmbs_type == "liveboard":
-        station_from = config_entry.data.get(CONF_STATION_FROM, None)
-        station_to = config_entry.data.get(CONF_STATION_TO, None)
-        station_live = config_entry.data[CONF_STATION_LIVE]
-        async_add_entities(
-            [NMBSLiveBoard(api_client, station_live, station_from, station_to)]
-        )
+    # setup a disabled liveboard for both from and to station
+    async_add_entities(
+        [
+            NMBSLiveBoard(api_client, station_from, station_from, station_to),
+            NMBSLiveBoard(api_client, station_to, station_from, station_to),
+        ]
+    )
 
 
 class NMBSLiveBoard(SensorEntity):
