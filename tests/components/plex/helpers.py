@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 from typing import Any
+from unittest.mock import MagicMock
 
 from plexwebsocket import SIGNAL_CONNECTION_STATE, STATE_CONNECTED
 
@@ -45,3 +46,10 @@ async def wait_for_debouncer(hass: HomeAssistant) -> None:
     next_update = dt_util.utcnow() + timedelta(seconds=3)
     async_fire_time_changed(hass, next_update)
     await hass.async_block_till_done()
+
+
+def mock_source(self):
+    """Mock the plex source for TMDB. source() takes self as an argument."""
+    mock = MagicMock()
+    mock.guids = [MagicMock(id="tmdb://12345"), MagicMock(id="tvdb://67890")]
+    return mock

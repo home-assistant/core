@@ -139,6 +139,7 @@ class PlexSession:
 
     def update_media(self, media):
         """Update attributes from a media object."""
+        _LOGGER.debug("media is type %s", type(media))
         self.media_content_id = media.ratingKey
         self.media_content_rating = getattr(media, "contentRating", None)
         self.media_image_url = self.get_media_image_url(media)

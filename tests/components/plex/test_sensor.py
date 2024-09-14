@@ -19,7 +19,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.util import dt as dt_util
 
-from .helpers import trigger_plex_update, wait_for_debouncer
+from .helpers import mock_source, trigger_plex_update, wait_for_debouncer
 
 from tests.common import async_fire_time_changed
 
@@ -326,47 +326,58 @@ async def test_plex_sensors_values(
     session_base,
 ) -> None:
     """Test the Plex sensors."""
-    mock_plex_server = await setup_plex_server()
-    await wait_for_debouncer(hass)
+    with patch("plexapi.video.MovieSession.source", new=mock_source):
+        mock_plex_server = await setup_plex_server()
+        await wait_for_debouncer(hass)
 
-    # Use the session_base fixture
-    requests_mock.get("/status/sessions", text=session_base)
+        # Use the session_base fixture
+        requests_mock.get("/status/sessions", text=session_base)
 
-    # Trigger an update
-    async_dispatcher_send(
-        hass,
-        PLEX_UPDATE_SENSOR_SIGNAL.format(mock_plex_server.machine_identifier),
-    )
-    await hass.async_block_till_done()
+        # Trigger an update
+        async_dispatcher_send(
+            hass,
+            PLEX_UPDATE_SENSOR_SIGNAL.format(mock_plex_server.machine_identifier),
+        )
+        await hass.async_block_till_done()
 
-    # Test year sensor
-    year_sensor = hass.states.get("sensor.shield_android_tv_year")
-    assert year_sensor
-    assert year_sensor.state == "2000"
+        # Test year sensor
+        year_sensor = hass.states.get("sensor.shield_android_tv_year")
+        assert year_sensor
+        assert year_sensor.state == "2000"
 
-    # Test title sensor
-    title_sensor = hass.states.get("sensor.shield_android_tv_title")
-    assert title_sensor
-    assert title_sensor.state == "Movie 1"
+        # Test title sensor
+        title_sensor = hass.states.get("sensor.shield_android_tv_title")
+        assert title_sensor
+        assert title_sensor.state == "Movie 1"
 
-    # Test filename sensor
-    filename_sensor = hass.states.get("sensor.shield_android_tv_filename")
-    assert filename_sensor
-    assert filename_sensor.state is not None
+        # Test filename sensor
+        filename_sensor = hass.states.get("sensor.shield_android_tv_filename")
+        assert filename_sensor
+        assert filename_sensor.state is not None
 
-    # Test codec sensor
-    codec_sensor = hass.states.get("sensor.shield_android_tv_codec")
-    assert codec_sensor
-    assert codec_sensor.state == "English (DTS 5.1)"
+        # Test codec sensor
+        codec_sensor = hass.states.get("sensor.shield_android_tv_codec")
+        assert codec_sensor
+        assert codec_sensor.state == "English (DTS 5.1)"
 
-    # Test codec long sensor
-    codec_extended = hass.states.get("sensor.shield_android_tv_codec_extended")
-    assert codec_extended
-    assert codec_extended.state == "DTS 5.1 @ 1536 kbps (English)"
+        # Test codec long sensor
+        codec_extended = hass.states.get("sensor.shield_android_tv_codec_extended")
+        assert codec_extended
+        assert codec_extended.state == "DTS 5.1 @ 1536 kbps (English)"
 
-    # Test edition title sensor
-    edition_sensor = hass.states.get("sensor.shield_android_tv_edition_title")
-    assert edition_sensor
-    assert (
-        edition_sensor.state == "Extended"
-    )  # will extract from filename which is the most common situation
+        # Test edition title sensor
+        edition_sensor = hass.states.get("sensor.shield_android_tv_edition_title")
+        assert edition_sensor
+        assert (
+            edition_sensor.state == "Extended"
+        )  # will extract from filename which is the most common situation
+
+        # Test TMDB ID sensor
+        tmdb_sensor = hass.states.get("sensor.shield_android_tv_tmdb_id")
+        assert tmdb_sensor
+        assert tmdb_sensor.state == "12345"
+
+        # Test TVDB ID sensor
+        tvdb_sensor = hass.states.get("sensor.shield_android_tv_tvdb_id")
+        assert tvdb_sensor
+        assert tvdb_sensor.state == "67890"

@@ -120,10 +120,9 @@ async def test_migrate_transient_devices(
     plex_service_device = device_registry.async_get_device(
         identifiers=plex_client_service_device_id
     )
-    # there are 8 new sensors so these are all x+8 now
     assert (
         len(er.async_entries_for_device(entity_registry, device_id=plexweb_device.id))
-        == 8
+        == 0
     )
     assert (
         len(
@@ -131,7 +130,7 @@ async def test_migrate_transient_devices(
                 entity_registry, device_id=non_plexweb_device.id
             )
         )
-        == 9
+        == 1
     )
     assert (
         len(
