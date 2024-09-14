@@ -26,7 +26,7 @@ from homeassistant.helpers.issue_registry import IssueSeverity, async_create_iss
 from homeassistant.helpers.typing import ConfigType
 
 from . import PchkConnectionManager
-from .const import CONF_DIM_MODE, CONF_SK_NUM_TRIES, DIM_MODES, DOMAIN
+from .const import CONF_ACKNOWLEDGE, CONF_DIM_MODE, CONF_SK_NUM_TRIES, DIM_MODES, DOMAIN
 from .helpers import purge_device_registry, purge_entity_registry
 
 _LOGGER = logging.getLogger(__name__)
@@ -38,6 +38,7 @@ CONFIG_DATA = {
     vol.Required(CONF_PASSWORD, default=""): str,
     vol.Required(CONF_SK_NUM_TRIES, default=0): cv.positive_int,
     vol.Required(CONF_DIM_MODE, default="STEPS200"): vol.In(DIM_MODES),
+    vol.Required(CONF_ACKNOWLEDGE, default=False): cv.boolean,
 }
 
 USER_DATA = {vol.Required(CONF_HOST, default="pchk"): str, **CONFIG_DATA}
@@ -71,10 +72,12 @@ async def validate_connection(data: ConfigType) -> str | None:
     password = data[CONF_PASSWORD]
     sk_num_tries = data[CONF_SK_NUM_TRIES]
     dim_mode = data[CONF_DIM_MODE]
+    acknowledge = data[CONF_ACKNOWLEDGE]
 
     settings = {
         "SK_NUM_TRIES": sk_num_tries,
         "DIM_MODE": pypck.lcn_defs.OutputPortDimMode[dim_mode],
+        "ACKNOWLEDGE": acknowledge,
     }
 
     _LOGGER.debug("Validating connection parameters to PCHK host '%s'", host_name)
@@ -108,6 +111,7 @@ class LcnFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a LCN config flow."""
 
     VERSION = 1
+    MINOR_VERSION = 2
 
     async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Import existing configuration from LCN."""
