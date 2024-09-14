@@ -368,14 +368,12 @@ class StreamMuxer:
             ),
             (
                 (
-                    (
-                        segment_duration := float(
-                            (adjusted_dts - self._segment_start_dts) * packet.time_base
-                        )
+                    segment_duration := float(
+                        (adjusted_dts - self._segment_start_dts) * packet.time_base
                     )
-                    if last_part
-                    else 0
-                ),
+                )
+                if last_part
+                else 0
             ),
         )
         if last_part:
