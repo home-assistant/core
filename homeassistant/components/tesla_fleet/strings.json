@@ -412,6 +412,12 @@
       "vehicle_state_odometer": {
         "name": "Odometer"
       },
+      "island_status": {
+        "name": "Grid status"
+      },
+      "storm_mode_active": {
+        "name": "Storm Watch active"
+      },
       "vehicle_state_tpms_pressure_fl": {
         "name": "Tire pressure front left"
       },
