@@ -7,7 +7,6 @@ from dataclasses import dataclass
 
 from anova_wifi import AnovaMode, AnovaState, APCUpdateSensor
 
-from homeassistant import config_entries
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -19,10 +18,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .const import DOMAIN
 from .coordinator import AnovaCoordinator
 from .entity import AnovaDescriptionEntity
-from .models import AnovaData
+from .models import AnovaConfigEntry
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -99,11 +97,11 @@ SENSOR_DESCRIPTIONS: list[AnovaSensorEntityDescription] = [
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: config_entries.ConfigEntry,
+    entry: AnovaConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Anova device."""
-    anova_data: AnovaData = hass.data[DOMAIN][entry.entry_id]
+    anova_data = entry.runtime_data
 
     for coordinator in anova_data.coordinators:
         setup_coordinator(coordinator, async_add_entities)
