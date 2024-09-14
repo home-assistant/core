@@ -110,7 +110,7 @@ async def async_setup_entry(
         )
     async_add_entities(entities)
     platform = entity_platform.async_get_current_platform()
-    platform.async_register_entity_service(SERVICE_RESUME, {}, "resume")
+    platform.async_register_entity_service(SERVICE_RESUME, None, "resume")
     platform.async_register_entity_service(
         SERVICE_START_WATERING, SCHEMA_START_WATERING, "start_watering"
     )

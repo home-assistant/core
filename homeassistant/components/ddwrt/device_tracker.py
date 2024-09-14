@@ -10,7 +10,7 @@ import requests
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
-    DOMAIN,
+    DOMAIN as DEVICE_TRACKER_DOMAIN,
     PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
     DeviceScanner,
 )
@@ -50,7 +50,7 @@ PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
 def get_scanner(hass: HomeAssistant, config: ConfigType) -> DdWrtDeviceScanner | None:
     """Validate the configuration and return a DD-WRT scanner."""
     try:
-        return DdWrtDeviceScanner(config[DOMAIN])
+        return DdWrtDeviceScanner(config[DEVICE_TRACKER_DOMAIN])
     except ConnectionError:
         return None
 

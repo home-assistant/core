@@ -1,0 +1,277 @@
+# serializer version: 1
+# name: test_async_setup_entry[binary_sensor.my_nc_url_local_avatars_enabled-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.my_nc_url_local_avatars_enabled',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Avatars enabled',
+    'platform': 'nextcloud',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'nextcloud_system_enable_avatars',
+    'unique_id': '1234567890abcdef#system_enable_avatars',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_async_setup_entry[binary_sensor.my_nc_url_local_avatars_enabled-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'my.nc_url.local Avatars enabled',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.my_nc_url_local_avatars_enabled',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_async_setup_entry[binary_sensor.my_nc_url_local_debug_enabled-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.my_nc_url_local_debug_enabled',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Debug enabled',
+    'platform': 'nextcloud',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'nextcloud_system_debug',
+    'unique_id': '1234567890abcdef#system_debug',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_async_setup_entry[binary_sensor.my_nc_url_local_debug_enabled-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'my.nc_url.local Debug enabled',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.my_nc_url_local_debug_enabled',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_async_setup_entry[binary_sensor.my_nc_url_local_filelocking_enabled-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.my_nc_url_local_filelocking_enabled',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Filelocking enabled',
+    'platform': 'nextcloud',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'nextcloud_system_filelocking_enabled',
+    'unique_id': '1234567890abcdef#system_filelocking.enabled',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_async_setup_entry[binary_sensor.my_nc_url_local_filelocking_enabled-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'my.nc_url.local Filelocking enabled',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.my_nc_url_local_filelocking_enabled',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_async_setup_entry[binary_sensor.my_nc_url_local_jit_active-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.my_nc_url_local_jit_active',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'JIT active',
+    'platform': 'nextcloud',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'nextcloud_jit_on',
+    'unique_id': '1234567890abcdef#jit_on',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_async_setup_entry[binary_sensor.my_nc_url_local_jit_active-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'my.nc_url.local JIT active',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.my_nc_url_local_jit_active',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_async_setup_entry[binary_sensor.my_nc_url_local_jit_enabled-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.my_nc_url_local_jit_enabled',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'JIT enabled',
+    'platform': 'nextcloud',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'nextcloud_jit_enabled',
+    'unique_id': '1234567890abcdef#jit_enabled',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_async_setup_entry[binary_sensor.my_nc_url_local_jit_enabled-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'my.nc_url.local JIT enabled',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.my_nc_url_local_jit_enabled',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_async_setup_entry[binary_sensor.my_nc_url_local_previews_enabled-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.my_nc_url_local_previews_enabled',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Previews enabled',
+    'platform': 'nextcloud',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'nextcloud_system_enable_previews',
+    'unique_id': '1234567890abcdef#system_enable_previews',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_async_setup_entry[binary_sensor.my_nc_url_local_previews_enabled-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'my.nc_url.local Previews enabled',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.my_nc_url_local_previews_enabled',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---

@@ -11,7 +11,7 @@ astroid==3.2.4
 coverage==7.6.0
 freezegun==1.5.1
 mock-open==1.4.0
-mypy-dev==1.12.0a2
+mypy-dev==1.12.0a3
 pre-commit==3.7.1
 pydantic==1.10.17
 pylint==3.2.6
@@ -51,4 +51,3 @@ types-pytz==2024.1.0.20240417
 types-PyYAML==6.0.12.20240311
 types-requests==2.31.0.3
 types-xmltodict==0.13.0.3
-uv==0.2.27

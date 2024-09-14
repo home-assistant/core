@@ -174,7 +174,7 @@ async def test_legacy_notify_file_exception(
 
 
 @pytest.mark.parametrize(
-    ("timestamp", "data"),
+    ("timestamp", "data", "options"),
     [
         (
             False,
@@ -182,6 +182,8 @@ async def test_legacy_notify_file_exception(
                 "name": "test",
                 "platform": "notify",
                 "file_path": "mock_file",
+            },
+            {
                 "timestamp": False,
             },
         ),
@@ -191,6 +193,8 @@ async def test_legacy_notify_file_exception(
                 "name": "test",
                 "platform": "notify",
                 "file_path": "mock_file",
+            },
+            {
                 "timestamp": True,
             },
         ),
@@ -203,6 +207,7 @@ async def test_legacy_notify_file_entry_only_setup(
     timestamp: bool,
     mock_is_allowed_path: MagicMock,
     data: dict[str, Any],
+    options: dict[str, Any],
 ) -> None:
     """Test the legacy notify file output in entry only setup."""
     filename = "mock_file"
@@ -213,7 +218,11 @@ async def test_legacy_notify_file_entry_only_setup(
     message = params["message"]
 
     entry = MockConfigEntry(
-        domain=DOMAIN, data=data, title=f"test [{data['file_path']}]"
+        domain=DOMAIN,
+        data=data,
+        version=2,
+        options=options,
+        title=f"test [{data['file_path']}]",
     )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
@@ -252,7 +261,7 @@ async def test_legacy_notify_file_entry_only_setup(
 
 
 @pytest.mark.parametrize(
-    ("is_allowed", "config"),
+    ("is_allowed", "config", "options"),
     [
         (
             False,
@@ -260,6 +269,8 @@ async def test_legacy_notify_file_entry_only_setup(
                 "name": "test",
                 "platform": "notify",
                 "file_path": "mock_file",
+            },
+            {
                 "timestamp": False,
             },
         ),
@@ -271,10 +282,15 @@ async def test_legacy_notify_file_not_allowed(
     caplog: pytest.LogCaptureFixture,
     mock_is_allowed_path: MagicMock,
     config: dict[str, Any],
+    options: dict[str, Any],
 ) -> None:
     """Test legacy notify file output not allowed."""
     entry = MockConfigEntry(
-        domain=DOMAIN, data=config, title=f"test [{config['file_path']}]"
+        domain=DOMAIN,
+        data=config,
+        version=2,
+        options=options,
+        title=f"test [{config['file_path']}]",
     )
     entry.add_to_hass(hass)
     assert not await hass.config_entries.async_setup(entry.entry_id)
@@ -293,13 +309,15 @@ async def test_legacy_notify_file_not_allowed(
     ],
 )
 @pytest.mark.parametrize(
-    ("data", "is_allowed"),
+    ("data", "options", "is_allowed"),
     [
         (
             {
                 "name": "test",
                 "platform": "notify",
                 "file_path": "mock_file",
+            },
+            {
                 "timestamp": False,
             },
             True,
@@ -314,12 +332,17 @@ async def test_notify_file_write_access_failed(
     service: str,
     params: dict[str, Any],
     data: dict[str, Any],
+    options: dict[str, Any],
 ) -> None:
     """Test the notify file fails."""
     domain = notify.DOMAIN
 
     entry = MockConfigEntry(
-        domain=DOMAIN, data=data, title=f"test [{data['file_path']}]"
+        domain=DOMAIN,
+        data=data,
+        version=2,
+        options=options,
+        title=f"test [{data['file_path']}]",
     )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)

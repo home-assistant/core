@@ -88,30 +88,11 @@
     "stop_hold_failed": {
       "message": "Honeywell could not stop hold mode"
     },
-    "set_aux_failed": {
-      "message": "Honeywell could not set system mode to aux heat"
-    },
-    "disable_aux_failed": {
-      "message": "Honeywell could turn off aux heat mode"
-    },
     "switch_failed_off": {
       "message": "Honeywell could turn off emergency heat mode."
     },
     "switch_failed_on": {
       "message": "Honeywell could not set system mode to emergency heat mode."
-    }
-  },
-  "issues": {
-    "service_deprecation": {
-      "title": "Honeywell aux heat is being removed",
-      "fix_flow": {
-        "step": {
-          "confirm": {
-            "title": "[%key:component::honeywell::issues::service_deprecation::title%]",
-            "description": "Use `switch.{name}_emergency_heat` instead to change mode.\n\nPlease adjust your automations and scripts and select **submit** to fix this issue."
-          }
-        }
-      }
     }
   }
 }

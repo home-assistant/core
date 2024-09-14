@@ -166,7 +166,7 @@ class SignalNotificationService(BaseNotificationService):
                     and int(str(resp.headers.get("Content-Length")))
                     > attachment_size_limit
                 ):
-                    raise ValueError(
+                    raise ValueError(  # noqa: TRY301
                         "Attachment too large (Content-Length reports {}). Max size: {}"
                         " bytes".format(
                             int(str(resp.headers.get("Content-Length"))),
@@ -179,7 +179,7 @@ class SignalNotificationService(BaseNotificationService):
                 for chunk in resp.iter_content(1024):
                     size += len(chunk)
                     if size > attachment_size_limit:
-                        raise ValueError(
+                        raise ValueError(  # noqa: TRY301
                             f"Attachment too large (Stream reports {size}). "
                             f"Max size: {CONF_MAX_ALLOWED_DOWNLOAD_SIZE_BYTES} bytes"
                         )

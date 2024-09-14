@@ -69,7 +69,7 @@ async def async_setup_entry(
 
     platform.async_register_entity_service(
         GET_MAPS_SERVICE_NAME,
-        {},
+        None,
         RoborockVacuum.get_maps.__name__,
         supports_response=SupportsResponse.ONLY,
     )

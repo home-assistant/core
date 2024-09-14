@@ -15,12 +15,14 @@ import pytest
 from homeassistant.components.esphome import DomainData
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from .conftest import MockESPHomeDevice
 
 from tests.common import MockConfigEntry
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_assist_in_progress(
     hass: HomeAssistant,
     mock_voice_assistant_v1_entry,
@@ -42,6 +44,20 @@ async def test_assist_in_progress(
 
     state = hass.states.get("binary_sensor.test_assist_in_progress")
     assert state.state == "off"
+
+
+async def test_assist_in_progress_disabled_by_default(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_voice_assistant_v1_entry,
+) -> None:
+    """Test assist in progress binary sensor is added disabled."""
+
+    assert not hass.states.get("binary_sensor.test_assist_in_progress")
+    entity_entry = entity_registry.async_get("binary_sensor.test_assist_in_progress")
+    assert entity_entry
+    assert entity_entry.disabled
+    assert entity_entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
 
 @pytest.mark.parametrize(
@@ -74,7 +90,7 @@ async def test_binary_sensor_generic_entity(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("binary_sensor.test_my_binary_sensor")
+    state = hass.states.get("binary_sensor.test_mybinary_sensor")
     assert state is not None
     assert state.state == hass_state
 
@@ -105,7 +121,7 @@ async def test_status_binary_sensor(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("binary_sensor.test_my_binary_sensor")
+    state = hass.states.get("binary_sensor.test_mybinary_sensor")
     assert state is not None
     assert state.state == STATE_ON
 
@@ -135,7 +151,7 @@ async def test_binary_sensor_missing_state(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("binary_sensor.test_my_binary_sensor")
+    state = hass.states.get("binary_sensor.test_mybinary_sensor")
     assert state is not None
     assert state.state == STATE_UNKNOWN
 
@@ -165,12 +181,12 @@ async def test_binary_sensor_has_state_false(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("binary_sensor.test_my_binary_sensor")
+    state = hass.states.get("binary_sensor.test_mybinary_sensor")
     assert state is not None
     assert state.state == STATE_UNKNOWN
 
     mock_device.set_state(BinarySensorState(key=1, state=True, missing_state=False))
     await hass.async_block_till_done()
-    state = hass.states.get("binary_sensor.test_my_binary_sensor")
+    state = hass.states.get("binary_sensor.test_mybinary_sensor")
     assert state is not None
     assert state.state == STATE_ON
