@@ -5,26 +5,13 @@
     },
     "error": {},
     "step": {
-      "liveboard": {
+      "user": {
         "data": {
-          "station_live": "Station",
-          "show_on_map": "Show the station on the map"
-        }
-      },
-      "connection": {
-        "data": {
-          "station_from": "Station where the connection departs",
-          "station_to": "Station where the connection arrives",
+          "station_from": "Station where the train departs",
+          "station_to": "Station where the train arrives",
           "exclude_vias": "Exclude connections with transfers",
           "show_on_map": "Show the station on the map"
         }
-      },
-      "user": {
-        "menu_options": {
-          "liveboard": "Liveboard at a station",
-          "connection": "Connection between 2 stations"
-        },
-        "title": "Choose type"
       }
     }
   }

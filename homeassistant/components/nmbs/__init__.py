@@ -7,8 +7,9 @@ from pyrail import iRail
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryError
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_STATION_FROM, CONF_STATION_LIVE, CONF_STATION_TO, DOMAIN
 
@@ -19,17 +20,22 @@ PLATFORMS = [Platform.SENSOR]
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up NMBS from a config entry."""
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the NMBS component."""
 
     api_client = iRail()
 
     hass.data.setdefault(DOMAIN, {})
-    if "stations" not in hass.data[DOMAIN]:
-        station_response = await hass.async_add_executor_job(api_client.get_stations)
-        if station_response == -1:
-            raise ConfigEntryNotReady("The API is currently unavailable.")
-        hass.data[DOMAIN]["stations"] = station_response["station"]
+    station_response = await hass.async_add_executor_job(api_client.get_stations)
+    if station_response == -1:
+        return False
+    hass.data[DOMAIN]["stations"] = station_response["station"]
+
+    return True
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up NMBS from a config entry."""
 
     station_types = [CONF_STATION_FROM, CONF_STATION_TO, CONF_STATION_LIVE]
 
