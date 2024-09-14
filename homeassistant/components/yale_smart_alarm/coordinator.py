@@ -35,13 +35,6 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
         self.locks: list[YaleLock] = []
 
-    def setup_yale(self) -> None:
-        """Set up the Yale initial information."""
-        self.yale = YaleSmartAlarmClient(
-            self.entry.data[CONF_USERNAME], self.entry.data[CONF_PASSWORD]
-        )
-        self.locks = self.yale.get_locks()
-
     async def _async_setup(self) -> None:
         """Set up connection to Yale."""
         try:
@@ -50,6 +43,7 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 self.entry.data[CONF_USERNAME],
                 self.entry.data[CONF_PASSWORD],
             )
+            self.locks = await self.hass.async_add_executor_job(self.yale.get_locks)
         except AuthenticationError as error:
             raise ConfigEntryAuthFailed from error
         except YALE_BASE_ERRORS as error:
