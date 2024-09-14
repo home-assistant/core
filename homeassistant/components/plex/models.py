@@ -87,7 +87,12 @@ class PlexSession:
     def update_item_ids(self, media):
         """Update TMDB and TVDB ID."""
         # get the source object from the session
-        source = media.source()
+        try:
+            source = media.source()
+        except AttributeError:
+            # media object is different things in different contexts
+            _LOGGER.debug("No source object found")
+            return
         _LOGGER.debug(
             "Attempting to extract TMDB and TVDB IDs from source %s", source.guids
         )
