@@ -709,6 +709,7 @@ select = [
     "B904", # Use raise from to specify exception cause
     "B905", # zip() without an explicit strict= parameter
     "BLE",
+    "F541", # f-string without any placeholders
     "C", # complexity
     "COM818", # Trailing comma on bare tuple prohibited
     "D", # docstrings
@@ -771,6 +772,8 @@ select = [
     "TID251", # Banned imports
     "TRY", # tryceratops
     "UP", # pyupgrade
+    "UP031", # Use format specifiers instead of percent format
+    "UP032", # Use f-string instead of `format` call
     "W", # pycodestyle
 ]
 
