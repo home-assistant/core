@@ -9,27 +9,14 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import ConfigType
 
-from .const import (
-    CONF_STATION_FROM,
-    CONF_STATION_LIVE,
-    CONF_STATION_TO,
-    DOMAIN,
-)  # noqa: F401
+from .const import CONF_STATION_FROM, CONF_STATION_LIVE, CONF_STATION_TO, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 PLATFORMS = [Platform.SENSOR]
 
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the NMBS component."""
-    hass.data.setdefault(DOMAIN, {})
-
-    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

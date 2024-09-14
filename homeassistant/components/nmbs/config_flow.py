@@ -66,11 +66,11 @@ class NMBSConfigFlow(ConfigFlow, domain=DOMAIN):
 
         errors: dict = {}
         if user_input is not None:
-            await self.async_set_unique_id(f"{user_input[CONF_STATION_LIVE]}")
+            await self.async_set_unique_id(user_input[CONF_STATION_LIVE])
             self._abort_if_unique_id_configured()
 
             user_input[CONF_TYPE] = "liveboard"
-            config_entry_name = f"{user_input[CONF_STATION_LIVE]}"
+            config_entry_name = user_input[CONF_STATION_LIVE]
             return self.async_create_entry(
                 title=config_entry_name,
                 data=user_input,
