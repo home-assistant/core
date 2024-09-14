@@ -1783,6 +1783,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "ezbeq": {
+      "name": "ezbeq",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "ezviz": {
       "name": "EZVIZ",
       "integration_type": "hub",

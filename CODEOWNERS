@@ -443,6 +443,7 @@ build.json @home-assistant/supervisor
 /tests/components/evil_genius_labs/ @balloob
 /homeassistant/components/evohome/ @zxdavb
 /tests/components/evohome/ @zxdavb
+/homeassistant/components/ezbeq/ @iloveicedgreentea
 /homeassistant/components/ezviz/ @RenierM26 @baqs
 /tests/components/ezviz/ @RenierM26 @baqs
 /homeassistant/components/faa_delays/ @ntilley905

@@ -1,0 +1,1 @@
+"""Constants for ezbeq module."""
