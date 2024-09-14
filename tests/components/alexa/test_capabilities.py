@@ -5,12 +5,14 @@ from unittest.mock import patch
 
 import pytest
 
+from homeassistant.components import cover
 from homeassistant.components.alexa import smart_home
 from homeassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE,
     ClimateEntityFeature,
     HVACMode,
 )
+from homeassistant.components.cover import CoverEntityFeature
 from homeassistant.components.lock import STATE_JAMMED, STATE_LOCKING, STATE_UNLOCKING
 from homeassistant.components.media_player import MediaPlayerEntityFeature
 from homeassistant.components.valve import ValveEntityFeature
@@ -386,6 +388,48 @@ async def test_api_remote_set_power_state(
         target_name,
         "remote#test",
         f"remote.{target_service}",
+        hass,
+    )
+
+
+@pytest.mark.parametrize(
+    (
+        "supported_features",
+        "expected_service_call",
+    ),
+    [
+        (CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE, cover.SERVICE_CLOSE_COVER),
+        (
+            CoverEntityFeature.SET_POSITION | CoverEntityFeature.CLOSE,
+            cover.SERVICE_CLOSE_COVER,
+        ),
+        (CoverEntityFeature.CLOSE | CoverEntityFeature.STOP, cover.SERVICE_CLOSE_COVER),
+        (
+            CoverEntityFeature.SET_POSITION
+            | CoverEntityFeature.CLOSE
+            | CoverEntityFeature.STOP,
+            cover.SERVICE_STOP_COVER,
+        ),
+        (
+            CoverEntityFeature.SET_POSITION | CoverEntityFeature.STOP,
+            cover.SERVICE_STOP_COVER,
+        ),
+    ],
+)
+async def test_api_cover_turn_off(
+    hass: HomeAssistant,
+    supported_features: CoverEntityFeature,
+    expected_service_call: str,
+) -> None:
+    hass.states.async_set(
+        "cover.test", "open", {"supported_features": supported_features}
+    )
+
+    await assert_request_calls_service(
+        "Alexa.PowerController",
+        "TurnOff",
+        "cover#test",
+        f"cover.{expected_service_call}",
         hass,
     )
 
