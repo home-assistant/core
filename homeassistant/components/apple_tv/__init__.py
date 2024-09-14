@@ -394,7 +394,7 @@ class AppleTVManager(DeviceListener):
 
         self._connection_attempts = 0
         if self._connection_was_lost:
-            _LOGGER.debug(
+            _LOGGER.warning(
                 'Connection was re-established to device "%s"',
                 self.config_entry.data[CONF_NAME],
             )
