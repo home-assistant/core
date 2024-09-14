@@ -97,7 +97,7 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             data = self.yale.get_information()
             if TYPE_CHECKING:
                 assert data.cycle
-            for device in data.cycle["device_status"]:
+            for device in data.cycle["data"]["device_status"]:
                 if device["type"] == YaleLock.DEVICE_TYPE:
                     for lock in self.locks:
                         if lock.name == device["name"]:
