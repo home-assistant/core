@@ -182,4 +182,4 @@ class EfergySensor(EfergyEntity, SensorEntity):
             return
         if not self._attr_available:
             self._attr_available = True
-            LOGGER.info("Connection has resumed")
+            LOGGER.debug("Connection has resumed")
