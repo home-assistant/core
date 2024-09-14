@@ -101,9 +101,11 @@ SENSORS = [
         name=None,
         device_class=SensorDeviceClass.ENUM,
         options=[s.name.lower() for s in HeatPump.State],
-        value_fn=lambda status: status.heat_pump_state.name.lower()
-        if status.heat_pump_state
-        else None,
+        value_fn=(
+            lambda status: status.heat_pump_state.name.lower()
+            if status.heat_pump_state
+            else None
+        ),
     ),
     WeHeatSensorEntityDescription(
         translation_key="electricity_used",
