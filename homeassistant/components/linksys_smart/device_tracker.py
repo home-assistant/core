@@ -9,7 +9,7 @@ import requests
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
-    DOMAIN,
+    DOMAIN as DEVICE_TRACKER_DOMAIN,
     PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
     DeviceScanner,
 )
@@ -32,7 +32,7 @@ def get_scanner(
 ) -> LinksysSmartWifiDeviceScanner | None:
     """Validate the configuration and return a Linksys AP scanner."""
     try:
-        return LinksysSmartWifiDeviceScanner(config[DOMAIN])
+        return LinksysSmartWifiDeviceScanner(config[DEVICE_TRACKER_DOMAIN])
     except ConnectionError:
         return None
 

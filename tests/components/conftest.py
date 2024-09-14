@@ -14,7 +14,7 @@ from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 
 if TYPE_CHECKING:
-    from homeassistant.components.hassio.addon_manager import AddonManager
+    from homeassistant.components.hassio import AddonManager
 
     from .conversation import MockAgent
     from .device_tracker.common import MockScanner

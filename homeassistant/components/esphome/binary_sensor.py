@@ -74,6 +74,7 @@ class EsphomeAssistInProgressBinarySensor(EsphomeAssistEntity, BinarySensorEntit
     """A binary sensor implementation for ESPHome for use with assist_pipeline."""
 
     entity_description = BinarySensorEntityDescription(
+        entity_registry_enabled_default=False,
         key="assist_in_progress",
         translation_key="assist_in_progress",
     )

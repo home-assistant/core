@@ -8,6 +8,7 @@ from typing import Any
 from androidtvremote2 import AndroidTVRemote, ConnectionClosed
 
 from homeassistant.components.media_player import (
+    BrowseMedia,
     MediaClass,
     MediaPlayerDeviceClass,
     MediaPlayerEntity,
@@ -15,7 +16,6 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
     MediaType,
 )
-from homeassistant.components.media_player.browse_media import BrowseMedia
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback

@@ -11,10 +11,10 @@ from homeassistant.core import HomeAssistant
 from .coordinator import LektricoDeviceDataUpdateCoordinator
 
 # List the platforms that charger supports.
-CHARGERS_PLATFORMS = [Platform.SENSOR]
+CHARGERS_PLATFORMS: list[Platform] = [Platform.BUTTON, Platform.SENSOR]
 
 # List the platforms that load balancer device supports.
-LB_DEVICES_PLATFORMS = [Platform.SENSOR]
+LB_DEVICES_PLATFORMS: list[Platform] = [Platform.BUTTON, Platform.SENSOR]
 
 type LektricoConfigEntry = ConfigEntry[LektricoDeviceDataUpdateCoordinator]
 

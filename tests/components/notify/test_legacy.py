@@ -19,7 +19,7 @@ from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockPlatform, async_get_persistent_notifications, mock_platform
+from tests.common import MockPlatform, mock_platform
 
 
 class NotificationService(notify.BaseNotificationService):
@@ -184,24 +184,6 @@ async def test_remove_targets(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     assert test.target_list == {"c": 1}
     assert test.registered_targets == {"test_c": 1}
-
-
-async def test_warn_template(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
-) -> None:
-    """Test warning when template used."""
-    assert await async_setup_component(hass, "notify", {})
-
-    await hass.services.async_call(
-        "notify",
-        "persistent_notification",
-        {"message": "{{ 1 + 1 }}", "title": "Test notif {{ 1 + 1 }}"},
-        blocking=True,
-    )
-    # We should only log it once
-    assert caplog.text.count("Passing templates to notify service is deprecated") == 1
-    notifications = async_get_persistent_notifications(hass)
-    assert len(notifications) == 1
 
 
 async def test_invalid_platform(
@@ -550,25 +532,9 @@ async def test_sending_none_message(hass: HomeAssistant, tmp_path: Path) -> None
             notify.DOMAIN, notify.SERVICE_NOTIFY, {notify.ATTR_MESSAGE: None}
         )
     assert (
-        str(exc.value)
-        == "template value is None for dictionary value @ data['message']"
+        str(exc.value) == "string value is None for dictionary value @ data['message']"
     )
     send_message_mock.assert_not_called()
-
-
-async def test_sending_templated_message(hass: HomeAssistant, tmp_path: Path) -> None:
-    """Send a templated message."""
-    send_message_mock = await help_setup_notify(hass, tmp_path)
-    hass.states.async_set("sensor.temperature", 10)
-    data = {
-        notify.ATTR_MESSAGE: "{{states.sensor.temperature.state}}",
-        notify.ATTR_TITLE: "{{ states.sensor.temperature.name }}",
-    }
-    await hass.services.async_call(notify.DOMAIN, notify.SERVICE_NOTIFY, data)
-    await hass.async_block_till_done()
-    send_message_mock.assert_called_once_with(
-        "10", {"title": "temperature", "data": None}
-    )
 
 
 async def test_method_forwards_correct_data(

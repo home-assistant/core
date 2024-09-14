@@ -10,12 +10,12 @@ from reolink_aio.enums import VodRequestType
 
 from homeassistant.components.camera import DOMAIN as CAM_DOMAIN, DynamicStreamSettings
 from homeassistant.components.media_player import MediaClass, MediaType
-from homeassistant.components.media_source.error import Unresolvable
-from homeassistant.components.media_source.models import (
+from homeassistant.components.media_source import (
     BrowseMediaSource,
     MediaSource,
     MediaSourceItem,
     PlayMedia,
+    Unresolvable,
 )
 from homeassistant.components.stream import create_stream
 from homeassistant.config_entries import ConfigEntryState
