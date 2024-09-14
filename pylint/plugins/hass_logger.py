@@ -26,6 +26,11 @@ class HassLoggerFormatChecker(BaseChecker):
             "hass-logger-capital",
             "All logger messages must start with a capital letter",
         ),
+        "W7403": (
+            "Informational logger messages are reserved for core use only",
+            "hass-logger-info-reserved",
+            "Informational logger messages are only allowed in core",
+        ),
     }
     options = ()
 
@@ -61,6 +66,12 @@ class HassLoggerFormatChecker(BaseChecker):
             and log_message[0].upper() != log_message[0]
         ):
             self.add_message("hass-logger-capital", node=node)
+
+        if (
+            node.root().name.startswith("homeassistant.components.")
+            and node.func.attrname == "info"
+        ):
+            self.add_message("hass-logger-info-reserved", node=node)
 
 
 def register(linter: PyLinter) -> None:
