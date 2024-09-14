@@ -236,6 +236,9 @@ async def async_api_turn_off(
 
         supported = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
 
+        # Alexa translates "stop" to a turn off command (most of the time), so we
+        # interpret this as a stop for covers if possible.
+        #
         # Only actually use the stop_cover service if the following conditions are met:
         # AND:
         #  - the cover has the STOP feature

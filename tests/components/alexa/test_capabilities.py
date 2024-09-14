@@ -421,6 +421,7 @@ async def test_api_cover_turn_off(
     supported_features: CoverEntityFeature,
     expected_service_call: str,
 ) -> None:
+    """Test alexa turn off command works as expected for covers."""
     hass.states.async_set(
         "cover.test", "open", {"supported_features": supported_features}
     )
