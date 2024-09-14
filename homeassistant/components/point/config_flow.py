@@ -4,18 +4,20 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
-from homeassistant.config_entries import ConfigFlowResult
+from homeassistant.components.webhook import async_generate_id
+from homeassistant.config_entries import ConfigEntry, ConfigFlowResult
+from homeassistant.const import CONF_TOKEN, CONF_WEBHOOK_ID
 from homeassistant.helpers.config_entry_oauth2_flow import AbstractOAuth2FlowHandler
 
 from .const import DOMAIN
-
-DATA_FLOW_IMPL = "point_flow_implementation"
 
 
 class OAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
     """Config flow to handle Minut Point OAuth2 authentication."""
 
     DOMAIN = DOMAIN
+
+    reauth_entry: ConfigEntry | None = None
 
     @property
     def logger(self) -> logging.Logger:
@@ -30,6 +32,9 @@ class OAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Perform reauth upon an API authentication error."""
+        self.reauth_entry = self.hass.config_entries.async_get_entry(
+            self.context["entry_id"]
+        )
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -42,8 +47,19 @@ class OAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
 
     async def async_oauth_create_entry(self, data: dict[str, Any]) -> ConfigFlowResult:
         """Create an oauth config entry or update existing entry for reauth."""
-        if existing_entry := await self.async_set_unique_id(DOMAIN):
-            self.hass.config_entries.async_update_entry(existing_entry, data=data)
-            await self.hass.config_entries.async_reload(existing_entry.entry_id)
-            return self.async_abort(reason="reauth_successful")
-        return self.async_create_entry(title="Minut Point", data=data)
+        user_id = str(data[CONF_TOKEN]["userid"])
+        if not self.reauth_entry:
+            await self.async_set_unique_id(user_id)
+            self._abort_if_unique_id_configured()
+
+            return self.async_create_entry(
+                title="Minut Point",
+                data={**data, CONF_WEBHOOK_ID: async_generate_id()},
+            )
+
+        if self.reauth_entry.unique_id == user_id:
+            return self.async_update_reload_and_abort(
+                self.reauth_entry, data={**self.reauth_entry.data, **data}
+            )
+
+        return self.async_abort(reason="wrong_account")
