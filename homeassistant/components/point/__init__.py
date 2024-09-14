@@ -1,5 +1,7 @@
 """Support for Minut Point."""
 
+import asyncio
+from dataclasses import dataclass, field
 from http import HTTPStatus
 import logging
 
@@ -48,7 +50,6 @@ from .const import (
     SCAN_INTERVAL,
     SIGNAL_UPDATE_ENTITY,
     SIGNAL_WEBHOOK,
-    PointData,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -375,3 +376,12 @@ class MinutPointEntity(Entity):
     def last_update(self):
         """Return the last_update time for the device."""
         return parse_datetime(self.device.last_update)
+
+
+@dataclass
+class PointData:
+    """Point Data."""
+
+    client: MinutPointClient
+    entry_lock: asyncio.Lock = asyncio.Lock()
+    entries: set[str | None] = field(default_factory=set)

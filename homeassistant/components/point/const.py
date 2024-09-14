@@ -1,10 +1,6 @@
 """Define constants for the Point component."""
 
-import asyncio
-from dataclasses import dataclass, field
 from datetime import timedelta
-
-from . import MinutPointClient
 
 DOMAIN = "point"
 
@@ -20,12 +16,3 @@ POINT_DISCOVERY_NEW = "point_new_{}_{}"
 
 OAUTH2_AUTHORIZE = "https://api.minut.com/v8/oauth/authorize"
 OAUTH2_TOKEN = "https://api.minut.com/v8/oauth/token"
-
-
-@dataclass
-class PointData:
-    """Point Data."""
-
-    client: MinutPointClient
-    entry_lock: asyncio.Lock = asyncio.Lock()
-    entries: set[str | None] = field(default_factory=set)
