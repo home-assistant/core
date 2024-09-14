@@ -107,7 +107,7 @@ DUMMY_SHUTTER_DEVICE = SwitcherShutter(
     DUMMY_DIRECTION,
 )
 
-DUMMY_SINGLE_SHUTTER_DUAL_DEVICE = SwitcherSingleShutterDualLight(
+DUMMY_SINGLE_SHUTTER_DUAL_LIGHT_DEVICE = SwitcherSingleShutterDualLight(
     DeviceType.RUNNER_S11,
     DeviceState.ON,
     DUMMY_DEVICE_ID5,

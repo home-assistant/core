@@ -27,7 +27,7 @@ from homeassistant.util import slugify
 from . import init_integration
 from .consts import (
     DUMMY_SHUTTER_DEVICE as DEVICE,
-    DUMMY_SINGLE_SHUTTER_DUAL_DEVICE as DEVICE2,
+    DUMMY_SINGLE_SHUTTER_DUAL_LIGHT_DEVICE as DEVICE2,
     DUMMY_TOKEN as TOKEN,
     DUMMY_USERNAME as USERNAME,
 )

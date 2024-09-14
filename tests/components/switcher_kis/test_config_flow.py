@@ -12,7 +12,7 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from .consts import (
     DUMMY_PLUG_DEVICE,
-    DUMMY_SINGLE_SHUTTER_DUAL_DEVICE,
+    DUMMY_SINGLE_SHUTTER_DUAL_LIGHT_DEVICE,
     DUMMY_TOKEN,
     DUMMY_USERNAME,
     DUMMY_WATER_HEATER_DEVICE,
@@ -61,7 +61,7 @@ async def test_user_setup(
     "mock_bridge",
     [
         [
-            DUMMY_SINGLE_SHUTTER_DUAL_DEVICE,
+            DUMMY_SINGLE_SHUTTER_DUAL_LIGHT_DEVICE,
         ]
     ],
     indirect=True,
