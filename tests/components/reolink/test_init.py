@@ -127,7 +127,7 @@ async def test_firmware_error_twice(
 
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 
-    reolink_connect.check_new_firmware.side_effect = None
+    reolink_connect.check_new_firmware.reset_mock(side_effect=True)
 
 
 async def test_credential_error_three(
@@ -154,7 +154,7 @@ async def test_credential_error_three(
 
     assert (HOMEASSISTANT_DOMAIN, issue_id) in issue_registry.issues
 
-    reolink_connect.get_states.side_effect = None
+    reolink_connect.get_states.reset_mock(side_effect=True)
 
 
 async def test_entry_reloading(
@@ -562,7 +562,7 @@ async def test_port_repair_issue(
 
     assert (DOMAIN, "enable_port") in issue_registry.issues
 
-    reolink_connect.set_net_port.side_effect = None
+    reolink_connect.set_net_port.reset_mock(side_effect=True)
 
 
 async def test_webhook_repair_issue(

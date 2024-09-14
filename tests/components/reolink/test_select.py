@@ -74,7 +74,7 @@ async def test_floodlight_mode_select(
 
     assert hass.states.get(entity_id).state == STATE_UNKNOWN
 
-    reolink_connect.set_whiteled.side_effect = None
+    reolink_connect.set_whiteled.reset_mock(side_effect=True)
 
 
 async def test_play_quick_reply_message(
@@ -158,4 +158,4 @@ async def test_chime_select(
 
     assert hass.states.get(entity_id).state == STATE_UNKNOWN
 
-    test_chime.set_tone.side_effect = None
+    test_chime.set_tone.reset_mock(side_effect=True)

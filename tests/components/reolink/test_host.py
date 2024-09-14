@@ -102,7 +102,7 @@ async def test_webhook_callback(
         await async_handle_webhook(hass, webhook_id, request)
     signal_all.assert_not_called()
 
-    reolink_connect.ONVIF_event_callback.side_effect = None
+    reolink_connect.ONVIF_event_callback.reset_mock(side_effect=True)
 
 
 async def test_no_mac(
@@ -131,7 +131,7 @@ async def test_subscribe_error(
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.LOADED
-    reolink_connect.subscribe.side_effect = None
+    reolink_connect.subscribe.reset_mock(side_effect=True)
 
 
 async def test_subscribe_unsuccesfull(
@@ -187,7 +187,7 @@ async def test_ONVIF_not_supported(
     await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.LOADED
 
-    reolink_connect.subscribe.side_effect = None
+    reolink_connect.subscribe.reset_mock(side_effect=True)
     reolink_connect.subscribed.return_value = True
 
 
@@ -227,8 +227,8 @@ async def test_renew(
 
     reolink_connect.subscribe.assert_called()
 
-    reolink_connect.renew.side_effect = None
-    reolink_connect.subscribe.side_effect = None
+    reolink_connect.renew.reset_mock(side_effect=True)
+    reolink_connect.subscribe.reset_mock(side_effect=True)
 
 
 async def test_long_poll_renew_fail(
@@ -251,7 +251,7 @@ async def test_long_poll_renew_fail(
     # ensure long polling continues
     reolink_connect.pull_point_request.assert_called()
 
-    reolink_connect.subscribe.side_effect = None
+    reolink_connect.subscribe.reset_mock(side_effect=True)
 
 
 async def test_register_webhook_errors(
@@ -332,7 +332,7 @@ async def test_long_poll_errors(
 
     reolink_connect.unsubscribe.assert_called_with(sub_type=SubType.long_poll)
 
-    reolink_connect.pull_point_request.side_effect = None
+    reolink_connect.pull_point_request.reset_mock(side_effect=True)
 
 
 async def test_fast_polling_errors(
@@ -369,8 +369,8 @@ async def test_fast_polling_errors(
     # fast polling continues despite errors
     assert reolink_connect.get_motion_state_all_ch.call_count == 2
 
-    reolink_connect.get_motion_state_all_ch.side_effect = None
-    reolink_connect.pull_point_request.side_effect = None
+    reolink_connect.get_motion_state_all_ch.reset_mock(side_effect=True)
+    reolink_connect.pull_point_request.reset_mock(side_effect=True)
 
 
 async def test_diagnostics_event_connection(

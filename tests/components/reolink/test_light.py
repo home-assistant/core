@@ -94,7 +94,7 @@ async def test_light_turn_off(
             blocking=True,
         )
 
-    reolink_connect.set_whiteled.side_effect = None
+    reolink_connect.set_whiteled.reset_mock(side_effect=True)
 
 
 async def test_light_turn_on(
@@ -147,4 +147,4 @@ async def test_light_turn_on(
             blocking=True,
         )
 
-    reolink_connect.set_whiteled.side_effect = None
+    reolink_connect.set_whiteled.reset_mock(side_effect=True)

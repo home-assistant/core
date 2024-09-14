@@ -135,4 +135,4 @@ async def test_siren_turn_off_errors(
             blocking=True,
         )
 
-    reolink_connect.set_siren.side_effect = None
+    reolink_connect.set_siren.reset_mock(side_effect=True)

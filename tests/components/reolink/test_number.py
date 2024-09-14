@@ -64,7 +64,7 @@ async def test_number(
             blocking=True,
         )
 
-    reolink_connect.set_volume.side_effect = None
+    reolink_connect.set_volume.reset_mock(side_effect=True)
 
 
 async def test_chime_number(
@@ -112,4 +112,4 @@ async def test_chime_number(
             blocking=True,
         )
 
-    test_chime.set_option.side_effect = None
+    test_chime.set_option.reset_mock(side_effect=True)

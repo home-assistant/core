@@ -48,7 +48,7 @@ async def test_button(
             blocking=True,
         )
 
-    reolink_connect.set_ptz_command.side_effect = None
+    reolink_connect.set_ptz_command.reset_mock(side_effect=True)
 
 
 async def test_ptz_move_service(
@@ -81,7 +81,7 @@ async def test_ptz_move_service(
             blocking=True,
         )
 
-    reolink_connect.set_ptz_command.side_effect = None
+    reolink_connect.set_ptz_command.reset_mock(side_effect=True)
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -115,4 +115,4 @@ async def test_host_button(
             blocking=True,
         )
 
-    reolink_connect.reboot.side_effect = None
+    reolink_connect.reboot.reset_mock(side_effect=True)

@@ -199,7 +199,7 @@ async def test_config_flow_errors(
     assert result["step_id"] == "user"
     assert result["errors"] == {CONF_HOST: "api_error"}
 
-    reolink_connect.get_host_data.side_effect = None
+    reolink_connect.get_host_data.reset_mock(side_effect=True)
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
@@ -224,8 +224,8 @@ async def test_config_flow_errors(
         CONF_PROTOCOL: DEFAULT_PROTOCOL,
     }
 
-    reolink_connect.unsubscribe.side_effect = None
-    reolink_connect.logout.side_effect = None
+    reolink_connect.unsubscribe.reset_mock(side_effect=True)
+    reolink_connect.logout.reset_mock(side_effect=True)
 
 
 async def test_options_flow(hass: HomeAssistant, mock_setup_entry: MagicMock) -> None:
