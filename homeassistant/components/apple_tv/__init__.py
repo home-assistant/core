@@ -375,7 +375,7 @@ class AppleTVManager(DeviceListener):
                     f"Protocol(s) {missing_protocols_str} not yet found for {name},"
                     " waiting for discovery."
                 )
-            _LOGGER.info(
+            _LOGGER.debug(
                 "Protocol(s) %s not yet found for %s, trying later",
                 missing_protocols_str,
                 name,
@@ -394,7 +394,7 @@ class AppleTVManager(DeviceListener):
 
         self._connection_attempts = 0
         if self._connection_was_lost:
-            _LOGGER.info(
+            _LOGGER.warning(
                 'Connection was re-established to device "%s"',
                 self.config_entry.data[CONF_NAME],
             )
