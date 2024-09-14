@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 import logging
 from urllib.error import HTTPError
 
@@ -20,14 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
-type TfLConfigEntry = ConfigEntry[TfLData]
-
-
-@dataclass
-class TfLData:
-    """Runtime data for TfL integration."""
-
-    stop_point_api: stopPoint
+type TfLConfigEntry = ConfigEntry[stopPoint]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: TfLConfigEntry) -> bool:
@@ -51,7 +43,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TfLConfigEntry) -> bool:
         "Setting up %s integration, got stoppoint categories %s", DOMAIN, categories
     )
 
-    entry.runtime_data = TfLData(stop_point_api)
+    entry.runtime_data = stop_point_api
     entry.async_on_unload(entry.add_update_listener(update_listener))
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

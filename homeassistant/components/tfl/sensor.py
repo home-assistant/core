@@ -37,7 +37,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: TfLConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the TfL sensor."""
-    stop_point_api = entry.runtime_data.stop_point_api
+    stop_point_api = entry.runtime_data
 
     conf = entry.options
 
