@@ -75,6 +75,34 @@ DEVICE_ENTITY_DESCRIPTIONS: tuple[ViCareNumberEntityDescription, ...] = (
         native_max_value=60,
         native_step=1,
     ),
+    ViCareNumberEntityDescription(
+        key="dhw_hysteresis_switch_on",
+        translation_key="dhw_hysteresis_switch_on",
+        entity_category=EntityCategory.CONFIG,
+        device_class=NumberDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.KELVIN,
+        value_getter=lambda api: api.getDomesticHotWaterHysteresisSwitchOn(),
+        value_setter=lambda api, value: api.setDomesticHotWaterHysteresisSwitchOn(
+            value
+        ),
+        min_value_getter=lambda api: api.getDomesticHotWaterHysteresisSwitchOnMin(),
+        max_value_getter=lambda api: api.getDomesticHotWaterHysteresisSwitchOnMax(),
+        stepping_getter=lambda api: api.getDomesticHotWaterHysteresisSwitchOnStepping(),
+    ),
+    ViCareNumberEntityDescription(
+        key="dhw_hysteresis_switch_off",
+        translation_key="dhw_hysteresis_switch_off",
+        entity_category=EntityCategory.CONFIG,
+        device_class=NumberDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.KELVIN,
+        value_getter=lambda api: api.getDomesticHotWaterHysteresisSwitchOff(),
+        value_setter=lambda api, value: api.setDomesticHotWaterHysteresisSwitchOff(
+            value
+        ),
+        min_value_getter=lambda api: api.getDomesticHotWaterHysteresisSwitchOffMin(),
+        max_value_getter=lambda api: api.getDomesticHotWaterHysteresisSwitchOffMax(),
+        stepping_getter=lambda api: api.getDomesticHotWaterHysteresisSwitchOffStepping(),
+    ),
 )
 
 
@@ -245,30 +273,30 @@ def _build_entities(
 ) -> list[ViCareNumber]:
     """Create ViCare number entities for a device."""
 
-    entities: list[ViCareNumber] = [
-        ViCareNumber(
-            device.config,
-            device.api,
-            description,
-        )
-        for device in device_list
-        for description in DEVICE_ENTITY_DESCRIPTIONS
-        if is_supported(description.key, description, device.api)
-    ]
-
-    entities.extend(
-        [
+    entities: list[ViCareNumber] = []
+    for device in device_list:
+        # add device entities
+        entities.extend(
             ViCareNumber(
-                device.config,
-                circuit,
                 description,
+                device.config,
+                device.api,
             )
-            for device in device_list
+            for description in DEVICE_ENTITY_DESCRIPTIONS
+            if is_supported(description.key, description, device.api)
+        )
+        # add component entities
+        entities.extend(
+            ViCareNumber(
+                description,
+                device.config,
+                device.api,
+                circuit,
+            )
             for circuit in get_circuits(device.api)
             for description in CIRCUIT_ENTITY_DESCRIPTIONS
             if is_supported(description.key, description, circuit)
-        ]
-    )
+        )
     return entities
 
 
@@ -295,12 +323,13 @@ class ViCareNumber(ViCareEntity, NumberEntity):
 
     def __init__(
         self,
-        device_config: PyViCareDeviceConfig,
-        api: PyViCareDevice | PyViCareHeatingDeviceComponent,
         description: ViCareNumberEntityDescription,
+        device_config: PyViCareDeviceConfig,
+        device: PyViCareDevice,
+        component: PyViCareHeatingDeviceComponent | None = None,
     ) -> None:
         """Initialize the number."""
-        super().__init__(device_config, api, description.key)
+        super().__init__(description.key, device_config, device, component)
         self.entity_description = description
 
     @property

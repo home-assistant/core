@@ -34,6 +34,7 @@ from .const import (
     CONF_SET_PRECISION,
     CONF_TEMPORARY_OVRD_MODE,
     CONNECTION_TIMEOUT,
+    OpenThermDataSource,
 )
 
 
@@ -74,7 +75,7 @@ class OpenThermGwConfigFlow(ConfigFlow, domain=DOMAIN):
                 await otgw.disconnect()
                 if not status:
                     raise ConnectionError
-                return status[gw_vars.OTGW].get(gw_vars.OTGW_ABOUT)
+                return status[OpenThermDataSource.GATEWAY].get(gw_vars.OTGW_ABOUT)
 
             try:
                 async with asyncio.timeout(CONNECTION_TIMEOUT):
@@ -94,6 +95,7 @@ class OpenThermGwConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle manual initiation of the config flow."""
         return await self.async_step_init(user_input)
 
+    # Deprecated import from configuration.yaml, can be removed in 2025.4.0
     async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Import an OpenTherm Gateway device as a config entry.
 

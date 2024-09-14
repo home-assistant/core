@@ -6,7 +6,7 @@ import logging
 import math
 from typing import Any
 
-from pysmarty import Smarty
+from pysmarty2 import Smarty
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.core import HomeAssistant, callback

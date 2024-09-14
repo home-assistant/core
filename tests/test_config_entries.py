@@ -4297,29 +4297,28 @@ async def test_loading_old_data(
     assert entry.pref_disable_new_entities is True
 
 
-async def test_deprecated_disabled_by_str_ctor(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
-) -> None:
+async def test_deprecated_disabled_by_str_ctor() -> None:
     """Test deprecated str disabled_by constructor enumizes and logs a warning."""
-    entry = MockConfigEntry(disabled_by=config_entries.ConfigEntryDisabler.USER.value)
-    assert entry.disabled_by is config_entries.ConfigEntryDisabler.USER
-    assert " str for config entry disabled_by. This is deprecated " in caplog.text
+    with pytest.raises(
+        TypeError, match="disabled_by must be a ConfigEntryDisabler value, got user"
+    ):
+        MockConfigEntry(disabled_by=config_entries.ConfigEntryDisabler.USER.value)
 
 
 async def test_deprecated_disabled_by_str_set(
     hass: HomeAssistant,
     manager: config_entries.ConfigEntries,
-    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test deprecated str set disabled_by enumizes and logs a warning."""
     entry = MockConfigEntry(domain="comp")
     entry.add_to_manager(manager)
     hass.config.components.add("comp")
-    assert await manager.async_set_disabled_by(
-        entry.entry_id, config_entries.ConfigEntryDisabler.USER.value
-    )
-    assert entry.disabled_by is config_entries.ConfigEntryDisabler.USER
-    assert " str for config entry disabled_by. This is deprecated " in caplog.text
+    with pytest.raises(
+        TypeError, match="disabled_by must be a ConfigEntryDisabler value, got user"
+    ):
+        await manager.async_set_disabled_by(
+            entry.entry_id, config_entries.ConfigEntryDisabler.USER.value
+        )
 
 
 async def test_entry_reload_concurrency(
@@ -5093,7 +5092,7 @@ async def test_hashable_non_string_unique_id(
     entries[entry.entry_id] = entry
     assert (
         "Config entry 'title' from integration test has an invalid unique_id"
-    ) not in caplog.text
+    ) in caplog.text
 
     assert entry.entry_id in entries
     assert entries[entry.entry_id] is entry
@@ -5437,13 +5436,8 @@ async def test_report_direct_mutation_of_config_entry(
     entry = MockConfigEntry(domain="test")
     entry.add_to_hass(hass)
 
-    setattr(entry, field, "new_value")
-
-    assert (
-        f'Detected code that sets "{field}" directly to update a config entry. '
-        "This is deprecated and will stop working in Home Assistant 2024.9, "
-        "it should be updated to use async_update_entry instead. Please report this issue."
-    ) in caplog.text
+    with pytest.raises(AttributeError):
+        setattr(entry, field, "new_value")
 
 
 async def test_updating_non_added_entry_raises(hass: HomeAssistant) -> None:

@@ -1,9 +1,12 @@
 """Media source for Google Photos."""
 
 from dataclasses import dataclass
-from enum import StrEnum
+from enum import Enum, StrEnum
 import logging
-from typing import Any, cast
+from typing import Any, Self, cast
+
+from google_photos_library_api.exceptions import GooglePhotosApiError
+from google_photos_library_api.model import Album, MediaItem
 
 from homeassistant.components.media_player import MediaClass, MediaType
 from homeassistant.components.media_source import (
@@ -16,23 +19,45 @@ from homeassistant.components.media_source import (
 from homeassistant.core import HomeAssistant
 
 from . import GooglePhotosConfigEntry
-from .const import DOMAIN
-from .exceptions import GooglePhotosApiError
+from .const import DOMAIN, READ_SCOPES
 
 _LOGGER = logging.getLogger(__name__)
 
-# Media Sources do not support paging, so we only show a subset of recent
-# photos when displaying the users library. We fetch a minimum of 50 photos
-# unless we run out, but in pages of 100 at a time given sometimes responses
-# may only contain a handful of items Fetches at least 50 photos.
-MAX_PHOTOS = 50
-PAGE_SIZE = 100
+MAX_RECENT_PHOTOS = 100
+MEDIA_ITEMS_PAGE_SIZE = 100
+ALBUM_PAGE_SIZE = 50
 
 THUMBNAIL_SIZE = 256
 LARGE_IMAGE_SIZE = 2160
 
 
-# Markers for parts of PhotosIdentifier url pattern.
+@dataclass
+class SpecialAlbumDetails:
+    """Details for a Special album."""
+
+    path: str
+    title: str
+    list_args: dict[str, Any]
+    max_photos: int | None
+
+
+class SpecialAlbum(Enum):
+    """Special Album types."""
+
+    RECENT = SpecialAlbumDetails("recent", "Recent Photos", {}, MAX_RECENT_PHOTOS)
+    FAVORITE = SpecialAlbumDetails(
+        "favorites", "Favorite Photos", {"favorites": True}, None
+    )
+
+    @classmethod
+    def of(cls, path: str) -> Self | None:
+        """Parse a PhotosIdentifierType by string value."""
+        for enum in cls:
+            if enum.value.path == path:
+                return enum
+        return None
+
+
 # The PhotosIdentifier can be in the following forms:
 #  config-entry-id
 #  config-entry-id/a/album-media-id
@@ -40,12 +65,6 @@ LARGE_IMAGE_SIZE = 2160
 #
 # The album-media-id can contain special reserved folder names for use by
 # this integration for virtual folders like the `recent` album.
-PHOTO_SOURCE_IDENTIFIER_PHOTO = "p"
-PHOTO_SOURCE_IDENTIFIER_ALBUM = "a"
-
-# Currently supports a single album of recent photos
-RECENT_PHOTOS_ALBUM = "recent"
-RECENT_PHOTOS_TITLE = "Recent Photos"
 
 
 class PhotosIdentifierType(StrEnum):
@@ -77,37 +96,30 @@ class PhotosIdentifier:
     """Identifies the album or photo contents to show."""
 
     def as_string(self) -> str:
-        """Serialize the identiifer as a string.
-
-        This is the opposite if of().
-        """
+        """Serialize the identifier as a string."""
         if self.id_type is None:
             return self.config_entry_id
         return f"{self.config_entry_id}/{self.id_type}/{self.media_id}"
 
-    @staticmethod
-    def of(identifier: str) -> "PhotosIdentifier":
-        """Parse a PhotosIdentifier form a string.
-
-        This is the opposite of as_string().
-        """
+    @classmethod
+    def of(cls, identifier: str) -> Self:
+        """Parse a PhotosIdentifier form a string."""
         parts = identifier.split("/")
-        _LOGGER.debug("parts=%s", parts)
         if len(parts) == 1:
-            return PhotosIdentifier(parts[0])
+            return cls(parts[0])
         if len(parts) != 3:
             raise BrowseError(f"Invalid identifier: {identifier}")
-        return PhotosIdentifier(parts[0], PhotosIdentifierType.of(parts[1]), parts[2])
+        return cls(parts[0], PhotosIdentifierType.of(parts[1]), parts[2])
 
-    @staticmethod
-    def album(config_entry_id: str, media_id: str) -> "PhotosIdentifier":
+    @classmethod
+    def album(cls, config_entry_id: str, media_id: str) -> Self:
         """Create an album PhotosIdentifier."""
-        return PhotosIdentifier(config_entry_id, PhotosIdentifierType.ALBUM, media_id)
+        return cls(config_entry_id, PhotosIdentifierType.ALBUM, media_id)
 
-    @staticmethod
-    def photo(config_entry_id: str, media_id: str) -> "PhotosIdentifier":
+    @classmethod
+    def photo(cls, config_entry_id: str, media_id: str) -> Self:
         """Create an album PhotosIdentifier."""
-        return PhotosIdentifier(config_entry_id, PhotosIdentifierType.PHOTO, media_id)
+        return cls(config_entry_id, PhotosIdentifierType.PHOTO, media_id)
 
 
 async def async_get_media_source(hass: HomeAssistant) -> MediaSource:
@@ -144,14 +156,15 @@ class GooglePhotosMediaSource(MediaSource):
         entry = self._async_config_entry(identifier.config_entry_id)
         client = entry.runtime_data
         media_item = await client.get_media_item(media_item_id=identifier.media_id)
-        is_video = media_item["mediaMetadata"].get("video") is not None
+        if not media_item.mime_type:
+            raise BrowseError("Could not determine mime type of media item")
+        if media_item.media_metadata and (media_item.media_metadata.video is not None):
+            url = _video_url(media_item)
+        else:
+            url = _media_url(media_item, LARGE_IMAGE_SIZE)
         return PlayMedia(
-            url=(
-                _video_url(media_item)
-                if is_video
-                else _media_url(media_item, LARGE_IMAGE_SIZE)
-            ),
-            mime_type=media_item["mimeType"],
+            url=url,
+            mime_type=media_item.mime_type,
         )
 
     async def async_browse_media(self, item: MediaSourceItem) -> BrowseMediaSource:
@@ -174,7 +187,7 @@ class GooglePhotosMediaSource(MediaSource):
                 children_media_class=MediaClass.DIRECTORY,
                 children=[
                     _build_account(entry, PhotosIdentifier(cast(str, entry.unique_id)))
-                    for entry in self.hass.config_entries.async_loaded_entries(DOMAIN)
+                    for entry in self._async_config_entries()
                 ],
             )
 
@@ -187,42 +200,79 @@ class GooglePhotosMediaSource(MediaSource):
         if identifier.id_type is None:
             source.children = [
                 _build_album(
-                    RECENT_PHOTOS_TITLE,
+                    special_album.value.title,
                     PhotosIdentifier.album(
-                        identifier.config_entry_id, RECENT_PHOTOS_ALBUM
+                        identifier.config_entry_id, special_album.value.path
                     ),
                 )
+                for special_album in SpecialAlbum
             ]
+            albums: list[Album] = []
+            try:
+                async for album_result in await client.list_albums(
+                    page_size=ALBUM_PAGE_SIZE
+                ):
+                    albums.extend(album_result.albums)
+            except GooglePhotosApiError as err:
+                raise BrowseError(f"Error listing albums: {err}") from err
+
+            source.children.extend(
+                _build_album(
+                    album.title,
+                    PhotosIdentifier.album(
+                        identifier.config_entry_id,
+                        album.id,
+                    ),
+                    _cover_photo_url(album, THUMBNAIL_SIZE),
+                )
+                for album in albums
+            )
             return source
 
-        # Currently only supports listing a single album of recent photos.
-        if identifier.media_id != RECENT_PHOTOS_ALBUM:
-            raise BrowseError(f"Unsupported album: {identifier}")
+        if (
+            identifier.id_type != PhotosIdentifierType.ALBUM
+            or identifier.media_id is None
+        ):
+            raise BrowseError(f"Unsupported identifier: {identifier}")
 
-        # Fetch recent items
-        media_items: list[dict[str, Any]] = []
-        page_token: str | None = None
-        while len(media_items) < MAX_PHOTOS:
-            try:
-                result = await client.list_media_items(
-                    page_size=PAGE_SIZE, page_token=page_token
-                )
-            except GooglePhotosApiError as err:
-                raise BrowseError(f"Error listing media items: {err}") from err
-            media_items.extend(result["mediaItems"])
-            page_token = result.get("nextPageToken")
-            if page_token is None:
-                break
+        list_args: dict[str, Any]
+        if special_album := SpecialAlbum.of(identifier.media_id):
+            list_args = special_album.value.list_args
+        else:
+            list_args = {"album_id": identifier.media_id}
 
-        # Render the grid of media item results
+        media_items: list[MediaItem] = []
+        try:
+            async for media_item_result in await client.list_media_items(
+                **list_args, page_size=MEDIA_ITEMS_PAGE_SIZE
+            ):
+                media_items.extend(media_item_result.media_items)
+                if (
+                    special_album
+                    and (max_photos := special_album.value.max_photos)
+                    and len(media_items) > max_photos
+                ):
+                    break
+        except GooglePhotosApiError as err:
+            raise BrowseError(f"Error listing media items: {err}") from err
+
         source.children = [
             _build_media_item(
-                PhotosIdentifier.photo(identifier.config_entry_id, media_item["id"]),
+                PhotosIdentifier.photo(identifier.config_entry_id, media_item.id),
                 media_item,
             )
             for media_item in media_items
         ]
         return source
+
+    def _async_config_entries(self) -> list[GooglePhotosConfigEntry]:
+        """Return all config entries that support photo library reads."""
+        entries = []
+        for entry in self.hass.config_entries.async_loaded_entries(DOMAIN):
+            scopes = entry.data["token"]["scope"].split(" ")
+            if any(scope in scopes for scope in READ_SCOPES):
+                entries.append(entry)
+        return entries
 
     def _async_config_entry(self, config_entry_id: str) -> GooglePhotosConfigEntry:
         """Return a config entry with the specified id."""
@@ -252,7 +302,9 @@ def _build_account(
     )
 
 
-def _build_album(title: str, identifier: PhotosIdentifier) -> BrowseMediaSource:
+def _build_album(
+    title: str, identifier: PhotosIdentifier, thumbnail_url: str | None = None
+) -> BrowseMediaSource:
     """Build an album node."""
     return BrowseMediaSource(
         domain=DOMAIN,
@@ -262,37 +314,46 @@ def _build_album(title: str, identifier: PhotosIdentifier) -> BrowseMediaSource:
         title=title,
         can_play=False,
         can_expand=True,
+        thumbnail=thumbnail_url,
     )
 
 
 def _build_media_item(
-    identifier: PhotosIdentifier, media_item: dict[str, Any]
+    identifier: PhotosIdentifier,
+    media_item: MediaItem,
 ) -> BrowseMediaSource:
     """Build the node for an individual photo or video."""
-    is_video = media_item["mediaMetadata"].get("video") is not None
+    is_video = media_item.media_metadata and (
+        media_item.media_metadata.video is not None
+    )
     return BrowseMediaSource(
         domain=DOMAIN,
         identifier=identifier.as_string(),
         media_class=MediaClass.IMAGE if not is_video else MediaClass.VIDEO,
         media_content_type=MediaType.IMAGE if not is_video else MediaType.VIDEO,
-        title=media_item["filename"],
+        title=media_item.filename,
         can_play=is_video,
         can_expand=False,
         thumbnail=_media_url(media_item, THUMBNAIL_SIZE),
     )
 
 
-def _media_url(media_item: dict[str, Any], max_size: int) -> str:
+def _media_url(media_item: MediaItem, max_size: int) -> str:
     """Return a media item url with the specified max thumbnail size on the longest edge.
 
     See https://developers.google.com/photos/library/guides/access-media-items#base-urls
     """
-    return f"{media_item["baseUrl"]}=h{max_size}"
+    return f"{media_item.base_url}=h{max_size}"
 
 
-def _video_url(media_item: dict[str, Any]) -> str:
+def _video_url(media_item: MediaItem) -> str:
     """Return a video url for the item.
 
     See https://developers.google.com/photos/library/guides/access-media-items#base-urls
     """
-    return f"{media_item["baseUrl"]}=dv"
+    return f"{media_item.base_url}=dv"
+
+
+def _cover_photo_url(album: Album, max_size: int) -> str:
+    """Return a media item url for the cover photo of the album."""
+    return f"{album.cover_photo_base_url}=h{max_size}"

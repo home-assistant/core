@@ -11,7 +11,7 @@ from homeassistant.components.fan import (
     ATTR_PRESET_MODE,
     DIRECTION_FORWARD,
     DIRECTION_REVERSE,
-    DOMAIN,
+    DOMAIN as FAN_DOMAIN,
     FanEntityFeature,
     NotValidPresetModeError,
 )
@@ -36,12 +36,12 @@ _OSC_INPUT = "input_select.osc"
 _DIRECTION_INPUT_SELECT = "input_select.direction"
 
 
-@pytest.mark.parametrize(("count", "domain"), [(1, DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, FAN_DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
         {
-            DOMAIN: {
+            FAN_DOMAIN: {
                 "platform": "template",
                 "fans": {
                     "test_fan": {
@@ -59,12 +59,12 @@ async def test_missing_optional_config(hass: HomeAssistant, start_ha) -> None:
     _verify(hass, STATE_ON, None, None, None, None)
 
 
-@pytest.mark.parametrize(("count", "domain"), [(0, DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(0, FAN_DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
         {
-            DOMAIN: {
+            FAN_DOMAIN: {
                 "platform": "template",
                 "fans": {
                     "platform": "template",
@@ -78,7 +78,7 @@ async def test_missing_optional_config(hass: HomeAssistant, start_ha) -> None:
             }
         },
         {
-            DOMAIN: {
+            FAN_DOMAIN: {
                 "platform": "template",
                 "fans": {
                     "platform": "template",
@@ -92,7 +92,7 @@ async def test_missing_optional_config(hass: HomeAssistant, start_ha) -> None:
             }
         },
         {
-            DOMAIN: {
+            FAN_DOMAIN: {
                 "platform": "template",
                 "fans": {
                     "platform": "template",
@@ -112,12 +112,12 @@ async def test_wrong_template_config(hass: HomeAssistant, start_ha) -> None:
     assert hass.states.async_all("fan") == []
 
 
-@pytest.mark.parametrize(("count", "domain"), [(1, DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, FAN_DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
         {
-            DOMAIN: {
+            FAN_DOMAIN: {
                 "platform": "template",
                 "fans": {
                     "test_fan": {
@@ -173,13 +173,13 @@ async def test_templates_with_entities(hass: HomeAssistant, start_ha) -> None:
     _verify(hass, STATE_OFF, 0, True, DIRECTION_FORWARD, None)
 
 
-@pytest.mark.parametrize(("count", "domain"), [(1, DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, FAN_DOMAIN)])
 @pytest.mark.parametrize(
     ("config", "entity", "tests"),
     [
         (
             {
-                DOMAIN: {
+                FAN_DOMAIN: {
                     "platform": "template",
                     "fans": {
                         "test_fan": {
@@ -203,7 +203,7 @@ async def test_templates_with_entities(hass: HomeAssistant, start_ha) -> None:
         ),
         (
             {
-                DOMAIN: {
+                FAN_DOMAIN: {
                     "platform": "template",
                     "fans": {
                         "test_fan": {
@@ -239,12 +239,12 @@ async def test_templates_with_entities2(
         _verify(hass, STATE_ON, test_percentage, None, None, test_type)
 
 
-@pytest.mark.parametrize(("count", "domain"), [(1, DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, FAN_DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
         {
-            DOMAIN: {
+            FAN_DOMAIN: {
                 "platform": "template",
                 "fans": {
                     "test_fan": {
@@ -272,13 +272,13 @@ async def test_availability_template_with_entities(
         assert (hass.states.get(_TEST_FAN).state != STATE_UNAVAILABLE) == test_assert
 
 
-@pytest.mark.parametrize(("count", "domain"), [(1, DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, FAN_DOMAIN)])
 @pytest.mark.parametrize(
     ("config", "states"),
     [
         (
             {
-                DOMAIN: {
+                FAN_DOMAIN: {
                     "platform": "template",
                     "fans": {
                         "test_fan": {
@@ -293,7 +293,7 @@ async def test_availability_template_with_entities(
         ),
         (
             {
-                DOMAIN: {
+                FAN_DOMAIN: {
                     "platform": "template",
                     "fans": {
                         "test_fan": {
@@ -311,7 +311,7 @@ async def test_availability_template_with_entities(
         ),
         (
             {
-                DOMAIN: {
+                FAN_DOMAIN: {
                     "platform": "template",
                     "fans": {
                         "test_fan": {
@@ -329,7 +329,7 @@ async def test_availability_template_with_entities(
         ),
         (
             {
-                DOMAIN: {
+                FAN_DOMAIN: {
                     "platform": "template",
                     "fans": {
                         "test_fan": {
@@ -354,12 +354,12 @@ async def test_template_with_unavailable_entities(
     _verify(hass, states[0], states[1], states[2], states[3], None)
 
 
-@pytest.mark.parametrize(("count", "domain"), [(1, DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, FAN_DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
         {
-            DOMAIN: {
+            FAN_DOMAIN: {
                 "platform": "template",
                 "fans": {
                     "test_fan": {
@@ -903,12 +903,12 @@ async def _register_components(
     await hass.async_block_till_done()
 
 
-@pytest.mark.parametrize(("count", "domain"), [(1, DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, FAN_DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
         {
-            DOMAIN: {
+            FAN_DOMAIN: {
                 "platform": "template",
                 "fans": {
                     "test_template_fan_01": {
@@ -1024,12 +1024,12 @@ async def test_implemented_percentage(
     assert attributes.get("supported_features") & FanEntityFeature.SET_SPEED
 
 
-@pytest.mark.parametrize(("count", "domain"), [(1, DOMAIN)])
+@pytest.mark.parametrize(("count", "domain"), [(1, FAN_DOMAIN)])
 @pytest.mark.parametrize(
     "config",
     [
         {
-            DOMAIN: {
+            FAN_DOMAIN: {
                 "platform": "template",
                 "fans": {
                     "mechanical_ventilation": {
