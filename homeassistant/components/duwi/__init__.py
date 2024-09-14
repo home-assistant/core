@@ -8,13 +8,13 @@ from typing import Any, NamedTuple
 from duwi_smarthome_sdk.base_api import CustomerApi, SharingTokenListener
 from duwi_smarthome_sdk.device_scene_models import CustomerDevice, CustomerScene
 from duwi_smarthome_sdk.manager import Manager, SharingDeviceListener
+
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import __version__
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.typing import ConfigType
 

@@ -1,13 +1,14 @@
 """Tests for the Duwi switch entity in Home Assistant."""
 
-import logging
 from collections.abc import Generator
+import logging
 from unittest.mock import AsyncMock, MagicMock, patch
 
-import pytest
 from duwi_smarthome_sdk.device_control import ControlDevice
 from duwi_smarthome_sdk.device_scene_models import CustomerDevice
 from duwi_smarthome_sdk.manager import Manager
+import pytest
+
 from homeassistant.components.duwi.switch import DuwiSwitchEntity
 from homeassistant.components.switch import SwitchEntityDescription
 from homeassistant.core import HomeAssistant

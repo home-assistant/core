@@ -4,6 +4,7 @@ from typing import Any
 
 from duwi_smarthome_sdk.device_scene_models import CustomerDevice
 from duwi_smarthome_sdk.manager import Manager
+
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity

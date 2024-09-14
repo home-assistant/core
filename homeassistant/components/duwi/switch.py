@@ -4,6 +4,7 @@ from typing import Any
 
 from duwi_smarthome_sdk.device_scene_models import CustomerDevice
 from duwi_smarthome_sdk.manager import Manager
+
 from homeassistant.components.switch import (
     SwitchDeviceClass,
     SwitchEntity,

@@ -3,8 +3,8 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
-import pytest
 from duwi_smarthome_sdk.const import DuwiCode
+import pytest
 
 
 @pytest.fixture

@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 import pytest
+from syrupy.assertion import SnapshotAssertion
+
 from homeassistant.components.duwi.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from syrupy.assertion import SnapshotAssertion
 
 
 @pytest.mark.usefixtures("mock_duwi_login_user", "mock_duwi_login_and_fetch_house")

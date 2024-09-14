@@ -1,7 +1,7 @@
 """Constants for the DUWI integration."""
 
-import logging
 from enum import StrEnum
+import logging
 
 from homeassistant.const import Platform
 

@@ -1,9 +1,10 @@
 """Config flow for Duwi Smart Devices integration."""
 
-import voluptuous as vol
 from duwi_smarthome_sdk.base_api import CustomerApi
 from duwi_smarthome_sdk.const import HTTP_ADDRESS, WEBSOCKET_ADDRESS, DuwiCode
 from duwi_smarthome_sdk.customer_client import CustomerClient
+import voluptuous as vol
+
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 
 from .const import (
