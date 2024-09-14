@@ -47,7 +47,7 @@ class WeheatDataUpdateCoordinator(DataUpdateCoordinator[HeatPump]):
             update_interval=timedelta(seconds=UPDATE_INTERVAL),
         )
         self.heat_pump_info = heat_pump
-        self._heat_pump_data = HeatPump(API_URL, self.heat_pump_info.uuid)
+        self._heat_pump_data = HeatPump(API_URL, heat_pump.uuid)
 
         self.session = session
 
