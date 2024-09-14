@@ -151,7 +151,7 @@ async def setup_device(
         )
     if device.pv == "A01":
         return await setup_device_a01(hass, user_data, device, product_info)
-    _LOGGER.info(
+    _LOGGER.warning(
         "Not adding device %s because its protocol version %s or category %s is not supported",
         device.duid,
         device.pv,
