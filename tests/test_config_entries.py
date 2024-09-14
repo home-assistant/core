@@ -5345,7 +5345,11 @@ async def test_unhashable_unique_id_fails(
 
     assert entry.entry_id not in entries
 
-    assert not entries.get_entry_by_domain_and_unique_id("test", unique_id)
+    with pytest.raises(
+        HomeAssistantError,
+        match=f"The entry unique id {unique_id_string} is not a string.",
+    ):
+        entries.get_entry_by_domain_and_unique_id("test", unique_id)
 
 
 @pytest.mark.parametrize("unique_id", [["blah", "bleh"], {"key": "value"}])
