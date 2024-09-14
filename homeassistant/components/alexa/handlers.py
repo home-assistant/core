@@ -233,7 +233,10 @@ async def async_api_turn_off(
     service = SERVICE_TURN_OFF
     if entity.domain == cover.DOMAIN:
         supported = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
-        if supported & cover.CoverEntityFeature.STOP:
+        if supported & cover.CoverEntityFeature.STOP and (
+                (supported & (cover.CoverEntityFeature.OPEN | cover.CoverEntityFeature.CLOSE)) or
+                (supported & cover.CoverEntityFeature.SET_POSITION)
+        ):
             service = cover.SERVICE_STOP_COVER
         else:
             service = cover.SERVICE_CLOSE_COVER
