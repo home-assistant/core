@@ -94,12 +94,12 @@ class StopPointSensor(SensorEntity):
 
     _attr_attribution = "Powered by TfL Open Data"
     _attr_icon = "mdi:bus"
+    _attr_has_entity_name = True
 
     def __init__(
         self, stop_point_api: stopPoint, name: str, stop_point_id: str, entry_id: str
     ) -> None:
         """Initialize the TfL StopPoint sensor."""
-        # super().__init__(coordinator)
         self._name = name
         self._attr_name = name
         self._attr_unique_id = stop_point_id
