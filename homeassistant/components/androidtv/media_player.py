@@ -306,7 +306,7 @@ class ADBDevice(AndroidTVEntity, MediaPlayerEntity):
                 msg,
                 title="Android Debug Bridge",
             )
-            _LOGGER.info("%s", msg)
+            _LOGGER.debug("%s", msg)
 
     @adb_decorator()
     async def service_download(self, device_path: str, local_path: str) -> None:
