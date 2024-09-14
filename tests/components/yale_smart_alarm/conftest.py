@@ -53,7 +53,7 @@ async def load_config_entry(
 
         config_entry.add_to_hass(hass)
 
-        cycle = get_data.cycle
+        cycle = get_data.cycle["data"]
         data = {"data": cycle["device_status"]}
 
         with patch(
