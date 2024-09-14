@@ -31,6 +31,7 @@ class SmData:
 class SmFwData:
     """SMLIGHT firmware data stored in the FirmwareUpdateCoordinator."""
 
+    sensors: Sensors
     info: Info
     esp_firmware: list[Firmware] | None
     zb_firmware: list[Firmware] | None
@@ -90,8 +91,7 @@ class SmDataUpdateCoordinator(DataUpdateCoordinator[SmData | SmFwData]):
 
     def update_setting(self, setting: Settings, value: bool | int) -> None:
         """Update the sensor value from event."""
-        if isinstance(self.data, SmFwData):
-            return
+
         prop = SettingsProp[setting.name].value
         setattr(self.data.sensors, prop, value)
 
@@ -133,6 +133,7 @@ class SmFirmwareUpdateCoordinator(SmDataUpdateCoordinator):
 
             return SmFwData(
                 info=info,
+                sensors=Sensors(),
                 esp_firmware=await self.client.get_firmware_version(info.fw_channel),
                 zb_firmware=await self.client.get_firmware_version(
                     info.fw_channel, device=info.model, mode="zigbee"
