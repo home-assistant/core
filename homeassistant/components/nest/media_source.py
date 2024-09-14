@@ -382,9 +382,9 @@ class NestMediaSource(MediaSource):
         # Clip previews are a session with multiple possible event types (e.g.
         # person, motion, etc) and a single mp4
         if CameraClipPreviewTrait.NAME in device.traits:
-            clips: dict[str, ClipPreviewSession] = (
-                await _async_get_clip_preview_sessions(device)
-            )
+            clips: dict[
+                str, ClipPreviewSession
+            ] = await _async_get_clip_preview_sessions(device)
             if media_id.event_token is None:
                 # Browse a specific device and return child events
                 browse_device = _browse_device(media_id, device)
