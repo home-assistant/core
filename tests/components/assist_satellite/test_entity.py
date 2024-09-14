@@ -69,22 +69,34 @@ async def test_entity_state(
     assert kwargs["start_stage"] == PipelineStage.STT
     assert kwargs["end_stage"] == PipelineStage.TTS
 
-    for event_type, expected_state in (
-        (PipelineEventType.RUN_START, AssistSatelliteState.LISTENING_WAKE_WORD),
-        (PipelineEventType.RUN_END, AssistSatelliteState.LISTENING_WAKE_WORD),
-        (PipelineEventType.WAKE_WORD_START, AssistSatelliteState.LISTENING_WAKE_WORD),
-        (PipelineEventType.WAKE_WORD_END, AssistSatelliteState.LISTENING_WAKE_WORD),
-        (PipelineEventType.STT_START, AssistSatelliteState.LISTENING_COMMAND),
-        (PipelineEventType.STT_VAD_START, AssistSatelliteState.LISTENING_COMMAND),
-        (PipelineEventType.STT_VAD_END, AssistSatelliteState.LISTENING_COMMAND),
-        (PipelineEventType.STT_END, AssistSatelliteState.LISTENING_COMMAND),
-        (PipelineEventType.INTENT_START, AssistSatelliteState.PROCESSING),
-        (PipelineEventType.INTENT_END, AssistSatelliteState.PROCESSING),
-        (PipelineEventType.TTS_START, AssistSatelliteState.RESPONDING),
-        (PipelineEventType.TTS_END, AssistSatelliteState.RESPONDING),
-        (PipelineEventType.ERROR, AssistSatelliteState.RESPONDING),
+    for event_type, event_data, expected_state in (
+        (PipelineEventType.RUN_START, {}, AssistSatelliteState.LISTENING_WAKE_WORD),
+        (PipelineEventType.RUN_END, {}, AssistSatelliteState.LISTENING_WAKE_WORD),
+        (
+            PipelineEventType.WAKE_WORD_START,
+            {},
+            AssistSatelliteState.LISTENING_WAKE_WORD,
+        ),
+        (PipelineEventType.WAKE_WORD_END, {}, AssistSatelliteState.LISTENING_WAKE_WORD),
+        (PipelineEventType.STT_START, {}, AssistSatelliteState.LISTENING_COMMAND),
+        (PipelineEventType.STT_VAD_START, {}, AssistSatelliteState.LISTENING_COMMAND),
+        (PipelineEventType.STT_VAD_END, {}, AssistSatelliteState.LISTENING_COMMAND),
+        (PipelineEventType.STT_END, {}, AssistSatelliteState.LISTENING_COMMAND),
+        (PipelineEventType.INTENT_START, {}, AssistSatelliteState.PROCESSING),
+        (
+            PipelineEventType.INTENT_END,
+            {
+                "intent_output": {
+                    "conversation_id": "mock-conversation-id",
+                }
+            },
+            AssistSatelliteState.PROCESSING,
+        ),
+        (PipelineEventType.TTS_START, {}, AssistSatelliteState.RESPONDING),
+        (PipelineEventType.TTS_END, {}, AssistSatelliteState.RESPONDING),
+        (PipelineEventType.ERROR, {}, AssistSatelliteState.RESPONDING),
     ):
-        kwargs["event_callback"](PipelineEvent(event_type, {}))
+        kwargs["event_callback"](PipelineEvent(event_type, event_data))
         state = hass.states.get(ENTITY_ID)
         assert state.state == expected_state, event_type
 
