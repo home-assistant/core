@@ -45,6 +45,11 @@ class DaikinZoneTemperature(NumberEntity):
         self._api = daikin_api
         self._zone_id = zone_id
         self._target_temperature = self._api.device.target_temperature
+
+        # Check if the zone has temperature control
+        if len(self._api.device.zones[self._zone_id]) < 3 or self._api.device.zones[self._zone_id][2] == 0:
+            raise IndexError("Zone does not have temperature control")
+
         self._current_value = self._api.device.zones[self._zone_id][2]
         self._attr_device_info = self._api.device_info
         self._attr_unique_id = f"{self._api.device.mac}-zone-temp{self._zone_id}"
