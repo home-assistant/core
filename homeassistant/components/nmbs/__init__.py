@@ -27,7 +27,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if "stations" not in hass.data[DOMAIN]:
         station_response = await hass.async_add_executor_job(api_client.get_stations)
         if station_response == -1:
-            raise ConfigEntryNotReady("The API is currently offline.")
+            raise ConfigEntryNotReady("The API is currently unavailable.")
         hass.data[DOMAIN]["stations"] = station_response["station"]
 
     station_types = [CONF_STATION_FROM, CONF_STATION_TO, CONF_STATION_LIVE]

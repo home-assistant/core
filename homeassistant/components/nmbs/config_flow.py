@@ -6,6 +6,7 @@ from pyrail import iRail
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.selector import (
     BooleanSelector,
     SelectOptionDict,
@@ -29,18 +30,17 @@ class NMBSConfigFlow(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize."""
         self.api_client = iRail()
-        self.stations: dict[str, Any] | None = None
+        self.stations: list[dict[str, Any]] = []
 
-    async def _fetch_stations_choices(self):
+    async def _fetch_stations_choices(self) -> list[SelectOptionDict]:
         """Fetch the stations."""
 
-        self.hass.data.setdefault(DOMAIN, {})
-        if "stations" not in self.hass.data[DOMAIN]:
-            stations = await self.hass.async_add_executor_job(
-                self.api_client.get_stations
-            )
-            self.hass.data[DOMAIN]["stations"] = stations["station"]
-        self.stations = self.hass.data[DOMAIN]["stations"]
+        stations_response = await self.hass.async_add_executor_job(
+            self.api_client.get_stations
+        )
+        if stations_response == -1:
+            raise ConfigEntryError("The API is currently unavailable.")
+        self.stations = stations_response["station"]
 
         return [
             SelectOptionDict(
