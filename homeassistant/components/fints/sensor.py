@@ -89,7 +89,7 @@ def setup_platform(
 
     for account in balance_accounts:
         if config[CONF_ACCOUNTS] and account.iban not in account_config:
-            _LOGGER.info("Skipping account %s for bank %s", account.iban, fints_name)
+            _LOGGER.debug("Skipping account %s for bank %s", account.iban, fints_name)
             continue
 
         if not (account_name := account_config.get(account.iban)):
@@ -99,7 +99,7 @@ def setup_platform(
 
     for account in holdings_accounts:
         if config[CONF_HOLDINGS] and account.accountnumber not in holdings_config:
-            _LOGGER.info(
+            _LOGGER.debug(
                 "Skipping holdings %s for bank %s", account.accountnumber, fints_name
             )
             continue
