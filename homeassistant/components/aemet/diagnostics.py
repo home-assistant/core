@@ -6,7 +6,7 @@ from typing import Any
 
 from aemet_opendata.const import AOD_COORDS
 
-from homeassistant.components.diagnostics.util import async_redact_data
+from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_LATITUDE,

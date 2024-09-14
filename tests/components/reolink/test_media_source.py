@@ -10,10 +10,10 @@ from reolink_aio.exceptions import ReolinkError
 from homeassistant.components.media_source import (
     DOMAIN as MEDIA_SOURCE_DOMAIN,
     URI_SCHEME,
+    Unresolvable,
     async_browse_media,
     async_resolve_media,
 )
-from homeassistant.components.media_source.error import Unresolvable
 from homeassistant.components.reolink.config_flow import DEFAULT_PROTOCOL
 from homeassistant.components.reolink.const import CONF_USE_HTTPS, DOMAIN
 from homeassistant.components.stream import DOMAIN as MEDIA_STREAM_DOMAIN
