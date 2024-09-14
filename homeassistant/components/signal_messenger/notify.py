@@ -111,13 +111,9 @@ class SignalNotificationService(BaseNotificationService):
             raise
 
         filenames = self.get_filenames(data)
-        try:
-            attachments_as_bytes = self.get_attachments_as_bytes(
-                data, CONF_MAX_ALLOWED_DOWNLOAD_SIZE_BYTES, self._hass
-            )
-        except Exception as ex:
-            _LOGGER.error("%s", ex)
-            raise
+        attachments_as_bytes = self.get_attachments_as_bytes(
+            data, CONF_MAX_ALLOWED_DOWNLOAD_SIZE_BYTES, self._hass
+        )
         try:
             self._signal_cli_rest_api.send_message(
                 message,
@@ -155,39 +151,42 @@ class SignalNotificationService(BaseNotificationService):
         attachments_as_bytes: list[bytearray] = []
 
         for url in urls:
-            if not hass.config.is_allowed_external_url(url):
-                _LOGGER.error("URL '%s' not in allow list", url)
-                continue
+            try:
+                if not hass.config.is_allowed_external_url(url):
+                    _LOGGER.error("URL '%s' not in allow list", url)
+                    continue
 
-            resp = requests.get(
-                url, verify=data[ATTR_VERIFY_SSL], timeout=10, stream=True
-            )
-            resp.raise_for_status()
-
-            content_length = int(str(resp.headers.get("Content-Length")))
-
-            if (
-                resp.headers.get("Content-Length") is not None
-                and content_length > attachment_size_limit
-            ):
-                raise ValueError(
-                    f"Attachment too large (Content-Length reports {content_length}). "
-                    f"Max size: {CONF_MAX_ALLOWED_DOWNLOAD_SIZE_BYTES} bytes"
+                resp = requests.get(
+                    url, verify=data[ATTR_VERIFY_SSL], timeout=10, stream=True
                 )
+                resp.raise_for_status()
 
-            size = 0
-            chunks = bytearray()
-            for chunk in resp.iter_content(1024):
-                size += len(chunk)
-                if size > attachment_size_limit:
+                if (
+                    resp.headers.get("Content-Length") is not None
+                    and int(str(resp.headers.get("Content-Length")))
+                    > attachment_size_limit
+                ):
+                    content_length = int(str(resp.headers.get("Content-Length")))
                     raise ValueError(  # noqa: TRY301
-                        f"Attachment too large (Stream reports {size}). "
-                        f"Max size: {CONF_MAX_ALLOWED_DOWNLOAD_SIZE_BYTES} bytes"
+                        f"Attachment too large (Content-Length reports {content_length}). Max size: {CONF_MAX_ALLOWED_DOWNLOAD_SIZE_BYTES} bytes"
                     )
 
-                chunks.extend(chunk)
+                size = 0
+                chunks = bytearray()
+                for chunk in resp.iter_content(1024):
+                    size += len(chunk)
+                    if size > attachment_size_limit:
+                        raise ValueError(  # noqa: TRY301
+                            f"Attachment too large (Stream reports {size}). "
+                            f"Max size: {CONF_MAX_ALLOWED_DOWNLOAD_SIZE_BYTES} bytes"
+                        )
 
-            attachments_as_bytes.append(chunks)
+                    chunks.extend(chunk)
+
+                attachments_as_bytes.append(chunks)
+            except Exception as ex:
+                _LOGGER.error("%s", ex)
+                raise
 
         if not attachments_as_bytes:
             return None
