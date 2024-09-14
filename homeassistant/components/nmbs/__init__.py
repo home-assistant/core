@@ -24,6 +24,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     api_client = iRail()
 
+    hass.data.setdefault(DOMAIN, {})
     if "stations" not in hass.data[DOMAIN]:
         station_response = await hass.async_add_executor_job(api_client.get_stations)
         if station_response == -1:
