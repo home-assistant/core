@@ -311,12 +311,6 @@ class IntelliFireOptionsFlowHandler(config_entries.OptionsFlow):
         """Create the options step for a account."""
 
         if user_input is not None:
-            # Update config entry with data from user input
-            # LOGGER.error("OptionsFlow::Updating existing entry")
-            # self.hass.config_entries.async_update_entry(
-            #     self._config_entry, data=self._config_entry.data, options=user_input
-            # )
-            LOGGER.debug("OptionsFlow::Calling Create Entry")
             return self.async_create_entry(
                 title=self._config_entry.title, data=user_input
             )

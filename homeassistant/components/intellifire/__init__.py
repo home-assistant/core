@@ -6,6 +6,7 @@ import asyncio
 
 from intellifire4py import UnifiedFireplace
 from intellifire4py.cloud_interface import IntelliFireCloudInterface
+from intellifire4py.const import IntelliFireApiMode
 from intellifire4py.model import IntelliFireCommonFireplaceData
 
 from homeassistant.config_entries import ConfigEntry
@@ -103,6 +104,10 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
             )
             LOGGER.debug("Pseudo Migration %s successful", config_entry.version)
 
+    config_entry.async_on_unload(
+        config_entry.add_update_listener(entry_update_listener)
+    )
+
     return True
 
 
@@ -152,6 +157,27 @@ async def _async_wait_for_initialization(
     ):
         LOGGER.debug(f"Waiting for fireplace to initialize [{fireplace.read_mode}]")
         await asyncio.sleep(INIT_WAIT_TIME_SECONDS)
+
+
+async def entry_update_listener(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+    """Update the data coordinator of the host entity."""
+
+    data_update_coordinator: IntellifireDataUpdateCoordinator = hass.data[DOMAIN][
+        config_entry.entry_id
+    ]
+
+    LOGGER.error(
+        f"Current Modes: Read [{data_update_coordinator.get_read_mode()}] Control [{data_update_coordinator.get_control_mode()}]"
+    )
+
+    await data_update_coordinator.set_read_mode(
+        IntelliFireApiMode(config_entry.options[CONF_READ_MODE])
+    )
+    await data_update_coordinator.set_control_mode(
+        IntelliFireApiMode(config_entry.options[CONF_CONTROL_MODE])
+    )
+
+    await hass.config_entries.async_reload(config_entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
