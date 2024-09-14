@@ -130,8 +130,11 @@ class TfLConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Transport for London."""
 
     VERSION = 1
-    data: dict[str, Any] = {}
-    options: dict[str, Any] = {}
+
+    def __init__(self) -> None:
+        """Initialise the config flow."""
+        self.data: dict[str, Any] = {}
+        self.options: dict[str, Any] = {}
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None

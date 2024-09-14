@@ -8,10 +8,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components.tfl.common import CannotConnect, InvalidAuth
-from homeassistant.components.tfl.config_flow import (
-    STEP_STOP_POINTS_DATA_SCHEMA,
-    TfLConfigFlow,
-)
+from homeassistant.components.tfl.config_flow import STEP_STOP_POINTS_DATA_SCHEMA
 from homeassistant.components.tfl.const import (
     CONF_API_APP_KEY,
     CONF_STOP_POINTS,
@@ -50,18 +47,18 @@ async def test_flow_stops_form_is_shown(hass: HomeAssistant) -> None:
         "homeassistant.components.tfl.config_flow.stopPoint.getCategories",
         return_value={},
     ):
-        stops_config_flow__init_result = await hass.config_entries.flow.async_configure(
+        stops_config_flow_init_result = await hass.config_entries.flow.async_configure(
             user_config_flow_result["flow_id"],
             user_input={CONF_API_APP_KEY: "appy_appy_app_key"},
         )
         await hass.async_block_till_done()
 
     # Validate that the stops form is shown
-    assert stops_config_flow__init_result["type"] == FlowResultType.FORM
-    assert stops_config_flow__init_result["step_id"] == "stop_point"
-    assert stops_config_flow__init_result["handler"] == "tfl"
-    assert stops_config_flow__init_result["errors"] == {}
-    assert stops_config_flow__init_result["data_schema"] == STEP_STOP_POINTS_DATA_SCHEMA
+    assert stops_config_flow_init_result["type"] == FlowResultType.FORM
+    assert stops_config_flow_init_result["step_id"] == "stop_point"
+    assert stops_config_flow_init_result["handler"] == "tfl"
+    assert stops_config_flow_init_result["errors"] == {}
+    assert stops_config_flow_init_result["data_schema"] == STEP_STOP_POINTS_DATA_SCHEMA
 
 
 @patch("homeassistant.components.tfl.config_flow.stopPoint")
@@ -72,22 +69,31 @@ async def test_flow_stops_does_multiple_stops(m_stopPoint, hass: HomeAssistant) 
     m_stop_point_api.getStationArrivals = Mock()
     m_stopPoint.return_value = m_stop_point_api
 
-    TfLConfigFlow.data = {CONF_API_APP_KEY: "appy_appy_app_key"}
-    TfLConfigFlow.options = {CONF_STOP_POINTS: []}
+    user_config_flow_result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert user_config_flow_result["type"] == FlowResultType.FORM
+    assert user_config_flow_result["errors"] == {}
+
+    with patch(
+        "homeassistant.components.tfl.config_flow.stopPoint.getCategories",
+        return_value={},
+    ):
+        stops_config_flow_init_result = await hass.config_entries.flow.async_configure(
+            user_config_flow_result["flow_id"],
+            user_input={CONF_API_APP_KEY: "appy_appy_app_key"},
+        )
+        await hass.async_block_till_done()
+
     with patch(
         "homeassistant.components.tfl.config_flow.stopPoint.getStationArrivals",
         return_value={},
     ):
-        stops_config_flow_init_result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "stop_point"}
-        )
-        await hass.async_block_till_done()
-
-    with patch("homeassistant.components.tfl.async_setup_entry", return_value=True):
         stops_config_success_result = await hass.config_entries.flow.async_configure(
             stops_config_flow_init_result["flow_id"],
             user_input={CONF_STOP_POINTS: ["AAAAAAAA1", "AAAAAAAA2"]},
         )
+        await hass.async_block_till_done()
 
     # assert expected == stops_config_success_result
     assert stops_config_success_result["type"] == FlowResultType.CREATE_ENTRY
@@ -111,22 +117,31 @@ async def test_flow_stops_creates_config_entry(
     m_stop_point_api.getStationArrivals = Mock()
     m_stopPoint.return_value = m_stop_point_api
 
-    TfLConfigFlow.data = {CONF_API_APP_KEY: "appy_appy_app_key"}
-    TfLConfigFlow.options = {CONF_STOP_POINTS: []}
+    user_config_flow_result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert user_config_flow_result["type"] == FlowResultType.FORM
+    assert user_config_flow_result["errors"] == {}
+
+    with patch(
+        "homeassistant.components.tfl.config_flow.stopPoint.getCategories",
+        return_value={},
+    ):
+        stops_config_flow_init_result = await hass.config_entries.flow.async_configure(
+            user_config_flow_result["flow_id"],
+            user_input={CONF_API_APP_KEY: "appy_appy_app_key"},
+        )
+        await hass.async_block_till_done()
+
     with patch(
         "homeassistant.components.tfl.config_flow.stopPoint.getStationArrivals",
         return_value={},
     ):
-        stops_config_flow_init_result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "stop_point"}
-        )
-        await hass.async_block_till_done()
-
-    with patch("homeassistant.components.tfl.async_setup_entry", return_value=True):
         stops_config_success_result = await hass.config_entries.flow.async_configure(
             stops_config_flow_init_result["flow_id"],
             user_input={CONF_STOP_POINTS: ["AAAAAAAA1"]},
         )
+        await hass.async_block_till_done()
 
     # Validate that config entry was created
     assert stops_config_success_result["type"] == FlowResultType.CREATE_ENTRY
@@ -146,14 +161,19 @@ async def test_form_no_stop(m_stopPoint, hass: HomeAssistant) -> None:
     m_stop_point_api.getStationArrivals = Mock()
     m_stopPoint.return_value = m_stop_point_api
 
-    TfLConfigFlow.data = {CONF_API_APP_KEY: "appy_appy_app_key"}
-    TfLConfigFlow.options = {CONF_STOP_POINTS: []}
+    user_config_flow_result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert user_config_flow_result["type"] == FlowResultType.FORM
+    assert user_config_flow_result["errors"] == {}
+
     with patch(
         "homeassistant.components.tfl.config_flow.stopPoint.getStationArrivals",
         return_value={},
     ):
-        stops_config_flow_init_result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "stop_point"}
+        stops_config_flow_init_result = await hass.config_entries.flow.async_configure(
+            user_config_flow_result["flow_id"],
+            user_input={CONF_API_APP_KEY: "appy_appy_app_key"},
         )
         await hass.async_block_till_done()
 
@@ -178,14 +198,19 @@ async def test_invalid_stop_id(m_stopPoint, hass: HomeAssistant) -> None:
     )
     m_stopPoint.return_value = m_stop_point_api
 
-    TfLConfigFlow.data = {CONF_API_APP_KEY: "appy_appy_app_key"}
-    TfLConfigFlow.options = {CONF_STOP_POINTS: []}
+    user_config_flow_result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert user_config_flow_result["type"] == FlowResultType.FORM
+    assert user_config_flow_result["errors"] == {}
+
     with patch(
         "homeassistant.components.tfl.config_flow.stopPoint.getStationArrivals",
         return_value={},
     ):
-        stops_config_flow_init_result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "stop_point"}
+        stops_config_flow_init_result = await hass.config_entries.flow.async_configure(
+            user_config_flow_result["flow_id"],
+            user_input={CONF_API_APP_KEY: "appy_appy_app_key"},
         )
         await hass.async_block_till_done()
 
