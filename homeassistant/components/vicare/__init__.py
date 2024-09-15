@@ -51,9 +51,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     for device in hass.data[DOMAIN][entry.entry_id][DEVICE_LIST]:
         # Migration can be removed in 2025.4.0
-        await async_migrate_devices(hass, entry, device)
-        # Migration can be removed in 2025.4.0
-        await async_migrate_entities(hass, entry, device)
+        await async_migrate_devices_and_entities(hass, entry, device)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -117,7 +115,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-async def async_migrate_devices(
+async def async_migrate_devices_and_entities(
     hass: HomeAssistant, entry: ConfigEntry, device: ViCareDevice
 ) -> None:
     """Migrate old entry."""
@@ -148,54 +146,41 @@ async def async_migrate_devices(
                 new_identifiers={(DOMAIN, new_identifier)},
             )
 
+            @callback
+            def _update_unique_id(
+                entity_entry: er.RegistryEntry,
+            ) -> dict[str, str] | None:
+                """Update unique ID of entity entry."""
+                if entity_entry.device_id != device_entry.id:
+                    # belongs to another device
+                    return None
+                if not entity_entry.unique_id.startswith(gateway_serial):
+                    # belongs to other device/gateway
+                    return None
+                if entity_entry.unique_id.startswith(new_identifier):
+                    # already correct, nothing to do
+                    return None
 
-async def async_migrate_entities(
-    hass: HomeAssistant, entry: ConfigEntry, device: ViCareDevice
-) -> None:
-    """Migrate old entry."""
-    gateway_serial: str = device.config.getConfig().serial
-    device_id = device.config.getId()
-    device_serial: str | None = await hass.async_add_executor_job(
-        get_device_serial, device.api
-    )
+                unique_id_parts = entity_entry.unique_id.split("-")
+                # replace old prefix `<gateway-serial>` with `<gateways-serial>_<device-serial>`
+                unique_id_parts[0] = new_identifier
+                # convert climate entity unique id from `<device_identifier>-<circuit_no>` to `<device_identifier>-heating-<circuit_no>`
+                if entity_entry.domain == DOMAIN_CLIMATE:
+                    unique_id_parts[len(unique_id_parts) - 1] = (
+                        f"{entity_entry.translation_key}-{unique_id_parts[len(unique_id_parts)-1]}"
+                    )
+                entity_new_unique_id = "-".join(unique_id_parts)
 
-    new_identifier = (
-        f"{gateway_serial}_{device_serial if device_serial is not None else device_id}"
-    )
+                _LOGGER.debug(
+                    "Migrating entity %s from %s to new id %s",
+                    entity_entry.entity_id,
+                    entity_entry.unique_id,
+                    entity_new_unique_id,
+                )
+                return {"new_unique_id": entity_new_unique_id}
 
-    @callback
-    def _update_unique_id(
-        entity_entry: er.RegistryEntry,
-    ) -> dict[str, str] | None:
-        """Update unique ID of entity entry."""
-        if not entity_entry.unique_id.startswith(gateway_serial):
-            # belongs to other device/gateway
-            return None
-        if entity_entry.unique_id.startswith(f"{gateway_serial}_"):
-            # Already correct, nothing to do
-            return None
-
-        unique_id_parts = entity_entry.unique_id.split("-")
-        unique_id_parts[0] = new_identifier
-
-        # convert climate entity unique id from `<device_identifier>-<circuit_no>` to `<device_identifier>-heating-<circuit_no>`
-        if entity_entry.domain == DOMAIN_CLIMATE:
-            unique_id_parts[len(unique_id_parts) - 1] = (
-                f"{entity_entry.translation_key}-{unique_id_parts[len(unique_id_parts)-1]}"
-            )
-
-        entity_new_unique_id = "-".join(unique_id_parts)
-
-        _LOGGER.debug(
-            "Migrating entity %s from %s to new id %s",
-            entity_entry.entity_id,
-            entity_entry.unique_id,
-            entity_new_unique_id,
-        )
-        return {"new_unique_id": entity_new_unique_id}
-
-    # Migrate entities
-    await er.async_migrate_entries(hass, entry.entry_id, _update_unique_id)
+            # Migrate entities
+            await er.async_migrate_entries(hass, entry.entry_id, _update_unique_id)
 
 
 def get_supported_devices(
