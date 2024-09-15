@@ -14,19 +14,17 @@ from homeassistant.components.number import (
     NumberEntityDescription,
     NumberMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import ReolinkData
-from .const import DOMAIN
 from .entity import (
     ReolinkChannelCoordinatorEntity,
     ReolinkChannelEntityDescription,
     ReolinkChimeCoordinatorEntity,
 )
+from .util import ReolinkConfigEntry, ReolinkData
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -492,11 +490,11 @@ CHIME_NUMBER_ENTITIES = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: ReolinkConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up a Reolink number entities."""
-    reolink_data: ReolinkData = hass.data[DOMAIN][config_entry.entry_id]
+    reolink_data: ReolinkData = config_entry.runtime_data
 
     entities: list[ReolinkNumberEntity | ReolinkChimeNumberEntity] = [
         ReolinkNumberEntity(reolink_data, channel, entity_description)
