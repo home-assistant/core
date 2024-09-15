@@ -11,10 +11,7 @@ from tplink_omada_client.exceptions import OmadaClientException
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-
-from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -111,40 +108,7 @@ class OmadaDevicesCoordinator(OmadaCoordinator[OmadaListDevice]):
 
     async def poll_update(self) -> dict[str, OmadaListDevice]:
         """Poll the site's current registered Omada devices."""
-        devices = {d.mac: d for d in await self.omada_client.get_devices()}
-
-        self._update_device_registry(devices)
-
-        return devices
-
-    def _update_device_registry(self, devices: dict[str, OmadaListDevice]) -> None:
-        device_registry = dr.async_get(self.hass)
-        # Remove any devices that are no longer present
-        for (
-            registered_device
-        ) in device_registry.devices.get_devices_for_config_entry_id(
-            self._config_entry.entry_id
-        ):
-            if all(i[1] not in devices for i in registered_device.identifiers):
-                entity_registry = er.async_get(self.hass)
-                dev_entities = er.async_entries_for_device(
-                    entity_registry,
-                    registered_device.id,
-                    include_disabled_entities=True,
-                )
-                if not dev_entities:
-                    dr.async_remove_device(registered_device.id)
-
-        # Add or update all connected devices
-        for device in devices.values():
-            dr.async_get_or_create(
-                config_entry_id=self._config_entry.entry_id,
-                connections={(dr.CONNECTION_NETWORK_MAC, device.mac)},
-                identifiers={(DOMAIN, device.mac)},
-                manufacturer="TP-Link",
-                model=device.model_display_name,
-                name=device.name,
-            )
+        return {d.mac: d for d in await self.omada_client.get_devices()}
 
 
 class OmadaClientsCoordinator(OmadaCoordinator[OmadaWirelessClient]):
