@@ -44,7 +44,7 @@ async def test_smoke_test_setup_component(
 async def test_smoke_test_setup_component_no_coordinates(
     aioclient_mock: AiohttpClientMocker, hass: HomeAssistant
 ) -> None:
-    """Smoke test for successfully set-up with default config."""
+    """Smoke test for set-up without valid coordinates."""
     aioclient_mock.get(
         "https://data.buienradar.nl/2.0/feed/json", status=HTTPStatus.NOT_FOUND
     )
