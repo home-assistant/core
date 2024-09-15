@@ -363,10 +363,10 @@
         }
       },
       "room_temperature": {
-        "name": "Room temperature"
+        "name": "Temperature"
       },
       "room_humidity": {
-        "name": "Room humidity"
+        "name": "Humidity"
       },
       "supply_temperature": {
         "name": "Supply temperature"
