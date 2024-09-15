@@ -21,6 +21,7 @@ from .const import (
     CONF_JELLYFIN_LAYOUT_SENSOR,
     CONF_JELLYFIN_PROFILE_SENSOR,
     CONF_PREFERRED_AUTHOR,
+    CONF_SLOT,
     CONF_SOURCE_MEDIA_PLAYER,
     CONF_SOURCE_TYPE,
     CONF_TITLE_SENSOR,
@@ -45,6 +46,10 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         ),
         vol.Required(CONF_SOURCE_MEDIA_PLAYER): selector.EntitySelector(
             selector.EntitySelectorConfig(domain="media_player")
+        ),
+        # minidsp slots are only 1-4
+        vol.Optional(CONF_SLOT, default=1): vol.All(
+            vol.Coerce(int), vol.Range(min=1, max=4)
         ),
     }
 )

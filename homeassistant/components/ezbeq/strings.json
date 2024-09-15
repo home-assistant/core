@@ -8,7 +8,8 @@
           "host": "ezbeq Host",
           "port": "Port",
           "source_type": "Source Type",
-          "source_media_player": "Source Media Player"
+          "source_media_player": "Source Media Player",
+          "slot": "Device Slot"
         }
       },
       "entities": {
