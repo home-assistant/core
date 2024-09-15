@@ -205,6 +205,11 @@ class ReolinkFlowHandler(ConfigFlow, domain=DOMAIN):
             if CONF_HOST not in user_input:
                 user_input[CONF_HOST] = self._host
 
+            # remember input in case of a error
+            self._username = user_input[CONF_USERNAME]
+            self._password = user_input[CONF_PASSWORD]
+            self._host = user_input[CONF_HOST]
+
             host = ReolinkHost(self.hass, user_input, DEFAULT_OPTIONS)
             try:
                 await host.async_init()
