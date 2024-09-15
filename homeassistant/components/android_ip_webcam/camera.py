@@ -55,13 +55,15 @@ class IPWebcamCamera(MjpegCamera):
 
     async def stream_source(self) -> str:
         """Get the stream source for the Android IP camera."""
-        coordinator_is_ssl = self._coordinator.cam.base_url.startswith("https")  # avoid accessing private attribute
+        coordinator_is_ssl = self._coordinator.cam.base_url.startswith(
+            "https"
+        )  # avoid accessing private attribute
         rtsp_protocol = "rtsps" if coordinator_is_ssl else "rtsp"
 
         host = self._coordinator.config_entry.data[CONF_HOST]
         port = self._coordinator.config_entry.data[CONF_PORT]
 
-        video_codec = "h264" # most compatible & recommended
+        video_codec = "h264"  # most compatible & recommended
         # while "opus" is compatible with more devices, HA's stream integration requires AAC or MP3,
         # and IP webcam doesn't provide MP3 audio. aac is supported on select devices >= android 4.1
         # the stream will be quiet on devices that don't support aac, but it won't fail.
@@ -74,6 +76,5 @@ class IPWebcamCamera(MjpegCamera):
             )
         else:
             return (
-                f"{rtsp_protocol}://{host}:{port}"
-                f"/{video_codec}_{audio_codec}.sdp"
+                f"{rtsp_protocol}://{host}:{port}" f"/{video_codec}_{audio_codec}.sdp"
             )
