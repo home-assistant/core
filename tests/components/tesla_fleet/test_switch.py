@@ -1,4 +1,4 @@
-"""Test the tesla_fleet switch platform."""
+"""Test the Tesla Fleet switch platform."""
 
 from copy import deepcopy
 from unittest.mock import AsyncMock, patch
