@@ -34,14 +34,19 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: TfLConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    config_entry: TfLConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the TfL sensor."""
-    stop_point_api = entry.runtime_data
+    """Set up the TfL sensor(s)."""
+    stop_point_api = config_entry.runtime_data
 
-    conf = entry.options
+    stop_point_ids: list[str] = config_entry.options[CONF_STOP_POINTS]
 
-    stop_point_ids: list[str] = conf[CONF_STOP_POINTS]
+    unique_id = config_entry.unique_id
+
+    if typing.TYPE_CHECKING:
+        assert unique_id
 
     try:
         stop_point_infos = await call_tfl_api(
@@ -55,7 +60,7 @@ async def async_setup_entry(
                         stop_point_api,
                         stop_point_infos[idx]["commonName"],
                         stop_point_id,
-                        entry.entry_id,
+                        unique_id,
                     )
                 )
         else:
@@ -64,7 +69,7 @@ async def async_setup_entry(
                     stop_point_api,
                     stop_point_infos["commonName"],
                     stop_point_ids[0],
-                    entry.entry_id,
+                    unique_id,
                 )
             )
 
@@ -97,15 +102,15 @@ class StopPointSensor(SensorEntity):
     _attr_has_entity_name = True
 
     def __init__(
-        self, stop_point_api: stopPoint, name: str, stop_point_id: str, entry_id: str
+        self, stop_point_api: stopPoint, name: str, stop_point_id: str, unique_id: str
     ) -> None:
         """Initialize the TfL StopPoint sensor."""
         self._name = name
         self._attr_name = name
-        self._attr_unique_id = stop_point_id
+        self._attr_unique_id = f"{unique_id}_{stop_point_id}"
         self._attr_device_info = DeviceInfo(
             name="TfL",
-            identifiers={(DOMAIN, entry_id)},
+            identifiers={(DOMAIN, unique_id)},
             entry_type=DeviceEntryType.SERVICE,
         )
 
