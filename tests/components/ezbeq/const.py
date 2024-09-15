@@ -9,6 +9,7 @@ from homeassistant.components.ezbeq.const import (
     CONF_JELLYFIN_LAYOUT_SENSOR,
     CONF_JELLYFIN_PROFILE_SENSOR,
     CONF_PREFERRED_AUTHOR,
+    CONF_SLOT,
     CONF_SOURCE_MEDIA_PLAYER,
     CONF_SOURCE_TYPE,
     CONF_TITLE_SENSOR,
@@ -29,6 +30,7 @@ MOCK_CONFIG = {
     CONF_EDITION_SENSOR: "sensor.edition",
     CONF_TITLE_SENSOR: "sensor.title",
     CONF_PREFERRED_AUTHOR: "",
+    CONF_SLOT: 1,
 }
 
 
@@ -46,4 +48,5 @@ JF_MOCK_CONFIG = {
     CONF_EDITION_SENSOR: "sensor.edition",
     CONF_TITLE_SENSOR: "sensor.title",
     CONF_PREFERRED_AUTHOR: "",
+    CONF_SLOT: 1,
 }
