@@ -23,7 +23,7 @@ async def test_device_and_entity_migration(
     """Test that the device registry is updated correctly."""
     fixtures: list[Fixture] = [
         Fixture({"type:boiler"}, "vicare/Vitodens300W.json"),
-        Fixture({"type:boiler"}, "vicare/Vitodens300W-no-serial.json"),
+        Fixture({"type:boiler"}, "vicare/dummy-device-no-serial.json"),
     ]
     with (
         patch(f"{MODULE}.vicare_login", return_value=MockPyViCare(fixtures)),
