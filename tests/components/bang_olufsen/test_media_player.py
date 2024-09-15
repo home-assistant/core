@@ -1,7 +1,6 @@
 """Test the Bang & Olufsen media_player entity."""
 
-from collections.abc import Callable
-from contextlib import nullcontext as does_not_raise
+from contextlib import AbstractContextManager, nullcontext as does_not_raise
 import logging
 from unittest.mock import AsyncMock, patch
 
@@ -105,7 +104,7 @@ async def test_initialization(
 
     # Check state (The initial state in this test does not contain all that much.
     # States are tested using simulated WebSocket events.)
-    states = hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID)
+    assert (states := hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID))
     assert states.attributes[ATTR_INPUT_SOURCE_LIST] == TEST_SOURCES
     assert states.attributes[ATTR_MEDIA_POSITION_UPDATED_AT]
 
@@ -127,7 +126,7 @@ async def test_async_update_sources_audio_only(
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
-    states = hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID)
+    assert (states := hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID))
     assert states.attributes[ATTR_INPUT_SOURCE_LIST] == TEST_AUDIO_SOURCES
 
 
@@ -142,7 +141,7 @@ async def test_async_update_sources_outdated_api(
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
-    states = hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID)
+    assert (states := hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID))
     assert (
         states.attributes[ATTR_INPUT_SOURCE_LIST]
         == TEST_FALLBACK_SOURCES + TEST_VIDEO_SOURCES
@@ -150,7 +149,9 @@ async def test_async_update_sources_outdated_api(
 
 
 async def test_async_update_sources_remote(
-    hass: HomeAssistant, mock_mozart_client, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    mock_mozart_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test _async_update_sources is called when there are new video sources."""
 
@@ -186,7 +187,7 @@ async def test_async_update_playback_metadata(
         mock_mozart_client.get_playback_metadata_notifications.call_args[0][0]
     )
 
-    states = hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID)
+    assert (states := hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID))
     assert ATTR_MEDIA_DURATION not in states.attributes
     assert ATTR_MEDIA_TITLE not in states.attributes
     assert ATTR_MEDIA_ALBUM_NAME not in states.attributes
@@ -197,7 +198,7 @@ async def test_async_update_playback_metadata(
     # Send the WebSocket event dispatch
     playback_metadata_callback(TEST_PLAYBACK_METADATA)
 
-    states = hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID)
+    assert (states := hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID))
     assert (
         states.attributes[ATTR_MEDIA_DURATION]
         == TEST_PLAYBACK_METADATA.total_duration_seconds
@@ -249,14 +250,14 @@ async def test_async_update_playback_progress(
         mock_mozart_client.get_playback_progress_notifications.call_args[0][0]
     )
 
-    states = hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID)
+    assert (states := hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID))
     assert ATTR_MEDIA_POSITION not in states.attributes
     old_updated_at = states.attributes[ATTR_MEDIA_POSITION_UPDATED_AT]
     assert old_updated_at
 
     playback_progress_callback(TEST_PLAYBACK_PROGRESS)
 
-    states = hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID)
+    assert (states := hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID))
     assert states.attributes[ATTR_MEDIA_POSITION] == TEST_PLAYBACK_PROGRESS.progress
     new_updated_at = states.attributes[ATTR_MEDIA_POSITION_UPDATED_AT]
     assert new_updated_at
@@ -277,12 +278,12 @@ async def test_async_update_playback_state(
         mock_mozart_client.get_playback_state_notifications.call_args[0][0]
     )
 
-    states = hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID)
+    assert (states := hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID))
     assert states.state == MediaPlayerState.PLAYING
 
     playback_state_callback(TEST_PLAYBACK_STATE_PAUSED)
 
-    states = hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID)
+    assert (states := hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID))
     assert states.state == TEST_PLAYBACK_STATE_PAUSED.value
 
 
@@ -365,7 +366,7 @@ async def test_async_update_source_change(
         mock_mozart_client.get_source_change_notifications.call_args[0][0]
     )
 
-    states = hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID)
+    assert (states := hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID))
     assert ATTR_INPUT_SOURCE not in states.attributes
     assert states.attributes[ATTR_MEDIA_CONTENT_TYPE] == MediaType.MUSIC
 
@@ -376,7 +377,7 @@ async def test_async_update_source_change(
     playback_metadata_callback(metadata)
     source_change_callback(reported_source)
 
-    states = hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID)
+    assert (states := hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID))
     assert states.attributes[ATTR_INPUT_SOURCE] == real_source.name
     assert states.attributes[ATTR_MEDIA_CONTENT_TYPE] == content_type
     assert states.attributes[ATTR_MEDIA_POSITION] == progress
@@ -405,7 +406,8 @@ async def test_async_turn_off(
 
     playback_state_callback(TEST_PLAYBACK_STATE_TURN_OFF)
 
-    states = hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID)
+    assert (states := hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID))
+    assert TEST_PLAYBACK_STATE_TURN_OFF.value
     assert states.state == BANG_OLUFSEN_STATES[TEST_PLAYBACK_STATE_TURN_OFF.value]
 
     # Check API call
@@ -424,7 +426,7 @@ async def test_async_set_volume_level(
 
     volume_callback = mock_mozart_client.get_volume_notifications.call_args[0][0]
 
-    states = hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID)
+    assert (states := hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID))
     assert ATTR_MEDIA_VOLUME_LEVEL not in states.attributes
 
     await hass.services.async_call(
@@ -440,7 +442,7 @@ async def test_async_set_volume_level(
     # The service call will trigger a WebSocket notification
     volume_callback(TEST_VOLUME)
 
-    states = hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID)
+    assert (states := hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID))
     assert (
         states.attributes[ATTR_MEDIA_VOLUME_LEVEL] == TEST_VOLUME_HOME_ASSISTANT_FORMAT
     )
@@ -462,7 +464,7 @@ async def test_async_mute_volume(
 
     volume_callback = mock_mozart_client.get_volume_notifications.call_args[0][0]
 
-    states = hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID)
+    assert (states := hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID))
     assert ATTR_MEDIA_VOLUME_MUTED not in states.attributes
 
     await hass.services.async_call(
@@ -478,7 +480,7 @@ async def test_async_mute_volume(
     # The service call will trigger a WebSocket notification
     volume_callback(TEST_VOLUME_MUTED)
 
-    states = hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID)
+    assert (states := hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID))
     assert (
         states.attributes[ATTR_MEDIA_VOLUME_MUTED]
         == TEST_VOLUME_MUTED_HOME_ASSISTANT_FORMAT
@@ -517,7 +519,8 @@ async def test_async_media_play_pause(
     # Set the initial state
     playback_state_callback(initial_state)
 
-    states = hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID)
+    assert (states := hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID))
+    assert initial_state.value
     assert states.state == BANG_OLUFSEN_STATES[initial_state.value]
 
     await hass.services.async_call(
@@ -547,7 +550,8 @@ async def test_async_media_stop(
     # Set the state to playing
     playback_state_callback(TEST_PLAYBACK_STATE_PLAYING)
 
-    states = hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID)
+    assert (states := hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID))
+    assert TEST_PLAYBACK_STATE_PLAYING.value
     assert states.state == BANG_OLUFSEN_STATES[TEST_PLAYBACK_STATE_PLAYING.value]
 
     await hass.services.async_call(
@@ -595,7 +599,7 @@ async def test_async_media_seek(
     mock_mozart_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     source: Source,
-    expected_result: Callable,
+    expected_result: AbstractContextManager,
     seek_called_times: int,
 ) -> None:
     """Test async_media_seek."""
@@ -681,7 +685,7 @@ async def test_async_select_source(
     mock_mozart_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     source: str,
-    expected_result: Callable,
+    expected_result: AbstractContextManager,
     audio_source_call: int,
     video_source_call: int,
 ) -> None:

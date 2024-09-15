@@ -77,7 +77,7 @@ class DynaliteBase(RestoreEntity, ABC):
         if cur_state:
             self.initialize_state(cur_state)
         else:
-            LOGGER.info("Restore state not available for %s", self.entity_id)
+            LOGGER.warning("Restore state not available for %s", self.entity_id)
 
         self._unsub_dispatchers.append(
             async_dispatcher_connect(

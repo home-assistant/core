@@ -11,12 +11,7 @@ from reolink_aio.exceptions import ApiError, CredentialsInvalidError, ReolinkErr
 import voluptuous as vol
 
 from homeassistant.components import dhcp
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-    OptionsFlow,
-)
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -37,7 +32,7 @@ from .exceptions import (
     UserNotAdmin,
 )
 from .host import ReolinkHost
-from .util import is_connected
+from .util import ReolinkConfigEntry, is_connected
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,7 +43,7 @@ DEFAULT_OPTIONS = {CONF_PROTOCOL: DEFAULT_PROTOCOL}
 class ReolinkOptionsFlowHandler(OptionsFlow):
     """Handle Reolink options."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
+    def __init__(self, config_entry: ReolinkConfigEntry) -> None:
         """Initialize ReolinkOptionsFlowHandler."""
         self.config_entry = config_entry
 
@@ -104,7 +99,7 @@ class ReolinkFlowHandler(ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: ReolinkConfigEntry,
     ) -> ReolinkOptionsFlowHandler:
         """Options callback for Reolink."""
         return ReolinkOptionsFlowHandler(config_entry)
@@ -204,6 +199,11 @@ class ReolinkFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             if CONF_HOST not in user_input:
                 user_input[CONF_HOST] = self._host
+
+            # remember input in case of a error
+            self._username = user_input[CONF_USERNAME]
+            self._password = user_input[CONF_PASSWORD]
+            self._host = user_input[CONF_HOST]
 
             host = ReolinkHost(self.hass, user_input, DEFAULT_OPTIONS)
             try:

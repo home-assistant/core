@@ -16,11 +16,12 @@ from cryptography.x509 import load_pem_x509_certificate
 import voluptuous as vol
 
 from homeassistant.components.file_upload import process_uploaded_file
-from homeassistant.components.hassio import HassioServiceInfo, is_hassio
-from homeassistant.components.hassio.addon_manager import (
+from homeassistant.components.hassio import (
     AddonError,
     AddonManager,
     AddonState,
+    HassioServiceInfo,
+    is_hassio,
 )
 from homeassistant.config_entries import (
     ConfigEntry,

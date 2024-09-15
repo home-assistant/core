@@ -35,7 +35,7 @@ from aiounifi.models.traffic_rule import TrafficRule, TrafficRuleEnableRequest
 from aiounifi.models.wlan import Wlan, WlanEnableRequest
 
 from homeassistant.components.switch import (
-    DOMAIN,
+    DOMAIN as SWITCH_DOMAIN,
     SwitchDeviceClass,
     SwitchEntity,
     SwitchEntityDescription,
@@ -88,7 +88,7 @@ def async_dpi_group_device_info_fn(hub: UnifiHub, obj_id: str) -> DeviceInfo:
     """Create device registry entry for DPI group."""
     return DeviceInfo(
         entry_type=DeviceEntryType.SERVICE,
-        identifiers={(DOMAIN, f"unifi_controller_{obj_id}")},
+        identifiers={(SWITCH_DOMAIN, f"unifi_controller_{obj_id}")},
         manufacturer=ATTR_MANUFACTURER,
         model="UniFi Network",
         name="UniFi Network",
@@ -102,7 +102,7 @@ def async_unifi_network_device_info_fn(hub: UnifiHub, obj_id: str) -> DeviceInfo
     assert unique_id is not None
     return DeviceInfo(
         entry_type=DeviceEntryType.SERVICE,
-        identifiers={(DOMAIN, unique_id)},
+        identifiers={(SWITCH_DOMAIN, unique_id)},
         manufacturer=ATTR_MANUFACTURER,
         model="UniFi Network",
         name="UniFi Network",
@@ -307,12 +307,14 @@ def async_update_unique_id(hass: HomeAssistant, config_entry: UnifiConfigEntry) 
     def update_unique_id(obj_id: str, type_name: str) -> None:
         """Rework unique ID."""
         new_unique_id = f"{type_name}-{obj_id}"
-        if ent_reg.async_get_entity_id(DOMAIN, UNIFI_DOMAIN, new_unique_id):
+        if ent_reg.async_get_entity_id(SWITCH_DOMAIN, UNIFI_DOMAIN, new_unique_id):
             return
 
         prefix, _, suffix = obj_id.partition("_")
         unique_id = f"{prefix}-{type_name}-{suffix}"
-        if entity_id := ent_reg.async_get_entity_id(DOMAIN, UNIFI_DOMAIN, unique_id):
+        if entity_id := ent_reg.async_get_entity_id(
+            SWITCH_DOMAIN, UNIFI_DOMAIN, unique_id
+        ):
             ent_reg.async_update_entity(entity_id, new_unique_id=new_unique_id)
 
     for obj_id in hub.api.outlets:

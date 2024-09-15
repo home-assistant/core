@@ -17,8 +17,9 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .. import mysensors
+from . import setup_mysensors_platform
 from .const import MYSENSORS_DISCOVERY, DiscoveryInfo
+from .device import MySensorsChildEntity
 from .helpers import on_unload
 
 
@@ -77,7 +78,7 @@ async def async_setup_entry(
     @callback
     def async_discover(discovery_info: DiscoveryInfo) -> None:
         """Discover and add a MySensors binary_sensor."""
-        mysensors.setup_mysensors_platform(
+        setup_mysensors_platform(
             hass,
             Platform.BINARY_SENSOR,
             discovery_info,
@@ -96,7 +97,7 @@ async def async_setup_entry(
     )
 
 
-class MySensorsBinarySensor(mysensors.device.MySensorsChildEntity, BinarySensorEntity):
+class MySensorsBinarySensor(MySensorsChildEntity, BinarySensorEntity):
     """Representation of a MySensors binary sensor child node."""
 
     entity_description: MySensorsBinarySensorDescription
