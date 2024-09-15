@@ -148,7 +148,6 @@ class-const-naming-style = "any"
 # inconsistent-return-statements - doesn't handle raise
 # too-many-ancestors - it's too strict.
 # wrong-import-order - isort guards this
-# consider-using-f-string - str.format sometimes more readable
 # possibly-used-before-assignment - too many errors / not necessarily issues
 # ---
 # Pylint CodeStyle plugin
@@ -171,7 +170,6 @@ disable = [
     "too-many-public-methods",
     "too-many-boolean-expressions",
     "wrong-import-order",
-    "consider-using-f-string",
     "consider-using-namedtuple-or-dataclass",
     "consider-using-assignment-expr",
     "possibly-used-before-assignment",
@@ -718,6 +716,7 @@ select = [
     "DTZ004", # Use datetime.fromtimestamp(ts, tz=) instead of datetime.utcfromtimestamp(ts)
     "E", # pycodestyle
     "F", # pyflakes/autoflake
+    "F541", # f-string without any placeholders
     "FLY", # flynt
     "FURB", # refurb
     "G", # flake8-logging-format
@@ -773,6 +772,8 @@ select = [
     "TID251", # Banned imports
     "TRY", # tryceratops
     "UP", # pyupgrade
+    "UP031", # Use format specifiers instead of percent format
+    "UP032", # Use f-string instead of `format` call
     "W", # pycodestyle
 ]
 
