@@ -43,7 +43,7 @@ def draw_box(
     )
     if text:
         draw.text(
-            (left + line_width, abs(top - line_width - font_height)), 
+            (left + line_width, abs(top - line_width - font_height)),
             text,
             fill=color,
             font_size=font_height,
