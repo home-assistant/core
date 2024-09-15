@@ -185,14 +185,13 @@ class NumatoAPI:
         if (device_id, port) not in self.ports_registered:
             self.ports_registered[(device_id, port)] = direction
         else:
+            io = (
+                "input"
+                if self.ports_registered[(device_id, port)] == gpio.IN
+                else "output"
+            )
             raise gpio.NumatoGpioError(
-                "Device {} port {} already in use as {}.".format(
-                    device_id,
-                    port,
-                    "input"
-                    if self.ports_registered[(device_id, port)] == gpio.IN
-                    else "output",
-                )
+                f"Device {device_id} port {port} already in use as {io}."
             )
 
     def check_device_id(self, device_id: int) -> None:
