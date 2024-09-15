@@ -1,1 +1,17 @@
-"""Constants for ezbeq module."""
+"""Constants for the ezbeq Profile Loader integration."""
+
+DOMAIN = "ezbeq"
+DEFAULT_PORT = 8080
+CONF_SOURCE_TYPE = "source_type"
+CONF_SOURCE_MEDIA_PLAYER = "source_media_player"
+CONF_TMDB_SENSOR = "tmdb_sensor"
+CONF_YEAR_SENSOR = "year_sensor"
+CONF_CODEC_SENSOR = "codec_sensor"
+CONF_CODEC_EXTENDED_SENSOR = "codec_extended_sensor"
+CONF_EDITION_SENSOR = "edition_sensor"
+CONF_TITLE_SENSOR = "title_sensor"
+CONF_PREFERRED_AUTHOR = "preferred_author"
+CONF_JELLYFIN_CODEC_SENSOR = "jellyfin_codec_sensor"
+CONF_JELLYFIN_DISPLAY_TITLE_SENSOR = "jellyfin_display_title_sensor"
+CONF_JELLYFIN_PROFILE_SENSOR = "jellyfin_profile_sensor"
+CONF_JELLYFIN_LAYOUT_SENSOR = "jellyfin_layout_sensor"

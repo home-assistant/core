@@ -1,0 +1,41 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Set up ezbeq Profile Loader",
+        "description": "Set up your ezbeq Profile Loader integration",
+        "data": {
+          "host": "ezbeq Host",
+          "port": "Port",
+          "source_type": "Source Type",
+          "source_media_player": "Source Media Player"
+        }
+      },
+      "entities": {
+        "title": "Select Entities",
+        "description": "Select the entities for your media source",
+        "data": {
+          "tmdb_sensor": "TMDB ID Sensor",
+          "year_sensor": "Year Sensor",
+          "codec_sensor": "Codec Sensor",
+          "codec_extended_sensor": "Extended Codec Sensor",
+          "edition_sensor": "Edition Sensor",
+          "title_sensor": "Title Sensor",
+          "preferred_author": "Preferred Author (optional)",
+          "jellyfin_codec_sensor": "Jellyfin Codec Sensor",
+          "jellyfin_display_title_sensor": "Jellyfin Display Title Sensor",
+          "jellyfin_profile_sensor": "Jellyfin Profile Sensor",
+          "jellyfin_layout_sensor": "Jellyfin Layout Sensor"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect",
+      "invalid_auth": "Invalid authentication",
+      "unknown": "Unexpected error"
+    },
+    "abort": {
+      "already_configured": "Device is already configured"
+    }
+  }
+}
