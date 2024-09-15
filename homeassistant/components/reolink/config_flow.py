@@ -99,7 +99,7 @@ class ReolinkFlowHandler(ConfigFlow, domain=DOMAIN):
         self._host: str | None = None
         self._username: str = "admin"
         self._password: str | None = None
-        self._reauth: bool = False
+        self._reauth_reason: str = ""
 
     @staticmethod
     @callback
@@ -116,7 +116,7 @@ class ReolinkFlowHandler(ConfigFlow, domain=DOMAIN):
         self._host = entry_data[CONF_HOST]
         self._username = entry_data[CONF_USERNAME]
         self._password = entry_data[CONF_PASSWORD]
-        self._reauth = True
+        self._reauth_reason = "reauth_successful"
         self.context["title_placeholders"]["ip_address"] = entry_data[CONF_HOST]
         self.context["title_placeholders"]["hostname"] = self.context[
             "title_placeholders"
@@ -133,6 +133,16 @@ class ReolinkFlowHandler(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="reauth_confirm", description_placeholders=placeholders
         )
+
+    async def async_step_reconfigure(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Perform a reconfiguration."""
+        self._host = entry_data[CONF_HOST]
+        self._username = entry_data[CONF_USERNAME]
+        self._password = entry_data[CONF_PASSWORD]
+        self._reauth_reason = "reconfigure_successful"
+        return await self.async_step_user()
 
     async def async_step_dhcp(
         self, discovery_info: dhcp.DhcpServiceInfo
@@ -244,14 +254,13 @@ class ReolinkFlowHandler(ConfigFlow, domain=DOMAIN):
                 existing_entry = await self.async_set_unique_id(
                     mac_address, raise_on_progress=False
                 )
-                if existing_entry and self._reauth:
-                    if self.hass.config_entries.async_update_entry(
-                        existing_entry, data=user_input
-                    ):
-                        await self.hass.config_entries.async_reload(
-                            existing_entry.entry_id
-                        )
-                    return self.async_abort(reason="reauth_successful")
+                if existing_entry and self._reauth_reason:
+                    return self.async_update_reload_and_abort(
+                        entry=existing_entry,
+                        data=user_input,
+                        reason=self._reauth_reason,
+                        reload_even_if_entry_is_unchanged=False,
+                    )
                 self._abort_if_unique_id_configured(updates=user_input)
 
                 return self.async_create_entry(
