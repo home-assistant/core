@@ -196,11 +196,10 @@ class MyMosqueSensor(SensorEntity):
         """Return the name of the sensor."""
         return self._name
 
-    # TODO check this # pylint: disable=fixme
-    # @property
-    # def state(self) -> str | None:
-    #     """Return the state of the sensor."""
-    #     return self._attributes["name"]
+    @property
+    def native_value(self) -> str | None:
+        """Return the state of the sensor."""
+        return self._attributes["name"]
 
     @property
     def icon(self) -> str | None:
