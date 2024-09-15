@@ -8,8 +8,13 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
-from homeassistant.components.hassio import AddonError, AddonInfo, AddonState, HassIO
-from homeassistant.components.hassio.handler import HassioAPIError
+from homeassistant.components.hassio import (
+    AddonError,
+    AddonInfo,
+    AddonState,
+    HassIO,
+    HassioAPIError,
+)
 from homeassistant.components.homeassistant_hardware import silabs_multiprotocol_addon
 from homeassistant.components.zha import DOMAIN as ZHA_DOMAIN
 from homeassistant.config_entries import ConfigEntry, ConfigFlow

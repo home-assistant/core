@@ -8,7 +8,7 @@ from miio import DeviceException, WifiRepeater
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
-    DOMAIN,
+    DOMAIN as DEVICE_TRACKER_DOMAIN,
     PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
     DeviceScanner,
 )
@@ -32,8 +32,10 @@ def get_scanner(
 ) -> XiaomiMiioDeviceScanner | None:
     """Return a Xiaomi MiIO device scanner."""
     scanner = None
-    host = config[DOMAIN][CONF_HOST]
-    token = config[DOMAIN][CONF_TOKEN]
+    config = config[DEVICE_TRACKER_DOMAIN]
+
+    host = config[CONF_HOST]
+    token = config[CONF_TOKEN]
 
     _LOGGER.info("Initializing with host %s (token %s...)", host, token[:5])
 

@@ -1,22 +1,19 @@
 """Test repairs for Ecobee integration."""
 
-from http import HTTPStatus
 from unittest.mock import MagicMock
 
 from homeassistant.components.ecobee import DOMAIN
 from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
-from homeassistant.components.repairs.issue_handler import (
-    async_process_repairs_platforms,
-)
-from homeassistant.components.repairs.websocket_api import (
-    RepairsFlowIndexView,
-    RepairsFlowResourceView,
-)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 
 from .common import setup_platform
 
+from tests.components.repairs import (
+    async_process_repairs_platforms,
+    process_repair_fix_flow,
+    start_repair_fix_flow,
+)
 from tests.typing import ClientSessionGenerator
 
 THERMOSTAT_ID = 0
@@ -53,20 +50,14 @@ async def test_ecobee_notify_repair_flow(
     )
     assert len(issue_registry.issues) == 1
 
-    url = RepairsFlowIndexView.url
-    resp = await http_client.post(
-        url, json={"handler": "notify", "issue_id": f"migrate_notify_{DOMAIN}_{DOMAIN}"}
+    data = await start_repair_fix_flow(
+        http_client, "notify", f"migrate_notify_{DOMAIN}_{DOMAIN}"
     )
-    assert resp.status == HTTPStatus.OK
-    data = await resp.json()
 
     flow_id = data["flow_id"]
     assert data["step_id"] == "confirm"
 
-    url = RepairsFlowResourceView.url.format(flow_id=flow_id)
-    resp = await http_client.post(url)
-    assert resp.status == HTTPStatus.OK
-    data = await resp.json()
+    data = await process_repair_fix_flow(http_client, flow_id)
     assert data["type"] == "create_entry"
     # Test confirm step in repair flow
     await hass.async_block_till_done()

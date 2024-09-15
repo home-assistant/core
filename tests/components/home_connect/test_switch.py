@@ -15,7 +15,7 @@ from homeassistant.components.home_connect.const import (
     BSH_POWER_STATE,
     REFRIGERATION_SUPERMODEFREEZER,
 )
-from homeassistant.components.switch import DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -139,7 +139,7 @@ async def test_switch_functionality(
 
     appliance.status.update(status)
     await hass.services.async_call(
-        DOMAIN, service, {"entity_id": entity_id}, blocking=True
+        SWITCH_DOMAIN, service, {"entity_id": entity_id}, blocking=True
     )
     assert hass.states.is_state(entity_id, state)
 
@@ -213,7 +213,7 @@ async def test_switch_exception_handling(
 
     problematic_appliance.status.update(status)
     await hass.services.async_call(
-        DOMAIN, service, {"entity_id": entity_id}, blocking=True
+        SWITCH_DOMAIN, service, {"entity_id": entity_id}, blocking=True
     )
     assert getattr(problematic_appliance, mock_attr).call_count == 2
 
@@ -268,7 +268,7 @@ async def test_ent_desc_switch_functionality(
 
     appliance.status.update(status)
     await hass.services.async_call(
-        DOMAIN, service, {ATTR_ENTITY_ID: entity_id}, blocking=True
+        SWITCH_DOMAIN, service, {ATTR_ENTITY_ID: entity_id}, blocking=True
     )
     assert hass.states.is_state(entity_id, state)
 
@@ -327,6 +327,6 @@ async def test_ent_desc_switch_exception_handling(
 
     problematic_appliance.status.update(status)
     await hass.services.async_call(
-        DOMAIN, service, {ATTR_ENTITY_ID: entity_id}, blocking=True
+        SWITCH_DOMAIN, service, {ATTR_ENTITY_ID: entity_id}, blocking=True
     )
     assert getattr(problematic_appliance, mock_attr).call_count == 2

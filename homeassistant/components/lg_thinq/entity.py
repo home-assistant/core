@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Coroutine
+from collections.abc import Callable, Coroutine
 import logging
 from typing import Any
 
@@ -10,6 +10,7 @@ from thinqconnect import ThinQAPIException
 from thinqconnect.devices.const import Location
 from thinqconnect.integration import PropertyState
 
+from homeassistant.const import UnitOfTemperature
 from homeassistant.core import callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import device_registry as dr
@@ -22,6 +23,11 @@ from .coordinator import DeviceDataUpdateCoordinator
 _LOGGER = logging.getLogger(__name__)
 
 EMPTY_STATE = PropertyState()
+
+UNIT_CONVERSION_MAP: dict[str, str] = {
+    "F": UnitOfTemperature.FAHRENHEIT,
+    "C": UnitOfTemperature.CELSIUS,
+}
 
 
 class ThinQEntity(CoordinatorEntity[DeviceDataUpdateCoordinator]):
@@ -64,6 +70,13 @@ class ThinQEntity(CoordinatorEntity[DeviceDataUpdateCoordinator]):
         """Return the state data of entity."""
         return self.coordinator.data.get(self.property_id, EMPTY_STATE)
 
+    def _get_unit_of_measurement(self, unit: str | None) -> str | None:
+        """Convert thinq unit string to HA unit string."""
+        if unit is None:
+            return None
+
+        return UNIT_CONVERSION_MAP.get(unit)
+
     def _update_status(self) -> None:
         """Update status itself.
 
@@ -81,11 +94,18 @@ class ThinQEntity(CoordinatorEntity[DeviceDataUpdateCoordinator]):
         await super().async_added_to_hass()
         self._handle_coordinator_update()
 
-    async def async_call_api(self, target: Coroutine[Any, Any, Any]) -> None:
+    async def async_call_api(
+        self,
+        target: Coroutine[Any, Any, Any],
+        on_fail_method: Callable[[], None] | None = None,
+    ) -> None:
         """Call the given api and handle exception."""
         try:
             await target
         except ThinQAPIException as exc:
+            if on_fail_method:
+                on_fail_method()
+
             raise ServiceValidationError(
                 exc.message,
                 translation_domain=DOMAIN,

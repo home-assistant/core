@@ -166,6 +166,19 @@ DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
         entity_description=MatterSensorEntityDescription(
+            key="PowerSourceBatVoltage",
+            native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+            device_class=SensorDeviceClass.VOLTAGE,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            measurement_to_ha=lambda x: x / 1000,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(clusters.PowerSource.Attributes.BatVoltage,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
             key="EveEnergySensorWatt",
             device_class=SensorDeviceClass.POWER,
             entity_category=EntityCategory.DIAGNOSTIC,

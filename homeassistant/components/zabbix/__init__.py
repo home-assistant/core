@@ -34,13 +34,14 @@ from homeassistant.helpers.entityfilter import (
 )
 from homeassistant.helpers.typing import ConfigType
 
+from .const import DOMAIN
+
 _LOGGER = logging.getLogger(__name__)
 
 CONF_PUBLISH_STATES_HOST = "publish_states_host"
 
 DEFAULT_SSL = False
 DEFAULT_PATH = "zabbix"
-DOMAIN = "zabbix"
 
 TIMEOUT = 5
 RETRY_DELAY = 20
