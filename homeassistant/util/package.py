@@ -123,7 +123,6 @@ def install_package(
         args += ["--constraint", constraints]
     if target:
         abs_target = os.path.abspath(target)
-        env["PYTHONUSERBASE"] = abs_target
         args += ["--target", abs_target]
     elif (
         not is_virtual_env()
