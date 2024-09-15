@@ -51,11 +51,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         ) from ex
 
     site_client = await client.get_site_client(OmadaSite("", entry.data[CONF_SITE]))
-    controller = OmadaSiteController(hass, site_client)
-    gateway_coordinator = await controller.get_gateway_coordinator()
-    if gateway_coordinator:
-        await gateway_coordinator.async_config_entry_first_refresh()
-    await controller.get_clients_coordinator().async_config_entry_first_refresh()
+    controller = OmadaSiteController(hass, entry, site_client)
+    await controller.initialize_first_refresh()
 
     hass.data[DOMAIN][entry.entry_id] = controller
 

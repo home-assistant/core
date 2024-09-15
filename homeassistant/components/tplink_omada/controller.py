@@ -3,10 +3,12 @@
 from tplink_omada_client import OmadaSiteClient
 from tplink_omada_client.devices import OmadaSwitch
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
 from .coordinator import (
     OmadaClientsCoordinator,
+    OmadaDevicesCoordinator,
     OmadaGatewayCoordinator,
     OmadaSwitchPortCoordinator,
 )
@@ -16,15 +18,40 @@ class OmadaSiteController:
     """Controller for the Omada SDN site."""
 
     _gateway_coordinator: OmadaGatewayCoordinator | None = None
-    _initialized_gateway_coordinator = False
-    _clients_coordinator: OmadaClientsCoordinator | None = None
+    _devices_coordinator: OmadaDevicesCoordinator
+    _clients_coordinator: OmadaClientsCoordinator
 
-    def __init__(self, hass: HomeAssistant, omada_client: OmadaSiteClient) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        omada_client: OmadaSiteClient,
+    ) -> None:
         """Create the controller."""
         self._hass = hass
         self._omada_client = omada_client
 
         self._switch_port_coordinators: dict[str, OmadaSwitchPortCoordinator] = {}
+        self._devices_coordinator = OmadaDevicesCoordinator(
+            self._hass, config_entry, self._omada_client
+        )
+        self._clients_coordinator = OmadaClientsCoordinator(
+            self._hass, self._omada_client
+        )
+
+    async def initialize_first_refresh(self) -> None:
+        """Initialize the all coordinators, and perform first refresh."""
+        await self._devices_coordinator.async_config_entry_first_refresh()
+
+        devices = self.devices_coordinator.data.values()
+        gateway = next((d for d in devices if d.type == "gateway"), None)
+        if gateway:
+            self._gateway_coordinator = OmadaGatewayCoordinator(
+                self._hass, self._omada_client, gateway.mac
+            )
+            await self._gateway_coordinator.async_config_entry_first_refresh()
+
+        await self._clients_coordinator.async_config_entry_first_refresh()
 
     @property
     def omada_client(self) -> OmadaSiteClient:
@@ -42,26 +69,17 @@ class OmadaSiteController:
 
         return self._switch_port_coordinators[switch.mac]
 
-    async def get_gateway_coordinator(self) -> OmadaGatewayCoordinator | None:
+    @property
+    def gateway_coordinator(self) -> OmadaGatewayCoordinator | None:
         """Get coordinator for site's gateway, or None if there is no gateway."""
-        if not self._initialized_gateway_coordinator:
-            self._initialized_gateway_coordinator = True
-            devices = await self._omada_client.get_devices()
-            gateway = next((d for d in devices if d.type == "gateway"), None)
-            if not gateway:
-                return None
-
-            self._gateway_coordinator = OmadaGatewayCoordinator(
-                self._hass, self._omada_client, gateway.mac
-            )
-
         return self._gateway_coordinator
 
-    def get_clients_coordinator(self) -> OmadaClientsCoordinator:
-        """Get coordinator for site's clients."""
-        if not self._clients_coordinator:
-            self._clients_coordinator = OmadaClientsCoordinator(
-                self._hass, self._omada_client
-            )
+    @property
+    def devices_coordinator(self) -> OmadaDevicesCoordinator:
+        """Get coordinator for site's devices."""
+        return self._devices_coordinator
 
+    @property
+    def clients_coordinator(self) -> OmadaClientsCoordinator:
+        """Get coordinator for site's clients."""
         return self._clients_coordinator
