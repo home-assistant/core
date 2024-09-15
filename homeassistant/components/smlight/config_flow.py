@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Any
 
 from pysmlight import Api2
@@ -14,6 +15,7 @@ from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNA
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
 
+from . import SmConfigEntry
 from .const import DOMAIN
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
@@ -37,6 +39,7 @@ class SmlightConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self.client: Api2
         self.host: str | None = None
+        self._reauth_entry: SmConfigEntry | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -127,6 +130,49 @@ class SmlightConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle reauth when API Authentication failed."""
+
+        self._reauth_entry = self.hass.config_entries.async_get_entry(
+            self.context["entry_id"]
+        )
+        host = entry_data[CONF_HOST]
+        self.client = Api2(host, session=async_get_clientsession(self.hass))
+        self.host = host
+
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle re-authentication of an existing config entry."""
+        errors = {}
+        if user_input is not None:
+            try:
+                await self.client.authenticate(
+                    user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
+                )
+            except SmlightAuthError:
+                errors["base"] = "invalid_auth"
+            except SmlightConnectionError:
+                return self.async_abort(reason="cannot_connect")
+            else:
+                assert self._reauth_entry is not None
+
+                return self.async_update_reload_and_abort(
+                    self._reauth_entry,
+                    data={**self._reauth_entry.data, **user_input},
+                )
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=STEP_AUTH_DATA_SCHEMA,
+            description_placeholders=self.context["title_placeholders"],
+            errors=errors,
+        )
+
     async def _async_check_auth_required(self, user_input: dict[str, Any]) -> bool:
         """Check if auth required and attempt to authenticate."""
         if await self.client.check_auth_needed():
@@ -148,4 +194,5 @@ class SmlightConfigFlow(ConfigFlow, domain=DOMAIN):
             user_input[CONF_HOST] = self.host
 
         assert info.model is not None
-        return self.async_create_entry(title=info.model, data=user_input)
+        title = self.context.get("title_placeholders", {}).get(CONF_NAME) or info.model
+        return self.async_create_entry(title=title, data=user_input)

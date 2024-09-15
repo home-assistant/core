@@ -13,9 +13,11 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import mqtt
-from homeassistant.components.hassio import HassioServiceInfo
-from homeassistant.components.hassio.addon_manager import AddonError
-from homeassistant.components.hassio.handler import HassioAPIError
+from homeassistant.components.hassio import (
+    AddonError,
+    HassioAPIError,
+    HassioServiceInfo,
+)
 from homeassistant.components.mqtt.config_flow import PWD_NOT_CHANGED
 from homeassistant.const import (
     CONF_CLIENT_ID,
@@ -1551,14 +1553,7 @@ async def test_step_reauth(
     assert result["context"]["source"] == "reauth"
 
     # Show the form
-    result = await hass.config_entries.flow.async_init(
-        mqtt.DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": config_entry.entry_id,
-        },
-        data=config_entry.data,
-    )
+    result = await config_entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 

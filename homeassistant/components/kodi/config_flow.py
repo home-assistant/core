@@ -140,7 +140,9 @@ class KodiConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_discovery_confirm()
 
-    async def async_step_discovery_confirm(self, user_input=None):
+    async def async_step_discovery_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle user-confirmation of discovered node."""
         if user_input is None:
             return self.async_show_form(
@@ -178,7 +180,9 @@ class KodiConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self._show_user_form(errors)
 
-    async def async_step_credentials(self, user_input=None):
+    async def async_step_credentials(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle username and password input."""
         errors = {}
 
@@ -203,7 +207,9 @@ class KodiConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self._show_credentials_form(errors)
 
-    async def async_step_ws_port(self, user_input=None):
+    async def async_step_ws_port(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle websocket port of discovered node."""
         errors = {}
 
@@ -249,7 +255,9 @@ class KodiConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_abort(reason=reason)
 
     @callback
-    def _show_credentials_form(self, errors=None):
+    def _show_credentials_form(
+        self, errors: dict[str, str] | None = None
+    ) -> ConfigFlowResult:
         schema = vol.Schema(
             {
                 vol.Optional(
@@ -262,7 +270,7 @@ class KodiConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
         return self.async_show_form(
-            step_id="credentials", data_schema=schema, errors=errors or {}
+            step_id="credentials", data_schema=schema, errors=errors
         )
 
     @callback
@@ -304,7 +312,7 @@ class KodiConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     @callback
-    def _get_data(self):
+    def _get_data(self) -> dict[str, Any]:
         return {
             CONF_NAME: self._name,
             CONF_HOST: self._host,

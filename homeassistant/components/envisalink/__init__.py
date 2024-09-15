@@ -160,7 +160,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     @callback
     def async_connection_success_callback(data):
         """Handle a successful connection."""
-        _LOGGER.info("Established a connection with the Envisalink")
+        _LOGGER.debug("Established a connection with the Envisalink")
         if not sync_connect.done():
             hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_envisalink)
             sync_connect.set_result(True)
@@ -186,7 +186,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     @callback
     def stop_envisalink(event):
         """Shutdown envisalink connection and thread on exit."""
-        _LOGGER.info("Shutting down Envisalink")
+        _LOGGER.debug("Shutting down Envisalink")
         controller.stop()
 
     async def handle_custom_function(call: ServiceCall) -> None:
@@ -203,7 +203,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     controller.callback_login_timeout = async_connection_fail_callback
     controller.callback_login_success = async_connection_success_callback
 
-    _LOGGER.info("Start envisalink")
+    _LOGGER.debug("Start envisalink")
     controller.start()
 
     if not await sync_connect:

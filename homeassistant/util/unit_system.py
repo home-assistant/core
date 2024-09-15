@@ -58,23 +58,21 @@ WIND_SPEED_UNITS = SpeedConverter.VALID_UNITS
 
 TEMPERATURE_UNITS: set[str] = {UnitOfTemperature.FAHRENHEIT, UnitOfTemperature.CELSIUS}
 
+_VALID_BY_TYPE: dict[str, set[str] | set[str | None]] = {
+    LENGTH: LENGTH_UNITS,
+    ACCUMULATED_PRECIPITATION: LENGTH_UNITS,
+    WIND_SPEED: WIND_SPEED_UNITS,
+    TEMPERATURE: TEMPERATURE_UNITS,
+    MASS: MASS_UNITS,
+    VOLUME: VOLUME_UNITS,
+    PRESSURE: PRESSURE_UNITS,
+}
+
 
 def _is_valid_unit(unit: str, unit_type: str) -> bool:
     """Check if the unit is valid for it's type."""
-    if unit_type == LENGTH:
-        return unit in LENGTH_UNITS
-    if unit_type == ACCUMULATED_PRECIPITATION:
-        return unit in LENGTH_UNITS
-    if unit_type == WIND_SPEED:
-        return unit in WIND_SPEED_UNITS
-    if unit_type == TEMPERATURE:
-        return unit in TEMPERATURE_UNITS
-    if unit_type == MASS:
-        return unit in MASS_UNITS
-    if unit_type == VOLUME:
-        return unit in VOLUME_UNITS
-    if unit_type == PRESSURE:
-        return unit in PRESSURE_UNITS
+    if units := _VALID_BY_TYPE.get(unit_type):
+        return unit in units
     return False
 
 

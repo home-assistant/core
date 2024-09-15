@@ -13,6 +13,7 @@ from mozart_api.models import (
     ProductState,
     RemoteMenuItem,
     RenderingState,
+    SoftwareUpdateState,
     SoftwareUpdateStatus,
     Source,
     SourceArray,
@@ -79,7 +80,7 @@ def mock_mozart_client() -> Generator[AsyncMock]:
         )
         client.get_softwareupdate_status = AsyncMock()
         client.get_softwareupdate_status.return_value = SoftwareUpdateStatus(
-            software_version="1.0.0", state=""
+            software_version="1.0.0", state=SoftwareUpdateState()
         )
         client.get_product_state = AsyncMock()
         client.get_product_state.return_value = ProductState(

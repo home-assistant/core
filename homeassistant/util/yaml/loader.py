@@ -385,7 +385,7 @@ def _include_yaml(loader: LoaderType, node: yaml.nodes.Node) -> JSON_TYPE:
         return _add_reference(loaded_yaml, loader, node)
     except FileNotFoundError as exc:
         raise HomeAssistantError(
-            f"{node.start_mark}: Unable to read file {fname}."
+            f"{node.start_mark}: Unable to read file {fname}"
         ) from exc
 
 

@@ -15,7 +15,7 @@ from homeassistant.components.light import (
     ATTR_HS_COLOR,
     ATTR_TRANSITION,
     ATTR_WHITE,
-    DOMAIN,
+    DOMAIN as LIGHT_DOMAIN,
     ColorMode,
     LightEntity,
     LightEntityFeature,
@@ -62,7 +62,7 @@ async def async_setup_entry(
     """
     data = config_entry.runtime_data
     bridge = data.bridge
-    light_devices = bridge.get_devices_by_domain(DOMAIN)
+    light_devices = bridge.get_devices_by_domain(LIGHT_DOMAIN)
     async_add_entities(
         LutronCasetaLight(light_device, data) for light_device in light_devices
     )

@@ -7,17 +7,17 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .coordinator import SolarlogData
+from .coordinator import SolarLogCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.SENSOR]
-type SolarlogConfigEntry = ConfigEntry[SolarlogData]
+type SolarlogConfigEntry = ConfigEntry[SolarLogCoordinator]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: SolarlogConfigEntry) -> bool:
     """Set up a config entry for solarlog."""
-    coordinator = SolarlogData(hass, entry)
+    coordinator = SolarLogCoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
