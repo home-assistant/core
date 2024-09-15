@@ -138,9 +138,13 @@ class ReolinkFlowHandler(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Perform a reconfiguration."""
-        self._host = entry_data[CONF_HOST]
-        self._username = entry_data[CONF_USERNAME]
-        self._password = entry_data[CONF_PASSWORD]
+        config_entry = self.hass.config_entries.async_get_entry(
+            self.context["entry_id"]
+        )
+        assert config_entry is not None
+        self._host = config_entry.data[CONF_HOST]
+        self._username = config_entry.data[CONF_USERNAME]
+        self._password = config_entry.data[CONF_PASSWORD]
         self._reauth_reason = "reconfigure_successful"
         return await self.async_step_user()
 
@@ -259,7 +263,6 @@ class ReolinkFlowHandler(ConfigFlow, domain=DOMAIN):
                         entry=existing_entry,
                         data=user_input,
                         reason=self._reauth_reason,
-                        reload_even_if_entry_is_unchanged=False,
                     )
                 self._abort_if_unique_id_configured(updates=user_input)
 
