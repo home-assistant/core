@@ -1006,6 +1006,7 @@ async def test_tts_format_from_media_player(
                         sample_rate=48000,
                         num_channels=2,
                         purpose=MediaPlayerFormatPurpose.DEFAULT,
+                        sample_bytes=2,
                     ),
                     # This is the format that should be used for tts
                     MediaPlayerSupportedFormat(
@@ -1013,6 +1014,7 @@ async def test_tts_format_from_media_player(
                         sample_rate=22050,
                         num_channels=1,
                         purpose=MediaPlayerFormatPurpose.ANNOUNCEMENT,
+                        sample_bytes=2,
                     ),
                 ],
             )

@@ -404,7 +404,7 @@ class EsphomeAssistSatellite(
                     tts.ATTR_PREFERRED_FORMAT: supported_format.format,
                     tts.ATTR_PREFERRED_SAMPLE_RATE: supported_format.sample_rate,
                     tts.ATTR_PREFERRED_SAMPLE_CHANNELS: supported_format.num_channels,
-                    tts.ATTR_PREFERRED_SAMPLE_BYTES: 2,
+                    tts.ATTR_PREFERRED_SAMPLE_BYTES: supported_format.sample_bytes,
                 }
                 break
 
