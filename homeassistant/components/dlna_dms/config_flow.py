@@ -15,7 +15,7 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_DEVICE_ID, CONF_HOST, CONF_URL
 from homeassistant.data_entry_flow import AbortFlow
 
-from .const import CONF_SOURCE_ID, CONFIG_VERSION, DEFAULT_NAME, DOMAIN
+from .const import CONF_SOURCE_ID, CONFIG_VERSION, DEFAULT_NAME, DOMAIN, CONF_RETRY
 from .util import generate_source_id
 
 LOGGER = logging.getLogger(__name__)
@@ -37,6 +37,7 @@ class DlnaDmsFlowHandler(ConfigFlow, domain=DOMAIN):
         self._location: str | None = None
         self._usn: str | None = None
         self._name: str | None = None
+        self._retry: bool | None = False
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -48,7 +49,7 @@ class DlnaDmsFlowHandler(ConfigFlow, domain=DOMAIN):
             # User has chosen a device
             discovery = self._discoveries[host]
             await self._async_parse_discovery(discovery, raise_on_progress=False)
-            return self._create_entry()
+            return await self.async_step_options()
 
         if not (discoveries := await self._async_get_discoveries()):
             # Nothing found, abort configuration
@@ -65,6 +66,20 @@ class DlnaDmsFlowHandler(ConfigFlow, domain=DOMAIN):
         }
         data_schema = vol.Schema({vol.Optional(CONF_HOST): vol.In(discovery_choices)})
         return self.async_show_form(step_id="user", data_schema=data_schema)
+
+    async def async_step_options(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle additional options."""
+        LOGGER.debug("async_step_options: user_input: %s", user_input)
+
+        if user_input is not None:
+            # User has chosen a device
+            self._retry = user_input.get(CONF_RETRY, False)
+            return self._create_entry()
+
+        data_schema = vol.Schema({vol.Required(CONF_RETRY, default=True): bool})
+        return self.async_show_form(step_id="options", data_schema=data_schema)
 
     async def async_step_ssdp(
         self, discovery_info: ssdp.SsdpServiceInfo
@@ -115,10 +130,11 @@ class DlnaDmsFlowHandler(ConfigFlow, domain=DOMAIN):
     def _create_entry(self) -> ConfigFlowResult:
         """Create a config entry, assuming all required information is now known."""
         LOGGER.debug(
-            "_create_entry: name: %s, location: %s, USN: %s",
+            "_create_entry: name: %s, location: %s, USN: %s, Retry: %s",
             self._name,
             self._location,
             self._usn,
+            self._retry,
         )
         assert self._name
         assert self._location
@@ -128,6 +144,7 @@ class DlnaDmsFlowHandler(ConfigFlow, domain=DOMAIN):
             CONF_URL: self._location,
             CONF_DEVICE_ID: self._usn,
             CONF_SOURCE_ID: generate_source_id(self.hass, self._name),
+            CONF_RETRY: self._retry,
         }
         return self.async_create_entry(title=self._name, data=data)
 

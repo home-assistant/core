@@ -31,6 +31,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import aiohttp_client
 
 from .const import (
+    CONF_RETRY,
     CONF_SOURCE_ID,
     DLNA_BROWSE_FILTER,
     DLNA_PATH_FILTER,
@@ -132,8 +133,30 @@ def catch_request_errors[_DlnaDmsDeviceMethod: DmsDeviceSource, _R](
     @functools.wraps(func)
     async def wrapper(self: _DlnaDmsDeviceMethod, req_param: str) -> _R:
         """Catch UpnpError errors and check availability before and after request."""
-        if not self.available:
-            LOGGER.warning("Device disappeared when trying to call %s", func.__name__)
+        if not self.available and self.retry:
+            # try once to connect, ignore exception to stay in this process.
+            LOGGER.debug(
+                "Device at: %s is not available, attempting reconnection", self.location
+            )
+            try:
+                await self.device_connect()
+            except UpnpError as err:
+                LOGGER.debug(
+                    "Couldn't connect immediately, during attempted reconnect: %r", err
+                )
+            if not self.available:
+                LOGGER.warning(
+                    "Device at: %s disappeared when trying to call %s",
+                    self.location,
+                    func.__name__,
+                )
+                raise DeviceConnectionError("DMS is not connected")
+        elif not self.available:
+            LOGGER.warning(
+                "Device at: %s disappeared when trying to call %s",
+                self.location,
+                func.__name__,
+            )
             raise DeviceConnectionError("DMS is not connected")
 
         try:
@@ -167,6 +190,7 @@ class DmsDeviceSource:
     # try to connect before SSDP has rediscovered it, or when SSDP discovery
     # fails.
     location: str | None
+    retry: bool | False
 
     _device_lock: asyncio.Lock  # Held when connecting or disconnecting the device
     _device: DmsDevice | None = None
@@ -182,6 +206,11 @@ class DmsDeviceSource:
         self.hass = hass
         self.config_entry = config_entry
         self.location = self.config_entry.data[CONF_URL]
+        try:
+            self.retry = self.config_entry.data[CONF_RETRY]
+        except KeyError as err:
+            LOGGER.warning("DMS Device %s does not have retry config entry", self.location)
+            
         self._device_lock = asyncio.Lock()
 
     # Callbacks and events
@@ -491,15 +520,11 @@ class DmsDeviceSource:
             object_id, metadata_filter=DLNA_BROWSE_FILTER
         )
 
-        children = None
-        try:
-            children = await self._device.async_browse_direct_children(
-                object_id,
-                metadata_filter=DLNA_BROWSE_FILTER,
-                sort_criteria=self._sort_criteria,
-            )
-        except UpnpError as err:
-            LOGGER.debug("Couldn't retrieve children: %r", err)
+        children = await self._device.async_browse_direct_children(
+            object_id,
+            metadata_filter=DLNA_BROWSE_FILTER,
+            sort_criteria=self._sort_criteria,
+        )
 
         return self._didl_to_media_source(base_object, children)
 

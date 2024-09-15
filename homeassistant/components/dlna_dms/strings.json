@@ -9,6 +9,13 @@
           "host": "[%key:common::config_flow::data::host%]"
         }
       },
+      "options": {
+        "title": "Selected DLNA DMA device options",
+        "description": "Choose options for selected device",
+        "data": {
+          "retry": "Try to reconnect when disconnected?"
+        }
+      },
       "confirm": {
         "description": "[%key:common::config_flow::description::confirm_setup%]"
       }
