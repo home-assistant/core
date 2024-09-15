@@ -1,6 +1,6 @@
 """Tesla Fleet Data Coordinator."""
 
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 from tesla_fleet_api import EnergySpecific, VehicleSpecific
@@ -180,6 +180,80 @@ class TeslaFleetEnergySiteLiveCoordinator(DataUpdateCoordinator[dict[str, Any]])
 
         self.updated_once = True
         return data
+
+
+class TeslaFleetEnergySitePastCoordinator(DataUpdateCoordinator[dict[str, Any]]):
+    """Class to manage fetching energy site past import and export from the TeslaFleet API."""
+
+    updated_once: bool
+
+    def __init__(self, hass: HomeAssistant, api: EnergySpecific) -> None:
+        """Initialize TeslaFleet Energy Site Past coordinator."""
+        super().__init__(
+            hass,
+            LOGGER,
+            name="Tesla Fleet Energy Site Past",
+            update_interval=timedelta(seconds=10),
+        )
+        self.api = api
+        self.data = {}
+        self.updated_once = False
+
+    async def _async_update_data(self) -> dict[str, Any]:
+        """Update energy site past data using TeslaFleet API."""
+
+        self.update_interval = ENERGY_INTERVAL
+        n = datetime.now(UTC).isoformat()
+        try:
+            data = (await self.api.energy_history("energy", n, n, "day", "UTC"))[
+                "response"
+            ]
+        except RateLimited as e:
+            LOGGER.warning(
+                "%s rate limited, will retry in %s seconds",
+                self.name,
+                e.data.get("after"),
+            )
+            if "after" in e.data:
+                self.update_interval = timedelta(seconds=int(e.data["after"]))
+            return self.data
+        except (InvalidToken, OAuthExpired, LoginRequired) as e:
+            raise ConfigEntryAuthFailed from e
+        except TeslaFleetError as e:
+            raise UpdateFailed(e.message) from e
+        self.updated_once = True
+        formatted_data = {
+            "grid_in": 0,
+            "grid_out": 0,
+            "solar_production": 0,
+            "battery_in": 0,
+            "battery_out": 0,
+        }
+        for time_entity in data["time_series"]:
+            formatted_data["grid_in"] = (
+                formatted_data["grid_in"] + time_entity["grid_energy_imported"]
+            )
+            formatted_data["grid_out"] = (
+                formatted_data["grid_out"]
+                + time_entity["grid_energy_exported_from_solar"]
+            )
+            +time_entity["grid_energy_exported_from_generator"]
+            +time_entity["grid_energy_exported_from_battery"]
+            formatted_data["solar_production"] = (
+                formatted_data["solar_production"]
+                + time_entity["solar_energy_exported"]
+            )
+            formatted_data["battery_in"] = (
+                formatted_data["battery_in"]
+                + time_entity["battery_energy_imported_from_grid"]
+                + time_entity["battery_energy_imported_from_solar"]
+                + time_entity["battery_energy_imported_from_generator"]
+            )
+            formatted_data["battery_out"] = (
+                formatted_data["battery_out"] + time_entity["battery_energy_exported"]
+            )
+
+        return formatted_data
 
 
 class TeslaFleetEnergySiteInfoCoordinator(DataUpdateCoordinator[dict[str, Any]]):
