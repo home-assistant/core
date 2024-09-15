@@ -1,17 +1,12 @@
 """Tests for TP-Link Omada integration init."""
 
-from datetime import timedelta
 from unittest.mock import MagicMock
 
 from homeassistant.components.tplink_omada.const import DOMAIN
-from homeassistant.components.tplink_omada.coordinator import POLL_CLIENTS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from tests.common import MockConfigEntry
-
-UPDATE_INTERVAL = timedelta(seconds=10)
-POLL_INTERVAL = timedelta(seconds=POLL_CLIENTS + 10)
 
 MOCK_ENTRY_DATA = {
     "host": "https://fake.omada.host",
