@@ -121,21 +121,21 @@ def install_package(
         args.append("--upgrade")
     if constraints is not None:
         args += ["--constraint", constraints]
-    if not is_virtual_env():
-        if target:
-            # This only works if not running in venv
-            abs_target = os.path.abspath(target)
-            env["PYTHONUSERBASE"] = abs_target
-            args += ["--target", abs_target]
-        elif not (any(var in env for var in _UV_ENV_PYTHON_VARS)) and (
-            abs_target := site.getusersitepackages()
-        ):
-            # Pip compatibility
-            # Uv has currently no support for --user
-            # See https://github.com/astral-sh/uv/issues/2077
-            # Using workaround to install to site-packages
-            # https://github.com/astral-sh/uv/issues/2077#issuecomment-2150406001
-            args += ["--python", sys.executable, "--target", abs_target]
+    if target:
+        abs_target = os.path.abspath(target)
+        env["PYTHONUSERBASE"] = abs_target
+        args += ["--target", abs_target]
+    elif (
+        not is_virtual_env()
+        and not (any(var in env for var in _UV_ENV_PYTHON_VARS))
+        and (abs_target := site.getusersitepackages())
+    ):
+        # Pip compatibility
+        # Uv has currently no support for --user
+        # See https://github.com/astral-sh/uv/issues/2077
+        # Using workaround to install to site-packages
+        # https://github.com/astral-sh/uv/issues/2077#issuecomment-2150406001
+        args += ["--python", sys.executable, "--target", abs_target]
 
     _LOGGER.debug("Running uv pip command: args=%s", args)
     with Popen(
