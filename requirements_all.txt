@@ -179,7 +179,7 @@ aioairq==0.3.2
 aioairzone-cloud==0.6.5
 
 # homeassistant.components.airzone
-aioairzone==0.9.2
+aioairzone==0.9.3
 
 # homeassistant.components.ambient_network
 # homeassistant.components.ambient_station
@@ -353,7 +353,7 @@ aioridwell==2024.01.0
 aioruckus==0.41
 
 # homeassistant.components.russound_rio
-aiorussound==3.0.4
+aiorussound==3.0.5
 
 # homeassistant.components.ruuvi_gateway
 aioruuvigateway==0.1.0
@@ -1019,7 +1019,7 @@ gotailwind==0.2.3
 govee-ble==0.40.0
 
 # homeassistant.components.govee_light_local
-govee-local-api==1.5.1
+govee-local-api==1.5.2
 
 # homeassistant.components.remote_rpi_gpio
 gpiozero==1.6.2
@@ -1538,7 +1538,7 @@ openwrt-luci-rpc==1.1.17
 openwrt-ubus-rpc==0.0.2
 
 # homeassistant.components.opower
-opower==0.7.0
+opower==0.8.0
 
 # homeassistant.components.oralb
 oralb-ble==0.17.6
@@ -1603,7 +1603,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.14
 
 # homeassistant.components.plugwise
-plugwise==1.0.0
+plugwise==1.4.0
 
 # homeassistant.components.plum_lightpad
 plumlightpad==0.0.11
