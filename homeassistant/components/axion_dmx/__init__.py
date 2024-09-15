@@ -8,7 +8,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
-from .const import CONF_HOST, CONF_PASSWORD
+from .const import CONF_CHANNEL, CONF_HOST, CONF_PASSWORD
+from .coordinator import AxionDataUpdateCoordinator
 
 PLATFORMS: list[Platform] = [Platform.LIGHT]
 
@@ -27,6 +28,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Store the API object in runtime_data
     entry.runtime_data["api"] = api
+
+    # Create coordinator instance
+    coordinator = AxionDataUpdateCoordinator(hass, api, entry.data[CONF_CHANNEL])
+    await coordinator.async_config_entry_first_refresh()
+
+    # Store coordinator object in runtime_data
+    entry.runtime_data["coordinator"] = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

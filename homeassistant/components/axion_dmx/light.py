@@ -17,6 +17,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 import homeassistant.util.color as color_util
 
 from .const import (
@@ -37,16 +38,14 @@ async def async_setup_entry(
 ) -> None:
     """Set up Axion Lighting platform."""
     api = config_entry.runtime_data["api"]
+    coordinator = config_entry.runtime_data["coordinator"]
     channel = config_entry.data[CONF_CHANNEL]
     light_type = config_entry.data[CONF_LIGHT_TYPE]
-
-    coordinator = AxionDataUpdateCoordinator(hass, api, channel)
-    await coordinator.async_config_entry_first_refresh()
 
     async_add_entities([AxionDMXLight(coordinator, api, channel, light_type)], True)
 
 
-class AxionDMXLight(LightEntity):
+class AxionDMXLight(CoordinatorEntity[AxionDataUpdateCoordinator], LightEntity):
     """Representation of an Axion Light."""
 
     _attr_has_entity_name = True
@@ -61,13 +60,13 @@ class AxionDMXLight(LightEntity):
         light_type: str,
     ) -> None:
         """Initialize an Axion Light."""
-        self.coordinator = coordinator
+        super().__init__(coordinator)
         self.api = api
         self._channel = channel - 1
         self._light_type = light_type
         self._name = f"Axion Light {channel}"
-        self._unique_id = f"axion_dmx_light_{channel}"
-        self._is_on = False
+        self._attr_unique_id = f"axion_dmx_light_{channel}"
+        self._attr_is_on = False
         self._attr_brightness = 255
         self._attr_hs_color = (0, 0)  # Default to white
         self._last_hs_color: tuple[float, float] | None = (0, 0)
@@ -80,7 +79,7 @@ class AxionDMXLight(LightEntity):
         self._attr_color_mode = ColorMode.BRIGHTNESS
         self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._unique_id)},
+            identifiers={(DOMAIN, self._attr_unique_id)},
             name=self._name,
             manufacturer=AXION_MANUFACTURER_NAME,
             model=AXION_MODEL_NAME,
@@ -103,16 +102,6 @@ class AxionDMXLight(LightEntity):
             self._attr_supported_color_modes.add(ColorMode.COLOR_TEMP)
 
     @property
-    def is_on(self) -> bool:
-        """Return true if light is on."""
-        return self._is_on
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique ID of this light."""
-        return self._unique_id
-
-    @property
     def color_temp(self) -> int:
         """Return the color temperature of the light."""
         return color_util.color_temperature_kelvin_to_mired(self._color_temp)
@@ -125,7 +114,7 @@ class AxionDMXLight(LightEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
         _LOGGER.debug(f"Instructing the {self._name} to turn on!")
-        self._is_on = True
+        self._attr_is_on = True
 
         # Handling brightness
         self._attr_brightness = kwargs.get(ATTR_BRIGHTNESS, 255)
@@ -277,7 +266,7 @@ class AxionDMXLight(LightEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
         _LOGGER.debug(f"Instructing the {self._name} to turn off!")
-        self._is_on = False
+        self._attr_is_on = False
         await self.api.set_level(self._channel, 0)
 
         if self._light_type in ["RGB", "RGBW", "RGBWW"]:
@@ -299,39 +288,3 @@ class AxionDMXLight(LightEntity):
         # Manually refresh the coordinator to get the latest state
         await self.coordinator.async_request_refresh()
         self.async_write_ha_state()
-
-    async def async_update(self) -> None:
-        """Fetch new state data for this light."""
-        level = await self.api.get_level(self._channel)
-        self._is_on = level > 0
-        self._attr_brightness = level
-
-        if self._light_type in ["RGB", "RGBW", "RGBWW"]:
-            # Assuming the RGB values are stored in a way to fetch them
-            r = await self.api.get_level(self._channel)
-            g = await self.api.get_level(self._channel + 1)
-            b = await self.api.get_level(self._channel + 2)
-            hs_color = color_util.color_RGB_to_hs(r, g, b)
-            self._attr_hs_color = (int(hs_color[0]), int(hs_color[1]))
-
-            # Determine if the light is on based on any of the RGB channels being non-zero
-            self._is_on = any([r, g, b])
-            self._attr_brightness = max(r, g, b)
-
-            if self._light_type in ["RGBW", "RGBWW"]:
-                w1 = await self.api.get_level(self._channel + 3)
-                self._attr_rgbw_color = (r, g, b, w1)
-                self._is_on = any([r, g, b, w1])
-                self._attr_brightness = max(r, g, b, w1)
-
-                if self._light_type == "RGBWW":
-                    w2 = await self.api.get_level(self._channel + 4)
-                    self._attr_rgbww_color = (r, g, b, w1, w2)
-                    self._is_on = any([r, g, b, w1, w2])
-                    self._attr_brightness = max(r, g, b, w1, w2)
-
-        elif self._light_type == "Tunable White":
-            cold_white_level = await self.api.get_level(self._channel)
-            warm_white_level = await self.api.get_level(self._channel + 1)
-            self._is_on = any([cold_white_level, warm_white_level])
-            self._attr_brightness = max(cold_white_level, warm_white_level)
