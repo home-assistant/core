@@ -18,7 +18,7 @@ from PyViCare.PyViCareUtils import (
 from homeassistant.components.climate import DOMAIN as DOMAIN_CLIMATE
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_CLIENT_ID, CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.storage import STORAGE_DIR
@@ -119,7 +119,8 @@ async def async_migrate_devices_and_entities(
     hass: HomeAssistant, entry: ConfigEntry, device: ViCareDevice
 ) -> None:
     """Migrate old entry."""
-    registry = dr.async_get(hass)
+    device_registry = dr.async_get(hass)
+    entity_registry = er.async_get(hass)
 
     gateway_serial: str = device.config.getConfig().serial
     device_id = device.config.getId()
@@ -134,33 +135,31 @@ async def async_migrate_devices_and_entities(
     )
 
     # Migrate devices
-    for device_entry in dr.async_entries_for_config_entry(registry, entry.entry_id):
+    for device_entry in dr.async_entries_for_config_entry(
+        device_registry, entry.entry_id
+    ):
         if (
             device_entry.identifiers == {(DOMAIN, old_identifier)}
             and device_entry.model == device_model
         ):
-            _LOGGER.debug("Migrating device %s", device_entry.name)
-            registry.async_update_device(
+            _LOGGER.debug(
+                "Migrating device %s to new identifier %s",
+                device_entry.name,
+                new_identifier,
+            )
+            device_registry.async_update_device(
                 device_entry.id,
                 serial_number=device_serial,
                 new_identifiers={(DOMAIN, new_identifier)},
             )
 
-            @callback
-            def _update_unique_id(
-                entity_entry: er.RegistryEntry,
-            ) -> dict[str, str] | None:
-                """Update unique ID of entity entry."""
-                if entity_entry.device_id != device_entry.id:
-                    # belongs to another device
-                    return None
-                if not entity_entry.unique_id.startswith(gateway_serial):
-                    # belongs to other device/gateway
-                    return None
+            # Migrate entities
+            for entity_entry in er.async_entries_for_device(
+                entity_registry, device_entry.id, True
+            ):
                 if entity_entry.unique_id.startswith(new_identifier):
                     # already correct, nothing to do
-                    return None
-
+                    return
                 unique_id_parts = entity_entry.unique_id.split("-")
                 # replace old prefix `<gateway-serial>` with `<gateways-serial>_<device-serial>`
                 unique_id_parts[0] = new_identifier
@@ -172,15 +171,13 @@ async def async_migrate_devices_and_entities(
                 entity_new_unique_id = "-".join(unique_id_parts)
 
                 _LOGGER.debug(
-                    "Migrating entity %s from %s to new id %s",
-                    entity_entry.entity_id,
-                    entity_entry.unique_id,
+                    "Migrating entity %s to new unique id %s",
+                    entity_entry.name,
                     entity_new_unique_id,
                 )
-                return {"new_unique_id": entity_new_unique_id}
-
-            # Migrate entities
-            await er.async_migrate_entries(hass, entry.entry_id, _update_unique_id)
+                entity_registry.async_update_entity(
+                    entity_id=entity_entry.entity_id, new_unique_id=entity_new_unique_id
+                )
 
 
 def get_supported_devices(
