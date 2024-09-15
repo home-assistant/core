@@ -46,5 +46,5 @@ def draw_box(
             (left + line_width, abs(top - line_width - font_height)), 
             text,
             fill=color,
-            font_size=font_height
+            font_size=font_height,
         )
