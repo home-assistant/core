@@ -3,10 +3,10 @@
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import EzBEQConfigEntry
 from .coordinator import EzbeqCoordinator
+from .entity import EzBEQEntity
 
 
 async def async_setup_entry(
@@ -24,7 +24,7 @@ async def async_setup_entry(
     async_add_entities(sensors)
 
 
-class EzbeqCurrentProfileSensor(CoordinatorEntity, SensorEntity):
+class EzbeqCurrentProfileSensor(SensorEntity, EzBEQEntity):
     """Sensor for the currently loaded ezbeq profile."""
 
     coordinator: EzbeqCoordinator
@@ -39,3 +39,8 @@ class EzbeqCurrentProfileSensor(CoordinatorEntity, SensorEntity):
     def native_value(self) -> str:
         """Return the state of the sensor."""
         return self.coordinator.current_profile
+
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return bool(self.coordinator.current_profile)

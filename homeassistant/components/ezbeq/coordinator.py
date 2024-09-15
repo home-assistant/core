@@ -28,20 +28,24 @@ class EzbeqCoordinator(DataUpdateCoordinator):
         self.client = client
         self.current_profile = ""
         self.current_media_type = ""
+        self.version = ""
         self.devices: list[BeqDevice] = []
 
     async def _async_update_data(self):
         """Fetch data from the ezbeq API."""
         try:
             await self.client.get_status()
+            await self.client.get_version()
         except (DeviceInfoEmpty, HTTPStatusError, RequestError) as err:
             _LOGGER.error("Error fetching ezbeq data: %s", err)
             raise
         self.devices = self.client.device_info
         self.current_profile = self.client.current_profile
         self.current_media_type = self.client.current_media_type
+        self.version = self.client.version
         return {
             "devices": self.devices,
             "current_profile": self.current_profile,
             "current_media_type": self.current_media_type,
+            "version": self.version,
         }
