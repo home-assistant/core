@@ -1,0 +1,127 @@
+# serializer version: 1
+# name: test_attribute_values
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'apparent_temperature': 20.5,
+      'attribution': 'Data provided by buienradar.nl',
+      'friendly_name': 'Buienradar',
+      'humidity': 76,
+      'precipitation_unit': <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
+      'pressure': 1020.0,
+      'pressure_unit': <UnitOfPressure.HPA: 'hPa'>,
+      'supported_features': <WeatherEntityFeature: 1>,
+      'temperature': 20.4,
+      'temperature_unit': <UnitOfTemperature.CELSIUS: '°C'>,
+      'visibility': 32.6,
+      'visibility_unit': <UnitOfLength.KILOMETERS: 'km'>,
+      'wind_bearing': 38,
+      'wind_gust_speed': 23.4,
+      'wind_speed': 14.4,
+      'wind_speed_unit': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'weather.buienradar',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'cloudy',
+  })
+# ---
+# name: test_attribute_values_invalid_data
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by buienradar.nl',
+      'friendly_name': 'Buienradar',
+      'precipitation_unit': <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
+      'pressure_unit': <UnitOfPressure.HPA: 'hPa'>,
+      'supported_features': <WeatherEntityFeature: 1>,
+      'temperature_unit': <UnitOfTemperature.CELSIUS: '°C'>,
+      'visibility_unit': <UnitOfLength.KILOMETERS: 'km'>,
+      'wind_speed_unit': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'weather.buienradar',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'cloudy',
+  })
+# ---
+# name: test_get_forecast
+  dict({
+    'weather.buienradar': dict({
+      'forecast': list([
+        dict({
+          'condition': 'partlycloudy',
+          'datetime': '2024-08-31T00:00:00+02:00',
+          'precipitation': 4.0,
+          'precipitation_probability': 30,
+          'temperature': 25.0,
+          'templow': 15.0,
+          'wind_bearing': 45,
+          'wind_speed': 20.38,
+        }),
+        dict({
+          'condition': 'partlycloudy',
+          'datetime': '2024-09-01T00:00:00+02:00',
+          'precipitation': 3.0,
+          'precipitation_probability': 30,
+          'temperature': 29.0,
+          'templow': 17.0,
+          'wind_bearing': 90,
+          'wind_speed': 12.96,
+        }),
+        dict({
+          'condition': 'pouring',
+          'datetime': '2024-09-02T00:00:00+02:00',
+          'precipitation': 3.5,
+          'precipitation_probability': 60,
+          'temperature': 27.0,
+          'templow': 18.0,
+          'wind_bearing': 225,
+          'wind_speed': 7.42,
+        }),
+        dict({
+          'condition': 'rainy',
+          'datetime': '2024-09-03T00:00:00+02:00',
+          'precipitation': 1.5,
+          'precipitation_probability': 40,
+          'temperature': 26.0,
+          'templow': 17.0,
+          'wind_bearing': 270,
+          'wind_speed': 12.96,
+        }),
+        dict({
+          'condition': 'rainy',
+          'datetime': '2024-09-04T00:00:00+02:00',
+          'precipitation': 1.0,
+          'precipitation_probability': 40,
+          'temperature': 25.0,
+          'templow': 14.0,
+          'wind_bearing': 180,
+          'wind_speed': 7.42,
+        }),
+      ]),
+    }),
+  })
+# ---
+# name: test_smoke_test_no_forecasts
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by buienradar.nl',
+      'friendly_name': 'Buienradar',
+      'precipitation_unit': <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
+      'pressure_unit': <UnitOfPressure.HPA: 'hPa'>,
+      'supported_features': <WeatherEntityFeature: 1>,
+      'temperature_unit': <UnitOfTemperature.CELSIUS: '°C'>,
+      'visibility_unit': <UnitOfLength.KILOMETERS: 'km'>,
+      'wind_speed_unit': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'weather.buienradar',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'cloudy',
+  })
+# ---

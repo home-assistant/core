@@ -2,6 +2,8 @@
 
 from http import HTTPStatus
 
+from syrupy.assertion import SnapshotAssertion
+
 from homeassistant.components.buienradar.const import DOMAIN
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
@@ -123,12 +125,13 @@ async def test_smoke_test_setup_component(
         assert state.state == "unknown"
 
 
-async def test_smoke_test_data(
+async def test_sensor_values(
     aioclient_mock: AiohttpClientMocker,
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
-    """Smoke test for successfully set-up with default configand data."""
+    """Test for fetching (mocked) weather data and checking sensor values."""
     brJson = load_json_object_fixture("buienradar.json", DOMAIN)
     raindata = load_fixture("raindata.txt", DOMAIN)
     aioclient_mock.get(
@@ -143,6 +146,9 @@ async def test_smoke_test_data(
 
     mock_entry.add_to_hass(hass)
 
+    # Explicitly call async_get_or_create to make sure all sensors in the test have been / are created.
+    # BrSensor sets '_attr_entity_registry_enabled_default=false', so no sensor will get added into
+    # the registry on platform creation.
     for cond in CONDITIONS:
         entity_registry.async_get_or_create(
             domain="sensor",
@@ -156,85 +162,6 @@ async def test_smoke_test_data(
     await hass.config_entries.async_setup(mock_entry.entry_id)
     await hass.async_block_till_done()
 
-    expected = {
-        "barometerfc": "5",
-        "barometerfcname": "Unstable",
-        "condition": "cloudy",
-        "conditioncode": "c",
-        "feeltemperature": "20.5",
-        "groundtemperature": "19.8",
-        "windspeed": "14.4",
-        "windforce": "3",
-        "winddirection": "NO",
-        "windazimuth": "38",
-        "humidity": "76",
-        "pressure": "1020.0",
-        "visibility": "32.6",
-        "windgust": "23.4",
-        "precipitation": "0.0",
-        "precipitation_forecast_average": "0.0",
-        "precipitation_forecast_total": "0.0",
-        "rainlast24hour": "2.2",
-        "rainlasthour": "0.0",
-        "temperature_1d": "23.5",
-        "temperature_2d": "26.5",
-        "temperature_3d": "25.5",
-        "temperature_4d": "24.5",
-        "temperature_5d": "23.5",
-        "mintemp_1d": "15.0",
-        "mintemp_2d": "17.0",
-        "mintemp_3d": "18.0",
-        "mintemp_4d": "17.0",
-        "mintemp_5d": "14.0",
-        "rain_1d": "4.0",
-        "rain_2d": "3.0",
-        "rain_3d": "3.5",
-        "rain_4d": "1.5",
-        "rain_5d": "1.0",
-        "minrain_1d": "0.0",
-        "minrain_2d": "0.0",
-        "minrain_3d": "1.0",
-        "minrain_4d": "0.0",
-        "minrain_5d": "0.0",
-        "maxrain_1d": "8.0",
-        "maxrain_2d": "6.0",
-        "maxrain_3d": "6.0",
-        "maxrain_4d": "3.0",
-        "maxrain_5d": "2.0",
-        "rainchance_1d": "30",
-        "rainchance_2d": "30",
-        "rainchance_3d": "60",
-        "rainchance_4d": "40",
-        "rainchance_5d": "40",
-        "sunchance_1d": "50",
-        "sunchance_2d": "60",
-        "sunchance_3d": "20",
-        "sunchance_4d": "30",
-        "sunchance_5d": "30",
-        "windforce_1d": "4",
-        "windforce_2d": "3",
-        "windforce_3d": "2",
-        "windforce_4d": "3",
-        "windforce_5d": "2",
-        "windspeed_1d": "20.4",
-        "windspeed_2d": "13.0",
-        "windspeed_3d": "7.4",
-        "windspeed_4d": "13.0",
-        "windspeed_5d": "7.4",
-        "windazimuth_1d": "45",
-        "windazimuth_2d": "90",
-        "windazimuth_3d": "225",
-        "windazimuth_4d": "270",
-        "windazimuth_5d": "180",
-        "condition_1d": "cloudy",
-        "condition_2d": "cloudy",
-        "condition_3d": "rainy",
-        "condition_4d": "rainy",
-        "condition_5d": "rainy",
-        "irradiance": "526",
-        "stationname": "Eindhoven (6370)",
-        "temperature": "20.4",
-    }
     for cond in CONDITIONS:
         state = hass.states.get(f"sensor.buienradar_51_5288505_400216{cond}")
-        assert state.state == expected[cond]
+        assert state == snapshot
