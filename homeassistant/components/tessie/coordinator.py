@@ -16,7 +16,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import TessieStatus
+from .const import TessieState
 
 # This matches the update interval Tessie performs server side
 TESSIE_SYNC_INTERVAL = 10
@@ -62,7 +62,7 @@ class TessieStateUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         # Tessie always returns cached data with a status of "online"
         # We need to check the timestamp to determine if the vehicle is actually asleep
         if data["vehicle_state"]["timestamp"] < (time() - 60) * 1000:
-            data["state"] = TessieStatus.ASLEEP
+            data["state"] = TessieState.ASLEEP
 
         self.data = flatten(data)
 
@@ -84,7 +84,7 @@ class TessieStateUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         # Tessie always returns cached data with a status of "online"
         # We need to check the timestamp to determine if the vehicle is actually asleep
         if vehicle["vehicle_state"]["timestamp"] < (time() - 60) * 1000:
-            vehicle["state"] = TessieStatus.ASLEEP
+            vehicle["state"] = TessieState.ASLEEP
 
         return flatten(vehicle)
 

@@ -293,7 +293,7 @@
           'id': '**REDACTED**',
           'id_s': '**REDACTED**',
           'in_service': False,
-          'state': 'online',
+          'state': 'asleep',
           'tokens': '**REDACTED**',
           'user_id': '**REDACTED**',
           'vehicle_config_aux_park_lamps': 'Eu',
