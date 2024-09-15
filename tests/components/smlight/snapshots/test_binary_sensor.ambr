@@ -75,7 +75,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'internet',
-    'unique_id': 'aa:bb:cc:dd:ee:ff_Internet',
+    'unique_id': 'aa:bb:cc:dd:ee:ff_internet',
     'unit_of_measurement': None,
   })
 # ---
