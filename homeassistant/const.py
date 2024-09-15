@@ -679,6 +679,8 @@ class UnitOfPower(StrEnum):
     """Power units."""
 
     WATT = "W"
+    WATT_HOUR = "Wh"
+    KILOWATT_HOUR = "kWh"
     KILO_WATT = "kW"
     BTU_PER_HOUR = "BTU/h"
 

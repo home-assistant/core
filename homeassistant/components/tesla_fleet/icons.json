@@ -222,6 +222,30 @@
       },
       "wall_connector_state": {
         "default": "mdi:ev-station"
+      },
+      "grid_in": {
+        "default": "mdi:transmission-tower-import"
+      },
+      "grid_out": {
+        "default": "mdi:transmission-tower-export"
+      },
+      "solar_production": {
+        "default": "mdi:solar-power-variant"
+      },
+      "battery_in": {
+        "default": "mdi:battery-arrow-up"
+      },
+      "battery_out": {
+        "default": "mdi:battery-arrow-down"
+      },
+      "storm_mode_active": {
+        "default": "mdi:weather-lightning"
+      },
+      "island_status": {
+        "state": {
+          "on_grid": "mdi:transmission-tower",
+          "off_grid": "mdi:transmission-tower-off"
+        }
       }
     },
     "switch": {

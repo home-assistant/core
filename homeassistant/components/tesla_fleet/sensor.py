@@ -39,6 +39,7 @@ from .const import TeslaFleetState
 from .entity import (
     TeslaFleetEnergyInfoEntity,
     TeslaFleetEnergyLiveEntity,
+    TeslaFleetEnergyPastEntity,
     TeslaFleetVehicleEntity,
     TeslaFleetWallConnectorEntity,
 )
@@ -412,6 +413,49 @@ WALL_CONNECTOR_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
     ),
 )
 
+ENERGY_PAST_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key="grid_in",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfPower.WATT_HOUR,
+        suggested_unit_of_measurement=UnitOfPower.KILOWATT_HOUR,
+        suggested_display_precision=2,
+        device_class=SensorDeviceClass.ENERGY,
+    ),
+    SensorEntityDescription(
+        key="grid_out",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfPower.WATT_HOUR,
+        suggested_unit_of_measurement=UnitOfPower.KILOWATT_HOUR,
+        suggested_display_precision=2,
+        device_class=SensorDeviceClass.ENERGY,
+    ),
+    SensorEntityDescription(
+        key="solar_production",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfPower.WATT_HOUR,
+        suggested_unit_of_measurement=UnitOfPower.KILOWATT_HOUR,
+        suggested_display_precision=2,
+        device_class=SensorDeviceClass.ENERGY,
+    ),
+    SensorEntityDescription(
+        key="battery_in",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfPower.WATT_HOUR,
+        suggested_unit_of_measurement=UnitOfPower.KILOWATT_HOUR,
+        suggested_display_precision=2,
+        device_class=SensorDeviceClass.ENERGY,
+    ),
+    SensorEntityDescription(
+        key="battery_out",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfPower.WATT_HOUR,
+        suggested_unit_of_measurement=UnitOfPower.KILOWATT_HOUR,
+        suggested_display_precision=2,
+        device_class=SensorDeviceClass.ENERGY,
+    ),
+)
+
 ENERGY_INFO_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="vpp_backup_reserve_percent",
@@ -446,6 +490,12 @@ async def async_setup_entry(
                 for energysite in entry.runtime_data.energysites
                 for description in ENERGY_LIVE_DESCRIPTIONS
                 if description.key in energysite.live_coordinator.data
+            ),
+            (  # Add energy site past
+                TeslaFleetEnergyPastSensorEntity(energysite, description)
+                for energysite in entry.runtime_data.energysites
+                for description in ENERGY_PAST_DESCRIPTIONS
+                if description.key in energysite.past_coordinator.data
             ),
             (  # Add wall connectors
                 TeslaFleetWallConnectorSensorEntity(energysite, wc["din"], description)
@@ -522,6 +572,33 @@ class TeslaFleetVehicleTimeSensorEntity(TeslaFleetVehicleEntity, SensorEntity):
 
 
 class TeslaFleetEnergyLiveSensorEntity(TeslaFleetEnergyLiveEntity, RestoreSensor):
+    """Base class for Tesla Fleet energy site metric sensors."""
+
+    entity_description: SensorEntityDescription
+
+    def __init__(
+        self,
+        data: TeslaFleetEnergyData,
+        description: SensorEntityDescription,
+    ) -> None:
+        """Initialize the sensor."""
+        self.entity_description = description
+        super().__init__(data, description.key)
+
+    async def async_added_to_hass(self) -> None:
+        """Handle entity which will be added."""
+        await super().async_added_to_hass()
+        if not self.coordinator.updated_once:
+            if (sensor_data := await self.async_get_last_sensor_data()) is not None:
+                self._attr_native_value = sensor_data.native_value
+
+    def _async_update_attrs(self) -> None:
+        """Update the attributes of the sensor."""
+        self._attr_available = not self.is_none
+        self._attr_native_value = self._value
+
+
+class TeslaFleetEnergyPastSensorEntity(TeslaFleetEnergyPastEntity, RestoreSensor):
     """Base class for Tesla Fleet energy site metric sensors."""
 
     entity_description: SensorEntityDescription

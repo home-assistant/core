@@ -447,6 +447,21 @@
       },
       "wall_connector_state": {
         "name": "State code"
+      },
+      "grid_in": {
+        "name": "Grid import"
+      },
+      "grid_out": {
+        "name": "Grid export"
+      },
+      "solar_production": {
+        "name": "Solar Production"
+      },
+      "battery_in": {
+        "name": "Battery power added"
+      },
+      "battery_out": {
+        "name": "Batter power removed"
       }
     },
     "switch": {
