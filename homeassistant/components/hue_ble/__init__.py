@@ -16,6 +16,7 @@ _LOGGER = logging.getLogger(__name__)
 
 type HueBLEConfigEntry = ConfigEntry[HueBleLight]
 
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the integration from a config entry."""
 
