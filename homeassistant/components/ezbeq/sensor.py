@@ -32,7 +32,7 @@ class EzbeqCurrentProfileSensor(SensorEntity, EzBEQEntity):
     def __init__(self, coordinator: EzbeqCoordinator) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
-        self._attr_name = "ezbeq Current Profile"
+        self._attr_name = "Current Profile"
         self._attr_unique_id = f"{coordinator.client.server_url}_current_profile"
 
     @property

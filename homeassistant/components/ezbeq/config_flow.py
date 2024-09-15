@@ -26,6 +26,7 @@ from .const import (
     CONF_TITLE_SENSOR,
     CONF_TMDB_SENSOR,
     CONF_YEAR_SENSOR,
+    DEFAULT_NAME,
     DOMAIN,
 )
 
@@ -56,19 +57,20 @@ SHARED_DATA_SCHEMA = {
     vol.Required(CONF_TITLE_SENSOR): selector.EntitySelector(
         selector.EntitySelectorConfig(domain="sensor")
     ),
+    vol.Required(CONF_TMDB_SENSOR): selector.EntitySelector(
+        selector.EntitySelectorConfig(domain="sensor")
+    ),
+    vol.Required(CONF_YEAR_SENSOR): selector.EntitySelector(
+        selector.EntitySelectorConfig(domain="sensor")
+    ),
     vol.Optional(CONF_PREFERRED_AUTHOR): str,
 }
 
+# Plex and JF have different codec schemas
 
 # Plex schema
 STEP_PLEX_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_TMDB_SENSOR): selector.EntitySelector(
-            selector.EntitySelectorConfig(domain="sensor")
-        ),
-        vol.Required(CONF_YEAR_SENSOR): selector.EntitySelector(
-            selector.EntitySelectorConfig(domain="sensor")
-        ),
         vol.Required(CONF_CODEC_SENSOR): selector.EntitySelector(
             selector.EntitySelectorConfig(domain="sensor")
         ),
@@ -129,7 +131,7 @@ class EzBEQConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is None:
             return self.async_show_form(
-                step_id="user", data_schema=STEP_USER_DATA_SCHEMA
+                step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
             )
 
         self.ezbeq_data.update(user_input)
@@ -154,15 +156,13 @@ class EzBEQConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is None:
             if self.ezbeq_data[CONF_SOURCE_TYPE] == "Plex":
                 return self.async_show_form(
-                    step_id="entities", data_schema=STEP_PLEX_DATA_SCHEMA
+                    step_id="entities", data_schema=STEP_PLEX_DATA_SCHEMA, errors={}
                 )
             # Jellyfin
             return self.async_show_form(
-                step_id="entities", data_schema=STEP_JF_DATA_SCHEMA
+                step_id="entities", data_schema=STEP_JF_DATA_SCHEMA, errors={}
             )
 
         self.ezbeq_data.update(user_input)
 
-        return self.async_create_entry(
-            title="ezbeq Profile Loader", data=self.ezbeq_data
-        )
+        return self.async_create_entry(title=DEFAULT_NAME, data=self.ezbeq_data)

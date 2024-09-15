@@ -2,6 +2,7 @@
 
 DOMAIN = "ezbeq"
 DEFAULT_PORT = 8080
+DEFAULT_NAME = "EzBEQ"
 CONF_SOURCE_TYPE = "source_type"
 CONF_SOURCE_MEDIA_PLAYER = "source_media_player"
 CONF_TMDB_SENSOR = "tmdb_sensor"
