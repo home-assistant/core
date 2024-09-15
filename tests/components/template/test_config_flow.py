@@ -30,6 +30,16 @@ from tests.typing import WebSocketGenerator
     ),
     [
         (
+            "alarm_control_panel",
+            {"value_template": "{{ states('alarm_control_panel.one') }}"},
+            "armed_away",
+            {"one": "armed_away", "two": "disarmed"},
+            {},
+            {},
+            {"code_arm_required": True, "code_format": "number"},
+            {},
+        ),
+        (
             "binary_sensor",
             {
                 "state": "{{ states('binary_sensor.one') == 'on' or states('binary_sensor.two') == 'on' }}"
@@ -271,6 +281,12 @@ async def test_config_flow(
             },
         ),
         (
+            "alarm_control_panel",
+            {"value_template": "{{ states('alarm_control_panel.one') }}"},
+            {"code_arm_required": True, "code_format": "number"},
+            {"code_arm_required": True, "code_format": "number"},
+        ),
+        (
             "select",
             {"state": "{{ states('select.one') }}"},
             {"options": "{{ ['off', 'on', 'auto'] }}"},
@@ -475,6 +491,16 @@ def get_suggested(schema, key):
                 },
             },
             "state",
+        ),
+        (
+            "alarm_control_panel",
+            {"value_template": "{{ states('alarm_control_panel.one') }}"},
+            {"value_template": "{{ states('alarm_control_panel.two') }}"},
+            ["armed_away", "disarmed"],
+            {"one": "armed_away", "two": "disarmed"},
+            {"code_arm_required": True, "code_format": "number"},
+            {"code_arm_required": True, "code_format": "number"},
+            "value_template",
         ),
         (
             "select",
@@ -1243,6 +1269,12 @@ async def test_option_flow_sensor_preview_config_entry_removed(
                 "max": 100,
                 "step": 0.1,
             },
+        ),
+        (
+            "alarm_control_panel",
+            {"value_template": "{{ states('alarm_control_panel.one') }}"},
+            {"code_arm_required": True, "code_format": "number"},
+            {"code_arm_required": True, "code_format": "number"},
         ),
         (
             "select",

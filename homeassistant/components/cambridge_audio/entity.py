@@ -5,6 +5,7 @@ from functools import wraps
 from typing import Any, Concatenate
 
 from aiostreammagic import StreamMagicClient
+from aiostreammagic.models import CallbackType
 
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
@@ -51,7 +52,9 @@ class CambridgeAudioEntity(Entity):
         )
 
     @callback
-    async def _state_update_callback(self, _client: StreamMagicClient) -> None:
+    async def _state_update_callback(
+        self, _client: StreamMagicClient, _callback_type: CallbackType
+    ) -> None:
         """Call when the device is notified of changes."""
         self._attr_available = _client.is_connected()
         self.async_write_ha_state()
