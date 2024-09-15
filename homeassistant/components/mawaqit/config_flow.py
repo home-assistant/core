@@ -1,6 +1,5 @@
 """Adds config flow for Mawaqit."""
 
-import json
 import logging
 import os
 
@@ -18,7 +17,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 
-from . import mawaqit_wrapper
+from . import mawaqit_wrapper, utils
 from .const import CONF_CALC_METHOD, CONF_UUID, DOMAIN
 from .utils import (
     create_data_folder,
@@ -78,7 +77,8 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 username, password
             )
 
-            os.environ["MAWAQIT_API_KEY"] = mawaqit_token
+            await utils.write_mawaqit_token(self.hass, mawaqit_token)
+            # os.environ["MAWAQIT_API_KEY"] = mawaqit_token
 
             try:
                 nearest_mosques = await mawaqit_wrapper.all_mosques_neighborhood(
@@ -94,13 +94,9 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 self.hass
             )
 
-            file_path = f"{CURRENT_DIR}/data/mosq_list_data"
-
-            def write():
-                with open(file_path, "w+", encoding="utf-8") as text_file:
-                    json.dump({"CALC_METHODS": CALC_METHODS}, text_file)
-
-            await self.hass.async_add_executor_job(write)
+            await utils.async_write_in_data(
+                self.hass, CURRENT_DIR, "mosq_list_data", {"CALC_METHODS": CALC_METHODS}
+            )
 
             return await self.async_step_mosques()
 
@@ -136,20 +132,9 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
             await write_my_mosque_NN_file(nearest_mosques[index], self.hass)
 
-            # the mosque chosen by user
-            dict_calendar = await mawaqit_wrapper.fetch_prayer_times(
-                mosque=mosque_id, token=mawaqit_token
+            await utils.update_my_mosque_data_files(
+                self.hass, CURRENT_DIR, mosque_id=mosque_id, token=mawaqit_token
             )
-
-            def write():
-                with open(
-                    "{dir}/data/pray_time{name}.txt".format(dir=CURRENT_DIR, name=""),
-                    "w",
-                    encoding="utf-8",
-                ) as f:
-                    json.dump(dict_calendar, f)
-
-            await self.hass.async_add_executor_job(write)
 
             title = "MAWAQIT" + " - " + nearest_mosques[index]["name"]
             data_entry = {
@@ -251,20 +236,9 @@ class MawaqitPrayerOptionsFlowHandler(config_entries.OptionsFlow):
 
             await write_my_mosque_NN_file(nearest_mosques[index], self.hass)
 
-            # the mosque chosen by user
-            dict_calendar = await mawaqit_wrapper.fetch_prayer_times(
-                mosque=mosque_id, token=mawaqit_token
+            await utils.update_my_mosque_data_files(
+                self.hass, CURRENT_DIR, mosque_id=mosque_id, token=mawaqit_token
             )
-
-            def write():
-                with open(
-                    "{dir}/data/pray_time{name}.txt".format(dir=CURRENT_DIR, name=""),
-                    "w",
-                    encoding="utf-8",
-                ) as f:
-                    json.dump(dict_calendar, f)
-
-            await self.hass.async_add_executor_job(write)
 
             title_entry = "MAWAQIT" + " - " + nearest_mosques[index]["name"]
 

@@ -28,6 +28,8 @@ from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as dt_util
 from homeassistant.util.dt import now as ha_now
 
+from . import utils
+
 # from homeassistant.util.dt import now as ha_now
 # from homeassistant.helpers import aiohttp_client
 from .const import (
@@ -121,14 +123,13 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
 async def async_remove_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
     """Remove Mawaqit Prayer entry from config_entry."""
 
-    current_dir = os.path.dirname(os.path.realpath(__file__))
-    dir_path = f"{current_dir}/data"
+    dir_path = f"{CURRENT_DIR}/data"
     try:
         shutil.rmtree(dir_path)
     except OSError as e:
         _LOGGER.error("Error: %s : %s", dir_path, e.strerror)
 
-    dir_path = f"{current_dir}/__pycache__"
+    dir_path = f"{CURRENT_DIR}/__pycache__"
     try:
         shutil.rmtree(dir_path)
     except OSError as e:
@@ -155,7 +156,7 @@ class MawaqitPrayerClient:
         """Return the calculation method."""
         return self.config_entry.options[CONF_CALC_METHOD]
 
-    def get_new_prayer_times(self):
+    async def get_new_prayer_times(self):
         """Fetch prayer times for today."""
         mawaqit_login = self.config_entry.data.get("username")  # noqa: F841
         mawaqit_password = self.config_entry.data.get("password")  # noqa: F841
@@ -164,18 +165,27 @@ class MawaqitPrayerClient:
 
         mosque = self.config_entry.options.get("calculation_method")  # noqa: F841
 
-        current_dir = os.path.dirname(os.path.realpath(__file__))
-
         name_servers = []  # noqa: F841
         uuid_servers = []  # noqa: F841
         # TODO check if we should keep this or no  # pylint: disable=fixme
         CALC_METHODS.clear()  # changed due to W0621 with pylint and F841 with Ruff
 
+        # TODO reload files here from API
         # We get the prayer times of the year from pray_time.txt
-        with open(f"{current_dir}/data/pray_time.txt", encoding="utf-8") as f:
-            content = json.load(f)
+        # utils.update_mosque_data_files()
+        await utils.update_my_mosque_data_files(
+            self.hass,
+            CURRENT_DIR,
+        )
 
-        data_pray_time = content
+        # with open(f"{CURRENT_DIR}/data/pray_time.txt", encoding="utf-8") as f:
+        #     content = json.load(f)
+
+        data_pray_time = await utils.async_read_in_data(
+            self.hass, CURRENT_DIR, "pray_time.txt"
+        )
+
+        # data_pray_time = content
         calendar = data_pray_time["calendar"]
 
         # Then, we get the prayer times of the day into this file
@@ -231,9 +241,7 @@ class MawaqitPrayerClient:
             prayers.append(pray)
 
         # Then the next prayer is the nearest prayer time, so the min of the prayers list
-        next_prayer = min(
-            prayers
-        )  # TODO recheck what do they mean by min here (it's an array of str) # pylint: disable=fixme
+        next_prayer = min(prayers)
         res["Next Salat Time"] = next_prayer.split(" ", 1)[1].rsplit(":", 1)[0]
         next_prayer_index = prayers.index(next_prayer)
         # TODO fix sensor times # pylint: disable=fixme
@@ -334,10 +342,8 @@ class MawaqitPrayerClient:
             ]
 
         else:  # We retrieve the next Fajr (more calculations).
-            current_dir = os.path.dirname(os.path.realpath(__file__))
-
             data_pray_time = ""
-            async with await anyio.open_file(f"{current_dir}/data/pray_time.txt") as f:
+            async with await anyio.open_file(f"{CURRENT_DIR}/data/pray_time.txt") as f:
                 data_pray_time = json.loads(await f.read())
 
             calendar = data_pray_time["calendar"]
@@ -394,9 +400,10 @@ class MawaqitPrayerClient:
         # get ID from my_mosque.txt, then create AsyncMawaqitClient and generate the dict with the prayer times.
         """Update sensors with new prayer times."""
         try:
-            prayer_times = await self.hass.async_add_executor_job(
-                self.get_new_prayer_times
-            )
+            # prayer_times = await self.hass.async_add_executor_job(
+            #     self.get_new_prayer_times
+            # )
+            prayer_times = await self.get_new_prayer_times()
             self.available = True
         except (BadCredentialsException, ConnError):
             self.available = False
@@ -407,6 +414,7 @@ class MawaqitPrayerClient:
         _LOGGER.debug("[;] prayer_times : %s", prayer_times)
         _LOGGER.debug("[;] ha_now() times : %s", ha_now().time())
         _LOGGER.debug("[;] ha_now() date : %s", ha_now().date())
+
         for prayer, time in prayer_times.items():
             tomorrow = (ha_now().date() + timedelta(days=1)).strftime("%Y-%m-%d")
             today = ha_now().date().strftime("%Y-%m-%d")
@@ -472,7 +480,8 @@ class MawaqitPrayerClient:
         await self.async_add_options()
 
         try:
-            await self.hass.async_add_executor_job(self.get_new_prayer_times)
+            await self.get_new_prayer_times()
+            # await self.hass.async_add_executor_job(self.get_new_prayer_times)
         except (BadCredentialsException, ConnError) as err:
             raise ConfigEntryNotReady from err
 
