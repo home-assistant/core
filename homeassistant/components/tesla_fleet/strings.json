@@ -458,10 +458,10 @@
         "name": "Solar Production"
       },
       "battery_in": {
-        "name": "Battery power added"
+        "name": "Battery charged"
       },
       "battery_out": {
-        "name": "Batter power removed"
+        "name": "Battery discharged"
       }
     },
     "switch": {
