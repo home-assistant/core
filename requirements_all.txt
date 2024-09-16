@@ -1538,7 +1538,7 @@ openwrt-luci-rpc==1.1.17
 openwrt-ubus-rpc==0.0.2
 
 # homeassistant.components.opower
-opower==0.7.0
+opower==0.8.0
 
 # homeassistant.components.oralb
 oralb-ble==0.17.6
@@ -1603,7 +1603,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.14
 
 # homeassistant.components.plugwise
-plugwise==1.0.0
+plugwise==1.4.0
 
 # homeassistant.components.plum_lightpad
 plumlightpad==0.0.11
