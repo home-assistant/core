@@ -80,9 +80,6 @@ def setup_platform(
     if device_class == SensorDeviceClass.ENUM and not options:
         raise ValueError("Options must be provided for ENUM device class")
 
-    if device_class == SensorDeviceClass.ENUM and not options:
-        raise ValueError("Options must be provided for ENUM device class")
-
     entity = AdsSensor(
         ads_hub,
         ads_var,
