@@ -319,15 +319,19 @@ def get_rpc_channel_name(device: RpcDevice, key: str) -> str:
     device_name = device.name
     entity_name: str | None = None
     if key in device.config:
-        entity_name = device.config[key].get("name", device_name)
+        entity_name = device.config[key].get("name")
 
     if entity_name is None:
-        if key.startswith(("input:", "light:", "switch:")):
-            return f"{device_name} {key.replace(':', '_')}"
+        channel = key.split(":")[0]
+        channel_id = key.split(":")[-1]
+        if key.startswith(("cover:", "input:", "light:", "switch:", "thermostat:")):
+            return f"{device_name} {channel.title()} {channel_id}"
+        if key.startswith(("rgb:", "rgbw:")):
+            return f"{device_name} {channel.upper()} light {channel_id}"
         if key.startswith("em1"):
-            return f"{device_name} EM{key.split(':')[-1]}"
+            return f"{device_name} EM{channel_id}"
         if key.startswith(("boolean:", "enum:", "number:", "text:")):
-            return key.replace(":", " ").title()
+            return f"{channel.title()} {channel_id}"
         return device_name
 
     return entity_name
