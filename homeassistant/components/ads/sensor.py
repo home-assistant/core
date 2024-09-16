@@ -77,6 +77,9 @@ def setup_platform(
     unit_of_measurement: str | None = config.get(CONF_UNIT_OF_MEASUREMENT)
     options: list[str] | None = config.get(CONF_OPTIONS, [])
 
+    if device_class == SensorDeviceClass.ENUM and not options:
+        raise ValueError("Options must be provided for ENUM device class")
+
     entity = AdsSensor(
         ads_hub,
         ads_var,
@@ -115,11 +118,6 @@ class AdsSensor(AdsEntity, SensorEntity):
         self._attr_state_class = state_class
         self._attr_native_unit_of_measurement = unit_of_measurement
         self._options = options or []
-
-        if self._attr_device_class == SensorDeviceClass.ENUM:
-            if not self._options:
-                raise ValueError("Options must be provided for ENUM device class")
-            self._attr_options = self._options
 
     async def async_added_to_hass(self) -> None:
         """Register device notification."""
