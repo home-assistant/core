@@ -93,18 +93,14 @@ class SmUpdateEntity(SmEntity, UpdateEntity):
     def installed_version(self) -> str | None:
         """Version installed.."""
         data = self.coordinator.data
-        if isinstance(data, SmFwData):
-            version = self.entity_description.installed_version(data.info)
-            if version != "-1":
-                return version
-        return None
+
+        version = self.entity_description.installed_version(data.info)
+        return version if version != "-1" else None
 
     @property
     def latest_version(self) -> str | None:
         """Latest version available for install."""
         data = self.coordinator.data
-        if not isinstance(data, SmFwData):
-            return None
 
         fw = self.entity_description.fw_list(data)
 
@@ -154,13 +150,13 @@ class SmUpdateEntity(SmEntity, UpdateEntity):
 
     def _update_done(self) -> None:
         """Handle cleanup for update done."""
-        self._finished_event.set()
-        assert isinstance(self.coordinator, SmFirmwareUpdateCoordinator)
-        self.coordinator.in_progress = False
+        if isinstance(self.coordinator, SmFirmwareUpdateCoordinator):
+            self._finished_event.set()
+            self.coordinator.in_progress = False
 
-        for remove_cb in self._unload:
-            remove_cb()
-        self._unload.clear()
+            for remove_cb in self._unload:
+                remove_cb()
+            self._unload.clear()
 
     @callback
     def _update_finished(self, event: MessageEvent) -> None:
@@ -178,8 +174,12 @@ class SmUpdateEntity(SmEntity, UpdateEntity):
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
         """Install firmware update."""
-        assert isinstance(self.coordinator, SmFirmwareUpdateCoordinator)
-        if not self.coordinator.in_progress and self._firmware:
+
+        if (
+            isinstance(self.coordinator, SmFirmwareUpdateCoordinator)
+            and not self.coordinator.in_progress
+            and self._firmware
+        ):
             self.coordinator.in_progress = True
             self._attr_in_progress = True
             self.register_callbacks()

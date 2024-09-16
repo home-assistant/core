@@ -1,13 +1,16 @@
 """DataUpdateCoordinator for Smlight."""
 
+from __future__ import annotations
+
+from abc import abstractmethod
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 from pysmlight import Api2, Info, Sensors
 from pysmlight.const import Settings, SettingsProp
 from pysmlight.exceptions import SmlightAuthError, SmlightConnectionError
 from pysmlight.web import Firmware
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
@@ -17,6 +20,9 @@ from homeassistant.helpers.issue_registry import IssueSeverity
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, LOGGER, SCAN_FIRMWARE_INTERVAL, SCAN_INTERVAL
+
+if TYPE_CHECKING:
+    from . import SmConfigEntry
 
 
 @dataclass
@@ -31,16 +37,15 @@ class SmData:
 class SmFwData:
     """SMLIGHT firmware data stored in the FirmwareUpdateCoordinator."""
 
-    sensors: Sensors
     info: Info
     esp_firmware: list[Firmware] | None
     zb_firmware: list[Firmware] | None
 
 
-class SmDataUpdateCoordinator(DataUpdateCoordinator[SmData | SmFwData]):
-    """Class to manage fetching SMLIGHT data."""
+class SmBaseDataUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
+    """Base Coordinator for SMLIGHT."""
 
-    config_entry: ConfigEntry
+    config_entry: SmConfigEntry
 
     def __init__(self, hass: HomeAssistant, host: str, client: Api2) -> None:
         """Initialize the coordinator."""
@@ -89,6 +94,23 @@ class SmDataUpdateCoordinator(DataUpdateCoordinator[SmData | SmFwData]):
                 translation_key="unsupported_firmware",
             )
 
+    async def _async_update_data(self) -> _DataT:
+        try:
+            return await self._internal_update_data()
+        except SmlightAuthError as err:
+            raise ConfigEntryAuthFailed from err
+
+        except SmlightConnectionError as err:
+            raise UpdateFailed(err) from err
+
+    @abstractmethod
+    async def _internal_update_data(self) -> _DataT:
+        """Update coordinator data."""
+
+
+class SmDataUpdateCoordinator(SmBaseDataUpdateCoordinator[SmData]):
+    """Class to manage fetching SMLIGHT sensor data."""
+
     def update_setting(self, setting: Settings, value: bool | int) -> None:
         """Update the sensor value from event."""
 
@@ -97,25 +119,19 @@ class SmDataUpdateCoordinator(DataUpdateCoordinator[SmData | SmFwData]):
 
         self.async_set_updated_data(self.data)
 
-    async def _async_update_data(self) -> SmData | SmFwData:
-        """Fetch data from the SMLIGHT device."""
-        try:
-            sensors = Sensors()
-            if not self.legacy_api:
-                sensors = await self.client.get_sensors()
+    async def _internal_update_data(self) -> SmData:
+        """Fetch sensor data from the SMLIGHT device."""
+        sensors = Sensors()
+        if not self.legacy_api:
+            sensors = await self.client.get_sensors()
 
-            return SmData(
-                sensors=sensors,
-                info=await self.client.get_info(),
-            )
-        except SmlightAuthError as err:
-            raise ConfigEntryAuthFailed from err
-
-        except SmlightConnectionError as err:
-            raise UpdateFailed(err) from err
+        return SmData(
+            sensors=sensors,
+            info=await self.client.get_info(),
+        )
 
 
-class SmFirmwareUpdateCoordinator(SmDataUpdateCoordinator):
+class SmFirmwareUpdateCoordinator(SmBaseDataUpdateCoordinator[SmFwData]):
     """Class to manage fetching SMLIGHT firmware update data from cloud."""
 
     def __init__(self, hass: HomeAssistant, host: str, client: Api2) -> None:
@@ -126,21 +142,14 @@ class SmFirmwareUpdateCoordinator(SmDataUpdateCoordinator):
         # only one update can run at a time (core or zibgee)
         self.in_progress = False
 
-    async def _async_update_data(self) -> SmFwData:
+    async def _internal_update_data(self) -> SmFwData:
         """Fetch data from the SMLIGHT device."""
-        try:
-            info = await self.client.get_info()
+        info = await self.client.get_info()
 
-            return SmFwData(
-                info=info,
-                sensors=Sensors(),
-                esp_firmware=await self.client.get_firmware_version(info.fw_channel),
-                zb_firmware=await self.client.get_firmware_version(
-                    info.fw_channel, device=info.model, mode="zigbee"
-                ),
-            )
-        except SmlightAuthError as err:
-            raise ConfigEntryAuthFailed from err
-
-        except SmlightConnectionError as err:
-            raise UpdateFailed(err) from err
+        return SmFwData(
+            info=info,
+            esp_firmware=await self.client.get_firmware_version(info.fw_channel),
+            zb_firmware=await self.client.get_firmware_version(
+                info.fw_channel, device=info.model, mode="zigbee"
+            ),
+        )

@@ -102,7 +102,10 @@ class SmSwitch(SmEntity, SwitchEntity):
     @callback
     def event_callback(self, event: SettingsEvent) -> None:
         """Handle switch events from the SLZB device."""
-        if event.setting is not None:
+        if (
+            isinstance(self.coordinator, SmDataUpdateCoordinator)
+            and event.setting is not None
+        ):
             self.coordinator.update_setting(
                 self.entity_description.setting, event.setting[self._toggle]
             )
