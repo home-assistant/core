@@ -561,7 +561,9 @@ class ReolinkHost:
 
     def register_webhook(self) -> None:
         """Register the webhook for motion events."""
-        self.webhook_id = f"{DOMAIN}_{self.unique_id.replace(':', '')}_ONVIF"
+        self.webhook_id = (
+            f"{DOMAIN}_{self.unique_id.replace(':', '')}_{webhook.async_generate_id()}"
+        )
         event_id = self.webhook_id
 
         webhook.async_register(
