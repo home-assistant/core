@@ -30,6 +30,8 @@ from homeassistant.components.assist_satellite import (
     AssistSatelliteEntity,
     AssistSatelliteEntityFeature,
 )
+
+# pylint: disable-next=hass-component-root-import
 from homeassistant.components.assist_satellite.entity import AssistSatelliteState
 from homeassistant.components.esphome import DOMAIN
 from homeassistant.components.esphome.assist_satellite import (
