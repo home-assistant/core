@@ -95,7 +95,9 @@ async def test_door_lock(
     )
     node.receive_event(event)
 
-    assert hass.states.get(SCHLAGE_BE469_LOCK_ENTITY).state == STATE_LOCKED
+    state = hass.states.get(SCHLAGE_BE469_LOCK_ENTITY)
+    assert state
+    assert state.state == STATE_LOCKED
 
     client.async_send_command.reset_mock()
 
@@ -194,6 +196,7 @@ async def test_door_lock(
             "insideHandlesCanOpenDoorConfiguration": [True, True, True, True],
             "operationType": 2,
             "outsideHandlesCanOpenDoorConfiguration": [True, True, True, True],
+            "lockTimeoutConfiguration": 1,
         }
     ]
     assert args["commandClass"] == 98
@@ -239,6 +242,7 @@ async def test_door_lock(
             "insideHandlesCanOpenDoorConfiguration": [True, True, True, True],
             "operationType": 2,
             "outsideHandlesCanOpenDoorConfiguration": [True, True, True, True],
+            "lockTimeoutConfiguration": 1,
         }
     ]
     assert args["commandClass"] == 98
@@ -294,7 +298,9 @@ async def test_door_lock(
     node.receive_event(event)
 
     assert node.status == NodeStatus.DEAD
-    assert hass.states.get(SCHLAGE_BE469_LOCK_ENTITY).state == STATE_UNAVAILABLE
+    state = hass.states.get(SCHLAGE_BE469_LOCK_ENTITY)
+    assert state
+    assert state.state == STATE_UNAVAILABLE
 
 
 async def test_only_one_lock(

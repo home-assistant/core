@@ -13,7 +13,6 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     ATTR_TEMPERATURE,
     PRECISION_TENTHS,
     PRECISION_WHOLE,
@@ -35,7 +34,7 @@ from homeassistant.helpers.deprecation import (
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.temperature import display_temp as show_temp
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, VolDictType
 from homeassistant.util.unit_conversion import TemperatureConverter
 
 from .const import DOMAIN
@@ -94,29 +93,16 @@ CONVERTIBLE_ATTRIBUTE = [ATTR_TEMPERATURE]
 
 _LOGGER = logging.getLogger(__name__)
 
-ON_OFF_SERVICE_SCHEMA = vol.Schema({vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids})
-
-SET_AWAY_MODE_SCHEMA = vol.Schema(
-    {
-        vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
-        vol.Required(ATTR_AWAY_MODE): cv.boolean,
-    }
-)
-SET_TEMPERATURE_SCHEMA = vol.Schema(
-    vol.All(
-        {
-            vol.Required(ATTR_TEMPERATURE, "temperature"): vol.Coerce(float),
-            vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
-            vol.Optional(ATTR_OPERATION_MODE): cv.string,
-        }
-    )
-)
-SET_OPERATION_MODE_SCHEMA = vol.Schema(
-    {
-        vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
-        vol.Required(ATTR_OPERATION_MODE): cv.string,
-    }
-)
+SET_AWAY_MODE_SCHEMA: VolDictType = {
+    vol.Required(ATTR_AWAY_MODE): cv.boolean,
+}
+SET_TEMPERATURE_SCHEMA: VolDictType = {
+    vol.Required(ATTR_TEMPERATURE, "temperature"): vol.Coerce(float),
+    vol.Optional(ATTR_OPERATION_MODE): cv.string,
+}
+SET_OPERATION_MODE_SCHEMA: VolDictType = {
+    vol.Required(ATTR_OPERATION_MODE): cv.string,
+}
 
 # mypy: disallow-any-generics
 
@@ -129,10 +115,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     await component.async_setup(config)
 
     component.async_register_entity_service(
-        SERVICE_TURN_ON, {}, "async_turn_on", [WaterHeaterEntityFeature.ON_OFF]
+        SERVICE_TURN_ON, None, "async_turn_on", [WaterHeaterEntityFeature.ON_OFF]
     )
     component.async_register_entity_service(
-        SERVICE_TURN_OFF, {}, "async_turn_off", [WaterHeaterEntityFeature.ON_OFF]
+        SERVICE_TURN_OFF, None, "async_turn_off", [WaterHeaterEntityFeature.ON_OFF]
     )
     component.async_register_entity_service(
         SERVICE_SET_AWAY_MODE, SET_AWAY_MODE_SCHEMA, async_service_away_mode
@@ -144,12 +130,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         SERVICE_SET_OPERATION_MODE,
         SET_OPERATION_MODE_SCHEMA,
         "async_handle_set_operation_mode",
-    )
-    component.async_register_entity_service(
-        SERVICE_TURN_OFF, ON_OFF_SERVICE_SCHEMA, "async_turn_off"
-    )
-    component.async_register_entity_service(
-        SERVICE_TURN_ON, ON_OFF_SERVICE_SCHEMA, "async_turn_on"
     )
 
     return True

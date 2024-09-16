@@ -52,7 +52,6 @@ class HomematicipAlarmControlPanelEntity(AlarmControlPanelEntity):
     def __init__(self, hap: HomematicipHAP) -> None:
         """Initialize the alarm control panel."""
         self._home: AsyncHome = hap.home
-        _LOGGER.info("Setting up %s", self.name)
 
     @property
     def device_info(self) -> DeviceInfo:

@@ -1,6 +1,7 @@
 """Test different accessory types: Camera."""
 
 import asyncio
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 from uuid import UUID
 
@@ -53,12 +54,12 @@ PID_THAT_WILL_NEVER_BE_ALIVE = 2147483647
 
 
 @pytest.fixture(autouse=True)
-async def setup_homeassistant(hass: HomeAssistant):
+async def setup_homeassistant(hass: HomeAssistant) -> None:
     """Set up the homeassistant integration."""
     await async_setup_component(hass, "homeassistant", {})
 
 
-async def _async_start_streaming(hass, acc):
+async def _async_start_streaming(hass: HomeAssistant, acc: Camera) -> None:
     """Start streaming a camera."""
     acc.set_selected_stream_configuration(MOCK_START_STREAM_TLV)
     await hass.async_block_till_done()
@@ -66,28 +67,35 @@ async def _async_start_streaming(hass, acc):
     await hass.async_block_till_done()
 
 
-async def _async_setup_endpoints(hass, acc):
+async def _async_setup_endpoints(hass: HomeAssistant, acc: Camera) -> None:
     """Set camera endpoints."""
     acc.set_endpoints(MOCK_END_POINTS_TLV)
     acc.run()
     await hass.async_block_till_done()
 
 
-async def _async_reconfigure_stream(hass, acc, session_info, stream_config):
+async def _async_reconfigure_stream(
+    hass: HomeAssistant,
+    acc: Camera,
+    session_info: dict[str, Any],
+    stream_config: dict[str, Any],
+) -> None:
     """Reconfigure the stream."""
     await acc.reconfigure_stream(session_info, stream_config)
     acc.run()
     await hass.async_block_till_done()
 
 
-async def _async_stop_all_streams(hass, acc):
+async def _async_stop_all_streams(hass: HomeAssistant, acc: Camera) -> None:
     """Stop all camera streams."""
     await acc.stop()
     acc.run()
     await hass.async_block_till_done()
 
 
-async def _async_stop_stream(hass, acc, session_info):
+async def _async_stop_stream(
+    hass: HomeAssistant, acc: Camera, session_info: dict[str, Any]
+) -> None:
     """Stop a camera stream."""
     await acc.stop_stream(session_info)
     acc.run()

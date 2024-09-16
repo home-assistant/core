@@ -212,8 +212,6 @@ WEBSOCKET_EVENTS_TO_FIRE_HASS_EVENT = [
     EVENT_USER_INITIATED_TEST,
 ]
 
-CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
-
 
 @callback
 def _async_get_system_for_service_call(

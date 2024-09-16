@@ -437,7 +437,15 @@ class ReolinkHost:
             self._long_poll_task.cancel()
             self._long_poll_task = None
 
-        await self._api.unsubscribe(sub_type=SubType.long_poll)
+        try:
+            await self._api.unsubscribe(sub_type=SubType.long_poll)
+        except ReolinkError as err:
+            _LOGGER.error(
+                "Reolink error while unsubscribing from host %s:%s: %s",
+                self._api.host,
+                self._api.port,
+                err,
+            )
 
     async def stop(self, event=None) -> None:
         """Disconnect the API."""
@@ -511,9 +519,7 @@ class ReolinkHost:
             )
             if sub_type == SubType.push:
                 await self.subscribe()
-            else:
-                await self._api.subscribe(self._webhook_url, sub_type)
-            return
+                return
 
         timer = self._api.renewtimer(sub_type)
         _LOGGER.debug(
@@ -555,7 +561,9 @@ class ReolinkHost:
 
     def register_webhook(self) -> None:
         """Register the webhook for motion events."""
-        self.webhook_id = f"{DOMAIN}_{self.unique_id.replace(':', '')}_ONVIF"
+        self.webhook_id = (
+            f"{DOMAIN}_{self.unique_id.replace(':', '')}_{webhook.async_generate_id()}"
+        )
         event_id = self.webhook_id
 
         webhook.async_register(

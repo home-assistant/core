@@ -1,5 +1,6 @@
 """Tests Ollama integration."""
 
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -16,12 +17,20 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture
-def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
+def mock_config_entry_options() -> dict[str, Any]:
+    """Fixture for configuration entry options."""
+    return TEST_OPTIONS
+
+
+@pytest.fixture
+def mock_config_entry(
+    hass: HomeAssistant, mock_config_entry_options: dict[str, Any]
+) -> MockConfigEntry:
     """Mock a config entry."""
     entry = MockConfigEntry(
         domain=ollama.DOMAIN,
         data=TEST_USER_DATA,
-        options=TEST_OPTIONS,
+        options=mock_config_entry_options,
     )
     entry.add_to_hass(hass)
     return entry
@@ -48,6 +57,7 @@ async def mock_init_component(hass: HomeAssistant, mock_config_entry: MockConfig
     ):
         assert await async_setup_component(hass, ollama.DOMAIN, {})
         await hass.async_block_till_done()
+        yield
 
 
 @pytest.fixture(autouse=True)

@@ -56,6 +56,7 @@ from .const import (
     ColorTempModes,
 )
 from .validation import (
+    backwards_compatible_xknx_climate_enum_member,
     dpt_base_type_validator,
     ga_list_validator,
     ga_validator,
@@ -409,10 +410,12 @@ class ClimateSchema(KNXPlatformSchema):
                     CONF_ON_OFF_INVERT, default=DEFAULT_ON_OFF_INVERT
                 ): cv.boolean,
                 vol.Optional(CONF_OPERATION_MODES): vol.All(
-                    cv.ensure_list, [vol.All(vol.Upper, cv.enum(HVACOperationMode))]
+                    cv.ensure_list,
+                    [backwards_compatible_xknx_climate_enum_member(HVACOperationMode)],
                 ),
                 vol.Optional(CONF_CONTROLLER_MODES): vol.All(
-                    cv.ensure_list, [vol.All(vol.Upper, cv.enum(HVACControllerMode))]
+                    cv.ensure_list,
+                    [backwards_compatible_xknx_climate_enum_member(HVACControllerMode)],
                 ),
                 vol.Optional(
                     CONF_DEFAULT_CONTROLLER_MODE, default=HVACMode.HEAT

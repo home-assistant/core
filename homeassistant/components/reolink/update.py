@@ -15,20 +15,18 @@ from homeassistant.components.update import (
     UpdateEntityDescription,
     UpdateEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 
-from . import ReolinkData
-from .const import DOMAIN
 from .entity import (
     ReolinkChannelCoordinatorEntity,
     ReolinkChannelEntityDescription,
     ReolinkHostCoordinatorEntity,
     ReolinkHostEntityDescription,
 )
+from .util import ReolinkConfigEntry, ReolinkData
 
 POLL_AFTER_INSTALL = 120
 
@@ -68,11 +66,11 @@ HOST_UPDATE_ENTITIES = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: ReolinkConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up update entities for Reolink component."""
-    reolink_data: ReolinkData = hass.data[DOMAIN][config_entry.entry_id]
+    reolink_data: ReolinkData = config_entry.runtime_data
 
     entities: list[ReolinkUpdateEntity | ReolinkHostUpdateEntity] = [
         ReolinkUpdateEntity(reolink_data, channel, entity_description)
@@ -137,8 +135,7 @@ class ReolinkUpdateEntity(
     async def async_release_notes(self) -> str | None:
         """Return the release notes."""
         new_firmware = self._host.api.firmware_update_available(self._channel)
-        if not isinstance(new_firmware, NewSoftwareVersion):
-            return None
+        assert isinstance(new_firmware, NewSoftwareVersion)
 
         return (
             "If the install button fails, download this"
@@ -229,8 +226,7 @@ class ReolinkHostUpdateEntity(
     async def async_release_notes(self) -> str | None:
         """Return the release notes."""
         new_firmware = self._host.api.firmware_update_available()
-        if not isinstance(new_firmware, NewSoftwareVersion):
-            return None
+        assert isinstance(new_firmware, NewSoftwareVersion)
 
         return (
             "If the install button fails, download this"
