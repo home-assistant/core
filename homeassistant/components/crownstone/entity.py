@@ -10,7 +10,7 @@ from homeassistant.helpers.entity import Entity
 from .const import CROWNSTONE_INCLUDE_TYPES, DOMAIN
 
 
-class CrownstoneBaseEntity(Entity):
+class CrownstoneEntity(Entity):
     """Base entity class for Crownstone devices."""
 
     _attr_should_poll = False
