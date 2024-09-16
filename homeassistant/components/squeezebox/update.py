@@ -80,6 +80,7 @@ class ServerStatusUpdatePlugins(ServerStatusUpdate):
     title: str = SERVER_MODEL + " Plugins"
     installed_version = "current"
     restart_triggered = False
+    _cancel_update = None
 
     @property
     def supported_features(self) -> UpdateEntityFeature:
