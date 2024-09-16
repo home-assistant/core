@@ -145,7 +145,6 @@ async def async_setup_default_agent(
     ha_start.async_at_started(hass, async_hass_started)
 
 
-# pylint: disable-next=hass-enforce-class-module
 class DefaultAgent(ConversationEntity):
     """Default agent for conversation agent."""
 
