@@ -529,7 +529,7 @@ autarco==3.0.0
 axis==62
 
 # homeassistant.components.fujitsu_fglair
-ayla-iot-unofficial-crevetor==1.3.2
+ayla-iot-unofficial==1.4.1
 
 # homeassistant.components.azure_event_hub
 azure-eventhub==5.11.1
