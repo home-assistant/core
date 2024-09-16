@@ -64,7 +64,6 @@ async def temperature_sensor_node_fixture(
     )
 
 
-@pytest.fixture(name="eve_contact_sensor_node")
 async def eve_contact_sensor_node_fixture(
     hass: HomeAssistant, matter_client: MagicMock
 ) -> MatterNode:
