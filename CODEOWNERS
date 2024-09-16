@@ -1668,6 +1668,8 @@ build.json @home-assistant/supervisor
 /tests/components/wiz/ @sbidy
 /homeassistant/components/wled/ @frenck
 /tests/components/wled/ @frenck
+/homeassistant/components/wmspro/ @mback2k
+/tests/components/wmspro/ @mback2k
 /homeassistant/components/wolflink/ @adamkrol93 @mtielen
 /tests/components/wolflink/ @adamkrol93 @mtielen
 /homeassistant/components/workday/ @fabaff @gjohansson-ST
