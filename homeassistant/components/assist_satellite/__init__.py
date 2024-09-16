@@ -12,10 +12,10 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, AssistSatelliteEntityFeature
 from .entity import (
+    AssistSatelliteConfiguration,
     AssistSatelliteEntity,
     AssistSatelliteEntityDescription,
     AssistSatelliteWakeWord,
-    AssistSatelliteConfiguration,
 )
 from .errors import SatelliteBusyError
 from .websocket_api import async_register_websocket_api
