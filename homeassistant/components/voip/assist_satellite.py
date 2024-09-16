@@ -142,6 +142,7 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
         assert self.voip_device.protocol == self
         self.voip_device.protocol = None
 
+    @callback
     def async_get_configuration(
         self,
     ) -> AssistSatelliteConfiguration:

@@ -36,7 +36,7 @@ from homeassistant.components.intent import (
 from homeassistant.components.media_player import async_process_play_media_url
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -151,6 +151,7 @@ class EsphomeAssistSatellite(
             f"{self.entry_data.device_info.mac_address}-vad_sensitivity",
         )
 
+    @callback
     def async_get_configuration(
         self,
     ) -> assist_satellite.AssistSatelliteConfiguration:
