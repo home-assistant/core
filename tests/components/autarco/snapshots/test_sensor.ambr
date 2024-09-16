@@ -4,7 +4,9 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
     'config_entry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
@@ -37,6 +39,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'Battery Charged month',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -52,7 +55,9 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
     'config_entry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
@@ -85,6 +90,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'Battery Charged today',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -151,7 +157,9 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
     'config_entry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
@@ -184,6 +192,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'Battery Discharged month',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -199,7 +208,9 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
     'config_entry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
@@ -232,6 +243,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'Battery Discharged today',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -604,7 +616,9 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
     'config_entry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
@@ -637,6 +651,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'Solar Energy production month',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -652,7 +667,9 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
     'config_entry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
@@ -685,6 +702,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'Solar Energy production today',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
