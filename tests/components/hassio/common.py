@@ -74,6 +74,8 @@ def mock_addon_info(
 
     supervisor_client.addons.addon_info.return_value = addon_info = Mock(
         spec=InstalledAddonComplete,
+        slug="test",
+        repository="core",
         available=False,
         hostname="",
         options={},
@@ -83,6 +85,7 @@ def mock_addon_info(
         supervisor_api=False,
         supervisor_role="default",
     )
+    addon_info.name = "test"
     addon_info.to_dict = MethodType(
         lambda self: mock_to_dict(self, INSTALLED_ADDON_FIELDS),
         addon_info,
