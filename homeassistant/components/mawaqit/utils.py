@@ -149,7 +149,7 @@ async def update_my_mosque_data_files(
 
     if token is None:
         token = await read_mawaqit_token(hass)
-        if token is None:
+        if token == "":
             _LOGGER.error("Mawaqit API token not found")
             return
 
