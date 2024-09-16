@@ -26,6 +26,7 @@ from homeassistant.const import (
     SERVICE_MEDIA_PLAY,
     SERVICE_MEDIA_PREVIOUS_TRACK,
     SERVICE_MEDIA_SEEK,
+    SERVICE_MEDIA_STOP,
     SERVICE_REPEAT_SET,
     SERVICE_SHUFFLE_SET,
     SERVICE_TURN_OFF,
@@ -181,6 +182,7 @@ async def test_media_play_pause_stop(
     mock_stream_magic_client.now_playing.controls = [
         TransportControl.PLAY,
         TransportControl.PAUSE,
+        TransportControl.STOP,
     ]
     await mock_state_update(mock_stream_magic_client)
     await hass.async_block_till_done()
@@ -190,6 +192,9 @@ async def test_media_play_pause_stop(
 
     await hass.services.async_call(MP_DOMAIN, SERVICE_MEDIA_PLAY, data, True)
     mock_stream_magic_client.play.assert_called_once()
+
+    await hass.services.async_call(MP_DOMAIN, SERVICE_MEDIA_STOP, data, True)
+    mock_stream_magic_client.stop.assert_called_once()
 
 
 async def test_media_next_previous_track(
