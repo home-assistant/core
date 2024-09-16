@@ -149,6 +149,9 @@ async def update_my_mosque_data_files(
 
     if token is None:
         token = await read_mawaqit_token(hass)
+        if token is None:
+            _LOGGER.error("Mawaqit API token not found")
+            return
 
     dict_calendar = await mawaqit_wrapper.fetch_prayer_times(
         mosque=mosque_id, token=token
