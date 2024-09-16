@@ -602,6 +602,41 @@ TEST_DATA = [
             "next_state": "80",
         },
     ),
+    (  # Air purifier filter time sensor
+        {
+            "config": {
+                "filterlifetime": 259200,
+                "ledindication": True,
+                "locked": False,
+                "mode": "speed_1",
+                "on": True,
+                "reachable": True,
+            },
+            "ep": 1,
+            "etag": "de26d19d9e91b2db3ded6ee7ab6b6a4b",
+            "lastannounced": None,
+            "lastseen": "2024-08-07T18:27Z",
+            "manufacturername": "IKEA of Sweden",
+            "modelid": "STARKVIND Air purifier",
+            "name": "IKEA Starkvind",
+            "productid": "E2007",
+            "state": {
+                "deviceruntime": 73405,
+                "filterruntime": 73405,
+                "lastupdated": "2024-08-07T18:27:52.543",
+                "replacefilter": False,
+                "speed": 20,
+            },
+            "swversion": "1.1.001",
+            "type": "ZHAAirPurifier",
+            "uniqueid": "0c:43:14:ff:fe:6c:20:12-01-fc7d",
+        },
+        {
+            "entity_id": "sensor.ikea_starkvind_filter_time",
+            "websocket_event": {"state": {"filterruntime": 100000}},
+            "next_state": "1.15740740740741",
+        },
+    ),
 ]
 
 

@@ -817,7 +817,9 @@ async def async_process_ha_core_config(hass: HomeAssistant, config: dict) -> Non
 
     This method is a coroutine.
     """
-    config = CORE_CONFIG_SCHEMA(config)
+    # CORE_CONFIG_SCHEMA is not async safe since it uses vol.IsDir
+    # so we need to run it in an executor job.
+    config = await hass.async_add_executor_job(CORE_CONFIG_SCHEMA, config)
 
     # Only load auth during startup.
     if not hasattr(hass, "auth"):

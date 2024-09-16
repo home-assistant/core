@@ -11,6 +11,7 @@ import prometheus_client
 import pytest
 
 from homeassistant.components import (
+    alarm_control_panel,
     binary_sensor,
     climate,
     counter,
@@ -61,6 +62,8 @@ from homeassistant.const import (
     CONTENT_TYPE_TEXT_PLAIN,
     DEGREE,
     PERCENTAGE,
+    STATE_ALARM_ARMED_AWAY,
+    STATE_ALARM_ARMED_HOME,
     STATE_CLOSED,
     STATE_CLOSING,
     STATE_HOME,
@@ -629,6 +632,43 @@ async def test_fan(
         'fan_direction_reversed{domain="fan",'
         'entity="fan.fan_2",'
         'friendly_name="Reverse Fan"} 1.0' in body
+    )
+
+
+@pytest.mark.parametrize("namespace", [""])
+async def test_alarm_control_panel(
+    client: ClientSessionGenerator,
+    alarm_control_panel_entities: dict[str, er.RegistryEntry],
+) -> None:
+    """Test prometheus metrics for alarm control panel."""
+    body = await generate_latest_metrics(client)
+
+    assert (
+        'alarm_control_panel_state{domain="alarm_control_panel",'
+        'entity="alarm_control_panel.alarm_control_panel_1",'
+        'friendly_name="Alarm Control Panel 1",'
+        'state="armed_away"} 1.0' in body
+    )
+
+    assert (
+        'alarm_control_panel_state{domain="alarm_control_panel",'
+        'entity="alarm_control_panel.alarm_control_panel_1",'
+        'friendly_name="Alarm Control Panel 1",'
+        'state="disarmed"} 0.0' in body
+    )
+
+    assert (
+        'alarm_control_panel_state{domain="alarm_control_panel",'
+        'entity="alarm_control_panel.alarm_control_panel_2",'
+        'friendly_name="Alarm Control Panel 2",'
+        'state="armed_home"} 1.0' in body
+    )
+
+    assert (
+        'alarm_control_panel_state{domain="alarm_control_panel",'
+        'entity="alarm_control_panel.alarm_control_panel_2",'
+        'friendly_name="Alarm Control Panel 2",'
+        'state="armed_away"} 0.0' in body
     )
 
 
@@ -1898,6 +1938,36 @@ async def fan_fixture(
     set_state_with_entry(hass, fan_2, STATE_ON, fan_2_attributes)
     data["fan_2"] = fan_2
     data["fan_2_attributes"] = fan_2_attributes
+
+    await hass.async_block_till_done()
+    return data
+
+
+@pytest.fixture(name="alarm_control_panel_entities")
+async def alarm_control_panel_fixture(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> dict[str, er.RegistryEntry]:
+    """Simulate alarm control panel entities."""
+    data = {}
+    alarm_control_panel_1 = entity_registry.async_get_or_create(
+        domain=alarm_control_panel.DOMAIN,
+        platform="test",
+        unique_id="alarm_control_panel_1",
+        suggested_object_id="alarm_control_panel_1",
+        original_name="Alarm Control Panel 1",
+    )
+    set_state_with_entry(hass, alarm_control_panel_1, STATE_ALARM_ARMED_AWAY)
+    data["alarm_control_panel_1"] = alarm_control_panel_1
+
+    alarm_control_panel_2 = entity_registry.async_get_or_create(
+        domain=alarm_control_panel.DOMAIN,
+        platform="test",
+        unique_id="alarm_control_panel_2",
+        suggested_object_id="alarm_control_panel_2",
+        original_name="Alarm Control Panel 2",
+    )
+    set_state_with_entry(hass, alarm_control_panel_2, STATE_ALARM_ARMED_HOME)
+    data["alarm_control_panel_2"] = alarm_control_panel_2
 
     await hass.async_block_till_done()
     return data

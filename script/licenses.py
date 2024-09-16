@@ -129,7 +129,6 @@ EXCEPTIONS = {
     "aiooui",  # https://github.com/Bluetooth-Devices/aiooui/pull/8
     "aioruuvigateway",  # https://github.com/akx/aioruuvigateway/pull/6
     "aiovodafone",  # https://github.com/chemelli74/aiovodafone/pull/131
-    "airthings-ble",  # https://github.com/Airthings/airthings-ble/pull/42
     "apple_weatherkit",  # https://github.com/tjhorner/python-weatherkit/pull/3
     "asyncio",  # PSF License
     "chacha20poly1305",  # LGPL
@@ -139,7 +138,6 @@ EXCEPTIONS = {
     "crownstone-core",  # https://github.com/crownstone/crownstone-lib-python-core/pull/6
     "crownstone-sse",  # https://github.com/crownstone/crownstone-lib-python-sse/pull/2
     "crownstone-uart",  # https://github.com/crownstone/crownstone-lib-python-uart/pull/12
-    "dio-chacon-wifi-api",
     "eliqonline",  # https://github.com/molobrakos/eliqonline/pull/17
     "enocean",  # https://github.com/kipe/enocean/pull/142
     "gardena-bluetooth",  # https://github.com/elupus/gardena-bluetooth/pull/11
@@ -155,22 +153,17 @@ EXCEPTIONS = {
     "neurio",  # https://github.com/jordanh/neurio-python/pull/13
     "nsw-fuel-api-client",  # https://github.com/nickw444/nsw-fuel-api-client/pull/14
     "pigpio",  # https://github.com/joan2937/pigpio/pull/608
-    "pyEmby",  # https://github.com/mezz64/pyEmby/pull/12
     "pymitv",  # MIT
-    "pyTibber",  # https://github.com/Danielhiversen/pyTibber/pull/294
     "pybbox",  # https://github.com/HydrelioxGitHub/pybbox/pull/5
     "pyeconet",  # https://github.com/w1ll1am23/pyeconet/pull/41
     "pysabnzbd",  # https://github.com/jeradM/pysabnzbd/pull/6
     "pyvera",  # https://github.com/maximvelichko/pyvera/pull/164
     "pyxeoma",  # https://github.com/jeradM/pyxeoma/pull/11
     "repoze.lru",
-    "russound",  # https://github.com/laf/russound/pull/14   # codespell:ignore laf
     "ruuvitag-ble",  # https://github.com/Bluetooth-Devices/ruuvitag-ble/pull/10
     "sensirion-ble",  # https://github.com/akx/sensirion-ble/pull/9
     "sharp_aquos_rc",  # https://github.com/jmoore987/sharp_aquos_rc/pull/14
     "tapsaff",  # https://github.com/bazwilliams/python-taps-aff/pull/5
-    "tellduslive",  # https://github.com/molobrakos/tellduslive/pull/24
-    "tellsticknet",  # https://github.com/molobrakos/tellsticknet/pull/33
     "vincenty",  # Public domain
     "zeversolar",  # https://github.com/kvanzuijlen/zeversolar/pull/46
 }

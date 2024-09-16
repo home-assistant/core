@@ -311,12 +311,12 @@ class HomeKitConfigFlow(ConfigFlow, domain=DOMAIN):
             title=f"{name}:{entry_data[CONF_PORT]}", data=entry_data
         )
 
-    async def async_step_import(self, user_input: dict[str, Any]) -> ConfigFlowResult:
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Handle import from yaml."""
-        if not self._async_is_unique_name_port(user_input):
+        if not self._async_is_unique_name_port(import_data):
             return self.async_abort(reason="port_name_in_use")
         return self.async_create_entry(
-            title=f"{user_input[CONF_NAME]}:{user_input[CONF_PORT]}", data=user_input
+            title=f"{import_data[CONF_NAME]}:{import_data[CONF_PORT]}", data=import_data
         )
 
     @callback

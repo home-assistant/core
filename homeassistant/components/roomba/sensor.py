@@ -116,6 +116,14 @@ SENSORS: list[RoombaSensorEntityDescription] = [
         suggested_display_precision=0,
         entity_registry_enabled_default=False,
     ),
+    RoombaSensorEntityDescription(
+        key="last_mission",
+        translation_key="last_mission",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda self: self.last_mission,
+        entity_registry_enabled_default=False,
+    ),
 ]
 
 

@@ -19,7 +19,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 
-from .. import zabbix
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -52,7 +52,7 @@ def setup_platform(
     """Set up the Zabbix sensor platform."""
     sensors: list[ZabbixTriggerCountSensor] = []
 
-    if not (zapi := hass.data[zabbix.DOMAIN]):
+    if not (zapi := hass.data[DOMAIN]):
         _LOGGER.error("Zabbix integration hasn't been loaded? zapi is None")
         return
 

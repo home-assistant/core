@@ -3,12 +3,13 @@
 import asyncio
 from collections import OrderedDict
 import logging
+from typing import Any
 
 from pypoint import PointSession
 import voluptuous as vol
 
 from homeassistant.components.http import KEY_HASS, HomeAssistantView
-from homeassistant.config_entries import ConfigFlow
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -24,6 +25,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @callback
+# pylint: disable-next=hass-argument-type # see PR 118243
 def register_flow_implementation(hass, domain, client_id, client_secret):
     """Register a flow implementation.
 
@@ -50,6 +52,7 @@ class PointFlowHandler(ConfigFlow, domain=DOMAIN):
         """Initialize flow."""
         self.flow_impl = None
 
+    # pylint: disable-next=hass-return-type # see PR 118243
     async def async_step_import(self, user_input=None):
         """Handle external yaml configuration."""
         if self._async_current_entries():
@@ -59,7 +62,9 @@ class PointFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_auth()
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle a flow start."""
         flows = self.hass.data.get(DATA_FLOW_IMPL, {})
 
@@ -83,6 +88,7 @@ class PointFlowHandler(ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema({vol.Required("flow_impl"): vol.In(list(flows))}),
         )
 
+    # pylint: disable-next=hass-return-type # see PR 118243
     async def async_step_auth(self, user_input=None):
         """Create an entry for auth."""
         if self._async_current_entries():
@@ -122,6 +128,7 @@ class PointFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return point_session.get_authorization_url
 
+    # pylint: disable-next=hass-return-type # see PR 118243
     async def async_step_code(self, code=None):
         """Received code for authentication."""
         if self._async_current_entries():

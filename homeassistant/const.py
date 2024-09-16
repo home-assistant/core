@@ -23,7 +23,7 @@ if TYPE_CHECKING:
 
 APPLICATION_NAME: Final = "HomeAssistant"
 MAJOR_VERSION: Final = 2024
-MINOR_VERSION: Final = 9
+MINOR_VERSION: Final = 10
 PATCH_VERSION: Final = "0.dev0"
 __short_version__: Final = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__: Final = f"{__short_version__}.{PATCH_VERSION}"
@@ -41,6 +41,7 @@ class Platform(StrEnum):
 
     AIR_QUALITY = "air_quality"
     ALARM_CONTROL_PANEL = "alarm_control_panel"
+    ASSIST_SATELLITE = "assist_satellite"
     BINARY_SENSOR = "binary_sensor"
     BUTTON = "button"
     CALENDAR = "calendar"
@@ -60,7 +61,6 @@ class Platform(StrEnum):
     LAWN_MOWER = "lawn_mower"
     LIGHT = "light"
     LOCK = "lock"
-    MAILBOX = "mailbox"
     MEDIA_PLAYER = "media_player"
     NOTIFY = "notify"
     NUMBER = "number"
@@ -282,6 +282,7 @@ CONF_THEN: Final = "then"
 CONF_TIMEOUT: Final = "timeout"
 CONF_TIME_ZONE: Final = "time_zone"
 CONF_TOKEN: Final = "token"
+CONF_TRIGGERS: Final = "triggers"
 CONF_TRIGGER_TIME: Final = "trigger_time"
 CONF_TTL: Final = "ttl"
 CONF_TYPE: Final = "type"
@@ -673,19 +674,36 @@ _DEPRECATED_POWER_BTU_PER_HOUR: Final = DeprecatedConstantEnum(
 )
 """Deprecated: please use UnitOfPower.BTU_PER_HOUR."""
 
+
 # Reactive power units
-POWER_VOLT_AMPERE_REACTIVE: Final = "var"
+class UnitOfReactivePower(StrEnum):
+    """Reactive power units."""
+
+    VOLT_AMPERE_REACTIVE = "var"
+
+
+_DEPRECATED_POWER_VOLT_AMPERE_REACTIVE: Final = DeprecatedConstantEnum(
+    UnitOfReactivePower.VOLT_AMPERE_REACTIVE,
+    "2025.9",
+)
+"""Deprecated: please use UnitOfReactivePower.VOLT_AMPERE_REACTIVE."""
 
 
 # Energy units
 class UnitOfEnergy(StrEnum):
     """Energy units."""
 
-    GIGA_JOULE = "GJ"
-    KILO_WATT_HOUR = "kWh"
+    JOULE = "J"
+    KILO_JOULE = "kJ"
     MEGA_JOULE = "MJ"
-    MEGA_WATT_HOUR = "MWh"
+    GIGA_JOULE = "GJ"
     WATT_HOUR = "Wh"
+    KILO_WATT_HOUR = "kWh"
+    MEGA_WATT_HOUR = "MWh"
+    CALORIE = "cal"
+    KILO_CALORIE = "kcal"
+    MEGA_CALORIE = "Mcal"
+    GIGA_CALORIE = "Gcal"
 
 
 _DEPRECATED_ENERGY_KILO_WATT_HOUR: Final = DeprecatedConstantEnum(

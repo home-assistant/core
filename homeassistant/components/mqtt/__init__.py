@@ -89,7 +89,6 @@ from .models import (  # noqa: F401
     PayloadSentinel,
     PublishPayloadType,
     ReceiveMessage,
-    ReceivePayloadType,
     convert_outgoing_mqtt_payload,
 )
 from .subscription import (  # noqa: F401

@@ -1098,3 +1098,27 @@ def test_section_in_serializer() -> None:
         ],
         "type": "expandable",
     }
+
+
+def test_nested_section_in_serializer() -> None:
+    """Test section with custom_serializer."""
+    with pytest.raises(
+        ValueError, match="Nesting expandable sections is not supported"
+    ):
+        cv.custom_serializer(
+            data_entry_flow.section(
+                vol.Schema(
+                    {
+                        vol.Required("section_1"): data_entry_flow.section(
+                            vol.Schema(
+                                {
+                                    vol.Optional("option_1", default=False): bool,
+                                    vol.Required("option_2"): int,
+                                }
+                            )
+                        )
+                    }
+                ),
+                {"collapsed": False},
+            )
+        )

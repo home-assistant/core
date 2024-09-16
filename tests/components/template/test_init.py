@@ -258,7 +258,7 @@ async def test_reload_sensors_that_reference_other_template_sensors(
     assert hass.states.get("sensor.test3").state == "2"
 
 
-async def async_yaml_patch_helper(hass, filename):
+async def async_yaml_patch_helper(hass: HomeAssistant, filename: str) -> None:
     """Help update configuration.yaml."""
     yaml_path = get_fixture_path(filename, "template")
     with patch.object(config, "YAML_CONFIG_FILE", yaml_path):
@@ -319,15 +319,25 @@ async def async_yaml_patch_helper(hass, filename):
                 "template_type": "number",
                 "name": "My template",
                 "state": "{{ 10 }}",
-                "min": "{{ 0 }}",
-                "max": "{{ 100 }}",
-                "step": "{{ 0.1 }}",
+                "min": 0,
+                "max": 100,
+                "step": 0.1,
+                "set_value": {
+                    "action": "input_number.set_value",
+                    "target": {"entity_id": "input_number.test"},
+                    "data": {"value": "{{ value }}"},
+                },
             },
             {
                 "state": "{{ 11 }}",
-                "min": "{{ 0 }}",
-                "max": "{{ 100 }}",
-                "step": "{{ 0.1 }}",
+                "min": 0,
+                "max": 100,
+                "step": 0.1,
+                "set_value": {
+                    "action": "input_number.set_value",
+                    "target": {"entity_id": "input_number.test"},
+                    "data": {"value": "{{ value }}"},
+                },
             },
         ),
         (
@@ -443,4 +453,41 @@ async def test_change_device(
             device_registry, template_config_entry.entry_id
         )
         == []
+    )
+
+
+async def test_fail_non_numerical_number_settings(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test that non numerical number options causes config entry setup to fail.
+
+    Support for non numerical max, min and step was added in HA Core 2024.9.0 and
+    removed in HA Core 2024.9.1.
+    """
+
+    options = {
+        "template_type": "number",
+        "name": "My template",
+        "state": "{{ 10 }}",
+        "min": "{{ 0 }}",
+        "max": "{{ 100 }}",
+        "step": "{{ 0.1 }}",
+        "set_value": {
+            "action": "input_number.set_value",
+            "target": {"entity_id": "input_number.test"},
+            "data": {"value": "{{ value }}"},
+        },
+    }
+    # Setup the config entry
+    template_config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options=options,
+        title="Template",
+    )
+    template_config_entry.add_to_hass(hass)
+    assert not await hass.config_entries.async_setup(template_config_entry.entry_id)
+    assert (
+        "The 'My template' number template needs to be reconfigured, "
+        "max must be a number, got '{{ 100 }}'" in caplog.text
     )

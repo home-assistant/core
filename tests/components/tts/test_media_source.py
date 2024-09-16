@@ -6,14 +6,14 @@ from unittest.mock import MagicMock
 import pytest
 
 from homeassistant.components import media_source
-from homeassistant.components.media_player.errors import BrowseError
+from homeassistant.components.media_player import BrowseError
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from .common import (
     DEFAULT_LANG,
-    MockProvider,
     MockTTSEntity,
+    MockTTSProvider,
     mock_config_entry_setup,
     mock_setup,
     retrieve_media,
@@ -28,7 +28,7 @@ class MSEntity(MockTTSEntity):
     get_tts_audio = MagicMock(return_value=("mp3", b""))
 
 
-class MSProvider(MockProvider):
+class MSProvider(MockTTSProvider):
     """Test speech API provider."""
 
     get_tts_audio = MagicMock(return_value=("mp3", b""))

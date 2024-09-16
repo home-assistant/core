@@ -25,6 +25,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
 from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
@@ -64,9 +65,11 @@ class ReolinkHost:
     ) -> None:
         """Initialize Reolink Host. Could be either NVR, or Camera."""
         self._hass: HomeAssistant = hass
-
-        self._clientsession: aiohttp.ClientSession | None = None
         self._unique_id: str = ""
+
+        def get_aiohttp_session() -> aiohttp.ClientSession:
+            """Return the HA aiohttp session."""
+            return async_get_clientsession(hass, verify_ssl=False)
 
         self._api = Host(
             config[CONF_HOST],
@@ -76,6 +79,7 @@ class ReolinkHost:
             use_https=config.get(CONF_USE_HTTPS),
             protocol=options[CONF_PROTOCOL],
             timeout=DEFAULT_TIMEOUT,
+            aiohttp_get_session_callback=get_aiohttp_session,
         )
 
         self.last_wake: float = 0
@@ -437,7 +441,15 @@ class ReolinkHost:
             self._long_poll_task.cancel()
             self._long_poll_task = None
 
-        await self._api.unsubscribe(sub_type=SubType.long_poll)
+        try:
+            await self._api.unsubscribe(sub_type=SubType.long_poll)
+        except ReolinkError as err:
+            _LOGGER.error(
+                "Reolink error while unsubscribing from host %s:%s: %s",
+                self._api.host,
+                self._api.port,
+                err,
+            )
 
     async def stop(self, event=None) -> None:
         """Disconnect the API."""
@@ -511,9 +523,7 @@ class ReolinkHost:
             )
             if sub_type == SubType.push:
                 await self.subscribe()
-            else:
-                await self._api.subscribe(self._webhook_url, sub_type)
-            return
+                return
 
         timer = self._api.renewtimer(sub_type)
         _LOGGER.debug(
@@ -555,7 +565,9 @@ class ReolinkHost:
 
     def register_webhook(self) -> None:
         """Register the webhook for motion events."""
-        self.webhook_id = f"{DOMAIN}_{self.unique_id.replace(':', '')}_ONVIF"
+        self.webhook_id = (
+            f"{DOMAIN}_{self.unique_id.replace(':', '')}_{webhook.async_generate_id()}"
+        )
         event_id = self.webhook_id
 
         webhook.async_register(

@@ -8,6 +8,7 @@ import pytest
 from renault_api.exceptions import RenaultException
 from renault_api.kamereon import schemas
 from renault_api.kamereon.models import ChargeSchedule
+from syrupy import SnapshotAssertion
 
 from homeassistant.components.renault.const import DOMAIN
 from homeassistant.components.renault.services import (
@@ -24,8 +25,8 @@ from homeassistant.const import (
     ATTR_IDENTIFIERS,
     ATTR_MANUFACTURER,
     ATTR_MODEL,
+    ATTR_MODEL_ID,
     ATTR_NAME,
-    ATTR_SW_VERSION,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -143,7 +144,7 @@ async def test_service_set_ac_start_with_date(
 
 
 async def test_service_set_charge_schedule(
-    hass: HomeAssistant, config_entry: ConfigEntry
+    hass: HomeAssistant, config_entry: ConfigEntry, snapshot: SnapshotAssertion
 ) -> None:
     """Test that service invokes renault_api with correct data."""
     await hass.config_entries.async_setup(config_entry.entry_id)
@@ -176,11 +177,11 @@ async def test_service_set_charge_schedule(
         )
     assert len(mock_action.mock_calls) == 1
     mock_call_data: list[ChargeSchedule] = mock_action.mock_calls[0][1][0]
-    assert mock_action.mock_calls[0][1] == (mock_call_data,)
+    assert mock_call_data == snapshot
 
 
 async def test_service_set_charge_schedule_multi(
-    hass: HomeAssistant, config_entry: ConfigEntry
+    hass: HomeAssistant, config_entry: ConfigEntry, snapshot: SnapshotAssertion
 ) -> None:
     """Test that service invokes renault_api with correct data."""
     await hass.config_entries.async_setup(config_entry.entry_id)
@@ -225,7 +226,7 @@ async def test_service_set_charge_schedule_multi(
         )
     assert len(mock_action.mock_calls) == 1
     mock_call_data: list[ChargeSchedule] = mock_action.mock_calls[0][1][0]
-    assert mock_action.mock_calls[0][1] == (mock_call_data,)
+    assert mock_call_data == snapshot
 
     # Monday updated with new values
     assert mock_call_data[1].monday.startTime == "T12:00Z"
@@ -267,7 +268,7 @@ async def test_service_invalid_device_id2(
         manufacturer=extra_vehicle[ATTR_MANUFACTURER],
         name=extra_vehicle[ATTR_NAME],
         model=extra_vehicle[ATTR_MODEL],
-        sw_version=extra_vehicle[ATTR_SW_VERSION],
+        model_id=extra_vehicle[ATTR_MODEL_ID],
     )
     device_id = device_registry.async_get_device(
         identifiers=extra_vehicle[ATTR_IDENTIFIERS]

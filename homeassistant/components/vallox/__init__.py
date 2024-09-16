@@ -22,6 +22,7 @@ from .const import (
     DEFAULT_FAN_SPEED_HOME,
     DEFAULT_NAME,
     DOMAIN,
+    I18N_KEY_TO_VALLOX_PROFILE,
 )
 from .coordinator import ValloxDataUpdateCoordinator
 
@@ -61,6 +62,18 @@ SERVICE_SCHEMA_SET_PROFILE_FAN_SPEED = vol.Schema(
     }
 )
 
+ATTR_PROFILE = "profile"
+ATTR_DURATION = "duration"
+
+SERVICE_SCHEMA_SET_PROFILE = vol.Schema(
+    {
+        vol.Required(ATTR_PROFILE): vol.In(I18N_KEY_TO_VALLOX_PROFILE),
+        vol.Optional(ATTR_DURATION): vol.All(
+            vol.Coerce(int), vol.Clamp(min=1, max=65535)
+        ),
+    }
+)
+
 
 class ServiceMethodDetails(NamedTuple):
     """Details for SERVICE_TO_METHOD mapping."""
@@ -72,6 +85,7 @@ class ServiceMethodDetails(NamedTuple):
 SERVICE_SET_PROFILE_FAN_SPEED_HOME = "set_profile_fan_speed_home"
 SERVICE_SET_PROFILE_FAN_SPEED_AWAY = "set_profile_fan_speed_away"
 SERVICE_SET_PROFILE_FAN_SPEED_BOOST = "set_profile_fan_speed_boost"
+SERVICE_SET_PROFILE = "set_profile"
 
 SERVICE_TO_METHOD = {
     SERVICE_SET_PROFILE_FAN_SPEED_HOME: ServiceMethodDetails(
@@ -85,6 +99,9 @@ SERVICE_TO_METHOD = {
     SERVICE_SET_PROFILE_FAN_SPEED_BOOST: ServiceMethodDetails(
         method="async_set_profile_fan_speed_boost",
         schema=SERVICE_SCHEMA_SET_PROFILE_FAN_SPEED,
+    ),
+    SERVICE_SET_PROFILE: ServiceMethodDetails(
+        method="async_set_profile", schema=SERVICE_SCHEMA_SET_PROFILE
     ),
 }
 
@@ -180,6 +197,22 @@ class ValloxServiceHandler:
             await self._client.set_fan_speed(Profile.BOOST, fan_speed)
         except ValloxApiException as err:
             _LOGGER.error("Error setting fan speed for Boost profile: %s", err)
+            return False
+        return True
+
+    async def async_set_profile(
+        self, profile: str, duration: int | None = None
+    ) -> bool:
+        """Activate profile for given duration."""
+        _LOGGER.debug("Activating profile %s for %s min", profile, duration)
+        try:
+            await self._client.set_profile(
+                I18N_KEY_TO_VALLOX_PROFILE[profile], duration
+            )
+        except ValloxApiException as err:
+            _LOGGER.error(
+                "Error setting profile %d for duration %s: %s", profile, duration, err
+            )
             return False
         return True
 

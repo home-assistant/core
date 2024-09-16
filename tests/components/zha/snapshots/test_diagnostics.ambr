@@ -162,19 +162,19 @@
           '0x0500': dict({
             'attributes': dict({
               '0x0000': dict({
-                'attribute': "ZCLAttributeDef(id=0x0000, name='zone_state', type=<enum 'ZoneState'>, access=<ZCLAttributeAccess.Read: 1>, mandatory=True, is_manufacturer_specific=False)",
+                'attribute': "ZCLAttributeDef(id=0x0000, name='zone_state', type=<enum 'ZoneState'>, zcl_type=<DataTypeId.enum8: 48>, access=<ZCLAttributeAccess.Read: 1>, mandatory=True, is_manufacturer_specific=False)",
                 'value': None,
               }),
               '0x0001': dict({
-                'attribute': "ZCLAttributeDef(id=0x0001, name='zone_type', type=<enum 'ZoneType'>, access=<ZCLAttributeAccess.Read: 1>, mandatory=True, is_manufacturer_specific=False)",
+                'attribute': "ZCLAttributeDef(id=0x0001, name='zone_type', type=<enum 'ZoneType'>, zcl_type=<DataTypeId.uint16: 33>, access=<ZCLAttributeAccess.Read: 1>, mandatory=True, is_manufacturer_specific=False)",
                 'value': None,
               }),
               '0x0002': dict({
-                'attribute': "ZCLAttributeDef(id=0x0002, name='zone_status', type=<flag 'ZoneStatus'>, access=<ZCLAttributeAccess.Read: 1>, mandatory=True, is_manufacturer_specific=False)",
+                'attribute': "ZCLAttributeDef(id=0x0002, name='zone_status', type=<flag 'ZoneStatus'>, zcl_type=<DataTypeId.map16: 25>, access=<ZCLAttributeAccess.Read: 1>, mandatory=True, is_manufacturer_specific=False)",
                 'value': None,
               }),
               '0x0010': dict({
-                'attribute': "ZCLAttributeDef(id=0x0010, name='cie_addr', type=<class 'zigpy.types.named.EUI64'>, access=<ZCLAttributeAccess.Read|Write: 3>, mandatory=True, is_manufacturer_specific=False)",
+                'attribute': "ZCLAttributeDef(id=0x0010, name='cie_addr', type=<class 'zigpy.types.named.EUI64'>, zcl_type=<DataTypeId.EUI64: 240>, access=<ZCLAttributeAccess.Read|Write: 3>, mandatory=True, is_manufacturer_specific=False)",
                 'value': list([
                   50,
                   79,
@@ -187,15 +187,15 @@
                 ]),
               }),
               '0x0011': dict({
-                'attribute': "ZCLAttributeDef(id=0x0011, name='zone_id', type=<class 'zigpy.types.basic.uint8_t'>, access=<ZCLAttributeAccess.Read: 1>, mandatory=True, is_manufacturer_specific=False)",
+                'attribute': "ZCLAttributeDef(id=0x0011, name='zone_id', type=<class 'zigpy.types.basic.uint8_t'>, zcl_type=<DataTypeId.uint8: 32>, access=<ZCLAttributeAccess.Read: 1>, mandatory=True, is_manufacturer_specific=False)",
                 'value': None,
               }),
               '0x0012': dict({
-                'attribute': "ZCLAttributeDef(id=0x0012, name='num_zone_sensitivity_levels_supported', type=<class 'zigpy.types.basic.uint8_t'>, access=<ZCLAttributeAccess.Read: 1>, mandatory=False, is_manufacturer_specific=False)",
+                'attribute': "ZCLAttributeDef(id=0x0012, name='num_zone_sensitivity_levels_supported', type=<class 'zigpy.types.basic.uint8_t'>, zcl_type=<DataTypeId.uint8: 32>, access=<ZCLAttributeAccess.Read: 1>, mandatory=False, is_manufacturer_specific=False)",
                 'value': None,
               }),
               '0x0013': dict({
-                'attribute': "ZCLAttributeDef(id=0x0013, name='current_zone_sensitivity_level', type=<class 'zigpy.types.basic.uint8_t'>, access=<ZCLAttributeAccess.Read|Write: 3>, mandatory=False, is_manufacturer_specific=False)",
+                'attribute': "ZCLAttributeDef(id=0x0013, name='current_zone_sensitivity_level', type=<class 'zigpy.types.basic.uint8_t'>, zcl_type=<DataTypeId.uint8: 32>, access=<ZCLAttributeAccess.Read|Write: 3>, mandatory=False, is_manufacturer_specific=False)",
                 'value': None,
               }),
             }),
@@ -208,11 +208,11 @@
           '0x0501': dict({
             'attributes': dict({
               '0xfffd': dict({
-                'attribute': "ZCLAttributeDef(id=0xFFFD, name='cluster_revision', type=<class 'zigpy.types.basic.uint16_t'>, access=<ZCLAttributeAccess.Read: 1>, mandatory=True, is_manufacturer_specific=False)",
+                'attribute': "ZCLAttributeDef(id=0xFFFD, name='cluster_revision', type=<class 'zigpy.types.basic.uint16_t'>, zcl_type=<DataTypeId.uint16: 33>, access=<ZCLAttributeAccess.Read: 1>, mandatory=True, is_manufacturer_specific=False)",
                 'value': None,
               }),
               '0xfffe': dict({
-                'attribute': "ZCLAttributeDef(id=0xFFFE, name='reporting_status', type=<enum 'AttributeReportingStatus'>, access=<ZCLAttributeAccess.Read: 1>, mandatory=False, is_manufacturer_specific=False)",
+                'attribute': "ZCLAttributeDef(id=0xFFFE, name='reporting_status', type=<enum 'AttributeReportingStatus'>, zcl_type=<DataTypeId.enum8: 48>, access=<ZCLAttributeAccess.Read: 1>, mandatory=False, is_manufacturer_specific=False)",
                 'value': None,
               }),
             }),
