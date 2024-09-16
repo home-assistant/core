@@ -37,9 +37,9 @@ from homeassistant.util.variance import ignore_variance
 from . import TeslaFleetConfigEntry
 from .const import TeslaFleetState
 from .entity import (
+    TeslaFleetEnergyHistoryEntity,
     TeslaFleetEnergyInfoEntity,
     TeslaFleetEnergyLiveEntity,
-    TeslaFleetEnergyPastEntity,
     TeslaFleetVehicleEntity,
     TeslaFleetWallConnectorEntity,
 )
@@ -413,7 +413,7 @@ WALL_CONNECTOR_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
     ),
 )
 
-ENERGY_PAST_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
+ENERGY_HISTORY_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="grid_in",
         state_class=SensorStateClass.TOTAL,
@@ -491,11 +491,12 @@ async def async_setup_entry(
                 for description in ENERGY_LIVE_DESCRIPTIONS
                 if description.key in energysite.live_coordinator.data
             ),
-            (  # Add energy site past
-                TeslaFleetEnergyPastSensorEntity(energysite, description)
+            (  # Add energy site history
+                TeslaFleetEnergyHistorySensorEntity(energysite, description)
                 for energysite in entry.runtime_data.energysites
-                for description in ENERGY_PAST_DESCRIPTIONS
-                if description.key in energysite.past_coordinator.data
+                for description in ENERGY_HISTORY_DESCRIPTIONS
+                if energysite.info_coordinator.data.get("components_battery")
+                or energysite.info_coordinator.data.get("components_solar")
             ),
             (  # Add wall connectors
                 TeslaFleetWallConnectorSensorEntity(energysite, wc["din"], description)
@@ -598,7 +599,7 @@ class TeslaFleetEnergyLiveSensorEntity(TeslaFleetEnergyLiveEntity, RestoreSensor
         self._attr_native_value = self._value
 
 
-class TeslaFleetEnergyPastSensorEntity(TeslaFleetEnergyPastEntity, RestoreSensor):
+class TeslaFleetEnergyHistorySensorEntity(TeslaFleetEnergyHistoryEntity, RestoreSensor):
     """Base class for Tesla Fleet energy site metric sensors."""
 
     entity_description: SensorEntityDescription
@@ -621,7 +622,6 @@ class TeslaFleetEnergyPastSensorEntity(TeslaFleetEnergyPastEntity, RestoreSensor
 
     def _async_update_attrs(self) -> None:
         """Update the attributes of the sensor."""
-        self._attr_available = not self.is_none
         self._attr_native_value = self._value
 
 

@@ -1,6 +1,6 @@
 """Tesla Fleet Data Coordinator."""
 
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta
 from typing import Any
 
 from tesla_fleet_api import EnergySpecific, VehicleSpecific
@@ -182,32 +182,29 @@ class TeslaFleetEnergySiteLiveCoordinator(DataUpdateCoordinator[dict[str, Any]])
         return data
 
 
-class TeslaFleetEnergySitePastCoordinator(DataUpdateCoordinator[dict[str, Any]]):
-    """Class to manage fetching energy site past import and export from the TeslaFleet API."""
+class TeslaFleetEnergySiteHistoryCoordinator(DataUpdateCoordinator[dict[str, Any]]):
+    """Class to manage fetching energy site history import and export from the TeslaFleet API."""
 
     updated_once: bool
 
     def __init__(self, hass: HomeAssistant, api: EnergySpecific) -> None:
-        """Initialize TeslaFleet Energy Site Past coordinator."""
+        """Initialize TeslaFleet Energy Site History coordinator."""
         super().__init__(
             hass,
             LOGGER,
-            name="Tesla Fleet Energy Site Past",
-            update_interval=timedelta(seconds=10),
+            name="Tesla Fleet Energy Site History",
+            update_interval=timedelta(seconds=300),
         )
         self.api = api
         self.data = {}
         self.updated_once = False
 
     async def _async_update_data(self) -> dict[str, Any]:
-        """Update energy site past data using TeslaFleet API."""
+        """Update energy site history data using TeslaFleet API."""
 
         self.update_interval = ENERGY_INTERVAL
-        n = datetime.now(UTC).isoformat()
         try:
-            data = (await self.api.energy_history("energy", n, n, "day", "UTC"))[
-                "response"
-            ]
+            data = (await self.api.energy_history("day"))["response"]
         except RateLimited as e:
             LOGGER.warning(
                 "%s rate limited, will retry in %s seconds",
@@ -232,9 +229,9 @@ class TeslaFleetEnergySitePastCoordinator(DataUpdateCoordinator[dict[str, Any]])
         for time_entity in data["time_series"]:
             formatted_data["grid_in"] += time_entity["grid_energy_imported"]
             formatted_data["grid_out"] += (
-            time_entity["grid_energy_exported_from_solar"]
-            + time_entity["grid_energy_exported_from_generator"]
-            + time_entity["grid_energy_exported_from_battery"]
+                time_entity["grid_energy_exported_from_solar"]
+                + time_entity["grid_energy_exported_from_generator"]
+                + time_entity["grid_energy_exported_from_battery"]
             )
             formatted_data["solar_production"] = (
                 formatted_data["solar_production"]
