@@ -68,6 +68,7 @@ async def async_setup_entry(
 class SmButton(SmEntity, ButtonEntity):
     """Defines a SLZB-06 button."""
 
+    coordinator: SmDataUpdateCoordinator
     entity_description: SmButtonDescription
     _attr_entity_category = EntityCategory.CONFIG
 

@@ -71,6 +71,7 @@ async def async_setup_entry(
 class SmSwitch(SmEntity, SwitchEntity):
     """Representation of a SLZB-06 switch."""
 
+    coordinator: SmDataUpdateCoordinator
     entity_description: SmSwitchEntityDescription
     _attr_device_class = SwitchDeviceClass.SWITCH
 
@@ -102,10 +103,7 @@ class SmSwitch(SmEntity, SwitchEntity):
     @callback
     def event_callback(self, event: SettingsEvent) -> None:
         """Handle switch events from the SLZB device."""
-        if (
-            isinstance(self.coordinator, SmDataUpdateCoordinator)
-            and event.setting is not None
-        ):
+        if event.setting is not None:
             self.coordinator.update_setting(
                 self.entity_description.setting, event.setting[self._toggle]
             )

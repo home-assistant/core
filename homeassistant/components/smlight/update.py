@@ -65,6 +65,7 @@ async def async_setup_entry(
 class SmUpdateEntity(SmEntity, UpdateEntity):
     """Representation for SLZB-06 update entities."""
 
+    coordinator: SmFirmwareUpdateCoordinator
     entity_description: SmUpdateEntityDescription
     _attr_entity_category = EntityCategory.CONFIG
     _attr_device_class = UpdateDeviceClass.FIRMWARE
@@ -150,13 +151,12 @@ class SmUpdateEntity(SmEntity, UpdateEntity):
 
     def _update_done(self) -> None:
         """Handle cleanup for update done."""
-        if isinstance(self.coordinator, SmFirmwareUpdateCoordinator):
-            self._finished_event.set()
-            self.coordinator.in_progress = False
+        self._finished_event.set()
+        self.coordinator.in_progress = False
 
-            for remove_cb in self._unload:
-                remove_cb()
-            self._unload.clear()
+        for remove_cb in self._unload:
+            remove_cb()
+        self._unload.clear()
 
     @callback
     def _update_finished(self, event: MessageEvent) -> None:
@@ -175,11 +175,7 @@ class SmUpdateEntity(SmEntity, UpdateEntity):
     ) -> None:
         """Install firmware update."""
 
-        if (
-            isinstance(self.coordinator, SmFirmwareUpdateCoordinator)
-            and not self.coordinator.in_progress
-            and self._firmware
-        ):
+        if not self.coordinator.in_progress and self._firmware:
             self.coordinator.in_progress = True
             self._attr_in_progress = True
             self.register_callbacks()
