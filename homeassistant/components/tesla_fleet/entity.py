@@ -12,9 +12,9 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import (
+    TeslaFleetEnergySiteHistoryCoordinator,
     TeslaFleetEnergySiteInfoCoordinator,
     TeslaFleetEnergySiteLiveCoordinator,
-    TeslaFleetEnergySitePastCoordinator,
     TeslaFleetVehicleDataCoordinator,
 )
 from .helpers import wake_up_vehicle
@@ -25,7 +25,7 @@ class TeslaFleetEntity(
     CoordinatorEntity[
         TeslaFleetVehicleDataCoordinator
         | TeslaFleetEnergySiteLiveCoordinator
-        | TeslaFleetEnergySitePastCoordinator
+        | TeslaFleetEnergySiteHistoryCoordinator
         | TeslaFleetEnergySiteInfoCoordinator
     ]
 ):
@@ -39,7 +39,7 @@ class TeslaFleetEntity(
         self,
         coordinator: TeslaFleetVehicleDataCoordinator
         | TeslaFleetEnergySiteLiveCoordinator
-        | TeslaFleetEnergySitePastCoordinator
+        | TeslaFleetEnergySiteHistoryCoordinator
         | TeslaFleetEnergySiteInfoCoordinator,
         api: VehicleSpecific | EnergySpecific,
         key: str,
@@ -150,19 +150,19 @@ class TeslaFleetEnergyLiveEntity(TeslaFleetEntity):
         super().__init__(data.live_coordinator, data.api, key)
 
 
-class TeslaFleetEnergyPastEntity(TeslaFleetEntity):
-    """Parent class for TeslaFleet Energy Site Past entities."""
+class TeslaFleetEnergyHistoryEntity(TeslaFleetEntity):
+    """Parent class for TeslaFleet Energy Site History entities."""
 
     def __init__(
         self,
         data: TeslaFleetEnergyData,
         key: str,
     ) -> None:
-        """Initialize common aspects of a Tesla Fleet Energy Site Past entity."""
+        """Initialize common aspects of a Tesla Fleet Energy Site History entity."""
         self._attr_unique_id = f"{data.id}-{key}"
         self._attr_device_info = data.device
 
-        super().__init__(data.past_coordinator, data.api, key)
+        super().__init__(data.history_coordinator, data.api, key)
 
 
 class TeslaFleetEnergyInfoEntity(TeslaFleetEntity):
