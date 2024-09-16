@@ -52,7 +52,10 @@ class MotionMountExtension(MotionMountEntity, NumberEntity):
         try:
             await self.mm.set_extension(int(value))
         except (TimeoutError, socket.gaierror) as ex:
-            raise HomeAssistantError("Failed to communicate with MotionMount") from ex
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="failed_communication",
+            ) from ex
 
 
 class MotionMountTurn(MotionMountEntity, NumberEntity):
@@ -78,4 +81,7 @@ class MotionMountTurn(MotionMountEntity, NumberEntity):
         try:
             await self.mm.set_turn(int(value * -1))
         except (TimeoutError, socket.gaierror) as ex:
-            raise HomeAssistantError("Failed to communicate with MotionMount") from ex
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="failed_communication",
+            ) from ex
