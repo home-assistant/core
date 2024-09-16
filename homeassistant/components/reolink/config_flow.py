@@ -11,7 +11,13 @@ from reolink_aio.exceptions import ApiError, CredentialsInvalidError, ReolinkErr
 import voluptuous as vol
 
 from homeassistant.components import dhcp
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
+from homeassistant.config_entries import (
+    SOURCE_REAUTH,
+    SOURCE_RECONFIGURE,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -255,7 +261,10 @@ class ReolinkFlowHandler(ConfigFlow, domain=DOMAIN):
                 existing_entry = await self.async_set_unique_id(
                     mac_address, raise_on_progress=False
                 )
-                if existing_entry and self.init_step in (SOURCE_REAUTH, SOURCE_RECONFIGURE):
+                if existing_entry and self.init_step in (
+                    SOURCE_REAUTH,
+                    SOURCE_RECONFIGURE,
+                ):
                     return self.async_update_reload_and_abort(
                         entry=existing_entry,
                         data=user_input,
@@ -275,11 +284,7 @@ class ReolinkFlowHandler(ConfigFlow, domain=DOMAIN):
                 vol.Required(CONF_PASSWORD, default=self._password): str,
             }
         )
-        if (
-            self._host is None
-            or self.init_step == SOURCE_RECONFIGURE
-            or errors
-        ):
+        if self._host is None or self.init_step == SOURCE_RECONFIGURE or errors:
             data_schema = data_schema.extend(
                 {
                     vol.Required(CONF_HOST, default=self._host): str,
