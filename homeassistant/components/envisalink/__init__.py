@@ -17,7 +17,6 @@ from homeassistant.core import HomeAssistant, ServiceCall, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
@@ -244,20 +243,3 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
 
     return True
-
-
-class EnvisalinkDevice(Entity):
-    """Representation of an Envisalink device."""
-
-    _attr_should_poll = False
-
-    def __init__(self, name, info, controller):
-        """Initialize the device."""
-        self._controller = controller
-        self._info = info
-        self._name = name
-
-    @property
-    def name(self):
-        """Return the name of the device."""
-        return self._name
