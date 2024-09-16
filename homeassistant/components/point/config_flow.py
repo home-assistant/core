@@ -25,6 +25,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @callback
+# pylint: disable-next=hass-argument-type # see PR 118243
 def register_flow_implementation(hass, domain, client_id, client_secret):
     """Register a flow implementation.
 
@@ -51,6 +52,7 @@ class PointFlowHandler(ConfigFlow, domain=DOMAIN):
         """Initialize flow."""
         self.flow_impl = None
 
+    # pylint: disable-next=hass-return-type # see PR 118243
     async def async_step_import(self, user_input=None):
         """Handle external yaml configuration."""
         if self._async_current_entries():
@@ -86,6 +88,7 @@ class PointFlowHandler(ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema({vol.Required("flow_impl"): vol.In(list(flows))}),
         )
 
+    # pylint: disable-next=hass-return-type # see PR 118243
     async def async_step_auth(self, user_input=None):
         """Create an entry for auth."""
         if self._async_current_entries():
@@ -125,6 +128,7 @@ class PointFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return point_session.get_authorization_url
 
+    # pylint: disable-next=hass-return-type # see PR 118243
     async def async_step_code(self, code=None):
         """Received code for authentication."""
         if self._async_current_entries():
