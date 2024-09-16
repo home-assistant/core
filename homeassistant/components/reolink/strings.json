@@ -35,7 +35,8 @@
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     }
   },
   "options": {
@@ -48,6 +49,14 @@
           "protocol": "Streaming protocol to use for the camera entities. RTSP supports 4K streams (h265 encoding) while RTMP and FLV do not. FLV is the least demanding on the camera."
         }
       }
+    }
+  },
+  "exceptions": {
+    "service_entry_ex": {
+      "message": "Reolink {service_name} error: config entry not found or not loaded"
+    },
+    "service_not_chime": {
+      "message": "Reolink play_chime error: {device_name} is not a chime"
     }
   },
   "issues": {
@@ -85,6 +94,36 @@
           "name": "Speed",
           "description": "PTZ move speed."
         }
+      }
+    },
+    "play_chime": {
+      "name": "Play chime",
+      "description": "Play a ringtone on a chime.",
+      "fields": {
+        "device_id": {
+          "name": "Target chime",
+          "description": "The chime to play the ringtone on."
+        },
+        "ringtone": {
+          "name": "Ringtone",
+          "description": "Ringtone to play."
+        }
+      }
+    }
+  },
+  "selector": {
+    "ringtone": {
+      "options": {
+        "citybird": "[%key:component::reolink::entity::select::motion_tone::state::citybird%]",
+        "originaltune": "[%key:component::reolink::entity::select::motion_tone::state::originaltune%]",
+        "pianokey": "[%key:component::reolink::entity::select::motion_tone::state::pianokey%]",
+        "loop": "[%key:component::reolink::entity::select::motion_tone::state::loop%]",
+        "attraction": "[%key:component::reolink::entity::select::motion_tone::state::attraction%]",
+        "hophop": "[%key:component::reolink::entity::select::motion_tone::state::hophop%]",
+        "goodday": "[%key:component::reolink::entity::select::motion_tone::state::goodday%]",
+        "operetta": "[%key:component::reolink::entity::select::motion_tone::state::operetta%]",
+        "moonlight": "[%key:component::reolink::entity::select::motion_tone::state::moonlight%]",
+        "waybackhome": "[%key:component::reolink::entity::select::motion_tone::state::waybackhome%]"
       }
     }
   },
@@ -526,6 +565,22 @@
       },
       "visitor_tone": {
         "name": "Visitor ringtone",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "citybird": "[%key:component::reolink::entity::select::motion_tone::state::citybird%]",
+          "originaltune": "[%key:component::reolink::entity::select::motion_tone::state::originaltune%]",
+          "pianokey": "[%key:component::reolink::entity::select::motion_tone::state::pianokey%]",
+          "loop": "[%key:component::reolink::entity::select::motion_tone::state::loop%]",
+          "attraction": "[%key:component::reolink::entity::select::motion_tone::state::attraction%]",
+          "hophop": "[%key:component::reolink::entity::select::motion_tone::state::hophop%]",
+          "goodday": "[%key:component::reolink::entity::select::motion_tone::state::goodday%]",
+          "operetta": "[%key:component::reolink::entity::select::motion_tone::state::operetta%]",
+          "moonlight": "[%key:component::reolink::entity::select::motion_tone::state::moonlight%]",
+          "waybackhome": "[%key:component::reolink::entity::select::motion_tone::state::waybackhome%]"
+        }
+      },
+      "package_tone": {
+        "name": "Package ringtone",
         "state": {
           "off": "[%key:common::state::off%]",
           "citybird": "[%key:component::reolink::entity::select::motion_tone::state::citybird%]",

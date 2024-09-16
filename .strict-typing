@@ -95,6 +95,7 @@ homeassistant.components.aruba.*
 homeassistant.components.arwn.*
 homeassistant.components.aseko_pool_live.*
 homeassistant.components.assist_pipeline.*
+homeassistant.components.assist_satellite.*
 homeassistant.components.asuswrt.*
 homeassistant.components.autarco.*
 homeassistant.components.auth.*
@@ -110,6 +111,7 @@ homeassistant.components.bitcoin.*
 homeassistant.components.blockchain.*
 homeassistant.components.blue_current.*
 homeassistant.components.blueprint.*
+homeassistant.components.bluesound.*
 homeassistant.components.bluetooth.*
 homeassistant.components.bluetooth_adapters.*
 homeassistant.components.bluetooth_tracker.*
@@ -139,6 +141,7 @@ homeassistant.components.cpuspeed.*
 homeassistant.components.crownstone.*
 homeassistant.components.date.*
 homeassistant.components.datetime.*
+homeassistant.components.deako.*
 homeassistant.components.deconz.*
 homeassistant.components.default_config.*
 homeassistant.components.demo.*
@@ -196,6 +199,7 @@ homeassistant.components.fritzbox.*
 homeassistant.components.fritzbox_callmonitor.*
 homeassistant.components.fronius.*
 homeassistant.components.frontend.*
+homeassistant.components.fujitsu_fglair.*
 homeassistant.components.fully_kiosk.*
 homeassistant.components.fyta.*
 homeassistant.components.generic_hygrostat.*
@@ -207,6 +211,8 @@ homeassistant.components.glances.*
 homeassistant.components.goalzero.*
 homeassistant.components.google.*
 homeassistant.components.google_assistant_sdk.*
+homeassistant.components.google_cloud.*
+homeassistant.components.google_photos.*
 homeassistant.components.google_sheets.*
 homeassistant.components.gpsd.*
 homeassistant.components.greeneye_monitor.*
@@ -277,6 +283,7 @@ homeassistant.components.lawn_mower.*
 homeassistant.components.lcn.*
 homeassistant.components.ld2410_ble.*
 homeassistant.components.led_ble.*
+homeassistant.components.lektrico.*
 homeassistant.components.lidarr.*
 homeassistant.components.lifx.*
 homeassistant.components.light.*
@@ -293,7 +300,7 @@ homeassistant.components.london_underground.*
 homeassistant.components.lookin.*
 homeassistant.components.luftdaten.*
 homeassistant.components.madvr.*
-homeassistant.components.mailbox.*
+homeassistant.components.manual.*
 homeassistant.components.map.*
 homeassistant.components.mastodon.*
 homeassistant.components.matrix.*
@@ -309,6 +316,7 @@ homeassistant.components.minecraft_server.*
 homeassistant.components.mjpeg.*
 homeassistant.components.modbus.*
 homeassistant.components.modem_callerid.*
+homeassistant.components.mold_indicator.*
 homeassistant.components.monzo.*
 homeassistant.components.moon.*
 homeassistant.components.mopeka.*
@@ -335,6 +343,7 @@ homeassistant.components.nut.*
 homeassistant.components.onboarding.*
 homeassistant.components.oncue.*
 homeassistant.components.onewire.*
+homeassistant.components.onkyo.*
 homeassistant.components.open_meteo.*
 homeassistant.components.openexchangerates.*
 homeassistant.components.opensky.*
@@ -394,6 +403,7 @@ homeassistant.components.select.*
 homeassistant.components.sensibo.*
 homeassistant.components.sensirion_ble.*
 homeassistant.components.sensor.*
+homeassistant.components.sensoterra.*
 homeassistant.components.senz.*
 homeassistant.components.sfr_box.*
 homeassistant.components.shelly.*
@@ -405,10 +415,13 @@ homeassistant.components.skybell.*
 homeassistant.components.slack.*
 homeassistant.components.sleepiq.*
 homeassistant.components.smhi.*
+homeassistant.components.smlight.*
 homeassistant.components.snooz.*
+homeassistant.components.solarlog.*
 homeassistant.components.sonarr.*
 homeassistant.components.speedtestdotnet.*
 homeassistant.components.sql.*
+homeassistant.components.squeezebox.*
 homeassistant.components.ssdp.*
 homeassistant.components.starlink.*
 homeassistant.components.statistics.*
@@ -468,6 +481,7 @@ homeassistant.components.update.*
 homeassistant.components.uptime.*
 homeassistant.components.uptimerobot.*
 homeassistant.components.usb.*
+homeassistant.components.uvc.*
 homeassistant.components.vacuum.*
 homeassistant.components.vallox.*
 homeassistant.components.valve.*

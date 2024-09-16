@@ -1,6 +1,13 @@
 {
   "config": {
     "step": {
+      "reauth_confirm": {
+        "title": "[%key:common::config_flow::title::reauth%]",
+        "data": {
+          "email": "[%key:common::config_flow::data::email%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      },
       "user": {
         "data": {
           "email": "[%key:common::config_flow::data::email%]",
@@ -15,6 +22,30 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    }
+  },
+  "entity": {
+    "light": {
+      "light": {
+        "name": "[%key:component::light::title%]"
+      }
+    },
+    "switch": {
+      "vacation_mode": {
+        "name": "Vacation mode"
+      }
+    },
+    "event": {
+      "barrier_obstructed": {
+        "name": "Barrier obstructed",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "barrier_obstructed": "Barrier obstructed"
+            }
+          }
+        }
+      }
     }
   },
   "issues": {

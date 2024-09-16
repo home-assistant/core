@@ -3,24 +3,29 @@
 from __future__ import annotations
 
 import asyncio
-from dataclasses import dataclass
 from datetime import timedelta
 import logging
 
 from reolink_aio.api import RETRY_ATTEMPTS
 from reolink_aio.exceptions import CredentialsInvalidError, ReolinkError
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
 from .exceptions import PasswordIncompatible, ReolinkException, UserNotAdmin
 from .host import ReolinkHost
+from .services import async_setup_services
+from .util import ReolinkConfigEntry, ReolinkData, get_device_uid_and_ch
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,17 +45,19 @@ DEVICE_UPDATE_INTERVAL = timedelta(seconds=60)
 FIRMWARE_UPDATE_INTERVAL = timedelta(hours=12)
 NUM_CRED_ERRORS = 3
 
-
-@dataclass
-class ReolinkData:
-    """Data for the Reolink integration."""
-
-    host: ReolinkHost
-    device_coordinator: DataUpdateCoordinator[None]
-    firmware_coordinator: DataUpdateCoordinator[None]
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up Reolink shared code."""
+
+    async_setup_services(hass)
+    return True
+
+
+async def async_setup_entry(
+    hass: HomeAssistant, config_entry: ReolinkConfigEntry
+) -> bool:
     """Set up Reolink from a config entry."""
     host = ReolinkHost(hass, config_entry.data, config_entry.options)
 
@@ -145,7 +152,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         await host.stop()
         raise
 
-    hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = ReolinkData(
+    config_entry.runtime_data = ReolinkData(
         host=host,
         device_coordinator=device_coordinator,
         firmware_coordinator=firmware_coordinator,
@@ -162,30 +169,29 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     return True
 
 
-async def entry_update_listener(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+async def entry_update_listener(
+    hass: HomeAssistant, config_entry: ReolinkConfigEntry
+) -> None:
     """Update the configuration of the host entity."""
     await hass.config_entries.async_reload(config_entry.entry_id)
 
 
-async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, config_entry: ReolinkConfigEntry
+) -> bool:
     """Unload a config entry."""
-    host: ReolinkHost = hass.data[DOMAIN][config_entry.entry_id].host
+    host: ReolinkHost = config_entry.runtime_data.host
 
     await host.stop()
 
-    if unload_ok := await hass.config_entries.async_unload_platforms(
-        config_entry, PLATFORMS
-    ):
-        hass.data[DOMAIN].pop(config_entry.entry_id)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, config_entry: ConfigEntry, device: dr.DeviceEntry
+    hass: HomeAssistant, config_entry: ReolinkConfigEntry, device: dr.DeviceEntry
 ) -> bool:
     """Remove a device from a config entry."""
-    host: ReolinkHost = hass.data[DOMAIN][config_entry.entry_id].host
+    host: ReolinkHost = config_entry.runtime_data.host
     (device_uid, ch, is_chime) = get_device_uid_and_ch(device, host)
 
     if is_chime:
@@ -263,28 +269,6 @@ async def async_remove_config_entry_device(
         ch,
     )
     return False
-
-
-def get_device_uid_and_ch(
-    device: dr.DeviceEntry, host: ReolinkHost
-) -> tuple[list[str], int | None, bool]:
-    """Get the channel and the split device_uid from a reolink DeviceEntry."""
-    device_uid = [
-        dev_id[1].split("_") for dev_id in device.identifiers if dev_id[0] == DOMAIN
-    ][0]
-
-    is_chime = False
-    if len(device_uid) < 2:
-        # NVR itself
-        ch = None
-    elif device_uid[1].startswith("ch") and len(device_uid[1]) <= 5:
-        ch = int(device_uid[1][2:])
-    elif device_uid[1].startswith("chime"):
-        ch = int(device_uid[1][5:])
-        is_chime = True
-    else:
-        ch = host.api.channel_for_uid(device_uid[1])
-    return (device_uid, ch, is_chime)
 
 
 def migrate_entity_ids(

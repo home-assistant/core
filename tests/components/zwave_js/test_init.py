@@ -12,7 +12,7 @@ from zwave_js_server.exceptions import BaseZwaveJSServerError, InvalidServerVers
 from zwave_js_server.model.node import Node
 from zwave_js_server.model.version import VersionInfo
 
-from homeassistant.components.hassio.handler import HassioAPIError
+from homeassistant.components.hassio import HassioAPIError
 from homeassistant.components.logger import DOMAIN as LOGGER_DOMAIN, SERVICE_SET_LEVEL
 from homeassistant.components.persistent_notification import async_dismiss
 from homeassistant.components.zwave_js import DOMAIN

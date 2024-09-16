@@ -77,6 +77,7 @@ __all__ = [
     "ATTR_PREFERRED_FORMAT",
     "ATTR_PREFERRED_SAMPLE_RATE",
     "ATTR_PREFERRED_SAMPLE_CHANNELS",
+    "ATTR_PREFERRED_SAMPLE_BYTES",
     "CONF_LANG",
     "DEFAULT_CACHE_DIR",
     "generate_media_source_id",
@@ -95,6 +96,7 @@ ATTR_AUDIO_OUTPUT = "audio_output"
 ATTR_PREFERRED_FORMAT = "preferred_format"
 ATTR_PREFERRED_SAMPLE_RATE = "preferred_sample_rate"
 ATTR_PREFERRED_SAMPLE_CHANNELS = "preferred_sample_channels"
+ATTR_PREFERRED_SAMPLE_BYTES = "preferred_sample_bytes"
 ATTR_MEDIA_PLAYER_ENTITY_ID = "media_player_entity_id"
 ATTR_VOICE = "voice"
 
@@ -103,6 +105,7 @@ _PREFFERED_FORMAT_OPTIONS: Final[set[str]] = {
     ATTR_PREFERRED_FORMAT,
     ATTR_PREFERRED_SAMPLE_RATE,
     ATTR_PREFERRED_SAMPLE_CHANNELS,
+    ATTR_PREFERRED_SAMPLE_BYTES,
 }
 
 CONF_LANG = "language"
@@ -137,15 +140,16 @@ def async_default_engine(hass: HomeAssistant) -> str | None:
     component: EntityComponent[TextToSpeechEntity] = hass.data[DOMAIN]
     manager: SpeechManager = hass.data[DATA_TTS_MANAGER]
 
-    if "cloud" in manager.providers:
-        return "cloud"
+    default_entity_id: str | None = None
 
-    entity = next(iter(component.entities), None)
+    for entity in component.entities:
+        if entity.platform and entity.platform.platform_name == "cloud":
+            return entity.entity_id
 
-    if entity is not None:
-        return entity.entity_id
+        if default_entity_id is None:
+            default_entity_id = entity.entity_id
 
-    return next(iter(manager.providers), None)
+    return default_entity_id or next(iter(manager.providers), None)
 
 
 @callback
@@ -222,6 +226,7 @@ async def async_convert_audio(
     to_extension: str,
     to_sample_rate: int | None = None,
     to_sample_channels: int | None = None,
+    to_sample_bytes: int | None = None,
 ) -> bytes:
     """Convert audio to a preferred format using ffmpeg."""
     ffmpeg_manager = ffmpeg.get_ffmpeg_manager(hass)
@@ -233,6 +238,7 @@ async def async_convert_audio(
             to_extension,
             to_sample_rate=to_sample_rate,
             to_sample_channels=to_sample_channels,
+            to_sample_bytes=to_sample_bytes,
         )
     )
 
@@ -244,6 +250,7 @@ def _convert_audio(
     to_extension: str,
     to_sample_rate: int | None = None,
     to_sample_channels: int | None = None,
+    to_sample_bytes: int | None = None,
 ) -> bytes:
     """Convert audio to a preferred format using ffmpeg."""
 
@@ -275,6 +282,10 @@ def _convert_audio(
         if to_extension == "mp3":
             # Max quality for MP3
             command.extend(["-q:a", "0"])
+
+        if to_sample_bytes == 2:
+            # 16-bit samples
+            command.extend(["-sample_fmt", "s16"])
 
         command.append(output_file.name)
 
@@ -737,10 +748,24 @@ class SpeechManager:
         else:
             sample_rate = options.pop(ATTR_PREFERRED_SAMPLE_RATE, None)
 
+        if sample_rate is not None:
+            sample_rate = int(sample_rate)
+
         if ATTR_PREFERRED_SAMPLE_CHANNELS in supported_options:
             sample_channels = options.get(ATTR_PREFERRED_SAMPLE_CHANNELS)
         else:
             sample_channels = options.pop(ATTR_PREFERRED_SAMPLE_CHANNELS, None)
+
+        if sample_channels is not None:
+            sample_channels = int(sample_channels)
+
+        if ATTR_PREFERRED_SAMPLE_BYTES in supported_options:
+            sample_bytes = options.get(ATTR_PREFERRED_SAMPLE_BYTES)
+        else:
+            sample_bytes = options.pop(ATTR_PREFERRED_SAMPLE_BYTES, None)
+
+        if sample_bytes is not None:
+            sample_bytes = int(sample_bytes)
 
         async def get_tts_data() -> str:
             """Handle data available."""
@@ -768,6 +793,7 @@ class SpeechManager:
                 (final_extension != extension)
                 or (sample_rate is not None)
                 or (sample_channels is not None)
+                or (sample_bytes is not None)
             )
 
             if needs_conversion:
@@ -778,6 +804,7 @@ class SpeechManager:
                     to_extension=final_extension,
                     to_sample_rate=sample_rate,
                     to_sample_channels=sample_channels,
+                    to_sample_bytes=sample_bytes,
                 )
 
             # Create file infos
@@ -1085,6 +1112,7 @@ def websocket_list_engines(
     language = msg.get("language")
     providers = []
     provider_info: dict[str, Any]
+    entity_domains: set[str] = set()
 
     for entity in component.entities:
         provider_info = {
@@ -1096,15 +1124,20 @@ def websocket_list_engines(
                 language, entity.supported_languages, country
             )
         providers.append(provider_info)
+        if entity.platform:
+            entity_domains.add(entity.platform.platform_name)
     for engine_id, provider in manager.providers.items():
         provider_info = {
             "engine_id": engine_id,
+            "name": provider.name,
             "supported_languages": provider.supported_languages,
         }
         if language:
             provider_info["supported_languages"] = language_util.matches(
                 language, provider.supported_languages, country
             )
+        if engine_id in entity_domains:
+            provider_info["deprecated"] = True
         providers.append(provider_info)
 
     connection.send_message(
@@ -1147,6 +1180,8 @@ def websocket_get_engine(
         "engine_id": engine_id,
         "supported_languages": provider.supported_languages,
     }
+    if isinstance(provider, Provider):
+        provider_info["name"] = provider.name
 
     connection.send_message(
         websocket_api.result_message(msg["id"], {"provider": provider_info})

@@ -51,11 +51,15 @@ from homeassistant.auth.const import GROUP_ID_ADMIN, GROUP_ID_READ_ONLY
 from homeassistant.auth.models import Credentials
 from homeassistant.auth.providers import homeassistant
 from homeassistant.components.device_tracker.legacy import Device
+
+# pylint: disable-next=hass-component-root-import
 from homeassistant.components.websocket_api.auth import (
     TYPE_AUTH,
     TYPE_AUTH_OK,
     TYPE_AUTH_REQUIRED,
 )
+
+# pylint: disable-next=hass-component-root-import
 from homeassistant.components.websocket_api.http import URL
 from homeassistant.config import YAML_CONFIG_FILE
 from homeassistant.config_entries import ConfigEntries, ConfigEntry, ConfigEntryState
@@ -1263,6 +1267,16 @@ def enable_statistics() -> bool:
 
 
 @pytest.fixture
+def enable_missing_statistics() -> bool:
+    """Fixture to control enabling of recorder's statistics compilation.
+
+    To enable statistics, tests can be marked with:
+    @pytest.mark.parametrize("enable_missing_statistics", [True])
+    """
+    return False
+
+
+@pytest.fixture
 def enable_schema_validation() -> bool:
     """Fixture to control enabling of recorder's statistics table validation.
 
@@ -1283,11 +1297,21 @@ def enable_nightly_purge() -> bool:
 
 
 @pytest.fixture
-def enable_migrate_context_ids() -> bool:
+def enable_migrate_event_context_ids() -> bool:
     """Fixture to control enabling of recorder's context id migration.
 
     To enable context id migration, tests can be marked with:
-    @pytest.mark.parametrize("enable_migrate_context_ids", [True])
+    @pytest.mark.parametrize("enable_migrate_event_context_ids", [True])
+    """
+    return False
+
+
+@pytest.fixture
+def enable_migrate_state_context_ids() -> bool:
+    """Fixture to control enabling of recorder's context id migration.
+
+    To enable context id migration, tests can be marked with:
+    @pytest.mark.parametrize("enable_migrate_state_context_ids", [True])
     """
     return False
 
@@ -1453,8 +1477,10 @@ async def async_test_recorder(
     recorder_db_url: str,
     enable_nightly_purge: bool,
     enable_statistics: bool,
+    enable_missing_statistics: bool,
     enable_schema_validation: bool,
-    enable_migrate_context_ids: bool,
+    enable_migrate_event_context_ids: bool,
+    enable_migrate_state_context_ids: bool,
     enable_migrate_event_type_ids: bool,
     enable_migrate_entity_ids: bool,
     enable_migrate_event_ids: bool,
@@ -1511,17 +1537,17 @@ async def async_test_recorder(
     )
     compile_missing = (
         recorder.Recorder._schedule_compile_missing_statistics
-        if enable_statistics
+        if enable_missing_statistics
         else None
     )
     migrate_states_context_ids = (
         migration.StatesContextIDMigration.migrate_data
-        if enable_migrate_context_ids
+        if enable_migrate_state_context_ids
         else None
     )
     migrate_events_context_ids = (
         migration.EventsContextIDMigration.migrate_data
-        if enable_migrate_context_ids
+        if enable_migrate_event_context_ids
         else None
     )
     migrate_event_type_ids = (
