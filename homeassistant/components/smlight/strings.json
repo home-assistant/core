@@ -117,6 +117,14 @@
       "night_mode": {
         "name": "LED night mode"
       }
+    },
+    "update": {
+      "core_update": {
+        "name": "Core firmware"
+      },
+      "zigbee_update": {
+        "name": "Zigbee firmware"
+      }
     }
   },
   "issues": {
