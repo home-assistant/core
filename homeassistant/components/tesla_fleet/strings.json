@@ -133,6 +133,20 @@
         "name": "Route"
       }
     },
+    "number": {
+      "backup_reserve_percent": {
+        "name": "Backup reserve"
+      },
+      "charge_state_charge_current_request": {
+        "name": "Charge current"
+      },
+      "charge_state_charge_limit_soc": {
+        "name": "Charge limit"
+      },
+      "off_grid_vehicle_charging_reserve_percent": {
+        "name": "Off grid reserve"
+      }
+    },
     "select": {
       "climate_state_seat_heater_left": {
         "name": "Seat heater front left",
