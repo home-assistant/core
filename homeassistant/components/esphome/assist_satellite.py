@@ -173,28 +173,20 @@ class EsphomeAssistSatellite(
 
     async def _update_satellite_config(self) -> None:
         """Get the latest satellite configuration from the device."""
-        try:
-            config = await self.cli.get_voice_assistant_configuration(
-                _CONFIG_TIMEOUT_SEC
-            )
+        config = await self.cli.get_voice_assistant_configuration(_CONFIG_TIMEOUT_SEC)
 
-            # Update available/active wake words
-            self._satellite_config.available_wake_words = [
-                assist_satellite.AssistSatelliteWakeWord(
-                    id=model.id,
-                    wake_word=model.wake_word,
-                    trained_languages=list(model.trained_languages),
-                )
-                for model in config.available_wake_words
-            ]
-            self._satellite_config.active_wake_words = list(config.active_wake_words)
-            self._satellite_config.max_active_wake_words = config.max_active_wake_words
-            _LOGGER.debug(
-                "Received satellite configuration: %s", self._satellite_config
+        # Update available/active wake words
+        self._satellite_config.available_wake_words = [
+            assist_satellite.AssistSatelliteWakeWord(
+                id=model.id,
+                wake_word=model.wake_word,
+                trained_languages=list(model.trained_languages),
             )
-        except:
-            _LOGGER.error("Failed to update satellite configuration")
-            raise
+            for model in config.available_wake_words
+        ]
+        self._satellite_config.active_wake_words = list(config.active_wake_words)
+        self._satellite_config.max_active_wake_words = config.max_active_wake_words
+        _LOGGER.debug("Received satellite configuration: %s", self._satellite_config)
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
