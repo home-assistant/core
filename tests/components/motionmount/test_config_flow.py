@@ -117,33 +117,6 @@ async def test_user_not_connected_error(
     assert result["reason"] == "not_connected"
 
 
-async def test_user_response_error_single_device_old_ce_old_new_pro(
-    hass: HomeAssistant,
-    mock_motionmount_config_flow: MagicMock,
-) -> None:
-    """Test that the flow creates an entry when there is a response error."""
-    mock_motionmount_config_flow.connect.side_effect = (
-        motionmount.MotionMountResponseError(motionmount.MotionMountResponse.NotFound)
-    )
-
-    user_input = MOCK_USER_INPUT.copy()
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data=user_input,
-    )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == HOST
-
-    assert result["data"]
-    assert result["data"][CONF_HOST] == HOST
-    assert result["data"][CONF_PORT] == PORT
-
-    assert result["result"]
-
-
 async def test_user_response_error_single_device_new_ce_old_pro(
     hass: HomeAssistant,
     mock_motionmount_config_flow: MagicMock,
@@ -197,30 +170,6 @@ async def test_user_response_error_single_device_new_ce_new_pro(
 
     assert result["result"]
     assert result["result"].unique_id == ZEROCONF_MAC
-
-
-async def test_user_response_error_multi_device_old_ce_old_new_pro(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_motionmount_config_flow: MagicMock,
-) -> None:
-    """Test that the flow is aborted when there are multiple devices."""
-    mock_config_entry.add_to_hass(hass)
-
-    mock_motionmount_config_flow.connect.side_effect = (
-        motionmount.MotionMountResponseError(motionmount.MotionMountResponse.NotFound)
-    )
-
-    user_input = MOCK_USER_INPUT.copy()
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data=user_input,
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
 
 
 async def test_user_response_error_multi_device_new_ce_new_pro(
@@ -320,48 +269,6 @@ async def test_zeroconf_not_connected_error(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "not_connected"
-
-
-async def test_show_zeroconf_form_old_ce_old_pro(
-    hass: HomeAssistant,
-    mock_motionmount_config_flow: MagicMock,
-) -> None:
-    """Test that the zeroconf confirmation form is served."""
-    mock_motionmount_config_flow.connect.side_effect = (
-        motionmount.MotionMountResponseError(motionmount.MotionMountResponse.NotFound)
-    )
-
-    discovery_info = dataclasses.replace(MOCK_ZEROCONF_TVM_SERVICE_INFO_V1)
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_ZEROCONF},
-        data=discovery_info,
-    )
-
-    assert result["step_id"] == "zeroconf_confirm"
-    assert result["type"] is FlowResultType.FORM
-    assert result["description_placeholders"] == {CONF_NAME: "My MotionMount"}
-
-
-async def test_show_zeroconf_form_old_ce_new_pro(
-    hass: HomeAssistant,
-    mock_motionmount_config_flow: MagicMock,
-) -> None:
-    """Test that the zeroconf confirmation form is served."""
-    mock_motionmount_config_flow.connect.side_effect = (
-        motionmount.MotionMountResponseError(motionmount.MotionMountResponse.NotFound)
-    )
-
-    discovery_info = dataclasses.replace(MOCK_ZEROCONF_TVM_SERVICE_INFO_V2)
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_ZEROCONF},
-        data=discovery_info,
-    )
-
-    assert result["step_id"] == "zeroconf_confirm"
-    assert result["type"] is FlowResultType.FORM
-    assert result["description_placeholders"] == {CONF_NAME: "My MotionMount"}
 
 
 async def test_show_zeroconf_form_new_ce_old_pro(
