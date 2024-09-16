@@ -50,3 +50,18 @@ CRITICAL_PUSH_SETTINGS_DEVICE_CLASSES = {
 
 PUSH_DELAY_DEFAULT = 2
 PUSH_DELAY_FOR_DOMAIN = {sensor.const.DOMAIN: 2}
+
+CRITICAL_PUSH_ALERT_STRINGS = {
+    "default": "Sensor triggered",
+    BinarySensorDeviceClass.BATTERY: "push.sensor.battery",
+    BinarySensorDeviceClass.COLD: "push.sensor.cold",
+    BinarySensorDeviceClass.HEAT: "push.sensor.heat",
+    BinarySensorDeviceClass.PROBLEM: "push.sensor.problem",
+    BinarySensorDeviceClass.VIBRATION: "push.sensor.vibration",
+    BinarySensorDeviceClass.SAFETY: "push.sensor.safety",
+    BinarySensorDeviceClass.TAMPER: "push.sensor.tamper",
+    BinarySensorDeviceClass.CO: "push.sensor.co",
+    BinarySensorDeviceClass.GAS: "push.sensor.gas",
+    BinarySensorDeviceClass.MOISTURE: "push.sensor.moisture",
+    BinarySensorDeviceClass.SMOKE: "push.sensor.smoke",
+}

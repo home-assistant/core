@@ -17,6 +17,6 @@
   "documentation": "https://www.home-assistant.io/integrations/domika",
   "iot_class": "local_polling",
   "loggers": ["domika"],
-  "requirements": ["domika-ha-framework==0.0.2"],
+  "requirements": ["domika-ha-framework==0.0.3"],
   "single_config_entry": true
 }
