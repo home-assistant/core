@@ -97,7 +97,7 @@ class NumatoGpioBinarySensor(BinarySensorEntity):
 
     def __init__(self, name, device_id, port, invert_logic, api):
         """Initialize the Numato GPIO based binary sensor object."""
-        self._name = name or DEVICE_DEFAULT_NAME
+        self._attr_name = name or DEVICE_DEFAULT_NAME
         self._device_id = device_id
         self._port = port
         self._invert_logic = invert_logic
@@ -119,11 +119,6 @@ class NumatoGpioBinarySensor(BinarySensorEntity):
         """Update entity state."""
         self._state = level
         self.async_write_ha_state()
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
 
     @property
     def is_on(self):
