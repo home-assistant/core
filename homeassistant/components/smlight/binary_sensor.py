@@ -94,17 +94,17 @@ class SmBinarySensorEntity(SmEntity, BinarySensorEntity):
 class SmInternetSensorEntity(SmEntity, BinarySensorEntity):
     """Representation of the SLZB internet sensor."""
 
+    _attr_translation_key = "internet"
+    _attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+
     def __init__(
         self,
         coordinator: SmDataUpdateCoordinator,
     ) -> None:
         """Initialize slzb binary sensor."""
         super().__init__(coordinator)
-        self._attr_name = "Internet"
-        self._attr_translation_key = "internet"
-        self._attr_unique_id = f"{coordinator.unique_id}_{self._attr_name}"
-        self._attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
-        self._attr_entity_category = EntityCategory.DIAGNOSTIC
+        self._attr_unique_id = f"{coordinator.unique_id}_{self._attr_translation_key}"
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
