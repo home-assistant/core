@@ -11,7 +11,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from .const import ACMEDA_ENTITY_REMOVE, DOMAIN, LOGGER
 
 
-class AcmedaBase(entity.Entity):
+class AcmedaEntity(entity.Entity):
     """Base representation of an Acmeda roller."""
 
     _attr_should_poll = False
