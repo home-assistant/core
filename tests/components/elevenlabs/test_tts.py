@@ -268,3 +268,49 @@ async def test_tts_service_speak_error(
     tts_entity._client.generate.assert_called_once_with(
         text="There is a person at the front door.", voice="voice1", model="model1"
     )
+
+
+@pytest.mark.parametrize(
+    ("setup", "tts_service", "service_data"),
+    [
+        (
+            "mock_config_entry_setup",
+            "speak",
+            {
+                ATTR_ENTITY_ID: "tts.mock_title",
+                tts.ATTR_MEDIA_PLAYER_ENTITY_ID: "media_player.something",
+                tts.ATTR_MESSAGE: "There is a person at the front door.",
+                tts.ATTR_OPTIONS: {},
+            },
+        ),
+    ],
+    indirect=["setup"],
+)
+async def test_tts_service_speak_without_options(
+    setup: AsyncMock,
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    calls: list[ServiceCall],
+    tts_service: str,
+    service_data: dict[str, Any],
+) -> None:
+    """Test service call say with http response 200."""
+    tts_entity = hass.data[tts.DOMAIN].get_entity(service_data[ATTR_ENTITY_ID])
+    tts_entity._client.generate.reset_mock()
+
+    await hass.services.async_call(
+        tts.DOMAIN,
+        tts_service,
+        service_data,
+        blocking=True,
+    )
+
+    assert len(calls) == 1
+    assert (
+        await retrieve_media(hass, hass_client, calls[0].data[ATTR_MEDIA_CONTENT_ID])
+        == HTTPStatus.OK
+    )
+
+    tts_entity._client.generate.assert_called_once_with(
+        text="There is a person at the front door.", voice="voice1", model="model1"
+    )

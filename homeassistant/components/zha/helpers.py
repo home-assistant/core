@@ -1166,7 +1166,8 @@ CONF_ZHA_OPTIONS_SCHEMA = vol.Schema(
             CONF_CONSIDER_UNAVAILABLE_BATTERY,
             default=CONF_DEFAULT_CONSIDER_UNAVAILABLE_BATTERY,
         ): cv.positive_int,
-    }
+    },
+    extra=vol.REMOVE_EXTRA,
 )
 
 CONF_ZHA_ALARM_SCHEMA = vol.Schema(

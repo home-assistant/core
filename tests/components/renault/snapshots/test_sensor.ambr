@@ -494,6 +494,7 @@
         'options': list([
           'unplugged',
           'plugged',
+          'plugged_waiting_for_charge',
           'plug_error',
           'plug_unknown',
         ]),
@@ -921,6 +922,7 @@
         'options': list([
           'unplugged',
           'plugged',
+          'plugged_waiting_for_charge',
           'plug_error',
           'plug_unknown',
         ]),
@@ -1249,6 +1251,7 @@
         'options': list([
           'unplugged',
           'plugged',
+          'plugged_waiting_for_charge',
           'plug_error',
           'plug_unknown',
         ]),
@@ -1674,6 +1677,7 @@
         'options': list([
           'unplugged',
           'plugged',
+          'plugged_waiting_for_charge',
           'plug_error',
           'plug_unknown',
         ]),
@@ -2000,6 +2004,7 @@
         'options': list([
           'unplugged',
           'plugged',
+          'plugged_waiting_for_charge',
           'plug_error',
           'plug_unknown',
         ]),
@@ -2456,6 +2461,7 @@
         'options': list([
           'unplugged',
           'plugged',
+          'plugged_waiting_for_charge',
           'plug_error',
           'plug_unknown',
         ]),
@@ -3104,6 +3110,7 @@
         'options': list([
           'unplugged',
           'plugged',
+          'plugged_waiting_for_charge',
           'plug_error',
           'plug_unknown',
         ]),
@@ -3531,6 +3538,7 @@
         'options': list([
           'unplugged',
           'plugged',
+          'plugged_waiting_for_charge',
           'plug_error',
           'plug_unknown',
         ]),
@@ -3859,6 +3867,7 @@
         'options': list([
           'unplugged',
           'plugged',
+          'plugged_waiting_for_charge',
           'plug_error',
           'plug_unknown',
         ]),
@@ -4284,6 +4293,7 @@
         'options': list([
           'unplugged',
           'plugged',
+          'plugged_waiting_for_charge',
           'plug_error',
           'plug_unknown',
         ]),
@@ -4610,6 +4620,7 @@
         'options': list([
           'unplugged',
           'plugged',
+          'plugged_waiting_for_charge',
           'plug_error',
           'plug_unknown',
         ]),
@@ -5066,6 +5077,7 @@
         'options': list([
           'unplugged',
           'plugged',
+          'plugged_waiting_for_charge',
           'plug_error',
           'plug_unknown',
         ]),

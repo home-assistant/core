@@ -255,10 +255,10 @@ aiokafka==0.10.0
 aiolifx-effects==0.3.2
 
 # homeassistant.components.lifx
-aiolifx-themes==0.5.0
+aiolifx-themes==0.5.5
 
 # homeassistant.components.lifx
-aiolifx==1.0.9
+aiolifx==1.1.1
 
 # homeassistant.components.livisi
 aiolivisi==0.0.19
@@ -332,7 +332,7 @@ aioridwell==2024.01.0
 aioruckus==0.41
 
 # homeassistant.components.russound_rio
-aiorussound==3.0.4
+aiorussound==3.0.5
 
 # homeassistant.components.ruuvi_gateway
 aioruuvigateway==0.1.0
@@ -839,7 +839,7 @@ google-cloud-pubsub==2.13.11
 google-generativeai==0.6.0
 
 # homeassistant.components.nest
-google-nest-sdm==5.0.0
+google-nest-sdm==5.0.1
 
 # homeassistant.components.google_travel_time
 googlemaps==2.5.1
@@ -851,7 +851,7 @@ gotailwind==0.2.3
 govee-ble==0.40.0
 
 # homeassistant.components.govee_light_local
-govee-local-api==1.5.1
+govee-local-api==1.5.2
 
 # homeassistant.components.gpsd
 gps3==0.33.3
@@ -925,7 +925,7 @@ hole==0.8.0
 holidays==0.56
 
 # homeassistant.components.frontend
-home-assistant-frontend==20240906.0
+home-assistant-frontend==20240909.1
 
 # homeassistant.components.conversation
 home-assistant-intents==2024.9.4
@@ -1021,7 +1021,7 @@ kegtron-ble==0.4.0
 knocki==0.3.1
 
 # homeassistant.components.knx
-knx-frontend==2024.9.4.64538
+knx-frontend==2024.9.10.221729
 
 # homeassistant.components.konnected
 konnected==1.2.0
@@ -1060,7 +1060,7 @@ libsoundtouch==0.8
 linear-garage-door==0.2.9
 
 # homeassistant.components.lamarzocco
-lmcloud==1.2.2
+lmcloud==1.2.3
 
 # homeassistant.components.london_underground
 london-tube-status==0.5
@@ -1132,7 +1132,7 @@ monzopy==1.3.2
 mopeka-iot-ble==0.8.0
 
 # homeassistant.components.motion_blinds
-motionblinds==0.6.24
+motionblinds==0.6.25
 
 # homeassistant.components.motionblinds_ble
 motionblindsble==0.1.1
@@ -1831,7 +1831,7 @@ python-izone==1.2.9
 python-juicenet==1.1.0
 
 # homeassistant.components.tplink
-python-kasa[speedups]==0.7.2
+python-kasa[speedups]==0.7.3
 
 # homeassistant.components.linkplay
 python-linkplay==0.0.9
@@ -2053,7 +2053,7 @@ sensorpush-ble==1.6.2
 sentry-sdk==1.40.3
 
 # homeassistant.components.sfr_box
-sfrbox-api==0.0.10
+sfrbox-api==0.0.11
 
 # homeassistant.components.sharkiq
 sharkiq==1.0.2
@@ -2356,7 +2356,7 @@ yalexs-ble==2.4.3
 
 # homeassistant.components.august
 # homeassistant.components.yale
-yalexs==8.6.3
+yalexs==8.6.4
 
 # homeassistant.components.yeelight
 yeelight==0.7.14
@@ -2383,7 +2383,7 @@ zeroconf==0.133.0
 zeversolar==0.3.1
 
 # homeassistant.components.zha
-zha==0.0.32
+zha==0.0.33
 
 # homeassistant.components.zwave_js
 zwave-js-server-python==0.57.0
