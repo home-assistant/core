@@ -6942,6 +6942,12 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
+    "wmspro": {
+      "name": "WMS WebControl pro",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "wolflink": {
       "name": "Wolf SmartSet Service",
       "integration_type": "hub",

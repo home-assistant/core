@@ -2470,6 +2470,9 @@ pywilight==0.0.74
 # homeassistant.components.wiz
 pywizlight==0.5.14
 
+# homeassistant.components.wmspro
+pywmspro==0.1.0
+
 # homeassistant.components.ws66i
 pyws66i==1.1
 
