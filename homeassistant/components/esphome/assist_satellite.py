@@ -151,34 +151,17 @@ class EsphomeAssistSatellite(
             f"{self.entry_data.device_info.mac_address}-vad_sensitivity",
         )
 
-    # @abstractmethod
-    async def async_get_configuration(
+    def async_get_configuration(
         self,
     ) -> assist_satellite.AssistSatelliteConfiguration:
         """Get the current satellite configuration."""
-        response = await self.cli.get_voice_assistant_configuration(_CONFIG_TIMEOUT_SEC)
-        return assist_satellite.AssistSatelliteConfiguration(
-            available_wake_words=[
-                assist_satellite.AssistSatelliteWakeWord(
-                    id=ww.id,
-                    wake_word=ww.wake_word,
-                    trained_languages=ww.trained_languages,
-                    version=ww.version,
-                )
-                for ww in response.available_wake_words
-            ],
-            active_wake_words=response.active_wake_words,
-            max_active_wake_words=response.max_active_wake_words,
-        )
+        raise NotImplementedError
 
-    # @abstractmethod
     async def async_set_configuration(
         self, config: assist_satellite.AssistSatelliteConfiguration
     ) -> None:
-        """Set the current satellite configuration"""
-        await self.cli.set_voice_assistant_configuration(
-            active_wake_words=config.active_wake_words
-        )
+        """Set the current satellite configuration."""
+        raise NotImplementedError
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
