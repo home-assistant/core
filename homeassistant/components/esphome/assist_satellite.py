@@ -79,7 +79,6 @@ _TIMER_EVENT_TYPES: EsphomeEnumMapper[VoiceAssistantTimerEventType, TimerEventTy
 )
 
 _ANNOUNCEMENT_TIMEOUT_SEC = 5 * 60  # 5 minutes
-_CONFIG_TIMEOUT_SEC = 5
 
 
 async def async_setup_entry(
