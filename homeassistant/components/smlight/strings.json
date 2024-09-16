@@ -117,10 +117,10 @@
     },
     "update": {
       "core_update": {
-        "name": "Core Firmware"
+        "name": "Core firmware"
       },
       "zigbee_update": {
-        "name": "Zigbee Firmware"
+        "name": "Zigbee firmware"
       }
     }
   },
