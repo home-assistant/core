@@ -55,7 +55,7 @@ def async_finish_entity_domain_replacements(
             continue
 
         old_entity_id = registry_entry.entity_id
-        LOGGER.info('Removing old entity: "%s"', old_entity_id)
+        LOGGER.debug('Removing old entity: "%s"', old_entity_id)
         ent_reg.async_remove(old_entity_id)
 
 
