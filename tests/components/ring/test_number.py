@@ -3,6 +3,7 @@
 from unittest.mock import Mock
 
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.number import (
     ATTR_VALUE,
@@ -13,7 +14,9 @@ from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .common import setup_platform
+from .common import MockConfigEntry, setup_platform
+
+from tests.common import snapshot_platform
 
 
 @pytest.mark.parametrize(
@@ -40,27 +43,18 @@ async def test_entity_registry(
     assert entry is not None and entry.unique_id == unique_id
 
 
-@pytest.mark.parametrize(
-    ("entity_id", "initial_state"),
-    [
-        ("number.downstairs_volume", "2.0"),
-        ("number.front_door_volume", "1.0"),
-        ("number.ingress_doorbell_volume", "8.0"),
-        ("number.ingress_mic_volume", "11.0"),
-        ("number.ingress_voice_volume", "11.0"),
-    ],
-)
-async def test_initial_state(
+async def test_states(
     hass: HomeAssistant,
     mock_ring_client: Mock,
-    entity_id: str,
-    initial_state: str,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
-    """Tests that the initial state of a device is correct."""
-    await setup_platform(hass, Platform.NUMBER)
+    """Test states."""
 
-    state = hass.states.get(entity_id)
-    assert state is not None and state.state == initial_state
+    mock_config_entry.add_to_hass(hass)
+    await setup_platform(hass, Platform.NUMBER)
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
 @pytest.mark.parametrize(
