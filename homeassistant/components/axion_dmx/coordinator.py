@@ -12,7 +12,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import _LOGGER
 
 
-class AxionDataUpdateCoordinator(DataUpdateCoordinator):
+class AxionDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Custom coordinator for Axion Lighting integration."""
 
     def __init__(self, hass: HomeAssistant, api: AxionDmxApi, channel: int) -> None:
