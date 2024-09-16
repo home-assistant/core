@@ -253,7 +253,7 @@ class OpeningDeviceBase(HomeAccessory):
 
     def set_tilt(self, value: float) -> None:
         """Set tilt to value if call came from HomeKit."""
-        _LOGGER.info("%s: Set tilt to %d", self.entity_id, value)
+        _LOGGER.debug("%s: Set tilt to %d", self.entity_id, value)
 
         # HomeKit sends values between -90 and 90.
         # We'll have to normalize to [0,100]

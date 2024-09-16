@@ -27,7 +27,7 @@ def setup_platform(
 ) -> None:
     """Find and return HDMI devices as switches."""
     if discovery_info and ATTR_NEW in discovery_info:
-        _LOGGER.info("Setting up HDMI devices %s", discovery_info[ATTR_NEW])
+        _LOGGER.debug("Setting up HDMI devices %s", discovery_info[ATTR_NEW])
         entities = []
         for device in discovery_info[ATTR_NEW]:
             hdmi_device = hass.data[DOMAIN][device]
