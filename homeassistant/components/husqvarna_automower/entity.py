@@ -37,7 +37,7 @@ ERROR_STATES = [
 
 @callback
 def _check_error_free(mower_attributes: MowerAttributes) -> bool:
-    """Return the translation key."""
+    """Check if the mower has any errors."""
     return (
         mower_attributes.mower.state not in ERROR_STATES
         or mower_attributes.mower.activity not in ERROR_ACTIVITIES
