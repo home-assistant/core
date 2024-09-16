@@ -66,6 +66,36 @@ def test_enforce_class_module_good(
 @pytest.mark.parametrize(
     "path",
     [
+        "homeassistant.components.sensor",
+        "homeassistant.components.sensor.entity",
+        "homeassistant.components.pylint_test.sensor",
+        "homeassistant.components.pylint_test.sensor.entity",
+    ],
+)
+def test_enforce_class_platform_good(
+    linter: UnittestLinter,
+    enforce_class_module_checker: BaseChecker,
+    path: str,
+) -> None:
+    """Good test cases."""
+    code = """
+    class SensorEntity:
+        pass
+
+    class CustomSensorEntity(SensorEntity):
+        pass
+    """
+    root_node = astroid.parse(code, path)
+    walker = ASTWalker(linter)
+    walker.add_checker(enforce_class_module_checker)
+
+    with assert_no_messages(linter):
+        walker.walk(root_node)
+
+
+@pytest.mark.parametrize(
+    "path",
+    [
         "homeassistant.components.pylint_test",
         "homeassistant.components.pylint_test.my_coordinator",
         "homeassistant.components.pylint_test.coordinator_other",
