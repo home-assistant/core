@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 from datetime import timedelta
 from functools import partial
+import inspect
 import logging
 from typing import Any, Final, final
 
@@ -25,6 +26,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers import issue_registry as ir
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import make_entity_service_schema
 from homeassistant.helpers.deprecation import (
@@ -162,55 +164,28 @@ class AlarmControlPanelEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_A
     )
     _alarm_control_panel_option_default_code: str | None = None
 
-    _deprecated_alarm_state_handling: bool = False
-    _deprecated_incorrect_state: bool = False
+    __alarm_legacy_state: bool = False
+    __alarm_legacy_state_reported: bool = False
+
+    def __init_subclass__(cls, **kwargs: Any) -> None:
+        """Post initialisation processing."""
+        super().__init_subclass__(**kwargs)
+        if any(method in cls.__dict__ for method in ("_attr_state", "state")):
+            # Integrations should use the 'alarm_state' property instead of
+            # setting the state directly.
+            cls.__alarm_legacy_state = True
 
     def __setattr__(self, __name: str, __value: Any) -> None:
         """Set attribute.
 
-        Deprecation warning if settings '_attr_state' directly.
+        Deprecation warning if settings '_attr_state' directly
+        unless already reported.
         """
         if __name == "_attr_state":
-            if self._deprecated_alarm_state_handling is False:
+            if self.__alarm_legacy_state_reported is not True:
                 self._report_deprecated_alarm_state_handling()
+            self.__alarm_legacy_state_reported = True
         return super().__setattr__(__name, __value)
-
-    def __getattribute__(self, __name: str) -> Any:
-        """Get attribute.
-
-        Deprecation warning if 'alarm_state' is not implemented by subclass.
-        """
-        if __name not in ["state", "_attr_state"]:
-            return super().__getattribute__(__name)
-
-        if __name == "state" and (
-            type(self).state is Entity.state
-            or type(self).state is AlarmControlPanelEntity.state
-        ):
-            return super().__getattribute__(__name)
-
-        # Check the state reported is valid in the enum
-        _state: str = super().__getattribute__(__name)
-        try:
-            AlarmControlPanelEntityState(_state)
-        except ValueError:
-            if self._deprecated_incorrect_state is False:
-                self._deprecated_incorrect_state = True
-                report_issue = self._suggest_report_issue()
-                _LOGGER.warning(
-                    (
-                        "Entity %s (%s) is using an incorrect state %s"
-                        " which will stop working in HA Core 2025.10."
-                        " Entities should implement the 'alarm_state' property and"
-                        " return it's state using the AlarmControlPanelEntityState enum, please %s",
-                    ),
-                    self.entity_id,
-                    type(self),
-                    _state,
-                    report_issue,
-                )
-
-        return _state
 
     @callback
     def add_to_platform_start(
@@ -221,8 +196,7 @@ class AlarmControlPanelEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_A
     ) -> None:
         """Start adding an entity to a platform."""
         super().add_to_platform_start(hass, platform, parallel_updates)
-
-        if type(self).alarm_state is AlarmControlPanelEntity.alarm_state:
+        if self.__alarm_legacy_state and not self.__alarm_legacy_state_reported:
             self._report_deprecated_alarm_state_handling()
 
     @callback
@@ -231,19 +205,37 @@ class AlarmControlPanelEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_A
 
         Integrations should implement alarm_state instead of using state directly.
         """
-        if self._deprecated_alarm_state_handling is False:
+        if self.__alarm_legacy_state_reported is True:
             return
-        self._deprecated_alarm_state_handling = True
-        report_issue = self._suggest_report_issue()
-        _LOGGER.warning(
-            "Entity %s (%s) is setting state directly"
-            " which will stop working in HA Core 2025.10."
-            " Entities should implement the 'alarm_state' property and"
-            " return it's state using the AlarmControlPanelEntityState enum, please %s",
-            self.entity_id,
-            type(self),
-            report_issue,
-        )
+        self.__alarm_legacy_state_reported = True
+        module = inspect.getmodule(self)
+        if module and module.__file__ and "custom_components" in module.__file__:
+            # Do not report on core integrations as they will be fixed.
+            report_issue = "report it to the custom integration author."
+            _LOGGER.warning(
+                "Entity %s (%s) is setting state directly"
+                " which will stop working in HA Core 2025.10."
+                " Entities should implement the 'alarm_state' property and"
+                " return it's state using the AlarmControlPanelEntityState enum, please %s",
+                self.entity_id,
+                type(self),
+                report_issue,
+            )
+            ir.async_create_issue(
+                self.hass,
+                DOMAIN,
+                f"deprecated_alarm_state_{self.platform.platform_name}",
+                breaks_in_ha_version="2025.10.0",
+                is_fixable=False,
+                is_persistent=False,
+                issue_domain=self.platform.platform_name,
+                severity=ir.IssueSeverity.WARNING,
+                translation_key="deprecated_alarm_state",
+                translation_placeholders={
+                    "platform": self.platform.platform_name,
+                    "report_issue": report_issue,
+                },
+            )
 
     @property
     def state(self) -> str | None:
@@ -254,7 +246,11 @@ class AlarmControlPanelEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_A
 
     @cached_property
     def alarm_state(self) -> AlarmControlPanelEntityState | None:
-        """Return the current alarm control panel entity state."""
+        """Return the current alarm control panel entity state.
+
+        Integrations should overwrite this or use the 'attr_alarm_state'
+        attribute to set the alarm status using the 'AlarmControlPanelEntityState' enum.
+        """
         return self._attr_alarm_state
 
     @final
