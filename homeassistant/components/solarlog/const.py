@@ -8,4 +8,4 @@ DOMAIN = "solarlog"
 DEFAULT_HOST = "http://solar-log"
 DEFAULT_NAME = "solarlog"
 
-CONF_HAS_PWD = "has_passoword"
+CONF_HAS_PWD = "has_password"
