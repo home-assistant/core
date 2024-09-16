@@ -202,7 +202,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     component.async_register_entity_service(
         SERVICE_SET_HUMIDITY,
         {vol.Required(ATTR_HUMIDITY): vol.Coerce(int)},
-        "async_set_humidity",
+        async_service_humidity_set,
         [ClimateEntityFeature.TARGET_HUMIDITY],
     )
     component.async_register_entity_service(
@@ -928,6 +928,33 @@ async def async_service_aux_heat(
         await entity.async_turn_aux_heat_on()
     else:
         await entity.async_turn_aux_heat_off()
+
+
+async def async_service_humidity_set(
+    entity: ClimateEntity, service_call: ServiceCall
+) -> None:
+    """Handle set humidity service."""
+    humidity = service_call.data[ATTR_HUMIDITY]
+    min_humidity = entity.min_humidity
+    max_humidity = entity.max_humidity
+    _LOGGER.debug(
+        "Check valid humidity %d in range %d - %d",
+        humidity,
+        min_humidity,
+        max_humidity,
+    )
+    if humidity < min_humidity or humidity > max_humidity:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="humidity_out_of_range",
+            translation_placeholders={
+                "humidity": str(humidity),
+                "min_humidity": str(min_humidity),
+                "max_humidity": str(max_humidity),
+            },
+        )
+
+    await entity.async_set_humidity(humidity)
 
 
 async def async_service_temperature_set(
