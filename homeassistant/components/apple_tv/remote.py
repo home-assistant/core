@@ -19,7 +19,8 @@ from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import AppleTvConfigEntry, AppleTVEntity
+from . import AppleTvConfigEntry
+from .entity import AppleTVEntity
 
 _LOGGER = logging.getLogger(__name__)
 
