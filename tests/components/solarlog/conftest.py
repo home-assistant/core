@@ -6,7 +6,10 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from solarlog_cli.solarlog_models import InverterData, SolarlogData
 
-from homeassistant.components.solarlog.const import DOMAIN as SOLARLOG_DOMAIN
+from homeassistant.components.solarlog.const import (
+    CONF_HAS_PWD,
+    DOMAIN as SOLARLOG_DOMAIN,
+)
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD
 
 from .const import HOST, NAME
@@ -36,7 +39,7 @@ def mock_config_entry() -> MockConfigEntry:
         data={
             CONF_HOST: HOST,
             CONF_NAME: NAME,
-            "has_password": True,
+            CONF_HAS_PWD: True,
             CONF_PASSWORD: "pwd",
         },
         minor_version=3,

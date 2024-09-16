@@ -10,7 +10,7 @@ from solarlog_cli.solarlog_exceptions import (
     SolarLogUpdateError,
 )
 
-from homeassistant.components.solarlog.const import DOMAIN
+from homeassistant.components.solarlog.const import CONF_HAS_PWD, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
@@ -126,6 +126,7 @@ async def test_migrate_config_entry(
     hass: HomeAssistant,
     device_registry: DeviceRegistry,
     entity_registry: EntityRegistry,
+    mock_solarlog_connector: AsyncMock,
 ) -> None:
     """Test successful migration of entry data."""
     entry = MockConfigEntry(
@@ -167,4 +168,4 @@ async def test_migrate_config_entry(
     assert entry.version == 1
     assert entry.minor_version == 3
     assert entry.data[CONF_HOST] == HOST
-    assert entry.data["has_password"] is False
+    assert entry.data[CONF_HAS_PWD] is False

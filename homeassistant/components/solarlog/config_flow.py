@@ -18,7 +18,7 @@ from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD
 from homeassistant.util import slugify
 
 from . import SolarlogConfigEntry
-from .const import DEFAULT_HOST, DEFAULT_NAME, DOMAIN
+from .const import CONF_HAS_PWD, DEFAULT_HOST, DEFAULT_NAME, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -89,7 +89,7 @@ class SolarLogConfigFlow(ConfigFlow, domain=DOMAIN):
             user_input[CONF_NAME] = slugify(user_input[CONF_NAME])
 
             if await self._test_connection(user_input[CONF_HOST]):
-                if user_input["has_password"]:
+                if user_input[CONF_HAS_PWD]:
                     self._user_input = user_input
                     return await self.async_step_password()
 
@@ -105,7 +105,7 @@ class SolarLogConfigFlow(ConfigFlow, domain=DOMAIN):
                 {
                     vol.Required(CONF_NAME, default=user_input[CONF_NAME]): str,
                     vol.Required(CONF_HOST, default=user_input[CONF_HOST]): str,
-                    vol.Required("has_password", default=False): bool,
+                    vol.Required(CONF_HAS_PWD, default=False): bool,
                 }
             ),
             errors=self._errors,
@@ -148,12 +148,9 @@ class SolarLogConfigFlow(ConfigFlow, domain=DOMAIN):
             assert entry is not None
 
         if user_input is not None:
-            if (
-                not user_input["has_password"]
-                or user_input.get(CONF_PASSWORD, "") == ""
-            ):
+            if not user_input[CONF_HAS_PWD] or user_input.get(CONF_PASSWORD, "") == "":
                 user_input[CONF_PASSWORD] = ""
-                user_input["has_password"] = False
+                user_input[CONF_HAS_PWD] = False
                 return self.async_update_reload_and_abort(
                     entry,
                     reason="reconfigure_successful",
@@ -174,9 +171,7 @@ class SolarLogConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="reconfigure",
             data_schema=vol.Schema(
                 {
-                    vol.Optional(
-                        "has_password", default=entry.data["has_password"]
-                    ): bool,
+                    vol.Optional(CONF_HAS_PWD, default=entry.data[CONF_HAS_PWD]): bool,
                     vol.Optional(CONF_PASSWORD): str,
                 }
             ),
@@ -206,7 +201,7 @@ class SolarLogConfigFlow(ConfigFlow, domain=DOMAIN):
         data_schema = vol.Schema(
             {
                 vol.Optional(
-                    "has_password", default=self._entry.data["has_password"]
+                    CONF_HAS_PWD, default=self._entry.data[CONF_HAS_PWD]
                 ): bool,
                 vol.Optional(CONF_PASSWORD): str,
             }
