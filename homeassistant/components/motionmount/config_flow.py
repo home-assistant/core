@@ -1,14 +1,16 @@
 """Config flow for Vogel's MotionMount."""
 
+from collections.abc import Mapping
 import logging
 import socket
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import motionmount
 import voluptuous as vol
 
 from homeassistant.config_entries import (
     DEFAULT_DISCOVERY_UNIQUE_ID,
+    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
 )
@@ -35,6 +37,7 @@ class MotionMountFlowHandler(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Set up the instance."""
         self.connection_data: dict[str, Any] = {}
+        self.reauth_entry: ConfigEntry | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -75,10 +78,7 @@ class MotionMountFlowHandler(ConfigFlow, domain=DOMAIN):
             # We need a pin to authenticate
             return await self.async_step_auth()
         # No pin is needed
-        return self.async_create_entry(
-            title=self.connection_data[CONF_NAME],
-            data=self.connection_data,
-        )
+        return self._create_or_update_entry()
 
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
@@ -152,10 +152,21 @@ class MotionMountFlowHandler(ConfigFlow, domain=DOMAIN):
                 errors={},
             )
 
-        return self.async_create_entry(
-            title=self.connection_data[CONF_NAME],
-            data=self.connection_data,
+        return self._create_or_update_entry()
+
+    async def async_step_reauth(
+        self, user_input: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle re-authentication."""
+        self.reauth_entry = self.hass.config_entries.async_get_entry(
+            self.context["entry_id"]
         )
+
+        if TYPE_CHECKING:
+            assert self.reauth_entry
+
+        self.connection_data.update(self.reauth_entry.data)
+        return await self.async_step_auth()
 
     async def async_step_auth(
         self, user_input: dict[str, Any] | None = None
@@ -168,10 +179,7 @@ class MotionMountFlowHandler(ConfigFlow, domain=DOMAIN):
 
             # Validate pin code
             if await self._validate_input_pin(self.connection_data):
-                return self.async_create_entry(
-                    title=self.connection_data[CONF_NAME],
-                    data=self.connection_data,
-                )
+                return self._create_or_update_entry()
 
             errors[CONF_PIN] = "Pin is not correct"
 
@@ -183,6 +191,16 @@ class MotionMountFlowHandler(ConfigFlow, domain=DOMAIN):
                 }
             ),
             errors=errors,
+        )
+
+    def _create_or_update_entry(self) -> ConfigFlowResult:
+        if self.reauth_entry:
+            return self.async_update_reload_and_abort(
+                self.reauth_entry, data=self.connection_data
+            )
+        return self.async_create_entry(
+            title=self.connection_data[CONF_NAME],
+            data=self.connection_data,
         )
 
     async def _validate_input_connect(self, data: dict) -> dict[str, Any]:
