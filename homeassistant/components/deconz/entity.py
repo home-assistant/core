@@ -68,8 +68,7 @@ class DeconzBase[_DeviceT: _DeviceType]:
         )
 
 
-# pylint: disable-next=hass-enforce-class-module
-class DeconzDevice[_DeviceT: _DeviceType](DeconzBase[_DeviceT], Entity):
+class DeconzEntity[_DeviceT: _DeviceType](DeconzBase[_DeviceT], Entity):
     """Representation of a deCONZ device."""
 
     _attr_should_poll = False
@@ -142,7 +141,7 @@ class DeconzDevice[_DeviceT: _DeviceType](DeconzBase[_DeviceT], Entity):
         return self.hub.available and self._device.reachable  # type: ignore[union-attr]
 
 
-class DeconzSceneMixin(DeconzDevice[PydeconzScene]):
+class DeconzSceneMixin(DeconzEntity[PydeconzScene]):
     """Representation of a deCONZ scene."""
 
     _attr_has_entity_name = True

@@ -34,7 +34,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import ATTR_LOCKED, ATTR_OFFSET, ATTR_VALVE
-from .deconz_device import DeconzDevice
+from .entity import DeconzEntity
 from .hub import DeconzHub
 
 DECONZ_FAN_SMART = "smart"
@@ -95,7 +95,7 @@ async def async_setup_entry(
     )
 
 
-class DeconzThermostat(DeconzDevice[Thermostat], ClimateEntity):
+class DeconzThermostat(DeconzEntity[Thermostat], ClimateEntity):
     """Representation of a deCONZ thermostat."""
 
     TYPE = CLIMATE_DOMAIN

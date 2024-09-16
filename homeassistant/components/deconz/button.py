@@ -19,7 +19,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .deconz_device import DeconzDevice, DeconzSceneMixin
+from .entity import DeconzEntity, DeconzSceneMixin
 from .hub import DeconzHub
 
 
@@ -110,7 +110,7 @@ class DeconzSceneButton(DeconzSceneMixin, ButtonEntity):
         return f"{super().get_device_identifier()}-{self.entity_description.key}"
 
 
-class DeconzPresenceResetButton(DeconzDevice[Presence], ButtonEntity):
+class DeconzPresenceResetButton(DeconzEntity[Presence], ButtonEntity):
     """Representation of a deCONZ presence reset button entity."""
 
     _name_suffix = "Reset Presence"

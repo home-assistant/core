@@ -13,7 +13,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import POWER_PLUGS
-from .deconz_device import DeconzDevice
+from .entity import DeconzEntity
 from .hub import DeconzHub
 
 
@@ -43,7 +43,7 @@ async def async_setup_entry(
     )
 
 
-class DeconzPowerPlug(DeconzDevice[Light], SwitchEntity):
+class DeconzPowerPlug(DeconzEntity[Light], SwitchEntity):
     """Representation of a deCONZ power plug."""
 
     TYPE = SWITCH_DOMAIN

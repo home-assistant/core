@@ -17,7 +17,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .deconz_device import DeconzDevice
+from .entity import DeconzEntity
 from .hub import DeconzHub
 
 
@@ -42,7 +42,7 @@ async def async_setup_entry(
     )
 
 
-class DeconzSiren(DeconzDevice[Siren], SirenEntity):
+class DeconzSiren(DeconzEntity[Siren], SirenEntity):
     """Representation of a deCONZ siren."""
 
     TYPE = SIREN_DOMAIN

@@ -33,7 +33,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.color import color_hs_to_xy
 
 from .const import DOMAIN as DECONZ_DOMAIN, POWER_PLUGS
-from .deconz_device import DeconzDevice
+from .entity import DeconzEntity
 from .hub import DeconzHub
 
 DECONZ_GROUP = "is_deconz_group"
@@ -166,7 +166,7 @@ async def async_setup_entry(
 
 
 class DeconzBaseLight[_LightDeviceT: Group | Light](
-    DeconzDevice[_LightDeviceT], LightEntity
+    DeconzEntity[_LightDeviceT], LightEntity
 ):
     """Representation of a deCONZ light."""
 

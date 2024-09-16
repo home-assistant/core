@@ -21,7 +21,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .deconz_device import DeconzDevice
+from .entity import DeconzEntity
 from .hub import DeconzHub
 
 DECONZ_TYPE_TO_DEVICE_CLASS = {
@@ -51,7 +51,7 @@ async def async_setup_entry(
     )
 
 
-class DeconzCover(DeconzDevice[Cover], CoverEntity):
+class DeconzCover(DeconzEntity[Cover], CoverEntity):
     """Representation of a deCONZ cover."""
 
     TYPE = COVER_DOMAIN

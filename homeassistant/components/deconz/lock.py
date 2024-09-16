@@ -13,7 +13,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .deconz_device import DeconzDevice
+from .entity import DeconzEntity
 from .hub import DeconzHub
 
 
@@ -50,7 +50,7 @@ async def async_setup_entry(
     )
 
 
-class DeconzLock(DeconzDevice[DoorLock | Lock], LockEntity):
+class DeconzLock(DeconzEntity[DoorLock | Lock], LockEntity):
     """Representation of a deCONZ lock."""
 
     TYPE = LOCK_DOMAIN
