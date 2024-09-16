@@ -135,14 +135,19 @@ class FritzboxThermostat(FritzBoxDeviceEntity, ClimateEntity):
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        if kwargs.get(ATTR_HVAC_MODE) is not None:
-            hvac_mode = kwargs[ATTR_HVAC_MODE]
+        target_temp = kwargs.get(ATTR_TEMPERATURE)
+        hvac_mode = kwargs.get(ATTR_HVAC_MODE)
+        if target_temp is None and hvac_mode is None:
+            return
+
+        if hvac_mode == HVACMode.OFF:
             await self.async_set_hvac_mode(hvac_mode)
-        elif kwargs.get(ATTR_TEMPERATURE) is not None:
-            temperature = kwargs[ATTR_TEMPERATURE]
+        elif target_temp is not None:
             await self.hass.async_add_executor_job(
-                self.data.set_target_temperature, temperature
+                self.data.set_target_temperature, target_temp
             )
+        elif hvac_mode is not None:
+            await self.async_set_hvac_mode(hvac_mode)
         await self.coordinator.async_refresh()
 
     @property
