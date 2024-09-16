@@ -2,8 +2,9 @@
 
 import json
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock, call
+from unittest.mock import ANY, AsyncMock, MagicMock, call
 
+from aiohttp import ClientSession
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from reolink_aio.exceptions import ApiError, CredentialsInvalidError, ReolinkError
@@ -492,11 +493,14 @@ async def test_dhcp_ip_update(
             use_https=TEST_USE_HTTPS,
             protocol=DEFAULT_PROTOCOL,
             timeout=DEFAULT_TIMEOUT,
+            aiohttp_get_session_callback=ANY,
         )
         assert expected_call in reolink_connect_class.call_args_list
 
     for exc_call in reolink_connect_class.call_args_list:
         assert exc_call[0][0] in host_call_list
+        get_session = exc_call[1]["aiohttp_get_session_callback"]
+        assert isinstance(get_session(), ClientSession)
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
