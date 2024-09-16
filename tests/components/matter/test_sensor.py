@@ -269,7 +269,7 @@ async def test_battery_sensor_voltage(
     eve_contact_sensor_node: MatterNode,
 ) -> None:
     """Test battery voltage sensor."""
-    entity_id = "sensor.eve_door_battery_voltage"
+    entity_id = "sensor.eve_door_voltage"
     state = hass.states.get(entity_id)
     assert state
     assert state.state == "3558"
