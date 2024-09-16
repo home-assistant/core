@@ -3,7 +3,7 @@
   dict({
     'config_entry': dict({
       'data': dict({
-        'has_password': True,
+        'has_passoword': True,
         'host': '**REDACTED**',
         'name': 'Solarlog test 1 2 3',
         'password': 'pwd',
