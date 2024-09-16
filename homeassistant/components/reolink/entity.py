@@ -19,26 +19,30 @@ from .const import DOMAIN
 
 
 @dataclass(frozen=True, kw_only=True)
-class ReolinkChannelEntityDescription(EntityDescription):
-    """A class that describes entities for a camera channel."""
+class ReolinkEntityDescription(EntityDescription):
+    """A class that describes entities for Reolink."""
 
     cmd_key: str | None = None
+
+
+@dataclass(frozen=True, kw_only=True)
+class ReolinkChannelEntityDescription(ReolinkEntityDescription):
+    """A class that describes entities for a camera channel."""
+
     supported: Callable[[Host, int], bool] = lambda api, ch: True
 
 
 @dataclass(frozen=True, kw_only=True)
-class ReolinkHostEntityDescription(EntityDescription):
+class ReolinkHostEntityDescription(ReolinkEntityDescription):
     """A class that describes host entities."""
 
-    cmd_key: str | None = None
     supported: Callable[[Host], bool] = lambda api: True
 
 
 @dataclass(frozen=True, kw_only=True)
-class ReolinkChimeEntityDescription(EntityDescription):
+class ReolinkChimeEntityDescription(ReolinkEntityDescription):
     """A class that describes entities for a chime."""
 
-    cmd_key: str | None = None
     supported: Callable[[Chime], bool] = lambda chime: True
 
 
@@ -50,11 +54,7 @@ class ReolinkHostCoordinatorEntity(CoordinatorEntity[DataUpdateCoordinator[None]
     """
 
     _attr_has_entity_name = True
-    entity_description: (
-        ReolinkHostEntityDescription
-        | ReolinkChannelEntityDescription
-        | ReolinkChimeEntityDescription
-    )
+    entity_description: ReolinkEntityDescription
 
     def __init__(
         self,
@@ -113,8 +113,6 @@ class ReolinkHostCoordinatorEntity(CoordinatorEntity[DataUpdateCoordinator[None]
 
 class ReolinkChannelCoordinatorEntity(ReolinkHostCoordinatorEntity):
     """Parent class for Reolink hardware camera entities connected to a channel of the NVR."""
-
-    entity_description: ReolinkChannelEntityDescription | ReolinkChimeEntityDescription
 
     def __init__(
         self,
@@ -175,8 +173,6 @@ class ReolinkChannelCoordinatorEntity(ReolinkHostCoordinatorEntity):
 
 class ReolinkChimeCoordinatorEntity(ReolinkChannelCoordinatorEntity):
     """Parent class for Reolink chime entities connected."""
-
-    entity_description: ReolinkChimeEntityDescription
 
     def __init__(
         self,
