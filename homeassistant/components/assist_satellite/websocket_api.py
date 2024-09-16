@@ -6,6 +6,7 @@ import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
 
@@ -42,5 +43,19 @@ async def websocket_intercept_wake_word(
         )
         return
 
-    wake_word_phrase = await satellite.async_intercept_wake_word()
-    connection.send_result(msg["id"], {"wake_word_phrase": wake_word_phrase})
+    async def intercept_wake_word() -> None:
+        """Push an intercepted wake word to websocket."""
+        try:
+            wake_word_phrase = await satellite.async_intercept_wake_word()
+            connection.send_message(
+                websocket_api.event_message(
+                    msg["id"],
+                    {"wake_word_phrase": wake_word_phrase},
+                )
+            )
+        except HomeAssistantError as err:
+            connection.send_error(msg["id"], "home_assistant_error", str(err))
+
+    task = hass.async_create_task(intercept_wake_word(), "intercept_wake_word")
+    connection.subscriptions[msg["id"]] = task.cancel
+    connection.send_message(websocket_api.result_message(msg["id"]))

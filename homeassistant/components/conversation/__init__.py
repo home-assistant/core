@@ -46,20 +46,23 @@ from .default_agent import async_get_default_agent, async_setup_default_agent
 from .entity import ConversationEntity
 from .http import async_setup as async_setup_conversation_http
 from .models import AbstractConversationAgent, ConversationInput, ConversationResult
+from .trace import ConversationTraceEventType, async_conversation_trace_append
 
 __all__ = [
     "DOMAIN",
     "HOME_ASSISTANT_AGENT",
     "OLD_HOME_ASSISTANT_AGENT",
+    "ConversationEntity",
+    "ConversationEntityFeature",
+    "ConversationInput",
+    "ConversationResult",
+    "ConversationTraceEventType",
+    "async_conversation_trace_append",
     "async_converse",
     "async_get_agent_info",
     "async_set_agent",
     "async_setup",
     "async_unset_agent",
-    "ConversationEntity",
-    "ConversationInput",
-    "ConversationResult",
-    "ConversationEntityFeature",
 ]
 
 _LOGGER = logging.getLogger(__name__)
