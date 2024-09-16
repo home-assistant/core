@@ -15,6 +15,8 @@ from homeassistant.components.climate import (
     ATTR_MIN_TEMP,
     ATTR_PRESET_MODE,
     ATTR_PRESET_MODES,
+    ATTR_TARGET_TEMP_HIGH,
+    ATTR_TARGET_TEMP_LOW,
     DOMAIN as CLIMATE_DOMAIN,
     PRESET_COMFORT,
     PRESET_ECO,
@@ -288,6 +290,13 @@ async def test_update_error(hass: HomeAssistant, fritz: Mock) -> None:
             },
             [call(23)],
         ),
+        (
+            {
+                ATTR_TARGET_TEMP_HIGH: 16,
+                ATTR_TARGET_TEMP_LOW: 10,
+            },
+            [],
+        ),
     ],
 )
 async def test_set_temperature(
@@ -308,6 +317,7 @@ async def test_set_temperature(
         {ATTR_ENTITY_ID: ENTITY_ID, **service_data},
         True,
     )
+    assert device.set_target_temperature.call_count == len(expected_call_args)
     assert device.set_target_temperature.call_args_list == expected_call_args
 
 
