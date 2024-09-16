@@ -3,6 +3,7 @@
 from abc import abstractmethod
 import asyncio
 from collections.abc import AsyncIterable
+import contextlib
 from enum import StrEnum
 import logging
 import time
@@ -21,13 +22,12 @@ from homeassistant.components.assist_pipeline import (
     vad,
 )
 from homeassistant.components.media_player import async_process_play_media_url
-from homeassistant.components.tts.media_source import (
+from homeassistant.components.tts import (
     generate_media_source_id as tts_generate_media_source_id,
 )
 from homeassistant.core import Context, callback
 from homeassistant.helpers import entity
 from homeassistant.helpers.entity import EntityDescription
-from homeassistant.util import ulid
 
 from .const import AssistSatelliteEntityFeature
 from .errors import AssistSatelliteError, SatelliteBusyError
@@ -73,6 +73,7 @@ class AssistSatelliteEntity(entity.Entity):
     _is_announcing = False
     _wake_word_intercept_future: asyncio.Future[str | None] | None = None
     _attr_tts_options: dict[str, Any] | None = None
+    _pipeline_task: asyncio.Task | None = None
 
     __assist_satellite_state = AssistSatelliteState.LISTENING_WAKE_WORD
 
@@ -131,6 +132,8 @@ class AssistSatelliteEntity(entity.Entity):
 
         Calls async_announce with message and media id.
         """
+        await self._cancel_running_pipeline()
+
         if message is None:
             message = ""
 
@@ -169,12 +172,14 @@ class AssistSatelliteEntity(entity.Entity):
             raise SatelliteBusyError
 
         self._is_announcing = True
+        self._set_state(AssistSatelliteState.RESPONDING)
 
         try:
             # Block until announcement is finished
             await self.async_announce(message, media_id)
         finally:
             self._is_announcing = False
+            self._set_state(AssistSatelliteState.LISTENING_WAKE_WORD)
 
     async def async_announce(self, message: str, media_id: str) -> None:
         """Announce media on the satellite.
@@ -191,6 +196,8 @@ class AssistSatelliteEntity(entity.Entity):
         wake_word_phrase: str | None = None,
     ) -> None:
         """Triggers an Assist pipeline in Home Assistant from a satellite."""
+        await self._cancel_running_pipeline()
+
         if self._wake_word_intercept_future and start_stage in (
             PipelineStage.WAKE_WORD,
             PipelineStage.STT,
@@ -232,44 +239,58 @@ class AssistSatelliteEntity(entity.Entity):
         assert self._context is not None
 
         # Reset conversation id if necessary
-        if (self._conversation_id_time is None) or (
+        if self._conversation_id_time and (
             (time.monotonic() - self._conversation_id_time) > _CONVERSATION_TIMEOUT_SEC
         ):
             self._conversation_id = None
-
-        if self._conversation_id is None:
-            self._conversation_id = ulid.ulid()
-
-        # Update timeout
-        self._conversation_id_time = time.monotonic()
+            self._conversation_id_time = None
 
         # Set entity state based on pipeline events
         self._run_has_tts = False
 
-        await async_pipeline_from_audio_stream(
+        assert self.platform.config_entry is not None
+        self._pipeline_task = self.platform.config_entry.async_create_background_task(
             self.hass,
-            context=self._context,
-            event_callback=self._internal_on_pipeline_event,
-            stt_metadata=stt.SpeechMetadata(
-                language="",  # set in async_pipeline_from_audio_stream
-                format=stt.AudioFormats.WAV,
-                codec=stt.AudioCodecs.PCM,
-                bit_rate=stt.AudioBitRates.BITRATE_16,
-                sample_rate=stt.AudioSampleRates.SAMPLERATE_16000,
-                channel=stt.AudioChannels.CHANNEL_MONO,
+            async_pipeline_from_audio_stream(
+                self.hass,
+                context=self._context,
+                event_callback=self._internal_on_pipeline_event,
+                stt_metadata=stt.SpeechMetadata(
+                    language="",  # set in async_pipeline_from_audio_stream
+                    format=stt.AudioFormats.WAV,
+                    codec=stt.AudioCodecs.PCM,
+                    bit_rate=stt.AudioBitRates.BITRATE_16,
+                    sample_rate=stt.AudioSampleRates.SAMPLERATE_16000,
+                    channel=stt.AudioChannels.CHANNEL_MONO,
+                ),
+                stt_stream=audio_stream,
+                pipeline_id=self._resolve_pipeline(),
+                conversation_id=self._conversation_id,
+                device_id=device_id,
+                tts_audio_output=self.tts_options,
+                wake_word_phrase=wake_word_phrase,
+                audio_settings=AudioSettings(
+                    silence_seconds=self._resolve_vad_sensitivity()
+                ),
+                start_stage=start_stage,
+                end_stage=end_stage,
             ),
-            stt_stream=audio_stream,
-            pipeline_id=self._resolve_pipeline(),
-            conversation_id=self._conversation_id,
-            device_id=device_id,
-            tts_audio_output=self.tts_options,
-            wake_word_phrase=wake_word_phrase,
-            audio_settings=AudioSettings(
-                silence_seconds=self._resolve_vad_sensitivity()
-            ),
-            start_stage=start_stage,
-            end_stage=end_stage,
+            f"{self.entity_id}_pipeline",
         )
+
+        try:
+            await self._pipeline_task
+        finally:
+            self._pipeline_task = None
+
+    async def _cancel_running_pipeline(self) -> None:
+        """Cancel the current pipeline if it's running."""
+        if self._pipeline_task is not None:
+            self._pipeline_task.cancel()
+            with contextlib.suppress(asyncio.CancelledError):
+                await self._pipeline_task
+
+            self._pipeline_task = None
 
     @abstractmethod
     def on_pipeline_event(self, event: PipelineEvent) -> None:
@@ -284,6 +305,11 @@ class AssistSatelliteEntity(entity.Entity):
             self._set_state(AssistSatelliteState.LISTENING_COMMAND)
         elif event.type is PipelineEventType.INTENT_START:
             self._set_state(AssistSatelliteState.PROCESSING)
+        elif event.type is PipelineEventType.INTENT_END:
+            assert event.data is not None
+            # Update timeout
+            self._conversation_id_time = time.monotonic()
+            self._conversation_id = event.data["intent_output"]["conversation_id"]
         elif event.type is PipelineEventType.TTS_START:
             # Wait until tts_response_finished is called to return to waiting state
             self._run_has_tts = True

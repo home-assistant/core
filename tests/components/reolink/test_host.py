@@ -11,7 +11,6 @@ from reolink_aio.enums import SubType
 from reolink_aio.exceptions import NotSupportedError, ReolinkError, SubscriptionError
 
 from homeassistant.components.reolink import DEVICE_UPDATE_INTERVAL
-from homeassistant.components.reolink.const import DOMAIN
 from homeassistant.components.reolink.host import (
     FIRST_ONVIF_LONG_POLL_TIMEOUT,
     FIRST_ONVIF_TIMEOUT,
@@ -26,8 +25,6 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.network import NoURLAvailableError
 from homeassistant.util.aiohttp import MockRequest
-
-from .conftest import TEST_UID
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.components.diagnostics import get_diagnostics_for_config_entry
@@ -47,7 +44,7 @@ async def test_webhook_callback(
     await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.LOADED
 
-    webhook_id = f"{DOMAIN}_{TEST_UID.replace(':', '')}_ONVIF"
+    webhook_id = config_entry.runtime_data.host.webhook_id
 
     signal_all = MagicMock()
     signal_ch = MagicMock()
@@ -276,7 +273,7 @@ async def test_long_poll_stop_when_push(
     # simulate ONVIF push callback
     client = await hass_client_no_auth()
     reolink_connect.ONVIF_event_callback.return_value = None
-    webhook_id = f"{DOMAIN}_{TEST_UID.replace(':', '')}_ONVIF"
+    webhook_id = config_entry.runtime_data.host.webhook_id
     await client.post(f"/api/webhook/{webhook_id}")
 
     freezer.tick(DEVICE_UPDATE_INTERVAL)
@@ -379,7 +376,7 @@ async def test_diagnostics_event_connection(
     # simulate ONVIF push callback
     client = await hass_client_no_auth()
     reolink_connect.ONVIF_event_callback.return_value = None
-    webhook_id = f"{DOMAIN}_{TEST_UID.replace(':', '')}_ONVIF"
+    webhook_id = config_entry.runtime_data.host.webhook_id
     await client.post(f"/api/webhook/{webhook_id}")
 
     diag = await get_diagnostics_for_config_entry(hass, hass_client, config_entry)

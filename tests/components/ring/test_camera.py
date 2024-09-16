@@ -138,25 +138,6 @@ async def test_camera_motion_detection_not_supported(
     )
 
 
-async def test_updates_work(
-    hass: HomeAssistant, mock_ring_client, mock_ring_devices
-) -> None:
-    """Tests the update service works correctly."""
-    await setup_platform(hass, Platform.CAMERA)
-    state = hass.states.get("camera.internal")
-    assert state.attributes.get("motion_detection") is True
-
-    internal_camera_mock = mock_ring_devices.get_device(345678)
-    internal_camera_mock.motion_detection = False
-
-    await hass.services.async_call("ring", "update", {}, blocking=True)
-
-    await hass.async_block_till_done()
-
-    state = hass.states.get("camera.internal")
-    assert state.attributes.get("motion_detection") is not True
-
-
 @pytest.mark.parametrize(
     ("exception_type", "reauth_expected"),
     [

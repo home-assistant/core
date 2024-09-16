@@ -60,7 +60,8 @@ def _create_engine_test(schema_module: str) -> Callable:
     return _create_engine_test
 
 
-@pytest.mark.parametrize("enable_migrate_context_ids", [True])
+@pytest.mark.parametrize("enable_migrate_event_context_ids", [True])
+@pytest.mark.parametrize("enable_migrate_state_context_ids", [True])
 @pytest.mark.parametrize("enable_migrate_event_type_ids", [True])
 @pytest.mark.parametrize("enable_migrate_entity_ids", [True])
 @pytest.mark.parametrize("persistent_database", [True])

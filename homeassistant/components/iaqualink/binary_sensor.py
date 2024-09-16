@@ -5,7 +5,7 @@ from __future__ import annotations
 from iaqualink.device import AqualinkBinarySensor
 
 from homeassistant.components.binary_sensor import (
-    DOMAIN,
+    DOMAIN as BINARY_SENSOR_DOMAIN,
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
@@ -26,7 +26,10 @@ async def async_setup_entry(
 ) -> None:
     """Set up discovered binary sensors."""
     async_add_entities(
-        (HassAqualinkBinarySensor(dev) for dev in hass.data[AQUALINK_DOMAIN][DOMAIN]),
+        (
+            HassAqualinkBinarySensor(dev)
+            for dev in hass.data[AQUALINK_DOMAIN][BINARY_SENSOR_DOMAIN]
+        ),
         True,
     )
 
