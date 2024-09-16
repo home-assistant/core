@@ -107,7 +107,7 @@ class ServerStatusUpdatePlugins(ServerStatusUpdate):
         if self.latest_version == self.installed_version and self.restart_triggered:
             _LOGGER.debug("plugin progress reset %s", self.coordinator.lms.name)
             if callable(self._cancel_update):
-               self._cancel_update()
+                self._cancel_update()
             self.restart_triggered = False
         return self.restart_triggered
 
