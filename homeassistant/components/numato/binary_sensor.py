@@ -39,7 +39,7 @@ def setup_platform(
     if discovery_info is None:
         return
 
-    def read_gpio(device_id, port, level):
+    def read_gpio(device_id: int, port: int, level: bool) -> None:
         """Send signal to entity to have it update state."""
         dispatcher_send(hass, NUMATO_SIGNAL.format(device_id, port), level)
 
