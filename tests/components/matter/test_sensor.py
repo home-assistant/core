@@ -260,6 +260,15 @@ async def test_battery_sensor(
     assert entry
     assert entry.entity_category == EntityCategory.DIAGNOSTIC
 
+
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
+async def test_battery_sensor_voltage(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    matter_client: MagicMock,
+    eve_contact_sensor_node: MatterNode,
+) -> None:
     """Test battery voltage sensor."""
     entity_id = "sensor.eve_door_battery_voltage"
     state = hass.states.get(entity_id)
