@@ -2,6 +2,7 @@
 
 import datetime
 from unittest.mock import AsyncMock, patch
+import zoneinfo
 
 from aioautomower.exceptions import ApiException
 from aioautomower.utils import mower_list_to_dictionary_dataclass
@@ -118,9 +119,10 @@ async def test_sync_clock(
     )
     mocked_method = getattr(mock_automower_client.commands, "set_datetime")
     # datetime(2024, 2, 29, 11, tzinfo=datetime.UTC) is in local time of the tests
-    # datetime(2024, 2, 29, 12)
+    # datetime(2024, 2, 29, 12, tzinfo=zoneinfo.ZoneInfo(key='Europe/Berlin'))
     mocked_method.assert_called_once_with(
-        TEST_MOWER_ID, datetime.datetime(2024, 2, 29, 12)
+        TEST_MOWER_ID,
+        datetime.datetime(2024, 2, 29, 12, tzinfo=zoneinfo.ZoneInfo("Europe/Berlin")),
     )
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
