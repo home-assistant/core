@@ -7,9 +7,9 @@ import socket
 import motionmount
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PORT, Platform
+from homeassistant.const import CONF_HOST, CONF_PIN, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.device_registry import format_mac
 
 from .const import DOMAIN, EMPTY_MAC
@@ -47,6 +47,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady(
             f"Unexpected device found at {host}; expected {entry.unique_id}, found {found_mac}"
         )
+
+    # Check we're properly authenticated or be able to become so
+    if not mm.is_authenticated:
+        if CONF_PIN not in entry.data:
+            raise ConfigEntryAuthFailed("No pin provided")
+        pin = entry.data[CONF_PIN]
+        await mm.authenticate(pin)
+        if not mm.is_authenticated:
+            raise ConfigEntryAuthFailed("Incorrect pin")
 
     # Store an API object for your platforms to access
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = mm
