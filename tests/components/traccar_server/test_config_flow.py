@@ -8,6 +8,8 @@ import pytest
 from pytraccar import TraccarException
 
 from homeassistant import config_entries
+
+# pylint: disable-next=hass-component-root-import
 from homeassistant.components.traccar.device_tracker import PLATFORM_SCHEMA
 from homeassistant.components.traccar_server.const import (
     CONF_CUSTOM_ATTRIBUTES,
