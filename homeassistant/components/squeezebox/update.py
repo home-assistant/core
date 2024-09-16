@@ -74,9 +74,9 @@ class ServerStatusUpdateLMS(ServerStatusUpdate):
         return str(self.coordinator.data[STATUS_QUERY_VERSION])
 
     @property
-    def release_url(self) -> str | None:
+    def release_url(self) -> str:
         """LMS Update info page."""
-        return self.coordinator.lms.generate_image_url("updateinfo.html")
+        return str(self.coordinator.lms.generate_image_url("updateinfo.html"))
 
 
 class ServerStatusUpdatePlugins(ServerStatusUpdate):
