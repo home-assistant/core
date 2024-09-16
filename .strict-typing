@@ -316,6 +316,7 @@ homeassistant.components.minecraft_server.*
 homeassistant.components.mjpeg.*
 homeassistant.components.modbus.*
 homeassistant.components.modem_callerid.*
+homeassistant.components.mold_indicator.*
 homeassistant.components.monzo.*
 homeassistant.components.moon.*
 homeassistant.components.mopeka.*
@@ -414,6 +415,7 @@ homeassistant.components.skybell.*
 homeassistant.components.slack.*
 homeassistant.components.sleepiq.*
 homeassistant.components.smhi.*
+homeassistant.components.smlight.*
 homeassistant.components.snooz.*
 homeassistant.components.solarlog.*
 homeassistant.components.sonarr.*
@@ -479,6 +481,7 @@ homeassistant.components.update.*
 homeassistant.components.uptime.*
 homeassistant.components.uptimerobot.*
 homeassistant.components.usb.*
+homeassistant.components.uvc.*
 homeassistant.components.vacuum.*
 homeassistant.components.vallox.*
 homeassistant.components.valve.*

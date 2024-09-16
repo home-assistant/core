@@ -95,7 +95,6 @@ class HomematicipGenericEntity(Entity):
         self.functional_channel = self.get_current_channel()
         # Marker showing that the HmIP device hase been removed.
         self.hmip_device_removed = False
-        _LOGGER.info("Setting up %s (%s)", self.name, self._device.modelType)
 
     @property
     def device_info(self) -> DeviceInfo | None:
