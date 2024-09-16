@@ -210,7 +210,7 @@ def setup(hass: HomeAssistant, base_config: ConfigType) -> bool:  # noqa: C901
         _LOGGER.debug("Reached _adapter_watchdog")
         event.call_later(hass, WATCHDOG_INTERVAL, _adapter_watchdog_job)
         if not adapter.initialized:
-            _LOGGER.info("Adapter not initialized; Trying to restart")
+            _LOGGER.warning("Adapter not initialized; Trying to restart")
             hass.bus.fire(EVENT_HDMI_CEC_UNAVAILABLE)
             adapter.init()
 
@@ -240,7 +240,7 @@ def setup(hass: HomeAssistant, base_config: ConfigType) -> bool:  # noqa: C901
                     KeyPressCommand(mute_key_mapping[att], dst=ADDR_AUDIOSYSTEM)
                 )
                 hdmi_network.send_command(KeyReleaseCommand(dst=ADDR_AUDIOSYSTEM))
-                _LOGGER.info("Audio muted")
+                _LOGGER.debug("Audio muted")
             else:
                 _LOGGER.warning("Unknown command %s", cmd)
 
@@ -307,7 +307,7 @@ def setup(hass: HomeAssistant, base_config: ConfigType) -> bool:  # noqa: C901
         if not isinstance(addr, (PhysicalAddress,)):
             addr = PhysicalAddress(addr)
         hdmi_network.active_source(addr)
-        _LOGGER.info("Selected %s (%s)", call.data[ATTR_DEVICE], addr)
+        _LOGGER.debug("Selected %s (%s)", call.data[ATTR_DEVICE], addr)
 
     def _update(call: ServiceCall) -> None:
         """Update if device update is needed.
