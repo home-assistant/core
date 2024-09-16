@@ -127,6 +127,7 @@ class AssistSatelliteEntity(entity.Entity):
         """Options passed for text-to-speech."""
         return self._attr_tts_options
 
+    @callback
     @abstractmethod
     def async_get_configuration(self) -> AssistSatelliteConfiguration:
         """Get the current satellite configuration."""
