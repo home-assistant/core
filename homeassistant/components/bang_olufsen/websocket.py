@@ -96,7 +96,16 @@ class BangOlufsenWebsocket(BangOlufsenBase):
         # Try to match the notification type with available WebsocketNotification members
         notification_type = try_parse_enum(WebsocketNotification, notification.value)
 
-        if notification_type is WebsocketNotification.REMOTE_MENU_CHANGED:
+        if notification_type in (
+            WebsocketNotification.BEOLINK_PEERS,
+            WebsocketNotification.BEOLINK_LISTENERS,
+            WebsocketNotification.BEOLINK_AVAILABLE_LISTENERS,
+        ):
+            async_dispatcher_send(
+                self.hass,
+                f"{self._unique_id}_{WebsocketNotification.BEOLINK}",
+            )
+        elif notification_type is WebsocketNotification.REMOTE_MENU_CHANGED:
             async_dispatcher_send(
                 self.hass,
                 f"{self._unique_id}_{WebsocketNotification.REMOTE_MENU_CHANGED}",

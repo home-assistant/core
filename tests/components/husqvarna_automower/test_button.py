@@ -33,7 +33,7 @@ from tests.common import (
 )
 
 
-@pytest.mark.freeze_time(datetime.datetime(2024, 2, 29, 11, tzinfo=datetime.UTC))
+@pytest.mark.freeze_time(datetime.datetime(2023, 6, 5, tzinfo=datetime.UTC))
 async def test_button_states_and_commands(
     hass: HomeAssistant,
     mock_automower_client: AsyncMock,
@@ -76,7 +76,7 @@ async def test_button_states_and_commands(
     mocked_method.assert_called_once_with(TEST_MOWER_ID)
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
-    assert state.state == "2024-02-29T11:16:00+00:00"
+    assert state.state == "2023-06-05T00:16:00+00:00"
     getattr(mock_automower_client.commands, "error_confirm").side_effect = ApiException(
         "Test error"
     )

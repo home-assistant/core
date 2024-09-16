@@ -402,10 +402,23 @@ class EsphomeAssistSatellite(
             if supported_format.purpose == MediaPlayerFormatPurpose.ANNOUNCEMENT:
                 self._attr_tts_options = {
                     tts.ATTR_PREFERRED_FORMAT: supported_format.format,
-                    tts.ATTR_PREFERRED_SAMPLE_RATE: supported_format.sample_rate,
-                    tts.ATTR_PREFERRED_SAMPLE_CHANNELS: supported_format.num_channels,
-                    tts.ATTR_PREFERRED_SAMPLE_BYTES: 2,
                 }
+
+                if supported_format.sample_rate > 0:
+                    self._attr_tts_options[tts.ATTR_PREFERRED_SAMPLE_RATE] = (
+                        supported_format.sample_rate
+                    )
+
+                if supported_format.sample_rate > 0:
+                    self._attr_tts_options[tts.ATTR_PREFERRED_SAMPLE_CHANNELS] = (
+                        supported_format.num_channels
+                    )
+
+                if supported_format.sample_rate > 0:
+                    self._attr_tts_options[tts.ATTR_PREFERRED_SAMPLE_BYTES] = (
+                        supported_format.sample_bytes
+                    )
+
                 break
 
     async def _stream_tts_audio(

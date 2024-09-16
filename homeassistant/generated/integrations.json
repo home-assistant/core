@@ -407,6 +407,11 @@
       "config_flow": false,
       "iot_class": "cloud_push"
     },
+    "aps": {
+      "name": "Arizona Public Service (APS)",
+      "integration_type": "virtual",
+      "supported_by": "opower"
+    },
     "apsystems": {
       "name": "APsystems",
       "integration_type": "device",
@@ -5659,7 +5664,7 @@
       "name": "SMLIGHT SLZB",
       "integration_type": "device",
       "config_flow": true,
-      "iot_class": "local_polling"
+      "iot_class": "local_push"
     },
     "sms": {
       "name": "SMS notifications via GSM-modem",
