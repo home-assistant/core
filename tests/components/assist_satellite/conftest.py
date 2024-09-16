@@ -14,7 +14,7 @@ from homeassistant.components.assist_satellite import (
     AssistSatelliteWakeWord,
 )
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.setup import async_setup_component
 
 from tests.common import (
@@ -67,6 +67,7 @@ class MockAssistSatellite(AssistSatelliteEntity):
         """Announce media on a device."""
         self.announcements.append((message, media_id))
 
+    @callback
     def async_get_configuration(self) -> AssistSatelliteConfiguration:
         """Get the current satellite configuration."""
         return self.config
