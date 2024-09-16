@@ -394,6 +394,31 @@ _OBSOLETE_IMPORT: dict[str, list[ObsoleteImportMatch]] = {
     ],
 }
 
+_IGNORE_ROOT_IMPORT = (
+    "assist_pipeline",
+    "automation",
+    "bluetooth",
+    "camera",
+    "cast",
+    "device_automation",
+    "device_tracker",
+    "ffmpeg",
+    "ffmpeg_motion",
+    "google_assistant",
+    "hardware",
+    "homeassistant",
+    "homeassistant_hardware",
+    "http",
+    "manual",
+    "plex",
+    "recorder",
+    "rest",
+    "script",
+    "sensor",
+    "stream",
+    "zha",
+)
+
 
 # Blacklist of imports that should be using the namespace
 @dataclass
@@ -489,8 +514,9 @@ class HassImportsFormatChecker(BaseChecker):
             if module.startswith(f"{self.current_package}."):
                 self.add_message("hass-relative-import", node=node)
                 continue
-            if module.startswith("homeassistant.components.") and module.endswith(
-                "const"
+            if (
+                module.startswith("homeassistant.components.")
+                and len(module.split(".")) > 3
             ):
                 if (
                     self.current_package.startswith("tests.components.")
@@ -546,11 +572,17 @@ class HassImportsFormatChecker(BaseChecker):
                     self.add_message("hass-relative-import", node=node)
                     return
 
-        if node.modname.startswith("homeassistant.components.") and not (
-            self.current_package.startswith("tests.components.")
-            and self.current_package.split(".")[2] == node.modname.split(".")[2]
+        if (
+            node.modname.startswith("homeassistant.components.")
+            and (module_parts := node.modname.split("."))
+            and (module_integration := module_parts[2])
+            and module_integration not in _IGNORE_ROOT_IMPORT
+            and not (
+                self.current_package.startswith("tests.components.")
+                and self.current_package.split(".")[2] == module_integration
+            )
         ):
-            if node.modname.endswith(".const"):
+            if len(module_parts) > 3:
                 self.add_message("hass-component-root-import", node=node)
                 return
             for name, alias in node.names:
