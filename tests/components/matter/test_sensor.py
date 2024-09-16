@@ -263,14 +263,14 @@ async def test_battery_sensor_voltage(
     entity_id = "sensor.eve_door_voltage"
     state = hass.states.get(entity_id)
     assert state
-    assert state.state == "3558"
+    assert state.state == "3.558"
 
-    set_node_attribute(eve_contact_sensor_node, 1, 47, 11, 3558)
+    set_node_attribute(eve_contact_sensor_node, 1, 47, 11, 4234)
     await trigger_subscription_callback(hass, matter_client)
 
     state = hass.states.get(entity_id)
     assert state
-    assert state.state == "3.558"
+    assert state.state == "4.234"
 
     entry = entity_registry.async_get(entity_id)
 
