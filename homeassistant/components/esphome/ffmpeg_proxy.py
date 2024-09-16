@@ -26,11 +26,12 @@ def async_create_proxy_url(
     media_format: str,
     rate: int | None = None,
     channels: int | None = None,
+    width: int | None = None,
 ) -> str:
     """Create a one-time use proxy URL that automatically converts the media."""
     data: FFmpegProxyData = hass.data[DATA_FFMPEG_PROXY]
     return data.async_create_proxy_url(
-        device_id, media_url, media_format, rate, channels
+        device_id, media_url, media_format, rate, channels, width
     )
 
 
@@ -49,6 +50,9 @@ class FFmpegConversionInfo:
 
     channels: int | None
     """Target number of channels (None to keep source channels)."""
+
+    width: int | None
+    """Target sample width in bytes (None to keep source width)."""
 
 
 @dataclass
@@ -70,11 +74,12 @@ class FFmpegProxyData:
         media_format: str,
         rate: int | None,
         channels: int | None,
+        width: int | None,
     ) -> str:
         """Create a one-time use proxy URL that automatically converts the media."""
         convert_id = secrets.token_urlsafe(16)
         self.conversions[device_id][convert_id] = FFmpegConversionInfo(
-            media_url, media_format, rate, channels
+            media_url, media_format, rate, channels, width
         )
         _LOGGER.debug("Media URL allowed by proxy: %s", media_url)
 
@@ -135,6 +140,10 @@ class FFmpegConvertResponse(web.StreamResponse):
         if self.convert_info.channels is not None:
             # Number of channels
             command_args.extend(["-ac", str(self.convert_info.channels)])
+
+        if self.convert_info.width == 2:
+            # 16-bit samples
+            command_args.extend(["-sample_fmt", "s16"])
 
         # Output to stdout
         command_args.append("pipe:")
