@@ -62,14 +62,15 @@ async def _get_hass_network_properties(hass: HomeAssistant) -> dict:
         f"http://{announce_addresses[0]}:{port}" if announce_addresses else None
     )
 
-    result: dict[str, Any] = {}
-    result["instance_name"] = instance_name
-    result["local_ip_port"] = local_ip_port
-    result["local_url"] = local_url
-    result["external_url"] = external_url
-    result["internal_url"] = internal_url
-    result["cloud_url"] = cloud_url
-    result["certificate_fingerprint"] = certificate_fingerprint
+    result: dict[str, Any] = {
+        "instance_name": instance_name,
+        "local_ip_port": local_ip_port,
+        "local_url": local_url,
+        "external_url": external_url,
+        "internal_url": internal_url,
+        "cloud_url": cloud_url,
+        "certificate_fingerprint": certificate_fingerprint,
+    }
 
     # Return without none values.
     return {k: v for k, v in result.items() if v is not None}
@@ -126,7 +127,7 @@ async def websocket_domika_update_app_session(
     )
     if not app_compatible:
         LOGGER.error("Update_app_session unsupported app or platform")
-        result = {"error": "unsupported app or platform"}
+        connection.send_error(msg_id, "unsupported", "unsupported app or platform")
     else:
         push_token_hash = cast(str, msg.get("push_token_hash") or "")
         app_session_id: uuid.UUID | None = None
@@ -164,8 +165,8 @@ async def websocket_domika_update_app_session(
                 "old_app_session_ids": str(app_session_id),
             }
 
-    connection.send_result(msg_id, result)
-    LOGGER.debug("Update_app_session msg_id=%s data=%s", msg_id, result)
+        connection.send_result(msg_id, result)
+        LOGGER.debug("Update_app_session msg_id=%s data=%s", msg_id, result)
 
 
 async def _check_push_token(

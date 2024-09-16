@@ -14,6 +14,7 @@ from domika_ha_framework.push_data.models import (
 import domika_ha_framework.subscription.flow as subscription_flow
 from domika_ha_framework.utils import flatten_json
 
+from homeassistant.const import ATTR_DEVICE_CLASS
 from homeassistant.core import (
     CompressedState,
     Event,
@@ -22,7 +23,12 @@ from homeassistant.core import (
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from ..const import LOGGER, PUSH_DELAY_DEFAULT, PUSH_DELAY_FOR_DOMAIN
+from ..const import (
+    CRITICAL_PUSH_ALERT_STRINGS,
+    LOGGER,
+    PUSH_DELAY_DEFAULT,
+    PUSH_DELAY_FOR_DOMAIN,
+)
 from ..critical_sensor import service as critical_sensor_service
 from ..critical_sensor.enums import NotificationType
 
@@ -78,6 +84,10 @@ async def register_event(
         and ("s", "on") in attributes
     )
 
+    critical_alert_payload = (
+        _get_critical_alert_payload(hass, entity_id) if critical_push_needed else {}
+    )
+
     try:
         async with database_core.get_session() as session:
             # Get application id's associated with attributes.
@@ -104,6 +114,7 @@ async def register_event(
                 async_get_clientsession(hass),
                 push_data=events,
                 critical_push_needed=critical_push_needed,
+                critical_alert_payload=critical_alert_payload,
             )
             if LOGGER.isEnabledFor(logging.DEBUG):
                 _log_pushed_events(pushed_events)
@@ -113,6 +124,22 @@ async def register_event(
             entity_id,
             attributes,
         )
+
+
+def _get_critical_alert_payload(hass: HomeAssistant, entity_id: str) -> dict:
+    """Create the payload for a critical push."""
+    alert_title = CRITICAL_PUSH_ALERT_STRINGS.get("default", "")
+    alert_body = hass.config.location_name
+
+    entity = hass.states.get(entity_id)
+    if entity:
+        entity_class = entity.attributes.get(ATTR_DEVICE_CLASS)
+        if entity_class:
+            alert_title = CRITICAL_PUSH_ALERT_STRINGS.get(entity_class, "")
+
+        alert_body = f"{entity.name}, " + alert_body
+
+    return {"title-loc-key": alert_title, "body": alert_body}
 
 
 async def push_registered_events(hass: HomeAssistant) -> None:
