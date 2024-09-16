@@ -49,9 +49,6 @@ class MotionMountExtension(MotionMountEntity, NumberEntity):
 
     async def async_set_native_value(self, value: float) -> None:
         """Set the new value for extension."""
-        if not await self._ensure_connected():
-            return
-
         try:
             await self.mm.set_extension(int(value))
         except (TimeoutError, socket.gaierror) as ex:
@@ -78,9 +75,6 @@ class MotionMountTurn(MotionMountEntity, NumberEntity):
 
     async def async_set_native_value(self, value: float) -> None:
         """Set the new value for turn."""
-        if not await self._ensure_connected():
-            return
-
         try:
             await self.mm.set_turn(int(value * -1))
         except (TimeoutError, socket.gaierror) as ex:

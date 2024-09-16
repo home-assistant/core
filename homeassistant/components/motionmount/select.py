@@ -87,9 +87,6 @@ class MotionMountPresets(MotionMountEntity, SelectEntity):
 
     async def async_select_option(self, option: str) -> None:
         """Set the new option."""
-        if not await self._ensure_connected():
-            return
-
         index = int(option[:1])
         try:
             await self.mm.go_to_preset(index)
