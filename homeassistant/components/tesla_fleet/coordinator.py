@@ -231,12 +231,11 @@ class TeslaFleetEnergySitePastCoordinator(DataUpdateCoordinator[dict[str, Any]])
         }
         for time_entity in data["time_series"]:
             formatted_data["grid_in"] += time_entity["grid_energy_imported"]
-            formatted_data["grid_out"] = (
-                formatted_data["grid_out"]
-                + time_entity["grid_energy_exported_from_solar"]
+            formatted_data["grid_out"] += (
+            time_entity["grid_energy_exported_from_solar"]
+            + time_entity["grid_energy_exported_from_generator"]
+            + time_entity["grid_energy_exported_from_battery"]
             )
-            +time_entity["grid_energy_exported_from_generator"]
-            +time_entity["grid_energy_exported_from_battery"]
             formatted_data["solar_production"] = (
                 formatted_data["solar_production"]
                 + time_entity["solar_energy_exported"]
