@@ -15,7 +15,6 @@ _LOGGER = logging.getLogger(__name__)
 SWITCH_TYPES: tuple[SwitchEntityDescription, ...] = (
     SwitchEntityDescription(
         key="hubState",
-        translation_key="hub_state",
     ),
 )
 

@@ -39,11 +39,6 @@
       "red_ox": {
         "name": "Red OX"
       }
-    },
-    "switch": {
-      "hub_state": {
-        "name": "state"
-      }
     }
   },
   "issues": {

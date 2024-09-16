@@ -26,6 +26,10 @@ class FliprEntity(CoordinatorEntity[BaseDataUpdateCoordinator]):
         self.entity_description = description
         self._attr_unique_id = f"{self.device_id}-{description.key}"
 
+        # Flipr hub entity is the default feature of the hub so there is no need to name it.
+        if is_flipr_hub:
+            self._attr_name = None
+
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self.device_id)},
             manufacturer=MANUFACTURER,

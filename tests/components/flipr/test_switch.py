@@ -18,7 +18,7 @@ from .conftest import MOCK_HUB_STATE_OFF
 
 from tests.common import MockConfigEntry
 
-SWITCH_ENTITY_ID = "switch.flipr_hub_myhubid_state"
+SWITCH_ENTITY_ID = "switch.flipr_hub_myhubid"
 
 
 async def test_entities(
