@@ -908,7 +908,6 @@ class SensorExtraStoredData(ExtraStoredData):
         return cls(native_value, native_unit_of_measurement)
 
 
-# pylint: disable-next=hass-enforce-class-module
 class RestoreSensor(SensorEntity, RestoreEntity):
     """Mixin class for restoring previous sensor state."""
 

@@ -1021,7 +1021,6 @@ async def async_get_forecasts_service(
     }
 
 
-# pylint: disable-next=hass-enforce-class-module
 class CoordinatorWeatherEntity(
     CoordinatorEntity[_ObservationUpdateCoordinatorT],
     WeatherEntity,
@@ -1193,7 +1192,6 @@ class CoordinatorWeatherEntity(
         return await self._async_forecast("twice_daily")
 
 
-# pylint: disable-next=hass-enforce-class-module
 class SingleCoordinatorWeatherEntity(
     CoordinatorWeatherEntity[
         _ObservationUpdateCoordinatorT, TimestampDataUpdateCoordinator[None]
