@@ -141,7 +141,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         """Stop the KIRA receiver."""
         for receiver in hass.data[DOMAIN][CONF_SENSOR].values():
             receiver.stop()
-        _LOGGER.info("Terminated receivers")
+        _LOGGER.debug("Terminated receivers")
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, _stop_kira)
 
