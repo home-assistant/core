@@ -73,6 +73,11 @@ class ServerStatusUpdateLMS(ServerStatusUpdate):
         """LMS Status directly from coordinator data."""
         return str(self.coordinator.data[STATUS_QUERY_VERSION])
 
+    @property
+    def release_url(self) -> str | None:
+        """LMS Update info page."""
+        return self.coordinator.lms.generate_image_url("updateinfo.html")
+
 
 class ServerStatusUpdatePlugins(ServerStatusUpdate):
     """LMS Plugings update sensor from LMS via cooridnatior."""
