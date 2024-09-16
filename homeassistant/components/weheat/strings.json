@@ -40,6 +40,40 @@
       },
       "cop": {
         "name": "COP"
+      },
+      "water_inlet_temperature": {
+        "name": "Water inlet temperature"
+      },
+      "water_outlet_temperature": {
+        "name": "Water outlet temperature"
+      },
+      "ch_inlet_temperature": {
+        "name": "Central heating inlet temperature"
+      },
+      "outside_temperature": {
+        "name": "Outside temperature"
+      },
+      "dhw_top_temperature": {
+        "name": "DHW top temperature"
+      },
+      "dhw_bottom_temperature": {
+        "name": "DHW bottom temperature"
+      },
+      "heat_pump_state": {
+        "state": {
+          "standby": "[%key:common::state::standby%]",
+          "water_check": "Checking water temperature",
+          "heating": "Heating",
+          "cooling": "Cooling",
+          "dhw": "Heating DHW",
+          "legionella_prevention": "Legionella prevention",
+          "defrosting": "Defrosting",
+          "self_test": "Self test",
+          "manual_control": "Manual control"
+        }
+      },
+      "electricity_used": {
+        "name": "Electricity used"
       }
     }
   }

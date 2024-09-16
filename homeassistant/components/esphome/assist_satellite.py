@@ -14,6 +14,7 @@ import wave
 
 from aioesphomeapi import (
     MediaPlayerFormatPurpose,
+    VoiceAssistantAnnounceFinished,
     VoiceAssistantAudioSettings,
     VoiceAssistantCommandFlag,
     VoiceAssistantEventType,
@@ -166,6 +167,7 @@ class EsphomeAssistSatellite(
                     handle_start=self.handle_pipeline_start,
                     handle_stop=self.handle_pipeline_stop,
                     handle_audio=self.handle_audio,
+                    handle_announcement_finished=self.handle_announcement_finished,
                 )
             )
         else:
@@ -174,6 +176,7 @@ class EsphomeAssistSatellite(
                 self.cli.subscribe_voice_assistant(
                     handle_start=self.handle_pipeline_start,
                     handle_stop=self.handle_pipeline_stop,
+                    handle_announcement_finished=self.handle_announcement_finished,
                 )
             )
 
@@ -193,6 +196,10 @@ class EsphomeAssistSatellite(
             self._attr_supported_features |= (
                 assist_satellite.AssistSatelliteEntityFeature.ANNOUNCE
             )
+
+        if not (feature_flags & VoiceAssistantFeature.SPEAKER):
+            # Will use media player for TTS/announcements
+            self._update_tts_format()
 
     async def async_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass."""
@@ -350,9 +357,12 @@ class EsphomeAssistSatellite(
         """Handle incoming audio chunk from API."""
         self._audio_queue.put_nowait(data)
 
-    async def handle_pipeline_stop(self) -> None:
+    async def handle_pipeline_stop(self, abort: bool) -> None:
         """Handle request for pipeline to stop."""
-        self._stop_pipeline()
+        if abort:
+            self._abort_pipeline()
+        else:
+            self._stop_pipeline()
 
     def handle_pipeline_finished(self) -> None:
         """Handle when pipeline has finished running."""
@@ -379,6 +389,12 @@ class EsphomeAssistSatellite(
             timer_info.is_active,
         )
 
+    async def handle_announcement_finished(
+        self, announce_finished: VoiceAssistantAnnounceFinished
+    ) -> None:
+        """Handle announcement finished message (also sent for TTS)."""
+        self.tts_response_finished()
+
     def _update_tts_format(self) -> None:
         """Update the TTS format from the first media player."""
         for supported_format in chain(*self.entry_data.media_player_formats.values()):
@@ -386,10 +402,23 @@ class EsphomeAssistSatellite(
             if supported_format.purpose == MediaPlayerFormatPurpose.ANNOUNCEMENT:
                 self._attr_tts_options = {
                     tts.ATTR_PREFERRED_FORMAT: supported_format.format,
-                    tts.ATTR_PREFERRED_SAMPLE_RATE: supported_format.sample_rate,
-                    tts.ATTR_PREFERRED_SAMPLE_CHANNELS: supported_format.num_channels,
-                    tts.ATTR_PREFERRED_SAMPLE_BYTES: 2,
                 }
+
+                if supported_format.sample_rate > 0:
+                    self._attr_tts_options[tts.ATTR_PREFERRED_SAMPLE_RATE] = (
+                        supported_format.sample_rate
+                    )
+
+                if supported_format.sample_rate > 0:
+                    self._attr_tts_options[tts.ATTR_PREFERRED_SAMPLE_CHANNELS] = (
+                        supported_format.num_channels
+                    )
+
+                if supported_format.sample_rate > 0:
+                    self._attr_tts_options[tts.ATTR_PREFERRED_SAMPLE_BYTES] = (
+                        supported_format.sample_bytes
+                    )
+
                 break
 
     async def _stream_tts_audio(
@@ -466,9 +495,16 @@ class EsphomeAssistSatellite(
             yield chunk
 
     def _stop_pipeline(self) -> None:
-        """Request pipeline to be stopped."""
+        """Request pipeline to be stopped by ending the audio stream and continue processing."""
         self._audio_queue.put_nowait(None)
         _LOGGER.debug("Requested pipeline stop")
+
+    def _abort_pipeline(self) -> None:
+        """Request pipeline to be aborted (no further processing)."""
+        _LOGGER.debug("Requested pipeline abort")
+        self._audio_queue.put_nowait(None)
+        if self._pipeline_task is not None:
+            self._pipeline_task.cancel()
 
     async def _start_udp_server(self) -> int:
         """Start a UDP server on a random free port."""

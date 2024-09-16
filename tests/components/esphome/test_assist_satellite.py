@@ -15,6 +15,7 @@ from aioesphomeapi import (
     MediaPlayerInfo,
     MediaPlayerSupportedFormat,
     UserService,
+    VoiceAssistantAnnounceFinished,
     VoiceAssistantAudioSettings,
     VoiceAssistantCommandFlag,
     VoiceAssistantEventType,
@@ -25,11 +26,13 @@ import pytest
 
 from homeassistant.components import assist_satellite, tts
 from homeassistant.components.assist_pipeline import PipelineEvent, PipelineEventType
-from homeassistant.components.assist_satellite.entity import (
+from homeassistant.components.assist_satellite import (
     AssistSatelliteEntity,
     AssistSatelliteEntityFeature,
-    AssistSatelliteState,
 )
+
+# pylint: disable-next=hass-component-root-import
+from homeassistant.components.assist_satellite.entity import AssistSatelliteState
 from homeassistant.components.esphome import DOMAIN
 from homeassistant.components.esphome.assist_satellite import (
     EsphomeAssistSatellite,
@@ -368,7 +371,7 @@ async def test_pipeline_api_audio(
             )
             mock_tts_streaming_task.cancel.assert_called_once()
             await satellite.handle_audio(b"test-mic")
-            await satellite.handle_pipeline_stop()
+            await satellite.handle_pipeline_stop(abort=False)
             await pipeline_finished.wait()
 
             await tts_finished.wait()
@@ -563,7 +566,7 @@ async def test_pipeline_udp_audio(
             # Wait for audio chunk to be delivered
             await mic_audio_event.wait()
 
-            await satellite.handle_pipeline_stop()
+            await satellite.handle_pipeline_stop(abort=False)
             await pipeline_finished.wait()
 
             await tts_finished.wait()
@@ -601,6 +604,160 @@ async def test_udp_errors() -> None:
     protocol.remote_addr = None
     protocol.send_audio_bytes(b"test")
     protocol.transport.sendto.assert_not_called()
+
+
+async def test_pipeline_media_player(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: Callable[
+        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
+        Awaitable[MockESPHomeDevice],
+    ],
+    mock_wav: bytes,
+) -> None:
+    """Test a complete pipeline run with the TTS response sent to a media player instead of a speaker.
+
+    This test is not as comprehensive as test_pipeline_api_audio since we're
+    mainly focused on tts_response_finished getting automatically called.
+    """
+    conversation_id = "test-conversation-id"
+    media_url = "http://test.url"
+    media_id = "test-media-id"
+
+    mock_device: MockESPHomeDevice = await mock_esphome_device(
+        mock_client=mock_client,
+        entity_info=[],
+        user_service=[],
+        states=[],
+        device_info={
+            "voice_assistant_feature_flags": VoiceAssistantFeature.VOICE_ASSISTANT
+            | VoiceAssistantFeature.API_AUDIO
+        },
+    )
+    await hass.async_block_till_done()
+
+    satellite = get_satellite_entity(hass, mock_device.device_info.mac_address)
+    assert satellite is not None
+
+    async def async_pipeline_from_audio_stream(*args, device_id, **kwargs):
+        stt_stream = kwargs["stt_stream"]
+
+        async for _chunk in stt_stream:
+            break
+
+        event_callback = kwargs["event_callback"]
+
+        # STT
+        event_callback(
+            PipelineEvent(
+                type=PipelineEventType.STT_START,
+                data={"engine": "test-stt-engine", "metadata": {}},
+            )
+        )
+
+        event_callback(
+            PipelineEvent(
+                type=PipelineEventType.STT_END,
+                data={"stt_output": {"text": "test-stt-text"}},
+            )
+        )
+
+        # Intent
+        event_callback(
+            PipelineEvent(
+                type=PipelineEventType.INTENT_START,
+                data={
+                    "engine": "test-intent-engine",
+                    "language": hass.config.language,
+                    "intent_input": "test-intent-text",
+                    "conversation_id": conversation_id,
+                    "device_id": device_id,
+                },
+            )
+        )
+
+        event_callback(
+            PipelineEvent(
+                type=PipelineEventType.INTENT_END,
+                data={"intent_output": {"conversation_id": conversation_id}},
+            )
+        )
+
+        # TTS
+        event_callback(
+            PipelineEvent(
+                type=PipelineEventType.TTS_START,
+                data={
+                    "engine": "test-stt-engine",
+                    "language": hass.config.language,
+                    "voice": "test-voice",
+                    "tts_input": "test-tts-text",
+                },
+            )
+        )
+
+        # Should return mock_wav audio
+        event_callback(
+            PipelineEvent(
+                type=PipelineEventType.TTS_END,
+                data={"tts_output": {"url": media_url, "media_id": media_id}},
+            )
+        )
+
+        event_callback(PipelineEvent(type=PipelineEventType.RUN_END))
+
+    pipeline_finished = asyncio.Event()
+    original_handle_pipeline_finished = satellite.handle_pipeline_finished
+
+    def handle_pipeline_finished():
+        original_handle_pipeline_finished()
+        pipeline_finished.set()
+
+    async def async_get_media_source_audio(
+        hass: HomeAssistant,
+        media_source_id: str,
+    ) -> tuple[str, bytes]:
+        return ("wav", mock_wav)
+
+    tts_finished = asyncio.Event()
+    original_tts_response_finished = satellite.tts_response_finished
+
+    def tts_response_finished():
+        original_tts_response_finished()
+        tts_finished.set()
+
+    with (
+        patch(
+            "homeassistant.components.assist_satellite.entity.async_pipeline_from_audio_stream",
+            new=async_pipeline_from_audio_stream,
+        ),
+        patch(
+            "homeassistant.components.tts.async_get_media_source_audio",
+            new=async_get_media_source_audio,
+        ),
+        patch.object(satellite, "handle_pipeline_finished", handle_pipeline_finished),
+        patch.object(satellite, "tts_response_finished", tts_response_finished),
+    ):
+        async with asyncio.timeout(1):
+            await satellite.handle_pipeline_start(
+                conversation_id=conversation_id,
+                flags=VoiceAssistantCommandFlag(0),  # stt
+                audio_settings=VoiceAssistantAudioSettings(),
+                wake_word_phrase="",
+            )
+
+            await satellite.handle_pipeline_stop(abort=False)
+            await pipeline_finished.wait()
+
+            assert satellite.state == AssistSatelliteState.RESPONDING
+
+            # Will trigger tts_response_finished
+            await mock_device.mock_voice_assistant_handle_announcement_finished(
+                VoiceAssistantAnnounceFinished(success=True)
+            )
+            await tts_finished.wait()
+
+            assert satellite.state == AssistSatelliteState.LISTENING_WAKE_WORD
 
 
 async def test_timer_events(
@@ -851,6 +1008,7 @@ async def test_tts_format_from_media_player(
                         sample_rate=48000,
                         num_channels=2,
                         purpose=MediaPlayerFormatPurpose.DEFAULT,
+                        sample_bytes=2,
                     ),
                     # This is the format that should be used for tts
                     MediaPlayerSupportedFormat(
@@ -858,6 +1016,7 @@ async def test_tts_format_from_media_player(
                         sample_rate=22050,
                         num_channels=1,
                         purpose=MediaPlayerFormatPurpose.ANNOUNCEMENT,
+                        sample_bytes=2,
                     ),
                 ],
             )
@@ -892,6 +1051,73 @@ async def test_tts_format_from_media_player(
             tts.ATTR_PREFERRED_SAMPLE_RATE: 22050,
             tts.ATTR_PREFERRED_SAMPLE_CHANNELS: 1,
             tts.ATTR_PREFERRED_SAMPLE_BYTES: 2,
+        }
+
+
+async def test_tts_minimal_format_from_media_player(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: Callable[
+        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
+        Awaitable[MockESPHomeDevice],
+    ],
+) -> None:
+    """Test text-to-speech format when media player only specifies the codec."""
+    mock_device: MockESPHomeDevice = await mock_esphome_device(
+        mock_client=mock_client,
+        entity_info=[
+            MediaPlayerInfo(
+                object_id="mymedia_player",
+                key=1,
+                name="my media_player",
+                unique_id="my_media_player",
+                supports_pause=True,
+                supported_formats=[
+                    MediaPlayerSupportedFormat(
+                        format="flac",
+                        sample_rate=48000,
+                        num_channels=2,
+                        purpose=MediaPlayerFormatPurpose.DEFAULT,
+                        sample_bytes=2,
+                    ),
+                    # This is the format that should be used for tts
+                    MediaPlayerSupportedFormat(
+                        format="mp3",
+                        sample_rate=0,  # source rate
+                        num_channels=0,  # source channels
+                        purpose=MediaPlayerFormatPurpose.ANNOUNCEMENT,
+                        sample_bytes=0,  # source width
+                    ),
+                ],
+            )
+        ],
+        user_service=[],
+        states=[],
+        device_info={
+            "voice_assistant_feature_flags": VoiceAssistantFeature.VOICE_ASSISTANT
+        },
+    )
+    await hass.async_block_till_done()
+
+    satellite = get_satellite_entity(hass, mock_device.device_info.mac_address)
+    assert satellite is not None
+
+    with patch(
+        "homeassistant.components.assist_satellite.entity.async_pipeline_from_audio_stream",
+    ) as mock_pipeline_from_audio_stream:
+        await satellite.handle_pipeline_start(
+            conversation_id="",
+            flags=0,
+            audio_settings=VoiceAssistantAudioSettings(),
+            wake_word_phrase=None,
+        )
+
+        mock_pipeline_from_audio_stream.assert_called_once()
+        kwargs = mock_pipeline_from_audio_stream.call_args_list[0].kwargs
+
+        # Should be ANNOUNCEMENT format from media player
+        assert kwargs.get("tts_audio_output") == {
+            tts.ATTR_PREFERRED_FORMAT: "mp3",
         }
 
 
@@ -952,6 +1178,7 @@ async def test_announce_message(
     async def send_voice_assistant_announcement_await_response(
         media_id: str, timeout: float, text: str
     ):
+        assert satellite.state == AssistSatelliteState.RESPONDING
         assert media_id == "https://www.home-assistant.io/resolved.mp3"
         assert text == "test-text"
 
@@ -983,6 +1210,7 @@ async def test_announce_message(
                 blocking=True,
             )
             await done.wait()
+            assert satellite.state == AssistSatelliteState.LISTENING_WAKE_WORD
 
 
 async def test_announce_media_id(
@@ -1016,6 +1244,7 @@ async def test_announce_media_id(
     async def send_voice_assistant_announcement_await_response(
         media_id: str, timeout: float, text: str
     ):
+        assert satellite.state == AssistSatelliteState.RESPONDING
         assert media_id == "https://www.home-assistant.io/resolved.mp3"
 
         done.set()
@@ -1038,6 +1267,7 @@ async def test_announce_media_id(
                 blocking=True,
             )
             await done.wait()
+            assert satellite.state == AssistSatelliteState.LISTENING_WAKE_WORD
 
 
 async def test_satellite_unloaded_on_disconnect(
@@ -1073,3 +1303,80 @@ async def test_satellite_unloaded_on_disconnect(
     state = hass.states.get(satellite.entity_id)
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
+
+
+async def test_pipeline_abort(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: Callable[
+        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
+        Awaitable[MockESPHomeDevice],
+    ],
+) -> None:
+    """Test aborting a pipeline (no further processing)."""
+    mock_device: MockESPHomeDevice = await mock_esphome_device(
+        mock_client=mock_client,
+        entity_info=[],
+        user_service=[],
+        states=[],
+        device_info={
+            "voice_assistant_feature_flags": VoiceAssistantFeature.VOICE_ASSISTANT
+            | VoiceAssistantFeature.API_AUDIO
+        },
+    )
+    await hass.async_block_till_done()
+
+    satellite = get_satellite_entity(hass, mock_device.device_info.mac_address)
+    assert satellite is not None
+
+    chunks = []
+    chunk_received = asyncio.Event()
+    pipeline_aborted = asyncio.Event()
+
+    async def async_pipeline_from_audio_stream(*args, **kwargs):
+        stt_stream = kwargs["stt_stream"]
+
+        try:
+            async for chunk in stt_stream:
+                chunks.append(chunk)
+                chunk_received.set()
+        except asyncio.CancelledError:
+            # Aborting cancels the pipeline task
+            pipeline_aborted.set()
+            raise
+
+    pipeline_finished = asyncio.Event()
+    original_handle_pipeline_finished = satellite.handle_pipeline_finished
+
+    def handle_pipeline_finished():
+        original_handle_pipeline_finished()
+        pipeline_finished.set()
+
+    with (
+        patch(
+            "homeassistant.components.assist_satellite.entity.async_pipeline_from_audio_stream",
+            new=async_pipeline_from_audio_stream,
+        ),
+        patch.object(satellite, "handle_pipeline_finished", handle_pipeline_finished),
+    ):
+        async with asyncio.timeout(1):
+            await satellite.handle_pipeline_start(
+                conversation_id="",
+                flags=VoiceAssistantCommandFlag(0),  # stt
+                audio_settings=VoiceAssistantAudioSettings(),
+                wake_word_phrase="",
+            )
+
+            await satellite.handle_audio(b"before-abort")
+            await chunk_received.wait()
+
+            # Abort the pipeline, no further processing
+            await satellite.handle_pipeline_stop(abort=True)
+            await pipeline_aborted.wait()
+
+            # This chunk should not make it into the STT stream
+            await satellite.handle_audio(b"after-abort")
+            await pipeline_finished.wait()
+
+            # Only first chunk
+            assert chunks == [b"before-abort"]
