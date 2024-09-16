@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import datetime
 import logging
 from typing import Any
@@ -80,7 +81,7 @@ class ServerStatusUpdatePlugins(ServerStatusUpdate):
     title: str = SERVER_MODEL + " Plugins"
     installed_version = "current"
     restart_triggered = False
-    _cancel_update = None
+    _cancel_update: Callable | None = None
 
     @property
     def supported_features(self) -> UpdateEntityFeature:
