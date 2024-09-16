@@ -26,11 +26,11 @@ import pytest
 
 from homeassistant.components import assist_satellite, tts
 from homeassistant.components.assist_pipeline import PipelineEvent, PipelineEventType
-from homeassistant.components.assist_satellite.entity import (
+from homeassistant.components.assist_satellite import (
     AssistSatelliteEntity,
     AssistSatelliteEntityFeature,
-    AssistSatelliteState,
 )
+from homeassistant.components.assist_satellite.entity import AssistSatelliteState
 from homeassistant.components.esphome import DOMAIN
 from homeassistant.components.esphome.assist_satellite import (
     EsphomeAssistSatellite,
