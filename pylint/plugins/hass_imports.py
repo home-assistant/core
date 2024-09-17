@@ -394,6 +394,31 @@ _OBSOLETE_IMPORT: dict[str, list[ObsoleteImportMatch]] = {
     ],
 }
 
+_IGNORE_ROOT_IMPORT = (
+    "assist_pipeline",
+    "automation",
+    "bluetooth",
+    "camera",
+    "cast",
+    "device_automation",
+    "device_tracker",
+    "ffmpeg",
+    "ffmpeg_motion",
+    "google_assistant",
+    "hardware",
+    "homeassistant",
+    "homeassistant_hardware",
+    "http",
+    "manual",
+    "plex",
+    "recorder",
+    "rest",
+    "script",
+    "sensor",
+    "stream",
+    "zha",
+)
+
 
 # Blacklist of imports that should be using the namespace
 @dataclass
@@ -460,6 +485,11 @@ class HassImportsFormatChecker(BaseChecker):
             "hass-helper-namespace-import",
             "Used when a helper should be used via the namespace",
         ),
+        "W7426": (
+            "`%s` should be imported using an alias, such as `%s as %s`",
+            "hass-import-constant-alias",
+            "Used when a constant should be imported as an alias",
+        ),
     }
     options = ()
 
@@ -484,8 +514,9 @@ class HassImportsFormatChecker(BaseChecker):
             if module.startswith(f"{self.current_package}."):
                 self.add_message("hass-relative-import", node=node)
                 continue
-            if module.startswith("homeassistant.components.") and module.endswith(
-                "const"
+            if (
+                module.startswith("homeassistant.components.")
+                and len(module.split(".")) > 3
             ):
                 if (
                     self.current_package.startswith("tests.components.")
@@ -540,19 +571,36 @@ class HassImportsFormatChecker(BaseChecker):
                 if node.modname.startswith(f"{root}.components.{current_component}."):
                     self.add_message("hass-relative-import", node=node)
                     return
-        if node.modname.startswith("homeassistant.components.") and (
-            node.modname.endswith(".const")
-            or "const" in {names[0] for names in node.names}
-        ):
-            if (
+
+        if (
+            node.modname.startswith("homeassistant.components.")
+            and (module_parts := node.modname.split("."))
+            and (module_integration := module_parts[2])
+            and module_integration not in _IGNORE_ROOT_IMPORT
+            and not (
                 self.current_package.startswith("tests.components.")
-                and self.current_package.split(".")[2] == node.modname.split(".")[2]
-            ):
-                # Ignore check if the component being tested matches
-                # the component being imported from
+                and self.current_package.split(".")[2] == module_integration
+            )
+        ):
+            if len(module_parts) > 3:
+                self.add_message("hass-component-root-import", node=node)
                 return
-            self.add_message("hass-component-root-import", node=node)
-            return
+            for name, alias in node.names:
+                if name == "const":
+                    self.add_message("hass-component-root-import", node=node)
+                    return
+                if name == "DOMAIN" and (alias is None or alias == "DOMAIN"):
+                    self.add_message(
+                        "hass-import-constant-alias",
+                        node=node,
+                        args=(
+                            "DOMAIN",
+                            "DOMAIN",
+                            f"{node.modname.split(".")[2].upper()}_DOMAIN",
+                        ),
+                    )
+                    return
+
         if obsolete_imports := _OBSOLETE_IMPORT.get(node.modname):
             for name_tuple in node.names:
                 for obsolete_import in obsolete_imports:

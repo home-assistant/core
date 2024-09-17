@@ -59,7 +59,7 @@ async def _migrate_old_unique_ids(
             activity_id = names_to_ids.get(activity_name)
 
             if activity_id is not None:
-                _LOGGER.info(
+                _LOGGER.debug(
                     "Migrating unique_id from [%s] to [%s]",
                     entity_entry.unique_id,
                     activity_id,

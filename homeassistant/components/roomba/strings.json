@@ -87,6 +87,9 @@
       },
       "total_cleaned_area": {
         "name": "Total cleaned area"
+      },
+      "last_mission": {
+        "name": "Last mission start time"
       }
     }
   }

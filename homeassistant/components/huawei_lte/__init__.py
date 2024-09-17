@@ -209,7 +209,7 @@ class Router:
                 else:
                     _LOGGER.debug("failed")
                 return
-            _LOGGER.info(
+            _LOGGER.warning(
                 "%s requires authorization, excluding from future updates", key
             )
             self.subscriptions.pop(key)
@@ -221,7 +221,7 @@ class Router:
                 exc, (ResponseErrorNotSupportedException, ExpatError)
             ) and exc.code not in (-1, 100006):
                 raise
-            _LOGGER.info(
+            _LOGGER.warning(
                 "%s apparently not supported by device, excluding from future updates",
                 key,
             )
@@ -559,12 +559,12 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         if isinstance(recipient, str):
             options[CONF_RECIPIENT] = [x.strip() for x in recipient.split(",")]
         hass.config_entries.async_update_entry(config_entry, options=options, version=2)
-        _LOGGER.info("Migrated config entry to version %d", config_entry.version)
+        _LOGGER.debug("Migrated config entry to version %d", config_entry.version)
     if config_entry.version == 2:
         data = dict(config_entry.data)
         data[CONF_MAC] = []
         hass.config_entries.async_update_entry(config_entry, data=data, version=3)
-        _LOGGER.info("Migrated config entry to version %d", config_entry.version)
+        _LOGGER.debug("Migrated config entry to version %d", config_entry.version)
     # There can be no longer needed *_from_yaml data and options things left behind
     # from pre-2022.4ish; they can be removed while at it when/if we eventually bump and
     # migrate to version > 3 for some other reason.

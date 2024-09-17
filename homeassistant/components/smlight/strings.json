@@ -46,6 +46,9 @@
       "ethernet": {
         "name": "Ethernet"
       },
+      "internet": {
+        "name": "Internet"
+      },
       "wifi": {
         "name": "Wi-Fi"
       }
@@ -68,6 +71,29 @@
       },
       "socket_uptime": {
         "name": "Zigbee uptime"
+      },
+      "device_mode": {
+        "name": "Connection mode",
+        "state": {
+          "eth": "Ethernet",
+          "wifi": "Wi-Fi",
+          "usb": "USB"
+        }
+      },
+      "firmware_channel": {
+        "name": "Firmware channel",
+        "state": {
+          "dev": "Development",
+          "release": "Stable"
+        }
+      },
+      "zigbee_type": {
+        "name": "Zigbee type",
+        "state": {
+          "coordinator": "Coordinator",
+          "router": "Router",
+          "thread": "Thread"
+        }
       }
     },
     "button": {
@@ -90,6 +116,14 @@
       },
       "night_mode": {
         "name": "LED night mode"
+      }
+    },
+    "update": {
+      "core_update": {
+        "name": "Core firmware"
+      },
+      "zigbee_update": {
+        "name": "Zigbee firmware"
       }
     }
   },

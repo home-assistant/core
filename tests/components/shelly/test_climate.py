@@ -609,23 +609,25 @@ async def test_rpc_climate_hvac_mode(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test climate hvac mode service."""
+    entity_id = "climate.test_name_thermostat_0"
+
     await init_integration(hass, 2, model=MODEL_WALL_DISPLAY)
 
-    state = hass.states.get(ENTITY_ID)
+    state = hass.states.get(entity_id)
     assert state.state == HVACMode.HEAT
     assert state.attributes[ATTR_TEMPERATURE] == 23
     assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 12.3
     assert state.attributes[ATTR_HVAC_ACTION] == HVACAction.HEATING
     assert state.attributes[ATTR_CURRENT_HUMIDITY] == 44.4
 
-    entry = entity_registry.async_get(ENTITY_ID)
+    entry = entity_registry.async_get(entity_id)
     assert entry
     assert entry.unique_id == "123456789ABC-thermostat:0"
 
     monkeypatch.setitem(mock_rpc_device.status["thermostat:0"], "output", False)
     mock_rpc_device.mock_update()
 
-    state = hass.states.get(ENTITY_ID)
+    state = hass.states.get(entity_id)
     assert state.attributes[ATTR_HVAC_ACTION] == HVACAction.IDLE
     assert state.attributes[ATTR_CURRENT_HUMIDITY] == 44.4
 
@@ -633,7 +635,7 @@ async def test_rpc_climate_hvac_mode(
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HVAC_MODE: HVACMode.OFF},
+        {ATTR_ENTITY_ID: entity_id, ATTR_HVAC_MODE: HVACMode.OFF},
         blocking=True,
     )
     mock_rpc_device.mock_update()
@@ -641,7 +643,7 @@ async def test_rpc_climate_hvac_mode(
     mock_rpc_device.call_rpc.assert_called_once_with(
         "Thermostat.SetConfig", {"config": {"id": 0, "enable": False}}
     )
-    state = hass.states.get(ENTITY_ID)
+    state = hass.states.get(entity_id)
     assert state.state == HVACMode.OFF
 
 
@@ -652,20 +654,21 @@ async def test_rpc_climate_without_humidity(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test climate entity without the humidity value."""
+    entity_id = "climate.test_name_thermostat_0"
     new_status = deepcopy(mock_rpc_device.status)
     new_status.pop("humidity:0")
     monkeypatch.setattr(mock_rpc_device, "status", new_status)
 
     await init_integration(hass, 2, model=MODEL_WALL_DISPLAY)
 
-    state = hass.states.get(ENTITY_ID)
+    state = hass.states.get(entity_id)
     assert state.state == HVACMode.HEAT
     assert state.attributes[ATTR_TEMPERATURE] == 23
     assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 12.3
     assert state.attributes[ATTR_HVAC_ACTION] == HVACAction.HEATING
     assert ATTR_CURRENT_HUMIDITY not in state.attributes
 
-    entry = entity_registry.async_get(ENTITY_ID)
+    entry = entity_registry.async_get(entity_id)
     assert entry
     assert entry.unique_id == "123456789ABC-thermostat:0"
 
@@ -674,9 +677,11 @@ async def test_rpc_climate_set_temperature(
     hass: HomeAssistant, mock_rpc_device: Mock, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Test climate set target temperature."""
+    entity_id = "climate.test_name_thermostat_0"
+
     await init_integration(hass, 2, model=MODEL_WALL_DISPLAY)
 
-    state = hass.states.get(ENTITY_ID)
+    state = hass.states.get(entity_id)
     assert state.attributes[ATTR_TEMPERATURE] == 23
 
     # test set temperature without target temperature
@@ -684,7 +689,7 @@ async def test_rpc_climate_set_temperature(
         CLIMATE_DOMAIN,
         SERVICE_SET_TEMPERATURE,
         {
-            ATTR_ENTITY_ID: ENTITY_ID,
+            ATTR_ENTITY_ID: entity_id,
             ATTR_TARGET_TEMP_LOW: 20,
             ATTR_TARGET_TEMP_HIGH: 30,
         },
@@ -696,7 +701,7 @@ async def test_rpc_climate_set_temperature(
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 28},
+        {ATTR_ENTITY_ID: entity_id, ATTR_TEMPERATURE: 28},
         blocking=True,
     )
     mock_rpc_device.mock_update()
@@ -704,7 +709,7 @@ async def test_rpc_climate_set_temperature(
     mock_rpc_device.call_rpc.assert_called_once_with(
         "Thermostat.SetConfig", {"config": {"id": 0, "target_C": 28}}
     )
-    state = hass.states.get(ENTITY_ID)
+    state = hass.states.get(entity_id)
     assert state.attributes[ATTR_TEMPERATURE] == 28
 
 
@@ -712,13 +717,14 @@ async def test_rpc_climate_hvac_mode_cool(
     hass: HomeAssistant, mock_rpc_device: Mock, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Test climate with hvac mode cooling."""
+    entity_id = "climate.test_name_thermostat_0"
     new_config = deepcopy(mock_rpc_device.config)
     new_config["thermostat:0"]["type"] = "cooling"
     monkeypatch.setattr(mock_rpc_device, "config", new_config)
 
     await init_integration(hass, 2, model=MODEL_WALL_DISPLAY)
 
-    state = hass.states.get(ENTITY_ID)
+    state = hass.states.get(entity_id)
     assert state.state == HVACMode.COOL
     assert state.attributes[ATTR_HVAC_ACTION] == HVACAction.COOLING
 
@@ -730,7 +736,7 @@ async def test_wall_display_thermostat_mode(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test Wall Display in thermostat mode."""
-    climate_entity_id = "climate.test_name"
+    climate_entity_id = "climate.test_name_thermostat_0"
     switch_entity_id = "switch.test_switch_0"
 
     await init_integration(hass, 2, model=MODEL_WALL_DISPLAY)
@@ -757,7 +763,7 @@ async def test_wall_display_thermostat_mode_external_actuator(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test Wall Display in thermostat mode with an external actuator."""
-    climate_entity_id = "climate.test_name"
+    climate_entity_id = "climate.test_name_thermostat_0"
     switch_entity_id = "switch.test_switch_0"
 
     new_status = deepcopy(mock_rpc_device.status)
