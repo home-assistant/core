@@ -4584,6 +4584,12 @@
       "integration_type": "virtual",
       "supported_by": "opower"
     },
+    "portainer": {
+      "name": "Portainer",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_poll"
+    },
     "philips": {
       "name": "Philips",
       "integrations": {
