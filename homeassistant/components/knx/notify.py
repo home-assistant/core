@@ -18,8 +18,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import DATA_KNX_CONFIG, DOMAIN, KNX_ADDRESS
-from .knx_entity import KnxEntity
+from . import KNXModule
+from .const import DOMAIN, KNX_ADDRESS, KNX_MODULE_KEY
+from .entity import KnxYamlEntity
 
 
 async def async_get_service(
@@ -31,8 +32,9 @@ async def async_get_service(
     if discovery_info is None:
         return None
 
-    if platform_config := hass.data[DATA_KNX_CONFIG].get(Platform.NOTIFY):
-        xknx: XKNX = hass.data[DOMAIN].xknx
+    knx_module = hass.data[KNX_MODULE_KEY]
+    if platform_config := knx_module.config_yaml.get(Platform.NOTIFY):
+        xknx: XKNX = hass.data[KNX_MODULE_KEY].xknx
 
         notification_devices = [
             _create_notification_instance(xknx, device_config)
@@ -44,7 +46,7 @@ async def async_get_service(
 
 
 class KNXNotificationService(BaseNotificationService):
-    """Implement demo notification service."""
+    """Implement notification service."""
 
     def __init__(self, devices: list[XknxNotification]) -> None:
         """Initialize the service."""
@@ -86,10 +88,10 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up notify(s) for KNX platform."""
-    xknx: XKNX = hass.data[DOMAIN].xknx
-    config: list[ConfigType] = hass.data[DATA_KNX_CONFIG][Platform.NOTIFY]
+    knx_module = hass.data[KNX_MODULE_KEY]
+    config: list[ConfigType] = knx_module.config_yaml[Platform.NOTIFY]
 
-    async_add_entities(KNXNotify(xknx, entity_config) for entity_config in config)
+    async_add_entities(KNXNotify(knx_module, entity_config) for entity_config in config)
 
 
 def _create_notification_instance(xknx: XKNX, config: ConfigType) -> XknxNotification:
@@ -102,14 +104,17 @@ def _create_notification_instance(xknx: XKNX, config: ConfigType) -> XknxNotific
     )
 
 
-class KNXNotify(KnxEntity, NotifyEntity):
+class KNXNotify(KnxYamlEntity, NotifyEntity):
     """Representation of a KNX notification entity."""
 
     _device: XknxNotification
 
-    def __init__(self, xknx: XKNX, config: ConfigType) -> None:
+    def __init__(self, knx_module: KNXModule, config: ConfigType) -> None:
         """Initialize a KNX notification."""
-        super().__init__(_create_notification_instance(xknx, config))
+        super().__init__(
+            knx_module=knx_module,
+            device=_create_notification_instance(knx_module.xknx, config),
+        )
         self._attr_entity_category = config.get(CONF_ENTITY_CATEGORY)
         self._attr_unique_id = str(self._device.remote_value.group_address)
 

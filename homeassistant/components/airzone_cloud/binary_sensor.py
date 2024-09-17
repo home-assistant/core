@@ -161,6 +161,11 @@ class AirzoneBinarySensor(AirzoneEntity, BinarySensorEntity):
 
     entity_description: AirzoneBinarySensorEntityDescription
 
+    @property
+    def available(self) -> bool:
+        """Return Airzone Cloud binary sensor availability."""
+        return super().available and self.is_on is not None
+
     @callback
     def _handle_coordinator_update(self) -> None:
         """Update attributes when the coordinator updates."""

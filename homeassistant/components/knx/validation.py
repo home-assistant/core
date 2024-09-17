@@ -1,6 +1,7 @@
 """Validation helpers for KNX config schemas."""
 
 from collections.abc import Callable
+from enum import Enum
 import ipaddress
 from typing import Any
 
@@ -104,3 +105,36 @@ sync_state_validator = vol.Any(
     cv.boolean,
     cv.matches_regex(r"^(init|expire|every)( \d*)?$"),
 )
+
+
+def backwards_compatible_xknx_climate_enum_member(enumClass: type[Enum]) -> vol.All:
+    """Transform a string to an enum member.
+
+    Backwards compatible with member names of xknx 2.x climate DPT Enums
+    due to unintentional breaking change in HA 2024.8.
+    """
+
+    def _string_transform(value: Any) -> str:
+        """Upper and slugify string and substitute old member names.
+
+        Previously this was checked against Enum values instead of names. These
+        looked like `FAN_ONLY = "Fan only"`, therefore the upper & replace part.
+        """
+        if not isinstance(value, str):
+            raise vol.Invalid("value should be a string")
+        name = value.upper().replace(" ", "_")
+        match name:
+            case "NIGHT":
+                return "ECONOMY"
+            case "FROST_PROTECTION":
+                return "BUILDING_PROTECTION"
+            case "DRY":
+                return "DEHUMIDIFICATION"
+            case _:
+                return name
+
+    return vol.All(
+        _string_transform,
+        vol.In(enumClass.__members__),
+        enumClass.__getitem__,
+    )

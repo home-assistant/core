@@ -13,15 +13,12 @@ from homeassistant.components.renault.const import (
     CONF_LOCALE,
     DOMAIN,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import aiohttp_client
 
-from .const import MOCK_CONFIG
-
-from tests.common import load_fixture
+from tests.common import MockConfigEntry, load_fixture
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
@@ -220,19 +217,11 @@ async def test_config_flow_duplicate(
     assert len(mock_setup_entry.mock_calls) == 0
 
 
-async def test_reauth(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+async def test_reauth(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
     """Test the start of the config flow."""
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": config_entry.entry_id,
-            "unique_id": config_entry.unique_id,
-        },
-        data=MOCK_CONFIG,
-    )
+    result = await config_entry.start_reauth_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
     assert result["description_placeholders"] == {CONF_USERNAME: "email@test.com"}
