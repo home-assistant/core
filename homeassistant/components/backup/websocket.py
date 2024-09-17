@@ -17,7 +17,7 @@ from .manager import BackupManager
 def async_register_websocket_handlers(hass: HomeAssistant, with_hassio: bool) -> None:
     """Register websocket commands."""
     websocket_api.async_register_command(hass, backup_agents_download)
-    websocket_api.async_register_command(hass, backup_agents_list)
+    websocket_api.async_register_command(hass, backup_agents_info)
     websocket_api.async_register_command(hass, backup_agents_list_synced_backups)
 
     if with_hassio:
@@ -129,17 +129,23 @@ async def handle_backup_end(
 
 
 @websocket_api.require_admin
-@websocket_api.websocket_command({vol.Required("type"): "backup/agents/list"})
+@websocket_api.websocket_command({vol.Required("type"): "backup/agents/info"})
 @websocket_api.async_response
-async def backup_agents_list(
+async def backup_agents_info(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
     msg: dict[str, Any],
 ) -> None:
-    """List backup agents."""
+    """Backup agents info."""
     manager: BackupManager = hass.data[DOMAIN]
     await manager.load_platforms()
-    connection.send_result(msg["id"], list(manager.sync_agents))
+    connection.send_result(
+        msg["id"],
+        {
+            "agents": list(manager.sync_agents),
+            "syncing": manager.syncing,
+        },
+    )
 
 
 @websocket_api.require_admin
