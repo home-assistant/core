@@ -4,12 +4,11 @@ from __future__ import annotations
 
 from typing import Any
 
-from libaxion_dmx import AxionDmxApi
+from libaxion_dmx import AxionDmxApi, AxionDmxAuthError, AxionDmxConnectionError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import selector
 
 from .const import _LOGGER, CONF_CHANNEL, CONF_LIGHT_TYPE, DOMAIN
@@ -22,13 +21,13 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_LIGHT_TYPE): selector.SelectSelector(
             selector.SelectSelectorConfig(
                 options=[
-                    selector.SelectOptionDict(value="White", label="White"),
+                    selector.SelectOptionDict(value="white", label="White"),
                     selector.SelectOptionDict(
-                        value="Tunable White", label="Tunable White"
+                        value="tunable_white", label="Tunable White"
                     ),
-                    selector.SelectOptionDict(value="RGB", label="RGB"),
-                    selector.SelectOptionDict(value="RGBW", label="RGBW"),
-                    selector.SelectOptionDict(value="RGBWW", label="RGBWW"),
+                    selector.SelectOptionDict(value="rgb", label="RGB"),
+                    selector.SelectOptionDict(value="rgbw", label="RGBW"),
+                    selector.SelectOptionDict(value="rgbww", label="RGBWW"),
                 ],
                 translation_key="light_type",
                 multiple=False,
@@ -53,11 +52,10 @@ class AxionConfigFlow(ConfigFlow, domain=DOMAIN):
             api = AxionDmxApi(user_input[CONF_HOST], user_input[CONF_PASSWORD])
             # Validate the user input and authenticate
             try:
-                if not await api.authenticate():
-                    raise InvalidAuth  # noqa: TRY301
-            except CannotConnect:
+                await api.authenticate()
+            except AxionDmxConnectionError:
                 errors["base"] = "cannot_connect"
-            except InvalidAuth:
+            except AxionDmxAuthError:
                 errors["base"] = "invalid_auth"
             except Exception as e:  # noqa: BLE001
                 _LOGGER.exception("Unexpected exception: %s", e)
@@ -72,11 +70,3 @@ class AxionConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
-
-
-class CannotConnect(HomeAssistantError):
-    """Error to indicate we cannot connect."""
-
-
-class InvalidAuth(HomeAssistantError):
-    """Error to indicate there is invalid auth."""

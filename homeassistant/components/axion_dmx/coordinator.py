@@ -30,8 +30,6 @@ class AxionDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Fetch data from the API endpoint."""
         try:
             # Return data in dictionary form
-            return {
-                "updated_value": await self.api.get_level(self.channel),
-            }
+            return await self.api.get_level(self.channel)
         except RequestException as err:
             raise UpdateFailed("Error communicating with API") from err
