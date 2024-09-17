@@ -87,7 +87,7 @@ class SyncedBackup(BaseBackup):
     id: str
 
 
-class BackupPlatformPrePostProtocol(Protocol):
+class BackupPlatformProtocol(Protocol):
     """Define the format that backup platforms can have."""
 
     async def async_pre_backup(self, hass: HomeAssistant) -> None:
@@ -118,7 +118,7 @@ class BackupManager:
         self.backup_dir = Path(hass.config.path("backups"))
         self.backing_up = False
         self.backups: dict[str, Backup] = {}
-        self.platforms: dict[str, BackupPlatformPrePostProtocol] = {}
+        self.platforms: dict[str, BackupPlatformProtocol] = {}
         self.sync_agents: dict[str, BackupSyncAgent] = {}
         self.syncing = False
         self.loaded_backups = False
@@ -129,7 +129,7 @@ class BackupManager:
         self,
         hass: HomeAssistant,
         integration_domain: str,
-        platform: BackupPlatformPrePostProtocol,
+        platform: BackupPlatformProtocol,
     ) -> None:
         """Add a platform to the backup manager."""
         if not hasattr(platform, "async_pre_backup") or not hasattr(
