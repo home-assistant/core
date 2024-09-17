@@ -23,7 +23,7 @@ from .const import (
     DiscoveryInfo,
     SensorType,
 )
-from .device import MySensorsChildEntity, get_mysensors_devices
+from .entity import MySensorsChildEntity, get_mysensors_devices
 from .gateway import finish_setup, gw_stop, setup_gateway
 
 _LOGGER = logging.getLogger(__name__)
