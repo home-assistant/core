@@ -107,6 +107,7 @@ class CameraEntityFeature(IntFlag):
 
     ON_OFF = 1
     STREAM = 2
+    MOTION_ON_OFF = 4
 
 
 # These SUPPORT_* constants are deprecated as of Home Assistant 2022.5.
@@ -731,7 +732,11 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         if brand := self.brand:
             attrs["brand"] = brand
 
-        if motion_detection_enabled := self.motion_detection_enabled:
+        if (
+            (motion_detection_enabled := self.motion_detection_enabled)
+            or self.supported_features & CameraEntityFeature.MOTION_ON_OFF
+            == CameraEntityFeature.MOTION_ON_OFF
+        ):
             attrs["motion_detection"] = motion_detection_enabled
 
         if frontend_stream_type := self.frontend_stream_type:

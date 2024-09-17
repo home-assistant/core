@@ -11,7 +11,7 @@ from haffmpeg.camera import CameraMjpeg
 from ring_doorbell import RingDoorBell
 
 from homeassistant.components import ffmpeg
-from homeassistant.components.camera import Camera
+from homeassistant.components.camera import Camera, CameraEntityFeature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -69,6 +69,9 @@ class RingCam(RingEntity[RingDoorBell], Camera):
         self._attr_unique_id = str(device.id)
         if device.has_capability(MOTION_DETECTION_CAPABILITY):
             self._attr_motion_detection_enabled = device.motion_detection
+            self._attr_supported_features: CameraEntityFeature = (
+                CameraEntityFeature.MOTION_ON_OFF
+            )
 
     @callback
     def _handle_coordinator_update(self) -> None:
