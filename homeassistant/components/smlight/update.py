@@ -128,6 +128,12 @@ class SmUpdateEntity(SmEntity, UpdateEntity):
                 SmEvents.FW_UPD_done, self._update_finished
             )
         )
+        if self.coordinator.legacy_api == 1:
+            self._unload.append(
+                self.coordinator.client.sse.register_callback(
+                    SmEvents.ESP_UPD_done, self._update_finished
+                )
+            )
         self._unload.append(
             self.coordinator.client.sse.register_callback(
                 SmEvents.ZB_FW_err, self._update_failed
