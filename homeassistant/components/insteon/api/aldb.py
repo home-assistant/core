@@ -60,7 +60,7 @@ async def async_reload_and_save_aldb(hass, device):
     await devices.async_save(workdir=hass.config.config_dir)
 
 
-def any_aldb_loading():
+def any_aldb_loading() -> bool:
     """Identify if any All-Link Databases are loading."""
     return any(
         device.aldb.status == ALDBStatus.LOADING for _, device in devices.items()
@@ -314,7 +314,7 @@ async def websocket_notify_on_aldb_status_all(
     """Tell Insteon all ALDBs are loaded."""
 
     @callback
-    def aldb_status_changed(status):
+    def aldb_status_changed(status: ALDBStatus) -> None:
         """Forward ALDB loaded event to websocket."""
 
         forward_data = {

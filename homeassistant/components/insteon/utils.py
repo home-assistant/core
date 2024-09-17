@@ -473,12 +473,12 @@ async def async_get_usb_ports(hass: HomeAssistant) -> dict[str, str]:
     return await hass.async_add_executor_job(get_usb_ports)
 
 
-def compute_device_name(ha_device):
+def compute_device_name(ha_device) -> str:
     """Return the HA device name."""
     return ha_device.name_by_user if ha_device.name_by_user else ha_device.name
 
 
-async def async_device_name(dev_registry, address):
+async def async_device_name(dev_registry: dr.DeviceRegistry, address: Address) -> str:
     """Get the Insteon device name from a device registry id."""
     ha_device = dev_registry.async_get_device(identifiers={(DOMAIN, str(address))})
     if not ha_device:
