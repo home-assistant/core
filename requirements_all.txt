@@ -257,6 +257,9 @@ aioguardian==2022.07.0
 # homeassistant.components.harmony
 aioharmony==0.2.10
 
+# homeassistant.components.hassio
+aiohasupervisor==0.1.0b0
+
 # homeassistant.components.homekit_controller
 aiohomekit==3.2.3
 
@@ -2471,7 +2474,7 @@ pywilight==0.0.74
 pywizlight==0.5.14
 
 # homeassistant.components.wmspro
-pywmspro==0.1.0
+pywmspro==0.2.0
 
 # homeassistant.components.ws66i
 pyws66i==1.1
