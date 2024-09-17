@@ -42,7 +42,6 @@ class EvoDevice(Entity):
         """Initialize the evohome entity."""
         self._evo_device = evo_device
         self._evo_broker = evo_broker
-        self._evo_tcs = evo_broker.tcs
 
         self._device_state_attrs: dict[str, Any] = {}
 
