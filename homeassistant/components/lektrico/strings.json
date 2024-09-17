@@ -22,6 +22,14 @@
     }
   },
   "entity": {
+    "button": {
+      "charge_start": {
+        "name": "Charge start"
+      },
+      "charge_stop": {
+        "name": "Charge stop"
+      }
+    },
     "sensor": {
       "state": {
         "name": "State",

@@ -253,6 +253,33 @@ async def test_battery_sensor(
 
 # This tests needs to be adjusted to remove lingering tasks
 @pytest.mark.parametrize("expected_lingering_tasks", [True])
+async def test_battery_sensor_voltage(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    matter_client: MagicMock,
+    eve_contact_sensor_node: MatterNode,
+) -> None:
+    """Test battery voltage sensor."""
+    entity_id = "sensor.eve_door_voltage"
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "3.558"
+
+    set_node_attribute(eve_contact_sensor_node, 1, 47, 11, 4234)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "4.234"
+
+    entry = entity_registry.async_get(entity_id)
+
+    assert entry
+    assert entry.entity_category == EntityCategory.DIAGNOSTIC
+
+
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_energy_sensors_custom_cluster(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,

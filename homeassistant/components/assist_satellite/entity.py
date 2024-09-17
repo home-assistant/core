@@ -4,6 +4,7 @@ from abc import abstractmethod
 import asyncio
 from collections.abc import AsyncIterable
 import contextlib
+from dataclasses import dataclass
 from enum import StrEnum
 import logging
 import time
@@ -22,13 +23,12 @@ from homeassistant.components.assist_pipeline import (
     vad,
 )
 from homeassistant.components.media_player import async_process_play_media_url
-from homeassistant.components.tts.media_source import (
+from homeassistant.components.tts import (
     generate_media_source_id as tts_generate_media_source_id,
 )
 from homeassistant.core import Context, callback
 from homeassistant.helpers import entity
 from homeassistant.helpers.entity import EntityDescription
-from homeassistant.util import ulid
 
 from .const import AssistSatelliteEntityFeature
 from .errors import AssistSatelliteError, SatelliteBusyError
@@ -56,6 +56,34 @@ class AssistSatelliteState(StrEnum):
 
 class AssistSatelliteEntityDescription(EntityDescription, frozen_or_thawed=True):
     """A class that describes Assist satellite entities."""
+
+
+@dataclass(frozen=True)
+class AssistSatelliteWakeWord:
+    """Available wake word model."""
+
+    id: str
+    """Unique id for wake word model."""
+
+    wake_word: str
+    """Wake word phrase."""
+
+    trained_languages: list[str]
+    """List of languages that the wake word was trained on."""
+
+
+@dataclass
+class AssistSatelliteConfiguration:
+    """Satellite configuration."""
+
+    available_wake_words: list[AssistSatelliteWakeWord]
+    """List of available available wake word models."""
+
+    active_wake_words: list[str]
+    """List of active wake word ids."""
+
+    max_active_wake_words: int
+    """Maximum number of simultaneous wake words allowed (0 for no limit)."""
 
 
 class AssistSatelliteEntity(entity.Entity):
@@ -98,6 +126,17 @@ class AssistSatelliteEntity(entity.Entity):
     def tts_options(self) -> dict[str, Any] | None:
         """Options passed for text-to-speech."""
         return self._attr_tts_options
+
+    @callback
+    @abstractmethod
+    def async_get_configuration(self) -> AssistSatelliteConfiguration:
+        """Get the current satellite configuration."""
+
+    @abstractmethod
+    async def async_set_configuration(
+        self, config: AssistSatelliteConfiguration
+    ) -> None:
+        """Set the current satellite configuration."""
 
     async def async_intercept_wake_word(self) -> str | None:
         """Intercept the next wake word from the satellite.
@@ -240,16 +279,11 @@ class AssistSatelliteEntity(entity.Entity):
         assert self._context is not None
 
         # Reset conversation id if necessary
-        if (self._conversation_id_time is None) or (
+        if self._conversation_id_time and (
             (time.monotonic() - self._conversation_id_time) > _CONVERSATION_TIMEOUT_SEC
         ):
             self._conversation_id = None
-
-        if self._conversation_id is None:
-            self._conversation_id = ulid.ulid()
-
-        # Update timeout
-        self._conversation_id_time = time.monotonic()
+            self._conversation_id_time = None
 
         # Set entity state based on pipeline events
         self._run_has_tts = False
@@ -311,6 +345,11 @@ class AssistSatelliteEntity(entity.Entity):
             self._set_state(AssistSatelliteState.LISTENING_COMMAND)
         elif event.type is PipelineEventType.INTENT_START:
             self._set_state(AssistSatelliteState.PROCESSING)
+        elif event.type is PipelineEventType.INTENT_END:
+            assert event.data is not None
+            # Update timeout
+            self._conversation_id_time = time.monotonic()
+            self._conversation_id = event.data["intent_output"]["conversation_id"]
         elif event.type is PipelineEventType.TTS_START:
             # Wait until tts_response_finished is called to return to waiting state
             self._run_has_tts = True

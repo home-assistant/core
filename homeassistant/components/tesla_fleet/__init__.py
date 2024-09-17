@@ -43,7 +43,9 @@ PLATFORMS: Final = [
     Platform.BINARY_SENSOR,
     Platform.CLIMATE,
     Platform.DEVICE_TRACKER,
+    Platform.SELECT,
     Platform.SENSOR,
+    Platform.SWITCH,
 ]
 
 type TeslaFleetConfigEntry = ConfigEntry[TeslaFleetData]
