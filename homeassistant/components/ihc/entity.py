@@ -11,10 +11,10 @@ from .const import CONF_INFO, DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-class IHCDevice(Entity):
+class IHCEntity(Entity):
     """Base class for all IHC devices.
 
-    All IHC devices have an associated IHC resource. IHCDevice handled the
+    All IHC devices have an associated IHC resource. IHCEntity handled the
     registration of the IHC controller callback when the IHC resource changes.
     Derived classes must implement the on_ihc_change method
     """
