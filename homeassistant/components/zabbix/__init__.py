@@ -84,7 +84,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     entities_filter = convert_include_exclude_filter(conf)
 
     try:
-        zapi = ZabbixAPI(url=url, user=username, password=password)
+        zapi = ZabbixAPI(url=url, username=username, password=password)
         _LOGGER.info("Connected to Zabbix API Version %s", zapi.api_version())
     except ZabbixAPIException as login_exception:
         _LOGGER.error("Unable to login to the Zabbix API: %s", login_exception)
