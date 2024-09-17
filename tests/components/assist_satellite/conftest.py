@@ -8,11 +8,13 @@ import pytest
 from homeassistant.components.assist_pipeline import PipelineEvent
 from homeassistant.components.assist_satellite import (
     DOMAIN as AS_DOMAIN,
+    AssistSatelliteConfiguration,
     AssistSatelliteEntity,
     AssistSatelliteEntityFeature,
+    AssistSatelliteWakeWord,
 )
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.setup import async_setup_component
 
 from tests.common import (
@@ -42,6 +44,20 @@ class MockAssistSatellite(AssistSatelliteEntity):
         """Initialize the mock entity."""
         self.events = []
         self.announcements = []
+        self.config = AssistSatelliteConfiguration(
+            available_wake_words=[
+                AssistSatelliteWakeWord(
+                    id="1234", wake_word="okay nabu", trained_languages=["en"]
+                ),
+                AssistSatelliteWakeWord(
+                    id="5678",
+                    wake_word="hey jarvis",
+                    trained_languages=["en"],
+                ),
+            ],
+            active_wake_words=["1234"],
+            max_active_wake_words=1,
+        )
 
     def on_pipeline_event(self, event: PipelineEvent) -> None:
         """Handle pipeline events."""
@@ -50,6 +66,17 @@ class MockAssistSatellite(AssistSatelliteEntity):
     async def async_announce(self, message: str, media_id: str) -> None:
         """Announce media on a device."""
         self.announcements.append((message, media_id))
+
+    @callback
+    def async_get_configuration(self) -> AssistSatelliteConfiguration:
+        """Get the current satellite configuration."""
+        return self.config
+
+    async def async_set_configuration(
+        self, config: AssistSatelliteConfiguration
+    ) -> None:
+        """Set the current satellite configuration."""
+        self.config = config
 
 
 @pytest.fixture
