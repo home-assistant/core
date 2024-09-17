@@ -6,7 +6,7 @@ from unittest.mock import MagicMock
 import pytest
 
 from homeassistant.components import media_source
-from homeassistant.components.media_player.errors import BrowseError
+from homeassistant.components.media_player import BrowseError
 from homeassistant.components.tts.media_source import (
     MediaSourceOptions,
     generate_media_source_id,
