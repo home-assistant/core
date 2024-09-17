@@ -5,6 +5,7 @@ import logging
 from typing import Any
 
 from ayla_iot_unofficial import AylaAuthError, new_ayla_api
+from ayla_iot_unofficial.fujitsu_consts import FGLAIR_APP_CREDENTIALS
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
@@ -18,7 +19,6 @@ from .const import (
     CONF_REGION_DEFAULT,
     CONF_REGION_EUROPE,
     DOMAIN,
-    FGLAIR_APP_CREDENTIALS,
 )
 
 _LOGGER = logging.getLogger(__name__)

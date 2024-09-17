@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, patch
 
 from ayla_iot_unofficial import AylaAuthError
+from ayla_iot_unofficial.fujitsu_consts import FGLAIR_APP_CREDENTIALS
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
@@ -11,7 +12,6 @@ from homeassistant.components.fujitsu_fglair.const import (
     API_TIMEOUT,
     CONF_REGION,
     DOMAIN,
-    FGLAIR_APP_CREDENTIALS,
 )
 from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
