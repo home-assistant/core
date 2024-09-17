@@ -9,6 +9,7 @@ from typing import Any
 from aioautomower.exceptions import ApiException
 from aioautomower.model import MowerActivities, MowerAttributes, MowerStates
 
+from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -32,6 +33,15 @@ ERROR_STATES = [
     MowerStates.STOPPED,
     MowerStates.OFF,
 ]
+
+
+@callback
+def _check_error_free(mower_attributes: MowerAttributes) -> bool:
+    """Check if the mower has any errors."""
+    return (
+        mower_attributes.mower.state not in ERROR_STATES
+        or mower_attributes.mower.activity not in ERROR_ACTIVITIES
+    )
 
 
 def handle_sending_exception(
@@ -109,7 +119,4 @@ class AutomowerControlEntity(AutomowerAvailableEntity):
     @property
     def available(self) -> bool:
         """Return True if the device is available."""
-        return super().available and (
-            self.mower_attributes.mower.state not in ERROR_STATES
-            or self.mower_attributes.mower.activity not in ERROR_ACTIVITIES
-        )
+        return super().available and _check_error_free(self.mower_attributes)

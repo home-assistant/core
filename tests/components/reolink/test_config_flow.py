@@ -2,8 +2,9 @@
 
 import json
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock, call
+from unittest.mock import ANY, AsyncMock, MagicMock, call
 
+from aiohttp import ClientSession
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from reolink_aio.exceptions import ApiError, CredentialsInvalidError, ReolinkError
@@ -492,14 +493,67 @@ async def test_dhcp_ip_update(
             use_https=TEST_USE_HTTPS,
             protocol=DEFAULT_PROTOCOL,
             timeout=DEFAULT_TIMEOUT,
+            aiohttp_get_session_callback=ANY,
         )
         assert expected_call in reolink_connect_class.call_args_list
 
     for exc_call in reolink_connect_class.call_args_list:
         assert exc_call[0][0] in host_call_list
+        get_session = exc_call[1]["aiohttp_get_session_callback"]
+        assert isinstance(get_session(), ClientSession)
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
     await hass.async_block_till_done()
     assert config_entry.data[CONF_HOST] == expected
+
+
+async def test_reconfig(hass: HomeAssistant, mock_setup_entry: MagicMock) -> None:
+    """Test a reconfiguration flow."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=format_mac(TEST_MAC),
+        data={
+            CONF_HOST: TEST_HOST,
+            CONF_USERNAME: TEST_USERNAME,
+            CONF_PASSWORD: TEST_PASSWORD,
+            CONF_PORT: TEST_PORT,
+            CONF_USE_HTTPS: TEST_USE_HTTPS,
+        },
+        options={
+            CONF_PROTOCOL: DEFAULT_PROTOCOL,
+        },
+        title=TEST_NVR_NAME,
+    )
+    config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_RECONFIGURE,
+            "entry_id": config_entry.entry_id,
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: TEST_HOST2,
+            CONF_USERNAME: TEST_USERNAME,
+            CONF_PASSWORD: TEST_PASSWORD,
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert config_entry.data[CONF_HOST] == TEST_HOST2
+    assert config_entry.data[CONF_USERNAME] == TEST_USERNAME
+    assert config_entry.data[CONF_PASSWORD] == TEST_PASSWORD

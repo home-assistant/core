@@ -1,0 +1,35 @@
+[
+  {
+    "mode": "ESP",
+    "type": null,
+    "notes": "CHANGELOG (Current 2.5.2 vs. Previous 2.3.6):\\r\\nFixed incorrect device type detection for some devices\\r\\nFixed web interface not working on some devices\\r\\nFixed disabled SSID/pass fields\\r\\n",
+    "rev": "20240830",
+    "link": "https://smlight.tech/flasher/firmware/bin/slzb06x/core/slzb-06-v2.5.2-ota.bin",
+    "ver": "v2.5.2",
+    "dev": false,
+    "prod": true,
+    "baud": null
+  },
+  {
+    "mode": "ESP",
+    "type": null,
+    "notes": "Read/write IEEE for CC chips\\r\\nDefault black theme\\r\\nAdd device mac to MDNS ZeroConf\\r\\nBreaking change! socket_uptime in /ha_sensors and /metrics now in seconds\\r\\nNew 5 languages\\r\\nAdd manual ZB OTA for 06M\\r\\nAdd warning modal for ZB manual OTA\\r\\nWireGuard can now use hostname instead of IP\\r\\nWiFi AP fixes and improvements\\r\\nImproved management of socket clients\\r\\nFix \"Disable web server when socket is connected\"\\r\\nFix events tag for log\\r\\nFix ZB maual OTA header text\\r\\nFix feedback page stack overflow\\r\\nFix sta drop in AP mode after scan start",
+    "rev": "20240815",
+    "link": "https://smlight.tech/flasher/firmware/bin/slzb06x/core/slzb-06-v2.3.6-ota.bin",
+    "ver": "v2.3.6",
+    "dev": false,
+    "prod": true,
+    "baud": null
+  },
+  {
+    "mode": "ESP",
+    "type": null,
+    "notes": "release of previous version",
+    "rev": "10112023",
+    "link": "https://smlight.tech/flasher/firmware/bin/slzb06x/core/slzb-06-0.9.9-ota.bin",
+    "ver": "0.9.9",
+    "dev": false,
+    "prod": true,
+    "baud": null
+  }
+]
