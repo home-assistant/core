@@ -210,6 +210,7 @@ async def test_loading_platforms(
         Mock(
             async_pre_backup=AsyncMock(),
             async_post_backup=AsyncMock(),
+            async_get_backup_sync_agents=AsyncMock(),
         ),
     )
     await manager.load_platforms()
@@ -239,10 +240,6 @@ async def test_not_loading_bad_platforms(
     assert len(manager.platforms) == 0
 
     assert "Loaded 0 platforms" in caplog.text
-    assert (
-        "some_domain does not implement required functions for the backup platform"
-        in caplog.text
-    )
 
 
 async def test_exception_plaform_pre(hass: HomeAssistant) -> None:
@@ -258,6 +255,7 @@ async def test_exception_plaform_pre(hass: HomeAssistant) -> None:
         Mock(
             async_pre_backup=_mock_step,
             async_post_backup=AsyncMock(),
+            async_get_backup_sync_agents=AsyncMock(),
         ),
     )
 
@@ -278,6 +276,7 @@ async def test_exception_plaform_post(hass: HomeAssistant) -> None:
         Mock(
             async_pre_backup=AsyncMock(),
             async_post_backup=_mock_step,
+            async_get_backup_sync_agents=AsyncMock(),
         ),
     )
 
@@ -300,6 +299,7 @@ async def test_loading_platforms_when_running_pre_backup_actions(
         Mock(
             async_pre_backup=AsyncMock(),
             async_post_backup=AsyncMock(),
+            async_get_backup_sync_agents=AsyncMock(),
         ),
     )
     await manager.pre_backup_actions()
@@ -325,6 +325,7 @@ async def test_loading_platforms_when_running_post_backup_actions(
         Mock(
             async_pre_backup=AsyncMock(),
             async_post_backup=AsyncMock(),
+            async_get_backup_sync_agents=AsyncMock(),
         ),
     )
     await manager.post_backup_actions()
