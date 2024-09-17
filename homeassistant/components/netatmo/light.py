@@ -174,7 +174,7 @@ class NetatmoLight(NetatmoModuleEntity, LightEntity):
         """Turn light on."""
         if ATTR_BRIGHTNESS in kwargs:
             await self.device.async_set_brightness(
-                round((kwargs[ATTR_BRIGHTNESS]) / 2.55)
+                round(kwargs[ATTR_BRIGHTNESS] / 2.55)
             )
 
         else:
