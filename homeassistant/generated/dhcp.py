@@ -1090,6 +1090,14 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "hostname": "wiz_*",
     },
     {
+        "domain": "wmspro",
+        "macaddress": "0023D5*",
+    },
+    {
+        "domain": "wmspro",
+        "registered_devices": True,
+    },
+    {
         "domain": "yale",
         "hostname": "yale-connect-plus",
         "macaddress": "00177A*",

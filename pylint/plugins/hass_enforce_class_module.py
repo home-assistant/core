@@ -3,49 +3,66 @@
 from __future__ import annotations
 
 from ast import ClassDef
-from dataclasses import dataclass
 
 from astroid import nodes
 from pylint.checkers import BaseChecker
 from pylint.lint import PyLinter
 
-
-@dataclass
-class ClassModuleMatch:
-    """Class for pattern matching."""
-
-    expected_module: str
-    base_class: str
-
-
-_MODULES = [
-    ClassModuleMatch("alarm_control_panel", "AlarmControlPanelEntityDescription"),
-    ClassModuleMatch("assist_satellite", "AssistSatelliteEntityDescription"),
-    ClassModuleMatch("binary_sensor", "BinarySensorEntityDescription"),
-    ClassModuleMatch("button", "ButtonEntityDescription"),
-    ClassModuleMatch("camera", "CameraEntityDescription"),
-    ClassModuleMatch("climate", "ClimateEntityDescription"),
-    ClassModuleMatch("coordinator", "DataUpdateCoordinator"),
-    ClassModuleMatch("cover", "CoverEntityDescription"),
-    ClassModuleMatch("date", "DateEntityDescription"),
-    ClassModuleMatch("datetime", "DateTimeEntityDescription"),
-    ClassModuleMatch("event", "EventEntityDescription"),
-    ClassModuleMatch("image", "ImageEntityDescription"),
-    ClassModuleMatch("image_processing", "ImageProcessingEntityDescription"),
-    ClassModuleMatch("lawn_mower", "LawnMowerEntityDescription"),
-    ClassModuleMatch("lock", "LockEntityDescription"),
-    ClassModuleMatch("media_player", "MediaPlayerEntityDescription"),
-    ClassModuleMatch("notify", "NotifyEntityDescription"),
-    ClassModuleMatch("number", "NumberEntityDescription"),
-    ClassModuleMatch("select", "SelectEntityDescription"),
-    ClassModuleMatch("sensor", "SensorEntityDescription"),
-    ClassModuleMatch("text", "TextEntityDescription"),
-    ClassModuleMatch("time", "TimeEntityDescription"),
-    ClassModuleMatch("update", "UpdateEntityDescription"),
-    ClassModuleMatch("vacuum", "VacuumEntityDescription"),
-    ClassModuleMatch("water_heater", "WaterHeaterEntityDescription"),
-    ClassModuleMatch("weather", "WeatherEntityDescription"),
-]
+_MODULES: dict[str, set[str]] = {
+    "air_quality": {"AirQualityEntity"},
+    "alarm_control_panel": {
+        "AlarmControlPanelEntity",
+        "AlarmControlPanelEntityDescription",
+    },
+    "assist_satellite": {"AssistSatelliteEntity", "AssistSatelliteEntityDescription"},
+    "binary_sensor": {"BinarySensorEntity", "BinarySensorEntityDescription"},
+    "button": {"ButtonEntity", "ButtonEntityDescription"},
+    "calendar": {"CalendarEntity"},
+    "camera": {"CameraEntity", "CameraEntityDescription"},
+    "climate": {"ClimateEntity", "ClimateEntityDescription"},
+    "coordinator": {"DataUpdateCoordinator"},
+    "conversation": {"ConversationEntity"},
+    "cover": {"CoverEntity", "CoverEntityDescription"},
+    "date": {"DateEntity", "DateEntityDescription"},
+    "datetime": {"DateTimeEntity", "DateTimeEntityDescription"},
+    "device_tracker": {"DeviceTrackerEntity"},
+    "event": {"EventEntity", "EventEntityDescription"},
+    "fan": {"FanEntity", "FanEntityDescription"},
+    "geo_location": {"GeolocationEvent"},
+    "humidifier": {"HumidifierEntity", "HumidifierEntityDescription"},
+    "image": {"ImageEntity", "ImageEntityDescription"},
+    "image_processing": {
+        "ImageProcessingEntity",
+        "ImageProcessingFaceEntity",
+        "ImageProcessingEntityDescription",
+    },
+    "lawn_mower": {"LawnMowerEntity", "LawnMowerEntityDescription"},
+    "light": {"LightEntity", "LightEntityDescription"},
+    "lock": {"LockEntity", "LockEntityDescription"},
+    "media_player": {"MediaPlayerEntity", "MediaPlayerEntityDescription"},
+    "notify": {"NotifyEntity", "NotifyEntityDescription"},
+    "number": {"NumberEntity", "NumberEntityDescription", "RestoreNumber"},
+    "remote": {"RemoteEntity", "RemoteEntityDescription"},
+    "select": {"SelectEntity", "SelectEntityDescription"},
+    "sensor": {"RestoreSensor", "SensorEntity", "SensorEntityDescription"},
+    "siren": {"SirenEntity", "SirenEntityDescription"},
+    "stt": {"SpeechToTextEntity"},
+    "switch": {"SwitchEntity", "SwitchEntityDescription"},
+    "text": {"TextEntity", "TextEntityDescription"},
+    "time": {"TimeEntity", "TimeEntityDescription"},
+    "todo": {"TodoListEntity"},
+    "tts": {"TextToSpeechEntity"},
+    "update": {"UpdateEntityDescription"},
+    "vacuum": {"VacuumEntity", "VacuumEntityDescription"},
+    "wake_word": {"WakeWordDetectionEntity"},
+    "water_heater": {"WaterHeaterEntity"},
+    "weather": {
+        "CoordinatorWeatherEntity",
+        "SingleCoordinatorWeatherEntity",
+        "WeatherEntity",
+        "WeatherEntityDescription",
+    },
+}
 
 
 class HassEnforceClassModule(BaseChecker):
@@ -69,24 +86,24 @@ class HassEnforceClassModule(BaseChecker):
         if not root_name.startswith("homeassistant.components."):
             return
         parts = root_name.split(".")
+        current_integration = parts[2]
         current_module = parts[3] if len(parts) > 3 else ""
 
         ancestors: list[ClassDef] | None = None
 
-        for match in _MODULES:
-            # Allow module.py and module/sub_module.py
-            if current_module == match.expected_module:
+        for expected_module, classes in _MODULES.items():
+            if expected_module in (current_module, current_integration):
                 continue
 
             if ancestors is None:
                 ancestors = list(node.ancestors())  # cache result for other modules
 
             for ancestor in ancestors:
-                if ancestor.name == match.base_class:
+                if ancestor.name in classes:
                     self.add_message(
                         "hass-enforce-class-module",
                         node=node,
-                        args=(match.base_class, match.expected_module),
+                        args=(ancestor.name, expected_module),
                     )
                     return
 
