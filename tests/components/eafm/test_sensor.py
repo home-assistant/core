@@ -1,6 +1,9 @@
 """Tests for polling measures."""
 
+from collections.abc import Callable, Coroutine
 import datetime
+from typing import Any
+from unittest.mock import AsyncMock
 
 import aiohttp
 import pytest
@@ -23,7 +26,9 @@ CONNECTION_EXCEPTIONS = [
 ]
 
 
-async def async_setup_test_fixture(hass, mock_get_station, initial_value):
+async def async_setup_test_fixture(
+    hass: HomeAssistant, mock_get_station: AsyncMock, initial_value: dict[str, Any]
+) -> tuple[MockConfigEntry, Callable[[Any], Coroutine[Any, Any, None]]]:
     """Create a dummy config entry for testing polling."""
     mock_get_station.return_value = initial_value
 

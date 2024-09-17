@@ -116,6 +116,7 @@ OSI_APPROVED_LICENSES = {
     "Unlicense",
     "Apache-2",
     "GPLv2",
+    "Python-2.0.1",
 }
 
 EXCEPTIONS = {
@@ -124,12 +125,10 @@ EXCEPTIONS = {
     "PyXiaomiGateway",  # https://github.com/Danielhiversen/PyXiaomiGateway/pull/201
     "aiocomelit",  # https://github.com/chemelli74/aiocomelit/pull/138
     "aioecowitt",  # https://github.com/home-assistant-libs/aioecowitt/pull/180
-    "aiohappyeyeballs",  # PSF-2.0 license
     "aioopenexchangerates",  # https://github.com/MartinHjelmare/aioopenexchangerates/pull/94
     "aiooui",  # https://github.com/Bluetooth-Devices/aiooui/pull/8
     "aioruuvigateway",  # https://github.com/akx/aioruuvigateway/pull/6
     "aiovodafone",  # https://github.com/chemelli74/aiovodafone/pull/131
-    "airthings-ble",  # https://github.com/Airthings/airthings-ble/pull/42
     "apple_weatherkit",  # https://github.com/tjhorner/python-weatherkit/pull/3
     "asyncio",  # PSF License
     "chacha20poly1305",  # LGPL
@@ -139,7 +138,6 @@ EXCEPTIONS = {
     "crownstone-core",  # https://github.com/crownstone/crownstone-lib-python-core/pull/6
     "crownstone-sse",  # https://github.com/crownstone/crownstone-lib-python-sse/pull/2
     "crownstone-uart",  # https://github.com/crownstone/crownstone-lib-python-uart/pull/12
-    "dio-chacon-wifi-api",
     "eliqonline",  # https://github.com/molobrakos/eliqonline/pull/17
     "enocean",  # https://github.com/kipe/enocean/pull/142
     "gardena-bluetooth",  # https://github.com/elupus/gardena-bluetooth/pull/11
@@ -155,24 +153,17 @@ EXCEPTIONS = {
     "neurio",  # https://github.com/jordanh/neurio-python/pull/13
     "nsw-fuel-api-client",  # https://github.com/nickw444/nsw-fuel-api-client/pull/14
     "pigpio",  # https://github.com/joan2937/pigpio/pull/608
-    "pyEmby",  # https://github.com/mezz64/pyEmby/pull/12
     "pymitv",  # MIT
-    "pyTibber",  # https://github.com/Danielhiversen/pyTibber/pull/294
     "pybbox",  # https://github.com/HydrelioxGitHub/pybbox/pull/5
     "pyeconet",  # https://github.com/w1ll1am23/pyeconet/pull/41
-    "pylutron-caseta",  # https://github.com/gurumitts/pylutron-caseta/pull/168
     "pysabnzbd",  # https://github.com/jeradM/pysabnzbd/pull/6
     "pyvera",  # https://github.com/maximvelichko/pyvera/pull/164
     "pyxeoma",  # https://github.com/jeradM/pyxeoma/pull/11
     "repoze.lru",
-    "russound",  # https://github.com/laf/russound/pull/14   # codespell:ignore laf
     "ruuvitag-ble",  # https://github.com/Bluetooth-Devices/ruuvitag-ble/pull/10
     "sensirion-ble",  # https://github.com/akx/sensirion-ble/pull/9
     "sharp_aquos_rc",  # https://github.com/jmoore987/sharp_aquos_rc/pull/14
     "tapsaff",  # https://github.com/bazwilliams/python-taps-aff/pull/5
-    "tellduslive",  # https://github.com/molobrakos/tellduslive/pull/24
-    "tellsticknet",  # https://github.com/molobrakos/tellsticknet/pull/33
-    "webrtc_noise_gain",  # https://github.com/rhasspy/webrtc-noise-gain/pull/24
     "vincenty",  # Public domain
     "zeversolar",  # https://github.com/kvanzuijlen/zeversolar/pull/46
 }
@@ -181,16 +172,6 @@ TODO = {
     "aiocache": AwesomeVersion(
         "0.12.2"
     ),  # https://github.com/aio-libs/aiocache/blob/master/LICENSE all rights reserved?
-    "asterisk_mbox": AwesomeVersion(
-        "0.5.0"
-    ),  # No license, integration is deprecated and scheduled for removal in 2024.9.0
-    "mficlient": AwesomeVersion(
-        "0.3.0"
-    ),  # No license https://github.com/kk7ds/mficlient/issues/4
-    "pyflic": AwesomeVersion("2.0.3"),  # No OSI approved license CC0-1.0 Universal)
-    "uvcclient": AwesomeVersion(
-        "0.11.0"
-    ),  # No License https://github.com/kk7ds/uvcclient/issues/7
 }
 
 
@@ -210,7 +191,7 @@ def main() -> int:
             if previous_unapproved_version < package.version:
                 if approved:
                     print(
-                        "Approved license detected for"
+                        "Approved license detected for "
                         f"{package.name}@{package.version}: {package.license}"
                     )
                     print("Please remove the package from the TODO list.")
@@ -224,14 +205,14 @@ def main() -> int:
                 exit_code = 1
         elif not approved and package.name not in EXCEPTIONS:
             print(
-                "We could not detect an OSI-approved license for"
+                "We could not detect an OSI-approved license for "
                 f"{package.name}@{package.version}: {package.license}"
             )
             print()
             exit_code = 1
         elif approved and package.name in EXCEPTIONS:
             print(
-                "Approved license detected for"
+                "Approved license detected for "
                 f"{package.name}@{package.version}: {package.license}"
             )
             print(f"Please remove the package from the EXCEPTIONS list: {package.name}")

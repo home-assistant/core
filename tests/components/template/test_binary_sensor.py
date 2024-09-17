@@ -1,5 +1,6 @@
 """The tests for the Template Binary sensor platform."""
 
+from copy import deepcopy
 from datetime import UTC, datetime, timedelta
 import logging
 from unittest.mock import patch
@@ -995,20 +996,32 @@ async def test_availability_icon_picture(
     ],
 )
 @pytest.mark.parametrize(
-    ("extra_config", "restored_state", "initial_state"),
+    ("extra_config", "source_state", "restored_state", "initial_state"),
     [
-        ({}, ON, OFF),
-        ({}, OFF, OFF),
-        ({}, STATE_UNAVAILABLE, OFF),
-        ({}, STATE_UNKNOWN, OFF),
-        ({"delay_off": 5}, ON, ON),
-        ({"delay_off": 5}, OFF, OFF),
-        ({"delay_off": 5}, STATE_UNAVAILABLE, STATE_UNKNOWN),
-        ({"delay_off": 5}, STATE_UNKNOWN, STATE_UNKNOWN),
-        ({"delay_on": 5}, ON, ON),
-        ({"delay_on": 5}, OFF, OFF),
-        ({"delay_on": 5}, STATE_UNAVAILABLE, STATE_UNKNOWN),
-        ({"delay_on": 5}, STATE_UNKNOWN, STATE_UNKNOWN),
+        ({}, OFF, ON, OFF),
+        ({}, OFF, OFF, OFF),
+        ({}, OFF, STATE_UNAVAILABLE, OFF),
+        ({}, OFF, STATE_UNKNOWN, OFF),
+        ({"delay_off": 5}, OFF, ON, ON),
+        ({"delay_off": 5}, OFF, OFF, OFF),
+        ({"delay_off": 5}, OFF, STATE_UNAVAILABLE, STATE_UNKNOWN),
+        ({"delay_off": 5}, OFF, STATE_UNKNOWN, STATE_UNKNOWN),
+        ({"delay_on": 5}, OFF, ON, OFF),
+        ({"delay_on": 5}, OFF, OFF, OFF),
+        ({"delay_on": 5}, OFF, STATE_UNAVAILABLE, OFF),
+        ({"delay_on": 5}, OFF, STATE_UNKNOWN, OFF),
+        ({}, ON, ON, ON),
+        ({}, ON, OFF, ON),
+        ({}, ON, STATE_UNAVAILABLE, ON),
+        ({}, ON, STATE_UNKNOWN, ON),
+        ({"delay_off": 5}, ON, ON, ON),
+        ({"delay_off": 5}, ON, OFF, ON),
+        ({"delay_off": 5}, ON, STATE_UNAVAILABLE, ON),
+        ({"delay_off": 5}, ON, STATE_UNKNOWN, ON),
+        ({"delay_on": 5}, ON, ON, ON),
+        ({"delay_on": 5}, ON, OFF, OFF),
+        ({"delay_on": 5}, ON, STATE_UNAVAILABLE, STATE_UNKNOWN),
+        ({"delay_on": 5}, ON, STATE_UNKNOWN, STATE_UNKNOWN),
     ],
 )
 async def test_restore_state(
@@ -1017,18 +1030,20 @@ async def test_restore_state(
     domain,
     config,
     extra_config,
+    source_state,
     restored_state,
     initial_state,
 ) -> None:
     """Test restoring template binary sensor."""
 
+    hass.states.async_set("sensor.test_state", source_state)
     fake_state = State(
         "binary_sensor.test",
         restored_state,
         {},
     )
     mock_restore_cache(hass, (fake_state,))
-    config = dict(config)
+    config = deepcopy(config)
     config["template"]["binary_sensor"].update(**extra_config)
     with assert_setup_component(count, domain):
         assert await async_setup_component(

@@ -52,7 +52,8 @@
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "reauth_unsuccessful": "Re-authentication was unsuccessful, please remove the integration and set it up again.",
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
-      "another_device": "Re-configuration was unsuccessful, the IP address/hostname of another Shelly device was used."
+      "another_device": "Re-configuration was unsuccessful, the IP address/hostname of another Shelly device was used.",
+      "ipv6_not_supported": "IPv6 is not supported."
     }
   },
   "device_automation": {

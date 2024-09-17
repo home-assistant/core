@@ -6,7 +6,8 @@
     "@vlebourl",
     "@tetienne",
     "@nyroDev",
-    "@tronix117"
+    "@tronix117",
+    "@alexfp14"
   ],
   "config_flow": true,
   "dhcp": [

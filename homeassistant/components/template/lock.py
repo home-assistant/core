@@ -59,7 +59,7 @@ PLATFORM_SCHEMA = LOCK_PLATFORM_SCHEMA.extend(
 
 async def _async_create_entities(hass, config):
     """Create the Template lock."""
-    config = rewrite_common_legacy_to_modern_conf(config)
+    config = rewrite_common_legacy_to_modern_conf(hass, config)
     return [TemplateLock(hass, config, config.get(CONF_UNIQUE_ID))]
 
 

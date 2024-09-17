@@ -242,9 +242,12 @@ async def test_update_area_with_same_name_change_case(
 
 async def test_update_area_with_name_already_in_use(
     area_registry: ar.AreaRegistry,
+    floor_registry: fr.FloorRegistry,
 ) -> None:
     """Make sure that we can't update an area with a name already in use."""
-    area1 = area_registry.async_create("mock1")
+    floor = floor_registry.async_create("mock")
+    floor_id = floor.floor_id
+    area1 = area_registry.async_create("mock1", floor_id=floor_id)
     area2 = area_registry.async_create("mock2")
 
     with pytest.raises(ValueError) as e_info:
@@ -254,6 +257,8 @@ async def test_update_area_with_name_already_in_use(
     assert area1.name == "mock1"
     assert area2.name == "mock2"
     assert len(area_registry.areas) == 2
+
+    assert area_registry.areas.get_areas_for_floor(floor_id) == [area1]
 
 
 async def test_update_area_with_normalized_name_already_in_use(

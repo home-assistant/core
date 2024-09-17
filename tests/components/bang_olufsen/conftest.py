@@ -13,6 +13,7 @@ from mozart_api.models import (
     ProductState,
     RemoteMenuItem,
     RenderingState,
+    SoftwareUpdateState,
     SoftwareUpdateStatus,
     Source,
     SourceArray,
@@ -26,17 +27,24 @@ from homeassistant.core import HomeAssistant
 
 from .const import (
     TEST_DATA_CREATE_ENTRY,
+    TEST_DATA_CREATE_ENTRY_2,
     TEST_FRIENDLY_NAME,
+    TEST_FRIENDLY_NAME_2,
+    TEST_FRIENDLY_NAME_3,
     TEST_JID_1,
+    TEST_JID_2,
+    TEST_JID_3,
     TEST_NAME,
+    TEST_NAME_2,
     TEST_SERIAL_NUMBER,
+    TEST_SERIAL_NUMBER_2,
 )
 
 from tests.common import MockConfigEntry
 
 
 @pytest.fixture
-def mock_config_entry():
+def mock_config_entry() -> MockConfigEntry:
     """Mock config entry."""
     return MockConfigEntry(
         domain=DOMAIN,
@@ -47,7 +55,22 @@ def mock_config_entry():
 
 
 @pytest.fixture
-async def mock_media_player(hass: HomeAssistant, mock_config_entry, mock_mozart_client):
+def mock_config_entry_2() -> MockConfigEntry:
+    """Mock config entry."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=TEST_SERIAL_NUMBER_2,
+        data=TEST_DATA_CREATE_ENTRY_2,
+        title=TEST_NAME_2,
+    )
+
+
+@pytest.fixture
+async def mock_media_player(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_mozart_client: AsyncMock,
+) -> None:
     """Mock media_player entity."""
 
     mock_config_entry.add_to_hass(hass)
@@ -75,7 +98,7 @@ def mock_mozart_client() -> Generator[AsyncMock]:
         )
         client.get_softwareupdate_status = AsyncMock()
         client.get_softwareupdate_status.return_value = SoftwareUpdateStatus(
-            software_version="1.0.0", state=""
+            software_version="1.0.0", state=SoftwareUpdateState()
         )
         client.get_product_state = AsyncMock()
         client.get_product_state.return_value = ProductState(
@@ -97,12 +120,18 @@ def mock_mozart_client() -> Generator[AsyncMock]:
                     is_enabled=True,
                     is_multiroom_available=False,
                 ),
-                # The only available source
+                # The only available beolink source
                 Source(
                     name="Tidal",
                     id="tidal",
                     is_enabled=True,
                     is_multiroom_available=True,
+                ),
+                Source(
+                    name="Line-In",
+                    id="lineIn",
+                    is_enabled=True,
+                    is_multiroom_available=False,
                 ),
                 # Is disabled, so should not be user selectable
                 Source(
@@ -223,6 +252,17 @@ def mock_mozart_client() -> Generator[AsyncMock]:
                 id="64c9da45-3682-44a4-8030-09ed3ef44160",
             ),
         }
+        client.get_beolink_peers = AsyncMock()
+        client.get_beolink_peers.return_value = [
+            BeolinkPeer(friendly_name=TEST_FRIENDLY_NAME_2, jid=TEST_JID_2),
+            BeolinkPeer(friendly_name=TEST_FRIENDLY_NAME_3, jid=TEST_JID_3),
+        ]
+        client.get_beolink_listeners = AsyncMock()
+        client.get_beolink_listeners.return_value = [
+            BeolinkPeer(friendly_name=TEST_FRIENDLY_NAME_2, jid=TEST_JID_2),
+            BeolinkPeer(friendly_name=TEST_FRIENDLY_NAME_3, jid=TEST_JID_3),
+        ]
+
         client.post_standby = AsyncMock()
         client.set_current_volume_level = AsyncMock()
         client.set_volume_mute = AsyncMock()
@@ -237,18 +277,27 @@ def mock_mozart_client() -> Generator[AsyncMock]:
         client.add_to_queue = AsyncMock()
         client.post_remote_trigger = AsyncMock()
         client.set_active_source = AsyncMock()
+        client.post_beolink_expand = AsyncMock()
+        client.join_beolink_peer = AsyncMock()
+        client.post_beolink_unexpand = AsyncMock()
+        client.post_beolink_leave = AsyncMock()
+        client.post_beolink_allstandby = AsyncMock()
+        client.join_latest_beolink_experience = AsyncMock()
 
         # Non-REST API client methods
         client.check_device_connection = AsyncMock()
         client.close_api_client = AsyncMock()
+
+        # WebSocket listener
         client.connect_notifications = AsyncMock()
         client.disconnect_notifications = Mock()
+        client.websocket_connected = False
 
         yield client
 
 
 @pytest.fixture
-def mock_setup_entry():
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock successful setup entry."""
     with patch(
         "homeassistant.components.bang_olufsen.async_setup_entry", return_value=True

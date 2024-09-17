@@ -5,12 +5,12 @@ from __future__ import annotations
 from typing import cast
 
 from homeassistant.components.media_player import BrowseError, MediaClass
-from homeassistant.components.media_source.error import Unresolvable
-from homeassistant.components.media_source.models import (
+from homeassistant.components.media_source import (
     BrowseMediaSource,
     MediaSource,
     MediaSourceItem,
     PlayMedia,
+    Unresolvable,
 )
 from homeassistant.const import ATTR_FRIENDLY_NAME
 from homeassistant.core import HomeAssistant, State

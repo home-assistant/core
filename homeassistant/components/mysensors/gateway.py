@@ -16,7 +16,6 @@ import voluptuous as vol
 from homeassistant.components.mqtt import (
     DOMAIN as MQTT_DOMAIN,
     ReceiveMessage as MQTTReceiveMessage,
-    ReceivePayloadType,
     async_publish,
     async_subscribe,
 )
@@ -24,6 +23,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.service_info.mqtt import ReceivePayloadType
 from homeassistant.setup import SetupPhases, async_pause_setup
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
@@ -114,14 +114,14 @@ async def try_connect(
                 await gateway_ready.wait()
                 return True
         except TimeoutError:
-            _LOGGER.info("Try gateway connect failed with timeout")
+            _LOGGER.warning("Try gateway connect failed with timeout")
             return False
         finally:
             if connect_task is not None and not connect_task.done():
                 connect_task.cancel()
             await gateway.stop()
     except OSError as err:
-        _LOGGER.info("Try gateway connect failed with exception", exc_info=err)
+        _LOGGER.warning("Try gateway connect failed with exception", exc_info=err)
         return False
 
 

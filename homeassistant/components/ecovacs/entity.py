@@ -150,6 +150,11 @@ class EcovacsLegacyEntity(Entity):
 
         self._event_listeners: list[EventListener] = []
 
+    @property
+    def available(self) -> bool:
+        """Return True if the entity is available."""
+        return super().available and self.state is not None
+
     async def async_will_remove_from_hass(self) -> None:
         """Remove event listeners on entity remove."""
         for listener in self._event_listeners:

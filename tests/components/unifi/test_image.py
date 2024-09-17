@@ -18,6 +18,12 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_registry import RegistryEntryDisabler
 from homeassistant.util import dt as dt_util
 
+from .conftest import (
+    ConfigEntryFactoryType,
+    WebsocketMessageMock,
+    WebsocketStateManager,
+)
+
 from tests.common import async_fire_time_changed, snapshot_platform
 from tests.typing import ClientSessionGenerator
 
@@ -82,7 +88,7 @@ WLAN = {
 async def test_entity_and_device_data(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    config_entry_factory,
+    config_entry_factory: ConfigEntryFactoryType,
     site_payload: dict[str, Any],
     snapshot: SnapshotAssertion,
 ) -> None:
@@ -102,7 +108,7 @@ async def test_wlan_qr_code(
     entity_registry: er.EntityRegistry,
     hass_client: ClientSessionGenerator,
     snapshot: SnapshotAssertion,
-    mock_websocket_message,
+    mock_websocket_message: WebsocketMessageMock,
 ) -> None:
     """Test the update_clients function when no clients are found."""
     assert len(hass.states.async_entity_ids(IMAGE_DOMAIN)) == 0
@@ -151,7 +157,9 @@ async def test_wlan_qr_code(
 @pytest.mark.parametrize("wlan_payload", [[WLAN]])
 @pytest.mark.usefixtures("config_entry_setup")
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_hub_state_change(hass: HomeAssistant, mock_websocket_state) -> None:
+async def test_hub_state_change(
+    hass: HomeAssistant, mock_websocket_state: WebsocketStateManager
+) -> None:
     """Verify entities state reflect on hub becoming unavailable."""
     assert hass.states.get("image.ssid_1_qr_code").state != STATE_UNAVAILABLE
 
@@ -167,7 +175,9 @@ async def test_hub_state_change(hass: HomeAssistant, mock_websocket_state) -> No
 @pytest.mark.parametrize("wlan_payload", [[WLAN]])
 @pytest.mark.usefixtures("config_entry_setup")
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_source_availability(hass: HomeAssistant, mock_websocket_message) -> None:
+async def test_source_availability(
+    hass: HomeAssistant, mock_websocket_message: WebsocketMessageMock
+) -> None:
     """Verify entities state reflect on source becoming unavailable."""
     assert hass.states.get("image.ssid_1_qr_code").state != STATE_UNAVAILABLE
 
