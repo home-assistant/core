@@ -96,7 +96,6 @@ class PS4Device(MediaPlayerEntity):
         self._retry = 0
         self._disconnected = False
 
-    @callback
     def status_callback(self) -> None:
         """Handle status callback. Parse status."""
         self._parse_status()
@@ -157,7 +156,7 @@ class PS4Device(MediaPlayerEntity):
             self._ps4.ddp_protocol = self.hass.data[PS4_DATA].protocol
             self.subscribe_to_protocol()
 
-        self._parse_status()
+        await self.hass.async_add_executor_job(self._parse_status)
 
     def _parse_status(self) -> None:
         """Parse status."""
