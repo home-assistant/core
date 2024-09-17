@@ -475,15 +475,26 @@ async def test_sub_intervals_with_time_window(hass: HomeAssistant) -> None:
 
             state = hass.states.get("sensor.power")
             derivative = round(float(state.state), config["sensor"]["round"])
-            last_sub_interval = (time // max_sub_interval) * max_sub_interval
 
-            expect_derivative = (
-                0
-                if (last_sub_interval >= time_window)
-                else ((time_window - last_sub_interval) / time_window)
-            )
-            # Test that the derivative is close to expected
-            assert abs(expect_derivative - derivative) <= 0.03
+            def calc_expected(elapsed_seconds: int, calculation_delay: int = 0):
+                last_sub_interval = (
+                    elapsed_seconds // max_sub_interval
+                ) * max_sub_interval
+                return (
+                    0
+                    if (last_sub_interval >= time_window)
+                    else (
+                        (time_window - last_sub_interval - calculation_delay)
+                        / time_window
+                    )
+                )
+
+            rounding_err = 0.01 + 1e-6
+            expect_max = calc_expected(time) + rounding_err
+            # Allow one second of slop for internal delays
+            expect_min = calc_expected(time, 1) - rounding_err
+
+            assert expect_min <= derivative <= expect_max
 
 
 async def test_prefix(hass: HomeAssistant) -> None:
