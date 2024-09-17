@@ -12,7 +12,7 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
 
-from .const import API_TIMEOUT, CONF_REGION, REGION_EU
+from .const import API_TIMEOUT, CONF_EUROPE, CONF_REGION, REGION_DEFAULT, REGION_EU
 from .coordinator import FGLairCoordinator
 
 PLATFORMS: list[Platform] = [Platform.CLIMATE]
@@ -49,3 +49,24 @@ async def async_unload_entry(hass: HomeAssistant, entry: FGLairConfigEntry) -> b
         await entry.runtime_data.api.async_sign_out()
 
     return unload_ok
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: FGLairConfigEntry) -> bool:
+    """Migrate old entry."""
+    if entry.version > 1:
+        return False
+
+    if entry.version == 1:
+        new_data = {**entry.data}
+        if entry.minor_version < 2:
+            is_europe = new_data.pop(CONF_EUROPE, False)
+            if is_europe:
+                new_data[CONF_REGION] = REGION_EU
+            else:
+                new_data[CONF_REGION] = REGION_DEFAULT
+
+        hass.config_entries.async_update_entry(
+            entry, data=new_data, minor_version=2, version=1
+        )
+
+    return True

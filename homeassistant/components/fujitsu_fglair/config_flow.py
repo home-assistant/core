@@ -40,6 +40,7 @@ STEP_REAUTH_DATA_SCHEMA = vol.Schema(
 class FGLairConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Fujitsu HVAC (based on Ayla IOT)."""
 
+    MINOR_VERSION = 2
     _reauth_entry: ConfigEntry | None = None
 
     async def _async_validate_credentials(

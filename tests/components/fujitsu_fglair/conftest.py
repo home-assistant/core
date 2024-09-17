@@ -8,6 +8,7 @@ from ayla_iot_unofficial.fujitsu_hvac import FanSpeed, FujitsuHVAC, OpMode, Swin
 import pytest
 
 from homeassistant.components.fujitsu_fglair.const import (
+    CONF_EUROPE,
     CONF_REGION,
     DOMAIN,
     REGION_DEFAULT,
@@ -58,6 +59,24 @@ def mock_ayla_api(mock_devices: list[AsyncMock]) -> Generator[AsyncMock]:
     ):
         my_mock.async_get_devices.return_value = mock_devices
         yield my_mock
+
+
+@pytest.fixture
+def mock_config_entry_v11(request: pytest.FixtureRequest) -> MockConfigEntry:
+    """Return a regular v1.1 config entry."""
+    is_europe = False
+    if hasattr(request, "param"):
+        is_europe = request.param
+
+    return MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=TEST_USERNAME,
+        data={
+            CONF_USERNAME: TEST_USERNAME,
+            CONF_PASSWORD: TEST_PASSWORD,
+            CONF_EUROPE: is_europe,
+        },
+    )
 
 
 @pytest.fixture

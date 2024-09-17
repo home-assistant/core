@@ -10,9 +10,13 @@ import pytest
 from homeassistant.components.fujitsu_fglair.const import (
     API_REFRESH,
     API_TIMEOUT,
+    CONF_EUROPE,
     CONF_REGION,
     DOMAIN,
+    REGION_DEFAULT,
+    REGION_EU,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client, entity_registry as er
@@ -66,6 +70,28 @@ async def test_auth_regions(
             websession=aiohttp_client.async_get_clientsession(hass),
             timeout=API_TIMEOUT,
         )
+
+
+@pytest.mark.parametrize("mock_config_entry_v11", [True, False], indirect=True)
+async def test_migrate_entry_v11_v12(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_ayla_api: AsyncMock,
+    mock_config_entry_v11: MockConfigEntry,
+    mock_devices: list[AsyncMock],
+) -> None:
+    """Test migration from schema 1.1 to 1.2."""
+    is_europe = mock_config_entry_v11.data[CONF_EUROPE]
+    await setup_integration(hass, mock_config_entry_v11)
+    updated_entry = hass.config_entries.async_get_entry(mock_config_entry_v11.entry_id)
+
+    assert updated_entry.state is ConfigEntryState.LOADED
+    assert updated_entry.version == 1
+    assert updated_entry.minor_version == 2
+    if is_europe:
+        assert updated_entry.data[CONF_REGION] is REGION_EU
+    else:
+        assert updated_entry.data[CONF_REGION] is REGION_DEFAULT
 
 
 async def test_device_auth_failure(
