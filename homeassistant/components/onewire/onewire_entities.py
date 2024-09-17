@@ -78,7 +78,7 @@ class OneWireEntity(Entity):
         else:
             if not self._last_update_success:
                 self._last_update_success = True
-                _LOGGER.info("Fetching %s data recovered", self.name)
+                _LOGGER.debug("Fetching %s data recovered", self.name)
             if self.entity_description.read_mode == READ_MODE_INT:
                 self._state = int(self._value_raw)
             elif self.entity_description.read_mode == READ_MODE_BOOL:
