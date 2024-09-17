@@ -36,9 +36,6 @@
       },
       "dynamic_limit": {
         "name": "Dynamic limit"
-      },
-      "user_limit": {
-        "name": "User limit"
       }
     },
     "sensor": {

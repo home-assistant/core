@@ -52,17 +52,6 @@ NUMBERS: tuple[LektricoNumberEntityDescription, ...] = (
         value_fn=lambda data: int(data["dynamic_current"]),
         set_value_fn=lambda data, value: data.set_dynamic_current(value),
     ),
-    LektricoNumberEntityDescription(
-        key="user_limit",
-        translation_key="user_limit",
-        entity_category=EntityCategory.CONFIG,
-        native_min_value=6,
-        native_max_value=32,
-        native_step=1,
-        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
-        value_fn=lambda data: int(data["user_current"]),
-        set_value_fn=lambda data, value: data.set_user_current(value),
-    ),
 )
 
 
