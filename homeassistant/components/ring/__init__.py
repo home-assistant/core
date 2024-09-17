@@ -3,20 +3,24 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from functools import partial
 import logging
 from typing import Any, cast
+import uuid
 
 from ring_doorbell import Auth, Ring, RingDevices
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import APPLICATION_NAME, CONF_TOKEN, __version__
-from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
+from homeassistant.const import APPLICATION_NAME, CONF_TOKEN
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    instance_id,
+)
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN, PLATFORMS
-from .coordinator import RingDataCoordinator, RingNotificationsCoordinator
+from .const import CONF_LISTEN_CREDENTIALS, DOMAIN, PLATFORMS
+from .coordinator import RingDataCoordinator, RingListenCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,90 +32,79 @@ class RingData:
     api: Ring
     devices: RingDevices
     devices_coordinator: RingDataCoordinator
-    notifications_coordinator: RingNotificationsCoordinator
+    listen_coordinator: RingListenCoordinator
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+type RingConfigEntry = ConfigEntry[RingData]
+
+
+async def get_auth_agent_id(hass: HomeAssistant) -> tuple[str, str]:
+    """Return user-agent and hardware id for Auth instantiation.
+
+    user_agent will be the display name in the ring.com authorised devices.
+    hardware_id will uniquely describe the authorised HA device.
+    """
+    user_agent = f"{APPLICATION_NAME}/{DOMAIN}-integration"
+
+    # Generate a new uuid from the instance_uuid to keep the HA one private
+    instance_uuid = uuid.UUID(hex=await instance_id.async_get(hass))
+    hardware_id = str(uuid.uuid5(instance_uuid, user_agent))
+    return user_agent, hardware_id
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: RingConfigEntry) -> bool:
     """Set up a config entry."""
 
     def token_updater(token: dict[str, Any]) -> None:
-        """Handle from sync context when token is updated."""
-        hass.loop.call_soon_threadsafe(
-            partial(
-                hass.config_entries.async_update_entry,
-                entry,
-                data={**entry.data, CONF_TOKEN: token},
-            )
+        """Handle from async context when token is updated."""
+        hass.config_entries.async_update_entry(
+            entry,
+            data={**entry.data, CONF_TOKEN: token},
         )
 
+    def listen_credentials_updater(token: dict[str, Any]) -> None:
+        """Handle from async context when token is updated."""
+        hass.config_entries.async_update_entry(
+            entry,
+            data={**entry.data, CONF_LISTEN_CREDENTIALS: token},
+        )
+
+    user_agent, hardware_id = await get_auth_agent_id(hass)
+    client_session = async_get_clientsession(hass)
     auth = Auth(
-        f"{APPLICATION_NAME}/{__version__}", entry.data[CONF_TOKEN], token_updater
+        user_agent,
+        entry.data[CONF_TOKEN],
+        token_updater,
+        hardware_id=hardware_id,
+        http_client_session=client_session,
     )
     ring = Ring(auth)
 
     await _migrate_old_unique_ids(hass, entry.entry_id)
 
     devices_coordinator = RingDataCoordinator(hass, ring)
-    notifications_coordinator = RingNotificationsCoordinator(hass, ring)
-    await devices_coordinator.async_config_entry_first_refresh()
-    await notifications_coordinator.async_config_entry_first_refresh()
+    listen_credentials = entry.data.get(CONF_LISTEN_CREDENTIALS)
+    listen_coordinator = RingListenCoordinator(
+        hass, ring, listen_credentials, listen_credentials_updater
+    )
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = RingData(
+    await devices_coordinator.async_config_entry_first_refresh()
+
+    entry.runtime_data = RingData(
         api=ring,
         devices=ring.devices(),
         devices_coordinator=devices_coordinator,
-        notifications_coordinator=notifications_coordinator,
+        listen_coordinator=listen_coordinator,
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
-    if hass.services.has_service(DOMAIN, "update"):
-        return True
-
-    async def async_refresh_all(_: ServiceCall) -> None:
-        """Refresh all ring data."""
-        _LOGGER.warning(
-            "Detected use of service 'ring.update'. "
-            "This is deprecated and will stop working in Home Assistant 2024.10. "
-            "Use 'homeassistant.update_entity' instead which updates all ring entities",
-        )
-        async_create_issue(
-            hass,
-            DOMAIN,
-            "deprecated_service_ring_update",
-            breaks_in_ha_version="2024.10.0",
-            is_fixable=True,
-            is_persistent=False,
-            issue_domain=DOMAIN,
-            severity=IssueSeverity.WARNING,
-            translation_key="deprecated_service_ring_update",
-        )
-
-        for info in hass.data[DOMAIN].values():
-            ring_data = cast(RingData, info)
-            await ring_data.devices_coordinator.async_refresh()
-            await ring_data.notifications_coordinator.async_refresh()
-
-    # register service
-    hass.services.async_register(DOMAIN, "update", async_refresh_all)
 
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload Ring entry."""
-    if not await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        return False
-
-    hass.data[DOMAIN].pop(entry.entry_id)
-
-    if len(hass.data[DOMAIN]) != 0:
-        return True
-
-    # Last entry unloaded, clean up service
-    hass.services.async_remove(DOMAIN, "update")
-
-    return True
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 async def async_remove_config_entry_device(

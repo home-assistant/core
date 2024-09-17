@@ -3,7 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
-from pyblu import SyncStatus
+from pyblu import Status, SyncStatus
 import pytest
 
 from homeassistant.components.bluesound.const import DOMAIN
@@ -40,6 +40,35 @@ def sync_status() -> SyncStatus:
 
 
 @pytest.fixture
+def status() -> Status:
+    """Return a status object."""
+    return Status(
+        etag="etag",
+        input_id=None,
+        service=None,
+        state="playing",
+        shuffle=False,
+        album=None,
+        artist=None,
+        name=None,
+        image=None,
+        volume=10,
+        volume_db=22.3,
+        mute=False,
+        mute_volume=None,
+        mute_volume_db=None,
+        seconds=2,
+        total_seconds=123.1,
+        can_seek=False,
+        sleep=0,
+        group_name=None,
+        group_volume=None,
+        indexing=False,
+        stream_url=None,
+    )
+
+
+@pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
@@ -65,7 +94,7 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_player() -> Generator[AsyncMock]:
+def mock_player(status: Status) -> Generator[AsyncMock]:
     """Mock the player."""
     with (
         patch(
@@ -78,7 +107,7 @@ def mock_player() -> Generator[AsyncMock]:
     ):
         player = mock_player.return_value
         player.__aenter__.return_value = player
-        player.status.return_value = None
+        player.status.return_value = status
         player.sync_status.return_value = SyncStatus(
             etag="etag",
             id="1.1.1.1:11000",

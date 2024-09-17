@@ -29,14 +29,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: FritzboxConfigEntry) -> 
             and "_temperature" not in entry.unique_id
         ):
             new_unique_id = f"{entry.unique_id}_temperature"
-            LOGGER.info(
+            LOGGER.debug(
                 "Migrating unique_id [%s] to [%s]", entry.unique_id, new_unique_id
             )
             return {"new_unique_id": new_unique_id}
 
         if entry.domain == BINARY_SENSOR_DOMAIN and "_" not in entry.unique_id:
             new_unique_id = f"{entry.unique_id}_alarm"
-            LOGGER.info(
+            LOGGER.debug(
                 "Migrating unique_id [%s] to [%s]", entry.unique_id, new_unique_id
             )
             return {"new_unique_id": new_unique_id}

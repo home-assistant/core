@@ -573,6 +573,8 @@ def _create_ha_id(name, channel, param, count):
     if count > 1 and param is not None:
         return f"{name} {channel} {param}"
 
+    raise ValueError(f"Unable to create unique id for count:{count} and param:{param}")
+
 
 def _hm_event_handler(hass, interface, device, caller, attribute, value):
     """Handle all pyhomematic device events."""
@@ -621,3 +623,4 @@ def _device_from_servicecall(hass, service):
     for devices in hass.data[DATA_HOMEMATIC].devices.values():
         if address in devices:
             return devices[address]
+    return None

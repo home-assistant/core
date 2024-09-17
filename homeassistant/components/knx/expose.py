@@ -84,8 +84,6 @@ class KNXExposeSensor:
         self.expose_default = config.get(ExposeSchema.CONF_KNX_EXPOSE_DEFAULT)
         self.expose_type: int | str = config[ExposeSchema.CONF_KNX_EXPOSE_TYPE]
         self.value_template: Template | None = config.get(CONF_VALUE_TEMPLATE)
-        if self.value_template is not None:
-            self.value_template.hass = hass
 
         self._remove_listener: Callable[[], None] | None = None
         self.device: ExposeSensor = ExposeSensor(
@@ -127,6 +125,8 @@ class KNXExposeSensor:
     def _get_expose_value(self, state: State | None) -> bool | int | float | str | None:
         """Extract value from state."""
         if state is None or state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE):
+            if self.expose_default is None:
+                return None
             value = self.expose_default
         elif self.expose_attribute is not None:
             _attr = state.attributes.get(self.expose_attribute)
@@ -156,12 +156,22 @@ class KNXExposeSensor:
         if value is not None and (
             isinstance(self.device.sensor_value, RemoteValueSensor)
         ):
-            if issubclass(self.device.sensor_value.dpt_class, DPTNumeric):
-                return float(value)
-            if issubclass(self.device.sensor_value.dpt_class, DPTString):
-                # DPT 16.000 only allows up to 14 Bytes
-                return str(value)[:14]
-        return value
+            try:
+                if issubclass(self.device.sensor_value.dpt_class, DPTNumeric):
+                    return float(value)
+                if issubclass(self.device.sensor_value.dpt_class, DPTString):
+                    # DPT 16.000 only allows up to 14 Bytes
+                    return str(value)[:14]
+            except (ValueError, TypeError) as err:
+                _LOGGER.warning(
+                    'Could not expose %s %s value "%s" to KNX: Conversion failed: %s',
+                    self.entity_id,
+                    self.expose_attribute or "state",
+                    value,
+                    err,
+                )
+                return None
+        return value  # type: ignore[no-any-return]
 
     async def _async_entity_changed(self, event: Event[EventStateChangedData]) -> None:
         """Handle entity change."""

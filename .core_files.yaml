@@ -14,6 +14,7 @@ core: &core
 base_platforms: &base_platforms
   - homeassistant/components/air_quality/**
   - homeassistant/components/alarm_control_panel/**
+  - homeassistant/components/assist_satellite/**
   - homeassistant/components/binary_sensor/**
   - homeassistant/components/button/**
   - homeassistant/components/calendar/**
@@ -61,6 +62,7 @@ components: &components
   - homeassistant/components/auth/**
   - homeassistant/components/automation/**
   - homeassistant/components/backup/**
+  - homeassistant/components/blueprint/**
   - homeassistant/components/bluetooth/**
   - homeassistant/components/cloud/**
   - homeassistant/components/config/**
@@ -124,9 +126,11 @@ tests: &tests
   - tests/*.py
   - tests/auth/**
   - tests/backports/**
+  - tests/components/diagnostics/**
   - tests/components/history/**
   - tests/components/logbook/**
   - tests/components/recorder/**
+  - tests/components/repairs/**
   - tests/components/sensor/**
   - tests/hassfest/**
   - tests/helpers/**

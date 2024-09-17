@@ -267,6 +267,22 @@
     }
   },
   "entity": {
+    "climate": {
+      "knx_climate": {
+        "state_attributes": {
+          "preset_mode": {
+            "name": "[%key:component::climate::entity_component::_::state_attributes::preset_mode::name%]",
+            "state": {
+              "auto": "Auto",
+              "comfort": "[%key:component::climate::entity_component::_::state_attributes::preset_mode::state::comfort%]",
+              "standby": "Standby",
+              "economy": "[%key:component::climate::entity_component::_::state_attributes::preset_mode::state::eco%]",
+              "building_protection": "Building protection"
+            }
+          }
+        }
+      }
+    },
     "sensor": {
       "individual_address": {
         "name": "[%key:component::knx::config::step::routing::data::individual_address%]"

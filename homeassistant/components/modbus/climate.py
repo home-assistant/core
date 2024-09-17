@@ -43,7 +43,6 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import get_hub
-from .base_platform import BaseStructPlatform
 from .const import (
     CALL_TYPE_REGISTER_HOLDING,
     CALL_TYPE_WRITE_REGISTER,
@@ -86,6 +85,7 @@ from .const import (
     CONF_WRITE_REGISTERS,
     DataType,
 )
+from .entity import BaseStructPlatform
 from .modbus import ModbusHub
 
 _LOGGER = logging.getLogger(__name__)

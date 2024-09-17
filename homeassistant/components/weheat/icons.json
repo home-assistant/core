@@ -1,0 +1,39 @@
+{
+  "entity": {
+    "sensor": {
+      "power_output": {
+        "default": "mdi:heat-wave"
+      },
+      "power_input": {
+        "default": "mdi:lightning-bolt"
+      },
+      "cop": {
+        "default": "mdi:speedometer"
+      },
+      "water_inlet_temperature": {
+        "default": "mdi:thermometer"
+      },
+      "water_outlet_temperature": {
+        "default": "mdi:thermometer"
+      },
+      "ch_inlet_temperature": {
+        "default": "mdi:radiator"
+      },
+      "outside_temperature": {
+        "default": "mdi:home-thermometer-outline"
+      },
+      "dhw_top_temperature": {
+        "default": "mdi:thermometer"
+      },
+      "dhw_bottom_temperature": {
+        "default": "mdi:thermometer"
+      },
+      "heat_pump_state": {
+        "default": "mdi:state-machine"
+      },
+      "electricity_used": {
+        "default": "mdi:flash"
+      }
+    }
+  }
+}

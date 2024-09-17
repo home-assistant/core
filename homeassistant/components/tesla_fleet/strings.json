@@ -19,7 +19,7 @@
       },
       "reauth_confirm": {
         "title": "[%key:common::config_flow::title::reauth%]",
-        "description": "The Withings integration needs to re-authenticate your account"
+        "description": "The {name} integration needs to re-authenticate your account"
       }
     },
     "create_entry": {
@@ -107,12 +107,133 @@
         "name": "Tire pressure warning rear right"
       }
     },
+    "climate": {
+      "climate_state_cabin_overheat_protection": {
+        "name": "Cabin overheat protection"
+      },
+      "driver_temp": {
+        "name": "[%key:component::climate::title%]",
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "off": "Normal",
+              "keep": "Keep mode",
+              "dog": "Dog mode",
+              "camp": "Camp mode"
+            }
+          }
+        }
+      }
+    },
     "device_tracker": {
       "location": {
         "name": "Location"
       },
       "route": {
         "name": "Route"
+      }
+    },
+    "number": {
+      "backup_reserve_percent": {
+        "name": "Backup reserve"
+      },
+      "charge_state_charge_current_request": {
+        "name": "Charge current"
+      },
+      "charge_state_charge_limit_soc": {
+        "name": "Charge limit"
+      },
+      "off_grid_vehicle_charging_reserve_percent": {
+        "name": "Off grid reserve"
+      }
+    },
+    "select": {
+      "climate_state_seat_heater_left": {
+        "name": "Seat heater front left",
+        "state": {
+          "high": "High",
+          "low": "Low",
+          "medium": "Medium",
+          "off": "Off"
+        }
+      },
+      "climate_state_seat_heater_rear_center": {
+        "name": "Seat heater rear center",
+        "state": {
+          "high": "[%key:component::tesla_fleet::entity::select::climate_state_seat_heater_left::state::high%]",
+          "low": "[%key:component::tesla_fleet::entity::select::climate_state_seat_heater_left::state::low%]",
+          "medium": "[%key:component::tesla_fleet::entity::select::climate_state_seat_heater_left::state::medium%]",
+          "off": "[%key:component::tesla_fleet::entity::select::climate_state_seat_heater_left::state::off%]"
+        }
+      },
+      "climate_state_seat_heater_rear_left": {
+        "name": "Seat heater rear left",
+        "state": {
+          "high": "[%key:component::tesla_fleet::entity::select::climate_state_seat_heater_left::state::high%]",
+          "low": "[%key:component::tesla_fleet::entity::select::climate_state_seat_heater_left::state::low%]",
+          "medium": "[%key:component::tesla_fleet::entity::select::climate_state_seat_heater_left::state::medium%]",
+          "off": "[%key:component::tesla_fleet::entity::select::climate_state_seat_heater_left::state::off%]"
+        }
+      },
+      "climate_state_seat_heater_rear_right": {
+        "name": "Seat heater rear right",
+        "state": {
+          "high": "[%key:component::tesla_fleet::entity::select::climate_state_seat_heater_left::state::high%]",
+          "low": "[%key:component::tesla_fleet::entity::select::climate_state_seat_heater_left::state::low%]",
+          "medium": "[%key:component::tesla_fleet::entity::select::climate_state_seat_heater_left::state::medium%]",
+          "off": "[%key:component::tesla_fleet::entity::select::climate_state_seat_heater_left::state::off%]"
+        }
+      },
+      "climate_state_seat_heater_right": {
+        "name": "Seat heater front right",
+        "state": {
+          "high": "[%key:component::tesla_fleet::entity::select::climate_state_seat_heater_left::state::high%]",
+          "low": "[%key:component::tesla_fleet::entity::select::climate_state_seat_heater_left::state::low%]",
+          "medium": "[%key:component::tesla_fleet::entity::select::climate_state_seat_heater_left::state::medium%]",
+          "off": "[%key:component::tesla_fleet::entity::select::climate_state_seat_heater_left::state::off%]"
+        }
+      },
+      "climate_state_seat_heater_third_row_left": {
+        "name": "Seat heater third row left",
+        "state": {
+          "high": "[%key:component::tesla_fleet::entity::select::climate_state_seat_heater_left::state::high%]",
+          "low": "[%key:component::tesla_fleet::entity::select::climate_state_seat_heater_left::state::low%]",
+          "medium": "[%key:component::tesla_fleet::entity::select::climate_state_seat_heater_left::state::medium%]",
+          "off": "[%key:component::tesla_fleet::entity::select::climate_state_seat_heater_left::state::off%]"
+        }
+      },
+      "climate_state_seat_heater_third_row_right": {
+        "name": "Seat heater third row right",
+        "state": {
+          "high": "[%key:component::tesla_fleet::entity::select::climate_state_seat_heater_left::state::high%]",
+          "low": "[%key:component::tesla_fleet::entity::select::climate_state_seat_heater_left::state::low%]",
+          "medium": "[%key:component::tesla_fleet::entity::select::climate_state_seat_heater_left::state::medium%]",
+          "off": "[%key:component::tesla_fleet::entity::select::climate_state_seat_heater_left::state::off%]"
+        }
+      },
+      "climate_state_steering_wheel_heat_level": {
+        "name": "Steering wheel heater",
+        "state": {
+          "high": "[%key:component::tesla_fleet::entity::select::climate_state_seat_heater_left::state::high%]",
+          "low": "[%key:component::tesla_fleet::entity::select::climate_state_seat_heater_left::state::low%]",
+          "off": "[%key:component::tesla_fleet::entity::select::climate_state_seat_heater_left::state::off%]"
+        }
+      },
+      "components_customer_preferred_export_rule": {
+        "name": "Allow export",
+        "state": {
+          "battery_ok": "Battery",
+          "never": "Never",
+          "pv_only": "Solar only"
+        }
+      },
+      "default_real_mode": {
+        "name": "Operation mode",
+        "state": {
+          "autonomous": "Autonomous",
+          "backup": "Backup",
+          "self_consumption": "Self consumption"
+        }
       }
     },
     "sensor": {
@@ -268,11 +389,73 @@
       "wall_connector_state": {
         "name": "State code"
       }
+    },
+    "switch": {
+      "charge_state_user_charge_enable_request": {
+        "name": "Charge"
+      },
+      "climate_state_auto_seat_climate_left": {
+        "name": "Auto seat climate left"
+      },
+      "climate_state_auto_seat_climate_right": {
+        "name": "Auto seat climate right"
+      },
+      "climate_state_auto_steering_wheel_heat": {
+        "name": "Auto steering wheel heater"
+      },
+      "climate_state_defrost_mode": {
+        "name": "Defrost"
+      },
+      "components_disallow_charge_from_grid_with_solar_installed": {
+        "name": "Allow charging from grid"
+      },
+      "user_settings_storm_mode_enabled": {
+        "name": "Storm watch"
+      },
+      "vehicle_state_sentry_mode": {
+        "name": "Sentry mode"
+      },
+      "vehicle_state_valet_mode": {
+        "name": "Valet mode"
+      }
     }
   },
   "exceptions": {
     "update_failed": {
-      "message": "{endpoint} data request failed. {message}"
+      "message": "{endpoint} data request failed: {message}"
+    },
+    "command_failed": {
+      "message": "Command failed: {message}"
+    },
+    "command_error": {
+      "message": "Command returned an error: {error}"
+    },
+    "command_reason": {
+      "message": "Command was unsuccessful: {reason}"
+    },
+    "command_no_reason": {
+      "message": "Command was unsuccessful but did not return a reason why."
+    },
+    "command_signing": {
+      "message": "Vehicle requires command signing. Please see documentation for more details."
+    },
+    "invalid_cop_temp": {
+      "message": "Cabin overheat protection does not support that temperature."
+    },
+    "invalid_hvac_mode": {
+      "message": "Climate mode {hvac_mode} is not supported."
+    },
+    "missing_temperature": {
+      "message": "Temperature is required for this action."
+    },
+    "missing_scope_vehicle_cmds": {
+      "message": "Missing vehicle commands scope."
+    },
+    "missing_scope_vehicle_charging_cmds": {
+      "message": "Missing vehicle charging commands scope."
+    },
+    "missing_scope_energy_cmds": {
+      "message": "Missing energy commands scope."
     }
   }
 }

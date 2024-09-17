@@ -89,9 +89,9 @@ def _format_schema(schema: dict[str, Any]) -> dict[str, Any]:
             key = "type_"
             val = val.upper()
         elif key == "format":
-            if (schema.get("type") == "string" and val != "enum") or (
-                schema.get("type") not in ("number", "integer", "string")
-            ):
+            if schema.get("type") == "string" and val != "enum":
+                continue
+            if schema.get("type") not in ("number", "integer", "string"):
                 continue
             key = "format_"
         elif key == "items":
@@ -100,11 +100,19 @@ def _format_schema(schema: dict[str, Any]) -> dict[str, Any]:
             val = {k: _format_schema(v) for k, v in val.items()}
         result[key] = val
 
+    if result.get("enum") and result.get("type_") != "STRING":
+        # enum is only allowed for STRING type. This is safe as long as the schema
+        # contains vol.Coerce for the respective type, for example:
+        # vol.All(vol.Coerce(int), vol.In([1, 2, 3]))
+        result["type_"] = "STRING"
+        result["enum"] = [str(item) for item in result["enum"]]
+
     if result.get("type_") == "OBJECT" and not result.get("properties"):
         # An object with undefined properties is not supported by Gemini API.
         # Fallback to JSON string. This will probably fail for most tools that want it,
         # but we don't have a better fallback strategy so far.
         result["properties"] = {"json": {"type_": "STRING"}}
+        result["required"] = []
     return result
 
 
@@ -164,6 +172,10 @@ class GoogleGenerativeAIConversationEntity(
             model="Generative AI",
             entry_type=dr.DeviceEntryType.SERVICE,
         )
+        if self.entry.options.get(CONF_LLM_HASS_API):
+            self._attr_supported_features = (
+                conversation.ConversationEntityFeature.CONTROL
+            )
 
     @property
     def supported_languages(self) -> list[str] | Literal["*"]:
@@ -177,6 +189,9 @@ class GoogleGenerativeAIConversationEntity(
             self.hass, "conversation", self.entry.entry_id, self.entity_id
         )
         conversation.async_set_agent(self.hass, self.entry, self)
+        self.entry.async_on_unload(
+            self.entry.add_update_listener(self._async_entry_update_listener)
+        )
 
     async def async_will_remove_from_hass(self) -> None:
         """When entity will be removed from Home Assistant."""
@@ -397,3 +412,10 @@ class GoogleGenerativeAIConversationEntity(
             parts.append(llm_api.api_prompt)
 
         return "\n".join(parts)
+
+    async def _async_entry_update_listener(
+        self, hass: HomeAssistant, entry: ConfigEntry
+    ) -> None:
+        """Handle options update."""
+        # Reload as we update device info + entity name + supported features
+        await hass.config_entries.async_reload(entry.entry_id)

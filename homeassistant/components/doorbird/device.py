@@ -195,7 +195,7 @@ class ConfiguredDoorBird:
             title: str | None = data.get("title")
             if not title or not title.startswith("Home Assistant"):
                 continue
-            event = title.split("(")[1].strip(")")
+            event = title.partition("(")[2].strip(")")
             if input_type := favorite_input_type.get(identifier):
                 events.append(DoorbirdEvent(event, input_type))
             elif input_type := default_event_types.get(event):
@@ -240,7 +240,7 @@ class ConfiguredDoorBird:
             )
             return False
 
-        _LOGGER.info("Successfully registered URL for %s on %s", event, self.name)
+        _LOGGER.debug("Successfully registered URL for %s on %s", event, self.name)
         return True
 
     def get_event_data(self, event: str) -> dict[str, str | None]:
