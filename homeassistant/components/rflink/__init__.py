@@ -264,7 +264,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async def connect():
         """Set up connection and hook it into HA for reconnect/shutdown."""
-        _LOGGER.info("Initiating Rflink connection")
+        _LOGGER.debug("Initiating Rflink connection")
 
         # Rflink create_rflink_connection decides based on the value of host
         # (string or None) if serial or tcp mode should be used
@@ -311,7 +311,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             EVENT_HOMEASSISTANT_STOP, lambda x: transport.close()
         )
 
-        _LOGGER.info("Connected to Rflink")
+        _LOGGER.debug("Connected to Rflink")
 
     hass.async_create_task(connect(), eager_start=False)
     async_dispatcher_connect(hass, SIGNAL_EVENT, event_callback)
