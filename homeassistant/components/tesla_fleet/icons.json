@@ -223,29 +223,68 @@
       "wall_connector_state": {
         "default": "mdi:ev-station"
       },
-      "grid_in": {
+      "total_grid_import": {
         "default": "mdi:transmission-tower-import"
       },
-      "grid_out": {
+      "total_grid_export": {
         "default": "mdi:transmission-tower-export"
       },
       "solar_production": {
         "default": "mdi:solar-power-variant"
       },
-      "battery_in": {
+      "total_battery_import": {
         "default": "mdi:battery-arrow-up"
       },
-      "battery_out": {
+      "total_battery_export": {
         "default": "mdi:battery-arrow-down"
       },
       "storm_mode_active": {
         "default": "mdi:weather-lightning"
       },
       "island_status": {
+        "default": "mdi:help-circle",
         "state": {
           "on_grid": "mdi:transmission-tower",
-          "off_grid": "mdi:transmission-tower-off"
+          "off_grid": "mdi:transmission-tower-off",
+          "island_status_unknown": "mdi:help-circle",
+          "off_grid_intentional": "mdi:account-cancel"
         }
+      },
+      "total_generator_production": {
+        "default": "mdi:generator-stationary"
+      },
+      "total_home_usage": {
+        "default": "mdi:home-lightning-bolt"
+      },
+      "grid_export_from_solar": {
+        "default": "mdi:transmission-tower-export"
+      },
+      "grid_export_from_generator": {
+        "default": "mdi:transmission-tower-export"
+      },
+      "grid_export_from_battery": {
+        "default": "mdi:transmission-tower-export"
+      },
+      "battery_import_from_solar": {
+        "default": "mdi:battery-arrow-up"
+      },
+      "battery_import_from_grid": {
+        "default": "mdi:battery-arrow-up"
+      },
+      "battery_import_from_generator": {
+        "default": "mdi:battery-arrow-up"
+      },
+      "home_usage_from_grid": {
+        "default": "mdi:home-lightning-bolt"
+      },
+      "home_usage_from_solar": {
+        "default": "mdi:home-lightning-bolt"
+      },
+      "home_usage_from_battery": {
+        "default": "mdi:home-lightning-bolt"
+      },
+      "home_usage_from_generator": {
+        "default": "mdi:home-lightning-bolt"
       }
     },
     "switch": {

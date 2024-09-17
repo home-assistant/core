@@ -220,33 +220,79 @@ class TeslaFleetEnergySiteHistoryCoordinator(DataUpdateCoordinator[dict[str, Any
             raise UpdateFailed(e.message) from e
         self.updated_once = True
         formatted_data = {
-            "grid_in": 0,
-            "grid_out": 0,
+            "total_grid_import": 0,
+            "total_grid_export": 0,
             "solar_production": 0,
-            "battery_in": 0,
-            "battery_out": 0,
+            "total_battery_import": 0,
+            "total_battery_export": 0,
+            "total_generator_production": 0,
+            "total_home_usage": 0,
+            "grid_export_from_solar": 0,
+            "grid_export_from_generator": 0,
+            "grid_export_from_battery": 0,
+            "battery_import_from_solar": 0,
+            "battery_import_from_grid": 0,
+            "battery_import_from_generator": 0,
+            "home_usage_from_grid": 0,
+            "home_usage_from_solar": 0,
+            "home_usage_from_battery": 0,
+            "home_usage_from_generator": 0,
         }
         for time_entity in data["time_series"]:
-            formatted_data["grid_in"] += time_entity["grid_energy_imported"]
-            formatted_data["grid_out"] += (
+            formatted_data["total_grid_import"] += time_entity["grid_energy_imported"]
+            formatted_data["total_grid_export"] += (
                 time_entity["grid_energy_exported_from_solar"]
                 + time_entity["grid_energy_exported_from_generator"]
                 + time_entity["grid_energy_exported_from_battery"]
             )
-            formatted_data["solar_production"] = (
-                formatted_data["solar_production"]
-                + time_entity["solar_energy_exported"]
-            )
-            formatted_data["battery_in"] = (
-                formatted_data["battery_in"]
-                + time_entity["battery_energy_imported_from_grid"]
+            formatted_data["solar_production"] += time_entity["solar_energy_exported"]
+            formatted_data["total_battery_import"] += (
+                time_entity["battery_energy_imported_from_grid"]
                 + time_entity["battery_energy_imported_from_solar"]
                 + time_entity["battery_energy_imported_from_generator"]
             )
-            formatted_data["battery_out"] = (
-                formatted_data["battery_out"] + time_entity["battery_energy_exported"]
+            formatted_data["total_battery_export"] += time_entity[
+                "battery_energy_exported"
+            ]
+            formatted_data["total_generator_production"] += time_entity[
+                "generator_energy_exported"
+            ]
+            formatted_data["total_home_usage"] += (
+                time_entity["consumer_energy_imported_from_grid"]
+                + time_entity["consumer_energy_imported_from_solar"]
+                + time_entity["consumer_energy_imported_from_battery"]
+                + time_entity["consumer_energy_imported_from_generator"]
             )
-
+            formatted_data["grid_export_from_solar"] += time_entity[
+                "grid_energy_exported_from_solar"
+            ]
+            formatted_data["grid_export_from_generator"] += time_entity[
+                "grid_energy_exported_from_generator"
+            ]
+            formatted_data["grid_export_from_battery"] += time_entity[
+                "grid_energy_exported_from_battery"
+            ]
+            formatted_data["battery_import_from_solar"] += time_entity[
+                "battery_energy_imported_from_solar"
+            ]
+            formatted_data["battery_import_from_grid"] += time_entity[
+                "battery_energy_imported_from_grid"
+            ]
+            formatted_data["battery_import_from_generator"] += time_entity[
+                "battery_energy_imported_from_generator"
+            ]
+            formatted_data["home_usage_from_grid"] += time_entity[
+                "consumer_energy_imported_from_grid"
+            ]
+            formatted_data["home_usage_from_solar"] += time_entity[
+                "consumer_energy_imported_from_solar"
+            ]
+            formatted_data["home_usage_from_battery"] += time_entity[
+                "consumer_energy_imported_from_battery"
+            ]
+            formatted_data["home_usage_from_generator"] += time_entity[
+                "consumer_energy_imported_from_generator"
+            ]
         return formatted_data
 
 

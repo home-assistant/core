@@ -413,7 +413,13 @@
         "name": "Odometer"
       },
       "island_status": {
-        "name": "Grid status"
+        "name": "Grid Status",
+        "state": {
+          "island_status_unknown": "Unknown",
+          "on_grid": "Connected",
+          "off_grid": "Disconnected",
+          "off_grid_intentional": "Disconnected intentionally"
+        }
       },
       "storm_mode_active": {
         "name": "Storm Watch active"
@@ -431,7 +437,7 @@
         "name": "Tire pressure rear right"
       },
       "version": {
-        "name": "version"
+        "name": "Version"
       },
       "vin": {
         "name": "Vehicle"
@@ -448,20 +454,56 @@
       "wall_connector_state": {
         "name": "State code"
       },
-      "grid_in": {
-        "name": "Grid import"
+      "total_grid_import": {
+        "name": "Grid total import"
       },
-      "grid_out": {
-        "name": "Grid export"
+      "total_grid_export": {
+        "name": "Grid total export"
       },
       "solar_production": {
         "name": "Solar Production"
       },
-      "battery_in": {
-        "name": "Battery charged"
+      "total_battery_import": {
+        "name": "Battery total charged"
       },
-      "battery_out": {
-        "name": "Battery discharged"
+      "total_battery_export": {
+        "name": "Battery total discharged"
+      },
+      "total_generator_production": {
+        "name": "Generator total production"
+      },
+      "total_home_usage": {
+        "name": "Home total usage"
+      },
+      "grid_export_from_solar": {
+        "name": "Grid exported from solar"
+      },
+      "grid_export_from_generator": {
+        "name": "Grid exported from generator"
+      },
+      "grid_export_from_battery": {
+        "name": "Grid exported from battery"
+      },
+      "battery_import_from_solar": {
+        "name": "Battery charged from solar"
+      },
+      "battery_import_from_grid": {
+        "name": "Battery charged from grid"
+      },
+      "battery_import_from_generator": {
+        "name": "Battery charged from generator"
+      },
+      "home_usage_from_grid": {
+        "name": "Home usage from grid"
+      },
+      "home_usage_from_solar": {
+        "name": "Home usage from solar"
+      },
+      "home_usage_from_battery": {
+        "name": "Home usage from battery"
+      },
+      "home_usage_from_generator": {
+        "name": "Home usage from generator"
       }
     },
     "switch": {
