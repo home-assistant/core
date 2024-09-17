@@ -110,7 +110,7 @@ async def async_setup_entry(
     # Add MediaPlayer entity
     async_add_entities(new_entities=[BangOlufsenMediaPlayer(config_entry, data.client)])
 
-    # Register services.
+    # Register actions.
     platform = async_get_current_platform()
 
     jid_regex = vol.Match(
@@ -931,7 +931,7 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
         """Unjoin Beolink session. End session if leader."""
         await self.async_beolink_leave()
 
-    # Custom services:
+    # Custom actions:
     async def async_beolink_join(self, beolink_jid: str | None = None) -> None:
         """Join a Beolink multi-room experience."""
         if beolink_jid is None:
