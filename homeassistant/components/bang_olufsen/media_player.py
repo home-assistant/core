@@ -586,10 +586,7 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
     @property
     def media_position(self) -> int | None:
         """Return the current playback progress."""
-        # Don't show progress if the the device is a Beolink listener.
-        if self._remote_leader is None:
-            return self._playback_progress.progress
-        return None
+        return self._playback_progress.progress
 
     @property
     def media_image_url(self) -> str | None:
