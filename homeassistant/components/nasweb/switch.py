@@ -121,8 +121,8 @@ class RelaySwitch(SwitchEntity, BaseCoordinatorEntity):
         """Update the entity.
 
         Only used by the generic entity update service.
+        Scheduling updates is not necessary, the coordinator takes care of updates via push notifications.
         """
-        # return await super().async_update()
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn On RelaySwitch."""
