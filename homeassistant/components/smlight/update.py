@@ -102,6 +102,8 @@ class SmUpdateEntity(SmEntity, UpdateEntity):
     def latest_version(self) -> str | None:
         """Latest version available for install."""
         data = self.coordinator.data
+        if self.coordinator.legacy_api == 2:
+            return None
 
         fw = self.entity_description.fw_list(data)
 
