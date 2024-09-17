@@ -30,6 +30,17 @@
         "name": "Charge stop"
       }
     },
+    "number": {
+      "led_max_brightness": {
+        "name": "Led brightness"
+      },
+      "dynamic_limit": {
+        "name": "Dynamic limit"
+      },
+      "user_limit": {
+        "name": "User limit"
+      }
+    },
     "sensor": {
       "state": {
         "name": "State",
