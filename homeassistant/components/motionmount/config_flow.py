@@ -1,5 +1,6 @@
 """Config flow for Vogel's MotionMount."""
 
+import asyncio
 from collections.abc import Mapping
 import logging
 import socket
@@ -38,6 +39,8 @@ class MotionMountFlowHandler(ConfigFlow, domain=DOMAIN):
         """Set up the instance."""
         self.connection_data: dict[str, Any] = {}
         self.reauth_entry: ConfigEntry | None = None
+        self.backoff_task: asyncio.Task | None = None
+        self.backoff_time: int = 0
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -174,12 +177,21 @@ class MotionMountFlowHandler(ConfigFlow, domain=DOMAIN):
         """Handle authentication form."""
         errors = {}
 
+        if self.backoff_task:
+            return await self.async_step_backoff()
+
         if user_input is not None:
             self.connection_data[CONF_PIN] = user_input[CONF_PIN]
 
             # Validate pin code
-            if await self._validate_input_pin(self.connection_data):
+            valid = await self._validate_input_pin(self.connection_data)
+            if valid is True:
                 return self._create_or_update_entry()
+
+            if type(valid) is int:
+                self.backoff_time = valid
+                self.backoff_task = self.hass.async_create_task(self._backoff(valid))
+                return await self.async_step_backoff()
 
             errors[CONF_PIN] = "Pin is not correct"
 
@@ -192,6 +204,26 @@ class MotionMountFlowHandler(ConfigFlow, domain=DOMAIN):
             ),
             errors=errors,
         )
+
+    async def async_step_backoff(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle backoff progress."""
+        if self.backoff_task is not None:
+            if self.backoff_task.done():
+                self.backoff_task = None
+                return self.async_show_progress_done(next_step_id="auth")
+
+            return self.async_show_progress(
+                step_id="backoff",
+                description_placeholders={
+                    "timeout": str(self.backoff_time),
+                },
+                progress_action="progress_action",
+                progress_task=self.backoff_task,
+            )
+
+        return await self.async_step_auth()
 
     def _create_or_update_entry(self) -> ConfigFlowResult:
         if self.reauth_entry:
@@ -218,17 +250,27 @@ class MotionMountFlowHandler(ConfigFlow, domain=DOMAIN):
             CONF_PIN: mm.is_authenticated,
         }
 
-    async def _validate_input_pin(self, data: dict) -> bool:
+    async def _validate_input_pin(self, data: dict) -> bool | int:
         """Validate the user input allows us to authenticate."""
 
         mm = motionmount.MotionMount(data[CONF_HOST], data[CONF_PORT])
         try:
             await mm.connect()
-            await mm.authenticate(data[CONF_PIN])
+
+            can_authenticate = mm.can_authenticate
+            if can_authenticate is True:
+                await mm.authenticate(data[CONF_PIN])
+            else:
+                # The backoff is running, return the remaining time
+                return can_authenticate
         finally:
             await mm.disconnect()
 
-        return mm.is_authenticated
+        can_authenticate = mm.can_authenticate
+        if can_authenticate is True:
+            return mm.is_authenticated
+
+        return can_authenticate
 
     def _show_setup_form(
         self, errors: dict[str, str] | None = None
@@ -244,3 +286,9 @@ class MotionMountFlowHandler(ConfigFlow, domain=DOMAIN):
             ),
             errors=errors or {},
         )
+
+    async def _backoff(self, time: int) -> None:
+        while time > 0:
+            await asyncio.sleep(1)
+            time -= 1
+            self.backoff_time = time

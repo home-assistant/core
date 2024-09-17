@@ -20,7 +20,14 @@
         "data": {
           "pin": "[%key:common::config_flow::data::pin%]"
         }
+      },
+      "backoff": {
+        "title": "Authenticate to your MotionMount",
+        "description": "Too many incorrect pin attempts."
       }
+    },
+    "progress": {
+      "progress_action": "Too many incorrect pin attempts. Please wait {timeout} s..."
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
