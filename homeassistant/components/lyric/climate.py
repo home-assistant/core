@@ -219,7 +219,7 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
             and LYRIC_HVAC_MODE_COOL in device.allowedModes
         ):
             self._attr_hvac_modes.append(HVACMode.HEAT_COOL)
-        
+
         # Setup supported features
         if self._attr_thermostat_type is LyricThermostatType.LCC:
             self._attr_supported_features = SUPPORT_FLAGS_LCC
