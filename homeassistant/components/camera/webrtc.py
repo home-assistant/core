@@ -3,10 +3,13 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Callable
-from dataclasses import dataclass
+from collections.abc import Awaitable, Callable, Coroutine
+from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, Protocol
 
+from mashumaro import field_options
+from mashumaro.config import BaseConfig
+from mashumaro.mixins.orjson import DataClassORJSONMixin
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
@@ -25,13 +28,37 @@ if TYPE_CHECKING:
 DATA_WEBRTC_PROVIDERS: HassKey[set[CameraWebRTCProvider]] = HassKey(
     "camera_web_rtc_providers"
 )
+DATA_ICE_SERVERS: HassKey[list[Callable[[], Coroutine[Any, Any, RTCIceServer]]]] = (
+    HassKey("camera_web_rtc_ice_servers")
+)
 
 
 @dataclass
-class CameraWebRTCProviderSettings:
-    """Return type for get_provider_settings."""
+class RTCIceServer:
+    """RTC Ice Server.
 
-    stun_servers: list[str]
+    See https://www.w3.org/TR/webrtc/#rtciceserver-dictionary
+    """
+
+    urls: list[str]
+    username: str | None = None
+    credential: str | None = None
+
+
+@dataclass
+class RTCConfiguration(DataClassORJSONMixin):
+    """RTC Configuration.
+
+    See https://www.w3.org/TR/webrtc/#rtcconfiguration-dictionary
+    """
+
+    ice_servers: list[RTCIceServer] | None =  field(metadata=field_options(alias="iceServers"), default=None)
+
+    class Config(BaseConfig):
+        """Mashumaro config for RTCConfiguration."""
+
+        omit_none = True
+        serialize_by_alias = True
 
 
 class CameraWebRTCProvider(Protocol):
@@ -44,9 +71,6 @@ class CameraWebRTCProvider(Protocol):
         self, camera: Camera, offer_sdp: str
     ) -> str | None:
         """Handle the WebRTC offer and return an answer."""
-
-    async def async_get_settings(self) -> CameraWebRTCProviderSettings:
-        """Return provider settings."""
 
 
 def async_register_webrtc_provider(
@@ -102,10 +126,6 @@ class _CameraRtspToWebRTCProvider(CameraWebRTCProvider):
 
         return await self._fn(stream_source, offer_sdp, camera.entity_id)
 
-    async def async_get_settings(self) -> CameraWebRTCProviderSettings:
-        """Return provider settings."""
-        return CameraWebRTCProviderSettings(stun_servers=[])
-
 
 def async_register_rtsp_to_web_rtc_provider(
     hass: HomeAssistant,
@@ -131,23 +151,15 @@ async def _async_refresh_providers(hass: HomeAssistant) -> None:
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "camera/webrtc/get_provider_settings",
+        vol.Required("type"): "camera/webrtc/get_config",
         vol.Required("entity_id"): cv.entity_id,
     }
 )
-@callback
-def ws_get_provider_settings(
+@websocket_api.async_response
+async def ws_get_config(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
-    """Handle webRTC provider settings command.
-
-    This signal path is used to route the offer created by the client to the
-    camera device through the integration for negotiation on initial setup,
-    which returns an answer. The actual streaming is handled entirely between
-    the client and camera device.
-
-    Async friendly.
-    """
+    """Handle get WebRTC config websocket command."""
     entity_id = msg["entity_id"]
     camera = get_camera_from_entity_id(hass, entity_id)
     if camera.frontend_stream_type != StreamType.WEB_RTC:
@@ -163,11 +175,7 @@ def ws_get_provider_settings(
 
     connection.send_result(
         msg["id"],
-        {
-            "settings": [
-                provider.async_get_settings() for provider in camera.webrtc_providers
-            ]
-        },
+        (await camera.async_get_webrtc_configuration()).to_json(),
     )
 
 
@@ -180,3 +188,24 @@ async def async_get_supported_providers(
         for provider in hass.data[DATA_WEBRTC_PROVIDERS]
         if await provider.async_is_supported(stream_source)
     ]
+
+
+@callback
+def register_ice_server(
+    hass: HomeAssistant,
+    get_ice_server_fn: Callable[[], Coroutine[Any, Any, RTCIceServer]],
+) -> Callable[[], None]:
+    """Register a ICE server.
+
+    The registering integration is responsible to implement caching if needed.
+    """
+    if DOMAIN not in hass.data:
+        raise ValueError("Unexpected state, camera not loaded")
+
+    servers = hass.data.setdefault(DATA_ICE_SERVERS, [])
+
+    def remove() -> None:
+        servers.remove(get_ice_server_fn)
+
+    servers.append(get_ice_server_fn)
+    return remove

@@ -81,10 +81,14 @@ from .helper import get_camera_from_entity_id
 from .img_util import scale_jpeg_camera_image
 from .prefs import CameraPreferences, DynamicStreamSettings  # noqa: F401
 from .webrtc import (
+    DATA_ICE_SERVERS,
     CameraWebRTCProvider,
+    RTCConfiguration,
+    RTCIceServer,
     async_get_supported_providers,
     async_register_rtsp_to_web_rtc_provider,  # noqa: F401
-    ws_get_provider_settings,
+    register_ice_server,
+    ws_get_config,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -336,7 +340,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     websocket_api.async_register_command(hass, ws_camera_web_rtc_offer)
     websocket_api.async_register_command(hass, websocket_get_prefs)
     websocket_api.async_register_command(hass, websocket_update_prefs)
-    websocket_api.async_register_command(hass, ws_get_provider_settings)
+    websocket_api.async_register_command(hass, ws_get_config)
 
     await component.async_setup(config)
 
@@ -392,6 +396,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         SERVICE_RECORD, CAMERA_SERVICE_RECORD, async_handle_record_service
     )
 
+    async def get_ice_servers() -> RTCIceServer:
+        # TODO: replace it with the production one before merging
+        return RTCIceServer(
+            urls=["stun:ec2-44-213-149-141.compute-1.amazonaws.com:3478"]
+        )
+
+    register_ice_server(hass, get_ice_servers)
     return True
 
 
@@ -722,6 +733,17 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     def webrtc_providers(self) -> list[CameraWebRTCProvider]:
         """Return the WebRTC providers."""
         return self._webrtc_providers
+
+    async def async_get_webrtc_configuration(self) -> RTCConfiguration:
+        """Return the WebRTC configuration."""
+
+        ice_servers = await asyncio.gather(
+            *[
+                asyncio.create_task(server())
+                for server in self.hass.data[DATA_ICE_SERVERS]
+            ]
+        )
+        return RTCConfiguration(ice_servers=ice_servers)
 
 
 class CameraView(HomeAssistantView):
