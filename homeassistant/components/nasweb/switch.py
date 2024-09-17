@@ -48,11 +48,9 @@ async def async_setup_entry(
     @callback
     def _check_entities() -> None:
         nonlocal current_outputs
-        received_outputs: set[int] = {
-            out.index for out in coordinator.webio_api.outputs
-        }
-        added: set[int] = {i for i in received_outputs if i not in current_outputs}
-        removed: set[int] = {i for i in current_outputs if i not in received_outputs}
+        received_outputs = {out.index for out in coordinator.webio_api.outputs}
+        added = {i for i in received_outputs if i not in current_outputs}
+        removed = {i for i in current_outputs if i not in received_outputs}
         entities_to_add: list[RelaySwitch] = []
         for index in added:
             webio_output = _get_output(coordinator, index)

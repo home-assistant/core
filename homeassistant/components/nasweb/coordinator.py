@@ -85,7 +85,7 @@ class NASwebCoordinator(BaseDataUpdateCoordinatorProtocol):
         """Initialize NASweb coordinator."""
         self._hass = hass
         self.name = name
-        self.webio_api: WebioAPI = webio_api
+        self.webio_api = webio_api
         self._last_update: float | None = None
         job_name = f"NASwebCoordinator[{name}]"
         self._job = HassJob(self._handle_max_update_interval, job_name)

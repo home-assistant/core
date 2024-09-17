@@ -35,7 +35,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: NASwebConfigEntry) -> bo
         data = NASwebData()
         data.initialize(hass)
         hass.data[DATA_NASWEB] = data
-    nasweb_data: NASwebData = hass.data[DATA_NASWEB]
+    nasweb_data = hass.data[DATA_NASWEB]
 
     webio_api = WebioAPI(
         entry.data[CONF_HOST], entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD]
@@ -106,8 +106,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: NASwebConfigEntry) -> bo
 async def async_unload_entry(hass: HomeAssistant, entry: NASwebConfigEntry) -> bool:
     """Unload a config entry."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        nasweb_data: NASwebData = hass.data[DATA_NASWEB]
-        coordinator: NASwebCoordinator = entry.runtime_data
+        nasweb_data = hass.data[DATA_NASWEB]
+        coordinator = entry.runtime_data
         serial = coordinator.webio_api.get_serial_number()
         if serial is not None:
             nasweb_data.notify_coordinator.remove_coordinator(serial)
