@@ -47,12 +47,7 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_MODEL, Platform
-from homeassistant.core import (
-    HomeAssistant,
-    ServiceResponse,
-    SupportsResponse,
-    callback,
-)
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import (
     config_validation as cv,
@@ -126,7 +121,6 @@ async def async_setup_entry(
         name="beolink_join",
         schema={vol.Optional("beolink_jid"): jid_regex},
         func="async_beolink_join",
-        supports_response=SupportsResponse.OPTIONAL,
     )
 
     platform.async_register_entity_service(
@@ -143,7 +137,6 @@ async def async_setup_entry(
             ),
         },
         func="async_beolink_expand",
-        supports_response=SupportsResponse.OPTIONAL,
     )
 
     platform.async_register_entity_service(
@@ -939,18 +932,12 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
         await self.async_beolink_leave()
 
     # Custom services:
-    async def async_beolink_join(
-        self, beolink_jid: str | None = None
-    ) -> ServiceResponse:
+    async def async_beolink_join(self, beolink_jid: str | None = None) -> None:
         """Join a Beolink multi-room experience."""
         if beolink_jid is None:
-            response = await self._client.join_latest_beolink_experience()
+            await self._client.join_latest_beolink_experience()
         else:
-            response = await self._client.join_beolink_peer(jid=beolink_jid)
-
-        if response:
-            return response.dict(by_alias=True, exclude={}, exclude_none=True)
-        return None
+            await self._client.join_beolink_peer(jid=beolink_jid)
 
     async def async_beolink_expand(
         self, beolink_jids: list[str] | None = None, all_discovered: bool = False
