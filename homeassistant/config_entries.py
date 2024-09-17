@@ -271,6 +271,16 @@ class ConfigFlowResult(FlowResult, total=False):
     version: int
 
 
+def _validate_item(*, disabled_by: ConfigEntryDisabler | Any | None = None) -> None:
+    """Validate config entry item."""
+
+    # Deprecated in 2022.1, stopped working in 2024.10
+    if disabled_by is not None and not isinstance(disabled_by, ConfigEntryDisabler):
+        raise TypeError(
+            f"disabled_by must be a ConfigEntryDisabler value, got {disabled_by}"
+        )
+
+
 class ConfigEntry(Generic[_DataT]):
     """Hold a configuration entry."""
 
@@ -369,18 +379,7 @@ class ConfigEntry(Generic[_DataT]):
         _setter(self, "unique_id", unique_id)
 
         # Config entry is disabled
-        if isinstance(disabled_by, str) and not isinstance(
-            disabled_by, ConfigEntryDisabler
-        ):
-            report(  # type: ignore[unreachable]
-                (
-                    "uses str for config entry disabled_by. This is deprecated and will"
-                    " stop working in Home Assistant 2022.3, it should be updated to"
-                    " use ConfigEntryDisabler instead"
-                ),
-                error_if_core=False,
-            )
-            disabled_by = ConfigEntryDisabler(disabled_by)
+        _validate_item(disabled_by=disabled_by)
         _setter(self, "disabled_by", disabled_by)
 
         # Supports unload
@@ -434,26 +433,10 @@ class ConfigEntry(Generic[_DataT]):
     def __setattr__(self, key: str, value: Any) -> None:
         """Set an attribute."""
         if key in UPDATE_ENTRY_CONFIG_ENTRY_ATTRS:
-            if key == "unique_id":
-                # Setting unique_id directly will corrupt internal state
-                # There is no deprecation period for this key
-                # as changing them will corrupt internal state
-                # so we raise an error here
-                raise AttributeError(
-                    "unique_id cannot be changed directly, use async_update_entry instead"
-                )
-            report(
-                f'sets "{key}" directly to update a config entry. This is deprecated and will'
-                " stop working in Home Assistant 2024.9, it should be updated to use"
-                " async_update_entry instead",
-                error_if_core=False,
+            raise AttributeError(
+                f"{key} cannot be changed directly, use async_update_entry instead"
             )
-
-        elif key in FROZEN_CONFIG_ENTRY_ATTRS:
-            # These attributes are frozen and cannot be changed
-            # There is no deprecation period for these
-            # as changing them will corrupt internal state
-            # so we raise an error here
+        if key in FROZEN_CONFIG_ENTRY_ATTRS:
             raise AttributeError(f"{key} cannot be changed")
 
         super().__setattr__(key, value)
@@ -1543,10 +1526,13 @@ class ConfigEntryItems(UserDict[str, ConfigEntry]):
         self._domain_index.setdefault(entry.domain, []).append(entry)
         if entry.unique_id is not None:
             unique_id_hash = entry.unique_id
-            # Guard against integrations using unhashable unique_id
-            # In HA Core 2024.9, we should remove the guard and instead fail
-            if not isinstance(entry.unique_id, Hashable):
-                unique_id_hash = str(entry.unique_id)  # type: ignore[unreachable]
+            if not isinstance(entry.unique_id, str):
+                # Guard against integrations using unhashable unique_id
+                # In HA Core 2024.9, we should remove the guard and instead fail
+                if not isinstance(entry.unique_id, Hashable):  # type: ignore[unreachable]
+                    unique_id_hash = str(entry.unique_id)
+                # Checks for other non-string was added in HA Core 2024.10
+                # In HA Core 2025.10, we should remove the error and instead fail
                 report_issue = async_suggest_report_issue(
                     self._hass, integration_domain=entry.domain
                 )
@@ -1971,19 +1957,7 @@ class ConfigEntries:
         if (entry := self.async_get_entry(entry_id)) is None:
             raise UnknownEntry
 
-        if isinstance(disabled_by, str) and not isinstance(
-            disabled_by, ConfigEntryDisabler
-        ):
-            report(  # type: ignore[unreachable]
-                (
-                    "uses str for config entry disabled_by. This is deprecated and will"
-                    " stop working in Home Assistant 2022.3, it should be updated to"
-                    " use ConfigEntryDisabler instead"
-                ),
-                error_if_core=False,
-            )
-            disabled_by = ConfigEntryDisabler(disabled_by)
-
+        _validate_item(disabled_by=disabled_by)
         if entry.disabled_by is disabled_by:
             return True
 

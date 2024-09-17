@@ -43,10 +43,10 @@ class HomematicipCloudFlowHandler(ConfigFlow, domain=DOMAIN):
             self.auth = HomematicipAuth(self.hass, user_input)
             connected = await self.auth.async_setup()
             if connected:
-                _LOGGER.info("Connection to HomematicIP Cloud established")
+                _LOGGER.debug("Connection to HomematicIP Cloud established")
                 return await self.async_step_link()
 
-            _LOGGER.info("Connection to HomematicIP Cloud failed")
+            _LOGGER.debug("Connection to HomematicIP Cloud failed")
             errors["base"] = "invalid_sgtin_or_pin"
 
         return self.async_show_form(
@@ -69,7 +69,7 @@ class HomematicipCloudFlowHandler(ConfigFlow, domain=DOMAIN):
         if pressed:
             authtoken = await self.auth.async_register()
             if authtoken:
-                _LOGGER.info("Write config entry for HomematicIP Cloud")
+                _LOGGER.debug("Write config entry for HomematicIP Cloud")
                 return self.async_create_entry(
                     title=self.auth.config[HMIPC_HAPID],
                     data={
@@ -92,7 +92,7 @@ class HomematicipCloudFlowHandler(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(hapid)
         self._abort_if_unique_id_configured()
 
-        _LOGGER.info("Imported authentication for %s", hapid)
+        _LOGGER.debug("Imported authentication for %s", hapid)
         return self.async_create_entry(
             title=hapid,
             data={HMIPC_AUTHTOKEN: authtoken, HMIPC_HAPID: hapid, HMIPC_NAME: name},

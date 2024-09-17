@@ -13,7 +13,7 @@ import voluptuous as vol
 
 from homeassistant.components import webhook
 from homeassistant.components.camera import (
-    DOMAIN,
+    DOMAIN as CAMERA_DOMAIN,
     PLATFORM_SCHEMA as CAMERA_PLATFORM_SCHEMA,
     STATE_IDLE,
     Camera,
@@ -121,7 +121,7 @@ class PushCamera(Camera):
 
         try:
             webhook.async_register(
-                self.hass, DOMAIN, self.name, self.webhook_id, handle_webhook
+                self.hass, CAMERA_DOMAIN, self.name, self.webhook_id, handle_webhook
             )
         except ValueError:
             _LOGGER.error(

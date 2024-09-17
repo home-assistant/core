@@ -16,6 +16,8 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
+from tests.common import MockConfigEntry
+
 
 @pytest.fixture(autouse=True)
 def init_sensors_fixture(hass: HomeAssistant) -> None:
@@ -47,6 +49,16 @@ async def test_setup(hass: HomeAssistant) -> None:
         },
     )
     await hass.async_block_till_done()
+    moldind = hass.states.get("sensor.mold_indicator")
+    assert moldind
+    assert moldind.attributes.get("unit_of_measurement") == PERCENTAGE
+
+
+async def test_setup_from_config_entry(
+    hass: HomeAssistant, loaded_entry: MockConfigEntry
+) -> None:
+    """Test the mold indicator sensor setup from a config entry."""
+
     moldind = hass.states.get("sensor.mold_indicator")
     assert moldind
     assert moldind.attributes.get("unit_of_measurement") == PERCENTAGE

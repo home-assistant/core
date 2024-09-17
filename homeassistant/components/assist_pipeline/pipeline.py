@@ -26,7 +26,7 @@ from homeassistant.components import (
     wake_word,
     websocket_api,
 )
-from homeassistant.components.tts.media_source import (
+from homeassistant.components.tts import (
     generate_media_source_id as tts_generate_media_source_id,
 )
 from homeassistant.core import Context, HomeAssistant, callback
@@ -504,7 +504,7 @@ class AudioSettings:
     is_vad_enabled: bool = True
     """True if VAD is used to determine the end of the voice command."""
 
-    silence_seconds: float = 0.5
+    silence_seconds: float = 0.7
     """Seconds of silence after voice command has ended."""
 
     def __post_init__(self) -> None:
@@ -538,7 +538,7 @@ class PipelineRun:
     language: str = None  # type: ignore[assignment]
     runner_data: Any | None = None
     intent_agent: str | None = None
-    tts_audio_output: str | None = None
+    tts_audio_output: str | dict[str, Any] | None = None
     wake_word_settings: WakeWordSettings | None = None
     audio_settings: AudioSettings = field(default_factory=AudioSettings)
 
@@ -906,6 +906,8 @@ class PipelineRun:
                 metadata,
                 self._speech_to_text_stream(audio_stream=stream, stt_vad=stt_vad),
             )
+        except (asyncio.CancelledError, TimeoutError):
+            raise  # expected
         except Exception as src_error:
             _LOGGER.exception("Unexpected error during speech-to-text")
             raise SpeechToTextError(
@@ -1052,12 +1054,15 @@ class PipelineRun:
         if self.pipeline.tts_voice is not None:
             tts_options[tts.ATTR_VOICE] = self.pipeline.tts_voice
 
-        if self.tts_audio_output is not None:
+        if isinstance(self.tts_audio_output, dict):
+            tts_options.update(self.tts_audio_output)
+        elif isinstance(self.tts_audio_output, str):
             tts_options[tts.ATTR_PREFERRED_FORMAT] = self.tts_audio_output
             if self.tts_audio_output == "wav":
                 # 16 Khz, 16-bit mono
                 tts_options[tts.ATTR_PREFERRED_SAMPLE_RATE] = SAMPLE_RATE
                 tts_options[tts.ATTR_PREFERRED_SAMPLE_CHANNELS] = SAMPLE_CHANNELS
+                tts_options[tts.ATTR_PREFERRED_SAMPLE_BYTES] = SAMPLE_WIDTH
 
         try:
             options_supported = await tts.async_support_options(
