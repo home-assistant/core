@@ -114,8 +114,8 @@ async def block_request(
     pytest.fail(f"Unexpected request: {method} {url}")
 
 
-@pytest.fixture
-def evo_config() -> dict[str, str]:
+@pytest.fixture(scope="module")
+def config() -> dict[str, str]:
     "Return a default/minimal configuration."
     return {
         CONF_USERNAME: USERNAME,
