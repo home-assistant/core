@@ -11,7 +11,10 @@ import logging
 from typing import Any, Concatenate
 
 from aiohasupervisor import SupervisorError
-from aiohasupervisor.models import InstalledAddonComplete
+from aiohasupervisor.models import (
+    AddonState as SupervisorAddonState,
+    InstalledAddonComplete,
+)
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -172,7 +175,7 @@ class AddonManager:
         """Return the current state of the managed add-on."""
         addon_state = AddonState.NOT_RUNNING
 
-        if addon_info.state == "started":
+        if addon_info.state == SupervisorAddonState.STARTED:
             addon_state = AddonState.RUNNING
         if self._install_task and not self._install_task.done():
             addon_state = AddonState.INSTALLING

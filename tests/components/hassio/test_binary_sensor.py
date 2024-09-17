@@ -193,22 +193,23 @@ def mock_all(aioclient_mock: AiohttpClientMocker, addon_installed) -> None:
 
 
 @pytest.mark.parametrize(
-    ("entity_id", "expected"),
+    ("entity_id", "expected", "addon_state"),
     [
-        ("binary_sensor.test_running", "on"),
-        ("binary_sensor.test2_running", "off"),
+        ("binary_sensor.test_running", "on", "started"),
+        ("binary_sensor.test2_running", "off", "stopped"),
     ],
 )
 async def test_binary_sensor(
     hass: HomeAssistant,
-    entity_id,
-    expected,
+    entity_id: str,
+    expected: str,
+    addon_state: str,
     aioclient_mock: AiohttpClientMocker,
     entity_registry: er.EntityRegistry,
     addon_installed: AsyncMock,
 ) -> None:
     """Test hassio OS and addons binary sensor."""
-    addon_installed.return_value.state = "started" if expected == "on" else "stopped"
+    addon_installed.return_value.state = addon_state
     config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
     config_entry.add_to_hass(hass)
 
