@@ -169,6 +169,7 @@ class AreaRegistryItems(NormalizedNameBaseRegistryItems[AreaEntry]):
         super().__init__()
         self._labels_index: RegistryIndexType = defaultdict(dict)
         self._floors_index: RegistryIndexType = defaultdict(dict)
+        self._aliases_index: RegistryIndexType = defaultdict(dict)
 
     def _index_entry(self, key: str, entry: AreaEntry) -> None:
         """Index an entry."""
@@ -177,6 +178,9 @@ class AreaRegistryItems(NormalizedNameBaseRegistryItems[AreaEntry]):
             self._floors_index[entry.floor_id][key] = True
         for label in entry.labels:
             self._labels_index[label][key] = True
+        for alias in entry.aliases:
+            normalized_alias = normalize_name(alias)
+            self._aliases_index[normalized_alias][key] = True
 
     def _unindex_entry(
         self, key: str, replacement_entry: AreaEntry | None = None
@@ -184,6 +188,10 @@ class AreaRegistryItems(NormalizedNameBaseRegistryItems[AreaEntry]):
         # always call base class before other indices
         super()._unindex_entry(key, replacement_entry)
         entry = self.data[key]
+        if aliases := entry.aliases:
+            for alias in aliases:
+                normalized_alias = normalize_name(alias)
+                self._unindex_entry_value(key, normalized_alias, self._aliases_index)
         if labels := entry.labels:
             for label in labels:
                 self._unindex_entry_value(key, label, self._labels_index)
@@ -199,6 +207,12 @@ class AreaRegistryItems(NormalizedNameBaseRegistryItems[AreaEntry]):
         """Get areas for floor."""
         data = self.data
         return [data[key] for key in self._floors_index.get(floor, ())]
+
+    def get_areas_for_alias(self, alias: str) -> list[AreaEntry]:
+        """Get areas for alias."""
+        data = self.data
+        normalized_alias = normalize_name(alias)
+        return [data[key] for key in self._aliases_index.get(normalized_alias, ())]
 
 
 class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
@@ -229,8 +243,11 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
 
     @callback
     def async_get_area_by_name(self, name: str) -> AreaEntry | None:
-        """Get area by name."""
-        return self.areas.get_by_name(name)
+        """Get area by name or alias."""
+        if area := self.areas.get_by_name(name):
+            return area
+        areas_list = self.areas.get_areas_for_alias(name)
+        return areas_list[0] if areas_list else None
 
     @callback
     def async_list_areas(self) -> Iterable[AreaEntry]:
