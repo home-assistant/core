@@ -18,10 +18,7 @@ class OAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
 
     DOMAIN = DOMAIN
 
-    def __init__(self) -> None:
-        """Initialize the Weheat OAuth2 flow."""
-        super().__init__()
-        self.reauth_entry: ConfigEntry | None = None
+    reauth_entry: ConfigEntry | None = None
 
     @property
     def logger(self) -> logging.Logger:
@@ -49,7 +46,9 @@ class OAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
 
         if self.reauth_entry.unique_id == user_id:
             return self.async_update_reload_and_abort(
-                self.reauth_entry, unique_id=user_id, data=data
+                self.reauth_entry,
+                unique_id=user_id,
+                data={**self.reauth_entry.data, **data},
             )
 
         return self.async_abort(reason="wrong_account")
