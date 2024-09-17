@@ -47,8 +47,6 @@ CONF_COMMAND = "command"
 EVENT_BUTTON_PRESS = "homeworks_button_press"
 EVENT_BUTTON_RELEASE = "homeworks_button_release"
 
-DEFAULT_FADE_RATE = 1.0
-
 KEYPAD_LEDSTATE_POLL_COOLDOWN = 1.0
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)

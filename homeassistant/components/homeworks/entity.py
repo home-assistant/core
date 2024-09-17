@@ -6,10 +6,7 @@ from pyhomeworks.pyhomeworks import Homeworks
 
 from homeassistant.helpers.entity import Entity
 
-
-def calculate_unique_id(controller_id: str, addr: str, idx: int) -> str:
-    """Calculate entity unique id."""
-    return f"homeworks.{controller_id}.{addr}.{idx}"
+from .util import calculate_unique_id
 
 
 class HomeworksEntity(Entity):
