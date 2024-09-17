@@ -17,7 +17,7 @@ from homeassistant.util.percentage import (
 )
 
 from .const import SIGNAL_ADD_ENTITIES
-from .insteon_entity import InsteonEntity
+from .entity import InsteonEntity
 from .utils import async_add_insteon_devices, async_add_insteon_entities
 
 SPEED_RANGE = (1, 255)  # off is not included
