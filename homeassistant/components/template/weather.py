@@ -133,10 +133,7 @@ WEATHER_SCHEMA = vol.Schema(
     }
 )
 
-PLATFORM_SCHEMA = vol.All(
-    cv.deprecated(CONF_FORECAST_TEMPLATE),
-    WEATHER_PLATFORM_SCHEMA.extend(WEATHER_SCHEMA.schema),
-)
+PLATFORM_SCHEMA = WEATHER_PLATFORM_SCHEMA.extend(WEATHER_SCHEMA.schema)
 
 
 async def async_setup_platform(
