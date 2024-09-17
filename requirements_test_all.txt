@@ -1792,7 +1792,7 @@ pysmartthings==0.7.8
 pysml==0.0.12
 
 # homeassistant.components.smlight
-pysmlight==0.0.16
+pysmlight==0.1.0
 
 # homeassistant.components.snmp
 pysnmp==6.2.5
