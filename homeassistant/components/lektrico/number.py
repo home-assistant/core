@@ -74,7 +74,7 @@ async def async_setup_entry(
 
 
 class LektricoNumber(LektricoEntity, NumberEntity):
-    """Defines an Lektrico number entity."""
+    """Defines a Lektrico number entity."""
 
     entity_description: LektricoNumberEntityDescription
 
