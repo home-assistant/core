@@ -497,8 +497,8 @@ async def test_async_get_area_by_name(area_registry: ar.AreaRegistry) -> None:
 async def test_async_get_area_by_name_using_alias(
     area_registry: ar.AreaRegistry,
 ) -> None:
-    """Make sure we can get the area by name."""
-    area_registry.async_create("Mock1", aliases=["alias_1", "alias_2"])
+    """Make sure we can get the area by alias."""
+    area_registry.async_create("Mock1", aliases=("alias_1", "alias_2"))
 
     assert len(area_registry.areas) == 1
 
