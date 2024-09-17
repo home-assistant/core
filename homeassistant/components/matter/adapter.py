@@ -213,7 +213,7 @@ class MatterAdapter:
             # we use the product name as fallback model ID
             model_id = get_clean_name(basic_info.productName)
         else:
-            model_id = str(basic_info.productID) if basic_info.productID else None
+            model_id = str(product_id) if (product_id := basic_info.productID) else None
 
         dr.async_get(self.hass).async_get_or_create(
             name=name,
