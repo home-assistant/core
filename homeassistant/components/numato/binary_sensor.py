@@ -71,7 +71,7 @@ def setup_platform(
                 api.edge_detect(device_id, port, partial(read_gpio, device_id))
 
             except NumatoGpioError as err:
-                _LOGGER.info(
+                _LOGGER.error(
                     "Notification setup failed on device %s, "
                     "updates on binary sensor %s only in polling mode: %s",
                     device_id,
