@@ -75,7 +75,16 @@ class TeslemetryVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.update_interval = VEHICLE_INTERVAL
 
         try:
-            data = (await self.api.vehicle_data(endpoints=ENDPOINTS))["response"]
+            if self.data["state"] != TeslemetryState.ONLINE:
+                response = await self.api.vehicle()
+                self.data["state"] = response["response"]["state"]
+
+            if self.data["state"] != TeslemetryState.ONLINE:
+                return self.data
+
+            response = await self.api.vehicle_data(endpoints=ENDPOINTS)
+            data = response["response"]
+
         except VehicleOffline:
             self.data["state"] = TeslemetryState.OFFLINE
             return self.data

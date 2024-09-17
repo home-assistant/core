@@ -19,8 +19,8 @@ from aioesphomeapi import (
     HomeassistantServiceCall,
     ReconnectLogic,
     UserService,
+    VoiceAssistantAnnounceFinished,
     VoiceAssistantAudioSettings,
-    VoiceAssistantEventType,
     VoiceAssistantFeature,
 )
 import pytest
@@ -33,11 +33,6 @@ from homeassistant.components.esphome.const import (
     CONF_NOISE_PSK,
     DEFAULT_NEW_CONFIG_ALLOW_ALLOW_SERVICE_CALLS,
     DOMAIN,
-)
-from homeassistant.components.esphome.entry_data import RuntimeEntryData
-from homeassistant.components.esphome.voice_assistant import (
-    VoiceAssistantAPIPipeline,
-    VoiceAssistantUDPPipeline,
 )
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import HomeAssistant
@@ -205,16 +200,24 @@ class MockESPHomeDevice:
         self.home_assistant_state_subscription_callback: Callable[
             [str, str | None], None
         ]
+        self.home_assistant_state_request_callback: Callable[[str, str | None], None]
         self.voice_assistant_handle_start_callback: Callable[
             [str, int, VoiceAssistantAudioSettings, str | None],
             Coroutine[Any, Any, int | None],
         ]
         self.voice_assistant_handle_stop_callback: Callable[
-            [], Coroutine[Any, Any, None]
+            [bool], Coroutine[Any, Any, None]
         ]
         self.voice_assistant_handle_audio_callback: (
             Callable[
                 [bytes],
+                Coroutine[Any, Any, None],
+            ]
+            | None
+        )
+        self.voice_assistant_handle_announcement_finished_callback: (
+            Callable[
+                [VoiceAssistantAnnounceFinished],
                 Coroutine[Any, Any, None],
             ]
             | None
@@ -268,9 +271,11 @@ class MockESPHomeDevice:
     def set_home_assistant_state_subscription_callback(
         self,
         on_state_sub: Callable[[str, str | None], None],
+        on_state_request: Callable[[str, str | None], None],
     ) -> None:
         """Set the state call callback."""
         self.home_assistant_state_subscription_callback = on_state_sub
+        self.home_assistant_state_request_callback = on_state_request
 
     def mock_home_assistant_state_subscription(
         self, entity_id: str, attribute: str | None
@@ -278,16 +283,29 @@ class MockESPHomeDevice:
         """Mock a state subscription."""
         self.home_assistant_state_subscription_callback(entity_id, attribute)
 
+    def mock_home_assistant_state_request(
+        self, entity_id: str, attribute: str | None
+    ) -> None:
+        """Mock a state request."""
+        self.home_assistant_state_request_callback(entity_id, attribute)
+
     def set_subscribe_voice_assistant_callbacks(
         self,
         handle_start: Callable[
             [str, int, VoiceAssistantAudioSettings, str | None],
             Coroutine[Any, Any, int | None],
         ],
-        handle_stop: Callable[[], Coroutine[Any, Any, None]],
+        handle_stop: Callable[[bool], Coroutine[Any, Any, None]],
         handle_audio: (
             Callable[
                 [bytes],
+                Coroutine[Any, Any, None],
+            ]
+            | None
+        ) = None,
+        handle_announcement_finished: (
+            Callable[
+                [VoiceAssistantAnnounceFinished],
                 Coroutine[Any, Any, None],
             ]
             | None
@@ -297,6 +315,9 @@ class MockESPHomeDevice:
         self.voice_assistant_handle_start_callback = handle_start
         self.voice_assistant_handle_stop_callback = handle_stop
         self.voice_assistant_handle_audio_callback = handle_audio
+        self.voice_assistant_handle_announcement_finished_callback = (
+            handle_announcement_finished
+        )
 
     async def mock_voice_assistant_handle_start(
         self,
@@ -310,14 +331,21 @@ class MockESPHomeDevice:
             conversation_id, flags, settings, wake_word_phrase
         )
 
-    async def mock_voice_assistant_handle_stop(self) -> None:
+    async def mock_voice_assistant_handle_stop(self, abort: bool) -> None:
         """Mock voice assistant handle stop."""
-        await self.voice_assistant_handle_stop_callback()
+        await self.voice_assistant_handle_stop_callback(abort)
 
     async def mock_voice_assistant_handle_audio(self, audio: bytes) -> None:
         """Mock voice assistant handle audio."""
         assert self.voice_assistant_handle_audio_callback is not None
         await self.voice_assistant_handle_audio_callback(audio)
+
+    async def mock_voice_assistant_handle_announcement_finished(
+        self, finished: VoiceAssistantAnnounceFinished
+    ) -> None:
+        """Mock voice assistant handle announcement finished."""
+        assert self.voice_assistant_handle_announcement_finished_callback is not None
+        await self.voice_assistant_handle_announcement_finished_callback(finished)
 
 
 async def _mock_generic_device_entry(
@@ -378,9 +406,12 @@ async def _mock_generic_device_entry(
 
     def _subscribe_home_assistant_states(
         on_state_sub: Callable[[str, str | None], None],
+        on_state_request: Callable[[str, str | None], None],
     ) -> None:
         """Subscribe to home assistant states."""
-        mock_device.set_home_assistant_state_subscription_callback(on_state_sub)
+        mock_device.set_home_assistant_state_subscription_callback(
+            on_state_sub, on_state_request
+        )
 
     def _subscribe_voice_assistant(
         *,
@@ -388,7 +419,7 @@ async def _mock_generic_device_entry(
             [str, int, VoiceAssistantAudioSettings, str | None],
             Coroutine[Any, Any, int | None],
         ],
-        handle_stop: Callable[[], Coroutine[Any, Any, None]],
+        handle_stop: Callable[[bool], Coroutine[Any, Any, None]],
         handle_audio: (
             Callable[
                 [bytes],
@@ -396,10 +427,17 @@ async def _mock_generic_device_entry(
             ]
             | None
         ) = None,
+        handle_announcement_finished: (
+            Callable[
+                [VoiceAssistantAnnounceFinished],
+                Coroutine[Any, Any, None],
+            ]
+            | None
+        ) = None,
     ) -> Callable[[], None]:
         """Subscribe to voice assistant."""
         mock_device.set_subscribe_voice_assistant_callbacks(
-            handle_start, handle_stop, handle_audio
+            handle_start, handle_stop, handle_audio, handle_announcement_finished
         )
 
         def unsub():
@@ -421,7 +459,7 @@ async def _mock_generic_device_entry(
     class MockReconnectLogic(BaseMockReconnectLogic):
         """Mock ReconnectLogic."""
 
-        def __init__(self, *args, **kwargs):
+        def __init__(self, *args: Any, **kwargs: Any) -> None:
             """Init the mock."""
             super().__init__(*args, **kwargs)
             mock_device.set_on_disconnect(kwargs["on_disconnect"])
@@ -613,57 +651,3 @@ async def mock_esphome_device(
         )
 
     return _mock_device
-
-
-@pytest.fixture
-def mock_voice_assistant_api_pipeline() -> VoiceAssistantAPIPipeline:
-    """Return the API Pipeline factory."""
-    mock_pipeline = Mock(spec=VoiceAssistantAPIPipeline)
-
-    def mock_constructor(
-        hass: HomeAssistant,
-        entry_data: RuntimeEntryData,
-        handle_event: Callable[[VoiceAssistantEventType, dict[str, str] | None], None],
-        handle_finished: Callable[[], None],
-        api_client: APIClient,
-    ):
-        """Fake the constructor."""
-        mock_pipeline.hass = hass
-        mock_pipeline.entry_data = entry_data
-        mock_pipeline.handle_event = handle_event
-        mock_pipeline.handle_finished = handle_finished
-        mock_pipeline.api_client = api_client
-        return mock_pipeline
-
-    mock_pipeline.side_effect = mock_constructor
-    with patch(
-        "homeassistant.components.esphome.voice_assistant.VoiceAssistantAPIPipeline",
-        new=mock_pipeline,
-    ):
-        yield mock_pipeline
-
-
-@pytest.fixture
-def mock_voice_assistant_udp_pipeline() -> VoiceAssistantUDPPipeline:
-    """Return the API Pipeline factory."""
-    mock_pipeline = Mock(spec=VoiceAssistantUDPPipeline)
-
-    def mock_constructor(
-        hass: HomeAssistant,
-        entry_data: RuntimeEntryData,
-        handle_event: Callable[[VoiceAssistantEventType, dict[str, str] | None], None],
-        handle_finished: Callable[[], None],
-    ):
-        """Fake the constructor."""
-        mock_pipeline.hass = hass
-        mock_pipeline.entry_data = entry_data
-        mock_pipeline.handle_event = handle_event
-        mock_pipeline.handle_finished = handle_finished
-        return mock_pipeline
-
-    mock_pipeline.side_effect = mock_constructor
-    with patch(
-        "homeassistant.components.esphome.voice_assistant.VoiceAssistantUDPPipeline",
-        new=mock_pipeline,
-    ):
-        yield mock_pipeline

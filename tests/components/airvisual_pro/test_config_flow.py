@@ -10,10 +10,12 @@ from pyairvisual.node import (
 import pytest
 
 from homeassistant.components.airvisual_pro.const import DOMAIN
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_REAUTH, SOURCE_USER
+from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+
+from tests.common import MockConfigEntry
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
@@ -98,22 +100,14 @@ async def test_step_import(hass: HomeAssistant, config, setup_airvisual_pro) -> 
 async def test_reauth(
     hass: HomeAssistant,
     config,
-    config_entry,
+    config_entry: MockConfigEntry,
     connect_errors,
     connect_mock,
     pro,
     setup_airvisual_pro,
 ) -> None:
     """Test re-auth (including errors)."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": SOURCE_REAUTH,
-            "entry_id": config_entry.entry_id,
-            "unique_id": config_entry.unique_id,
-        },
-        data=config,
-    )
+    result = await config_entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 

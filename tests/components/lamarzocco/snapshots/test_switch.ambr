@@ -113,6 +113,7 @@
     }),
     'manufacturer': 'La Marzocco',
     'model': <MachineModel.GS3_AV: 'GS3 AV'>,
+    'model_id': None,
     'name': 'GS01234',
     'name_by_user': None,
     'primary_config_entry': <ANY>,

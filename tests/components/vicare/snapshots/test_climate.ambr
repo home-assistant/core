@@ -1,0 +1,167 @@
+# serializer version: 1
+# name: test_all_entities[climate.model0_heating-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'hvac_modes': list([
+      ]),
+      'max_temp': 37,
+      'min_temp': 3,
+      'preset_modes': list([
+        'comfort',
+        'eco',
+        'home',
+        'sleep',
+      ]),
+      'target_temp_step': 1,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.model0_heating',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Heating',
+    'platform': 'vicare',
+    'previous_unique_id': None,
+    'supported_features': <ClimateEntityFeature: 401>,
+    'translation_key': 'heating',
+    'unique_id': 'gateway0_deviceSerialVitodens300W-heating-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[climate.model0_heating-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': None,
+      'friendly_name': 'model0 Heating',
+      'hvac_action': <HVACAction.IDLE: 'idle'>,
+      'hvac_modes': list([
+      ]),
+      'max_temp': 37,
+      'min_temp': 3,
+      'preset_mode': None,
+      'preset_modes': list([
+        'comfort',
+        'eco',
+        'home',
+        'sleep',
+      ]),
+      'supported_features': <ClimateEntityFeature: 401>,
+      'target_temp_step': 1,
+      'temperature': None,
+      'vicare_programs': list([
+        'comfort',
+        'eco',
+        'external',
+        'holiday',
+        'normal',
+        'reduced',
+        'standby',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.model0_heating',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_all_entities[climate.model0_heating_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'hvac_modes': list([
+      ]),
+      'max_temp': 37,
+      'min_temp': 3,
+      'preset_modes': list([
+        'comfort',
+        'eco',
+        'home',
+        'sleep',
+      ]),
+      'target_temp_step': 1,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.model0_heating_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Heating',
+    'platform': 'vicare',
+    'previous_unique_id': None,
+    'supported_features': <ClimateEntityFeature: 401>,
+    'translation_key': 'heating',
+    'unique_id': 'gateway0_deviceSerialVitodens300W-heating-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[climate.model0_heating_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': None,
+      'friendly_name': 'model0 Heating',
+      'hvac_action': <HVACAction.IDLE: 'idle'>,
+      'hvac_modes': list([
+      ]),
+      'max_temp': 37,
+      'min_temp': 3,
+      'preset_mode': None,
+      'preset_modes': list([
+        'comfort',
+        'eco',
+        'home',
+        'sleep',
+      ]),
+      'supported_features': <ClimateEntityFeature: 401>,
+      'target_temp_step': 1,
+      'temperature': None,
+      'vicare_programs': list([
+        'comfort',
+        'eco',
+        'external',
+        'holiday',
+        'normal',
+        'reduced',
+        'standby',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.model0_heating_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---

@@ -3,6 +3,7 @@
 import asyncio
 import logging
 
+from aiohttp import web
 from httpx import ConnectTimeout
 from pypoint import PointSession
 import voluptuous as vol
@@ -158,13 +159,15 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-async def handle_webhook(hass, webhook_id, request):
+async def handle_webhook(
+    hass: HomeAssistant, webhook_id: str, request: web.Request
+) -> None:
     """Handle webhook callback."""
     try:
         data = await request.json()
         _LOGGER.debug("Webhook %s: %s", webhook_id, data)
     except ValueError:
-        return None
+        return
 
     if isinstance(data, dict):
         data["webhook_id"] = webhook_id

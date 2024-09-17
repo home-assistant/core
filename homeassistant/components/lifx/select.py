@@ -50,7 +50,10 @@ async def async_setup_entry(
             LIFXInfraredBrightnessSelectEntity(coordinator, INFRARED_BRIGHTNESS_ENTITY)
         )
 
-    if lifx_features(coordinator.device)["multizone"] is True:
+    if (
+        lifx_features(coordinator.device)["multizone"] is True
+        or lifx_features(coordinator.device)["matrix"] is True
+    ):
         entities.append(LIFXThemeSelectEntity(coordinator, THEME_ENTITY))
 
     async_add_entities(entities)

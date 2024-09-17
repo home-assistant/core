@@ -6,15 +6,13 @@ from collections.abc import Callable
 from dataclasses import dataclass
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .const import DOMAIN
+from . import JellyfinConfigEntry
 from .coordinator import JellyfinDataT
 from .entity import JellyfinEntity
-from .models import JellyfinData
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -37,23 +35,22 @@ SENSOR_TYPES: dict[str, JellyfinSensorEntityDescription] = {
     "sessions": JellyfinSensorEntityDescription(
         key="watching",
         translation_key="watching",
-        name=None,
-        native_unit_of_measurement="Watching",
         value_fn=_count_now_playing,
+        native_unit_of_measurement="clients",
     )
 }
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: JellyfinConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Jellyfin sensor based on a config entry."""
-    jellyfin_data: JellyfinData = hass.data[DOMAIN][entry.entry_id]
+    data = entry.runtime_data
 
     async_add_entities(
-        JellyfinSensor(jellyfin_data.coordinators[coordinator_type], description)
+        JellyfinSensor(data.coordinators[coordinator_type], description)
         for coordinator_type, description in SENSOR_TYPES.items()
     )
 
@@ -61,6 +58,7 @@ async def async_setup_entry(
 class JellyfinSensor(JellyfinEntity, SensorEntity):
     """Defines a Jellyfin sensor entity."""
 
+    _attr_has_entity_name = True
     entity_description: JellyfinSensorEntityDescription
 
     @property

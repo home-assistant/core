@@ -111,6 +111,7 @@ UNSUBSCRIBE_COOLDOWN = 0.1
 TIMEOUT_ACK = 10
 RECONNECT_INTERVAL_SECONDS = 10
 
+MAX_WILDCARD_SUBSCRIBES_PER_CALL = 1
 MAX_SUBSCRIBES_PER_CALL = 500
 MAX_UNSUBSCRIBES_PER_CALL = 500
 
@@ -427,12 +428,12 @@ class MQTT:
         await self.async_init_client()
 
     @property
-    def subscriptions(self) -> list[Subscription]:
+    def subscriptions(self) -> set[Subscription]:
         """Return the tracked subscriptions."""
-        return [
+        return {
             *chain.from_iterable(self._simple_subscriptions.values()),
             *self._wildcard_subscriptions,
-        ]
+        }
 
     def cleanup(self) -> None:
         """Clean up listeners."""
@@ -735,7 +736,7 @@ class MQTT:
 
     @callback
     def async_restore_tracked_subscriptions(
-        self, subscriptions: list[Subscription]
+        self, subscriptions: set[Subscription]
     ) -> None:
         """Restore tracked subscriptions after reload."""
         for subscription in subscriptions:
@@ -893,14 +894,27 @@ class MQTT:
         if not self._pending_subscriptions:
             return
 
-        subscriptions: dict[str, int] = self._pending_subscriptions
+        # Split out the wildcard subscriptions, we subscribe to them one by one
+        pending_subscriptions: dict[str, int] = self._pending_subscriptions
+        pending_wildcard_subscriptions = {
+            subscription.topic: pending_subscriptions.pop(subscription.topic)
+            for subscription in self._wildcard_subscriptions
+            if subscription.topic in pending_subscriptions
+        }
+
         self._pending_subscriptions = {}
 
-        subscription_list = list(subscriptions.items())
         debug_enabled = _LOGGER.isEnabledFor(logging.DEBUG)
 
-        for chunk in chunked_or_all(subscription_list, MAX_SUBSCRIBES_PER_CALL):
+        for chunk in chain(
+            chunked_or_all(
+                pending_wildcard_subscriptions.items(), MAX_WILDCARD_SUBSCRIBES_PER_CALL
+            ),
+            chunked_or_all(pending_subscriptions.items(), MAX_SUBSCRIBES_PER_CALL),
+        ):
             chunk_list = list(chunk)
+            if not chunk_list:
+                continue
 
             result, mid = self._mqttc.subscribe(chunk_list)
 

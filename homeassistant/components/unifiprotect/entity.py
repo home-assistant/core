@@ -182,7 +182,6 @@ class BaseProtectEntity(Entity):
                 self._async_get_ufp_enabled = description.get_ufp_enabled
 
         self._async_set_device_info()
-        self._async_update_device_from_protect(device)
         self._state_getters = tuple(
             partial(attrgetter(attr), self) for attr in self._state_attrs
         )
@@ -252,6 +251,7 @@ class BaseProtectEntity(Entity):
         self.async_on_remove(
             self.data.async_subscribe(self.device.mac, self._async_updated_event)
         )
+        self._async_update_device_from_protect(self.device)
 
 
 class ProtectIsOnEntity(BaseProtectEntity):
@@ -278,7 +278,8 @@ class ProtectDeviceEntity(BaseProtectEntity):
         self._attr_device_info = DeviceInfo(
             name=self.device.display_name,
             manufacturer=DEFAULT_BRAND,
-            model=self.device.type,
+            model=self.device.market_name or self.device.type,
+            model_id=self.device.type,
             via_device=(DOMAIN, self.data.api.bootstrap.nvr.mac),
             sw_version=self.device.firmware_version,
             connections={(dr.CONNECTION_NETWORK_MAC, self.device.mac)},

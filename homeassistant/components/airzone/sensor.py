@@ -85,21 +85,37 @@ async def async_setup_entry(
     """Add Airzone sensors from a config_entry."""
     coordinator = entry.runtime_data
 
-    sensors: list[AirzoneSensor] = [
-        AirzoneZoneSensor(
-            coordinator,
-            description,
-            entry,
-            system_zone_id,
-            zone_data,
-        )
-        for system_zone_id, zone_data in coordinator.data[AZD_ZONES].items()
-        for description in ZONE_SENSOR_TYPES
-        if description.key in zone_data
-    ]
+    added_zones: set[str] = set()
+
+    def _async_entity_listener() -> None:
+        """Handle additions of sensors."""
+
+        entities: list[AirzoneSensor] = []
+
+        zones_data = coordinator.data.get(AZD_ZONES, {})
+        received_zones = set(zones_data)
+        new_zones = received_zones - added_zones
+        if new_zones:
+            entities.extend(
+                AirzoneZoneSensor(
+                    coordinator,
+                    description,
+                    entry,
+                    system_zone_id,
+                    zones_data.get(system_zone_id),
+                )
+                for system_zone_id in new_zones
+                for description in ZONE_SENSOR_TYPES
+                if description.key in zones_data.get(system_zone_id)
+            )
+            added_zones.update(new_zones)
+
+        async_add_entities(entities)
+
+    entities: list[AirzoneSensor] = []
 
     if AZD_HOT_WATER in coordinator.data:
-        sensors.extend(
+        entities.extend(
             AirzoneHotWaterSensor(
                 coordinator,
                 description,
@@ -110,7 +126,7 @@ async def async_setup_entry(
         )
 
     if AZD_WEBSERVER in coordinator.data:
-        sensors.extend(
+        entities.extend(
             AirzoneWebServerSensor(
                 coordinator,
                 description,
@@ -120,7 +136,10 @@ async def async_setup_entry(
             if description.key in coordinator.data[AZD_WEBSERVER]
         )
 
-    async_add_entities(sensors)
+    async_add_entities(entities)
+
+    entry.async_on_unload(coordinator.async_add_listener(_async_entity_listener))
+    _async_entity_listener()
 
 
 class AirzoneSensor(AirzoneEntity, SensorEntity):

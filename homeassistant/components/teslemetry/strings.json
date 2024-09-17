@@ -274,6 +274,9 @@
       "vehicle_state_rt": {
         "name": "Trunk"
       },
+      "vehicle_state_sun_roof_state": {
+        "name": "Sunroof"
+      },
       "windows": {
         "name": "Windows"
       }

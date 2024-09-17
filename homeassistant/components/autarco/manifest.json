@@ -1,0 +1,9 @@
+{
+  "domain": "autarco",
+  "name": "Autarco",
+  "codeowners": ["@klaasnicolaas"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/autarco",
+  "iot_class": "cloud_polling",
+  "requirements": ["autarco==3.0.0"]
+}

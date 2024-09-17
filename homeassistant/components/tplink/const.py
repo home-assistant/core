@@ -21,7 +21,11 @@ ATTR_TOTAL_ENERGY_KWH: Final = "total_energy_kwh"
 
 CONF_DEVICE_CONFIG: Final = "device_config"
 CONF_CREDENTIALS_HASH: Final = "credentials_hash"
-CONF_CONNECTION_TYPE: Final = "connection_type"
+CONF_CONNECTION_PARAMETERS: Final = "connection_parameters"
+CONF_USES_HTTP: Final = "uses_http"
+CONF_AES_KEYS: Final = "aes_keys"
+
+CONF_CONFIG_ENTRY_MINOR_VERSION: Final = 5
 
 PLATFORMS: Final = [
     Platform.BINARY_SENSOR,

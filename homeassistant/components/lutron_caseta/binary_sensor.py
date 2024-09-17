@@ -6,7 +6,6 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_SUGGESTED_AREA
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
@@ -14,12 +13,12 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import DOMAIN as CASETA_DOMAIN, LutronCasetaDevice, _area_name_from_id
 from .const import CONFIG_URL, MANUFACTURER, UNASSIGNED_AREA
-from .models import LutronCasetaData
+from .models import LutronCasetaConfigEntry
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: LutronCasetaConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Lutron Caseta binary_sensor platform.
@@ -27,7 +26,7 @@ async def async_setup_entry(
     Adds occupancy groups from the Caseta bridge associated with the
     config_entry as binary_sensor entities.
     """
-    data: LutronCasetaData = hass.data[CASETA_DOMAIN][config_entry.entry_id]
+    data = config_entry.runtime_data
     bridge = data.bridge
     occupancy_groups = bridge.occupancy_groups
     async_add_entities(

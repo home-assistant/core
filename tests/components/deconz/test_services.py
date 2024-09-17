@@ -21,13 +21,12 @@ from homeassistant.components.deconz.services import (
     SERVICE_REMOVE_ORPHANED_ENTRIES,
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from .test_gateway import BRIDGEID
+from .test_hub import BRIDGE_ID
 
-from tests.common import async_capture_events
+from tests.common import MockConfigEntry, async_capture_events
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
@@ -39,7 +38,7 @@ async def test_configure_service_with_field(
     """Test that service invokes pydeconz with the correct path and data."""
     data = {
         SERVICE_FIELD: "/lights/2",
-        CONF_BRIDGE_ID: BRIDGEID,
+        CONF_BRIDGE_ID: BRIDGE_ID,
         SERVICE_DATA: {"on": True, "attr1": 10, "attr2": 20},
     }
 
@@ -55,12 +54,10 @@ async def test_configure_service_with_field(
     "light_payload",
     [
         {
-            "1": {
-                "name": "Test",
-                "state": {"reachable": True},
-                "type": "Light",
-                "uniqueid": "00:00:00:00:00:00:00:01-00",
-            }
+            "name": "Test",
+            "state": {"reachable": True},
+            "type": "Light",
+            "uniqueid": "00:00:00:00:00:00:00:01-00",
         }
     ],
 )
@@ -74,7 +71,7 @@ async def test_configure_service_with_entity(
         SERVICE_ENTITY: "light.test",
         SERVICE_DATA: {"on": True, "attr1": 10, "attr2": 20},
     }
-    aioclient_mock = mock_put_request("/lights/1")
+    aioclient_mock = mock_put_request("/lights/0")
 
     await hass.services.async_call(
         DECONZ_DOMAIN, SERVICE_CONFIGURE_DEVICE, service_data=data, blocking=True
@@ -86,12 +83,10 @@ async def test_configure_service_with_entity(
     "light_payload",
     [
         {
-            "1": {
-                "name": "Test",
-                "state": {"reachable": True},
-                "type": "Light",
-                "uniqueid": "00:00:00:00:00:00:00:01-00",
-            }
+            "name": "Test",
+            "state": {"reachable": True},
+            "type": "Light",
+            "uniqueid": "00:00:00:00:00:00:00:01-00",
         }
     ],
 )
@@ -106,7 +101,7 @@ async def test_configure_service_with_entity_and_field(
         SERVICE_FIELD: "/state",
         SERVICE_DATA: {"on": True, "attr1": 10, "attr2": 20},
     }
-    aioclient_mock = mock_put_request("/lights/1/state")
+    aioclient_mock = mock_put_request("/lights/0/state")
 
     await hass.services.async_call(
         DECONZ_DOMAIN, SERVICE_CONFIGURE_DEVICE, service_data=data, blocking=True
@@ -232,7 +227,7 @@ async def test_service_refresh_devices(
     mock_requests()
 
     await hass.services.async_call(
-        DECONZ_DOMAIN, SERVICE_DEVICE_REFRESH, service_data={CONF_BRIDGE_ID: BRIDGEID}
+        DECONZ_DOMAIN, SERVICE_DEVICE_REFRESH, service_data={CONF_BRIDGE_ID: BRIDGE_ID}
     )
     await hass.async_block_till_done()
 
@@ -243,13 +238,11 @@ async def test_service_refresh_devices(
     "sensor_payload",
     [
         {
-            "1": {
-                "name": "Switch 1",
-                "type": "ZHASwitch",
-                "state": {"buttonevent": 1000},
-                "config": {"battery": 100},
-                "uniqueid": "00:00:00:00:00:00:00:01-00",
-            }
+            "name": "Switch 1",
+            "type": "ZHASwitch",
+            "state": {"buttonevent": 1000},
+            "config": {"battery": 100},
+            "uniqueid": "00:00:00:00:00:00:00:01-00",
         }
     ],
 )
@@ -288,7 +281,7 @@ async def test_service_refresh_devices_trigger_no_state_update(
             }
         },
         "sensors": {
-            "1": {
+            "0": {
                 "name": "Switch 1",
                 "type": "ZHASwitch",
                 "state": {"buttonevent": 1000},
@@ -300,7 +293,7 @@ async def test_service_refresh_devices_trigger_no_state_update(
     mock_requests()
 
     await hass.services.async_call(
-        DECONZ_DOMAIN, SERVICE_DEVICE_REFRESH, service_data={CONF_BRIDGE_ID: BRIDGEID}
+        DECONZ_DOMAIN, SERVICE_DEVICE_REFRESH, service_data={CONF_BRIDGE_ID: BRIDGE_ID}
     )
     await hass.async_block_till_done()
 
@@ -312,12 +305,10 @@ async def test_service_refresh_devices_trigger_no_state_update(
     "light_payload",
     [
         {
-            "1": {
-                "name": "Light 1 name",
-                "state": {"reachable": True},
-                "type": "Light",
-                "uniqueid": "00:00:00:00:00:00:00:01-00",
-            }
+            "name": "Light 0 name",
+            "state": {"reachable": True},
+            "type": "Light",
+            "uniqueid": "00:00:00:00:00:00:00:01-00",
         }
     ],
 )
@@ -325,13 +316,11 @@ async def test_service_refresh_devices_trigger_no_state_update(
     "sensor_payload",
     [
         {
-            "1": {
-                "name": "Switch 1",
-                "type": "ZHASwitch",
-                "state": {"buttonevent": 1000, "gesture": 1},
-                "config": {"battery": 100},
-                "uniqueid": "00:00:00:00:00:00:00:03-00",
-            },
+            "name": "Switch 1",
+            "type": "ZHASwitch",
+            "state": {"buttonevent": 1000, "gesture": 1},
+            "config": {"battery": 100},
+            "uniqueid": "00:00:00:00:00:00:00:03-00",
         }
     ],
 )
@@ -339,7 +328,7 @@ async def test_remove_orphaned_entries_service(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    config_entry_setup: ConfigEntry,
+    config_entry_setup: MockConfigEntry,
 ) -> None:
     """Test service works and also don't remove more than expected."""
     device = device_registry.async_get_or_create(
@@ -379,7 +368,7 @@ async def test_remove_orphaned_entries_service(
     await hass.services.async_call(
         DECONZ_DOMAIN,
         SERVICE_REMOVE_ORPHANED_ENTRIES,
-        service_data={CONF_BRIDGE_ID: BRIDGEID},
+        service_data={CONF_BRIDGE_ID: BRIDGE_ID},
     )
     await hass.async_block_till_done()
 

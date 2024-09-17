@@ -94,7 +94,7 @@ async def fetch_redirect_uris(hass: HomeAssistant, url: str) -> list[str]:
     try:
         async with (
             aiohttp.ClientSession() as session,
-            session.get(url, timeout=5) as resp,
+            session.get(url, timeout=aiohttp.ClientTimeout(total=5)) as resp,
         ):
             async for data in resp.content.iter_chunked(1024):
                 parser.feed(data.decode())

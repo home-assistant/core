@@ -44,7 +44,7 @@ from homeassistant.util.dt import utcnow
 from homeassistant.util.json import JsonValueType
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
-from .const import (
+from .const import (  # noqa: F401
     ATTR_WEATHER_APPARENT_TEMPERATURE,
     ATTR_WEATHER_CLOUD_COVERAGE,
     ATTR_WEATHER_DEW_POINT,
@@ -63,6 +63,7 @@ from .const import (
     ATTR_WEATHER_WIND_SPEED,
     ATTR_WEATHER_WIND_SPEED_UNIT,
     DOMAIN,
+    INTENT_GET_WEATHER,
     UNIT_CONVERSIONS,
     VALID_UNITS,
     WeatherEntityFeature,
@@ -922,7 +923,6 @@ class WeatherEntity(Entity, PostInit, cached_properties=CACHED_PROPERTIES_WITH_A
         forecast_type: Literal["daily", "hourly", "twice_daily"],
     ) -> None:
         """Start subscription to forecast_type."""
-        return None
 
     @callback
     def _async_subscription_ended(
@@ -930,7 +930,6 @@ class WeatherEntity(Entity, PostInit, cached_properties=CACHED_PROPERTIES_WITH_A
         forecast_type: Literal["daily", "hourly", "twice_daily"],
     ) -> None:
         """End subscription to forecast_type."""
-        return None
 
     @final
     @callback

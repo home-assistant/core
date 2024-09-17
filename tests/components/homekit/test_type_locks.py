@@ -5,7 +5,7 @@ import pytest
 from homeassistant.components.homekit.const import ATTR_VALUE
 from homeassistant.components.homekit.type_locks import Lock
 from homeassistant.components.lock import (
-    DOMAIN,
+    DOMAIN as LOCK_DOMAIN,
     STATE_JAMMED,
     STATE_LOCKING,
     STATE_UNLOCKING,
@@ -98,8 +98,8 @@ async def test_lock_unlock(hass: HomeAssistant, hk_driver, events: list[Event]) 
     assert acc.char_target_state.value == 0
 
     # Set from HomeKit
-    call_lock = async_mock_service(hass, DOMAIN, "lock")
-    call_unlock = async_mock_service(hass, DOMAIN, "unlock")
+    call_lock = async_mock_service(hass, LOCK_DOMAIN, "lock")
+    call_unlock = async_mock_service(hass, LOCK_DOMAIN, "unlock")
 
     acc.char_target_state.client_update_value(1)
     await hass.async_block_till_done()
@@ -132,7 +132,7 @@ async def test_no_code(
     acc = Lock(hass, hk_driver, "Lock", entity_id, 2, config)
 
     # Set from HomeKit
-    call_lock = async_mock_service(hass, DOMAIN, "lock")
+    call_lock = async_mock_service(hass, LOCK_DOMAIN, "lock")
 
     acc.char_target_state.client_update_value(1)
     await hass.async_block_till_done()

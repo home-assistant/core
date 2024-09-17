@@ -77,7 +77,7 @@ class LegacyBase(DeclarativeBase):
     """Base class for tables, used for schema migration."""
 
 
-SCHEMA_VERSION = 44
+SCHEMA_VERSION = 47
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -178,7 +178,7 @@ def compile_char_one(type_: TypeDecorator, compiler: Any, **kw: Any) -> str:
 class FAST_PYSQLITE_DATETIME(sqlite.DATETIME):
     """Use ciso8601 to parse datetimes instead of sqlalchemy built-in regex."""
 
-    def result_processor(self, dialect, coltype):  # type: ignore[no-untyped-def]
+    def result_processor(self, dialect: Dialect, coltype: Any) -> Callable | None:
         """Offload the datetime parsing to ciso8601."""
         return lambda value: None if value is None else ciso8601.parse_datetime(value)
 
@@ -186,7 +186,7 @@ class FAST_PYSQLITE_DATETIME(sqlite.DATETIME):
 class NativeLargeBinary(LargeBinary):
     """A faster version of LargeBinary for engines that support python bytes natively."""
 
-    def result_processor(self, dialect, coltype):  # type: ignore[no-untyped-def]
+    def result_processor(self, dialect: Dialect, coltype: Any) -> Callable | None:
         """No conversion needed for engines that support native bytes."""
         return None
 
@@ -693,13 +693,13 @@ class StatisticsBase:
 
     @classmethod
     def from_stats(cls, metadata_id: int, stats: StatisticData) -> Self:
-        """Create object from a statistics with datatime objects."""
+        """Create object from a statistics with datetime objects."""
         return cls(  # type: ignore[call-arg]
             metadata_id=metadata_id,
             created=None,
             created_ts=time.time(),
             start=None,
-            start_ts=dt_util.utc_to_timestamp(stats["start"]),
+            start_ts=stats["start"].timestamp(),
             mean=stats.get("mean"),
             min=stats.get("min"),
             max=stats.get("max"),

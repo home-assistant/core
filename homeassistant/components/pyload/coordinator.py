@@ -30,7 +30,7 @@ class PyLoadData:
     speed: float
     download: bool
     reconnect: bool
-    captcha: bool
+    captcha: bool | None = None
     free_space: int
 
 
