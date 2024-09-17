@@ -112,12 +112,12 @@ async def test_sync_clock(
     mock_automower_client.get_status.return_value = values
 
     await hass.services.async_call(
-        domain="button",
-        service=SERVICE_PRESS,
-        target={ATTR_ENTITY_ID: entity_id},
+        BUTTON_DOMAIN,
+        SERVICE_PRESS,
+        {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
-    mocked_method = getattr(mock_automower_client.commands, "set_datetime")
+    mocked_method = mock_automower_client.commands.set_datetime
     # datetime(2024, 2, 29, 11, tzinfo=datetime.UTC) is in local time of the tests
     # datetime(2024, 2, 29, 12, tzinfo=zoneinfo.ZoneInfo(key='Europe/Berlin'))
     mocked_method.assert_called_once_with(
