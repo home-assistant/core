@@ -1,4 +1,4 @@
-"""Creates a button entity for Husqvarna Automower integration."""
+"""Creates button entities for the Husqvarna Automower integration."""
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
@@ -39,7 +39,7 @@ async def _async_set_time(
 
 @dataclass(frozen=True, kw_only=True)
 class AutomowerButtonEntityDescription(ButtonEntityDescription):
-    """Describes Automower button entity."""
+    """Describes Automower button entities."""
 
     available_fn: Callable[[MowerAttributes], bool] = lambda _: True
     exists_fn: Callable[[MowerAttributes], bool] = lambda _: True
@@ -70,14 +70,12 @@ async def async_setup_entry(
 ) -> None:
     """Set up button platform."""
     coordinator = entry.runtime_data
-    entities: list[ButtonEntity] = []
-    entities.extend(
+    async_add_entities(
         AutomowerButtonEntity(mower_id, coordinator, description)
         for mower_id in coordinator.data
         for description in BUTTON_TYPES
         if description.exists_fn(coordinator.data[mower_id])
     )
-    async_add_entities(entities)
 
 
 class AutomowerButtonEntity(AutomowerAvailableEntity, ButtonEntity):
