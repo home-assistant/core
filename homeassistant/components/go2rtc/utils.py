@@ -12,7 +12,7 @@ import subprocess
 from threading import Thread
 from typing import Final
 import zipfile
-
+from tempfile import NamedTemporaryFile
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -110,13 +110,13 @@ class Server(Thread):
         super().__init__(name=DOMAIN, daemon=True)
         self._binary = binary
         self._stop_requested = False
-        self.url: Final = "http://localhost:1984/"
+        self.url: Final = DEFAULT_URL
 
     def run(self) -> None:
         """Run the server."""
         self._stop_requested = False
-        with subprocess.Popen(
-            [self._binary], stdout=subprocess.PIPE, stderr=subprocess.STDOUT
+        with NamedTemporaryFile(prefix="go2rtc", suffix=".yaml") as file, subprocess.Popen(
+            [self._binary, "-c", "webrtc.ice_servers=[]", "-c", file.name], stdout=subprocess.PIPE, stderr=subprocess.STDOUT
         ) as process:
             while not self._stop_requested and process.poll() is None:
                 assert process.stdout
