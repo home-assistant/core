@@ -257,6 +257,6 @@ class HomeConnectCoolingLight(HomeConnectLight):
         """Initialize Cooling Light Entity."""
         super().__init__(device, entity_description.key, ambient)
         self.entity_description = entity_description
-        self._key = self.entity_description.on_key
-        self._brightness_key = self.entity_description.brightness_key
+        self._key = entity_description.on_key
+        self._brightness_key = entity_description.brightness_key
         self._percentage_scale = (1, 100)
