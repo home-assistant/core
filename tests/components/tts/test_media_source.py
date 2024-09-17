@@ -98,14 +98,24 @@ async def test_browsing(hass: HomeAssistant, setup: str) -> None:
         await media_source.async_browse_media(hass, "media-source://tts/non-existing")
 
 
-@pytest.mark.parametrize("mock_provider", [MSProvider(DEFAULT_LANG)])
+@pytest.mark.parametrize(
+    ("mock_provider", "extra_options"),
+    [
+        (MSProvider(DEFAULT_LANG), "&tts_options=%7B%22voice%22%3A%22Paulus%22%7D"),
+        (MSProvider(DEFAULT_LANG), "&voice=Paulus"),
+    ],
+)
 async def test_legacy_resolving(
-    hass: HomeAssistant, hass_client: ClientSessionGenerator, mock_provider: MSProvider
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_provider: MSProvider,
+    extra_options: str,
 ) -> None:
     """Test resolving legacy provider."""
     await mock_setup(hass, mock_provider)
     mock_get_tts_audio = mock_provider.get_tts_audio
 
+    mock_get_tts_audio.reset_mock()
     media_id = "media-source://tts/test?message=Hello%20World"
     media = await media_source.async_resolve_media(hass, media_id, None)
     assert media.url.startswith("/api/tts_proxy/")
@@ -120,7 +130,9 @@ async def test_legacy_resolving(
 
     # Pass language and options
     mock_get_tts_audio.reset_mock()
-    media_id = "media-source://tts/test?message=Bye%20World&language=de_DE&voice=Paulus"
+    media_id = (
+        f"media-source://tts/test?message=Bye%20World&language=de_DE{extra_options}"
+    )
     media = await media_source.async_resolve_media(hass, media_id, None)
     assert media.url.startswith("/api/tts_proxy/")
     assert media.mime_type == "audio/mpeg"
@@ -133,14 +145,24 @@ async def test_legacy_resolving(
     assert mock_get_tts_audio.mock_calls[0][2]["options"] == {"voice": "Paulus"}
 
 
-@pytest.mark.parametrize("mock_tts_entity", [MSEntity(DEFAULT_LANG)])
+@pytest.mark.parametrize(
+    ("mock_tts_entity", "extra_options"),
+    [
+        (MSEntity(DEFAULT_LANG), "&tts_options=%7B%22voice%22%3A%22Paulus%22%7D"),
+        (MSEntity(DEFAULT_LANG), "&voice=Paulus"),
+    ],
+)
 async def test_resolving(
-    hass: HomeAssistant, hass_client: ClientSessionGenerator, mock_tts_entity: MSEntity
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_tts_entity: MSEntity,
+    extra_options: str,
 ) -> None:
     """Test resolving entity."""
     await mock_config_entry_setup(hass, mock_tts_entity)
     mock_get_tts_audio = mock_tts_entity.get_tts_audio
 
+    mock_get_tts_audio.reset_mock()
     media_id = "media-source://tts/tts.test?message=Hello%20World"
     media = await media_source.async_resolve_media(hass, media_id, None)
     assert media.url.startswith("/api/tts_proxy/")
@@ -156,7 +178,7 @@ async def test_resolving(
     # Pass language and options
     mock_get_tts_audio.reset_mock()
     media_id = (
-        "media-source://tts/tts.test?message=Bye%20World&language=de_DE&voice=Paulus"
+        f"media-source://tts/tts.test?message=Bye%20World&language=de_DE{extra_options}"
     )
     media = await media_source.async_resolve_media(hass, media_id, None)
     assert media.url.startswith("/api/tts_proxy/")
@@ -196,6 +218,16 @@ async def test_resolving_errors(hass: HomeAssistant, setup: str, engine: str) ->
             hass, "media-source://tts/non-existing?message=bla", None
         )
 
+    # Non-JSON tts options
+    with pytest.raises(
+        media_source.Unresolvable, match="Invalid TTS options: Expecting ',' delimiter"
+    ):
+        await media_source.async_resolve_media(
+            hass,
+            f"media-source://tts/{engine}?message=bla&tts_options=%7Binvalid json",
+            None,
+        )
+
     # Non-existing option
     with pytest.raises(
         media_source.Unresolvable,
@@ -203,7 +235,7 @@ async def test_resolving_errors(hass: HomeAssistant, setup: str, engine: str) ->
     ):
         await media_source.async_resolve_media(
             hass,
-            f"media-source://tts/{engine}?message=bla&non_existing_option=bla",
+            f"media-source://tts/{engine}?message=bla&tts_options=%7B%22non_existing_option%22%3A%22bla%22%7D",
             None,
         )
 
@@ -234,7 +266,7 @@ async def test_generate_media_source_id_and_media_source_id_to_kwargs(
         "engine": result_engine,
         "message": "hello",
         "language": "en_US",
-        "options": {"age": "5"},
+        "options": {"age": 5},
         "cache": True,
     }
 
