@@ -220,7 +220,8 @@ async def test_resolving_errors(hass: HomeAssistant, setup: str, engine: str) ->
 
     # Non-JSON tts options
     with pytest.raises(
-        media_source.Unresolvable, match="Invalid TTS options: Expecting ',' delimiter"
+        media_source.Unresolvable,
+        match="Invalid TTS options: Expecting property name enclosed in double quotes",
     ):
         await media_source.async_resolve_media(
             hass,
