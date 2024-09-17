@@ -3,14 +3,28 @@
 from __future__ import annotations
 
 from collections.abc import Generator
+from dataclasses import fields
 import logging
+from types import MethodType
 from typing import Any
-from unittest.mock import DEFAULT, AsyncMock, patch
+from unittest.mock import DEFAULT, AsyncMock, Mock, patch
+
+from aiohasupervisor.models import InstalledAddonComplete
 
 from homeassistant.components.hassio.addon_manager import AddonManager
 from homeassistant.core import HomeAssistant
 
 LOGGER = logging.getLogger(__name__)
+INSTALLED_ADDON_FIELDS = [field.name for field in fields(InstalledAddonComplete)]
+
+
+def mock_to_dict(obj: Mock, fields: list[str]) -> dict[str, Any]:
+    """Aiohasupervisor mocks to dictionary representation."""
+    return {
+        field: getattr(obj, field)
+        for field in fields
+        if not isinstance(getattr(obj, field), Mock)
+    }
 
 
 def mock_addon_manager(hass: HomeAssistant) -> AddonManager:
@@ -52,21 +66,31 @@ def mock_addon_store_info(
         yield addon_store_info
 
 
-def mock_addon_info(addon_info_side_effect: Any | None) -> Generator[AsyncMock]:
+def mock_addon_info(
+    supervisor_client: AsyncMock, addon_info_side_effect: Any | None
+) -> Generator[AsyncMock]:
     """Mock Supervisor add-on info."""
-    with patch(
-        "homeassistant.components.hassio.addon_manager.async_get_addon_info",
-        side_effect=addon_info_side_effect,
-    ) as addon_info:
-        addon_info.return_value = {
-            "available": False,
-            "hostname": None,
-            "options": {},
-            "state": None,
-            "update_available": False,
-            "version": None,
-        }
-        yield addon_info
+    supervisor_client.addons.addon_info.side_effect = addon_info_side_effect
+
+    supervisor_client.addons.addon_info.return_value = addon_info = Mock(
+        spec=InstalledAddonComplete,
+        slug="test",
+        repository="core",
+        available=False,
+        hostname="",
+        options={},
+        state="unknown",
+        update_available=False,
+        version=None,
+        supervisor_api=False,
+        supervisor_role="default",
+    )
+    addon_info.name = "test"
+    addon_info.to_dict = MethodType(
+        lambda self: mock_to_dict(self, INSTALLED_ADDON_FIELDS),
+        addon_info,
+    )
+    yield supervisor_client.addons.addon_info
 
 
 def mock_addon_not_installed(
@@ -87,10 +111,10 @@ def mock_addon_installed(
         "state": "stopped",
         "version": "1.0.0",
     }
-    addon_info.return_value["available"] = True
-    addon_info.return_value["hostname"] = "core-test-addon"
-    addon_info.return_value["state"] = "stopped"
-    addon_info.return_value["version"] = "1.0.0"
+    addon_info.return_value.available = True
+    addon_info.return_value.hostname = "core-test-addon"
+    addon_info.return_value.state = "stopped"
+    addon_info.return_value.version = "1.0.0"
     return addon_info
 
 
@@ -102,10 +126,7 @@ def mock_addon_running(addon_store_info: AsyncMock, addon_info: AsyncMock) -> As
         "state": "started",
         "version": "1.0.0",
     }
-    addon_info.return_value["available"] = True
-    addon_info.return_value["hostname"] = "core-test-addon"
-    addon_info.return_value["state"] = "started"
-    addon_info.return_value["version"] = "1.0.0"
+    addon_info.return_value.state = "started"
     return addon_info
 
 
@@ -122,9 +143,10 @@ def mock_install_addon_side_effect(
             "state": "stopped",
             "version": "1.0.0",
         }
-        addon_info.return_value["available"] = True
-        addon_info.return_value["state"] = "stopped"
-        addon_info.return_value["version"] = "1.0.0"
+
+        addon_info.return_value.available = True
+        addon_info.return_value.state = "stopped"
+        addon_info.return_value.version = "1.0.0"
 
     return install_addon
 
@@ -152,8 +174,8 @@ def mock_start_addon_side_effect(
             "state": "started",
             "version": "1.0.0",
         }
-        addon_info.return_value["available"] = True
-        addon_info.return_value["state"] = "started"
+        addon_info.return_value.available = True
+        addon_info.return_value.state = "started"
 
     return start_addon
 
@@ -194,7 +216,7 @@ def mock_uninstall_addon() -> Generator[AsyncMock]:
 
 def mock_addon_options(addon_info: AsyncMock) -> dict[str, Any]:
     """Mock add-on options."""
-    return addon_info.return_value["options"]
+    return addon_info.return_value.options
 
 
 def mock_set_addon_options_side_effect(addon_options: dict[str, Any]) -> Any | None:
