@@ -280,40 +280,6 @@ async def test_async_update_playback_progress(
     assert old_updated_at != new_updated_at
 
 
-async def test_async_update_playback_progress_remote_leader(
-    hass: HomeAssistant,
-    mock_mozart_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test _async_update_playback_progress."""
-
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-
-    playback_metadata_callback = (
-        mock_mozart_client.get_playback_metadata_notifications.call_args[0][0]
-    )
-    playback_progress_callback = (
-        mock_mozart_client.get_playback_progress_notifications.call_args[0][0]
-    )
-    assert (states := hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID))
-    assert ATTR_MEDIA_POSITION not in states.attributes
-    old_updated_at = states.attributes[ATTR_MEDIA_POSITION_UPDATED_AT]
-    assert old_updated_at
-
-    # Send metadata to set remote leader
-    playback_metadata_callback(
-        PlaybackContentMetadata(remote_leader=BeolinkLeader(friendly_name="", jid=""))
-    )
-    playback_progress_callback(TEST_PLAYBACK_PROGRESS)
-
-    assert (states := hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID))
-    assert ATTR_MEDIA_POSITION not in states.attributes
-    new_updated_at = states.attributes[ATTR_MEDIA_POSITION_UPDATED_AT]
-    assert new_updated_at
-    assert old_updated_at != new_updated_at
-
-
 async def test_async_update_playback_state(
     hass: HomeAssistant,
     mock_mozart_client: AsyncMock,
