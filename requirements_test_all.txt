@@ -228,7 +228,7 @@ aioelectricitymaps==0.4.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==26.0.0
+aioesphomeapi==27.0.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -1574,7 +1574,7 @@ pyipp==0.16.0
 pyiqvia==2022.04.0
 
 # homeassistant.components.iskra
-pyiskra==0.1.8
+pyiskra==0.1.11
 
 # homeassistant.components.iss
 pyiss==1.0.1
@@ -1969,6 +1969,9 @@ pywilight==0.0.74
 
 # homeassistant.components.wiz
 pywizlight==0.5.14
+
+# homeassistant.components.wmspro
+pywmspro==0.1.0
 
 # homeassistant.components.ws66i
 pyws66i==1.1

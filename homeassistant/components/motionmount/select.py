@@ -91,6 +91,9 @@ class MotionMountPresets(MotionMountEntity, SelectEntity):
         try:
             await self.mm.go_to_preset(index)
         except (TimeoutError, socket.gaierror) as ex:
-            raise HomeAssistantError("Failed to communicate with MotionMount") from ex
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="failed_communication",
+            ) from ex
         else:
             self._attr_current_option = option
