@@ -738,10 +738,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """Return the WebRTC configuration."""
 
         ice_servers = await asyncio.gather(
-            *[
-                asyncio.create_task(server())
-                for server in self.hass.data[DATA_ICE_SERVERS]
-            ]
+            *[server() for server in self.hass.data.get(DATA_ICE_SERVERS, [])]
         )
         return RTCConfiguration(ice_servers=ice_servers)
 

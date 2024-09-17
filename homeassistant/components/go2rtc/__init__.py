@@ -66,3 +66,8 @@ class WebRTCProvider(CameraWebRTCProvider):
             camera.entity_id, WebRTCSdpOffer(offer_sdp)
         )
         return answer.sdp
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload a config entry."""
+    return True

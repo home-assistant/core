@@ -96,8 +96,11 @@ def async_register_webrtc_provider(
     )
 
     def remove_provider() -> None:
-        providers.discard(provider)
+        providers.remove(provider)
         hass.async_create_task(_async_refresh_providers(hass))
+
+    if provider in providers:
+        raise ValueError("Provider already registered")
 
     providers.add(provider)
     hass.async_create_task(_async_refresh_providers(hass))
