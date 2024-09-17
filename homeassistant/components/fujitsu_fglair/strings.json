@@ -30,7 +30,7 @@
   "selector": {
     "region": {
       "options": {
-        "default": "Default",
+        "default": "Other",
         "eu": "Europe",
         "cn": "China"
       }
