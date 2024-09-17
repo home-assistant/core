@@ -6,13 +6,14 @@ import logging
 from typing import Any
 from urllib.error import HTTPError
 
-from pylutron import Lutron
 import voluptuous as vol
+from pylutron import Lutron
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import callback
 
-from .const import DOMAIN
+from .const import CONF_DEFAULT_DIMMER_LEVEL, DEFAULT_DIMMER_LEVEL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -68,3 +69,38 @@ class LutronConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
             errors=errors,
         )
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: ConfigEntry,
+    ) -> OptionsFlowHandler:
+        """Get the options flow for this handler."""
+        return OptionsFlowHandler(config_entry)
+
+
+class OptionsFlowHandler(OptionsFlow):
+    """Handle a option flow for esphome."""
+
+    def __init__(self, config_entry: ConfigEntry) -> None:
+        """Initialize options flow."""
+        self.config_entry = config_entry
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle options flow."""
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        data_schema = vol.Schema(
+            {
+                vol.Required(
+                    CONF_DEFAULT_DIMMER_LEVEL,
+                    default=self.config_entry.options.get(
+                        CONF_DEFAULT_DIMMER_LEVEL, DEFAULT_DIMMER_LEVEL
+                    ),
+                ): vol.All(vol.Coerce(int), vol.Range(min=1, max=255)),
+            }
+        )
+        return self.async_show_form(step_id="init", data_schema=data_schema)
