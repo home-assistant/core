@@ -159,7 +159,7 @@ async def async_migrate_devices_and_entities(
             ):
                 if entity_entry.unique_id.startswith(new_identifier):
                     # already correct, nothing to do
-                    return
+                    continue
                 unique_id_parts = entity_entry.unique_id.split("-")
                 # replace old prefix `<gateway-serial>` with `<gateways-serial>_<device-serial>`
                 unique_id_parts[0] = new_identifier
