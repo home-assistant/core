@@ -68,7 +68,7 @@ class AzureDataExplorerClient:
             # Queued is the only option supported on free tier of ADX
             self.write_client = QueuedIngestClient(kcsb_ingest)
         else:
-            self.write_client = ManagedStreamingIngestClient.from_dm_kcsb(kcsb_ingest)
+            self.write_client = ManagedStreamingIngestClient(kcsb_ingest)
 
         self.query_client = KustoClient(kcsb_query)
 

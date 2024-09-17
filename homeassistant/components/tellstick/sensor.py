@@ -29,7 +29,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
-DatatypeDescription = namedtuple(
+DatatypeDescription = namedtuple(  # noqa: PYI024
     "DatatypeDescription", ["name", "unit", "device_class"]
 )
 

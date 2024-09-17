@@ -23,6 +23,7 @@ class WebminUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """The Webmin data update coordinator."""
 
     mac_address: str
+    unique_id: str
 
     def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
         """Initialize the Webmin data update coordinator."""
@@ -41,14 +42,19 @@ class WebminUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     async def async_setup(self) -> None:
         """Provide needed data to the device info."""
         mac_addresses = get_sorted_mac_addresses(self.data)
-        self.mac_address = mac_addresses[0]
-        self.device_info[ATTR_CONNECTIONS] = {
-            (CONNECTION_NETWORK_MAC, format_mac(mac_address))
-            for mac_address in mac_addresses
-        }
-        self.device_info[ATTR_IDENTIFIERS] = {
-            (DOMAIN, format_mac(mac_address)) for mac_address in mac_addresses
-        }
+        if len(mac_addresses) > 0:
+            self.mac_address = mac_addresses[0]
+            self.unique_id = self.mac_address
+            self.device_info[ATTR_CONNECTIONS] = {
+                (CONNECTION_NETWORK_MAC, format_mac(mac_address))
+                for mac_address in mac_addresses
+            }
+            self.device_info[ATTR_IDENTIFIERS] = {
+                (DOMAIN, format_mac(mac_address)) for mac_address in mac_addresses
+            }
+        else:
+            assert self.config_entry
+            self.unique_id = self.config_entry.entry_id
 
     async def _async_update_data(self) -> dict[str, Any]:
         data = await self.instance.update()

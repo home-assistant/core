@@ -9,6 +9,7 @@ from typing import ClassVar, Final
 import voluptuous as vol
 from xknx.devices.climate import SetpointShiftMode
 from xknx.dpt import DPTBase, DPTNumeric
+from xknx.dpt.dpt_20 import HVACControllerMode, HVACOperationMode
 from xknx.exceptions import ConversionError, CouldNotParseTelegram
 
 from homeassistant.components.binary_sensor import (
@@ -51,12 +52,12 @@ from .const import (
     CONF_RESPOND_TO_READ,
     CONF_STATE_ADDRESS,
     CONF_SYNC_STATE,
-    CONTROLLER_MODES,
     KNX_ADDRESS,
-    PRESET_MODES,
     ColorTempModes,
 )
 from .validation import (
+    backwards_compatible_xknx_climate_enum_member,
+    dpt_base_type_validator,
     ga_list_validator,
     ga_validator,
     numeric_type_validator,
@@ -173,7 +174,7 @@ class EventSchema:
     KNX_EVENT_FILTER_SCHEMA = vol.Schema(
         {
             vol.Required(KNX_ADDRESS): vol.All(cv.ensure_list, [cv.string]),
-            vol.Optional(CONF_TYPE): sensor_type_validator,
+            vol.Optional(CONF_TYPE): dpt_base_type_validator,
         }
     )
 
@@ -409,10 +410,12 @@ class ClimateSchema(KNXPlatformSchema):
                     CONF_ON_OFF_INVERT, default=DEFAULT_ON_OFF_INVERT
                 ): cv.boolean,
                 vol.Optional(CONF_OPERATION_MODES): vol.All(
-                    cv.ensure_list, [vol.In(PRESET_MODES)]
+                    cv.ensure_list,
+                    [backwards_compatible_xknx_climate_enum_member(HVACOperationMode)],
                 ),
                 vol.Optional(CONF_CONTROLLER_MODES): vol.All(
-                    cv.ensure_list, [vol.In(CONTROLLER_MODES)]
+                    cv.ensure_list,
+                    [backwards_compatible_xknx_climate_enum_member(HVACControllerMode)],
                 ),
                 vol.Optional(
                     CONF_DEFAULT_CONTROLLER_MODE, default=HVACMode.HEAT
@@ -535,11 +538,10 @@ class ExposeSchema(KNXPlatformSchema):
     CONF_KNX_EXPOSE_BINARY = "binary"
     CONF_KNX_EXPOSE_COOLDOWN = "cooldown"
     CONF_KNX_EXPOSE_DEFAULT = "default"
-    EXPOSE_TIME_TYPES: Final = [
-        "time",
-        "date",
-        "datetime",
-    ]
+    CONF_TIME = "time"
+    CONF_DATE = "date"
+    CONF_DATETIME = "datetime"
+    EXPOSE_TIME_TYPES: Final = [CONF_TIME, CONF_DATE, CONF_DATETIME]
 
     EXPOSE_TIME_SCHEMA = vol.Schema(
         {

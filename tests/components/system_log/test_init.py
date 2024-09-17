@@ -10,10 +10,10 @@ import traceback
 from typing import Any
 from unittest.mock import MagicMock, patch
 
-from homeassistant.bootstrap import async_setup_component
 from homeassistant.components import system_log
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.setup import async_setup_component
 
 from tests.common import async_capture_events
 from tests.typing import WebSocketGenerator
@@ -36,7 +36,7 @@ async def get_error_log(hass_ws_client):
 
 def _generate_and_log_exception(exception, log):
     try:
-        raise Exception(exception)  # pylint: disable=broad-exception-raised
+        raise Exception(exception)  # noqa: TRY002, TRY301
     except Exception:
         _LOGGER.exception(log)
 
@@ -371,7 +371,9 @@ def get_frame(path: str, previous_frame: MagicMock | None) -> MagicMock:
     )
 
 
-async def async_log_error_from_test_path(hass, path, watcher):
+async def async_log_error_from_test_path(
+    hass: HomeAssistant, path: str, watcher: WatchLogErrorHandler
+) -> None:
     """Log error while mocking the path."""
     call_path = "internal_path.py"
     main_frame = get_frame("main_path/main.py", None)
@@ -461,7 +463,7 @@ async def test__figure_out_source(hass: HomeAssistant) -> None:
     in a test because the test is not a component.
     """
     try:
-        raise ValueError("test")
+        raise ValueError("test")  # noqa: TRY301
     except ValueError as ex:
         exc_info = (type(ex), ex, ex.__traceback__)
     mock_record = MagicMock(
@@ -486,7 +488,7 @@ async def test__figure_out_source(hass: HomeAssistant) -> None:
 async def test_formatting_exception(hass: HomeAssistant) -> None:
     """Test that exceptions are formatted correctly."""
     try:
-        raise ValueError("test")
+        raise ValueError("test")  # noqa: TRY301
     except ValueError as ex:
         exc_info = (type(ex), ex, ex.__traceback__)
     mock_record = MagicMock(

@@ -198,6 +198,50 @@ async def test_sending_inital_state_and_optimistic(
             mqtt.DOMAIN: {
                 switch.DOMAIN: {
                     "name": "test",
+                    "command_topic": "command-topic",
+                    "command_template": '{"state": "{{ value }}"}',
+                    "payload_on": "beer on",
+                    "payload_off": "beer off",
+                    "qos": "2",
+                }
+            }
+        }
+    ],
+)
+async def test_sending_mqtt_commands_with_command_template(
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
+) -> None:
+    """Test the sending MQTT commands using a command template."""
+    fake_state = State("switch.test", "on")
+    mock_restore_cache(hass, (fake_state,))
+
+    mqtt_mock = await mqtt_mock_entry()
+
+    state = hass.states.get("switch.test")
+    assert state.state == STATE_ON
+    assert state.attributes.get(ATTR_ASSUMED_STATE)
+
+    await common.async_turn_on(hass, "switch.test")
+
+    mqtt_mock.async_publish.assert_called_once_with(
+        "command-topic", '{"state": "beer on"}', 2, False
+    )
+    mqtt_mock.async_publish.reset_mock()
+
+    await common.async_turn_off(hass, "switch.test")
+
+    mqtt_mock.async_publish.assert_called_once_with(
+        "command-topic", '{"state": "beer off"}', 2, False
+    )
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            mqtt.DOMAIN: {
+                switch.DOMAIN: {
+                    "name": "test",
                     "state_topic": "state-topic",
                     "command_topic": "command-topic",
                     "payload_on": "beer on",

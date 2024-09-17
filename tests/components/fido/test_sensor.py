@@ -6,9 +6,9 @@ from unittest.mock import MagicMock, patch
 from pyfido.client import PyFidoError
 import pytest
 
-from homeassistant.bootstrap import async_setup_component
 from homeassistant.components.fido import sensor as fido
 from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
 
 from tests.common import assert_setup_component
 
@@ -18,7 +18,7 @@ CONTRACT = "123456789"
 class FidoClientMock:
     """Fake Fido client."""
 
-    def __init__(self, username, password, timeout=None, httpsession=None):
+    def __init__(self, username, password, timeout=None, httpsession=None) -> None:
         """Fake Fido client init."""
 
     def get_phone_numbers(self):

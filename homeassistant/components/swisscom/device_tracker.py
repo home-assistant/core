@@ -9,7 +9,7 @@ import requests
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
-    DOMAIN,
+    DOMAIN as DEVICE_TRACKER_DOMAIN,
     PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
     DeviceScanner,
 )
@@ -31,7 +31,7 @@ def get_scanner(
     hass: HomeAssistant, config: ConfigType
 ) -> SwisscomDeviceScanner | None:
     """Return the Swisscom device scanner."""
-    scanner = SwisscomDeviceScanner(config[DOMAIN])
+    scanner = SwisscomDeviceScanner(config[DEVICE_TRACKER_DOMAIN])
 
     return scanner if scanner.success_init else None
 

@@ -23,11 +23,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import (
-    config_validation as cv,
-    device_registry as dr,
-    entity_registry as er,
-)
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.debounce import Debouncer
 
 from .bridge import (
@@ -53,7 +49,6 @@ from .coordinator import SamsungTVDataUpdateCoordinator
 
 PLATFORMS = [Platform.MEDIA_PLAYER, Platform.REMOTE]
 
-CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 SamsungTVConfigEntry = ConfigEntry[SamsungTVDataUpdateCoordinator]
 

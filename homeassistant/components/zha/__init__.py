@@ -2,6 +2,7 @@
 
 import contextlib
 import logging
+from zoneinfo import ZoneInfo
 
 import voluptuous as vol
 from zha.application.const import BAUD_RATES, RadioType
@@ -12,8 +13,13 @@ from zigpy.config import CONF_DATABASE, CONF_DEVICE, CONF_DEVICE_PATH
 from zigpy.exceptions import NetworkSettingsInconsistent, TransientConnectionError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_TYPE, EVENT_HOMEASSISTANT_STOP, Platform
-from homeassistant.core import Event, HomeAssistant
+from homeassistant.const import (
+    CONF_TYPE,
+    EVENT_CORE_CONFIG_UPDATE,
+    EVENT_HOMEASSISTANT_STOP,
+    Platform,
+)
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.config_validation as cv
@@ -117,6 +123,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     ha_zha_data.config_entry = config_entry
     zha_lib_data: ZHAData = create_zha_config(hass, ha_zha_data)
 
+    zha_gateway = await Gateway.async_from_config(zha_lib_data)
+
     # Load and cache device trigger information early
     device_registry = dr.async_get(hass)
     radio_mgr = ZhaRadioManager.from_config_entry(hass, config_entry)
@@ -140,7 +148,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     _LOGGER.debug("Trigger cache: %s", zha_lib_data.device_trigger_cache)
 
     try:
-        zha_gateway = await Gateway.async_from_config(zha_lib_data)
+        await zha_gateway.async_initialize()
     except NetworkSettingsInconsistent as exc:
         await warn_on_inconsistent_network_settings(
             hass,
@@ -200,6 +208,15 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     config_entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_shutdown)
+    )
+
+    @callback
+    def update_config(event: Event) -> None:
+        """Handle Core config update."""
+        zha_gateway.config.local_timezone = ZoneInfo(hass.config.time_zone)
+
+    config_entry.async_on_unload(
+        hass.bus.async_listen(EVENT_CORE_CONFIG_UPDATE, update_config)
     )
 
     await ha_zha_data.gateway_proxy.async_initialize_devices_and_entities()

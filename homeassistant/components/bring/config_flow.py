@@ -6,9 +6,12 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
-from bring_api.bring import Bring
-from bring_api.exceptions import BringAuthException, BringRequestException
-from bring_api.types import BringAuthResponse
+from bring_api import (
+    Bring,
+    BringAuthException,
+    BringAuthResponse,
+    BringRequestException,
+)
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -30,11 +33,13 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_EMAIL): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.EMAIL,
+                autocomplete="email",
             ),
         ),
         vol.Required(CONF_PASSWORD): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.PASSWORD,
+                autocomplete="current-password",
             ),
         ),
     }
@@ -58,7 +63,7 @@ class BringConfigFlow(ConfigFlow, domain=DOMAIN):
         ):
             self._abort_if_unique_id_configured()
             return self.async_create_entry(
-                title=self.info["name"] or user_input[CONF_EMAIL], data=user_input
+                title=self.info.get("name") or user_input[CONF_EMAIL], data=user_input
             )
 
         return self.async_show_form(

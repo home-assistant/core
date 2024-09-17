@@ -132,7 +132,7 @@ async def _generate_trackables(
     trackable = await trackable.details()
 
     # Check that the pet has tracker linked.
-    if not trackable["device_id"]:
+    if not trackable.get("device_id"):
         return None
 
     if "details" not in trackable:

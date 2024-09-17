@@ -1,7 +1,6 @@
 """Tests for home_connect light entities."""
 
 from collections.abc import Awaitable, Callable, Generator
-from typing import Any
 from unittest.mock import MagicMock, Mock
 
 from homeconnect.api import HomeConnectError
@@ -14,7 +13,7 @@ from homeassistant.components.home_connect.const import (
     COOKING_LIGHTING,
     COOKING_LIGHTING_BRIGHTNESS,
 )
-from homeassistant.components.light import DOMAIN
+from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     SERVICE_TURN_OFF,
@@ -48,7 +47,7 @@ def platforms() -> list[str]:
 
 
 async def test_light(
-    bypass_throttle: Generator[None, Any, None],
+    bypass_throttle: Generator[None],
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[], Awaitable[bool]],
@@ -159,7 +158,7 @@ async def test_light_functionality(
     service_data: dict,
     state: str,
     appliance: Mock,
-    bypass_throttle: Generator[None, Any, None],
+    bypass_throttle: Generator[None],
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[], Awaitable[bool]],
@@ -177,7 +176,7 @@ async def test_light_functionality(
     appliance.status.update(status)
     service_data["entity_id"] = entity_id
     await hass.services.async_call(
-        DOMAIN,
+        LIGHT_DOMAIN,
         service,
         service_data,
         blocking=True,
@@ -273,7 +272,7 @@ async def test_switch_exception_handling(
     mock_attr: str,
     attr_side_effect: list,
     problematic_appliance: Mock,
-    bypass_throttle: Generator[None, Any, None],
+    bypass_throttle: Generator[None],
     hass: HomeAssistant,
     integration_setup: Callable[[], Awaitable[bool]],
     config_entry: MockConfigEntry,
@@ -295,5 +294,5 @@ async def test_switch_exception_handling(
 
     problematic_appliance.status.update(status)
     service_data["entity_id"] = entity_id
-    await hass.services.async_call(DOMAIN, service, service_data, blocking=True)
+    await hass.services.async_call(LIGHT_DOMAIN, service, service_data, blocking=True)
     assert getattr(problematic_appliance, mock_attr).call_count == len(attr_side_effect)

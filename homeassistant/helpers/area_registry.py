@@ -87,8 +87,8 @@ class AreaEntry(NormalizedNameBaseRegistryEntry):
                     "labels": list(self.labels),
                     "name": self.name,
                     "picture": self.picture,
-                    "created_at": self.created_at.isoformat(),
-                    "modified_at": self.modified_at.isoformat(),
+                    "created_at": self.created_at.timestamp(),
+                    "modified_at": self.modified_at.timestamp(),
                 }
             )
         )
@@ -133,10 +133,9 @@ class AreaRegistryStore(Store[AreasRegistryStoreData]):
 
             if old_minor_version < 7:
                 # Version 1.7 adds created_at and modiefied_at
+                created_at = utc_from_timestamp(0).isoformat()
                 for area in old_data["areas"]:
-                    area["created_at"] = area["modified_at"] = utc_from_timestamp(
-                        0
-                    ).isoformat()
+                    area["created_at"] = area["modified_at"] = created_at
 
         if old_major_version > 1:
             raise NotImplementedError
@@ -154,22 +153,23 @@ class AreaRegistryItems(NormalizedNameBaseRegistryItems[AreaEntry]):
 
     def _index_entry(self, key: str, entry: AreaEntry) -> None:
         """Index an entry."""
+        super()._index_entry(key, entry)
         if entry.floor_id is not None:
             self._floors_index[entry.floor_id][key] = True
         for label in entry.labels:
             self._labels_index[label][key] = True
-        super()._index_entry(key, entry)
 
     def _unindex_entry(
         self, key: str, replacement_entry: AreaEntry | None = None
     ) -> None:
+        # always call base class before other indices
+        super()._unindex_entry(key, replacement_entry)
         entry = self.data[key]
         if labels := entry.labels:
             for label in labels:
                 self._unindex_entry_value(key, label, self._labels_index)
         if floor_id := entry.floor_id:
             self._unindex_entry_value(key, floor_id, self._floors_index)
-        return super()._unindex_entry(key, replacement_entry)
 
     def get_areas_for_label(self, label: str) -> list[AreaEntry]:
         """Get areas for label."""

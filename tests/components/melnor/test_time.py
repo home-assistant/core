@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import time
+from datetime import time, timedelta
 
 from homeassistant.core import HomeAssistant
 import homeassistant.util.dt as dt_util
@@ -46,7 +46,7 @@ async def test_schedule_start_time(hass: HomeAssistant) -> None:
             blocking=True,
         )
 
-        async_fire_time_changed(hass, now + dt_util.dt.timedelta(seconds=10))
+        async_fire_time_changed(hass, now + timedelta(seconds=10))
         await hass.async_block_till_done()
 
         time_entity = hass.states.get("time.zone_1_schedule_start_time")

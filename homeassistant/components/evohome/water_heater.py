@@ -31,8 +31,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
-from . import EvoChild
 from .const import DOMAIN, EVO_FOLLOW, EVO_PERMOVER
+from .entity import EvoChild
 
 if TYPE_CHECKING:
     from . import EvoBroker

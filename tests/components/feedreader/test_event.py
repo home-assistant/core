@@ -18,14 +18,14 @@ from tests.common import async_fire_time_changed
 
 
 async def test_event_entity(
-    hass: HomeAssistant, feed_one_event, feed_two_event
+    hass: HomeAssistant, feed_one_event, feed_two_event, feed_only_summary
 ) -> None:
     """Test feed event entity."""
     entry = create_mock_entry(VALID_CONFIG_DEFAULT)
     entry.add_to_hass(hass)
     with patch(
         "homeassistant.components.feedreader.coordinator.feedparser.http.get",
-        side_effect=[feed_one_event, feed_two_event],
+        side_effect=[feed_one_event, feed_two_event, feed_only_summary],
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -45,3 +45,13 @@ async def test_event_entity(
         assert state.attributes[ATTR_TITLE] == "Title 2"
         assert state.attributes[ATTR_LINK] == "http://www.example.com/link/2"
         assert state.attributes[ATTR_CONTENT] == "Content 2"
+
+        future = dt_util.utcnow() + timedelta(hours=2, seconds=2)
+        async_fire_time_changed(hass, future)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+        state = hass.states.get("event.mock_title")
+        assert state
+        assert state.attributes[ATTR_TITLE] == "Title 1"
+        assert state.attributes[ATTR_LINK] == "http://www.example.com/link/1"
+        assert state.attributes[ATTR_CONTENT] == "This is a summary"
