@@ -1,4 +1,4 @@
-"""Utils for WebRTC component."""
+"""Utils for go2rtc component."""
 
 from __future__ import annotations
 

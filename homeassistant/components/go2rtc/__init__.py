@@ -1,9 +1,8 @@
-"""The WebRTC component."""
+"""The go2rtc component."""
 
 from homeassistant.components.camera import Camera
 from homeassistant.components.camera.webrtc import (
     CameraWebRTCProvider,
-    CameraWebRTCProviderSettings,
     async_register_webrtc_provider,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -13,7 +12,6 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from . import utils
 from .api.client import Go2rtcClient
 from .api.models import WebRTCSdpOffer
-from .const import CONF_STUN_SERVERS
 from .utils import Server
 
 type WebRTCConfigEntry = ConfigEntry[Server]
@@ -58,19 +56,12 @@ class WebRTCProvider(CameraWebRTCProvider):
         self, camera: Camera, offer_sdp: str
     ) -> str | None:
         """Handle the WebRTC offer and return an answer."""
-        streams = await self._client.list_streams()
-        if camera.entity_id not in streams:
+        if camera.entity_id not in await self._client.streams.list():
             if not (stream_source := await camera.stream_source()):
                 return None
-            await self._client.add_stream(camera.entity_id, stream_source)
+            await self._client.streams.add(camera.entity_id, stream_source)
 
         answer = await self._client.webrtc.forward_whep_sdp_offer(
             camera.entity_id, WebRTCSdpOffer(offer_sdp)
         )
         return answer.sdp
-
-    async def async_get_settings(self) -> CameraWebRTCProviderSettings:
-        """Return provider settings."""
-        return CameraWebRTCProviderSettings(
-            stun_servers=self._entry.options.get(CONF_STUN_SERVERS, [])
-        )

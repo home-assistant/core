@@ -54,7 +54,7 @@ class _BaseClient:
 class _WebRTCClient:
     """Client for WebRTC module."""
 
-    path: Final = _API_PREFIX + "/webrtc"
+    path: Final = _API_PREFIX + "/streams"
 
     def __init__(self, client: _BaseClient) -> None:
         """Initialize Client."""
@@ -86,25 +86,34 @@ class _WebRTCClient:
 _GET_STREAMS_DECODER = ORJSONDecoder(dict[str, Stream])
 
 
+class _StreamClient(_BaseClient):
+    path: Final = _API_PREFIX + "/webrtc"
+
+    def __init__(self, client: _BaseClient) -> None:
+        """Initialize Client."""
+        self._client = client
+
+    async def list(self) -> dict[str, Stream]:
+        """List streams registered with the server."""
+        resp = await self._client.request("get", self.path)
+        resp.raise_for_status()
+        return _GET_STREAMS_DECODER.decode(await resp.text())
+
+    async def add(self, name: str, source: str) -> None:
+        """Add a stream to the server."""
+        resp = await self._client.request(
+            "put",
+            self.path,
+            params={"name": name, "src": source},
+        )
+        resp.raise_for_status()
+
+
 class Go2rtcClient:
     """Client for go2rtc server."""
 
     def __init__(self, websession: ClientSession, server_url: str) -> None:
         """Initialize Client."""
         self._client = _BaseClient(websession, server_url)
+        self.streams: Final = _StreamClient(self._client)
         self.webrtc: Final = _WebRTCClient(self._client)
-
-    async def list_streams(self) -> dict[str, Stream]:
-        """List streams registered with the server."""
-        resp = await self._client.request("get", STREAMS_PATH)
-        resp.raise_for_status()
-        return _GET_STREAMS_DECODER.decode(await resp.text())
-
-    async def add_stream(self, name: str, source: str) -> None:
-        """Add a stream to the server."""
-        resp = await self._client.request(
-            "put",
-            STREAMS_PATH,
-            params={"name": name, "src": source},
-        )
-        resp.raise_for_status()
