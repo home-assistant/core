@@ -181,7 +181,7 @@ def get_counter_entity_description(
             key=key,
             translation_key=key,
             state_class=SensorStateClass.TOTAL_INCREASING,
-            value_func=(lambda device: device.counters.non_resettable[index].value),
+            value_func=lambda device: device.counters.non_resettable[index].value,
             native_unit_of_measurement=counter.units,
         )
     else:
@@ -189,7 +189,7 @@ def get_counter_entity_description(
             key=key,
             translation_key=key,
             state_class=SensorStateClass.TOTAL_INCREASING,
-            value_func=(lambda device: device.counters.resettable[index].value),
+            value_func=lambda device: device.counters.resettable[index].value,
             native_unit_of_measurement=counter.units,
         )
 
