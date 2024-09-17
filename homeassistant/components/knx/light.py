@@ -29,8 +29,8 @@ from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.color as color_util
 
 from . import KNXModule
-from .const import CONF_SYNC_STATE, DATA_KNX_CONFIG, DOMAIN, KNX_ADDRESS, ColorTempModes
-from .knx_entity import KnxUiEntity, KnxUiEntityPlatformController, KnxYamlEntity
+from .const import CONF_SYNC_STATE, DOMAIN, KNX_ADDRESS, KNX_MODULE_KEY, ColorTempModes
+from .entity import KnxUiEntity, KnxUiEntityPlatformController, KnxYamlEntity
 from .schema import LightSchema
 from .storage.const import (
     CONF_COLOR_TEMP_MAX,
@@ -65,7 +65,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up light(s) for KNX platform."""
-    knx_module: KNXModule = hass.data[DOMAIN]
+    knx_module = hass.data[KNX_MODULE_KEY]
     platform = async_get_current_platform()
     knx_module.config_store.add_platform(
         platform=Platform.LIGHT,
@@ -77,7 +77,7 @@ async def async_setup_entry(
     )
 
     entities: list[KnxYamlEntity | KnxUiEntity] = []
-    if yaml_platform_config := hass.data[DATA_KNX_CONFIG].get(Platform.LIGHT):
+    if yaml_platform_config := knx_module.config_yaml.get(Platform.LIGHT):
         entities.extend(
             KnxYamlLight(knx_module, entity_config)
             for entity_config in yaml_platform_config
@@ -226,7 +226,7 @@ def _create_ui_light(xknx: XKNX, knx_config: ConfigType, name: str) -> XknxLight
     group_address_color_temp_state = None
     color_temperature_type = ColorTemperatureType.UINT_2_BYTE
     if ga_color_temp := knx_config.get(CONF_GA_COLOR_TEMP):
-        if ga_color_temp[CONF_DPT] == ColorTempModes.RELATIVE:
+        if ga_color_temp[CONF_DPT] == ColorTempModes.RELATIVE.value:
             group_address_tunable_white = ga_color_temp[CONF_GA_WRITE]
             group_address_tunable_white_state = [
                 ga_color_temp[CONF_GA_STATE],
@@ -239,7 +239,7 @@ def _create_ui_light(xknx: XKNX, knx_config: ConfigType, name: str) -> XknxLight
                 ga_color_temp[CONF_GA_STATE],
                 *ga_color_temp[CONF_GA_PASSIVE],
             ]
-            if ga_color_temp[CONF_DPT] == ColorTempModes.ABSOLUTE_FLOAT:
+            if ga_color_temp[CONF_DPT] == ColorTempModes.ABSOLUTE_FLOAT.value:
                 color_temperature_type = ColorTemperatureType.FLOAT_2_BYTE
 
     _color_dpt = get_dpt(CONF_GA_COLOR)

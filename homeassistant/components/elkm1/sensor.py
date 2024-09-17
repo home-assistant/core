@@ -22,8 +22,9 @@ from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import VolDictType
 
-from . import ElkAttachedEntity, ElkEntity, ElkM1ConfigEntry, create_elk_entities
+from . import ElkM1ConfigEntry
 from .const import ATTR_VALUE, ELK_USER_CODE_SERVICE_SCHEMA
+from .entity import ElkAttachedEntity, ElkEntity, create_elk_entities
 
 SERVICE_SENSOR_COUNTER_REFRESH = "sensor_counter_refresh"
 SERVICE_SENSOR_COUNTER_SET = "sensor_counter_set"
@@ -56,7 +57,7 @@ async def async_setup_entry(
 
     platform.async_register_entity_service(
         SERVICE_SENSOR_COUNTER_REFRESH,
-        {},
+        None,
         "async_counter_refresh",
     )
     platform.async_register_entity_service(
@@ -71,7 +72,7 @@ async def async_setup_entry(
     )
     platform.async_register_entity_service(
         SERVICE_SENSOR_ZONE_TRIGGER,
-        {},
+        None,
         "async_zone_trigger",
     )
 

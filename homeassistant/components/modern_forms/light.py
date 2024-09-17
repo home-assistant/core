@@ -61,7 +61,7 @@ async def async_setup_entry(
 
     platform.async_register_entity_service(
         SERVICE_CLEAR_LIGHT_SLEEP_TIMER,
-        {},
+        None,
         "async_clear_light_sleep_timer",
     )
 

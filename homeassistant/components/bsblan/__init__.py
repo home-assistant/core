@@ -18,11 +18,11 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from .const import CONF_PASSKEY, DOMAIN
 from .coordinator import BSBLanUpdateCoordinator
 
-PLATFORMS = [Platform.CLIMATE]
+PLATFORMS = [Platform.CLIMATE, Platform.SENSOR]
 
 
 @dataclasses.dataclass
-class HomeAssistantBSBLANData:
+class BSBLanData:
     """BSBLan data stored in the Home Assistant data object."""
 
     coordinator: BSBLanUpdateCoordinator
@@ -57,7 +57,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     info = await bsblan.info()
     static = await bsblan.static_values()
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = HomeAssistantBSBLANData(
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = BSBLanData(
         client=bsblan,
         coordinator=coordinator,
         device=device,

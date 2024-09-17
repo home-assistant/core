@@ -126,7 +126,7 @@ def _gateway_descriptor(
 class GatewayScannerMock:
     """Mock GatewayScanner."""
 
-    def __init__(self, gateways=None):
+    def __init__(self, gateways=None) -> None:
         """Initialize GatewayScannerMock."""
         # Key is a HPAI instance in xknx, but not used in HA anyway.
         self.found_gateways = (

@@ -30,7 +30,7 @@ class MockSwitchLinc(SwitchedLightingControl_SwitchLinc02):
 class MockDevices:
     """Mock devices class."""
 
-    def __init__(self, connected=True):
+    def __init__(self, connected=True) -> None:
         """Init the MockDevices class."""
         self._devices = {}
         self.modem = None

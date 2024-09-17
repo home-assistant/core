@@ -4,8 +4,8 @@
       "user": {
         "data": {
           "base_url": "[%key:common::config_flow::data::url%]",
-          "client_id": "Client Key",
-          "client_secret": "Client Secret",
+          "client_id": "Client key",
+          "client_secret": "Client secret",
           "access_token": "[%key:common::config_flow::data::access_token%]"
         },
         "data_description": {

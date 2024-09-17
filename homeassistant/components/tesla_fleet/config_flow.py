@@ -83,5 +83,8 @@ class OAuth2FlowHandler(
     ) -> ConfigFlowResult:
         """Confirm reauth dialog."""
         if user_input is None:
-            return self.async_show_form(step_id="reauth_confirm")
+            return self.async_show_form(
+                step_id="reauth_confirm",
+                description_placeholders={"name": "Tesla Fleet"},
+            )
         return await self.async_step_user()

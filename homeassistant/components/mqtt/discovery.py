@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 from collections import deque
 import functools
+from itertools import chain
 import logging
 import re
 import time
@@ -25,8 +26,8 @@ from homeassistant.loader import async_get_mqtt
 from homeassistant.util.json import json_loads_object
 from homeassistant.util.signal_type import SignalTypeFormat
 
-from .. import mqtt
 from .abbreviations import ABBREVIATIONS, DEVICE_ABBREVIATIONS, ORIGIN_ABBREVIATIONS
+from .client import async_subscribe_internal
 from .const import (
     ATTR_DISCOVERY_HASH,
     ATTR_DISCOVERY_PAYLOAD,
@@ -238,10 +239,6 @@ async def async_start(  # noqa: C901
 
         component, node_id, object_id = match.groups()
 
-        if component not in SUPPORTED_COMPONENTS:
-            _LOGGER.warning("Integration %s is not supported", component)
-            return
-
         if payload:
             try:
                 discovery_payload = MQTTDiscoveryPayload(json_loads_object(payload))
@@ -344,16 +341,22 @@ async def async_start(  # noqa: C901
             )
 
     mqtt_data.discovery_unsubscribe = [
-        mqtt.async_subscribe_internal(
+        async_subscribe_internal(
             hass,
             topic,
             async_discovery_message_received,
             0,
             job_type=HassJobType.Callback,
         )
-        for topic in (
-            f"{discovery_topic}/+/+/config",
-            f"{discovery_topic}/+/+/+/config",
+        for topic in chain(
+            (
+                f"{discovery_topic}/{component}/+/config"
+                for component in SUPPORTED_COMPONENTS
+            ),
+            (
+                f"{discovery_topic}/{component}/+/+/config"
+                for component in SUPPORTED_COMPONENTS
+            ),
         )
     ]
 
@@ -397,7 +400,7 @@ async def async_start(  # noqa: C901
 
     integration_unsubscribe.update(
         {
-            f"{integration}_{topic}": mqtt.async_subscribe_internal(
+            f"{integration}_{topic}": async_subscribe_internal(
                 hass,
                 topic,
                 functools.partial(async_integration_message_received, integration),

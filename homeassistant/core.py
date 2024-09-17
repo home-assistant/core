@@ -451,9 +451,7 @@ class HomeAssistant:
         self.import_executor = InterruptibleThreadPoolExecutor(
             max_workers=1, thread_name_prefix="ImportExecutor"
         )
-        self.loop_thread_id = getattr(
-            self.loop, "_thread_ident", getattr(self.loop, "_thread_id")
-        )
+        self.loop_thread_id = getattr(self.loop, "_thread_id")
 
     def verify_event_loop_thread(self, what: str) -> None:
         """Report and raise if we are not running in the event loop thread."""

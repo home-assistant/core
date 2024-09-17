@@ -194,12 +194,7 @@ class InfluxSensor(SensorEntity):
         """Initialize the sensor."""
         self._name = query.get(CONF_NAME)
         self._unit_of_measurement = query.get(CONF_UNIT_OF_MEASUREMENT)
-        value_template = query.get(CONF_VALUE_TEMPLATE)
-        if value_template is not None:
-            self._value_template = value_template
-            self._value_template.hass = hass
-        else:
-            self._value_template = None
+        self._value_template = query.get(CONF_VALUE_TEMPLATE)
         self._state = None
         self._hass = hass
         self._attr_unique_id = query.get(CONF_UNIQUE_ID)

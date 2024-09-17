@@ -158,8 +158,12 @@ WF_SENSORS: tuple[WeatherFlowCloudSensorEntityDescription, ...] = (
         key="lightning_strike_last_epoch",
         translation_key="lightning_strike_last_epoch",
         device_class=SensorDeviceClass.TIMESTAMP,
-        value_fn=lambda data: datetime.fromtimestamp(
-            data.lightning_strike_last_epoch, tz=UTC
+        value_fn=(
+            lambda data: datetime.fromtimestamp(
+                data.lightning_strike_last_epoch, tz=UTC
+            )
+            if data.lightning_strike_last_epoch is not None
+            else None
         ),
     ),
 )
@@ -176,11 +180,9 @@ async def async_setup_entry(
         entry.entry_id
     ]
 
-    stations = coordinator.data.keys()
-
     async_add_entities(
         WeatherFlowCloudSensor(coordinator, sensor_description, station_id)
-        for station_id in stations
+        for station_id in coordinator.data
         for sensor_description in WF_SENSORS
     )
 

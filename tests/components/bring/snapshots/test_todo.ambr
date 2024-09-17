@@ -1,0 +1,95 @@
+# serializer version: 1
+# name: test_todo[todo.baumarkt-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'todo',
+    'entity_category': None,
+    'entity_id': 'todo.baumarkt',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'bring',
+    'previous_unique_id': None,
+    'supported_features': <TodoListEntityFeature: 71>,
+    'translation_key': 'shopping_list',
+    'unique_id': '00000000-00000000-00000000-00000000_b4776778-7f6c-496e-951b-92a35d3db0dd',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_todo[todo.baumarkt-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Baumarkt',
+      'supported_features': <TodoListEntityFeature: 71>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'todo.baumarkt',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2',
+  })
+# ---
+# name: test_todo[todo.einkauf-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'todo',
+    'entity_category': None,
+    'entity_id': 'todo.einkauf',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'bring',
+    'previous_unique_id': None,
+    'supported_features': <TodoListEntityFeature: 71>,
+    'translation_key': 'shopping_list',
+    'unique_id': '00000000-00000000-00000000-00000000_e542eef6-dba7-4c31-a52c-29e6ab9d83a5',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_todo[todo.einkauf-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Einkauf',
+      'supported_features': <TodoListEntityFeature: 71>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'todo.einkauf',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2',
+  })
+# ---
