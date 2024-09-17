@@ -1,5 +1,6 @@
 """Assist satellite Websocket API."""
 
+from dataclasses import asdict, replace
 from typing import Any
 
 import voluptuous as vol
@@ -18,6 +19,8 @@ from .entity import AssistSatelliteEntity
 def async_register_websocket_api(hass: HomeAssistant) -> None:
     """Register the websocket API."""
     websocket_api.async_register_command(hass, websocket_intercept_wake_word)
+    websocket_api.async_register_command(hass, websocket_get_configuration)
+    websocket_api.async_register_command(hass, websocket_set_wake_words)
 
 
 @callback
@@ -59,3 +62,84 @@ async def websocket_intercept_wake_word(
     task = hass.async_create_task(intercept_wake_word(), "intercept_wake_word")
     connection.subscriptions[msg["id"]] = task.cancel
     connection.send_message(websocket_api.result_message(msg["id"]))
+
+
+@callback
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "assist_satellite/get_configuration",
+        vol.Required("entity_id"): cv.entity_domain(DOMAIN),
+    }
+)
+def websocket_get_configuration(
+    hass: HomeAssistant,
+    connection: websocket_api.connection.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Get the current satellite configuration."""
+    component: EntityComponent[AssistSatelliteEntity] = hass.data[DOMAIN]
+    satellite = component.get_entity(msg["entity_id"])
+    if satellite is None:
+        connection.send_error(
+            msg["id"], websocket_api.ERR_NOT_FOUND, "Entity not found"
+        )
+        return
+
+    config_dict = asdict(satellite.async_get_configuration())
+    config_dict["pipeline_entity_id"] = satellite.pipeline_entity_id
+    config_dict["vad_entity_id"] = satellite.vad_sensitivity_entity_id
+
+    connection.send_result(msg["id"], config_dict)
+
+
+@callback
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "assist_satellite/set_wake_words",
+        vol.Required("entity_id"): cv.entity_domain(DOMAIN),
+        vol.Required("wake_word_ids"): [str],
+    }
+)
+@websocket_api.require_admin
+@websocket_api.async_response
+async def websocket_set_wake_words(
+    hass: HomeAssistant,
+    connection: websocket_api.connection.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Set the active wake words for the satellite."""
+    component: EntityComponent[AssistSatelliteEntity] = hass.data[DOMAIN]
+    satellite = component.get_entity(msg["entity_id"])
+    if satellite is None:
+        connection.send_error(
+            msg["id"], websocket_api.ERR_NOT_FOUND, "Entity not found"
+        )
+        return
+
+    config = satellite.async_get_configuration()
+
+    # Don't set too many active wake words
+    actual_ids = msg["wake_word_ids"]
+    if len(actual_ids) > config.max_active_wake_words:
+        connection.send_error(
+            msg["id"],
+            websocket_api.ERR_NOT_SUPPORTED,
+            f"Maximum number of active wake words is {config.max_active_wake_words}",
+        )
+        return
+
+    # Verify all ids are available
+    available_ids = {ww.id for ww in config.available_wake_words}
+    for ww_id in actual_ids:
+        if ww_id not in available_ids:
+            connection.send_error(
+                msg["id"],
+                websocket_api.ERR_NOT_SUPPORTED,
+                f"Wake word id is not supported: {ww_id}",
+            )
+            return
+
+    await satellite.async_set_configuration(
+        replace(config, active_wake_words=actual_ids)
+    )
+    connection.send_result(msg["id"])
