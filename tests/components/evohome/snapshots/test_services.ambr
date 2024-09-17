@@ -1,0 +1,168 @@
+# serializer version: 1
+# name: test_climate_svcs_ctl[default]
+  list([
+  ])
+# ---
+# name: test_climate_svcs_ctl[h032585]
+  list([
+  ])
+# ---
+# name: test_climate_svcs_ctl[h099625]
+  list([
+  ])
+# ---
+# name: test_climate_svcs_ctl[minimal]
+  list([
+  ])
+# ---
+# name: test_climate_svcs_ctl[sys_004]
+  list([
+  ])
+# ---
+# name: test_climate_svcs_zon[default]
+  list([
+    dict({
+      'until': datetime.datetime(2024, 7, 10, 21, 10, tzinfo=datetime.timezone.utc),
+    }),
+  ])
+# ---
+# name: test_climate_svcs_zon[h032585]
+  list([
+    dict({
+      'until': datetime.datetime(2024, 7, 10, 21, 10, tzinfo=datetime.timezone.utc),
+    }),
+  ])
+# ---
+# name: test_climate_svcs_zon[h099625]
+  list([
+    dict({
+      'until': datetime.datetime(2024, 7, 10, 19, 10, tzinfo=datetime.timezone.utc),
+    }),
+  ])
+# ---
+# name: test_climate_svcs_zon[minimal]
+  list([
+    dict({
+      'until': datetime.datetime(2024, 7, 10, 21, 10, tzinfo=datetime.timezone.utc),
+    }),
+  ])
+# ---
+# name: test_climate_svcs_zon[sys_004]
+  list([
+    dict({
+      'until': None,
+    }),
+  ])
+# ---
+# name: test_evohome_svcs_ctl[default]
+  list([
+    'refresh_system',
+    'reset_system',
+    'set_system_mode',
+    'clear_zone_override',
+    'set_zone_override',
+  ])
+# ---
+# name: test_evohome_svcs_ctl[default].1
+  list([
+    dict({
+      'until': HAFakeDatetime(2024, 7, 30, 23, 0, tzinfo=datetime.timezone.utc),
+    }),
+    dict({
+      'until': HAFakeDatetime(2024, 7, 10, 14, 30, tzinfo=datetime.timezone.utc),
+    }),
+  ])
+# ---
+# name: test_evohome_svcs_ctl[h032585]
+  list([
+    'refresh_system',
+    'set_system_mode',
+    'clear_zone_override',
+    'set_zone_override',
+  ])
+# ---
+# name: test_evohome_svcs_ctl[h099625]
+  list([
+    'refresh_system',
+    'set_system_mode',
+    'clear_zone_override',
+    'set_zone_override',
+  ])
+# ---
+# name: test_evohome_svcs_ctl[minimal]
+  list([
+    'refresh_system',
+    'reset_system',
+    'set_system_mode',
+    'clear_zone_override',
+    'set_zone_override',
+  ])
+# ---
+# name: test_evohome_svcs_ctl[minimal].1
+  list([
+    dict({
+      'until': HAFakeDatetime(2024, 7, 30, 23, 0, tzinfo=datetime.timezone.utc),
+    }),
+    dict({
+      'until': HAFakeDatetime(2024, 7, 10, 14, 30, tzinfo=datetime.timezone.utc),
+    }),
+  ])
+# ---
+# name: test_evohome_svcs_ctl[sys_004]
+  list([
+    'refresh_system',
+    'set_system_mode',
+    'clear_zone_override',
+    'set_zone_override',
+  ])
+# ---
+# name: test_evohome_svcs_zon[default]
+  list([
+    dict({
+      'until': HAFakeDatetime(2024, 7, 10, 14, 30, tzinfo=datetime.timezone.utc),
+    }),
+    dict({
+      'until': None,
+    }),
+  ])
+# ---
+# name: test_evohome_svcs_zon[h032585]
+  list([
+    dict({
+      'until': HAFakeDatetime(2024, 7, 10, 14, 30, tzinfo=datetime.timezone.utc),
+    }),
+    dict({
+      'until': None,
+    }),
+  ])
+# ---
+# name: test_evohome_svcs_zon[h099625]
+  list([
+    dict({
+      'until': HAFakeDatetime(2024, 7, 10, 14, 30, tzinfo=datetime.timezone.utc),
+    }),
+    dict({
+      'until': None,
+    }),
+  ])
+# ---
+# name: test_evohome_svcs_zon[minimal]
+  list([
+    dict({
+      'until': HAFakeDatetime(2024, 7, 10, 14, 30, tzinfo=datetime.timezone.utc),
+    }),
+    dict({
+      'until': None,
+    }),
+  ])
+# ---
+# name: test_evohome_svcs_zon[sys_004]
+  list([
+    dict({
+      'until': HAFakeDatetime(2024, 7, 10, 14, 30, tzinfo=datetime.timezone.utc),
+    }),
+    dict({
+      'until': None,
+    }),
+  ])
+# ---
