@@ -14,7 +14,7 @@ from homeassistant.components.google_assistant.const import (
     SOURCE_LOCAL,
     STORE_GOOGLE_LOCAL_WEBHOOK_ID,
 )
-from homeassistant.components.matter.models import MatterDeviceInfo
+from homeassistant.components.matter import MatterDeviceInfo
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import device_registry as dr, entity_registry as er

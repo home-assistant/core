@@ -111,5 +111,51 @@
         }
       ]
     }
+  },
+  "FridgeFreezer": {
+    "data": {
+      "settings": [
+        {
+          "key": "Refrigeration.FridgeFreezer.Setting.SuperModeFreezer",
+          "value": false,
+          "type": "Boolean",
+          "constraints": {
+            "access": "readWrite"
+          }
+        },
+        {
+          "key": "Refrigeration.FridgeFreezer.Setting.SuperModeRefrigerator",
+          "value": false,
+          "type": "Boolean",
+          "constraints": {
+            "access": "readWrite"
+          }
+        },
+        {
+          "key": "Refrigeration.Common.Setting.Dispenser.Enabled",
+          "value": false,
+          "type": "Boolean",
+          "constraints": {
+            "access": "readWrite"
+          }
+        },
+        {
+          "key": "Refrigeration.Common.Setting.Light.External.Power",
+          "value": true,
+          "type": "Boolean"
+        },
+        {
+          "key": "Refrigeration.Common.Setting.Light.External.Brightness",
+          "value": 70,
+          "unit": "%",
+          "type": "Double",
+          "constraints": {
+            "min": 0,
+            "max": 100,
+            "access": "readWrite"
+          }
+        }
+      ]
+    }
   }
 }
