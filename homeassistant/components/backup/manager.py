@@ -56,34 +56,35 @@ class BackupSyncAgent(abc.ABC):
 
 
 @dataclass(slots=True)
-class Backup:
-    """Backup class."""
+class BaseBackup:
+    """Base backup class."""
 
+    date: str
     slug: str
+    size: float
     name: str
-    date: str
-    path: Path
-    size: float
-
-    def as_dict(self) -> dict:
-        """Return a dict representation of this backup."""
-        return {**asdict(self), "path": self.path.as_posix()}
-
-
-@dataclass(slots=True)
-class SyncedBackup:
-    """Synced backup class."""
-
-    id: str
-    date: str
-    slug: str
-    size: float
-    password: bool = False
-    name: str | None = None
 
     def as_dict(self) -> dict:
         """Return a dict representation of this backup."""
         return asdict(self)
+
+
+@dataclass(slots=True)
+class Backup(BaseBackup):
+    """Backup class."""
+
+    path: Path
+
+    def as_dict(self) -> dict:
+        """Return a dict representation of this backup."""
+        return {**super().as_dict(), "path": self.path.as_posix()}
+
+
+@dataclass(slots=True)
+class SyncedBackup(BaseBackup):
+    """Synced backup class."""
+
+    id: str
 
 
 class BackupPlatformPrePostProtocol(Protocol):
