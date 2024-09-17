@@ -20,7 +20,7 @@ from homeassistant.util.color import rgb_hex_to_rgb_list
 
 from . import setup_mysensors_platform
 from .const import MYSENSORS_DISCOVERY, DiscoveryInfo, SensorType
-from .device import MySensorsChildEntity
+from .entity import MySensorsChildEntity
 from .helpers import on_unload
 
 

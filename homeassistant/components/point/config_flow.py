@@ -162,7 +162,7 @@ class PointFlowHandler(ConfigFlow, domain=DOMAIN):
             _LOGGER.error("Authentication Error")
             return self.async_abort(reason="auth_error")
 
-        _LOGGER.info("Successfully authenticated Point")
+        _LOGGER.debug("Successfully authenticated Point")
         user_email = (await point_session.user()).get("email") or ""
 
         return self.async_create_entry(

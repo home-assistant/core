@@ -102,7 +102,6 @@ from .handler import (  # noqa: F401
     HassioAPIError,
     async_create_backup,
     async_get_addon_discovery_info,
-    async_get_addon_info,
     async_get_addon_store_info,
     async_get_green_settings,
     async_get_yellow_settings,
@@ -120,6 +119,7 @@ from .handler import (  # noqa: F401
     async_update_diagnostics,
     async_update_os,
     async_update_supervisor,
+    get_supervisor_client,
 )
 from .http import HassIOView
 from .ingress import async_setup_ingress_view
