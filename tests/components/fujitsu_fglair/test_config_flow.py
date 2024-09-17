@@ -7,8 +7,8 @@ import pytest
 
 from homeassistant.components.fujitsu_fglair.const import (
     CONF_REGION,
-    CONF_REGION_DEFAULT,
     DOMAIN,
+    REGION_DEFAULT,
 )
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
@@ -32,7 +32,7 @@ async def _initial_step(hass: HomeAssistant) -> FlowResult:
         {
             CONF_USERNAME: TEST_USERNAME,
             CONF_PASSWORD: TEST_PASSWORD,
-            CONF_REGION: CONF_REGION_DEFAULT["value"],
+            CONF_REGION: REGION_DEFAULT,
         },
     )
 
@@ -49,7 +49,7 @@ async def test_full_flow(
     assert result["data"] == {
         CONF_USERNAME: TEST_USERNAME,
         CONF_PASSWORD: TEST_PASSWORD,
-        CONF_REGION: CONF_REGION_DEFAULT["value"],
+        CONF_REGION: REGION_DEFAULT,
     }
 
 
@@ -98,7 +98,7 @@ async def test_form_exceptions(
         {
             CONF_USERNAME: TEST_USERNAME,
             CONF_PASSWORD: TEST_PASSWORD,
-            CONF_REGION: CONF_REGION_DEFAULT["value"],
+            CONF_REGION: REGION_DEFAULT,
         },
     )
 
@@ -107,7 +107,7 @@ async def test_form_exceptions(
     assert result["data"] == {
         CONF_USERNAME: TEST_USERNAME,
         CONF_PASSWORD: TEST_PASSWORD,
-        CONF_REGION: CONF_REGION_DEFAULT["value"],
+        CONF_REGION: REGION_DEFAULT,
     }
 
 

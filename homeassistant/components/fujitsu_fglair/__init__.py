@@ -12,7 +12,7 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
 
-from .const import API_TIMEOUT, CONF_REGION, CONF_REGION_EUROPE
+from .const import API_TIMEOUT, CONF_REGION, REGION_EU
 from .coordinator import FGLairCoordinator
 
 PLATFORMS: list[Platform] = [Platform.CLIMATE]
@@ -28,7 +28,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: FGLairConfigEntry) -> bo
         entry.data[CONF_PASSWORD],
         app_id,
         app_secret,
-        europe=entry.data[CONF_REGION] == CONF_REGION_EUROPE["value"],
+        europe=entry.data[CONF_REGION] == REGION_EU,
         websession=aiohttp_client.async_get_clientsession(hass),
         timeout=API_TIMEOUT,
     )

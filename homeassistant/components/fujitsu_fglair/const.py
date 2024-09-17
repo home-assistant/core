@@ -8,6 +8,5 @@ API_REFRESH = timedelta(minutes=5)
 DOMAIN = "fujitsu_fglair"
 
 CONF_REGION = "region"
-CONF_REGION_DEFAULT = {"label": "other", "value": "default"}
-CONF_REGION_EUROPE = {"label": "europe", "value": "EU"}
-CONF_REGION_CHINA = {"label": "china", "value": "CN"}
+REGION_EU = "EU"
+REGION_DEFAULT = "default"

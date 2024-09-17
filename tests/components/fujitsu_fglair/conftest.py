@@ -9,8 +9,8 @@ import pytest
 
 from homeassistant.components.fujitsu_fglair.const import (
     CONF_REGION,
-    CONF_REGION_DEFAULT,
     DOMAIN,
+    REGION_DEFAULT,
 )
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
@@ -63,7 +63,7 @@ def mock_ayla_api(mock_devices: list[AsyncMock]) -> Generator[AsyncMock]:
 @pytest.fixture
 def mock_config_entry(request: pytest.FixtureRequest) -> MockConfigEntry:
     """Return a regular config entry."""
-    region = CONF_REGION_DEFAULT["value"]
+    region = REGION_DEFAULT
     if hasattr(request, "param"):
         region = request.param
 
