@@ -33,8 +33,19 @@ DATA_ICE_SERVERS: HassKey[list[Callable[[], Coroutine[Any, Any, RTCIceServer]]]]
 )
 
 
+class _RTCBaseModel(DataClassDictMixin):
+    """Base class for RTC models."""
+
+    class Config(BaseConfig):
+        """Mashumaro config."""
+
+        # Serialize to spec conform names and omit default values
+        omit_default = True
+        serialize_by_alias = True
+
+
 @dataclass
-class RTCIceServer:
+class RTCIceServer(_RTCBaseModel):
     """RTC Ice Server.
 
     See https://www.w3.org/TR/webrtc/#rtciceserver-dictionary
@@ -44,28 +55,17 @@ class RTCIceServer:
     username: str | None = None
     credential: str | None = None
 
-    class Config(BaseConfig):
-        """Mashumaro config for RTCIceServer."""
-
-        omit_none = True
-
 
 @dataclass
-class RTCConfiguration(DataClassDictMixin):
+class RTCConfiguration(_RTCBaseModel):
     """RTC Configuration.
 
     See https://www.w3.org/TR/webrtc/#rtcconfiguration-dictionary
     """
 
-    ice_servers: list[RTCIceServer] | None = field(
-        metadata=field_options(alias="iceServers"), default=None
+    ice_servers: list[RTCIceServer] = field(
+        metadata=field_options(alias="iceServers"), default_factory=list
     )
-
-    class Config(BaseConfig):
-        """Mashumaro config for RTCConfiguration."""
-
-        omit_none = True
-        serialize_by_alias = True
 
 
 class CameraWebRTCProvider(Protocol):
@@ -107,7 +107,7 @@ def async_register_webrtc_provider(
     return remove_provider
 
 
-RTSP_PREFIXES = {"rtsp://", "rtsps://", "rtmp://"}
+_RTSP_PREFIXES = {"rtsp://", "rtsps://", "rtmp://"}
 
 # An RtspToWebRtcProvider accepts these inputs:
 #     stream_source: The RTSP url
@@ -125,7 +125,7 @@ class _CameraRtspToWebRTCProvider(CameraWebRTCProvider):
 
     async def async_is_supported(self, stream_source: str) -> bool:
         """Return if this provider is supports the Camera as source."""
-        return any(stream_source.startswith(prefix) for prefix in RTSP_PREFIXES)
+        return any(stream_source.startswith(prefix) for prefix in _RTSP_PREFIXES)
 
     async def async_handle_web_rtc_offer(
         self, camera: Camera, offer_sdp: str

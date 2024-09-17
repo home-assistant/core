@@ -9,10 +9,11 @@ import platform
 import re
 import stat
 import subprocess
+from tempfile import NamedTemporaryFile
 from threading import Thread
 from typing import Final
 import zipfile
-from tempfile import NamedTemporaryFile
+
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -93,7 +94,8 @@ async def validate_binary(hass: HomeAssistant) -> str | None:
         raw = _unzip(raw)
 
     # save binary to config folder
-    with open(filename, "wb") as f:
+    # todo delete this file before merge
+    with open(filename, "wb") as f:  # noqa: ASYNC230
         f.write(raw)
 
     # change binary access rights
@@ -115,9 +117,14 @@ class Server(Thread):
     def run(self) -> None:
         """Run the server."""
         self._stop_requested = False
-        with NamedTemporaryFile(prefix="go2rtc", suffix=".yaml") as file, subprocess.Popen(
-            [self._binary, "-c", "webrtc.ice_servers=[]", "-c", file.name], stdout=subprocess.PIPE, stderr=subprocess.STDOUT
-        ) as process:
+        with (
+            NamedTemporaryFile(prefix="go2rtc", suffix=".yaml") as file,
+            subprocess.Popen(
+                [self._binary, "-c", "webrtc.ice_servers=[]", "-c", file.name],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+            ) as process,
+        ):
             while not self._stop_requested and process.poll() is None:
                 assert process.stdout
                 line = process.stdout.readline()

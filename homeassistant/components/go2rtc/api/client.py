@@ -89,7 +89,7 @@ class _WebRTCClient:
 _GET_STREAMS_DECODER = BasicDecoder(dict[str, Stream])
 
 
-class _StreamClient(_BaseClient):
+class _StreamClient:
     path: Final = _API_PREFIX + "/streams"
 
     def __init__(self, client: _BaseClient) -> None:
