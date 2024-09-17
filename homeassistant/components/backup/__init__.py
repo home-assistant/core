@@ -7,7 +7,12 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, LOGGER
 from .http import async_register_http_views
-from .manager import BackupManager
+from .manager import (
+    Backup,  # noqa: F401
+    BackupManager,
+    BackupSyncAgent,  # noqa: F401
+    SyncedBackup,  # noqa: F401
+)
 from .websocket import async_register_websocket_handlers
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)

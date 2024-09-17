@@ -6,11 +6,7 @@ import logging
 from pathlib import Path
 from typing import Any
 
-from homeassistant.components.backup.manager import (
-    Backup,
-    BackupSyncAgent,
-    SyncedBackup,
-)
+from homeassistant.components.backup import Backup, BackupSyncAgent, SyncedBackup
 from homeassistant.core import HomeAssistant
 
 LOGGER = logging.getLogger(__name__)
