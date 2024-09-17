@@ -119,6 +119,7 @@ class BackupManager:
         self.backups: dict[str, Backup] = {}
         self.platforms: dict[str, BackupPlatformPrePostProtocol] = {}
         self.sync_agents: dict[str, BackupSyncAgent] = {}
+        self.syncing = False
         self.loaded_backups = False
         self.loaded_platforms = False
 
@@ -191,6 +192,7 @@ class BackupManager:
         if not self.sync_agents:
             return
 
+        self.syncing = True
         sync_backup_results = await asyncio.gather(
             *(
                 agent.async_upload_backup(backup=backup)
@@ -200,7 +202,8 @@ class BackupManager:
         )
         for result in sync_backup_results:
             if isinstance(result, Exception):
-                LOGGER.error("Error during backup sync")
+                LOGGER.error("Error during backup sync - %s", result)
+        self.syncing = False
 
     async def load_backups(self) -> None:
         """Load data of stored backup files."""
