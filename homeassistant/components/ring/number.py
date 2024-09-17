@@ -20,8 +20,6 @@ from . import RingConfigEntry
 from .coordinator import RingDataCoordinator
 from .entity import RingDeviceT, RingEntity, refresh_after
 
-SKIP_UPDATES_DELAY_SECONDS = 5
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
