@@ -20,7 +20,6 @@ class Stream:
     """Stream model."""
 
     producers: list[Producer]
-    pending: int = 0
 
 
 @dataclass
@@ -28,9 +27,6 @@ class Producer:
     """Producer model."""
 
     url: str
-    template: str
-
-    state: str
 
 
 @dataclass

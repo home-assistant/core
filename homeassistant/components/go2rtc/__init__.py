@@ -56,7 +56,8 @@ class WebRTCProvider(CameraWebRTCProvider):
         self, camera: Camera, offer_sdp: str
     ) -> str | None:
         """Handle the WebRTC offer and return an answer."""
-        if camera.entity_id not in await self._client.streams.list():
+        streams = await self._client.streams.list()
+        if camera.entity_id not in streams:
             if not (stream_source := await camera.stream_source()):
                 return None
             await self._client.streams.add(camera.entity_id, stream_source)

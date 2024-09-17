@@ -8,14 +8,14 @@ from typing import Any, Final, Literal
 from urllib.parse import urljoin
 
 from aiohttp import ClientError, ClientResponse, ClientSession
-from mashumaro.codecs.orjson import ORJSONDecoder
+from mashumaro.codecs.basic import BasicDecoder
+from mashumaro.mixins.dict import DataClassDictMixin
 
 from .models import Stream, WebRTCSdpAnswer, WebRTCSdpOffer
 
 _LOGGER = logging.getLogger(__name__)
 
 _API_PREFIX = "/api"
-STREAMS_PATH = _API_PREFIX + "/streams"
 
 
 class _BaseClient:
@@ -32,16 +32,19 @@ class _BaseClient:
         path: str,
         *,
         params: Mapping[str, Any] | None = None,
-        data: Any | None = None,
+        data: DataClassDictMixin | dict | None = None,
     ) -> ClientResponse:
         """Make a request to the server."""
         url = self._request_url(path)
         _LOGGER.debug("request[%s] %s", method, url)
+        if isinstance(data, DataClassDictMixin):
+            data = data.to_dict()
         try:
-            resp = await self._session.request(method, url, params=params, data=data)
+            resp = await self._session.request(method, url, params=params, json=data)
         except ClientError as err:
             raise ClientError(f"Server communication failure: {err}") from err
 
+        resp.raise_for_status()
         return resp
 
     def _request_url(self, path: str) -> str:
@@ -54,7 +57,7 @@ class _BaseClient:
 class _WebRTCClient:
     """Client for WebRTC module."""
 
-    path: Final = _API_PREFIX + "/streams"
+    path: Final = _API_PREFIX + "/webrtc"
 
     def __init__(self, client: _BaseClient) -> None:
         """Initialize Client."""
@@ -68,9 +71,9 @@ class _WebRTCClient:
             "post",
             self.path,
             params={src_or_dst: stream_name},
-            data=offer.to_json(),
+            data=offer,
         )
-        return WebRTCSdpAnswer.from_json(await resp.text())
+        return WebRTCSdpAnswer.from_dict(await resp.json())
 
     async def forward_whep_sdp_offer(
         self, source_name: str, offer: WebRTCSdpOffer
@@ -83,11 +86,11 @@ class _WebRTCClient:
         )
 
 
-_GET_STREAMS_DECODER = ORJSONDecoder(dict[str, Stream])
+_GET_STREAMS_DECODER = BasicDecoder(dict[str, Stream])
 
 
 class _StreamClient(_BaseClient):
-    path: Final = _API_PREFIX + "/webrtc"
+    path: Final = _API_PREFIX + "/streams"
 
     def __init__(self, client: _BaseClient) -> None:
         """Initialize Client."""
@@ -96,17 +99,15 @@ class _StreamClient(_BaseClient):
     async def list(self) -> dict[str, Stream]:
         """List streams registered with the server."""
         resp = await self._client.request("get", self.path)
-        resp.raise_for_status()
-        return _GET_STREAMS_DECODER.decode(await resp.text())
+        return _GET_STREAMS_DECODER.decode(await resp.json())
 
     async def add(self, name: str, source: str) -> None:
         """Add a stream to the server."""
-        resp = await self._client.request(
+        await self._client.request(
             "put",
             self.path,
             params={"name": name, "src": source},
         )
-        resp.raise_for_status()
 
 
 class Go2rtcClient:

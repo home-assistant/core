@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, Any, Protocol
 
 from mashumaro import field_options
 from mashumaro.config import BaseConfig
-from mashumaro.mixins.orjson import DataClassORJSONMixin
+from mashumaro.mixins.dict import DataClassDictMixin
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
@@ -44,9 +44,14 @@ class RTCIceServer:
     username: str | None = None
     credential: str | None = None
 
+    class Config(BaseConfig):
+        """Mashumaro config for RTCIceServer."""
+
+        omit_none = True
+
 
 @dataclass
-class RTCConfiguration(DataClassORJSONMixin):
+class RTCConfiguration(DataClassDictMixin):
     """RTC Configuration.
 
     See https://www.w3.org/TR/webrtc/#rtcconfiguration-dictionary
@@ -175,9 +180,10 @@ async def ws_get_config(
         )
         return
 
+    config = (await camera.async_get_webrtc_configuration()).to_dict()
     connection.send_result(
         msg["id"],
-        (await camera.async_get_webrtc_configuration()).to_json(),
+        config,
     )
 
 
@@ -187,7 +193,7 @@ async def async_get_supported_providers(
     """Return a list of supported providers for the camera."""
     return [
         provider
-        for provider in hass.data[DATA_WEBRTC_PROVIDERS]
+        for provider in hass.data.get(DATA_WEBRTC_PROVIDERS, set())
         if await provider.async_is_supported(stream_source)
     ]
 
