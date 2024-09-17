@@ -52,7 +52,9 @@ class RTCConfiguration(DataClassORJSONMixin):
     See https://www.w3.org/TR/webrtc/#rtcconfiguration-dictionary
     """
 
-    ice_servers: list[RTCIceServer] | None =  field(metadata=field_options(alias="iceServers"), default=None)
+    ice_servers: list[RTCIceServer] | None = field(
+        metadata=field_options(alias="iceServers"), default=None
+    )
 
     class Config(BaseConfig):
         """Mashumaro config for RTCConfiguration."""

@@ -2240,6 +2240,12 @@
         }
       }
     },
+    "go2rtc": {
+      "name": "go2rtc",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "goalzero": {
       "name": "Goal Zero Yeti",
       "integration_type": "device",
@@ -6876,11 +6882,6 @@
       "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
-    },
-    "webrtc": {
-      "name": "WebRTC",
-      "integration_type": "hub",
-      "config_flow": true
     },
     "weheat": {
       "name": "Weheat",
