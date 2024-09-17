@@ -32,6 +32,15 @@ COFFEE_EVENT_BEAN_CONTAINER_EMPTY = (
 COFFEE_EVENT_WATER_TANK_EMPTY = "ConsumerProducts.CoffeeMaker.Event.WaterTankEmpty"
 COFFEE_EVENT_DRIP_TRAY_FULL = "ConsumerProducts.CoffeeMaker.Event.DripTrayFull"
 
+REFRIGERATION_INTERNAL_LIGHT_POWER = "Refrigeration.Common.Setting.Light.Internal.Power"
+REFRIGERATION_INTERNAL_LIGHT_BRIGHTNESS = (
+    "Refrigeration.Common.Setting.Light.Internal.Brightness"
+)
+REFRIGERATION_EXTERNAL_LIGHT_POWER = "Refrigeration.Common.Setting.Light.External.Power"
+REFRIGERATION_EXTERNAL_LIGHT_BRIGHTNESS = (
+    "Refrigeration.Common.Setting.Light.External.Brightness"
+)
+
 REFRIGERATION_SUPERMODEFREEZER = "Refrigeration.FridgeFreezer.Setting.SuperModeFreezer"
 REFRIGERATION_SUPERMODEREFRIGERATOR = (
     "Refrigeration.FridgeFreezer.Setting.SuperModeRefrigerator"
