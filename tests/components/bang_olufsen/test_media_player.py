@@ -528,8 +528,9 @@ async def test_async_update_beolink_line_in(
     assert (states := hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID))
     assert states.attributes["group_members"] == []
 
-    assert mock_mozart_client.get_beolink_listeners.call_count == 1
-    assert mock_mozart_client.get_beolink_peers.call_count == 1
+    # Called once during _initialize and once during _async_update_beolink
+    assert mock_mozart_client.get_beolink_listeners.call_count == 2
+    assert mock_mozart_client.get_beolink_peers.call_count == 2
 
 
 async def test_async_update_beolink_listener(
@@ -566,7 +567,11 @@ async def test_async_update_beolink_listener(
         TEST_MEDIA_PLAYER_ENTITY_ID,
     ]
 
-    assert mock_mozart_client.get_beolink_listeners.call_count == 0
+    # Called once for each entity during _initialize
+    assert mock_mozart_client.get_beolink_listeners.call_count == 2
+    # Called once for each entity during _initialize and
+    # once more during _async_update_beolink for the entity that has the callback associated with it.
+    assert mock_mozart_client.get_beolink_peers.call_count == 3
 
 
 async def test_async_mute_volume(
