@@ -3,11 +3,11 @@
   "name": "MeteoSwiss",
   "codeowners": ["@albertomontesg"],
   "config_flow": true,
-  "dependencies": [],
   "documentation": "https://www.home-assistant.io/integrations/meteoswiss",
-  "homekit": {},
   "iot_class": "cloud_polling",
-  "requirements": ["meteoswiss-async==0.1.0"],
+  "requirements": [
+    "meteoswiss-async @ git+https://github.com/albertomontesg/meteoswiss-async.git@main"
+  ],
   "ssdp": [],
   "zeroconf": []
 }
