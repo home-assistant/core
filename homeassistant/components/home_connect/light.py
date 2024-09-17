@@ -10,6 +10,7 @@ from homeconnect.api import HomeConnectError
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_HS_COLOR,
+    ATTR_RGB_COLOR,
     ColorMode,
     LightEntity,
     LightEntityDescription,
@@ -138,20 +139,22 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
                 self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
             case (_, _):
                 self._attr_color_mode = ColorMode.HS
-                self._attr_supported_color_modes = {ColorMode.HS}
+                self._attr_supported_color_modes = {ColorMode.HS, ColorMode.RGB}
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Switch the light on, change brightness, change color."""
+        _LOGGER.debug("Switching light on for: %s", self.name)
+        try:
+            await self.hass.async_add_executor_job(
+                self.device.appliance.set_setting, self.bsh_key, True
+            )
+        except HomeConnectError as err:
+            _LOGGER.error("Error while trying to turn on light: %s", err)
+            return
         if self._custom_color_key:
-            _LOGGER.debug("Switching ambient light on for: %s", self.name)
-            try:
-                await self.hass.async_add_executor_job(
-                    self.device.appliance.set_setting, self.bsh_key, True
-                )
-            except HomeConnectError as err:
-                _LOGGER.error("Error while trying to turn on ambient light: %s", err)
-                return
-            if ATTR_BRIGHTNESS in kwargs or ATTR_HS_COLOR in kwargs:
+            if (
+                ATTR_RGB_COLOR in kwargs or ATTR_HS_COLOR in kwargs
+            ) and self._enable_custom_color_value_key:
                 try:
                     await self.hass.async_add_executor_job(
                         self.device.appliance.set_setting,
@@ -159,36 +162,46 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
                         self._enable_custom_color_value_key,
                     )
                 except HomeConnectError as err:
-                    _LOGGER.error("Error while trying selecting customcolor: %s", err)
-                if self._attr_brightness is not None:
-                    brightness_arg = self._attr_brightness
-                    if ATTR_BRIGHTNESS in kwargs:
-                        brightness_arg = kwargs[ATTR_BRIGHTNESS]
+                    _LOGGER.error("Error while trying selecting custom color: %s", err)
+                    return
 
-                    brightness = ceil(
-                        color_util.brightness_to_value(
-                            self._brightness_scale, brightness_arg
-                        )
+            if ATTR_RGB_COLOR in kwargs:
+                hex_val = color_util.color_rgb_to_hex(*kwargs[ATTR_RGB_COLOR])
+                try:
+                    await self.hass.async_add_executor_job(
+                        self.device.appliance.set_setting,
+                        self._custom_color_key,
+                        f"#{hex_val}",
                     )
-                    hs_color = kwargs.get(ATTR_HS_COLOR, self._attr_hs_color)
+                except HomeConnectError as err:
+                    _LOGGER.error("Error while trying setting the color: %s", err)
+            elif (ATTR_BRIGHTNESS in kwargs or ATTR_HS_COLOR in kwargs) and (
+                self._attr_brightness is not None or ATTR_BRIGHTNESS in kwargs
+            ):
+                brightness = 10 + ceil(
+                    color_util.brightness_to_value(
+                        self._brightness_scale,
+                        kwargs.get(ATTR_BRIGHTNESS, self._attr_brightness),
+                    )
+                )
 
-                    if hs_color is not None:
-                        rgb = color_util.color_hsv_to_RGB(
-                            hs_color[0], hs_color[1], brightness
+                hs_color = kwargs.get(ATTR_HS_COLOR, self._attr_hs_color)
+
+                if hs_color is not None:
+                    rgb = color_util.color_hsv_to_RGB(
+                        hs_color[0], hs_color[1], brightness
+                    )
+                    hex_val = color_util.color_rgb_to_hex(*rgb)
+                    try:
+                        await self.hass.async_add_executor_job(
+                            self.device.appliance.set_setting,
+                            self._custom_color_key,
+                            f"#{hex_val}",
                         )
-                        hex_val = color_util.color_rgb_to_hex(rgb[0], rgb[1], rgb[2])
-                        try:
-                            await self.hass.async_add_executor_job(
-                                self.device.appliance.set_setting,
-                                self._custom_color_key,
-                                f"#{hex_val}",
-                            )
-                        except HomeConnectError as err:
-                            _LOGGER.error(
-                                "Error while trying setting the color: %s", err
-                            )
+                    except HomeConnectError as err:
+                        _LOGGER.error("Error while trying setting the color: %s", err)
 
-        elif ATTR_BRIGHTNESS in kwargs:
+        elif self._brightness_key and ATTR_BRIGHTNESS in kwargs:
             _LOGGER.debug(
                 "Changing brightness for: %s, to: %s",
                 self.name,
@@ -205,14 +218,6 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
                 )
             except HomeConnectError as err:
                 _LOGGER.error("Error while trying set the brightness: %s", err)
-        else:
-            _LOGGER.debug("Switching light on for: %s", self.name)
-            try:
-                await self.hass.async_add_executor_job(
-                    self.device.appliance.set_setting, self.bsh_key, True
-                )
-            except HomeConnectError as err:
-                _LOGGER.error("Error while trying to turn on light: %s", err)
 
         self.async_entity_update()
 
@@ -244,18 +249,23 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
             color = self.device.appliance.status.get(self._custom_color_key, {})
 
             if not color:
+                self._attr_rgb_color = None
                 self._attr_hs_color = None
                 self._attr_brightness = None
             else:
-                colorvalue = color.get(ATTR_VALUE)[1:]
-                rgb = color_util.rgb_hex_to_rgb_list(colorvalue)
-                hsv = color_util.color_RGB_to_hsv(rgb[0], rgb[1], rgb[2])
+                color_value = color.get(ATTR_VALUE)[1:]
+                rgb = color_util.rgb_hex_to_rgb_list(color_value)
+                self._attr_rgb_color = (rgb[0], rgb[1], rgb[2])
+                hsv = color_util.color_RGB_to_hsv(*rgb)
                 self._attr_hs_color = (hsv[0], hsv[1])
                 self._attr_brightness = color_util.value_to_brightness(
                     self._brightness_scale, hsv[2]
                 )
-                _LOGGER.debug("Updated, new brightness: %s", self._attr_brightness)
-
+                _LOGGER.debug(
+                    "Updated, new color (%s) and new brightness (%s) ",
+                    color_value,
+                    self._attr_brightness,
+                )
         elif self._brightness_key:
             brightness = self.device.appliance.status.get(self._brightness_key, {})
             if brightness is None:
