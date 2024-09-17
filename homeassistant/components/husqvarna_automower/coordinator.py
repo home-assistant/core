@@ -41,7 +41,7 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[dict[str, MowerAttrib
         )
         self.api = api
         self.ws_connected: bool = False
-        self.reconnect_time: int = (
+        self.reconnect_time = (
             DEFAULT_RECONNECT_TIME  # Initialize the reconnect time
         )
 
