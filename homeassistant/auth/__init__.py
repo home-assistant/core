@@ -129,7 +129,7 @@ class AuthManagerFlowManager(
     ) -> AuthFlowResult:
         """Return a user as result of login flow.
 
-        This method is called when a flow step returns FlowResultType.ABOIRT or
+        This method is called when a flow step returns FlowResultType.ABORT or
         FlowResultType.CREATE_ENTRY.
         """
         flow = cast(LoginFlow, flow)

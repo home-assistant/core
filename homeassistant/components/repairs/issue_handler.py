@@ -84,7 +84,7 @@ class RepairsFlowManager(data_entry_flow.FlowManager):
     ) -> data_entry_flow.FlowResult:
         """Complete a fix flow.
 
-        This method is called when a flow step returns FlowResultType.ABOIRT or
+        This method is called when a flow step returns FlowResultType.ABORT or
         FlowResultType.CREATE_ENTRY.
         """
         if result.get("type") != data_entry_flow.FlowResultType.ABORT:

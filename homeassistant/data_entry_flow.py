@@ -228,7 +228,7 @@ class FlowManager(abc.ABC, Generic[_FlowResultT, _HandlerT]):
     ) -> _FlowResultT:
         """Finish a data entry flow.
 
-        This method is called when a flow step returns FlowResultType.ABOIRT or
+        This method is called when a flow step returns FlowResultType.ABORT or
         FlowResultType.CREATE_ENTRY.
         """
 

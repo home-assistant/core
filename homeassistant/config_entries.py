@@ -1340,7 +1340,7 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager[ConfigFlowResult]):
     ) -> ConfigFlowResult:
         """Finish a config flow and add an entry.
 
-        This method is called when a flow step returns FlowResultType.ABOIRT or
+        This method is called when a flow step returns FlowResultType.ABORT or
         FlowResultType.CREATE_ENTRY.
         """
         flow = cast(ConfigFlow, flow)
@@ -2664,7 +2664,7 @@ class OptionsFlowManager(data_entry_flow.FlowManager[ConfigFlowResult]):
     ) -> ConfigFlowResult:
         """Finish an options flow and update options for configuration entry.
 
-        This method is called when a flow step returns FlowResultType.ABOIRT or
+        This method is called when a flow step returns FlowResultType.ABORT or
         FlowResultType.CREATE_ENTRY.
 
         Flow.handler and entry_id is the same thing to map flow with entry.
