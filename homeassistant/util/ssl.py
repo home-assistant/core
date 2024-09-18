@@ -15,6 +15,7 @@ class SSLCipherList(StrEnum):
     PYTHON_DEFAULT = "python_default"
     INTERMEDIATE = "intermediate"
     MODERN = "modern"
+    INSECURE = "insecure"
 
 
 SSL_CIPHER_LISTS = {
@@ -58,6 +59,7 @@ SSL_CIPHER_LISTS = {
         "ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA384:"
         "ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256"
     ),
+    SSLCipherList.INSECURE: "DEFAULT",
 }
 
 
@@ -115,6 +117,7 @@ def client_context(
 # Create this only once and reuse it
 _DEFAULT_SSL_CONTEXT = client_context()
 _DEFAULT_NO_VERIFY_SSL_CONTEXT = create_no_verify_ssl_context()
+_INSECURE_NO_VERIFY_SSL_CONTEXT = create_no_verify_ssl_context(SSLCipherList.INSECURE)
 
 
 def get_default_context() -> ssl.SSLContext:
@@ -125,6 +128,11 @@ def get_default_context() -> ssl.SSLContext:
 def get_default_no_verify_context() -> ssl.SSLContext:
     """Return the default SSL context that does not verify the server certificate."""
     return _DEFAULT_NO_VERIFY_SSL_CONTEXT
+
+
+def get_insecure_no_verify_context() -> ssl.SSLContext:
+    """Return a SSL context which is compatible with old SSL/TLS standards."""
+    return _INSECURE_NO_VERIFY_SSL_CONTEXT
 
 
 def server_context_modern() -> ssl.SSLContext:

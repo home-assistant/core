@@ -69,7 +69,7 @@ class ReolinkHost:
 
         def get_aiohttp_session() -> aiohttp.ClientSession:
             """Return the HA aiohttp session."""
-            return async_get_clientsession(hass, verify_ssl=False)
+            return async_get_clientsession(hass, verify_ssl=False, old_ssl=True)
 
         self._api = Host(
             config[CONF_HOST],
