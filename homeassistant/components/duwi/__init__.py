@@ -72,6 +72,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: DuwiConfigEntry) -> bool
     )
 
     # Fetch devices
+    await manager.init_manager()
     await manager.update_device_cache()
     listener = DeviceListener(hass, manager)
     manager.add_device_listener(listener)
@@ -127,41 +128,24 @@ async def cleanup_device_registry(
 
     for dev_id, device_entry in list(device_registry.devices.items()):
         for item in device_entry.identifiers:
-            if (
-                item[0] == DOMAIN
-                and item[1] not in entry.runtime_data.manager.device_map
+            if item[0] == DOMAIN and (
+                item[1] not in entry.runtime_data.manager.device_map
+                or dev_id in device_ids
             ):
                 device_registry.async_remove_device(dev_id)
-
-    for d in device_ids:
-        device_registry.async_remove_device(d)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: DuwiConfigEntry) -> bool:
     """Unload the Duwi platforms associated with the provided config entry."""
+    if unload_ok := await hass.config_entries.async_unload_platforms(
+        entry, SUPPORTED_PLATFORMS
+    ):
+        house_no = entry.data.get(HOUSE_NO)
+        if house_no in hass.data[DOMAIN].get("existing_house"):
+            hass.data[DOMAIN].get("existing_house").remove(house_no)
+        await entry.runtime_data.manager.unload(True)
 
-    # Attempt to unload all platforms associated with the entry.
-    await entry.runtime_data.manager.unload()
-
-    house_no = entry.data.get(HOUSE_NO)
-    if house_no in hass.data[DOMAIN].get("existing_house"):
-        hass.data[DOMAIN].get("existing_house").remove(house_no)
-
-    return await hass.config_entries.async_unload_platforms(entry, SUPPORTED_PLATFORMS)
-
-
-async def async_remove_entry(hass: HomeAssistant, entry: DuwiConfigEntry) -> None:
-    """Remove a config entry and revoke credentials from Duwi."""
-
-    manager = entry.runtime_data.manager
-
-    # Cleanup device registry for the devices managed by this entry
-    await cleanup_device_registry(hass, entry, manager.device_map.keys())
-
-    # Unload the manager and remove entry data
-    await manager.unload(True)
-
-    await hass.config_entries.async_unload_platforms(entry, SUPPORTED_PLATFORMS)
+    return unload_ok
 
 
 class DeviceListener(SharingDeviceListener):
@@ -189,10 +173,6 @@ class DeviceListener(SharingDeviceListener):
     def remove_device(self, device_no: str) -> None:
         """Schedule removal of a device."""
         self.hass.add_job(self.async_remove_device, device_no)
-
-    def token_listener(self, token_info: dict[str, Any]) -> None:
-        """Handle token update notifications."""
-        # Implementation needed (if applicable)
 
     @callback
     def async_remove_device(self, device_no: str) -> None:
@@ -226,33 +206,33 @@ class TokenListener(SharingTokenListener):
             # Prepare data for updating the config entry
             data = {
                 PHONE: self.entry.data[PHONE] if self.entry.data is not None else None,
-                PASSWORD: self.entry.data[PASSWORD]
-                if self.entry.data is not None
-                else None,
-                HOUSE_KEY: self.entry.data[HOUSE_KEY]
-                if self.entry.data is not None
-                else None,
-                ADDRESS: self.entry.data[ADDRESS]
-                if self.entry.data is not None
-                else None,
-                WS_ADDRESS: self.entry.data[WS_ADDRESS]
-                if self.entry.data is not None
-                else None,
-                APP_KEY: self.entry.data[APP_KEY]
-                if self.entry.data is not None
-                else None,
-                APP_SECRET: self.entry.data[APP_SECRET]
-                if self.entry.data is not None
-                else None,
-                HOUSE_NO: self.entry.data[HOUSE_NO]
-                if self.entry.data is not None
-                else None,
-                ACCESS_TOKEN: token_info[ACCESS_TOKEN]
-                if token_info is not None
-                else None,
-                REFRESH_TOKEN: token_info[REFRESH_TOKEN]
-                if token_info is not None
-                else None,
+                PASSWORD: (
+                    self.entry.data[PASSWORD] if self.entry.data is not None else None
+                ),
+                HOUSE_KEY: (
+                    self.entry.data[HOUSE_KEY] if self.entry.data is not None else None
+                ),
+                ADDRESS: (
+                    self.entry.data[ADDRESS] if self.entry.data is not None else None
+                ),
+                WS_ADDRESS: (
+                    self.entry.data[WS_ADDRESS] if self.entry.data is not None else None
+                ),
+                APP_KEY: (
+                    self.entry.data[APP_KEY] if self.entry.data is not None else None
+                ),
+                APP_SECRET: (
+                    self.entry.data[APP_SECRET] if self.entry.data is not None else None
+                ),
+                HOUSE_NO: (
+                    self.entry.data[HOUSE_NO] if self.entry.data is not None else None
+                ),
+                ACCESS_TOKEN: (
+                    token_info[ACCESS_TOKEN] if token_info is not None else None
+                ),
+                REFRESH_TOKEN: (
+                    token_info[REFRESH_TOKEN] if token_info is not None else None
+                ),
             }
         else:
             raise ConfigEntryAuthFailed(
