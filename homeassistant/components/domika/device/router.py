@@ -18,10 +18,9 @@ from homeassistant.components.cloud import (
     CloudNotAvailable,
     async_remote_ui_url,
 )
-from homeassistant.components.hassio import is_hassio
-from homeassistant.components.hassio.coordinator import get_host_info
-from homeassistant.components.websocket_api.connection import ActiveConnection
-from homeassistant.components.websocket_api.decorators import (
+from homeassistant.components.hassio import get_host_info, is_hassio
+from homeassistant.components.websocket_api import (
+    ActiveConnection,
     async_response,
     websocket_command,
 )
