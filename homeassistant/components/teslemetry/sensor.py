@@ -400,7 +400,7 @@ WALL_CONNECTOR_DESCRIPTIONS: tuple[TeslemetrySensorEntityDescription, ...] = (
     ),
     TeslemetrySensorEntityDescription(
         key="vin",
-        value_fn=lambda vin: vin or "None",
+        value_fn=lambda vin: vin or "Disconnected",
     ),
 )
 
