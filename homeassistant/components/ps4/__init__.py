@@ -111,7 +111,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     device[CONF_REGION] = country
                 version = 2
                 config_entries.async_update_entry(entry, data=data, version=2)
-                _LOGGER.info(
+                _LOGGER.debug(
                     "PlayStation 4 Config Updated: Region changed to: %s",
                     country,
                 )
@@ -143,7 +143,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 config_entry=entry,
                 device_id=e_entry.device_id,
             )
-            _LOGGER.info(
+            _LOGGER.debug(
                 "PlayStation 4 identifier for entity: %s has changed",
                 entity_id,
             )

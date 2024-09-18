@@ -18,15 +18,12 @@ from homeassistant.const import CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, config_validation as cv
-from homeassistant.helpers.device_registry import DeviceEntry, DeviceInfo
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect,
-    async_dispatcher_send,
-)
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.device_registry import DeviceEntry
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, PLATFORM_LOOKUP, PLATFORMS
+from .entity import HiveEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -139,29 +136,3 @@ def refresh_system[_HiveEntityT: HiveEntity, **_P](
         async_dispatcher_send(self.hass, DOMAIN)
 
     return wrapper
-
-
-class HiveEntity(Entity):
-    """Initiate Hive Base Class."""
-
-    def __init__(self, hive: Hive, hive_device: dict[str, Any]) -> None:
-        """Initialize the instance."""
-        self.hive = hive
-        self.device = hive_device
-        self._attr_name = self.device["haName"]
-        self._attr_unique_id = f'{self.device["hiveID"]}-{self.device["hiveType"]}'
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self.device["device_id"])},
-            model=self.device["deviceData"]["model"],
-            manufacturer=self.device["deviceData"]["manufacturer"],
-            name=self.device["device_name"],
-            sw_version=self.device["deviceData"]["version"],
-            via_device=(DOMAIN, self.device["parentDevice"]),
-        )
-        self.attributes: dict[str, Any] = {}
-
-    async def async_added_to_hass(self) -> None:
-        """When entity is added to Home Assistant."""
-        self.async_on_remove(
-            async_dispatcher_connect(self.hass, DOMAIN, self.async_write_ha_state)
-        )

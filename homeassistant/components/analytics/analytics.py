@@ -177,6 +177,7 @@ class Analytics:
         hass = self.hass
         supervisor_info = None
         operating_system_info: dict[str, Any] = {}
+        supervisor_client = hassio.get_supervisor_client(hass)
 
         if not self.onboarded or not self.preferences.get(ATTR_BASE, False):
             LOGGER.debug("Nothing to submit")
@@ -263,16 +264,16 @@ class Analytics:
             if supervisor_info is not None:
                 installed_addons = await asyncio.gather(
                     *(
-                        hassio.async_get_addon_info(hass, addon[ATTR_SLUG])
+                        supervisor_client.addons.addon_info(addon[ATTR_SLUG])
                         for addon in supervisor_info[ATTR_ADDONS]
                     )
                 )
                 addons.extend(
                     {
-                        ATTR_SLUG: addon[ATTR_SLUG],
-                        ATTR_PROTECTED: addon[ATTR_PROTECTED],
-                        ATTR_VERSION: addon[ATTR_VERSION],
-                        ATTR_AUTO_UPDATE: addon[ATTR_AUTO_UPDATE],
+                        ATTR_SLUG: addon.slug,
+                        ATTR_PROTECTED: addon.protected,
+                        ATTR_VERSION: addon.version,
+                        ATTR_AUTO_UPDATE: addon.auto_update,
                     }
                     for addon in installed_addons
                 )

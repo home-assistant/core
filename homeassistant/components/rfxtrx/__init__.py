@@ -231,7 +231,7 @@ async def async_setup_internal(hass: HomeAssistant, entry: ConfigEntry) -> None:
         config = {}
         config[CONF_DEVICE_ID] = device_id
 
-        _LOGGER.info(
+        _LOGGER.debug(
             "Added device (Device ID: %s Class: %s Sub: %s, Event: %s)",
             event.device.id_string.lower(),
             event.device.__class__.__name__,
@@ -416,7 +416,7 @@ def find_possible_pt2262_device(device_ids: set[str], device_id: str) -> str | N
                 size = i
             if size is not None:
                 size = len(dev_id) - size - 1
-                _LOGGER.info(
+                _LOGGER.debug(
                     (
                         "Found possible device %s for %s "
                         "with the following configuration:\n"
