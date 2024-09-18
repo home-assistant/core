@@ -6,6 +6,8 @@ from unittest.mock import AsyncMock
 from flipr_api.exceptions import FliprError
 
 from homeassistant.components.select import (
+    ATTR_OPTION,
+    ATTR_OPTIONS,
     DOMAIN as SELECT_DOMAIN,
     SERVICE_SELECT_OPTION,
 )
@@ -19,7 +21,7 @@ from tests.common import MockConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
-SELECT_ENTITY_ID = "select.flipr_hub_myhubid"
+SELECT_ENTITY_ID = "select.flipr_hub_myhubid_mode"
 
 
 async def test_entities(
@@ -39,10 +41,11 @@ async def test_entities(
     _LOGGER.debug("Found entity = %s", entity)
     assert entity.unique_id == "myhubid-hubMode"
 
-    state = hass.states.get(SELECT_ENTITY_ID)
-    _LOGGER.debug("Found state = %s", state)
-    assert state
-    assert state.state == "planning"
+    mode = hass.states.get(SELECT_ENTITY_ID)
+    _LOGGER.debug("Found mode = %s", mode)
+    assert mode
+    assert mode.state == "planning"
+    assert mode.attributes.get(ATTR_OPTIONS) == ["auto", "manual", "planning"]
 
 
 async def test_select_actions(
@@ -63,7 +66,7 @@ async def test_select_actions(
     await hass.services.async_call(
         SELECT_DOMAIN,
         SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: SELECT_ENTITY_ID, "option": "manual"},
+        {ATTR_ENTITY_ID: SELECT_ENTITY_ID, ATTR_OPTION: "manual"},
         blocking=True,
     )
     state = hass.states.get(SELECT_ENTITY_ID)

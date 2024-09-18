@@ -42,6 +42,7 @@
     },
     "select": {
       "hub_mode": {
+        "name": "Mode",
         "state": {
           "auto": "Automatic",
           "manual": "Manual",
