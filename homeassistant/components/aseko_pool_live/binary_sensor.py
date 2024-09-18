@@ -52,12 +52,12 @@ async def async_setup_entry(
     ]
     user_id, coordinator = data
     units = coordinator.data.values()
-    for unit in units:
-        async_add_entities(
-            AsekoBinarySensorEntity(unit, user_id, coordinator, description)
-            for description in BINARY_SENSORS
-            if description.value_fn(unit) is not None
-        )
+    async_add_entities(
+        AsekoBinarySensorEntity(unit, user_id, coordinator, description)
+        for description in BINARY_SENSORS
+        for unit in units
+        if description.value_fn(unit) is not None
+    )
 
 
 class AsekoBinarySensorEntity(AsekoEntity, BinarySensorEntity):
