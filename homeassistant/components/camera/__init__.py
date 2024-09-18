@@ -725,10 +725,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         if CameraEntityFeature.STREAM not in self.supported_features_compat:
             return []
 
-        if stream_source := await self.stream_source():
-            return await async_get_supported_providers(self.hass, stream_source)
-
-        return []
+        return await async_get_supported_providers(self.hass, self)
 
     @property
     def webrtc_providers(self) -> list[CameraWebRTCProvider]:

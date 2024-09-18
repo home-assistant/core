@@ -204,12 +204,16 @@ async def ws_get_client_config(
 
 
 async def async_get_supported_providers(
-    hass: HomeAssistant, stream_source: str
+    hass: HomeAssistant, camera: Camera
 ) -> list[CameraWebRTCProvider]:
     """Return a list of supported providers for the camera."""
+    providers = hass.data.get(DATA_WEBRTC_PROVIDERS)
+    if not providers or not (stream_source := await camera.stream_source()):
+        return []
+
     return [
         provider
-        for provider in hass.data.get(DATA_WEBRTC_PROVIDERS, set())
+        for provider in providers
         if await provider.async_is_supported(stream_source)
     ]
 
