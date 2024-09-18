@@ -104,7 +104,9 @@ async def async_setup_entry(
 
         if host.api.new_devices:
             # Their are new cameras/chimes connected, reload to add them.
-            await hass.config_entries.async_reload(config_entry.entry_id)
+            hass.async_create_task(
+                hass.config_entries.async_reload(config_entry.entry_id)
+            )
 
     async def async_check_firmware_update() -> None:
         """Check for firmware updates."""
