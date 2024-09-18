@@ -126,9 +126,11 @@ tests: &tests
   - tests/*.py
   - tests/auth/**
   - tests/backports/**
+  - tests/components/diagnostics/**
   - tests/components/history/**
   - tests/components/logbook/**
   - tests/components/recorder/**
+  - tests/components/repairs/**
   - tests/components/sensor/**
   - tests/hassfest/**
   - tests/helpers/**
