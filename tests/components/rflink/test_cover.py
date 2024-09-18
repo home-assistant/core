@@ -7,7 +7,7 @@ control of RFLink cover devices.
 
 import pytest
 
-from homeassistant.components.rflink import EVENT_BUTTON_PRESSED
+from homeassistant.components.rflink.entity import EVENT_BUTTON_PRESSED
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_CLOSE_COVER,
