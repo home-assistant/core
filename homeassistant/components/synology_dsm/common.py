@@ -330,10 +330,11 @@ class SynoApi:
 
         if not self._with_external_usb:
             LOGGER.debug(
-                "Disable external sub api from being updated for '%s'",
+                "Disable external usb api from being updated for '%s'",
                 self._entry.unique_id,
             )
-            self.dsm.reset(self.external_usb)
+            if self.external_usb:
+                self.dsm.reset(self.external_usb)
             self.external_usb = None
 
     async def _fetch_device_configuration(self) -> None:
