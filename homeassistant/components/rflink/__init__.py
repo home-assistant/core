@@ -32,38 +32,32 @@ from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType
 
-from .utils import brightness_to_rflink
+from .const import (
+    DATA_DEVICE_REGISTER,
+    DATA_ENTITY_LOOKUP,
+    DEFAULT_SIGNAL_REPETITIONS,
+    EVENT_KEY_COMMAND,
+    EVENT_KEY_ID,
+    EVENT_KEY_SENSOR,
+    SIGNAL_AVAILABILITY,
+    SIGNAL_HANDLE_EVENT,
+    TMP_ENTITY,
+)
+from .utils import brightness_to_rflink, identify_event_type
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_EVENT = "event"
-
-CONF_ALIASES = "aliases"
-CONF_GROUP_ALIASES = "group_aliases"
-CONF_GROUP = "group"
-CONF_NOGROUP_ALIASES = "nogroup_aliases"
-CONF_DEVICE_DEFAULTS = "device_defaults"
-CONF_AUTOMATIC_ADD = "automatic_add"
-CONF_FIRE_EVENT = "fire_event"
 CONF_IGNORE_DEVICES = "ignore_devices"
 CONF_RECONNECT_INTERVAL = "reconnect_interval"
-CONF_SIGNAL_REPETITIONS = "signal_repetitions"
 CONF_WAIT_FOR_ACK = "wait_for_ack"
 CONF_KEEPALIVE_IDLE = "tcp_keepalive_idle_timer"
 
-DATA_DEVICE_REGISTER = "rflink_device_register"
-DATA_ENTITY_LOOKUP = "rflink_entity_lookup"
 DATA_ENTITY_GROUP_LOOKUP = "rflink_entity_group_only_lookup"
 DEFAULT_RECONNECT_INTERVAL = 10
-DEFAULT_SIGNAL_REPETITIONS = 1
 DEFAULT_TCP_KEEPALIVE_IDLE_TIMER = 3600
 CONNECTION_TIMEOUT = 10
 
 EVENT_BUTTON_PRESSED = "button_pressed"
-EVENT_KEY_COMMAND = "command"
-EVENT_KEY_ID = "id"
-EVENT_KEY_SENSOR = "sensor"
-EVENT_KEY_UNIT = "unit"
 
 RFLINK_GROUP_COMMANDS = ["allon", "alloff"]
 
@@ -71,20 +65,8 @@ DOMAIN = "rflink"
 
 SERVICE_SEND_COMMAND = "send_command"
 
-SIGNAL_AVAILABILITY = "rflink_device_available"
-SIGNAL_HANDLE_EVENT = "rflink_handle_event_{}"
 SIGNAL_EVENT = "rflink_event"
 
-TMP_ENTITY = "tmp.{}"
-
-DEVICE_DEFAULTS_SCHEMA = vol.Schema(
-    {
-        vol.Optional(CONF_FIRE_EVENT, default=False): cv.boolean,
-        vol.Optional(
-            CONF_SIGNAL_REPETITIONS, default=DEFAULT_SIGNAL_REPETITIONS
-        ): vol.Coerce(int),
-    }
-)
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -111,18 +93,6 @@ CONFIG_SCHEMA = vol.Schema(
 SEND_COMMAND_SCHEMA = vol.Schema(
     {vol.Required(CONF_DEVICE_ID): cv.string, vol.Required(CONF_COMMAND): cv.string}
 )
-
-
-def identify_event_type(event):
-    """Look at event to determine type of device.
-
-    Async friendly.
-    """
-    if EVENT_KEY_COMMAND in event:
-        return EVENT_KEY_COMMAND
-    if EVENT_KEY_SENSOR in event:
-        return EVENT_KEY_SENSOR
-    return "unknown"
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
