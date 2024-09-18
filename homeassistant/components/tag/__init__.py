@@ -360,7 +360,7 @@ async def async_scan_tag(
     _LOGGER.debug("Tag: %s scanned by device: %s", tag_id, device_id)
 
 
-class TagEntity(Entity):
+class TagEntity(Entity):  # pylint: disable=hass-enforce-class-module
     """Representation of a Tag entity."""
 
     _unrecorded_attributes = frozenset({TAG_ID})
