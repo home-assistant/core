@@ -5,13 +5,14 @@ import logging
 from typing import Any
 
 from ayla_iot_unofficial import AylaAuthError, new_ayla_api
+from ayla_iot_unofficial.fujitsu_consts import FGLAIR_APP_ID, FGLAIR_APP_SECRET
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers import aiohttp_client
 
-from .const import API_TIMEOUT, CONF_EUROPE, DOMAIN, FGLAIR_APP_ID, FGLAIR_APP_SECRET
+from .const import API_TIMEOUT, CONF_EUROPE, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
