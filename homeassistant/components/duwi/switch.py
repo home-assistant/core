@@ -16,7 +16,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import DuwiConfigEntry
 from .base import DuwiEntity
-from .const import _LOGGER, DOMAIN, DUWI_DISCOVERY_NEW, DPCode
+from .const import _LOGGER, DUWI_DISCOVERY_NEW, DPCode
 
 # List of Duwi switch types, each represented by a unique ID.
 DUWI_SWITCH_TYPES = [
@@ -57,7 +57,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: DuwiConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up duwi sensors dynamically through duwi discovery."""
-    hass_data = hass.data[DOMAIN].get(entry.entry_id)
+    hass_data = entry.runtime_data
 
     @callback
     def async_discover_device(device_ids: list[str]) -> None:
