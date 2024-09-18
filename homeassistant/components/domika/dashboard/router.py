@@ -12,8 +12,8 @@ import domika_ha_framework.device.service as device_service
 from domika_ha_framework.errors import DomikaFrameworkBaseError
 import voluptuous as vol
 
-from homeassistant.components.websocket_api.connection import ActiveConnection
-from homeassistant.components.websocket_api.decorators import (
+from homeassistant.components.websocket_api import (
+    ActiveConnection,
     async_response,
     websocket_command,
 )
