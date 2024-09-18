@@ -33,7 +33,7 @@ class AsekoSensorEntityDescription(SensorEntityDescription):
 
 SENSORS: list[AsekoSensorEntityDescription] = [
     AsekoSensorEntityDescription(
-        key="air_temperature",
+        key="airTemp",
         translation_key="air_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -41,7 +41,7 @@ SENSORS: list[AsekoSensorEntityDescription] = [
         value_fn=lambda unit: unit.air_temperature,
     ),
     AsekoSensorEntityDescription(
-        key="cl_free",
+        key="free_chlorine",
         translation_key="cl_free",
         native_unit_of_measurement="mg/l",
         state_class=SensorStateClass.MEASUREMENT,
@@ -54,7 +54,7 @@ SENSORS: list[AsekoSensorEntityDescription] = [
         value_fn=lambda unit: unit.ph,
     ),
     AsekoSensorEntityDescription(
-        key="redox",
+        key="rx",
         translation_key="redox",
         native_unit_of_measurement=UnitOfElectricPotential.MILLIVOLT,
         state_class=SensorStateClass.MEASUREMENT,
@@ -68,7 +68,7 @@ SENSORS: list[AsekoSensorEntityDescription] = [
         value_fn=lambda unit: unit.salinity,
     ),
     AsekoSensorEntityDescription(
-        key="water_temperature",
+        key="waterTemp",
         translation_key="water_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -84,16 +84,13 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Aseko Pool Live sensors."""
-    data: tuple[str, AsekoDataUpdateCoordinator] = hass.data[DOMAIN][
-        config_entry.entry_id
-    ]
-    user_id, coordinator = data
+    coordinator: AsekoDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
     units = coordinator.data.values()
     async_add_entities(
-        AsekoSensorEntity(unit, user_id, coordinator, description)
+        AsekoSensorEntity(unit, coordinator, description)
         for description in SENSORS
         for unit in units
-        if getattr(unit, description.key) is not None
+        if description.value_fn(unit) is not None
     )
 
 

@@ -29,7 +29,7 @@ class AsekoBinarySensorEntityDescription(BinarySensorEntityDescription):
 
 BINARY_SENSORS: tuple[AsekoBinarySensorEntityDescription, ...] = (
     AsekoBinarySensorEntityDescription(
-        key="water_flow_to_probes",
+        key="water_flow",
         translation_key="water_flow_to_probes",
         value_fn=lambda unit: unit.water_flow_to_probes,
     ),
@@ -47,13 +47,10 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Aseko Pool Live binary sensors."""
-    data: tuple[str, AsekoDataUpdateCoordinator] = hass.data[DOMAIN][
-        config_entry.entry_id
-    ]
-    user_id, coordinator = data
+    coordinator: AsekoDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
     units = coordinator.data.values()
     async_add_entities(
-        AsekoBinarySensorEntity(unit, user_id, coordinator, description)
+        AsekoBinarySensorEntity(unit, coordinator, description)
         for description in BINARY_SENSORS
         for unit in units
         if description.value_fn(unit) is not None

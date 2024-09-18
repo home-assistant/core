@@ -18,7 +18,6 @@ class AsekoEntity(CoordinatorEntity[AsekoDataUpdateCoordinator]):
     def __init__(
         self,
         unit: Unit,
-        user_id: str,
         coordinator: AsekoDataUpdateCoordinator,
         description: EntityDescription,
     ) -> None:
@@ -27,10 +26,10 @@ class AsekoEntity(CoordinatorEntity[AsekoDataUpdateCoordinator]):
         self.entity_description = description
         self._unit = unit
         self._attr_unique_id = (
-            f"{user_id}_{self.unit.serial_number}_{self.entity_description.key}"
+            f"{self.unit.serial_number}_{self.entity_description.key}"
         )
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, f"{user_id}_{self.unit.serial_number}")},
+            identifiers={(DOMAIN, self.unit.serial_number)},
             serial_number=self.unit.serial_number,
             name=unit.name or unit.serial_number,
             manufacturer=(

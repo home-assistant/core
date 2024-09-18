@@ -24,13 +24,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     aseko = Aseko(entry.data[CONF_EMAIL], entry.data[CONF_PASSWORD])
 
     try:
-        user = await aseko.login()
+        await aseko.login()
     except AsekoNotLoggedIn as err:
         raise ConfigEntryAuthFailed from err
 
     coordinator = AsekoDataUpdateCoordinator(hass, aseko)
     await coordinator.async_config_entry_first_refresh()
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = (user.user_id, coordinator)
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
