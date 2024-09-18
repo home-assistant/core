@@ -41,7 +41,7 @@ import pytest
 def route_config_direction(request: pytest.FixtureRequest) -> Any:
     """Generate alternative directions values.
 
-    When only on edirection is returned, it is not returned as a list, but instead an object.
+    When only one direction is returned, it is not returned as a list, but instead an object.
     """
     return request.param
 

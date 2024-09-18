@@ -21,6 +21,7 @@ from tests.common import MockConfigEntry
 VALID_AGENCY = "sfmta-cis"
 VALID_ROUTE = "F"
 VALID_STOP = "5184"
+VALID_COORDINATOR_KEY = f"{VALID_AGENCY}-{VALID_STOP}"
 VALID_AGENCY_TITLE = "San Francisco Muni"
 VALID_ROUTE_TITLE = "F-Market & Wharves"
 VALID_STOP_TITLE = "Market St & 7th St"
@@ -153,7 +154,7 @@ async def test_prediction_exceptions(
 ) -> None:
     """Test that some coodinator exceptions raise UpdateFailed exceptions."""
     await assert_setup_sensor(hass, CONFIG_BASIC)
-    coordinator: NextBusDataUpdateCoordinator = hass.data[DOMAIN][VALID_AGENCY]
+    coordinator: NextBusDataUpdateCoordinator = hass.data[DOMAIN][VALID_COORDINATOR_KEY]
     mock_nextbus_predictions.side_effect = client_exception
     with pytest.raises(UpdateFailed):
         await coordinator._async_update_data()
