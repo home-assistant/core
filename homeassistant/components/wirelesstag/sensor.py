@@ -20,8 +20,8 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import WirelessTagBaseSensor
 from .const import DOMAIN, SIGNAL_TAG_UPDATE
+from .entity import WirelessTagBaseSensor
 from .util import async_migrate_unique_id
 
 _LOGGER = logging.getLogger(__name__)
