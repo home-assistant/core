@@ -27,13 +27,13 @@ async def test_unload_entry(
     assert hass.states.get("media_player.player_name1111").state == "unavailable"
 
 
-async def test_unload_entry_while_offline(
+async def test_unload_entry_while_player_is_offline(
     hass: HomeAssistant,
     setup_config_entry: None,
     config_entry: MockConfigEntry,
     player_mocks: PlayerMocks,
 ) -> None:
-    """Test entries are unloaded correctly when the player is offline."""
+    """Test entries can be unloaded correctly while the player is offline."""
     player_mocks.player_data.player.status.side_effect = PlayerUnreachableError(
         "Player not reachable"
     )
