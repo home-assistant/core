@@ -37,7 +37,7 @@
       "air_temperature": {
         "name": "Air temperature"
       },
-      "cl_free": {
+      "free_chlorine": {
         "name": "Free chlorine"
       },
       "redox": {

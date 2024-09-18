@@ -42,7 +42,7 @@ SENSORS: list[AsekoSensorEntityDescription] = [
     ),
     AsekoSensorEntityDescription(
         key="free_chlorine",
-        translation_key="cl_free",
+        translation_key="free_chlorine",
         native_unit_of_measurement="mg/l",
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda unit: unit.cl_free,

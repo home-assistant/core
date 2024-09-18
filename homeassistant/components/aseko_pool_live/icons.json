@@ -12,7 +12,7 @@
       "air_temperature": {
         "default": "mdi:thermometer-lines"
       },
-      "cl_free": {
+      "free_chlorine": {
         "default": "mdi:pool"
       },
       "redox": {
