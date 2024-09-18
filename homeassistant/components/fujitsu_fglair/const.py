@@ -2,11 +2,6 @@
 
 from datetime import timedelta
 
-from ayla_iot_unofficial.fujitsu_consts import (  # noqa: F401
-    FGLAIR_APP_ID,
-    FGLAIR_APP_SECRET,
-)
-
 API_TIMEOUT = 10
 API_REFRESH = timedelta(minutes=5)
 
