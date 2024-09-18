@@ -40,7 +40,8 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import (
+from . import RflinkDevice
+from .const import (
     CONF_ALIASES,
     CONF_AUTOMATIC_ADD,
     DATA_DEVICE_REGISTER,
@@ -51,7 +52,6 @@ from . import (
     SIGNAL_AVAILABILITY,
     SIGNAL_HANDLE_EVENT,
     TMP_ENTITY,
-    RflinkDevice,
 )
 
 SENSOR_TYPES = (
