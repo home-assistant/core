@@ -6,7 +6,6 @@ from requests.exceptions import ConnectTimeout, HTTPError
 import voluptuous as vol
 from wirelesstagpy import WirelessTags
 from wirelesstagpy.exceptions import WirelessTagsException
-from wirelesstagpy.sensortag import SensorTag
 
 from homeassistant.components import persistent_notification
 from homeassistant.const import (
@@ -19,11 +18,12 @@ from homeassistant.const import (
     UnitOfElectricPotential,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType
+
+from .const import DOMAIN, SIGNAL_BINARY_EVENT_UPDATE, SIGNAL_TAG_UPDATE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,16 +39,7 @@ ATTR_TAG_POWER_CONSUMPTION = "power_consumption"
 NOTIFICATION_ID = "wirelesstag_notification"
 NOTIFICATION_TITLE = "Wireless Sensor Tag Setup"
 
-DOMAIN = "wirelesstag"
 DEFAULT_ENTITY_NAMESPACE = "wirelesstag"
-
-# Template for signal - first parameter is tag_id,
-# second, tag manager mac address
-SIGNAL_TAG_UPDATE = "wirelesstag.tag_info_updated_{}_{}"
-
-# Template for signal - tag_id, sensor type and
-# tag manager mac address
-SIGNAL_BINARY_EVENT_UPDATE = "wirelesstag.binary_event_updated_{}_{}_{}"
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -127,22 +118,6 @@ class WirelessTagPlatform:
                     )
 
         self.api.start_monitoring(push_callback)
-
-
-def async_migrate_unique_id(
-    hass: HomeAssistant, tag: SensorTag, domain: str, key: str
-) -> None:
-    """Migrate old unique id to new one with use of tag's uuid."""
-    registry = er.async_get(hass)
-    new_unique_id = f"{tag.uuid}_{key}"
-
-    if registry.async_get_entity_id(domain, DOMAIN, new_unique_id):
-        return
-
-    old_unique_id = f"{tag.tag_id}_{key}"
-    if entity_id := registry.async_get_entity_id(domain, DOMAIN, old_unique_id):
-        _LOGGER.debug("Updating unique id for %s %s", key, entity_id)
-        registry.async_update_entity(entity_id, new_unique_id=new_unique_id)
 
 
 def setup(hass: HomeAssistant, config: ConfigType) -> bool:
