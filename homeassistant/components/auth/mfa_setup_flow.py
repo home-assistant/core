@@ -57,7 +57,11 @@ class MfaFlowManager(data_entry_flow.FlowManager):
     async def async_finish_flow(
         self, flow: data_entry_flow.FlowHandler, result: data_entry_flow.FlowResult
     ) -> data_entry_flow.FlowResult:
-        """Complete an mfs setup flow."""
+        """Complete an mfs setup flow.
+
+        This method is called when a flow step returns FlowResultType.ABOIRT or
+        FlowResultType.CREATE_ENTRY.
+        """
         _LOGGER.debug("flow_result: %s", result)
         return result
 
