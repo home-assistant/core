@@ -219,6 +219,27 @@
       },
       "wall_connector_state": {
         "default": "mdi:ev-station"
+      },
+      "total_home_usage": {
+        "default": "mdi:home-lightning-bolt"
+      },
+      "total_battery_charge": {
+        "default": "mdi:battery-arrow-up"
+      },
+      "total_battery_discharge": {
+        "default": "mdi:battery-arrow-down"
+      },
+      "total_solar_production": {
+        "default": "mdi:solar-power-variant"
+      },
+      "grid_energy_imported": {
+        "default": "mdi:transmission-tower-import"
+      },
+      "total_grid_energy_exported": {
+        "default": "mdi:transmission-tower-export"
+      },
+      "solar_energy_exported": {
+        "default": "mdi:solar-power-variant"
       }
     },
     "switch": {
