@@ -24,7 +24,7 @@ from .const import (
     MODEL_AIRFRESH_T2017,
     MODELS_VACUUM,
 )
-from .device import XiaomiCoordinatedMiioEntity
+from .entity import XiaomiCoordinatedMiioEntity
 
 # Fans
 ATTR_RESET_DUST_FILTER = "reset_dust_filter"

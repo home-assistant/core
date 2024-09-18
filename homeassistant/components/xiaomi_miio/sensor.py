@@ -89,8 +89,7 @@ from .const import (
     ROBOROCK_GENERIC,
     ROCKROBO_GENERIC,
 )
-from .device import XiaomiCoordinatedMiioEntity, XiaomiMiioEntity
-from .gateway import XiaomiGatewayDevice
+from .entity import XiaomiCoordinatedMiioEntity, XiaomiGatewayDevice, XiaomiMiioEntity
 
 _LOGGER = logging.getLogger(__name__)
 
