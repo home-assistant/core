@@ -16,6 +16,7 @@ CONF_FIRE_EVENT = "fire_event"
 CONF_SIGNAL_REPETITIONS = "signal_repetitions"
 
 DATA_DEVICE_REGISTER = "rflink_device_register"
+DATA_ENTITY_GROUP_LOOKUP = "rflink_entity_group_only_lookup"
 DATA_ENTITY_LOOKUP = "rflink_entity_lookup"
 DEFAULT_SIGNAL_REPETITIONS = 1
 

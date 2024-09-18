@@ -14,7 +14,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import SwitchableRflinkDevice
 from .const import (
     CONF_ALIASES,
     CONF_DEVICE_DEFAULTS,
@@ -25,6 +24,7 @@ from .const import (
     CONF_SIGNAL_REPETITIONS,
     DEVICE_DEFAULTS_SCHEMA,
 )
+from .entity import SwitchableRflinkDevice
 
 PARALLEL_UPDATES = 0
 
