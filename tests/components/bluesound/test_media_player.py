@@ -8,7 +8,20 @@ from pyblu import PairedPlayer
 from pyblu.errors import PlayerUnreachableError
 import pytest
 
-from homeassistant.components.media_player import MediaPlayerState
+from homeassistant.components.bluesound import DOMAIN as BLUESOUND_DOMAIN
+from homeassistant.components.media_player import (
+    DOMAIN as MEDIA_PLAYER_DOMAIN,
+    SERVICE_MEDIA_NEXT_TRACK,
+    SERVICE_MEDIA_PAUSE,
+    SERVICE_MEDIA_PLAY,
+    SERVICE_MEDIA_PREVIOUS_TRACK,
+    SERVICE_VOLUME_DOWN,
+    SERVICE_VOLUME_MUTE,
+    SERVICE_VOLUME_SET,
+    SERVICE_VOLUME_UP,
+    MediaPlayerState,
+)
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 
@@ -20,9 +33,9 @@ async def test_pause(
 ) -> None:
     """Test the media player pause."""
     await hass.services.async_call(
-        "media_player",
-        "media_pause",
-        {"entity_id": "media_player.player_name1111"},
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_MEDIA_PAUSE,
+        {ATTR_ENTITY_ID: "media_player.player_name1111"},
         blocking=True,
     )
 
@@ -34,9 +47,9 @@ async def test_play(
 ) -> None:
     """Test the media player play."""
     await hass.services.async_call(
-        "media_player",
-        "media_play",
-        {"entity_id": "media_player.player_name1111"},
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_MEDIA_PLAY,
+        {ATTR_ENTITY_ID: "media_player.player_name1111"},
         blocking=True,
     )
 
@@ -48,9 +61,9 @@ async def test_next_track(
 ) -> None:
     """Test the media player next track."""
     await hass.services.async_call(
-        "media_player",
-        "media_next_track",
-        {"entity_id": "media_player.player_name1111"},
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_MEDIA_NEXT_TRACK,
+        {ATTR_ENTITY_ID: "media_player.player_name1111"},
         blocking=True,
     )
 
@@ -62,9 +75,9 @@ async def test_previous_track(
 ) -> None:
     """Test the media player previous track."""
     await hass.services.async_call(
-        "media_player",
-        "media_previous_track",
-        {"entity_id": "media_player.player_name1111"},
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_MEDIA_PREVIOUS_TRACK,
+        {ATTR_ENTITY_ID: "media_player.player_name1111"},
         blocking=True,
     )
 
@@ -76,9 +89,9 @@ async def test_volume_set(
 ) -> None:
     """Test the media player volume set."""
     await hass.services.async_call(
-        "media_player",
-        "volume_set",
-        {"entity_id": "media_player.player_name1111", "volume_level": 0.5},
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_VOLUME_SET,
+        {ATTR_ENTITY_ID: "media_player.player_name1111", "volume_level": 0.5},
         blocking=True,
     )
 
@@ -90,9 +103,9 @@ async def test_volume_mute(
 ) -> None:
     """Test the media player volume mute."""
     await hass.services.async_call(
-        "media_player",
-        "volume_mute",
-        {"entity_id": "media_player.player_name1111", "is_volume_muted": True},
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_VOLUME_MUTE,
+        {ATTR_ENTITY_ID: "media_player.player_name1111", "is_volume_muted": True},
         blocking=True,
     )
 
@@ -104,9 +117,9 @@ async def test_volume_up(
 ) -> None:
     """Test the media player volume up."""
     await hass.services.async_call(
-        "media_player",
-        "volume_up",
-        {"entity_id": "media_player.player_name1111"},
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_VOLUME_UP,
+        {ATTR_ENTITY_ID: "media_player.player_name1111"},
         blocking=True,
     )
 
@@ -118,9 +131,9 @@ async def test_volume_down(
 ) -> None:
     """Test the media player volume down."""
     await hass.services.async_call(
-        "media_player",
-        "volume_down",
-        {"entity_id": "media_player.player_name1111"},
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_VOLUME_DOWN,
+        {ATTR_ENTITY_ID: "media_player.player_name1111"},
         blocking=True,
     )
 
@@ -199,9 +212,9 @@ async def test_set_sleep_timer(
 ) -> None:
     """Test the set sleep timer action."""
     await hass.services.async_call(
-        "bluesound",
+        BLUESOUND_DOMAIN,
         "set_sleep_timer",
-        {"entity_id": "media_player.player_name1111"},
+        {ATTR_ENTITY_ID: "media_player.player_name1111"},
         blocking=True,
     )
 
@@ -216,9 +229,9 @@ async def test_clear_sleep_timer(
     player_mocks.player_data.player.sleep_timer.side_effect = [15, 30, 45, 60, 90, 0]
 
     await hass.services.async_call(
-        "bluesound",
+        BLUESOUND_DOMAIN,
         "clear_sleep_timer",
-        {"entity_id": "media_player.player_name1111"},
+        {ATTR_ENTITY_ID: "media_player.player_name1111"},
         blocking=True,
     )
 
@@ -231,10 +244,10 @@ async def test_join_cannot_join_to_self(
     """Test that joining to self is not allowed."""
     with pytest.raises(ServiceValidationError) as exc:
         await hass.services.async_call(
-            "bluesound",
+            BLUESOUND_DOMAIN,
             "join",
             {
-                "entity_id": "media_player.player_name1111",
+                ATTR_ENTITY_ID: "media_player.player_name1111",
                 "master": "media_player.player_name1111",
             },
             blocking=True,
@@ -251,10 +264,10 @@ async def test_join(
 ) -> None:
     """Test the join action."""
     await hass.services.async_call(
-        "bluesound",
+        BLUESOUND_DOMAIN,
         "join",
         {
-            "entity_id": "media_player.player_name1111",
+            ATTR_ENTITY_ID: "media_player.player_name1111",
             "master": "media_player.player_name2222",
         },
         blocking=True,
@@ -282,9 +295,9 @@ async def test_unjoin(
     await asyncio.sleep(0)
 
     await hass.services.async_call(
-        "bluesound",
+        BLUESOUND_DOMAIN,
         "unjoin",
-        {"entity_id": "media_player.player_name1111"},
+        {ATTR_ENTITY_ID: "media_player.player_name1111"},
         blocking=True,
     )
 
