@@ -2517,6 +2517,107 @@ async def test_blueprint_automation(
     ]
 
 
+async def test_blueprint_automation_legacy_schema(
+    hass: HomeAssistant, calls: list[ServiceCall]
+) -> None:
+    """Test blueprint automation where the blueprint is using legacy schema."""
+    assert await async_setup_component(
+        hass,
+        "automation",
+        {
+            "automation": {
+                "use_blueprint": {
+                    "path": "test_event_service_legacy_schema.yaml",
+                    "input": {
+                        "trigger_event": "blueprint_event",
+                        "service_to_call": "test.automation",
+                        "a_number": 5,
+                    },
+                }
+            }
+        },
+    )
+    hass.bus.async_fire("blueprint_event")
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    assert automation.entities_in_automation(hass, "automation.automation_0") == [
+        "light.kitchen"
+    ]
+    assert (
+        automation.blueprint_in_automation(hass, "automation.automation_0")
+        == "test_event_service_legacy_schema.yaml"
+    )
+    assert automation.automations_with_blueprint(
+        hass, "test_event_service_legacy_schema.yaml"
+    ) == ["automation.automation_0"]
+
+
+@pytest.mark.parametrize(
+    ("blueprint", "override"),
+    [
+        # Override a blueprint with modern schema with legacy schema
+        (
+            "test_event_service.yaml",
+            {"trigger": {"platform": "event", "event_type": "override"}},
+        ),
+        # Override a blueprint with modern schema with modern schema
+        (
+            "test_event_service.yaml",
+            {"triggers": {"platform": "event", "event_type": "override"}},
+        ),
+        # Override a blueprint with legacy schema with legacy schema
+        (
+            "test_event_service_legacy_schema.yaml",
+            {"trigger": {"platform": "event", "event_type": "override"}},
+        ),
+        # Override a blueprint with legacy schema with modern schema
+        (
+            "test_event_service_legacy_schema.yaml",
+            {"triggers": {"platform": "event", "event_type": "override"}},
+        ),
+    ],
+)
+async def test_blueprint_automation_override(
+    hass: HomeAssistant, calls: list[ServiceCall], blueprint: str, override: dict
+) -> None:
+    """Test blueprint automation where the automation config overrides the blueprint."""
+    assert await async_setup_component(
+        hass,
+        "automation",
+        {
+            "automation": {
+                "use_blueprint": {
+                    "path": blueprint,
+                    "input": {
+                        "trigger_event": "blueprint_event",
+                        "service_to_call": "test.automation",
+                        "a_number": 5,
+                    },
+                },
+            }
+            | override
+        },
+    )
+
+    hass.bus.async_fire("blueprint_event")
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    hass.bus.async_fire("override")
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+    assert automation.entities_in_automation(hass, "automation.automation_0") == [
+        "light.kitchen"
+    ]
+    assert (
+        automation.blueprint_in_automation(hass, "automation.automation_0") == blueprint
+    )
+    assert automation.automations_with_blueprint(hass, blueprint) == [
+        "automation.automation_0"
+    ]
+
+
 @pytest.mark.parametrize(
     ("blueprint_inputs", "problem", "details"),
     [

@@ -110,6 +110,10 @@ PLATFORM_SCHEMA = vol.All(
     ),
 )
 
+AUTOMATION_BLUEPRINT_SCHEMA = vol.All(
+    _backward_compat_schema, blueprint.schemas.BLUEPRINT_SCHEMA
+)
+
 
 async def _async_validate_config_item(  # noqa: C901
     hass: HomeAssistant,
@@ -188,7 +192,9 @@ async def _async_validate_config_item(  # noqa: C901
         uses_blueprint = True
         blueprints = async_get_blueprints(hass)
         try:
-            blueprint_inputs = await blueprints.async_inputs_from_config(config)
+            blueprint_inputs = await blueprints.async_inputs_from_config(
+                _backward_compat_schema(config)
+            )
         except blueprint.BlueprintException as err:
             if warn_on_errors:
                 LOGGER.error(
