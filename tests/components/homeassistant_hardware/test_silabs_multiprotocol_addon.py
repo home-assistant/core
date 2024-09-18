@@ -6,6 +6,7 @@ from collections.abc import Generator
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
+from aiohasupervisor import SupervisorError
 import pytest
 
 from homeassistant.components.hassio import (
@@ -996,7 +997,7 @@ async def test_option_flow_flasher_addon_flash_failure(
     assert result["step_id"] == "uninstall_multiprotocol_addon"
     assert result["progress_action"] == "uninstall_multiprotocol_addon"
 
-    start_addon.side_effect = HassioAPIError("Boom")
+    start_addon.side_effect = SupervisorError("Boom")
 
     await hass.async_block_till_done()
     uninstall_addon.assert_called_once_with(hass, "core_silabs_multiprotocol")
@@ -1230,7 +1231,7 @@ async def test_option_flow_install_multi_pan_addon_start_fails(
 ) -> None:
     """Test installing the multi pan addon."""
 
-    start_addon.side_effect = HassioAPIError("Boom")
+    start_addon.side_effect = SupervisorError("Boom")
 
     # Setup the config entry
     config_entry = MockConfigEntry(

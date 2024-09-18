@@ -6,6 +6,7 @@ import asyncio
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, call, patch
 
+from aiohasupervisor import SupervisorError
 from matter_server.client.exceptions import (
     CannotConnect,
     ServerVersionTooNew,
@@ -338,7 +339,7 @@ async def test_addon_info_failure(
     start_addon: AsyncMock,
 ) -> None:
     """Test failure to get add-on info for Matter add-on during entry setup."""
-    addon_info.side_effect = HassioAPIError("Boom")
+    addon_info.side_effect = SupervisorError("Boom")
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="Matter",

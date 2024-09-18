@@ -6,6 +6,7 @@ from collections.abc import Generator
 from ipaddress import ip_address
 from unittest.mock import AsyncMock, MagicMock, call, patch
 
+from aiohasupervisor import SupervisorError
 from matter_server.client.exceptions import CannotConnect, InvalidServerVersion
 import pytest
 
@@ -468,7 +469,7 @@ async def test_supervisor_discovery(
 
 @pytest.mark.parametrize(
     ("discovery_info", "error"),
-    [({"config": ADDON_DISCOVERY_INFO}, HassioAPIError())],
+    [({"config": ADDON_DISCOVERY_INFO}, SupervisorError())],
 )
 async def test_supervisor_discovery_addon_info_failed(
     hass: HomeAssistant,
@@ -868,7 +869,7 @@ async def test_addon_running(
             {"config": ADDON_DISCOVERY_INFO},
             None,
             None,
-            HassioAPIError(),
+            SupervisorError(),
             "addon_info_failed",
             False,
             False,
@@ -954,7 +955,7 @@ async def test_addon_running_failures(
             {"config": ADDON_DISCOVERY_INFO},
             None,
             None,
-            HassioAPIError(),
+            SupervisorError(),
             "addon_info_failed",
             False,
             False,
@@ -1084,7 +1085,7 @@ async def test_addon_installed(
     [
         (
             {"config": ADDON_DISCOVERY_INFO},
-            HassioAPIError(),
+            SupervisorError(),
             None,
             False,
             False,
@@ -1159,7 +1160,7 @@ async def test_addon_installed_failures(
     [
         (
             {"config": ADDON_DISCOVERY_INFO},
-            HassioAPIError(),
+            SupervisorError(),
             None,
             False,
             False,

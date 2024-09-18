@@ -196,13 +196,12 @@ def mock_stop_addon() -> Generator[AsyncMock]:
         yield stop_addon
 
 
-def mock_restart_addon(restart_addon_side_effect: Any | None) -> Generator[AsyncMock]:
+def mock_restart_addon(
+    supervisor_client: AsyncMock, restart_addon_side_effect: Any | None
+) -> AsyncMock:
     """Mock restart add-on."""
-    with patch(
-        "homeassistant.components.hassio.addon_manager.async_restart_addon",
-        side_effect=restart_addon_side_effect,
-    ) as restart_addon:
-        yield restart_addon
+    supervisor_client.addons.restart_addon.side_effect = restart_addon_side_effect
+    return supervisor_client.addons.restart_addon
 
 
 def mock_uninstall_addon() -> Generator[AsyncMock]:
