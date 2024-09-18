@@ -39,8 +39,8 @@ async def test_unload_entry_while_player_is_offline(
     )
     player_mocks.player_data.status_store.trigger()
 
-    # this needs to be here to make sure the player is offline
-    await asyncio.sleep(0)
+    # this is only there to yield to the event loop once; there is nothing we can wait for
+    await hass.async_block_till_done()
 
     assert await async_unload_entry(hass, config_entry)
     await hass.async_block_till_done()
