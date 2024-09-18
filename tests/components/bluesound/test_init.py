@@ -1,10 +1,9 @@
-"""Test __init__."""
-
-import asyncio
+"""Test bluesound integration."""
 
 from pyblu.errors import PlayerUnreachableError
 
 from homeassistant.components.bluesound import async_unload_entry
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from .conftest import PlayerMocks
@@ -12,19 +11,18 @@ from .conftest import PlayerMocks
 from tests.common import MockConfigEntry
 
 
-async def test_setup_entry(hass: HomeAssistant, setup_config_entry: None) -> None:
-    """Test a successful setup entry."""
-    assert hass.states.get("media_player.player_name1111").state == "playing"
-
-
-async def test_unload_entry(
+async def test_setup_entry(
     hass: HomeAssistant, setup_config_entry: None, config_entry: MockConfigEntry
 ) -> None:
-    """Test entries are unloaded correctly."""
+    """Test a successful setup entry."""
+    assert hass.states.get("media_player.player_name1111").state == "playing"
+    assert config_entry.state is ConfigEntryState.LOADED
+
     assert await async_unload_entry(hass, config_entry)
     await hass.async_block_till_done()
 
     assert hass.states.get("media_player.player_name1111").state == "unavailable"
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
 
 
 async def test_unload_entry_while_player_is_offline(
