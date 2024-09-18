@@ -88,10 +88,9 @@ class FFmpegProxyData:
                 convert_info.proc.kill()
 
         convert_id = secrets.token_urlsafe(16)
-        self.conversions[device_id][convert_id] = FFmpegConversionInfo(
-            media_url, media_format, rate, channels, width
+        self.conversions[device_id] = FFmpegConversionInfo(
+            convert_id, media_url, media_format, rate, channels, width
         )
-        self.conversions[device_id] = convert_info
         _LOGGER.debug("Media URL allowed by proxy: %s", media_url)
 
         return f"/api/esphome/ffmpeg_proxy/{device_id}/{convert_id}.{media_format}"
@@ -184,29 +183,25 @@ class FFmpegConvertResponse(web.StreamResponse):
             ):
                 await writer.write(chunk)
                 await writer.drain()
-        finally:
-            # Clean up if the conversion hasn't changed
-            if (
-                (convert_info := self.proxy_data.conversions.get(self.device_id))
-                is not None
-            ) and (convert_info.convert_id == self.convert_info.convert_id):
-                self.proxy_data.conversions.pop(self.device_id)
+        except asyncio.CancelledError:
+            raise  # don't log error
+        except:
+            _LOGGER.exception("Unexpected error during ffmpeg conversion")
 
+            # Process did not exit successfully
+            stderr_text = ""
+            while line := await proc.stderr.readline():
+                stderr_text += line.decode()
+            _LOGGER.error("FFmpeg output: %s", stderr_text)
+
+            raise
+        finally:
             # Terminate hangs, so kill is used
             if proc.returncode is None:
                 proc.kill()
 
             # Close connection
             await writer.write_eof()
-
-            if proc.returncode != 0:
-                # Process did not exit successfully
-                stderr_text = ""
-                while line := await proc.stderr.readline():
-                    stderr_text += line.decode()
-                _LOGGER.error("Error shutting down ffmpeg: %s", stderr_text)
-            else:
-                _LOGGER.debug("Conversion completed: %s", self.convert_info)
 
         return writer
 
