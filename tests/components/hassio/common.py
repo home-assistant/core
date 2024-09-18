@@ -166,7 +166,7 @@ def mock_start_addon_side_effect(
 ) -> Any | None:
     """Return the start add-on options side effect."""
 
-    async def start_addon(hass: HomeAssistant, slug):
+    async def start_addon(addon: str):
         """Mock start add-on."""
         addon_store_info.return_value = {
             "available": True,
@@ -180,13 +180,12 @@ def mock_start_addon_side_effect(
     return start_addon
 
 
-def mock_start_addon(start_addon_side_effect: Any | None) -> Generator[AsyncMock]:
+def mock_start_addon(
+    supervisor_client: AsyncMock, start_addon_side_effect: Any | None
+) -> AsyncMock:
     """Mock start add-on."""
-    with patch(
-        "homeassistant.components.hassio.addon_manager.async_start_addon",
-        side_effect=start_addon_side_effect,
-    ) as start_addon:
-        yield start_addon
+    supervisor_client.addons.start_addon.side_effect = start_addon_side_effect
+    return supervisor_client.addons.start_addon
 
 
 def mock_stop_addon() -> Generator[AsyncMock]:

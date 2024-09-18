@@ -321,12 +321,14 @@ def start_addon_side_effect_fixture(
 
 
 @pytest.fixture(name="start_addon")
-def start_addon_fixture(start_addon_side_effect: Any | None) -> Generator[AsyncMock]:
+def start_addon_fixture(
+    supervisor_client: AsyncMock, start_addon_side_effect: Any | None
+) -> Generator[AsyncMock]:
     """Mock start add-on."""
     # pylint: disable-next=import-outside-toplevel
     from .hassio.common import mock_start_addon
 
-    yield from mock_start_addon(start_addon_side_effect)
+    return mock_start_addon(supervisor_client, start_addon_side_effect)
 
 
 @pytest.fixture(name="restart_addon_side_effect")

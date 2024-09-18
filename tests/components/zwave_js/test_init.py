@@ -556,7 +556,7 @@ async def test_start_addon(
         hass, "core_zwave_js", {"options": addon_options}
     )
     assert start_addon.call_count == 1
-    assert start_addon.call_args == call(hass, "core_zwave_js")
+    assert start_addon.call_args == call("core_zwave_js")
 
 
 async def test_install_addon(
@@ -605,7 +605,7 @@ async def test_install_addon(
         hass, "core_zwave_js", {"options": addon_options}
     )
     assert start_addon.call_count == 1
-    assert start_addon.call_args == call(hass, "core_zwave_js")
+    assert start_addon.call_args == call("core_zwave_js")
 
 
 @pytest.mark.parametrize("addon_info_side_effect", [HassioAPIError("Boom")])

@@ -27,7 +27,6 @@ from .handler import (
     async_install_addon,
     async_restart_addon,
     async_set_addon_options,
-    async_start_addon,
     async_stop_addon,
     async_uninstall_addon,
     async_update_addon,
@@ -229,7 +228,7 @@ class AddonManager:
     @api_error("Failed to start the {addon_name} add-on")
     async def async_start_addon(self) -> None:
         """Start the managed add-on."""
-        await async_start_addon(self._hass, self.addon_slug)
+        await get_supervisor_client(self._hass).addons.start_addon(self.addon_slug)
 
     @api_error("Failed to restart the {addon_name} add-on")
     async def async_restart_addon(self) -> None:

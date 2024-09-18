@@ -298,7 +298,7 @@ async def test_start_addon(
     assert addon_info.call_count == 1
     assert install_addon.call_count == 0
     assert start_addon.call_count == 1
-    assert start_addon.call_args == call(hass, "core_matter_server")
+    assert start_addon.call_args == call("core_matter_server")
 
 
 async def test_install_addon(
@@ -327,7 +327,7 @@ async def test_install_addon(
     assert install_addon.call_count == 1
     assert install_addon.call_args == call(hass, "core_matter_server")
     assert start_addon.call_count == 1
-    assert start_addon.call_args == call(hass, "core_matter_server")
+    assert start_addon.call_args == call("core_matter_server")
 
 
 async def test_addon_info_failure(

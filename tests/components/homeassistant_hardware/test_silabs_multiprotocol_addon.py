@@ -265,7 +265,7 @@ async def test_option_flow_install_multi_pan_addon(
     )
 
     await hass.async_block_till_done()
-    start_addon.assert_called_once_with(hass, "core_silabs_multiprotocol")
+    start_addon.assert_called_once_with("core_silabs_multiprotocol")
 
     result = await hass.config_entries.options.async_configure(result["flow_id"])
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -360,7 +360,7 @@ async def test_option_flow_install_multi_pan_addon_zha(
     assert zha_config_entry.title == "Test Multiprotocol"
 
     await hass.async_block_till_done()
-    start_addon.assert_called_once_with(hass, "core_silabs_multiprotocol")
+    start_addon.assert_called_once_with("core_silabs_multiprotocol")
 
     result = await hass.config_entries.options.async_configure(result["flow_id"])
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -436,7 +436,7 @@ async def test_option_flow_install_multi_pan_addon_zha_other_radio(
     )
 
     await hass.async_block_till_done()
-    start_addon.assert_called_once_with(hass, "core_silabs_multiprotocol")
+    start_addon.assert_called_once_with("core_silabs_multiprotocol")
 
     result = await hass.config_entries.options.async_configure(result["flow_id"])
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -1275,7 +1275,7 @@ async def test_option_flow_install_multi_pan_addon_start_fails(
     )
 
     await hass.async_block_till_done()
-    start_addon.assert_called_once_with(hass, "core_silabs_multiprotocol")
+    start_addon.assert_called_once_with("core_silabs_multiprotocol")
 
     result = await hass.config_entries.options.async_configure(result["flow_id"])
     assert result["type"] is FlowResultType.ABORT
@@ -1470,7 +1470,7 @@ async def test_option_flow_install_multi_pan_addon_zha_migration_fails_step_2(
     )
 
     await hass.async_block_till_done()
-    start_addon.assert_called_once_with(hass, "core_silabs_multiprotocol")
+    start_addon.assert_called_once_with("core_silabs_multiprotocol")
 
     result = await hass.config_entries.options.async_configure(result["flow_id"])
     assert result["type"] is FlowResultType.ABORT
@@ -1678,7 +1678,7 @@ async def test_check_multi_pan_addon_auto_start(
     with pytest.raises(HomeAssistantError):
         await silabs_multiprotocol_addon.check_multi_pan_addon(hass)
 
-    start_addon.assert_called_once_with(hass, "core_silabs_multiprotocol")
+    start_addon.assert_called_once_with("core_silabs_multiprotocol")
 
 
 async def test_check_multi_pan_addon(
