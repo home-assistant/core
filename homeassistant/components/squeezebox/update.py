@@ -23,6 +23,7 @@ from .const import (
     STATUS_QUERY_VERSION,
     STATUS_SENSOR_NEWPLUGINS,
     STATUS_SENSOR_NEWVERSION,
+    UPDATE_RELEASE_SUMMARY,
 )
 from .entity import LMSStatusEntity
 
@@ -78,6 +79,15 @@ class ServerStatusUpdateLMS(ServerStatusUpdate):
         """LMS Update info page."""
         return str(self.coordinator.lms.generate_image_url("updateinfo.html"))
 
+    @property
+    def release_summary(self) -> None | str:
+        """If install is supported give some info."""
+        return (
+            str(self.coordinator.data[UPDATE_RELEASE_SUMMARY])
+            if self.coordinator.data[UPDATE_RELEASE_SUMMARY]
+            else None
+        )
+
 
 class ServerStatusUpdatePlugins(ServerStatusUpdate):
     """LMS Plugings update sensor from LMS via cooridnatior."""
@@ -104,6 +114,15 @@ class ServerStatusUpdatePlugins(ServerStatusUpdate):
             "Named Plugins will be updated on the next restart. For some installation types, the service will be restarted automatically after the Install button has been selected. Allow enough time for the service to restart. It will become briefly unavailable."
             if self.coordinator.can_server_restart
             else None
+        )
+
+    @property
+    def release_url(self) -> str:
+        """LMS Plugins info page."""
+        return str(
+            self.coordinator.lms.generate_image_url(
+                "/settings/index.html?activePage=SETUP_PLUGINS"
+            )
         )
 
     @property

@@ -20,6 +20,7 @@ from .const import (
     STATUS_SENSOR_NEWPLUGINS,
     STATUS_SENSOR_NEWVERSION,
     STATUS_SENSOR_RESCAN,
+    UPDATE_RELEASE_SUMMARY,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -39,11 +40,8 @@ class LMSStatusDataUpdateCoordinator(DataUpdateCoordinator):
         )
         self.lms = lms
         self.can_server_restart = False
-        self.newversion_regex_pre = re.compile("^.*\\(")
-        self.newversion_regex_post = re.compile("\\)\\. <.*$")
-        self.newversion_regex_windows_pre = re.compile("^<ul><li>[\\S]+ ")
-        self.newversion_regex_windows_post = re.compile("[\\D]*</li><li>.*$")
-        self.newplugins_regex = re.compile(".* - ")
+        self.newversion_regex_leavefirstsentance = re.compile("\\.[^)]*$")
+        self.newplugins_regex_leavepluginnames = re.compile(".* - ")
 
     async def _async_setup(self) -> None:
         """Query LMS capabilities."""
@@ -90,26 +88,23 @@ class LMSStatusDataUpdateCoordinator(DataUpdateCoordinator):
         # Sample text:-
         # 'A new version of Logitech Media Server is available (8.5.2 - 0). <a href="updateinfo.html?installerFile=/var/lib/squeezeboxserver/cache/updates/logitechmediaserver_8.5.2_amd64.deb" target="update">Click here for further information</a>.'
         # '<ul><li>Version %s - %s is available for installation.</li><li>Log in to your computer running Logitech Media Server (%s).</li><li>Execute <code>%s</code> and follow the instructions.</li></ul>'
-        data[STATUS_SENSOR_NEWVERSION] = (
-            self.newversion_regex_pre.sub(
-                "",
-                self.newversion_regex_post.sub(
-                    "",
-                    self.newversion_regex_windows_pre.sub(
-                        "",
-                        self.newversion_regex_windows_post.sub(
-                            "", data[STATUS_SENSOR_NEWVERSION]
-                        ),
-                    ),
-                ),
+        data[UPDATE_RELEASE_SUMMARY] = (
+            self.newversion_regex_leavefirstsentance_strip.sub(
+                ".", data[STATUS_SENSOR_NEWVERSION]
             )
+            if STATUS_SENSOR_NEWVERSION in data
+            else None
+        )
+        data[STATUS_SENSOR_NEWVERSION] = (
+            "New Version"
             if STATUS_SENSOR_NEWVERSION in data
             else data[STATUS_QUERY_VERSION]
         )
+
         # newplugins str not always present
         # newplugins': 'Plugins have been updated - Restart Required (BBC Sounds)
         data[STATUS_SENSOR_NEWPLUGINS] = (
-            self.newplugins_regex.sub("", data[STATUS_SENSOR_NEWPLUGINS])
+            self.newplugins_leavepluginnames.sub("", data[STATUS_SENSOR_NEWPLUGINS])
             if STATUS_SENSOR_NEWPLUGINS in data
             else "current"
         )
