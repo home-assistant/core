@@ -98,7 +98,7 @@ from .schemas import (
 )
 
 if TYPE_CHECKING:
-    from .insteon_entity import InsteonEntity
+    from .entity import InsteonEntity
 
 _LOGGER = logging.getLogger(__name__)
 

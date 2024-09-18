@@ -15,7 +15,6 @@ class SunWEGRequiredKeysMixin:
 
 
 @dataclass(frozen=True)
-# pylint: disable-next=hass-enforce-class-module
 class SunWEGSensorEntityDescription(SensorEntityDescription, SunWEGRequiredKeysMixin):
     """Describes SunWEG sensor entity."""
 

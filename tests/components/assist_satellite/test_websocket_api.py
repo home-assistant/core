@@ -273,3 +273,115 @@ async def test_intercept_wake_word_unsubscribe(
 
         # Wake word should not be intercepted
         mock_pipeline_from_audio_stream.assert_called_once()
+
+
+async def test_get_configuration(
+    hass: HomeAssistant,
+    init_components: ConfigEntry,
+    entity: MockAssistSatellite,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test getting satellite configuration."""
+    ws_client = await hass_ws_client(hass)
+
+    with (
+        patch.object(entity, "_attr_pipeline_entity_id", "select.test_pipeline"),
+        patch.object(entity, "_attr_vad_sensitivity_entity_id", "select.test_vad"),
+    ):
+        await ws_client.send_json_auto_id(
+            {
+                "type": "assist_satellite/get_configuration",
+                "entity_id": ENTITY_ID,
+            }
+        )
+        msg = await ws_client.receive_json()
+        assert msg["success"]
+        assert msg["result"] == {
+            "active_wake_words": ["1234"],
+            "available_wake_words": [
+                {"id": "1234", "trained_languages": ["en"], "wake_word": "okay nabu"},
+                {"id": "5678", "trained_languages": ["en"], "wake_word": "hey jarvis"},
+            ],
+            "max_active_wake_words": 1,
+            "pipeline_entity_id": "select.test_pipeline",
+            "vad_entity_id": "select.test_vad",
+        }
+
+
+async def test_set_wake_words(
+    hass: HomeAssistant,
+    init_components: ConfigEntry,
+    entity: MockAssistSatellite,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test setting active wake words."""
+    ws_client = await hass_ws_client(hass)
+
+    await ws_client.send_json_auto_id(
+        {
+            "type": "assist_satellite/set_wake_words",
+            "entity_id": ENTITY_ID,
+            "wake_word_ids": ["5678"],
+        }
+    )
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+
+    # Verify change
+    await ws_client.send_json_auto_id(
+        {
+            "type": "assist_satellite/get_configuration",
+            "entity_id": ENTITY_ID,
+        }
+    )
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+    assert msg["result"].get("active_wake_words") == ["5678"]
+
+
+async def test_set_wake_words_exceed_maximum(
+    hass: HomeAssistant,
+    init_components: ConfigEntry,
+    entity: MockAssistSatellite,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test setting too many active wake words."""
+    ws_client = await hass_ws_client(hass)
+
+    await ws_client.send_json_auto_id(
+        {
+            "type": "assist_satellite/set_wake_words",
+            "entity_id": ENTITY_ID,
+            "wake_word_ids": ["1234", "5678"],  # max of 1
+        }
+    )
+    msg = await ws_client.receive_json()
+    assert not msg["success"]
+    assert msg["error"] == {
+        "code": "not_supported",
+        "message": "Maximum number of active wake words is 1",
+    }
+
+
+async def test_set_wake_words_bad_id(
+    hass: HomeAssistant,
+    init_components: ConfigEntry,
+    entity: MockAssistSatellite,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test setting active wake words with a bad id."""
+    ws_client = await hass_ws_client(hass)
+
+    await ws_client.send_json_auto_id(
+        {
+            "type": "assist_satellite/set_wake_words",
+            "entity_id": ENTITY_ID,
+            "wake_word_ids": ["abcd"],  # not an available id
+        }
+    )
+    msg = await ws_client.receive_json()
+    assert not msg["success"]
+    assert msg["error"] == {
+        "code": "not_supported",
+        "message": "Wake word id is not supported: abcd",
+    }

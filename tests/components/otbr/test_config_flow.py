@@ -3,7 +3,7 @@
 import asyncio
 from http import HTTPStatus
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import aiohttp
 import pytest
@@ -32,21 +32,16 @@ HASSIO_DATA_2 = hassio.HassioServiceInfo(
 )
 
 
-@pytest.fixture(name="addon_info")
-def addon_info_fixture():
-    """Mock Supervisor add-on info."""
-    with patch(
-        "homeassistant.components.otbr.config_flow.async_get_addon_info",
-    ) as addon_info:
-        addon_info.return_value = {
-            "available": True,
-            "hostname": None,
-            "options": {},
-            "state": None,
-            "update_available": False,
-            "version": None,
-        }
-        yield addon_info
+@pytest.fixture(name="otbr_addon_info")
+def otbr_addon_info_fixture(addon_info: AsyncMock, addon_installed) -> AsyncMock:
+    """Mock Supervisor otbr add-on info."""
+    addon_info.return_value.available = True
+    addon_info.return_value.hostname = ""
+    addon_info.return_value.options = {}
+    addon_info.return_value.state = "unknown"
+    addon_info.return_value.update_available = False
+    addon_info.return_value.version = None
+    return addon_info
 
 
 @pytest.mark.parametrize(
@@ -360,7 +355,7 @@ async def _test_user_flow_connect_error(hass: HomeAssistant, func, error) -> Non
 
 @pytest.mark.usefixtures("get_border_agent_id")
 async def test_hassio_discovery_flow(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, addon_info
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, otbr_addon_info
 ) -> None:
     """Test the hassio discovery flow."""
     url = "http://core-silabs-multiprotocol:8081"
@@ -393,20 +388,14 @@ async def test_hassio_discovery_flow(
 
 @pytest.mark.usefixtures("get_border_agent_id")
 async def test_hassio_discovery_flow_yellow(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, addon_info
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, otbr_addon_info
 ) -> None:
     """Test the hassio discovery flow."""
     url = "http://core-silabs-multiprotocol:8081"
     aioclient_mock.get(f"{url}/node/dataset/active", text="aa")
 
-    addon_info.return_value = {
-        "available": True,
-        "hostname": None,
-        "options": {"device": "/dev/ttyAMA1"},
-        "state": None,
-        "update_available": False,
-        "version": None,
-    }
+    otbr_addon_info.return_value.available = True
+    otbr_addon_info.return_value.options = {"device": "/dev/ttyAMA1"}
 
     with (
         patch(
@@ -455,20 +444,14 @@ async def test_hassio_discovery_flow_sky_connect(
     title: str,
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
-    addon_info,
+    otbr_addon_info,
 ) -> None:
     """Test the hassio discovery flow."""
     url = "http://core-silabs-multiprotocol:8081"
     aioclient_mock.get(f"{url}/node/dataset/active", text="aa")
 
-    addon_info.return_value = {
-        "available": True,
-        "hostname": None,
-        "options": {"device": device},
-        "state": None,
-        "update_available": False,
-        "version": None,
-    }
+    otbr_addon_info.return_value.available = True
+    otbr_addon_info.return_value.options = {"device": device}
 
     with patch(
         "homeassistant.components.otbr.async_setup_entry",
@@ -497,7 +480,7 @@ async def test_hassio_discovery_flow_sky_connect(
 
 @pytest.mark.usefixtures("get_active_dataset_tlvs", "get_extended_address")
 async def test_hassio_discovery_flow_2x_addons(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, addon_info
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, otbr_addon_info
 ) -> None:
     """Test the hassio discovery flow when the user has 2 addons with otbr support."""
     url1 = "http://core-silabs-multiprotocol:8081"
@@ -507,37 +490,28 @@ async def test_hassio_discovery_flow_2x_addons(
     aioclient_mock.get(f"{url1}/node/ba-id", json=TEST_BORDER_AGENT_ID.hex())
     aioclient_mock.get(f"{url2}/node/ba-id", json=TEST_BORDER_AGENT_ID_2.hex())
 
-    async def _addon_info(hass: HomeAssistant, slug: str) -> dict[str, Any]:
+    async def _addon_info(slug: str) -> Mock:
         await asyncio.sleep(0)
         if slug == "otbr":
-            return {
-                "available": True,
-                "hostname": None,
-                "options": {
-                    "device": (
-                        "/dev/serial/by-id/usb-Nabu_Casa_SkyConnect_v1.0_"
-                        "9e2adbd75b8beb119fe564a0f320645d-if00-port0"
-                    )
-                },
-                "state": None,
-                "update_available": False,
-                "version": None,
-            }
-        return {
-            "available": True,
-            "hostname": None,
-            "options": {
-                "device": (
-                    "/dev/serial/by-id/usb-Nabu_Casa_SkyConnect_v1.0_"
-                    "9e2adbd75b8beb119fe564a0f320645d-if00-port1"
-                )
-            },
-            "state": None,
-            "update_available": False,
-            "version": None,
-        }
+            device = (
+                "/dev/serial/by-id/usb-Nabu_Casa_SkyConnect_v1.0_"
+                "9e2adbd75b8beb119fe564a0f320645d-if00-port0"
+            )
+        else:
+            device = (
+                "/dev/serial/by-id/usb-Nabu_Casa_SkyConnect_v1.0_"
+                "9e2adbd75b8beb119fe564a0f320645d-if00-port1"
+            )
+        return Mock(
+            available=True,
+            hostname=otbr_addon_info.return_value.hostname,
+            options={"device": device},
+            state=otbr_addon_info.return_value.state,
+            update_available=otbr_addon_info.return_value.update_available,
+            version=otbr_addon_info.return_value.version,
+        )
 
-    addon_info.side_effect = _addon_info
+    otbr_addon_info.side_effect = _addon_info
 
     result1 = await hass.config_entries.flow.async_init(
         otbr.DOMAIN, context={"source": "hassio"}, data=HASSIO_DATA
@@ -590,7 +564,7 @@ async def test_hassio_discovery_flow_2x_addons(
 
 @pytest.mark.usefixtures("get_active_dataset_tlvs", "get_extended_address")
 async def test_hassio_discovery_flow_2x_addons_same_ext_address(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, addon_info
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, otbr_addon_info
 ) -> None:
     """Test the hassio discovery flow when the user has 2 addons with otbr support."""
     url1 = "http://core-silabs-multiprotocol:8081"
@@ -600,37 +574,28 @@ async def test_hassio_discovery_flow_2x_addons_same_ext_address(
     aioclient_mock.get(f"{url1}/node/ba-id", json=TEST_BORDER_AGENT_ID.hex())
     aioclient_mock.get(f"{url2}/node/ba-id", json=TEST_BORDER_AGENT_ID.hex())
 
-    async def _addon_info(hass: HomeAssistant, slug: str) -> dict[str, Any]:
+    async def _addon_info(slug: str) -> Mock:
         await asyncio.sleep(0)
         if slug == "otbr":
-            return {
-                "available": True,
-                "hostname": None,
-                "options": {
-                    "device": (
-                        "/dev/serial/by-id/usb-Nabu_Casa_SkyConnect_v1.0_"
-                        "9e2adbd75b8beb119fe564a0f320645d-if00-port0"
-                    )
-                },
-                "state": None,
-                "update_available": False,
-                "version": None,
-            }
-        return {
-            "available": True,
-            "hostname": None,
-            "options": {
-                "device": (
-                    "/dev/serial/by-id/usb-Nabu_Casa_SkyConnect_v1.0_"
-                    "9e2adbd75b8beb119fe564a0f320645d-if00-port1"
-                )
-            },
-            "state": None,
-            "update_available": False,
-            "version": None,
-        }
+            device = (
+                "/dev/serial/by-id/usb-Nabu_Casa_SkyConnect_v1.0_"
+                "9e2adbd75b8beb119fe564a0f320645d-if00-port0"
+            )
+        else:
+            device = (
+                "/dev/serial/by-id/usb-Nabu_Casa_SkyConnect_v1.0_"
+                "9e2adbd75b8beb119fe564a0f320645d-if00-port1"
+            )
+        return Mock(
+            available=True,
+            hostname=otbr_addon_info.return_value.hostname,
+            options={"device": device},
+            state=otbr_addon_info.return_value.state,
+            update_available=otbr_addon_info.return_value.update_available,
+            version=otbr_addon_info.return_value.version,
+        )
 
-    addon_info.side_effect = _addon_info
+    otbr_addon_info.side_effect = _addon_info
 
     result1 = await hass.config_entries.flow.async_init(
         otbr.DOMAIN, context={"source": "hassio"}, data=HASSIO_DATA
@@ -666,7 +631,7 @@ async def test_hassio_discovery_flow_2x_addons_same_ext_address(
 
 @pytest.mark.usefixtures("get_border_agent_id")
 async def test_hassio_discovery_flow_router_not_setup(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, addon_info
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, otbr_addon_info
 ) -> None:
     """Test the hassio discovery flow when the border router has no dataset.
 
@@ -724,7 +689,7 @@ async def test_hassio_discovery_flow_router_not_setup(
 
 @pytest.mark.usefixtures("get_border_agent_id")
 async def test_hassio_discovery_flow_router_not_setup_has_preferred(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, addon_info
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, otbr_addon_info
 ) -> None:
     """Test the hassio discovery flow when the border router has no dataset.
 
@@ -780,7 +745,7 @@ async def test_hassio_discovery_flow_router_not_setup_has_preferred_2(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     multiprotocol_addon_manager_mock,
-    addon_info,
+    otbr_addon_info,
 ) -> None:
     """Test the hassio discovery flow when the border router has no dataset.
 
@@ -920,7 +885,7 @@ async def test_hassio_discovery_flow_new_port(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures(
-    "addon_info",
+    "otbr_addon_info",
     "get_active_dataset_tlvs",
     "get_border_agent_id",
     "get_extended_address",
@@ -962,7 +927,7 @@ async def test_hassio_discovery_flow_new_port_other_addon(hass: HomeAssistant) -
     ],
 )
 @pytest.mark.usefixtures(
-    "addon_info",
+    "otbr_addon_info",
     "get_active_dataset_tlvs",
     "get_border_agent_id",
     "get_extended_address",

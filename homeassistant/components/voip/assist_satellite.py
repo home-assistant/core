@@ -20,6 +20,7 @@ from homeassistant.components.assist_pipeline import (
     PipelineNotFound,
 )
 from homeassistant.components.assist_satellite import (
+    AssistSatelliteConfiguration,
     AssistSatelliteEntity,
     AssistSatelliteEntityDescription,
 )
@@ -140,6 +141,19 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
         await super().async_will_remove_from_hass()
         assert self.voip_device.protocol == self
         self.voip_device.protocol = None
+
+    @callback
+    def async_get_configuration(
+        self,
+    ) -> AssistSatelliteConfiguration:
+        """Get the current satellite configuration."""
+        raise NotImplementedError
+
+    async def async_set_configuration(
+        self, config: AssistSatelliteConfiguration
+    ) -> None:
+        """Set the current satellite configuration."""
+        raise NotImplementedError
 
     # -------------------------------------------------------------------------
     # VoIP
