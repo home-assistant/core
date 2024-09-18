@@ -22,11 +22,11 @@ from homeassistant.components.squeezebox.const import (
     STATUS_SENSOR_INFO_TOTAL_GENRES,
     STATUS_SENSOR_INFO_TOTAL_SONGS,
     STATUS_SENSOR_LASTSCAN,
-    STATUS_SENSOR_NEWPLUGINS,
-    STATUS_SENSOR_NEWVERSION,
     STATUS_SENSOR_OTHER_PLAYER_COUNT,
     STATUS_SENSOR_PLAYER_COUNT,
     STATUS_SENSOR_RESCAN,
+    STATUS_UPDATE_NEWPLUGINS,
+    STATUS_UPDATE_NEWVERSION,
 )
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
