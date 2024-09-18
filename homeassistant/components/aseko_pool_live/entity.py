@@ -25,9 +25,7 @@ class AsekoEntity(CoordinatorEntity[AsekoDataUpdateCoordinator]):
         super().__init__(coordinator)
         self.entity_description = description
         self._unit = unit
-        self._attr_unique_id = (
-            f"{self.unit.serial_number}_{self.entity_description.key}"
-        )
+        self._attr_unique_id = f"{self.unit.serial_number}{self.entity_description.key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self.unit.serial_number)},
             serial_number=self.unit.serial_number,
