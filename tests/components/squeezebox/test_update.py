@@ -6,7 +6,7 @@ from unittest.mock import patch
 
 from homeassistant.components.squeezebox.const import (
     SENSOR_UPDATE_INTERVAL,
-    STATUS_SENSOR_NEWPLUGINS,
+    STATUS_UPDATE_NEWPLUGINS,
 )
 from homeassistant.components.update import (
     ATTR_IN_PROGRESS,
@@ -159,7 +159,7 @@ async def test_update_plugins_install_ok(
     assert attrs[ATTR_IN_PROGRESS]
 
     resp = copy.deepcopy(FAKE_QUERY_RESPONSE)
-    del resp[STATUS_SENSOR_NEWPLUGINS]
+    del resp[STATUS_UPDATE_NEWPLUGINS]
 
     with (
         patch(
