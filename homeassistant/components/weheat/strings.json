@@ -24,7 +24,8 @@
       "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
       "user_rejected_authorize": "[%key:common::config_flow::abort::oauth2_user_rejected_authorize%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "no_devices_found": "Could not find any heat pumps on this account"
+      "no_devices_found": "Could not find any heat pumps on this account",
+      "wrong_account": "You can only reauthenticate this account with the same user."
     },
     "create_entry": {
       "default": "[%key:common::config_flow::create_entry::authenticated%]"

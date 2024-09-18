@@ -133,7 +133,7 @@ async def _migrate_old_unique_ids(hass: HomeAssistant, entry_id: str) -> None:
                     existing_entity_id,
                 )
                 return None
-            _LOGGER.info("Fixing non string unique id %s", entity_entry.unique_id)
+            _LOGGER.debug("Fixing non string unique id %s", entity_entry.unique_id)
             return {"new_unique_id": new_unique_id}
         return None
 

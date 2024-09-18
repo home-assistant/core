@@ -289,6 +289,6 @@ class RMVDepartureData:
 
         if not self._error_notification and _deps_not_found:
             self._error_notification = True
-            _LOGGER.info("Destination(s) %s not found", ", ".join(_deps_not_found))
+            _LOGGER.warning("Destination(s) %s not found", ", ".join(_deps_not_found))
 
         self.departures = _deps

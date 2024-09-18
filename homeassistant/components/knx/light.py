@@ -30,7 +30,7 @@ import homeassistant.util.color as color_util
 
 from . import KNXModule
 from .const import CONF_SYNC_STATE, DOMAIN, KNX_ADDRESS, KNX_MODULE_KEY, ColorTempModes
-from .knx_entity import KnxUiEntity, KnxUiEntityPlatformController, KnxYamlEntity
+from .entity import KnxUiEntity, KnxUiEntityPlatformController, KnxYamlEntity
 from .schema import LightSchema
 from .storage.const import (
     CONF_COLOR_TEMP_MAX,

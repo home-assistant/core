@@ -27,8 +27,10 @@ import pytest
 from homeassistant.components import assist_satellite, tts
 from homeassistant.components.assist_pipeline import PipelineEvent, PipelineEventType
 from homeassistant.components.assist_satellite import (
+    AssistSatelliteConfiguration,
     AssistSatelliteEntity,
     AssistSatelliteEntityFeature,
+    AssistSatelliteWakeWord,
 )
 
 # pylint: disable-next=hass-component-root-import
@@ -1380,3 +1382,50 @@ async def test_pipeline_abort(
 
             # Only first chunk
             assert chunks == [b"before-abort"]
+
+
+async def test_get_set_configuration(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: Callable[
+        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
+        Awaitable[MockESPHomeDevice],
+    ],
+) -> None:
+    """Test getting and setting the satellite configuration."""
+    expected_config = AssistSatelliteConfiguration(
+        available_wake_words=[
+            AssistSatelliteWakeWord("1234", "okay nabu", ["en"]),
+            AssistSatelliteWakeWord("5678", "hey jarvis", ["en"]),
+        ],
+        active_wake_words=["1234"],
+        max_active_wake_words=1,
+    )
+    mock_client.get_voice_assistant_configuration.return_value = expected_config
+
+    mock_device: MockESPHomeDevice = await mock_esphome_device(
+        mock_client=mock_client,
+        entity_info=[],
+        user_service=[],
+        states=[],
+        device_info={
+            "voice_assistant_feature_flags": VoiceAssistantFeature.VOICE_ASSISTANT
+        },
+    )
+    await hass.async_block_till_done()
+
+    satellite = get_satellite_entity(hass, mock_device.device_info.mac_address)
+    assert satellite is not None
+
+    # HA should have been updated
+    actual_config = satellite.async_get_configuration()
+    assert actual_config == expected_config
+
+    # Change active wake words
+    actual_config.active_wake_words = ["5678"]
+    await satellite.async_set_configuration(actual_config)
+
+    # Device should have been updated
+    mock_client.set_voice_assistant_configuration.assert_called_once_with(
+        active_wake_words=["5678"]
+    )
