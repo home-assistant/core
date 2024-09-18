@@ -4,7 +4,7 @@ import logging
 
 from homeassistant.components.vacuum import VacuumEntityFeature
 
-from . import SUPPORT_IROBOT, IRobotVacuum
+from .entity import SUPPORT_IROBOT, IRobotVacuum
 
 _LOGGER = logging.getLogger(__name__)
 

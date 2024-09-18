@@ -21,8 +21,8 @@ from homeassistant.helpers.entity import Entity
 import homeassistant.util.dt as dt_util
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
-from .. import roomba_reported_state
-from ..const import DOMAIN
+from . import roomba_reported_state
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 

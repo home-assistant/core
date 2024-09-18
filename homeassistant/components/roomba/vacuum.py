@@ -7,11 +7,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import roomba_reported_state
+from .braava import BraavaJet
 from .const import DOMAIN
 from .entity import IRobotVacuum
-from .entity.braava import BraavaJet
-from .entity.roomba import RoombaVacuum, RoombaVacuumCarpetBoost
 from .models import RoombaData
+from .roomba import RoombaVacuum, RoombaVacuumCarpetBoost
 
 
 async def async_setup_entry(
