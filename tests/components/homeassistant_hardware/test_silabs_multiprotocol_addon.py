@@ -700,7 +700,7 @@ async def test_option_flow_addon_installed_same_device_uninstall(
     assert result["progress_action"] == "uninstall_multiprotocol_addon"
 
     await hass.async_block_till_done()
-    uninstall_addon.assert_called_once_with(hass, "core_silabs_multiprotocol")
+    uninstall_addon.assert_called_once_with("core_silabs_multiprotocol")
 
     result = await hass.config_entries.options.async_configure(result["flow_id"])
     assert result["type"] is FlowResultType.SHOW_PROGRESS
@@ -865,7 +865,7 @@ async def test_option_flow_addon_installed_same_device_flasher_already_installed
     assert result["progress_action"] == "uninstall_multiprotocol_addon"
 
     await hass.async_block_till_done()
-    uninstall_addon.assert_called_once_with(hass, "core_silabs_multiprotocol")
+    uninstall_addon.assert_called_once_with("core_silabs_multiprotocol")
 
     result = await hass.config_entries.options.async_configure(result["flow_id"])
     assert result["type"] is FlowResultType.SHOW_PROGRESS
@@ -1000,7 +1000,7 @@ async def test_option_flow_flasher_addon_flash_failure(
     start_addon.side_effect = SupervisorError("Boom")
 
     await hass.async_block_till_done()
-    uninstall_addon.assert_called_once_with(hass, "core_silabs_multiprotocol")
+    uninstall_addon.assert_called_once_with("core_silabs_multiprotocol")
 
     result = await hass.config_entries.options.async_configure(result["flow_id"])
     assert result["type"] is FlowResultType.SHOW_PROGRESS
@@ -1134,7 +1134,7 @@ async def test_option_flow_uninstall_migration_finish_failure(
     )
 
     await hass.async_block_till_done()
-    uninstall_addon.assert_called_once_with(hass, "core_silabs_multiprotocol")
+    uninstall_addon.assert_called_once_with("core_silabs_multiprotocol")
 
     result = await hass.config_entries.options.async_configure(result["flow_id"])
     assert result["type"] is FlowResultType.SHOW_PROGRESS

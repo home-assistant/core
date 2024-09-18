@@ -383,12 +383,9 @@ def set_addon_options_fixture(
 
 
 @pytest.fixture(name="uninstall_addon")
-def uninstall_addon_fixture() -> Generator[AsyncMock]:
+def uninstall_addon_fixture(supervisor_client: AsyncMock) -> AsyncMock:
     """Mock uninstall add-on."""
-    # pylint: disable-next=import-outside-toplevel
-    from .hassio.common import mock_uninstall_addon
-
-    yield from mock_uninstall_addon()
+    return supervisor_client.addons.uninstall_addon
 
 
 @pytest.fixture(name="create_backup")

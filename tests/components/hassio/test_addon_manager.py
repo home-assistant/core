@@ -304,7 +304,7 @@ async def test_uninstall_addon_error(
     addon_manager: AddonManager, uninstall_addon: AsyncMock
 ) -> None:
     """Test uninstall addon raises error."""
-    uninstall_addon.side_effect = HassioAPIError("Boom")
+    uninstall_addon.side_effect = SupervisorError("Boom")
 
     with pytest.raises(AddonError) as err:
         await addon_manager.async_uninstall_addon()

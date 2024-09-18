@@ -936,7 +936,7 @@ async def test_remove_entry(
         partial=True,
     )
     assert uninstall_addon.call_count == 1
-    assert uninstall_addon.call_args == call(hass, "core_zwave_js")
+    assert uninstall_addon.call_args == call("core_zwave_js")
     assert entry.state is ConfigEntryState.NOT_LOADED
     assert len(hass.config_entries.async_entries(DOMAIN)) == 0
     stop_addon.reset_mock()
@@ -989,7 +989,7 @@ async def test_remove_entry(
     # test add-on uninstall failure
     entry.add_to_hass(hass)
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-    uninstall_addon.side_effect = HassioAPIError()
+    uninstall_addon.side_effect = SupervisorError()
 
     await hass.config_entries.async_remove(entry.entry_id)
 
@@ -1002,7 +1002,7 @@ async def test_remove_entry(
         partial=True,
     )
     assert uninstall_addon.call_count == 1
-    assert uninstall_addon.call_args == call(hass, "core_zwave_js")
+    assert uninstall_addon.call_args == call("core_zwave_js")
     assert entry.state is ConfigEntryState.NOT_LOADED
     assert len(hass.config_entries.async_entries(DOMAIN)) == 0
     assert "Failed to uninstall the Z-Wave JS add-on" in caplog.text

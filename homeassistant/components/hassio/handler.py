@@ -98,18 +98,6 @@ async def async_install_addon(hass: HomeAssistant, slug: str) -> dict:
 
 @bind_hass
 @api_data
-async def async_uninstall_addon(hass: HomeAssistant, slug: str) -> dict:
-    """Uninstall add-on.
-
-    The caller of the function should handle HassioAPIError.
-    """
-    hassio: HassIO = hass.data[DOMAIN]
-    command = f"/addons/{slug}/uninstall"
-    return await hassio.send_command(command, timeout=60)
-
-
-@bind_hass
-@api_data
 async def async_update_addon(
     hass: HomeAssistant,
     slug: str,

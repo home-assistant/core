@@ -110,7 +110,6 @@ from .handler import (  # noqa: F401
     async_set_addon_options,
     async_set_green_settings,
     async_set_yellow_settings,
-    async_uninstall_addon,
     async_update_addon,
     async_update_core,
     async_update_diagnostics,

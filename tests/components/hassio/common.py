@@ -180,14 +180,6 @@ def mock_start_addon_side_effect(
     return start_addon
 
 
-def mock_uninstall_addon() -> Generator[AsyncMock]:
-    """Mock uninstall add-on."""
-    with patch(
-        "homeassistant.components.hassio.addon_manager.async_uninstall_addon"
-    ) as uninstall_addon:
-        yield uninstall_addon
-
-
 def mock_addon_options(addon_info: AsyncMock) -> dict[str, Any]:
     """Mock add-on options."""
     return addon_info.return_value.options

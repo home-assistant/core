@@ -26,7 +26,6 @@ from .handler import (
     async_get_addon_store_info,
     async_install_addon,
     async_set_addon_options,
-    async_uninstall_addon,
     async_update_addon,
     get_supervisor_client,
 )
@@ -205,7 +204,7 @@ class AddonManager:
     @api_error("Failed to uninstall the {addon_name} add-on")
     async def async_uninstall_addon(self) -> None:
         """Uninstall the managed add-on."""
-        await async_uninstall_addon(self._hass, self.addon_slug)
+        await get_supervisor_client(self._hass).addons.uninstall_addon(self.addon_slug)
 
     @api_error("Failed to update the {addon_name} add-on")
     async def async_update_addon(self) -> None:
