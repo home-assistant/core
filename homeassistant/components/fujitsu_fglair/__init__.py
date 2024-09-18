@@ -5,13 +5,14 @@ from __future__ import annotations
 from contextlib import suppress
 
 from ayla_iot_unofficial import new_ayla_api
+from ayla_iot_unofficial.fujitsu_consts import FGLAIR_APP_ID, FGLAIR_APP_SECRET
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
 
-from .const import API_TIMEOUT, CONF_EUROPE, FGLAIR_APP_ID, FGLAIR_APP_SECRET
+from .const import API_TIMEOUT, CONF_EUROPE
 from .coordinator import FGLairCoordinator
 
 PLATFORMS: list[Platform] = [Platform.CLIMATE]
