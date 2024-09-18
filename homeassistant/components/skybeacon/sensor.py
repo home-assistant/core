@@ -69,7 +69,7 @@ def setup_platform(
 
     def monitor_stop(_service_or_event):
         """Stop the monitor thread."""
-        _LOGGER.info("Stopping monitor for %s", name)
+        _LOGGER.debug("Stopping monitor for %s", name)
         mon.terminate()
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, monitor_stop)
@@ -163,7 +163,7 @@ class Monitor(threading.Thread, SensorEntity):
                 # Magic: writing this makes device happy
                 device.char_write_handle(0x1B, bytearray([255]), False)
                 device.subscribe(BLE_TEMP_UUID, self._update)
-                _LOGGER.info("Subscribed to %s", self.name)
+                _LOGGER.debug("Subscribed to %s", self.name)
                 while self.keep_going:
                     # protect against stale connections, just read temperature
                     device.char_read(BLE_TEMP_UUID, timeout=CONNECT_TIMEOUT)
