@@ -11,7 +11,12 @@ from haffmpeg.camera import CameraMjpeg
 from ring_doorbell import RingDoorBell
 
 from homeassistant.components import ffmpeg
-from homeassistant.components.camera import Camera
+from homeassistant.components.camera import (
+    Camera,
+    CameraEntityFeature,
+    StreamType,
+    WebRTCClientConfiguration,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -69,6 +74,8 @@ class RingCam(RingEntity[RingDoorBell], Camera):
         self._attr_unique_id = str(device.id)
         if device.has_capability(MOTION_DETECTION_CAPABILITY):
             self._attr_motion_detection_enabled = device.motion_detection
+        self._attr_supported_features |= CameraEntityFeature.STREAM
+        self._attr_frontend_stream_type = StreamType.WEB_RTC
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -135,6 +142,22 @@ class RingCam(RingEntity[RingDoorBell], Camera):
             )
         finally:
             await stream.close()
+
+    async def async_handle_web_rtc_offer(self, offer_sdp: str) -> str | None:
+        """Return the source of the stream."""
+        return await self._device.generate_rtc_stream(offer_sdp)
+
+    async def async_handle_web_rtc_close(self, sdp_session_id: str) -> None:
+        """Do any cleanup following an RTC stream ending."""
+
+        await self._device.close_rtc_stream(sdp_session_id)
+
+    async def async_get_webrtc_client_configuration(self) -> WebRTCClientConfiguration:
+        """Return the WebRTC client configuration."""
+        config = await super().async_get_webrtc_client_configuration()
+        config.audio_direction = WebRTCClientConfiguration.TransportDirection.SENDRECV
+        config.requires_close = True
+        return config
 
     async def async_update(self) -> None:
         """Update camera entity and refresh attributes."""

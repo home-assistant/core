@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Awaitable, Callable, Coroutine
 from dataclasses import dataclass, field
+from enum import StrEnum, auto
 from typing import TYPE_CHECKING, Any, Protocol
 
 from mashumaro import field_options
@@ -75,10 +76,19 @@ class WebRTCClientConfiguration(_RTCBaseModel):
     Not part of the spec, but required to configure client.
     """
 
+    class TransportDirection(StrEnum):
+        """Transport direction enum."""
+
+        RECVONLY = auto()
+        SENDONLY = auto()
+        SENDRECV = auto()
+
     configuration: RTCConfiguration
     data_channel: str | None = field(
         metadata=field_options(alias="dataChannel"), default=None
     )
+    requires_close: bool = False
+    audio_direction: TransportDirection = TransportDirection.RECVONLY
 
 
 class CameraWebRTCProvider(Protocol):
@@ -201,6 +211,35 @@ async def ws_get_client_config(
         msg["id"],
         config,
     )
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "camera/web_rtc_close",
+        vol.Required("entity_id"): cv.entity_id,
+        vol.Required("session_id"): str,
+    }
+)
+@websocket_api.async_response
+async def ws_camera_web_rtc_close(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Close the web rtc session."""
+    entity_id = msg["entity_id"]
+    camera = get_camera_from_entity_id(hass, entity_id)
+    if camera.frontend_stream_type != StreamType.WEB_RTC:
+        connection.send_error(
+            msg["id"],
+            "web_rtc_close_failed",
+            (
+                "Camera does not support WebRTC,"
+                f" frontend_stream_type={camera.frontend_stream_type}"
+            ),
+        )
+        return
+    session_id = msg["session_id"]
+    await camera.async_handle_web_rtc_close(session_id)
+    connection.send_result(msg["id"])
 
 
 async def async_get_supported_providers(

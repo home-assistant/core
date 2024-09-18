@@ -89,6 +89,7 @@ from .webrtc import (
     async_get_supported_providers,
     async_register_rtsp_to_web_rtc_provider,  # noqa: F401
     register_ice_server,
+    ws_camera_web_rtc_close,
     ws_get_client_config,
 )
 
@@ -342,6 +343,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     websocket_api.async_register_command(hass, websocket_get_prefs)
     websocket_api.async_register_command(hass, websocket_update_prefs)
     websocket_api.async_register_command(hass, ws_get_client_config)
+    websocket_api.async_register_command(hass, ws_camera_web_rtc_close)
 
     await component.async_setup(config)
 
@@ -398,7 +400,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
 
     async def get_ice_servers() -> RTCIceServer:
-        # TODO: replace it with the production one before merging
         return RTCIceServer(
             urls=["stun:ec2-44-213-149-141.compute-1.amazonaws.com:3478"]
         )
@@ -744,6 +745,9 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     async def async_get_webrtc_client_configuration(self) -> WebRTCClientConfiguration:
         """Return the WebRTC client configuration."""
         return WebRTCClientConfiguration(await self._async_get_rtc_configuration())
+
+    async def async_handle_web_rtc_close(self, sdp_session_id: str) -> None:
+        """Do any cleanup following an RTC stream ending."""
 
 
 class CameraView(HomeAssistantView):
