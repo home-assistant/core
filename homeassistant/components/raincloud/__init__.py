@@ -8,13 +8,7 @@ from requests.exceptions import ConnectTimeout, HTTPError
 import voluptuous as vol
 
 from homeassistant.components import persistent_notification
-from homeassistant.const import (
-    CONF_PASSWORD,
-    CONF_SCAN_INTERVAL,
-    CONF_USERNAME,
-    PERCENTAGE,
-    UnitOfTime,
-)
+from homeassistant.const import CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
@@ -22,18 +16,14 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import track_time_interval
 from homeassistant.helpers.typing import ConfigType
 
+from .const import DATA_RAINCLOUD, SIGNAL_UPDATE_RAINCLOUD
+
 _LOGGER = logging.getLogger(__name__)
-
-ALLOWED_WATERING_TIME = [5, 10, 15, 30, 45, 60]
-
-CONF_WATERING_TIME = "watering_minutes"
 
 NOTIFICATION_ID = "raincloud_notification"
 NOTIFICATION_TITLE = "Rain Cloud Setup"
 
-DATA_RAINCLOUD = "raincloud"
 DOMAIN = "raincloud"
-DEFAULT_WATERING_TIME = 15
 
 KEY_MAP = {
     "auto_watering": "Automatic Watering",
@@ -57,26 +47,8 @@ ICON_MAP = {
     "watering_time": "mdi:water-pump",
 }
 
-UNIT_OF_MEASUREMENT_MAP = {
-    "auto_watering": "",
-    "battery": PERCENTAGE,
-    "is_watering": "",
-    "manual_watering": "",
-    "next_cycle": "",
-    "rain_delay": UnitOfTime.DAYS,
-    "status": "",
-    "watering_time": UnitOfTime.MINUTES,
-}
-
-BINARY_SENSORS = ["is_watering", "status"]
-
-SENSORS = ["battery", "next_cycle", "rain_delay", "watering_time"]
-
-SWITCHES = ["auto_watering", "manual_watering"]
 
 SCAN_INTERVAL = timedelta(seconds=20)
-
-SIGNAL_UPDATE_RAINCLOUD = "raincloud_update"
 
 CONFIG_SCHEMA = vol.Schema(
     {
