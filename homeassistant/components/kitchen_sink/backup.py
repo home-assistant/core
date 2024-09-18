@@ -1,4 +1,4 @@
-"""Backup platform for the demo integration."""
+"""Backup platform for the kitchen_sink integration."""
 
 from __future__ import annotations
 
@@ -16,11 +16,11 @@ async def async_get_backup_sync_agents(
     hass: HomeAssistant,
 ) -> list[BackupSyncAgent]:
     """Register the backup sync agents."""
-    return [DemoBackupSyncAgent("sync")]
+    return [KitchenSinkBackupSyncAgent("syncer")]
 
 
-class DemoBackupSyncAgent(BackupSyncAgent):
-    """Demo backup sync agent."""
+class KitchenSinkBackupSyncAgent(BackupSyncAgent):
+    """Kitchen sink backup sync agent."""
 
     async def async_download_backup(
         self,
@@ -40,8 +40,8 @@ class DemoBackupSyncAgent(BackupSyncAgent):
         """List synced backups."""
         return [
             SyncedBackup(
-                id="demo_backup",
-                name="Demo Backup",
+                id="def456",
+                name="Kitchen sink syncer",
                 slug="abc123",
                 size=1234,
                 date="1970-01-01T00:00:00Z",
