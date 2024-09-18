@@ -20,7 +20,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import KNXModule
 from .const import DOMAIN, KNX_ADDRESS, KNX_MODULE_KEY
-from .knx_entity import KnxYamlEntity
+from .entity import KnxYamlEntity
 
 
 async def async_get_service(

@@ -6,6 +6,7 @@
       "firmware": "2019-06-21T02:00:00+02:00",
       "location": "cd143c07248f491493cea0533bc3d669",
       "model": "Plug",
+      "model_id": "160-01",
       "name": "NVR",
       "sensors": {
         "electricity_consumed": 34.0,
@@ -26,6 +27,7 @@
       "firmware": "2019-06-21T02:00:00+02:00",
       "location": "cd143c07248f491493cea0533bc3d669",
       "model": "Plug",
+      "model_id": "160-01",
       "name": "Playstation Smart Plug",
       "sensors": {
         "electricity_consumed": 84.1,
@@ -46,6 +48,7 @@
       "firmware": "2019-06-21T02:00:00+02:00",
       "location": "cd143c07248f491493cea0533bc3d669",
       "model": "Plug",
+      "model_id": "160-01",
       "name": "USG Smart Plug",
       "sensors": {
         "electricity_consumed": 8.5,
@@ -66,6 +69,7 @@
       "firmware": "2019-06-21T02:00:00+02:00",
       "location": "cd143c07248f491493cea0533bc3d669",
       "model": "Plug",
+      "model_id": "160-01",
       "name": "Ziggo Modem",
       "sensors": {
         "electricity_consumed": 12.2,
@@ -82,11 +86,15 @@
     },
     "680423ff840043738f42cc7f1ff97a36": {
       "available": true,
+      "binary_sensors": {
+        "low_battery": false
+      },
       "dev_class": "thermo_sensor",
       "firmware": "2019-03-27T01:00:00+01:00",
       "hardware": "1",
       "location": "08963fec7c53423ca5680aa4cb502c63",
       "model": "Tom/Floor",
+      "model_id": "106-03",
       "name": "Thermostatic Radiator Badkamer",
       "sensors": {
         "battery": 51,
@@ -115,12 +123,16 @@
         "CV Jessie",
         "off"
       ],
+      "binary_sensors": {
+        "low_battery": false
+      },
       "dev_class": "zone_thermostat",
       "firmware": "2016-10-27T02:00:00+02:00",
       "hardware": "255",
       "location": "82fa13f017d240daa0d0ea1775420f24",
       "mode": "auto",
       "model": "Lisa",
+      "model_id": "158-01",
       "name": "Zone Thermostat Jessie",
       "preset_modes": ["home", "asleep", "away", "vacation", "no_frost"],
       "select_schedule": "CV Jessie",
@@ -150,6 +162,7 @@
       "firmware": "2019-06-21T02:00:00+02:00",
       "location": "c50f167537524366a5af7aa3942feb1e",
       "model": "Plug",
+      "model_id": "160-01",
       "name": "CV Pomp",
       "sensors": {
         "electricity_consumed": 35.6,
@@ -183,6 +196,7 @@
       "firmware": "2019-06-21T02:00:00+02:00",
       "location": "cd143c07248f491493cea0533bc3d669",
       "model": "Plug",
+      "model_id": "160-01",
       "name": "Fibaro HC2",
       "sensors": {
         "electricity_consumed": 12.5,
@@ -199,11 +213,15 @@
     },
     "a2c3583e0a6349358998b760cea82d2a": {
       "available": true,
+      "binary_sensors": {
+        "low_battery": false
+      },
       "dev_class": "thermo_sensor",
       "firmware": "2019-03-27T01:00:00+01:00",
       "hardware": "1",
       "location": "12493538af164a409c6a1c79e38afe1c",
       "model": "Tom/Floor",
+      "model_id": "106-03",
       "name": "Bios Cv Thermostatic Radiator ",
       "sensors": {
         "battery": 62,
@@ -228,6 +246,7 @@
       "hardware": "1",
       "location": "c50f167537524366a5af7aa3942feb1e",
       "model": "Tom/Floor",
+      "model_id": "106-03",
       "name": "Floor kraan",
       "sensors": {
         "setpoint": 21.5,
@@ -255,12 +274,16 @@
         "CV Jessie",
         "off"
       ],
+      "binary_sensors": {
+        "low_battery": false
+      },
       "dev_class": "zone_thermostat",
       "firmware": "2016-08-02T02:00:00+02:00",
       "hardware": "255",
       "location": "c50f167537524366a5af7aa3942feb1e",
       "mode": "auto",
       "model": "Lisa",
+      "model_id": "158-01",
       "name": "Zone Lisa WK",
       "preset_modes": ["home", "asleep", "away", "vacation", "no_frost"],
       "select_schedule": "GF7  Woonkamer",
@@ -290,6 +313,7 @@
       "firmware": "2019-06-21T02:00:00+02:00",
       "location": "cd143c07248f491493cea0533bc3d669",
       "model": "Plug",
+      "model_id": "160-01",
       "name": "NAS",
       "sensors": {
         "electricity_consumed": 16.5,
@@ -306,11 +330,15 @@
     },
     "d3da73bde12a47d5a6b8f9dad971f2ec": {
       "available": true,
+      "binary_sensors": {
+        "low_battery": false
+      },
       "dev_class": "thermo_sensor",
       "firmware": "2019-03-27T01:00:00+01:00",
       "hardware": "1",
       "location": "82fa13f017d240daa0d0ea1775420f24",
       "model": "Tom/Floor",
+      "model_id": "106-03",
       "name": "Thermostatic Radiator Jessie",
       "sensors": {
         "battery": 62,
@@ -339,12 +367,16 @@
         "CV Jessie",
         "off"
       ],
+      "binary_sensors": {
+        "low_battery": false
+      },
       "dev_class": "zone_thermostat",
       "firmware": "2016-10-27T02:00:00+02:00",
       "hardware": "255",
       "location": "12493538af164a409c6a1c79e38afe1c",
       "mode": "heat",
       "model": "Lisa",
+      "model_id": "158-01",
       "name": "Zone Lisa Bios",
       "preset_modes": ["home", "asleep", "away", "vacation", "no_frost"],
       "select_schedule": "off",
@@ -379,12 +411,16 @@
         "CV Jessie",
         "off"
       ],
+      "binary_sensors": {
+        "low_battery": false
+      },
       "dev_class": "thermostatic_radiator_valve",
       "firmware": "2019-03-27T01:00:00+01:00",
       "hardware": "1",
       "location": "446ac08dd04d4eff8ac57489757b7314",
       "mode": "heat",
       "model": "Tom/Floor",
+      "model_id": "106-03",
       "name": "CV Kraan Garage",
       "preset_modes": ["home", "asleep", "away", "vacation", "no_frost"],
       "select_schedule": "off",
@@ -421,12 +457,16 @@
         "CV Jessie",
         "off"
       ],
+      "binary_sensors": {
+        "low_battery": false
+      },
       "dev_class": "zone_thermostat",
       "firmware": "2016-10-27T02:00:00+02:00",
       "hardware": "255",
       "location": "08963fec7c53423ca5680aa4cb502c63",
       "mode": "auto",
       "model": "Lisa",
+      "model_id": "158-01",
       "name": "Zone Thermostat Badkamer",
       "preset_modes": ["home", "asleep", "away", "vacation", "no_frost"],
       "select_schedule": "Badkamer Schema",
@@ -460,6 +500,7 @@
       "location": "1f9dcf83fd4e4b66b72ff787957bfe5d",
       "mac_address": "012345670001",
       "model": "Gateway",
+      "model_id": "smile_open_therm",
       "name": "Adam",
       "select_regulation_mode": "heating",
       "sensors": {
@@ -473,7 +514,7 @@
     "cooling_present": false,
     "gateway_id": "fe799307f1624099878210aa0b9f1475",
     "heater_id": "90986d591dcd426cae3ec3e8111ff730",
-    "item_count": 315,
+    "item_count": 340,
     "notifications": {
       "af82e4ccf9c548528166d38e560662a4": {
         "warning": "Node Plug (with MAC address 000D6F000D13CB01, in room 'n.a.') has been unreachable since 23:03 2020-01-18. Please check the connection and restart the device."

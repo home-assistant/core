@@ -15,7 +15,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
-from .const import DOMAIN as HMIPC_DOMAIN
+from .const import DOMAIN
 from .hap import AsyncHome, HomematicipHAP
 
 _LOGGER = logging.getLogger(__name__)
@@ -95,7 +95,6 @@ class HomematicipGenericEntity(Entity):
         self.functional_channel = self.get_current_channel()
         # Marker showing that the HmIP device hase been removed.
         self.hmip_device_removed = False
-        _LOGGER.info("Setting up %s (%s)", self.name, self._device.modelType)
 
     @property
     def device_info(self) -> DeviceInfo | None:
@@ -105,14 +104,14 @@ class HomematicipGenericEntity(Entity):
             return DeviceInfo(
                 identifiers={
                     # Serial numbers of Homematic IP device
-                    (HMIPC_DOMAIN, self._device.id)
+                    (DOMAIN, self._device.id)
                 },
                 manufacturer=self._device.oem,
                 model=self._device.modelType,
                 name=self._device.label,
                 sw_version=self._device.firmwareVersion,
                 # Link to the homematic ip access point.
-                via_device=(HMIPC_DOMAIN, self._device.homeId),
+                via_device=(DOMAIN, self._device.homeId),
             )
         return None
 

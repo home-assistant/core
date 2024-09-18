@@ -22,7 +22,6 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import get_hub
-from .base_platform import BasePlatform
 from .const import (
     CALL_TYPE_COIL,
     CALL_TYPE_WRITE_COIL,
@@ -34,6 +33,7 @@ from .const import (
     CONF_STATUS_REGISTER,
     CONF_STATUS_REGISTER_TYPE,
 )
+from .entity import BasePlatform
 from .modbus import ModbusHub
 
 PARALLEL_UPDATES = 1

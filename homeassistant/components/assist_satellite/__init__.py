@@ -11,15 +11,22 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, AssistSatelliteEntityFeature
-from .entity import AssistSatelliteEntity, AssistSatelliteEntityDescription
+from .entity import (
+    AssistSatelliteConfiguration,
+    AssistSatelliteEntity,
+    AssistSatelliteEntityDescription,
+    AssistSatelliteWakeWord,
+)
 from .errors import SatelliteBusyError
 from .websocket_api import async_register_websocket_api
 
 __all__ = [
     "DOMAIN",
     "AssistSatelliteEntity",
+    "AssistSatelliteConfiguration",
     "AssistSatelliteEntityDescription",
     "AssistSatelliteEntityFeature",
+    "AssistSatelliteWakeWord",
     "SatelliteBusyError",
 ]
 

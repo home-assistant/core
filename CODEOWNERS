@@ -48,6 +48,7 @@ build.json @home-assistant/supervisor
 /tests/components/adax/ @danielhiversen
 /homeassistant/components/adguard/ @frenck
 /tests/components/adguard/ @frenck
+/homeassistant/components/ads/ @mrpasztoradam
 /homeassistant/components/advantage_air/ @Bre77
 /tests/components/advantage_air/ @Bre77
 /homeassistant/components/aemet/ @Noltari
@@ -1435,8 +1436,8 @@ build.json @home-assistant/supervisor
 /tests/components/switchbee/ @jafar-atili
 /homeassistant/components/switchbot/ @danielhiversen @RenierM26 @murtas @Eloston @dsypniewski
 /tests/components/switchbot/ @danielhiversen @RenierM26 @murtas @Eloston @dsypniewski
-/homeassistant/components/switchbot_cloud/ @SeraphicRav @laurence-presland
-/tests/components/switchbot_cloud/ @SeraphicRav @laurence-presland
+/homeassistant/components/switchbot_cloud/ @SeraphicRav @laurence-presland @Gigatrappeur
+/tests/components/switchbot_cloud/ @SeraphicRav @laurence-presland @Gigatrappeur
 /homeassistant/components/switcher_kis/ @thecode
 /tests/components/switcher_kis/ @thecode
 /homeassistant/components/switchmate/ @danielhiversen @qiz-li
@@ -1667,6 +1668,8 @@ build.json @home-assistant/supervisor
 /tests/components/wiz/ @sbidy
 /homeassistant/components/wled/ @frenck
 /tests/components/wled/ @frenck
+/homeassistant/components/wmspro/ @mback2k
+/tests/components/wmspro/ @mback2k
 /homeassistant/components/wolflink/ @adamkrol93 @mtielen
 /tests/components/wolflink/ @adamkrol93 @mtielen
 /homeassistant/components/workday/ @fabaff @gjohansson-ST

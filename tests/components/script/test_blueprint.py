@@ -9,7 +9,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components import script
-from homeassistant.components.blueprint.models import Blueprint, DomainBlueprints
+from homeassistant.components.blueprint import Blueprint, DomainBlueprints
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, template
