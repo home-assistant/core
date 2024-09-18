@@ -33,11 +33,6 @@ BINARY_SENSORS: tuple[AsekoBinarySensorEntityDescription, ...] = (
         translation_key="water_flow_to_probes",
         value_fn=lambda unit: unit.water_flow_to_probes,
     ),
-    AsekoBinarySensorEntityDescription(
-        key="heating",
-        translation_key="heating",
-        value_fn=lambda unit: unit.heating,
-    ),
 )
 
 

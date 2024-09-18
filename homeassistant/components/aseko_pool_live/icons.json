@@ -3,9 +3,6 @@
     "binary_sensor": {
       "water_flow_to_probes": {
         "default": "mdi:waves-arrow-right"
-      },
-      "heating": {
-        "default": "mdi:heat-wave"
       }
     },
     "sensor": {

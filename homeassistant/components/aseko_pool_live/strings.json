@@ -28,9 +28,6 @@
     "binary_sensor": {
       "water_flow_to_probes": {
         "name": "Water flow to probes"
-      },
-      "heating": {
-        "name": "Heating"
       }
     },
     "sensor": {
