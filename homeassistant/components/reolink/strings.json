@@ -35,7 +35,8 @@
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     }
   },
   "options": {
@@ -564,6 +565,22 @@
       },
       "visitor_tone": {
         "name": "Visitor ringtone",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "citybird": "[%key:component::reolink::entity::select::motion_tone::state::citybird%]",
+          "originaltune": "[%key:component::reolink::entity::select::motion_tone::state::originaltune%]",
+          "pianokey": "[%key:component::reolink::entity::select::motion_tone::state::pianokey%]",
+          "loop": "[%key:component::reolink::entity::select::motion_tone::state::loop%]",
+          "attraction": "[%key:component::reolink::entity::select::motion_tone::state::attraction%]",
+          "hophop": "[%key:component::reolink::entity::select::motion_tone::state::hophop%]",
+          "goodday": "[%key:component::reolink::entity::select::motion_tone::state::goodday%]",
+          "operetta": "[%key:component::reolink::entity::select::motion_tone::state::operetta%]",
+          "moonlight": "[%key:component::reolink::entity::select::motion_tone::state::moonlight%]",
+          "waybackhome": "[%key:component::reolink::entity::select::motion_tone::state::waybackhome%]"
+        }
+      },
+      "package_tone": {
+        "name": "Package ringtone",
         "state": {
           "off": "[%key:common::state::off%]",
           "citybird": "[%key:component::reolink::entity::select::motion_tone::state::citybird%]",

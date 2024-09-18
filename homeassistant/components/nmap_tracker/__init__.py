@@ -380,7 +380,7 @@ class NmapDeviceScanner:
             )
             if mac is None:
                 self._async_device_offline(ipv4, "No MAC address found", now)
-                _LOGGER.info("No MAC address found for %s", ipv4)
+                _LOGGER.warning("No MAC address found for %s", ipv4)
                 continue
 
             formatted_mac = format_mac(mac)

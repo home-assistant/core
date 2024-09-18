@@ -5,14 +5,13 @@ from functools import wraps
 from typing import Any, Concatenate
 
 from aiostreammagic import StreamMagicClient
+from aiostreammagic.models import CallbackType
 
-from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
-from . import STREAM_MAGIC_EXCEPTIONS
-from .const import DOMAIN
+from .const import DOMAIN, STREAM_MAGIC_EXCEPTIONS
 
 
 def command[_EntityT: CambridgeAudioEntity, **_P](
@@ -50,8 +49,9 @@ class CambridgeAudioEntity(Entity):
             configuration_url=f"http://{client.host}",
         )
 
-    @callback
-    async def _state_update_callback(self, _client: StreamMagicClient) -> None:
+    async def _state_update_callback(
+        self, _client: StreamMagicClient, _callback_type: CallbackType
+    ) -> None:
         """Call when the device is notified of changes."""
         self._attr_available = _client.is_connected()
         self.async_write_ha_state()

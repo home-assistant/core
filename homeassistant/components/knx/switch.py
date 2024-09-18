@@ -35,7 +35,7 @@ from .const import (
     KNX_ADDRESS,
     KNX_MODULE_KEY,
 )
-from .knx_entity import KnxUiEntity, KnxUiEntityPlatformController, KnxYamlEntity
+from .entity import KnxUiEntity, KnxUiEntityPlatformController, KnxYamlEntity
 from .schema import SwitchSchema
 from .storage.const import (
     CONF_DEVICE_INFO,

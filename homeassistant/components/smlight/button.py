@@ -60,7 +60,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up SMLIGHT buttons based on a config entry."""
-    coordinator = entry.runtime_data
+    coordinator = entry.runtime_data.data
 
     async_add_entities(SmButton(coordinator, button) for button in BUTTONS)
 
@@ -68,6 +68,7 @@ async def async_setup_entry(
 class SmButton(SmEntity, ButtonEntity):
     """Defines a SLZB-06 button."""
 
+    coordinator: SmDataUpdateCoordinator
     entity_description: SmButtonDescription
     _attr_entity_category = EntityCategory.CONFIG
 

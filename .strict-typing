@@ -415,6 +415,7 @@ homeassistant.components.skybell.*
 homeassistant.components.slack.*
 homeassistant.components.sleepiq.*
 homeassistant.components.smhi.*
+homeassistant.components.smlight.*
 homeassistant.components.snooz.*
 homeassistant.components.solarlog.*
 homeassistant.components.sonarr.*
