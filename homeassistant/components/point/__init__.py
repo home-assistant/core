@@ -257,7 +257,7 @@ class MinutPointClient:
         return await self._client.alarm_arm(home_id)
 
 
-class MinutPointEntity(Entity):
+class MinutPointEntity(Entity):  # pylint: disable=hass-enforce-class-module # see PR 118243
     """Base Entity used by the sensors."""
 
     _attr_should_poll = False
