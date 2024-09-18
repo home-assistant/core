@@ -33,7 +33,6 @@ from .const import (
 )
 from .coordinator import FritzboxConfigEntry, FritzboxDataUpdateCoordinator
 from .model import ClimateExtraAttributes
-from .sensor import value_scheduled_preset
 
 HVAC_MODES = [HVACMode.HEAT, HVACMode.OFF]
 PRESET_HOLIDAY = "holiday"
@@ -177,10 +176,14 @@ class FritzboxThermostat(FritzBoxDeviceEntity, ClimateEntity):
             return
         if hvac_mode == HVACMode.OFF:
             await self.async_set_temperature(temperature=OFF_REPORT_SET_TEMPERATURE)
-        elif value_scheduled_preset(self.data) is PRESET_ECO:
-            await self.async_set_temperature(temperature=self.data.eco_temperature)
         else:
-            await self.async_set_temperature(temperature=self.data.comfort_temperature)
+            if (
+                nextchange_temperature := self.data.nextchange_temperature
+            ) is not None and nextchange_temperature == self.data.comfort_temperature:
+                target_temp = self.data.eco_temperature
+            else:
+                target_temp = self.data.comfort_temperature
+            await self.async_set_temperature(temperature=target_temp)
 
     @property
     def preset_mode(self) -> str | None:
