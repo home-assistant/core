@@ -89,12 +89,12 @@ async def async_setup_entry(
     ]
     user_id, coordinator = data
     units = coordinator.data.values()
-    for unit in units:
-        async_add_entities(
-            AsekoSensorEntity(unit, user_id, coordinator, description)
-            for description in SENSORS
-            if getattr(unit, description.key) is not None
-        )
+    async_add_entities(
+        AsekoSensorEntity(unit, user_id, coordinator, description)
+        for description in SENSORS
+        for unit in units
+        if getattr(unit, description.key) is not None
+    )
 
 
 class AsekoSensorEntity(AsekoEntity, SensorEntity):
