@@ -99,7 +99,7 @@ class PS4Device(MediaPlayerEntity):
     def status_callback(self) -> None:
         """Handle status callback. Parse status."""
         self._parse_status()
-        self.async_write_ha_state()
+        self.schedule_update_ha_state()
 
     @callback
     def subscribe_to_protocol(self) -> None:
