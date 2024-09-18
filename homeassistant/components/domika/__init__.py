@@ -160,26 +160,26 @@ async def async_unload_entry(hass: HomeAssistant, _entry: ConfigEntry) -> bool:
     LOGGER.debug("Entry unloading")
     # Unregister Domika WebSocket commands.
     websocket_api_handlers: dict = hass.data.get(websocket_api.DOMAIN, {})
-    websocket_api_handlers.pop("domika/update_app_session")
-    websocket_api_handlers.pop("domika/remove_app_session")
-    websocket_api_handlers.pop("domika/update_push_token")
-    websocket_api_handlers.pop("domika/update_push_session")
-    websocket_api_handlers.pop("domika/verify_push_session")
-    websocket_api_handlers.pop("domika/remove_push_session")
-    websocket_api_handlers.pop("domika/resubscribe")
-    websocket_api_handlers.pop("domika/confirm_event")
-    websocket_api_handlers.pop("domika/critical_sensors")
-    websocket_api_handlers.pop("domika/update_dashboards")
-    websocket_api_handlers.pop("domika/get_dashboards")
-    websocket_api_handlers.pop("domika/get_dashboards_hash")
-    websocket_api_handlers.pop("domika/entity_list")
-    websocket_api_handlers.pop("domika/entity_info")
-    websocket_api_handlers.pop("domika/entity_state")
+    websocket_api_handlers.pop("domika/update_app_session", None)
+    websocket_api_handlers.pop("domika/remove_app_session", None)
+    websocket_api_handlers.pop("domika/update_push_token", None)
+    websocket_api_handlers.pop("domika/update_push_session", None)
+    websocket_api_handlers.pop("domika/verify_push_session", None)
+    websocket_api_handlers.pop("domika/remove_push_session", None)
+    websocket_api_handlers.pop("domika/resubscribe", None)
+    websocket_api_handlers.pop("domika/confirm_event", None)
+    websocket_api_handlers.pop("domika/critical_sensors", None)
+    websocket_api_handlers.pop("domika/update_dashboards", None)
+    websocket_api_handlers.pop("domika/get_dashboards", None)
+    websocket_api_handlers.pop("domika/get_dashboards_hash", None)
+    websocket_api_handlers.pop("domika/entity_list", None)
+    websocket_api_handlers.pop("domika/entity_info", None)
+    websocket_api_handlers.pop("domika/entity_state", None)
 
     # Unsubscribe from events.
-    if cancel_registrator_cb := hass.data[DOMAIN].get("cancel_registrator_cb", None):
-        cancel_registrator_cb()
-        hass.data[DOMAIN]["cancel_registrator_cb"] = None
+    if domika_data := hass.data.get(DOMAIN):
+        if cancel_registrator_cb := domika_data.get("cancel_registrator_cb"):
+            cancel_registrator_cb()
 
     await asyncio.sleep(0)
 
@@ -187,7 +187,7 @@ async def async_unload_entry(hass: HomeAssistant, _entry: ConfigEntry) -> bool:
     await domika_ha_framework.dispose()
 
     # Clear hass data.
-    hass.data.pop(DOMAIN)
+    hass.data.pop(DOMAIN, None)
 
     LOGGER.debug("Entry unloaded")
     return True
