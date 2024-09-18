@@ -68,6 +68,19 @@ class RTCConfiguration(_RTCBaseModel):
     )
 
 
+@dataclass
+class WebRTCClientConfiguration(_RTCBaseModel):
+    """WebRTC configuration for the client.
+
+    Not part of the spec, but required to configure client.
+    """
+
+    configuration: RTCConfiguration
+    data_channel: str | None = field(
+        metadata=field_options(alias="dataChannel"), default=None
+    )
+
+
 class CameraWebRTCProvider(Protocol):
     """WebRTC provider."""
 
@@ -161,15 +174,15 @@ async def _async_refresh_providers(hass: HomeAssistant) -> None:
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "camera/webrtc/get_config",
+        vol.Required("type"): "camera/webrtc/get_client_config",
         vol.Required("entity_id"): cv.entity_id,
     }
 )
 @websocket_api.async_response
-async def ws_get_config(
+async def ws_get_client_config(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
-    """Handle get WebRTC config websocket command."""
+    """Handle get WebRTC client config websocket command."""
     entity_id = msg["entity_id"]
     camera = get_camera_from_entity_id(hass, entity_id)
     if camera.frontend_stream_type != StreamType.WEB_RTC:
@@ -183,7 +196,7 @@ async def ws_get_config(
         )
         return
 
-    config = (await camera.async_get_webrtc_configuration()).to_dict()
+    config = (await camera.async_get_webrtc_client_configuration()).to_dict()
     connection.send_result(
         msg["id"],
         config,

@@ -85,10 +85,11 @@ from .webrtc import (
     CameraWebRTCProvider,
     RTCConfiguration,
     RTCIceServer,
+    WebRTCClientConfiguration,
     async_get_supported_providers,
     async_register_rtsp_to_web_rtc_provider,  # noqa: F401
     register_ice_server,
-    ws_get_config,
+    ws_get_client_config,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -340,7 +341,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     websocket_api.async_register_command(hass, ws_camera_web_rtc_offer)
     websocket_api.async_register_command(hass, websocket_get_prefs)
     websocket_api.async_register_command(hass, websocket_update_prefs)
-    websocket_api.async_register_command(hass, ws_get_config)
+    websocket_api.async_register_command(hass, ws_get_client_config)
 
     await component.async_setup(config)
 
@@ -734,13 +735,18 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """Return the WebRTC providers."""
         return self._webrtc_providers
 
-    async def async_get_webrtc_configuration(self) -> RTCConfiguration:
-        """Return the WebRTC configuration."""
+    @final
+    async def _async_get_rtc_configuration(self) -> RTCConfiguration:
+        """Return the RTC configuration."""
 
         ice_servers = await asyncio.gather(
             *[server() for server in self.hass.data.get(DATA_ICE_SERVERS, [])]
         )
         return RTCConfiguration(ice_servers=ice_servers)
+
+    async def async_get_webrtc_client_configuration(self) -> WebRTCClientConfiguration:
+        """Return the WebRTC client configuration."""
+        return WebRTCClientConfiguration(await self._async_get_rtc_configuration())
 
 
 class CameraView(HomeAssistantView):
