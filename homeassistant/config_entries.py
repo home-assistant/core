@@ -1371,8 +1371,8 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager[ConfigFlowResult]):
                     )
                 )
                 and entry.source == SOURCE_IGNORE
-                and (known_discovery_keys := entry.data.get("discovery_keys", []))
-                and discovery_key not in known_discovery_keys
+                and discovery_key
+                not in (known_discovery_keys := entry.data.get("discovery_keys", []))
             ):
                 _LOGGER.debug(
                     "Updating discovery keys for %s entry %s %s -> %s",
