@@ -25,16 +25,19 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType
 
+from .const import (
+    ATTR_DISCOVER_CONFIG,
+    ATTR_DISCOVER_DEVICES,
+    DATA_TELLSTICK,
+    DEFAULT_SIGNAL_REPETITIONS,
+)
+
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_DISCOVER_CONFIG = "config"
-ATTR_DISCOVER_DEVICES = "devices"
 CONF_SIGNAL_REPETITIONS = "signal_repetitions"
 
-DEFAULT_SIGNAL_REPETITIONS = 1
 DOMAIN = "tellstick"
 
-DATA_TELLSTICK = "tellstick_device"
 SIGNAL_TELLCORE_CALLBACK = "tellstick_callback"
 
 # Use a global tellstick domain lock to avoid getting Tellcore errors when
