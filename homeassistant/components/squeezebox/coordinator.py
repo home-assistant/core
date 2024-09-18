@@ -17,9 +17,10 @@ from .const import (
     STATUS_QUERY_VERSION,
     STATUS_SENSOR_LASTSCAN,
     STATUS_SENSOR_NEEDSRESTART,
-    STATUS_SENSOR_NEWPLUGINS,
-    STATUS_SENSOR_NEWVERSION,
     STATUS_SENSOR_RESCAN,
+    STATUS_UPDATE_NEWPLUGINS,
+    STATUS_UPDATE_NEWVERSION,
+    UPDATE_PLUGINS_RELEASE_SUMMARY,
     UPDATE_RELEASE_SUMMARY,
 )
 
@@ -89,24 +90,27 @@ class LMSStatusDataUpdateCoordinator(DataUpdateCoordinator):
         # 'A new version of Logitech Media Server is available (8.5.2 - 0). <a href="updateinfo.html?installerFile=/var/lib/squeezeboxserver/cache/updates/logitechmediaserver_8.5.2_amd64.deb" target="update">Click here for further information</a>.'
         # '<ul><li>Version %s - %s is available for installation.</li><li>Log in to your computer running Logitech Media Server (%s).</li><li>Execute <code>%s</code> and follow the instructions.</li></ul>'
         data[UPDATE_RELEASE_SUMMARY] = (
-            self.newversion_regex_leavefirstsentance_strip.sub(
-                ".", data[STATUS_SENSOR_NEWVERSION]
+            self.newversion_regex_leavefirstsentance.sub(
+                ".", data[STATUS_UPDATE_NEWVERSION]
             )
-            if STATUS_SENSOR_NEWVERSION in data
+            if STATUS_UPDATE_NEWVERSION in data
             else None
         )
-        data[STATUS_SENSOR_NEWVERSION] = (
+        data[STATUS_UPDATE_NEWVERSION] = (
             "New Version"
-            if STATUS_SENSOR_NEWVERSION in data
+            if STATUS_UPDATE_NEWVERSION in data
             else data[STATUS_QUERY_VERSION]
         )
 
         # newplugins str not always present
         # newplugins': 'Plugins have been updated - Restart Required (BBC Sounds)
-        data[STATUS_SENSOR_NEWPLUGINS] = (
-            self.newplugins_leavepluginnames.sub("", data[STATUS_SENSOR_NEWPLUGINS])
-            if STATUS_SENSOR_NEWPLUGINS in data
-            else "current"
+        data[UPDATE_PLUGINS_RELEASE_SUMMARY] = (
+            data[STATUS_UPDATE_NEWPLUGINS] + ". "
+            if STATUS_UPDATE_NEWPLUGINS in data
+            else None
+        )
+        data[STATUS_UPDATE_NEWPLUGINS] = (
+            "Updates" if STATUS_UPDATE_NEWPLUGINS in data else "Current"
         )
 
         _LOGGER.debug("Processed serverstatus %s=%s", self.lms.name, data)

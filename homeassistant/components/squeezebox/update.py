@@ -21,18 +21,19 @@ from . import SqueezeboxConfigEntry
 from .const import (
     SERVER_MODEL,
     STATUS_QUERY_VERSION,
-    STATUS_SENSOR_NEWPLUGINS,
-    STATUS_SENSOR_NEWVERSION,
+    STATUS_UPDATE_NEWPLUGINS,
+    STATUS_UPDATE_NEWVERSION,
+    UPDATE_PLUGINS_RELEASE_SUMMARY,
     UPDATE_RELEASE_SUMMARY,
 )
 from .entity import LMSStatusEntity
 
 newserver = UpdateEntityDescription(
-    key=STATUS_SENSOR_NEWVERSION,
+    key=STATUS_UPDATE_NEWVERSION,
 )
 
 newplugins = UpdateEntityDescription(
-    key=STATUS_SENSOR_NEWPLUGINS,
+    key=STATUS_UPDATE_NEWPLUGINS,
 )
 
 POLL_AFTER_INSTALL = 120
@@ -94,7 +95,7 @@ class ServerStatusUpdatePlugins(ServerStatusUpdate):
 
     auto_update = True
     title: str = SERVER_MODEL + " Plugins"
-    installed_version = "current"
+    installed_version = "Current"
     restart_triggered = False
     _cancel_update: Callable | None = None
 
@@ -110,10 +111,12 @@ class ServerStatusUpdatePlugins(ServerStatusUpdate):
     @property
     def release_summary(self) -> None | str:
         """If install is supported give some info."""
+        rs = self.coordinator.data[UPDATE_PLUGINS_RELEASE_SUMMARY]
         return (
-            "Named Plugins will be updated on the next restart. For some installation types, the service will be restarted automatically after the Install button has been selected. Allow enough time for the service to restart. It will become briefly unavailable."
+            (rs or "")
+            + "The Named Plugins will be updated on the next restart triggred by selecting the Install button. Allow enough time for the service to restart. It will become briefly unavailable."
             if self.coordinator.can_server_restart
-            else None
+            else rs
         )
 
     @property
