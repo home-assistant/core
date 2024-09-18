@@ -51,7 +51,7 @@ def _discover(hass, config, component_name, found_tellcore_devices):
     if not found_tellcore_devices:
         return
 
-    _LOGGER.info(
+    _LOGGER.debug(
         "Discovered %d new %s devices", len(found_tellcore_devices), component_name
     )
 
