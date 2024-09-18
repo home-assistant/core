@@ -5,12 +5,9 @@
   "config_flow": true,
   "dependencies": ["mqtt"],
   "documentation": "https://www.home-assistant.io/integrations/qbus",
-  "homekit": {},
   "integration_type": "hub",
   "iot_class": "local_push",
-  "mqtt": ["cloudapp/QBUSMQTTGW/config/#"],
+  "mqtt": ["cloudapp/QBUSMQTTGW/config", "cloudapp/QBUSMQTTGW/+/state"],
   "requirements": ["qbusmqttapi==0.2.0"],
-  "single_config_entry": false,
-  "ssdp": [],
-  "zeroconf": []
+  "single_config_entry": false
 }

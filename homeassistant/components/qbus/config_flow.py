@@ -2,108 +2,124 @@
 
 from __future__ import annotations
 
+import logging
 from typing import TYPE_CHECKING, Any
 
-from qbusmqttapi.discovery import QbusDiscovery
-import voluptuous as vol
+from qbusmqttapi.discovery import QbusMqttDevice
+from qbusmqttapi.factory import QbusMqttMessageFactory, QbusMqttTopicFactory
 
 from homeassistant import config_entries
-from homeassistant.components import mqtt
 from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
 
-from .const import (
-    CONF_CONFIG_TOPIC,
-    CONF_SERIAL,
-    CONF_STATE_MESSAGE,
-    CONFIG_TOPIC,
-    DEVICE_CONFIG_TOPIC,
-    DOMAIN,
-    NAME,
-)
+from .const import CONF_ID, CONF_SERIAL, DOMAIN
+from .qbus import QbusConfigContainer
+
+_LOGGER = logging.getLogger(__name__)
 
 
-class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class QbusFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle Qbus config flow."""
 
     VERSION = 1
 
-    _qbus_config: QbusDiscovery | None = None
+    def __init__(self) -> None:
+        """Initialize."""
+        self._message_factory = QbusMqttMessageFactory()
+
+        topic_factory = QbusMqttTopicFactory()
+        self._controller_topic = topic_factory.get_device_state_topic("+")
+        self._config_topic = topic_factory.get_config_topic()
+
+        self._device: QbusMqttDevice | None = None
 
     async def async_step_mqtt(
         self, discovery_info: MqttServiceInfo
     ) -> ConfigFlowResult:
         """Handle a flow initialized by MQTT discovery."""
+        _LOGGER.debug("Running mqtt discovery for topic %s", discovery_info.topic)
 
-        # Abort if the topic does not match our discovery topic or the payload is empty.
-        if (
-            discovery_info.subscribed_topic != CONFIG_TOPIC
-            or not discovery_info.payload
-        ):
+        # Abort if the payload is empty
+        if not discovery_info.payload:
+            _LOGGER.debug("Payload empty")
             return self.async_abort(reason="invalid_discovery_info")
 
-        self._qbus_config = QbusDiscovery(DOMAIN)
+        # Qbus config topic
+        if discovery_info.subscribed_topic == self._config_topic:
+            _LOGGER.debug("Parsing discovery")
+            qbus_config = self._message_factory.parse_discovery(discovery_info.payload)
 
-        if not (
-            await self._qbus_config.parse_config(
-                discovery_info.topic, discovery_info.payload
+            if qbus_config is not None:
+                QbusConfigContainer.store_config(self.hass, qbus_config)
+
+            # Abort to wait for controller topic
+            return self.async_abort(reason="invalid_discovery_info")
+
+        # Specific controller topic
+        if discovery_info.subscribed_topic == self._controller_topic:
+            _LOGGER.debug("Discovering controller")
+            qbus_config = await QbusConfigContainer.async_get_or_request_config(
+                self.hass
             )
-        ):
-            return self.async_abort(reason="invalid_discovery_info")
 
-        existing_entry = await self.async_set_unique_id(DOMAIN)
+            if qbus_config is None:
+                _LOGGER.warning("Qbus config could not be loaded")
+                return self.async_abort(reason="invalid_discovery_info")
 
-        if existing_entry is not None:
-            return self.async_abort(reason="invalid_discovery_info")
+            device_id = discovery_info.topic.split("/")[2]
+            self._device = qbus_config.get_device_by_id(device_id)
 
-        self.context.update({"title_placeholders": {"name": DOMAIN}})
+            if self._device is None:
+                _LOGGER.warning("Device with id '%s' not found in config", device_id)
+                return self.async_abort(reason="invalid_discovery_info")
 
-        return await self.async_step_confirm()
+            await self.async_set_unique_id(self._device.serial_number)
 
-    async def async_step_confirm(
+            # Do not use error message "already_configured" (which is the
+            # default), as this will result in unsubscribing from the triggered
+            # mqtt topic. The topic subscribed to has a wildcard to allow
+            # discovery of controllers. Unsubscribing would result in not
+            # discovering new or unconfigured controllers.
+            self._abort_if_unique_id_configured(error="device_already_configured")
+
+            self.context.update(
+                {
+                    "title_placeholders": {
+                        CONF_SERIAL: self._device.serial_number,
+                    }
+                }
+            )
+
+            return await self.async_step_discovery_confirm()
+
+        # Abort
+        return self.async_abort(reason="invalid_discovery_info")
+
+    async def async_step_discovery_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Confirm the setup."""
         if TYPE_CHECKING:
-            assert self._qbus_config is not None
+            assert self._device is not None
+
         if user_input is not None:
-            await self.async_set_unique_id(user_input.get("id"))
-            qid = user_input.get("id")
-            device = self._qbus_config.set_device(qid)
-
-            device_data = {
-                NAME: device.name,
-                CONF_SERIAL: device.id,
-                CONF_STATE_MESSAGE: device.state_message,
-                DEVICE_CONFIG_TOPIC: self._qbus_config.config_topic,
-            }
-
-            # Create the device
-            return self.async_create_entry(title=device.serial_number, data=device_data)
+            return self.async_create_entry(
+                title=f"Controller {self._device.serial_number}",
+                data={
+                    CONF_SERIAL: self._device.serial_number,
+                    CONF_ID: self._device.id,
+                },
+            )
 
         return self.async_show_form(
-            step_id="confirm",
+            step_id="discovery_confirm",
             description_placeholders={
-                "device_name": self.unique_id,
+                CONF_SERIAL: self._device.serial_number,
             },
-            data_schema=vol.Schema(
-                {
-                    vol.Required("id"): vol.In(
-                        {
-                            **{
-                                device.id: device.serial_number
-                                for device in self._qbus_config.devices
-                            }
-                        }
-                    ),
-                }
-            ),
         )
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
-        if self._qbus_config is None:
-            await mqtt.async_publish(self.hass, CONF_CONFIG_TOPIC, b"")
         return self.async_abort(reason="not_supported")

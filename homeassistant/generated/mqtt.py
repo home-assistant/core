@@ -17,7 +17,8 @@ MQTT = {
         "fully/deviceInfo/+",
     ],
     "qbus": [
-        "cloudapp/QBUSMQTTGW/config/#",
+        "cloudapp/QBUSMQTTGW/config",
+        "cloudapp/QBUSMQTTGW/+/state",
     ],
     "tasmota": [
         "tasmota/discovery/#",
