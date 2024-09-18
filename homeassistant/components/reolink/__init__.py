@@ -102,7 +102,7 @@ async def async_setup_entry(
         async with asyncio.timeout(host.api.timeout * (RETRY_ATTEMPTS + 2)):
             await host.renew()
 
-        if host.new_devices:
+        if host.api.new_devices:
             # Their are new cameras/chimes connected, reload to add them.
             await hass.config_entries.async_reload(config_entry.entry_id)
 
