@@ -20,8 +20,25 @@ def mock_flow_init(hass: HomeAssistant) -> Generator[AsyncMock]:
         yield mock_init
 
 
+@pytest.mark.parametrize(
+    ("discovery_key", "context"),
+    [
+        (None, {}),
+        (
+            discovery_flow.DiscoveryKey(domain="test", key="string_key", version=1),
+            {"discovery_key": {"domain": "test", "key": "string_key", "version": 1}},
+        ),
+        (
+            discovery_flow.DiscoveryKey(domain="test", key=["one", "two"], version=1),
+            {"discovery_key": {"domain": "test", "key": ["one", "two"], "version": 1}},
+        ),
+    ],
+)
 async def test_async_create_flow(
-    hass: HomeAssistant, mock_flow_init: AsyncMock
+    hass: HomeAssistant,
+    mock_flow_init: AsyncMock,
+    discovery_key: discovery_flow.DiscoveryKey | None,
+    context: {},
 ) -> None:
     """Test we can create a flow."""
     discovery_flow.async_create_flow(
@@ -29,11 +46,12 @@ async def test_async_create_flow(
         "hue",
         {"source": config_entries.SOURCE_HOMEKIT},
         {"properties": {"id": "aa:bb:cc:dd:ee:ff"}},
+        discovery_key=discovery_key,
     )
     assert mock_flow_init.mock_calls == [
         call(
             "hue",
-            context={"source": "homekit"},
+            context={"source": "homekit"} | context,
             data={"properties": {"id": "aa:bb:cc:dd:ee:ff"}},
         )
     ]

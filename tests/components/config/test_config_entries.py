@@ -1321,8 +1321,27 @@ async def test_disable_entry_nonexisting(
     assert response["error"]["code"] == "not_found"
 
 
+@pytest.mark.parametrize(
+    (
+        "flow_context",
+        "entry_data",
+    ),
+    [
+        (
+            {},
+            {},
+        ),
+        (
+            {"discovery_key": {"domain": "test", "key": "blah", "version": 1}},
+            {"discovery_keys": [{"domain": "test", "key": "blah", "version": 1}]},
+        ),
+    ],
+)
 async def test_ignore_flow(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    flow_context: dict,
+    entry_data: dict,
 ) -> None:
     """Test we can ignore a flow."""
     assert await async_setup_component(hass, "config", {})
@@ -1345,7 +1364,7 @@ async def test_ignore_flow(
 
     with patch.dict(HANDLERS, {"test": TestFlow}):
         result = await hass.config_entries.flow.async_init(
-            "test", context={"source": core_ce.SOURCE_USER}
+            "test", context={"source": core_ce.SOURCE_USER} | flow_context
         )
         assert result["type"] is FlowResultType.FORM
 
@@ -1367,6 +1386,7 @@ async def test_ignore_flow(
     assert entry.source == "ignore"
     assert entry.unique_id == "mock-unique-id"
     assert entry.title == "Test Integration"
+    assert entry.data == entry_data
 
 
 async def test_ignore_flow_nonexisting(

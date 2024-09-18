@@ -2743,8 +2743,24 @@ async def test_finish_flow_aborts_progress(
     assert len(hass.config_entries.flow.async_progress()) == 0
 
 
+@pytest.mark.parametrize(
+    ("extra_data", "expected_entry_data"),
+    [
+        (
+            {},
+            {},
+        ),
+        (
+            {"discovery_key": {"domain": "test", "key": "blah", "version": 1}},
+            {"discovery_keys": [{"domain": "test", "key": "blah", "version": 1}]},
+        ),
+    ],
+)
 async def test_unique_id_ignore(
-    hass: HomeAssistant, manager: config_entries.ConfigEntries
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+    extra_data: dict,
+    expected_entry_data: dict,
 ) -> None:
     """Test that we can ignore flows that are in progress and have a unique ID."""
     async_setup_entry = AsyncMock(return_value=False)
@@ -2771,7 +2787,7 @@ async def test_unique_id_ignore(
         result2 = await manager.flow.async_init(
             "comp",
             context={"source": config_entries.SOURCE_IGNORE},
-            data={"unique_id": "mock-unique-id", "title": "Ignored Title"},
+            data={"unique_id": "mock-unique-id", "title": "Ignored Title"} | extra_data,
         )
 
     assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
@@ -2786,6 +2802,7 @@ async def test_unique_id_ignore(
     assert entry.source == "ignore"
     assert entry.unique_id == "mock-unique-id"
     assert entry.title == "Ignored Title"
+    assert entry.data == expected_entry_data
 
 
 async def test_manual_add_overrides_ignored_entry(
@@ -2880,6 +2897,189 @@ async def test_manual_add_overrides_ignored_entry_singleton(
 
     assert p_hass is hass
     assert p_entry.data == {"token": "supersecret"}
+
+
+@pytest.mark.parametrize(
+    (
+        "entry_data",
+        "entry_source",
+        "entry_unique_id",
+        "flow_context",
+        "flow_source",
+        "flow_result",
+        "updated_entry_data",
+    ),
+    [
+        # No discovery key
+        (
+            {},
+            config_entries.SOURCE_IGNORE,
+            "mock-unique-id",
+            {},
+            config_entries.SOURCE_ZEROCONF,
+            data_entry_flow.FlowResultType.ABORT,
+            {},
+        ),
+        # Discovery key added to ignored entry data
+        (
+            {},
+            config_entries.SOURCE_IGNORE,
+            "mock-unique-id",
+            {"discovery_key": {"domain": "test", "key": "blah", "version": 1}},
+            config_entries.SOURCE_ZEROCONF,
+            data_entry_flow.FlowResultType.ABORT,
+            {"discovery_keys": [{"domain": "test", "key": "blah", "version": 1}]},
+        ),
+        # Discovery key added to ignored entry data
+        (
+            {"discovery_keys": [{"domain": "test", "key": "bleh", "version": 1}]},
+            config_entries.SOURCE_IGNORE,
+            "mock-unique-id",
+            {"discovery_key": {"domain": "test", "key": "blah", "version": 1}},
+            config_entries.SOURCE_ZEROCONF,
+            data_entry_flow.FlowResultType.ABORT,
+            {
+                "discovery_keys": [
+                    {"domain": "test", "key": "bleh", "version": 1},
+                    {"domain": "test", "key": "blah", "version": 1},
+                ]
+            },
+        ),
+        # Discovery key added to ignored entry data
+        (
+            {
+                "discovery_keys": [
+                    {"domain": "test", "key": "1", "version": 1},
+                    {"domain": "test", "key": "2", "version": 1},
+                    {"domain": "test", "key": "3", "version": 1},
+                    {"domain": "test", "key": "4", "version": 1},
+                    {"domain": "test", "key": "5", "version": 1},
+                    {"domain": "test", "key": "6", "version": 1},
+                    {"domain": "test", "key": "7", "version": 1},
+                    {"domain": "test", "key": "8", "version": 1},
+                    {"domain": "test", "key": "9", "version": 1},
+                    {"domain": "test", "key": "10", "version": 1},
+                ]
+            },
+            config_entries.SOURCE_IGNORE,
+            "mock-unique-id",
+            {"discovery_key": {"domain": "test", "key": "11", "version": 1}},
+            config_entries.SOURCE_ZEROCONF,
+            data_entry_flow.FlowResultType.ABORT,
+            {
+                "discovery_keys": [
+                    {"domain": "test", "key": "2", "version": 1},
+                    {"domain": "test", "key": "3", "version": 1},
+                    {"domain": "test", "key": "4", "version": 1},
+                    {"domain": "test", "key": "5", "version": 1},
+                    {"domain": "test", "key": "6", "version": 1},
+                    {"domain": "test", "key": "7", "version": 1},
+                    {"domain": "test", "key": "8", "version": 1},
+                    {"domain": "test", "key": "9", "version": 1},
+                    {"domain": "test", "key": "10", "version": 1},
+                    {"domain": "test", "key": "11", "version": 1},
+                ]
+            },
+        ),
+        # Discovery key already in ignored entry data
+        (
+            {"discovery_keys": [{"domain": "test", "key": "blah", "version": 1}]},
+            config_entries.SOURCE_IGNORE,
+            "mock-unique-id",
+            {"discovery_key": {"domain": "test", "key": "blah", "version": 1}},
+            config_entries.SOURCE_ZEROCONF,
+            data_entry_flow.FlowResultType.ABORT,
+            {"discovery_keys": [{"domain": "test", "key": "blah", "version": 1}]},
+        ),
+        # Discovery key not added to user entry data
+        (
+            {},
+            config_entries.SOURCE_USER,
+            "mock-unique-id",
+            {"discovery_key": {"domain": "test", "key": "blah", "version": 1}},
+            config_entries.SOURCE_ZEROCONF,
+            data_entry_flow.FlowResultType.ABORT,
+            {},
+        ),
+        # Flow not aborted when unique id is not matching
+        (
+            {},
+            config_entries.SOURCE_IGNORE,
+            "mock-unique-id-2",
+            {"discovery_key": {"domain": "test", "key": "blah", "version": 1}},
+            config_entries.SOURCE_ZEROCONF,
+            data_entry_flow.FlowResultType.FORM,
+            {},
+        ),
+        # Flow not aborted when user initiated flow
+        (
+            {},
+            config_entries.SOURCE_IGNORE,
+            "mock-unique-id-2",
+            {"discovery_key": {"domain": "test", "key": "blah", "version": 1}},
+            config_entries.SOURCE_USER,
+            data_entry_flow.FlowResultType.FORM,
+            {},
+        ),
+    ],
+)
+async def test_ignored_entry_update_discovery_keys(
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+    entry_data: dict,
+    entry_source: str,
+    entry_unique_id: str,
+    flow_context: dict,
+    flow_source: str,
+    flow_result: data_entry_flow.FlowResultType,
+    updated_entry_data: dict,
+) -> None:
+    """Test that discovery keys of an ignored entry can be updated."""
+    hass.config.components.add("comp")
+    entry = MockConfigEntry(
+        domain="comp",
+        data=entry_data,
+        unique_id=entry_unique_id,
+        state=config_entries.ConfigEntryState.LOADED,
+        source=entry_source,
+    )
+    entry.add_to_hass(hass)
+
+    mock_integration(hass, MockModule("comp"))
+    mock_platform(hass, "comp.config_flow", None)
+
+    class TestFlow(config_entries.ConfigFlow):
+        """Test flow."""
+
+        VERSION = 1
+
+        async def async_step_user(self, user_input=None):
+            """Test user step."""
+            await self.async_set_unique_id("mock-unique-id")
+            self._abort_if_unique_id_configured(reload_on_update=False)
+            return self.async_show_form(step_id="step2")
+
+        async def async_step_step2(self, user_input=None):
+            raise NotImplementedError
+
+        async def async_step_zeroconf(self, discovery_info=None):
+            """Test zeroconf step."""
+            return await self.async_step_user(discovery_info)
+
+    with (
+        patch.dict(config_entries.HANDLERS, {"comp": TestFlow}),
+        patch(
+            "homeassistant.config_entries.ConfigEntries.async_reload"
+        ) as async_reload,
+    ):
+        result = await manager.flow.async_init(
+            "comp", context={"source": flow_source} | flow_context
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == flow_result
+    assert entry.data == updated_entry_data
+    assert len(async_reload.mock_calls) == 0
 
 
 async def test_async_current_entries_does_not_skip_ignore_non_user(
