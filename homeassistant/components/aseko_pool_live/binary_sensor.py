@@ -68,4 +68,4 @@ class AsekoBinarySensorEntity(AsekoEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool | None:
         """Return the state of the sensor."""
-        return self.entity_description.value_fn(self._unit)
+        return self.entity_description.value_fn(self.unit)

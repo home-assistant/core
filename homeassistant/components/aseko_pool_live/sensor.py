@@ -105,4 +105,4 @@ class AsekoSensorEntity(AsekoEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
-        return self.entity_description.value_fn(self._unit)
+        return self.entity_description.value_fn(self.unit)
