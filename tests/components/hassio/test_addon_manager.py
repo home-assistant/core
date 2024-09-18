@@ -483,7 +483,7 @@ async def test_stop_addon_error(
     addon_manager: AddonManager, stop_addon: AsyncMock
 ) -> None:
     """Test stop addon raises error."""
-    stop_addon.side_effect = HassioAPIError("Boom")
+    stop_addon.side_effect = SupervisorError("Boom")
 
     with pytest.raises(AddonError) as err:
         await addon_manager.async_stop_addon()

@@ -130,18 +130,6 @@ async def async_update_addon(
 
 @bind_hass
 @api_data
-async def async_stop_addon(hass: HomeAssistant, slug: str) -> dict:
-    """Stop add-on.
-
-    The caller of the function should handle HassioAPIError.
-    """
-    hassio: HassIO = hass.data[DOMAIN]
-    command = f"/addons/{slug}/stop"
-    return await hassio.send_command(command, timeout=60)
-
-
-@bind_hass
-@api_data
 async def async_set_addon_options(
     hass: HomeAssistant, slug: str, options: dict
 ) -> dict:

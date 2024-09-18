@@ -2007,7 +2007,7 @@ async def test_options_addon_running(
     result = await hass.config_entries.options.async_configure(result["flow_id"])
     await hass.async_block_till_done()
 
-    assert restart_addon.call_args == call(hass, "core_zwave_js")
+    assert restart_addon.call_args == call("core_zwave_js")
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert entry.data["url"] == "ws://host1:3001"
@@ -2286,7 +2286,7 @@ async def test_options_different_device(
     await hass.async_block_till_done()
 
     assert restart_addon.call_count == 1
-    assert restart_addon.call_args == call(hass, "core_zwave_js")
+    assert restart_addon.call_args == call("core_zwave_js")
 
     result = await hass.config_entries.options.async_configure(result["flow_id"])
     await hass.async_block_till_done()
@@ -2308,7 +2308,7 @@ async def test_options_different_device(
     await hass.async_block_till_done()
 
     assert restart_addon.call_count == 2
-    assert restart_addon.call_args == call(hass, "core_zwave_js")
+    assert restart_addon.call_args == call("core_zwave_js")
 
     result = await hass.config_entries.options.async_configure(result["flow_id"])
     await hass.async_block_till_done()
@@ -2452,7 +2452,7 @@ async def test_options_addon_restart_failed(
     await hass.async_block_till_done()
 
     assert restart_addon.call_count == 1
-    assert restart_addon.call_args == call(hass, "core_zwave_js")
+    assert restart_addon.call_args == call("core_zwave_js")
 
     result = await hass.config_entries.options.async_configure(result["flow_id"])
     await hass.async_block_till_done()
@@ -2471,7 +2471,7 @@ async def test_options_addon_restart_failed(
     await hass.async_block_till_done()
 
     assert restart_addon.call_count == 2
-    assert restart_addon.call_args == call(hass, "core_zwave_js")
+    assert restart_addon.call_args == call("core_zwave_js")
 
     result = await hass.config_entries.options.async_configure(result["flow_id"])
     await hass.async_block_till_done()

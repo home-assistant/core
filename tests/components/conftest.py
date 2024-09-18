@@ -325,10 +325,8 @@ def start_addon_fixture(
     supervisor_client: AsyncMock, start_addon_side_effect: Any | None
 ) -> AsyncMock:
     """Mock start add-on."""
-    # pylint: disable-next=import-outside-toplevel
-    from .hassio.common import mock_start_addon
-
-    return mock_start_addon(supervisor_client, start_addon_side_effect)
+    supervisor_client.addons.start_addon.side_effect = start_addon_side_effect
+    return supervisor_client.addons.start_addon
 
 
 @pytest.fixture(name="restart_addon_side_effect")
@@ -343,19 +341,14 @@ def restart_addon_fixture(
     restart_addon_side_effect: Any | None,
 ) -> AsyncMock:
     """Mock restart add-on."""
-    # pylint: disable-next=import-outside-toplevel
-    from .hassio.common import mock_restart_addon
-
-    return mock_restart_addon(supervisor_client, restart_addon_side_effect)
+    supervisor_client.addons.restart_addon.side_effect = restart_addon_side_effect
+    return supervisor_client.addons.restart_addon
 
 
 @pytest.fixture(name="stop_addon")
-def stop_addon_fixture() -> Generator[AsyncMock]:
+def stop_addon_fixture(supervisor_client: AsyncMock) -> AsyncMock:
     """Mock stop add-on."""
-    # pylint: disable-next=import-outside-toplevel
-    from .hassio.common import mock_stop_addon
-
-    yield from mock_stop_addon()
+    return supervisor_client.addons.stop_addon
 
 
 @pytest.fixture(name="addon_options")
