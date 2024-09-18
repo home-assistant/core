@@ -71,7 +71,7 @@ async def async_setup_scanner(
         )
     )
 
-    _LOGGER.info(
+    _LOGGER.debug(
         "Your Tile configuration has been imported into the UI; "
         "please remove it from configuration.yaml"
     )
