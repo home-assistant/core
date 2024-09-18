@@ -64,6 +64,17 @@ async def test_list_blueprints(
                 "name": "Call service based on event",
             },
         },
+        "test_event_service_legacy_schema.yaml": {
+            "metadata": {
+                "domain": "automation",
+                "input": {
+                    "service_to_call": None,
+                    "trigger_event": {"selector": {"text": {}}},
+                    "a_number": {"selector": {"number": {"mode": "box", "step": 1.0}}},
+                },
+                "name": "Call service based on event",
+            },
+        },
         "in_folder/in_folder_blueprint.yaml": {
             "metadata": {
                 "domain": "automation",
