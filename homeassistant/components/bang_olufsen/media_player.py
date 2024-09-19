@@ -919,7 +919,6 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
             await self.async_beolink_join()
             return
 
-        jids = []
         # Get JID for each group member
         jids = [self._get_beolink_jid(group_member) for group_member in group_members]
         await self.async_beolink_expand(jids)
