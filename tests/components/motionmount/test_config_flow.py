@@ -423,6 +423,9 @@ async def test_authentication_correct_pin(
     type(mock_motionmount_config_flow).is_authenticated = PropertyMock(
         return_value=False
     )
+    type(mock_motionmount_config_flow).can_authenticate = PropertyMock(
+        return_value=True
+    )
 
     user_input = MOCK_USER_INPUT.copy()
 
