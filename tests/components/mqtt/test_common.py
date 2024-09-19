@@ -20,7 +20,7 @@ from homeassistant.components.mqtt.const import (
     MQTT_CONNECTION_STATE,
     SUPPORTED_COMPONENTS,
 )
-from homeassistant.components.mqtt.mixins import MQTT_ATTRIBUTES_BLOCKED
+from homeassistant.components.mqtt.entity import MQTT_ATTRIBUTES_BLOCKED
 from homeassistant.components.mqtt.models import PublishPayloadType
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
@@ -1938,7 +1938,7 @@ async def help_test_skipped_async_ha_write_state(
 ) -> None:
     """Test entity.async_ha_write_state is only called on changes."""
     with patch(
-        "homeassistant.components.mqtt.mixins.MqttEntity.async_write_ha_state"
+        "homeassistant.components.mqtt.entity.MqttEntity.async_write_ha_state"
     ) as mock_async_ha_write_state:
         assert len(mock_async_ha_write_state.mock_calls) == 0
         async_fire_mqtt_message(hass, topic, payload1)

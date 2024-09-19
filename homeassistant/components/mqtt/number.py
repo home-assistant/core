@@ -39,7 +39,7 @@ from .const import (
     CONF_PAYLOAD_RESET,
     CONF_STATE_TOPIC,
 )
-from .mixins import MqttEntity, async_setup_entity_entry_helper
+from .entity import MqttEntity, async_setup_entity_entry_helper
 from .models import (
     MqttCommandTemplate,
     MqttValueTemplate,
