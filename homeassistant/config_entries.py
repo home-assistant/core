@@ -120,7 +120,7 @@ HANDLERS: Registry[str, type[ConfigFlow]] = Registry()
 
 STORAGE_KEY = "core.config_entries"
 STORAGE_VERSION = 1
-STORAGE_VERSION_MINOR = 3
+STORAGE_VERSION_MINOR = 4
 
 SAVE_DELAY = 1
 
@@ -317,6 +317,7 @@ class ConfigEntry(Generic[_DataT]):
     _tries: int
     created_at: datetime
     modified_at: datetime
+    discovery_keys: tuple[MappingProxyType[str, int | str | tuple[str, ...]], ...]
 
     def __init__(
         self,
@@ -324,6 +325,7 @@ class ConfigEntry(Generic[_DataT]):
         created_at: datetime | None = None,
         data: Mapping[str, Any],
         disabled_by: ConfigEntryDisabler | None = None,
+        discovery_keys: Iterable[Mapping[str, int | str | tuple[str, ...]]],
         domain: str,
         entry_id: str | None = None,
         minor_version: int,
@@ -422,6 +424,11 @@ class ConfigEntry(Generic[_DataT]):
         _setter(self, "_tries", 0)
         _setter(self, "created_at", created_at or utcnow())
         _setter(self, "modified_at", modified_at or utcnow())
+        _setter(
+            self,
+            "discovery_keys",
+            tuple(MappingProxyType(dict(key)) for key in discovery_keys),
+        )
 
     def __repr__(self) -> str:
         """Representation of ConfigEntry."""
@@ -951,6 +958,7 @@ class ConfigEntry(Generic[_DataT]):
         return {
             "created_at": self.created_at.isoformat(),
             "data": dict(self.data),
+            "discovery_keys": self.discovery_keys,
             "disabled_by": self.disabled_by,
             "domain": self.domain,
             "entry_id": self.entry_id,
@@ -1371,19 +1379,19 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager[ConfigFlowResult]):
                     )
                 )
                 and entry.source == SOURCE_IGNORE
-                and discovery_key
-                not in (known_discovery_keys := entry.data.get("discovery_keys", []))
+                and discovery_key not in (known_discovery_keys := entry.discovery_keys)
             ):
+                new_discovery_keys = tuple([*known_discovery_keys, discovery_key][-10:])
                 _LOGGER.debug(
                     "Updating discovery keys for %s entry %s %s -> %s",
                     entry.domain,
                     unique_id,
                     known_discovery_keys,
-                    [*known_discovery_keys, discovery_key],
+                    new_discovery_keys,
                 )
-                new_discovery_keys = [*known_discovery_keys, discovery_key][-10:]
-                data = entry.data | {"discovery_keys": new_discovery_keys}
-                self.config_entries.async_update_entry(entry, data=data)
+                self.config_entries.async_update_entry(
+                    entry, discovery_keys=new_discovery_keys
+                )
             return result
 
         # Avoid adding a config entry for a integration
@@ -1440,8 +1448,11 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager[ConfigFlowResult]):
         if existing_entry is not None and existing_entry.state.recoverable:
             await self.config_entries.async_unload(existing_entry.entry_id)
 
+        discovery_key = flow.context.get("discovery_key")
+        discovery_keys = (discovery_key,) if discovery_key else ()
         entry = ConfigEntry(
             data=result["data"],
+            discovery_keys=discovery_keys,
             domain=result["handler"],
             minor_version=result["minor_version"],
             options=result["options"],
@@ -1669,6 +1680,11 @@ class ConfigEntryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
                 for entry in data["entries"]:
                     entry["created_at"] = entry["modified_at"] = created_at
 
+            if old_minor_version < 4:
+                # Version 1.4 adds discovery_keys
+                for entry in data["entries"]:
+                    entry["discovery_keys"] = []
+
         if old_major_version > 1:
             raise NotImplementedError
         return data
@@ -1856,6 +1872,7 @@ class ConfigEntries:
                 created_at=datetime.fromisoformat(entry["created_at"]),
                 data=entry["data"],
                 disabled_by=try_parse_enum(ConfigEntryDisabler, entry["disabled_by"]),
+                discovery_keys=entry["discovery_keys"],
                 domain=entry["domain"],
                 entry_id=entry_id,
                 minor_version=entry["minor_version"],
@@ -2012,6 +2029,8 @@ class ConfigEntries:
         entry: ConfigEntry,
         *,
         data: Mapping[str, Any] | UndefinedType = UNDEFINED,
+        discovery_keys: Iterable[Mapping[str, int | str | tuple[str, ...]]]
+        | UndefinedType = UNDEFINED,
         minor_version: int | UndefinedType = UNDEFINED,
         options: Mapping[str, Any] | UndefinedType = UNDEFINED,
         pref_disable_new_entities: bool | UndefinedType = UNDEFINED,
@@ -2052,6 +2071,13 @@ class ConfigEntries:
 
             _setter(entry, attr, value)
             changed = True
+
+        if discovery_keys is not UNDEFINED and entry.discovery_keys != discovery_keys:
+            _setter(
+                entry,
+                "discovery_keys",
+                tuple(MappingProxyType(dict(key)) for key in discovery_keys),
+            )
 
         if data is not UNDEFINED and entry.data != data:
             changed = True

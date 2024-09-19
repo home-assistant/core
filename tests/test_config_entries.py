@@ -2901,144 +2901,138 @@ async def test_manual_add_overrides_ignored_entry_singleton(
 
 @pytest.mark.parametrize(
     (
-        "entry_data",
+        "discovery_keys",
         "entry_source",
         "entry_unique_id",
         "flow_context",
         "flow_source",
         "flow_result",
-        "updated_entry_data",
+        "updated_discovery_keys",
     ),
     [
         # No discovery key
         (
-            {},
+            (),
             config_entries.SOURCE_IGNORE,
             "mock-unique-id",
             {},
             config_entries.SOURCE_ZEROCONF,
             data_entry_flow.FlowResultType.ABORT,
-            {},
+            (),
         ),
         # Discovery key added to ignored entry data
         (
-            {},
-            config_entries.SOURCE_IGNORE,
-            "mock-unique-id",
-            {"discovery_key": {"domain": "test", "key": "blah", "version": 1}},
-            config_entries.SOURCE_ZEROCONF,
-            data_entry_flow.FlowResultType.ABORT,
-            {"discovery_keys": [{"domain": "test", "key": "blah", "version": 1}]},
-        ),
-        # Discovery key added to ignored entry data
-        (
-            {"discovery_keys": [{"domain": "test", "key": "bleh", "version": 1}]},
+            (),
             config_entries.SOURCE_IGNORE,
             "mock-unique-id",
             {"discovery_key": {"domain": "test", "key": "blah", "version": 1}},
             config_entries.SOURCE_ZEROCONF,
             data_entry_flow.FlowResultType.ABORT,
-            {
-                "discovery_keys": [
-                    {"domain": "test", "key": "bleh", "version": 1},
-                    {"domain": "test", "key": "blah", "version": 1},
-                ]
-            },
+            ({"domain": "test", "key": "blah", "version": 1},),
         ),
         # Discovery key added to ignored entry data
         (
-            {
-                "discovery_keys": [
-                    {"domain": "test", "key": "1", "version": 1},
-                    {"domain": "test", "key": "2", "version": 1},
-                    {"domain": "test", "key": "3", "version": 1},
-                    {"domain": "test", "key": "4", "version": 1},
-                    {"domain": "test", "key": "5", "version": 1},
-                    {"domain": "test", "key": "6", "version": 1},
-                    {"domain": "test", "key": "7", "version": 1},
-                    {"domain": "test", "key": "8", "version": 1},
-                    {"domain": "test", "key": "9", "version": 1},
-                    {"domain": "test", "key": "10", "version": 1},
-                ]
-            },
+            ({"domain": "test", "key": "bleh", "version": 1},),
+            config_entries.SOURCE_IGNORE,
+            "mock-unique-id",
+            {"discovery_key": {"domain": "test", "key": "blah", "version": 1}},
+            config_entries.SOURCE_ZEROCONF,
+            data_entry_flow.FlowResultType.ABORT,
+            (
+                {"domain": "test", "key": "bleh", "version": 1},
+                {"domain": "test", "key": "blah", "version": 1},
+            ),
+        ),
+        # Discovery key added to ignored entry data
+        (
+            (
+                {"domain": "test", "key": "1", "version": 1},
+                {"domain": "test", "key": "2", "version": 1},
+                {"domain": "test", "key": "3", "version": 1},
+                {"domain": "test", "key": "4", "version": 1},
+                {"domain": "test", "key": "5", "version": 1},
+                {"domain": "test", "key": "6", "version": 1},
+                {"domain": "test", "key": "7", "version": 1},
+                {"domain": "test", "key": "8", "version": 1},
+                {"domain": "test", "key": "9", "version": 1},
+                {"domain": "test", "key": "10", "version": 1},
+            ),
             config_entries.SOURCE_IGNORE,
             "mock-unique-id",
             {"discovery_key": {"domain": "test", "key": "11", "version": 1}},
             config_entries.SOURCE_ZEROCONF,
             data_entry_flow.FlowResultType.ABORT,
-            {
-                "discovery_keys": [
-                    {"domain": "test", "key": "2", "version": 1},
-                    {"domain": "test", "key": "3", "version": 1},
-                    {"domain": "test", "key": "4", "version": 1},
-                    {"domain": "test", "key": "5", "version": 1},
-                    {"domain": "test", "key": "6", "version": 1},
-                    {"domain": "test", "key": "7", "version": 1},
-                    {"domain": "test", "key": "8", "version": 1},
-                    {"domain": "test", "key": "9", "version": 1},
-                    {"domain": "test", "key": "10", "version": 1},
-                    {"domain": "test", "key": "11", "version": 1},
-                ]
-            },
+            (
+                {"domain": "test", "key": "2", "version": 1},
+                {"domain": "test", "key": "3", "version": 1},
+                {"domain": "test", "key": "4", "version": 1},
+                {"domain": "test", "key": "5", "version": 1},
+                {"domain": "test", "key": "6", "version": 1},
+                {"domain": "test", "key": "7", "version": 1},
+                {"domain": "test", "key": "8", "version": 1},
+                {"domain": "test", "key": "9", "version": 1},
+                {"domain": "test", "key": "10", "version": 1},
+                {"domain": "test", "key": "11", "version": 1},
+            ),
         ),
         # Discovery key already in ignored entry data
         (
-            {"discovery_keys": [{"domain": "test", "key": "blah", "version": 1}]},
+            ({"domain": "test", "key": "blah", "version": 1},),
             config_entries.SOURCE_IGNORE,
             "mock-unique-id",
             {"discovery_key": {"domain": "test", "key": "blah", "version": 1}},
             config_entries.SOURCE_ZEROCONF,
             data_entry_flow.FlowResultType.ABORT,
-            {"discovery_keys": [{"domain": "test", "key": "blah", "version": 1}]},
+            ({"domain": "test", "key": "blah", "version": 1},),
         ),
         # Discovery key not added to user entry data
         (
-            {},
+            (),
             config_entries.SOURCE_USER,
             "mock-unique-id",
             {"discovery_key": {"domain": "test", "key": "blah", "version": 1}},
             config_entries.SOURCE_ZEROCONF,
             data_entry_flow.FlowResultType.ABORT,
-            {},
+            (),
         ),
         # Flow not aborted when unique id is not matching
         (
-            {},
+            (),
             config_entries.SOURCE_IGNORE,
             "mock-unique-id-2",
             {"discovery_key": {"domain": "test", "key": "blah", "version": 1}},
             config_entries.SOURCE_ZEROCONF,
             data_entry_flow.FlowResultType.FORM,
-            {},
+            (),
         ),
         # Flow not aborted when user initiated flow
         (
-            {},
+            (),
             config_entries.SOURCE_IGNORE,
             "mock-unique-id-2",
             {"discovery_key": {"domain": "test", "key": "blah", "version": 1}},
             config_entries.SOURCE_USER,
             data_entry_flow.FlowResultType.FORM,
-            {},
+            (),
         ),
     ],
 )
 async def test_ignored_entry_update_discovery_keys(
     hass: HomeAssistant,
     manager: config_entries.ConfigEntries,
-    entry_data: dict,
+    discovery_keys: tuple,
     entry_source: str,
     entry_unique_id: str,
     flow_context: dict,
     flow_source: str,
     flow_result: data_entry_flow.FlowResultType,
-    updated_entry_data: dict,
+    updated_discovery_keys: tuple,
 ) -> None:
     """Test that discovery keys of an ignored entry can be updated."""
     hass.config.components.add("comp")
     entry = MockConfigEntry(
         domain="comp",
-        data=entry_data,
+        discovery_keys=discovery_keys,
         unique_id=entry_unique_id,
         state=config_entries.ConfigEntryState.LOADED,
         source=entry_source,
@@ -3078,7 +3072,8 @@ async def test_ignored_entry_update_discovery_keys(
         await hass.async_block_till_done()
 
     assert result["type"] == flow_result
-    assert entry.data == updated_entry_data
+    assert entry.data == {}
+    assert entry.discovery_keys == updated_discovery_keys
     assert len(async_reload.mock_calls) == 0
 
 
@@ -5247,6 +5242,7 @@ async def test_unhashable_unique_id(
     entries = config_entries.ConfigEntryItems(hass)
     entry = config_entries.ConfigEntry(
         data={},
+        discovery_keys=(),
         domain="test",
         entry_id="mock_id",
         minor_version=1,
@@ -5279,6 +5275,7 @@ async def test_hashable_non_string_unique_id(
     entries = config_entries.ConfigEntryItems(hass)
     entry = config_entries.ConfigEntry(
         data={},
+        discovery_keys=(),
         domain="test",
         entry_id="mock_id",
         minor_version=1,
@@ -6180,6 +6177,7 @@ async def test_migration_from_1_2(
                     "created_at": "1970-01-01T00:00:00+00:00",
                     "data": {},
                     "disabled_by": None,
+                    "discovery_keys": [],
                     "domain": "sun",
                     "entry_id": "0a8bd02d0d58c7debf5daf7941c9afe2",
                     "minor_version": 1,
