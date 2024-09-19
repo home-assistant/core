@@ -121,13 +121,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: PointConfigEntry) -> boo
             data={
                 **entry.data,
                 "auth_implementation": DOMAIN,
-                CONF_TOKEN: {
-                    **entry.data[CONF_TOKEN],
-                    "expires_at": 0,
-                },
+                CONF_TOKEN: entry.data[CONF_TOKEN],
                 "imported": True,
             },
         )
+        raise ConfigEntryAuthFailed("Authentication failed. Please re-authenticate.")
 
     implementation = (
         await config_entry_oauth2_flow.async_get_config_entry_implementation(
