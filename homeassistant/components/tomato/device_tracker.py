@@ -97,7 +97,7 @@ class TomatoDeviceScanner(DeviceScanner):
 
         Return boolean if scanning successful.
         """
-        _LOGGER.info("Scanning")
+        _LOGGER.debug("Scanning")
 
         try:
             if self.ssl:

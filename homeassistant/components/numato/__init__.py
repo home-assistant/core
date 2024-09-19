@@ -139,11 +139,11 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     try:
         gpio.discover(config[DOMAIN][CONF_DISCOVER])
     except gpio.NumatoGpioError as err:
-        _LOGGER.info("Error discovering Numato devices: %s", err)
+        _LOGGER.error("Error discovering Numato devices: %s", err)
         gpio.cleanup()
         return False
 
-    _LOGGER.info(
+    _LOGGER.debug(
         "Initializing Numato 32 port USB GPIO expanders with IDs: %s",
         ", ".join(str(d) for d in gpio.devices),
     )

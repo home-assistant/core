@@ -8,7 +8,6 @@ from dataclasses import dataclass
 from aioaseko import Unit
 
 from homeassistant.components.binary_sensor import (
-    BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
@@ -25,26 +24,14 @@ from .entity import AsekoEntity
 class AsekoBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Describes an Aseko binary sensor entity."""
 
-    value_fn: Callable[[Unit], bool]
+    value_fn: Callable[[Unit], bool | None]
 
 
-UNIT_BINARY_SENSORS: tuple[AsekoBinarySensorEntityDescription, ...] = (
+BINARY_SENSORS: tuple[AsekoBinarySensorEntityDescription, ...] = (
     AsekoBinarySensorEntityDescription(
         key="water_flow",
-        translation_key="water_flow",
-        value_fn=lambda unit: unit.water_flow,
-    ),
-    AsekoBinarySensorEntityDescription(
-        key="has_alarm",
-        translation_key="alarm",
-        value_fn=lambda unit: unit.has_alarm,
-        device_class=BinarySensorDeviceClass.SAFETY,
-    ),
-    AsekoBinarySensorEntityDescription(
-        key="has_error",
-        translation_key="error",
-        value_fn=lambda unit: unit.has_error,
-        device_class=BinarySensorDeviceClass.PROBLEM,
+        translation_key="water_flow_to_probes",
+        value_fn=lambda unit: unit.water_flow_to_probes,
     ),
 )
 
@@ -55,33 +42,22 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Aseko Pool Live binary sensors."""
-    data: list[tuple[Unit, AsekoDataUpdateCoordinator]] = hass.data[DOMAIN][
-        config_entry.entry_id
-    ]
+    coordinator: AsekoDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    units = coordinator.data.values()
     async_add_entities(
-        AsekoUnitBinarySensorEntity(unit, coordinator, description)
-        for unit, coordinator in data
-        for description in UNIT_BINARY_SENSORS
+        AsekoBinarySensorEntity(unit, coordinator, description)
+        for description in BINARY_SENSORS
+        for unit in units
+        if description.value_fn(unit) is not None
     )
 
 
-class AsekoUnitBinarySensorEntity(AsekoEntity, BinarySensorEntity):
-    """Representation of a unit water flow binary sensor entity."""
+class AsekoBinarySensorEntity(AsekoEntity, BinarySensorEntity):
+    """Representation of an Aseko binary sensor entity."""
 
     entity_description: AsekoBinarySensorEntityDescription
 
-    def __init__(
-        self,
-        unit: Unit,
-        coordinator: AsekoDataUpdateCoordinator,
-        entity_description: AsekoBinarySensorEntityDescription,
-    ) -> None:
-        """Initialize the unit binary sensor."""
-        super().__init__(unit, coordinator)
-        self.entity_description = entity_description
-        self._attr_unique_id = f"{self._unit.serial_number}_{entity_description.key}"
-
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return the state of the sensor."""
-        return self.entity_description.value_fn(self._unit)
+        return self.entity_description.value_fn(self.unit)

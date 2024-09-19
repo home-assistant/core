@@ -1,5 +1,6 @@
 """Provides a light for Home Connect."""
 
+from dataclasses import dataclass
 import logging
 from math import ceil
 from typing import Any
@@ -11,13 +12,15 @@ from homeassistant.components.light import (
     ATTR_HS_COLOR,
     ColorMode,
     LightEntity,
+    LightEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ENTITIES
+from homeassistant.const import CONF_DEVICE, CONF_ENTITIES
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.color as color_util
 
+from .api import HomeConnectDevice
 from .const import (
     ATTR_VALUE,
     BSH_AMBIENT_LIGHT_BRIGHTNESS,
@@ -28,10 +31,36 @@ from .const import (
     COOKING_LIGHTING,
     COOKING_LIGHTING_BRIGHTNESS,
     DOMAIN,
+    REFRIGERATION_EXTERNAL_LIGHT_BRIGHTNESS,
+    REFRIGERATION_EXTERNAL_LIGHT_POWER,
+    REFRIGERATION_INTERNAL_LIGHT_BRIGHTNESS,
+    REFRIGERATION_INTERNAL_LIGHT_POWER,
 )
 from .entity import HomeConnectEntity
 
 _LOGGER = logging.getLogger(__name__)
+
+
+@dataclass(frozen=True, kw_only=True)
+class HomeConnectLightEntityDescription(LightEntityDescription):
+    """Light entity description."""
+
+    on_key: str
+    brightness_key: str | None
+
+
+LIGHTS: tuple[HomeConnectLightEntityDescription, ...] = (
+    HomeConnectLightEntityDescription(
+        key="Internal Light",
+        on_key=REFRIGERATION_INTERNAL_LIGHT_POWER,
+        brightness_key=REFRIGERATION_INTERNAL_LIGHT_BRIGHTNESS,
+    ),
+    HomeConnectLightEntityDescription(
+        key="External Light",
+        on_key=REFRIGERATION_EXTERNAL_LIGHT_POWER,
+        brightness_key=REFRIGERATION_EXTERNAL_LIGHT_BRIGHTNESS,
+    ),
+)
 
 
 async def async_setup_entry(
@@ -48,7 +77,18 @@ async def async_setup_entry(
         for device_dict in hc_api.devices:
             entity_dicts = device_dict.get(CONF_ENTITIES, {}).get("light", [])
             entity_list = [HomeConnectLight(**d) for d in entity_dicts]
-            entities += entity_list
+            device: HomeConnectDevice = device_dict[CONF_DEVICE]
+            # Auto-discover entities
+            entities.extend(
+                HomeConnectCoolingLight(
+                    device=device,
+                    ambient=False,
+                    entity_description=description,
+                )
+                for description in LIGHTS
+                if description.on_key in device.appliance.status
+            )
+            entities.extend(entity_list)
         return entities
 
     async_add_entities(await hass.async_add_executor_job(get_entities), True)
@@ -57,10 +97,14 @@ async def async_setup_entry(
 class HomeConnectLight(HomeConnectEntity, LightEntity):
     """Light for Home Connect."""
 
-    def __init__(self, device, desc, ambient):
+    def __init__(self, device, desc, ambient) -> None:
         """Initialize the entity."""
         super().__init__(device, desc)
         self._ambient = ambient
+        self._percentage_scale = (10, 100)
+        self._brightness_key: str | None
+        self._custom_color_key: str | None
+        self._color_key: str | None
         if ambient:
             self._brightness_key = BSH_AMBIENT_LIGHT_BRIGHTNESS
             self._key = BSH_AMBIENT_LIGHT_ENABLED
@@ -97,10 +141,15 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
                 except HomeConnectError as err:
                     _LOGGER.error("Error while trying selecting customcolor: %s", err)
                 if self._attr_brightness is not None:
-                    brightness = 10 + ceil(self._attr_brightness / 255 * 90)
+                    brightness_arg = self._attr_brightness
                     if ATTR_BRIGHTNESS in kwargs:
-                        brightness = 10 + ceil(kwargs[ATTR_BRIGHTNESS] / 255 * 90)
+                        brightness_arg = kwargs[ATTR_BRIGHTNESS]
 
+                    brightness = ceil(
+                        color_util.brightness_to_value(
+                            self._percentage_scale, brightness_arg
+                        )
+                    )
                     hs_color = kwargs.get(ATTR_HS_COLOR, self._attr_hs_color)
 
                     if hs_color is not None:
@@ -120,8 +169,16 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
                             )
 
         elif ATTR_BRIGHTNESS in kwargs:
-            _LOGGER.debug("Changing brightness for: %s", self.name)
-            brightness = 10 + ceil(kwargs[ATTR_BRIGHTNESS] / 255 * 90)
+            _LOGGER.debug(
+                "Changing brightness for: %s, to: %s",
+                self.name,
+                kwargs[ATTR_BRIGHTNESS],
+            )
+            brightness = ceil(
+                color_util.brightness_to_value(
+                    self._percentage_scale, kwargs[ATTR_BRIGHTNESS]
+                )
+            )
             try:
                 await self.hass.async_add_executor_job(
                     self.device.appliance.set_setting, self._brightness_key, brightness
@@ -172,7 +229,9 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
                 rgb = color_util.rgb_hex_to_rgb_list(colorvalue)
                 hsv = color_util.color_RGB_to_hsv(rgb[0], rgb[1], rgb[2])
                 self._attr_hs_color = (hsv[0], hsv[1])
-                self._attr_brightness = ceil((hsv[2] - 10) * 255 / 90)
+                self._attr_brightness = color_util.value_to_brightness(
+                    self._percentage_scale, hsv[2]
+                )
                 _LOGGER.debug("Updated, new brightness: %s", self._attr_brightness)
 
         else:
@@ -180,7 +239,24 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
             if brightness is None:
                 self._attr_brightness = None
             else:
-                self._attr_brightness = ceil(
-                    (brightness.get(ATTR_VALUE) - 10) * 255 / 90
+                self._attr_brightness = color_util.value_to_brightness(
+                    self._percentage_scale, brightness[ATTR_VALUE]
                 )
             _LOGGER.debug("Updated, new brightness: %s", self._attr_brightness)
+
+
+class HomeConnectCoolingLight(HomeConnectLight):
+    """Light entity for Cooling Appliances."""
+
+    def __init__(
+        self,
+        device: HomeConnectDevice,
+        ambient: bool,
+        entity_description: HomeConnectLightEntityDescription,
+    ) -> None:
+        """Initialize Cooling Light Entity."""
+        super().__init__(device, entity_description.key, ambient)
+        self.entity_description = entity_description
+        self._key = entity_description.on_key
+        self._brightness_key = entity_description.brightness_key
+        self._percentage_scale = (1, 100)

@@ -19,9 +19,7 @@ RESOURCE_DIR = os.path.abspath(
 
 TEST_NEW_REQ = "pyhelloworld3==1.0.0"
 
-TEST_ZIP_REQ = "file://{}#{}".format(
-    os.path.join(RESOURCE_DIR, "pyhelloworld3.zip"), TEST_NEW_REQ
-)
+TEST_ZIP_REQ = f"file://{RESOURCE_DIR}/pyhelloworld3.zip#{TEST_NEW_REQ}"
 
 
 @pytest.fixture
