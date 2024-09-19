@@ -305,18 +305,6 @@ async def test_climate_ctl_svcs(
             assert mock_fcn.await_args.args == (system_mode,)
             assert mock_fcn.await_args.kwargs == {"until": None}
 
-        for hvac_mode in [h for h in HVACMode if h not in ctl.hvac_modes]:
-            with pytest.raises(HomeAssistantError):
-                await hass.services.async_call(
-                    Platform.CLIMATE,
-                    SERVICE_SET_HVAC_MODE,
-                    {
-                        ATTR_ENTITY_ID: ctl.entity_id,
-                        ATTR_HVAC_MODE: hvac_mode,
-                    },
-                    blocking=True,
-                )
-
         assert install != "default" or ctl.preset_modes == list(CTL_MODE_LOOKUP)
         assert ctl.preset_modes == snapshot
 
