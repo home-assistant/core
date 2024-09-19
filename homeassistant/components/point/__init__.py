@@ -177,7 +177,7 @@ async def async_setup_webhook(
         )
 
     await session.update_webhook(
-        entry.data[CONF_WEBHOOK_URL],
+        webhook.async_generate_url(hass, entry.data[CONF_WEBHOOK_ID]),
         entry.data[CONF_WEBHOOK_ID],
         ["*"],
     )
