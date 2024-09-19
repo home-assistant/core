@@ -166,7 +166,7 @@ def mock_start_addon_side_effect(
 ) -> Any | None:
     """Return the start add-on options side effect."""
 
-    async def start_addon(addon: str):
+    async def start_addon(addon: str) -> None:
         """Mock start add-on."""
         addon_store_info.return_value = {
             "available": True,
