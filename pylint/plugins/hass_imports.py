@@ -601,6 +601,32 @@ class HassImportsFormatChecker(BaseChecker):
 
         return True
 
+    def _check_for_relative_import(
+        self,
+        current_package: str,
+        node: nodes.ImportFrom,
+        current_component: str | None,
+    ) -> bool:
+        """Check for improper relative imports."""
+        if node.modname == current_package or node.modname.startswith(
+            f"{current_package}."
+        ):
+            self.add_message("hass-relative-import", node=node)
+            return False
+
+        for root in ("homeassistant", "tests"):
+            if current_package.startswith(f"{root}.components."):
+                if node.modname == f"{root}.components":
+                    for name in node.names:
+                        if name[0] == current_component:
+                            self.add_message("hass-relative-import", node=node)
+                            return False
+                elif node.modname.startswith(f"{root}.components.{current_component}."):
+                    self.add_message("hass-relative-import", node=node)
+                    return False
+
+        return True
+
     def visit_importfrom(self, node: nodes.ImportFrom) -> None:
         """Check for improper 'from _ import _' invocations."""
         if not self.current_package:
@@ -608,39 +634,36 @@ class HassImportsFormatChecker(BaseChecker):
         if node.level is not None:
             self._visit_importfrom_relative(self.current_package, node)
             return
-        if node.modname == self.current_package or node.modname.startswith(
-            f"{self.current_package}."
-        ):
-            self.add_message("hass-relative-import", node=node)
-            return
 
+        # Cache current component
         current_component: str | None = None
         for root in ("homeassistant", "tests"):
             if self.current_package.startswith(f"{root}.components."):
                 current_component = self.current_package.split(".")[2]
-                if node.modname == f"{root}.components":
-                    for name in node.names:
-                        if name[0] == current_component:
-                            self.add_message("hass-relative-import", node=node)
-                    return
-                if node.modname.startswith(f"{root}.components.{current_component}."):
-                    self.add_message("hass-relative-import", node=node)
-                    return
+
+        # Checks for hass-relative-import
+        if not self._check_for_relative_import(
+            self.current_package, node, current_component
+        ):
+            return
 
         if node.modname.startswith("homeassistant.components."):
             imported_parts = node.modname.split(".")
             imported_component = imported_parts[2]
 
+            # Checks for hass-component-root-import
             if not self._check_component_root_import(
                 node, current_component, imported_parts, imported_component
             ):
                 return
 
+            # Checks for hass-import-constant-alias
             if not self._check_constant_alias(
                 node, current_component, imported_component
             ):
                 return
 
+        # Checks for hass-deprecated-import
         if obsolete_imports := _OBSOLETE_IMPORT.get(node.modname):
             for name_tuple in node.names:
                 for obsolete_import in obsolete_imports:
@@ -650,6 +673,8 @@ class HassImportsFormatChecker(BaseChecker):
                             node=node,
                             args=(import_match.string, obsolete_import.reason),
                         )
+
+        # Checks for hass-helper-namespace-import
         if namespace_alias := _FORCE_NAMESPACE_IMPORT.get(node.modname):
             for name in node.names:
                 if name[0] in namespace_alias.names:
