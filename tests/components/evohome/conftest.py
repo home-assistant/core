@@ -175,7 +175,7 @@ async def setup_evohome(
         try:
             yield mock_client
         finally:
-            # wait for DataUpdateCoordinator to quiesce
+            await hass.data[DOMAIN]["coordinator"].async_shutdown()
             await hass.async_block_till_done()
 
 
