@@ -1,6 +1,6 @@
 """The tests for climate entities of evohome.
 
-There are two distinct types of such entities, controllers and zones.
+All evohome systems have controllers and at least one zone.
 """
 
 from __future__ import annotations
@@ -24,13 +24,10 @@ async def test_set_hvac_mode_zone(
     hass: HomeAssistant,
     config: dict[str, str],
     install: str,
-    freezer: FrozenDateTimeFactory,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test climate methods of a evohome-compatible zone."""
 
-    # some dtm are relative to a schedule
-    freezer.move_to("2024-07-10T12:00:00Z")
     result = []
 
     async for _ in setup_evohome(hass, config, install=install):
@@ -76,7 +73,6 @@ async def test_set_preset_mode_zone(
 ) -> None:
     """Test climate methods of a evohome-compatible zone."""
 
-    # some dtm are relative to a schedule
     freezer.move_to("2024-07-10T12:00:00Z")
     result = []
 
@@ -138,7 +134,6 @@ async def test_set_temperature_zone(
 ) -> None:
     """Test climate methods of a evohome-compatible zone."""
 
-    # some dtm are relative to a schedule
     freezer.move_to("2024-07-10T12:00:00Z")
     result = []
 

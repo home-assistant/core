@@ -14,9 +14,10 @@ from syrupy import SnapshotAssertion
 from homeassistant.core import HomeAssistant
 
 from .conftest import dhw_entity, setup_evohome
+from .const import TEST_INSTALLS
 
 
-@pytest.mark.parametrize("install", ["default"])
+@pytest.mark.parametrize("install", TEST_INSTALLS)
 async def test_set_operation_mode(
     hass: HomeAssistant,
     config: dict[str, str],
@@ -50,20 +51,36 @@ async def test_set_operation_mode(
             await dhw.async_set_operation_mode("off")
 
             assert mock_fcn.await_count == 1
-            result.append(mock_fcn.await_args.args)
+            assert install == "default" or mock_fcn.await_args.args == (
+                {
+                    "mode": "TemporaryOverride",
+                    "state": "Off",
+                    "untilTime": "2024-07-10T12:00:00Z",  # varies by install
+                },
+            )
             assert mock_fcn.await_args.kwargs == {}
+
+            result.append(mock_fcn.await_args.args)
 
         with patch("evohomeasync2.hotwater.HotWater._set_mode") as mock_fcn:
             await dhw.async_set_operation_mode("on")
 
             assert mock_fcn.await_count == 1
-            result.append(mock_fcn.await_args.args)
+            assert install == "default" or mock_fcn.await_args.args == (
+                {
+                    "mode": "TemporaryOverride",
+                    "state": "ON",
+                    "untilTime": "2024-07-10T12:00:00Z",  # varies by install
+                },
+            )
             assert mock_fcn.await_args.kwargs == {}
+
+            result.append(mock_fcn.await_args.args)
 
     assert result == snapshot
 
 
-@pytest.mark.parametrize("install", ["default"])
+@pytest.mark.parametrize("install", TEST_INSTALLS)
 async def test_turn_away_mode_off(
     hass: HomeAssistant,
     config: dict[str, str],
@@ -89,7 +106,7 @@ async def test_turn_away_mode_off(
             assert mock_fcn.await_args.kwargs == {}
 
 
-@pytest.mark.parametrize("install", ["default"])
+@pytest.mark.parametrize("install", TEST_INSTALLS)
 async def test_turn_away_mode_on(
     hass: HomeAssistant,
     config: dict[str, str],
@@ -115,7 +132,7 @@ async def test_turn_away_mode_on(
             assert mock_fcn.await_args.kwargs == {}
 
 
-@pytest.mark.parametrize("install", ["default"])
+@pytest.mark.parametrize("install", TEST_INSTALLS)
 async def test_turn_off(
     hass: HomeAssistant,
     config: dict[str, str],
@@ -141,7 +158,7 @@ async def test_turn_off(
             assert mock_fcn.await_args.kwargs == {}
 
 
-@pytest.mark.parametrize("install", ["default"])
+@pytest.mark.parametrize("install", TEST_INSTALLS)
 async def test_turn_on(
     hass: HomeAssistant,
     config: dict[str, str],
