@@ -11,10 +11,12 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy import SnapshotAssertion
 
-from homeassistant.components.climate import (  # SERVICE_SET_PRESET_MODE,
+from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
+    ATTR_PRESET_MODE,
     ATTR_TEMPERATURE,
     SERVICE_SET_HVAC_MODE,
+    SERVICE_SET_PRESET_MODE,
     SERVICE_SET_TEMPERATURE,
     HVACMode,
 )
@@ -36,7 +38,7 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.util import dt as dt_util
 
 from .conftest import ctl_entity, dhw_entity, setup_evohome, zone_entity
-from .const import TEST_INSTALLS
+from .const import CTL_MODE_LOOKUP, TEST_INSTALLS
 
 
 @pytest.mark.parametrize("install", TEST_INSTALLS)
@@ -173,7 +175,7 @@ async def test_evohome_zon_svcs(
     results = []
 
     async for _ in setup_evohome(hass, config, install=install):
-        zone = zone_entity(hass)  # the first zone will do...
+        zone = zone_entity(hass)
 
         # reset zone to follow_schedule
         with patch("evohomeasync2.zone.Zone.reset_mode") as mock_fcn:
@@ -215,34 +217,36 @@ async def test_evohome_zon_svcs(
                 service_data={
                     "entity_id": zone.entity_id,
                     "setpoint": 20.2,
+                    "duration": 0,
                 },
                 blocking=True,
             )
 
             assert mock_fcn.await_count == 1
             assert mock_fcn.await_args.args == (20.2,)
-            assert mock_fcn.await_args.kwargs == {
-                "until": None,
+            assert install != "default" or mock_fcn.await_args.kwargs == {
+                "until": dt_util.parse_datetime("2024-07-10T21:10:00Z"),
             }
 
-        # # set zone to permanent_override
-        # with patch("evohomeasync2.zone.Zone.set_temperature") as mock_fcn:
-        # await hass.services.async_call(
-        #     DOMAIN,
-        #     EvoService.SET_ZONE_OVERRIDE,
-        #     service_data={
-        #         "entity_id": zone.entity_id,
-        #         "setpoint": 20.3,
-        #         "duration": None,
-        #     },
-        #     blocking=True,
-        # )
+            results.append(mock_fcn.await_args.kwargs)
 
-        # assert mock_fcn.await_count == 1
-        # assert mock_fcn.await_args.args == (20.3,)
-        # assert "until" in mock_fcn.await_args.kwargs  # to next scheduled setpoint
+        # set zone to permanent_override
+        with patch("evohomeasync2.zone.Zone.set_temperature") as mock_fcn:
+            await hass.services.async_call(
+                DOMAIN,
+                EvoService.SET_ZONE_OVERRIDE,
+                service_data={
+                    "entity_id": zone.entity_id,
+                    "setpoint": 20.3,
+                },
+                blocking=True,
+            )
 
-        # results.append(mock_fcn.await_args.kwargs)  # varies by install fixture/zone
+        assert mock_fcn.await_count == 1
+        assert mock_fcn.await_args.args == (20.3,)
+        assert mock_fcn.await_args.kwargs == {
+            "until": None,
+        }
 
     assert results == snapshot
 
@@ -253,14 +257,19 @@ async def test_climate_ctl_svcs(
     config: dict[str, str],
     install: str,
     freezer: FrozenDateTimeFactory,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test climate services of a evohome-compatible controller."""
 
     freezer.move_to("2024-07-10T12:00:00Z")
+    results = []
 
     async for _ in setup_evohome(hass, config, install=install):
         ctl = ctl_entity(hass)
 
+        assert ctl.hvac_modes == [HVACMode.OFF, HVACMode.HEAT]
+
+        # SERVICE_SET_HVAC_MODE: HVACMode.OFF
         with patch("evohomeasync2.controlsystem.ControlSystem.set_mode") as mock_fcn:
             await hass.services.async_call(
                 Platform.CLIMATE,
@@ -278,6 +287,7 @@ async def test_climate_ctl_svcs(
             assert mock_fcn.await_args.args == (system_mode,)
             assert mock_fcn.await_args.kwargs == {"until": None}
 
+        # SERVICE_SET_HVAC_MODE: HVACMode.HEAT
         with patch("evohomeasync2.controlsystem.ControlSystem.set_mode") as mock_fcn:
             await hass.services.async_call(
                 Platform.CLIMATE,
@@ -295,10 +305,7 @@ async def test_climate_ctl_svcs(
             assert mock_fcn.await_args.args == (system_mode,)
             assert mock_fcn.await_args.kwargs == {"until": None}
 
-        for hvac_mode in HVACMode:
-            if hvac_mode in (HVACMode.HEAT, HVACMode.OFF):
-                continue
-
+        for hvac_mode in [h for h in HVACMode if h not in ctl.hvac_modes]:
             with pytest.raises(HomeAssistantError):
                 await hass.services.async_call(
                     Platform.CLIMATE,
@@ -309,6 +316,47 @@ async def test_climate_ctl_svcs(
                     },
                     blocking=True,
                 )
+
+        assert install != "default" or ctl.preset_modes == list(CTL_MODE_LOOKUP)
+        assert ctl.preset_modes == snapshot
+
+        # SERVICE_SET_PRESET_MODE: various
+        if ctl.preset_modes:
+            for mode in ctl.preset_modes:
+                with patch(
+                    "evohomeasync2.controlsystem.ControlSystem.set_mode"
+                ) as mock_fcn:
+                    await hass.services.async_call(
+                        Platform.CLIMATE,
+                        SERVICE_SET_PRESET_MODE,
+                        {
+                            ATTR_ENTITY_ID: ctl.entity_id,
+                            ATTR_PRESET_MODE: mode,
+                        },
+                        blocking=True,
+                    )
+
+                    assert mock_fcn.await_count == 1
+                    assert install != "default" or mock_fcn.await_args.args == (
+                        CTL_MODE_LOOKUP[mode],
+                    )
+                    assert mock_fcn.await_args.kwargs == {"until": None}
+
+                    results.append(mock_fcn.await_args.args)
+
+        # SERVICE_SET_TEMPERATURE (not supported)
+        with pytest.raises(HomeAssistantError):
+            await hass.services.async_call(
+                Platform.CLIMATE,
+                SERVICE_SET_TEMPERATURE,
+                {
+                    ATTR_ENTITY_ID: ctl.entity_id,
+                    ATTR_TEMPERATURE: 23.0,
+                },
+                blocking=True,
+            )
+
+    assert results == snapshot
 
 
 @pytest.mark.parametrize("install", TEST_INSTALLS)
@@ -325,8 +373,67 @@ async def test_climate_zon_svcs(
     results = []
 
     async for _ in setup_evohome(hass, config, install=install):
-        zone = zone_entity(hass)  # the first zone will do...
+        zone = zone_entity(hass)
 
+        assert zone.preset_modes == ["none", "temporary", "permanent"]
+
+        # SERVICE_SET_PRESET_MODE: "none"
+        with patch("evohomeasync2.zone.Zone.reset_mode") as mock_fcn:
+            await hass.services.async_call(
+                Platform.CLIMATE,
+                SERVICE_SET_PRESET_MODE,
+                {
+                    ATTR_ENTITY_ID: zone.entity_id,
+                    ATTR_PRESET_MODE: "none",
+                },
+                blocking=True,
+            )
+
+            assert mock_fcn.await_count == 1
+            assert mock_fcn.await_args.args == ()
+            assert mock_fcn.await_args.kwargs == {}
+
+        # SERVICE_SET_PRESET_MODE: "permanent"
+        with patch("evohomeasync2.zone.Zone.set_temperature") as mock_fcn:
+            await hass.services.async_call(
+                Platform.CLIMATE,
+                SERVICE_SET_PRESET_MODE,
+                {
+                    ATTR_ENTITY_ID: zone.entity_id,
+                    ATTR_PRESET_MODE: "permanent",
+                },
+                blocking=True,
+            )
+
+            assert mock_fcn.await_count == 1
+            assert install != "default" or mock_fcn.await_args.args == (17.0,)
+            assert mock_fcn.await_args.kwargs == {
+                "until": None,
+            }
+
+            results.append(mock_fcn.await_args.args)
+
+        # SERVICE_SET_PRESET_MODE: "temporary"
+        with patch("evohomeasync2.zone.Zone.set_temperature") as mock_fcn:
+            await hass.services.async_call(
+                Platform.CLIMATE,
+                SERVICE_SET_PRESET_MODE,
+                {
+                    ATTR_ENTITY_ID: zone.entity_id,
+                    ATTR_PRESET_MODE: "temporary",
+                },
+                blocking=True,
+            )
+
+            assert mock_fcn.await_count == 1
+            assert install != "default" or mock_fcn.await_args.args == (17.0,)
+            assert install != "default" or mock_fcn.await_args.kwargs == {
+                "until": dt_util.parse_datetime("2024-07-10T21:10:00Z")
+            }
+
+            results.append(mock_fcn.await_args)
+
+        # SERVICE_SET_TEMPERATURE: 23.0
         with patch("evohomeasync2.zone.Zone.set_temperature") as mock_fcn:
             await hass.services.async_call(
                 Platform.CLIMATE,
@@ -344,6 +451,53 @@ async def test_climate_zon_svcs(
 
             results.append(mock_fcn.await_args.kwargs)  # varies by install fixture/zone
 
+        for temperature in (0, 40):  # outside of min/max temp range
+            with pytest.raises(ServiceValidationError):
+                await hass.services.async_call(
+                    Platform.CLIMATE,
+                    SERVICE_SET_TEMPERATURE,
+                    {
+                        ATTR_ENTITY_ID: zone.entity_id,
+                        ATTR_TEMPERATURE: temperature,
+                    },
+                    blocking=True,
+                )
+
+        assert zone.hvac_modes == [HVACMode.OFF, HVACMode.HEAT]
+
+        # SERVICE_SET_HVAC_MODE: HVACMode.OFF
+        with patch("evohomeasync2.zone.Zone.set_temperature") as mock_fcn:
+            await hass.services.async_call(
+                Platform.CLIMATE,
+                SERVICE_SET_HVAC_MODE,
+                {
+                    ATTR_ENTITY_ID: zone.entity_id,
+                    ATTR_HVAC_MODE: HVACMode.OFF,
+                },
+                blocking=True,
+            )
+
+            assert mock_fcn.await_count == 1
+            assert mock_fcn.await_args.args == (zone.min_temp,)
+            assert mock_fcn.await_args.kwargs == {"until": None}
+
+        # SERVICE_SET_HVAC_MODE: HVACMode.HEAT
+        with patch("evohomeasync2.zone.Zone.reset_mode") as mock_fcn:
+            await hass.services.async_call(
+                Platform.CLIMATE,
+                SERVICE_SET_HVAC_MODE,
+                {
+                    ATTR_ENTITY_ID: zone.entity_id,
+                    ATTR_HVAC_MODE: HVACMode.HEAT,
+                },
+                blocking=True,
+            )
+
+            assert mock_fcn.await_count == 1
+            assert mock_fcn.await_args.args == ()
+            assert mock_fcn.await_args.kwargs == {}
+
+        # SERVICE_TURN_OFF
         with patch("evohomeasync2.zone.Zone.set_temperature") as mock_fcn:
             await hass.services.async_call(
                 Platform.CLIMATE,
@@ -358,6 +512,7 @@ async def test_climate_zon_svcs(
             assert mock_fcn.await_args.args == (zone.min_temp,)
             assert mock_fcn.await_args.kwargs == {"until": None}
 
+        # SERVICE_TURN_ON
         with patch("evohomeasync2.zone.Zone.reset_mode") as mock_fcn:
             await hass.services.async_call(
                 Platform.CLIMATE,
@@ -371,18 +526,6 @@ async def test_climate_zon_svcs(
             assert mock_fcn.await_count == 1
             assert mock_fcn.await_args.args == ()
             assert mock_fcn.await_args.kwargs == {}
-
-        for temperature in (0, 40):  # outside of min/max temp range
-            with pytest.raises(ServiceValidationError):
-                await hass.services.async_call(
-                    Platform.CLIMATE,
-                    SERVICE_SET_TEMPERATURE,
-                    {
-                        ATTR_ENTITY_ID: zone.entity_id,
-                        ATTR_TEMPERATURE: temperature,
-                    },
-                    blocking=True,
-                )
 
     assert results == snapshot
 
@@ -436,6 +579,8 @@ async def test_water_heater_svcs(
             assert mock_fcn.await_args.args == ()
             assert mock_fcn.await_args.kwargs == {}
 
+        assert dhw.operation_list == ["auto", "on", "off"]
+
         # SERVICE_SET_OPERATION_MODE: "auto" (FollowSchedule)
         with patch("evohomeasync2.hotwater.HotWater.reset_mode") as mock_fcn:
             await hass.services.async_call(
@@ -483,5 +628,16 @@ async def test_water_heater_svcs(
             assert mock_fcn.await_count == 1
             assert mock_fcn.await_args.args == ()
             results.append(mock_fcn.await_args.kwargs)
+
+        for service in (SERVICE_TURN_OFF, SERVICE_TURN_ON):
+            with pytest.raises(HomeAssistantError):
+                await hass.services.async_call(
+                    Platform.WATER_HEATER,
+                    service,
+                    {
+                        ATTR_ENTITY_ID: dhw.entity_id,
+                    },
+                    blocking=True,
+                )
 
     assert results == snapshot

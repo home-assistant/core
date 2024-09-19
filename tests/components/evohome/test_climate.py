@@ -16,7 +16,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
 from .conftest import ctl_entity, setup_evohome, zone_entity
-from .const import TEST_INSTALLS
+from .const import CTL_MODE_LOOKUP, TEST_INSTALLS
 
 
 @pytest.mark.parametrize("install", TEST_INSTALLS)
@@ -76,23 +76,13 @@ async def test_ctl_set_preset_mode(
 ) -> None:
     """Test climate methods of a evohome-compatible zone."""
 
-    MODE_LOOKUP = {
-        "Reset": "AutoWithReset",
-        "eco": "AutoWithEco",
-        "away": "Away",
-        "home": "DayOff",
-        "Custom": "Custom",
-    }
-
     freezer.move_to("2024-07-10T12:00:00Z")
     results = []
 
     async for _ in setup_evohome(hass, config, install=install):
         ctl = ctl_entity(hass)
 
-        assert install != "default" or ctl.preset_modes == list(  # varies by install
-            MODE_LOOKUP
-        )
+        assert install != "default" or ctl.preset_modes == list(CTL_MODE_LOOKUP)
         assert ctl.preset_modes == snapshot
 
         if ctl.preset_modes:
@@ -105,7 +95,7 @@ async def test_ctl_set_preset_mode(
                     assert mock_fcn.await_count == 1
                     assert install != "default" or mock_fcn.await_args.args == (
                         {
-                            "systemMode": MODE_LOOKUP[mode],
+                            "systemMode": CTL_MODE_LOOKUP[mode],
                             "permanent": True,
                         },
                     )
