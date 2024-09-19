@@ -409,7 +409,7 @@ async def test_authentication_incorrect_pin(
     assert result["step_id"] == "auth"
 
     assert result["errors"]
-    assert result["errors"][CONF_PIN] == "Pin is not correct"
+    assert result["errors"][CONF_PIN] == CONF_PIN
 
 
 async def test_authentication_correct_pin(
