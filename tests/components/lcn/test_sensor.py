@@ -1,18 +1,20 @@
 """Test for the LCN sensor platform."""
 
+from unittest.mock import patch
+
 from pypck.inputs import ModStatusLedsAndLogicOps, ModStatusVar
 from pypck.lcn_addr import LcnAddr
 from pypck.lcn_defs import LedStatus, LogicOpStatus, Var, VarValue
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.lcn.helpers import get_device_connection
-from homeassistant.const import (
-    ATTR_UNIT_OF_MEASUREMENT,
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
-    UnitOfTemperature,
-)
+from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+
+from .conftest import MockConfigEntry, init_integration
+
+from tests.common import snapshot_platform
 
 SENSOR_VAR1 = "sensor.sensor_var1"
 SENSOR_SETPOINT1 = "sensor.sensor_setpoint1"
@@ -20,66 +22,25 @@ SENSOR_LED6 = "sensor.sensor_led6"
 SENSOR_LOGICOP1 = "sensor.sensor_logicop1"
 
 
-async def test_setup_lcn_sensor(hass: HomeAssistant, entry, lcn_connection) -> None:
-    """Test the setup of sensor."""
-    for entity_id in (
-        SENSOR_VAR1,
-        SENSOR_SETPOINT1,
-        SENSOR_LED6,
-        SENSOR_LOGICOP1,
-    ):
-        state = hass.states.get(entity_id)
-        assert state is not None
-        assert state.state == STATE_UNKNOWN
-
-
-async def test_entity_state(hass: HomeAssistant, lcn_connection) -> None:
-    """Test state of entity."""
-    state = hass.states.get(SENSOR_VAR1)
-    assert state
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfTemperature.CELSIUS
-
-    state = hass.states.get(SENSOR_SETPOINT1)
-    assert state
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfTemperature.CELSIUS
-
-    state = hass.states.get(SENSOR_LED6)
-    assert state
-
-    state = hass.states.get(SENSOR_LOGICOP1)
-    assert state
-
-
-async def test_entity_attributes(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry, entry, lcn_connection
+async def test_setup_lcn_sensor(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
 ) -> None:
-    """Test the attributes of an entity."""
+    """Test the setup of sensor."""
+    with patch("homeassistant.components.lcn.PLATFORMS", [Platform.SENSOR]):
+        await init_integration(hass, entry)
 
-    entity_var1 = entity_registry.async_get(SENSOR_VAR1)
-    assert entity_var1
-    assert entity_var1.unique_id == f"{entry.entry_id}-m000007-var1"
-    assert entity_var1.original_name == "Sensor_Var1"
-
-    entity_r1varsetpoint = entity_registry.async_get(SENSOR_SETPOINT1)
-    assert entity_r1varsetpoint
-    assert entity_r1varsetpoint.unique_id == f"{entry.entry_id}-m000007-r1varsetpoint"
-    assert entity_r1varsetpoint.original_name == "Sensor_Setpoint1"
-
-    entity_led6 = entity_registry.async_get(SENSOR_LED6)
-    assert entity_led6
-    assert entity_led6.unique_id == f"{entry.entry_id}-m000007-led6"
-    assert entity_led6.original_name == "Sensor_Led6"
-
-    entity_logicop1 = entity_registry.async_get(SENSOR_LOGICOP1)
-    assert entity_logicop1
-    assert entity_logicop1.unique_id == f"{entry.entry_id}-m000007-logicop1"
-    assert entity_logicop1.original_name == "Sensor_LogicOp1"
+    await snapshot_platform(hass, entity_registry, snapshot, entry.entry_id)
 
 
 async def test_pushed_variable_status_change(
-    hass: HomeAssistant, entry, lcn_connection
+    hass: HomeAssistant, entry: MockConfigEntry
 ) -> None:
     """Test the variable sensor changes its state on status received."""
+    await init_integration(hass, entry)
+
     device_connection = get_device_connection(hass, (0, 7, False), entry)
     address = LcnAddr(0, 7, False)
 
@@ -103,9 +64,11 @@ async def test_pushed_variable_status_change(
 
 
 async def test_pushed_ledlogicop_status_change(
-    hass: HomeAssistant, entry, lcn_connection
+    hass: HomeAssistant, entry: MockConfigEntry
 ) -> None:
     """Test the led and logicop sensor changes its state on status received."""
+    await init_integration(hass, entry)
+
     device_connection = get_device_connection(hass, (0, 7, False), entry)
     address = LcnAddr(0, 7, False)
 
@@ -129,8 +92,10 @@ async def test_pushed_ledlogicop_status_change(
     assert state.state == "all"
 
 
-async def test_unload_config_entry(hass: HomeAssistant, entry, lcn_connection) -> None:
+async def test_unload_config_entry(hass: HomeAssistant, entry: MockConfigEntry) -> None:
     """Test the sensor is removed when the config entry is unloaded."""
+    await init_integration(hass, entry)
+
     await hass.config_entries.async_unload(entry.entry_id)
     assert hass.states.get(SENSOR_VAR1).state == STATE_UNAVAILABLE
     assert hass.states.get(SENSOR_SETPOINT1).state == STATE_UNAVAILABLE

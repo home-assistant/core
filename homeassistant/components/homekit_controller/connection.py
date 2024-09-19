@@ -22,7 +22,7 @@ from aiohomekit.model import Accessories, Accessory, Transport
 from aiohomekit.model.characteristics import Characteristic, CharacteristicsTypes
 from aiohomekit.model.services import Service, ServicesTypes
 
-from homeassistant.components.thread.dataset_store import async_get_preferred_dataset
+from homeassistant.components.thread import async_get_preferred_dataset
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_VIA_DEVICE, EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import CALLBACK_TYPE, CoreState, Event, HomeAssistant, callback
@@ -433,7 +433,7 @@ class HKDevice:
                 continue
 
             if self.config_entry.entry_id not in device.config_entries:
-                _LOGGER.info(
+                _LOGGER.warning(
                     (
                         "Found candidate device for %s:aid:%s, but owned by a different"
                         " config entry, skipping"
@@ -443,7 +443,7 @@ class HKDevice:
                 )
                 continue
 
-            _LOGGER.info(
+            _LOGGER.debug(
                 "Migrating device identifiers for %s:aid:%s",
                 self.unique_id,
                 accessory.aid,
@@ -904,7 +904,7 @@ class HKDevice:
             return
 
         if self._polling_lock_warned:
-            _LOGGER.info(
+            _LOGGER.warning(
                 (
                     "HomeKit device no longer detecting back pressure - not"
                     " skipping poll: %s"

@@ -18,7 +18,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import DOMAIN, VeluxEntity
+from .const import DOMAIN
+from .entity import VeluxEntity
 
 PARALLEL_UPDATES = 1
 

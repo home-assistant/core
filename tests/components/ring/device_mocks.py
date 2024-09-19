@@ -7,9 +7,8 @@ Each device entry in the devices.json will have a MagicMock instead of the RingO
 Mocks the api calls on the devices such as history() and health().
 """
 
-from copy import deepcopy
 from datetime import datetime
-from time import time
+from functools import partial
 from unittest.mock import AsyncMock, MagicMock
 
 from ring_doorbell import (
@@ -30,7 +29,10 @@ DOORBOT_HISTORY = load_json_value_fixture("doorbot_history.json", DOMAIN)
 INTERCOM_HISTORY = load_json_value_fixture("intercom_history.json", DOMAIN)
 DOORBOT_HEALTH = load_json_value_fixture("doorbot_health_attrs.json", DOMAIN)
 CHIME_HEALTH = load_json_value_fixture("chime_health_attrs.json", DOMAIN)
-DEVICE_ALERTS = load_json_value_fixture("ding_active.json", DOMAIN)
+
+FRONT_DOOR_DEVICE_ID = 987654
+INGRESS_DEVICE_ID = 185036587
+FRONT_DEVICE_ID = 765432
 
 
 def get_mock_devices():
@@ -54,14 +56,6 @@ def get_devices_data():
     }
 
 
-def get_active_alerts():
-    """Return active alerts set to now."""
-    dings_fixture = deepcopy(DEVICE_ALERTS)
-    for ding in dings_fixture:
-        ding["now"] = time()
-    return dings_fixture
-
-
 DEVICE_TYPES = {
     "doorbots": RingDoorBell,
     "authorized_doorbots": RingDoorBell,
@@ -76,6 +70,7 @@ DEVICE_CAPABILITIES = {
         RingCapability.VOLUME,
         RingCapability.MOTION_DETECTION,
         RingCapability.VIDEO,
+        RingCapability.DING,
         RingCapability.HISTORY,
     ],
     RingStickUpCam: [
@@ -88,7 +83,7 @@ DEVICE_CAPABILITIES = {
         RingCapability.LIGHT,
     ],
     RingChime: [RingCapability.VOLUME],
-    RingOther: [RingCapability.OPEN, RingCapability.HISTORY],
+    RingOther: [RingCapability.OPEN, RingCapability.HISTORY, RingCapability.DING],
 }
 
 
@@ -159,10 +154,16 @@ def _mocked_ring_device(device_dict, device_family, device_class, capabilities):
                 "doorbell_volume", device_dict["settings"].get("volume")
             )
         )
+        mock_device.async_set_volume.side_effect = lambda i: mock_device.configure_mock(
+            volume=i
+        )
 
     if has_capability(RingCapability.SIREN):
         mock_device.configure_mock(
             siren=device_dict["siren_status"].get("seconds_remaining")
+        )
+        mock_device.async_set_siren.side_effect = lambda i: mock_device.configure_mock(
+            siren=i
         )
 
     if has_capability(RingCapability.BATTERY):
@@ -173,10 +174,14 @@ def _mocked_ring_device(device_dict, device_family, device_class, capabilities):
         )
 
     if device_family == "other":
-        mock_device.configure_mock(
-            doorbell_volume=device_dict["settings"].get("doorbell_volume"),
-            mic_volume=device_dict["settings"].get("mic_volume"),
-            voice_volume=device_dict["settings"].get("voice_volume"),
-        )
+        for prop in ("doorbell_volume", "mic_volume", "voice_volume"):
+            mock_device.configure_mock(
+                **{
+                    prop: device_dict["settings"].get(prop),
+                    f"async_set_{prop}.side_effect": partial(
+                        setattr, mock_device, prop
+                    ),
+                }
+            )
 
     return mock_device

@@ -24,7 +24,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DEVICE_LIST, DOMAIN
 from .entity import ViCareEntity
 from .types import ViCareDevice, ViCareRequiredKeysMixinWithSet
-from .utils import is_supported
+from .utils import get_device_serial, is_supported
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -54,9 +54,10 @@ def _build_entities(
 
     return [
         ViCareButton(
+            description,
+            get_device_serial(device.api),
             device.config,
             device.api,
-            description,
         )
         for device in device_list
         for description in BUTTON_DESCRIPTIONS
@@ -87,12 +88,13 @@ class ViCareButton(ViCareEntity, ButtonEntity):
 
     def __init__(
         self,
+        description: ViCareButtonEntityDescription,
+        device_serial: str | None,
         device_config: PyViCareDeviceConfig,
         device: PyViCareDevice,
-        description: ViCareButtonEntityDescription,
     ) -> None:
         """Initialize the button."""
-        super().__init__(device_config, device, description.key)
+        super().__init__(description.key, device_serial, device_config, device)
         self.entity_description = description
 
     def press(self) -> None:

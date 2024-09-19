@@ -84,10 +84,11 @@ class VenstarEntity(CoordinatorEntity[VenstarDataUpdateCoordinator]):
     @property
     def device_info(self) -> DeviceInfo:
         """Return the device information for this entity."""
+        fw_ver_major, fw_ver_minor = self._client.get_firmware_ver()
         return DeviceInfo(
             identifiers={(DOMAIN, self._config.entry_id)},
             name=self._client.name,
             manufacturer="Venstar",
             model=f"{self._client.model}-{self._client.get_type()}",
-            sw_version="{}.{}".format(*(self._client.get_firmware_ver())),
+            sw_version=f"{fw_ver_major}.{fw_ver_minor}",
         )

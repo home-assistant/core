@@ -1,9 +1,0 @@
-{
-  "entity": {
-    "switch": {
-      "operation_power": {
-        "default": "mdi:power"
-      }
-    }
-  }
-}

@@ -20,6 +20,7 @@ from homeassistant.components.climate import (
 from homeassistant.components.climate.const import (
     ATTR_CURRENT_TEMPERATURE,
     ATTR_FAN_MODE,
+    ATTR_HUMIDITY,
     ATTR_MAX_TEMP,
     ATTR_MIN_TEMP,
     ATTR_PRESET_MODE,
@@ -27,6 +28,8 @@ from homeassistant.components.climate.const import (
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
     SERVICE_SET_FAN_MODE,
+    SERVICE_SET_HUMIDITY,
+    SERVICE_SET_HVAC_MODE,
     SERVICE_SET_PRESET_MODE,
     SERVICE_SET_SWING_MODE,
     SERVICE_SET_TEMPERATURE,
@@ -109,6 +112,9 @@ class MockClimateEntity(MockEntity, ClimateEntity):
     _attr_swing_mode = "auto"
     _attr_swing_modes = ["auto", "off"]
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_target_temperature = 20
+    _attr_target_temperature_high = 25
+    _attr_target_temperature_low = 15
 
     @property
     def hvac_mode(self) -> HVACMode:
@@ -137,6 +143,18 @@ class MockClimateEntity(MockEntity, ClimateEntity):
     def set_swing_mode(self, swing_mode: str) -> None:
         """Set swing mode."""
         self._attr_swing_mode = swing_mode
+
+    def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
+        """Set new target hvac mode."""
+        self._attr_hvac_mode = hvac_mode
+
+    def set_temperature(self, **kwargs: Any) -> None:
+        """Set new target temperature."""
+        if ATTR_TEMPERATURE in kwargs:
+            self._attr_target_temperature = kwargs[ATTR_TEMPERATURE]
+        if ATTR_TARGET_TEMP_HIGH in kwargs:
+            self._attr_target_temperature_high = kwargs[ATTR_TARGET_TEMP_HIGH]
+            self._attr_target_temperature_low = kwargs[ATTR_TARGET_TEMP_LOW]
 
 
 class MockClimateEntityTestMethods(MockClimateEntity):
@@ -237,10 +255,83 @@ def test_deprecated_current_constants(
     )
 
 
-async def test_preset_mode_validation(
-    hass: HomeAssistant, register_test_integration: MockConfigEntry
+async def test_temperature_features_is_valid(
+    hass: HomeAssistant,
+    register_test_integration: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test mode validation for fan, swing and preset."""
+    """Test correct features for setting temperature."""
+
+    class MockClimateTempEntity(MockClimateEntity):
+        @property
+        def supported_features(self) -> int:
+            """Return supported features."""
+            return ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+
+    class MockClimateTempRangeEntity(MockClimateEntity):
+        @property
+        def supported_features(self) -> int:
+            """Return supported features."""
+            return ClimateEntityFeature.TARGET_TEMPERATURE
+
+    climate_temp_entity = MockClimateTempEntity(
+        name="test", entity_id="climate.test_temp"
+    )
+    climate_temp_range_entity = MockClimateTempRangeEntity(
+        name="test", entity_id="climate.test_range"
+    )
+
+    setup_test_component_platform(
+        hass,
+        DOMAIN,
+        entities=[climate_temp_entity, climate_temp_range_entity],
+        from_config_entry=True,
+    )
+    await hass.config_entries.async_setup(register_test_integration.entry_id)
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {
+            "entity_id": "climate.test_temp",
+            "temperature": 20,
+        },
+        blocking=True,
+    )
+    assert (
+        "MockClimateTempEntity set_temperature action was used "
+        "with temperature but the entity does not "
+        "implement the ClimateEntityFeature.TARGET_TEMPERATURE feature. "
+        "This will stop working in 2025.4 and raise an error instead. "
+        "Please"
+    ) in caplog.text
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {
+            "entity_id": "climate.test_range",
+            "target_temp_low": 20,
+            "target_temp_high": 25,
+        },
+        blocking=True,
+    )
+    assert (
+        "MockClimateTempRangeEntity set_temperature action was used with "
+        "target_temp_low but the entity does not "
+        "implement the ClimateEntityFeature.TARGET_TEMPERATURE_RANGE feature. "
+        "This will stop working in 2025.4 and raise an error instead. "
+        "Please"
+    ) in caplog.text
+
+
+async def test_mode_validation(
+    hass: HomeAssistant,
+    register_test_integration: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test mode validation for hvac_mode, fan, swing and preset."""
     climate_entity = MockClimateEntity(name="test", entity_id="climate.test")
 
     setup_test_component_platform(
@@ -250,6 +341,7 @@ async def test_preset_mode_validation(
     await hass.async_block_till_done()
 
     state = hass.states.get("climate.test")
+    assert state.state == "heat"
     assert state.attributes.get(ATTR_PRESET_MODE) == "home"
     assert state.attributes.get(ATTR_FAN_MODE) == "auto"
     assert state.attributes.get(ATTR_SWING_MODE) == "auto"
@@ -285,6 +377,23 @@ async def test_preset_mode_validation(
     assert state.attributes.get(ATTR_PRESET_MODE) == "away"
     assert state.attributes.get(ATTR_FAN_MODE) == "off"
     assert state.attributes.get(ATTR_SWING_MODE) == "off"
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {
+            "entity_id": "climate.test",
+            "hvac_mode": "auto",
+        },
+        blocking=True,
+    )
+
+    assert (
+        "MockClimateEntity sets the hvac_mode auto which is not valid "
+        "for this entity with modes: off, heat. This will stop working "
+        "in 2025.4 and raise an error instead. "
+        "Please" in caplog.text
+    )
 
     with pytest.raises(
         ServiceValidationError,
@@ -826,7 +935,7 @@ async def test_issue_aux_property_deprecated(
     assert (
         "test::MockClimateEntityWithAux implements the `is_aux_heat` property or uses "
         "the auxiliary  heater methods in a subclass of ClimateEntity which is deprecated "
-        f"and will be unsupported from Home Assistant 2024.10. Please {report}"
+        f"and will be unsupported from Home Assistant 2025.4. Please {report}"
     ) in caplog.text
 
     # Assert we only log warning once
@@ -951,6 +1060,71 @@ async def test_no_issue_no_aux_property(
         "the auxiliary  heater methods in a subclass of ClimateEntity which is deprecated "
         "and will be unsupported from Home Assistant 2024.10."
     ) not in caplog.text
+
+
+async def test_humidity_validation(
+    hass: HomeAssistant,
+    register_test_integration: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test validation for humidity."""
+
+    class MockClimateEntityHumidity(MockClimateEntity):
+        """Mock climate class with mocked aux heater."""
+
+        _attr_supported_features = ClimateEntityFeature.TARGET_HUMIDITY
+        _attr_target_humidity = 50
+        _attr_min_humidity = 50
+        _attr_max_humidity = 60
+
+        def set_humidity(self, humidity: int) -> None:
+            """Set new target humidity."""
+            self._attr_target_humidity = humidity
+
+    test_climate = MockClimateEntityHumidity(
+        name="Test",
+        unique_id="unique_climate_test",
+    )
+
+    setup_test_component_platform(
+        hass, DOMAIN, entities=[test_climate], from_config_entry=True
+    )
+    await hass.config_entries.async_setup(register_test_integration.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("climate.test")
+    assert state.attributes.get(ATTR_HUMIDITY) == 50
+
+    with pytest.raises(
+        ServiceValidationError,
+        match="Provided humidity 1 is not valid. Accepted range is 50 to 60",
+    ) as exc:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_HUMIDITY,
+            {
+                "entity_id": "climate.test",
+                ATTR_HUMIDITY: "1",
+            },
+            blocking=True,
+        )
+
+    assert exc.value.translation_key == "humidity_out_of_range"
+    assert "Check valid humidity 1 in range 50 - 60" in caplog.text
+
+    with pytest.raises(
+        ServiceValidationError,
+        match="Provided humidity 70 is not valid. Accepted range is 50 to 60",
+    ) as exc:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_HUMIDITY,
+            {
+                "entity_id": "climate.test",
+                ATTR_HUMIDITY: "70",
+            },
+            blocking=True,
+        )
 
 
 async def test_temperature_validation(
