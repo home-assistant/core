@@ -7,6 +7,8 @@
         'mac': '**REDACTED**',
       }),
       'disabled_by': None,
+      'discovery_keys': list([
+      ]),
       'domain': 'modern_forms',
       'minor_version': 1,
       'options': dict({

@@ -238,6 +238,8 @@
         'port': 3000,
       }),
       'disabled_by': None,
+      'discovery_keys': list([
+      ]),
       'domain': 'airzone',
       'entry_id': '6e7a0798c1734ba81d26ced0e690eaec',
       'minor_version': 1,

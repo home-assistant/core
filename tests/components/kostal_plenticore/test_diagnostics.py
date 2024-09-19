@@ -56,6 +56,7 @@ async def test_entry_diagnostics(
             "disabled_by": None,
             "created_at": ANY,
             "modified_at": ANY,
+            "discovery_keys": [],
         },
         "client": {
             "version": "api_version='0.2.0' hostname='scb' name='PUCK RESTful API' sw_version='01.16.05025'",

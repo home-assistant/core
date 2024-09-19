@@ -4721,6 +4721,8 @@
         'username': '**REDACTED**',
       }),
       'disabled_by': None,
+      'discovery_keys': list([
+      ]),
       'domain': 'vicare',
       'entry_id': '1234',
       'minor_version': 1,

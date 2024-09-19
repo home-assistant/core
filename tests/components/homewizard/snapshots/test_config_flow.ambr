@@ -20,6 +20,8 @@
         'ip_address': '127.0.0.1',
       }),
       'disabled_by': None,
+      'discovery_keys': tuple(
+      ),
       'domain': 'homewizard',
       'entry_id': <ANY>,
       'minor_version': 1,
@@ -62,6 +64,8 @@
         'ip_address': '127.0.0.1',
       }),
       'disabled_by': None,
+      'discovery_keys': tuple(
+      ),
       'domain': 'homewizard',
       'entry_id': <ANY>,
       'minor_version': 1,
@@ -104,6 +108,8 @@
         'ip_address': '127.0.0.1',
       }),
       'disabled_by': None,
+      'discovery_keys': tuple(
+      ),
       'domain': 'homewizard',
       'entry_id': <ANY>,
       'minor_version': 1,
@@ -142,6 +148,8 @@
         'ip_address': '2.2.2.2',
       }),
       'disabled_by': None,
+      'discovery_keys': tuple(
+      ),
       'domain': 'homewizard',
       'entry_id': <ANY>,
       'minor_version': 1,

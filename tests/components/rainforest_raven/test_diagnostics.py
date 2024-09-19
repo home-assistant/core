@@ -40,7 +40,7 @@ async def test_entry_diagnostics_no_meters(
     config_entry_dict["data"][CONF_MAC] = REDACTED
 
     assert result == {
-        "config_entry": config_entry_dict,
+        "config_entry": config_entry_dict | {"discovery_keys": []},
         "data": {
             "Meters": {},
             "NetworkInfo": {**asdict(NETWORK_INFO), "device_mac_id": REDACTED},
@@ -58,7 +58,7 @@ async def test_entry_diagnostics(
     config_entry_dict["data"][CONF_MAC] = REDACTED
 
     assert result == {
-        "config_entry": config_entry_dict,
+        "config_entry": config_entry_dict | {"discovery_keys": []},
         "data": {
             "Meters": {
                 "**REDACTED0**": {

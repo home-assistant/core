@@ -6,6 +6,8 @@
         'station_id': '123',
       }),
       'disabled_by': None,
+      'discovery_keys': list([
+      ]),
       'domain': 'imgw_pib',
       'minor_version': 1,
       'options': dict({

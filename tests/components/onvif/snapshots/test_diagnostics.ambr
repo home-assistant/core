@@ -11,6 +11,8 @@
         'username': '**REDACTED**',
       }),
       'disabled_by': None,
+      'discovery_keys': list([
+      ]),
       'domain': 'onvif',
       'entry_id': '1',
       'minor_version': 1,
