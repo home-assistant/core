@@ -548,6 +548,59 @@ class HassImportsFormatChecker(BaseChecker):
         if len(split_package) < node.level + 2:
             self.add_message("hass-absolute-import", node=node)
 
+    def _check_constant_alias(
+        self,
+        node: nodes.ImportFrom,
+        current_component: str | None,
+        imported_component: str,
+    ) -> bool:
+        """Check for improper alias `from homeassistant.components.component import CONSTANT` invocations."""
+        if current_component == imported_component:
+            return True
+
+        # Check for `from homeassistant.components.other import DOMAIN`
+        for name, alias in node.names:
+            if name == "DOMAIN" and (alias is None or alias == "DOMAIN"):
+                self.add_message(
+                    "hass-import-constant-alias",
+                    node=node,
+                    args=(
+                        "DOMAIN",
+                        "DOMAIN",
+                        f"{imported_component.upper()}_DOMAIN",
+                    ),
+                )
+                return False
+
+        return True
+
+    def _check_component_root_import(
+        self,
+        node: nodes.ImportFrom,
+        current_component: str | None,
+        imported_parts: list[str],
+        imported_component: str,
+    ) -> bool:
+        """Check for improper root imports."""
+        if (
+            current_component == imported_component
+            or imported_component in _IGNORE_ROOT_IMPORT
+        ):
+            return True
+
+        # Check for `from homeassistant.components.other.module import something`
+        if len(imported_parts) > 3:
+            self.add_message("hass-component-root-import", node=node)
+            return False
+
+        # Check for `from homeassistant.components.other import const`
+        for name, _ in node.names:
+            if name == "const":
+                self.add_message("hass-component-root-import", node=node)
+                return False
+
+        return True
+
     def visit_importfrom(self, node: nodes.ImportFrom) -> None:
         """Check for improper 'from _ import _' invocations."""
         if not self.current_package:
@@ -560,6 +613,8 @@ class HassImportsFormatChecker(BaseChecker):
         ):
             self.add_message("hass-relative-import", node=node)
             return
+
+        current_component: str | None = None
         for root in ("homeassistant", "tests"):
             if self.current_package.startswith(f"{root}.components."):
                 current_component = self.current_package.split(".")[2]
@@ -572,34 +627,19 @@ class HassImportsFormatChecker(BaseChecker):
                     self.add_message("hass-relative-import", node=node)
                     return
 
-        if (
-            node.modname.startswith("homeassistant.components.")
-            and (module_parts := node.modname.split("."))
-            and (module_integration := module_parts[2])
-            and module_integration not in _IGNORE_ROOT_IMPORT
-            and not (
-                self.current_package.startswith("tests.components.")
-                and self.current_package.split(".")[2] == module_integration
-            )
-        ):
-            if len(module_parts) > 3:
-                self.add_message("hass-component-root-import", node=node)
+        if node.modname.startswith("homeassistant.components."):
+            imported_parts = node.modname.split(".")
+            imported_component = imported_parts[2]
+
+            if not self._check_component_root_import(
+                node, current_component, imported_parts, imported_component
+            ):
                 return
-            for name, alias in node.names:
-                if name == "const":
-                    self.add_message("hass-component-root-import", node=node)
-                    return
-                if name == "DOMAIN" and (alias is None or alias == "DOMAIN"):
-                    self.add_message(
-                        "hass-import-constant-alias",
-                        node=node,
-                        args=(
-                            "DOMAIN",
-                            "DOMAIN",
-                            f"{node.modname.split(".")[2].upper()}_DOMAIN",
-                        ),
-                    )
-                    return
+
+            if not self._check_constant_alias(
+                node, current_component, imported_component
+            ):
+                return
 
         if obsolete_imports := _OBSOLETE_IMPORT.get(node.modname):
             for name_tuple in node.names:
