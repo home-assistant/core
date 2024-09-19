@@ -1230,8 +1230,8 @@ async def test_light_ui_load(
     """Test loading a light from storage."""
     await knx.setup_integration({})
 
-    await knx.assert_read("1/0/45", response=True)  # test switch - unrelated here
     await knx.assert_read("1/0/21", response=True)  # test light
+    await knx.assert_read("1/0/45", response=True)  # test switch - unrelated here
     state = hass.states.get("light.test")
     assert state.state is STATE_ON
 
