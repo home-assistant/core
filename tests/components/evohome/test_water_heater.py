@@ -28,7 +28,7 @@ async def test_set_operation_mode(
     """Test water_heater services of a evohome-compatible DHW zone."""
 
     freezer.move_to("2024-07-10T11:55:00Z")
-    result = []
+    results = []
 
     async for _ in setup_evohome(hass, config, install=install):
         if (dhw := dhw_entity(hass)) is None:
@@ -51,7 +51,7 @@ async def test_set_operation_mode(
             await dhw.async_set_operation_mode("off")
 
             assert mock_fcn.await_count == 1
-            assert install == "default" or mock_fcn.await_args.args == (
+            assert install != "default" or mock_fcn.await_args.args == (
                 {
                     "mode": "TemporaryOverride",
                     "state": "Off",
@@ -60,24 +60,24 @@ async def test_set_operation_mode(
             )
             assert mock_fcn.await_args.kwargs == {}
 
-            result.append(mock_fcn.await_args.args)
+            results.append(mock_fcn.await_args.args)
 
         with patch("evohomeasync2.hotwater.HotWater._set_mode") as mock_fcn:
             await dhw.async_set_operation_mode("on")
 
             assert mock_fcn.await_count == 1
-            assert install == "default" or mock_fcn.await_args.args == (
+            assert install != "default" or mock_fcn.await_args.args == (
                 {
                     "mode": "TemporaryOverride",
-                    "state": "ON",
+                    "state": "On",
                     "untilTime": "2024-07-10T12:00:00Z",  # varies by install
                 },
             )
             assert mock_fcn.await_args.kwargs == {}
 
-            result.append(mock_fcn.await_args.args)
+            results.append(mock_fcn.await_args.args)
 
-    assert result == snapshot
+    assert results == snapshot
 
 
 @pytest.mark.parametrize("install", TEST_INSTALLS)

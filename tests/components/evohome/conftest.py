@@ -140,6 +140,19 @@ async def setup_evohome(
     The class is mocked here to check the client was instantiated with the correct args.
     """
 
+    # set the time zone as for the active evohome location
+    loc_idx: int = test_config.get("location_idx", 0)  # type: ignore[assignment]
+
+    try:
+        locn = user_locations_config_fixture(install)[loc_idx]
+    except IndexError:
+        if loc_idx == 0:
+            raise
+        locn = user_locations_config_fixture(install)[0]
+
+    utc_offset: int = locn["locationInfo"]["timeZone"]["currentOffsetMinutes"]  # type: ignore[assignment, call-overload, index]
+    dt_util.set_default_time_zone(timezone(timedelta(minutes=utc_offset)))
+
     with (
         patch("homeassistant.components.evohome.evo.EvohomeClient") as mock_client,
         patch("homeassistant.components.evohome.ev1.EvohomeClient", return_value=None),
@@ -159,9 +172,6 @@ async def setup_evohome(
 
         assert mock_client.account_info is not None
 
-        broker: EvoBroker = hass.data[DOMAIN]["broker"]
-        dt_util.set_default_time_zone(timezone(broker.loc_utc_offset))
-
         try:
             yield mock_client
         finally:
@@ -179,8 +189,8 @@ def ctl_entity(hass: HomeAssistant) -> EvoController:
         Platform.CLIMATE, DOMAIN, broker.tcs._id
     )
 
-    component: EntityComponent = hass.data.get(Platform.CLIMATE)
-    return next((e for e in component.entities if e.entity_id == entity_id), None)
+    component: EntityComponent = hass.data.get(Platform.CLIMATE)  # type: ignore[assignment]
+    return next(e for e in component.entities if e.entity_id == entity_id)  # type: ignore[return-value]
 
 
 def dhw_entity(hass: HomeAssistant) -> EvoDHW | None:
@@ -196,8 +206,8 @@ def dhw_entity(hass: HomeAssistant) -> EvoDHW | None:
         Platform.WATER_HEATER, DOMAIN, dhw._id
     )
 
-    component: EntityComponent = hass.data.get(Platform.WATER_HEATER)
-    return next((e for e in component.entities if e.entity_id == entity_id), None)
+    component: EntityComponent = hass.data.get(Platform.WATER_HEATER)  # type: ignore[assignment]
+    return next(e for e in component.entities if e.entity_id == entity_id)  # type: ignore[return-value]
 
 
 def zone_entity(hass: HomeAssistant) -> EvoZone:
@@ -212,5 +222,5 @@ def zone_entity(hass: HomeAssistant) -> EvoZone:
     entity_registry = er.async_get(hass)
     entity_id = entity_registry.async_get_entity_id(Platform.CLIMATE, DOMAIN, unique_id)
 
-    component: EntityComponent = hass.data.get(Platform.CLIMATE)
-    return next((e for e in component.entities if e.entity_id == entity_id), None)
+    component: EntityComponent = hass.data.get(Platform.CLIMATE)  # type: ignore[assignment]
+    return next(e for e in component.entities if e.entity_id == entity_id)  # type: ignore[return-value]

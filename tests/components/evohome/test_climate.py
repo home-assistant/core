@@ -19,7 +19,7 @@ from .conftest import ctl_entity, setup_evohome, zone_entity
 from .const import TEST_INSTALLS
 
 
-@pytest.mark.parametrize("install", TEST_INSTALLS)  # add turn_off/on?
+@pytest.mark.parametrize("install", TEST_INSTALLS)
 async def test_ctl_set_hvac_mode(
     hass: HomeAssistant,
     config: dict[str, str],
@@ -28,7 +28,7 @@ async def test_ctl_set_hvac_mode(
 ) -> None:
     """Test climate methods of a evohome-compatible zone."""
 
-    result = []
+    results = []
 
     async for _ in setup_evohome(hass, config, install=install):
         ctl = ctl_entity(hass)
@@ -47,7 +47,7 @@ async def test_ctl_set_hvac_mode(
             )
             assert mock_fcn.await_args.kwargs == {}
 
-            result.append(mock_fcn.await_args.args)
+            results.append(mock_fcn.await_args.args)
 
         with patch("evohomeasync2.controlsystem.ControlSystem._set_mode") as mock_fcn:
             await ctl.async_set_hvac_mode(HVACMode.OFF)
@@ -61,9 +61,9 @@ async def test_ctl_set_hvac_mode(
             )
             assert mock_fcn.await_args.kwargs == {}
 
-            result.append(mock_fcn.await_args.args)
+            results.append(mock_fcn.await_args.args)
 
-    assert result == snapshot
+    assert results == snapshot
 
 
 @pytest.mark.parametrize("install", TEST_INSTALLS)
@@ -85,7 +85,7 @@ async def test_ctl_set_preset_mode(
     }
 
     freezer.move_to("2024-07-10T12:00:00Z")
-    result = []
+    results = []
 
     async for _ in setup_evohome(hass, config, install=install):
         ctl = ctl_entity(hass)
@@ -93,27 +93,27 @@ async def test_ctl_set_preset_mode(
         assert install != "default" or ctl.preset_modes == list(  # varies by install
             MODE_LOOKUP
         )
-
         assert ctl.preset_modes == snapshot
 
-        for mode in ctl.preset_modes:
-            with patch(
-                "evohomeasync2.controlsystem.ControlSystem._set_mode"
-            ) as mock_fcn:
-                await ctl.async_set_preset_mode(mode)
+        if ctl.preset_modes:
+            for mode in ctl.preset_modes:
+                with patch(
+                    "evohomeasync2.controlsystem.ControlSystem._set_mode"
+                ) as mock_fcn:
+                    await ctl.async_set_preset_mode(mode)
 
-                assert mock_fcn.await_count == 1
-                assert install != "default" or mock_fcn.await_args.args == (
-                    {
-                        "systemMode": MODE_LOOKUP[mode],
-                        "permanent": True,
-                    },
-                )
-                assert mock_fcn.await_args.kwargs == {}
+                    assert mock_fcn.await_count == 1
+                    assert install != "default" or mock_fcn.await_args.args == (
+                        {
+                            "systemMode": MODE_LOOKUP[mode],
+                            "permanent": True,
+                        },
+                    )
+                    assert mock_fcn.await_args.kwargs == {}
 
-                result.append(mock_fcn.await_args.args)
+                    results.append(mock_fcn.await_args.args)
 
-    assert result == snapshot
+    assert results == snapshot
 
 
 @pytest.mark.parametrize("install", TEST_INSTALLS)
@@ -134,7 +134,7 @@ async def test_ctl_set_temperature(
             await ctl.async_set_temperature(temperature=20.01)
 
 
-@pytest.mark.parametrize("install", TEST_INSTALLS)  # add turn_off/on?
+@pytest.mark.parametrize("install", TEST_INSTALLS)
 async def test_zon_set_hvac_mode(
     hass: HomeAssistant,
     config: dict[str, str],
@@ -143,7 +143,7 @@ async def test_zon_set_hvac_mode(
 ) -> None:
     """Test climate methods of a evohome-compatible zone."""
 
-    result = []
+    results = []
 
     async for _ in setup_evohome(hass, config, install=install):
         zone = zone_entity(hass)
@@ -173,9 +173,9 @@ async def test_zon_set_hvac_mode(
             )
             assert mock_fcn.await_args.kwargs == {}
 
-            result.append(mock_fcn.await_args.args)
+            results.append(mock_fcn.await_args.args)
 
-    assert result == snapshot
+    assert results == snapshot
 
 
 @pytest.mark.parametrize("install", TEST_INSTALLS)
@@ -189,7 +189,7 @@ async def test_zon_set_preset_mode(
     """Test climate methods of a evohome-compatible zone."""
 
     freezer.move_to("2024-07-10T12:00:00Z")
-    result = []
+    results = []
 
     async for _ in setup_evohome(hass, config, install=install):
         zone = zone_entity(hass)
@@ -219,7 +219,7 @@ async def test_zon_set_preset_mode(
             )
             assert mock_fcn.await_args.kwargs == {}
 
-            result.append(mock_fcn.await_args.args)
+            results.append(mock_fcn.await_args.args)
 
         with patch("evohomeasync2.zone.Zone._set_mode") as mock_fcn:
             await zone.async_set_preset_mode("temporary")
@@ -234,9 +234,9 @@ async def test_zon_set_preset_mode(
             )
             assert mock_fcn.await_args.kwargs == {}
 
-            result.append(mock_fcn.await_args.args)
+            results.append(mock_fcn.await_args.args)
 
-    assert result == snapshot
+    assert results == snapshot
 
 
 @pytest.mark.parametrize("install", TEST_INSTALLS)
@@ -250,7 +250,7 @@ async def test_zon_set_temperature(
     """Test climate methods of a evohome-compatible zone."""
 
     freezer.move_to("2024-07-10T12:00:00Z")
-    result = []
+    results = []
 
     async for _ in setup_evohome(hass, config, install=install):
         zone = zone_entity(hass)
@@ -268,7 +268,7 @@ async def test_zon_set_temperature(
             )
             assert mock_fcn.await_args.kwargs == {}
 
-            result.append(mock_fcn.await_args.args)
+            results.append(mock_fcn.await_args.args)
 
         with patch("evohomeasync2.zone.Zone._set_mode") as mock_fcn:
             await zone.async_set_temperature(
@@ -286,4 +286,4 @@ async def test_zon_set_temperature(
             )
             assert mock_fcn.await_args.kwargs == {}
 
-    assert result == snapshot
+    assert results == snapshot
