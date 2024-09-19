@@ -10,6 +10,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 
+from .connection_test import ConnectionTestView
 from .const import DOMAIN, DOMAIN_DATA, AssistSatelliteEntityFeature
 from .entity import (
     AssistSatelliteAnnouncement,
@@ -58,6 +59,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         [AssistSatelliteEntityFeature.ANNOUNCE],
     )
     async_register_websocket_api(hass)
+    hass.http.register_view(ConnectionTestView())
 
     return True
 
