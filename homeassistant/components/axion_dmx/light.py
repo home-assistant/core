@@ -267,19 +267,25 @@ class AxionDMXLight(CoordinatorEntity[AxionDataUpdateCoordinator], LightEntity):
         """Instruct the light to turn off."""
         _LOGGER.debug(f"Instructing the {self._name} to turn off!")
         self._attr_is_on = False
-        await self.api.set_level(self._channel, 0)
 
-        if self._light_type in ["RGB", "RGBW", "RGBWW"]:
+        # Only set the first channel to 0 for White or Tunable White
+        if self._light_type in ["White", "Tunable White"]:
+            await self.api.set_level(self._channel, 0)
+
+        if self._light_type == "RGB":
             self._last_hs_color = self._attr_hs_color
-            await self.api.set_level((self._channel + 1), 0)
-            await self.api.set_level((self._channel + 2), 0)
-            if self._light_type in ["RGBW", "RGBWW"]:
-                self._last_rgbw = self._attr_rgbw_color
-                await self.api.set_level((self._channel + 3), 0)
-                if self._light_type == "RGBWW":
-                    self._last_rgbww = self._attr_rgbww_color
-                    await self.api.set_level((self._channel + 4), 0)
+            await self.api.set_color(self._channel, (0, 0, 0))
+
+        elif self._light_type == "RGBW":
+            self._last_rgbw = self._attr_rgbw_color
+            await self.api.set_rgbw(self._channel, (0, 0, 0, 0))
+
+        elif self._light_type == "RGBWW":
+            self._last_rgbww = self._attr_rgbww_color
+            await self.api.set_rgbww(self._channel, (0, 0, 0, 0, 0))
+
         elif self._light_type == "Tunable White":
+            # Turn off the second channel
             await self.api.set_level(self._channel + 1, 0)
 
         # Add a small delay to allow the controller to process the command
