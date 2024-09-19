@@ -65,7 +65,7 @@ from .const import (
     DEFAULT_OPTIMISTIC,
     PAYLOAD_NONE,
 )
-from .mixins import async_setup_entity_entry_helper
+from .entity import async_setup_entity_entry_helper
 from .models import MqttCommandTemplate, MqttValueTemplate, ReceiveMessage
 from .schemas import MQTT_ENTITY_COMMON_SCHEMA
 from .util import valid_publish_topic, valid_subscribe_topic
