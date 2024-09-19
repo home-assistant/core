@@ -18,7 +18,6 @@ from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_CLIENT_ID,
     CONF_CLIENT_SECRET,
-    CONF_TOKEN,
     CONF_WEBHOOK_ID,
     Platform,
 )
@@ -78,15 +77,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     conf = config[DOMAIN]
 
-    await async_import_client_credential(
-        hass,
-        DOMAIN,
-        ClientCredential(
-            conf[CONF_CLIENT_ID],
-            conf[CONF_CLIENT_SECRET],
-        ),
-    )
-
     async_create_issue(
         hass,
         HOMEASSISTANT_DOMAIN,
@@ -102,11 +92,21 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         },
     )
 
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=conf
+    if not hass.config_entries.async_entries(DOMAIN):
+        await async_import_client_credential(
+            hass,
+            DOMAIN,
+            ClientCredential(
+                conf[CONF_CLIENT_ID],
+                conf[CONF_CLIENT_SECRET],
+            ),
         )
-    )
+
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN, context={"source": SOURCE_IMPORT}, data=conf
+            )
+        )
 
     return True
 
@@ -115,16 +115,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: PointConfigEntry) -> boo
     """Set up Minut Point from a config entry."""
 
     if "auth_implementation" not in entry.data:
-        # Config entry is imported from old implementation without native oauth2.
-        hass.config_entries.async_update_entry(
-            entry,
-            data={
-                **entry.data,
-                "auth_implementation": DOMAIN,
-                CONF_TOKEN: entry.data[CONF_TOKEN],
-                "imported": True,
-            },
-        )
         raise ConfigEntryAuthFailed("Authentication failed. Please re-authenticate.")
 
     implementation = (

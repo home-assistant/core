@@ -62,4 +62,4 @@ class OAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
                 self.reauth_entry, data={**self.reauth_entry.data, **data}
             )
 
-        return self.async_abort(reason="missing_configuration")
+        return self.async_abort(reason="wrong_account")
