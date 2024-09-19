@@ -65,7 +65,8 @@ _MODULES: dict[str, set[str]] = {
         "WeatherEntityDescription",
     },
 }
-_PLATFORMS: set[str] = {platform.value for platform in Platform}
+_ENTITY_COMPONENTS: set[str] = {platform.value for platform in Platform}
+_ENTITY_COMPONENTS.add("tag")
 
 
 class HassEnforceClassModule(BaseChecker):
@@ -92,7 +93,7 @@ class HassEnforceClassModule(BaseChecker):
         current_integration = parts[2]
         current_module = parts[3] if len(parts) > 3 else ""
 
-        if current_module != "entity" and current_integration not in _PLATFORMS:
+        if current_module != "entity" and current_integration not in _ENTITY_COMPONENTS:
             top_level_ancestors = list(node.ancestors(recurs=False))
 
             for ancestor in top_level_ancestors:
