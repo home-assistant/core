@@ -2016,13 +2016,13 @@ renault-api==0.2.7
 renson-endura-delta==1.7.1
 
 # homeassistant.components.reolink
-reolink-aio==0.9.8
+reolink-aio==0.9.9
 
 # homeassistant.components.rflink
 rflink==0.0.66
 
 # homeassistant.components.ring
-ring-doorbell[listen]==0.9.3
+ring-doorbell[listen]==0.9.5
 
 # homeassistant.components.roku
 rokuecp==0.19.3
