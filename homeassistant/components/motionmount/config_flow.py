@@ -181,13 +181,15 @@ class MotionMountFlowHandler(ConfigFlow, domain=DOMAIN):
             self.connection_data[CONF_PIN] = user_input[CONF_PIN]
 
             # Validate pin code
-            valid = await self._validate_input_pin(self.connection_data)
-            if valid is True:
+            valid_or_wait_time = await self._validate_input_pin(self.connection_data)
+            if valid_or_wait_time is True:
                 return self._create_or_update_entry()
 
-            if type(valid) is int:
-                self.backoff_time = valid
-                self.backoff_task = self.hass.async_create_task(self._backoff(valid))
+            if type(valid_or_wait_time) is int:
+                self.backoff_time = valid_or_wait_time
+                self.backoff_task = self.hass.async_create_task(
+                    self._backoff(valid_or_wait_time)
+                )
                 return await self.async_step_backoff()
 
             errors[CONF_PIN] = CONF_PIN
