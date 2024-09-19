@@ -4,8 +4,7 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.components.websocket_api.connection import ActiveConnection
-from homeassistant.components.websocket_api.decorators import websocket_command
+from homeassistant.components.websocket_api import ActiveConnection, websocket_command
 from homeassistant.core import HomeAssistant, callback
 
 from ..const import LOGGER
