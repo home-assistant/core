@@ -125,7 +125,7 @@ async def async_setup_webhook(hass: HomeAssistant, entry: ConfigEntry, session):
     if CONF_WEBHOOK_ID not in entry.data:
         webhook_id = webhook.async_generate_id()
         webhook_url = webhook.async_generate_url(hass, webhook_id)
-        _LOGGER.info("Registering new webhook at: %s", webhook_url)
+        _LOGGER.debug("Registering new webhook at: %s", webhook_url)
 
         hass.config_entries.async_update_entry(
             entry,
@@ -257,7 +257,7 @@ class MinutPointClient:
         return await self._client.alarm_arm(home_id)
 
 
-class MinutPointEntity(Entity):
+class MinutPointEntity(Entity):  # pylint: disable=hass-enforce-class-module # see PR 118243
     """Base Entity used by the sensors."""
 
     _attr_should_poll = False

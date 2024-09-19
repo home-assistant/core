@@ -26,11 +26,15 @@ import pytest
 
 from homeassistant.components import assist_satellite, tts
 from homeassistant.components.assist_pipeline import PipelineEvent, PipelineEventType
-from homeassistant.components.assist_satellite.entity import (
+from homeassistant.components.assist_satellite import (
+    AssistSatelliteConfiguration,
     AssistSatelliteEntity,
     AssistSatelliteEntityFeature,
-    AssistSatelliteState,
+    AssistSatelliteWakeWord,
 )
+
+# pylint: disable-next=hass-component-root-import
+from homeassistant.components.assist_satellite.entity import AssistSatelliteState
 from homeassistant.components.esphome import DOMAIN
 from homeassistant.components.esphome.assist_satellite import (
     EsphomeAssistSatellite,
@@ -1006,6 +1010,7 @@ async def test_tts_format_from_media_player(
                         sample_rate=48000,
                         num_channels=2,
                         purpose=MediaPlayerFormatPurpose.DEFAULT,
+                        sample_bytes=2,
                     ),
                     # This is the format that should be used for tts
                     MediaPlayerSupportedFormat(
@@ -1013,6 +1018,7 @@ async def test_tts_format_from_media_player(
                         sample_rate=22050,
                         num_channels=1,
                         purpose=MediaPlayerFormatPurpose.ANNOUNCEMENT,
+                        sample_bytes=2,
                     ),
                 ],
             )
@@ -1047,6 +1053,73 @@ async def test_tts_format_from_media_player(
             tts.ATTR_PREFERRED_SAMPLE_RATE: 22050,
             tts.ATTR_PREFERRED_SAMPLE_CHANNELS: 1,
             tts.ATTR_PREFERRED_SAMPLE_BYTES: 2,
+        }
+
+
+async def test_tts_minimal_format_from_media_player(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: Callable[
+        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
+        Awaitable[MockESPHomeDevice],
+    ],
+) -> None:
+    """Test text-to-speech format when media player only specifies the codec."""
+    mock_device: MockESPHomeDevice = await mock_esphome_device(
+        mock_client=mock_client,
+        entity_info=[
+            MediaPlayerInfo(
+                object_id="mymedia_player",
+                key=1,
+                name="my media_player",
+                unique_id="my_media_player",
+                supports_pause=True,
+                supported_formats=[
+                    MediaPlayerSupportedFormat(
+                        format="flac",
+                        sample_rate=48000,
+                        num_channels=2,
+                        purpose=MediaPlayerFormatPurpose.DEFAULT,
+                        sample_bytes=2,
+                    ),
+                    # This is the format that should be used for tts
+                    MediaPlayerSupportedFormat(
+                        format="mp3",
+                        sample_rate=0,  # source rate
+                        num_channels=0,  # source channels
+                        purpose=MediaPlayerFormatPurpose.ANNOUNCEMENT,
+                        sample_bytes=0,  # source width
+                    ),
+                ],
+            )
+        ],
+        user_service=[],
+        states=[],
+        device_info={
+            "voice_assistant_feature_flags": VoiceAssistantFeature.VOICE_ASSISTANT
+        },
+    )
+    await hass.async_block_till_done()
+
+    satellite = get_satellite_entity(hass, mock_device.device_info.mac_address)
+    assert satellite is not None
+
+    with patch(
+        "homeassistant.components.assist_satellite.entity.async_pipeline_from_audio_stream",
+    ) as mock_pipeline_from_audio_stream:
+        await satellite.handle_pipeline_start(
+            conversation_id="",
+            flags=0,
+            audio_settings=VoiceAssistantAudioSettings(),
+            wake_word_phrase=None,
+        )
+
+        mock_pipeline_from_audio_stream.assert_called_once()
+        kwargs = mock_pipeline_from_audio_stream.call_args_list[0].kwargs
+
+        # Should be ANNOUNCEMENT format from media player
+        assert kwargs.get("tts_audio_output") == {
+            tts.ATTR_PREFERRED_FORMAT: "mp3",
         }
 
 
@@ -1309,3 +1382,50 @@ async def test_pipeline_abort(
 
             # Only first chunk
             assert chunks == [b"before-abort"]
+
+
+async def test_get_set_configuration(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: Callable[
+        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
+        Awaitable[MockESPHomeDevice],
+    ],
+) -> None:
+    """Test getting and setting the satellite configuration."""
+    expected_config = AssistSatelliteConfiguration(
+        available_wake_words=[
+            AssistSatelliteWakeWord("1234", "okay nabu", ["en"]),
+            AssistSatelliteWakeWord("5678", "hey jarvis", ["en"]),
+        ],
+        active_wake_words=["1234"],
+        max_active_wake_words=1,
+    )
+    mock_client.get_voice_assistant_configuration.return_value = expected_config
+
+    mock_device: MockESPHomeDevice = await mock_esphome_device(
+        mock_client=mock_client,
+        entity_info=[],
+        user_service=[],
+        states=[],
+        device_info={
+            "voice_assistant_feature_flags": VoiceAssistantFeature.VOICE_ASSISTANT
+        },
+    )
+    await hass.async_block_till_done()
+
+    satellite = get_satellite_entity(hass, mock_device.device_info.mac_address)
+    assert satellite is not None
+
+    # HA should have been updated
+    actual_config = satellite.async_get_configuration()
+    assert actual_config == expected_config
+
+    # Change active wake words
+    actual_config.active_wake_words = ["5678"]
+    await satellite.async_set_configuration(actual_config)
+
+    # Device should have been updated
+    mock_client.set_voice_assistant_configuration.assert_called_once_with(
+        active_wake_words=["5678"]
+    )

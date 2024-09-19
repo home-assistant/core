@@ -239,7 +239,7 @@ class GeniusBroker:
             await self.client.update()
             if self._connect_error:
                 self._connect_error = False
-                _LOGGER.info("Connection to geniushub re-established")
+                _LOGGER.warning("Connection to geniushub re-established")
         except (
             aiohttp.ClientResponseError,
             aiohttp.client_exceptions.ClientConnectorError,

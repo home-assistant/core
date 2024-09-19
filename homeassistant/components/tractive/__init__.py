@@ -136,7 +136,7 @@ async def _generate_trackables(
         return None
 
     if "details" not in trackable:
-        _LOGGER.info(
+        _LOGGER.warning(
             "Tracker %s has no details and will be skipped. This happens for shared trackers",
             trackable["device_id"],
         )

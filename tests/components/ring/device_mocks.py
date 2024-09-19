@@ -8,6 +8,7 @@ Mocks the api calls on the devices such as history() and health().
 """
 
 from datetime import datetime
+from functools import partial
 from unittest.mock import AsyncMock, MagicMock
 
 from ring_doorbell import (
@@ -153,6 +154,9 @@ def _mocked_ring_device(device_dict, device_family, device_class, capabilities):
                 "doorbell_volume", device_dict["settings"].get("volume")
             )
         )
+        mock_device.async_set_volume.side_effect = lambda i: mock_device.configure_mock(
+            volume=i
+        )
 
     if has_capability(RingCapability.SIREN):
         mock_device.configure_mock(
@@ -170,10 +174,14 @@ def _mocked_ring_device(device_dict, device_family, device_class, capabilities):
         )
 
     if device_family == "other":
-        mock_device.configure_mock(
-            doorbell_volume=device_dict["settings"].get("doorbell_volume"),
-            mic_volume=device_dict["settings"].get("mic_volume"),
-            voice_volume=device_dict["settings"].get("voice_volume"),
-        )
+        for prop in ("doorbell_volume", "mic_volume", "voice_volume"):
+            mock_device.configure_mock(
+                **{
+                    prop: device_dict["settings"].get(prop),
+                    f"async_set_{prop}.side_effect": partial(
+                        setattr, mock_device, prop
+                    ),
+                }
+            )
 
     return mock_device
