@@ -47,7 +47,7 @@ class OAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
 
     async def async_oauth_create_entry(self, data: dict[str, Any]) -> ConfigFlowResult:
         """Create an oauth config entry or update existing entry for reauth."""
-        user_id = str(data[CONF_TOKEN]["userid"])
+        user_id = str(data[CONF_TOKEN]["user_id"])
         if not self.reauth_entry:
             await self.async_set_unique_id(user_id)
             self._abort_if_unique_id_configured()
@@ -62,4 +62,4 @@ class OAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
                 self.reauth_entry, data={**self.reauth_entry.data, **data}
             )
 
-        return self.async_abort(reason="wrong_account")
+        return self.async_abort(reason="missing_configuration")
