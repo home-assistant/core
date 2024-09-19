@@ -190,48 +190,56 @@ class MatterClimate(MatterEntity, ClimateEntity):
             # if the mains power is off - treat it as if the HVAC mode is off
             self._attr_hvac_mode = HVACMode.OFF
             self._attr_hvac_action = None
-            return
-
-        # update hvac_mode from SystemMode
-        system_mode_value = int(
-            self.get_matter_attribute_value(clusters.Thermostat.Attributes.SystemMode)
-        )
-        match system_mode_value:
-            case SystemModeEnum.kAuto:
-                self._attr_hvac_mode = HVACMode.HEAT_COOL
-            case SystemModeEnum.kDry:
-                self._attr_hvac_mode = HVACMode.DRY
-            case SystemModeEnum.kFanOnly:
-                self._attr_hvac_mode = HVACMode.FAN_ONLY
-            case SystemModeEnum.kCool | SystemModeEnum.kPrecooling:
-                self._attr_hvac_mode = HVACMode.COOL
-            case SystemModeEnum.kHeat | SystemModeEnum.kEmergencyHeat:
-                self._attr_hvac_mode = HVACMode.HEAT
-            case SystemModeEnum.kFanOnly:
-                self._attr_hvac_mode = HVACMode.FAN_ONLY
-            case SystemModeEnum.kDry:
-                self._attr_hvac_mode = HVACMode.DRY
-            case _:
-                self._attr_hvac_mode = HVACMode.OFF
-        # running state is an optional attribute
-        # which we map to hvac_action if it exists (its value is not None)
-        self._attr_hvac_action = None
-        if running_state_value := self.get_matter_attribute_value(
-            clusters.Thermostat.Attributes.ThermostatRunningState
-        ):
-            match running_state_value:
-                case ThermostatRunningState.Heat | ThermostatRunningState.HeatStage2:
-                    self._attr_hvac_action = HVACAction.HEATING
-                case ThermostatRunningState.Cool | ThermostatRunningState.CoolStage2:
-                    self._attr_hvac_action = HVACAction.COOLING
-                case (
-                    ThermostatRunningState.Fan
-                    | ThermostatRunningState.FanStage2
-                    | ThermostatRunningState.FanStage3
-                ):
-                    self._attr_hvac_action = HVACAction.FAN
+        else:
+            # update hvac_mode from SystemMode
+            system_mode_value = int(
+                self.get_matter_attribute_value(
+                    clusters.Thermostat.Attributes.SystemMode
+                )
+            )
+            match system_mode_value:
+                case SystemModeEnum.kAuto:
+                    self._attr_hvac_mode = HVACMode.HEAT_COOL
+                case SystemModeEnum.kDry:
+                    self._attr_hvac_mode = HVACMode.DRY
+                case SystemModeEnum.kFanOnly:
+                    self._attr_hvac_mode = HVACMode.FAN_ONLY
+                case SystemModeEnum.kCool | SystemModeEnum.kPrecooling:
+                    self._attr_hvac_mode = HVACMode.COOL
+                case SystemModeEnum.kHeat | SystemModeEnum.kEmergencyHeat:
+                    self._attr_hvac_mode = HVACMode.HEAT
+                case SystemModeEnum.kFanOnly:
+                    self._attr_hvac_mode = HVACMode.FAN_ONLY
+                case SystemModeEnum.kDry:
+                    self._attr_hvac_mode = HVACMode.DRY
                 case _:
-                    self._attr_hvac_action = HVACAction.OFF
+                    self._attr_hvac_mode = HVACMode.OFF
+            # running state is an optional attribute
+            # which we map to hvac_action if it exists (its value is not None)
+            self._attr_hvac_action = None
+            if running_state_value := self.get_matter_attribute_value(
+                clusters.Thermostat.Attributes.ThermostatRunningState
+            ):
+                match running_state_value:
+                    case (
+                        ThermostatRunningState.Heat
+                        | ThermostatRunningState.HeatStage2
+                    ):
+                        self._attr_hvac_action = HVACAction.HEATING
+                    case (
+                        ThermostatRunningState.Cool
+                        | ThermostatRunningState.CoolStage2
+                    ):
+                        self._attr_hvac_action = HVACAction.COOLING
+                    case (
+                        ThermostatRunningState.Fan
+                        | ThermostatRunningState.FanStage2
+                        | ThermostatRunningState.FanStage3
+                    ):
+                        self._attr_hvac_action = HVACAction.FAN
+                    case _:
+                        self._attr_hvac_action = HVACAction.OFF
+
         # update target temperature high/low
         supports_range = (
             self._attr_supported_features
