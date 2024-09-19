@@ -177,6 +177,14 @@
       "target_temperature_for_location": {
         "default": "mdi:thermometer"
       }
+    },
+    "text": {
+      "absolute_to_start": {
+        "default": "mdi:timer-edit-outline"
+      },
+      "absolute_to_stop": {
+        "default": "mdi:timer-edit-outline"
+      }
     }
   }
 }

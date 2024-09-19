@@ -591,6 +591,14 @@
           "temperature_number": "[%key:component::lg_thinq::entity::sensor::target_temperature::state::temperature_number%]"
         }
       }
+    },
+    "text": {
+      "absolute_to_start": {
+        "name": "Schedule turn-on"
+      },
+      "absolute_to_stop": {
+        "name": "Schedule turn-off"
+      }
     }
   }
 }

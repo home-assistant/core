@@ -27,7 +27,6 @@ from .coordinator import DeviceDataUpdateCoordinator, async_setup_device_coordin
 from .mqtt import ThinQMQTT
 
 
-@dataclass(kw_only=True)
 class ThinqData:
     """A class that holds runtime data."""
 
@@ -45,6 +44,7 @@ PLATFORMS = [
     Platform.NUMBER,
     Platform.SENSOR,
     Platform.SWITCH,
+    Platform.TEXT,
     Platform.VACUUM,
 ]
 
