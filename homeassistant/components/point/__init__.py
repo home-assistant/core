@@ -1,7 +1,7 @@
 """Support for Minut Point."""
 
 import asyncio
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from http import HTTPStatus
 import logging
 
@@ -188,7 +188,9 @@ async def async_setup_webhook(
 
 async def async_unload_entry(hass: HomeAssistant, entry: PointConfigEntry) -> bool:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+    if unload_ok := await hass.config_entries.async_unload_platforms(
+        entry, [*PLATFORMS, Platform.ALARM_CONTROL_PANEL]
+    ):
         session: PointSession = entry.runtime_data.client
         if CONF_WEBHOOK_ID in entry.data:
             webhook.async_unregister(hass, entry.data[CONF_WEBHOOK_ID])
@@ -242,14 +244,6 @@ class MinutPointClient:
 
         async def new_device(device_id, platform):
             """Load new device."""
-            config_entries_key = f"{platform}.{DOMAIN}"
-            async with self._config_entry.runtime_data.entry_lock:
-                if config_entries_key not in self._config_entry.runtime_data.entries:
-                    await self._hass.config_entries.async_forward_entry_setup(
-                        self._config_entry, platform
-                    )
-                    self._config_entry.runtime_data.entries.add(config_entries_key)
-
             async_dispatcher_send(
                 self._hass, POINT_DISCOVERY_NEW.format(platform, DOMAIN), device_id
             )
@@ -257,10 +251,16 @@ class MinutPointClient:
         self._is_available = True
         for home_id in self._client.homes:
             if home_id not in self._known_homes:
+                await self._hass.config_entries.async_forward_entry_setups(
+                    self._config_entry, [Platform.ALARM_CONTROL_PANEL]
+                )
                 await new_device(home_id, "alarm_control_panel")
                 self._known_homes.add(home_id)
         for device in self._client.devices:
             if device.device_id not in self._known_devices:
+                await self._hass.config_entries.async_forward_entry_setups(
+                    self._config_entry, PLATFORMS
+                )
                 for platform in PLATFORMS:
                     await new_device(device.device_id, platform)
                 self._known_devices.add(device.device_id)
@@ -382,4 +382,3 @@ class PointData:
 
     client: MinutPointClient
     entry_lock: asyncio.Lock = asyncio.Lock()
-    entries: set[str | None] = field(default_factory=set)
