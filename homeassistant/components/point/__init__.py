@@ -243,7 +243,7 @@ class MinutPointClient:
         async def new_device(device_id, platform):
             """Load new device."""
             config_entries_key = f"{platform}.{DOMAIN}"
-            async with self._config_entry.runtime_data.lock:
+            async with self._config_entry.runtime_data.entry_lock:
                 if config_entries_key not in self._config_entry.runtime_data.entries:
                     await self._hass.config_entries.async_forward_entry_setup(
                         self._config_entry, platform
