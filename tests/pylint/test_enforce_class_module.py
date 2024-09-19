@@ -66,6 +66,36 @@ def test_enforce_class_module_good(
 @pytest.mark.parametrize(
     "path",
     [
+        "homeassistant.components.sensor",
+        "homeassistant.components.sensor.entity",
+        "homeassistant.components.pylint_test.sensor",
+        "homeassistant.components.pylint_test.sensor.entity",
+    ],
+)
+def test_enforce_class_platform_good(
+    linter: UnittestLinter,
+    enforce_class_module_checker: BaseChecker,
+    path: str,
+) -> None:
+    """Good test cases."""
+    code = """
+    class SensorEntity:
+        pass
+
+    class CustomSensorEntity(SensorEntity):
+        pass
+    """
+    root_node = astroid.parse(code, path)
+    walker = ASTWalker(linter)
+    walker.add_checker(enforce_class_module_checker)
+
+    with assert_no_messages(linter):
+        walker.walk(root_node)
+
+
+@pytest.mark.parametrize(
+    "path",
+    [
         "homeassistant.components.pylint_test",
         "homeassistant.components.pylint_test.my_coordinator",
         "homeassistant.components.pylint_test.coordinator_other",
@@ -159,6 +189,76 @@ def test_enforce_class_module_bad_nested(
             col_offset=0,
             end_line=8,
             end_col_offset=21,
+        ),
+    ):
+        walker.walk(root_node)
+
+
+@pytest.mark.parametrize(
+    "path",
+    [
+        "homeassistant.components.sensor",
+        "homeassistant.components.sensor.entity",
+        "homeassistant.components.pylint_test.entity",
+    ],
+)
+def test_enforce_entity_good(
+    linter: UnittestLinter,
+    enforce_class_module_checker: BaseChecker,
+    path: str,
+) -> None:
+    """Good test cases."""
+    code = """
+    class Entity:
+        pass
+
+    class CustomEntity(Entity):
+        pass
+    """
+    root_node = astroid.parse(code, path)
+    walker = ASTWalker(linter)
+    walker.add_checker(enforce_class_module_checker)
+
+    with assert_no_messages(linter):
+        walker.walk(root_node)
+
+
+@pytest.mark.parametrize(
+    "path",
+    [
+        "homeassistant.components.pylint_test",
+        "homeassistant.components.pylint_test.select",
+        "homeassistant.components.pylint_test.select.entity",
+    ],
+)
+def test_enforce_entity_bad(
+    linter: UnittestLinter,
+    enforce_class_module_checker: BaseChecker,
+    path: str,
+) -> None:
+    """Good test cases."""
+    code = """
+    class Entity:
+        pass
+
+    class CustomEntity(Entity):
+        pass
+    """
+    root_node = astroid.parse(code, path)
+    walker = ASTWalker(linter)
+    walker.add_checker(enforce_class_module_checker)
+
+    with assert_adds_messages(
+        linter,
+        MessageTest(
+            msg_id="hass-enforce-class-module",
+            line=5,
+            node=root_node.body[1],
+            args=("Entity", "entity"),
+            confidence=UNDEFINED,
+            col_offset=0,
+            end_line=5,
+            end_col_offset=18,
         ),
     ):
         walker.walk(root_node)

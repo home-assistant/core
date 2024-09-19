@@ -3048,9 +3048,21 @@ async def test_get_config_parameters(
     assert result[key]["property"] == 2
     assert result[key]["property_key"] is None
     assert result[key]["endpoint"] == 0
-    assert result[key]["metadata"]["type"] == "number"
     assert result[key]["configuration_value_type"] == "enumerated"
     assert result[key]["metadata"]["states"]
+    assert (
+        result[key]["metadata"]["description"]
+        == "Stay awake for 10 minutes at power on"
+    )
+    assert result[key]["metadata"]["label"] == "Stay Awake in Battery Mode"
+    assert result[key]["metadata"]["type"] == "number"
+    assert result[key]["metadata"]["min"] == 0
+    assert result[key]["metadata"]["max"] == 1
+    assert result[key]["metadata"]["unit"] is None
+    assert result[key]["metadata"]["writeable"] is True
+    assert result[key]["metadata"]["readable"] is True
+    assert result[key]["metadata"]["default"] == 0
+    assert result[key]["value"] == 0
 
     key = "52-112-0-201-255"
     assert result[key]["property_key"] == 255

@@ -34,6 +34,7 @@ def platforms() -> list[Platform]:
     return [Platform.SWITCH]
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_switch_setup(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -46,12 +47,29 @@ async def test_switch_setup(
     await snapshot_platform(hass, entity_registry, snapshot, entry.entry_id)
 
 
+async def test_disabled_by_default_switch(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test vpn enabled switch is disabled by default ."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert not hass.states.get("switch.mock_title_vpn_enabled")
+
+    assert (entry := entity_registry.async_get("switch.mock_title_vpn_enabled"))
+    assert entry.disabled
+    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize(
     ("entity", "setting"),
     [
         ("disable_leds", Settings.DISABLE_LEDS),
         ("led_night_mode", Settings.NIGHT_MODE),
         ("auto_zigbee_update", Settings.ZB_AUTOUPDATE),
+        ("vpn_enabled", Settings.ENABLE_VPN),
     ],
 )
 async def test_switches(

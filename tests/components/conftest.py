@@ -6,7 +6,7 @@ from collections.abc import Callable, Generator
 from importlib.util import find_spec
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
 import pytest
 
@@ -243,12 +243,14 @@ def addon_info_side_effect_fixture() -> Any | None:
 
 
 @pytest.fixture(name="addon_info")
-def addon_info_fixture(addon_info_side_effect: Any | None) -> Generator[AsyncMock]:
+def addon_info_fixture(
+    supervisor_client: AsyncMock, addon_info_side_effect: Any | None
+) -> Generator[AsyncMock]:
     """Mock Supervisor add-on info."""
     # pylint: disable-next=import-outside-toplevel
     from .hassio.common import mock_addon_info
 
-    yield from mock_addon_info(addon_info_side_effect)
+    yield from mock_addon_info(supervisor_client, addon_info_side_effect)
 
 
 @pytest.fixture(name="addon_not_installed")
@@ -409,3 +411,29 @@ def update_addon_fixture() -> Generator[AsyncMock]:
     from .hassio.common import mock_update_addon
 
     yield from mock_update_addon()
+
+
+@pytest.fixture(name="supervisor_client")
+def supervisor_client() -> Generator[AsyncMock]:
+    """Mock the supervisor client."""
+    supervisor_client = AsyncMock()
+    supervisor_client.addons = AsyncMock()
+    with (
+        patch(
+            "homeassistant.components.hassio.get_supervisor_client",
+            return_value=supervisor_client,
+        ),
+        patch(
+            "homeassistant.components.hassio.handler.get_supervisor_client",
+            return_value=supervisor_client,
+        ),
+        patch(
+            "homeassistant.components.hassio.addon_manager.get_supervisor_client",
+            return_value=supervisor_client,
+        ),
+        patch(
+            "homeassistant.components.hassio.handler.HassIO.client",
+            new=PropertyMock(return_value=supervisor_client),
+        ),
+    ):
+        yield supervisor_client
