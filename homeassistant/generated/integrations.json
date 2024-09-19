@@ -3262,12 +3262,6 @@
           "iot_class": "local_polling",
           "name": "LG Netcast"
         },
-        "lg_thinq": {
-          "integration_type": "hub",
-          "config_flow": true,
-          "iot_class": "cloud_push",
-          "name": "LG ThinQ"
-        },
         "lg_soundbar": {
           "integration_type": "hub",
           "config_flow": true,

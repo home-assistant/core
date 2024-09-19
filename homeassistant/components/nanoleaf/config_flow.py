@@ -215,7 +215,7 @@ class NanoleafConfigFlow(ConfigFlow, domain=DOMAIN):
                 self.discovery_conf.pop(self.nanoleaf.host)
             if self.device_id in self.discovery_conf:
                 self.discovery_conf.pop(self.device_id)
-            _LOGGER.info(
+            _LOGGER.debug(
                 "Successfully imported Nanoleaf %s from the discovery integration",
                 name,
             )

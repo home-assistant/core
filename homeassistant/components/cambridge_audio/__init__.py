@@ -10,7 +10,7 @@ from aiostreammagic.models import CallbackType
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, Platform
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import CONNECT_TIMEOUT, STREAM_MAGIC_EXCEPTIONS
@@ -29,7 +29,6 @@ async def async_setup_entry(
 
     client = StreamMagicClient(entry.data[CONF_HOST])
 
-    @callback
     async def _connection_update_callback(
         _client: StreamMagicClient, _callback_type: CallbackType
     ) -> None:

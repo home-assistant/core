@@ -45,6 +45,9 @@
     "button": {
       "confirm_error": {
         "name": "Confirm error"
+      },
+      "sync_clock": {
+        "name": "Sync clock"
       }
     },
     "number": {

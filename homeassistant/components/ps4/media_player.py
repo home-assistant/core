@@ -118,7 +118,7 @@ class PS4Device(MediaPlayerEntity):
         """Display logger msg if region is deprecated."""
         # Non-Breaking although data returned may be inaccurate.
         if self._region in deprecated_regions:
-            _LOGGER.info(
+            _LOGGER.warning(
                 """Region: %s has been deprecated.
                             Please remove PS4 integration
                             and Re-configure again to utilize
@@ -340,7 +340,7 @@ class PS4Device(MediaPlayerEntity):
         """Set device info for registry."""
         # If cannot get status on startup, assume info from registry.
         if status is None:
-            _LOGGER.info("Assuming status from registry")
+            _LOGGER.debug("Assuming status from registry")
             e_registry = er.async_get(self.hass)
             d_registry = dr.async_get(self.hass)
 
