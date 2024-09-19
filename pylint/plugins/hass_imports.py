@@ -601,7 +601,7 @@ class HassImportsFormatChecker(BaseChecker):
 
         return True
 
-    def _check_for_component_relative_import(
+    def _check_for_relative_import(
         self,
         current_package: str,
         node: nodes.ImportFrom,
@@ -642,7 +642,7 @@ class HassImportsFormatChecker(BaseChecker):
                 current_component = self.current_package.split(".")[2]
 
         # Checks for hass-relative-import
-        if not self._check_for_component_relative_import(
+        if not self._check_for_relative_import(
             self.current_package, node, current_component
         ):
             return
