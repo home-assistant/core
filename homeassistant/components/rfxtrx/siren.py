@@ -93,7 +93,7 @@ async def async_setup_entry(
     )
 
 
-class RfxtrxOffDelayMixin(Entity):
+class RfxtrxOffDelayMixin(Entity):  # pylint: disable=hass-enforce-class-module
     """Mixin to support timeouts on data.
 
     Many 433 devices only send data when active. They will

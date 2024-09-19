@@ -46,7 +46,7 @@ class SamsungTVRemote(SamsungTVEntity, RemoteEntity):
         See https://github.com/jaruba/ha-samsungtv-tizen/blob/master/Key_codes.md
         """
         if self._bridge.power_off_in_progress:
-            LOGGER.info("TV is powering off, not sending keys: %s", command)
+            LOGGER.debug("TV is powering off, not sending keys: %s", command)
             return
 
         num_repeats = kwargs[ATTR_NUM_REPEATS]
