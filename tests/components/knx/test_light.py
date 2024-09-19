@@ -1160,7 +1160,7 @@ async def test_light_ui_create(
     knx: KNXTestKit,
     create_ui_entity: KnxEntityGenerator,
 ) -> None:
-    """Test creating a switch."""
+    """Test creating a light."""
     await knx.setup_integration({})
     await create_ui_entity(
         platform=Platform.LIGHT,
@@ -1193,7 +1193,7 @@ async def test_light_ui_color_temp(
     color_temp_mode: str,
     raw_ct: tuple[int, ...],
 ) -> None:
-    """Test creating a switch."""
+    """Test creating a color-temp light."""
     await knx.setup_integration({})
     await create_ui_entity(
         platform=Platform.LIGHT,
@@ -1227,7 +1227,7 @@ async def test_light_ui_load(
     load_config_store: None,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test device removal."""
+    """Test loading a light from storage."""
     await knx.setup_integration({})
 
     await knx.assert_read("1/0/45", response=True)  # test switch - unrelated here
