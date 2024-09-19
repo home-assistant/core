@@ -20,14 +20,16 @@ class ViCareEntity(Entity):
     def __init__(
         self,
         unique_id_suffix: str,
+        device_serial: str | None,
         device_config: PyViCareDeviceConfig,
         device: PyViCareDevice,
         component: PyViCareHeatingDeviceComponent | None = None,
     ) -> None:
         """Initialize the entity."""
         gateway_serial = device_config.getConfig().serial
-        device_serial = device.getSerial()
-        identifier = f"{gateway_serial}_{device_serial}"
+        device_id = device_config.getId()
+
+        identifier = f"{gateway_serial}_{device_serial if device_serial is not None else device_id}"
 
         self._api: PyViCareDevice | PyViCareHeatingDeviceComponent = (
             component if component else device
