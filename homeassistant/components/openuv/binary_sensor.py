@@ -51,7 +51,7 @@ class OpenUvBinarySensor(OpenUvEntity, BinarySensorEntity):
 
         for key in ("from_time", "to_time", "from_uv", "to_uv"):
             if not data.get(key):
-                LOGGER.info("Skipping update due to missing data: %s", key)
+                LOGGER.warning("Skipping update due to missing data: %s", key)
                 return
 
         if self.entity_description.key == TYPE_PROTECTION_WINDOW:

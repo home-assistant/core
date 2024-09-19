@@ -11,6 +11,7 @@
   "sw_version": "v2.3.6",
   "wifi_mode": 0,
   "zb_flash_size": 704,
+  "zb_channel": 0,
   "zb_hw": "CC2652P7",
   "zb_ram_size": 152,
   "zb_version": "20240314",

@@ -180,7 +180,7 @@ aioapcaccess==0.4.2
 aioaquacell==0.2.0
 
 # homeassistant.components.aseko_pool_live
-aioaseko==0.2.0
+aioaseko==1.0.0
 
 # homeassistant.components.asuswrt
 aioasuswrt==1.4.0
@@ -241,6 +241,9 @@ aioguardian==2022.07.0
 
 # homeassistant.components.harmony
 aioharmony==0.2.10
+
+# homeassistant.components.hassio
+aiohasupervisor==0.1.0b0
 
 # homeassistant.components.homekit_controller
 aiohomekit==3.2.3
@@ -478,7 +481,7 @@ autarco==3.0.0
 axis==62
 
 # homeassistant.components.fujitsu_fglair
-ayla-iot-unofficial==1.3.1
+ayla-iot-unofficial==1.4.1
 
 # homeassistant.components.azure_event_hub
 azure-eventhub==5.11.1
@@ -1372,7 +1375,7 @@ py-madvr2==1.6.32
 py-melissa-climate==2.1.4
 
 # homeassistant.components.nextbus
-py-nextbusnext==2.0.4
+py-nextbusnext==2.0.5
 
 # homeassistant.components.nightscout
 py-nightscout==1.2.2
@@ -1399,7 +1402,7 @@ pyElectra==1.2.4
 pyRFXtrx==0.31.1
 
 # homeassistant.components.tibber
-pyTibber==0.30.1
+pyTibber==0.30.2
 
 # homeassistant.components.dlink
 pyW215==0.7.0
@@ -1463,7 +1466,7 @@ pycoolmasternet-async==0.2.2
 pycsspeechtts==1.0.8
 
 # homeassistant.components.daikin
-pydaikin==2.13.6
+pydaikin==2.13.7
 
 # homeassistant.components.deako
 pydeako==0.4.0
@@ -1792,7 +1795,7 @@ pysmartthings==0.7.8
 pysml==0.0.12
 
 # homeassistant.components.smlight
-pysmlight==0.0.16
+pysmlight==0.1.0
 
 # homeassistant.components.snmp
 pysnmp==6.2.5
@@ -1971,7 +1974,7 @@ pywilight==0.0.74
 pywizlight==0.5.14
 
 # homeassistant.components.wmspro
-pywmspro==0.1.0
+pywmspro==0.2.0
 
 # homeassistant.components.ws66i
 pyws66i==1.1
@@ -2204,7 +2207,7 @@ temperusb==1.6.1
 # homeassistant.components.tesla_fleet
 # homeassistant.components.teslemetry
 # homeassistant.components.tessie
-tesla-fleet-api==0.7.3
+tesla-fleet-api==0.7.8
 
 # homeassistant.components.powerwall
 tesla-powerwall==0.5.2
@@ -2220,9 +2223,6 @@ thermobeacon-ble==0.7.0
 
 # homeassistant.components.thermopro
 thermopro-ble==0.10.0
-
-# homeassistant.components.lg_thinq
-thinqconnect==0.9.7
 
 # homeassistant.components.tilt_ble
 tilt-ble==0.2.3

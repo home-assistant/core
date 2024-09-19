@@ -5,5 +5,6 @@
   "dependencies": ["http", "repairs"],
   "documentation": "https://www.home-assistant.io/integrations/hassio",
   "iot_class": "local_polling",
-  "quality_scale": "internal"
+  "quality_scale": "internal",
+  "requirements": ["aiohasupervisor==0.1.0b0"]
 }

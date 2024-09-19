@@ -16,7 +16,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import RoborockConfigEntry
 from .const import MAP_SLEEP
 from .coordinator import RoborockDataUpdateCoordinator
-from .device import RoborockCoordinatedEntityV1
+from .entity import RoborockCoordinatedEntityV1
 
 
 @dataclass(frozen=True, kw_only=True)

@@ -289,7 +289,7 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
             and existing_entry.data[CONF_HOST] != host
             and ip(existing_entry.data[CONF_HOST]).version == ip(host).version
         ):
-            _LOGGER.info(
+            _LOGGER.debug(
                 "Update host from '%s' to '%s' for NAS '%s' via discovery",
                 existing_entry.data[CONF_HOST],
                 host,
