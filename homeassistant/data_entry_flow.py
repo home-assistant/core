@@ -226,7 +226,11 @@ class FlowManager(abc.ABC, Generic[_FlowResultT, _HandlerT]):
     async def async_finish_flow(
         self, flow: FlowHandler[_FlowResultT, _HandlerT], result: _FlowResultT
     ) -> _FlowResultT:
-        """Finish a data entry flow."""
+        """Finish a data entry flow.
+
+        This method is called when a flow step returns FlowResultType.ABORT or
+        FlowResultType.CREATE_ENTRY.
+        """
 
     async def async_post_init(
         self, flow: FlowHandler[_FlowResultT, _HandlerT], result: _FlowResultT

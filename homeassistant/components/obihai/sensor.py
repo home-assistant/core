@@ -106,7 +106,7 @@ class ObihaiServiceSensors(SensorEntity):
 
             if not self.requester.available:
                 self.requester.available = True
-                LOGGER.info("Connection restored")
+                LOGGER.warning("Connection restored")
             self._attr_available = True
 
         except RequestException as exc:

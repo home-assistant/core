@@ -79,12 +79,12 @@ def setup_platform(
 
         def monitor_stop(event: Event) -> None:
             """Stop the monitor thread."""
-            _LOGGER.info("Stopping scanner for Eddystone beacons")
+            _LOGGER.debug("Stopping scanner for Eddystone beacons")
             mon.stop()
 
         def monitor_start(event: Event) -> None:
             """Start the monitor thread."""
-            _LOGGER.info("Starting scanner for Eddystone beacons")
+            _LOGGER.debug("Starting scanner for Eddystone beacons")
             mon.start()
 
         add_entities(devices)

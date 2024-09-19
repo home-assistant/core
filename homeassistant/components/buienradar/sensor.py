@@ -888,7 +888,7 @@ class BrSensor(SensorEntity):
         if sensor_type.startswith(PRECIPITATION_FORECAST):
             result = {ATTR_ATTRIBUTION: data.get(ATTRIBUTION)}
             if self._timeframe is not None:
-                result[TIMEFRAME_LABEL] = "%d min" % (self._timeframe)
+                result[TIMEFRAME_LABEL] = f"{self._timeframe} min"
 
             self._attr_extra_state_attributes = result
 

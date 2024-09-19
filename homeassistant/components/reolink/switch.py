@@ -10,22 +10,22 @@ from reolink_aio.api import Chime, Host
 from reolink_aio.exceptions import ReolinkError
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import ReolinkData
 from .const import DOMAIN
 from .entity import (
     ReolinkChannelCoordinatorEntity,
     ReolinkChannelEntityDescription,
     ReolinkChimeCoordinatorEntity,
+    ReolinkChimeEntityDescription,
     ReolinkHostCoordinatorEntity,
     ReolinkHostEntityDescription,
 )
+from .util import ReolinkConfigEntry, ReolinkData
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -53,7 +53,7 @@ class ReolinkNVRSwitchEntityDescription(
 @dataclass(frozen=True, kw_only=True)
 class ReolinkChimeSwitchEntityDescription(
     SwitchEntityDescription,
-    ReolinkChannelEntityDescription,
+    ReolinkChimeEntityDescription,
 ):
     """A class that describes switch entities for a chime."""
 
@@ -283,11 +283,11 @@ DEPRECATED_HDR = ReolinkSwitchEntityDescription(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: ReolinkConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up a Reolink switch entities."""
-    reolink_data: ReolinkData = hass.data[DOMAIN][config_entry.entry_id]
+    reolink_data: ReolinkData = config_entry.runtime_data
 
     entities: list[
         ReolinkSwitchEntity | ReolinkNVRSwitchEntity | ReolinkChimeSwitchEntity

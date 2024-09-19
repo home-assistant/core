@@ -7,6 +7,8 @@ from collections import defaultdict
 import logging
 from typing import TYPE_CHECKING, Any
 
+from aiohasupervisor import SupervisorError
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_MANUFACTURER, ATTR_NAME
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
@@ -514,11 +516,15 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
     async def _update_addon_info(self, slug: str) -> tuple[str, dict[str, Any] | None]:
         """Return the info for an add-on."""
         try:
-            info = await self.hassio.get_addon_info(slug)
-        except HassioAPIError as err:
+            info = await self.hassio.client.addons.addon_info(slug)
+        except SupervisorError as err:
             _LOGGER.warning("Could not fetch info for %s: %s", slug, err)
             return (slug, None)
-        return (slug, info)
+        # Translate to legacy hassio names for compatibility
+        info_dict = info.to_dict()
+        info_dict["hassio_api"] = info_dict.pop("supervisor_api")
+        info_dict["hassio_role"] = info_dict.pop("supervisor_role")
+        return (slug, info_dict)
 
     @callback
     def async_enable_container_updates(

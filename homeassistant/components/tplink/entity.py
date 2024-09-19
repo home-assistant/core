@@ -319,7 +319,7 @@ class CoordinatedTPLinkFeatureEntity(CoordinatedTPLinkEntity, ABC):
                 and desc.entity_registry_enabled_default,
             )
 
-        _LOGGER.info(
+        _LOGGER.debug(
             "Device feature: %s (%s) needs an entity description defined in HA",
             feature.name,
             feature.id,

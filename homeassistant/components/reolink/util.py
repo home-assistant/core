@@ -12,6 +12,8 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from .const import DOMAIN
 from .host import ReolinkHost
 
+type ReolinkConfigEntry = config_entries.ConfigEntry[ReolinkData]
+
 
 @dataclass
 class ReolinkData:
@@ -24,13 +26,10 @@ class ReolinkData:
 
 def is_connected(hass: HomeAssistant, config_entry: config_entries.ConfigEntry) -> bool:
     """Check if an existing entry has a proper connection."""
-    reolink_data: ReolinkData | None = hass.data.get(DOMAIN, {}).get(
-        config_entry.entry_id
-    )
     return (
-        reolink_data is not None
+        hasattr(config_entry, "runtime_data")
         and config_entry.state == config_entries.ConfigEntryState.LOADED
-        and reolink_data.device_coordinator.last_update_success
+        and config_entry.runtime_data.device_coordinator.last_update_success
     )
 
 
