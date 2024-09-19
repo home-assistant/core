@@ -168,7 +168,9 @@ class SignalNotificationService(BaseNotificationService):
                 ):
                     content_length = int(str(resp.headers.get("Content-Length")))
                     raise ValueError(  # noqa: TRY301
-                        f"Attachment too large (Content-Length reports {content_length}). Max size: {CONF_MAX_ALLOWED_DOWNLOAD_SIZE_BYTES} bytes"
+                        "Attachment too large (Content-Length reports "
+                        f"{content_length}). Max size: "
+                        f"{CONF_MAX_ALLOWED_DOWNLOAD_SIZE_BYTES} bytes"
                     )
 
                 size = 0
