@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import abc
 import asyncio
 from dataclasses import asdict, dataclass
 import hashlib
@@ -25,37 +24,12 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.json import json_loads_object
 
 from .const import DOMAIN, EXCLUDE_FROM_BACKUP, LOGGER
+from .sync_agent import BackupPlatformAgentProtocol, BackupSyncAgent
 
 BUF_SIZE = 2**20 * 4  # 4MB
 
 
-class BackupSyncAgent(abc.ABC):
-    """Define the format that backup sync agents can have."""
-
-    def __init__(self, name: str) -> None:
-        """Initialize the backup sync agent."""
-        self.name = name
-
-    @abc.abstractmethod
-    async def async_download_backup(
-        self,
-        *,
-        id: str,
-        path: Path,
-        **kwargs: Any,
-    ) -> None:
-        """Download a backup file."""
-
-    @abc.abstractmethod
-    async def async_upload_backup(self, *, backup: Backup, **kwargs: Any) -> None:
-        """Upload a backup file."""
-
-    @abc.abstractmethod
-    async def async_list_backups(self, **kwargs: Any) -> list[SyncedBackup]:
-        """List backups."""
-
-
-@dataclass(slots=True)
+@dataclass()
 class BaseBackup:
     """Base backup class."""
 
@@ -80,13 +54,6 @@ class Backup(BaseBackup):
         return {**super().as_dict(), "path": self.path.as_posix()}
 
 
-@dataclass(slots=True)
-class SyncedBackup(BaseBackup):
-    """Synced backup class."""
-
-    id: str
-
-
 class BackupPlatformProtocol(Protocol):
     """Define the format that backup platforms can have."""
 
@@ -95,18 +62,6 @@ class BackupPlatformProtocol(Protocol):
 
     async def async_post_backup(self, hass: HomeAssistant) -> None:
         """Perform operations after a backup finishes."""
-
-
-class BackupPlatformAgentProtocol(Protocol):
-    """Define the format that backup platforms can have."""
-
-    async def async_get_backup_sync_agents(
-        self,
-        *,
-        hass: HomeAssistant,
-        **kwargs: Any,
-    ) -> list[BackupSyncAgent]:
-        """Register the backup sync agent."""
 
 
 class BackupManager:
