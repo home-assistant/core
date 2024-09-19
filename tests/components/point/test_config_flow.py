@@ -94,10 +94,19 @@ async def test_full_flow(
     assert "webhook_id" in result["result"].data
 
 
-@pytest.mark.parametrize("unique_id", ["abcd", None])
+@pytest.mark.parametrize(
+    ("unique_id", "expected"),
+    [
+        ("abcd", "reauth_successful"),
+        (None, "reauth_successful"),
+        ("abcde", "wrong_account"),
+    ],
+    ids=("correct-unique_id", "missing-unique_id", "wrong-unique_id-abort"),
+)
 @pytest.mark.usefixtures("current_request_with_host")
 async def test_reauthentication_flow(
-    unique_id: str,
+    unique_id: str | None,
+    expected: str,
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
@@ -145,61 +154,9 @@ async def test_reauthentication_flow(
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "reauth_successful"
-
-    assert len(mock_setup.mock_calls) == 1
-
-
-@pytest.mark.usefixtures("current_request_with_host")
-async def test_wrong_account_in_reauth(
-    hass: HomeAssistant,
-    hass_client_no_auth: ClientSessionGenerator,
-    aioclient_mock: AiohttpClientMocker,
-) -> None:
-    """Test reauthentication flow."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="abcde",
-        version=1,
-        data={"id": "timmo", "auth_implementation": DOMAIN},
-    )
-    entry.add_to_hass(hass)
-
-    result = await entry.start_reauth_flow(hass)
-
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-
-    state = config_entry_oauth2_flow._encode_jwt(
-        hass,
-        {
-            "flow_id": result["flow_id"],
-            "redirect_uri": REDIRECT_URL,
-        },
-    )
-    client = await hass_client_no_auth()
-    await client.get(f"/auth/external/callback?code=abcd&state={state}")
-
-    aioclient_mock.post(
-        OAUTH2_TOKEN,
-        json={
-            "refresh_token": "mock-refresh-token",
-            "access_token": "mock-access-token",
-            "type": "Bearer",
-            "expires_in": 60,
-            "user_id": "abcd",
-        },
-    )
-
-    with (
-        patch("homeassistant.components.point.api.AsyncConfigEntryAuth"),
-        patch(
-            f"homeassistant.components.{DOMAIN}.async_setup_entry", return_value=True
-        ),
-    ):
-        result = await hass.config_entries.flow.async_configure(result["flow_id"])
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "wrong_account"
+    assert result["reason"] == expected
+    if expected == "reauth_successful":
+        assert len(mock_setup.mock_calls) == 1
 
 
 async def test_import_flow(
