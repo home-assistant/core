@@ -23,24 +23,11 @@ from homeassistant.helpers.json import json_bytes
 from homeassistant.util import dt as dt_util
 from homeassistant.util.json import json_loads_object
 
+from .base import BaseBackup
 from .const import DOMAIN, EXCLUDE_FROM_BACKUP, LOGGER
 from .sync_agent import BackupPlatformAgentProtocol, BackupSyncAgent
 
 BUF_SIZE = 2**20 * 4  # 4MB
-
-
-@dataclass()
-class BaseBackup:
-    """Base backup class."""
-
-    date: str
-    slug: str
-    size: float
-    name: str
-
-    def as_dict(self) -> dict:
-        """Return a dict representation of this backup."""
-        return asdict(self)
 
 
 @dataclass(slots=True)
@@ -51,7 +38,7 @@ class Backup(BaseBackup):
 
     def as_dict(self) -> dict:
         """Return a dict representation of this backup."""
-        return {**super().as_dict(), "path": self.path.as_posix()}
+        return {**asdict(self), "path": self.path.as_posix()}
 
 
 class BackupPlatformProtocol(Protocol):
@@ -151,7 +138,7 @@ class BackupManager:
         self.syncing = True
         sync_backup_results = await asyncio.gather(
             *(
-                agent.async_upload_backup(backup=backup)
+                agent.async_upload_backup(path=backup.path, metadata=backup.as_dict())
                 for agent in self.sync_agents.values()
             ),
             return_exceptions=True,

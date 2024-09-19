@@ -9,7 +9,7 @@ from typing import Any, Protocol
 
 from homeassistant.core import HomeAssistant
 
-from .manager import Backup, BaseBackup
+from .base import BaseBackup
 
 
 @dataclass(slots=True)
@@ -37,8 +37,14 @@ class BackupSyncAgent(abc.ABC):
         """Download a backup file."""
 
     @abc.abstractmethod
-    async def async_upload_backup(self, *, backup: Backup, **kwargs: Any) -> None:
-        """Upload a backup file."""
+    async def async_upload_backup(
+        self,
+        *,
+        path: Path,
+        metadata: dict[str, Any],
+        **kwargs: Any,
+    ) -> None:
+        """Upload a backup."""
 
     @abc.abstractmethod
     async def async_list_backups(self, **kwargs: Any) -> list[SyncedBackup]:
