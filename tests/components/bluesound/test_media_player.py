@@ -172,12 +172,10 @@ async def test_status_updated(
     status = dataclasses.replace(status, state="pause", volume=50, etag="changed")
     player_mocks.player_data.status_long_polling_mock.set(status)
 
-    await asyncio.sleep(0)
-    for _ in range(10):
-        post_state = hass.states.get("media_player.player_name1111")
-        if post_state.state == MediaPlayerState.PAUSED:
-            break
-        await asyncio.sleep(1)
+    # give the long polling loop a chance to update the state; this could be any async call
+    await hass.async_block_till_done()
+
+    post_state = hass.states.get("media_player.player_name1111")
 
     assert post_state.state == MediaPlayerState.PAUSED
     assert post_state.attributes["volume_level"] == 0.5
@@ -192,17 +190,15 @@ async def test_unavailable_when_offline(
     pre_state = hass.states.get("media_player.player_name1111")
     assert pre_state.state == "playing"
 
-    player_mocks.player_data.player.status.side_effect = PlayerUnreachableError(
-        "Player not reachable"
+    player_mocks.player_data.status_long_polling_mock.set_error(
+        PlayerUnreachableError("Player not reachable")
     )
     player_mocks.player_data.status_long_polling_mock.trigger()
 
-    await asyncio.sleep(0)
-    for _ in range(10):
-        post_state = hass.states.get("media_player.player_name1111")
-        if post_state.state == "unavailable":
-            break
-        await asyncio.sleep(1)
+    # give the long polling loop a chance to update the state; this could be any async call
+    await hass.async_block_till_done()
+
+    post_state = hass.states.get("media_player.player_name1111")
 
     assert post_state.state == "unavailable"
 
@@ -291,8 +287,8 @@ async def test_unjoin(
     )
     player_mocks.player_data.sync_long_polling_mock.set(updated_sync_status)
 
-    # this might be flaky, but we do not have a way to wait for the master to be set
-    await asyncio.sleep(0)
+    # give the long polling loop a chance to update the state; this could be any async call
+    await hass.async_block_till_done()
 
     await hass.services.async_call(
         BLUESOUND_DOMAIN,
@@ -321,13 +317,10 @@ async def test_attr_master(
     )
     player_mocks.player_data.sync_long_polling_mock.set(updated_sync_status)
 
-    for _ in range(10):
-        attr_master = hass.states.get("media_player.player_name1111").attributes[
-            "master"
-        ]
-        if attr_master:
-            break
-        await asyncio.sleep(1)
+    # give the long polling loop a chance to update the state; this could be any async call
+    await hass.async_block_till_done()
+
+    attr_master = hass.states.get("media_player.player_name1111").attributes["master"]
 
     assert attr_master is True
 
@@ -350,12 +343,11 @@ async def test_attr_bluesound_group(
     )
     player_mocks.player_data.status_long_polling_mock.set(updated_status)
 
-    for _ in range(10):
-        attr_bluesound_group = hass.states.get(
-            "media_player.player_name1111"
-        ).attributes.get("bluesound_group")
-        if attr_bluesound_group:
-            break
-        await asyncio.sleep(1)
+    # give the long polling loop a chance to update the state; this could be any async call
+    await hass.async_block_till_done()
+
+    attr_bluesound_group = hass.states.get(
+        "media_player.player_name1111"
+    ).attributes.get("bluesound_group")
 
     assert attr_bluesound_group == ["player-name1111", "player-name2222"]

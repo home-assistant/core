@@ -1,5 +1,7 @@
 """Test bluesound integration."""
 
+import asyncio
+
 from pyblu.errors import PlayerUnreachableError
 
 from homeassistant.components.bluesound import async_unload_entry
@@ -37,7 +39,7 @@ async def test_unload_entry_while_player_is_offline(
     )
     player_mocks.player_data.status_long_polling_mock.trigger()
 
-    # this is only there to yield to the event loop once; there is nothing we can wait for
+    # give the long polling loop a chance to update the state; this could be any async call
     await hass.async_block_till_done()
 
     assert await async_unload_entry(hass, config_entry)
