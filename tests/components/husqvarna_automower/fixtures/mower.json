@@ -78,17 +78,6 @@
               "saturday": true,
               "sunday": false,
               "workAreaId": 654321
-            },
-            {
-              "start": 120,
-              "duration": 480,
-              "monday": true,
-              "tuesday": false,
-              "wednesday": false,
-              "thursday": true,
-              "friday": false,
-              "saturday": true,
-              "sunday": false
             }
           ]
         },
