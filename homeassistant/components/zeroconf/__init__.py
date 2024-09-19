@@ -402,14 +402,14 @@ class ZeroconfDiscovery:
         if (
             change != config_entries.ConfigEntryChange.REMOVED
             or entry.source != config_entries.SOURCE_IGNORE
-            or not (discovery_keys := entry.data.get("discovery_keys"))
+            or not (discovery_keys := entry.discovery_keys)
         ):
             return
         for discovery_key in discovery_keys:
             if discovery_key["domain"] != DOMAIN or discovery_key["version"] != 1:
                 continue
-            _type = discovery_key["key"][0]
-            name = discovery_key["key"][1]
+            _type = discovery_key["key"][0]  # type: ignore[index]
+            name = discovery_key["key"][1]  # type: ignore[index]
             _LOGGER.debug("Rediscover unignored service %s.%s", _type, name)
             self._async_service_update(self.zeroconf, _type, name)
 

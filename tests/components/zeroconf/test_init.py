@@ -1402,61 +1402,55 @@ async def test_zeroconf_removed(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     (
         "entry_domain",
-        "entry_data",
+        "entry_discovery_keys",
     ),
     [
         # Matching discovery key
         (
             "shelly",
-            {
-                "discovery_keys": [
-                    {
-                        "domain": "zeroconf",
-                        "key": ["_http._tcp.local.", "Shelly108._http._tcp.local."],
-                        "version": 1,
-                    }
-                ]
-            },
+            (
+                {
+                    "domain": "zeroconf",
+                    "key": ["_http._tcp.local.", "Shelly108._http._tcp.local."],
+                    "version": 1,
+                },
+            ),
         ),
         # Matching discovery key
         (
             "shelly",
-            {
-                "discovery_keys": [
-                    {
-                        "domain": "zeroconf",
-                        "key": ["_http._tcp.local.", "Shelly108._http._tcp.local."],
-                        "version": 1,
-                    },
-                    {
-                        "domain": "other",
-                        "key": "blah",
-                        "version": 1,
-                    },
-                ]
-            },
+            (
+                {
+                    "domain": "zeroconf",
+                    "key": ["_http._tcp.local.", "Shelly108._http._tcp.local."],
+                    "version": 1,
+                },
+                {
+                    "domain": "other",
+                    "key": "blah",
+                    "version": 1,
+                },
+            ),
         ),
         # Matching discovery key, other domain
         # Note: Rediscovery is not currently restricted to the domain of the removed
         # entry. Such a check can be added if needed.
         (
             "comp",
-            {
-                "discovery_keys": [
-                    {
-                        "domain": "zeroconf",
-                        "key": ["_http._tcp.local.", "Shelly108._http._tcp.local."],
-                        "version": 1,
-                    }
-                ]
-            },
+            (
+                {
+                    "domain": "zeroconf",
+                    "key": ["_http._tcp.local.", "Shelly108._http._tcp.local."],
+                    "version": 1,
+                },
+            ),
         ),
     ],
 )
 async def test_zeroconf_rediscover(
     hass: HomeAssistant,
     entry_domain: str,
-    entry_data: dict,
+    entry_discovery_keys: tuple,
 ) -> None:
     """Test we reinitiate flows when an ignored config entry is removed."""
 
@@ -1471,7 +1465,7 @@ async def test_zeroconf_rediscover(
 
     entry = MockConfigEntry(
         domain=entry_domain,
-        data=entry_data,
+        discovery_keys=entry_discovery_keys,
         unique_id="mock-unique-id",
         state=config_entries.ConfigEntryState.LOADED,
         source=config_entries.SOURCE_IGNORE,
@@ -1535,7 +1529,7 @@ async def test_zeroconf_rediscover(
 @pytest.mark.parametrize(
     (
         "entry_domain",
-        "entry_data",
+        "entry_discovery_keys",
         "entry_source",
         "entry_unique_id",
     ),
@@ -1543,30 +1537,26 @@ async def test_zeroconf_rediscover(
         # Discovery key from other domain
         (
             "shelly",
-            {
-                "discovery_keys": [
-                    {
-                        "domain": "bluetooth",
-                        "key": ["_http._tcp.local.", "Shelly108._http._tcp.local."],
-                        "version": 1,
-                    }
-                ]
-            },
+            (
+                {
+                    "domain": "bluetooth",
+                    "key": ["_http._tcp.local.", "Shelly108._http._tcp.local."],
+                    "version": 1,
+                },
+            ),
             config_entries.SOURCE_IGNORE,
             "mock-unique-id",
         ),
         # Discovery key from the future
         (
             "shelly",
-            {
-                "discovery_keys": [
-                    {
-                        "domain": "zeroconf",
-                        "key": ["_http._tcp.local.", "Shelly108._http._tcp.local."],
-                        "version": 2,
-                    }
-                ]
-            },
+            (
+                {
+                    "domain": "zeroconf",
+                    "key": ["_http._tcp.local.", "Shelly108._http._tcp.local."],
+                    "version": 2,
+                },
+            ),
             config_entries.SOURCE_IGNORE,
             "mock-unique-id",
         ),
@@ -1575,7 +1565,7 @@ async def test_zeroconf_rediscover(
 async def test_zeroconf_rediscover_no_match(
     hass: HomeAssistant,
     entry_domain: str,
-    entry_data: dict,
+    entry_discovery_keys: tuple,
     entry_source: str,
     entry_unique_id: str,
 ) -> None:
@@ -1595,7 +1585,7 @@ async def test_zeroconf_rediscover_no_match(
 
     entry = MockConfigEntry(
         domain=entry_domain,
-        data=entry_data,
+        discovery_keys=entry_discovery_keys,
         unique_id=entry_unique_id,
         state=config_entries.ConfigEntryState.LOADED,
         source=entry_source,
@@ -1657,7 +1647,7 @@ async def test_zeroconf_rediscover_no_match(
 @pytest.mark.parametrize(
     (
         "entry_domain",
-        "entry_data",
+        "entry_discovery_keys",
         "entry_source",
         "entry_unique_id",
     ),
@@ -1665,15 +1655,13 @@ async def test_zeroconf_rediscover_no_match(
         # Source not SOURCE_IGNORE
         (
             "shelly",
-            {
-                "discovery_keys": [
-                    {
-                        "domain": "zeroconf",
-                        "key": ["_http._tcp.local.", "Shelly108._http._tcp.local."],
-                        "version": 1,
-                    }
-                ]
-            },
+            (
+                {
+                    "domain": "zeroconf",
+                    "key": ["_http._tcp.local.", "Shelly108._http._tcp.local."],
+                    "version": 1,
+                },
+            ),
             config_entries.SOURCE_ZEROCONF,
             "mock-unique-id",
         ),
@@ -1682,7 +1670,7 @@ async def test_zeroconf_rediscover_no_match(
 async def test_zeroconf_rediscover_no_match_2(
     hass: HomeAssistant,
     entry_domain: str,
-    entry_data: dict,
+    entry_discovery_keys: tuple,
     entry_source: str,
     entry_unique_id: str,
 ) -> None:
@@ -1706,7 +1694,7 @@ async def test_zeroconf_rediscover_no_match_2(
 
     entry = MockConfigEntry(
         domain=entry_domain,
-        data=entry_data,
+        discovery_keys=entry_discovery_keys,
         unique_id=entry_unique_id,
         state=config_entries.ConfigEntryState.LOADED,
         source=entry_source,
