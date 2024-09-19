@@ -53,10 +53,8 @@ class ListTopItemsIntent(intent.IntentHandler):
         if not items:
             response.async_set_speech("There are no items on your shopping list")
         else:
+            items_list = ", ".join(itm["name"] for itm in reversed(items))
             response.async_set_speech(
-                "These are the top {} items on your shopping list: {}".format(
-                    min(len(items), 5),
-                    ", ".join(itm["name"] for itm in reversed(items)),
-                )
+                f"These are the top {min(len(items), 5)} items on your shopping list: {items_list}"
             )
         return response
