@@ -193,7 +193,7 @@ class MotionMountFlowHandler(ConfigFlow, domain=DOMAIN):
                 self.backoff_task = self.hass.async_create_task(self._backoff(valid))
                 return await self.async_step_backoff()
 
-            errors[CONF_PIN] = "Pin is not correct"
+            errors[CONF_PIN] = CONF_PIN
 
         return self.async_show_form(
             step_id="auth",

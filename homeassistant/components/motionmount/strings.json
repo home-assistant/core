@@ -26,6 +26,9 @@
         "description": "Too many incorrect pin attempts."
       }
     },
+    "error": {
+      "pin": "Pin is not correct"
+    },
     "progress": {
       "progress_action": "Too many incorrect pin attempts. Please wait {timeout} s..."
     },
