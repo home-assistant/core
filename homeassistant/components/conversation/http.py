@@ -112,13 +112,11 @@ async def websocket_list_agents(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
 ) -> None:
     """List conversation agents and, optionally, if they support a given language."""
-    entity_component = hass.data[DOMAIN_DATA]
-
     country = msg.get("country")
     language = msg.get("language")
     agents = []
 
-    for entity in entity_component.entities:
+    for entity in hass.data[DOMAIN_DATA].entities:
         supported_languages = entity.supported_languages
         if language and supported_languages != MATCH_ALL:
             supported_languages = language_util.matches(

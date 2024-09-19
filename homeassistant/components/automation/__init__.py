@@ -166,11 +166,9 @@ def _automations_with_x(
     if DOMAIN_DATA not in hass.data:
         return []
 
-    component = hass.data[DOMAIN_DATA]
-
     return [
         automation_entity.entity_id
-        for automation_entity in component.entities
+        for automation_entity in hass.data[DOMAIN_DATA].entities
         if referenced_id in getattr(automation_entity, property_name)
     ]
 
@@ -182,9 +180,7 @@ def _x_in_automation(
     if DOMAIN_DATA not in hass.data:
         return []
 
-    component = hass.data[DOMAIN_DATA]
-
-    if (automation_entity := component.get_entity(entity_id)) is None:
+    if (automation_entity := hass.data[DOMAIN_DATA].get_entity(entity_id)) is None:
         return []
 
     return list(getattr(automation_entity, property_name))
@@ -256,11 +252,9 @@ def automations_with_blueprint(hass: HomeAssistant, blueprint_path: str) -> list
     if DOMAIN not in hass.data:
         return []
 
-    component = hass.data[DOMAIN_DATA]
-
     return [
         automation_entity.entity_id
-        for automation_entity in component.entities
+        for automation_entity in hass.data[DOMAIN_DATA].entities
         if automation_entity.referenced_blueprint == blueprint_path
     ]
 
@@ -271,9 +265,7 @@ def blueprint_in_automation(hass: HomeAssistant, entity_id: str) -> str | None:
     if DOMAIN_DATA not in hass.data:
         return None
 
-    component = hass.data[DOMAIN_DATA]
-
-    if (automation_entity := component.get_entity(entity_id)) is None:
+    if (automation_entity := hass.data[DOMAIN_DATA].get_entity(entity_id)) is None:
         return None
 
     return automation_entity.referenced_blueprint
@@ -1212,9 +1204,7 @@ def websocket_config(
     msg: dict[str, Any],
 ) -> None:
     """Get automation config."""
-    component = hass.data[DOMAIN_DATA]
-
-    automation = component.get_entity(msg["entity_id"])
+    automation = hass.data[DOMAIN_DATA].get_entity(msg["entity_id"])
 
     if automation is None:
         connection.send_error(

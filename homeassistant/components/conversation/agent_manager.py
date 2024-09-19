@@ -53,8 +53,7 @@ def async_get_agent(
         return async_get_default_agent(hass)
 
     if "." in agent_id:
-        entity_component = hass.data[DOMAIN_DATA]
-        return entity_component.get_entity(agent_id)
+        return hass.data[DOMAIN_DATA].get_entity(agent_id)
 
     manager = get_agent_manager(hass)
 

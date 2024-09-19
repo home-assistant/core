@@ -133,7 +133,6 @@ def async_get_conversation_languages(
     all conversation agents.
     """
     agent_manager = get_agent_manager(hass)
-    entity_component = hass.data[DOMAIN_DATA]
     agents: list[ConversationEntity | AbstractConversationAgent]
 
     if agent_id:
@@ -149,7 +148,7 @@ def async_get_conversation_languages(
         agents = [agent]
 
     else:
-        agents = list(entity_component.entities)
+        agents = list(hass.data[DOMAIN_DATA].entities)
         for info in agent_manager.async_get_agent_info():
             agent = agent_manager.async_get_agent(info.id)
             assert agent is not None
@@ -268,11 +267,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    component = hass.data[DOMAIN_DATA]
-    return await component.async_setup_entry(entry)
+    return await hass.data[DOMAIN_DATA].async_setup_entry(entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    component = hass.data[DOMAIN_DATA]
-    return await component.async_unload_entry(entry)
+    return await hass.data[DOMAIN_DATA].async_unload_entry(entry)
