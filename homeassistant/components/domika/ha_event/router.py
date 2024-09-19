@@ -8,8 +8,8 @@ from domika_ha_framework.errors import DomikaFrameworkBaseError
 import domika_ha_framework.push_data.service as push_data_service
 import voluptuous as vol
 
-from homeassistant.components.websocket_api.connection import ActiveConnection
-from homeassistant.components.websocket_api.decorators import (
+from homeassistant.components.websocket_api import (
+    ActiveConnection,
     async_response,
     websocket_command,
 )

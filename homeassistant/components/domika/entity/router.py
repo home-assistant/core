@@ -5,8 +5,8 @@ from typing import Any, cast
 from domika_ha_framework.utils import flatten_json
 import voluptuous as vol
 
-from homeassistant.components.websocket_api.connection import ActiveConnection
-from homeassistant.components.websocket_api.decorators import (
+from homeassistant.components.websocket_api import (
+    ActiveConnection,
     async_response,
     websocket_command,
 )
