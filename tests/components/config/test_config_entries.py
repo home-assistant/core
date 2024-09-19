@@ -17,6 +17,7 @@ from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_RADIUS
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_flow, config_validation as cv
+from homeassistant.helpers.discovery_flow import DiscoveryKey
 from homeassistant.loader import IntegrationNotFound
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
@@ -1324,16 +1325,16 @@ async def test_disable_entry_nonexisting(
 @pytest.mark.parametrize(
     (
         "flow_context",
-        "entry_data",
+        "entry_discovery_keys",
     ),
     [
         (
             {},
-            {},
+            (),
         ),
         (
-            {"discovery_key": {"domain": "test", "key": "blah", "version": 1}},
-            {"discovery_keys": [{"domain": "test", "key": "blah", "version": 1}]},
+            {"discovery_key": DiscoveryKey(domain="test", key="blah", version=1)},
+            (DiscoveryKey(domain="test", key="blah", version=1),),
         ),
     ],
 )
@@ -1341,7 +1342,7 @@ async def test_ignore_flow(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     flow_context: dict,
-    entry_data: dict,
+    entry_discovery_keys: tuple,
 ) -> None:
     """Test we can ignore a flow."""
     assert await async_setup_component(hass, "config", {})
@@ -1386,7 +1387,8 @@ async def test_ignore_flow(
     assert entry.source == "ignore"
     assert entry.unique_id == "mock-unique-id"
     assert entry.title == "Test Integration"
-    assert entry.data == entry_data
+    assert entry.data == {}
+    assert entry.discovery_keys == entry_discovery_keys
 
 
 async def test_ignore_flow_nonexisting(

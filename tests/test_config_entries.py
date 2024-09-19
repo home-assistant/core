@@ -38,6 +38,7 @@ from homeassistant.exceptions import (
     HomeAssistantError,
 )
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
+from homeassistant.helpers.discovery_flow import DiscoveryKey
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -884,7 +885,11 @@ async def test_saving_and_loading(
 
     with patch("homeassistant.config_entries.HANDLERS.get", return_value=Test2Flow):
         await hass.config_entries.flow.async_init(
-            "test", context={"source": config_entries.SOURCE_USER}
+            "test",
+            context={
+                "source": config_entries.SOURCE_USER,
+                "discovery_key": DiscoveryKey(domain="test", key="blah", version=1),
+            },
         )
 
     assert len(hass.config_entries.async_entries()) == 2
@@ -2744,23 +2749,23 @@ async def test_finish_flow_aborts_progress(
 
 
 @pytest.mark.parametrize(
-    ("extra_data", "expected_entry_data"),
+    ("extra_context", "expected_entry_discovery_keys"),
     [
         (
             {},
-            {},
+            (),
         ),
         (
-            {"discovery_key": {"domain": "test", "key": "blah", "version": 1}},
-            {"discovery_keys": [{"domain": "test", "key": "blah", "version": 1}]},
+            {"discovery_key": DiscoveryKey(domain="test", key="blah", version=1)},
+            (DiscoveryKey(domain="test", key="blah", version=1),),
         ),
     ],
 )
 async def test_unique_id_ignore(
     hass: HomeAssistant,
     manager: config_entries.ConfigEntries,
-    extra_data: dict,
-    expected_entry_data: dict,
+    extra_context: dict,
+    expected_entry_discovery_keys: dict,
 ) -> None:
     """Test that we can ignore flows that are in progress and have a unique ID."""
     async_setup_entry = AsyncMock(return_value=False)
@@ -2786,8 +2791,8 @@ async def test_unique_id_ignore(
 
         result2 = await manager.flow.async_init(
             "comp",
-            context={"source": config_entries.SOURCE_IGNORE},
-            data={"unique_id": "mock-unique-id", "title": "Ignored Title"} | extra_data,
+            context={"source": config_entries.SOURCE_IGNORE} | extra_context,
+            data={"unique_id": "mock-unique-id", "title": "Ignored Title"},
         )
 
     assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
@@ -2802,7 +2807,8 @@ async def test_unique_id_ignore(
     assert entry.source == "ignore"
     assert entry.unique_id == "mock-unique-id"
     assert entry.title == "Ignored Title"
-    assert entry.data == expected_entry_data
+    assert entry.data == {}
+    assert entry.discovery_keys == expected_entry_discovery_keys
 
 
 async def test_manual_add_overrides_ignored_entry(

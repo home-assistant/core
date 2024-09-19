@@ -4,14 +4,16 @@ from __future__ import annotations
 
 from collections.abc import Coroutine
 import dataclasses
-from typing import Any, NamedTuple
+from typing import TYPE_CHECKING, Any, NamedTuple, Self
 
-from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import CoreState, Event, HomeAssistant, callback
 from homeassistant.loader import bind_hass
 from homeassistant.util.async_ import gather_with_limited_concurrency
 from homeassistant.util.hass_dict import HassKey
+
+if TYPE_CHECKING:
+    from homeassistant.config_entries import ConfigFlowResult
 
 FLOW_INIT_LIMIT = 20
 DISCOVERY_FLOW_DISPATCHER: HassKey[FlowDispatcher] = HassKey(
@@ -24,8 +26,15 @@ class DiscoveryKey:
     """Serializable discovery key."""
 
     domain: str
-    key: str | list[str]
+    key: str | tuple[str, ...]
     version: int
+
+    @classmethod
+    def from_json_dict(cls, json_dict: dict[str, Any]) -> Self:
+        """Construct from JSON dict."""
+        if type(key := json_dict["key"]) is list:
+            key = tuple(*key)
+        return cls(domain=json_dict["domain"], key=key, version=json_dict["version"])
 
 
 @bind_hass
@@ -47,7 +56,7 @@ def async_create_flow(
         dispatcher.async_setup()
 
     if discovery_key:
-        context = context | {"discovery_key": dataclasses.asdict(discovery_key)}
+        context = context | {"discovery_key": discovery_key}
 
     if not dispatcher or dispatcher.started:
         if init_coro := _async_init_flow(hass, domain, context, data):

@@ -49,6 +49,7 @@ from .exceptions import (
 )
 from .helpers import device_registry, entity_registry, issue_registry as ir, storage
 from .helpers.debounce import Debouncer
+from .helpers.discovery_flow import DiscoveryKey
 from .helpers.dispatcher import SignalType, async_dispatcher_send_internal
 from .helpers.event import (
     RANDOM_MICROSECOND_MAX,
@@ -317,7 +318,7 @@ class ConfigEntry(Generic[_DataT]):
     _tries: int
     created_at: datetime
     modified_at: datetime
-    discovery_keys: tuple[MappingProxyType[str, int | str | tuple[str, ...]], ...]
+    discovery_keys: tuple[DiscoveryKey, ...]
 
     def __init__(
         self,
@@ -325,7 +326,7 @@ class ConfigEntry(Generic[_DataT]):
         created_at: datetime | None = None,
         data: Mapping[str, Any],
         disabled_by: ConfigEntryDisabler | None = None,
-        discovery_keys: Iterable[Mapping[str, int | str | tuple[str, ...]]],
+        discovery_keys: tuple[DiscoveryKey, ...],
         domain: str,
         entry_id: str | None = None,
         minor_version: int,
@@ -424,11 +425,7 @@ class ConfigEntry(Generic[_DataT]):
         _setter(self, "_tries", 0)
         _setter(self, "created_at", created_at or utcnow())
         _setter(self, "modified_at", modified_at or utcnow())
-        _setter(
-            self,
-            "discovery_keys",
-            tuple(MappingProxyType(dict(key)) for key in discovery_keys),
-        )
+        _setter(self, "discovery_keys", discovery_keys)
 
     def __repr__(self) -> str:
         """Representation of ConfigEntry."""
@@ -1872,7 +1869,9 @@ class ConfigEntries:
                 created_at=datetime.fromisoformat(entry["created_at"]),
                 data=entry["data"],
                 disabled_by=try_parse_enum(ConfigEntryDisabler, entry["disabled_by"]),
-                discovery_keys=entry["discovery_keys"],
+                discovery_keys=tuple(
+                    DiscoveryKey.from_json_dict(key) for key in entry["discovery_keys"]
+                ),
                 domain=entry["domain"],
                 entry_id=entry_id,
                 minor_version=entry["minor_version"],
@@ -2029,8 +2028,7 @@ class ConfigEntries:
         entry: ConfigEntry,
         *,
         data: Mapping[str, Any] | UndefinedType = UNDEFINED,
-        discovery_keys: Iterable[Mapping[str, int | str | tuple[str, ...]]]
-        | UndefinedType = UNDEFINED,
+        discovery_keys: tuple[DiscoveryKey, ...] | UndefinedType = UNDEFINED,
         minor_version: int | UndefinedType = UNDEFINED,
         options: Mapping[str, Any] | UndefinedType = UNDEFINED,
         pref_disable_new_entities: bool | UndefinedType = UNDEFINED,
@@ -2060,6 +2058,7 @@ class ConfigEntries:
             changed = True
 
         for attr, value in (
+            ("discovery_keys", discovery_keys),
             ("minor_version", minor_version),
             ("pref_disable_new_entities", pref_disable_new_entities),
             ("pref_disable_polling", pref_disable_polling),
@@ -2071,13 +2070,6 @@ class ConfigEntries:
 
             _setter(entry, attr, value)
             changed = True
-
-        if discovery_keys is not UNDEFINED and entry.discovery_keys != discovery_keys:
-            _setter(
-                entry,
-                "discovery_keys",
-                tuple(MappingProxyType(dict(key)) for key in discovery_keys),
-            )
 
         if data is not UNDEFINED and entry.data != data:
             changed = True
@@ -2512,10 +2504,7 @@ class ConfigFlow(ConfigEntryBaseFlow):
         unlike the unique id.
         """
         await self.async_set_unique_id(user_input["unique_id"], raise_on_progress=False)
-        data = {}
-        if "discovery_key" in user_input:
-            data["discovery_keys"] = [user_input["discovery_key"]]
-        return self.async_create_entry(title=user_input["title"], data=data)
+        return self.async_create_entry(title=user_input["title"], data={})
 
     async def async_step_unignore(self, user_input: dict[str, Any]) -> ConfigFlowResult:
         """Rediscover a config entry by it's unique_id."""

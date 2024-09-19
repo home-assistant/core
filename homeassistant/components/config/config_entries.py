@@ -463,13 +463,13 @@ async def ignore_config_flow(
         )
         return
 
-    data = {"unique_id": flow["context"]["unique_id"], "title": msg["title"]}
+    context = {"source": config_entries.SOURCE_IGNORE}
     if "discovery_key" in flow["context"]:
-        data["discovery_key"] = flow["context"]["discovery_key"]
+        context["discovery_key"] = flow["context"]["discovery_key"]
     await hass.config_entries.flow.async_init(
         flow["handler"],
-        context={"source": config_entries.SOURCE_IGNORE},
-        data=data,
+        context=context,
+        data={"unique_id": flow["context"]["unique_id"], "title": msg["title"]},
     )
     connection.send_result(msg["id"])
 

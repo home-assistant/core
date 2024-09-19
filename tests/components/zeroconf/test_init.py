@@ -23,6 +23,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.generated import zeroconf as zc_gen
+from homeassistant.helpers.discovery_flow import DiscoveryKey
 from homeassistant.setup import ATTR_COMPONENT, async_setup_component
 
 from tests.common import MockConfigEntry, MockModule, mock_integration
@@ -307,11 +308,11 @@ async def test_zeroconf_match_macaddress(hass: HomeAssistant) -> None:
     assert len(mock_config_flow.mock_calls) == 1
     assert mock_config_flow.mock_calls[0][1][0] == "shelly"
     assert mock_config_flow.mock_calls[0][2]["context"] == {
-        "discovery_key": {
-            "domain": "zeroconf",
-            "key": ["_http._tcp.local.", "Shelly108._http._tcp.local."],
-            "version": 1,
-        },
+        "discovery_key": DiscoveryKey(
+            domain="zeroconf",
+            key=("_http._tcp.local.", "Shelly108._http._tcp.local."),
+            version=1,
+        ),
         "source": "zeroconf",
     }
 
@@ -552,11 +553,11 @@ async def test_homekit_match_partial_space(hass: HomeAssistant) -> None:
     assert mock_config_flow.mock_calls[1][2]["context"] == {
         "source": "zeroconf",
         "alternative_domain": "lifx",
-        "discovery_key": {
-            "domain": "zeroconf",
-            "key": ["_hap._tcp.local.", "_name._hap._tcp.local."],
-            "version": 1,
-        },
+        "discovery_key": DiscoveryKey(
+            domain="zeroconf",
+            key=("_hap._tcp.local.", "_name._hap._tcp.local."),
+            version=1,
+        ),
     }
 
 
@@ -1409,27 +1410,27 @@ async def test_zeroconf_removed(hass: HomeAssistant) -> None:
         (
             "shelly",
             (
-                {
-                    "domain": "zeroconf",
-                    "key": ["_http._tcp.local.", "Shelly108._http._tcp.local."],
-                    "version": 1,
-                },
+                DiscoveryKey(
+                    domain="zeroconf",
+                    key=("_http._tcp.local.", "Shelly108._http._tcp.local."),
+                    version=1,
+                ),
             ),
         ),
         # Matching discovery key
         (
             "shelly",
             (
-                {
-                    "domain": "zeroconf",
-                    "key": ["_http._tcp.local.", "Shelly108._http._tcp.local."],
-                    "version": 1,
-                },
-                {
-                    "domain": "other",
-                    "key": "blah",
-                    "version": 1,
-                },
+                DiscoveryKey(
+                    domain="zeroconf",
+                    key=("_http._tcp.local.", "Shelly108._http._tcp.local."),
+                    version=1,
+                ),
+                DiscoveryKey(
+                    domain="other",
+                    key="blah",
+                    version=1,
+                ),
             ),
         ),
         # Matching discovery key, other domain
@@ -1438,11 +1439,11 @@ async def test_zeroconf_removed(hass: HomeAssistant) -> None:
         (
             "comp",
             (
-                {
-                    "domain": "zeroconf",
-                    "key": ["_http._tcp.local.", "Shelly108._http._tcp.local."],
-                    "version": 1,
-                },
+                DiscoveryKey(
+                    domain="zeroconf",
+                    key=("_http._tcp.local.", "Shelly108._http._tcp.local."),
+                    version=1,
+                ),
             ),
         ),
     ],
@@ -1500,11 +1501,11 @@ async def test_zeroconf_rediscover(
         await hass.async_block_till_done()
 
         expected_context = {
-            "discovery_key": {
-                "domain": "zeroconf",
-                "key": ["_http._tcp.local.", "Shelly108._http._tcp.local."],
-                "version": 1,
-            },
+            "discovery_key": DiscoveryKey(
+                domain="zeroconf",
+                key=("_http._tcp.local.", "Shelly108._http._tcp.local."),
+                version=1,
+            ),
             "source": "zeroconf",
         }
         assert len(mock_service_browser.mock_calls) == 1
@@ -1538,11 +1539,11 @@ async def test_zeroconf_rediscover(
         (
             "shelly",
             (
-                {
-                    "domain": "bluetooth",
-                    "key": ["_http._tcp.local.", "Shelly108._http._tcp.local."],
-                    "version": 1,
-                },
+                DiscoveryKey(
+                    domain="bluetooth",
+                    key=("_http._tcp.local.", "Shelly108._http._tcp.local."),
+                    version=1,
+                ),
             ),
             config_entries.SOURCE_IGNORE,
             "mock-unique-id",
@@ -1551,11 +1552,11 @@ async def test_zeroconf_rediscover(
         (
             "shelly",
             (
-                {
-                    "domain": "zeroconf",
-                    "key": ["_http._tcp.local.", "Shelly108._http._tcp.local."],
-                    "version": 2,
-                },
+                DiscoveryKey(
+                    domain="zeroconf",
+                    key=("_http._tcp.local.", "Shelly108._http._tcp.local."),
+                    version=2,
+                ),
             ),
             config_entries.SOURCE_IGNORE,
             "mock-unique-id",
@@ -1620,11 +1621,11 @@ async def test_zeroconf_rediscover_no_match(
         await hass.async_block_till_done()
 
         expected_context = {
-            "discovery_key": {
-                "domain": "zeroconf",
-                "key": ["_http._tcp.local.", "Shelly108._http._tcp.local."],
-                "version": 1,
-            },
+            "discovery_key": DiscoveryKey(
+                domain="zeroconf",
+                key=("_http._tcp.local.", "Shelly108._http._tcp.local."),
+                version=1,
+            ),
             "source": "zeroconf",
         }
         assert len(mock_service_browser.mock_calls) == 1
@@ -1656,11 +1657,11 @@ async def test_zeroconf_rediscover_no_match(
         (
             "shelly",
             (
-                {
-                    "domain": "zeroconf",
-                    "key": ["_http._tcp.local.", "Shelly108._http._tcp.local."],
-                    "version": 1,
-                },
+                DiscoveryKey(
+                    domain="zeroconf",
+                    key=("_http._tcp.local.", "Shelly108._http._tcp.local."),
+                    version=1,
+                ),
             ),
             config_entries.SOURCE_ZEROCONF,
             "mock-unique-id",
@@ -1729,11 +1730,11 @@ async def test_zeroconf_rediscover_no_match_2(
         await hass.async_block_till_done()
 
         expected_context = {
-            "discovery_key": {
-                "domain": "zeroconf",
-                "key": ["_http._tcp.local.", "Shelly108._http._tcp.local."],
-                "version": 1,
-            },
+            "discovery_key": DiscoveryKey(
+                domain="zeroconf",
+                key=("_http._tcp.local.", "Shelly108._http._tcp.local."),
+                version=1,
+            ),
             "source": "zeroconf",
         }
         assert len(mock_service_browser.mock_calls) == 1

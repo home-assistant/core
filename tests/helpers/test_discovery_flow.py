@@ -9,6 +9,7 @@ from homeassistant import config_entries
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers import discovery_flow
+from homeassistant.helpers.discovery_flow import DiscoveryKey
 
 
 @pytest.fixture
@@ -25,19 +26,23 @@ def mock_flow_init(hass: HomeAssistant) -> Generator[AsyncMock]:
     [
         (None, {}),
         (
-            discovery_flow.DiscoveryKey(domain="test", key="string_key", version=1),
-            {"discovery_key": {"domain": "test", "key": "string_key", "version": 1}},
+            DiscoveryKey(domain="test", key="string_key", version=1),
+            {"discovery_key": DiscoveryKey(domain="test", key="string_key", version=1)},
         ),
         (
-            discovery_flow.DiscoveryKey(domain="test", key=["one", "two"], version=1),
-            {"discovery_key": {"domain": "test", "key": ["one", "two"], "version": 1}},
+            DiscoveryKey(domain="test", key=("one", "two"), version=1),
+            {
+                "discovery_key": DiscoveryKey(
+                    domain="test", key=("one", "two"), version=1
+                )
+            },
         ),
     ],
 )
 async def test_async_create_flow(
     hass: HomeAssistant,
     mock_flow_init: AsyncMock,
-    discovery_key: discovery_flow.DiscoveryKey | None,
+    discovery_key: DiscoveryKey | None,
     context: {},
 ) -> None:
     """Test we can create a flow."""
