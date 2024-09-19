@@ -161,9 +161,12 @@ async def async_migrate_devices_and_entities(
                     # already correct, nothing to do
                     continue
                 unique_id_parts = entity_entry.unique_id.split("-")
-                # replace old prefix `<gateway-serial>` with `<gateways-serial>_<device-serial>`
+                # replace old prefix `<gateway-serial>`
+                # with `<gateways-serial>_<device-serial>`
                 unique_id_parts[0] = new_identifier
-                # convert climate entity unique id from `<device_identifier>-<circuit_no>` to `<device_identifier>-heating-<circuit_no>`
+                # convert climate entity unique id
+                # from `<device_identifier>-<circuit_no>`
+                # to `<device_identifier>-heating-<circuit_no>`
                 if entity_entry.domain == DOMAIN_CLIMATE:
                     unique_id_parts[len(unique_id_parts) - 1] = (
                         f"{entity_entry.translation_key}-{unique_id_parts[len(unique_id_parts)-1]}"
