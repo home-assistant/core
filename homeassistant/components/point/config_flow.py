@@ -57,9 +57,16 @@ class OAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
                 data={**data, CONF_WEBHOOK_ID: async_generate_id()},
             )
 
-        if self.reauth_entry.unique_id == user_id:
+        if self.reauth_entry.unique_id is None:
+            await self.async_set_unique_id(user_id)
+            self._abort_if_unique_id_configured()
+        if (
+            self.reauth_entry.unique_id is None
+            or self.reauth_entry.unique_id == user_id
+        ):
+            logging.info("user_id: %s", user_id)
             return self.async_update_reload_and_abort(
                 self.reauth_entry, data={**self.reauth_entry.data, **data}
             )
 
-        return self.async_abort(reason="missing_configuration")
+        return self.async_abort(reason="wrong_account")

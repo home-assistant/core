@@ -94,8 +94,10 @@ async def test_full_flow(
     assert "webhook_id" in result["result"].data
 
 
+@pytest.mark.parametrize("unique_id", ["abcd", None])
 @pytest.mark.usefixtures("current_request_with_host")
 async def test_reauthentication_flow(
+    unique_id: str,
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
@@ -103,7 +105,7 @@ async def test_reauthentication_flow(
     """Test reauthentication flow."""
     old_entry = MockConfigEntry(
         domain=DOMAIN,
-        unique_id="abcd",
+        unique_id=unique_id,
         version=1,
         data={"id": "timmo", "auth_implementation": DOMAIN},
     )
@@ -197,7 +199,7 @@ async def test_wrong_account_in_reauth(
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "missing_configuration"
+    assert result["reason"] == "wrong_account"
 
 
 async def test_import_flow(
