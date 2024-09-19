@@ -59,6 +59,29 @@
         "name": "Fresh air filter"
       }
     },
+    "climate": {
+      "climate_air_conditioner": {
+        "state_attributes": {
+          "fan_mode": {
+            "state": {
+              "slow": "Slow",
+              "low": "Low",
+              "mid": "Medium",
+              "high": "High",
+              "power": "Power",
+              "auto": "Auto"
+            }
+          },
+          "preset_mode": {
+            "state": {
+              "air_clean": "Air purify",
+              "aroma": "Aroma",
+              "energy_saving": "Energy saving"
+            }
+          }
+        }
+      }
+    },
     "event": {
       "error": {
         "name": "Error",

@@ -39,6 +39,7 @@ type ThinqConfigEntry = ConfigEntry[ThinqData]
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
+    Platform.CLIMATE,
     Platform.EVENT,
     Platform.NUMBER,
     Platform.SWITCH,
