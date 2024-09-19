@@ -12,7 +12,7 @@ from .conftest import setup_evohome
 from .const import TEST_INSTALLS
 
 
-@pytest.mark.parametrize("install", TEST_INSTALLS)
+@pytest.mark.parametrize("install", [*TEST_INSTALLS, "botched"])
 async def test_entities(
     hass: HomeAssistant,
     config: dict[str, str],
