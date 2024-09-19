@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from motioneye_client.client import (
     MotionEyeClientConnectionError,
@@ -12,7 +12,8 @@ from motioneye_client.client import (
 )
 import voluptuous as vol
 
-from homeassistant.components.hassio import HassioServiceInfo
+if TYPE_CHECKING:
+    from homeassistant.components.hassio import HassioServiceInfo
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
     ConfigEntry,

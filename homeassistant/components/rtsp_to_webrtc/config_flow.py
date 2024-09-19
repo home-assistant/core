@@ -3,13 +3,14 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from urllib.parse import urlparse
 
 import rtsp_to_webrtc
 import voluptuous as vol
 
-from homeassistant.components.hassio import HassioServiceInfo
+if TYPE_CHECKING:
+    from homeassistant.components.hassio import HassioServiceInfo
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,

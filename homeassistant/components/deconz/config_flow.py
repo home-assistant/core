@@ -6,7 +6,7 @@ import asyncio
 from collections.abc import Mapping
 import logging
 from pprint import pformat
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 from urllib.parse import urlparse
 
 from pydeconz.errors import LinkButtonNotPressed, RequestError, ResponseError
@@ -20,7 +20,9 @@ from pydeconz.utils import (
 import voluptuous as vol
 
 from homeassistant.components import ssdp
-from homeassistant.components.hassio import HassioServiceInfo
+
+if TYPE_CHECKING:
+    from homeassistant.components.hassio import HassioServiceInfo
 from homeassistant.config_entries import (
     SOURCE_HASSIO,
     ConfigEntry,

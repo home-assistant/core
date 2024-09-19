@@ -27,6 +27,7 @@ from homeassistant.config import load_yaml_config_file
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.hassio import get_supervisor_ip, is_hassio
 from homeassistant.util import dt as dt_util, yaml
 
 from .const import KEY_HASS
@@ -149,12 +150,8 @@ async def process_wrong_login(request: Request) -> None:
     request.app[KEY_FAILED_LOGIN_ATTEMPTS][remote_addr] += 1
 
     # Supervisor IP should never be banned
-    if "hassio" in hass.config.components:
-        # pylint: disable-next=import-outside-toplevel
-        from homeassistant.components import hassio
-
-        if hassio.get_supervisor_ip() == str(remote_addr):
-            return
+    if is_hassio(hass) and str(remote_addr) == get_supervisor_ip():
+        return
 
     if (
         request.app[KEY_FAILED_LOGIN_ATTEMPTS][remote_addr]

@@ -38,9 +38,9 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_call_later
+from homeassistant.helpers.hassio import get_supervisor_ip, is_hassio  # noqa: F401
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.loader import bind_hass
 from homeassistant.util.async_ import create_eager_task
 from homeassistant.util.dt import now
 
@@ -280,24 +280,6 @@ HARDWARE_INTEGRATIONS = {
 def hostname_from_addon_slug(addon_slug: str) -> str:
     """Return hostname of add-on."""
     return addon_slug.replace("_", "-")
-
-
-@callback
-@bind_hass
-def is_hassio(hass: HomeAssistant) -> bool:
-    """Return true if Hass.io is loaded.
-
-    Async friendly.
-    """
-    return DOMAIN in hass.config.components
-
-
-@callback
-def get_supervisor_ip() -> str | None:
-    """Return the supervisor ip address."""
-    if "SUPERVISOR" not in os.environ:
-        return None
-    return os.environ["SUPERVISOR"].partition(":")[0]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa: C901
