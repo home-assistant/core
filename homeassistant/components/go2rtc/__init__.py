@@ -6,12 +6,13 @@ from homeassistant.components.camera.webrtc import (
     async_register_webrtc_provider,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from . import utils
 from .api.client import Go2rtcClient
 from .api.models import WebRTCSdpOffer
+from .const import CONF_BINARY
 from .utils import Server
 
 type WebRTCConfigEntry = ConfigEntry[Server]
@@ -19,17 +20,14 @@ type WebRTCConfigEntry = ConfigEntry[Server]
 
 async def async_setup_entry(hass: HomeAssistant, entry: WebRTCConfigEntry) -> bool:
     """Set up WebRTC from a config entry."""
-    # todo
-    binary = await utils.validate_binary(hass)
-    if not binary:
-        return False
+    if binary := entry.data.get(CONF_BINARY):
+        # HA will manage the binary
+        server = Server(binary)
+        entry.async_on_unload(server.stop)
+        entry.runtime_data = server
+        server.start()
 
-    server = Server(binary)
-    entry.async_on_unload(server.stop)
-    entry.runtime_data = server
-    server.start()
-
-    client = Go2rtcClient(async_get_clientsession(hass), server.url)
+    client = Go2rtcClient(async_get_clientsession(hass), entry.data[CONF_HOST])
 
     provider = WebRTCProvider(entry, client)
     entry.async_on_unload(async_register_webrtc_provider(hass, provider))

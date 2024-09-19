@@ -50,4 +50,7 @@ RUN \
 # Home Assistant S6-Overlay
 COPY rootfs /
 
+# Add go2rtc binary
+COPY --from=docker.io/alexxit/go2rtc:1.9.4 /usr/local/bin/go2rtc /bin/go2rtc
+
 WORKDIR /config

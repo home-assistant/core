@@ -63,6 +63,9 @@ RUN \
 # Home Assistant S6-Overlay
 COPY rootfs /
 
+# Add go2rtc binary
+COPY --from=docker.io/alexxit/go2rtc:{go2rtc} /usr/local/bin/go2rtc /bin/go2rtc
+
 WORKDIR /config
 """
 
@@ -101,6 +104,8 @@ LABEL "com.github.actions.description"="Run hassfest to validate standalone inte
 LABEL "com.github.actions.icon"="terminal"
 LABEL "com.github.actions.color"="gray-dark"
 """
+
+_GO2RTC_VERSION = "1.9.4"
 
 
 def _get_package_versions(file: Path, packages: set[str]) -> dict[str, str]:
@@ -182,7 +187,11 @@ def _generate_files(config: Config) -> list[File]:
 
     return [
         File(
-            DOCKERFILE_TEMPLATE.format(timeout=timeout, **package_versions),
+            DOCKERFILE_TEMPLATE.format(
+                timeout=timeout,
+                **package_versions,
+                go2rtc=_GO2RTC_VERSION,
+            ),
             config.root / "Dockerfile",
         ),
         _generate_hassfest_dockerimage(config, timeout, package_versions),
