@@ -126,10 +126,7 @@ async def test_update_firmware(
         mock_smlight_client, SmEvents.ZB_FW_prgs
     )
 
-    async def _call_event_function(event: MessageEvent):
-        event_function(event)
-
-    await _call_event_function(MOCK_FIRMWARE_PROGRESS)
+    event_function(MOCK_FIRMWARE_PROGRESS)
     state = hass.states.get(entity_id)
     assert state.attributes[ATTR_IN_PROGRESS] == 50
 
@@ -137,7 +134,55 @@ async def test_update_firmware(
         mock_smlight_client, SmEvents.FW_UPD_done
     )
 
-    await _call_event_function(MOCK_FIRMWARE_DONE)
+    event_function(MOCK_FIRMWARE_DONE)
+
+    mock_smlight_client.get_info.return_value = Info(
+        sw_version="v2.5.2",
+    )
+
+    freezer.tick(SCAN_FIRMWARE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_OFF
+    assert state.attributes[ATTR_INSTALLED_VERSION] == "v2.5.2"
+    assert state.attributes[ATTR_LATEST_VERSION] == "v2.5.2"
+
+
+async def test_update_legacy_firmware_v2(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_smlight_client: MagicMock,
+) -> None:
+    """Test firmware update for legacy v2 firmware."""
+    mock_smlight_client.get_info.return_value = Info(
+        sw_version="v2.0.18",
+        legacy_api=1,
+        MAC="AA:BB:CC:DD:EE:FF",
+    )
+    await setup_integration(hass, mock_config_entry)
+    entity_id = "update.mock_title_core_firmware"
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_INSTALLED_VERSION] == "v2.0.18"
+    assert state.attributes[ATTR_LATEST_VERSION] == "v2.5.2"
+
+    await hass.services.async_call(
+        PLATFORM,
+        SERVICE_INSTALL,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=False,
+    )
+
+    assert len(mock_smlight_client.fw_update.mock_calls) == 1
+
+    event_function: Callable[[MessageEvent], None] = get_callback_function(
+        mock_smlight_client, SmEvents.ESP_UPD_done
+    )
+
+    event_function(MOCK_FIRMWARE_DONE)
 
     mock_smlight_client.get_info.return_value = Info(
         sw_version="v2.5.2",

@@ -24,6 +24,9 @@ classifiers = [
 requires-python = ">=3.12.0"
 dependencies    = [
     "aiodns==3.2.0",
+    # Integrations may depend on hassio integration without listing it to
+    # change behavior based on presence of supervisor
+    "aiohasupervisor==0.1.0b0",
     "aiohttp==3.10.5",
     "aiohttp_cors==0.7.0",
     "aiohttp-fast-zlib==0.1.1",
@@ -65,7 +68,7 @@ dependencies    = [
     # Temporary setting an upper bound, to prevent compat issues with urllib3>=2
     # https://github.com/home-assistant/core/issues/97248
     "urllib3>=1.26.5,<2",
-    "uv==0.4.9",
+    "uv==0.4.12",
     "voluptuous==0.15.2",
     "voluptuous-serialize==2.6.0",
     "voluptuous-openapi==0.0.5",

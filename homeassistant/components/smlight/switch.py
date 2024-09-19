@@ -54,6 +54,13 @@ SWITCHES: list[SmSwitchEntityDescription] = [
         setting=Settings.ZB_AUTOUPDATE,
         state_fn=lambda x: x.auto_zigbee,
     ),
+    SmSwitchEntityDescription(
+        key="vpn_enabled",
+        translation_key="vpn_enabled",
+        setting=Settings.ENABLE_VPN,
+        entity_registry_enabled_default=False,
+        state_fn=lambda x: x.vpn_enabled,
+    ),
 ]
 
 
