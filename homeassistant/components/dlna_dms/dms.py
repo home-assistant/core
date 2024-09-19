@@ -190,7 +190,6 @@ class DmsDeviceSource:
     # try to connect before SSDP has rediscovered it, or when SSDP discovery
     # fails.
     location: str | None
-    retry: bool | False
 
     _device_lock: asyncio.Lock  # Held when connecting or disconnecting the device
     _device: DmsDevice | None = None
@@ -206,11 +205,6 @@ class DmsDeviceSource:
         self.hass = hass
         self.config_entry = config_entry
         self.location = self.config_entry.data[CONF_URL]
-        try:
-            self.retry = self.config_entry.data[CONF_RETRY]
-        except KeyError as err:
-            LOGGER.warning("DMS Device %s does not have retry config entry", self.location)
-            
         self._device_lock = asyncio.Lock()
 
     # Callbacks and events
@@ -383,6 +377,11 @@ class DmsDeviceSource:
     def icon(self) -> str | None:
         """Return an URL to an icon for the media server."""
         return self._device.icon if self._device else None
+
+    @property
+    def retry(self) -> bool | False:
+        """Return an URL to an icon for the media server."""
+        return self.config_entry.options.get(CONF_RETRY) or False
 
     # MediaSource methods
 
