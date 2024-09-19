@@ -8,6 +8,9 @@
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
         }
+      },
+      "confirm": {
+        "description": "[%key:common::config_flow::description::confirm_setup%]"
       }
     },
     "abort": {
