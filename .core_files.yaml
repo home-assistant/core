@@ -44,6 +44,7 @@ base_platforms: &base_platforms
   - homeassistant/components/siren/**
   - homeassistant/components/stt/**
   - homeassistant/components/switch/**
+  - homeassistant/components/tag/**
   - homeassistant/components/text/**
   - homeassistant/components/time/**
   - homeassistant/components/todo/**
@@ -108,7 +109,6 @@ components: &components
   - homeassistant/components/stream/**
   - homeassistant/components/sun/**
   - homeassistant/components/system_health/**
-  - homeassistant/components/tag/**
   - homeassistant/components/template/**
   - homeassistant/components/timer/**
   - homeassistant/components/usb/**
