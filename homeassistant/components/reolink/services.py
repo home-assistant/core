@@ -47,7 +47,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
                     translation_key="service_entry_ex",
                     translation_placeholders={"service_name": "play_chime"},
                 )
-            host: ReolinkHost = hass.data[DOMAIN][config_entry.entry_id].host
+            host: ReolinkHost = config_entry.runtime_data.host
             (device_uid, chime_id, is_chime) = get_device_uid_and_ch(device, host)
             chime: Chime | None = host.api.chime(chime_id)
             if not is_chime or chime is None:

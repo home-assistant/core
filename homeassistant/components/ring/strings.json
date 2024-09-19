@@ -58,6 +58,20 @@
         "name": "[%key:component::light::title%]"
       }
     },
+    "number": {
+      "volume": {
+        "name": "Volume"
+      },
+      "doorbell_volume": {
+        "name": "Doorbell volume"
+      },
+      "mic_volume": {
+        "name": "Mic volume"
+      },
+      "voice_volume": {
+        "name": "Voice volume"
+      }
+    },
     "siren": {
       "siren": {
         "name": "[%key:component::siren::title%]"

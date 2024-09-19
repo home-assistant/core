@@ -4,6 +4,7 @@ from abc import abstractmethod
 import asyncio
 from collections.abc import AsyncIterable
 import contextlib
+from dataclasses import dataclass
 from enum import StrEnum
 import logging
 import time
@@ -57,6 +58,34 @@ class AssistSatelliteEntityDescription(EntityDescription, frozen_or_thawed=True)
     """A class that describes Assist satellite entities."""
 
 
+@dataclass(frozen=True)
+class AssistSatelliteWakeWord:
+    """Available wake word model."""
+
+    id: str
+    """Unique id for wake word model."""
+
+    wake_word: str
+    """Wake word phrase."""
+
+    trained_languages: list[str]
+    """List of languages that the wake word was trained on."""
+
+
+@dataclass
+class AssistSatelliteConfiguration:
+    """Satellite configuration."""
+
+    available_wake_words: list[AssistSatelliteWakeWord]
+    """List of available available wake word models."""
+
+    active_wake_words: list[str]
+    """List of active wake word ids."""
+
+    max_active_wake_words: int
+    """Maximum number of simultaneous wake words allowed (0 for no limit)."""
+
+
 class AssistSatelliteEntity(entity.Entity):
     """Entity encapsulating the state and functionality of an Assist satellite."""
 
@@ -97,6 +126,17 @@ class AssistSatelliteEntity(entity.Entity):
     def tts_options(self) -> dict[str, Any] | None:
         """Options passed for text-to-speech."""
         return self._attr_tts_options
+
+    @callback
+    @abstractmethod
+    def async_get_configuration(self) -> AssistSatelliteConfiguration:
+        """Get the current satellite configuration."""
+
+    @abstractmethod
+    async def async_set_configuration(
+        self, config: AssistSatelliteConfiguration
+    ) -> None:
+        """Set the current satellite configuration."""
 
     async def async_intercept_wake_word(self) -> str | None:
         """Intercept the next wake word from the satellite.

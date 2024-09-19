@@ -409,7 +409,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: HomeKitConfigEntry) -> 
             break
 
         if not logged_shutdown_wait:
-            _LOGGER.info("Waiting for the HomeKit server to shutdown")
+            _LOGGER.debug("Waiting for the HomeKit server to shutdown")
             logged_shutdown_wait = True
 
         await asyncio.sleep(PORT_CLEANUP_CHECK_INTERVAL_SECS)
