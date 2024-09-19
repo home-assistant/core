@@ -116,13 +116,13 @@ def test_good_import(
             "homeassistant.components.pylint_test.sensor",
             "..",
             "pylint_test",
-            "hass-absolute-import",
+            "hass-import-relative-self",
         ),
         (
             "homeassistant.components.pylint_test.api.hub",
             "...",
             "pylint_test",
-            "hass-absolute-import",
+            "hass-import-relative-self",
         ),
     ],
 )

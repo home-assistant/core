@@ -490,6 +490,11 @@ class HassImportsFormatChecker(BaseChecker):
             "hass-import-constant-alias",
             "Used when a constant should be imported as an alias",
         ),
+        "W7427": (
+            "Individual items should be import from self root",
+            "hass-import-relative-self",
+            "Used when self is imported as a relative import",
+        ),
     }
     options = ()
 
@@ -539,8 +544,14 @@ class HassImportsFormatChecker(BaseChecker):
             return
         split_package = current_package.split(".")
         if not node.modname and len(split_package) == node.level + 1:
-            # Avoid from .. import self
-            self.add_message("hass-absolute-import", node=node)
+            for name in node.names:
+                if name[0] == split_package[2]:
+                    # from .. import self
+                    self.add_message("hass-import-relative-self", node=node)
+                    return
+                # from .. import other
+                self.add_message("hass-absolute-import", node=node)
+                return
             return
         if len(split_package) < node.level + 2:
             self.add_message("hass-absolute-import", node=node)
