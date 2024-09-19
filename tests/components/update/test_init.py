@@ -959,7 +959,7 @@ async def test_deprecated_supported_features_ints_with_service_call(
         )
 
 
-async def test_custom_version(hass: HomeAssistant) -> None:
+async def test_custom_version_is_newer(hass: HomeAssistant) -> None:
     """Test using custom version metho."""
 
     class MockUpdateEntity(UpdateEntity):
