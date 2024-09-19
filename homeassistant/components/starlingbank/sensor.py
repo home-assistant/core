@@ -92,9 +92,8 @@ class StarlingBalanceSensor(SensorEntity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "{} {}".format(
-            self._account_name, self._balance_data_type.replace("_", " ").capitalize()
-        )
+        balance_data_type = self._balance_data_type.replace("_", " ").capitalize()
+        return f"{self._account_name} {balance_data_type}"
 
     @property
     def native_value(self):
