@@ -311,6 +311,7 @@ disable = [
     "broad-except", # BLE001
     "protected-access", # SLF001
     "broad-exception-raised", # TRY002
+    "consider-using-f-string", # PLC0209
     # "no-self-use", # PLR6301  # Optional plugin, not enabled
 
     # Handled by mypy
