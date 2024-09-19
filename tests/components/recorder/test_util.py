@@ -1,7 +1,6 @@
 """Test util methods."""
 
-from collections.abc import Callable
-from contextlib import nullcontext as does_not_raise
+from contextlib import AbstractContextManager, nullcontext as does_not_raise
 from datetime import UTC, datetime, timedelta
 import os
 from pathlib import Path
@@ -1130,23 +1129,26 @@ async def test_resolve_period(hass: HomeAssistant) -> None:
     ) == (now - timedelta(hours=1, minutes=25), now - timedelta(minutes=25))
 
 
-NonRetryable = OperationalError(None, None, None, "")
+NonRetryable = OperationalError(None, None, BaseException())
 Retryable = OperationalError(None, None, BaseException(RETRYABLE_MYSQL_ERRORS[0], ""))
 
 
 @pytest.mark.parametrize(
-    ("side_effect", "expected_result", "nbr_calls", "dialect"),
+    ("side_effect", "dialect", "expected_result", "num_calls"),
     [
-        (None, does_not_raise(), 1, SupportedDialect.MYSQL),
-        (ValueError, pytest.raises(ValueError), 1, SupportedDialect.MYSQL),
-        (NonRetryable, pytest.raises(OperationalError), 1, SupportedDialect.MYSQL),
-        (Retryable, pytest.raises(OperationalError), 5, SupportedDialect.MYSQL),
-        (NonRetryable, pytest.raises(OperationalError), 1, SupportedDialect.SQLITE),
-        (Retryable, pytest.raises(OperationalError), 1, SupportedDialect.SQLITE),
+        (None, SupportedDialect.MYSQL, does_not_raise(), 1),
+        (ValueError, SupportedDialect.MYSQL, pytest.raises(ValueError), 1),
+        (NonRetryable, SupportedDialect.MYSQL, pytest.raises(OperationalError), 1),
+        (Retryable, SupportedDialect.MYSQL, pytest.raises(OperationalError), 5),
+        (NonRetryable, SupportedDialect.SQLITE, pytest.raises(OperationalError), 1),
+        (Retryable, SupportedDialect.SQLITE, pytest.raises(OperationalError), 1),
     ],
 )
 def test_database_job_retry_wrapper(
-    side_effect: Any, expected_result: Callable, nbr_calls: int, dialect: str
+    side_effect: Any,
+    dialect: str,
+    expected_result: AbstractContextManager,
+    num_calls: int,
 ) -> None:
     """Test database_job_retry_wrapper."""
 
@@ -1162,23 +1164,26 @@ def test_database_job_retry_wrapper(
     with expected_result:
         job(instance)
 
-    assert len(mock_job.mock_calls) == nbr_calls
+    assert len(mock_job.mock_calls) == num_calls
 
 
 @pytest.mark.parametrize(
-    ("side_effect", "retval", "expected_result", "dialect"),
+    ("side_effect", "dialect", "retval", "expected_result"),
     [
-        (None, False, does_not_raise(), SupportedDialect.MYSQL),
-        (None, True, does_not_raise(), SupportedDialect.MYSQL),
-        (ValueError, False, pytest.raises(ValueError), SupportedDialect.MYSQL),
-        (NonRetryable, True, does_not_raise(), SupportedDialect.MYSQL),
-        (Retryable, False, does_not_raise(), SupportedDialect.MYSQL),
-        (NonRetryable, True, does_not_raise(), SupportedDialect.SQLITE),
-        (Retryable, True, does_not_raise(), SupportedDialect.SQLITE),
+        (None, SupportedDialect.MYSQL, False, does_not_raise()),
+        (None, SupportedDialect.MYSQL, True, does_not_raise()),
+        (ValueError, SupportedDialect.MYSQL, False, pytest.raises(ValueError)),
+        (NonRetryable, SupportedDialect.MYSQL, True, does_not_raise()),
+        (Retryable, SupportedDialect.MYSQL, False, does_not_raise()),
+        (NonRetryable, SupportedDialect.SQLITE, True, does_not_raise()),
+        (Retryable, SupportedDialect.SQLITE, True, does_not_raise()),
     ],
 )
 def test_retryable_database_job(
-    side_effect: Any, retval: bool, expected_result: Callable, dialect: str
+    side_effect: Any,
+    retval: bool,
+    expected_result: AbstractContextManager,
+    dialect: str,
 ) -> None:
     """Test retryable_database_job."""
 
@@ -1188,7 +1193,7 @@ def test_retryable_database_job(
     mock_job = Mock(side_effect=side_effect)
 
     @retryable_database_job(description="test")
-    def job(instance, *args, **kwargs) -> None:
+    def job(instance, *args, **kwargs) -> bool:
         mock_job()
         return retval
 
@@ -1199,19 +1204,22 @@ def test_retryable_database_job(
 
 
 @pytest.mark.parametrize(
-    ("side_effect", "retval", "expected_result", "dialect"),
+    ("side_effect", "dialect", "retval", "expected_result"),
     [
-        (None, False, does_not_raise(), SupportedDialect.MYSQL),
-        (None, True, does_not_raise(), SupportedDialect.MYSQL),
-        (ValueError, False, pytest.raises(ValueError), SupportedDialect.MYSQL),
-        (NonRetryable, True, does_not_raise(), SupportedDialect.MYSQL),
-        (Retryable, False, does_not_raise(), SupportedDialect.MYSQL),
-        (NonRetryable, True, does_not_raise(), SupportedDialect.SQLITE),
-        (Retryable, True, does_not_raise(), SupportedDialect.SQLITE),
+        (None, SupportedDialect.MYSQL, False, does_not_raise()),
+        (None, SupportedDialect.MYSQL, True, does_not_raise()),
+        (ValueError, SupportedDialect.MYSQL, False, pytest.raises(ValueError)),
+        (NonRetryable, SupportedDialect.MYSQL, True, does_not_raise()),
+        (Retryable, SupportedDialect.MYSQL, False, does_not_raise()),
+        (NonRetryable, SupportedDialect.SQLITE, True, does_not_raise()),
+        (Retryable, SupportedDialect.SQLITE, True, does_not_raise()),
     ],
 )
 def test_retryable_database_job_method(
-    side_effect: Any, retval: bool, expected_result: Callable, dialect: str
+    side_effect: Any,
+    retval: bool,
+    expected_result: AbstractContextManager,
+    dialect: str,
 ) -> None:
     """Test retryable_database_job_method."""
 
@@ -1222,7 +1230,7 @@ def test_retryable_database_job_method(
 
     class Test:
         @retryable_database_job_method(description="test")
-        def job(self, instance, *args, **kwargs) -> None:
+        def job(self, instance, *args, **kwargs) -> bool:
             mock_job()
             return retval
 
