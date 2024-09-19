@@ -71,7 +71,6 @@ class Platform(StrEnum):
     SIREN = "siren"
     STT = "stt"
     SWITCH = "switch"
-    TAG = "tag"
     TEXT = "text"
     TIME = "time"
     TODO = "todo"
