@@ -3067,7 +3067,7 @@ async def test_ignored_entry_update_discovery_keys(
             return await self.async_step_user(discovery_info)
 
     with (
-        patch.dict(config_entries.HANDLERS, {"comp": TestFlow}),
+        mock_config_flow("comp", TestFlow),
         patch(
             "homeassistant.config_entries.ConfigEntries.async_reload"
         ) as async_reload,
