@@ -14,7 +14,15 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .api import ConfigEntryAuth
-from .const import ATTR_CONSTRAINTS, ATTR_MAX, ATTR_MIN, ATTR_VALUE, DOMAIN
+from .const import (
+    ATTR_CONSTRAINTS,
+    ATTR_MAX,
+    ATTR_MIN,
+    ATTR_STEPSIZE,
+    ATTR_UNIT,
+    ATTR_VALUE,
+    DOMAIN,
+)
 from .entity import HomeConnectEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -126,9 +134,10 @@ class HomeConnectNumberEntity(HomeConnectEntity, NumberEntity):
             return
         if not data or not (constraints := data.get(ATTR_CONSTRAINTS)):
             return
-        self._attr_native_max_value = constraints.get(ATTR_MAX, None)
-        self._attr_native_min_value = constraints.get(ATTR_MIN, None)
-        self._attr_native_step = 1 if data.get("type", None) == "Int" else 0.1
+        self._attr_native_max_value = constraints.get(ATTR_MAX)
+        self._attr_native_min_value = constraints.get(ATTR_MIN)
+        self._attr_native_step = constraints.get(ATTR_STEPSIZE)
+        self._attr_native_unit_of_measurement = data.get(ATTR_UNIT)
 
     async def async_update(self) -> None:
         """Update the number setting status."""

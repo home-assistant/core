@@ -107,6 +107,7 @@ ATTR_MIN = "min"
 ATTR_PROGRAM = "program"
 ATTR_SENSOR_TYPE = "sensor_type"
 ATTR_SIGN = "sign"
+ATTR_STEPSIZE = "stepsize"
 ATTR_UNIT = "unit"
 ATTR_VALUE = "value"
 

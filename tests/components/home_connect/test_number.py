@@ -11,6 +11,8 @@ from homeassistant.components.home_connect.const import (
     ATTR_CONSTRAINTS,
     ATTR_MAX,
     ATTR_MIN,
+    ATTR_STEPSIZE,
+    ATTR_UNIT,
     ATTR_VALUE,
 )
 from homeassistant.components.number import (
@@ -51,13 +53,22 @@ async def test_number(
 
 @pytest.mark.parametrize("appliance", ["Refrigerator"], indirect=True)
 @pytest.mark.parametrize(
-    ("entity_id", "setting_key", "min_value", "max_value"),
+    (
+        "entity_id",
+        "setting_key",
+        "min_value",
+        "max_value",
+        "step_size",
+        "unit_of_measurement",
+    ),
     [
         (
             f"{NUMBER_DOMAIN.lower()}.refrigerator_refrigerator_temperature",
             "Refrigeration.FridgeFreezer.Setting.SetpointTemperatureRefrigerator",
             7,
             15,
+            0.1,
+            "°C",
         ),
     ],
 )
@@ -69,6 +80,8 @@ async def test_number_entity_functionality(
     bypass_throttle: Generator[None],
     min_value: int,
     max_value: int,
+    step_size: float,
+    unit_of_measurement: str,
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[], Awaitable[bool]],
@@ -77,7 +90,14 @@ async def test_number_entity_functionality(
 ) -> None:
     """Test number entity functionality."""
     appliance.get.side_effect = [
-        {ATTR_CONSTRAINTS: {ATTR_MIN: min_value, ATTR_MAX: max_value}}
+        {
+            ATTR_CONSTRAINTS: {
+                ATTR_MIN: min_value,
+                ATTR_MAX: max_value,
+                ATTR_STEPSIZE: step_size,
+            },
+            ATTR_UNIT: unit_of_measurement,
+        }
     ]
     get_appliances.return_value = [appliance]
     current_value = min_value
@@ -87,8 +107,11 @@ async def test_number_entity_functionality(
     assert await integration_setup()
     assert config_entry.state == ConfigEntryState.LOADED
     assert hass.states.is_state(entity_id, str(current_value))
-    assert hass.states.get(entity_id).attributes["min"] == min_value
-    assert hass.states.get(entity_id).attributes["max"] == max_value
+    state = hass.states.get(entity_id)
+    assert state.attributes["min"] == min_value
+    assert state.attributes["max"] == max_value
+    assert state.attributes["step"] == step_size
+    assert state.attributes["unit_of_measurement"] == unit_of_measurement
 
     new_value = random.randint(min_value + 1, max_value)
     await hass.services.async_call(
