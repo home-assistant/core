@@ -650,10 +650,10 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
                 port=port,
                 hostname=discovery_info.hostname,
                 type="_zigbee-gateway._tcp.local.",
-                name=local_name,
+                name=discovery_info.properties.get("name", local_name),
                 properties={
                     "radio_type": radio_type.name,
-                    "serial_number": f"{radio_type}_{local_name}_{port}",
+                    "serial_number": local_name,  # To maintain backwards compatibility
                 },
             )
 
