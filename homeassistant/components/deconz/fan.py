@@ -20,7 +20,7 @@ from homeassistant.util.percentage import (
     percentage_to_ordered_list_item,
 )
 
-from .entity import DeconzEntity
+from .entity import DeconzDevice
 from .hub import DeconzHub
 
 ORDERED_NAMED_FAN_SPEEDS: list[LightFanSpeed] = [
@@ -54,7 +54,7 @@ async def async_setup_entry(
     )
 
 
-class DeconzFan(DeconzEntity[Light], FanEntity):
+class DeconzFan(DeconzDevice[Light], FanEntity):
     """Representation of a deCONZ fan."""
 
     TYPE = FAN_DOMAIN

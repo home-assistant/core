@@ -68,7 +68,7 @@ class DeconzBase[_DeviceT: _DeviceType]:
         )
 
 
-class DeconzEntity[_DeviceT: _DeviceType](DeconzBase[_DeviceT], Entity):
+class DeconzDevice[_DeviceT: _DeviceType](DeconzBase[_DeviceT], Entity):
     """Representation of a deCONZ device."""
 
     _attr_should_poll = False
@@ -141,7 +141,7 @@ class DeconzEntity[_DeviceT: _DeviceType](DeconzBase[_DeviceT], Entity):
         return self.hub.available and self._device.reachable  # type: ignore[union-attr]
 
 
-class DeconzSceneMixin(DeconzEntity[PydeconzScene]):
+class DeconzSceneMixin(DeconzDevice[PydeconzScene]):
     """Representation of a deCONZ scene."""
 
     _attr_has_entity_name = True

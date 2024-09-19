@@ -29,7 +29,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import ATTR_DARK, ATTR_ON
-from .entity import DeconzEntity
+from .entity import DeconzDevice
 from .hub import DeconzHub
 
 ATTR_ORIENTATION = "orientation"
@@ -186,7 +186,7 @@ async def async_setup_entry(
     )
 
 
-class DeconzBinarySensor(DeconzEntity[SensorResources], BinarySensorEntity):
+class DeconzBinarySensor(DeconzDevice[SensorResources], BinarySensorEntity):
     """Representation of a deCONZ binary sensor."""
 
     TYPE = BINARY_SENSOR_DOMAIN

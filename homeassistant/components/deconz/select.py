@@ -17,7 +17,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .entity import DeconzEntity
+from .entity import DeconzDevice
 from .hub import DeconzHub
 
 SENSITIVITY_TO_DECONZ = {
@@ -67,7 +67,7 @@ async def async_setup_entry(
     )
 
 
-class DeconzAirPurifierFanMode(DeconzEntity[AirPurifier], SelectEntity):
+class DeconzAirPurifierFanMode(DeconzDevice[AirPurifier], SelectEntity):
     """Representation of a deCONZ air purifier fan mode entity."""
 
     _name_suffix = "Fan Mode"
@@ -100,7 +100,7 @@ class DeconzAirPurifierFanMode(DeconzEntity[AirPurifier], SelectEntity):
         )
 
 
-class DeconzPresenceDeviceModeSelect(DeconzEntity[Presence], SelectEntity):
+class DeconzPresenceDeviceModeSelect(DeconzDevice[Presence], SelectEntity):
     """Representation of a deCONZ presence device mode entity."""
 
     _name_suffix = "Device Mode"
@@ -130,7 +130,7 @@ class DeconzPresenceDeviceModeSelect(DeconzEntity[Presence], SelectEntity):
         )
 
 
-class DeconzPresenceSensitivitySelect(DeconzEntity[Presence], SelectEntity):
+class DeconzPresenceSensitivitySelect(DeconzDevice[Presence], SelectEntity):
     """Representation of a deCONZ presence sensitivity entity."""
 
     _name_suffix = "Sensitivity"
@@ -157,7 +157,7 @@ class DeconzPresenceSensitivitySelect(DeconzEntity[Presence], SelectEntity):
         )
 
 
-class DeconzPresenceTriggerDistanceSelect(DeconzEntity[Presence], SelectEntity):
+class DeconzPresenceTriggerDistanceSelect(DeconzDevice[Presence], SelectEntity):
     """Representation of a deCONZ presence trigger distance entity."""
 
     _name_suffix = "Trigger Distance"

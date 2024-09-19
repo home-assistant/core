@@ -28,7 +28,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .entity import DeconzEntity
+from .entity import DeconzDevice
 from .hub import DeconzHub
 
 DECONZ_TO_ALARM_STATE = {
@@ -75,7 +75,7 @@ async def async_setup_entry(
     )
 
 
-class DeconzAlarmControlPanel(DeconzEntity[AncillaryControl], AlarmControlPanelEntity):
+class DeconzAlarmControlPanel(DeconzDevice[AncillaryControl], AlarmControlPanelEntity):
     """Representation of a deCONZ alarm control panel."""
 
     _update_key = "panel"

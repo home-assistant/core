@@ -22,7 +22,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .entity import DeconzEntity
+from .entity import DeconzDevice
 from .hub import DeconzHub
 
 
@@ -96,7 +96,7 @@ async def async_setup_entry(
     )
 
 
-class DeconzNumber(DeconzEntity[SensorResources], NumberEntity):
+class DeconzNumber(DeconzDevice[SensorResources], NumberEntity):
     """Representation of a deCONZ number entity."""
 
     TYPE = NUMBER_DOMAIN
