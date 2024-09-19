@@ -56,7 +56,7 @@ async def _migrate_old_unique_ids(hass, devices):
 
 def sense_to_mdi(sense_icon):
     """Convert sense icon to mdi icon."""
-    return "mdi:{}".format(MDI_ICONS.get(sense_icon, "power-plug"))
+    return f"mdi:{MDI_ICONS.get(sense_icon, "power-plug")}"
 
 
 class SenseDevice(BinarySensorEntity):
