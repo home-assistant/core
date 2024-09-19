@@ -20,8 +20,9 @@ from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import AqualinkEntity, refresh_system
+from . import refresh_system
 from .const import DOMAIN as AQUALINK_DOMAIN
+from .entity import AqualinkEntity
 from .utils import await_or_reraise
 
 _LOGGER = logging.getLogger(__name__)

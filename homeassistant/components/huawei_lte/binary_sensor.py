@@ -16,13 +16,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import HuaweiLteBaseEntityWithDevice
 from .const import (
     DOMAIN,
     KEY_MONITORING_CHECK_NOTIFICATIONS,
     KEY_MONITORING_STATUS,
     KEY_WLAN_WIFI_FEATURE_SWITCH,
 )
+from .entity import HuaweiLteBaseEntityWithDevice
 
 _LOGGER = logging.getLogger(__name__)
 

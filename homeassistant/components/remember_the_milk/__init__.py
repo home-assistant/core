@@ -58,7 +58,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     stored_rtm_config = RememberTheMilkConfiguration(hass)
     for rtm_config in config[DOMAIN]:
         account_name = rtm_config[CONF_NAME]
-        _LOGGER.info("Adding Remember the milk account %s", account_name)
+        _LOGGER.debug("Adding Remember the milk account %s", account_name)
         api_key = rtm_config[CONF_API_KEY]
         shared_secret = rtm_config[CONF_SHARED_SECRET]
         token = stored_rtm_config.get_token(account_name)
