@@ -20,7 +20,7 @@ class ConnectionTestView(HomeAssistantView):
     """View to serve an audio sample for connection test."""
 
     requires_auth = False
-    url = CONNECTION_TEST_URL_BASE + "/{connection_id}"
+    url = f"{CONNECTION_TEST_URL_BASE}/{{connection_id}}"
     name = "api:assist_satellite_connection_test"
 
     async def get(self, request: web.Request, connection_id: str) -> web.Response:

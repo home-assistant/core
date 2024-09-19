@@ -150,7 +150,6 @@ async def websocket_set_wake_words(
     connection.send_result(msg["id"])
 
 
-@callback
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "assist_satellite/test_connection",
@@ -163,7 +162,7 @@ async def websocket_test_connection(
     connection: websocket_api.connection.ActiveConnection,
     msg: dict[str, Any],
 ) -> None:
-    """Intercept the next wake word from a satellite."""
+    """Send an announcement to the device with a special media id to test the connection to HA."""
     component: EntityComponent[AssistSatelliteEntity] = hass.data[DOMAIN]
     satellite = component.get_entity(msg["entity_id"])
     if satellite is None:
