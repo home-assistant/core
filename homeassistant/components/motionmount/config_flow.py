@@ -208,21 +208,18 @@ class MotionMountFlowHandler(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle backoff progress."""
-        if self.backoff_task is not None:
-            if self.backoff_task.done():
-                self.backoff_task = None
-                return self.async_show_progress_done(next_step_id="auth")
+        if not self.backoff_task or self.backoff_task.done():
+            self.backoff_task = None
+            return self.async_show_progress_done(next_step_id="auth")
 
-            return self.async_show_progress(
-                step_id="backoff",
-                description_placeholders={
-                    "timeout": str(self.backoff_time),
-                },
-                progress_action="progress_action",
-                progress_task=self.backoff_task,
-            )
-
-        return await self.async_step_auth()
+        return self.async_show_progress(
+            step_id="backoff",
+            description_placeholders={
+                "timeout": str(self.backoff_time),
+            },
+            progress_action="progress_action",
+            progress_task=self.backoff_task,
+        )
 
     def _create_or_update_entry(self) -> ConfigFlowResult:
         if self.reauth_entry:
