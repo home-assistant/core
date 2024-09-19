@@ -791,9 +791,7 @@ async def test_get_progress_flow(hass: HomeAssistant, client: TestClient) -> Non
     assert resp.status == HTTPStatus.OK
     data = await resp.json()
 
-    resp2 = await client.get(
-        "/api/config/config_entries/flow/{}".format(data["flow_id"])
-    )
+    resp2 = await client.get(f"/api/config/config_entries/flow/{data['flow_id']}")
 
     assert resp2.status == HTTPStatus.OK
     data2 = await resp2.json()
@@ -829,9 +827,7 @@ async def test_get_progress_flow_unauth(
 
     hass_admin_user.groups = []
 
-    resp2 = await client.get(
-        "/api/config/config_entries/flow/{}".format(data["flow_id"])
-    )
+    resp2 = await client.get(f"/api/config/config_entries/flow/{data['flow_id']}")
 
     assert resp2.status == HTTPStatus.UNAUTHORIZED
 
