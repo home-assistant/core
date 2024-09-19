@@ -177,9 +177,6 @@ class MotionMountFlowHandler(ConfigFlow, domain=DOMAIN):
         """Handle authentication form."""
         errors = {}
 
-        if self.backoff_task:
-            return await self.async_step_backoff()
-
         if user_input is not None:
             self.connection_data[CONF_PIN] = user_input[CONF_PIN]
 
