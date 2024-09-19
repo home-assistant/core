@@ -19,8 +19,9 @@ from homeassistant.components.light import (
     ATTR_RGBW_COLOR,
     ColorMode,
 )
-from homeassistant.const import CONF_NAME, STATE_OFF, STATE_ON
+from homeassistant.const import CONF_NAME, STATE_OFF, STATE_ON, EntityCategory
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from . import KnxEntityGenerator
 from .conftest import KNXTestKit
@@ -1218,3 +1219,21 @@ async def test_light_ui_color_temp(
     state = hass.states.get("light.test")
     assert state.state is STATE_ON
     assert state.attributes[ATTR_COLOR_TEMP_KELVIN] == pytest.approx(4200, abs=1)
+
+
+async def test_light_ui_load(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    load_config_store: None,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test device removal."""
+    await knx.setup_integration({})
+
+    await knx.assert_read("1/0/45", response=True)  # test switch - unrelated here
+    await knx.assert_read("1/0/21", response=True)  # test light
+    state = hass.states.get("light.test")
+    assert state.state is STATE_ON
+
+    entity = entity_registry.async_get("light.test")
+    assert entity.entity_category is EntityCategory.CONFIG
