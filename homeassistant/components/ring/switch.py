@@ -5,7 +5,7 @@ from dataclasses import dataclass
 import logging
 from typing import Any, Generic, Self, cast
 
-from ring_doorbell import RingCapability, RingStickUpCam
+from ring_doorbell import RingCapability, RingDoorBell, RingStickUpCam
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.const import Platform
@@ -53,6 +53,14 @@ SWITCHES: Sequence[RingSwitchEntityDescription[Any]] = (
         deprecated_info=DeprecatedInfo(
             new_platform=Platform.SIREN, breaks_in_ha_version="2025.4.0"
         ),
+    ),
+    RingSwitchEntityDescription[RingDoorBell](
+        key="motion_detection",
+        translation_key="motion_detection",
+        exists_fn=lambda device: device.has_capability(RingCapability.MOTION_DETECTION),
+        is_on_fn=lambda device: device.motion_detection,
+        turn_on_fn=lambda device: device.async_set_motion_detection(True),
+        turn_off_fn=lambda device: device.async_set_motion_detection(False),
     ),
 )
 
