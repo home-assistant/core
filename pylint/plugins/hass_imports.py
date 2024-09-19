@@ -545,13 +545,12 @@ class HassImportsFormatChecker(BaseChecker):
         split_package = current_package.split(".")
         if not node.modname and len(split_package) == node.level + 1:
             for name in node.names:
-                if name[0] == split_package[2]:
-                    # from .. import self
-                    self.add_message("hass-import-relative-self", node=node)
+                if name[0] != split_package[2]:
+                    # from .. import other
+                    self.add_message("hass-absolute-import", node=node)
                     return
-                # from .. import other
-                self.add_message("hass-absolute-import", node=node)
-                return
+            # from .. import self
+            self.add_message("hass-import-relative-self", node=node)
             return
         if len(split_package) < node.level + 2:
             self.add_message("hass-absolute-import", node=node)
