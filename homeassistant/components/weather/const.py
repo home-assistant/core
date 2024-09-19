@@ -49,6 +49,8 @@ ATTR_WEATHER_UV_INDEX = "uv_index"
 
 DOMAIN: Final = "weather"
 
+INTENT_GET_WEATHER = "HassGetWeather"
+
 VALID_UNITS_PRESSURE: set[str] = {
     UnitOfPressure.HPA,
     UnitOfPressure.MBAR,
