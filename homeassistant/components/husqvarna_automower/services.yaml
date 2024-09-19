@@ -38,3 +38,71 @@ override_schedule_work_area:
       selector:
         text:
           type: number
+
+set_schedule:
+  target:
+    entity:
+      integration: "husqvarna_automower"
+      domain: "lawn_mower"
+  fields:
+    mode:
+      required: true
+      example: "add"
+      selector:
+        select:
+          translation_key: "schedule_modification_modes"
+          options:
+            - overwrite
+            - add
+            - remove
+    start:
+      required: true
+      example: "08:00"
+      selector:
+        time:
+    end:
+      required: true
+      example: "18:00"
+      selector:
+        time:
+    monday:
+      required: true
+      example: true
+      selector:
+        boolean:
+    tuesday:
+      required: true
+      example: true
+      selector:
+        boolean:
+    wednesday:
+      required: true
+      example: true
+      selector:
+        boolean:
+    thursday:
+      required: true
+      example: true
+      selector:
+        boolean:
+    friday:
+      required: true
+      example: true
+      selector:
+        boolean:
+    saturday:
+      required: true
+      example: false
+      selector:
+        boolean:
+    sunday:
+      required: true
+      example: false
+      selector:
+        boolean:
+    work_area_id:
+      required: false
+      example: "123456"
+      selector:
+        text:
+          type: number

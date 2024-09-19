@@ -275,8 +275,17 @@
     }
   },
   "exceptions": {
+    "calendar_entry_already_exists": {
+      "message": "Calendar entry already exists."
+    },
+    "calendar_entry_not_found": {
+      "message": "Calendar entry not found. Can't be removed."
+    },
     "command_send_failed": {
       "message": "Failed to send command: {exception}"
+    },
+    "start_after_end": {
+      "message": "Start must be before end."
     },
     "work_areas_not_supported": {
       "message": "This mower does not support work areas."
@@ -290,6 +299,13 @@
       "options": {
         "mow": "Mow",
         "park": "Park"
+      }
+    },
+    "schedule_modification_modes": {
+      "options": {
+        "overwrite": "Overwrite",
+        "add": "Add",
+        "remove": "Remove"
       }
     }
   },
@@ -319,6 +335,56 @@
         "work_area_id": {
           "name": "Work area ID",
           "description": "In which work area the mower should mow."
+        }
+      }
+    },
+    "set_schedule": {
+      "name": "Set schedule",
+      "description": "Add or remove a schedule",
+      "fields": {
+        "mode": {
+          "name": "Mode",
+          "description": "Selects if the current schedule should be overwritten, expanded or if one of the schedules schould be removed."
+        },
+        "start": {
+          "name": "Start",
+          "description": "Start of the schedule, seconds will be ignored."
+        },
+        "end": {
+          "name": "End",
+          "description": "End of the schedule, seconds will be ignored."
+        },
+        "monday": {
+          "name": "Monday",
+          "description": "If set, then the schedule will be activated on this day."
+        },
+        "tuesday": {
+          "name": "Tuesday",
+          "description": "[%key:component::husqvarna_automower::services::set_schedule::fields::monday::description%]"
+        },
+        "wednesday": {
+          "name": "Wednesday",
+          "description": "[%key:component::husqvarna_automower::services::set_schedule::fields::monday::description%]"
+        },
+        "thursday": {
+          "name": "Thursday",
+          "description": "[%key:component::husqvarna_automower::services::set_schedule::fields::monday::description%]"
+        },
+        "friday": {
+          "name": "Friday",
+          "description": "[%key:component::husqvarna_automower::services::set_schedule::fields::monday::description%]"
+        },
+        "saturday": {
+          "name": "Saturday",
+          "description": "[%key:component::husqvarna_automower::services::set_schedule::fields::monday::description%]"
+        },
+        "sunday": {
+          "name": "Sunday",
+          "description": "[%key:component::husqvarna_automower::services::set_schedule::fields::monday::description%]"
+        },
+        "work_area_id": {
+          "name": "Work area ID",
+          "description": "This field is only needed, if you mower supports work areas. You can select the affected work area ID with this field. You can find the work area IDs in the work area sensor's extra state attributes."
         }
       }
     }

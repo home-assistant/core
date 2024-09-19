@@ -44,6 +44,9 @@
     },
     "override_schedule_work_area": {
       "service": "mdi:land-fields"
+    },
+    "set_schedule": {
+      "service": "mdi:calendar-week"
     }
   }
 }

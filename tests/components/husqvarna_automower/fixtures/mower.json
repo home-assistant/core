@@ -33,7 +33,7 @@
           "tasks": [
             {
               "start": 1140,
-              "duration": 300,
+              "duration": 299,
               "monday": true,
               "tuesday": false,
               "wednesday": true,

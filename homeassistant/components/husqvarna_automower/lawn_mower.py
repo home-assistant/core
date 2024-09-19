@@ -1,10 +1,11 @@
 """Husqvarna Automower lawn mower entity."""
 
-from datetime import timedelta
+import copy
+from datetime import time, timedelta
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Final
 
-from aioautomower.model import MowerActivities, MowerStates, WorkArea
+from aioautomower.model import Calendar, MowerActivities, MowerStates, Tasks, WorkArea
 import voluptuous as vol
 
 from homeassistant.components.lawn_mower import (
@@ -22,6 +23,17 @@ from .const import DOMAIN
 from .coordinator import AutomowerDataUpdateCoordinator
 from .entity import AutomowerAvailableEntity, handle_sending_exception
 
+CONF_FRIDAY: Final = "friday"
+CONF_MONDAY: Final = "monday"
+CONF_SATURDAY: Final = "saturday"
+CONF_SUNDAY: Final = "sunday"
+CONF_THURSDAY: Final = "thursday"
+CONF_TUESDAY: Final = "tuesday"
+CONF_WEDNESDAY: Final = "wednesday"
+CONF_WORK_AREA_ID: Final = "work_area_id"
+CONF_END: Final = "end"
+CONF_START: Final = "start"
+CONF_DURATION: Final = "duration"
 DOCKED_ACTIVITIES = (MowerActivities.PARKED_IN_CS, MowerActivities.CHARGING)
 MOWING_ACTIVITIES = (
     MowerActivities.MOWING,
@@ -40,8 +52,6 @@ SUPPORT_STATE_SERVICES = (
 MOW = "mow"
 PARK = "park"
 OVERRIDE_MODES = [MOW, PARK]
-
-
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -61,7 +71,7 @@ async def async_setup_entry(
         "override_schedule",
         {
             vol.Required("override_mode"): vol.In(OVERRIDE_MODES),
-            vol.Required("duration"): vol.All(
+            vol.Required(CONF_DURATION): vol.All(
                 cv.time_period,
                 cv.positive_timedelta,
                 vol.Range(min=timedelta(minutes=1), max=timedelta(days=42)),
@@ -72,14 +82,53 @@ async def async_setup_entry(
     platform.async_register_entity_service(
         "override_schedule_work_area",
         {
-            vol.Required("work_area_id"): vol.Coerce(int),
-            vol.Required("duration"): vol.All(
+            vol.Required(CONF_WORK_AREA_ID): vol.Coerce(int),
+            vol.Required(CONF_DURATION): vol.All(
                 cv.time_period,
                 cv.positive_timedelta,
                 vol.Range(min=timedelta(minutes=1), max=timedelta(days=42)),
             ),
         },
         "async_override_schedule_work_area",
+    )
+    platform.async_register_entity_service(
+        "set_schedule",
+        {
+            vol.Required("mode"): vol.All(
+                cv.string,
+            ),
+            vol.Required(CONF_START): vol.All(
+                cv.time,
+            ),
+            vol.Required(CONF_END): vol.All(
+                cv.time,
+            ),
+            vol.Required(CONF_MONDAY): vol.All(
+                cv.boolean,
+            ),
+            vol.Required(CONF_TUESDAY): vol.All(
+                cv.boolean,
+            ),
+            vol.Required(CONF_WEDNESDAY): vol.All(
+                cv.boolean,
+            ),
+            vol.Required(CONF_THURSDAY): vol.All(
+                cv.boolean,
+            ),
+            vol.Required(CONF_FRIDAY): vol.All(
+                cv.boolean,
+            ),
+            vol.Required(CONF_SATURDAY): vol.All(
+                cv.boolean,
+            ),
+            vol.Required(CONF_SUNDAY): vol.All(
+                cv.boolean,
+            ),
+            vol.Optional(CONF_WORK_AREA_ID, default=None): vol.Any(
+                vol.Coerce(int), None
+            ),
+        },
+        "async_set_schedule",
     )
 
 
@@ -162,3 +211,85 @@ class AutomowerLawnMowerEntity(AutomowerAvailableEntity, LawnMowerEntity):
         await self.coordinator.api.commands.start_in_workarea(
             self.mower_id, work_area_id, duration
         )
+
+    @handle_sending_exception()
+    async def async_set_schedule(
+        self,
+        mode: str,
+        start: time,
+        end: time,
+        monday: bool,
+        tuesday: bool,
+        wednesday: bool,
+        thursday: bool,
+        friday: bool,
+        saturday: bool,
+        sunday: bool,
+        work_area_id: int | None = None,
+    ) -> None:
+        """Set schedule."""
+        if start > end:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="start_after_end",
+            )
+        duration = timedelta(
+            hours=int(end.hour) - int(start.hour),
+            minutes=int(end.minute) - int(start.minute),
+        )
+        user_input = Calendar(
+            start,
+            duration,
+            monday,
+            tuesday,
+            wednesday,
+            thursday,
+            friday,
+            saturday,
+            sunday,
+            work_area_id,
+        )
+        new_list = []
+        existing_data = copy.copy(self.coordinator.data[self.mower_id].calendar.tasks)
+        _LOGGER.debug("existing_data : %s", existing_data)
+        _LOGGER.debug("user_input: %s", user_input)
+        if mode == "overwrite":
+            new_list.append(user_input)
+            tasks = Tasks(tasks=new_list)
+            await self.coordinator.api.commands.set_calendar(self.mower_id, tasks)
+        if mode == "add":
+            if existing_data is not None:
+                for calendar_entry in existing_data:
+                    if calendar_entry == user_input:
+                        raise ServiceValidationError(
+                            translation_domain=DOMAIN,
+                            translation_key="calendar_entry_already_exists",
+                        )
+                    if work_area_id is not None:
+                        if calendar_entry.work_area_id == user_input.work_area_id:
+                            new_list.append(calendar_entry)
+            new_list.append(user_input)
+            tasks = Tasks(tasks=new_list)
+            await self.coordinator.api.commands.set_calendar(self.mower_id, tasks)
+        if mode == "remove":
+            if existing_data is None:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="calendar_entry_not_found",
+                )
+            calendar_entry_found = False
+            for calendar_entry in existing_data:
+                if calendar_entry == user_input:
+                    calendar_entry_found = True
+                if (
+                    calendar_entry.to_dict() != user_input.to_dict()
+                    and calendar_entry.work_area_id == user_input.work_area_id
+                ):
+                    new_list.append(calendar_entry)
+            if not calendar_entry_found:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="calendar_entry_not_found",
+                )
+            tasks = Tasks(tasks=new_list)
+            await self.coordinator.api.commands.set_calendar(self.mower_id, tasks)

@@ -7,7 +7,7 @@
     'calendar': dict({
       'tasks': list([
         dict({
-          'duration': 300,
+          'duration': 299,
           'friday': True,
           'monday': True,
           'saturday': False,

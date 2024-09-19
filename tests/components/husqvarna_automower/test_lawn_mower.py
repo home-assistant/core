@@ -4,6 +4,7 @@ from datetime import timedelta
 from unittest.mock import AsyncMock
 
 from aioautomower.exceptions import ApiException
+from aioautomower.model import Tasks
 from aioautomower.utils import mower_list_to_dictionary_dataclass
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -265,6 +266,256 @@ async def test_lawn_mower_wrong_service_commands(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     with pytest.raises(exception):
+        await hass.services.async_call(
+            domain=DOMAIN,
+            service=service,
+            target={"entity_id": "lawn_mower.test_mower_1"},
+            service_data=service_data,
+            blocking=True,
+        )
+
+
+@pytest.mark.parametrize(
+    ("service", "service_data", "output"),
+    [
+        (
+            "set_schedule",
+            {
+                "mode": "overwrite",
+                "start": "17:00:00",
+                "end": "20:00:00",
+                "monday": True,
+                "tuesday": True,
+                "wednesday": True,
+                "thursday": True,
+                "friday": True,
+                "saturday": False,
+                "sunday": False,
+                "work_area_id": 0,
+            },
+            Tasks.from_dict(
+                {
+                    "tasks": [
+                        {
+                            "start": 1020,
+                            "duration": 180,
+                            "monday": True,
+                            "tuesday": True,
+                            "wednesday": True,
+                            "thursday": True,
+                            "friday": True,
+                            "saturday": False,
+                            "sunday": False,
+                            "workAreaId": 0,
+                        },
+                    ]
+                }
+            ),
+        ),
+        (
+            "set_schedule",
+            {
+                "mode": "remove",
+                "start": "01:00:00",
+                "end": "09:00:00",
+                "monday": True,
+                "tuesday": True,
+                "wednesday": False,
+                "thursday": True,
+                "friday": False,
+                "saturday": True,
+                "sunday": False,
+                "work_area_id": 654321,
+            },
+            Tasks.from_dict(
+                {
+                    "tasks": [
+                        {
+                            "start": 0,
+                            "duration": 480,
+                            "monday": False,
+                            "tuesday": True,
+                            "wednesday": False,
+                            "thursday": True,
+                            "friday": False,
+                            "saturday": True,
+                            "sunday": False,
+                            "workAreaId": 654321,
+                        },
+                    ]
+                }
+            ),
+        ),
+        (
+            "set_schedule",
+            {
+                "mode": "add",
+                "start": "10:00:00",
+                "end": "11:00:00",
+                "monday": True,
+                "tuesday": False,
+                "wednesday": False,
+                "thursday": False,
+                "friday": False,
+                "saturday": False,
+                "sunday": False,
+                "work_area_id": 654321,
+            },
+            Tasks.from_dict(
+                {
+                    "tasks": [
+                        {
+                            "start": 0,
+                            "duration": 480,
+                            "monday": False,
+                            "tuesday": True,
+                            "wednesday": False,
+                            "thursday": True,
+                            "friday": False,
+                            "saturday": True,
+                            "sunday": False,
+                            "workAreaId": 654321,
+                        },
+                        {
+                            "start": 60,
+                            "duration": 480,
+                            "monday": True,
+                            "tuesday": True,
+                            "wednesday": False,
+                            "thursday": True,
+                            "friday": False,
+                            "saturday": True,
+                            "sunday": False,
+                            "workAreaId": 654321,
+                        },
+                        {
+                            "start": 600,
+                            "duration": 60,
+                            "monday": True,
+                            "tuesday": False,
+                            "wednesday": False,
+                            "thursday": False,
+                            "friday": False,
+                            "saturday": False,
+                            "sunday": False,
+                            "workAreaId": 654321,
+                        },
+                    ]
+                }
+            ),
+        ),
+    ],
+)
+async def test_lawn_mower_set_schedule_command(
+    hass: HomeAssistant,
+    output: Tasks,
+    service: str,
+    service_data: dict[str, int] | None,
+    mock_automower_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test lawn_mower work area override commands."""
+    await setup_integration(hass, mock_config_entry)
+    mocked_method = AsyncMock()
+    setattr(mock_automower_client.commands, "set_calendar", mocked_method)
+    await hass.services.async_call(
+        domain=DOMAIN,
+        service=service,
+        target={"entity_id": "lawn_mower.test_mower_1"},
+        service_data=service_data,
+        blocking=True,
+    )
+    mocked_method.assert_called_once_with(TEST_MOWER_ID, output)
+
+    getattr(mock_automower_client.commands, "set_calendar").side_effect = ApiException(
+        "Test error"
+    )
+    with pytest.raises(
+        HomeAssistantError,
+        match="Failed to send command: Test error",
+    ):
+        await hass.services.async_call(
+            domain=DOMAIN,
+            service=service,
+            target={"entity_id": "lawn_mower.test_mower_1"},
+            service_data=service_data,
+            blocking=True,
+        )
+
+
+@pytest.mark.parametrize(
+    ("service", "service_data", "fail_message"),
+    [
+        (
+            "set_schedule",
+            {
+                "mode": "remove",
+                "start": "11:11:00",
+                "end": "12:00:00",
+                "monday": True,
+                "tuesday": True,
+                "wednesday": False,
+                "thursday": True,
+                "friday": False,
+                "saturday": True,
+                "sunday": False,
+                "work_area_id": 654321,
+            },
+            "Calendar entry not found. Can't be removed",
+        ),
+        (
+            "set_schedule",
+            {
+                "mode": "add",
+                "start": "19:00",
+                "end": "23:59",
+                "monday": True,
+                "tuesday": False,
+                "wednesday": True,
+                "thursday": False,
+                "friday": True,
+                "saturday": False,
+                "sunday": False,
+                "work_area_id": 123456,
+            },
+            "Calendar entry already exists",
+        ),
+        (
+            "set_schedule",
+            {
+                "mode": "overwrite",
+                "start": "13:13",
+                "end": "11:11",
+                "monday": True,
+                "tuesday": False,
+                "wednesday": True,
+                "thursday": False,
+                "friday": True,
+                "saturday": False,
+                "sunday": False,
+                "work_area_id": 0,
+            },
+            "Start must be before end",
+        ),
+    ],
+)
+async def test_lawn_mower_set_schedule_command_service_validation(
+    hass: HomeAssistant,
+    service: str,
+    service_data: dict[str, int] | None,
+    fail_message: str,
+    mock_automower_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test lawn_mower work area override commands."""
+    await setup_integration(hass, mock_config_entry)
+    mocked_method = AsyncMock()
+    setattr(mock_automower_client.commands, "set_calendar", mocked_method)
+
+    with pytest.raises(
+        ServiceValidationError,
+        match=fail_message,
+    ):
         await hass.services.async_call(
             domain=DOMAIN,
             service=service,
