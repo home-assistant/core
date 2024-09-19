@@ -19,7 +19,7 @@ from .conftest import ctl_entity, setup_evohome, zone_entity
 from .const import TEST_INSTALLS
 
 
-@pytest.mark.parametrize("install", TEST_INSTALLS)
+@pytest.mark.parametrize("install", TEST_INSTALLS)  # add turn_off/on?
 async def test_ctl_set_hvac_mode(
     hass: HomeAssistant,
     config: dict[str, str],
@@ -134,7 +134,7 @@ async def test_ctl_set_temperature(
             await ctl.async_set_temperature(temperature=20.01)
 
 
-@pytest.mark.parametrize("install", TEST_INSTALLS)
+@pytest.mark.parametrize("install", TEST_INSTALLS)  # add turn_off/on?
 async def test_zon_set_hvac_mode(
     hass: HomeAssistant,
     config: dict[str, str],
