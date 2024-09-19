@@ -22,6 +22,7 @@ from homeassistant.components.evohome import (
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 from homeassistant.util.json import JsonArrayType, JsonObjectType
@@ -168,20 +169,21 @@ async def setup_evohome(
             await hass.async_block_till_done()
 
 
-def entity_of_ctl(hass: HomeAssistant) -> EvoController:
+def ctl_entity(hass: HomeAssistant) -> EvoController:
     """Return the controller entity of the evohome system."""
 
     broker: EvoBroker = hass.data[DOMAIN]["broker"]
 
     entity_registry = er.async_get(hass)
-
     entity_id = entity_registry.async_get_entity_id(
         Platform.CLIMATE, DOMAIN, broker.tcs._id
     )
-    return entity_registry.async_get(entity_id)
+
+    component: EntityComponent = hass.data.get(Platform.CLIMATE)
+    return next((e for e in component.entities if e.entity_id == entity_id), None)
 
 
-def entity_of_dhw(hass: HomeAssistant) -> EvoDHW | None:
+def dhw_entity(hass: HomeAssistant) -> EvoDHW | None:
     """Return the DHW entity of the evohome system."""
 
     broker: EvoBroker = hass.data[DOMAIN]["broker"]
@@ -190,14 +192,15 @@ def entity_of_dhw(hass: HomeAssistant) -> EvoDHW | None:
         return None
 
     entity_registry = er.async_get(hass)
-
     entity_id = entity_registry.async_get_entity_id(
         Platform.WATER_HEATER, DOMAIN, dhw._id
     )
-    return entity_registry.async_get(entity_id)
+
+    component: EntityComponent = hass.data.get(Platform.WATER_HEATER)
+    return next((e for e in component.entities if e.entity_id == entity_id), None)
 
 
-def entity_of_zone(hass: HomeAssistant) -> EvoZone:
+def zone_entity(hass: HomeAssistant) -> EvoZone:
     """Return the entity of the first zone of the evohome system."""
 
     broker: EvoBroker = hass.data[DOMAIN]["broker"]
@@ -207,6 +210,7 @@ def entity_of_zone(hass: HomeAssistant) -> EvoZone:
         unique_id += "z"  # special case of merged controller/zone
 
     entity_registry = er.async_get(hass)
-
     entity_id = entity_registry.async_get_entity_id(Platform.CLIMATE, DOMAIN, unique_id)
-    return entity_registry.async_get(entity_id)
+
+    component: EntityComponent = hass.data.get(Platform.CLIMATE)
+    return next((e for e in component.entities if e.entity_id == entity_id), None)
