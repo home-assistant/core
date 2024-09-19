@@ -156,6 +156,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
             energysite.info_coordinator.async_config_entry_first_refresh()
             for energysite in energysites
         ),
+        *(
+            energysite.history_coordinator.async_config_entry_first_refresh()
+            for energysite in energysites
+        ),
     )
 
     # Add energy device models
