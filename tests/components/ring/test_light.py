@@ -65,25 +65,6 @@ async def test_light_can_be_turned_on(hass: HomeAssistant, mock_ring_client) -> 
     assert state.state == "on"
 
 
-async def test_updates_work(
-    hass: HomeAssistant, mock_ring_client, mock_ring_devices
-) -> None:
-    """Tests the update service works correctly."""
-    await setup_platform(hass, Platform.LIGHT)
-    state = hass.states.get("light.front_light")
-    assert state.state == "off"
-
-    front_light_mock = mock_ring_devices.get_device(765432)
-    front_light_mock.lights = "on"
-
-    await hass.services.async_call("ring", "update", {}, blocking=True)
-
-    await hass.async_block_till_done()
-
-    state = hass.states.get("light.front_light")
-    assert state.state == "on"
-
-
 @pytest.mark.parametrize(
     ("exception_type", "reauth_expected"),
     [

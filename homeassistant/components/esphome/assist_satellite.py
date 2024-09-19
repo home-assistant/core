@@ -27,8 +27,11 @@ from homeassistant.components.assist_pipeline import (
     PipelineEventType,
     PipelineStage,
 )
-from homeassistant.components.intent import async_register_timer_handler
-from homeassistant.components.intent.timers import TimerEventType, TimerInfo
+from homeassistant.components.intent import (
+    TimerEventType,
+    TimerInfo,
+    async_register_timer_handler,
+)
 from homeassistant.components.media_player import async_process_play_media_url
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory, Platform

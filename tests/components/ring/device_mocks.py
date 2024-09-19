@@ -158,6 +158,9 @@ def _mocked_ring_device(device_dict, device_family, device_class, capabilities):
         mock_device.configure_mock(
             siren=device_dict["siren_status"].get("seconds_remaining")
         )
+        mock_device.async_set_siren.side_effect = lambda i: mock_device.configure_mock(
+            siren=i
+        )
 
     if has_capability(RingCapability.BATTERY):
         mock_device.configure_mock(

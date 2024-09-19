@@ -16,8 +16,11 @@ from dateutil.rrule import rrulestr
 import voluptuous as vol
 
 from homeassistant.components import frontend, http, websocket_api
-from homeassistant.components.websocket_api import ERR_NOT_FOUND, ERR_NOT_SUPPORTED
-from homeassistant.components.websocket_api.connection import ActiveConnection
+from homeassistant.components.websocket_api import (
+    ERR_NOT_FOUND,
+    ERR_NOT_SUPPORTED,
+    ActiveConnection,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import (

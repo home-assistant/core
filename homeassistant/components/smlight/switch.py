@@ -7,7 +7,7 @@ from dataclasses import dataclass
 import logging
 from typing import Any
 
-from pysmlight import Sensors
+from pysmlight import Sensors, SettingsEvent
 from pysmlight.const import Settings
 
 from homeassistant.components.switch import (
@@ -16,7 +16,7 @@ from homeassistant.components.switch import (
     SwitchEntityDescription,
 )
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import SmConfigEntry
@@ -86,22 +86,33 @@ class SmSwitch(SmEntity, SwitchEntity):
 
         self._page, self._toggle = description.setting.value
 
+    async def async_added_to_hass(self) -> None:
+        """Run when entity about to be added to hass."""
+        await super().async_added_to_hass()
+        self.async_on_remove(
+            self.coordinator.client.sse.register_settings_cb(
+                self.entity_description.setting, self.event_callback
+            )
+        )
+
     async def set_smlight(self, state: bool) -> None:
         """Set the state on SLZB device."""
         await self.coordinator.client.set_toggle(self._page, self._toggle, state)
 
+    @callback
+    def event_callback(self, event: SettingsEvent) -> None:
+        """Handle switch events from the SLZB device."""
+        if event.setting is not None:
+            self.coordinator.update_setting(
+                self.entity_description.setting, event.setting[self._toggle]
+            )
+
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
-        self._attr_is_on = True
-        self.async_write_ha_state()
-
         await self.set_smlight(True)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
-        self._attr_is_on = False
-        self.async_write_ha_state()
-
         await self.set_smlight(False)
 
     @property
