@@ -964,7 +964,7 @@ async def test_custom_version_is_newer(hass: HomeAssistant) -> None:
 
     class MockUpdateEntity(UpdateEntity):
         def version_is_newer(self, latest_version: str, installed_version: str) -> bool:
-            """Return True if available version is newer than installed version."""
+            """Return True if latest_version is newer than installed_version."""
             return AwesomeVersion(
                 latest_version,
                 find_first_match=True,
