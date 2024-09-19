@@ -26,7 +26,6 @@ class ConnectionTestView(HomeAssistantView):
     async def get(self, request: web.Request, connection_id: str) -> web.Response:
         """Start a get request."""
         _LOGGER.debug("Request for connection test with id %s", connection_id)
-        _LOGGER.warning("Request for connection test with id %s", connection_id)
 
         hass = request.app[KEY_HASS]
         audio_path = Path(__file__).parent / CONNECTION_TEST_FILENAME
