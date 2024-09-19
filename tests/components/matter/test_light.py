@@ -159,7 +159,7 @@ async def test_dimmable_light(
         endpoint_id=1,
         command=clusters.LevelControl.Commands.MoveToLevelWithOnOff(
             level=128,
-            transitionTime=2,
+            transitionTime=0,
         ),
     )
     matter_client.send_device_command.reset_mock()
@@ -237,7 +237,7 @@ async def test_color_temperature_light(
                 endpoint_id=1,
                 command=clusters.ColorControl.Commands.MoveToColorTemperature(
                     colorTemperatureMireds=300,
-                    transitionTime=2,
+                    transitionTime=0,
                     optionsMask=1,
                     optionsOverride=1,
                 ),
@@ -348,7 +348,7 @@ async def test_extended_color_light(
                 command=clusters.ColorControl.Commands.MoveToColor(
                     colorX=0.5 * 65536,
                     colorY=0.5 * 65536,
-                    transitionTime=2,
+                    transitionTime=0,
                     optionsMask=1,
                     optionsOverride=1,
                 ),
@@ -413,7 +413,7 @@ async def test_extended_color_light(
                 command=clusters.ColorControl.Commands.MoveToHueAndSaturation(
                     hue=167,
                     saturation=254,
-                    transitionTime=2,
+                    transitionTime=0,
                     optionsMask=1,
                     optionsOverride=1,
                 ),

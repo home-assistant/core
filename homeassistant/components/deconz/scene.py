@@ -6,7 +6,7 @@ from typing import Any
 
 from pydeconz.models.event import EventType
 
-from homeassistant.components.scene import DOMAIN, Scene
+from homeassistant.components.scene import DOMAIN as SCENE_DOMAIN, Scene
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -22,7 +22,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up scenes for deCONZ integration."""
     hub = DeconzHub.get_hub(hass, config_entry)
-    hub.entities[DOMAIN] = set()
+    hub.entities[SCENE_DOMAIN] = set()
 
     @callback
     def async_add_scene(_: EventType, scene_id: str) -> None:
@@ -39,7 +39,7 @@ async def async_setup_entry(
 class DeconzScene(DeconzSceneMixin, Scene):
     """Representation of a deCONZ scene."""
 
-    TYPE = DOMAIN
+    TYPE = SCENE_DOMAIN
 
     async def async_activate(self, **kwargs: Any) -> None:
         """Activate the scene."""

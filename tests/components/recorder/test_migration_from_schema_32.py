@@ -118,7 +118,7 @@ def db_schema_32():
         yield
 
 
-@pytest.mark.parametrize("enable_migrate_context_ids", [True])
+@pytest.mark.parametrize("enable_migrate_event_context_ids", [True])
 @pytest.mark.usefixtures("db_schema_32")
 async def test_migrate_events_context_ids(
     hass: HomeAssistant, recorder_mock: Recorder
@@ -338,7 +338,7 @@ async def test_migrate_events_context_ids(
         assert get_index_by_name(session, "events", "ix_events_context_id") is None
 
 
-@pytest.mark.parametrize("enable_migrate_context_ids", [True])
+@pytest.mark.parametrize("enable_migrate_state_context_ids", [True])
 @pytest.mark.usefixtures("db_schema_32")
 async def test_migrate_states_context_ids(
     hass: HomeAssistant, recorder_mock: Recorder

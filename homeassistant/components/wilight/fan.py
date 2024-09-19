@@ -25,7 +25,8 @@ from homeassistant.util.percentage import (
     percentage_to_ordered_list_item,
 )
 
-from . import DOMAIN, WiLightDevice
+from .const import DOMAIN
+from .entity import WiLightDevice
 from .parent_device import WiLightParent
 
 ORDERED_NAMED_FAN_SPEEDS = [WL_SPEED_LOW, WL_SPEED_MEDIUM, WL_SPEED_HIGH]

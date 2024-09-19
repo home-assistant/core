@@ -1,6 +1,10 @@
 """Test KNX date."""
 
-from homeassistant.components.date import ATTR_DATE, DOMAIN, SERVICE_SET_VALUE
+from homeassistant.components.date import (
+    ATTR_DATE,
+    DOMAIN as DATE_DOMAIN,
+    SERVICE_SET_VALUE,
+)
 from homeassistant.components.knx.const import CONF_RESPOND_TO_READ, KNX_ADDRESS
 from homeassistant.components.knx.schema import DateSchema
 from homeassistant.const import CONF_NAME
@@ -24,7 +28,7 @@ async def test_date(hass: HomeAssistant, knx: KNXTestKit) -> None:
     )
     # set value
     await hass.services.async_call(
-        DOMAIN,
+        DATE_DOMAIN,
         SERVICE_SET_VALUE,
         {"entity_id": "date.test", ATTR_DATE: "1999-03-31"},
         blocking=True,

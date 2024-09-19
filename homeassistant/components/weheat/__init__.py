@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 from weheat.abstractions.discovery import HeatPumpDiscovery
+from weheat.exceptions import UnauthorizedException
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.config_entry_oauth2_flow import (
     OAuth2Session,
     async_get_config_entry_implementation,
@@ -30,7 +32,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: WeheatConfigEntry) -> bo
     entry.runtime_data = []
 
     # fetch a list of the heat pumps the entry can access
-    for pump_info in await HeatPumpDiscovery.discover_active(API_URL, token):
+    try:
+        discovered_heat_pumps = await HeatPumpDiscovery.discover_active(API_URL, token)
+    except UnauthorizedException as error:
+        raise ConfigEntryAuthFailed from error
+
+    for pump_info in discovered_heat_pumps:
         LOGGER.debug("Adding %s", pump_info)
         # for each pump, add a coordinator
         new_coordinator = WeheatDataUpdateCoordinator(hass, session, pump_info)
