@@ -3,6 +3,7 @@
 aiodhcpwatcher==1.0.2
 aiodiscover==2.1.0
 aiodns==3.2.0
+aiohasupervisor==0.1.0b0
 aiohttp-fast-zlib==0.1.1
 aiohttp==3.10.5
 aiohttp_cors==0.7.0
@@ -58,7 +59,7 @@ SQLAlchemy==2.0.31
 typing-extensions>=4.12.2,<5.0
 ulid-transform==1.0.2
 urllib3>=1.26.5,<2
-uv==0.4.9
+uv==0.4.12
 voluptuous-openapi==0.0.5
 voluptuous-serialize==2.6.0
 voluptuous==0.15.2

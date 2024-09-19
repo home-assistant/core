@@ -269,9 +269,7 @@ async def test_send_command(hass: HomeAssistant) -> None:
     """Test send_command service."""
     await setup_mock_component(hass)
 
-    mock_func = "{}{}".format(
-        "homeassistant.components.ps4", ".media_player.PS4Device.async_send_command"
-    )
+    mock_func = "homeassistant.components.ps4.media_player.PS4Device.async_send_command"
 
     mock_devices = hass.data[PS4_DATA].devices
     assert len(mock_devices) == 1

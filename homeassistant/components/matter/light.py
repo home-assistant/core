@@ -41,7 +41,6 @@ COLOR_MODE_MAP = {
     clusters.ColorControl.Enums.ColorMode.kCurrentXAndCurrentY: ColorMode.XY,
     clusters.ColorControl.Enums.ColorMode.kColorTemperature: ColorMode.COLOR_TEMP,
 }
-DEFAULT_TRANSITION = 0.2
 
 # there's a bug in (at least) Espressif's implementation of light transitions
 # on devices based on Matter 1.0. Mark potential devices with this issue.
@@ -287,7 +286,7 @@ class MatterLight(MatterEntity, LightEntity):
         xy_color = kwargs.get(ATTR_XY_COLOR)
         color_temp = kwargs.get(ATTR_COLOR_TEMP)
         brightness = kwargs.get(ATTR_BRIGHTNESS)
-        transition = kwargs.get(ATTR_TRANSITION, DEFAULT_TRANSITION)
+        transition = kwargs.get(ATTR_TRANSITION, 0)
         if self._transitions_disabled:
             transition = 0
 
