@@ -68,7 +68,7 @@ async def test_user_flow_cannot_connect(
     assert result["step_id"] == "user"
 
     player_mocks.player_data.player.sync_status.side_effect = (
-        player_mocks.player_data.sync_status_store.long_polling_mock()
+        player_mocks.player_data.sync_long_polling_mock.long_polling_mock()
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],

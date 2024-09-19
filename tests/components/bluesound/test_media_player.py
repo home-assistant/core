@@ -168,9 +168,9 @@ async def test_status_updated(
     assert pre_state.state == "playing"
     assert pre_state.attributes["volume_level"] == 0.1
 
-    status = player_mocks.player_data.status_store.get()
+    status = player_mocks.player_data.status_long_polling_mock.get()
     status = dataclasses.replace(status, state="pause", volume=50, etag="changed")
-    player_mocks.player_data.status_store.set(status)
+    player_mocks.player_data.status_long_polling_mock.set(status)
 
     await asyncio.sleep(0)
     for _ in range(10):
@@ -195,7 +195,7 @@ async def test_unavailable_when_offline(
     player_mocks.player_data.player.status.side_effect = PlayerUnreachableError(
         "Player not reachable"
     )
-    player_mocks.player_data.status_store.trigger()
+    player_mocks.player_data.status_long_polling_mock.trigger()
 
     await asyncio.sleep(0)
     for _ in range(10):
@@ -286,10 +286,10 @@ async def test_unjoin(
 ) -> None:
     """Test the unjoin action."""
     updated_sync_status = dataclasses.replace(
-        player_mocks.player_data.sync_status_store.get(),
+        player_mocks.player_data.sync_long_polling_mock.get(),
         master=PairedPlayer("2.2.2.2", 11000),
     )
-    player_mocks.player_data.sync_status_store.set(updated_sync_status)
+    player_mocks.player_data.sync_long_polling_mock.set(updated_sync_status)
 
     # this might be flaky, but we do not have a way to wait for the master to be set
     await asyncio.sleep(0)
@@ -316,10 +316,10 @@ async def test_attr_master(
     assert attr_master is False
 
     updated_sync_status = dataclasses.replace(
-        player_mocks.player_data.sync_status_store.get(),
+        player_mocks.player_data.sync_long_polling_mock.get(),
         slaves=[PairedPlayer("2.2.2.2", 11000)],
     )
-    player_mocks.player_data.sync_status_store.set(updated_sync_status)
+    player_mocks.player_data.sync_long_polling_mock.set(updated_sync_status)
 
     for _ in range(10):
         attr_master = hass.states.get("media_player.player_name1111").attributes[
@@ -345,10 +345,10 @@ async def test_attr_bluesound_group(
     assert attr_bluesound_group is None
 
     updated_status = dataclasses.replace(
-        player_mocks.player_data.status_store.get(),
+        player_mocks.player_data.status_long_polling_mock.get(),
         group_name="player-name1111+player-name2222",
     )
-    player_mocks.player_data.status_store.set(updated_status)
+    player_mocks.player_data.status_long_polling_mock.set(updated_status)
 
     for _ in range(10):
         attr_bluesound_group = hass.states.get(

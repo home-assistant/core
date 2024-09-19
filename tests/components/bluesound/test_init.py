@@ -35,7 +35,7 @@ async def test_unload_entry_while_player_is_offline(
     player_mocks.player_data.player.status.side_effect = PlayerUnreachableError(
         "Player not reachable"
     )
-    player_mocks.player_data.status_store.trigger()
+    player_mocks.player_data.status_long_polling_mock.trigger()
 
     # this is only there to yield to the event loop once; there is nothing we can wait for
     await hass.async_block_till_done()

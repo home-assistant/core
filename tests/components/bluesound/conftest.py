@@ -13,7 +13,7 @@ from homeassistant.components.bluesound.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 
-from .utils import ValueStore
+from .utils import LongPollingMock
 
 from tests.common import MockConfigEntry
 
@@ -24,8 +24,8 @@ class PlayerMockData:
 
     host: str
     player: AsyncMock
-    status_store: ValueStore[Status]
-    sync_status_store: ValueStore[SyncStatus]
+    status_long_polling_mock: LongPollingMock[Status]
+    sync_long_polling_mock: LongPollingMock[SyncStatus]
 
     @staticmethod
     async def generate(host: str) -> "PlayerMockData":
@@ -40,7 +40,7 @@ class PlayerMockData:
         player = await AsyncMock(spec=Player)()
         player.__aenter__.return_value = player
 
-        status_store = ValueStore(
+        status_long_polling_mock = LongPollingMock(
             Status(
                 etag="etag",
                 input_id=None,
@@ -67,7 +67,7 @@ class PlayerMockData:
             )
         )
 
-        sync_status_store = ValueStore(
+        sync_status_long_polling_mock = LongPollingMock(
             SyncStatus(
                 etag="etag",
                 id=f"{host}:11000",
@@ -91,8 +91,8 @@ class PlayerMockData:
             )
         )
 
-        player.status.side_effect = status_store.long_polling_mock()
-        player.sync_status.side_effect = sync_status_store.long_polling_mock()
+        player.status.side_effect = status_long_polling_mock.side_effect()
+        player.sync_status.side_effect = sync_status_long_polling_mock.side_effect()
 
         player.inputs = AsyncMock(
             return_value=[
@@ -107,7 +107,7 @@ class PlayerMockData:
             ]
         )
 
-        return PlayerMockData(host, player, status_store, sync_status_store)
+        return PlayerMockData(host, player, status_long_polling_mock, sync_status_long_polling_mock)
 
 
 @dataclass
@@ -186,8 +186,8 @@ async def player_mocks() -> AsyncGenerator[PlayerMocks, None, None]:
     )
 
     # to simulate a player that is already configured
-    player_mocks.player_data_for_already_configured.sync_status_store.get().mac = (
-        player_mocks.player_data.sync_status_store.get().mac
+    player_mocks.player_data_for_already_configured.sync_long_polling_mock.get().mac = (
+        player_mocks.player_data.sync_long_polling_mock.get().mac
     )
 
     def select_player(*args: Any, **kwargs: Any) -> AsyncMock:
