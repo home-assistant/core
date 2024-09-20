@@ -138,7 +138,7 @@ async def test_calendar_snapshot(
         CALENDAR_DOMAIN,
         SERVICE_GET_EVENTS,
         {
-            ATTR_ENTITY_ID: "calendar.test_mower_1",
+            ATTR_ENTITY_ID: ["calendar.test_mower_1", "calendar.test_mower_2"],
             EVENT_START_DATETIME: start_date,
             EVENT_END_DATETIME: end_date,
         },
