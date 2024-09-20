@@ -131,12 +131,12 @@ async def build_item_response(
                     can_expand = False
                     can_play = True
 
-            if artwork_track_id := item.get("artwork_track_id") and item_type:
+            if artwork_track_id := item.get("artwork_track_id"):
                 if internal_request:
                     item_thumbnail = player.generate_image_url_from_track_id(
                         artwork_track_id
                     )
-                else:
+                elif item_type is not None:
                     item_thumbnail = entity.get_browse_image_url(
                         item_type, item_id, artwork_track_id
                     )
