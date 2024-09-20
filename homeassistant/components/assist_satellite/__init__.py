@@ -12,6 +12,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, DOMAIN_DATA, AssistSatelliteEntityFeature
 from .entity import (
+    AssistSatelliteAnnouncement,
     AssistSatelliteConfiguration,
     AssistSatelliteEntity,
     AssistSatelliteEntityDescription,
@@ -22,6 +23,7 @@ from .websocket_api import async_register_websocket_api
 
 __all__ = [
     "DOMAIN",
+    "AssistSatelliteAnnouncement",
     "AssistSatelliteEntity",
     "AssistSatelliteConfiguration",
     "AssistSatelliteEntityDescription",

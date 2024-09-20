@@ -313,18 +313,20 @@ class EsphomeAssistSatellite(
 
         self.cli.send_voice_assistant_event(event_type, data_to_send)
 
-    async def async_announce(self, message: str, media_id: str) -> None:
+    async def async_announce(
+        self, announcement: assist_satellite.AssistSatelliteAnnouncement
+    ) -> None:
         """Announce media on the satellite.
 
         Should block until the announcement is done playing.
         """
         _LOGGER.debug(
             "Waiting for announcement to finished (message=%s, media_id=%s)",
-            message,
-            media_id,
+            announcement.message,
+            announcement.media_id,
         )
         await self.cli.send_voice_assistant_announcement_await_response(
-            media_id, _ANNOUNCEMENT_TIMEOUT_SEC, message
+            announcement.media_id, _ANNOUNCEMENT_TIMEOUT_SEC, announcement.message
         )
 
     async def handle_pipeline_start(
