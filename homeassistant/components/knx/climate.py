@@ -15,17 +15,15 @@ from xknx.dpt.dpt_20 import HVACControllerMode, HVACOperationMode
 
 from homeassistant import config_entries
 from homeassistant.components.climate import (
-    ClimateEntity,
-    ClimateEntityFeature,
-    HVACAction,
-    HVACMode,
-)
-from homeassistant.components.climate.const import (
     FAN_HIGH,
     FAN_LOW,
     FAN_MEDIUM,
     FAN_OFF,
     FAN_ON,
+    ClimateEntity,
+    ClimateEntityFeature,
+    HVACAction,
+    HVACMode,
 )
 from homeassistant.const import (
     ATTR_TEMPERATURE,
@@ -375,6 +373,9 @@ class KNXClimate(KnxYamlEntity, ClimateEntity):
         if fan_speed == 0:
             return FAN_OFF
 
+        if self._attr_fan_modes is None:
+            return FAN_OFF
+
         if self._device.fan_mode == FanSpeedMode.STEP:
             return self._attr_fan_modes[fan_speed]
 
@@ -384,6 +385,9 @@ class KNXClimate(KnxYamlEntity, ClimateEntity):
         """Set fan mode."""
 
         if self._device.fan_mode == FanSpeedMode.STEP:
+            if self._attr_fan_modes is None:
+                return
+
             fan_mode_index = self._attr_fan_modes.index(fan_mode)
             await self._device.set_fan_speed(fan_mode_index)
         else:
