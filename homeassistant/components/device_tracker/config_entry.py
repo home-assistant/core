@@ -28,7 +28,6 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity_platform import EntityPlatform
 from homeassistant.helpers.typing import StateType
-from homeassistant.util.hass_dict import HassKey
 
 from .const import (
     ATTR_HOST_NAME,
@@ -41,19 +40,17 @@ from .const import (
     SourceType,
 )
 
-DOMAIN_DATA: HassKey[EntityComponent[BaseTrackerEntity]] = HassKey(DOMAIN)
-
 # mypy: disallow-any-generics
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up an entry."""
-    component = hass.data.get(DOMAIN_DATA)
+    component: EntityComponent[BaseTrackerEntity] | None = hass.data.get(DOMAIN)
 
     if component is not None:
         return await component.async_setup_entry(entry)
 
-    component = hass.data[DOMAIN_DATA] = EntityComponent[BaseTrackerEntity](
+    component = hass.data[DOMAIN] = EntityComponent[BaseTrackerEntity](
         LOGGER, DOMAIN, hass
     )
     component.register_shutdown()
@@ -63,7 +60,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload an entry."""
-    return await hass.data[DOMAIN_DATA].async_unload_entry(entry)
+    component: EntityComponent[BaseTrackerEntity] = hass.data[DOMAIN]
+    return await component.async_unload_entry(entry)
 
 
 @callback
