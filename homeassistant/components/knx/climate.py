@@ -193,17 +193,10 @@ class KNXClimate(KnxYamlEntity, ClimateEntity):
                     str(i) for i in range(1, fan_max_step + 1)
                 ]
             else:
-                fan_percentages_modes = config.get(
-                    ClimateSchema.CONF_FAN_PERCENTAGES_MODES
-                )
-                if (fan_percentages_modes is not None) and (
-                    len(fan_percentages_modes) > 0
-                ):
-                    self._attr_fan_modes = [FAN_OFF] + [
-                        f"{value}%" for value in fan_percentages_modes
-                    ]
-                else:
-                    self._attr_fan_modes = [FAN_OFF, "33%", "66%", "100%"]
+                fan_percentages_modes = config[ClimateSchema.CONF_FAN_PERCENTAGES_MODES]
+                self._attr_fan_modes = [FAN_OFF] + [
+                    f"{value}%" for value in fan_percentages_modes
+                ]
 
         self._attr_target_temperature_step = self._device.temperature_step
         self._attr_unique_id = (
