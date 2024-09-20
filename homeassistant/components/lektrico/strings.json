@@ -38,6 +38,17 @@
         "name": "Dynamic limit"
       }
     },
+    "select": {
+      "lb_mode": {
+        "name": "Lb mode",
+        "state": {
+          "disabled": "Disabled",
+          "power": "Power",
+          "hybrid": "Hybrid",
+          "green": "Green"
+        }
+      }
+    },
     "sensor": {
       "state": {
         "name": "State",
