@@ -39,6 +39,56 @@
       "one_touch_filter": {
         "default": "mdi:air-filter"
       }
+    },
+    "number": {
+      "target_temperature": {
+        "default": "mdi:thermometer"
+      },
+      "target_temperature_for_location": {
+        "default": "mdi:thermometer"
+      },
+      "light_status": {
+        "default": "mdi:television-ambient-light"
+      },
+      "fan_speed": {
+        "default": "mdi:wind-power-outline"
+      },
+      "lamp_brightness": {
+        "default": "mdi:alarm-light-outline"
+      },
+      "wind_temperature": {
+        "default": "mdi:thermometer"
+      },
+      "relative_hour_to_start": {
+        "default": "mdi:timer-edit-outline"
+      },
+      "relative_hour_to_start_for_location": {
+        "default": "mdi:timer-edit-outline"
+      },
+      "relative_hour_to_start_wm": {
+        "default": "mdi:timer-edit-outline"
+      },
+      "relative_hour_to_start_wm_for_location": {
+        "default": "mdi:timer-edit-outline"
+      },
+      "relative_hour_to_stop": {
+        "default": "mdi:timer-edit-outline"
+      },
+      "relative_hour_to_stop_for_location": {
+        "default": "mdi:timer-edit-outline"
+      },
+      "relative_hour_to_stop_wm": {
+        "default": "mdi:timer-edit-outline"
+      },
+      "relative_hour_to_stop_wm_for_location": {
+        "default": "mdi:timer-edit-outline"
+      },
+      "sleep_timer_relative_hour_to_stop": {
+        "default": "mdi:bed-clock"
+      },
+      "sleep_timer_relative_hour_to_stop_for_location": {
+        "default": "mdi:bed-clock"
+      }
     }
   }
 }

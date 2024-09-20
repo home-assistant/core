@@ -58,6 +58,56 @@
       "one_touch_filter": {
         "name": "Fresh air filter"
       }
+    },
+    "number": {
+      "target_temperature": {
+        "name": "Temperature"
+      },
+      "target_temperature_for_location": {
+        "name": "{location} temperature"
+      },
+      "light_status": {
+        "name": "Light"
+      },
+      "fan_speed": {
+        "name": "Fan"
+      },
+      "lamp_brightness": {
+        "name": "Light"
+      },
+      "wind_temperature": {
+        "name": "Wind temperature"
+      },
+      "relative_hour_to_start": {
+        "name": "Schedule turn-on"
+      },
+      "relative_hour_to_start_for_location": {
+        "name": "{location} schedule turn-on"
+      },
+      "relative_hour_to_start_wm": {
+        "name": "Delay starts in"
+      },
+      "relative_hour_to_start_wm_for_location": {
+        "name": "{location} delay starts in"
+      },
+      "relative_hour_to_stop": {
+        "name": "Schedule turn-off"
+      },
+      "relative_hour_to_stop_for_location": {
+        "name": "{location} schedule turn-off"
+      },
+      "relative_hour_to_stop_wm": {
+        "name": "Delay ends in"
+      },
+      "relative_hour_to_stop_wm_for_location": {
+        "name": "{location} delay ends in"
+      },
+      "sleep_timer_relative_hour_to_stop": {
+        "name": "Sleep timer"
+      },
+      "sleep_timer_relative_hour_to_stop_for_location": {
+        "name": "{location} sleep timer"
+      }
     }
   }
 }
