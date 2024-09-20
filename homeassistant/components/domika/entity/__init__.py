@@ -1,0 +1,1 @@
+"""Domika entity."""

@@ -1,0 +1,26 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Config title"
+      }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+    }
+  },
+  "options": {
+    "step": {
+      "critical_entities": {
+        "data": {
+          "smoke_select_all": "All SMOKE sensors",
+          "moisture_select_all": "All MOISTURE detectors",
+          "co_select_all": "All CO detectors",
+          "gas_select_all": "All GAS detectors",
+          "critical_included_entity_ids": "Other entity ids to trigger critical notifications"
+        },
+        "description": "Select binary sensors to trigger critical notifications"
+      }
+    }
+  }
+}

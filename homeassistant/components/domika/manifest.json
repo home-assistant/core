@@ -1,0 +1,22 @@
+{
+  "domain": "domika",
+  "name": "Domika",
+  "codeowners": ["@bealex", "@bmikle"],
+  "config_flow": true,
+  "dependencies": [
+    "api",
+    "binary_sensor",
+    "climate",
+    "cloud",
+    "light",
+    "network",
+    "search",
+    "sensor",
+    "websocket_api"
+  ],
+  "documentation": "https://www.home-assistant.io/integrations/domika",
+  "iot_class": "local_polling",
+  "loggers": ["domika"],
+  "requirements": ["domika-ha-framework==0.0.4"],
+  "single_config_entry": true
+}
