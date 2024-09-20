@@ -99,15 +99,14 @@ class BangOlufsenWebsocket(BangOlufsenBase):
 
     def on_beo_remote_button_notification(self, notification: BeoRemoteButton) -> None:
         """Send beo_remote_button dispatch."""
-        if notification.type == "KeyPress":
-            # Trigger the device trigger
-            self.hass.bus.async_fire(
-                BANG_OLUFSEN_EVENT,
-                event_data={
-                    CONF_TYPE: f"{notification.key}_{notification.type}",
-                    CONF_DEVICE_ID: self._device.id,
-                },
-            )
+        # Trigger the device trigger
+        self.hass.bus.async_fire(
+            BANG_OLUFSEN_EVENT,
+            event_data={
+                CONF_TYPE: f"{notification.key}_{notification.type}",
+                CONF_DEVICE_ID: self._device.id,
+            },
+        )
 
     def on_button_notification(self, notification: ButtonEvent) -> None:
         """Send button dispatch."""

@@ -3,14 +3,16 @@
 import logging
 from unittest.mock import AsyncMock, Mock
 
-from mozart_api.models import SoftwareUpdateState
+from mozart_api.models import BeoRemoteButton, ButtonEvent, SoftwareUpdateState
 import pytest
 
 from homeassistant.components.bang_olufsen.const import (
+    BANG_OLUFSEN_EVENT,
     BANG_OLUFSEN_WEBSOCKET_EVENT,
     CONNECTION_STATUS,
     DOMAIN,
 )
+from homeassistant.const import CONF_DEVICE_ID, CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -167,3 +169,77 @@ async def test_on_all_notifications_raw(
     mocked_call = mock_event_callback.call_args[0][0].as_dict()
     assert mocked_call["event_type"] == BANG_OLUFSEN_WEBSOCKET_EVENT
     assert mocked_call["data"] == raw_notification_full
+
+
+async def test_on_beo_remote_button_notification(
+    hass: HomeAssistant,
+    device_registry: DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_mozart_client: AsyncMock,
+) -> None:
+    """Test events are fired on on_beo_remote_button_notification."""
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    assert mock_config_entry.unique_id
+    device = device_registry.async_get_device(
+        identifiers={(DOMAIN, mock_config_entry.unique_id)}
+    )
+    assert device
+
+    beo_remote_button_callback = (
+        mock_mozart_client.get_beo_remote_button_notifications.call_args[0][0]
+    )
+
+    mock_event_callback = Mock()
+
+    # Listen to BANG_OLUFSEN_EVENT events
+    hass.bus.async_listen(BANG_OLUFSEN_EVENT, mock_event_callback)
+
+    event = BeoRemoteButton(key="Control/Wind", type="KeyPress")
+
+    # Trigger the notification
+    beo_remote_button_callback(event)
+    await hass.async_block_till_done()
+
+    # Ensure that the event has been fired
+    mocked_call = mock_event_callback.call_args[0][0].as_dict()
+    assert mocked_call["data"][CONF_TYPE] == f"{event.key}_{event.type}"
+    assert mocked_call["data"][CONF_DEVICE_ID] == device.id
+
+
+async def test_on_button_notification(
+    hass: HomeAssistant,
+    device_registry: DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_mozart_client: AsyncMock,
+) -> None:
+    """Test events are fired on on_button_notification."""
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    assert mock_config_entry.unique_id
+    device = device_registry.async_get_device(
+        identifiers={(DOMAIN, mock_config_entry.unique_id)}
+    )
+    assert device
+
+    button_callback = mock_mozart_client.get_button_notifications.call_args[0][0]
+
+    mock_event_callback = Mock()
+
+    # Listen to BANG_OLUFSEN_EVENT events
+    hass.bus.async_listen(BANG_OLUFSEN_EVENT, mock_event_callback)
+
+    event = ButtonEvent(button="Preset1", state="shortPress")
+
+    # Trigger the notification
+    button_callback(event)
+    await hass.async_block_till_done()
+
+    # Ensure that the event has been fired
+    mocked_call = mock_event_callback.call_args[0][0].as_dict()
+    assert mocked_call["data"][CONF_TYPE] == f"{event.button}_{event.state}"
+    assert mocked_call["data"][CONF_DEVICE_ID] == device.id
