@@ -13,10 +13,7 @@ from evohomeasync2 import EvohomeClient
 import pytest
 
 from homeassistant.components.evohome import CONF_PASSWORD, CONF_USERNAME, DOMAIN
-from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 from homeassistant.util.json import JsonArrayType, JsonObjectType
@@ -27,10 +24,6 @@ from tests.common import load_json_array_fixture, load_json_object_fixture
 
 if TYPE_CHECKING:
     from evohomeasync2.broker import Broker
-
-    from homeassistant.components.evohome import EvoBroker
-    from homeassistant.components.evohome.climate import EvoController, EvoZone
-    from homeassistant.components.evohome.water_heater import EvoDHW
 
 
 def user_account_config_fixture(install: str) -> JsonObjectType:
@@ -166,50 +159,3 @@ async def setup_evohome(
         finally:
             await hass.data[DOMAIN]["coordinator"].async_shutdown()
             await hass.async_block_till_done()
-
-
-def ctl_entity(hass: HomeAssistant) -> EvoController:
-    """Return the controller entity of the evohome system."""
-
-    broker: EvoBroker = hass.data[DOMAIN]["broker"]
-
-    entity_registry = er.async_get(hass)
-    entity_id = entity_registry.async_get_entity_id(
-        Platform.CLIMATE, DOMAIN, broker.tcs._id
-    )
-
-    component: EntityComponent = hass.data.get(Platform.CLIMATE)  # type: ignore[assignment]
-    return next(e for e in component.entities if e.entity_id == entity_id)  # type: ignore[return-value]
-
-
-def dhw_entity(hass: HomeAssistant) -> EvoDHW | None:
-    """Return the DHW entity of the evohome system."""
-
-    broker: EvoBroker = hass.data[DOMAIN]["broker"]
-
-    if (dhw := broker.tcs.hotwater) is None:
-        return None
-
-    entity_registry = er.async_get(hass)
-    entity_id = entity_registry.async_get_entity_id(
-        Platform.WATER_HEATER, DOMAIN, dhw._id
-    )
-
-    component: EntityComponent = hass.data.get(Platform.WATER_HEATER)  # type: ignore[assignment]
-    return next(e for e in component.entities if e.entity_id == entity_id)  # type: ignore[return-value]
-
-
-def zone_entity(hass: HomeAssistant) -> EvoZone:
-    """Return the entity of the first zone of the evohome system."""
-
-    broker: EvoBroker = hass.data[DOMAIN]["broker"]
-
-    unique_id = broker.tcs._zones[0]._id
-    if unique_id == broker.tcs._id:
-        unique_id += "z"  # special case of merged controller/zone
-
-    entity_registry = er.async_get(hass)
-    entity_id = entity_registry.async_get_entity_id(Platform.CLIMATE, DOMAIN, unique_id)
-
-    component: EntityComponent = hass.data.get(Platform.CLIMATE)  # type: ignore[assignment]
-    return next(e for e in component.entities if e.entity_id == entity_id)  # type: ignore[return-value]
