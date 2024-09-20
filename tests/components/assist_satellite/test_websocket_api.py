@@ -417,8 +417,8 @@ async def test_connection_test(
         await asyncio.sleep(0)
 
     assert len(entity.announcements) == 1
-    assert entity.announcements[0][0] == ""
-    announcement_media_id = entity.announcements[0][1]
+    assert entity.announcements[0].message == ""
+    announcement_media_id = entity.announcements[0].media_id
     hass_url = "http://10.10.10.10:8123"
     assert announcement_media_id.startswith(
         f"{hass_url}/api/assist_satellite/connection_test/"
@@ -460,8 +460,8 @@ async def test_connection_test_timeout(
         await asyncio.sleep(0)
 
     assert len(entity.announcements) == 1
-    assert entity.announcements[0][0] == ""
-    announcement_media_id = entity.announcements[0][1]
+    assert entity.announcements[0].message == ""
+    announcement_media_id = entity.announcements[0].media_id
     hass_url = "http://10.10.10.10:8123"
     assert announcement_media_id.startswith(
         f"{hass_url}/api/assist_satellite/connection_test/"
