@@ -5,7 +5,8 @@ from dataclasses import dataclass
 import logging
 from typing import Any, Generic, Self, cast
 
-from ring_doorbell import RingCapability, RingStickUpCam
+from ring_doorbell import RingCapability, RingDoorBell, RingStickUpCam
+from ring_doorbell.const import DOORBELL_EXISTING_TYPE
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.const import Platform
@@ -25,6 +26,8 @@ from .entity import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+IN_HOME_CHIME_IS_PRESENT = {v for k, v in DOORBELL_EXISTING_TYPE.items() if k != 2}
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -52,6 +55,17 @@ SWITCHES: Sequence[RingSwitchEntityDescription[Any]] = (
         turn_off_fn=lambda device: device.async_set_siren(0),
         deprecated_info=DeprecatedInfo(
             new_platform=Platform.SIREN, breaks_in_ha_version="2025.4.0"
+        ),
+    ),
+    RingSwitchEntityDescription[RingDoorBell](
+        key="in_home_chime",
+        translation_key="in_home_chime",
+        exists_fn=lambda device: device.family == "doorbots"
+        and device.existing_doorbell_type in IN_HOME_CHIME_IS_PRESENT,
+        is_on_fn=lambda device: device.existing_doorbell_type_enabled or False,
+        turn_on_fn=lambda device: device.async_set_existing_doorbell_type_enabled(True),
+        turn_off_fn=lambda device: device.async_set_existing_doorbell_type_enabled(
+            False
         ),
     ),
 )
