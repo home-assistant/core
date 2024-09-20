@@ -23,17 +23,17 @@ from .const import DOMAIN
 from .coordinator import AutomowerDataUpdateCoordinator
 from .entity import AutomowerAvailableEntity, handle_sending_exception
 
-CONF_FRIDAY: Final = "friday"
-CONF_MONDAY: Final = "monday"
-CONF_SATURDAY: Final = "saturday"
-CONF_SUNDAY: Final = "sunday"
-CONF_THURSDAY: Final = "thursday"
-CONF_TUESDAY: Final = "tuesday"
-CONF_WEDNESDAY: Final = "wednesday"
-CONF_WORK_AREA_ID: Final = "work_area_id"
-CONF_END: Final = "end"
-CONF_START: Final = "start"
-CONF_DURATION: Final = "duration"
+ATTR_FRIDAY: Final = "friday"
+ATTR_MONDAY: Final = "monday"
+ATTR_SATURDAY: Final = "saturday"
+ATTR_SUNDAY: Final = "sunday"
+ATTR_THURSDAY: Final = "thursday"
+ATTR_TUESDAY: Final = "tuesday"
+ATTR_WEDNESDAY: Final = "wednesday"
+ATTR_WORK_AREA_ID: Final = "work_area_id"
+ATTR_END: Final = "end"
+ATTR_START: Final = "start"
+ATTR_DURATION: Final = "duration"
 DOCKED_ACTIVITIES = (MowerActivities.PARKED_IN_CS, MowerActivities.CHARGING)
 MOWING_ACTIVITIES = (
     MowerActivities.MOWING,
@@ -71,7 +71,7 @@ async def async_setup_entry(
         "override_schedule",
         {
             vol.Required("override_mode"): vol.In(OVERRIDE_MODES),
-            vol.Required(CONF_DURATION): vol.All(
+            vol.Required(ATTR_DURATION): vol.All(
                 cv.time_period,
                 cv.positive_timedelta,
                 vol.Range(min=timedelta(minutes=1), max=timedelta(days=42)),
@@ -82,8 +82,8 @@ async def async_setup_entry(
     platform.async_register_entity_service(
         "override_schedule_work_area",
         {
-            vol.Required(CONF_WORK_AREA_ID): vol.Coerce(int),
-            vol.Required(CONF_DURATION): vol.All(
+            vol.Required(ATTR_WORK_AREA_ID): vol.Coerce(int),
+            vol.Required(ATTR_DURATION): vol.All(
                 cv.time_period,
                 cv.positive_timedelta,
                 vol.Range(min=timedelta(minutes=1), max=timedelta(days=42)),
@@ -97,34 +97,34 @@ async def async_setup_entry(
             vol.Required("mode"): vol.All(
                 cv.string,
             ),
-            vol.Required(CONF_START): vol.All(
+            vol.Required(ATTR_START): vol.All(
                 cv.time,
             ),
-            vol.Required(CONF_END): vol.All(
+            vol.Required(ATTR_END): vol.All(
                 cv.time,
             ),
-            vol.Required(CONF_MONDAY): vol.All(
+            vol.Required(ATTR_MONDAY): vol.All(
                 cv.boolean,
             ),
-            vol.Required(CONF_TUESDAY): vol.All(
+            vol.Required(ATTR_TUESDAY): vol.All(
                 cv.boolean,
             ),
-            vol.Required(CONF_WEDNESDAY): vol.All(
+            vol.Required(ATTR_WEDNESDAY): vol.All(
                 cv.boolean,
             ),
-            vol.Required(CONF_THURSDAY): vol.All(
+            vol.Required(ATTR_THURSDAY): vol.All(
                 cv.boolean,
             ),
-            vol.Required(CONF_FRIDAY): vol.All(
+            vol.Required(ATTR_FRIDAY): vol.All(
                 cv.boolean,
             ),
-            vol.Required(CONF_SATURDAY): vol.All(
+            vol.Required(ATTR_SATURDAY): vol.All(
                 cv.boolean,
             ),
-            vol.Required(CONF_SUNDAY): vol.All(
+            vol.Required(ATTR_SUNDAY): vol.All(
                 cv.boolean,
             ),
-            vol.Optional(CONF_WORK_AREA_ID, default=None): vol.Any(
+            vol.Optional(ATTR_WORK_AREA_ID, default=None): vol.Any(
                 vol.Coerce(int), None
             ),
         },
