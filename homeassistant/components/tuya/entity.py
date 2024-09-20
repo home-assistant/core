@@ -47,6 +47,11 @@ class IntegerTypeData:
 
     def scale_value(self, value: float) -> float:
         """Scale a value."""
+        if isinstance(value, str):
+            try:
+                value = float(value)
+            except ValueError:
+                value = 0
         return value / (10**self.scale)
 
     def scale_value_back(self, value: float) -> int:
