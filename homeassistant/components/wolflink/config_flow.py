@@ -11,12 +11,12 @@ from wolf_comm.wolf_client import WolfClient
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
-from .const import DEVICE_GATEWAY, DEVICE_ID, DEVICE_NAME, DOMAIN
+from .const import DEVICE_GATEWAY, DEVICE_ID, DEVICE_NAME, DOMAIN, LOCALE
 
 _LOGGER = logging.getLogger(__name__)
 
 USER_SCHEMA = vol.Schema(
-    {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str}
+    {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str, vol.Required(LOCALE): str}
 )
 
 
@@ -32,6 +32,7 @@ class WolfLinkConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize with empty username and password."""
         self.username: str | None = None
         self.password: str | None = None
+        self.locale: str = "en"
 
     async def async_step_user(
         self, user_input: dict[str, str] | None = None
@@ -42,6 +43,7 @@ class WolfLinkConfigFlow(ConfigFlow, domain=DOMAIN):
             wolf_client = WolfClient(
                 user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
             )
+            await wolf_client.load_localized_json(user_input[LOCALE])
             try:
                 self.fetched_systems = await wolf_client.fetch_system_list()
             except ConnectError:
@@ -54,6 +56,7 @@ class WolfLinkConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 self.username = user_input[CONF_USERNAME]
                 self.password = user_input[CONF_PASSWORD]
+                self.locale = user_input[LOCALE]
                 return await self.async_step_device()
         return self.async_show_form(
             step_id="user", data_schema=USER_SCHEMA, errors=errors
@@ -80,6 +83,7 @@ class WolfLinkConfigFlow(ConfigFlow, domain=DOMAIN):
                     DEVICE_NAME: device_name,
                     DEVICE_GATEWAY: system[0].gateway,
                     DEVICE_ID: device_id,
+                    LOCALE: self.locale,
                 },
             )
 
