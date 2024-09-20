@@ -285,6 +285,6 @@ class MotionMountFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def _backoff(self, time: int) -> None:
         while time > 0:
-            await asyncio.sleep(1)
             time -= 1
             self.backoff_time = time
+            await asyncio.sleep(1)
