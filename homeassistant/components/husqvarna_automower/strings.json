@@ -355,31 +355,31 @@
           "description": "End of the schedule, seconds will be ignored."
         },
         "monday": {
-          "name": "Monday",
+          "name": "[%key:common::time::monday%]",
           "description": "If set, then the schedule will be activated on this day."
         },
         "tuesday": {
-          "name": "Tuesday",
+          "name": "[%key:common::time::tuesday%]",
           "description": "[%key:component::husqvarna_automower::services::set_schedule::fields::monday::description%]"
         },
         "wednesday": {
-          "name": "Wednesday",
+          "name": "[%key:common::time::wednesday%]",
           "description": "[%key:component::husqvarna_automower::services::set_schedule::fields::monday::description%]"
         },
         "thursday": {
-          "name": "Thursday",
+          "name": "[%key:common::time::thursday%]",
           "description": "[%key:component::husqvarna_automower::services::set_schedule::fields::monday::description%]"
         },
         "friday": {
-          "name": "Friday",
+          "name": "[%key:common::time::friday%]",
           "description": "[%key:component::husqvarna_automower::services::set_schedule::fields::monday::description%]"
         },
         "saturday": {
-          "name": "Saturday",
+          "name": "[%key:common::time::saturday%]",
           "description": "[%key:component::husqvarna_automower::services::set_schedule::fields::monday::description%]"
         },
         "sunday": {
-          "name": "Sunday",
+          "name": "[%key:common::time::sunday%]",
           "description": "[%key:component::husqvarna_automower::services::set_schedule::fields::monday::description%]"
         },
         "work_area_id": {
