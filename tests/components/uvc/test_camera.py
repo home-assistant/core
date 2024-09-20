@@ -4,7 +4,6 @@ from datetime import UTC, datetime, timedelta
 from unittest.mock import call, patch
 
 import pytest
-import requests
 from uvcclient import camera, nvr
 
 from homeassistant.components.camera import (
@@ -46,6 +45,7 @@ def mock_remote_fixture(camera_info):
         ]
         mock_remote.return_value.index.return_value = mock_cameras
         mock_remote.return_value.server_version = (3, 2, 0)
+        mock_remote.return_value.camera_identifier = "id"
         yield mock_remote
 
 
@@ -205,6 +205,7 @@ async def test_setup_partial_config_v31x(
     """Test the setup with a v3.1.x server."""
     config = {"platform": "uvc", "nvr": "foo", "key": "secret"}
     mock_remote.return_value.server_version = (3, 1, 3)
+    mock_remote.return_value.camera_identifier = "uuid"
 
     assert await async_setup_component(hass, "camera", {"camera": config})
     await hass.async_block_till_done()
@@ -260,7 +261,6 @@ async def test_setup_incomplete_config(
     [
         (nvr.NotAuthorized, 0),
         (nvr.NvrError, 2),
-        (requests.exceptions.ConnectionError, 2),
     ],
 )
 async def test_setup_nvr_errors_during_indexing(
@@ -293,7 +293,6 @@ async def test_setup_nvr_errors_during_indexing(
     [
         (nvr.NotAuthorized, 0),
         (nvr.NvrError, 2),
-        (requests.exceptions.ConnectionError, 2),
     ],
 )
 async def test_setup_nvr_errors_during_initialization(

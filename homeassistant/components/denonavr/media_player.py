@@ -233,7 +233,7 @@ def async_log_errors[_DenonDeviceT: DenonDevice, **_P, _R](
             )
         finally:
             if available and not self.available:
-                _LOGGER.info(
+                _LOGGER.warning(
                     "Denon AVR receiver at host %s is available again",
                     self._receiver.host,
                 )

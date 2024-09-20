@@ -7,7 +7,8 @@ from datetime import timedelta
 import logging
 
 from iottycloud.device import Device
-from iottycloud.verbs import RESULT, STATUS
+from iottycloud.shutter import Shutter
+from iottycloud.verbs import OPEN_PERCENTAGE, RESULT, STATUS
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -104,5 +105,9 @@ class IottyDataUpdateCoordinator(DataUpdateCoordinator[IottyData]):
                     "Retrieved status: '%s' for device %s", status, device.device_id
                 )
                 device.update_status(status)
+                if isinstance(device, Shutter) and isinstance(
+                    percentage := json.get(OPEN_PERCENTAGE), int
+                ):
+                    device.update_percentage(percentage)
 
         return IottyData(self._devices)
