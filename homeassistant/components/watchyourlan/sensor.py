@@ -18,6 +18,7 @@ from .coordinator import WatchYourLANUpdateCoordinator
 
 WatchYourLANConfigEntry = ConfigEntry[WatchYourLANUpdateCoordinator]
 
+
 # Define entity descriptions for each sensor type
 ENTITY_DESCRIPTIONS = [
     SensorEntityDescription(
@@ -33,6 +34,13 @@ ENTITY_DESCRIPTIONS = [
         translation_key="iface",
     ),
 ]
+
+# Define a mapping of sensor keys to device fields
+DEVICE_FIELD_MAPPING = {
+    "online_status": "Now",
+    "ip_address": "IP",
+    "iface": "Iface",
+}
 
 
 async def async_setup_entry(
@@ -124,16 +132,9 @@ class WatchYourLANGenericSensor(
     @property
     def native_value(self) -> str:
         """Return the native value of the sensor based on its description."""
-        # if self.entity_description.key == "online_status":
-        #    return "Online" if self.device.get("Now", 0) == 1 else "Offline"
-        return self.device.get(self._get_device_field_for_key(), None)
+        device_field = DEVICE_FIELD_MAPPING.get(self.entity_description.key, None)
 
-    def _get_device_field_for_key(self) -> str:
-        """Map description key to the appropriate device field."""
-        field_mapping = {
-            "online_status": "Now",
-            "ip_address": "IP",
-            "mac_address": "Mac",
-            "iface": "Iface",
-        }
-        return field_mapping.get(self.entity_description.key, "")
+        # Ensure that device_field is not None before accessing it
+        if device_field is not None:
+            return self.device.get(device_field, "Unknown")
+        return "Unknown"
