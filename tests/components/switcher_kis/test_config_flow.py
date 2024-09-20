@@ -214,8 +214,8 @@ async def test_reauth_successful(
             user_input=user_input,
         )
 
-        assert result["type"] is FlowResultType.ABORT
-        assert result["reason"] == "reauth_successful"
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
 
 
 async def test_reauth_invalid_auth(hass: HomeAssistant) -> None:
