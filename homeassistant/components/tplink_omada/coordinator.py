@@ -9,7 +9,6 @@ from tplink_omada_client.clients import OmadaWirelessClient
 from tplink_omada_client.devices import OmadaGateway, OmadaListDevice, OmadaSwitch
 from tplink_omada_client.exceptions import OmadaClientException
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -99,12 +98,10 @@ class OmadaDevicesCoordinator(OmadaCoordinator[OmadaListDevice]):
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
         omada_client: OmadaSiteClient,
     ) -> None:
         """Initialize my coordinator."""
         super().__init__(hass, omada_client, "DeviceList", POLL_CLIENTS)
-        self._config_entry = config_entry
 
     async def poll_update(self) -> dict[str, OmadaListDevice]:
         """Poll the site's current registered Omada devices."""
