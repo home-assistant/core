@@ -148,6 +148,7 @@ CACHED_PROPERTIES_WITH_ATTR_ = {
     "code_arm_required",
     "supported_features",
     "alarm_state",
+    "state",
 }
 
 
@@ -237,7 +238,8 @@ class AlarmControlPanelEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_A
                 },
             )
 
-    @property
+    @final
+    @cached_property
     def state(self) -> str | None:
         """Return the current state."""
         if (alarm_state := self.alarm_state) is None:
