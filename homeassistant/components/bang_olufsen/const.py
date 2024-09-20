@@ -201,6 +201,7 @@ FALLBACK_SOURCES: Final[SourceArray] = SourceArray(
 
 
 # Device events
+BANG_OLUFSEN_EVENT: Final[str] = f"{DOMAIN}_event"
 BANG_OLUFSEN_WEBSOCKET_EVENT: Final[str] = f"{DOMAIN}_websocket_event"
 
 

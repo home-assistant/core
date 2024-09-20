@@ -5,6 +5,8 @@ from __future__ import annotations
 import logging
 
 from mozart_api.models import (
+    BeoRemoteButton,
+    ButtonEvent,
     PlaybackContentMetadata,
     PlaybackError,
     PlaybackProgress,
@@ -17,12 +19,14 @@ from mozart_api.models import (
 from mozart_api.mozart_client import MozartClient
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_DEVICE_ID, CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.util.enum import try_parse_enum
 
 from .const import (
+    BANG_OLUFSEN_EVENT,
     BANG_OLUFSEN_WEBSOCKET_EVENT,
     CONNECTION_STATUS,
     WebsocketNotification,
@@ -50,6 +54,10 @@ class BangOlufsenWebsocket(BangOlufsenBase):
         self._client.get_notification_notifications(self.on_notification_notification)
         self._client.get_on_connection_lost(self.on_connection_lost)
         self._client.get_on_connection(self.on_connection)
+        self._client.get_beo_remote_button_notifications(
+            self.on_beo_remote_button_notification
+        )
+        self._client.get_button_notifications(self.on_button_notification)
         self._client.get_playback_error_notifications(
             self.on_playback_error_notification
         )
@@ -88,6 +96,29 @@ class BangOlufsenWebsocket(BangOlufsenBase):
         """Handle WebSocket connection lost."""
         _LOGGER.error("Lost connection to the %s", self.entry.title)
         self._update_connection_status()
+
+    def on_beo_remote_button_notification(self, notification: BeoRemoteButton) -> None:
+        """Send beo_remote_button dispatch."""
+        if notification.type == "KeyPress":
+            # Trigger the device trigger
+            self.hass.bus.async_fire(
+                BANG_OLUFSEN_EVENT,
+                event_data={
+                    CONF_TYPE: f"{notification.key}_{notification.type}",
+                    CONF_DEVICE_ID: self._device.id,
+                },
+            )
+
+    def on_button_notification(self, notification: ButtonEvent) -> None:
+        """Send button dispatch."""
+        # Trigger the device trigger
+        self.hass.bus.async_fire(
+            BANG_OLUFSEN_EVENT,
+            event_data={
+                CONF_TYPE: f"{notification.button}_{notification.state}",
+                CONF_DEVICE_ID: self._device.id,
+            },
+        )
 
     def on_notification_notification(
         self, notification: WebsocketNotificationTag
