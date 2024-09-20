@@ -479,7 +479,7 @@ async def test_lawn_mower_set_schedule_command(
     mock_automower_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test lawn_mower work area override commands."""
+    """Test set schedule service commands."""
     await setup_integration(hass, mock_config_entry)
     mocked_method = AsyncMock()
     setattr(mock_automower_client.commands, "set_calendar", mocked_method)
@@ -572,8 +572,65 @@ async def test_lawn_mower_set_schedule_command_service_validation(
     mock_automower_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test lawn_mower work area override commands."""
+    """Test service validation errors for setting schedules."""
     await setup_integration(hass, mock_config_entry)
+    mocked_method = AsyncMock()
+    setattr(mock_automower_client.commands, "set_calendar", mocked_method)
+
+    with pytest.raises(
+        ServiceValidationError,
+        match=fail_message,
+    ):
+        await hass.services.async_call(
+            domain=DOMAIN,
+            service=service,
+            target={"entity_id": "lawn_mower.test_mower_1"},
+            service_data=service_data,
+            blocking=True,
+        )
+
+
+@pytest.mark.parametrize(
+    ("service", "service_data", "fail_message"),
+    [
+        (
+            "set_schedule",
+            {
+                "mode": "remove",
+                "start": "11:11:00",
+                "end": "12:00:00",
+                "monday": True,
+                "tuesday": True,
+                "wednesday": False,
+                "thursday": True,
+                "friday": False,
+                "saturday": True,
+                "sunday": False,
+                "work_area_id": 654321,
+            },
+            "Calendar entry not found. Can't be removed",
+        ),
+    ],
+)
+async def test_lawn_mower_set_schedule_with_no_existing_schedules(
+    hass: HomeAssistant,
+    service: str,
+    service_data: dict[str, int] | None,
+    fail_message: str,
+    mock_automower_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test lawn_mower set schedule command, when there asre no tasks to remove."""
+    await setup_integration(hass, mock_config_entry)
+    values = mower_list_to_dictionary_dataclass(
+        load_json_value_fixture("mower.json", DOMAIN)
+    )
+    values[TEST_MOWER_ID].calendar.tasks = []
+    mock_automower_client.get_status.return_value = values
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
     mocked_method = AsyncMock()
     setattr(mock_automower_client.commands, "set_calendar", mocked_method)
 
