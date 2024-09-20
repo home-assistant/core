@@ -17,7 +17,13 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
+)
+from homeassistant.components.valve import (
+    DOMAIN,
     ValveDeviceClass,
+    ValveEntity,
+    ValveEntityDescription,
+    ValveEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
