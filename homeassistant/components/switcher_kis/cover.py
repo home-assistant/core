@@ -42,11 +42,9 @@ async def async_setup_entry(
     @callback
     def async_add_cover(coordinator: SwitcherDataUpdateCoordinator) -> None:
         """Add cover from Switcher device."""
-        if coordinator.data.device_type.category == DeviceCategory.SHUTTER:
-            async_add_entities([SwitcherCoverEntity(coordinator, 0)])
-        if (
-            coordinator.data.device_type.category
-            == DeviceCategory.SINGLE_SHUTTER_DUAL_LIGHT
+        if coordinator.data.device_type.category in (
+            DeviceCategory.SHUTTER,
+            DeviceCategory.SINGLE_SHUTTER_DUAL_LIGHT,
         ):
             async_add_entities([SwitcherCoverEntity(coordinator, 0)])
 

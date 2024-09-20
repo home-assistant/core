@@ -54,7 +54,7 @@ class SwitcherFlowHandler(ConfigFlow, domain=DOMAIN):
 
         for device_id, device in self.discovered_devices.items():
             if device.token_needed:
-                _LOGGER.info("Device with ID %s requires a token", device_id)
+                _LOGGER.debug("Device with ID %s requires a token", device_id)
                 return await self.async_step_credentials()
         return await self._create_entry()
 
@@ -73,8 +73,6 @@ class SwitcherFlowHandler(ConfigFlow, domain=DOMAIN):
             if token_is_valid:
                 return await self._create_entry()
             errors["base"] = "invalid_auth"
-        else:
-            user_input = {}
 
         return self.async_show_form(
             step_id="credentials", data_schema=CONFIG_SCHEMA, errors=errors
