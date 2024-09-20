@@ -91,7 +91,7 @@ async def async_setup_entry(
             for container in snapshot.docker_snapshot_raw.containers:
                 entities.extend(
                     ContainerSensorEntity(
-                        node_id, snapshot, container, coordinator, description
+                        coordinator, node_id, snapshot, container, description
                     )
                     for description in CONTAINER_SENSOR_TYPES
                     if description.exists_fn(coordinator.data[node_id])
@@ -135,14 +135,14 @@ class ContainerSensorEntity(ContainerBaseEntity, SensorEntity):
 
     def __init__(
         self,
+        coordinator: PortainerDataUpdateCoordinator,
         node_id: int,
         snapshot: Snapshot,
         container: Container,
-        coordinator: PortainerDataUpdateCoordinator,
         description: ContainerSensorEntityDescription,
     ) -> None:
         """Set up PortainerSensors."""
-        super().__init__(node_id, snapshot, container, coordinator)
+        super().__init__(coordinator, node_id, snapshot, container)
         self.entity_description = description
         self._attr_unique_id = f"{node_id}-{container}-{description.key}"
         _LOGGER.debug("self.node_attributes %s", self.node_attributes)

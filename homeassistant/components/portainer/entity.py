@@ -54,51 +54,6 @@ def handle_sending_exception(
     return decorator
 
 
-class ContainerBaseEntity(CoordinatorEntity[PortainerDataUpdateCoordinator]):
-    """Defining the Portainer base Entity."""
-
-    _attr_has_entity_name = True
-
-    def __init__(
-        self,
-        node_id: int,
-        snapshot: Snapshot,
-        container: Container,
-        coordinator: PortainerDataUpdateCoordinator,
-    ) -> None:
-        """Initialize PortainerEntity."""
-        super().__init__(coordinator)
-        _LOGGER.debug("node_id %s", node_id)
-        self.node_id = node_id
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, node_id)},
-            manufacturer="Husqvarna",
-            name=self.node_attributes.name,
-            serial_number=self.node_attributes.status,
-        )
-        self.snapshot = snapshot
-        self.container = container
-
-    @property
-    def node_attributes(self) -> NodeData:
-        """Get the node attributes of the current node."""
-        return self.coordinator.data[self.node_id]
-
-    @property
-    def container_attributes(self) -> Container | None:
-        """Get the node attributes of the current node."""
-        for node_id in self.coordinator.data:
-            for snapshot in self.coordinator.data[node_id].snapshots:
-                for container in snapshot.docker_snapshot_raw.containers:
-                    return container
-        return None
-
-    @property
-    def available(self) -> bool:
-        """Return True if the device is available."""
-        return super().available
-
-
 class SnapshotBaseEntity(CoordinatorEntity[PortainerDataUpdateCoordinator]):
     """Defining the Portainer base Entity."""
 
@@ -116,9 +71,7 @@ class SnapshotBaseEntity(CoordinatorEntity[PortainerDataUpdateCoordinator]):
         self.node_id = node_id
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, node_id)},
-            manufacturer="Husqvarna",
             name=self.node_attributes.name,
-            serial_number=self.node_attributes.status,
         )
         self.snapshot = snapshot
 
@@ -139,3 +92,26 @@ class SnapshotBaseEntity(CoordinatorEntity[PortainerDataUpdateCoordinator]):
     def available(self) -> bool:
         """Return True if the device is available."""
         return super().available
+
+
+class ContainerBaseEntity(SnapshotBaseEntity):
+    """Defining the Portainer base Entity."""
+
+    def __init__(
+        self,
+        coordinator: PortainerDataUpdateCoordinator,
+        node_id: int,
+        snapshot: Snapshot,
+        container: Container,
+    ) -> None:
+        """Initialize PortainerEntity."""
+        super().__init__(coordinator, node_id, snapshot)
+
+    @property
+    def container_attributes(self) -> Container | None:
+        """Get the node attributes of the current node."""
+        for node_id in self.coordinator.data:
+            for snapshot in self.coordinator.data[node_id].snapshots:
+                for container in snapshot.docker_snapshot_raw.containers:
+                    return container
+        return None
