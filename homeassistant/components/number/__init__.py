@@ -28,6 +28,7 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_suggest_report_issue
+from homeassistant.util.hass_dict import HassKey
 
 from .const import (  # noqa: F401
     ATTR_MAX,
@@ -49,6 +50,7 @@ from .websocket_api import async_setup as async_setup_ws_api
 
 _LOGGER = logging.getLogger(__name__)
 
+DOMAIN_DATA: HassKey[EntityComponent[NumberEntity]] = HassKey(DOMAIN)
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
 PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
@@ -81,7 +83,7 @@ __all__ = [
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Number entities."""
-    component = hass.data[DOMAIN] = EntityComponent[NumberEntity](
+    component = hass.data[DOMAIN_DATA] = EntityComponent[NumberEntity](
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )
     async_setup_ws_api(hass)
@@ -124,14 +126,12 @@ async def async_set_value(entity: NumberEntity, service_call: ServiceCall) -> No
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    component: EntityComponent[NumberEntity] = hass.data[DOMAIN]
-    return await component.async_setup_entry(entry)
+    return await hass.data[DOMAIN_DATA].async_setup_entry(entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    component: EntityComponent[NumberEntity] = hass.data[DOMAIN]
-    return await component.async_unload_entry(entry)
+    return await hass.data[DOMAIN_DATA].async_unload_entry(entry)
 
 
 class NumberEntityDescription(EntityDescription, frozen_or_thawed=True):

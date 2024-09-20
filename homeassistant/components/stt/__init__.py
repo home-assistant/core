@@ -28,6 +28,7 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_suggest_report_issue
 from homeassistant.util import dt as dt_util, language as language_util
+from homeassistant.util.hass_dict import HassKey
 
 from .const import (
     DATA_PROVIDERS,
@@ -66,17 +67,16 @@ __all__ = [
 
 _LOGGER = logging.getLogger(__name__)
 
+DOMAIN_DATA: HassKey[EntityComponent[SpeechToTextEntity]] = HassKey(DOMAIN)
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 
 @callback
 def async_default_engine(hass: HomeAssistant) -> str | None:
     """Return the domain or entity id of the default engine."""
-    component: EntityComponent[SpeechToTextEntity] = hass.data[DOMAIN]
-
     default_entity_id: str | None = None
 
-    for entity in component.entities:
+    for entity in hass.data[DOMAIN_DATA].entities:
         if entity.platform and entity.platform.platform_name == "cloud":
             return entity.entity_id
 
@@ -91,9 +91,7 @@ def async_get_speech_to_text_entity(
     hass: HomeAssistant, entity_id: str
 ) -> SpeechToTextEntity | None:
     """Return stt entity."""
-    component: EntityComponent[SpeechToTextEntity] = hass.data[DOMAIN]
-
-    return component.get_entity(entity_id)
+    return hass.data[DOMAIN_DATA].get_entity(entity_id)
 
 
 @callback
@@ -111,9 +109,8 @@ def async_get_speech_to_text_languages(hass: HomeAssistant) -> set[str]:
     """Return a set with the union of languages supported by stt engines."""
     languages = set()
 
-    component: EntityComponent[SpeechToTextEntity] = hass.data[DOMAIN]
     legacy_providers: dict[str, Provider] = hass.data[DATA_PROVIDERS]
-    for entity in component.entities:
+    for entity in hass.data[DOMAIN_DATA].entities:
         for language_tag in entity.supported_languages:
             languages.add(language_tag)
 
@@ -128,7 +125,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up STT."""
     websocket_api.async_register_command(hass, websocket_list_engines)
 
-    component = hass.data[DOMAIN] = EntityComponent[SpeechToTextEntity](
+    component = hass.data[DOMAIN_DATA] = EntityComponent[SpeechToTextEntity](
         _LOGGER, DOMAIN, hass
     )
 
@@ -150,14 +147,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    component: EntityComponent[SpeechToTextEntity] = hass.data[DOMAIN]
-    return await component.async_setup_entry(entry)
+    return await hass.data[DOMAIN_DATA].async_setup_entry(entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    component: EntityComponent[SpeechToTextEntity] = hass.data[DOMAIN]
-    return await component.async_unload_entry(entry)
+    return await hass.data[DOMAIN_DATA].async_unload_entry(entry)
 
 
 class SpeechToTextEntity(RestoreEntity):
@@ -426,7 +421,6 @@ def websocket_list_engines(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
 ) -> None:
     """List speech-to-text engines and, optionally, if they support a given language."""
-    component: EntityComponent[SpeechToTextEntity] = hass.data[DOMAIN]
     legacy_providers: dict[str, Provider] = hass.data[DATA_PROVIDERS]
 
     country = msg.get("country")
@@ -434,7 +428,7 @@ def websocket_list_engines(
     providers = []
     provider_info: dict[str, Any]
 
-    for entity in component.entities:
+    for entity in hass.data[DOMAIN_DATA].entities:
         provider_info = {
             "engine_id": entity.entity_id,
             "supported_languages": entity.supported_languages,
