@@ -180,7 +180,7 @@ class DeviceWithPrograms(HomeConnectDevice):
                 ATTR_DEVICE: self,
                 ATTR_DESC: k,
                 ATTR_UNIT: unit,
-                ATTR_KEY: "BSH.Common.Option.{}".format(k.replace(" ", "")),
+                ATTR_KEY: f"BSH.Common.Option.{k.replace(' ', '')}",
                 ATTR_ICON: icon,
                 ATTR_DEVICE_CLASS: device_class,
                 ATTR_SIGN: sign,

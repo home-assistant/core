@@ -62,11 +62,14 @@ async def test_disabled_by_default_sensors(
     """Test wifi sensor is disabled by default ."""
     await setup_integration(hass, mock_config_entry)
 
-    assert not hass.states.get("binary_sensor.mock_title_wi_fi")
+    for sensor in ("wi_fi", "vpn"):
+        assert not hass.states.get(f"binary_sensor.mock_title_{sensor}")
 
-    assert (entry := entity_registry.async_get("binary_sensor.mock_title_wi_fi"))
-    assert entry.disabled
-    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+        assert (
+            entry := entity_registry.async_get(f"binary_sensor.mock_title_{sensor}")
+        )
+        assert entry.disabled
+        assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
 
 async def test_internet_sensor_event(

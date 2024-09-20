@@ -119,7 +119,7 @@
       }),
     }),
     'system': dict({
-      'model': '450XH-TEST',
+      'model': 'HUSQVARNA AUTOMOWER® 450XH',
       'name': 'Test Mower 1',
       'serial_number': 123,
     }),

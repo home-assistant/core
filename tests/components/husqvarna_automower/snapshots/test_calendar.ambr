@@ -70,5 +70,14 @@
         }),
       ]),
     }),
+    'calendar.test_mower_2': dict({
+      'events': list([
+        dict({
+          'end': '2023-06-05T02:49:00+02:00',
+          'start': '2023-06-05T02:00:00+02:00',
+          'summary': 'Schedule 1',
+        }),
+      ]),
+    }),
   })
 # ---

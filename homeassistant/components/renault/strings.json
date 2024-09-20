@@ -175,7 +175,7 @@
     },
     "ac_cancel": {
       "name": "Cancel A/C",
-      "description": "Canceles A/C on vehicle.",
+      "description": "Cancels A/C on vehicle.",
       "fields": {
         "vehicle": {
           "name": "Vehicle",
@@ -194,6 +194,20 @@
         "schedules": {
           "name": "Schedules",
           "description": "Schedule details."
+        }
+      }
+    },
+    "ac_set_schedules": {
+      "name": "Update A/C schedule",
+      "description": "Updates A/C schedule on vehicle.",
+      "fields": {
+        "vehicle": {
+          "name": "Vehicle",
+          "description": "[%key:component::renault::services::ac_start::fields::vehicle::description%]"
+        },
+        "schedules": {
+          "name": "Schedules",
+          "description": "[%key:component::renault::services::charge_set_schedules::fields::schedules::description%]"
         }
       }
     }
