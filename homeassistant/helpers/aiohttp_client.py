@@ -85,8 +85,8 @@ class HassClientResponse(aiohttp.ClientResponse):
 def async_get_clientsession(
     hass: HomeAssistant,
     verify_ssl: bool = True,
-    ssl_cipher: ssl_util.SSLCipherList = ssl_util.SSLCipherList.PYTHON_DEFAULT,
     family: socket.AddressFamily = socket.AF_UNSPEC,
+    ssl_cipher: ssl_util.SSLCipherList = ssl_util.SSLCipherList.PYTHON_DEFAULT,
 ) -> aiohttp.ClientSession:
     """Return default aiohttp ClientSession.
 
@@ -99,9 +99,9 @@ def async_get_clientsession(
         session = _async_create_clientsession(
             hass,
             verify_ssl,
-            ssl_cipher,
             auto_cleanup_method=_async_register_default_clientsession_shutdown,
             family=family,
+            ssl_cipher=ssl_cipher,
         )
         sessions[session_key] = session
     else:
@@ -115,9 +115,9 @@ def async_get_clientsession(
 def async_create_clientsession(
     hass: HomeAssistant,
     verify_ssl: bool = True,
-    ssl_cipher: ssl_util.SSLCipherList = ssl_util.SSLCipherList.PYTHON_DEFAULT,
     auto_cleanup: bool = True,
     family: socket.AddressFamily = socket.AF_UNSPEC,
+    ssl_cipher: ssl_util.SSLCipherList = ssl_util.SSLCipherList.PYTHON_DEFAULT,
     **kwargs: Any,
 ) -> aiohttp.ClientSession:
     """Create a new ClientSession with kwargs, i.e. for cookies.
@@ -136,9 +136,9 @@ def async_create_clientsession(
     return _async_create_clientsession(
         hass,
         verify_ssl,
-        ssl_cipher,
         auto_cleanup_method=auto_cleanup_method,
         family=family,
+        ssl_cipher=ssl_cipher,
         **kwargs,
     )
 
@@ -147,15 +147,15 @@ def async_create_clientsession(
 def _async_create_clientsession(
     hass: HomeAssistant,
     verify_ssl: bool = True,
-    ssl_cipher: ssl_util.SSLCipherList = ssl_util.SSLCipherList.PYTHON_DEFAULT,
     auto_cleanup_method: Callable[[HomeAssistant, aiohttp.ClientSession], None]
     | None = None,
     family: socket.AddressFamily = socket.AF_UNSPEC,
+    ssl_cipher: ssl_util.SSLCipherList = ssl_util.SSLCipherList.PYTHON_DEFAULT,
     **kwargs: Any,
 ) -> aiohttp.ClientSession:
     """Create a new ClientSession with kwargs, i.e. for cookies."""
     clientsession = aiohttp.ClientSession(
-        connector=_async_get_connector(hass, verify_ssl, ssl_cipher, family),
+        connector=_async_get_connector(hass, verify_ssl, family, ssl_cipher),
         json_serialize=json_dumps,
         response_class=HassClientResponse,
         **kwargs,
@@ -311,8 +311,8 @@ class HomeAssistantTCPConnector(aiohttp.TCPConnector):
 def _async_get_connector(
     hass: HomeAssistant,
     verify_ssl: bool = True,
-    ssl_cipher: ssl_util.SSLCipherList = ssl_util.SSLCipherList.PYTHON_DEFAULT,
     family: socket.AddressFamily = socket.AF_UNSPEC,
+    ssl_cipher: ssl_util.SSLCipherList = ssl_util.SSLCipherList.PYTHON_DEFAULT,
 ) -> aiohttp.BaseConnector:
     """Return the connector pool for aiohttp.
 
