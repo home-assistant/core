@@ -177,8 +177,12 @@ def count_torrents_in_states(
     # When torrents are not in the returned data, there are none, return 0.
     try:
         torrents = cast(Mapping[str, Mapping], coordinator.data.get("torrents"))
+        if torrents is None:
+            return 0
+
         if not states:
             return len(torrents)
+
         return len(
             [torrent for torrent in torrents.values() if torrent.get("state") in states]
         )

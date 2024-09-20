@@ -131,7 +131,7 @@ class VlcDevice(MediaPlayerEntity):
 
             self._attr_state = MediaPlayerState.IDLE
             self._attr_available = True
-            LOGGER.info("Connected to vlc host: %s", self._vlc.host)
+            LOGGER.debug("Connected to vlc host: %s", self._vlc.host)
 
         status = await self._vlc.status()
         LOGGER.debug("Status: %s", status)

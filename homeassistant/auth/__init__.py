@@ -127,7 +127,11 @@ class AuthManagerFlowManager(
         flow: data_entry_flow.FlowHandler[AuthFlowResult, tuple[str, str]],
         result: AuthFlowResult,
     ) -> AuthFlowResult:
-        """Return a user as result of login flow."""
+        """Return a user as result of login flow.
+
+        This method is called when a flow step returns FlowResultType.ABORT or
+        FlowResultType.CREATE_ENTRY.
+        """
         flow = cast(LoginFlow, flow)
 
         if result["type"] != data_entry_flow.FlowResultType.CREATE_ENTRY:

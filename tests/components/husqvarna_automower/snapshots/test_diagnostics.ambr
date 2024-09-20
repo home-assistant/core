@@ -54,17 +54,6 @@
           'wednesday': False,
           'workAreaId': 654321,
         }),
-        dict({
-          'duration': 480,
-          'friday': False,
-          'monday': True,
-          'saturday': True,
-          'start': 120,
-          'sunday': False,
-          'thursday': True,
-          'tuesday': False,
-          'wednesday': False,
-        }),
       ]),
     }),
     'capabilities': dict({
@@ -130,7 +119,7 @@
       }),
     }),
     'system': dict({
-      'model': '450XH-TEST',
+      'model': 'HUSQVARNA AUTOMOWER® 450XH',
       'name': 'Test Mower 1',
       'serial_number': 123,
     }),

@@ -504,7 +504,7 @@ class SimpliSafe:
         except Exception as err:  # noqa: BLE001
             LOGGER.error("Unknown exception while connecting to websocket: %s", err)
 
-        LOGGER.info("Reconnecting to websocket")
+        LOGGER.warning("Reconnecting to websocket")
         await self._async_cancel_websocket_loop()
         self._websocket_reconnect_task = self._hass.async_create_task(
             self._async_start_websocket_loop()
@@ -604,7 +604,7 @@ class SimpliSafe:
         @callback
         def async_save_refresh_token(token: str) -> None:
             """Save a refresh token to the config entry."""
-            LOGGER.info("Saving new refresh token to HASS storage")
+            LOGGER.debug("Saving new refresh token to HASS storage")
             self._hass.config_entries.async_update_entry(
                 self.entry,
                 data={**self.entry.data, CONF_TOKEN: token},
@@ -647,7 +647,7 @@ class SimpliSafe:
                 # In case the user attempts an action not allowed in their current plan,
                 # we merely log that message at INFO level (so the user is aware,
                 # but not spammed with ERROR messages that they cannot change):
-                LOGGER.info(result)
+                LOGGER.debug(result)
 
             if isinstance(result, SimplipyError):
                 raise UpdateFailed(f"SimpliSafe error while updating: {result}")
