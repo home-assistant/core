@@ -43,6 +43,8 @@ from homeassistant.util.json import JsonValueType
 
 from .const import (
     CONF_EVENT,
+    DOMAIN,
+    DOMAIN_DATA,
     EVENT_DESCRIPTION,
     EVENT_DURATION,
     EVENT_END,
@@ -70,7 +72,6 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = "calendar"
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
 PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
@@ -285,7 +286,7 @@ SERVICE_GET_EVENTS_SCHEMA: Final = vol.All(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Track states and offer events for calendars."""
-    component = hass.data[DOMAIN] = EntityComponent[CalendarEntity](
+    component = hass.data[DOMAIN_DATA] = EntityComponent[CalendarEntity](
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )
 
@@ -318,14 +319,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    component: EntityComponent[CalendarEntity] = hass.data[DOMAIN]
-    return await component.async_setup_entry(entry)
+    return await hass.data[DOMAIN_DATA].async_setup_entry(entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    component: EntityComponent[CalendarEntity] = hass.data[DOMAIN]
-    return await component.async_unload_entry(entry)
+    return await hass.data[DOMAIN_DATA].async_unload_entry(entry)
 
 
 def get_date(date: dict[str, Any]) -> datetime.datetime:
@@ -702,8 +701,7 @@ async def handle_calendar_event_create(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle creation of a calendar event."""
-    component: EntityComponent[CalendarEntity] = hass.data[DOMAIN]
-    if not (entity := component.get_entity(msg["entity_id"])):
+    if not (entity := hass.data[DOMAIN_DATA].get_entity(msg["entity_id"])):
         connection.send_error(msg["id"], ERR_NOT_FOUND, "Entity not found")
         return
 
@@ -743,8 +741,7 @@ async def handle_calendar_event_delete(
 ) -> None:
     """Handle delete of a calendar event."""
 
-    component: EntityComponent[CalendarEntity] = hass.data[DOMAIN]
-    if not (entity := component.get_entity(msg["entity_id"])):
+    if not (entity := hass.data[DOMAIN_DATA].get_entity(msg["entity_id"])):
         connection.send_error(msg["id"], ERR_NOT_FOUND, "Entity not found")
         return
 
@@ -789,8 +786,7 @@ async def handle_calendar_event_update(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle creation of a calendar event."""
-    component: EntityComponent[CalendarEntity] = hass.data[DOMAIN]
-    if not (entity := component.get_entity(msg["entity_id"])):
+    if not (entity := hass.data[DOMAIN_DATA].get_entity(msg["entity_id"])):
         connection.send_error(msg["id"], ERR_NOT_FOUND, "Entity not found")
         return
 

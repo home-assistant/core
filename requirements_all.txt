@@ -198,7 +198,7 @@ aioaseko==1.0.0
 aioasuswrt==1.4.0
 
 # homeassistant.components.husqvarna_automower
-aioautomower==2024.9.0
+aioautomower==2024.9.1
 
 # homeassistant.components.azure_devops
 aioazuredevops==2.2.1
@@ -258,7 +258,7 @@ aioguardian==2022.07.0
 aioharmony==0.2.10
 
 # homeassistant.components.hassio
-aiohasupervisor==0.1.0b0
+aiohasupervisor==0.1.0b1
 
 # homeassistant.components.homekit_controller
 aiohomekit==3.2.3
@@ -1707,7 +1707,7 @@ pyCEC==0.5.2
 pyControl4==1.2.0
 
 # homeassistant.components.duotecno
-pyDuotecno==2024.5.1
+pyDuotecno==2024.9.0
 
 # homeassistant.components.electrasmart
 pyElectra==1.2.4
@@ -2142,7 +2142,7 @@ pypjlink2==1.2.1
 pyplaato==0.0.18
 
 # homeassistant.components.point
-pypoint==2.3.2
+pypoint==3.0.0
 
 # homeassistant.components.profiler
 pyprof2calltree==1.4.5
@@ -2241,7 +2241,7 @@ pysmarty2==0.10.1
 pysml==0.0.12
 
 # homeassistant.components.smlight
-pysmlight==0.1.0
+pysmlight==0.1.1
 
 # homeassistant.components.snmp
 pysnmp==6.2.5
@@ -2280,7 +2280,7 @@ pytedee-async==0.2.20
 pythinkingcleaner==0.0.3
 
 # homeassistant.components.motionmount
-python-MotionMount==2.1.0
+python-MotionMount==2.2.0
 
 # homeassistant.components.awair
 python-awair==0.2.4
