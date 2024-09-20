@@ -38,7 +38,7 @@ from .const import (
     READ_MODE_FLOAT,
     READ_MODE_INT,
 )
-from .onewire_entities import OneWireEntity, OneWireEntityDescription
+from .entity import OneWireEntity, OneWireEntityDescription
 from .onewirehub import OneWireHub
 
 

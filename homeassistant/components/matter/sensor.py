@@ -188,7 +188,7 @@ DISCOVERY_SCHEMAS = [
         ),
         entity_class=MatterSensor,
         required_attributes=(EveCluster.Attributes.Watt,),
-        absent_attributes=(clusters.ElectricalPowerMeasurement.Attributes.ActivePower,),
+        absent_clusters=(clusters.ElectricalPowerMeasurement,),
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
@@ -202,7 +202,7 @@ DISCOVERY_SCHEMAS = [
         ),
         entity_class=MatterSensor,
         required_attributes=(EveCluster.Attributes.Voltage,),
-        absent_attributes=(clusters.ElectricalPowerMeasurement.Attributes.Voltage,),
+        absent_clusters=(clusters.ElectricalPowerMeasurement,),
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
@@ -216,9 +216,7 @@ DISCOVERY_SCHEMAS = [
         ),
         entity_class=MatterSensor,
         required_attributes=(EveCluster.Attributes.WattAccumulated,),
-        absent_attributes=(
-            clusters.ElectricalEnergyMeasurement.Attributes.CumulativeEnergyImported,
-        ),
+        absent_clusters=(clusters.ElectricalEnergyMeasurement,),
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
@@ -232,9 +230,7 @@ DISCOVERY_SCHEMAS = [
         ),
         entity_class=MatterSensor,
         required_attributes=(EveCluster.Attributes.Current,),
-        absent_attributes=(
-            clusters.ElectricalPowerMeasurement.Attributes.ActiveCurrent,
-        ),
+        absent_clusters=(clusters.ElectricalPowerMeasurement,),
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
@@ -398,7 +394,7 @@ DISCOVERY_SCHEMAS = [
         required_attributes=(
             ThirdRealityMeteringCluster.Attributes.InstantaneousDemand,
         ),
-        absent_attributes=(clusters.ElectricalPowerMeasurement.Attributes.ActivePower,),
+        absent_clusters=(clusters.ElectricalPowerMeasurement,),
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
@@ -415,9 +411,7 @@ DISCOVERY_SCHEMAS = [
         required_attributes=(
             ThirdRealityMeteringCluster.Attributes.CurrentSummationDelivered,
         ),
-        absent_attributes=(
-            clusters.ElectricalEnergyMeasurement.Attributes.CumulativeEnergyImported,
-        ),
+        absent_clusters=(clusters.ElectricalEnergyMeasurement,),
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
@@ -432,7 +426,7 @@ DISCOVERY_SCHEMAS = [
         ),
         entity_class=MatterSensor,
         required_attributes=(NeoCluster.Attributes.Watt,),
-        absent_attributes=(clusters.ElectricalPowerMeasurement.Attributes.ActivePower,),
+        absent_clusters=(clusters.ElectricalPowerMeasurement,),
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
@@ -446,9 +440,7 @@ DISCOVERY_SCHEMAS = [
         ),
         entity_class=MatterSensor,
         required_attributes=(NeoCluster.Attributes.WattAccumulated,),
-        absent_attributes=(
-            clusters.ElectricalEnergyMeasurement.Attributes.CumulativeEnergyImported,
-        ),
+        absent_clusters=(clusters.ElectricalEnergyMeasurement,),
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
@@ -463,7 +455,7 @@ DISCOVERY_SCHEMAS = [
         ),
         entity_class=MatterSensor,
         required_attributes=(NeoCluster.Attributes.Voltage,),
-        absent_attributes=(clusters.ElectricalPowerMeasurement.Attributes.Voltage,),
+        absent_clusters=(clusters.ElectricalPowerMeasurement,),
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
@@ -477,9 +469,7 @@ DISCOVERY_SCHEMAS = [
         ),
         entity_class=MatterSensor,
         required_attributes=(NeoCluster.Attributes.Current,),
-        absent_attributes=(
-            clusters.ElectricalPowerMeasurement.Attributes.ActiveCurrent,
-        ),
+        absent_clusters=(clusters.ElectricalPowerMeasurement,),
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
@@ -490,6 +480,7 @@ DISCOVERY_SCHEMAS = [
             state_class=SensorStateClass.MEASUREMENT,
             translation_key="switch_current_position",
             entity_category=EntityCategory.DIAGNOSTIC,
+            entity_registry_enabled_default=False,
         ),
         entity_class=MatterSensor,
         required_attributes=(clusters.Switch.Attributes.CurrentPosition,),

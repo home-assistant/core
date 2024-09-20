@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from typing import TypedDict
 
 from chip.clusters import Objects as clusters
-from chip.clusters.Objects import ClusterAttributeDescriptor
+from chip.clusters.Objects import Cluster, ClusterAttributeDescriptor
 from matter_server.client.models.device_types import DeviceType
 from matter_server.client.models.node import MatterEndpoint
 
@@ -95,11 +95,15 @@ class MatterDiscoverySchema:
     # [optional] the attribute's endpoint_id must match ANY of these values
     endpoint_id: tuple[int, ...] | None = None
 
-    # [optional] additional attributes that MAY NOT be present
-    # on the node for this scheme to pass
+    # [optional] attributes that MAY NOT be present
+    # (on the same endpoint) for this scheme to pass
     absent_attributes: tuple[type[ClusterAttributeDescriptor], ...] | None = None
 
-    # [optional] additional attributes that may be present
+    # [optional] cluster(s) that MAY NOT be present
+    # (on ANY endpoint) for this scheme to pass
+    absent_clusters: tuple[type[Cluster], ...] | None = None
+
+    # [optional] additional attributes that may be present (on the same endpoint)
     # these attributes are copied over to attributes_to_watch and
     # are not discovered by other entities
     optional_attributes: tuple[type[ClusterAttributeDescriptor], ...] | None = None

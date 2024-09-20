@@ -3,14 +3,15 @@
   dict({
     'config_entry': dict({
       'data': dict({
-        'extended_data': True,
+        'has_password': True,
         'host': '**REDACTED**',
         'name': 'Solarlog test 1 2 3',
+        'password': 'pwd',
       }),
       'disabled_by': None,
       'domain': 'solarlog',
       'entry_id': 'ce5f5431554d101905d31797e1232da8',
-      'minor_version': 2,
+      'minor_version': 3,
       'options': dict({
       }),
       'pref_disable_new_entities': False,

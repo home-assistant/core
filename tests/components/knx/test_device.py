@@ -58,7 +58,8 @@ async def test_remove_device(
     await knx.setup_integration({})
     client = await hass_ws_client(hass)
 
-    await knx.assert_read("1/0/45", response=True)
+    await knx.assert_read("1/0/21", response=True, ignore_order=True)  # test light
+    await knx.assert_read("1/0/45", response=True, ignore_order=True)  # test switch
 
     assert hass_storage[KNX_CONFIG_STORAGE_KEY]["data"]["entities"].get("switch")
     test_device = device_registry.async_get_device(

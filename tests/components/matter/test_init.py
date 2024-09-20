@@ -411,8 +411,8 @@ async def test_update_addon(
     connect_side_effect: Exception,
 ) -> None:
     """Test update the Matter add-on during entry setup."""
-    addon_info.return_value["version"] = addon_version
-    addon_info.return_value["update_available"] = update_available
+    addon_info.return_value.version = addon_version
+    addon_info.return_value.update_available = update_available
     create_backup.side_effect = create_backup_side_effect
     update_addon.side_effect = update_addon_side_effect
     matter_client.connect.side_effect = connect_side_effect
