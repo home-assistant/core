@@ -7,12 +7,13 @@ from typing import Any
 from skyboxremote import VALID_KEYS
 
 from homeassistant.components.remote import RemoteEntity
-from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import RemoteControl, SkyRemoteConfigEntry
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,11 +25,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Sky remote platform."""
     async_add_entities(
-        [
-            SkyRemote(
-                config.runtime_data.remote, config.data[CONF_HOST], config.entry_id
-            )
-        ],
+        [SkyRemote(config.runtime_data.remote, config.entry_id)],
         True,
     )
 
@@ -36,12 +33,14 @@ async def async_setup_entry(
 class SkyRemote(RemoteEntity):
     """Representation of a Sky Remote."""
 
-    def __init__(self, remote: RemoteControl, name: str, unique_id: str) -> None:
+    def __init__(self, remote: RemoteControl, unique_id: str) -> None:
         """Initialize the Sky Remote."""
         self._remote = remote
         self._is_on = True
         self._attr_unique_id = unique_id
-        self._attr_name = name
+        self._attr_has_entity_name = True
+        self._attr_name = None
+        self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, unique_id)})
 
     def turn_on(self, activity: str | None = None, **kwargs: Any) -> None:
         """Send the power on command."""
