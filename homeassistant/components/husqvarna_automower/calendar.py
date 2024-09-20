@@ -97,5 +97,4 @@ class AutomowerCalendarEntity(AutomowerBaseEntity, CalendarEntity):
                     rrule=program_event.rrule_str,
                 )
             )
-
         return calendar_events
