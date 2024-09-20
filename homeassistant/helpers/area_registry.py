@@ -247,10 +247,9 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
         return self.areas.get_by_name(name)
 
     @callback
-    def async_get_area_by_alias(self, alias: str) -> AreaEntry | None:
-        """Get area by alias."""
-        areas_list = self.areas.get_areas_for_alias(alias)
-        return areas_list[0] if areas_list else None
+    def async_get_areas_by_alias(self, alias: str) -> list[AreaEntry]:
+        """Get areas by alias."""
+        return self.areas.get_areas_for_alias(alias)
 
     @callback
     def async_list_areas(self) -> Iterable[AreaEntry]:
