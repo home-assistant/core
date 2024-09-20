@@ -117,7 +117,9 @@ def client_context(
 # Create this only once and reuse it
 _DEFAULT_SSL_CONTEXT = client_context()
 _DEFAULT_NO_VERIFY_SSL_CONTEXT = create_no_verify_ssl_context()
-_INTERMEDIATE_NO_VERIFY_SSL_CONTEXT = create_no_verify_ssl_context(SSLCipherList.INTERMEDIATE)
+_INTERMEDIATE_NO_VERIFY_SSL_CONTEXT = create_no_verify_ssl_context(
+    SSLCipherList.INTERMEDIATE
+)
 _MODERN_NO_VERIFY_SSL_CONTEXT = create_no_verify_ssl_context(SSLCipherList.MODERN)
 _INSECURE_NO_VERIFY_SSL_CONTEXT = create_no_verify_ssl_context(SSLCipherList.INSECURE)
 
@@ -132,7 +134,9 @@ def get_default_no_verify_context() -> ssl.SSLContext:
     return _DEFAULT_NO_VERIFY_SSL_CONTEXT
 
 
-def server_context_no_verify(ssl_cipher_list: SSLCipherList = SSLCipherList.PYTHON_DEFAULT) -> ssl.SSLContext:
+def server_context_no_verify(
+    ssl_cipher_list: SSLCipherList = SSLCipherList.PYTHON_DEFAULT,
+) -> ssl.SSLContext:
     """Return a SSL context which a specific ssl cipher."""
     if ssl_cipher_list == SSLCipherList.INTERMEDIATE:
         return _INTERMEDIATE_NO_VERIFY_SSL_CONTEXT

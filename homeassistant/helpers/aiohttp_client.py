@@ -32,11 +32,11 @@ if TYPE_CHECKING:
     from aiohttp.typedefs import JSONDecoder
 
 
-DATA_CONNECTOR: HassKey[dict[tuple[bool, int], aiohttp.BaseConnector]] = HassKey(
+DATA_CONNECTOR: HassKey[dict[tuple[bool, str, int], aiohttp.BaseConnector]] = HassKey(
     "aiohttp_connector"
 )
-DATA_CLIENTSESSION: HassKey[dict[tuple[bool, int], aiohttp.ClientSession]] = HassKey(
-    "aiohttp_clientsession"
+DATA_CLIENTSESSION: HassKey[dict[tuple[bool, str, int], aiohttp.ClientSession]] = (
+    HassKey("aiohttp_clientsession")
 )
 
 SERVER_SOFTWARE = (
@@ -287,7 +287,7 @@ def _make_key(
     verify_ssl: bool = True,
     ssl_cipher: ssl_util.SSLCipherList = ssl_util.SSLCipherList.PYTHON_DEFAULT,
     family: socket.AddressFamily = socket.AF_UNSPEC,
-) -> tuple[bool, socket.AddressFamily]:
+) -> tuple[bool, ssl_util.SSLCipherList, socket.AddressFamily]:
     """Make a key for connector or session pool."""
     return (verify_ssl, ssl_cipher, family)
 
