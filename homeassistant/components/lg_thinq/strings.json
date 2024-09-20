@@ -59,9 +59,117 @@
         "name": "Fresh air filter"
       }
     },
+    "event": {
+      "error": {
+        "name": "Error",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "block_error": "Cleaning has stopped. Check for obstacles",
+              "brush_error": "Moving brush has a problem",
+              "bubble_error": "Bubble error",
+              "child_lock_active_error": "Child lock",
+              "cliff_error": "Fall prevention sensor has an error",
+              "clutch_error": "Clutch error",
+              "compressor_error": "Compressor error",
+              "dispensing_error": "Dispensor error",
+              "door_close_error": "Door closed error",
+              "door_lock_error": "Door lock error",
+              "door_open_error": "Door open",
+              "door_sensor_error": "Door sensor error",
+              "drainmotor_error": "Drain error",
+              "dust_full_error": "Dust bin is full and needs to be emptied",
+              "empty_water_alert_error": "Empty water",
+              "fan_motor_error": "Fan lock error",
+              "filter_clogging_error": "Filter error",
+              "frozen_error": "Freezing detection error",
+              "heater_circuit_error": "Heater circuit failure",
+              "high_power_supply_error": "Power supply error",
+              "high_temperature_detection_error": "High-temperature error",
+              "inner_lid_open_error": "Lid open error",
+              "ir_sensor_error": "IR sensor error",
+              "le_error": "LE error",
+              "le2_error": "LE2 error",
+              "left_wheel_error": "Left wheel has a problem",
+              "locked_motor_error": "Driver motor error",
+              "mop_error": "Cannot operate properly without the mop attached",
+              "motor_error": "Motor trouble",
+              "motor_lock_error": "Motor lock error",
+              "move_error": "The wheels are not touching the floor",
+              "need_water_drain": "[%key:component::lg_thinq::entity::event::error::state_attributes::event_type::state::empty_water_alert_error%]",
+              "need_water_replenishment": "Fill water",
+              "no_battery_error": "Robot cleaner's battery is low",
+              "no_dust_bin_error": "Dust bin is not installed",
+              "no_filter_error": "[%key:component::lg_thinq::entity::event::error::state_attributes::event_type::state::filter_clogging_error%]",
+              "out_of_balance_error": "Out of balance load",
+              "overfill_error": "Overfill error",
+              "part_malfunction_error": "AIE error",
+              "power_code_connection_error": "Power cord connection error",
+              "power_fail_error": "Power failure",
+              "right_wheel_error": "Right wheel has a problem",
+              "stack_error": "Stacking error",
+              "steam_heat_error": "Steam heater error",
+              "suction_blocked_error": "Suction motor is clogged",
+              "temperature_sensor_error": "Thermistor error",
+              "time_to_run_the_tub_clean_cycle_error": "Tub clean recommendation",
+              "timeout_error": "Timeout error",
+              "turbidity_sensor_error": "turbidity sensor error",
+              "unable_to_lock_error": "Door lock error",
+              "unbalanced_load_error": "[%key:component::lg_thinq::entity::event::error::state_attributes::event_type::state::out_of_balance_error%]",
+              "unknown_error": "Product requires attention",
+              "vibration_sensor_error": "Vibration sensor error",
+              "water_drain_error": "Water drain error",
+              "water_leakage_error": "Water leakage problem",
+              "water_leaks_error": "[%key:component::lg_thinq::entity::event::error::state_attributes::event_type::state::water_leakage_error%]",
+              "water_level_sensor_error": "Water sensor error",
+              "water_supply_error": "Water supply error"
+            }
+          }
+        }
+      },
+      "notification": {
+        "name": "Notification",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "charging_is_complete": "Charging is completed",
+              "cleaning_is_complete": "Cycle is finished",
+              "cleaning_is_completed": "Cleaning is completed",
+              "cleaning_is_failed": "Cleaning has failed",
+              "cooking_is_complete": "Turned off",
+              "door_is_open": "The door is open",
+              "drying_failed": "An error has occurred in the dryer",
+              "drying_is_complete": "Drying is completed",
+              "error_during_cleaning": "Cleaning stopped due to an error",
+              "error_during_washing": "An error has occurred in the washing machine",
+              "error_has_occurred": "An error has occurred",
+              "frozen_is_complete": "Ice plus is done",
+              "homeguard_is_stopped": "Home guard has stopped",
+              "lack_of_water": "There is no water in the water tank",
+              "motion_is_detected": "Photograph is sent as movement is detected during home guard",
+              "need_to_check_location": "Location check is required",
+              "pollution_is_high": "Air status is rapidly becoming bad",
+              "preheating_is_complete": "Preheating is done",
+              "rinse_is_not_enough": "Add rinse aid for better drying performance",
+              "salt_refill_is_needed": "Add salt for better softening performance",
+              "scheduled_cleaning_starts": "Scheduled cleaning starts",
+              "styling_is_complete": "Styling is completed",
+              "time_to_change_filter": "It is time to replace the filter",
+              "time_to_change_water_filter": "You need to replace water filter",
+              "time_to_clean": "Need to selfcleaning",
+              "time_to_clean_filter": "It is time to clean the filter",
+              "timer_is_complete": "Timer has been completed",
+              "washing_is_complete": "Washing is completed",
+              "water_is_full": "Water is full",
+              "water_leak_has_occurred": "The dishwasher has detected a water leak"
+            }
+          }
+        }
+      }
+    },
     "number": {
       "target_temperature": {
-        "name": "Temperature"
+        "name": "[%key:component::sensor::entity_component::temperature::name%]"
       },
       "target_temperature_for_location": {
         "name": "{location} temperature"

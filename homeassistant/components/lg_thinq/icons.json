@@ -40,6 +40,14 @@
         "default": "mdi:air-filter"
       }
     },
+    "event": {
+      "error": {
+        "default": "mdi:alert-circle-outline"
+      },
+      "notification": {
+        "default": "mdi:message-badge-outline"
+      }
+    },
     "number": {
       "target_temperature": {
         "default": "mdi:thermometer"
