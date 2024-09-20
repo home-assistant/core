@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from script.hassfest.model import Integration
+from script.hassfest.model import Config, Integration
 from script.hassfest.requirements import validate_requirements_format
 
 
@@ -13,6 +13,13 @@ def integration():
     """Fixture for hassfest integration model."""
     return Integration(
         path=Path("homeassistant/components/test"),
+        _config=Config(
+            root=Path(".").absolute(),
+            specific_integrations=None,
+            action="validate",
+            requirements=True,
+            core_integrations_path=Path("homeassistant/components"),
+        ),
         _manifest={
             "domain": "test",
             "documentation": "https://example.com",
@@ -78,5 +85,24 @@ def test_validate_requirements_format_successful(integration: Integration) -> No
         "test_package[async]==1.2.3",
         "test_package[async,encrypted]==1.2.3",
     ]
+    assert validate_requirements_format(integration)
+    assert len(integration.errors) == 0
+
+
+def test_validate_requirements_format_github_core(integration: Integration) -> None:
+    """Test requirement that points to github fails with core component."""
+    integration.manifest["requirements"] = [
+        "git+https://github.com/user/project.git@1.2.3",
+    ]
+    assert not validate_requirements_format(integration)
+    assert len(integration.errors) == 1
+
+
+def test_validate_requirements_format_github_custom(integration: Integration) -> None:
+    """Test requirement that points to github succeeds with custom component."""
+    integration.manifest["requirements"] = [
+        "git+https://github.com/user/project.git@1.2.3",
+    ]
+    integration.path = Path("")
     assert validate_requirements_format(integration)
     assert len(integration.errors) == 0

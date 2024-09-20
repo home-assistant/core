@@ -1,37 +1,4 @@
 # serializer version: 1
-# name: test_gas_meter_migrated[sensor.homewizard_aabbccddeeff_total_gas_m3:entity-registry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.homewizard_aabbccddeeff_total_gas_m3',
-    'has_entity_name': False,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'homewizard',
-    'previous_unique_id': 'aabbccddeeff_total_gas_m3',
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'homewizard_gas_meter_01FFEEDDCCBBAA99887766554433221100',
-    'unit_of_measurement': None,
-  })
-# ---
 # name: test_sensors[HWE-KWH1-entity_ids7][sensor.device_apparent_power:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
@@ -57,7 +24,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter',
+    'model': 'Wi-Fi kWh Meter 1-phase',
     'model_id': 'HWE-KWH1',
     'name': 'Device',
     'name_by_user': None,
@@ -144,7 +111,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter',
+    'model': 'Wi-Fi kWh Meter 1-phase',
     'model_id': 'HWE-KWH1',
     'name': 'Device',
     'name_by_user': None,
@@ -231,7 +198,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter',
+    'model': 'Wi-Fi kWh Meter 1-phase',
     'model_id': 'HWE-KWH1',
     'name': 'Device',
     'name_by_user': None,
@@ -318,7 +285,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter',
+    'model': 'Wi-Fi kWh Meter 1-phase',
     'model_id': 'HWE-KWH1',
     'name': 'Device',
     'name_by_user': None,
@@ -405,7 +372,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter',
+    'model': 'Wi-Fi kWh Meter 1-phase',
     'model_id': 'HWE-KWH1',
     'name': 'Device',
     'name_by_user': None,
@@ -492,7 +459,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter',
+    'model': 'Wi-Fi kWh Meter 1-phase',
     'model_id': 'HWE-KWH1',
     'name': 'Device',
     'name_by_user': None,
@@ -582,7 +549,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter',
+    'model': 'Wi-Fi kWh Meter 1-phase',
     'model_id': 'HWE-KWH1',
     'name': 'Device',
     'name_by_user': None,
@@ -669,7 +636,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter',
+    'model': 'Wi-Fi kWh Meter 1-phase',
     'model_id': 'HWE-KWH1',
     'name': 'Device',
     'name_by_user': None,
@@ -712,7 +679,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'aabbccddeeff_active_reactive_power_var',
-    'unit_of_measurement': 'var',
+    'unit_of_measurement': <UnitOfReactivePower.VOLT_AMPERE_REACTIVE: 'var'>,
   })
 # ---
 # name: test_sensors[HWE-KWH1-entity_ids7][sensor.device_reactive_power:state]
@@ -721,7 +688,7 @@
       'device_class': 'reactive_power',
       'friendly_name': 'Device Reactive power',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'var',
+      'unit_of_measurement': <UnitOfReactivePower.VOLT_AMPERE_REACTIVE: 'var'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_reactive_power',
@@ -756,7 +723,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter',
+    'model': 'Wi-Fi kWh Meter 1-phase',
     'model_id': 'HWE-KWH1',
     'name': 'Device',
     'name_by_user': None,
@@ -843,7 +810,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter',
+    'model': 'Wi-Fi kWh Meter 1-phase',
     'model_id': 'HWE-KWH1',
     'name': 'Device',
     'name_by_user': None,
@@ -925,7 +892,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter',
+    'model': 'Wi-Fi kWh Meter 1-phase',
     'model_id': 'HWE-KWH1',
     'name': 'Device',
     'name_by_user': None,
@@ -1011,7 +978,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter',
+    'model': 'Wi-Fi kWh Meter 3-phase',
     'model_id': 'HWE-KWH3',
     'name': 'Device',
     'name_by_user': None,
@@ -1098,7 +1065,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter',
+    'model': 'Wi-Fi kWh Meter 3-phase',
     'model_id': 'HWE-KWH3',
     'name': 'Device',
     'name_by_user': None,
@@ -1185,7 +1152,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter',
+    'model': 'Wi-Fi kWh Meter 3-phase',
     'model_id': 'HWE-KWH3',
     'name': 'Device',
     'name_by_user': None,
@@ -1272,7 +1239,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter',
+    'model': 'Wi-Fi kWh Meter 3-phase',
     'model_id': 'HWE-KWH3',
     'name': 'Device',
     'name_by_user': None,
@@ -1359,7 +1326,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter',
+    'model': 'Wi-Fi kWh Meter 3-phase',
     'model_id': 'HWE-KWH3',
     'name': 'Device',
     'name_by_user': None,
@@ -1446,7 +1413,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter',
+    'model': 'Wi-Fi kWh Meter 3-phase',
     'model_id': 'HWE-KWH3',
     'name': 'Device',
     'name_by_user': None,
@@ -1533,7 +1500,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter',
+    'model': 'Wi-Fi kWh Meter 3-phase',
     'model_id': 'HWE-KWH3',
     'name': 'Device',
     'name_by_user': None,
@@ -1620,7 +1587,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter',
+    'model': 'Wi-Fi kWh Meter 3-phase',
     'model_id': 'HWE-KWH3',
     'name': 'Device',
     'name_by_user': None,
@@ -1707,7 +1674,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter',
+    'model': 'Wi-Fi kWh Meter 3-phase',
     'model_id': 'HWE-KWH3',
     'name': 'Device',
     'name_by_user': None,
@@ -1794,7 +1761,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter',
+    'model': 'Wi-Fi kWh Meter 3-phase',
     'model_id': 'HWE-KWH3',
     'name': 'Device',
     'name_by_user': None,
@@ -1881,7 +1848,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter',
+    'model': 'Wi-Fi kWh Meter 3-phase',
     'model_id': 'HWE-KWH3',
     'name': 'Device',
     'name_by_user': None,
@@ -1968,7 +1935,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter',
+    'model': 'Wi-Fi kWh Meter 3-phase',
     'model_id': 'HWE-KWH3',
     'name': 'Device',
     'name_by_user': None,
@@ -2058,7 +2025,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter',
+    'model': 'Wi-Fi kWh Meter 3-phase',
     'model_id': 'HWE-KWH3',
     'name': 'Device',
     'name_by_user': None,
@@ -2145,7 +2112,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter',
+    'model': 'Wi-Fi kWh Meter 3-phase',
     'model_id': 'HWE-KWH3',
     'name': 'Device',
     'name_by_user': None,
@@ -2232,7 +2199,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter',
+    'model': 'Wi-Fi kWh Meter 3-phase',
     'model_id': 'HWE-KWH3',
     'name': 'Device',
     'name_by_user': None,
@@ -2319,7 +2286,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter',
+    'model': 'Wi-Fi kWh Meter 3-phase',
     'model_id': 'HWE-KWH3',
     'name': 'Device',
     'name_by_user': None,
@@ -2409,7 +2376,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter',
+    'model': 'Wi-Fi kWh Meter 3-phase',
     'model_id': 'HWE-KWH3',
     'name': 'Device',
     'name_by_user': None,
@@ -2499,7 +2466,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter',
+    'model': 'Wi-Fi kWh Meter 3-phase',
     'model_id': 'HWE-KWH3',
     'name': 'Device',
     'name_by_user': None,
@@ -2589,7 +2556,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter',
+    'model': 'Wi-Fi kWh Meter 3-phase',
     'model_id': 'HWE-KWH3',
     'name': 'Device',
     'name_by_user': None,
@@ -2632,7 +2599,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'aabbccddeeff_active_reactive_power_var',
-    'unit_of_measurement': 'var',
+    'unit_of_measurement': <UnitOfReactivePower.VOLT_AMPERE_REACTIVE: 'var'>,
   })
 # ---
 # name: test_sensors[HWE-KWH3-entity_ids8][sensor.device_reactive_power:state]
@@ -2641,7 +2608,7 @@
       'device_class': 'reactive_power',
       'friendly_name': 'Device Reactive power',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'var',
+      'unit_of_measurement': <UnitOfReactivePower.VOLT_AMPERE_REACTIVE: 'var'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_reactive_power',
@@ -2676,7 +2643,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter',
+    'model': 'Wi-Fi kWh Meter 3-phase',
     'model_id': 'HWE-KWH3',
     'name': 'Device',
     'name_by_user': None,
@@ -2719,7 +2686,7 @@
     'supported_features': 0,
     'translation_key': 'active_reactive_power_phase_var',
     'unique_id': 'aabbccddeeff_active_reactive_power_l1_var',
-    'unit_of_measurement': 'var',
+    'unit_of_measurement': <UnitOfReactivePower.VOLT_AMPERE_REACTIVE: 'var'>,
   })
 # ---
 # name: test_sensors[HWE-KWH3-entity_ids8][sensor.device_reactive_power_phase_1:state]
@@ -2728,7 +2695,7 @@
       'device_class': 'reactive_power',
       'friendly_name': 'Device Reactive power phase 1',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'var',
+      'unit_of_measurement': <UnitOfReactivePower.VOLT_AMPERE_REACTIVE: 'var'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_reactive_power_phase_1',
@@ -2763,7 +2730,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter',
+    'model': 'Wi-Fi kWh Meter 3-phase',
     'model_id': 'HWE-KWH3',
     'name': 'Device',
     'name_by_user': None,
@@ -2806,7 +2773,7 @@
     'supported_features': 0,
     'translation_key': 'active_reactive_power_phase_var',
     'unique_id': 'aabbccddeeff_active_reactive_power_l2_var',
-    'unit_of_measurement': 'var',
+    'unit_of_measurement': <UnitOfReactivePower.VOLT_AMPERE_REACTIVE: 'var'>,
   })
 # ---
 # name: test_sensors[HWE-KWH3-entity_ids8][sensor.device_reactive_power_phase_2:state]
@@ -2815,7 +2782,7 @@
       'device_class': 'reactive_power',
       'friendly_name': 'Device Reactive power phase 2',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'var',
+      'unit_of_measurement': <UnitOfReactivePower.VOLT_AMPERE_REACTIVE: 'var'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_reactive_power_phase_2',
@@ -2850,7 +2817,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter',
+    'model': 'Wi-Fi kWh Meter 3-phase',
     'model_id': 'HWE-KWH3',
     'name': 'Device',
     'name_by_user': None,
@@ -2893,7 +2860,7 @@
     'supported_features': 0,
     'translation_key': 'active_reactive_power_phase_var',
     'unique_id': 'aabbccddeeff_active_reactive_power_l3_var',
-    'unit_of_measurement': 'var',
+    'unit_of_measurement': <UnitOfReactivePower.VOLT_AMPERE_REACTIVE: 'var'>,
   })
 # ---
 # name: test_sensors[HWE-KWH3-entity_ids8][sensor.device_reactive_power_phase_3:state]
@@ -2902,7 +2869,7 @@
       'device_class': 'reactive_power',
       'friendly_name': 'Device Reactive power phase 3',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'var',
+      'unit_of_measurement': <UnitOfReactivePower.VOLT_AMPERE_REACTIVE: 'var'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_reactive_power_phase_3',
@@ -2937,7 +2904,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter',
+    'model': 'Wi-Fi kWh Meter 3-phase',
     'model_id': 'HWE-KWH3',
     'name': 'Device',
     'name_by_user': None,
@@ -3024,7 +2991,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter',
+    'model': 'Wi-Fi kWh Meter 3-phase',
     'model_id': 'HWE-KWH3',
     'name': 'Device',
     'name_by_user': None,
@@ -3111,7 +3078,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter',
+    'model': 'Wi-Fi kWh Meter 3-phase',
     'model_id': 'HWE-KWH3',
     'name': 'Device',
     'name_by_user': None,
@@ -3198,7 +3165,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter',
+    'model': 'Wi-Fi kWh Meter 3-phase',
     'model_id': 'HWE-KWH3',
     'name': 'Device',
     'name_by_user': None,
@@ -3280,7 +3247,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter',
+    'model': 'Wi-Fi kWh Meter 3-phase',
     'model_id': 'HWE-KWH3',
     'name': 'Device',
     'name_by_user': None,
@@ -14905,7 +14872,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'aabbccddeeff_active_reactive_power_var',
-    'unit_of_measurement': 'var',
+    'unit_of_measurement': <UnitOfReactivePower.VOLT_AMPERE_REACTIVE: 'var'>,
   })
 # ---
 # name: test_sensors[HWE-SKT-21-entity_ids3][sensor.device_reactive_power:state]
@@ -14914,7 +14881,7 @@
       'device_class': 'reactive_power',
       'friendly_name': 'Device Reactive power',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'var',
+      'unit_of_measurement': <UnitOfReactivePower.VOLT_AMPERE_REACTIVE: 'var'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_reactive_power',
@@ -15204,7 +15171,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi Water Meter',
+    'model': 'Wi-Fi Watermeter',
     'model_id': 'HWE-WTR',
     'name': 'Device',
     'name_by_user': None,
@@ -15291,7 +15258,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi Water Meter',
+    'model': 'Wi-Fi Watermeter',
     'model_id': 'HWE-WTR',
     'name': 'Device',
     'name_by_user': None,
@@ -15377,7 +15344,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi Water Meter',
+    'model': 'Wi-Fi Watermeter',
     'model_id': 'HWE-WTR',
     'name': 'Device',
     'name_by_user': None,
@@ -15459,7 +15426,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi Water Meter',
+    'model': 'Wi-Fi Watermeter',
     'model_id': 'HWE-WTR',
     'name': 'Device',
     'name_by_user': None,
@@ -15545,7 +15512,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter',
+    'model': 'Wi-Fi kWh Meter 1-phase',
     'model_id': 'SDM230-wifi',
     'name': 'Device',
     'name_by_user': None,
@@ -15632,7 +15599,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter',
+    'model': 'Wi-Fi kWh Meter 1-phase',
     'model_id': 'SDM230-wifi',
     'name': 'Device',
     'name_by_user': None,
@@ -15719,7 +15686,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter',
+    'model': 'Wi-Fi kWh Meter 1-phase',
     'model_id': 'SDM230-wifi',
     'name': 'Device',
     'name_by_user': None,
@@ -15806,7 +15773,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter',
+    'model': 'Wi-Fi kWh Meter 1-phase',
     'model_id': 'SDM230-wifi',
     'name': 'Device',
     'name_by_user': None,
@@ -15893,7 +15860,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter',
+    'model': 'Wi-Fi kWh Meter 1-phase',
     'model_id': 'SDM230-wifi',
     'name': 'Device',
     'name_by_user': None,
@@ -15980,7 +15947,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter',
+    'model': 'Wi-Fi kWh Meter 1-phase',
     'model_id': 'SDM230-wifi',
     'name': 'Device',
     'name_by_user': None,
@@ -16070,7 +16037,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter',
+    'model': 'Wi-Fi kWh Meter 1-phase',
     'model_id': 'SDM230-wifi',
     'name': 'Device',
     'name_by_user': None,
@@ -16157,7 +16124,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter',
+    'model': 'Wi-Fi kWh Meter 1-phase',
     'model_id': 'SDM230-wifi',
     'name': 'Device',
     'name_by_user': None,
@@ -16200,7 +16167,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'aabbccddeeff_active_reactive_power_var',
-    'unit_of_measurement': 'var',
+    'unit_of_measurement': <UnitOfReactivePower.VOLT_AMPERE_REACTIVE: 'var'>,
   })
 # ---
 # name: test_sensors[SDM230-entity_ids5][sensor.device_reactive_power:state]
@@ -16209,7 +16176,7 @@
       'device_class': 'reactive_power',
       'friendly_name': 'Device Reactive power',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'var',
+      'unit_of_measurement': <UnitOfReactivePower.VOLT_AMPERE_REACTIVE: 'var'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_reactive_power',
@@ -16244,7 +16211,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter',
+    'model': 'Wi-Fi kWh Meter 1-phase',
     'model_id': 'SDM230-wifi',
     'name': 'Device',
     'name_by_user': None,
@@ -16331,7 +16298,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter',
+    'model': 'Wi-Fi kWh Meter 1-phase',
     'model_id': 'SDM230-wifi',
     'name': 'Device',
     'name_by_user': None,
@@ -16413,7 +16380,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter',
+    'model': 'Wi-Fi kWh Meter 1-phase',
     'model_id': 'SDM230-wifi',
     'name': 'Device',
     'name_by_user': None,
@@ -16499,7 +16466,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter',
+    'model': 'Wi-Fi kWh Meter 3-phase',
     'model_id': 'SDM630-wifi',
     'name': 'Device',
     'name_by_user': None,
@@ -16586,7 +16553,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter',
+    'model': 'Wi-Fi kWh Meter 3-phase',
     'model_id': 'SDM630-wifi',
     'name': 'Device',
     'name_by_user': None,
@@ -16673,7 +16640,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter',
+    'model': 'Wi-Fi kWh Meter 3-phase',
     'model_id': 'SDM630-wifi',
     'name': 'Device',
     'name_by_user': None,
@@ -16760,7 +16727,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter',
+    'model': 'Wi-Fi kWh Meter 3-phase',
     'model_id': 'SDM630-wifi',
     'name': 'Device',
     'name_by_user': None,
@@ -16847,7 +16814,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter',
+    'model': 'Wi-Fi kWh Meter 3-phase',
     'model_id': 'SDM630-wifi',
     'name': 'Device',
     'name_by_user': None,
@@ -16934,7 +16901,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter',
+    'model': 'Wi-Fi kWh Meter 3-phase',
     'model_id': 'SDM630-wifi',
     'name': 'Device',
     'name_by_user': None,
@@ -17021,7 +16988,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter',
+    'model': 'Wi-Fi kWh Meter 3-phase',
     'model_id': 'SDM630-wifi',
     'name': 'Device',
     'name_by_user': None,
@@ -17108,7 +17075,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter',
+    'model': 'Wi-Fi kWh Meter 3-phase',
     'model_id': 'SDM630-wifi',
     'name': 'Device',
     'name_by_user': None,
@@ -17195,7 +17162,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter',
+    'model': 'Wi-Fi kWh Meter 3-phase',
     'model_id': 'SDM630-wifi',
     'name': 'Device',
     'name_by_user': None,
@@ -17282,7 +17249,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter',
+    'model': 'Wi-Fi kWh Meter 3-phase',
     'model_id': 'SDM630-wifi',
     'name': 'Device',
     'name_by_user': None,
@@ -17369,7 +17336,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter',
+    'model': 'Wi-Fi kWh Meter 3-phase',
     'model_id': 'SDM630-wifi',
     'name': 'Device',
     'name_by_user': None,
@@ -17456,7 +17423,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter',
+    'model': 'Wi-Fi kWh Meter 3-phase',
     'model_id': 'SDM630-wifi',
     'name': 'Device',
     'name_by_user': None,
@@ -17546,7 +17513,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter',
+    'model': 'Wi-Fi kWh Meter 3-phase',
     'model_id': 'SDM630-wifi',
     'name': 'Device',
     'name_by_user': None,
@@ -17633,7 +17600,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter',
+    'model': 'Wi-Fi kWh Meter 3-phase',
     'model_id': 'SDM630-wifi',
     'name': 'Device',
     'name_by_user': None,
@@ -17720,7 +17687,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter',
+    'model': 'Wi-Fi kWh Meter 3-phase',
     'model_id': 'SDM630-wifi',
     'name': 'Device',
     'name_by_user': None,
@@ -17807,7 +17774,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter',
+    'model': 'Wi-Fi kWh Meter 3-phase',
     'model_id': 'SDM630-wifi',
     'name': 'Device',
     'name_by_user': None,
@@ -17897,7 +17864,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter',
+    'model': 'Wi-Fi kWh Meter 3-phase',
     'model_id': 'SDM630-wifi',
     'name': 'Device',
     'name_by_user': None,
@@ -17987,7 +17954,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter',
+    'model': 'Wi-Fi kWh Meter 3-phase',
     'model_id': 'SDM630-wifi',
     'name': 'Device',
     'name_by_user': None,
@@ -18077,7 +18044,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter',
+    'model': 'Wi-Fi kWh Meter 3-phase',
     'model_id': 'SDM630-wifi',
     'name': 'Device',
     'name_by_user': None,
@@ -18120,7 +18087,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'aabbccddeeff_active_reactive_power_var',
-    'unit_of_measurement': 'var',
+    'unit_of_measurement': <UnitOfReactivePower.VOLT_AMPERE_REACTIVE: 'var'>,
   })
 # ---
 # name: test_sensors[SDM630-entity_ids6][sensor.device_reactive_power:state]
@@ -18129,7 +18096,7 @@
       'device_class': 'reactive_power',
       'friendly_name': 'Device Reactive power',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'var',
+      'unit_of_measurement': <UnitOfReactivePower.VOLT_AMPERE_REACTIVE: 'var'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_reactive_power',
@@ -18164,7 +18131,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter',
+    'model': 'Wi-Fi kWh Meter 3-phase',
     'model_id': 'SDM630-wifi',
     'name': 'Device',
     'name_by_user': None,
@@ -18207,7 +18174,7 @@
     'supported_features': 0,
     'translation_key': 'active_reactive_power_phase_var',
     'unique_id': 'aabbccddeeff_active_reactive_power_l1_var',
-    'unit_of_measurement': 'var',
+    'unit_of_measurement': <UnitOfReactivePower.VOLT_AMPERE_REACTIVE: 'var'>,
   })
 # ---
 # name: test_sensors[SDM630-entity_ids6][sensor.device_reactive_power_phase_1:state]
@@ -18216,7 +18183,7 @@
       'device_class': 'reactive_power',
       'friendly_name': 'Device Reactive power phase 1',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'var',
+      'unit_of_measurement': <UnitOfReactivePower.VOLT_AMPERE_REACTIVE: 'var'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_reactive_power_phase_1',
@@ -18251,7 +18218,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter',
+    'model': 'Wi-Fi kWh Meter 3-phase',
     'model_id': 'SDM630-wifi',
     'name': 'Device',
     'name_by_user': None,
@@ -18294,7 +18261,7 @@
     'supported_features': 0,
     'translation_key': 'active_reactive_power_phase_var',
     'unique_id': 'aabbccddeeff_active_reactive_power_l2_var',
-    'unit_of_measurement': 'var',
+    'unit_of_measurement': <UnitOfReactivePower.VOLT_AMPERE_REACTIVE: 'var'>,
   })
 # ---
 # name: test_sensors[SDM630-entity_ids6][sensor.device_reactive_power_phase_2:state]
@@ -18303,7 +18270,7 @@
       'device_class': 'reactive_power',
       'friendly_name': 'Device Reactive power phase 2',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'var',
+      'unit_of_measurement': <UnitOfReactivePower.VOLT_AMPERE_REACTIVE: 'var'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_reactive_power_phase_2',
@@ -18338,7 +18305,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter',
+    'model': 'Wi-Fi kWh Meter 3-phase',
     'model_id': 'SDM630-wifi',
     'name': 'Device',
     'name_by_user': None,
@@ -18381,7 +18348,7 @@
     'supported_features': 0,
     'translation_key': 'active_reactive_power_phase_var',
     'unique_id': 'aabbccddeeff_active_reactive_power_l3_var',
-    'unit_of_measurement': 'var',
+    'unit_of_measurement': <UnitOfReactivePower.VOLT_AMPERE_REACTIVE: 'var'>,
   })
 # ---
 # name: test_sensors[SDM630-entity_ids6][sensor.device_reactive_power_phase_3:state]
@@ -18390,7 +18357,7 @@
       'device_class': 'reactive_power',
       'friendly_name': 'Device Reactive power phase 3',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'var',
+      'unit_of_measurement': <UnitOfReactivePower.VOLT_AMPERE_REACTIVE: 'var'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_reactive_power_phase_3',
@@ -18425,7 +18392,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter',
+    'model': 'Wi-Fi kWh Meter 3-phase',
     'model_id': 'SDM630-wifi',
     'name': 'Device',
     'name_by_user': None,
@@ -18512,7 +18479,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter',
+    'model': 'Wi-Fi kWh Meter 3-phase',
     'model_id': 'SDM630-wifi',
     'name': 'Device',
     'name_by_user': None,
@@ -18599,7 +18566,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter',
+    'model': 'Wi-Fi kWh Meter 3-phase',
     'model_id': 'SDM630-wifi',
     'name': 'Device',
     'name_by_user': None,
@@ -18686,7 +18653,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter',
+    'model': 'Wi-Fi kWh Meter 3-phase',
     'model_id': 'SDM630-wifi',
     'name': 'Device',
     'name_by_user': None,
@@ -18768,7 +18735,7 @@
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
-    'model': 'Wi-Fi kWh Meter',
+    'model': 'Wi-Fi kWh Meter 3-phase',
     'model_id': 'SDM630-wifi',
     'name': 'Device',
     'name_by_user': None,

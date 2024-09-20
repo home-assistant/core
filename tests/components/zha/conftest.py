@@ -154,6 +154,8 @@ async def zigpy_app_controller():
 
     app.state.node_info.nwk = 0x0000
     app.state.node_info.ieee = zigpy.types.EUI64.convert("00:15:8d:00:02:32:4f:32")
+    app.state.node_info.manufacturer = "Coordinator Manufacturer"
+    app.state.node_info.model = "Coordinator Model"
     app.state.network_info.pan_id = 0x1234
     app.state.network_info.extended_pan_id = app.state.node_info.ieee
     app.state.network_info.channel = 15

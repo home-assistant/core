@@ -151,11 +151,11 @@ def _format_err[*_Ts](
     *args: Any,
 ) -> str:
     """Format error message."""
-    return "Exception in {} when dispatching '{}': {}".format(
+
+    return (
         # Functions wrapped in partial do not have a __name__
-        getattr(target, "__name__", None) or str(target),
-        signal,
-        args,
+        f"Exception in {getattr(target, "__name__", None) or target} "
+        f"when dispatching '{signal}': {args}"
     )
 
 

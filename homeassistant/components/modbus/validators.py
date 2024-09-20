@@ -46,7 +46,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-ENTRY = namedtuple(
+ENTRY = namedtuple(  # noqa: PYI024
     "ENTRY",
     [
         "struct_id",
@@ -60,7 +60,7 @@ ILLEGAL = "I"
 OPTIONAL = "O"
 DEMANDED = "D"
 
-PARM_IS_LEGAL = namedtuple(
+PARM_IS_LEGAL = namedtuple(  # noqa: PYI024
     "PARM_IS_LEGAL",
     [
         "count",

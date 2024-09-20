@@ -165,6 +165,21 @@ async def test_feed_identical_timestamps(
     )
 
 
+async def test_feed_with_only_summary(
+    hass: HomeAssistant, events, feed_only_summary
+) -> None:
+    """Test simple feed with only summary, no content."""
+    assert await async_setup_config_entry(
+        hass, VALID_CONFIG_DEFAULT, return_value=feed_only_summary
+    )
+    await hass.async_block_till_done()
+
+    assert len(events) == 1
+    assert events[0].data.title == "Title 1"
+    assert events[0].data.description == "Description 1"
+    assert events[0].data.content[0].value == "This is a summary"
+
+
 async def test_feed_updates(
     hass: HomeAssistant, events, feed_one_event, feed_two_event
 ) -> None:
@@ -245,6 +260,20 @@ async def test_feed_with_unrecognized_publication_date(
     await hass.async_block_till_done()
 
     assert len(events) == 1
+
+
+async def test_feed_without_items(
+    hass: HomeAssistant, events, feed_without_items, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test simple feed without any items."""
+    assert "No new entries to be published in feed" not in caplog.text
+    assert await async_setup_config_entry(
+        hass, VALID_CONFIG_DEFAULT, return_value=feed_without_items
+    )
+    await hass.async_block_till_done()
+
+    assert "No new entries to be published in feed" in caplog.text
+    assert len(events) == 0
 
 
 async def test_feed_invalid_data(hass: HomeAssistant, events) -> None:

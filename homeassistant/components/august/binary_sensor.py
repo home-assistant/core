@@ -81,6 +81,7 @@ SENSOR_TYPES_VIDEO_DOORBELL = (
 SENSOR_TYPES_DOORBELL: tuple[AugustDoorbellBinarySensorEntityDescription, ...] = (
     AugustDoorbellBinarySensorEntityDescription(
         key="ding",
+        translation_key="ding",
         device_class=BinarySensorDeviceClass.OCCUPANCY,
         value_fn=retrieve_ding_activity,
         is_time_based=True,
@@ -108,12 +109,11 @@ async def async_setup_entry(
                 for description in SENSOR_TYPES_DOORBELL
             )
 
-    for doorbell in data.doorbells:
-        entities.extend(
-            AugustDoorbellBinarySensor(data, doorbell, description)
-            for description in SENSOR_TYPES_DOORBELL + SENSOR_TYPES_VIDEO_DOORBELL
-        )
-
+    entities.extend(
+        AugustDoorbellBinarySensor(data, doorbell, description)
+        for description in SENSOR_TYPES_DOORBELL + SENSOR_TYPES_VIDEO_DOORBELL
+        for doorbell in data.doorbells
+    )
     async_add_entities(entities)
 
 

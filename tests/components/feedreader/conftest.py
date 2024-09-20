@@ -52,6 +52,18 @@ def fixture_feed_identically_timed_events(hass: HomeAssistant) -> bytes:
     return load_fixture_bytes("feedreader6.xml")
 
 
+@pytest.fixture(name="feed_without_items")
+def fixture_feed_without_items(hass: HomeAssistant) -> bytes:
+    """Load test feed without any items."""
+    return load_fixture_bytes("feedreader7.xml")
+
+
+@pytest.fixture(name="feed_only_summary")
+def fixture_feed_only_summary(hass: HomeAssistant) -> bytes:
+    """Load test feed data with one event containing only a summary, no content."""
+    return load_fixture_bytes("feedreader8.xml")
+
+
 @pytest.fixture(name="events")
 async def fixture_events(hass: HomeAssistant) -> list[Event]:
     """Fixture that catches alexa events."""

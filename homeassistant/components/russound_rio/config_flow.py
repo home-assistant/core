@@ -6,7 +6,7 @@ import asyncio
 import logging
 from typing import Any
 
-from aiorussound import Russound
+from aiorussound import Controller, RussoundClient, RussoundTcpConnectionHandler
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -31,13 +31,12 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def find_primary_controller_metadata(
-    controllers: list[tuple[int, str, str]],
+    controllers: dict[int, Controller],
 ) -> tuple[str, str]:
     """Find the mac address of the primary Russound controller."""
-    for controller_id, mac_address, controller_type in controllers:
-        # The integration only cares about the primary controller linked by IP and not any downstream controllers
-        if controller_id == 1:
-            return (mac_address, controller_type)
+    if 1 in controllers:
+        c = controllers[1]
+        return c.mac_address, c.controller_type
     raise NoPrimaryControllerException
 
 
@@ -55,8 +54,9 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
             host = user_input[CONF_HOST]
             port = user_input[CONF_PORT]
 
-            controllers = None
-            russ = Russound(self.hass.loop, host, port)
+            russ = RussoundClient(
+                RussoundTcpConnectionHandler(self.hass.loop, host, port)
+            )
             try:
                 async with asyncio.timeout(CONNECT_TIMEOUT):
                     await russ.connect()
@@ -81,16 +81,14 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
 
-    async def async_step_import(
-        self, import_config: dict[str, Any]
-    ) -> ConfigFlowResult:
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Attempt to import the existing configuration."""
-        self._async_abort_entries_match({CONF_HOST: import_config[CONF_HOST]})
-        host = import_config[CONF_HOST]
-        port = import_config.get(CONF_PORT, 9621)
+        self._async_abort_entries_match({CONF_HOST: import_data[CONF_HOST]})
+        host = import_data[CONF_HOST]
+        port = import_data.get(CONF_PORT, 9621)
 
         # Connection logic is repeated here since this method will be removed in future releases
-        russ = Russound(self.hass.loop, host, port)
+        russ = RussoundClient(RussoundTcpConnectionHandler(self.hass.loop, host, port))
         try:
             async with asyncio.timeout(CONNECT_TIMEOUT):
                 await russ.connect()

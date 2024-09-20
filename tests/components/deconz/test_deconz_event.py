@@ -17,20 +17,13 @@ from homeassistant.components.deconz.deconz_event import (
     CONF_DECONZ_RELATIVE_ROTARY_EVENT,
     RELATIVE_ROTARY_DECONZ_TO_EVENT,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_DEVICE_ID,
-    CONF_EVENT,
-    CONF_ID,
-    CONF_UNIQUE_ID,
-    STATE_UNAVAILABLE,
-)
+from homeassistant.const import CONF_DEVICE_ID, CONF_EVENT, CONF_ID, CONF_UNIQUE_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from .conftest import WebsocketDataType
 
-from tests.common import async_capture_events
+from tests.common import MockConfigEntry, async_capture_events
 
 
 @pytest.mark.parametrize(
@@ -78,8 +71,8 @@ from tests.common import async_capture_events
 async def test_deconz_events(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    config_entry_setup: ConfigEntry,
-    mock_websocket_data: WebsocketDataType,
+    config_entry_setup: MockConfigEntry,
+    sensor_ws_data: WebsocketDataType,
 ) -> None:
     """Test successful creation of deconz events."""
     assert len(hass.states.async_all()) == 3
@@ -98,13 +91,7 @@ async def test_deconz_events(
 
     captured_events = async_capture_events(hass, CONF_DECONZ_EVENT)
 
-    event_changed_sensor = {
-        "r": "sensors",
-        "id": "1",
-        "state": {"buttonevent": 2000},
-    }
-    await mock_websocket_data(event_changed_sensor)
-    await hass.async_block_till_done()
+    await sensor_ws_data({"id": "1", "state": {"buttonevent": 2000}})
 
     device = device_registry.async_get_device(
         identifiers={(DECONZ_DOMAIN, "00:00:00:00:00:00:00:01")}
@@ -118,13 +105,7 @@ async def test_deconz_events(
         "device_id": device.id,
     }
 
-    event_changed_sensor = {
-        "r": "sensors",
-        "id": "3",
-        "state": {"buttonevent": 2000},
-    }
-    await mock_websocket_data(event_changed_sensor)
-    await hass.async_block_till_done()
+    await sensor_ws_data({"id": "3", "state": {"buttonevent": 2000}})
 
     device = device_registry.async_get_device(
         identifiers={(DECONZ_DOMAIN, "00:00:00:00:00:00:00:03")}
@@ -139,13 +120,7 @@ async def test_deconz_events(
         "device_id": device.id,
     }
 
-    event_changed_sensor = {
-        "r": "sensors",
-        "id": "4",
-        "state": {"gesture": 0},
-    }
-    await mock_websocket_data(event_changed_sensor)
-    await hass.async_block_till_done()
+    await sensor_ws_data({"id": "4", "state": {"gesture": 0}})
 
     device = device_registry.async_get_device(
         identifiers={(DECONZ_DOMAIN, "00:00:00:00:00:00:00:04")}
@@ -161,12 +136,10 @@ async def test_deconz_events(
     }
 
     event_changed_sensor = {
-        "r": "sensors",
         "id": "5",
         "state": {"buttonevent": 6002, "angle": 110, "xy": [0.5982, 0.3897]},
     }
-    await mock_websocket_data(event_changed_sensor)
-    await hass.async_block_till_done()
+    await sensor_ws_data(event_changed_sensor)
 
     device = device_registry.async_get_device(
         identifiers={(DECONZ_DOMAIN, "00:00:00:00:00:00:00:05")}
@@ -184,26 +157,8 @@ async def test_deconz_events(
 
     # Unsupported event
 
-    event_changed_sensor = {
-        "r": "sensors",
-        "id": "1",
-        "name": "other name",
-    }
-    await mock_websocket_data(event_changed_sensor)
-    await hass.async_block_till_done()
-
+    await sensor_ws_data({"id": "1", "name": "other name"})
     assert len(captured_events) == 4
-
-    await hass.config_entries.async_unload(config_entry_setup.entry_id)
-
-    states = hass.states.async_all()
-    assert len(hass.states.async_all()) == 3
-    for state in states:
-        assert state.state == STATE_UNAVAILABLE
-
-    await hass.config_entries.async_remove(config_entry_setup.entry_id)
-    await hass.async_block_till_done()
-    assert len(hass.states.async_all()) == 0
 
 
 @pytest.mark.parametrize(
@@ -273,8 +228,8 @@ async def test_deconz_events(
 async def test_deconz_alarm_events(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    config_entry_setup: ConfigEntry,
-    mock_websocket_data: WebsocketDataType,
+    config_entry_setup: MockConfigEntry,
+    sensor_ws_data: WebsocketDataType,
 ) -> None:
     """Test successful creation of deconz alarm events."""
     assert len(hass.states.async_all()) == 4
@@ -292,12 +247,7 @@ async def test_deconz_alarm_events(
 
     # Emergency event
 
-    event_changed_sensor = {
-        "r": "sensors",
-        "state": {"action": AncillaryControlAction.EMERGENCY},
-    }
-    await mock_websocket_data(event_changed_sensor)
-    await hass.async_block_till_done()
+    await sensor_ws_data({"state": {"action": AncillaryControlAction.EMERGENCY}})
 
     device = device_registry.async_get_device(
         identifiers={(DECONZ_DOMAIN, "00:00:00:00:00:00:00:01")}
@@ -313,12 +263,7 @@ async def test_deconz_alarm_events(
 
     # Fire event
 
-    event_changed_sensor = {
-        "r": "sensors",
-        "state": {"action": AncillaryControlAction.FIRE},
-    }
-    await mock_websocket_data(event_changed_sensor)
-    await hass.async_block_till_done()
+    await sensor_ws_data({"state": {"action": AncillaryControlAction.FIRE}})
 
     device = device_registry.async_get_device(
         identifiers={(DECONZ_DOMAIN, "00:00:00:00:00:00:00:01")}
@@ -334,12 +279,7 @@ async def test_deconz_alarm_events(
 
     # Invalid code event
 
-    event_changed_sensor = {
-        "r": "sensors",
-        "state": {"action": AncillaryControlAction.INVALID_CODE},
-    }
-    await mock_websocket_data(event_changed_sensor)
-    await hass.async_block_till_done()
+    await sensor_ws_data({"state": {"action": AncillaryControlAction.INVALID_CODE}})
 
     device = device_registry.async_get_device(
         identifiers={(DECONZ_DOMAIN, "00:00:00:00:00:00:00:01")}
@@ -355,12 +295,7 @@ async def test_deconz_alarm_events(
 
     # Panic event
 
-    event_changed_sensor = {
-        "r": "sensors",
-        "state": {"action": AncillaryControlAction.PANIC},
-    }
-    await mock_websocket_data(event_changed_sensor)
-    await hass.async_block_till_done()
+    await sensor_ws_data({"state": {"action": AncillaryControlAction.PANIC}})
 
     device = device_registry.async_get_device(
         identifiers={(DECONZ_DOMAIN, "00:00:00:00:00:00:00:01")}
@@ -376,36 +311,13 @@ async def test_deconz_alarm_events(
 
     # Only care for changes to specific action events
 
-    event_changed_sensor = {
-        "r": "sensors",
-        "state": {"action": AncillaryControlAction.ARMED_AWAY},
-    }
-    await mock_websocket_data(event_changed_sensor)
-    await hass.async_block_till_done()
-
+    await sensor_ws_data({"state": {"action": AncillaryControlAction.ARMED_AWAY}})
     assert len(captured_events) == 4
 
     # Only care for action events
 
-    event_changed_sensor = {
-        "r": "sensors",
-        "state": {"panel": AncillaryControlPanel.ARMED_AWAY},
-    }
-    await mock_websocket_data(event_changed_sensor)
-    await hass.async_block_till_done()
-
+    await sensor_ws_data({"state": {"panel": AncillaryControlPanel.ARMED_AWAY}})
     assert len(captured_events) == 4
-
-    await hass.config_entries.async_unload(config_entry_setup.entry_id)
-
-    states = hass.states.async_all()
-    assert len(hass.states.async_all()) == 4
-    for state in states:
-        assert state.state == STATE_UNAVAILABLE
-
-    await hass.config_entries.async_remove(config_entry_setup.entry_id)
-    await hass.async_block_till_done()
-    assert len(hass.states.async_all()) == 0
 
 
 @pytest.mark.parametrize(
@@ -439,8 +351,8 @@ async def test_deconz_alarm_events(
 async def test_deconz_presence_events(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    config_entry_setup: ConfigEntry,
-    mock_websocket_data: WebsocketDataType,
+    config_entry_setup: MockConfigEntry,
+    sensor_ws_data: WebsocketDataType,
 ) -> None:
     """Test successful creation of deconz presence events."""
     assert len(hass.states.async_all()) == 5
@@ -469,12 +381,7 @@ async def test_deconz_presence_events(
         PresenceStatePresenceEvent.LEFT_LEAVE,
         PresenceStatePresenceEvent.RIGHT_LEAVE,
     ):
-        event_changed_sensor = {
-            "r": "sensors",
-            "state": {"presenceevent": presence_event},
-        }
-        await mock_websocket_data(event_changed_sensor)
-        await hass.async_block_till_done()
+        await sensor_ws_data({"state": {"presenceevent": presence_event}})
 
         assert len(captured_events) == 1
         assert captured_events[0].data == {
@@ -487,25 +394,8 @@ async def test_deconz_presence_events(
 
     # Unsupported presence event
 
-    event_changed_sensor = {
-        "r": "sensors",
-        "state": {"presenceevent": PresenceStatePresenceEvent.NINE},
-    }
-    await mock_websocket_data(event_changed_sensor)
-    await hass.async_block_till_done()
-
+    await sensor_ws_data({"state": {"presenceevent": PresenceStatePresenceEvent.NINE}})
     assert len(captured_events) == 0
-
-    await hass.config_entries.async_unload(config_entry_setup.entry_id)
-
-    states = hass.states.async_all()
-    assert len(hass.states.async_all()) == 5
-    for state in states:
-        assert state.state == STATE_UNAVAILABLE
-
-    await hass.config_entries.async_remove(config_entry_setup.entry_id)
-    await hass.async_block_till_done()
-    assert len(hass.states.async_all()) == 0
 
 
 @pytest.mark.parametrize(
@@ -538,8 +428,8 @@ async def test_deconz_presence_events(
 async def test_deconz_relative_rotary_events(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    config_entry_setup: ConfigEntry,
-    mock_websocket_data: WebsocketDataType,
+    config_entry_setup: MockConfigEntry,
+    sensor_ws_data: WebsocketDataType,
 ) -> None:
     """Test successful creation of deconz relative rotary events."""
     assert len(hass.states.async_all()) == 1
@@ -560,15 +450,13 @@ async def test_deconz_relative_rotary_events(
 
     for rotary_event, duration, rotation in ((1, 100, 50), (2, 200, -50)):
         event_changed_sensor = {
-            "r": "sensors",
             "state": {
                 "rotaryevent": rotary_event,
                 "expectedeventduration": duration,
                 "expectedrotation": rotation,
-            },
+            }
         }
-        await mock_websocket_data(event_changed_sensor)
-        await hass.async_block_till_done()
+        await sensor_ws_data(event_changed_sensor)
 
         assert len(captured_events) == 1
         assert captured_events[0].data == {
@@ -583,25 +471,8 @@ async def test_deconz_relative_rotary_events(
 
     # Unsupported relative rotary event
 
-    event_changed_sensor = {
-        "r": "sensors",
-        "name": "123",
-    }
-    await mock_websocket_data(event_changed_sensor)
-    await hass.async_block_till_done()
-
+    await sensor_ws_data({"name": "123"})
     assert len(captured_events) == 0
-
-    await hass.config_entries.async_unload(config_entry_setup.entry_id)
-
-    states = hass.states.async_all()
-    assert len(hass.states.async_all()) == 1
-    for state in states:
-        assert state.state == STATE_UNAVAILABLE
-
-    await hass.config_entries.async_remove(config_entry_setup.entry_id)
-    await hass.async_block_till_done()
-    assert len(hass.states.async_all()) == 0
 
 
 @pytest.mark.parametrize(
@@ -627,7 +498,7 @@ async def test_deconz_relative_rotary_events(
 async def test_deconz_events_bad_unique_id(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    config_entry_setup: ConfigEntry,
+    config_entry_setup: MockConfigEntry,
 ) -> None:
     """Verify no devices are created if unique id is bad or missing."""
     assert len(hass.states.async_all()) == 1

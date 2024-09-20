@@ -6,12 +6,11 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
-from aioaseko import APIUnavailable, InvalidAuthCredentials, WebAccount
+from aioaseko import Aseko, AsekoAPIError, AsekoInvalidCredentials
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, CONF_UNIQUE_ID
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
 
@@ -34,15 +33,12 @@ class AsekoConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def get_account_info(self, email: str, password: str) -> dict:
         """Get account info from the mobile API and the web API."""
-        session = async_get_clientsession(self.hass)
-
-        web_account = WebAccount(session, email, password)
-        web_account_info = await web_account.login()
-
+        aseko = Aseko(email, password)
+        user = await aseko.login()
         return {
             CONF_EMAIL: email,
             CONF_PASSWORD: password,
-            CONF_UNIQUE_ID: web_account_info.user_id,
+            CONF_UNIQUE_ID: user.user_id,
         }
 
     async def async_step_user(
@@ -58,9 +54,9 @@ class AsekoConfigFlow(ConfigFlow, domain=DOMAIN):
                 info = await self.get_account_info(
                     user_input[CONF_EMAIL], user_input[CONF_PASSWORD]
                 )
-            except APIUnavailable:
+            except AsekoAPIError:
                 errors["base"] = "cannot_connect"
-            except InvalidAuthCredentials:
+            except AsekoInvalidCredentials:
                 errors["base"] = "invalid_auth"
             except Exception:
                 _LOGGER.exception("Unexpected exception")
@@ -101,7 +97,7 @@ class AsekoConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_reauth(
-        self, user_input: Mapping[str, Any]
+        self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Perform reauth upon an API authentication error."""
 
@@ -109,10 +105,10 @@ class AsekoConfigFlow(ConfigFlow, domain=DOMAIN):
             self.context["entry_id"]
         )
 
-        return await self.async_step_reauth_confirm(user_input)
+        return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
-        self, user_input: Mapping | None = None
+        self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Dialog that informs the user that reauth is required."""
 
@@ -122,9 +118,9 @@ class AsekoConfigFlow(ConfigFlow, domain=DOMAIN):
                 info = await self.get_account_info(
                     user_input[CONF_EMAIL], user_input[CONF_PASSWORD]
                 )
-            except APIUnavailable:
+            except AsekoAPIError:
                 errors["base"] = "cannot_connect"
-            except InvalidAuthCredentials:
+            except AsekoInvalidCredentials:
                 errors["base"] = "invalid_auth"
             except Exception:
                 _LOGGER.exception("Unexpected exception")

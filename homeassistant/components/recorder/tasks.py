@@ -323,31 +323,6 @@ class SynchronizeTask(RecorderTask):
 
 
 @dataclass(slots=True)
-class PostSchemaMigrationTask(RecorderTask):
-    """Post migration task to update schema."""
-
-    old_version: int
-    new_version: int
-
-    def run(self, instance: Recorder) -> None:
-        """Handle the task."""
-        instance._post_schema_migration(  # noqa: SLF001
-            self.old_version, self.new_version
-        )
-
-
-@dataclass(slots=True)
-class StatisticsTimestampMigrationCleanupTask(RecorderTask):
-    """An object to insert into the recorder queue to run a statistics migration cleanup task."""
-
-    def run(self, instance: Recorder) -> None:
-        """Run statistics timestamp cleanup task."""
-        if not statistics.cleanup_statistics_timestamp_migration(instance):
-            # Schedule a new statistics migration task if this one didn't finish
-            instance.queue_task(StatisticsTimestampMigrationCleanupTask())
-
-
-@dataclass(slots=True)
 class AdjustLRUSizeTask(RecorderTask):
     """An object to insert into the recorder queue to adjust the LRU size."""
 
@@ -356,33 +331,6 @@ class AdjustLRUSizeTask(RecorderTask):
     def run(self, instance: Recorder) -> None:
         """Handle the task to adjust the size."""
         instance._adjust_lru_size()  # noqa: SLF001
-
-
-@dataclass(slots=True)
-class EntityIDPostMigrationTask(RecorderTask):
-    """An object to insert into the recorder queue to cleanup after entity_ids migration."""
-
-    def run(self, instance: Recorder) -> None:
-        """Run entity_id post migration task."""
-        if (
-            not instance._post_migrate_entity_ids()  # noqa: SLF001
-        ):
-            # Schedule a new migration task if this one didn't finish
-            instance.queue_task(EntityIDPostMigrationTask())
-
-
-@dataclass(slots=True)
-class EventIdMigrationTask(RecorderTask):
-    """An object to insert into the recorder queue to cleanup legacy event_ids in the states table.
-
-    This task should only be queued if the ix_states_event_id index exists
-    since it is used to scan the states table and it will be removed after this
-    task is run if its no longer needed.
-    """
-
-    def run(self, instance: Recorder) -> None:
-        """Clean up the legacy event_id index on states."""
-        instance._cleanup_legacy_states_event_ids()  # noqa: SLF001
 
 
 @dataclass(slots=True)

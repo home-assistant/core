@@ -76,6 +76,6 @@ class GASelector:
     def _add_dpt(self, schema: dict[vol.Marker, Any]) -> None:
         """Add DPT validator to the schema."""
         if self.dpt is not None:
-            schema[vol.Required(CONF_DPT)] = vol.In([item.value for item in self.dpt])
+            schema[vol.Required(CONF_DPT)] = vol.In({item.value for item in self.dpt})
         else:
             schema[vol.Remove(CONF_DPT)] = object

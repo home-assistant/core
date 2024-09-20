@@ -1,12 +1,13 @@
 """deCONZ cover platform tests."""
 
 from collections.abc import Callable
+from unittest.mock import patch
 
 import pytest
+from syrupy import SnapshotAssertion
 
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
-    ATTR_CURRENT_TILT_POSITION,
     ATTR_POSITION,
     ATTR_TILT_POSITION,
     DOMAIN as COVER_DOMAIN,
@@ -19,17 +20,13 @@ from homeassistant.components.cover import (
     SERVICE_STOP_COVER,
     SERVICE_STOP_COVER_TILT,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    STATE_CLOSED,
-    STATE_OPEN,
-    STATE_UNAVAILABLE,
-)
+from homeassistant.const import ATTR_ENTITY_ID, STATE_OPEN, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
-from .conftest import WebsocketDataType
+from .conftest import ConfigEntryFactoryType, WebsocketDataType
 
+from tests.common import snapshot_platform
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
@@ -55,22 +52,20 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 )
 async def test_cover(
     hass: HomeAssistant,
-    config_entry_setup: ConfigEntry,
+    entity_registry: er.EntityRegistry,
+    config_entry_factory: ConfigEntryFactoryType,
     mock_put_request: Callable[[str, str], AiohttpClientMocker],
-    mock_websocket_data: WebsocketDataType,
+    light_ws_data: WebsocketDataType,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test that all supported cover entities are created."""
-    assert len(hass.states.async_all()) == 2
-    cover = hass.states.get("cover.window_covering_device")
-    assert cover.state == STATE_CLOSED
-    assert cover.attributes[ATTR_CURRENT_POSITION] == 0
-    assert not hass.states.get("cover.unsupported_cover")
+    with patch("homeassistant.components.deconz.PLATFORMS", [Platform.COVER]):
+        config_entry = await config_entry_factory()
+    await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
     # Event signals cover is open
 
-    await mock_websocket_data({"r": "lights", "state": {"lift": 0, "open": True}})
-    await hass.async_block_till_done()
-
+    await light_ws_data({"state": {"lift": 0, "open": True}})
     cover = hass.states.get("cover.window_covering_device")
     assert cover.state == STATE_OPEN
     assert cover.attributes[ATTR_CURRENT_POSITION] == 100
@@ -119,17 +114,6 @@ async def test_cover(
     )
     assert aioclient_mock.mock_calls[4][2] == {"stop": True}
 
-    await hass.config_entries.async_unload(config_entry_setup.entry_id)
-
-    states = hass.states.async_all()
-    assert len(states) == 2
-    for state in states:
-        assert state.state == STATE_UNAVAILABLE
-
-    await hass.config_entries.async_remove(config_entry_setup.entry_id)
-    await hass.async_block_till_done()
-    assert len(hass.states.async_all()) == 0
-
 
 @pytest.mark.parametrize(
     "light_payload",
@@ -155,15 +139,17 @@ async def test_cover(
         }
     ],
 )
-@pytest.mark.usefixtures("config_entry_setup")
 async def test_tilt_cover(
-    hass: HomeAssistant, mock_put_request: Callable[[str, str], AiohttpClientMocker]
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    config_entry_factory: ConfigEntryFactoryType,
+    mock_put_request: Callable[[str, str], AiohttpClientMocker],
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test that tilting a cover works."""
-    assert len(hass.states.async_all()) == 1
-    covering_device = hass.states.get("cover.covering_device")
-    assert covering_device.state == STATE_OPEN
-    assert covering_device.attributes[ATTR_CURRENT_TILT_POSITION] == 100
+    with patch("homeassistant.components.deconz.PLATFORMS", [Platform.COVER]):
+        config_entry = await config_entry_factory()
+    await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
     # Verify service calls for tilting cover
 
@@ -234,15 +220,17 @@ async def test_tilt_cover(
         }
     ],
 )
-@pytest.mark.usefixtures("config_entry_setup")
 async def test_level_controllable_output_cover(
-    hass: HomeAssistant, mock_put_request: Callable[[str, str], AiohttpClientMocker]
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    config_entry_factory: ConfigEntryFactoryType,
+    mock_put_request: Callable[[str, str], AiohttpClientMocker],
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test that tilting a cover works."""
-    assert len(hass.states.async_all()) == 1
-    covering_device = hass.states.get("cover.vent")
-    assert covering_device.state == STATE_OPEN
-    assert covering_device.attributes[ATTR_CURRENT_TILT_POSITION] == 97
+    with patch("homeassistant.components.deconz.PLATFORMS", [Platform.COVER]):
+        config_entry = await config_entry_factory()
+    await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
     # Verify service calls for tilting cover
 

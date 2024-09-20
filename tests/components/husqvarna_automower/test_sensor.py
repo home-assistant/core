@@ -73,12 +73,12 @@ async def test_next_start_sensor(
     await setup_integration(hass, mock_config_entry)
     state = hass.states.get("sensor.test_mower_1_next_start")
     assert state is not None
-    assert state.state == "2023-06-05T19:00:00+00:00"
+    assert state.state == "2023-06-05T17:00:00+00:00"
 
     values = mower_list_to_dictionary_dataclass(
         load_json_value_fixture("mower.json", DOMAIN)
     )
-    values[TEST_MOWER_ID].planner.next_start_datetime = None
+    values[TEST_MOWER_ID].planner.next_start_datetime_naive = None
     mock_automower_client.get_status.return_value = values
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)

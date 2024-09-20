@@ -12,7 +12,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import DOMAIN, PRODUCT, BleBoxEntity
+from .const import DOMAIN, PRODUCT
+from .entity import BleBoxEntity
 
 BINARY_SENSOR_TYPES = (
     BinarySensorEntityDescription(

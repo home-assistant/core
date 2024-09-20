@@ -10,7 +10,8 @@ from homeassistant.const import STATE_OFF
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import GeniusHeatingZone, GeniusHubConfigEntry
+from . import GeniusHubConfigEntry
+from .entity import GeniusHeatingZone
 
 STATE_AUTO = "auto"
 STATE_MANUAL = "manual"

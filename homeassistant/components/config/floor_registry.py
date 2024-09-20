@@ -5,7 +5,7 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
-from homeassistant.components.websocket_api.connection import ActiveConnection
+from homeassistant.components.websocket_api import ActiveConnection
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import floor_registry as fr
 from homeassistant.helpers.floor_registry import FloorEntry
@@ -132,8 +132,10 @@ def _entry_dict(entry: FloorEntry) -> dict[str, Any]:
     """Convert entry to API format."""
     return {
         "aliases": list(entry.aliases),
+        "created_at": entry.created_at.timestamp(),
         "floor_id": entry.floor_id,
         "icon": entry.icon,
         "level": entry.level,
         "name": entry.name,
+        "modified_at": entry.modified_at.timestamp(),
     }

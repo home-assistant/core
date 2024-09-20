@@ -87,10 +87,9 @@ class LabelRegistryStore(Store[LabelRegistryStoreData]):
         if old_major_version == 1:
             if old_minor_version < 2:
                 # Version 1.2 implements migration and adds created_at and modified_at
+                created_at = utc_from_timestamp(0).isoformat()
                 for label in old_data["labels"]:
-                    label["created_at"] = label["modified_at"] = utc_from_timestamp(
-                        0
-                    ).isoformat()
+                    label["created_at"] = label["modified_at"] = created_at
 
         return old_data  # type: ignore[return-value]
 

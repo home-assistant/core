@@ -317,6 +317,7 @@
       'seg': dict({
         '0': dict({
           'bri': 255,
+          'cct': 127,
           'cln': -1,
           'col': list([
             list([
@@ -349,6 +350,7 @@
         }),
         '1': dict({
           'bri': 255,
+          'cct': 127,
           'cln': -1,
           'col': list([
             list([

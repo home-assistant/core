@@ -945,7 +945,7 @@ class Integration:
         except IntegrationNotFound as err:
             _LOGGER.error(
                 (
-                    "Unable to resolve dependencies for %s:  we are unable to resolve"
+                    "Unable to resolve dependencies for %s: unable to resolve"
                     " (sub)dependency %s"
                 ),
                 self.domain,
@@ -954,7 +954,7 @@ class Integration:
         except CircularDependency as err:
             _LOGGER.error(
                 (
-                    "Unable to resolve dependencies for %s:  it contains a circular"
+                    "Unable to resolve dependencies for %s: it contains a circular"
                     " dependency: %s -> %s"
                 ),
                 self.domain,
@@ -1557,7 +1557,7 @@ class Components:
         report(
             (
                 f"accesses hass.components.{comp_name}."
-                " This is deprecated and will stop working in Home Assistant 2024.9, it"
+                " This is deprecated and will stop working in Home Assistant 2025.3, it"
                 f" should be updated to import functions used from {comp_name} directly"
             ),
             error_if_core=False,

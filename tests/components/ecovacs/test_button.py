@@ -42,7 +42,7 @@ def platforms() -> Platform | list[Platform]:
                     ResetLifeSpan(LifeSpan.FILTER),
                 ),
                 (
-                    "button.ozmo_950_reset_side_brushes_lifespan",
+                    "button.ozmo_950_reset_side_brush_lifespan",
                     ResetLifeSpan(LifeSpan.SIDE_BRUSH),
                 ),
             ],
@@ -107,7 +107,7 @@ async def test_buttons(
             [
                 "button.ozmo_950_reset_main_brush_lifespan",
                 "button.ozmo_950_reset_filter_lifespan",
-                "button.ozmo_950_reset_side_brushes_lifespan",
+                "button.ozmo_950_reset_side_brush_lifespan",
             ],
         ),
         (

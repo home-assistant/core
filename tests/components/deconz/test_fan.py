@@ -1,8 +1,10 @@
 """deCONZ fan platform tests."""
 
 from collections.abc import Callable
+from unittest.mock import patch
 
 import pytest
+from syrupy import SnapshotAssertion
 
 from homeassistant.components.fan import (
     ATTR_PERCENTAGE,
@@ -11,12 +13,13 @@ from homeassistant.components.fan import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, STATE_UNAVAILABLE
+from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
-from .conftest import WebsocketDataType
+from .conftest import ConfigEntryFactoryType, WebsocketDataType
 
+from tests.common import snapshot_platform
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
@@ -44,45 +47,27 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 )
 async def test_fans(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
     aioclient_mock: AiohttpClientMocker,
-    config_entry_setup: ConfigEntry,
+    config_entry_factory: ConfigEntryFactoryType,
     mock_put_request: Callable[[str, str], AiohttpClientMocker],
-    mock_websocket_data: WebsocketDataType,
+    light_ws_data: WebsocketDataType,
 ) -> None:
     """Test that all supported fan entities are created."""
-    assert len(hass.states.async_all()) == 2  # Light and fan
-    assert hass.states.get("fan.ceiling_fan").state == STATE_ON
-    assert hass.states.get("fan.ceiling_fan").attributes[ATTR_PERCENTAGE] == 100
+    with patch("homeassistant.components.deconz.PLATFORMS", [Platform.FAN]):
+        config_entry = await config_entry_factory()
+
+    await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
     # Test states
 
-    await mock_websocket_data({"r": "lights", "state": {"speed": 1}})
-    await hass.async_block_till_done()
+    for speed, percent in (1, 25), (2, 50), (3, 75), (4, 100):
+        await light_ws_data({"state": {"speed": speed}})
+        assert hass.states.get("fan.ceiling_fan").state == STATE_ON
+        assert hass.states.get("fan.ceiling_fan").attributes[ATTR_PERCENTAGE] == percent
 
-    assert hass.states.get("fan.ceiling_fan").state == STATE_ON
-    assert hass.states.get("fan.ceiling_fan").attributes[ATTR_PERCENTAGE] == 25
-
-    await mock_websocket_data({"r": "lights", "state": {"speed": 2}})
-    await hass.async_block_till_done()
-
-    assert hass.states.get("fan.ceiling_fan").state == STATE_ON
-    assert hass.states.get("fan.ceiling_fan").attributes[ATTR_PERCENTAGE] == 50
-
-    await mock_websocket_data({"r": "lights", "state": {"speed": 3}})
-    await hass.async_block_till_done()
-
-    assert hass.states.get("fan.ceiling_fan").state == STATE_ON
-    assert hass.states.get("fan.ceiling_fan").attributes[ATTR_PERCENTAGE] == 75
-
-    await mock_websocket_data({"r": "lights", "state": {"speed": 4}})
-    await hass.async_block_till_done()
-
-    assert hass.states.get("fan.ceiling_fan").state == STATE_ON
-    assert hass.states.get("fan.ceiling_fan").attributes[ATTR_PERCENTAGE] == 100
-
-    await mock_websocket_data({"r": "lights", "state": {"speed": 0}})
-    await hass.async_block_till_done()
-
+    await light_ws_data({"state": {"speed": 0}})
     assert hass.states.get("fan.ceiling_fan").state == STATE_OFF
     assert hass.states.get("fan.ceiling_fan").attributes[ATTR_PERCENTAGE] == 0
 
@@ -120,71 +105,20 @@ async def test_fans(
     )
     assert aioclient_mock.mock_calls[3][2] == {"speed": 1}
 
-    # Service set fan percentage to 20%
+    # Service set fan percentage
 
-    await hass.services.async_call(
-        FAN_DOMAIN,
-        SERVICE_SET_PERCENTAGE,
-        {ATTR_ENTITY_ID: "fan.ceiling_fan", ATTR_PERCENTAGE: 20},
-        blocking=True,
-    )
-    assert aioclient_mock.mock_calls[4][2] == {"speed": 1}
-
-    # Service set fan percentage to 40%
-
-    await hass.services.async_call(
-        FAN_DOMAIN,
-        SERVICE_SET_PERCENTAGE,
-        {ATTR_ENTITY_ID: "fan.ceiling_fan", ATTR_PERCENTAGE: 40},
-        blocking=True,
-    )
-    assert aioclient_mock.mock_calls[5][2] == {"speed": 2}
-
-    # Service set fan percentage to 60%
-
-    await hass.services.async_call(
-        FAN_DOMAIN,
-        SERVICE_SET_PERCENTAGE,
-        {ATTR_ENTITY_ID: "fan.ceiling_fan", ATTR_PERCENTAGE: 60},
-        blocking=True,
-    )
-    assert aioclient_mock.mock_calls[6][2] == {"speed": 3}
-
-    # Service set fan percentage to 80%
-
-    await hass.services.async_call(
-        FAN_DOMAIN,
-        SERVICE_SET_PERCENTAGE,
-        {ATTR_ENTITY_ID: "fan.ceiling_fan", ATTR_PERCENTAGE: 80},
-        blocking=True,
-    )
-    assert aioclient_mock.mock_calls[7][2] == {"speed": 4}
-
-    # Service set fan percentage to 0% does not equal off
-
-    await hass.services.async_call(
-        FAN_DOMAIN,
-        SERVICE_SET_PERCENTAGE,
-        {ATTR_ENTITY_ID: "fan.ceiling_fan", ATTR_PERCENTAGE: 0},
-        blocking=True,
-    )
-    assert aioclient_mock.mock_calls[8][2] == {"speed": 0}
+    for percent, speed in (20, 1), (40, 2), (60, 3), (80, 4), (0, 0):
+        aioclient_mock.mock_calls.clear()
+        await hass.services.async_call(
+            FAN_DOMAIN,
+            SERVICE_SET_PERCENTAGE,
+            {ATTR_ENTITY_ID: "fan.ceiling_fan", ATTR_PERCENTAGE: percent},
+            blocking=True,
+        )
+        assert aioclient_mock.mock_calls[0][2] == {"speed": speed}
 
     # Events with an unsupported speed does not get converted
 
-    await mock_websocket_data({"r": "lights", "state": {"speed": 5}})
-    await hass.async_block_till_done()
-
+    await light_ws_data({"state": {"speed": 5}})
     assert hass.states.get("fan.ceiling_fan").state == STATE_ON
     assert not hass.states.get("fan.ceiling_fan").attributes[ATTR_PERCENTAGE]
-
-    await hass.config_entries.async_unload(config_entry_setup.entry_id)
-
-    states = hass.states.async_all()
-    assert len(states) == 2
-    for state in states:
-        assert state.state == STATE_UNAVAILABLE
-
-    await hass.config_entries.async_remove(config_entry_setup.entry_id)
-    await hass.async_block_till_done()
-    assert len(hass.states.async_all()) == 0

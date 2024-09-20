@@ -13,7 +13,8 @@ from homeassistant.components.climate import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import GeniusHeatingZone, GeniusHubConfigEntry
+from . import GeniusHubConfigEntry
+from .entity import GeniusHeatingZone
 
 # GeniusHub Zones support: Off, Timer, Override/Boost, Footprint & Linked modes
 HA_HVAC_TO_GH = {HVACMode.OFF: "off", HVACMode.HEAT: "timer"}

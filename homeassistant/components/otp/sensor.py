@@ -15,6 +15,7 @@ from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_NAME, CONF_TOKEN
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
@@ -76,12 +77,19 @@ class TOTPSensor(SensorEntity):
     _attr_should_poll = False
     _attr_native_value: StateType = None
     _next_expiration: float | None = None
+    _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(self, name: str, token: str, entry_id: str) -> None:
         """Initialize the sensor."""
-        self._attr_name = name
         self._attr_unique_id = entry_id
         self._otp = pyotp.TOTP(token)
+
+        self.device_info = DeviceInfo(
+            name=name,
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={(DOMAIN, entry_id)},
+        )
 
     async def async_added_to_hass(self) -> None:
         """Handle when an entity is about to be added to Home Assistant."""

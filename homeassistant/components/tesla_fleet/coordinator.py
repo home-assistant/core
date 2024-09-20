@@ -13,6 +13,7 @@ from tesla_fleet_api.exceptions import (
     TeslaFleetError,
     VehicleOffline,
 )
+from tesla_fleet_api.ratecalculator import RateCalculator
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
@@ -20,7 +21,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import LOGGER, TeslaFleetState
 
-VEHICLE_INTERVAL_SECONDS = 120
+VEHICLE_INTERVAL_SECONDS = 90
 VEHICLE_INTERVAL = timedelta(seconds=VEHICLE_INTERVAL_SECONDS)
 VEHICLE_WAIT = timedelta(minutes=15)
 
@@ -56,6 +57,7 @@ class TeslaFleetVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     updated_once: bool
     pre2021: bool
     last_active: datetime
+    rate: RateCalculator
 
     def __init__(
         self, hass: HomeAssistant, api: VehicleSpecific, product: dict
@@ -65,27 +67,31 @@ class TeslaFleetVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             hass,
             LOGGER,
             name="Tesla Fleet Vehicle",
-            update_interval=timedelta(seconds=5),
+            update_interval=VEHICLE_INTERVAL,
         )
         self.api = api
         self.data = flatten(product)
         self.updated_once = False
         self.last_active = datetime.now()
+        self.rate = RateCalculator(200, 86400, VEHICLE_INTERVAL_SECONDS, 3600, 5)
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Update vehicle data using TeslaFleet API."""
 
-        self.update_interval = VEHICLE_INTERVAL
-
         try:
             # Check if the vehicle is awake using a non-rate limited API call
-            state = (await self.api.vehicle())["response"]
-            if state and state["state"] != TeslaFleetState.ONLINE:
-                self.data["state"] = state["state"]
+            if self.data["state"] != TeslaFleetState.ONLINE:
+                response = await self.api.vehicle()
+                self.data["state"] = response["response"]["state"]
+
+            if self.data["state"] != TeslaFleetState.ONLINE:
                 return self.data
 
             # This is a rated limited API call
-            data = (await self.api.vehicle_data(endpoints=ENDPOINTS))["response"]
+            self.rate.consume()
+            response = await self.api.vehicle_data(endpoints=ENDPOINTS)
+            data = response["response"]
+
         except VehicleOffline:
             self.data["state"] = TeslaFleetState.ASLEEP
             return self.data
@@ -102,6 +108,9 @@ class TeslaFleetVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             raise ConfigEntryAuthFailed from e
         except TeslaFleetError as e:
             raise UpdateFailed(e.message) from e
+
+        # Calculate ideal refresh interval
+        self.update_interval = timedelta(seconds=self.rate.calculate())
 
         self.updated_once = True
 

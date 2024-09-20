@@ -1,5 +1,7 @@
 """Test area_registry API."""
 
+from datetime import datetime
+
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_unordered import unordered
@@ -28,11 +30,11 @@ async def test_list_areas(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test list entries."""
-    created_area1 = "2024-07-16T13:30:00.900075+00:00"
+    created_area1 = datetime.fromisoformat("2024-07-16T13:30:00.900075+00:00")
     freezer.move_to(created_area1)
     area1 = area_registry.async_create("mock 1")
 
-    created_area2 = "2024-07-16T13:45:00.900075+00:00"
+    created_area2 = datetime.fromisoformat("2024-07-16T13:45:00.900075+00:00")
     freezer.move_to(created_area2)
     area2 = area_registry.async_create(
         "mock 2",
@@ -55,8 +57,8 @@ async def test_list_areas(
             "labels": [],
             "name": "mock 1",
             "picture": None,
-            "created_at": created_area1,
-            "modified_at": created_area1,
+            "created_at": created_area1.timestamp(),
+            "modified_at": created_area1.timestamp(),
         },
         {
             "aliases": unordered(["alias_1", "alias_2"]),
@@ -66,8 +68,8 @@ async def test_list_areas(
             "labels": unordered(["label_1", "label_2"]),
             "name": "mock 2",
             "picture": "/image/example.png",
-            "created_at": created_area2,
-            "modified_at": created_area2,
+            "created_at": created_area2.timestamp(),
+            "modified_at": created_area2.timestamp(),
         },
     ]
 
@@ -93,8 +95,8 @@ async def test_create_area(
         "labels": [],
         "name": "mock",
         "picture": None,
-        "created_at": utcnow().isoformat(),
-        "modified_at": utcnow().isoformat(),
+        "created_at": utcnow().timestamp(),
+        "modified_at": utcnow().timestamp(),
     }
     assert len(area_registry.areas) == 1
 
@@ -121,8 +123,8 @@ async def test_create_area(
         "labels": unordered(["label_1", "label_2"]),
         "name": "mock 2",
         "picture": "/image/example.png",
-        "created_at": utcnow().isoformat(),
-        "modified_at": utcnow().isoformat(),
+        "created_at": utcnow().timestamp(),
+        "modified_at": utcnow().timestamp(),
     }
     assert len(area_registry.areas) == 2
 
@@ -185,10 +187,10 @@ async def test_update_area(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test update entry."""
-    created_at = "2024-07-16T13:30:00.900075+00:00"
+    created_at = datetime.fromisoformat("2024-07-16T13:30:00.900075+00:00")
     freezer.move_to(created_at)
     area = area_registry.async_create("mock 1")
-    modified_at = "2024-07-16T13:45:00.900075+00:00"
+    modified_at = datetime.fromisoformat("2024-07-16T13:45:00.900075+00:00")
     freezer.move_to(modified_at)
 
     await client.send_json_auto_id(
@@ -214,12 +216,12 @@ async def test_update_area(
         "labels": unordered(["label_1", "label_2"]),
         "name": "mock 2",
         "picture": "/image/example.png",
-        "created_at": created_at,
-        "modified_at": modified_at,
+        "created_at": created_at.timestamp(),
+        "modified_at": modified_at.timestamp(),
     }
     assert len(area_registry.areas) == 1
 
-    modified_at = "2024-07-16T13:50:00.900075+00:00"
+    modified_at = datetime.fromisoformat("2024-07-16T13:50:00.900075+00:00")
     freezer.move_to(modified_at)
 
     await client.send_json_auto_id(
@@ -244,8 +246,8 @@ async def test_update_area(
         "labels": [],
         "name": "mock 2",
         "picture": None,
-        "created_at": created_at,
-        "modified_at": modified_at,
+        "created_at": created_at.timestamp(),
+        "modified_at": modified_at.timestamp(),
     }
     assert len(area_registry.areas) == 1
 

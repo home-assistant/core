@@ -199,7 +199,7 @@ async def test_media_player_is_setup(hass: HomeAssistant) -> None:
     assert len(hass.data[PS4_DATA].devices) == 1
 
 
-async def setup_mock_component(hass):
+async def setup_mock_component(hass: HomeAssistant) -> None:
     """Set up Mock Media Player."""
     entry = MockConfigEntry(domain=ps4.DOMAIN, data=MOCK_DATA, version=VERSION)
     entry.add_to_manager(hass.config_entries)
@@ -269,9 +269,7 @@ async def test_send_command(hass: HomeAssistant) -> None:
     """Test send_command service."""
     await setup_mock_component(hass)
 
-    mock_func = "{}{}".format(
-        "homeassistant.components.ps4", ".media_player.PS4Device.async_send_command"
-    )
+    mock_func = "homeassistant.components.ps4.media_player.PS4Device.async_send_command"
 
     mock_devices = hass.data[PS4_DATA].devices
     assert len(mock_devices) == 1

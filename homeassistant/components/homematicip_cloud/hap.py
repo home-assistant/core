@@ -104,7 +104,7 @@ class HomematicipHAP:
             _LOGGER.error("Error connecting with HomematicIP Cloud: %s", err)
             return False
 
-        _LOGGER.info(
+        _LOGGER.debug(
             "Connected to HomematicIP with HAP %s", self.config_entry.unique_id
         )
 
@@ -220,7 +220,7 @@ class HomematicipHAP:
         if self._retry_task is not None:
             self._retry_task.cancel()
         await self.home.disable_events()
-        _LOGGER.info("Closed connection to HomematicIP cloud server")
+        _LOGGER.debug("Closed connection to HomematicIP cloud server")
         await self.hass.config_entries.async_unload_platforms(
             self.config_entry, PLATFORMS
         )

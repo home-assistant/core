@@ -223,8 +223,10 @@ CRITICAL_INTEGRATIONS = {
 SETUP_ORDER = (
     # Load logging and http deps as soon as possible
     ("logging, http deps", LOGGING_AND_HTTP_DEPS_INTEGRATIONS),
-    # Setup frontend and recorder
-    ("frontend, recorder", {*FRONTEND_INTEGRATIONS, *RECORDER_INTEGRATIONS}),
+    # Setup frontend
+    ("frontend", FRONTEND_INTEGRATIONS),
+    # Setup recorder
+    ("recorder", RECORDER_INTEGRATIONS),
     # Start up debuggers. Start these first in case they want to wait.
     ("debugger", DEBUGGER_INTEGRATIONS),
 )
@@ -584,10 +586,10 @@ async def async_enable_logging(
     logging.getLogger("aiohttp.access").setLevel(logging.WARNING)
     logging.getLogger("httpx").setLevel(logging.WARNING)
 
-    sys.excepthook = lambda *args: logging.getLogger(None).exception(
+    sys.excepthook = lambda *args: logging.getLogger().exception(
         "Uncaught exception", exc_info=args
     )
-    threading.excepthook = lambda args: logging.getLogger(None).exception(
+    threading.excepthook = lambda args: logging.getLogger().exception(
         "Uncaught thread exception",
         exc_info=(  # type: ignore[arg-type]
             args.exc_type,
@@ -614,10 +616,9 @@ async def async_enable_logging(
             _create_log_file, err_log_path, log_rotate_days
         )
 
-        err_handler.setLevel(logging.INFO if verbose else logging.WARNING)
         err_handler.setFormatter(logging.Formatter(fmt, datefmt=FORMAT_DATETIME))
 
-        logger = logging.getLogger("")
+        logger = logging.getLogger()
         logger.addHandler(err_handler)
         logger.setLevel(logging.INFO if verbose else logging.WARNING)
 
@@ -906,7 +907,13 @@ async def _async_resolve_domains_to_setup(
             await asyncio.gather(*resolve_dependencies_tasks)
 
         for itg in integrations_to_process:
-            for dep in itg.all_dependencies:
+            try:
+                all_deps = itg.all_dependencies
+            except RuntimeError:
+                # Integration.all_dependencies raises RuntimeError if
+                # dependencies could not be resolved
+                continue
+            for dep in all_deps:
                 if dep in domains_to_setup:
                     continue
                 domains_to_setup.add(dep)

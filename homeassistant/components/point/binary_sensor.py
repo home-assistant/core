@@ -7,7 +7,7 @@ import logging
 from pypoint import EVENTS
 
 from homeassistant.components.binary_sensor import (
-    DOMAIN,
+    DOMAIN as BINARY_SENSOR_DOMAIN,
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
@@ -49,7 +49,7 @@ async def async_setup_entry(
 
     async def async_discover_sensor(device_id):
         """Discover and add a discovered sensor."""
-        client = hass.data[POINT_DOMAIN][config_entry.entry_id]
+        client = config_entry.runtime_data.client
         async_add_entities(
             (
                 MinutPointBinarySensor(client, device_id, device_name)
@@ -60,7 +60,9 @@ async def async_setup_entry(
         )
 
     async_dispatcher_connect(
-        hass, POINT_DISCOVERY_NEW.format(DOMAIN, POINT_DOMAIN), async_discover_sensor
+        hass,
+        POINT_DISCOVERY_NEW.format(BINARY_SENSOR_DOMAIN, POINT_DOMAIN),
+        async_discover_sensor,
     )
 
 

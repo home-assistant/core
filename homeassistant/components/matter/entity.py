@@ -44,6 +44,7 @@ class MatterEntity(Entity):
     """Entity class for Matter devices."""
 
     _attr_has_entity_name = True
+    _attr_should_poll = False
     _name_postfix: str | None = None
 
     def __init__(
