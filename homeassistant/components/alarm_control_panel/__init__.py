@@ -33,6 +33,7 @@ from homeassistant.helpers.deprecation import (
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util.hass_dict import HassKey
 
 from .const import (  # noqa: F401
     _DEPRECATED_FORMAT_NUMBER,
@@ -52,6 +53,7 @@ from .const import (  # noqa: F401
 
 _LOGGER: Final = logging.getLogger(__name__)
 
+DOMAIN_DATA: HassKey[EntityComponent[AlarmControlPanelEntity]] = HassKey(DOMAIN)
 ENTITY_ID_FORMAT: Final = DOMAIN + ".{}"
 PLATFORM_SCHEMA: Final = cv.PLATFORM_SCHEMA
 PLATFORM_SCHEMA_BASE: Final = cv.PLATFORM_SCHEMA_BASE
@@ -69,7 +71,7 @@ ALARM_SERVICE_SCHEMA: Final = make_entity_service_schema(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Track states and offer events for sensors."""
-    component = hass.data[DOMAIN] = EntityComponent[AlarmControlPanelEntity](
+    component = hass.data[DOMAIN_DATA] = EntityComponent[AlarmControlPanelEntity](
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )
 
@@ -122,14 +124,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    component: EntityComponent[AlarmControlPanelEntity] = hass.data[DOMAIN]
-    return await component.async_setup_entry(entry)
+    return await hass.data[DOMAIN_DATA].async_setup_entry(entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    component: EntityComponent[AlarmControlPanelEntity] = hass.data[DOMAIN]
-    return await component.async_unload_entry(entry)
+    return await hass.data[DOMAIN_DATA].async_unload_entry(entry)
 
 
 class AlarmControlPanelEntityDescription(EntityDescription, frozen_or_thawed=True):

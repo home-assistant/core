@@ -3,6 +3,8 @@
 from datetime import datetime
 import logging
 
+from aioautomower.model import make_name_string
+
 from homeassistant.components.calendar import CalendarEntity, CalendarEvent
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -54,8 +56,13 @@ class AutomowerCalendarEntity(AutomowerBaseEntity, CalendarEntity):
         _LOGGER.debug("program_event %s", program_event)
         if not program_event:
             return None
+        work_area_name = None
+        if self.mower_attributes.work_area_dict and program_event.work_area_id:
+            work_area_name = self.mower_attributes.work_area_dict[
+                program_event.work_area_id
+            ]
         return CalendarEvent(
-            summary=program_event.schedule_name,
+            summary=make_name_string(work_area_name, program_event.schedule_no),
             start=program_event.start.replace(tzinfo=dt_util.DEFAULT_TIME_ZONE),
             end=program_event.end.replace(tzinfo=dt_util.DEFAULT_TIME_ZONE),
             rrule=program_event.rrule_str,
@@ -75,12 +82,19 @@ class AutomowerCalendarEntity(AutomowerBaseEntity, CalendarEntity):
             start_date,
             end_date,
         )
-        return [
-            CalendarEvent(
-                summary=program_event.schedule_name,
-                start=program_event.start.replace(tzinfo=start_date.tzinfo),
-                end=program_event.end.replace(tzinfo=start_date.tzinfo),
-                rrule=program_event.rrule_str,
+        calendar_events = []
+        for program_event in cursor:
+            work_area_name = None
+            if self.mower_attributes.work_area_dict and program_event.work_area_id:
+                work_area_name = self.mower_attributes.work_area_dict[
+                    program_event.work_area_id
+                ]
+            calendar_events.append(
+                CalendarEvent(
+                    summary=make_name_string(work_area_name, program_event.schedule_no),
+                    start=program_event.start.replace(tzinfo=start_date.tzinfo),
+                    end=program_event.end.replace(tzinfo=start_date.tzinfo),
+                    rrule=program_event.rrule_str,
+                )
             )
-            for program_event in cursor
-        ]
+        return calendar_events

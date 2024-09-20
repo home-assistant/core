@@ -9,10 +9,8 @@ from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity_component import EntityComponent
 
-from .const import DOMAIN
-from .entity import AssistSatelliteEntity
+from .const import DOMAIN, DOMAIN_DATA
 
 
 @callback
@@ -38,8 +36,7 @@ async def websocket_intercept_wake_word(
     msg: dict[str, Any],
 ) -> None:
     """Intercept the next wake word from a satellite."""
-    component: EntityComponent[AssistSatelliteEntity] = hass.data[DOMAIN]
-    satellite = component.get_entity(msg["entity_id"])
+    satellite = hass.data[DOMAIN_DATA].get_entity(msg["entity_id"])
     if satellite is None:
         connection.send_error(
             msg["id"], websocket_api.ERR_NOT_FOUND, "Entity not found"
@@ -77,8 +74,7 @@ def websocket_get_configuration(
     msg: dict[str, Any],
 ) -> None:
     """Get the current satellite configuration."""
-    component: EntityComponent[AssistSatelliteEntity] = hass.data[DOMAIN]
-    satellite = component.get_entity(msg["entity_id"])
+    satellite = hass.data[DOMAIN_DATA].get_entity(msg["entity_id"])
     if satellite is None:
         connection.send_error(
             msg["id"], websocket_api.ERR_NOT_FOUND, "Entity not found"
@@ -108,8 +104,7 @@ async def websocket_set_wake_words(
     msg: dict[str, Any],
 ) -> None:
     """Set the active wake words for the satellite."""
-    component: EntityComponent[AssistSatelliteEntity] = hass.data[DOMAIN]
-    satellite = component.get_entity(msg["entity_id"])
+    satellite = hass.data[DOMAIN_DATA].get_entity(msg["entity_id"])
     if satellite is None:
         connection.send_error(
             msg["id"], websocket_api.ERR_NOT_FOUND, "Entity not found"

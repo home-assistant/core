@@ -617,9 +617,11 @@ class ZHAGatewayProxy(EventBase):
                     ATTR_NWK: str(event.device_info.nwk),
                     ATTR_IEEE: str(event.device_info.ieee),
                     DEVICE_PAIRING_STATUS: event.device_info.pairing_status.name,
-                    ATTR_MODEL: event.device_info.model
-                    if event.device_info.model
-                    else UNKNOWN_MODEL,
+                    ATTR_MODEL: (
+                        event.device_info.model
+                        if event.device_info.model
+                        else UNKNOWN_MODEL
+                    ),
                     ATTR_MANUFACTURER: manuf if manuf else UNKNOWN_MANUFACTURER,
                     ATTR_SIGNATURE: event.device_info.signature,
                 },
@@ -922,9 +924,7 @@ class LogRelayHandler(logging.Handler):
         hass_path: str = HOMEASSISTANT_PATH[0]
         config_dir = self.hass.config.config_dir
         self.paths_re = re.compile(
-            r"(?:{})/(.*)".format(
-                "|".join([re.escape(x) for x in (hass_path, config_dir)])
-            )
+            rf"(?:{re.escape(hass_path)}|{re.escape(config_dir)})/(.*)"
         )
 
     def emit(self, record: LogRecord) -> None:
@@ -1025,9 +1025,9 @@ def cluster_command_schema_to_vol_schema(schema: CommandSchema) -> vol.Schema:
     """Convert a cluster command schema to a voluptuous schema."""
     return vol.Schema(
         {
-            vol.Optional(field.name)
-            if field.optional
-            else vol.Required(field.name): schema_type_to_vol(field.type)
+            (
+                vol.Optional(field.name) if field.optional else vol.Required(field.name)
+            ): schema_type_to_vol(field.type)
             for field in schema.fields
         }
     )
