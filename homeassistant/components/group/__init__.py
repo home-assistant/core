@@ -22,7 +22,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv, entity_registry as er
-from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.group import (
     expand_entity_ids as _expand_entity_ids,
     get_entity_ids as _get_entity_ids,
@@ -179,10 +178,7 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up all groups found defined in the configuration."""
-    if DOMAIN not in hass.data:
-        hass.data[DOMAIN] = EntityComponent[Group](_LOGGER, DOMAIN, hass)
-
-    component: EntityComponent[Group] = hass.data[DOMAIN]
+    component = async_get_component(hass)
 
     await async_setup_registry(hass)
 

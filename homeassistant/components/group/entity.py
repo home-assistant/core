@@ -21,10 +21,12 @@ from homeassistant.helpers import start
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.util.hass_dict import HassKey
 
 from .const import ATTR_AUTO, ATTR_ORDER, DOMAIN, GROUP_ORDER, REG_KEY
 from .registry import GroupIntegrationRegistry, SingleStateType
 
+DOMAIN_DATA: HassKey[EntityComponent[Group]] = HassKey(DOMAIN)
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
 _PACKAGE_LOGGER = logging.getLogger(__package__)
