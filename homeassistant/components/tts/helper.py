@@ -9,7 +9,7 @@ from homeassistant.core import HomeAssistant
 from .const import DATA_TTS_MANAGER, DOMAIN_DATA
 
 if TYPE_CHECKING:
-    from . import SpeechManager, TextToSpeechEntity
+    from . import TextToSpeechEntity
     from .legacy import Provider
 
 
@@ -20,5 +20,4 @@ def get_engine_instance(
     if entity := hass.data[DOMAIN_DATA].get_entity(engine):
         return entity
 
-    manager: SpeechManager = hass.data[DATA_TTS_MANAGER]
-    return manager.providers.get(engine)
+    return hass.data[DATA_TTS_MANAGER].providers.get(engine)

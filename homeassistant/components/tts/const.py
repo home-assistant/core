@@ -9,7 +9,7 @@ from homeassistant.util.hass_dict import HassKey
 if TYPE_CHECKING:
     from homeassistant.helpers.entity_component import EntityComponent
 
-    from . import TextToSpeechEntity
+    from . import SpeechManager, TextToSpeechEntity
 
 ATTR_CACHE = "cache"
 ATTR_LANGUAGE = "language"
@@ -28,6 +28,6 @@ DEFAULT_TIME_MEMORY = 300
 DOMAIN = "tts"
 DOMAIN_DATA: HassKey[EntityComponent[TextToSpeechEntity]] = HassKey(DOMAIN)
 
-DATA_TTS_MANAGER = "tts_manager"
+DATA_TTS_MANAGER: HassKey[SpeechManager] = HassKey("tts_manager")
 
 type TtsAudioType = tuple[str | None, bytes | None]

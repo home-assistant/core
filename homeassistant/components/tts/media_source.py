@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import mimetypes
-from typing import TYPE_CHECKING, TypedDict
+from typing import TypedDict
 
 from yarl import URL
 
@@ -21,9 +21,6 @@ from homeassistant.exceptions import HomeAssistantError
 
 from .const import DATA_TTS_MANAGER, DOMAIN, DOMAIN_DATA
 from .helper import get_engine_instance
-
-if TYPE_CHECKING:
-    from . import SpeechManager
 
 
 async def async_get_media_source(hass: HomeAssistant) -> TTSMediaSource:
@@ -43,8 +40,6 @@ def generate_media_source_id(
     """Generate a media source ID for text-to-speech."""
     from . import async_resolve_engine  # pylint: disable=import-outside-toplevel
 
-    manager: SpeechManager = hass.data[DATA_TTS_MANAGER]
-
     if (engine := async_resolve_engine(hass, engine)) is None:
         raise HomeAssistantError("Invalid TTS provider selected")
 
@@ -52,7 +47,7 @@ def generate_media_source_id(
     # We raise above if the engine is not resolved, so engine_instance can't be None
     assert engine_instance is not None
 
-    manager.process_options(engine_instance, language, options)
+    hass.data[DATA_TTS_MANAGER].process_options(engine_instance, language, options)
     params = {
         "message": message,
     }
@@ -112,10 +107,8 @@ class TTSMediaSource(MediaSource):
 
     async def async_resolve_media(self, item: MediaSourceItem) -> PlayMedia:
         """Resolve media to a url."""
-        manager: SpeechManager = self.hass.data[DATA_TTS_MANAGER]
-
         try:
-            url = await manager.async_get_url_path(
+            url = await self.hass.data[DATA_TTS_MANAGER].async_get_url_path(
                 **media_source_id_to_kwargs(item.identifier)
             )
         except HomeAssistantError as err:
@@ -135,8 +128,10 @@ class TTSMediaSource(MediaSource):
             return self._engine_item(engine, params)
 
         # Root. List providers.
-        manager: SpeechManager = self.hass.data[DATA_TTS_MANAGER]
-        children = [self._engine_item(engine) for engine in manager.providers] + [
+        children = [
+            self._engine_item(engine)
+            for engine in self.hass.data[DATA_TTS_MANAGER].providers
+        ] + [
             self._engine_item(entity.entity_id)
             for entity in self.hass.data[DOMAIN_DATA].entities
         ]
