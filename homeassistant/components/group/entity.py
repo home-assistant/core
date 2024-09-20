@@ -480,8 +480,8 @@ class Group(Entity):
 
 def async_get_component(hass: HomeAssistant) -> EntityComponent[Group]:
     """Get the group entity component."""
-    if (component := hass.data.get(DOMAIN)) is None:
-        component = hass.data[DOMAIN] = EntityComponent[Group](
+    if (component := hass.data.get(DOMAIN_DATA)) is None:
+        component = hass.data[DOMAIN_DATA] = EntityComponent[Group](
             _PACKAGE_LOGGER, DOMAIN, hass
         )
     return component
