@@ -205,7 +205,11 @@ class RestUpdateEntity(ShellyRestAttributeEntity, UpdateEntity):
             LOGGER.debug("Result of OTA update call: %s", result)
 
     def version_is_newer(self, latest_version: str, installed_version: str) -> bool:
-        """Return True if available version is newer then installed version."""
+        """Return True if available version is newer then installed version.
+
+        Default strategy generate an exception with Shelly firmware format
+        thus making the entity state always true.
+        """
         return AwesomeVersion(
             latest_version,
             find_first_match=True,
