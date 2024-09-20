@@ -84,12 +84,10 @@ async def test_user_setup_found_token_device_valid_token(
         assert result2["type"] is FlowResultType.FORM
         assert result2["step_id"] == "credentials"
 
-        with patch("aiohttp.ClientSession.post") as mock_post:
-            # Setup mock response for successful validation
-            mock_response = mock_post.return_value.__aenter__.return_value
-            mock_response.status = 200
-            mock_response.json.return_value = {"result": "true"}
-
+        with patch(
+            "homeassistant.components.switcher_kis.config_flow.validate_token",
+            return_value=True,
+        ):
             result3 = await hass.config_entries.flow.async_configure(
                 result2["flow_id"],
                 {CONF_USERNAME: DUMMY_USERNAME, CONF_TOKEN: DUMMY_TOKEN},
@@ -129,12 +127,10 @@ async def test_user_setup_found_token_device_invalid_token(
         assert result2["type"] is FlowResultType.FORM
         assert result2["step_id"] == "credentials"
 
-        with patch("aiohttp.ClientSession.post") as mock_post:
-            # Setup mock response for failed validation
-            mock_response = mock_post.return_value.__aenter__.return_value
-            mock_response.status = 200
-            mock_response.json.return_value = {"result": "false"}
-
+        with patch(
+            "homeassistant.components.switcher_kis.config_flow.validate_token",
+            return_value=False,
+        ):
             result3 = await hass.config_entries.flow.async_configure(
                 result2["flow_id"],
                 {CONF_USERNAME: DUMMY_USERNAME, CONF_TOKEN: DUMMY_TOKEN},
@@ -197,12 +193,10 @@ async def test_reauth_successful(
     )
     entry.add_to_hass(hass)
 
-    with patch("aiohttp.ClientSession.post") as mock_post:
-        # Setup mock response for successful validation
-        mock_response = mock_post.return_value.__aenter__.return_value
-        mock_response.status = 200
-        mock_response.json.return_value = {"result": "true"}
-
+    with patch(
+        "homeassistant.components.switcher_kis.config_flow.validate_token",
+        return_value=True,
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={
@@ -244,12 +238,10 @@ async def test_reauth_invalid_auth(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
-    with patch("aiohttp.ClientSession.post") as mock_post:
-        # Setup mock response for failed validation
-        mock_response = mock_post.return_value.__aenter__.return_value
-        mock_response.status = 200
-        mock_response.json.return_value = {"result": "false"}
-
+    with patch(
+        "homeassistant.components.switcher_kis.config_flow.validate_token",
+        return_value=False,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={CONF_USERNAME: "invalid_user", CONF_TOKEN: "invalid_token"},
