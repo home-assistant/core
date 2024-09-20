@@ -34,6 +34,7 @@ ATTR_WORK_AREA_ID: Final = "work_area_id"
 ATTR_END: Final = "end"
 ATTR_START: Final = "start"
 ATTR_DURATION: Final = "duration"
+ATTR_MODE: Final = "mode"
 DOCKED_ACTIVITIES = (MowerActivities.PARKED_IN_CS, MowerActivities.CHARGING)
 MOWING_ACTIVITIES = (
     MowerActivities.MOWING,
@@ -52,6 +53,7 @@ SUPPORT_STATE_SERVICES = (
 MOW = "mow"
 PARK = "park"
 OVERRIDE_MODES = [MOW, PARK]
+MANIPULATING_SCHEDULE_MODES = ["overwrite", "add", "remove"]
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -94,36 +96,16 @@ async def async_setup_entry(
     platform.async_register_entity_service(
         "set_schedule",
         {
-            vol.Required("mode"): vol.All(
-                cv.string,
-            ),
-            vol.Required(ATTR_START): vol.All(
-                cv.time,
-            ),
-            vol.Required(ATTR_END): vol.All(
-                cv.time,
-            ),
-            vol.Required(ATTR_MONDAY): vol.All(
-                cv.boolean,
-            ),
-            vol.Required(ATTR_TUESDAY): vol.All(
-                cv.boolean,
-            ),
-            vol.Required(ATTR_WEDNESDAY): vol.All(
-                cv.boolean,
-            ),
-            vol.Required(ATTR_THURSDAY): vol.All(
-                cv.boolean,
-            ),
-            vol.Required(ATTR_FRIDAY): vol.All(
-                cv.boolean,
-            ),
-            vol.Required(ATTR_SATURDAY): vol.All(
-                cv.boolean,
-            ),
-            vol.Required(ATTR_SUNDAY): vol.All(
-                cv.boolean,
-            ),
+            vol.Required(ATTR_MODE): vol.In(MANIPULATING_SCHEDULE_MODES),
+            vol.Required(ATTR_START): vol.All(cv.time),
+            vol.Required(ATTR_END): vol.All(cv.time),
+            vol.Required(ATTR_MONDAY): vol.All(cv.boolean),
+            vol.Required(ATTR_TUESDAY): vol.All(cv.boolean),
+            vol.Required(ATTR_WEDNESDAY): vol.All(cv.boolean),
+            vol.Required(ATTR_THURSDAY): vol.All(cv.boolean),
+            vol.Required(ATTR_FRIDAY): vol.All(cv.boolean),
+            vol.Required(ATTR_SATURDAY): vol.All(cv.boolean),
+            vol.Required(ATTR_SUNDAY): vol.All(cv.boolean),
             vol.Optional(ATTR_WORK_AREA_ID, default=None): vol.Any(
                 vol.Coerce(int), None
             ),
