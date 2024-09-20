@@ -114,7 +114,7 @@ class WatchYourLANGenericSensor(
             connections={(CONNECTION_NETWORK_MAC, self.device["Mac"])},
             name=self.device.get("Name")
             or f"WatchYourLAN {self.device.get('ID', 'Unknown')}",
-            manufacturer=self.device.get("Hw", "Unknown Manufacturer"),
+            manufacturer=self.device.get("Hw"),
             model="WatchYourLAN Device",
         )
 
