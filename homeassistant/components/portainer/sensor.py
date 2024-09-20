@@ -4,22 +4,18 @@ from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from datetime import datetime
 import logging
-from typing import TYPE_CHECKING, Any
-from zoneinfo import ZoneInfo
+from typing import Any
 
-from aiotainer.model import NodeData, Container
+from aiotainer.model import Container, NodeData, Snapshot
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
-    SensorStateClass,
 )
-from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfLength, UnitOfTime
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
-from homeassistant.util import dt as dt_util
 
 from . import PortainerConfigEntry
 from .coordinator import AutomowerDataUpdateCoordinator
@@ -82,14 +78,14 @@ class AutomowerSensorEntity(AutomowerBaseEntity, SensorEntity):
 
     def __init__(
         self,
-        mower_id: str,
-        snapshot: str,
+        mower_id: int,
+        snapshot: Snapshot,
         container: Container,
         coordinator: AutomowerDataUpdateCoordinator,
         description: AutomowerSensorEntityDescription,
     ) -> None:
         """Set up AutomowerSensors."""
-        super().__init__(mower_id, container, coordinator)
+        super().__init__(mower_id, snapshot, container, coordinator)
         self.entity_description = description
         self._attr_unique_id = f"{mower_id}-{container}-{description.key}"
         _LOGGER.debug("self.mower_attributes %s", self.mower_attributes)

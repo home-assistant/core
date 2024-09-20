@@ -7,7 +7,7 @@ import logging
 from typing import Any
 
 from aiotainer.exceptions import ApiException
-from aiotainer.model import NodeData, Container
+from aiotainer.model import Container, NodeData, Snapshot
 
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -61,9 +61,9 @@ class AutomowerBaseEntity(CoordinatorEntity[AutomowerDataUpdateCoordinator]):
 
     def __init__(
         self,
-        mower_id: str,
-        snapshot: str,
-        container: str,
+        mower_id: int,
+        snapshot: Snapshot,
+        container: Container,
         coordinator: AutomowerDataUpdateCoordinator,
     ) -> None:
         """Initialize AutomowerEntity."""
@@ -85,30 +85,15 @@ class AutomowerBaseEntity(CoordinatorEntity[AutomowerDataUpdateCoordinator]):
         return self.coordinator.data[self.mower_id]
 
     @property
-    def container_attributes(self) -> Container:
+    def container_attributes(self) -> Container | None:
         """Get the mower attributes of the current mower."""
         for node_id in self.coordinator.data:
             for snapshot in self.coordinator.data[node_id].snapshots:
                 for container in snapshot.docker_snapshot_raw.containers:
                     return container
-
-
-class AutomowerAvailableEntity(AutomowerBaseEntity):
-    """Replies available when the mower is connected."""
+        return None
 
     @property
     def available(self) -> bool:
         """Return True if the device is available."""
-        return super().available and self.mower_attributes.metadata.connected
-
-
-class AutomowerControlEntity(AutomowerAvailableEntity):
-    """Replies available when the mower is connected and not in error state."""
-
-    @property
-    def available(self) -> bool:
-        """Return True if the device is available."""
-        return super().available and (
-            self.mower_attributes.mower.state not in ERROR_STATES
-            or self.mower_attributes.mower.activity not in ERROR_ACTIVITIES
-        )
+        return super().available

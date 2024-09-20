@@ -1,18 +1,14 @@
 """Data UpdateCoordinator for the Husqvarna Automower integration."""
 
-import asyncio
 from datetime import timedelta
 import logging
 
-from aiotainer.exceptions import (
-    ApiException,
-    AuthException,
-)
-from aiotainer.model import NodeData
 from aiotainer.client import PortainerClient
+from aiotainer.exceptions import ApiException, AuthException
+from aiotainer.model import NodeData
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -23,7 +19,7 @@ MAX_WS_RECONNECT_TIME = 600
 SCAN_INTERVAL = timedelta(minutes=8)
 
 
-class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[dict[str, NodeData]]):
+class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[dict[int, NodeData]]):
     """Class to manage fetching Husqvarna data."""
 
     def __init__(
@@ -40,10 +36,8 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[dict[str, NodeData]])
 
         self.ws_connected: bool = False
 
-    async def _async_update_data(self) -> dict[str, NodeData]:
+    async def _async_update_data(self) -> dict[int, NodeData]:
         """Subscribe for websocket and poll data from the API."""
-        if not self.ws_connected:
-            await self.api.connect()
         try:
             return await self.api.get_status()
         except ApiException as err:
