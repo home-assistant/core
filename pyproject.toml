@@ -773,7 +773,7 @@ select = [
     "T100", # Trace found: {name} used
     "T20", # flake8-print
     "TCH", # flake8-type-checking
-    "TID251", # Banned imports
+    "TID", # Tidy imports
     "TRY", # tryceratops
     "UP", # pyupgrade
     "UP031", # Use format specifiers instead of percent format
@@ -910,6 +910,11 @@ split-on-trailing-comma = false
 "homeassistant/__main__.py" = ["T201"]
 "homeassistant/scripts/*" = ["T201"]
 "script/*" = ["T20"]
+
+# Allow relative imports within auth and within components
+"homeassistant/auth/*/*" = ["TID252"]
+"homeassistant/components/*/*/*" = ["TID252"]
+"tests/components/*/*/*" = ["TID252"]
 
 # Temporary
 "homeassistant/**" = ["PTH"]
