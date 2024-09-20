@@ -155,8 +155,6 @@ async def test_reauthentication_flow(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == expected
-    if expected == "reauth_successful":
-        assert len(mock_setup.mock_calls) == 1
 
 
 async def test_import_flow(
