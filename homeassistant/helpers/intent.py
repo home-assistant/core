@@ -438,6 +438,30 @@ def _filter_by_name(
                     break
 
 
+def _matches_name(
+    state: State,
+    name: str,
+    entities: entity_registry.EntityRegistry,
+) -> bool:
+    """Return true if entity's (normalized) name or alias matches the provided name."""
+    name_norm = _normalize_name(name)
+
+    if (state.entity_id == name) or _normalize_name(state.name) == name_norm:
+        return True
+
+    if entity := entities.async_get(state.entity_id):
+        if entity.name and (_normalize_name(entity.name) == name_norm):
+            return True
+
+        # Check aliases
+        if entity.aliases:
+            for alias in entity.aliases:
+                if _normalize_name(alias) == name_norm:
+                    return True
+
+    return False
+
+
 def _filter_by_features(
     features: int,
     candidates: Iterable[MatchTargetsCandidate],
@@ -496,6 +520,22 @@ def _add_areas(
             candidate.area = areas.async_get_area(candidate.device.area_id)
 
 
+def _get_area_id(
+    entity_id: str,
+    entities: entity_registry.EntityRegistry,
+    devices: device_registry.DeviceRegistry,
+) -> str | None:
+    """Get the area id of an entity from the entity registry or from its device."""
+    if entity := entities.async_get(entity_id):
+        if entity.area_id:
+            return entity.area_id
+
+        if entity.device_id and (device := devices.async_get(entity.device_id)):
+            return device.area_id
+
+    return None
+
+
 @callback
 def async_match_targets(  # noqa: C901
     hass: HomeAssistant,
@@ -514,13 +554,20 @@ def async_match_targets(  # noqa: C901
         if not states:
             return MatchTargetsResult(False, MatchFailedReason.DOMAIN)
 
+    # Keep track of states that were filtered out due to exposure so that we can
+    # disambiguate the case of a match failure.
+    unexposed_states: list[State] = list(states)
+
     if constraints.assistant:
         # Filter by exposure
-        states = [
-            s
-            for s in states
-            if async_should_expose(hass, constraints.assistant, s.entity_id)
-        ]
+        exposed_states: list[State] = []
+        for state in states:
+            if async_should_expose(hass, constraints.assistant, state.entity_id):
+                exposed_states.append(state)
+            else:
+                unexposed_states.append(state)
+
+        states = exposed_states
         if not states:
             return MatchTargetsResult(False, MatchFailedReason.ASSISTANT)
 
@@ -554,6 +601,11 @@ def async_match_targets(  # noqa: C901
         # Filter by entity name or alias
         candidates = list(_filter_by_name(constraints.name, candidates))
         if not candidates:
+            # Check if any unexposed entities match the name
+            for state in unexposed_states:
+                if _matches_name(state, constraints.name, er):
+                    return MatchTargetsResult(False, MatchFailedReason.ASSISTANT)
+
             return MatchTargetsResult(False, MatchFailedReason.NAME)
 
     if constraints.features:
@@ -607,6 +659,13 @@ def async_match_targets(  # noqa: C901
                 if (c.area is not None) and (c.area.id in possible_area_ids)
             ]
             if not candidates:
+                # Check if any unexposed entities are on this floor
+                for state in unexposed_states:
+                    if _get_area_id(state.entity_id, er, dr) in possible_area_ids:
+                        return MatchTargetsResult(
+                            False, MatchFailedReason.ASSISTANT, floors=targeted_floors
+                        )
+
                 return MatchTargetsResult(
                     False, MatchFailedReason.FLOOR, floors=targeted_floors
                 )
@@ -633,6 +692,13 @@ def async_match_targets(  # noqa: C901
                 if (c.area is not None) and (c.area.id in possible_area_ids)
             ]
             if not candidates:
+                # Check if any unexposed entities are in this area
+                for state in unexposed_states:
+                    if _get_area_id(state.entity_id, er, dr) in possible_area_ids:
+                        return MatchTargetsResult(
+                            False, MatchFailedReason.ASSISTANT, areas=targeted_areas
+                        )
+
                 return MatchTargetsResult(
                     False, MatchFailedReason.AREA, areas=targeted_areas
                 )

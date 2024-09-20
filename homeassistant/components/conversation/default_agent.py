@@ -824,11 +824,11 @@ class DefaultAgent(ConversationEntity):
         start = time.monotonic()
 
         entity_registry = er.async_get(self.hass)
-        states = [
-            state
-            for state in self.hass.states.async_all()
-            if async_should_expose(self.hass, DOMAIN, state.entity_id)
-        ]
+        # states = [
+        #     state
+        #     for state in self.hass.states.async_all()
+        #     if async_should_expose(self.hass, DOMAIN, state.entity_id)
+        # ]
 
         # Gather exposed entity names.
         #
@@ -837,7 +837,7 @@ class DefaultAgent(ConversationEntity):
         # values for a list, just the first. So we will need to match by name no
         # matter what.
         entity_names = []
-        for state in states:
+        for state in self.hass.states.async_all():
             # Checked against "requires_context" and "excludes_context" in hassil
             context = {"domain": state.domain}
             if state.attributes:
@@ -1181,16 +1181,61 @@ def _get_match_error_response(
 
     if reason == intent.MatchFailedReason.STATE:
         # Entity is not in correct state
-        assert match_error.constraints.states
-        state = next(iter(match_error.constraints.states))
-        if match_error.constraints.domains:
+        assert constraints.states
+        state = next(iter(constraints.states))
+        if constraints.domains:
             # Translate if domain is available
-            domain = next(iter(match_error.constraints.domains))
+            domain = next(iter(constraints.domains))
             state = translation.async_translate_state(
                 hass, state, domain, None, None, None
             )
 
         return ErrorKey.ENTITY_WRONG_STATE, {"state": state}
+
+    if reason == intent.MatchFailedReason.ASSISTANT:
+        # Not exposed
+        if constraints.name:
+            if constraints.area_name:
+                return ErrorKey.NO_ENTITY_IN_AREA_EXPOSED, {
+                    "entity": constraints.name,
+                    "area": constraints.area_name,
+                }
+            if constraints.floor_name:
+                return ErrorKey.NO_ENTITY_IN_FLOOR_EXPOSED, {
+                    "entity": constraints.name,
+                    "floor": constraints.floor_name,
+                }
+            return ErrorKey.NO_ENTITY_EXPOSED, {"entity": constraints.name}
+
+        if constraints.domains:
+            domain = next(iter(constraints.domains))
+
+            if constraints.area_name:
+                return ErrorKey.NO_DOMAIN_IN_AREA_EXPOSED, {
+                    "domain": domain,
+                    "area": constraints.area_name,
+                }
+            if constraints.area_name:
+                return ErrorKey.NO_DOMAIN_IN_FLOOR_EXPOSED, {
+                    "domain": domain,
+                    "floor": constraints.floor_name,
+                }
+            return ErrorKey.NO_DOMAIN_EXPOSED, {"domain": domain}
+
+        if constraints.device_classes:
+            device_class = next(iter(constraints.device_classes))
+
+            if constraints.area_name:
+                return ErrorKey.NO_DEVICE_CLASS_IN_AREA_EXPOSED, {
+                    "device_class": device_class,
+                    "area": constraints.area_name,
+                }
+            if constraints.area_name:
+                return ErrorKey.NO_DEVICE_CLASS_IN_FLOOR_EXPOSED, {
+                    "device_class": device_class,
+                    "floor": constraints.floor_name,
+                }
+            return ErrorKey.NO_DEVICE_CLASS_EXPOSED, {"device_class": device_class}
 
     # Default error
     return ErrorKey.NO_INTENT, {}
