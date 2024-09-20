@@ -2142,7 +2142,7 @@ pypjlink2==1.2.1
 pyplaato==0.0.18
 
 # homeassistant.components.point
-pypoint==2.3.2
+pypoint==3.0.0
 
 # homeassistant.components.profiler
 pyprof2calltree==1.4.5
