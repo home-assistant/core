@@ -34,7 +34,7 @@
         "default": "mdi:snowflake"
       },
       "defensive_stance": {
-        "default": "mdi:sword-cross"
+        "default": "mdi:shield-sword"
       },
       "valorous_presence": {
         "default": "mdi:shield-sun"

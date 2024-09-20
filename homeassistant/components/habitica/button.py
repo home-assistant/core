@@ -210,22 +210,26 @@ async def async_setup_entry(
     async_add_entities(
         HabiticaButton(coordinator, description) for description in BUTTON_DESCRIPTIONS
     )
-    if coordinator.data.user["stats"]["class"] == "wizard":
-        async_add_entities(
-            HabiticaButton(coordinator, description) for description in WIZARD_SKILLS
-        )
-    if coordinator.data.user["stats"]["class"] == "warrior":
-        async_add_entities(
-            HabiticaButton(coordinator, description) for description in WARRIOR_SKILLS
-        )
-    if coordinator.data.user["stats"]["class"] == "rogue":
-        async_add_entities(
-            HabiticaButton(coordinator, description) for description in ROGUE_SKILLS
-        )
-    if coordinator.data.user["stats"]["class"] == "healer":
-        async_add_entities(
-            HabiticaButton(coordinator, description) for description in HEALER_SKILLS
-        )
+    if coordinator.data.user["stats"]["lvl"] > 10:
+        if coordinator.data.user["stats"]["class"] == "wizard":
+            async_add_entities(
+                HabiticaButton(coordinator, description)
+                for description in WIZARD_SKILLS
+            )
+        if coordinator.data.user["stats"]["class"] == "warrior":
+            async_add_entities(
+                HabiticaButton(coordinator, description)
+                for description in WARRIOR_SKILLS
+            )
+        if coordinator.data.user["stats"]["class"] == "rogue":
+            async_add_entities(
+                HabiticaButton(coordinator, description) for description in ROGUE_SKILLS
+            )
+        if coordinator.data.user["stats"]["class"] == "healer":
+            async_add_entities(
+                HabiticaButton(coordinator, description)
+                for description in HEALER_SKILLS
+            )
 
 
 class HabiticaButton(HabiticaBase, ButtonEntity):
