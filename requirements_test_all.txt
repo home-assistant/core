@@ -1828,7 +1828,7 @@ pytautulli==23.1.1
 pytedee-async==0.2.20
 
 # homeassistant.components.motionmount
-python-MotionMount==2.1.0
+python-MotionMount==2.2.0
 
 # homeassistant.components.awair
 python-awair==0.2.4
