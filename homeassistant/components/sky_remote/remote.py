@@ -4,9 +4,12 @@ from collections.abc import Iterable
 import logging
 from typing import Any
 
+from skyboxremote import VALID_KEYS
+
 from homeassistant.components.remote import RemoteEntity
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import RemoteControl, SkyRemoteConfigEntry
@@ -50,8 +53,14 @@ class SkyRemote(RemoteEntity):
 
     def send_command(self, command: Iterable[str], **kwargs: Any) -> None:
         """Send a list of commands to the device."""
+        for cmd in command:
+            if cmd not in VALID_KEYS:
+                raise ServiceValidationError(
+                    f"{cmd} is not in Valid Keys: {VALID_KEYS}"
+                )
         try:
             self._remote.send_keys(command)
-            _LOGGER.debug("Successfully sent command %s", command)
         except ValueError as err:
             _LOGGER.error("Invalid command: %s. Error: %s", command, err)
+            return
+        _LOGGER.debug("Successfully sent command %s", command)
