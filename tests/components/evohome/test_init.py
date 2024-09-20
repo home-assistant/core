@@ -26,6 +26,6 @@ async def test_entities(
     freezer.move_to("2024-07-10T12:00:00Z")
 
     async for _ in setup_evohome(hass, config, install=install):
-        pass  # await hass.async_block_till_done()
+        await hass.async_block_till_done()
 
     assert hass.states.async_all() == snapshot
