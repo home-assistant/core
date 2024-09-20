@@ -66,7 +66,7 @@ async def test_user_setup(
     ],
     indirect=True,
 )
-async def test_user_setup_found_token_device(
+async def test_user_setup_found_token_device_valid_token(
     hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_bridge
 ) -> None:
     """Test we can finish a config flow with token device found."""
@@ -102,11 +102,21 @@ async def test_user_setup_found_token_device(
                 CONF_TOKEN: DUMMY_TOKEN,
             }
 
-        # Reset the config entries
-        await hass.config_entries.async_remove(result3["result"].entry_id)
-        await hass.async_block_till_done()
 
-        # Now test with invalid credentials
+@pytest.mark.parametrize(
+    "mock_bridge",
+    [
+        [
+            DUMMY_SINGLE_SHUTTER_DUAL_LIGHT_DEVICE,
+        ]
+    ],
+    indirect=True,
+)
+async def test_user_setup_found_token_device_invalid_token(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_bridge
+) -> None:
+    """Test we can finish a config flow with token device found."""
+    with patch("homeassistant.components.switcher_kis.utils.DISCOVERY_TIME_SEC", 0):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
