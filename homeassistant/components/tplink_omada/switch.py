@@ -20,12 +20,11 @@ from tplink_omada_client.devices import (
 from tplink_omada_client.omadasiteclient import GatewayPortSettings
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from . import OmadaConfigEntry
 from .controller import (
     OmadaGatewayCoordinator,
     OmadaSiteController,
@@ -41,11 +40,11 @@ TCoordinator = TypeVar("TCoordinator", bound="OmadaCoordinator[Any]")
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: OmadaConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up switches."""
-    controller: OmadaSiteController = hass.data[DOMAIN][config_entry.entry_id]
+    controller: OmadaSiteController = config_entry.runtime_data
     omada_client = controller.omada_client
 
     # Naming fun. Omada switches, as in the network hardware

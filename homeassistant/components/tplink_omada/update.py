@@ -14,12 +14,11 @@ from homeassistant.components.update import (
     UpdateEntity,
     UpdateEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from . import OmadaConfigEntry
 from .controller import OmadaSiteController
 from .coordinator import POLL_DEVICES, OmadaCoordinator, OmadaDevicesCoordinator
 from .entity import OmadaDeviceEntity
@@ -40,7 +39,7 @@ class OmadaFirmwareUpdateCoordinator(OmadaCoordinator[FirmwareUpdateStatus]):  #
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: OmadaConfigEntry,
         omada_client: OmadaSiteClient,
         devices_coordinator: OmadaDevicesCoordinator,
     ) -> None:
@@ -92,11 +91,11 @@ class OmadaFirmwareUpdateCoordinator(OmadaCoordinator[FirmwareUpdateStatus]):  #
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: OmadaConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up switches."""
-    controller: OmadaSiteController = hass.data[DOMAIN][config_entry.entry_id]
+    controller: OmadaSiteController = config_entry.runtime_data
 
     devices = controller.devices_coordinator.data
 
