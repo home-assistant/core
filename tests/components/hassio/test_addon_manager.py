@@ -43,7 +43,7 @@ async def test_not_available_raises_exception(
     addon_info: AsyncMock,
 ) -> None:
     """Test addon not available raises exception."""
-    addon_store_info.return_value["available"] = False
+    addon_store_info.return_value.available = False
     addon_info.return_value.available = False
 
     with pytest.raises(AddonError) as err:
@@ -198,7 +198,7 @@ async def test_install_addon(
     addon_info: AsyncMock,
 ) -> None:
     """Test install addon."""
-    addon_store_info.return_value["available"] = True
+    addon_store_info.return_value.available = True
     addon_info.return_value.available = True
 
     await addon_manager.async_install_addon()
@@ -213,7 +213,7 @@ async def test_install_addon_error(
     addon_info: AsyncMock,
 ) -> None:
     """Test install addon raises error."""
-    addon_store_info.return_value["available"] = True
+    addon_store_info.return_value.available = True
     addon_info.return_value.available = True
     install_addon.side_effect = HassioAPIError("Boom")
 

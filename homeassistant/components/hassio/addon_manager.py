@@ -23,7 +23,6 @@ from .handler import (
     HassioAPIError,
     async_create_backup,
     async_get_addon_discovery_info,
-    async_get_addon_store_info,
     async_install_addon,
     async_set_addon_options,
     async_update_addon,
@@ -143,11 +142,11 @@ class AddonManager:
     async def async_get_addon_info(self) -> AddonInfo:
         """Return and cache manager add-on info."""
         supervisor_client = get_supervisor_client(self._hass)
-        addon_store_info = await async_get_addon_store_info(self._hass, self.addon_slug)
-        self._logger.debug("Add-on store info: %s", addon_store_info)
-        if not addon_store_info["installed"]:
+        addon_store_info = await supervisor_client.store.addon_info(self.addon_slug)
+        self._logger.debug("Add-on store info: %s", addon_store_info.to_dict())
+        if not addon_store_info.installed:
             return AddonInfo(
-                available=addon_store_info["available"],
+                available=addon_store_info.available,
                 hostname=None,
                 options={},
                 state=AddonState.NOT_INSTALLED,

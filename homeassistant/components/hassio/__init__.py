@@ -103,7 +103,6 @@ from .handler import (  # noqa: F401
     HassioAPIError,
     async_create_backup,
     async_get_addon_discovery_info,
-    async_get_addon_store_info,
     async_get_green_settings,
     async_get_yellow_settings,
     async_install_addon,

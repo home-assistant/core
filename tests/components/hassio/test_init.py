@@ -15,7 +15,6 @@ from homeassistant.components.hassio import (
     ADDONS_COORDINATOR,
     DOMAIN,
     STORAGE_KEY,
-    async_get_addon_store_info,
     get_core_info,
     hostname_from_addon_slug,
     is_hassio,
@@ -1122,22 +1121,6 @@ async def test_setup_hardware_integration(
     assert result
     assert aioclient_mock.call_count == 20
     assert len(mock_setup_entry.mock_calls) == 1
-
-
-@pytest.mark.usefixtures("hassio_stubs")
-async def test_get_store_addon_info(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-) -> None:
-    """Test get store add-on info from Supervisor API."""
-    aioclient_mock.clear_requests()
-    aioclient_mock.get(
-        "http://127.0.0.1/store/addons/test",
-        json={"result": "ok", "data": {"name": "bla"}},
-    )
-
-    data = await async_get_addon_store_info(hass, "test")
-    assert data["name"] == "bla"
-    assert aioclient_mock.call_count == 1
 
 
 def test_hostname_from_addon_slug() -> None:
