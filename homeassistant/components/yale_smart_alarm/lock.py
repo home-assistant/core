@@ -71,7 +71,7 @@ class YaleDoorlock(YaleLockEntity, LockEntity):
 
     async def async_set_lock(self, state: YaleLockState, code: str | None) -> None:
         """Set lock."""
-        if state == YaleLockState.UNLOCKED and not code:
+        if state is YaleLockState.UNLOCKED and not code:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="no_code",
@@ -79,11 +79,11 @@ class YaleDoorlock(YaleLockEntity, LockEntity):
 
         lock_state = False
         try:
-            if state == YaleLockState.LOCKED:
+            if state is YaleLockState.LOCKED:
                 lock_state = await self.hass.async_add_executor_job(
                     self.lock_data.close
                 )
-            if code and state == YaleLockState.UNLOCKED:
+            if code and state is YaleLockState.UNLOCKED:
                 lock_state = await self.hass.async_add_executor_job(
                     self.lock_data.open, code
                 )

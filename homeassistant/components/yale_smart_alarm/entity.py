@@ -11,7 +11,7 @@ from .const import DOMAIN, MANUFACTURER, MODEL
 from .coordinator import YaleDataUpdateCoordinator
 
 
-class YaleEntity(CoordinatorEntity[YaleDataUpdateCoordinator], Entity):
+class YaleEntity(CoordinatorEntity[YaleDataUpdateCoordinator]):
     """Base implementation for Yale device."""
 
     _attr_has_entity_name = True
@@ -25,11 +25,11 @@ class YaleEntity(CoordinatorEntity[YaleDataUpdateCoordinator], Entity):
             manufacturer=MANUFACTURER,
             model=MODEL,
             identifiers={(DOMAIN, data["address"])},
-            via_device=(DOMAIN, self.coordinator.entry.data[CONF_USERNAME]),
+            via_device=(DOMAIN, coordinator.entry.data[CONF_USERNAME]),
         )
 
 
-class YaleLockEntity(CoordinatorEntity[YaleDataUpdateCoordinator], Entity):
+class YaleLockEntity(CoordinatorEntity[YaleDataUpdateCoordinator]):
     """Base implementation for Yale lock device."""
 
     _attr_has_entity_name = True
@@ -43,7 +43,7 @@ class YaleLockEntity(CoordinatorEntity[YaleDataUpdateCoordinator], Entity):
             manufacturer=MANUFACTURER,
             model=MODEL,
             identifiers={(DOMAIN, lock.sid())},
-            via_device=(DOMAIN, self.coordinator.entry.data[CONF_USERNAME]),
+            via_device=(DOMAIN, coordinator.entry.data[CONF_USERNAME]),
         )
 
 
