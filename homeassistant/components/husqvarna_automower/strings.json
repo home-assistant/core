@@ -285,7 +285,7 @@
       "message": "Failed to send command: {exception}"
     },
     "start_after_end": {
-      "message": "Start must be before end."
+      "message": "Start must be at least one minute before end."
     },
     "work_areas_not_supported": {
       "message": "This mower does not support work areas."

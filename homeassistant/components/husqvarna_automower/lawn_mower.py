@@ -228,7 +228,7 @@ class AutomowerLawnMowerEntity(AutomowerAvailableEntity, LawnMowerEntity):
         work_area_id: int | None = None,
     ) -> None:
         """Set schedule."""
-        if start > end:
+        if start >= end:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="start_after_end",

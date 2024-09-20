@@ -549,7 +549,7 @@ async def test_lawn_mower_set_schedule_command(
             "set_schedule",
             {
                 "mode": "overwrite",
-                "start": "13:13",
+                "start": "11:11",
                 "end": "11:11",
                 "monday": True,
                 "tuesday": False,
@@ -560,7 +560,7 @@ async def test_lawn_mower_set_schedule_command(
                 "sunday": False,
                 "work_area_id": 0,
             },
-            "Start must be before end",
+            "Start must be at least one minute before end",
         ),
     ],
 )
