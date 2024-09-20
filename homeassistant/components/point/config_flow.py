@@ -64,7 +64,7 @@ class OAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
             self.reauth_entry.unique_id is None
             or self.reauth_entry.unique_id == user_id
         ):
-            logging.info("user_id: %s", user_id)
+            logging.debug("user_id: %s", user_id)
             return self.async_update_reload_and_abort(
                 self.reauth_entry, data={**self.reauth_entry.data, **data}
             )
