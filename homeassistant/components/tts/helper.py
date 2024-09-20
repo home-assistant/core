@@ -5,9 +5,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_component import EntityComponent
 
-from .const import DATA_TTS_MANAGER, DOMAIN
+from .const import DATA_TTS_MANAGER, DOMAIN_DATA
 
 if TYPE_CHECKING:
     from . import SpeechManager, TextToSpeechEntity
@@ -18,9 +17,7 @@ def get_engine_instance(
     hass: HomeAssistant, engine: str
 ) -> TextToSpeechEntity | Provider | None:
     """Get engine instance."""
-    component: EntityComponent[TextToSpeechEntity] = hass.data[DOMAIN]
-
-    if entity := component.get_entity(engine):
+    if entity := hass.data[DOMAIN_DATA].get_entity(engine):
         return entity
 
     manager: SpeechManager = hass.data[DATA_TTS_MANAGER]

@@ -18,13 +18,12 @@ from homeassistant.components.media_source import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_component import EntityComponent
 
-from .const import DATA_TTS_MANAGER, DOMAIN
+from .const import DATA_TTS_MANAGER, DOMAIN, DOMAIN_DATA
 from .helper import get_engine_instance
 
 if TYPE_CHECKING:
-    from . import SpeechManager, TextToSpeechEntity
+    from . import SpeechManager
 
 
 async def async_get_media_source(hass: HomeAssistant) -> TTSMediaSource:
@@ -137,9 +136,9 @@ class TTSMediaSource(MediaSource):
 
         # Root. List providers.
         manager: SpeechManager = self.hass.data[DATA_TTS_MANAGER]
-        component: EntityComponent[TextToSpeechEntity] = self.hass.data[DOMAIN]
         children = [self._engine_item(engine) for engine in manager.providers] + [
-            self._engine_item(entity.entity_id) for entity in component.entities
+            self._engine_item(entity.entity_id)
+            for entity in self.hass.data[DOMAIN_DATA].entities
         ]
         return BrowseMediaSource(
             domain=DOMAIN,

@@ -62,6 +62,7 @@ from .const import (
     DEFAULT_CACHE_DIR,
     DEFAULT_TIME_MEMORY,
     DOMAIN,
+    DOMAIN_DATA,
     TtsAudioType,
 )
 from .helper import get_engine_instance
@@ -137,12 +138,11 @@ def async_default_engine(hass: HomeAssistant) -> str | None:
 
     Returns None if no engines found.
     """
-    component: EntityComponent[TextToSpeechEntity] = hass.data[DOMAIN]
     manager: SpeechManager = hass.data[DATA_TTS_MANAGER]
 
     default_entity_id: str | None = None
 
-    for entity in component.entities:
+    for entity in hass.data[DOMAIN_DATA].entities:
         if entity.platform and entity.platform.platform_name == "cloud":
             return entity.entity_id
 
@@ -158,11 +158,13 @@ def async_resolve_engine(hass: HomeAssistant, engine: str | None) -> str | None:
 
     Returns None if no engines found or invalid engine passed in.
     """
-    component: EntityComponent[TextToSpeechEntity] = hass.data[DOMAIN]
     manager: SpeechManager = hass.data[DATA_TTS_MANAGER]
 
     if engine is not None:
-        if not component.get_entity(engine) and engine not in manager.providers:
+        if (
+            not hass.data[DOMAIN_DATA].get_entity(engine)
+            and engine not in manager.providers
+        ):
             return None
         return engine
 
@@ -205,10 +207,9 @@ def async_get_text_to_speech_languages(hass: HomeAssistant) -> set[str]:
     """Return a set with the union of languages supported by tts engines."""
     languages = set()
 
-    component: EntityComponent[TextToSpeechEntity] = hass.data[DOMAIN]
     manager: SpeechManager = hass.data[DATA_TTS_MANAGER]
 
-    for entity in component.entities:
+    for entity in hass.data[DOMAIN_DATA].entities:
         for language_tag in entity.supported_languages:
             languages.add(language_tag)
 
@@ -325,7 +326,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         return False
 
     hass.data[DATA_TTS_MANAGER] = tts
-    component = hass.data[DOMAIN] = EntityComponent[TextToSpeechEntity](
+    component = hass.data[DOMAIN_DATA] = EntityComponent[TextToSpeechEntity](
         _LOGGER, DOMAIN, hass
     )
 
@@ -373,14 +374,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    component: EntityComponent[TextToSpeechEntity] = hass.data[DOMAIN]
-    return await component.async_setup_entry(entry)
+    return await hass.data[DOMAIN_DATA].async_setup_entry(entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    component: EntityComponent[TextToSpeechEntity] = hass.data[DOMAIN]
-    return await component.async_unload_entry(entry)
+    return await hass.data[DOMAIN_DATA].async_unload_entry(entry)
 
 
 CACHED_PROPERTIES_WITH_ATTR_ = {
@@ -1105,7 +1104,6 @@ def websocket_list_engines(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
 ) -> None:
     """List text to speech engines and, optionally, if they support a given language."""
-    component: EntityComponent[TextToSpeechEntity] = hass.data[DOMAIN]
     manager: SpeechManager = hass.data[DATA_TTS_MANAGER]
 
     country = msg.get("country")
@@ -1114,7 +1112,7 @@ def websocket_list_engines(
     provider_info: dict[str, Any]
     entity_domains: set[str] = set()
 
-    for entity in component.entities:
+    for entity in hass.data[DOMAIN_DATA].entities:
         provider_info = {
             "engine_id": entity.entity_id,
             "supported_languages": entity.supported_languages,
@@ -1156,14 +1154,18 @@ def websocket_get_engine(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
 ) -> None:
     """Get text to speech engine info."""
-    component: EntityComponent[TextToSpeechEntity] = hass.data[DOMAIN]
     manager: SpeechManager = hass.data[DATA_TTS_MANAGER]
 
     engine_id = msg["engine_id"]
     provider_info: dict[str, Any]
 
     provider: TextToSpeechEntity | Provider | None = next(
-        (entity for entity in component.entities if entity.entity_id == engine_id), None
+        (
+            entity
+            for entity in hass.data[DOMAIN_DATA].entities
+            if entity.entity_id == engine_id
+        ),
+        None,
     )
     if not provider:
         provider = manager.providers.get(engine_id)
