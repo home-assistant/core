@@ -42,14 +42,13 @@ def test_no_verify_ssl_context(mock_sslcontext) -> None:
         mock_sslcontext.set_ciphers.assert_not_called()
 
         create_no_verify_ssl_context(SSLCipherList.MODERN)
-        mock_sslcontext.set_ciphers.assert_called_with(
-            SSL_CIPHER_LISTS[SSLCipherList.MODERN]
-        )
+        mock_sslcontext.set_ciphers.assert_not_called()
 
         create_no_verify_ssl_context(SSLCipherList.INTERMEDIATE)
-        mock_sslcontext.set_ciphers.assert_called_with(
-            SSL_CIPHER_LISTS[SSLCipherList.INTERMEDIATE]
-        )
+        mock_sslcontext.set_ciphers.assert_not_called()
+
+        create_no_verify_ssl_context(SSLCipherList.INSECURE)
+        mock_sslcontext.set_ciphers.assert_not_called()
 
 
 def test_ssl_context_caching() -> None:
