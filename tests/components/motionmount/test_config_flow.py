@@ -8,7 +8,7 @@ import motionmount
 import pytest
 
 from homeassistant.components.motionmount.const import DOMAIN
-from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
+from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PIN, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -412,6 +412,114 @@ async def test_authentication_incorrect_pin(
     assert result["errors"][CONF_PIN] == CONF_PIN
 
 
+async def test_authentication_first_incorrect_pin_to_backoff(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_motionmount_config_flow: MagicMock,
+) -> None:
+    """Test that authentication is requested when needed."""
+    type(mock_motionmount_config_flow).name = PropertyMock(return_value=ZEROCONF_NAME)
+    type(mock_motionmount_config_flow).mac = PropertyMock(return_value=MAC)
+    type(mock_motionmount_config_flow).is_authenticated = PropertyMock(
+        return_value=False
+    )
+    type(mock_motionmount_config_flow).can_authenticate = PropertyMock(
+        side_effect=[True, 4]
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+        data=MOCK_USER_INPUT.copy(),
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "auth"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=MOCK_PIN_INPUT.copy(),
+    )
+
+    assert mock_motionmount_config_flow.authenticate.called
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "backoff"
+
+
+async def test_authentication_multiple_incorrect_pins(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_motionmount_config_flow: MagicMock,
+) -> None:
+    """Test that authentication is requested when needed."""
+    type(mock_motionmount_config_flow).name = PropertyMock(return_value=ZEROCONF_NAME)
+    type(mock_motionmount_config_flow).mac = PropertyMock(return_value=MAC)
+    type(mock_motionmount_config_flow).is_authenticated = PropertyMock(
+        return_value=False
+    )
+    type(mock_motionmount_config_flow).can_authenticate = PropertyMock(return_value=7)
+
+    user_input = MOCK_USER_INPUT.copy()
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+        data=user_input,
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "auth"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=MOCK_PIN_INPUT.copy(),
+    )
+
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "backoff"
+
+
+async def test_authentication_show_backoff_when_still_running(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_motionmount_config_flow: MagicMock,
+) -> None:
+    """Test that authentication is requested when needed."""
+    type(mock_motionmount_config_flow).name = PropertyMock(return_value=ZEROCONF_NAME)
+    type(mock_motionmount_config_flow).mac = PropertyMock(return_value=MAC)
+    type(mock_motionmount_config_flow).is_authenticated = PropertyMock(
+        return_value=False
+    )
+    type(mock_motionmount_config_flow).can_authenticate = PropertyMock(return_value=20)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+        data=MOCK_USER_INPUT.copy(),
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "auth"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=MOCK_PIN_INPUT.copy(),
+    )
+
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "backoff"
+
+    # This situation happens when the user cancels the progress dialog and tries to
+    # configure the MotionMount again
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=None,
+    )
+
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "backoff"
+
+
 async def test_authentication_correct_pin(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -455,6 +563,26 @@ async def test_authentication_correct_pin(
 
     assert result["result"]
     assert result["result"].unique_id == ZEROCONF_MAC
+
+
+async def test_reauth(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_motionmount_config_flow: MagicMock,
+) -> None:
+    """Test reauthentication."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": SOURCE_REAUTH,
+            "entry_id": mock_config_entry.entry_id,
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "auth"
 
 
 async def test_full_user_flow_implementation(
@@ -521,3 +649,37 @@ async def test_full_zeroconf_flow_implementation(
 
     assert result["result"]
     assert result["result"].unique_id == ZEROCONF_MAC
+
+
+async def test_full_reauth_flow_implementation(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_motionmount_config_flow: MagicMock,
+) -> None:
+    """Test reauthentication."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": SOURCE_REAUTH,
+            "entry_id": mock_config_entry.entry_id,
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "auth"
+
+    type(mock_motionmount_config_flow).can_authenticate = PropertyMock(
+        return_value=True
+    )
+    type(mock_motionmount_config_flow).is_authenticated = PropertyMock(
+        return_value=True
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=MOCK_PIN_INPUT.copy(),
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
