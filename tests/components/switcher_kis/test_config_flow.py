@@ -193,22 +193,22 @@ async def test_reauth_successful(
     )
     entry.add_to_hass(hass)
 
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "entry_id": entry.entry_id,
+        },
+        data=entry.data,
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
     with patch(
         "homeassistant.components.switcher_kis.config_flow.validate_token",
         return_value=True,
     ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={
-                "source": config_entries.SOURCE_REAUTH,
-                "entry_id": entry.entry_id,
-            },
-            data=entry.data,
-        )
-
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "reauth_confirm"
-
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input=user_input,
