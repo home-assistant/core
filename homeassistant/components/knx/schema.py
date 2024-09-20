@@ -341,6 +341,10 @@ class ClimateSchema(KNXPlatformSchema):
     CONF_ON_OFF_INVERT = "on_off_invert"
     CONF_MIN_TEMP = "min_temp"
     CONF_MAX_TEMP = "max_temp"
+    CONF_FAN_SPEED_ADDRESS = "fan_speed_address"
+    CONF_FAN_SPEED_STATE_ADDRESS = "fan_speed_state_address"
+    CONF_FAN_MAX_STEP = "fan_max_step"
+    CONF_FAN_PERCENTAGES_MODES = "fan_percentages_modes"
 
     DEFAULT_NAME = "KNX Climate"
     DEFAULT_SETPOINT_SHIFT_MODE = "DPT6010"
@@ -423,6 +427,15 @@ class ClimateSchema(KNXPlatformSchema):
                 vol.Optional(CONF_MIN_TEMP): vol.Coerce(float),
                 vol.Optional(CONF_MAX_TEMP): vol.Coerce(float),
                 vol.Optional(CONF_ENTITY_CATEGORY): ENTITY_CATEGORIES_SCHEMA,
+                vol.Optional(CONF_FAN_SPEED_ADDRESS): ga_list_validator,
+                vol.Optional(CONF_FAN_SPEED_STATE_ADDRESS): ga_list_validator,
+                vol.Optional(CONF_FAN_MAX_STEP): cv.byte,
+                vol.Optional(
+                    CONF_FAN_PERCENTAGES_MODES, default=[33, 66, 100]
+                ): vol.All(
+                    cv.ensure_list,
+                    [vol.All(vol.Coerce(int), vol.Range(min=1, max=100))],
+                ),
             }
         ),
     )

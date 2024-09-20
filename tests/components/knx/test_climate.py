@@ -439,3 +439,261 @@ async def test_command_value_idle_mode(hass: HomeAssistant, knx: KNXTestKit) -> 
     knx.assert_state(
         "climate.test", HVACMode.HEAT, command_value=0, hvac_action=STATE_IDLE
     )
+
+
+async def test_fan_speed_3_steps(hass: HomeAssistant, knx: KNXTestKit) -> None:
+    """Test KNX climate fan speed 3 steps."""
+    await knx.setup_integration(
+        {
+            ClimateSchema.PLATFORM: {
+                CONF_NAME: "test",
+                ClimateSchema.CONF_TEMPERATURE_ADDRESS: "1/2/3",
+                ClimateSchema.CONF_TARGET_TEMPERATURE_ADDRESS: "1/2/4",
+                ClimateSchema.CONF_TARGET_TEMPERATURE_STATE_ADDRESS: "1/2/5",
+                ClimateSchema.CONF_FAN_SPEED_ADDRESS: "1/2/6",
+                ClimateSchema.CONF_FAN_SPEED_STATE_ADDRESS: "1/2/7",
+                ClimateSchema.CONF_FAN_MAX_STEP: 3,
+            }
+        }
+    )
+
+    # read states state updater
+    await knx.assert_read("1/2/3")
+    await knx.assert_read("1/2/5")
+
+    # StateUpdater initialize state
+    await knx.receive_response("1/2/5", RAW_FLOAT_22_0)
+    await knx.receive_response("1/2/3", RAW_FLOAT_21_0)
+
+    # Query status
+    await knx.assert_read("1/2/7")
+    await knx.receive_response("1/2/7", (0x01,))
+    knx.assert_state(
+        "climate.test",
+        HVACMode.HEAT,
+        fan_mode="low",
+        fan_modes=["off", "low", "medium", "high"],
+    )
+
+    # set fan mode
+    await hass.services.async_call(
+        "climate",
+        "set_fan_mode",
+        {"entity_id": "climate.test", "fan_mode": "medium"},
+        blocking=True,
+    )
+    await knx.assert_write("1/2/6", (0x02,))
+    knx.assert_state("climate.test", HVACMode.HEAT, fan_mode="medium")
+
+    # turn off
+    await hass.services.async_call(
+        "climate",
+        "set_fan_mode",
+        {"entity_id": "climate.test", "fan_mode": "off"},
+        blocking=True,
+    )
+    await knx.assert_write("1/2/6", (0x0,))
+    knx.assert_state("climate.test", HVACMode.HEAT, fan_mode="off")
+
+
+async def test_fan_speed_2_steps(hass: HomeAssistant, knx: KNXTestKit) -> None:
+    """Test KNX climate fan speed 2 steps."""
+    await knx.setup_integration(
+        {
+            ClimateSchema.PLATFORM: {
+                CONF_NAME: "test",
+                ClimateSchema.CONF_TEMPERATURE_ADDRESS: "1/2/3",
+                ClimateSchema.CONF_TARGET_TEMPERATURE_ADDRESS: "1/2/4",
+                ClimateSchema.CONF_TARGET_TEMPERATURE_STATE_ADDRESS: "1/2/5",
+                ClimateSchema.CONF_FAN_SPEED_ADDRESS: "1/2/6",
+                ClimateSchema.CONF_FAN_SPEED_STATE_ADDRESS: "1/2/7",
+                ClimateSchema.CONF_FAN_MAX_STEP: 2,
+            }
+        }
+    )
+
+    # read states state updater
+    await knx.assert_read("1/2/3")
+    await knx.assert_read("1/2/5")
+
+    # StateUpdater initialize state
+    await knx.receive_response("1/2/5", RAW_FLOAT_22_0)
+    await knx.receive_response("1/2/3", RAW_FLOAT_21_0)
+
+    # Query status
+    await knx.assert_read("1/2/7")
+    await knx.receive_response("1/2/7", (0x01,))
+    knx.assert_state(
+        "climate.test", HVACMode.HEAT, fan_mode="low", fan_modes=["off", "low", "high"]
+    )
+
+    # set fan mode
+    await hass.services.async_call(
+        "climate",
+        "set_fan_mode",
+        {"entity_id": "climate.test", "fan_mode": "high"},
+        blocking=True,
+    )
+    await knx.assert_write("1/2/6", (0x02,))
+    knx.assert_state("climate.test", HVACMode.HEAT, fan_mode="high")
+
+    # turn off
+    await hass.services.async_call(
+        "climate",
+        "set_fan_mode",
+        {"entity_id": "climate.test", "fan_mode": "off"},
+        blocking=True,
+    )
+    await knx.assert_write("1/2/6", (0x0,))
+    knx.assert_state("climate.test", HVACMode.HEAT, fan_mode="off")
+
+
+async def test_fan_speed_1_step(hass: HomeAssistant, knx: KNXTestKit) -> None:
+    """Test KNX climate fan speed 1 step."""
+    await knx.setup_integration(
+        {
+            ClimateSchema.PLATFORM: {
+                CONF_NAME: "test",
+                ClimateSchema.CONF_TEMPERATURE_ADDRESS: "1/2/3",
+                ClimateSchema.CONF_TARGET_TEMPERATURE_ADDRESS: "1/2/4",
+                ClimateSchema.CONF_TARGET_TEMPERATURE_STATE_ADDRESS: "1/2/5",
+                ClimateSchema.CONF_FAN_SPEED_ADDRESS: "1/2/6",
+                ClimateSchema.CONF_FAN_SPEED_STATE_ADDRESS: "1/2/7",
+                ClimateSchema.CONF_FAN_MAX_STEP: 1,
+            }
+        }
+    )
+
+    # read states state updater
+    await knx.assert_read("1/2/3")
+    await knx.assert_read("1/2/5")
+
+    # StateUpdater initialize state
+    await knx.receive_response("1/2/5", RAW_FLOAT_22_0)
+    await knx.receive_response("1/2/3", RAW_FLOAT_21_0)
+
+    # Query status
+    await knx.assert_read("1/2/7")
+    await knx.receive_response("1/2/7", (0x01,))
+    knx.assert_state(
+        "climate.test", HVACMode.HEAT, fan_mode="on", fan_modes=["off", "on"]
+    )
+
+    # turn off
+    await hass.services.async_call(
+        "climate",
+        "set_fan_mode",
+        {"entity_id": "climate.test", "fan_mode": "off"},
+        blocking=True,
+    )
+    await knx.assert_write("1/2/6", (0x0,))
+    knx.assert_state("climate.test", HVACMode.HEAT, fan_mode="off")
+
+
+async def test_fan_speed_5_steps(hass: HomeAssistant, knx: KNXTestKit) -> None:
+    """Test KNX climate fan speed 5 steps."""
+    await knx.setup_integration(
+        {
+            ClimateSchema.PLATFORM: {
+                CONF_NAME: "test",
+                ClimateSchema.CONF_TEMPERATURE_ADDRESS: "1/2/3",
+                ClimateSchema.CONF_TARGET_TEMPERATURE_ADDRESS: "1/2/4",
+                ClimateSchema.CONF_TARGET_TEMPERATURE_STATE_ADDRESS: "1/2/5",
+                ClimateSchema.CONF_FAN_SPEED_ADDRESS: "1/2/6",
+                ClimateSchema.CONF_FAN_SPEED_STATE_ADDRESS: "1/2/7",
+                ClimateSchema.CONF_FAN_MAX_STEP: 5,
+            }
+        }
+    )
+
+    # read states state updater
+    await knx.assert_read("1/2/3")
+    await knx.assert_read("1/2/5")
+
+    # StateUpdater initialize state
+    await knx.receive_response("1/2/5", RAW_FLOAT_22_0)
+    await knx.receive_response("1/2/3", RAW_FLOAT_21_0)
+
+    # Query status
+    await knx.assert_read("1/2/7")
+    await knx.receive_response("1/2/7", (0x01,))
+    knx.assert_state(
+        "climate.test",
+        HVACMode.HEAT,
+        fan_mode="1",
+        fan_modes=["off", "1", "2", "3", "4", "5"],
+    )
+
+    # set fan mode
+    await hass.services.async_call(
+        "climate",
+        "set_fan_mode",
+        {"entity_id": "climate.test", "fan_mode": "4"},
+        blocking=True,
+    )
+    await knx.assert_write("1/2/6", (0x04,))
+    knx.assert_state("climate.test", HVACMode.HEAT, fan_mode="4")
+
+    # turn off
+    await hass.services.async_call(
+        "climate",
+        "set_fan_mode",
+        {"entity_id": "climate.test", "fan_mode": "off"},
+        blocking=True,
+    )
+    await knx.assert_write("1/2/6", (0x0,))
+    knx.assert_state("climate.test", HVACMode.HEAT, fan_mode="off")
+
+
+async def test_fan_speed_percentage(hass: HomeAssistant, knx: KNXTestKit) -> None:
+    """Test KNX climate fan speed 5 steps."""
+    await knx.setup_integration(
+        {
+            ClimateSchema.PLATFORM: {
+                CONF_NAME: "test",
+                ClimateSchema.CONF_TEMPERATURE_ADDRESS: "1/2/3",
+                ClimateSchema.CONF_TARGET_TEMPERATURE_ADDRESS: "1/2/4",
+                ClimateSchema.CONF_TARGET_TEMPERATURE_STATE_ADDRESS: "1/2/5",
+                ClimateSchema.CONF_FAN_SPEED_ADDRESS: "1/2/6",
+                ClimateSchema.CONF_FAN_SPEED_STATE_ADDRESS: "1/2/7",
+            }
+        }
+    )
+
+    # read states state updater
+    await knx.assert_read("1/2/3")
+    await knx.assert_read("1/2/5")
+
+    # StateUpdater initialize state
+    await knx.receive_response("1/2/5", RAW_FLOAT_22_0)
+    await knx.receive_response("1/2/3", RAW_FLOAT_21_0)
+
+    # Query status
+    await knx.assert_read("1/2/7")
+    await knx.receive_response("1/2/7", (84,))  # 84 / 255 = 33%
+    knx.assert_state(
+        "climate.test",
+        HVACMode.HEAT,
+        fan_mode="33%",
+        fan_modes=["off", "33%", "66%", "100%"],
+    )
+
+    # set fan mode
+    await hass.services.async_call(
+        "climate",
+        "set_fan_mode",
+        {"entity_id": "climate.test", "fan_mode": "66%"},
+        blocking=True,
+    )
+    await knx.assert_write("1/2/6", (168,))  # 168 / 255 = 66%
+    knx.assert_state("climate.test", HVACMode.HEAT, fan_mode="66%")
+
+    # turn off
+    await hass.services.async_call(
+        "climate",
+        "set_fan_mode",
+        {"entity_id": "climate.test", "fan_mode": "off"},
+        blocking=True,
+    )
+    await knx.assert_write("1/2/6", (0x0,))
+    knx.assert_state("climate.test", HVACMode.HEAT, fan_mode="off")
