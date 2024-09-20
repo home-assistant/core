@@ -340,7 +340,7 @@
     },
     "set_schedule": {
       "name": "Set schedule",
-      "description": "Add or remove a schedule",
+      "description": "Overwrite, add or remove a schedule. For mowers with work areas: If a work area is selected, than the changes only have effect on this work area. E.g. If you overwrite all schedules in work area `0`, than the schedules in work area `123456` are not affected.",
       "fields": {
         "mode": {
           "name": "Mode",
