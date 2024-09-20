@@ -494,7 +494,7 @@ async def test_async_get_area_by_name(area_registry: ar.AreaRegistry) -> None:
     assert area_registry.async_get_area_by_name("M o c k 1").normalized_name == "mock1"
 
 
-async def test_async_get_area_by_name_using_alias(
+async def test_async_get_area_by_alias(
     area_registry: ar.AreaRegistry,
 ) -> None:
     """Make sure we can get the area by alias."""
@@ -503,11 +503,9 @@ async def test_async_get_area_by_name_using_alias(
     assert len(area_registry.areas) == 1
 
     assert (
-        area_registry.async_get_area_by_name("A l i a s_1").normalized_name == "mock1"
+        area_registry.async_get_area_by_alias("A l i a s_1").normalized_name == "mock1"
     )
-    assert (
-        area_registry.async_get_area_by_name("A l i a s_2").normalized_name == "mock1"
-    )
+    assert area_registry.async_get_area_by_alias("Alias_2").normalized_name == "mock1"
 
 
 async def test_async_get_area_by_name_not_found(area_registry: ar.AreaRegistry) -> None:
