@@ -108,6 +108,7 @@ async def test_siren_on_reports_correctly(
     [
         ("switch.front_siren"),
         ("switch.front_door_in_home_chime"),
+        ("switch.front_motion_detection"),
     ],
 )
 async def test_switch_can_be_turned_on_and_off(

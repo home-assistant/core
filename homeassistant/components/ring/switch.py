@@ -68,6 +68,14 @@ SWITCHES: Sequence[RingSwitchEntityDescription[Any]] = (
             False
         ),
     ),
+    RingSwitchEntityDescription[RingDoorBell](
+        key="motion_detection",
+        translation_key="motion_detection",
+        exists_fn=lambda device: device.has_capability(RingCapability.MOTION_DETECTION),
+        is_on_fn=lambda device: device.motion_detection,
+        turn_on_fn=lambda device: device.async_set_motion_detection(True),
+        turn_off_fn=lambda device: device.async_set_motion_detection(False),
+    ),
 )
 
 
