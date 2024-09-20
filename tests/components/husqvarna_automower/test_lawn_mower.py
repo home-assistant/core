@@ -276,10 +276,11 @@ async def test_lawn_mower_wrong_service_commands(
 
 
 @pytest.mark.parametrize(
-    ("service", "service_data", "output"),
+    ("entity", "mower_id", "service_data", "output"),
     [
         (
-            "set_schedule",
+            "lawn_mower.test_mower_1",
+            TEST_MOWER_ID,
             {
                 "mode": "overwrite",
                 "start": "17:00:00",
@@ -313,7 +314,8 @@ async def test_lawn_mower_wrong_service_commands(
             ),
         ),
         (
-            "set_schedule",
+            "lawn_mower.test_mower_1",
+            TEST_MOWER_ID,
             {
                 "mode": "remove",
                 "start": "01:00:00",
@@ -347,7 +349,8 @@ async def test_lawn_mower_wrong_service_commands(
             ),
         ),
         (
-            "set_schedule",
+            "lawn_mower.test_mower_1",
+            TEST_MOWER_ID,
             {
                 "mode": "add",
                 "start": "10:00:00",
@@ -404,12 +407,74 @@ async def test_lawn_mower_wrong_service_commands(
                 }
             ),
         ),
+        (
+            "lawn_mower.test_mower_2",
+            "1234",
+            {
+                "mode": "add",
+                "start": "10:00:00",
+                "end": "11:00:00",
+                "monday": True,
+                "tuesday": False,
+                "wednesday": False,
+                "thursday": False,
+                "friday": False,
+                "saturday": False,
+                "sunday": False,
+            },
+            Tasks.from_dict(
+                {
+                    "tasks": [
+                        {
+                            "start": 120,
+                            "duration": 49,
+                            "monday": True,
+                            "tuesday": False,
+                            "wednesday": False,
+                            "thursday": False,
+                            "friday": False,
+                            "saturday": False,
+                            "sunday": False,
+                        },
+                        {
+                            "start": 600,
+                            "duration": 60,
+                            "monday": True,
+                            "tuesday": False,
+                            "wednesday": False,
+                            "thursday": False,
+                            "friday": False,
+                            "saturday": False,
+                            "sunday": False,
+                        },
+                    ]
+                }
+            ),
+        ),
+        (
+            "lawn_mower.test_mower_2",
+            "1234",
+            {
+                "mode": "remove",
+                "start": "02:00",
+                "end": "02:49",
+                "monday": True,
+                "tuesday": False,
+                "wednesday": False,
+                "thursday": False,
+                "friday": False,
+                "saturday": False,
+                "sunday": False,
+            },
+            Tasks.from_dict({"tasks": []}),
+        ),
     ],
 )
 async def test_lawn_mower_set_schedule_command(
     hass: HomeAssistant,
     output: Tasks,
-    service: str,
+    entity: str,
+    mower_id: str,
     service_data: dict[str, int] | None,
     mock_automower_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
@@ -420,12 +485,12 @@ async def test_lawn_mower_set_schedule_command(
     setattr(mock_automower_client.commands, "set_calendar", mocked_method)
     await hass.services.async_call(
         domain=DOMAIN,
-        service=service,
-        target={"entity_id": "lawn_mower.test_mower_1"},
+        service="set_schedule",
+        target={"entity_id": entity},
         service_data=service_data,
         blocking=True,
     )
-    mocked_method.assert_called_once_with(TEST_MOWER_ID, output)
+    mocked_method.assert_called_once_with(mower_id, output)
 
     getattr(mock_automower_client.commands, "set_calendar").side_effect = ApiException(
         "Test error"
@@ -436,8 +501,8 @@ async def test_lawn_mower_set_schedule_command(
     ):
         await hass.services.async_call(
             domain=DOMAIN,
-            service=service,
-            target={"entity_id": "lawn_mower.test_mower_1"},
+            service="set_schedule",
+            target={"entity_id": entity},
             service_data=service_data,
             blocking=True,
         )

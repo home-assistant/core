@@ -268,6 +268,8 @@ class AutomowerLawnMowerEntity(AutomowerAvailableEntity, LawnMowerEntity):
                     if work_area_id is not None:
                         if calendar_entry.work_area_id == user_input.work_area_id:
                             new_list.append(calendar_entry)
+                    if work_area_id is None:
+                        new_list.append(calendar_entry)
             new_list.append(user_input)
             tasks = Tasks(tasks=new_list)
             await self.coordinator.api.commands.set_calendar(self.mower_id, tasks)
