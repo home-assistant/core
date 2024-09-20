@@ -34,7 +34,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import ATTR_LOCKED, ATTR_OFFSET, ATTR_VALVE
-from .deconz_device import DeconzDevice
+from .entity import DeconzDevice
 from .hub import DeconzHub
 
 DECONZ_FAN_SMART = "smart"
