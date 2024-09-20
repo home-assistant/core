@@ -327,7 +327,8 @@ class EsphomeAssistSatellite(
             announcement.message,
             announcement.media_id,
         )
-        if not message:
+        media_id = announcement.media_id
+        if announcement.media_id_source != "tts":
             # Route non-TTS media through the proxy
             format_to_use: MediaPlayerSupportedFormat | None = None
             for supported_format in chain(
@@ -353,7 +354,7 @@ class EsphomeAssistSatellite(
                 media_id = async_process_play_media_url(self.hass, proxy_url)
 
         await self.cli.send_voice_assistant_announcement_await_response(
-            announcement.media_id, _ANNOUNCEMENT_TIMEOUT_SEC, announcement.message
+            media_id, _ANNOUNCEMENT_TIMEOUT_SEC, announcement.message
         )
 
     async def handle_pipeline_start(
