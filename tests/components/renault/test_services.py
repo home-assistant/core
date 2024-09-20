@@ -7,7 +7,7 @@ from unittest.mock import patch
 import pytest
 from renault_api.exceptions import RenaultException
 from renault_api.kamereon import schemas
-from renault_api.kamereon.models import ChargeSchedule
+from renault_api.kamereon.models import ChargeSchedule, HvacSchedule
 from syrupy import SnapshotAssertion
 
 from homeassistant.components.renault.const import DOMAIN
@@ -17,6 +17,7 @@ from homeassistant.components.renault.services import (
     ATTR_VEHICLE,
     ATTR_WHEN,
     SERVICE_AC_CANCEL,
+    SERVICE_AC_SET_SCHEDULES,
     SERVICE_AC_START,
     SERVICE_CHARGE_SET_SCHEDULES,
 )
@@ -236,6 +237,101 @@ async def test_service_set_charge_schedule_multi(
     # Thursday keeps original values
     assert mock_call_data[1].thursday.startTime == "T23:30Z"
     assert mock_call_data[1].thursday.duration == 15
+
+
+async def test_service_set_ac_schedule(
+    hass: HomeAssistant, config_entry: ConfigEntry, snapshot: SnapshotAssertion
+) -> None:
+    """Test that service invokes renault_api with correct data."""
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    schedules = {"id": 2}
+    data = {
+        ATTR_VEHICLE: get_device_id(hass),
+        ATTR_SCHEDULES: schedules,
+    }
+
+    with (
+        patch(
+            "renault_api.renault_vehicle.RenaultVehicle.get_hvac_settings",
+            return_value=schemas.KamereonVehicleDataResponseSchema.loads(
+                load_fixture("renault/hvac_settings.json")
+            ).get_attributes(schemas.KamereonVehicleHvacSettingsDataSchema),
+        ),
+        patch(
+            "renault_api.renault_vehicle.RenaultVehicle.set_hvac_schedules",
+            return_value=(
+                schemas.KamereonVehicleHvacScheduleActionDataSchema.loads(
+                    load_fixture("renault/action.set_ac_schedules.json")
+                )
+            ),
+        ) as mock_action,
+    ):
+        await hass.services.async_call(
+            DOMAIN, SERVICE_AC_SET_SCHEDULES, service_data=data, blocking=True
+        )
+    assert len(mock_action.mock_calls) == 1
+    mock_call_data: list[ChargeSchedule] = mock_action.mock_calls[0][1][0]
+    assert mock_call_data == snapshot
+
+
+async def test_service_set_ac_schedule_multi(
+    hass: HomeAssistant, config_entry: ConfigEntry, snapshot: SnapshotAssertion
+) -> None:
+    """Test that service invokes renault_api with correct data."""
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    schedules = [
+        {
+            "id": 3,
+            "activated": True,
+            "monday": {"readyAtTime": "T12:00Z"},
+            "tuesday": {"readyAtTime": "T12:00Z"},
+            "wednesday": None,
+            "friday": {"readyAtTime": "T12:00Z"},
+            "saturday": {"readyAtTime": "T12:00Z"},
+            "sunday": {"readyAtTime": "T12:00Z"},
+        },
+        {"id": 4},
+    ]
+    data = {
+        ATTR_VEHICLE: get_device_id(hass),
+        ATTR_SCHEDULES: schedules,
+    }
+
+    with (
+        patch(
+            "renault_api.renault_vehicle.RenaultVehicle.get_hvac_settings",
+            return_value=schemas.KamereonVehicleDataResponseSchema.loads(
+                load_fixture("renault/hvac_settings.json")
+            ).get_attributes(schemas.KamereonVehicleHvacSettingsDataSchema),
+        ),
+        patch(
+            "renault_api.renault_vehicle.RenaultVehicle.set_hvac_schedules",
+            return_value=(
+                schemas.KamereonVehicleHvacScheduleActionDataSchema.loads(
+                    load_fixture("renault/action.set_ac_schedules.json")
+                )
+            ),
+        ) as mock_action,
+    ):
+        await hass.services.async_call(
+            DOMAIN, SERVICE_AC_SET_SCHEDULES, service_data=data, blocking=True
+        )
+    assert len(mock_action.mock_calls) == 1
+    mock_call_data: list[HvacSchedule] = mock_action.mock_calls[0][1][0]
+    assert mock_call_data == snapshot
+
+    # Schedule is activated now
+    assert mock_call_data[2].activated is True
+    # Monday updated with new values
+    assert mock_call_data[2].monday.readyAtTime == "T12:00Z"
+    # Wednesday has original values cleared
+    assert mock_call_data[2].wednesday is None
+    # Thursday keeps original values
+    assert mock_call_data[2].thursday.readyAtTime == "T23:30Z"
 
 
 async def test_service_invalid_device_id(
