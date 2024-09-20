@@ -145,6 +145,9 @@ def _mocked_ring_device(device_dict, device_family, device_class, capabilities):
         mock_device.configure_mock(
             motion_detection=device_dict["settings"].get("motion_detection_enabled"),
         )
+        mock_device.async_set_motion_detection.side_effect = (
+            lambda i: mock_device.configure_mock(motion_detection=i)
+        )
 
     if has_capability(RingCapability.LIGHT):
         mock_device.configure_mock(lights=device_dict.get("led_status"))
