@@ -911,7 +911,7 @@ split-on-trailing-comma = false
 "homeassistant/scripts/*" = ["T201"]
 "script/*" = ["T20"]
 
-# Allow relative imports within components
+# Allow relative imports within auth and within components
 "homeassistant/auth/*/*" = ["TID252"]
 "homeassistant/components/*/*/*" = ["TID252"]
 "tests/components/*/*/*" = ["TID252"]
