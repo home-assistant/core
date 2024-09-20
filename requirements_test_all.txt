@@ -367,6 +367,9 @@ aioswitcher==4.0.3
 # homeassistant.components.syncthing
 aiosyncthing==0.5.1
 
+# homeassistant.components.portainer
+aiotainer==0.0.0
+
 # homeassistant.components.tankerkoenig
 aiotankerkoenig==0.4.2
 

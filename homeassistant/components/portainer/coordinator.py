@@ -1,4 +1,4 @@
-"""Data UpdateCoordinator for the Husqvarna Automower integration."""
+"""Data UpdateCoordinator for the Portainer integration."""
 
 from datetime import timedelta
 import logging
@@ -15,12 +15,12 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-MAX_WS_RECONNECT_TIME = 600
-SCAN_INTERVAL = timedelta(minutes=8)
+
+SCAN_INTERVAL = timedelta(seconds=30)
 
 
-class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[dict[int, NodeData]]):
-    """Class to manage fetching Husqvarna data."""
+class PortainerDataUpdateCoordinator(DataUpdateCoordinator[dict[int, NodeData]]):
+    """Class to manage fetching data."""
 
     def __init__(
         self, hass: HomeAssistant, api: PortainerClient, entry: ConfigEntry

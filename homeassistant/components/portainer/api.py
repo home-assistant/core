@@ -1,4 +1,4 @@
-"""API for Husqvarna Automower bound to Home Assistant OAuth."""
+"""API for Portainer bound to Home Assistant OAuth."""
 
 import logging
 
@@ -11,10 +11,10 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class AsyncConfigEntryAuth(AbstractAuth):
-    """Provide Husqvarna Automower authentication tied to an OAuth2 based config entry."""
+    """Provide Portainer authentication tied to an OAuth2 based config entry."""
 
     def __init__(self, websession: ClientSession, entry) -> None:
-        """Initialize Husqvarna Automower auth."""
+        """Initialize Portainer auth."""
         self.entry = entry
         super().__init__(websession, entry.data["ip_address"])
 

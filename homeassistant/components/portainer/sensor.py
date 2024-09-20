@@ -1,4 +1,4 @@
-"""Creates the sensor entities for the mower."""
+"""Creates the sensor entities for the node."""
 
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
@@ -13,25 +13,47 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
+from homeassistant.const import UnitOfInformation
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from . import PortainerConfigEntry
-from .coordinator import AutomowerDataUpdateCoordinator
-from .entity import AutomowerBaseEntity
+from .coordinator import PortainerDataUpdateCoordinator
+from .entity import ContainerBaseEntity, SnapshotBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_WORK_AREA_ID_ASSIGNMENT = "work_area_id_assignment"
+
+@dataclass(frozen=True, kw_only=True)
+class SnapshotSensorEntityDescription(SensorEntityDescription):
+    """Describes Portainer sensor entity."""
+
+    value_fn: Callable[[Snapshot], StateType | datetime]
 
 
-STATE_NO_WORK_AREA_ACTIVE = "no_work_area_active"
+SNAPSHOT_SENSOR_TYPES: tuple[SnapshotSensorEntityDescription, ...] = (
+    SnapshotSensorEntityDescription(
+        key="total_cpu",
+        translation_key="total_cpu",
+        suggested_display_precision=0,
+        value_fn=lambda data: data.total_cpu,
+    ),
+    SnapshotSensorEntityDescription(
+        key="total_memory",
+        translation_key="total_memory",
+        device_class=SensorDeviceClass.DATA_SIZE,
+        native_unit_of_measurement=UnitOfInformation.BYTES,
+        suggested_unit_of_measurement=UnitOfInformation.GIGABYTES,
+        suggested_display_precision=2,
+        value_fn=lambda data: data.total_memory,
+    ),
+)
 
 
 @dataclass(frozen=True, kw_only=True)
-class AutomowerSensorEntityDescription(SensorEntityDescription):
-    """Describes Automower sensor entity."""
+class ContainerSensorEntityDescription(SensorEntityDescription):
+    """Describes Portainer sensor entity."""
 
     exists_fn: Callable[[NodeData], bool] = lambda _: True
     extra_state_attributes_fn: Callable[[NodeData], Mapping[str, Any] | None] = (
@@ -41,8 +63,8 @@ class AutomowerSensorEntityDescription(SensorEntityDescription):
     value_fn: Callable[[Container], StateType | datetime]
 
 
-SENSOR_TYPES: tuple[AutomowerSensorEntityDescription, ...] = (
-    AutomowerSensorEntityDescription(
+CONTAINER_SENSOR_TYPES: tuple[ContainerSensorEntityDescription, ...] = (
+    ContainerSensorEntityDescription(
         key="state",
         translation_key="state",
         device_class=SensorDeviceClass.ENUM,
@@ -58,37 +80,72 @@ async def async_setup_entry(
 ) -> None:
     """Set up sensor platform."""
     coordinator = entry.runtime_data
+
+    entities: list[SensorEntity] = []
     for node_id in coordinator.data:
         for snapshot in coordinator.data[node_id].snapshots:
+            entities.extend(
+                SnapshotSensorEntity(description, coordinator, node_id, snapshot)
+                for description in SNAPSHOT_SENSOR_TYPES
+            )
             for container in snapshot.docker_snapshot_raw.containers:
-                async_add_entities(
-                    AutomowerSensorEntity(
+                entities.extend(
+                    ContainerSensorEntity(
                         node_id, snapshot, container, coordinator, description
                     )
-                    for description in SENSOR_TYPES
+                    for description in CONTAINER_SENSOR_TYPES
                     if description.exists_fn(coordinator.data[node_id])
                 )
+    async_add_entities(entities)
 
 
-class AutomowerSensorEntity(AutomowerBaseEntity, SensorEntity):
-    """Defining the Automower Sensors with AutomowerSensorEntityDescription."""
+class SnapshotSensorEntity(SnapshotBaseEntity, SensorEntity):
+    """Defining the Portainer Sensors with PortainerSensorEntityDescription."""
 
-    entity_description: AutomowerSensorEntityDescription
-    _unrecorded_attributes = frozenset({ATTR_WORK_AREA_ID_ASSIGNMENT})
+    entity_description: ContainerSensorEntityDescription
 
     def __init__(
         self,
-        mower_id: int,
+        description: SnapshotSensorEntityDescription,
+        coordinator: PortainerDataUpdateCoordinator,
+        node_id: int,
+        snapshot: Snapshot,
+    ) -> None:
+        """Set up PortainerSensors."""
+        super().__init__(
+            coordinator,
+            node_id,
+            snapshot,
+        )
+        self.entity_description = description
+        self._attr_unique_id = f"{node_id}-{description.key}"
+        _LOGGER.debug("self.node_attributes %s", self.snapshot_attributes)
+
+    @property
+    def native_value(self) -> StateType | datetime:
+        """Return the state of the sensor."""
+        _LOGGER.debug("self.node_attributes %s", self.node_attributes)
+        return self.entity_description.value_fn(self.snapshot_attributes)
+
+
+class ContainerSensorEntity(ContainerBaseEntity, SensorEntity):
+    """Defining the Portainer Sensors with PortainerSensorEntityDescription."""
+
+    entity_description: ContainerSensorEntityDescription
+
+    def __init__(
+        self,
+        node_id: int,
         snapshot: Snapshot,
         container: Container,
-        coordinator: AutomowerDataUpdateCoordinator,
-        description: AutomowerSensorEntityDescription,
+        coordinator: PortainerDataUpdateCoordinator,
+        description: ContainerSensorEntityDescription,
     ) -> None:
-        """Set up AutomowerSensors."""
-        super().__init__(mower_id, snapshot, container, coordinator)
+        """Set up PortainerSensors."""
+        super().__init__(node_id, snapshot, container, coordinator)
         self.entity_description = description
-        self._attr_unique_id = f"{mower_id}-{container}-{description.key}"
-        _LOGGER.debug("self.mower_attributes %s", self.mower_attributes)
+        self._attr_unique_id = f"{node_id}-{container}-{description.key}"
+        _LOGGER.debug("self.node_attributes %s", self.node_attributes)
         self.container = container
         self._attr_translation_placeholders = {
             "container": container.names[0].strip("/").capitalize()
@@ -97,15 +154,10 @@ class AutomowerSensorEntity(AutomowerBaseEntity, SensorEntity):
     @property
     def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
-        _LOGGER.debug("self.mower_attributes %s", self.mower_attributes)
+        _LOGGER.debug("self.node_attributes %s", self.node_attributes)
         return self.entity_description.value_fn(self.container_attributes)
 
     @property
     def options(self) -> list[str] | None:
         """Return the option of the sensor."""
-        return self.entity_description.option_fn(self.mower_attributes)
-
-    @property
-    def extra_state_attributes(self) -> Mapping[str, Any] | None:
-        """Return the state attributes."""
-        return self.entity_description.extra_state_attributes_fn(self.mower_attributes)
+        return self.entity_description.option_fn(self.container_attributes)

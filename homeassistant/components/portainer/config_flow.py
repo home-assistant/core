@@ -2,29 +2,18 @@
 
 from typing import Any
 
-import logging
-
-from aiotainer.client import PortainerClient
-from aiohttp import ClientResponseError
-from aiotainer.auth import AbstractAuth
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import aiohttp_client, config_entry_oauth2_flow
 from aiohttp import ClientSession
-from . import api
-from .coordinator import AutomowerDataUpdateCoordinator
 from aiohttp.client_exceptions import ClientConnectionError
+from aiotainer.auth import AbstractAuth
 from aiotainer.client import PortainerClient
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT, CONF_ACCESS_TOKEN
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_IP_ADDRESS, CONF_PORT
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
-from .const import DEFAULT_PORT, DOMAIN
+from .const import DOMAIN
 
 DATA_SCHEMA = vol.Schema(
     {

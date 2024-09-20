@@ -1,4 +1,4 @@
-"""The constants for the Husqvarna Automower integration."""
+"""The constants for the Portainer integration."""
 
 DOMAIN = "portainer"
 NAME = "Portainer"

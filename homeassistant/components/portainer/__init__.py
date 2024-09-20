@@ -12,7 +12,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
 
 from . import api
-from .coordinator import AutomowerDataUpdateCoordinator
+from .coordinator import PortainerDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -20,14 +20,14 @@ PLATFORMS: list[Platform] = [
     Platform.SENSOR,
 ]
 
-type PortainerConfigEntry = ConfigEntry[AutomowerDataUpdateCoordinator]
+type PortainerConfigEntry = ConfigEntry[PortainerDataUpdateCoordinator]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: PortainerConfigEntry) -> bool:
     """Set up this integration using UI."""
     client_session = aiohttp_client.async_get_clientsession(hass, False)
     api_api = api.AsyncConfigEntryAuth(client_session, entry)
-    automower_api = PortainerClient(api_api)
+    Portainer_api = PortainerClient(api_api)
     try:
         await api_api.async_get_access_token()
     except ClientResponseError as err:
@@ -35,7 +35,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: PortainerConfigEntry) ->
             raise ConfigEntryAuthFailed from err
         raise ConfigEntryNotReady from err
 
-    coordinator = AutomowerDataUpdateCoordinator(hass, automower_api, entry)
+    coordinator = PortainerDataUpdateCoordinator(hass, Portainer_api, entry)
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
