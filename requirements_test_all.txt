@@ -2388,7 +2388,7 @@ xknxproject==3.7.1
 xmltodict==0.13.0
 
 # homeassistant.components.yale_smart_alarm
-yalesmartalarmclient==0.4.0
+yalesmartalarmclient==0.4.2
 
 # homeassistant.components.august
 # homeassistant.components.yale
