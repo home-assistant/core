@@ -5,37 +5,40 @@ import logging
 from typing import Any
 
 from homeassistant.components.remote import RemoteEntity
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import RemoteControl
+from . import RemoteControl, SkyRemoteConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigEntry,
+    config: SkyRemoteConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Sky remote platform."""
-    host = config.data[CONF_HOST]
-    port = config.data[CONF_PORT]
-    _LOGGER.debug("Setting up Host: %s, Port: %s", host, port)
-    async_add_entities([SkyRemote(host, port, config.entry_id)], True)
+    async_add_entities(
+        [
+            SkyRemote(
+                config.runtime_data.remote, config.data[CONF_HOST], config.entry_id
+            )
+        ],
+        True,
+    )
 
 
 class SkyRemote(RemoteEntity):
     """Representation of a Sky Remote."""
 
-    def __init__(self, host, port, unique_id) -> None:
+    def __init__(self, remote: RemoteControl, name: str, unique_id: str) -> None:
         """Initialize the Sky Remote."""
-        self._remote = RemoteControl(host, port)
+        self._remote = remote
         self._is_on = True
         self._attr_unique_id = unique_id
-        self._attr_name = host
+        self._attr_name = name
 
     def turn_on(self, activity: str | None = None, **kwargs: Any) -> None:
         """Send the power on command."""

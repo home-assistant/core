@@ -6,5 +6,5 @@
   "documentation": "https://www.home-assistant.io/integrations/sky_remote",
   "integration_type": "device",
   "iot_class": "assumed_state",
-  "requirements": ["skyboxremote==0.0.5"]
+  "requirements": ["skyboxremote==0.0.6"]
 }
