@@ -322,12 +322,14 @@ async def test_set_temperature(
 
 
 @pytest.mark.parametrize(
-    ("service_data", "target_temperature", "expected_call_args"),
+    ("service_data", "target_temperature", "current_preset", "expected_call_args"),
     [
-        ({ATTR_HVAC_MODE: HVACMode.OFF}, 22, [call(0)]),
-        ({ATTR_HVAC_MODE: HVACMode.HEAT}, 0.0, [call(22)]),
-        ({ATTR_HVAC_MODE: HVACMode.HEAT}, 18, []),
-        ({ATTR_HVAC_MODE: HVACMode.HEAT}, 22, []),
+        ({ATTR_HVAC_MODE: HVACMode.OFF}, 22, PRESET_COMFORT, [call(0)]),
+        ({ATTR_HVAC_MODE: HVACMode.HEAT}, 0.0, PRESET_ECO, [call(16)]),
+        ({ATTR_HVAC_MODE: HVACMode.OFF}, 16, PRESET_ECO, [call(0)]),
+        ({ATTR_HVAC_MODE: HVACMode.HEAT}, 0.0, PRESET_COMFORT, [call(22)]),
+        ({ATTR_HVAC_MODE: HVACMode.HEAT}, 18, PRESET_ECO, []),
+        ({ATTR_HVAC_MODE: HVACMode.HEAT}, 22, PRESET_COMFORT, []),
     ],
 )
 async def test_set_hvac_mode(
@@ -335,11 +337,20 @@ async def test_set_hvac_mode(
     fritz: Mock,
     service_data: dict,
     target_temperature: float,
+    current_preset: str,
     expected_call_args: list[_Call],
 ) -> None:
     """Test setting hvac mode."""
     device = FritzDeviceClimateMock()
     device.target_temperature = target_temperature
+
+    # Configure the mock to requested preset
+    if current_preset is PRESET_COMFORT:
+        device.nextchange_temperature = device.eco_temperature
+    else:
+        # This is the default value of FritzDeviceClimateMock
+        device.nextchange_temperature = device.comfort_temperature
+
     assert await setup_config_entry(
         hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
     )
