@@ -13,12 +13,7 @@ from evohomeasync2 import EvohomeClient
 from evohomeasync2.broker import Broker
 import pytest
 
-from homeassistant.components.evohome import (
-    CONF_PASSWORD,
-    CONF_USERNAME,
-    DOMAIN,
-    EvoBroker,
-)
+from homeassistant.components.evohome import CONF_PASSWORD, CONF_USERNAME, DOMAIN
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -32,6 +27,7 @@ from .const import ACCESS_TOKEN, REFRESH_TOKEN, USERNAME
 from tests.common import load_json_array_fixture, load_json_object_fixture
 
 if TYPE_CHECKING:
+    from homeassistant.components.evohome import EvoBroker
     from homeassistant.components.evohome.climate import EvoController, EvoZone
     from homeassistant.components.evohome.water_heater import EvoDHW
 
