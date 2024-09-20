@@ -7,9 +7,6 @@
       "ip_address": {
         "default": "mdi:ip-network"
       },
-      "mac_address": {
-        "default": "mdi:lan"
-      },
       "iface": {
         "default": "mdi:ethernet"
       }

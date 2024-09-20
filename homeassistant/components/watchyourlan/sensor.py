@@ -124,8 +124,8 @@ class WatchYourLANGenericSensor(
     @property
     def native_value(self) -> str:
         """Return the native value of the sensor based on its description."""
-        if self.entity_description.key == "online_status":
-            return "Online" if self.device.get("Now", 0) == 1 else "Offline"
+        # if self.entity_description.key == "online_status":
+        #    return "Online" if self.device.get("Now", 0) == 1 else "Offline"
         return self.device.get(self._get_device_field_for_key(), None)
 
     def _get_device_field_for_key(self) -> str:
