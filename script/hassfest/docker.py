@@ -67,9 +67,12 @@ COPY rootfs /
 
 # Get go2rtc binary
 RUN \
-    go2rtc_suffix=${{BUILD_ARCH}} \
-    && if [ "${{BUILD_ARCH}}" = "armhf" ]; then go2rtc_suffix='armv6'; \
-    elif [ "${{BUILD_ARCH}}" = "armv7" ]; then go2rtc_suffix='arm'; fi \
+    case "${{BUILD_ARCH}}" in \
+        "aarch64") go2rtc_suffix='arm64' ;; \
+        "armhf") go2rtc_suffix='armv6' ;; \
+        "armv7") go2rtc_suffix='arm' ;; \
+        *) go2rtc_suffix=${{BUILD_ARCH}} ;; \
+    esac \
     && curl -L https://github.com/AlexxIT/go2rtc/releases/download/v{go2rtc}/go2rtc_linux_${{go2rtc_suffix}} --output /bin/go2rtc \
     && chmod +x /bin/go2rtc \
     # Verify go2rtc can be executed
