@@ -379,18 +379,18 @@ ENERGY_LIVE_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(key="island_status", device_class=SensorDeviceClass.ENUM),
 )
 
-WALL_CONNECTOR_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
-    SensorEntityDescription(
+WALL_CONNECTOR_DESCRIPTIONS: tuple[TeslemetrySensorEntityDescription, ...] = (
+    TeslemetrySensorEntityDescription(
         key="wall_connector_state",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    SensorEntityDescription(
+    TeslemetrySensorEntityDescription(
         key="wall_connector_fault_state",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    SensorEntityDescription(
+    TeslemetrySensorEntityDescription(
         key="wall_connector_power",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPower.WATT,
@@ -398,8 +398,9 @@ WALL_CONNECTOR_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
         suggested_display_precision=2,
         device_class=SensorDeviceClass.POWER,
     ),
-    SensorEntityDescription(
+    TeslemetrySensorEntityDescription(
         key="vin",
+        value_fn=lambda vin: vin or "disconnected",
     ),
 )
 
@@ -525,13 +526,13 @@ class TeslemetryEnergyLiveSensorEntity(TeslemetryEnergyLiveEntity, SensorEntity)
 class TeslemetryWallConnectorSensorEntity(TeslemetryWallConnectorEntity, SensorEntity):
     """Base class for Teslemetry energy site metric sensors."""
 
-    entity_description: SensorEntityDescription
+    entity_description: TeslemetrySensorEntityDescription
 
     def __init__(
         self,
         data: TeslemetryEnergyData,
         din: str,
-        description: SensorEntityDescription,
+        description: TeslemetrySensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
         self.entity_description = description
@@ -543,8 +544,8 @@ class TeslemetryWallConnectorSensorEntity(TeslemetryWallConnectorEntity, SensorE
 
     def _async_update_attrs(self) -> None:
         """Update the attributes of the sensor."""
-        self._attr_available = not self.is_none
-        self._attr_native_value = self._value
+        if self.exists:
+            self._attr_native_value = self.entity_description.value_fn(self._value)
 
 
 class TeslemetryEnergyInfoSensorEntity(TeslemetryEnergyInfoEntity, SensorEntity):

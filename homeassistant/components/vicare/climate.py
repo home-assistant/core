@@ -40,7 +40,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DEVICE_LIST, DOMAIN
 from .entity import ViCareEntity
 from .types import HeatingProgram, ViCareDevice
-from .utils import get_burners, get_circuits, get_compressors
+from .utils import get_burners, get_circuits, get_compressors, get_device_serial
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -87,6 +87,7 @@ def _build_entities(
     """Create ViCare climate entities for a device."""
     return [
         ViCareClimate(
+            get_device_serial(device.api),
             device.config,
             device.api,
             circuit,
@@ -143,12 +144,15 @@ class ViCareClimate(ViCareEntity, ClimateEntity):
 
     def __init__(
         self,
+        device_serial: str | None,
         device_config: PyViCareDeviceConfig,
         device: PyViCareDevice,
         circuit: PyViCareHeatingCircuit,
     ) -> None:
         """Initialize the climate device."""
-        super().__init__(self._attr_translation_key, device_config, device, circuit)
+        super().__init__(
+            self._attr_translation_key, device_serial, device_config, device, circuit
+        )
         self._device = device
         self._attributes: dict[str, Any] = {}
         self._attributes["vicare_programs"] = self._api.getPrograms()

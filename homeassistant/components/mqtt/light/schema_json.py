@@ -65,7 +65,7 @@ from ..const import (
     CONF_STATE_TOPIC,
     DOMAIN as MQTT_DOMAIN,
 )
-from ..mixins import MqttEntity
+from ..entity import MqttEntity
 from ..models import ReceiveMessage
 from ..schemas import MQTT_ENTITY_COMMON_SCHEMA
 from ..util import valid_subscribe_topic

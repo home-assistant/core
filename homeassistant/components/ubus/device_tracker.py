@@ -123,7 +123,7 @@ class UbusDeviceScanner(DeviceScanner):
         if not self.success_init:
             return False
 
-        _LOGGER.info("Checking hostapd")
+        _LOGGER.debug("Checking hostapd")
 
         if not self.hostapd:
             hostapd = self.ubus.get_hostapd()

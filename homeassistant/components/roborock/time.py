@@ -19,7 +19,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import RoborockConfigEntry
 from .coordinator import RoborockDataUpdateCoordinator
-from .device import RoborockEntityV1
+from .entity import RoborockEntityV1
 
 _LOGGER = logging.getLogger(__name__)
 
