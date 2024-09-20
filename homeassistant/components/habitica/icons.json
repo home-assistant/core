@@ -21,9 +21,6 @@
       "revive": {
         "default": "mdi:grave-stone"
       },
-      "fireball": {
-        "default": "mdi:fire"
-      },
       "mpheal": {
         "default": "mdi:broadcast"
       },

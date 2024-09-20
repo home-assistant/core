@@ -36,7 +36,6 @@ class HabitipyButtonEntity(StrEnum):
     BUY_HEALTH_POTION = "buy_health_potion"
     ALLOCATE_ALL_STAT_POINTS = "allocate_all_stat_points"
     REVIVE = "revive"
-    FIREBALL = "fireball"
     MPHEAL = "mpheal"
     EARTH = "earth"
     FROST = "frost"
@@ -88,16 +87,6 @@ BUTTON_DESCRIPTIONS: tuple[HabiticaButtonEntityDescription, ...] = (
 
 
 MAGE_SKILLS: tuple[HabiticaButtonEntityDescription, ...] = (
-    HabiticaButtonEntityDescription(
-        key=HabitipyButtonEntity.FIREBALL,
-        translation_key=HabitipyButtonEntity.FIREBALL,
-        press_fn=lambda coordinator: coordinator.api.user.class_.cast[
-            "fireball"
-        ].post(),
-        available_fn=lambda data: data.user["stats"]["lvl"] >= 11
-        and data.user["stats"]["mp"] >= 10
-        and data.user["stats"]["class"] == MAGE,
-    ),
     HabiticaButtonEntityDescription(
         key=HabitipyButtonEntity.MPHEAL,
         translation_key=HabitipyButtonEntity.MPHEAL,
