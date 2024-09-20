@@ -49,6 +49,9 @@
       "internet": {
         "name": "Internet"
       },
+      "vpn": {
+        "name": "VPN"
+      },
       "wifi": {
         "name": "Wi-Fi"
       }
@@ -116,6 +119,9 @@
       },
       "night_mode": {
         "name": "LED night mode"
+      },
+      "vpn_enabled": {
+        "name": "VPN enabled"
       }
     },
     "update": {

@@ -56,14 +56,7 @@ class HabiticaDataUpdateCoordinator(DataUpdateCoordinator[HabiticaData]):
         try:
             user_response = await self.api.user.get()
             tasks_response = await self.api.tasks.user.get()
-            tasks_response.extend(
-                [
-                    {"id": task["_id"], **task}
-                    for task in await self.api.tasks.user.get(type="completedTodos")
-                    if task.get("_id")
-                ]
-            )
-
+            tasks_response.extend(await self.api.tasks.user.get(type="completedTodos"))
         except ClientResponseError as error:
             if error.status == HTTPStatus.TOO_MANY_REQUESTS:
                 _LOGGER.debug("Currently rate limited, skipping update")
