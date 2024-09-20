@@ -63,10 +63,7 @@ async def test_verify_api_version_outdated(
         )
 
         assert result["type"] == FlowResultType.FORM
-        assert (
-            result["errors"]["base"]
-            == "Network ID parameter is empty. Use the latest API."
-        )
+        assert result["errors"]["base"] == "api_version_error"
 
 
 async def test_http_error_handling(hass: HomeAssistant, mocked_entry) -> None:
@@ -84,7 +81,7 @@ async def test_http_error_handling(hass: HomeAssistant, mocked_entry) -> None:
         )
 
         assert result["type"] == FlowResultType.FORM
-        assert result["errors"]["base"] == "HTTP exception -> Args: ('HTTP error',)"
+        assert result["errors"]["base"] == "unexpected_error"
 
 
 async def test_invalid_url_handling(hass: HomeAssistant, mocked_entry) -> None:
@@ -102,10 +99,7 @@ async def test_invalid_url_handling(hass: HomeAssistant, mocked_entry) -> None:
         )
 
         assert result["type"] == FlowResultType.FORM
-        assert (
-            result["errors"]["base"]
-            == "Invalid URL exception -> Args: ('Invalid URL',)"
-        )
+        assert result["errors"]["base"] == "url_error"
 
 
 async def test_generic_error_handling(hass: HomeAssistant, mocked_entry) -> None:
@@ -123,7 +117,4 @@ async def test_generic_error_handling(hass: HomeAssistant, mocked_entry) -> None
         )
 
         assert result["type"] == FlowResultType.FORM
-        assert (
-            result["errors"]["base"]
-            == "Generic exception raised -> Args: ('Generic error',)"
-        )
+        assert result["errors"]["base"] == "unexpected_error"

@@ -2,7 +2,6 @@
 
 from datetime import timedelta
 import logging
-from random import randrange
 from typing import Self
 
 from fing_agent_api import FingAgent
@@ -51,11 +50,11 @@ class FingDataUpdateCoordinator(DataUpdateCoordinator[FingDataFetcher]):
         self._fing_fetcher = FingDataFetcher(
             hass,
             config_entry.data[AGENT_IP],
-            int(config_entry.data.get(AGENT_PORT, "49090")),
+            int(config_entry.data[AGENT_PORT]),
             config_entry.data[AGENT_KEY],
         )
 
-        update_interval = timedelta(seconds=randrange(25, 35))
+        update_interval = timedelta(seconds=30)
         super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=update_interval)
 
     async def _async_update_data(self) -> FingDataFetcher:

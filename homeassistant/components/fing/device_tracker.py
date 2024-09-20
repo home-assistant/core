@@ -62,13 +62,14 @@ async def async_setup_entry(
 class FingTrackedDevice(CoordinatorEntity[FingDataUpdateCoordinator], ScannerEntity):
     """Represent a tracked device."""
 
+    _attr_has_entity_name = True
+
     def __init__(self, coordinator: FingDataUpdateCoordinator, device: Device) -> None:
         """Set up FingDevice entity."""
         super().__init__(coordinator)
         self._mac = device.mac
         self._device = coordinator.data.get_devices()[device.mac]
         self._network_id = coordinator.data.get_network_id()
-        self._attr_has_entity_name = True
         self._attr_name = self._device.name
 
     @property
@@ -101,10 +102,6 @@ class FingTrackedDevice(CoordinatorEntity[FingDataUpdateCoordinator], ScannerEnt
             attrs["make"] = self._device.make
         if self._device.model:
             attrs["model"] = self._device.model
-        if self._device.first_seen:
-            attrs["first_seen"] = self._device.first_seen
-        if self._device.last_changed:
-            attrs["last_changed"] = self._device.last_changed
         return attrs
 
     @property
