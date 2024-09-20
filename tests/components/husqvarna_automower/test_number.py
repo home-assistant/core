@@ -131,7 +131,7 @@ async def test_workarea_deleted(
     await hass.async_block_till_done()
     assert len(
         er.async_entries_for_config_entry(entity_registry, mock_config_entry.entry_id)
-    ) == (current_entries - 1)
+    ) == (current_entries - 2)
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

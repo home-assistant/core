@@ -31,6 +31,7 @@ from tests.common import (
 )
 
 TEST_ZONE_ID = "AAAAAAAA-BBBB-CCCC-DDDD-123456789101"
+TEST_AREA_ID = 0
 
 
 async def test_switch_states(
@@ -135,6 +136,61 @@ async def test_stay_out_zone_switch_commands(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     mocked_method.assert_called_once_with(TEST_MOWER_ID, TEST_ZONE_ID, boolean)
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == excepted_state
+
+    mocked_method.side_effect = ApiException("Test error")
+    with pytest.raises(
+        HomeAssistantError,
+        match="Failed to send command: Test error",
+    ):
+        await hass.services.async_call(
+            domain="switch",
+            service=service,
+            service_data={"entity_id": entity_id},
+            blocking=True,
+        )
+    assert len(mocked_method.mock_calls) == 2
+
+
+@pytest.mark.parametrize(
+    ("service", "boolean", "excepted_state"),
+    [
+        ("turn_off", False, "off"),
+        ("turn_on", True, "on"),
+        ("toggle", True, "on"),
+    ],
+)
+async def test_work_area_switch_commands(
+    hass: HomeAssistant,
+    service: str,
+    boolean: bool,
+    excepted_state: str,
+    mock_automower_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test switch commands."""
+    entity_id = "switch.test_mower_1_my_lawn"
+    await setup_integration(hass, mock_config_entry)
+    values = mower_list_to_dictionary_dataclass(
+        load_json_value_fixture("mower.json", DOMAIN)
+    )
+    values[TEST_MOWER_ID].work_areas[TEST_AREA_ID].enabled = boolean
+    mock_automower_client.get_status.return_value = values
+    mocked_method = AsyncMock()
+    setattr(mock_automower_client.commands, "workarea_settings", mocked_method)
+    await hass.services.async_call(
+        domain="switch",
+        service=service,
+        service_data={"entity_id": entity_id},
+        blocking=False,
+    )
+    freezer.tick(timedelta(seconds=EXECUTION_TIME_DELAY))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    mocked_method.assert_called_once_with(TEST_MOWER_ID, TEST_AREA_ID, enabled=boolean)
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == excepted_state
