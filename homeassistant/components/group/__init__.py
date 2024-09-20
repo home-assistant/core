@@ -49,11 +49,12 @@ from .const import (  # noqa: F401
     ATTR_REMOVE_ENTITIES,
     CONF_HIDE_MEMBERS,
     DOMAIN,
+    DOMAIN_DATA,
     GROUP_ORDER,
     REG_KEY,
 )
 from .entity import Group, async_get_component
-from .registry import GroupIntegrationRegistry, async_setup as async_setup_registry
+from .registry import async_setup as async_setup_registry
 
 CONF_ALL = "all"
 
@@ -109,8 +110,7 @@ def is_on(hass: HomeAssistant, entity_id: str) -> bool:
         return False
 
     if (state := hass.states.get(entity_id)) is not None:
-        registry: GroupIntegrationRegistry = hass.data[REG_KEY]
-        return state.state in registry.on_off_mapping
+        return state.state in hass.data[REG_KEY].on_off_mapping
 
     return False
 
@@ -131,7 +131,7 @@ def groups_with_entity(hass: HomeAssistant, entity_id: str) -> list[str]:
 
     return [
         group.entity_id
-        for group in hass.data[DOMAIN].entities
+        for group in hass.data[DOMAIN_DATA].entities
         if entity_id in group.tracking
     ]
 
@@ -334,7 +334,7 @@ async def _async_process_config(hass: HomeAssistant, config: ConfigType) -> None
         entity_ids: Collection[str] = conf.get(CONF_ENTITIES) or []
         icon: str | None = conf.get(CONF_ICON)
         mode = bool(conf.get(CONF_ALL))
-        order: int = hass.data[GROUP_ORDER]
+        order = hass.data[GROUP_ORDER]
 
         # We keep track of the order when we are creating the tasks
         # in the same way that async_create_group does to make
