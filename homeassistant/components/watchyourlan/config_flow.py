@@ -33,6 +33,7 @@ class WatchYourLANConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors = {}
+        hosts = None
         if user_input is not None:
             try:
                 # Use the WatchYourLANClient to validate the connection

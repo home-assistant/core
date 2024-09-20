@@ -36,7 +36,9 @@ ENTITY_DESCRIPTIONS = [
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: WatchYourLANConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the WatchYourLAN sensors."""
     coordinator: WatchYourLANUpdateCoordinator = entry.runtime_data
@@ -112,10 +114,11 @@ class WatchYourLANGenericSensor(
         self._attr_unique_id = f"{self.device.get('ID')}_{description.key}"
         self._attr_device_info = DeviceInfo(
             connections={(CONNECTION_NETWORK_MAC, self.device["Mac"])},
-            name=self.device.get("Name")
-            or f"WatchYourLAN {self.device.get('ID', 'Unknown')}",
-            manufacturer=self.device.get("Hw"),
-            model="WatchYourLAN Device",
+            default_name=(
+                self.device.get("Name")
+                or f"WatchYourLAN {self.device.get('ID', 'Unknown')}"
+            ),
+            default_manufacturer=self.device.get("Hw", None),
         )
 
     @property
@@ -123,7 +126,7 @@ class WatchYourLANGenericSensor(
         """Return the native value of the sensor based on its description."""
         if self.entity_description.key == "online_status":
             return "Online" if self.device.get("Now", 0) == 1 else "Offline"
-        return self.device.get(self._get_device_field_for_key(), "Unknown")
+        return self.device.get(self._get_device_field_for_key(), None)
 
     def _get_device_field_for_key(self) -> str:
         """Map description key to the appropriate device field."""
