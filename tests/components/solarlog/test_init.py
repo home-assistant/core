@@ -123,15 +123,16 @@ async def test_other_exceptions_during_first_refresh(
 
 
 @pytest.mark.parametrize(
-    ("minor_version"),
+    ("minor_version", "suffix"),
     [
-        (1),
-        (2),
+        (1, "time"),
+        (2, "last_updated"),
     ],
 )
 async def test_migrate_config_entry(
     hass: HomeAssistant,
     minor_version: int,
+    suffix: str,
     device_registry: DeviceRegistry,
     entity_registry: EntityRegistry,
     mock_solarlog_connector: AsyncMock,
@@ -154,11 +155,8 @@ async def test_migrate_config_entry(
         manufacturer="Solar-Log",
         name="solarlog",
     )
-    uid = (
-        f"{entry.entry_id}_time"
-        if minor_version == 1
-        else f"{entry.entry_id}_last_updated"
-    )
+    uid = f"{entry.entry_id}_{suffix}"
+
     sensor_entity = entity_registry.async_get_or_create(
         config_entry=entry,
         platform=DOMAIN,
@@ -169,8 +167,7 @@ async def test_migrate_config_entry(
 
     assert entry.version == 1
     assert entry.minor_version == minor_version
-    if minor_version == 1:
-        assert sensor_entity.unique_id == f"{entry.entry_id}_time"
+    assert sensor_entity.unique_id == f"{entry.entry_id}_{suffix}"
 
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
