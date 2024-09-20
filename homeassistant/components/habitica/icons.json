@@ -55,7 +55,7 @@
         "default": "mdi:flare"
       },
       "protect_aura": {
-        "default": "mdi:shield-star-outline"
+        "default": "mdi:shimmer"
       },
       "heal_all": {
         "default": "mdi:hand-heart-outline"
