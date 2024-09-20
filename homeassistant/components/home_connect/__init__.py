@@ -244,7 +244,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 @Throttle(SCAN_INTERVAL)
-async def update_all_devices(hass, entry):
+async def update_all_devices(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Update all the devices."""
     data = hass.data[DOMAIN]
     hc_api = data[entry.entry_id]

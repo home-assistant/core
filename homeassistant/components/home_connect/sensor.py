@@ -97,9 +97,9 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Home Connect sensor."""
 
-    def get_entities():
+    def get_entities() -> list[SensorEntity]:
         """Get a list of entities."""
-        entities = []
+        entities: list[SensorEntity] = []
         hc_api: ConfigEntryAuth = hass.data[DOMAIN][config_entry.entry_id]
         for device_dict in hc_api.devices:
             entity_dicts = device_dict.get(CONF_ENTITIES, {}).get("sensor", [])
@@ -122,7 +122,19 @@ async def async_setup_entry(
 class HomeConnectSensor(HomeConnectEntity, SensorEntity):
     """Sensor class for Home Connect."""
 
-    def __init__(self, device, desc, key, unit, icon, device_class, sign=1):
+    _key: str
+    _sign: int
+
+    def __init__(
+        self,
+        device: HomeConnectDevice,
+        desc: str,
+        key: str,
+        unit: str,
+        icon: str,
+        device_class: SensorDeviceClass,
+        sign: int = 1,
+    ) -> None:
         """Initialize the entity."""
         super().__init__(device, desc)
         self._key = key

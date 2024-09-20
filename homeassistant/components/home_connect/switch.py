@@ -61,15 +61,15 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Home Connect switch."""
 
-    def get_entities():
+    def get_entities() -> list[SwitchEntity]:
         """Get a list of entities."""
-        entities = []
+        entities: list[SwitchEntity] = []
         hc_api: ConfigEntryAuth = hass.data[DOMAIN][config_entry.entry_id]
         for device_dict in hc_api.devices:
             entity_dicts = device_dict.get(CONF_ENTITIES, {}).get("switch", [])
-            entity_list = [HomeConnectProgramSwitch(**d) for d in entity_dicts]
-            entity_list += [HomeConnectPowerSwitch(device_dict[CONF_DEVICE])]
-            entity_list += [HomeConnectChildLockSwitch(device_dict[CONF_DEVICE])]
+            entities.extend(HomeConnectProgramSwitch(**d) for d in entity_dicts)
+            entities.append(HomeConnectPowerSwitch(device_dict[CONF_DEVICE]))
+            entities.append(HomeConnectChildLockSwitch(device_dict[CONF_DEVICE]))
             # Auto-discover entities
             hc_device: HomeConnectDevice = device_dict[CONF_DEVICE]
             entities.extend(
@@ -77,7 +77,6 @@ async def async_setup_entry(
                 for description in SWITCHES
                 if description.on_key in hc_device.appliance.status
             )
-            entities.extend(entity_list)
 
         return entities
 
@@ -88,7 +87,6 @@ class HomeConnectSwitch(HomeConnectEntity, SwitchEntity):
     """Generic switch class for Home Connect Binary Settings."""
 
     entity_description: HomeConnectSwitchEntityDescription
-    _attr_available: bool = False
 
     def __init__(
         self,
@@ -97,6 +95,7 @@ class HomeConnectSwitch(HomeConnectEntity, SwitchEntity):
     ) -> None:
         """Initialize the entity."""
         self.entity_description = entity_description
+        self._attr_available = False
         super().__init__(device=device, desc=entity_description.key)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
@@ -148,7 +147,7 @@ class HomeConnectSwitch(HomeConnectEntity, SwitchEntity):
 class HomeConnectProgramSwitch(HomeConnectEntity, SwitchEntity):
     """Switch class for Home Connect."""
 
-    def __init__(self, device, program_name):
+    def __init__(self, device: HomeConnectDevice, program_name: str) -> None:
         """Initialize the entity."""
         desc = " ".join(["Program", program_name.split(".")[-1]])
         if device.appliance.type == "WasherDryer":
@@ -191,7 +190,7 @@ class HomeConnectProgramSwitch(HomeConnectEntity, SwitchEntity):
 class HomeConnectPowerSwitch(HomeConnectEntity, SwitchEntity):
     """Power switch class for Home Connect."""
 
-    def __init__(self, device):
+    def __init__(self, device: HomeConnectDevice) -> None:
         """Initialize the entity."""
         super().__init__(device, "Power")
 
@@ -258,7 +257,7 @@ class HomeConnectPowerSwitch(HomeConnectEntity, SwitchEntity):
 class HomeConnectChildLockSwitch(HomeConnectEntity, SwitchEntity):
     """Child lock switch class for Home Connect."""
 
-    def __init__(self, device) -> None:
+    def __init__(self, device: HomeConnectDevice) -> None:
         """Initialize the entity."""
         super().__init__(device, "ChildLock")
 

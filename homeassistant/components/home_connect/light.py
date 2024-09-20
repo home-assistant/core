@@ -70,9 +70,9 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Home Connect light."""
 
-    def get_entities():
+    def get_entities() -> list[LightEntity]:
         """Get a list of entities."""
-        entities = []
+        entities: list[LightEntity] = []
         hc_api = hass.data[DOMAIN][config_entry.entry_id]
         for device_dict in hc_api.devices:
             entity_dicts = device_dict.get(CONF_ENTITIES, {}).get("light", [])
