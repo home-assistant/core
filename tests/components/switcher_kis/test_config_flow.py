@@ -75,30 +75,30 @@ async def test_user_setup_found_token_device_valid_token(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
 
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "confirm"
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "confirm"
 
-        result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
-        assert mock_bridge.is_running is False
-        assert result2["type"] is FlowResultType.FORM
-        assert result2["step_id"] == "credentials"
+    assert mock_bridge.is_running is False
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["step_id"] == "credentials"
 
-        with patch(
-            "homeassistant.components.switcher_kis.config_flow.validate_token",
-            return_value=True,
-        ):
-            result3 = await hass.config_entries.flow.async_configure(
-                result2["flow_id"],
-                {CONF_USERNAME: DUMMY_USERNAME, CONF_TOKEN: DUMMY_TOKEN},
-            )
+    with patch(
+        "homeassistant.components.switcher_kis.config_flow.validate_token",
+        return_value=True,
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            {CONF_USERNAME: DUMMY_USERNAME, CONF_TOKEN: DUMMY_TOKEN},
+        )
 
-            assert result3["type"] is FlowResultType.CREATE_ENTRY
-            assert result3["title"] == "Switcher"
-            assert result3["result"].data == {
-                CONF_USERNAME: DUMMY_USERNAME,
-                CONF_TOKEN: DUMMY_TOKEN,
-            }
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+    assert result3["title"] == "Switcher"
+    assert result3["result"].data == {
+        CONF_USERNAME: DUMMY_USERNAME,
+        CONF_TOKEN: DUMMY_TOKEN,
+    }
 
 
 @pytest.mark.parametrize(
