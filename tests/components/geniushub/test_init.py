@@ -12,7 +12,9 @@ from tests.common import MockConfigEntry
 
 
 async def test_cloud_unique_id_migration(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry, mock_geniushub: AsyncMock
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_geniushub_cloud: AsyncMock,
 ) -> None:
     """Test that the cloud unique ID is migrated to the entry_id."""
     entry = MockConfigEntry(
@@ -26,11 +28,12 @@ async def test_cloud_unique_id_migration(
     )
     entry.add_to_hass(hass)
     entity_registry.async_get_or_create(
-        SENSOR_DOMAIN, DOMAIN, "aa:bb:cc:dd:ee:ff_device_76543", config_entry=entry
+        SENSOR_DOMAIN, DOMAIN, "aa:bb:cc:dd:ee:ff_device_78", config_entry=entry
     )
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
-    entities = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
-    assert len(entities) == 1
-    assert hass.states.get("sensor.geniushub_aa_bb_cc_dd_ee_ff_device_76543")
-    assert entities[0].unique_id == "4584_air_quality"
+    assert hass.states.get("sensor.geniushub_aa_bb_cc_dd_ee_ff_device_78")
+    entity_entry = entity_registry.async_get(
+        "sensor.geniushub_aa_bb_cc_dd_ee_ff_device_78"
+    )
+    assert entity_entry.unique_id == "1234_device_78"
