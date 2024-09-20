@@ -50,6 +50,12 @@
       "siren": {
         "default": "mdi:alarm-bell"
       },
+      "in_home_chime": {
+        "default": "mdi:bell-ring-outline",
+        "state": {
+          "on": "mdi:bell-ring"
+        }
+      },
       "motion_detection": {
         "default": "mdi:motion-sensor-off",
         "state": {

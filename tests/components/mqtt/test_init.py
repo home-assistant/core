@@ -1894,7 +1894,7 @@ async def test_disabling_and_enabling_entry(
     config_light = '{"name": "test_new", "command_topic": "test-topic_new"}'
 
     with patch(
-        "homeassistant.components.mqtt.mixins.mqtt_config_entry_enabled",
+        "homeassistant.components.mqtt.entity.mqtt_config_entry_enabled",
         return_value=False,
     ):
         # Discovery of mqtt tag
