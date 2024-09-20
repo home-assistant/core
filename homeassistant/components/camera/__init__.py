@@ -83,7 +83,6 @@ from .prefs import CameraPreferences, DynamicStreamSettings  # noqa: F401
 from .webrtc import (
     DATA_ICE_SERVERS,
     CameraWebRTCProvider,
-    RTCConfiguration,
     RTCIceServer,
     WebRTCClientConfiguration,
     async_get_supported_providers,
@@ -732,18 +731,21 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """Return the WebRTC providers."""
         return self._webrtc_providers
 
+    async def _async_get_webrtc_client_configuration(self) -> WebRTCClientConfiguration:
+        """Return the WebRTC client configuration adjustable per integration."""
+        return WebRTCClientConfiguration()
+
     @final
-    async def _async_get_rtc_configuration(self) -> RTCConfiguration:
-        """Return the RTC configuration."""
+    async def async_get_webrtc_client_configuration(self) -> WebRTCClientConfiguration:
+        """Return the WebRTC client configuration and extend it with the registered ice servers."""
+        config = await self._async_get_webrtc_client_configuration()
 
         ice_servers = await asyncio.gather(
             *[server() for server in self.hass.data.get(DATA_ICE_SERVERS, [])]
         )
-        return RTCConfiguration(ice_servers=ice_servers)
+        config.configuration.ice_servers.extend(ice_servers)
 
-    async def async_get_webrtc_client_configuration(self) -> WebRTCClientConfiguration:
-        """Return the WebRTC client configuration."""
-        return WebRTCClientConfiguration(await self._async_get_rtc_configuration())
+        return config
 
 
 class CameraView(HomeAssistantView):

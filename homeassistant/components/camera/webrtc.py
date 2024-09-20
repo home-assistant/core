@@ -68,14 +68,14 @@ class RTCConfiguration(_RTCBaseModel):
     )
 
 
-@dataclass
+@dataclass(kw_only=True)
 class WebRTCClientConfiguration(_RTCBaseModel):
     """WebRTC configuration for the client.
 
     Not part of the spec, but required to configure client.
     """
 
-    configuration: RTCConfiguration
+    configuration: RTCConfiguration = RTCConfiguration()
     data_channel: str | None = field(
         metadata=field_options(alias="dataChannel"), default=None
     )
