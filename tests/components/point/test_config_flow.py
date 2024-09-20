@@ -95,21 +95,22 @@ async def test_full_flow(
 
 
 @pytest.mark.parametrize(
-    ("unique_id", "expected"),
+    ("unique_id", "expected", "expected_unique_id"),
     [
-        ("abcd", "reauth_successful"),
-        (None, "reauth_successful"),
-        ("abcde", "wrong_account"),
+        ("abcd", "reauth_successful", "abcd"),
+        (None, "reauth_successful", "abcd"),
+        ("abcde", "wrong_account", "abcde"),
     ],
     ids=("correct-unique_id", "missing-unique_id", "wrong-unique_id-abort"),
 )
 @pytest.mark.usefixtures("current_request_with_host")
 async def test_reauthentication_flow(
-    unique_id: str | None,
-    expected: str,
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
+    unique_id: str | None,
+    expected: str,
+    expected_unique_id: str,
 ) -> None:
     """Test reauthentication flow."""
     old_entry = MockConfigEntry(
@@ -149,12 +150,13 @@ async def test_reauthentication_flow(
         patch("homeassistant.components.point.api.AsyncConfigEntryAuth"),
         patch(
             f"homeassistant.components.{DOMAIN}.async_setup_entry", return_value=True
-        ) as mock_setup,
+        ),
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == expected
+    assert old_entry.unique_id == expected_unique_id
 
 
 async def test_import_flow(
