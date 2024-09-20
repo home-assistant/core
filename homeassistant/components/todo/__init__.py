@@ -387,10 +387,9 @@ async def websocket_handle_todo_item_list(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle the list of To-do items in a To-do- list."""
-    component: EntityComponent[TodoListEntity] = hass.data[DOMAIN]
     if (
         not (entity_id := msg[CONF_ENTITY_ID])
-        or not (entity := component.get_entity(entity_id))
+        or not (entity := hass.data[DOMAIN_DATA].get_entity(entity_id))
         or not isinstance(entity, TodoListEntity)
     ):
         connection.send_error(msg["id"], ERR_NOT_FOUND, "Entity not found")
