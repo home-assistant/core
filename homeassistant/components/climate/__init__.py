@@ -71,6 +71,7 @@ from .const import (  # noqa: F401
     ATTR_PRESET_MODE,
     ATTR_PRESET_MODES,
     ATTR_SWING_HORIZONTAL_MODE,
+    ATTR_SWING_HORIZONTAL_MODES,
     ATTR_SWING_MODE,
     ATTR_SWING_MODES,
     ATTR_TARGET_TEMP_HIGH,
@@ -526,7 +527,7 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             data[ATTR_SWING_MODES] = self.swing_modes
 
         if ClimateEntityFeature.SWING_HORIZONTAL_MODE in supported_features:
-            data[ATTR_SWING_HORIZONTAL_MODE] = self.swing_horizontal_modes
+            data[ATTR_SWING_HORIZONTAL_MODES] = self.swing_horizontal_modes
 
         return data
 
