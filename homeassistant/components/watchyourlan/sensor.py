@@ -118,7 +118,7 @@ class WatchYourLANGenericSensor(
                 self.device.get("Name")
                 or f"WatchYourLAN {self.device.get('ID', 'Unknown')}"
             ),
-            default_manufacturer=self.device.get("Hw", None),
+            default_manufacturer=self.device.get("Hw", "Unknown Manufacturer"),
         )
 
     @property
