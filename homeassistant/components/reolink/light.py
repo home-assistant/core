@@ -20,7 +20,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .entity import ReolinkChannelCoordinatorEntity, ReolinkChannelEntityDescription, ReolinkHostEntityDescription, ReolinkHostCoordinatorEntity
+from .entity import (
+    ReolinkChannelCoordinatorEntity,
+    ReolinkChannelEntityDescription,
+    ReolinkHostCoordinatorEntity,
+    ReolinkHostEntityDescription,
+)
 from .util import ReolinkConfigEntry, ReolinkData
 
 
@@ -204,9 +209,7 @@ class ReolinkHostLightEntity(ReolinkHostCoordinatorEntity, LightEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn light off."""
         try:
-            await self.entity_description.turn_on_off_fn(
-                self._host.api, False
-            )
+            await self.entity_description.turn_on_off_fn(self._host.api, False)
         except ReolinkError as err:
             raise HomeAssistantError(err) from err
         self.async_write_ha_state()
@@ -214,9 +217,7 @@ class ReolinkHostLightEntity(ReolinkHostCoordinatorEntity, LightEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn light on."""
         try:
-            await self.entity_description.turn_on_off_fn(
-                self._host.api, True
-            )
+            await self.entity_description.turn_on_off_fn(self._host.api, True)
         except ReolinkError as err:
             raise HomeAssistantError(err) from err
         self.async_write_ha_state()
