@@ -1,0 +1,55 @@
+# serializer version: 1
+# name: test_device_connected_status
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Test PoE Switch Device Status',
+      'options': list([
+        'unknown',
+        'disconnected',
+        'connected',
+        'pending',
+        'heartbeat_missed',
+        'isolated',
+        'adopt_failed',
+        'managed_externally',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_poe_switch_device_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'connected',
+  })
+# ---
+# name: test_device_cpu_usage
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Router CPU Usage',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_router_cpu_usage',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '16',
+  })
+# ---
+# name: test_device_mem_usage
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test PoE Switch Memory Usage',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_poe_switch_memory_usage',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '20',
+  })
+# ---
