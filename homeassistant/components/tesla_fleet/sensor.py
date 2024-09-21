@@ -35,7 +35,7 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.variance import ignore_variance
 
 from . import TeslaFleetConfigEntry
-from .const import TeslaFleetState
+from .const import ENERGY_HISTORY_FIELDS, TeslaFleetState
 from .entity import (
     TeslaFleetEnergyHistoryEntity,
     TeslaFleetEnergyInfoEntity,
@@ -413,147 +413,18 @@ WALL_CONNECTOR_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
     ),
 )
 
-ENERGY_HISTORY_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
+ENERGY_HISTORY_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = tuple(
     SensorEntityDescription(
-        key="total_grid_import",
-        state_class=SensorStateClass.TOTAL,
+        key=key,
+        device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        suggested_display_precision=2,
-        device_class=SensorDeviceClass.ENERGY,
-    ),
-    SensorEntityDescription(
-        key="total_grid_export",
-        state_class=SensorStateClass.TOTAL,
-        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
-        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        suggested_display_precision=2,
-        device_class=SensorDeviceClass.ENERGY,
-    ),
-    SensorEntityDescription(
-        key="solar_production",
-        state_class=SensorStateClass.TOTAL,
-        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
-        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        suggested_display_precision=2,
-        device_class=SensorDeviceClass.ENERGY,
-    ),
-    SensorEntityDescription(
-        key="total_battery_import",
-        state_class=SensorStateClass.TOTAL,
-        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
-        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        suggested_display_precision=2,
-        device_class=SensorDeviceClass.ENERGY,
-    ),
-    SensorEntityDescription(
-        key="total_battery_export",
-        state_class=SensorStateClass.TOTAL,
-        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
-        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        suggested_display_precision=2,
-        device_class=SensorDeviceClass.ENERGY,
-    ),
-    SensorEntityDescription(
-        key="total_generator_production",
-        state_class=SensorStateClass.TOTAL,
-        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
-        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        suggested_display_precision=2,
-        device_class=SensorDeviceClass.ENERGY,
-        entity_registry_enabled_default=False,
-    ),
-    SensorEntityDescription(
-        key="total_home_usage",
-        state_class=SensorStateClass.TOTAL,
-        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
-        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        suggested_display_precision=2,
-        device_class=SensorDeviceClass.ENERGY,
-    ),
-    SensorEntityDescription(
-        key="grid_export_from_solar",
-        state_class=SensorStateClass.TOTAL,
-        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
-        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        suggested_display_precision=2,
-        device_class=SensorDeviceClass.ENERGY,
-    ),
-    SensorEntityDescription(
-        key="grid_export_from_generator",
-        state_class=SensorStateClass.TOTAL,
-        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
-        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        suggested_display_precision=2,
-        device_class=SensorDeviceClass.ENERGY,
-        entity_registry_enabled_default=False,
-    ),
-    SensorEntityDescription(
-        key="grid_export_from_battery",
-        state_class=SensorStateClass.TOTAL,
-        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
-        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        suggested_display_precision=2,
-        device_class=SensorDeviceClass.ENERGY,
-    ),
-    SensorEntityDescription(
-        key="battery_import_from_solar",
-        state_class=SensorStateClass.TOTAL,
-        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
-        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        suggested_display_precision=2,
-        device_class=SensorDeviceClass.ENERGY,
-    ),
-    SensorEntityDescription(
-        key="battery_import_from_grid",
-        state_class=SensorStateClass.TOTAL,
-        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
-        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        suggested_display_precision=2,
-        device_class=SensorDeviceClass.ENERGY,
-    ),
-    SensorEntityDescription(
-        key="battery_import_from_generator",
-        state_class=SensorStateClass.TOTAL,
-        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
-        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        suggested_display_precision=2,
-        device_class=SensorDeviceClass.ENERGY,
-        entity_registry_enabled_default=False,
-    ),
-    SensorEntityDescription(
-        key="home_usage_from_grid",
-        state_class=SensorStateClass.TOTAL,
-        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
-        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        suggested_display_precision=2,
-        device_class=SensorDeviceClass.ENERGY,
-    ),
-    SensorEntityDescription(
-        key="home_usage_from_solar",
-        state_class=SensorStateClass.TOTAL,
-        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
-        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        suggested_display_precision=2,
-        device_class=SensorDeviceClass.ENERGY,
-    ),
-    SensorEntityDescription(
-        key="home_usage_from_battery",
-        state_class=SensorStateClass.TOTAL,
-        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
-        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        suggested_display_precision=2,
-        device_class=SensorDeviceClass.ENERGY,
-    ),
-    SensorEntityDescription(
-        key="home_usage_from_generator",
-        state_class=SensorStateClass.TOTAL,
-        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
-        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        suggested_display_precision=2,
-        device_class=SensorDeviceClass.ENERGY,
-        entity_registry_enabled_default=False,
-    ),
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=(
+            key.startswith("total") or key == "grid_energy_imported"
+        ),
+    )
+    for key in ENERGY_HISTORY_FIELDS
 )
 
 ENERGY_INFO_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
