@@ -146,7 +146,7 @@ async def async_setup_platform(
 
 
 class EvoClimateEntity(EvoDevice, ClimateEntity):
-    """Base for an evohome Climate device."""
+    """Base for any evohome-compatible climate entity (controller, zone)."""
 
     _attr_hvac_modes = [HVACMode.OFF, HVACMode.HEAT]
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
@@ -154,14 +154,14 @@ class EvoClimateEntity(EvoDevice, ClimateEntity):
 
 
 class EvoZone(EvoChild, EvoClimateEntity):
-    """Base for a Honeywell TCC Zone."""
+    """Base for any evohome-compatible heating zone."""
 
     _attr_preset_modes = list(HA_PRESET_TO_EVO)
 
     _evo_device: evo.Zone  # mypy hint
 
     def __init__(self, evo_broker: EvoBroker, evo_device: evo.Zone) -> None:
-        """Initialize a Honeywell TCC Zone."""
+        """Initialize an evohome-compatible heating zone."""
 
         super().__init__(evo_broker, evo_device)
         self._evo_id = evo_device.zoneId
@@ -336,7 +336,7 @@ class EvoZone(EvoChild, EvoClimateEntity):
 
 
 class EvoController(EvoClimateEntity):
-    """Base for a Honeywell TCC Controller/Location.
+    """Base for any evohome-compatible controller.
 
     The Controller (aka TCS, temperature control system) is the parent of all the child
     (CH/DHW) devices. It is implemented as a Climate entity to expose the controller's
@@ -351,7 +351,7 @@ class EvoController(EvoClimateEntity):
     _evo_device: evo.ControlSystem  # mypy hint
 
     def __init__(self, evo_broker: EvoBroker, evo_device: evo.ControlSystem) -> None:
-        """Initialize a Honeywell TCC Controller/Location."""
+        """Initialize an evohome-compatible controller."""
 
         super().__init__(evo_broker, evo_device)
         self._evo_id = evo_device.systemId
