@@ -9,6 +9,7 @@ import logging
 from pysmlight.web import CmdWrapper
 
 from homeassistant.components.button import (
+    DOMAIN as BUTTON_DOMAIN,
     ButtonDeviceClass,
     ButtonEntity,
     ButtonEntityDescription,
@@ -16,8 +17,10 @@ from homeassistant.components.button import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from .const import DOMAIN
 from .coordinator import SmDataUpdateCoordinator
 from .entity import SmEntity
 
@@ -69,8 +72,15 @@ async def async_setup_entry(
     coordinator = entry.runtime_data.data
 
     entities = [SmButton(coordinator, button) for button in BUTTONS]
+
     if coordinator.data.info.zb_type == 1:
         entities.append(SmButton(coordinator, ROUTER))
+    else:
+        entity_registry = er.async_get(hass)
+        if entity_id := entity_registry.async_get_entity_id(
+            BUTTON_DOMAIN, DOMAIN, f"{coordinator.unique_id}-{ROUTER.key}"
+        ):
+            entity_registry.async_remove(entity_id)
 
     async_add_entities(entities)
 
