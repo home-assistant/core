@@ -28,6 +28,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 
 from . import setup_integration
@@ -46,7 +47,7 @@ def automation_calls(hass: HomeAssistant) -> list[ServiceCall]:
     return async_mock_service(hass, "test", "automation")
 
 
-def _make_trigger(account_id: str, device_id: str):
+def _make_trigger(account_id: str, device_id: str) -> ConfigType:
     return {
         CONF_PLATFORM: CONF_DEVICE,
         ACCOUNT_ID: account_id,
