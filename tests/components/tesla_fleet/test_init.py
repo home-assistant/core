@@ -315,6 +315,21 @@ async def test_energy_site_refresh_error(
     assert normal_config_entry.state is state
 
 
+# Test Energy History Coordinator
+@pytest.mark.parametrize(("side_effect", "state"), ERRORS)
+async def test_energy_history_refresh_error(
+    hass: HomeAssistant,
+    normal_config_entry: MockConfigEntry,
+    mock_energy_history: AsyncMock,
+    side_effect: TeslaFleetError,
+    state: ConfigEntryState,
+) -> None:
+    """Test coordinator refresh with an error."""
+    mock_energy_history.side_effect = side_effect
+    await setup_platform(hass, normal_config_entry)
+    assert normal_config_entry.state is state
+
+
 async def test_energy_live_refresh_ratelimited(
     hass: HomeAssistant,
     normal_config_entry: MockConfigEntry,
