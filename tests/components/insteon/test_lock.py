@@ -66,7 +66,7 @@ async def test_lock_lock(
     try:
         lock = entity_registry.async_get("lock.device_55_55_55_55_55_55")
         state = hass.states.get(lock.entity_id)
-        assert state.state is LockState.UNLOCKED
+        assert state.state == LockState.UNLOCKED
 
         # lock via UI
         await hass.services.async_call(
@@ -95,7 +95,7 @@ async def test_lock_unlock(
         lock = entity_registry.async_get("lock.device_55_55_55_55_55_55")
         state = hass.states.get(lock.entity_id)
 
-        assert state.state is LockState.LOCKED
+        assert state.state == LockState.LOCKED
 
         # lock via UI
         await hass.services.async_call(
