@@ -35,8 +35,9 @@ class ConnectionTestView(HomeAssistantView):
         if connection_test_event is None:
             return web.Response(status=404)
 
+        connection_test_event.set()
+
         audio_path = Path(__file__).parent / CONNECTION_TEST_FILENAME
         audio_data = await hass.async_add_executor_job(audio_path.read_bytes)
 
-        connection_test_event.set()
         return web.Response(body=audio_data, content_type=CONNECTION_TEST_CONTENT_TYPE)
