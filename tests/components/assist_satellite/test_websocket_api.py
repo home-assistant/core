@@ -409,10 +409,6 @@ async def test_connection_test(
         }
     )
 
-    response = await ws_client.receive_json()
-    assert response["success"]
-    assert response["result"] is None
-
     for _ in range(3):
         await asyncio.sleep(0)
 
@@ -431,7 +427,7 @@ async def test_connection_test(
 
     response = await ws_client.receive_json()
     assert response["success"]
-    assert response["result"] == {"status": "connection_test_successful"}
+    assert response["result"] == {"status": "success"}
 
 
 async def test_connection_test_timeout(
@@ -452,10 +448,6 @@ async def test_connection_test_timeout(
         }
     )
 
-    response = await ws_client.receive_json()
-    assert response["success"]
-    assert response["result"] is None
-
     for _ in range(3):
         await asyncio.sleep(0)
 
@@ -472,7 +464,7 @@ async def test_connection_test_timeout(
     # Timeout
     response = await ws_client.receive_json()
     assert response["success"]
-    assert response["result"] == {"status": "connection_test_timed_out"}
+    assert response["result"] == {"status": "timeout"}
 
 
 async def test_connection_test_invalid_satellite(

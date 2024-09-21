@@ -10,12 +10,16 @@ from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.util import uuid as uuid_util
 
-from .connection_test import CONNECTION_TEST_SIGNAL, CONNECTION_TEST_URL_BASE
-from .const import DOMAIN, DOMAIN_DATA, AssistSatelliteEntityFeature
+from .connection_test import CONNECTION_TEST_URL_BASE
+from .const import (
+    CONNECTION_TEST_DATA,
+    DOMAIN,
+    DOMAIN_DATA,
+    AssistSatelliteEntityFeature,
+)
 from .entity import AssistSatelliteEntity
 
 CONNECTION_TEST_TIMEOUT = 30
@@ -177,30 +181,24 @@ async def websocket_test_connection(
         )
         return
 
-    # Send response indicating the command is accepted
-    connection.send_result(msg["id"])
-
     # Announce and wait for event
+    connection_test_data = hass.data[CONNECTION_TEST_DATA]
     connection_id = uuid_util.random_uuid_hex()
     connection_test_event = asyncio.Event()
+    connection_test_data[connection_id] = connection_test_event
 
-    @callback
-    def on_connection_test_signal() -> None:
-        """Wrap set method in function decorated with callback."""
-        connection_test_event.set()
-
-    connection.subscriptions[msg["id"]] = async_dispatcher_connect(
-        hass,
-        CONNECTION_TEST_SIGNAL.format(connection_id),
-        on_connection_test_signal,
-    )
-    await satellite.async_internal_announce(
-        media_id=f"{CONNECTION_TEST_URL_BASE}/{connection_id}"
+    hass.async_create_background_task(
+        satellite.async_internal_announce(
+            media_id=f"{CONNECTION_TEST_URL_BASE}/{connection_id}"
+        ),
+        f"assist_satellite_connection_test_{msg['entity_id']}",
     )
 
     try:
         async with asyncio.timeout(CONNECTION_TEST_TIMEOUT):
             await connection_test_event.wait()
-            connection.send_event(msg["id"], {"status": "connection_test_successful"})
+            connection.send_result(msg["id"], {"status": "success"})
     except TimeoutError:
-        connection.send_event(msg["id"], {"status": "connection_test_timed_out"})
+        connection.send_result(msg["id"], {"status": "timeout"})
+    finally:
+        connection_test_data.pop(connection_id, None)
