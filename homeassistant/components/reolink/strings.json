@@ -551,16 +551,16 @@
         "name": "Hub visitor ringtone",
         "state": {
           "alarm": "[%key:component::reolink::entity::select::hub_alarm_ringtone::state::alarm%]",
-          "citybird": "[%key:component::reolink::entity::select::hub_alarm_ringtone::state::citybird%]",
-          "originaltune": "[%key:component::reolink::entity::select::hub_alarm_ringtone::state::originaltune%]",
-          "pianokey": "[%key:component::reolink::entity::select::hub_alarm_ringtone::state::pianokey%]",
-          "loop": "[%key:component::reolink::entity::select::hub_alarm_ringtone::state::loop%]",
-          "attraction": "[%key:component::reolink::entity::select::hub_alarm_ringtone::state::attraction%]",
-          "hophop": "[%key:component::reolink::entity::select::hub_alarm_ringtone::state::hophop%]",
-          "goodday": "[%key:component::reolink::entity::select::hub_alarm_ringtone::state::goodday%]",
-          "operetta": "[%key:component::reolink::entity::select::hub_alarm_ringtone::state::operetta%]",
-          "moonlight": "[%key:component::reolink::entity::select::hub_alarm_ringtone::state::moonlight%]",
-          "waybackhome": "[%key:component::reolink::entity::select::hub_alarm_ringtone::state::waybackhome%]"
+          "citybird": "[%key:component::reolink::entity::select::motion_tone::state::citybird%]",
+          "originaltune": "[%key:component::reolink::entity::select::motion_tone::state::originaltune%]",
+          "pianokey": "[%key:component::reolink::entity::select::motion_tone::state::pianokey%]",
+          "loop": "[%key:component::reolink::entity::select::motion_tone::state::loop%]",
+          "attraction": "[%key:component::reolink::entity::select::motion_tone::state::attraction%]",
+          "hophop": "[%key:component::reolink::entity::select::motion_tone::state::hophop%]",
+          "goodday": "[%key:component::reolink::entity::select::motion_tone::state::goodday%]",
+          "operetta": "[%key:component::reolink::entity::select::motion_tone::state::operetta%]",
+          "moonlight": "[%key:component::reolink::entity::select::motion_tone::state::moonlight%]",
+          "waybackhome": "[%key:component::reolink::entity::select::motion_tone::state::waybackhome%]"
         }
       },
       "motion_tone": {
