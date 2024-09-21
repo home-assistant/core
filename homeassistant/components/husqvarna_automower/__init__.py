@@ -95,7 +95,7 @@ def cleanup_removed_devices(
             entity_reg.async_remove(entity.entity_id)
 
     device_reg = dr.async_get(hass)
-    identifiers = {(DOMAIN, ain) for ain in available_devices}
+    identifiers = {(DOMAIN, mower_id) for mower_id in available_devices}
     for device in dr.async_entries_for_config_entry(device_reg, config_entry.entry_id):
         if not set(device.identifiers) & identifiers:
             _LOGGER.debug("Removing obsolete device entry %s", device.name)
