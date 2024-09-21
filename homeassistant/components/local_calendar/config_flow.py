@@ -1,15 +1,14 @@
 """Config flow for Local Calendar integration."""
 
 from __future__ import annotations
+
 from pathlib import Path
 import shutil
-
 from typing import Any
-
-import voluptuous as vol
 
 from ical.calendar_stream import CalendarStream
 from ical.exceptions import CalendarParseError
+import voluptuous as vol
 
 from homeassistant.components.file_upload import process_uploaded_file
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -26,7 +25,6 @@ from .const import (
     DOMAIN,
     STORAGE_PATH,
 )
-from .helpers.ics import save_uploaded_ics_file
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
