@@ -165,7 +165,10 @@ async def websocket_test_connection(
     connection: websocket_api.connection.ActiveConnection,
     msg: dict[str, Any],
 ) -> None:
-    """Send an announcement to the device with a special media id to test the connection to HA."""
+    """Test the connection between the device and Home Assistant.
+
+    Send an announcement to the device with a special media id.
+    """
     component: EntityComponent[AssistSatelliteEntity] = hass.data[DOMAIN]
     satellite = component.get_entity(msg["entity_id"])
     if satellite is None:
