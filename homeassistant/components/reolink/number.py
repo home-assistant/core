@@ -24,8 +24,8 @@ from .entity import (
     ReolinkChannelEntityDescription,
     ReolinkChimeCoordinatorEntity,
     ReolinkChimeEntityDescription,
-    ReolinkHostEntityDescription,
     ReolinkHostCoordinatorEntity,
+    ReolinkHostEntityDescription,
 )
 from .util import ReolinkConfigEntry, ReolinkData
 
@@ -538,7 +538,9 @@ async def async_setup_entry(
     """Set up a Reolink number entities."""
     reolink_data: ReolinkData = config_entry.runtime_data
 
-    entities: list[ReolinkNumberEntity | ReolinkHostNumberEntity | ReolinkChimeNumberEntity] = [
+    entities: list[
+        ReolinkNumberEntity | ReolinkHostNumberEntity | ReolinkChimeNumberEntity
+    ] = [
         ReolinkNumberEntity(reolink_data, channel, entity_description)
         for entity_description in NUMBER_ENTITIES
         for channel in reolink_data.host.api.channels
@@ -601,12 +603,12 @@ class ReolinkNumberEntity(ReolinkChannelCoordinatorEntity, NumberEntity):
 class ReolinkHostNumberEntity(ReolinkHostCoordinatorEntity, NumberEntity):
     """Base number entity class for Reolink Host."""
 
-    entity_description: ReolinkHostEntityDescription
+    entity_description: ReolinkHostNumberEntityDescription
 
     def __init__(
         self,
         reolink_data: ReolinkData,
-        entity_description: ReolinkNumberEntityDescription,
+        entity_description: ReolinkHostNumberEntityDescription,
     ) -> None:
         """Initialize Reolink number entity."""
         self.entity_description = entity_description
