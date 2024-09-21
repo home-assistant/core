@@ -8,10 +8,7 @@ from typing import Any
 from aioswitcher.api import SwitcherBaseResponse, SwitcherType2Api
 from aioswitcher.device import DeviceCategory, DeviceState
 
-from homeassistant.components.light import (
-    ColorMode,
-    LightEntity,
-)
+from homeassistant.components.light import ColorMode, LightEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -68,7 +65,9 @@ class SwitcherLightEntity(
     @property
     def name(self) -> str:
         """Name of the entity."""
-        return "Light" + str(self._light_id + 1)
+        if self._light_id is not None:
+            return f"Light{self._light_id + 1}"
+        return "Light"
 
     def __init__(
         self,
