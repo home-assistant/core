@@ -1,12 +1,20 @@
 """Config flow for Local Calendar integration."""
 
 from __future__ import annotations
+from pathlib import Path
+import shutil
 
 from typing import Any
 
 import voluptuous as vol
 
+from ical.calendar_stream import CalendarStream
+from ical.exceptions import CalendarParseError
+
+from homeassistant.components.file_upload import process_uploaded_file
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import selector
 from homeassistant.util import slugify
 
@@ -16,6 +24,7 @@ from .const import (
     CONF_IMPORT_ICS,
     CONF_STORAGE_KEY,
     DOMAIN,
+    STORAGE_PATH,
 )
 from .helpers.ics import save_uploaded_ics_file
 
@@ -79,3 +88,24 @@ class LocalCalendarConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_create_entry(
             title=self.data[CONF_CALENDAR_NAME], data=self.data
         )
+
+
+async def save_uploaded_ics_file(
+    hass: HomeAssistant, uploaded_file_id: str, storage_key: str
+):
+    """Validate the uploaded file and move it to the storage directory."""
+
+    def _process_upload():
+        with process_uploaded_file(hass, uploaded_file_id) as file:
+            ics = file.read_text(encoding="utf8")
+            try:
+                CalendarStream.from_ics(ics)
+            except CalendarParseError as err:
+                raise HomeAssistantError(
+                    "Failed to upload file: Invalid ICS file"
+                ) from err
+            dest_path = Path(hass.config.path(
+                STORAGE_PATH.format(key=storage_key)))
+            shutil.move(file, dest_path)
+
+    return await hass.async_add_executor_job(_process_upload)
