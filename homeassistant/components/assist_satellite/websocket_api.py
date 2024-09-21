@@ -201,6 +201,6 @@ async def websocket_test_connection(
     try:
         async with asyncio.timeout(CONNECTION_TEST_TIMEOUT):
             await connection_test_event.wait()
-            connection.send_result(msg["id"], {"status": "connection_test_successful"})
+            connection.send_event(msg["id"], {"status": "connection_test_successful"})
     except TimeoutError:
-        connection.send_result(msg["id"], {"status": "connection_test_timed_out"})
+        connection.send_event(msg["id"], {"status": "connection_test_timed_out"})
