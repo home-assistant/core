@@ -74,7 +74,7 @@ class SwitcherLightEntity(
         self,
         coordinator: SwitcherDataUpdateCoordinator,
         light_id: int | None = None,
-    ):
+    ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
         self._light_id = light_id
