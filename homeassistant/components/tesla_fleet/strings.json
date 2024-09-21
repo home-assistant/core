@@ -454,56 +454,68 @@
       "wall_connector_state": {
         "name": "State code"
       },
-      "total_grid_import": {
-        "name": "Grid total import"
+      "solar_energy_exported": {
+        "name": "Solar exported"
       },
-      "total_grid_export": {
-        "name": "Grid total export"
+      "generator_energy_exported": {
+        "name": "Generator exported"
       },
-      "solar_production": {
-        "name": "Solar Production"
+      "grid_energy_imported": {
+        "name": "Grid imported"
       },
-      "total_battery_import": {
-        "name": "Battery total charged"
+      "grid_services_energy_imported": {
+        "name": "Grid services imported"
       },
-      "total_battery_export": {
-        "name": "Battery total discharged"
+      "grid_services_energy_exported": {
+        "name": "Grid services exported"
       },
-      "total_generator_production": {
-        "name": "Generator total production"
-      },
-      "total_home_usage": {
-        "name": "Home total usage"
-      },
-      "grid_export_from_solar": {
+      "grid_energy_exported_from_solar": {
         "name": "Grid exported from solar"
       },
-      "grid_export_from_generator": {
+      "grid_energy_exported_from_generator": {
         "name": "Grid exported from generator"
       },
-      "grid_export_from_battery": {
+      "grid_energy_exported_from_battery": {
         "name": "Grid exported from battery"
       },
-      "battery_import_from_solar": {
-        "name": "Battery charged from solar"
+      "battery_energy_exported": {
+        "name": "Battery exported"
       },
-      "battery_import_from_grid": {
-        "name": "Battery charged from grid"
+      "battery_energy_imported_from_grid": {
+        "name": "Battery imported from grid"
       },
-      "battery_import_from_generator": {
-        "name": "Battery charged from generator"
+      "battery_energy_imported_from_solar": {
+        "name": "Battery imported from solar"
       },
-      "home_usage_from_grid": {
-        "name": "Home usage from grid"
+      "battery_energy_imported_from_generator": {
+        "name": "Battery imported from generator"
       },
-      "home_usage_from_solar": {
-        "name": "Home usage from solar"
+      "consumer_energy_imported_from_grid": {
+        "name": "Consumer imported from grid"
       },
-      "home_usage_from_battery": {
-        "name": "Home usage from battery"
+      "consumer_energy_imported_from_solar": {
+        "name": "Consumer imported from solar"
       },
-      "home_usage_from_generator": {
-        "name": "Home usage from generator"
+      "consumer_energy_imported_from_battery": {
+        "name": "Consumer imported from battery"
+      },
+      "consumer_energy_imported_from_generator": {
+        "name": "Consumer imported from generator"
+      },
+      "total_home_usage": {
+        "name": "Home usage"
+      },
+      "total_battery_charge": {
+        "name": "Battery charged"
+      },
+      "total_battery_discharge": {
+        "name": "Battery discharged"
+      },
+      "total_solar_generation": {
+        "name": "Solar generated"
+      },
+      "total_grid_energy_exported": {
+        "name": "Grid exported"
       }
     },
     "switch": {
