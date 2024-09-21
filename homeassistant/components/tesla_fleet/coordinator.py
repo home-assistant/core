@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from typing import Any
 
 from tesla_fleet_api import EnergySpecific, VehicleSpecific
-from tesla_fleet_api.const import VehicleDataEndpoint
+from tesla_fleet_api.const import TeslaEnergyPeriod, VehicleDataEndpoint
 from tesla_fleet_api.exceptions import (
     InvalidToken,
     LoginRequired,
@@ -19,7 +19,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import LOGGER, TeslaFleetState
+from .const import ENERGY_HISTORY_FIELDS, LOGGER, TeslaFleetState
 
 VEHICLE_INTERVAL_SECONDS = 90
 VEHICLE_INTERVAL = timedelta(seconds=VEHICLE_INTERVAL_SECONDS)
@@ -183,12 +183,12 @@ class TeslaFleetEnergySiteLiveCoordinator(DataUpdateCoordinator[dict[str, Any]])
 
 
 class TeslaFleetEnergySiteHistoryCoordinator(DataUpdateCoordinator[dict[str, Any]]):
-    """Class to manage fetching energy site history import and export from the TeslaFleet API."""
+    """Class to manage fetching energy site history import and export from the Tesla Fleet API."""
 
     updated_once: bool
 
     def __init__(self, hass: HomeAssistant, api: EnergySpecific) -> None:
-        """Initialize TeslaFleet Energy Site History coordinator."""
+        """Initialize Tesla Fleet Energy Site History coordinator."""
         super().__init__(
             hass,
             LOGGER,
@@ -200,11 +200,11 @@ class TeslaFleetEnergySiteHistoryCoordinator(DataUpdateCoordinator[dict[str, Any
         self.updated_once = False
 
     async def _async_update_data(self) -> dict[str, Any]:
-        """Update energy site history data using TeslaFleet API."""
+        """Update energy site history data using Tesla Fleet API."""
 
         self.update_interval = ENERGY_INTERVAL
         try:
-            data = (await self.api.energy_history("day"))["response"]
+            data = (await self.api.energy_history(TeslaEnergyPeriod.DAY))["response"]
         except RateLimited as e:
             LOGGER.warning(
                 "%s rate limited, will retry in %s seconds",
@@ -219,81 +219,15 @@ class TeslaFleetEnergySiteHistoryCoordinator(DataUpdateCoordinator[dict[str, Any
         except TeslaFleetError as e:
             raise UpdateFailed(e.message) from e
         self.updated_once = True
-        formatted_data = {
-            "total_grid_import": 0,
-            "total_grid_export": 0,
-            "solar_production": 0,
-            "total_battery_import": 0,
-            "total_battery_export": 0,
-            "total_generator_production": 0,
-            "total_home_usage": 0,
-            "grid_export_from_solar": 0,
-            "grid_export_from_generator": 0,
-            "grid_export_from_battery": 0,
-            "battery_import_from_solar": 0,
-            "battery_import_from_grid": 0,
-            "battery_import_from_generator": 0,
-            "home_usage_from_grid": 0,
-            "home_usage_from_solar": 0,
-            "home_usage_from_battery": 0,
-            "home_usage_from_generator": 0,
-        }
-        for time_entity in data["time_series"]:
-            formatted_data["total_grid_import"] += time_entity["grid_energy_imported"]
-            formatted_data["total_grid_export"] += (
-                time_entity["grid_energy_exported_from_solar"]
-                + time_entity["grid_energy_exported_from_generator"]
-                + time_entity["grid_energy_exported_from_battery"]
-            )
-            formatted_data["solar_production"] += time_entity["solar_energy_exported"]
-            formatted_data["total_battery_import"] += (
-                time_entity["battery_energy_imported_from_grid"]
-                + time_entity["battery_energy_imported_from_solar"]
-                + time_entity["battery_energy_imported_from_generator"]
-            )
-            formatted_data["total_battery_export"] += time_entity[
-                "battery_energy_exported"
-            ]
-            formatted_data["total_generator_production"] += time_entity[
-                "generator_energy_exported"
-            ]
-            formatted_data["total_home_usage"] += (
-                time_entity["consumer_energy_imported_from_grid"]
-                + time_entity["consumer_energy_imported_from_solar"]
-                + time_entity["consumer_energy_imported_from_battery"]
-                + time_entity["consumer_energy_imported_from_generator"]
-            )
-            formatted_data["grid_export_from_solar"] += time_entity[
-                "grid_energy_exported_from_solar"
-            ]
-            formatted_data["grid_export_from_generator"] += time_entity[
-                "grid_energy_exported_from_generator"
-            ]
-            formatted_data["grid_export_from_battery"] += time_entity[
-                "grid_energy_exported_from_battery"
-            ]
-            formatted_data["battery_import_from_solar"] += time_entity[
-                "battery_energy_imported_from_solar"
-            ]
-            formatted_data["battery_import_from_grid"] += time_entity[
-                "battery_energy_imported_from_grid"
-            ]
-            formatted_data["battery_import_from_generator"] += time_entity[
-                "battery_energy_imported_from_generator"
-            ]
-            formatted_data["home_usage_from_grid"] += time_entity[
-                "consumer_energy_imported_from_grid"
-            ]
-            formatted_data["home_usage_from_solar"] += time_entity[
-                "consumer_energy_imported_from_solar"
-            ]
-            formatted_data["home_usage_from_battery"] += time_entity[
-                "consumer_energy_imported_from_battery"
-            ]
-            formatted_data["home_usage_from_generator"] += time_entity[
-                "consumer_energy_imported_from_generator"
-            ]
-        return formatted_data
+
+        # Add all time periods together
+        output = {key: 0 for key in ENERGY_HISTORY_FIELDS}
+        if isinstance(data, dict):
+            for period in data.get("time_series", []):
+                for key in ENERGY_HISTORY_FIELDS:
+                    output[key] += period.get(key, 0)
+
+        return output
 
 
 class TeslaFleetEnergySiteInfoCoordinator(DataUpdateCoordinator[dict[str, Any]]):
