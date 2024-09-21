@@ -16,5 +16,15 @@
     "abort": {
       "already_configured": "Device is already configured"
     }
+  },
+  "entity": {
+    "sensor": {
+      "current_profile": {
+        "name": "Current Profile"
+      },
+      "devices": {
+        "name": "Discovered Devices"
+      }
+    }
   }
 }

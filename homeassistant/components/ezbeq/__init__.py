@@ -11,13 +11,13 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 
-from .coordinator import EzbeqCoordinator
+from .coordinator import EzBEQCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
-type EzBEQConfigEntry = ConfigEntry[EzbeqCoordinator]
+type EzBEQConfigEntry = ConfigEntry[EzBEQCoordinator]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: EzBEQConfigEntry) -> bool:
@@ -27,7 +27,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: EzBEQConfigEntry) -> boo
     port = entry.data.get(CONF_PORT, DEFAULT_PORT)
 
     client = EzbeqClient(host=host, port=port, logger=_LOGGER)
-    coordinator = EzbeqCoordinator(hass, client)
+    coordinator = EzBEQCoordinator(hass, client)
 
     await coordinator.async_config_entry_first_refresh()
 

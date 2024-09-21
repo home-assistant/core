@@ -14,7 +14,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 _LOGGER = logging.getLogger(__name__)
 
 
-class EzbeqCoordinator(DataUpdateCoordinator):
+class EzBEQCoordinator(DataUpdateCoordinator):
     """Coordinator for fetching ezbeq data."""
 
     def __init__(self, hass: HomeAssistant, client: EzbeqClient) -> None:

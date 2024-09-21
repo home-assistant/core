@@ -4,15 +4,15 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .coordinator import EzbeqCoordinator
+from .coordinator import EzBEQCoordinator
 
 
-class EzBEQEntity(CoordinatorEntity[EzbeqCoordinator]):
+class EzBEQEntity(CoordinatorEntity[EzBEQCoordinator]):
     """Defines a base ezbeq entity."""
 
     _attr_has_entity_name = True
 
-    def __init__(self, coordinator: EzbeqCoordinator) -> None:
+    def __init__(self, coordinator: EzBEQCoordinator) -> None:
         """Initialize ezbeq entity."""
         super().__init__(coordinator)
         assert coordinator.config_entry

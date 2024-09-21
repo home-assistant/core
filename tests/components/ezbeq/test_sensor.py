@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from syrupy import SnapshotAssertion
 
-from homeassistant.const import STATE_UNAVAILABLE, Platform
+from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -54,4 +54,4 @@ async def test_sensor_setup_and_update(
 
     state = hass.states.get(entity_id)
     assert state
-    assert state.state == STATE_UNAVAILABLE
+    assert state.state == STATE_UNKNOWN

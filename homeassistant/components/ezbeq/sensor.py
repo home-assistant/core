@@ -1,12 +1,41 @@
 """Sensor platform for the ezbeq Profile Loader integration."""
 
-from homeassistant.components.sensor import SensorEntity
+from collections.abc import Callable
+from dataclasses import dataclass
+
+from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
 
 from . import EzBEQConfigEntry
-from .coordinator import EzbeqCoordinator
+from .const import CURRENT_PROFILE, DEVICES
+from .coordinator import EzBEQCoordinator
 from .entity import EzBEQEntity
+
+
+@dataclass(frozen=True, kw_only=True)
+class EzBEQSensorEntityDescription(SensorEntityDescription):
+    """Describe EzBEQ sensor entity."""
+
+    value_fn: Callable[[EzBEQCoordinator], StateType]
+
+
+SENSORS: tuple[EzBEQSensorEntityDescription, ...] = (
+    EzBEQSensorEntityDescription(
+        key=CURRENT_PROFILE,
+        value_fn=lambda coordinator: coordinator.data.get(CURRENT_PROFILE),
+        translation_key=CURRENT_PROFILE,
+    ),
+    EzBEQSensorEntityDescription(
+        key=DEVICES,
+        # make a list of device names
+        value_fn=lambda coordinator: ", ".join(
+            f"{device.name}" for device in coordinator.devices
+        ),
+        translation_key=DEVICES,
+    ),
+)
 
 
 async def async_setup_entry(
@@ -14,33 +43,25 @@ async def async_setup_entry(
     entry: EzBEQConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up ezbeq sensors based on a config entry."""
-    coordinator: EzbeqCoordinator = entry.runtime_data
-
-    sensors = [
-        EzbeqCurrentProfileSensor(coordinator),
-    ]
-
-    async_add_entities(sensors)
+    """Set up the sensor entities."""
+    coordinator = entry.runtime_data
+    async_add_entities(EzBEQSensor(coordinator, description) for description in SENSORS)
 
 
-class EzbeqCurrentProfileSensor(SensorEntity, EzBEQEntity):
-    """Sensor for the currently loaded ezbeq profile."""
+class EzBEQSensor(EzBEQEntity, SensorEntity):
+    """Base class for EzBEQ sensors."""
 
-    coordinator: EzbeqCoordinator
-
-    def __init__(self, coordinator: EzbeqCoordinator) -> None:
+    def __init__(
+        self,
+        coordinator: EzBEQCoordinator,
+        description: EzBEQSensorEntityDescription,
+    ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
-        self._attr_name = "Current Profile"
-        self._attr_unique_id = f"{coordinator.client.server_url}_current_profile"
+        self.entity_description: EzBEQSensorEntityDescription = description
+        self._attr_unique_id = f"{coordinator.client.server_url}_{description.key}"
 
     @property
-    def native_value(self) -> str:
+    def native_value(self) -> float | str | None:
         """Return the state of the sensor."""
-        return self.coordinator.current_profile
-
-    @property
-    def available(self) -> bool:
-        """Return if entity is available."""
-        return bool(self.coordinator.current_profile)
+        return self.entity_description.value_fn(self.coordinator)
