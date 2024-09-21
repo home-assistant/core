@@ -18,12 +18,23 @@ from homeassistant.components.local_calendar.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.exceptions import HomeAssistantError
 
 from tests.common import MockConfigEntry
 
 
 @pytest.fixture
-def mock_process_uploaded_file(tmp_path: Path) -> Generator[MagicMock, None, None]:
+def mock_ics_content():
+    """Mock ics file content."""
+    return b"""BEGIN:VCALENDAR
+                VERSION:2.0
+                PRODID:-//hacksw/handcal//NONSGML v1.0//EN
+                END:VCALENDAR
+            """
+
+
+@pytest.fixture
+def mock_process_uploaded_file(tmp_path: Path, mock_ics_content: str) -> Generator[MagicMock, None, None]:
     """Mock upload ics file."""
     file_id_ics = str(uuid4())
 
@@ -32,16 +43,12 @@ def mock_process_uploaded_file(tmp_path: Path) -> Generator[MagicMock, None, Non
         hass: HomeAssistant, uploaded_file_id: str
     ) -> Iterator[Path | None]:
         with open(tmp_path / uploaded_file_id, "wb") as icsfile:
-            icsfile.write(b"""BEGIN:VCALENDAR
-                                VERSION:2.0
-                                PRODID:-//hacksw/handcal//NONSGML v1.0//EN
-                                END:VCALENDAR
-                              """)
+            icsfile.write(mock_ics_content)
         yield tmp_path / uploaded_file_id
 
     with (
         patch(
-            "homeassistant.components.local_calendar.helpers.ics.process_uploaded_file",
+            "homeassistant.components.local_calendar.config_flow.process_uploaded_file",
             side_effect=_mock_process_uploaded_file,
         ) as mock_upload,
         patch(
@@ -137,3 +144,28 @@ async def test_duplicate_name(
 
     assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "already_configured"
+
+@pytest.mark.parametrize("mock_ics_content", [b"invalid-ics-content"])
+async def test_invalid_ics(
+    hass: HomeAssistant,
+    mock_process_uploaded_file: MagicMock,
+) -> None:
+    """Test invalid ics content raises error."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] is None
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_CALENDAR_NAME: "My Calendar", CONF_IMPORT_ICS: True},
+    )
+    assert result2["type"] is FlowResultType.FORM
+
+    file_id = mock_process_uploaded_file.file_id
+    with pytest.raises(HomeAssistantError):
+        await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_ICS_FILE: file_id[CONF_ICS_FILE]},
+        )
