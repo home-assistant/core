@@ -65,6 +65,27 @@
       "poe_delivery": {
         "name": "Port {port_name} PoE Delivery"
       }
+    },
+    "sensor": {
+      "device_status": {
+        "name": "Device Status",
+        "state": {
+          "unknown": "Unknown",
+          "disconnected": "[%key:common::state::disconnected%]",
+          "connected": "[%key:common::state::connected%]",
+          "pending": "Pending",
+          "heartbeat_missed": "Heartbeat Missed",
+          "isolated": "Isolated",
+          "adopt_failed": "Adopt Failed",
+          "managed_externally": "Managed Externally"
+        }
+      },
+      "cpu_usage": {
+        "name": "CPU Usage"
+      },
+      "mem_usage": {
+        "name": "Memory Usage"
+      }
     }
   }
 }
