@@ -1,0 +1,377 @@
+{
+  "success": true,
+  "data": [
+    {
+      "challenge": {},
+      "group": {
+        "completedBy": {},
+        "assignedUsers": []
+      },
+      "_id": "11111111-1111-1111-1111-111111111111",
+      "up": true,
+      "down": true,
+      "counterUp": 1,
+      "counterDown": 0,
+      "frequency": "daily",
+      "history": [],
+      "type": "habit",
+      "text": "Gesundes Essen/Junkfood",
+      "notes": "",
+      "tags": [],
+      "value": 0,
+      "priority": 1,
+      "attribute": "str",
+      "byHabitica": false,
+      "reminders": [],
+      "createdAt": "2024-07-07T17:51:53.268Z",
+      "updatedAt": "2024-07-07T17:51:53.268Z",
+      "userId": "00000000-0000-0000-0000-000000000000",
+      "id": "11111111-1111-1111-1111-111111111111"
+    },
+    {
+      "challenge": {},
+      "group": {
+        "completedBy": {},
+        "assignedUsers": []
+      },
+      "_id": "22222222-2222-2222-2222-222222222222",
+      "up": true,
+      "down": false,
+      "counterUp": 0,
+      "counterDown": 0,
+      "frequency": "daily",
+      "history": [
+        {
+          "date": 1720376763324,
+          "value": 1,
+          "scoredUp": 1,
+          "scoredDown": 0
+        }
+      ],
+      "type": "habit",
+      "text": "Eine kurze Pause machen",
+      "notes": "",
+      "tags": [],
+      "value": 0,
+      "priority": 1,
+      "attribute": "str",
+      "byHabitica": false,
+      "reminders": [],
+      "createdAt": "2024-07-07T17:51:53.266Z",
+      "updatedAt": "2024-07-12T09:58:45.438Z",
+      "userId": "00000000-0000-0000-0000-000000000000",
+      "id": "22222222-2222-2222-2222-222222222222"
+    },
+    {
+      "challenge": {},
+      "group": {
+        "completedBy": {},
+        "assignedUsers": []
+      },
+      "_id": "33333333-3333-3333-3333-333333333333",
+      "up": false,
+      "down": true,
+      "counterUp": 0,
+      "counterDown": 0,
+      "frequency": "daily",
+      "history": [],
+      "type": "habit",
+      "text": "Klicke hier um dies als schlechte Gewohnheit zu markieren, die Du gerne loswerden möchtest",
+      "notes": "Oder lösche es über die Bearbeitungs-Ansicht",
+      "tags": [],
+      "value": 0,
+      "priority": 1,
+      "attribute": "str",
+      "byHabitica": false,
+      "reminders": [],
+      "createdAt": "2024-07-07T17:51:53.265Z",
+      "updatedAt": "2024-07-07T17:51:53.265Z",
+      "userId": "00000000-0000-0000-0000-000000000000",
+      "id": "33333333-3333-3333-3333-333333333333"
+    },
+    {
+      "challenge": {},
+      "group": {
+        "completedBy": {},
+        "assignedUsers": []
+      },
+      "_id": "44444444-4444-4444-4444-444444444444",
+      "up": true,
+      "down": false,
+      "counterUp": 0,
+      "counterDown": 0,
+      "frequency": "daily",
+      "history": [
+        {
+          "date": 1720376763140,
+          "value": 1,
+          "scoredUp": 1,
+          "scoredDown": 0
+        }
+      ],
+      "type": "habit",
+      "text": "Füge eine Aufgabe zu Habitica hinzu",
+      "notes": "Eine Gewohnheit, eine Tagesaufgabe oder ein To-Do",
+      "tags": [],
+      "value": 0,
+      "priority": 1,
+      "attribute": "str",
+      "byHabitica": false,
+      "reminders": [],
+      "createdAt": "2024-07-07T17:51:53.264Z",
+      "updatedAt": "2024-07-12T09:58:45.438Z",
+      "userId": "00000000-0000-0000-0000-000000000000",
+      "id": "44444444-4444-4444-4444-444444444444"
+    },
+    {
+      "repeat": {
+        "m": true,
+        "t": true,
+        "w": true,
+        "th": true,
+        "f": true,
+        "s": true,
+        "su": true
+      },
+      "challenge": {},
+      "group": {
+        "completedBy": {},
+        "assignedUsers": []
+      },
+      "_id": "55555555-5555-5555-5555-555555555555",
+      "frequency": "weekly",
+      "everyX": 1,
+      "streak": 2,
+      "nextDue": [
+        "Sat Jul 13 2024 00:00:00 GMT+0200",
+        "Mon Jul 15 2024 00:00:00 GMT+0200",
+        "Tue Jul 16 2024 00:00:00 GMT+0200",
+        "Wed Jul 17 2024 00:00:00 GMT+0200",
+        "Thu Jul 18 2024 00:00:00 GMT+0200",
+        "Fri Jul 19 2024 00:00:00 GMT+0200"
+      ],
+      "yesterDaily": true,
+      "history": [
+        {
+          "date": 1720376766749,
+          "value": 1,
+          "isDue": true,
+          "completed": true
+        },
+        {
+          "date": 1720545311292,
+          "value": 0.02529999999999999,
+          "isDue": true,
+          "completed": false
+        },
+        {
+          "date": 1720564306719,
+          "value": -0.9740518837628547,
+          "isDue": true,
+          "completed": false
+        },
+        {
+          "date": 1720691096907,
+          "value": 0.051222853419153,
+          "isDue": true,
+          "completed": true
+        },
+        {
+          "date": 1720778325243,
+          "value": 1.0499115128458676,
+          "isDue": true,
+          "completed": true
+        }
+      ],
+      "completed": false,
+      "collapseChecklist": false,
+      "type": "daily",
+      "text": "Zahnseide benutzen",
+      "notes": "Klicke um Änderungen zu machen!",
+      "tags": [],
+      "value": 1.0499115128458676,
+      "priority": 1,
+      "attribute": "str",
+      "byHabitica": false,
+      "startDate": "2024-07-06T22:00:00.000Z",
+      "daysOfMonth": [],
+      "weeksOfMonth": [],
+      "checklist": [],
+      "reminders": [],
+      "createdAt": "2024-07-07T17:51:53.268Z",
+      "updatedAt": "2024-07-12T09:58:45.438Z",
+      "userId": "00000000-0000-0000-0000-000000000000",
+      "isDue": true,
+      "id": "55555555-5555-5555-5555-555555555555"
+    },
+    {
+      "repeat": {
+        "m": true,
+        "t": true,
+        "w": true,
+        "th": true,
+        "f": true,
+        "s": true,
+        "su": true
+      },
+      "challenge": {},
+      "group": {
+        "completedBy": {},
+        "assignedUsers": []
+      },
+      "_id": "66666666-6666-6666-6666-666666666666",
+      "frequency": "weekly",
+      "everyX": 1,
+      "streak": 3,
+      "nextDue": [
+        "2024-07-12T22:00:00.000Z",
+        "2024-07-14T22:00:00.000Z",
+        "2024-07-15T22:00:00.000Z",
+        "2024-07-16T22:00:00.000Z",
+        "2024-07-17T22:00:00.000Z",
+        "2024-07-18T22:00:00.000Z"
+      ],
+      "yesterDaily": true,
+      "history": [
+        {
+          "date": 1720374903074,
+          "value": 1,
+          "isDue": true,
+          "completed": true
+        },
+        {
+          "date": 1720545311291,
+          "value": 0.02529999999999999,
+          "isDue": true,
+          "completed": false
+        },
+        {
+          "date": 1720564306717,
+          "value": -0.9740518837628547,
+          "isDue": true,
+          "completed": false
+        },
+        {
+          "date": 1720682459722,
+          "value": 0.051222853419153,
+          "isDue": true,
+          "completed": true
+        },
+        {
+          "date": 1720778325246,
+          "value": 1.0499115128458676,
+          "isDue": true,
+          "completed": true
+        },
+        {
+          "date": 1720778492219,
+          "value": 2.023365658844519,
+          "isDue": true,
+          "completed": true
+        }
+      ],
+      "completed": true,
+      "collapseChecklist": false,
+      "type": "daily",
+      "text": "5 Minuten ruhig durchatmen",
+      "notes": "Klicke um Deinen Terminplan festzulegen!",
+      "tags": [],
+      "value": 2.023365658844519,
+      "priority": 1,
+      "attribute": "str",
+      "byHabitica": false,
+      "startDate": "2024-07-06T22:00:00.000Z",
+      "daysOfMonth": [],
+      "weeksOfMonth": [],
+      "checklist": [],
+      "reminders": [],
+      "createdAt": "2024-07-07T17:51:53.266Z",
+      "updatedAt": "2024-07-12T10:01:32.225Z",
+      "userId": "00000000-0000-0000-0000-000000000000",
+      "isDue": true,
+      "id": "66666666-6666-6666-6666-666666666666"
+    },
+    {
+      "challenge": {},
+      "group": {
+        "completedBy": {},
+        "assignedUsers": []
+      },
+      "_id": "77777777-7777-7777-7777-777777777777",
+      "completed": false,
+      "collapseChecklist": false,
+      "type": "todo",
+      "text": "Habitica beitreten (Hake mich ab!)",
+      "notes": "Du kannst dieses To-Do entweder abhaken, es bearbeiten oder löschen",
+      "tags": [],
+      "value": -0.9999899605038167,
+      "priority": 1,
+      "attribute": "str",
+      "byHabitica": true,
+      "checklist": [],
+      "reminders": [],
+      "createdAt": "2024-07-07T17:51:53.265Z",
+      "updatedAt": "2024-07-12T09:58:45.438Z",
+      "userId": "00000000-0000-0000-0000-000000000000",
+      "date": null,
+      "id": "77777777-7777-7777-7777-777777777777"
+    },
+    {
+      "challenge": {},
+      "group": {
+        "completedBy": {},
+        "assignedUsers": []
+      },
+      "_id": "88888888-8888-8888-8888-888888888888",
+      "completed": false,
+      "collapseChecklist": false,
+      "type": "todo",
+      "text": "Termin für einen Check-up setzen >> Denke über eine gesunde Veränderung nach",
+      "notes": "Klicke um Checklisten hinzuzufügen",
+      "tags": [],
+      "value": -5.273864715541224,
+      "priority": 1,
+      "attribute": "str",
+      "byHabitica": false,
+      "checklist": [],
+      "reminders": [],
+      "createdAt": "2024-07-07T17:51:53.269Z",
+      "updatedAt": "2024-07-12T09:58:45.438Z",
+      "userId": "00000000-0000-0000-0000-000000000000",
+      "date": "2024-07-31T00:00:00.000Z",
+      "id": "88888888-8888-8888-8888-888888888888"
+    },
+    {
+      "challenge": {},
+      "group": {
+        "completedBy": {},
+        "assignedUsers": []
+      },
+      "_id": "99999999-9999-9999-9999-999999999999",
+      "type": "reward",
+      "text": "Belohne Dich selbst",
+      "notes": "Schaue fern, spiele ein Spiel, gönne Dir einen Leckerbissen, es liegt ganz bei Dir!",
+      "tags": [],
+      "value": 10,
+      "priority": 1,
+      "attribute": "str",
+      "byHabitica": false,
+      "reminders": [],
+      "createdAt": "2024-07-07T17:51:53.266Z",
+      "updatedAt": "2024-07-07T17:51:53.266Z",
+      "userId": "00000000-0000-0000-0000-000000000000",
+      "id": "99999999-9999-9999-9999-999999999999"
+    }
+  ],
+  "notifications": [
+    {
+      "type": "UNALLOCATED_STATS_POINTS",
+      "data": {
+        "points": 2
+      },
+      "seen": true,
+      "id": "00000000-0000-0000-0000-000000000000"
+    }
+  ],
+  "appVersion": "5.26.1"
+}

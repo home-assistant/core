@@ -1,0 +1,42 @@
+{
+  "success": true,
+  "data": [
+    {
+      "challenge": {},
+      "group": {
+        "completedBy": {},
+        "assignedUsers": []
+      },
+      "_id": "10101010-1010-1010-1010-101010101010",
+      "completed": true,
+      "collapseChecklist": false,
+      "type": "todo",
+      "text": "Etwas Lustiges unternehmen",
+      "notes": "Klicke um anzugeben, was Du vorhast!",
+      "tags": [],
+      "value": -3.048804262229657,
+      "priority": 1,
+      "attribute": "str",
+      "byHabitica": false,
+      "checklist": [],
+      "reminders": [],
+      "createdAt": "2024-07-07T17:51:53.268Z",
+      "updatedAt": "2024-07-12T10:01:26.604Z",
+      "userId": "00000000-0000-0000-0000-000000000000",
+      "date": null,
+      "dateCompleted": "2024-07-12T10:01:26.598Z",
+      "id": "10101010-1010-1010-1010-101010101010"
+    }
+  ],
+  "notifications": [
+    {
+      "type": "UNALLOCATED_STATS_POINTS",
+      "data": {
+        "points": 2
+      },
+      "seen": true,
+      "id": "00000000-0000-0000-0000-000000000000"
+    }
+  ],
+  "appVersion": "5.26.1"
+}
