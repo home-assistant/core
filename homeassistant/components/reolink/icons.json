@@ -106,6 +106,18 @@
           "0": "mdi:volume-off"
         }
       },
+      "alarm_volume": {
+        "default": "mdi:volume-high",
+        "state": {
+          "0": "mdi:volume-off"
+        }
+      },
+      "message_volume": {
+        "default": "mdi:volume-high",
+        "state": {
+          "0": "mdi:volume-off"
+        }
+      },
       "guard_return_time": {
         "default": "mdi:crosshairs-gps"
       },
