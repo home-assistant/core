@@ -5,7 +5,6 @@ from __future__ import annotations
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 import logging
-from typing import Final
 
 from pysmlight.web import CmdWrapper
 
@@ -32,7 +31,7 @@ class SmButtonDescription(ButtonEntityDescription):
     press_fn: Callable[[CmdWrapper], Awaitable[None]]
 
 
-BUTTONS: Final = [
+BUTTONS: list[SmButtonDescription] = [
     SmButtonDescription(
         key="core_restart",
         translation_key="core_restart",
@@ -53,6 +52,13 @@ BUTTONS: Final = [
     ),
 ]
 
+ROUTER = SmButtonDescription(
+    key="zigbee_router_reconnect",
+    translation_key="zigbee_router_reconnect",
+    entity_registry_enabled_default=False,
+    press_fn=lambda cmd: cmd.zb_router(),
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -62,7 +68,11 @@ async def async_setup_entry(
     """Set up SMLIGHT buttons based on a config entry."""
     coordinator = entry.runtime_data.data
 
-    async_add_entities(SmButton(coordinator, button) for button in BUTTONS)
+    entities = [SmButton(coordinator, button) for button in BUTTONS]
+    if coordinator.data.info.zb_type == 1:
+        entities.append(SmButton(coordinator, ROUTER))
+
+    async_add_entities(entities)
 
 
 class SmButton(SmEntity, ButtonEntity):
