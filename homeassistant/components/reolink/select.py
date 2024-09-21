@@ -13,10 +13,10 @@ from reolink_aio.api import (
     DayNightEnum,
     HDREnum,
     Host,
+    HubToneEnum,
     SpotlightModeEnum,
     StatusLedEnum,
     TrackMethodEnum,
-    HubToneEnum,
 )
 from reolink_aio.exceptions import InvalidParameterError, ReolinkError
 
