@@ -392,6 +392,39 @@ async def test_energy_info_refresh_ratelimited(
     assert mock_site_info.call_count == 3
 
 
+async def test_energy_history_refresh_ratelimited(
+    hass: HomeAssistant,
+    normal_config_entry: MockConfigEntry,
+    mock_energy_history: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test coordinator refresh handles 429."""
+
+    await setup_platform(hass, normal_config_entry)
+
+    mock_energy_history.side_effect = RateLimited(
+        {"after": ENERGY_INTERVAL_SECONDS + 10}
+    )
+    freezer.tick(ENERGY_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_energy_history.call_count == 2
+
+    freezer.tick(ENERGY_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # Should not call for another 10 seconds
+    assert mock_energy_history.call_count == 2
+
+    freezer.tick(ENERGY_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_energy_history.call_count == 3
+
+
 async def test_init_region_issue(
     hass: HomeAssistant,
     normal_config_entry: MockConfigEntry,
