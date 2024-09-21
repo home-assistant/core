@@ -210,6 +210,18 @@
       "hdr": {
         "default": "mdi:hdr"
       },
+      "hub_alarm_ringtone": {
+        "default": "mdi:music-note",
+        "state": {
+          "alarm": "mdi:bullhorn"
+        }
+      },
+      "hub_visitor_ringtone": {
+        "default": "mdi:music-note",
+        "state": {
+          "alarm": "mdi:bullhorn"
+        }
+      },
       "motion_tone": {
         "default": "mdi:music-note",
         "state": {
