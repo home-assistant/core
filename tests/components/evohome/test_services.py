@@ -55,6 +55,8 @@ async def test_evohome_ctl_svcs(
     results = []
 
     async for _ in setup_evohome(hass, config, install=install):
+        ctl = ctl_entity(hass)
+
         services = list(hass.services.async_services_for_domain(DOMAIN))
         assert services == snapshot
 
@@ -71,46 +73,47 @@ async def test_evohome_ctl_svcs(
             assert mock_fcn.await_args.args == ()
             assert mock_fcn.await_args.kwargs == {}
 
-        # some systems (rare) only support Heat, Off
-        system_mode = "Off" if install == "h032585" else "HeatingOff"
+        # EvoService.SET_SYSTEM_MODE: HeatingOff (or Off)
+        ctl_mode = "Off" if "Off" in ctl._modes else "HeatingOff"  # most are HeatingOff
 
-        # EvoService.SET_SYSTEM_MODE: HeatingOff|Off
         with patch("evohomeasync2.controlsystem.ControlSystem.set_mode") as mock_fcn:
             await hass.services.async_call(
                 DOMAIN,
                 EvoService.SET_SYSTEM_MODE,
-                service_data={"mode": system_mode},
+                service_data={"mode": ctl_mode},
                 blocking=True,
             )
 
             assert mock_fcn.await_count == 1
-            assert mock_fcn.await_args.args == (system_mode,)
+            assert mock_fcn.await_args.args == (ctl_mode,)
             assert mock_fcn.await_args.kwargs == {
                 "until": None,
             }
 
-        # some systems (rare) only support Heat, Off
-        system_mode = "Heat" if install == "h032585" else "Auto"
+        # EvoService.SET_SYSTEM_MODE: Auto (or Heat)
+        ctl_mode = "Auto" if "Auto" in ctl._modes else "Heat"  # most are Auto
 
-        # EvoService.SET_SYSTEM_MODE: Auto|Heat
         with patch("evohomeasync2.controlsystem.ControlSystem.set_mode") as mock_fcn:
             await hass.services.async_call(
                 DOMAIN,
                 EvoService.SET_SYSTEM_MODE,
-                service_data={"mode": system_mode},
+                service_data={"mode": ctl_mode},
                 blocking=True,
             )
 
             assert mock_fcn.await_count == 1
-            assert mock_fcn.await_args.args == (system_mode,)
+            assert mock_fcn.await_args.args == (ctl_mode,)
             assert mock_fcn.await_args.kwargs == {
                 "until": None,
             }
 
-        if install == "h032585":
+        # some systems (e.g. VisionPro Wifi) support only Off, Heat
+        if not [
+            m for m in ctl._modes if m not in ("Auto", "Heat", "HeatingOff", "Off")
+        ]:
             return
 
-        # EvoService.SET_SYSTEM_MODE: Auto|Heat
+        # EvoService.SET_SYSTEM_MODE: Away, for 21 days
         with patch("evohomeasync2.controlsystem.ControlSystem.set_mode") as mock_fcn:
             await hass.services.async_call(
                 DOMAIN,
@@ -127,7 +130,7 @@ async def test_evohome_ctl_svcs(
 
             results.append(mock_fcn.await_args.kwargs)
 
-        # EvoService.SET_SYSTEM_MODE: AutoWithEco: 150 minutes
+        # EvoService.SET_SYSTEM_MODE: AutoWithEco, for 150 minutes
         with patch("evohomeasync2.controlsystem.ControlSystem.set_mode") as mock_fcn:
             await hass.services.async_call(
                 DOMAIN,
@@ -142,7 +145,9 @@ async def test_evohome_ctl_svcs(
                 "until": dt_util.parse_datetime("2024-07-10T14:30:00Z")
             }
 
-        if EvoService.RESET_SYSTEM not in services:
+        # only evohome (e.g. not RoundThermostat) supports AutoWithReset
+        if "AutoWithReset" not in ctl._modes:
+            # not need to confirm EvoService.RESET_SYSTEM not in services
             return
 
         # EvoService.RESET_SYSTEM
@@ -270,6 +275,8 @@ async def test_climate_ctl_svcs(
         assert ctl.hvac_modes == [HVACMode.OFF, HVACMode.HEAT]
 
         # SERVICE_SET_HVAC_MODE: HVACMode.OFF
+        ctl_mode = "HeatingOff" if "HeatingOff" in ctl._modes else "Off"
+
         with patch("evohomeasync2.controlsystem.ControlSystem.set_mode") as mock_fcn:
             await hass.services.async_call(
                 Platform.CLIMATE,
@@ -281,13 +288,13 @@ async def test_climate_ctl_svcs(
                 blocking=True,
             )
 
-            system_mode = "Off" if install == "h032585" else "HeatingOff"
-
             assert mock_fcn.await_count == 1
-            assert mock_fcn.await_args.args == (system_mode,)
+            assert mock_fcn.await_args.args == (ctl_mode,)
             assert mock_fcn.await_args.kwargs == {"until": None}
 
         # SERVICE_SET_HVAC_MODE: HVACMode.HEAT
+        ctl_mode = "Heat" if "Heat" in ctl._modes else "Auto"
+
         with patch("evohomeasync2.controlsystem.ControlSystem.set_mode") as mock_fcn:
             await hass.services.async_call(
                 Platform.CLIMATE,
@@ -299,38 +306,35 @@ async def test_climate_ctl_svcs(
                 blocking=True,
             )
 
-            system_mode = "Heat" if install == "h032585" else "Auto"
-
             assert mock_fcn.await_count == 1
-            assert mock_fcn.await_args.args == (system_mode,)
+            assert mock_fcn.await_args.args == (ctl_mode,)
             assert mock_fcn.await_args.kwargs == {"until": None}
 
         assert install != "default" or ctl.preset_modes == list(CTL_MODE_LOOKUP)
         assert ctl.preset_modes == snapshot
 
         # SERVICE_SET_PRESET_MODE: various
-        if ctl.preset_modes:
-            for mode in ctl.preset_modes:
-                with patch(
-                    "evohomeasync2.controlsystem.ControlSystem.set_mode"
-                ) as mock_fcn:
-                    await hass.services.async_call(
-                        Platform.CLIMATE,
-                        SERVICE_SET_PRESET_MODE,
-                        {
-                            ATTR_ENTITY_ID: ctl.entity_id,
-                            ATTR_PRESET_MODE: mode,
-                        },
-                        blocking=True,
-                    )
+        for mode in ctl.preset_modes or []:  # could be None
+            with patch(
+                "evohomeasync2.controlsystem.ControlSystem.set_mode"
+            ) as mock_fcn:
+                await hass.services.async_call(
+                    Platform.CLIMATE,
+                    SERVICE_SET_PRESET_MODE,
+                    {
+                        ATTR_ENTITY_ID: ctl.entity_id,
+                        ATTR_PRESET_MODE: mode,
+                    },
+                    blocking=True,
+                )
 
-                    assert mock_fcn.await_count == 1
-                    assert install != "default" or mock_fcn.await_args.args == (
-                        CTL_MODE_LOOKUP[mode],
-                    )
-                    assert mock_fcn.await_args.kwargs == {"until": None}
+                assert mock_fcn.await_count == 1
+                assert install != "default" or mock_fcn.await_args.args == (
+                    CTL_MODE_LOOKUP[mode],
+                )
+                assert mock_fcn.await_args.kwargs == {"until": None}
 
-                    results.append(mock_fcn.await_args.args)
+                results.append(mock_fcn.await_args.args)
 
         # SERVICE_SET_TEMPERATURE (not supported)
         with pytest.raises(HomeAssistantError):

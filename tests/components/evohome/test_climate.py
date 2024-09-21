@@ -35,6 +35,7 @@ async def test_ctl_set_hvac_mode(
 
         assert ctl.hvac_modes == [HVACMode.OFF, HVACMode.HEAT]
 
+        # set_hvac_mode(HVACMode.HEAT): Auto or Heat
         with patch("evohomeasync2.controlsystem.ControlSystem._set_mode") as mock_fcn:
             await ctl.async_set_hvac_mode(HVACMode.HEAT)
 
@@ -49,6 +50,7 @@ async def test_ctl_set_hvac_mode(
 
             results.append(mock_fcn.await_args.args)
 
+        # set_hvac_mode(HVACMode.OFF): HeatingOff or Off
         with patch("evohomeasync2.controlsystem.ControlSystem._set_mode") as mock_fcn:
             await ctl.async_set_hvac_mode(HVACMode.OFF)
 
@@ -85,23 +87,23 @@ async def test_ctl_set_preset_mode(
         assert install != "default" or ctl.preset_modes == list(CTL_MODE_LOOKUP)
         assert ctl.preset_modes == snapshot
 
-        if ctl.preset_modes:
-            for mode in ctl.preset_modes:
-                with patch(
-                    "evohomeasync2.controlsystem.ControlSystem._set_mode"
-                ) as mock_fcn:
-                    await ctl.async_set_preset_mode(mode)
+        # set_preset_mode(various)
+        for mode in ctl.preset_modes or []:  # could be None
+            with patch(
+                "evohomeasync2.controlsystem.ControlSystem._set_mode"
+            ) as mock_fcn:
+                await ctl.async_set_preset_mode(mode)
 
-                    assert mock_fcn.await_count == 1
-                    assert install != "default" or mock_fcn.await_args.args == (
-                        {
-                            "systemMode": CTL_MODE_LOOKUP[mode],
-                            "permanent": True,
-                        },
-                    )
-                    assert mock_fcn.await_args.kwargs == {}
+                assert mock_fcn.await_count == 1
+                assert install != "default" or mock_fcn.await_args.args == (
+                    {
+                        "systemMode": CTL_MODE_LOOKUP[mode],
+                        "permanent": True,
+                    },
+                )
+                assert mock_fcn.await_args.kwargs == {}
 
-                    results.append(mock_fcn.await_args.args)
+                results.append(mock_fcn.await_args.args)
 
     assert results == snapshot
 
@@ -114,6 +116,7 @@ async def test_ctl_set_temperature(
 ) -> None:
     """Test climate methods of a evohome-compatible zone."""
 
+    # not implemented
     async for _ in setup_evohome(hass, config, install=install):
         ctl = ctl_entity(hass)
 
@@ -140,6 +143,7 @@ async def test_zon_set_hvac_mode(
 
         assert zone.hvac_modes == [HVACMode.OFF, HVACMode.HEAT]
 
+        # set_hvac_mode(HVACMode.HEAT): FollowSchedule
         with patch("evohomeasync2.zone.Zone._set_mode") as mock_fcn:
             await zone.async_set_hvac_mode(HVACMode.HEAT)
 
@@ -151,6 +155,7 @@ async def test_zon_set_hvac_mode(
             )
             assert mock_fcn.await_args.kwargs == {}
 
+        # set_hvac_mode(HVACMode.OFF): PermanentOverride, minHeatSetpoint
         with patch("evohomeasync2.zone.Zone._set_mode") as mock_fcn:
             await zone.async_set_hvac_mode(HVACMode.OFF)
 
@@ -186,6 +191,7 @@ async def test_zon_set_preset_mode(
 
         assert zone.preset_modes == ["none", "temporary", "permanent"]
 
+        # set_preset_mode(none): FollowSchedule
         with patch("evohomeasync2.zone.Zone._set_mode") as mock_fcn:
             await zone.async_set_preset_mode("none")
 
@@ -197,6 +203,7 @@ async def test_zon_set_preset_mode(
             )
             assert mock_fcn.await_args.kwargs == {}
 
+        # set_preset_mode(permanent): PermanentOverride
         with patch("evohomeasync2.zone.Zone._set_mode") as mock_fcn:
             await zone.async_set_preset_mode("permanent")
 
@@ -211,6 +218,7 @@ async def test_zon_set_preset_mode(
 
             results.append(mock_fcn.await_args.args)
 
+        # set_preset_mode(permanent): TemporaryOverride
         with patch("evohomeasync2.zone.Zone._set_mode") as mock_fcn:
             await zone.async_set_preset_mode("temporary")
 
@@ -245,6 +253,7 @@ async def test_zon_set_temperature(
     async for _ in setup_evohome(hass, config, install=install):
         zone = zone_entity(hass)
 
+        # set_temperature(temp): TemporaryOverride, advanced
         with patch("evohomeasync2.zone.Zone._set_mode") as mock_fcn:
             await zone.async_set_temperature(temperature=19.1)
 
@@ -260,6 +269,7 @@ async def test_zon_set_temperature(
 
             results.append(mock_fcn.await_args.args)
 
+        # set_temperature(temp, until): TemporaryOverride, until
         with patch("evohomeasync2.zone.Zone._set_mode") as mock_fcn:
             await zone.async_set_temperature(
                 temperature=19.2,

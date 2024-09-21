@@ -34,6 +34,7 @@ async def test_set_operation_mode(
         if (dhw := dhw_entity(hass)) is None:
             pytest.skip("this installation has no DHW to test")
 
+        # set_operation_mode(auto): FollowSchedule
         with patch("evohomeasync2.hotwater.HotWater._set_mode") as mock_fcn:
             await dhw.async_set_operation_mode("auto")
 
@@ -47,6 +48,7 @@ async def test_set_operation_mode(
             )
             assert mock_fcn.await_args.kwargs == {}
 
+        # set_operation_mode(off): TemporaryOverride, advanced
         with patch("evohomeasync2.hotwater.HotWater._set_mode") as mock_fcn:
             await dhw.async_set_operation_mode("off")
 
@@ -62,6 +64,7 @@ async def test_set_operation_mode(
 
             results.append(mock_fcn.await_args.args)
 
+        # set_operation_mode(on): TemporaryOverride, advanced
         with patch("evohomeasync2.hotwater.HotWater._set_mode") as mock_fcn:
             await dhw.async_set_operation_mode("on")
 
@@ -92,6 +95,7 @@ async def test_turn_away_mode_off(
         if (dhw := dhw_entity(hass)) is None:
             pytest.skip("this installation has no DHW to test")
 
+        # turn_away_mode_off(): FollowSchedule
         with patch("evohomeasync2.hotwater.HotWater._set_mode") as mock_fcn:
             await dhw.async_turn_away_mode_off()
 
@@ -118,6 +122,7 @@ async def test_turn_away_mode_on(
         if (dhw := dhw_entity(hass)) is None:
             pytest.skip("this installation has no DHW to test")
 
+        # turn_away_mode_on(): PermanentOverride, Off
         with patch("evohomeasync2.hotwater.HotWater._set_mode") as mock_fcn:
             await dhw.async_turn_away_mode_on()
 
@@ -144,6 +149,7 @@ async def test_turn_off(
         if (dhw := dhw_entity(hass)) is None:
             pytest.skip("this installation has no DHW to test")
 
+        # turn_off(): PermanentOverride, Off
         with patch("evohomeasync2.hotwater.HotWater._set_mode") as mock_fcn:
             await dhw.async_turn_off()
 
@@ -170,6 +176,7 @@ async def test_turn_on(
         if (dhw := dhw_entity(hass)) is None:
             pytest.skip("this installation has no DHW to test")
 
+        # turn_on(): PermanentOverride, On
         with patch("evohomeasync2.hotwater.HotWater._set_mode") as mock_fcn:
             await dhw.async_turn_on()
 
