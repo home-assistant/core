@@ -165,7 +165,6 @@ class EvoZone(EvoChild, EvoClimateEntity):
 
         super().__init__(evo_broker, evo_device)
         self._evo_id = evo_device.zoneId
-        self._evo_tcs = evo_device.tcs
 
         if evo_device.modelType.startswith("VisionProWifi"):
             # this system does not have a distinct ID for the zone

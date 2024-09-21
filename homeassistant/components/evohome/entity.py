@@ -100,6 +100,8 @@ class EvoChild(EvoDevice):
         """Initialize a evohome Controller (hub)."""
         super().__init__(evo_broker, evo_device)
 
+        self._evo_tcs = evo_device.tcs
+
         self._schedule: dict[str, Any] = {}
         self._setpoints: dict[str, Any] = {}
 
