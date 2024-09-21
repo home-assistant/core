@@ -55,7 +55,7 @@ ACCESS_TOKEN_EXP_DTM, ACCESS_TOKEN_EXP_STR = dt_pair(dt_util.now() + timedelta(h
 USERNAME_DIFF: Final = f"not_{USERNAME}"
 USERNAME_SAME: Final = USERNAME
 
-TEST_DATA: Final[dict[str, _TokenStoreT]] = {
+TEST_STORAGE_DATA: Final[dict[str, _TokenStoreT]] = {
     "sans_session_id": {
         SZ_USERNAME: USERNAME_SAME,
         SZ_REFRESH_TOKEN: REFRESH_TOKEN,
@@ -71,7 +71,7 @@ TEST_DATA: Final[dict[str, _TokenStoreT]] = {
     },
 }
 
-TEST_DATA_NULL: Final[dict[str, _EmptyStoreT | None]] = {
+TEST_STORAGE_NULL: Final[dict[str, _EmptyStoreT | None]] = {
     "store_is_absent": None,
     "store_was_reset": {},
 }
@@ -83,7 +83,7 @@ DOMAIN_STORAGE_BASE: Final = {
 }
 
 
-@pytest.mark.parametrize("idx", TEST_DATA_NULL)
+@pytest.mark.parametrize("idx", TEST_STORAGE_NULL)
 async def test_auth_tokens_null(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
@@ -92,7 +92,7 @@ async def test_auth_tokens_null(
 ) -> None:
     """Test loading/saving authentication tokens when no cached tokens in the store."""
 
-    hass_storage[DOMAIN] = DOMAIN_STORAGE_BASE | {"data": TEST_DATA_NULL[idx]}
+    hass_storage[DOMAIN] = DOMAIN_STORAGE_BASE | {"data": TEST_STORAGE_NULL[idx]}
 
     mock_client = await setup_evohome(hass, evo_config, install="minimal")
 
@@ -113,7 +113,7 @@ async def test_auth_tokens_null(
     )
 
 
-@pytest.mark.parametrize("idx", TEST_DATA)
+@pytest.mark.parametrize("idx", TEST_STORAGE_DATA)
 async def test_auth_tokens_same(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
@@ -122,7 +122,7 @@ async def test_auth_tokens_same(
 ) -> None:
     """Test loading/saving authentication tokens when matching username."""
 
-    hass_storage[DOMAIN] = DOMAIN_STORAGE_BASE | {"data": TEST_DATA[idx]}
+    hass_storage[DOMAIN] = DOMAIN_STORAGE_BASE | {"data": TEST_STORAGE_DATA[idx]}
 
     mock_client = await setup_evohome(hass, evo_config, install="minimal")
 
@@ -142,7 +142,7 @@ async def test_auth_tokens_same(
     assert dt_util.parse_datetime(data[SZ_ACCESS_TOKEN_EXPIRES]) == ACCESS_TOKEN_EXP_DTM
 
 
-@pytest.mark.parametrize("idx", TEST_DATA)
+@pytest.mark.parametrize("idx", TEST_STORAGE_DATA)
 async def test_auth_tokens_past(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
@@ -154,7 +154,7 @@ async def test_auth_tokens_past(
     dt_dtm, dt_str = dt_pair(dt_util.now() - timedelta(hours=1))
 
     # make this access token have expired in the past...
-    test_data = TEST_DATA[idx].copy()  # shallow copy is OK here
+    test_data = TEST_STORAGE_DATA[idx].copy()  # shallow copy is OK here
     test_data[SZ_ACCESS_TOKEN_EXPIRES] = dt_str
 
     hass_storage[DOMAIN] = DOMAIN_STORAGE_BASE | {"data": test_data}
@@ -180,7 +180,7 @@ async def test_auth_tokens_past(
     )
 
 
-@pytest.mark.parametrize("idx", TEST_DATA)
+@pytest.mark.parametrize("idx", TEST_STORAGE_DATA)
 async def test_auth_tokens_diff(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
@@ -189,7 +189,7 @@ async def test_auth_tokens_diff(
 ) -> None:
     """Test loading/saving authentication tokens when unmatched username."""
 
-    hass_storage[DOMAIN] = DOMAIN_STORAGE_BASE | {"data": TEST_DATA[idx]}
+    hass_storage[DOMAIN] = DOMAIN_STORAGE_BASE | {"data": TEST_STORAGE_DATA[idx]}
 
     mock_client = await setup_evohome(
         hass, evo_config | {CONF_USERNAME: USERNAME_DIFF}, install="minimal"
