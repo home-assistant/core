@@ -1444,7 +1444,7 @@ nextdns==3.3.0
 nibe==2.11.0
 
 # homeassistant.components.nice_go
-nice-go==0.3.8
+nice-go==0.3.9
 
 # homeassistant.components.niko_home_control
 niko-home-control==0.2.1
