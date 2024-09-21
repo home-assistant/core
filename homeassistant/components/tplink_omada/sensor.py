@@ -24,33 +24,19 @@ from .const import OmadaDeviceStatus
 from .coordinator import OmadaDevicesCoordinator
 from .entity import OmadaDeviceEntity
 
-# All currently known low level status categories, mapped to a fairly descriptive status.
+# Useful low level status categories, mapped to a more descriptive status.
 DEVICE_STATUS_MAP = {
-    DeviceStatus.DISCONNECTED: OmadaDeviceStatus.DISCONNECTED,
-    DeviceStatus.DISCONNECTED_MIGRATING: OmadaDeviceStatus.DISCONNECTED,
     DeviceStatus.PROVISIONING: OmadaDeviceStatus.PENDING,
     DeviceStatus.CONFIGURING: OmadaDeviceStatus.PENDING,
     DeviceStatus.UPGRADING: OmadaDeviceStatus.PENDING,
     DeviceStatus.REBOOTING: OmadaDeviceStatus.PENDING,
-    DeviceStatus.CONNECTED: OmadaDeviceStatus.CONNECTED,
-    DeviceStatus.CONNECTED_WIRELESS: OmadaDeviceStatus.CONNECTED,
-    DeviceStatus.PENDING: OmadaDeviceStatus.PENDING,
-    DeviceStatus.PENDING_WIRELESS: OmadaDeviceStatus.PENDING,
-    DeviceStatus.ADOPTING: OmadaDeviceStatus.PENDING,
-    DeviceStatus.ADOPTING_WIRELESS: OmadaDeviceStatus.PENDING,
     DeviceStatus.ADOPT_FAILED: OmadaDeviceStatus.ADOPT_FAILED,
     DeviceStatus.ADOPT_FAILED_WIRELESS: OmadaDeviceStatus.ADOPT_FAILED,
     DeviceStatus.MANAGED_EXTERNALLY: OmadaDeviceStatus.MANAGED_EXTERNALLY,
     DeviceStatus.MANAGED_EXTERNALLY_WIRELESS: OmadaDeviceStatus.MANAGED_EXTERNALLY,
-    DeviceStatus.HEARTBEAT_MISSED: OmadaDeviceStatus.HEARTBEAT_MISSED,
-    DeviceStatus.HEARTBEAT_MISSED_WIRELESS: OmadaDeviceStatus.HEARTBEAT_MISSED,
-    DeviceStatus.HEARTBEAT_MISSED_MIGRATING: OmadaDeviceStatus.HEARTBEAT_MISSED,
-    DeviceStatus.HEARTBEAT_MISSED_WIRELESS_MIGRATING: OmadaDeviceStatus.HEARTBEAT_MISSED,
-    DeviceStatus.ISOLATED: OmadaDeviceStatus.ISOLATED,
-    DeviceStatus.ISOLATED_MIGRATING: OmadaDeviceStatus.ISOLATED,
 }
 
-# High level status categories for fallback when the detailed status is not a known value.
+# High level status categories, suitable for most device statuses.
 DEVICE_STATUS_CATEGORY_MAP = {
     DeviceStatusCategory.DISCONNECTED: OmadaDeviceStatus.DISCONNECTED,
     DeviceStatusCategory.CONNECTED: OmadaDeviceStatus.CONNECTED,
@@ -152,12 +138,8 @@ class OmadaDeviceSensor(OmadaDeviceEntity[OmadaDevicesCoordinator], SensorEntity
         self._do_update()
 
     def _do_update(self) -> None:
-        device = self.coordinator.data.get(self.device.mac)
-        if device:
-            self._attr_native_value = self.entity_description.update_func(device)
-            self.device = device
-        else:
-            self._attr_available = False
+        self.device = self.coordinator.data[self.device.mac]
+        self._attr_native_value = self.entity_description.update_func(self.device)
 
     @callback
     def _handle_coordinator_update(self) -> None:
