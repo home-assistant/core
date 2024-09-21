@@ -2,15 +2,10 @@
   "success": true,
   "data": [
     {
-      "challenge": {},
-      "group": {
-        "completedBy": {},
-        "assignedUsers": []
-      },
-      "_id": "11111111-1111-1111-1111-111111111111",
+      "_id": "f21fa608-cfc6-4413-9fc7-0eb1b48ca43a",
       "up": true,
       "down": true,
-      "counterUp": 1,
+      "counterUp": 0,
       "counterDown": 0,
       "frequency": "daily",
       "history": [],
@@ -21,20 +16,20 @@
       "value": 0,
       "priority": 1,
       "attribute": "str",
-      "byHabitica": false,
-      "reminders": [],
-      "createdAt": "2024-07-07T17:51:53.268Z",
-      "updatedAt": "2024-07-07T17:51:53.268Z",
-      "userId": "00000000-0000-0000-0000-000000000000",
-      "id": "11111111-1111-1111-1111-111111111111"
-    },
-    {
       "challenge": {},
       "group": {
         "completedBy": {},
         "assignedUsers": []
       },
-      "_id": "22222222-2222-2222-2222-222222222222",
+      "byHabitica": false,
+      "reminders": [],
+      "createdAt": "2024-07-07T17:51:53.268Z",
+      "updatedAt": "2024-07-07T17:51:53.268Z",
+      "userId": "5f359083-ef78-4af0-985a-0b2c6d05797c",
+      "id": "f21fa608-cfc6-4413-9fc7-0eb1b48ca43a"
+    },
+    {
+      "_id": "1d147de6-5c02-4740-8e2f-71d3015a37f4",
       "up": true,
       "down": false,
       "counterUp": 0,
@@ -55,20 +50,20 @@
       "value": 0,
       "priority": 1,
       "attribute": "str",
-      "byHabitica": false,
-      "reminders": [],
-      "createdAt": "2024-07-07T17:51:53.266Z",
-      "updatedAt": "2024-07-12T09:58:45.438Z",
-      "userId": "00000000-0000-0000-0000-000000000000",
-      "id": "22222222-2222-2222-2222-222222222222"
-    },
-    {
       "challenge": {},
       "group": {
         "completedBy": {},
         "assignedUsers": []
       },
-      "_id": "33333333-3333-3333-3333-333333333333",
+      "byHabitica": false,
+      "reminders": [],
+      "createdAt": "2024-07-07T17:51:53.266Z",
+      "updatedAt": "2024-07-12T09:58:45.438Z",
+      "userId": "5f359083-ef78-4af0-985a-0b2c6d05797c",
+      "id": "1d147de6-5c02-4740-8e2f-71d3015a37f4"
+    },
+    {
+      "_id": "bc1d1855-b2b8-4663-98ff-62e7b763dfc4",
       "up": false,
       "down": true,
       "counterUp": 0,
@@ -82,20 +77,20 @@
       "value": 0,
       "priority": 1,
       "attribute": "str",
-      "byHabitica": false,
-      "reminders": [],
-      "createdAt": "2024-07-07T17:51:53.265Z",
-      "updatedAt": "2024-07-07T17:51:53.265Z",
-      "userId": "00000000-0000-0000-0000-000000000000",
-      "id": "33333333-3333-3333-3333-333333333333"
-    },
-    {
       "challenge": {},
       "group": {
         "completedBy": {},
         "assignedUsers": []
       },
-      "_id": "44444444-4444-4444-4444-444444444444",
+      "byHabitica": false,
+      "reminders": [],
+      "createdAt": "2024-07-07T17:51:53.265Z",
+      "updatedAt": "2024-07-07T17:51:53.265Z",
+      "userId": "5f359083-ef78-4af0-985a-0b2c6d05797c",
+      "id": "bc1d1855-b2b8-4663-98ff-62e7b763dfc4"
+    },
+    {
+      "_id": "e97659e0-2c42-4599-a7bb-00282adc410d",
       "up": true,
       "down": false,
       "counterUp": 0,
@@ -116,14 +111,22 @@
       "value": 0,
       "priority": 1,
       "attribute": "str",
+      "challenge": {},
+      "group": {
+        "completedBy": {},
+        "assignedUsers": []
+      },
       "byHabitica": false,
       "reminders": [],
       "createdAt": "2024-07-07T17:51:53.264Z",
       "updatedAt": "2024-07-12T09:58:45.438Z",
-      "userId": "00000000-0000-0000-0000-000000000000",
-      "id": "44444444-4444-4444-4444-444444444444"
+      "userId": "5f359083-ef78-4af0-985a-0b2c6d05797c",
+      "id": "e97659e0-2c42-4599-a7bb-00282adc410d"
     },
     {
+      "_id": "564b9ac9-c53d-4638-9e7f-1cd96fe19baa",
+      "frequency": "weekly",
+      "everyX": 1,
       "repeat": {
         "m": true,
         "t": true,
@@ -133,22 +136,14 @@
         "s": true,
         "su": true
       },
-      "challenge": {},
-      "group": {
-        "completedBy": {},
-        "assignedUsers": []
-      },
-      "_id": "55555555-5555-5555-5555-555555555555",
-      "frequency": "weekly",
-      "everyX": 1,
-      "streak": 2,
+      "streak": 1,
       "nextDue": [
-        "Sat Jul 13 2024 00:00:00 GMT+0200",
-        "Mon Jul 15 2024 00:00:00 GMT+0200",
-        "Tue Jul 16 2024 00:00:00 GMT+0200",
-        "Wed Jul 17 2024 00:00:00 GMT+0200",
-        "Thu Jul 18 2024 00:00:00 GMT+0200",
-        "Fri Jul 19 2024 00:00:00 GMT+0200"
+        "Mon Sep 23 2024 00:00:00 GMT+0200",
+        "Tue Sep 24 2024 00:00:00 GMT+0200",
+        "Wed Sep 25 2024 00:00:00 GMT+0200",
+        "Thu Sep 26 2024 00:00:00 GMT+0200",
+        "Fri Sep 27 2024 00:00:00 GMT+0200",
+        "Sat Sep 28 2024 00:00:00 GMT+0200"
       ],
       "yesterDaily": true,
       "history": [
@@ -181,17 +176,58 @@
           "value": 1.0499115128458676,
           "isDue": true,
           "completed": true
+        },
+        {
+          "date": 1724185196447,
+          "value": 0.07645736684721605,
+          "isDue": true,
+          "completed": false
+        },
+        {
+          "date": 1724255707692,
+          "value": -0.921585289356988,
+          "isDue": true,
+          "completed": false
+        },
+        {
+          "date": 1726846163640,
+          "value": -1.9454824860630637,
+          "isDue": true,
+          "completed": false
+        },
+        {
+          "date": 1726953787542,
+          "value": -2.9966001649571803,
+          "isDue": true,
+          "completed": false
+        },
+        {
+          "date": 1726956115608,
+          "value": -4.07641493832036,
+          "isDue": true,
+          "completed": false
+        },
+        {
+          "date": 1726957460150,
+          "value": -2.9663035443712333,
+          "isDue": true,
+          "completed": true
         }
       ],
-      "completed": false,
+      "completed": true,
       "collapseChecklist": false,
       "type": "daily",
       "text": "Zahnseide benutzen",
       "notes": "Klicke um Änderungen zu machen!",
       "tags": [],
-      "value": 1.0499115128458676,
+      "value": -2.9663035443712333,
       "priority": 1,
       "attribute": "str",
+      "challenge": {},
+      "group": {
+        "completedBy": {},
+        "assignedUsers": []
+      },
       "byHabitica": false,
       "startDate": "2024-07-06T22:00:00.000Z",
       "daysOfMonth": [],
@@ -199,12 +235,15 @@
       "checklist": [],
       "reminders": [],
       "createdAt": "2024-07-07T17:51:53.268Z",
-      "updatedAt": "2024-07-12T09:58:45.438Z",
-      "userId": "00000000-0000-0000-0000-000000000000",
+      "updatedAt": "2024-09-21T22:24:20.154Z",
+      "userId": "5f359083-ef78-4af0-985a-0b2c6d05797c",
       "isDue": true,
-      "id": "55555555-5555-5555-5555-555555555555"
+      "id": "564b9ac9-c53d-4638-9e7f-1cd96fe19baa"
     },
     {
+      "_id": "f2c85972-1a19-4426-bc6d-ce3337b9d99f",
+      "frequency": "weekly",
+      "everyX": 1,
       "repeat": {
         "m": true,
         "t": true,
@@ -214,22 +253,14 @@
         "s": true,
         "su": true
       },
-      "challenge": {},
-      "group": {
-        "completedBy": {},
-        "assignedUsers": []
-      },
-      "_id": "66666666-6666-6666-6666-666666666666",
-      "frequency": "weekly",
-      "everyX": 1,
-      "streak": 3,
+      "streak": 0,
       "nextDue": [
-        "2024-07-12T22:00:00.000Z",
-        "2024-07-14T22:00:00.000Z",
-        "2024-07-15T22:00:00.000Z",
-        "2024-07-16T22:00:00.000Z",
-        "2024-07-17T22:00:00.000Z",
-        "2024-07-18T22:00:00.000Z"
+        "2024-09-22T22:00:00.000Z",
+        "2024-09-23T22:00:00.000Z",
+        "2024-09-24T22:00:00.000Z",
+        "2024-09-25T22:00:00.000Z",
+        "2024-09-26T22:00:00.000Z",
+        "2024-09-27T22:00:00.000Z"
       ],
       "yesterDaily": true,
       "history": [
@@ -268,17 +299,46 @@
           "value": 2.023365658844519,
           "isDue": true,
           "completed": true
+        },
+        {
+          "date": 1724255707691,
+          "value": 1.0738942424964806,
+          "isDue": true,
+          "completed": false
+        },
+        {
+          "date": 1726846163638,
+          "value": 0.10103816898038132,
+          "isDue": true,
+          "completed": false
+        },
+        {
+          "date": 1726953787540,
+          "value": -0.8963760215867302,
+          "isDue": true,
+          "completed": false
+        },
+        {
+          "date": 1726956115607,
+          "value": -1.919611992979862,
+          "isDue": true,
+          "completed": false
         }
       ],
-      "completed": true,
+      "completed": false,
       "collapseChecklist": false,
       "type": "daily",
       "text": "5 Minuten ruhig durchatmen",
       "notes": "Klicke um Deinen Terminplan festzulegen!",
       "tags": [],
-      "value": 2.023365658844519,
+      "value": -1.919611992979862,
       "priority": 1,
       "attribute": "str",
+      "challenge": {},
+      "group": {
+        "completedBy": {},
+        "assignedUsers": []
+      },
       "byHabitica": false,
       "startDate": "2024-07-06T22:00:00.000Z",
       "daysOfMonth": [],
@@ -286,68 +346,112 @@
       "checklist": [],
       "reminders": [],
       "createdAt": "2024-07-07T17:51:53.266Z",
-      "updatedAt": "2024-07-12T10:01:32.225Z",
-      "userId": "00000000-0000-0000-0000-000000000000",
+      "updatedAt": "2024-09-21T22:51:41.756Z",
+      "userId": "5f359083-ef78-4af0-985a-0b2c6d05797c",
       "isDue": true,
-      "id": "66666666-6666-6666-6666-666666666666"
+      "id": "f2c85972-1a19-4426-bc6d-ce3337b9d99f"
     },
     {
-      "challenge": {},
-      "group": {
-        "completedBy": {},
-        "assignedUsers": []
-      },
-      "_id": "77777777-7777-7777-7777-777777777777",
+      "_id": "88de7cd9-af2b-49ce-9afd-bf941d87336b",
+      "date": "2024-09-27T22:17:00.000Z",
       "completed": false,
       "collapseChecklist": false,
-      "type": "todo",
-      "text": "Habitica beitreten (Hake mich ab!)",
-      "notes": "Du kannst dieses To-Do entweder abhaken, es bearbeiten oder löschen",
-      "tags": [],
-      "value": -0.9999899605038167,
-      "priority": 1,
-      "attribute": "str",
-      "byHabitica": true,
       "checklist": [],
-      "reminders": [],
-      "createdAt": "2024-07-07T17:51:53.265Z",
-      "updatedAt": "2024-07-12T09:58:45.438Z",
-      "userId": "00000000-0000-0000-0000-000000000000",
-      "date": null,
-      "id": "77777777-7777-7777-7777-777777777777"
-    },
-    {
+      "type": "todo",
+      "text": "Buch zu Ende lesen",
+      "notes": "Das Buch, das du angefangen hast, bis zum Wochenende fertig lesen.",
+      "tags": [],
+      "value": 0,
+      "priority": 1,
+      "attribute": "str",
       "challenge": {},
       "group": {
         "completedBy": {},
         "assignedUsers": []
       },
-      "_id": "88888888-8888-8888-8888-888888888888",
-      "completed": false,
-      "collapseChecklist": false,
-      "type": "todo",
-      "text": "Termin für einen Check-up setzen >> Denke über eine gesunde Veränderung nach",
-      "notes": "Klicke um Checklisten hinzuzufügen",
-      "tags": [],
-      "value": -5.273864715541224,
-      "priority": 1,
-      "attribute": "str",
+      "reminders": [],
       "byHabitica": false,
-      "checklist": [],
-      "reminders": [],
-      "createdAt": "2024-07-07T17:51:53.269Z",
-      "updatedAt": "2024-07-12T09:58:45.438Z",
-      "userId": "00000000-0000-0000-0000-000000000000",
-      "date": "2024-07-31T00:00:00.000Z",
-      "id": "88888888-8888-8888-8888-888888888888"
+      "createdAt": "2024-09-21T22:17:57.816Z",
+      "updatedAt": "2024-09-21T22:17:57.816Z",
+      "userId": "5f359083-ef78-4af0-985a-0b2c6d05797c",
+      "id": "88de7cd9-af2b-49ce-9afd-bf941d87336b"
     },
     {
+      "_id": "2f6fcabc-f670-4ec3-ba65-817e8deea490",
+      "date": "2024-08-31T22:16:00.000Z",
+      "completed": false,
+      "collapseChecklist": false,
+      "checklist": [],
+      "type": "todo",
+      "text": "Rechnungen bezahlen",
+      "notes": "Strom- und Internetrechnungen rechtzeitig überweisen.",
+      "tags": [],
+      "value": 0,
+      "priority": 1,
+      "attribute": "str",
       "challenge": {},
       "group": {
         "completedBy": {},
         "assignedUsers": []
       },
-      "_id": "99999999-9999-9999-9999-999999999999",
+      "reminders": [],
+      "byHabitica": false,
+      "createdAt": "2024-09-21T22:17:19.513Z",
+      "updatedAt": "2024-09-21T22:19:35.576Z",
+      "userId": "5f359083-ef78-4af0-985a-0b2c6d05797c",
+      "id": "2f6fcabc-f670-4ec3-ba65-817e8deea490"
+    },
+    {
+      "_id": "1aa3137e-ef72-4d1f-91ee-41933602f438",
+      "completed": false,
+      "collapseChecklist": false,
+      "checklist": [],
+      "type": "todo",
+      "text": "Garten pflegen",
+      "notes": "Rasen mähen und die Pflanzen gießen.",
+      "tags": [],
+      "value": 0,
+      "priority": 1,
+      "attribute": "str",
+      "challenge": {},
+      "group": {
+        "completedBy": {},
+        "assignedUsers": []
+      },
+      "reminders": [],
+      "byHabitica": false,
+      "createdAt": "2024-09-21T22:16:38.153Z",
+      "updatedAt": "2024-09-21T22:16:38.153Z",
+      "userId": "5f359083-ef78-4af0-985a-0b2c6d05797c",
+      "id": "1aa3137e-ef72-4d1f-91ee-41933602f438"
+    },
+    {
+      "_id": "86ea2475-d1b5-4020-bdcc-c188c7996afa",
+      "date": "2024-09-26T22:15:00.000Z",
+      "completed": false,
+      "collapseChecklist": false,
+      "checklist": [],
+      "type": "todo",
+      "text": "Wochenendausflug planen",
+      "notes": "Den Ausflug für das kommende Wochenende organisieren.",
+      "tags": ["51076966-2970-4b40-b6ba-d58c6a756dd7"],
+      "value": 0,
+      "priority": 1,
+      "attribute": "str",
+      "challenge": {},
+      "group": {
+        "completedBy": {},
+        "assignedUsers": []
+      },
+      "reminders": [],
+      "byHabitica": false,
+      "createdAt": "2024-09-21T22:16:16.756Z",
+      "updatedAt": "2024-09-21T22:16:16.756Z",
+      "userId": "5f359083-ef78-4af0-985a-0b2c6d05797c",
+      "id": "86ea2475-d1b5-4020-bdcc-c188c7996afa"
+    },
+    {
+      "_id": "5e2ea1df-f6e6-4ba3-bccb-97c5ec63e99b",
       "type": "reward",
       "text": "Belohne Dich selbst",
       "notes": "Schaue fern, spiele ein Spiel, gönne Dir einen Leckerbissen, es liegt ganz bei Dir!",
@@ -355,23 +459,40 @@
       "value": 10,
       "priority": 1,
       "attribute": "str",
+      "challenge": {},
+      "group": {
+        "completedBy": {},
+        "assignedUsers": []
+      },
       "byHabitica": false,
       "reminders": [],
       "createdAt": "2024-07-07T17:51:53.266Z",
       "updatedAt": "2024-07-07T17:51:53.266Z",
-      "userId": "00000000-0000-0000-0000-000000000000",
-      "id": "99999999-9999-9999-9999-999999999999"
+      "userId": "5f359083-ef78-4af0-985a-0b2c6d05797c",
+      "id": "5e2ea1df-f6e6-4ba3-bccb-97c5ec63e99b"
     }
   ],
   "notifications": [
+    {
+      "type": "ITEM_RECEIVED",
+      "data": {
+        "icon": "notif_orca_mount",
+        "title": "Orcas for Summer Splash!",
+        "text": "To celebrate Summer Splash, we've given you an Orca Mount!",
+        "destination": "stable"
+      },
+      "seen": true,
+      "id": "b7a85df1-06ed-4ab1-b56d-43418fc6a5e5"
+    },
     {
       "type": "UNALLOCATED_STATS_POINTS",
       "data": {
         "points": 2
       },
       "seen": true,
-      "id": "00000000-0000-0000-0000-000000000000"
+      "id": "bc3f8a69-231f-4eb1-ba48-a00b6c0e0f37"
     }
   ],
-  "appVersion": "5.26.1"
+  "userV": 589,
+  "appVersion": "5.28.6"
 }

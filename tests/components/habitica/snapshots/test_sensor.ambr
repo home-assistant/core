@@ -95,7 +95,8 @@
 # name: test_sensors[sensor.test_user_dailies-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      '55555555-5555-5555-5555-555555555555': dict({
+      '564b9ac9-c53d-4638-9e7f-1cd96fe19baa': dict({
+        'completed': True,
         'created_at': '2024-07-07T17:51:53.268Z',
         'every_x': 1,
         'frequency': 'weekly',
@@ -107,12 +108,12 @@
         }),
         'is_due': True,
         'next_due': list([
-          'Sat Jul 13 2024 00:00:00 GMT+0200',
-          'Mon Jul 15 2024 00:00:00 GMT+0200',
-          'Tue Jul 16 2024 00:00:00 GMT+0200',
-          'Wed Jul 17 2024 00:00:00 GMT+0200',
-          'Thu Jul 18 2024 00:00:00 GMT+0200',
-          'Fri Jul 19 2024 00:00:00 GMT+0200',
+          'Mon Sep 23 2024 00:00:00 GMT+0200',
+          'Tue Sep 24 2024 00:00:00 GMT+0200',
+          'Wed Sep 25 2024 00:00:00 GMT+0200',
+          'Thu Sep 26 2024 00:00:00 GMT+0200',
+          'Fri Sep 27 2024 00:00:00 GMT+0200',
+          'Sat Sep 28 2024 00:00:00 GMT+0200',
         ]),
         'notes': 'Klicke um Änderungen zu machen!',
         'priority': 1,
@@ -126,14 +127,13 @@
           'w': True,
         }),
         'start_date': '2024-07-06T22:00:00.000Z',
-        'streak': 2,
+        'streak': 1,
         'text': 'Zahnseide benutzen',
         'type': 'daily',
-        'value': 1.0499115128458676,
+        'value': -2.9663035443712333,
         'yester_daily': True,
       }),
-      '66666666-6666-6666-6666-666666666666': dict({
-        'completed': True,
+      'f2c85972-1a19-4426-bc6d-ce3337b9d99f': dict({
         'created_at': '2024-07-07T17:51:53.266Z',
         'every_x': 1,
         'frequency': 'weekly',
@@ -145,12 +145,12 @@
         }),
         'is_due': True,
         'next_due': list([
-          '2024-07-12T22:00:00.000Z',
-          '2024-07-14T22:00:00.000Z',
-          '2024-07-15T22:00:00.000Z',
-          '2024-07-16T22:00:00.000Z',
-          '2024-07-17T22:00:00.000Z',
-          '2024-07-18T22:00:00.000Z',
+          '2024-09-22T22:00:00.000Z',
+          '2024-09-23T22:00:00.000Z',
+          '2024-09-24T22:00:00.000Z',
+          '2024-09-25T22:00:00.000Z',
+          '2024-09-26T22:00:00.000Z',
+          '2024-09-27T22:00:00.000Z',
         ]),
         'notes': 'Klicke um Deinen Terminplan festzulegen!',
         'priority': 1,
@@ -164,10 +164,9 @@
           'w': True,
         }),
         'start_date': '2024-07-06T22:00:00.000Z',
-        'streak': 3,
         'text': '5 Minuten ruhig durchatmen',
         'type': 'daily',
-        'value': 2.023365658844519,
+        'value': -1.919611992979862,
         'yester_daily': True,
       }),
       'friendly_name': 'test-user Dailies',
@@ -360,23 +359,7 @@
 # name: test_sensors[sensor.test_user_habits-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      '11111111-1111-1111-1111-111111111111': dict({
-        'counter_up': 1,
-        'created_at': '2024-07-07T17:51:53.268Z',
-        'down': True,
-        'frequency': 'daily',
-        'group': dict({
-          'assignedUsers': list([
-          ]),
-          'completedBy': dict({
-          }),
-        }),
-        'priority': 1,
-        'text': 'Gesundes Essen/Junkfood',
-        'type': 'habit',
-        'up': True,
-      }),
-      '22222222-2222-2222-2222-222222222222': dict({
+      '1d147de6-5c02-4740-8e2f-71d3015a37f4': dict({
         'created_at': '2024-07-07T17:51:53.266Z',
         'frequency': 'daily',
         'group': dict({
@@ -390,7 +373,7 @@
         'type': 'habit',
         'up': True,
       }),
-      '33333333-3333-3333-3333-333333333333': dict({
+      'bc1d1855-b2b8-4663-98ff-62e7b763dfc4': dict({
         'created_at': '2024-07-07T17:51:53.265Z',
         'down': True,
         'frequency': 'daily',
@@ -405,7 +388,7 @@
         'text': 'Klicke hier um dies als schlechte Gewohnheit zu markieren, die Du gerne loswerden möchtest',
         'type': 'habit',
       }),
-      '44444444-4444-4444-4444-444444444444': dict({
+      'e97659e0-2c42-4599-a7bb-00282adc410d': dict({
         'created_at': '2024-07-07T17:51:53.264Z',
         'frequency': 'daily',
         'group': dict({
@@ -417,6 +400,21 @@
         'notes': 'Eine Gewohnheit, eine Tagesaufgabe oder ein To-Do',
         'priority': 1,
         'text': 'Füge eine Aufgabe zu Habitica hinzu',
+        'type': 'habit',
+        'up': True,
+      }),
+      'f21fa608-cfc6-4413-9fc7-0eb1b48ca43a': dict({
+        'created_at': '2024-07-07T17:51:53.268Z',
+        'down': True,
+        'frequency': 'daily',
+        'group': dict({
+          'assignedUsers': list([
+          ]),
+          'completedBy': dict({
+          }),
+        }),
+        'priority': 1,
+        'text': 'Gesundes Essen/Junkfood',
         'type': 'habit',
         'up': True,
       }),
@@ -754,7 +752,7 @@
 # name: test_sensors[sensor.test_user_rewards-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      '99999999-9999-9999-9999-999999999999': dict({
+      '5e2ea1df-f6e6-4ba3-bccb-97c5ec63e99b': dict({
         'created_at': '2024-07-07T17:51:53.266Z',
         'group': dict({
           'assignedUsers': list([
@@ -815,33 +813,60 @@
 # name: test_sensors[sensor.test_user_to_do_s-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      '77777777-7777-7777-7777-777777777777': dict({
-        'created_at': '2024-07-07T17:51:53.265Z',
+      '1aa3137e-ef72-4d1f-91ee-41933602f438': dict({
+        'created_at': '2024-09-21T22:16:38.153Z',
         'group': dict({
           'assignedUsers': list([
           ]),
           'completedBy': dict({
           }),
         }),
-        'notes': 'Du kannst dieses To-Do entweder abhaken, es bearbeiten oder löschen',
+        'notes': 'Rasen mähen und die Pflanzen gießen.',
         'priority': 1,
-        'text': 'Habitica beitreten (Hake mich ab!)',
+        'text': 'Garten pflegen',
         'type': 'todo',
-        'value': -0.9999899605038167,
       }),
-      '88888888-8888-8888-8888-888888888888': dict({
-        'created_at': '2024-07-07T17:51:53.269Z',
+      '2f6fcabc-f670-4ec3-ba65-817e8deea490': dict({
+        'created_at': '2024-09-21T22:17:19.513Z',
         'group': dict({
           'assignedUsers': list([
           ]),
           'completedBy': dict({
           }),
         }),
-        'notes': 'Klicke um Checklisten hinzuzufügen',
+        'notes': 'Strom- und Internetrechnungen rechtzeitig überweisen.',
         'priority': 1,
-        'text': 'Termin für einen Check-up setzen >> Denke über eine gesunde Veränderung nach',
+        'text': 'Rechnungen bezahlen',
         'type': 'todo',
-        'value': -5.273864715541224,
+      }),
+      '86ea2475-d1b5-4020-bdcc-c188c7996afa': dict({
+        'created_at': '2024-09-21T22:16:16.756Z',
+        'group': dict({
+          'assignedUsers': list([
+          ]),
+          'completedBy': dict({
+          }),
+        }),
+        'notes': 'Den Ausflug für das kommende Wochenende organisieren.',
+        'priority': 1,
+        'tags': list([
+          '51076966-2970-4b40-b6ba-d58c6a756dd7',
+        ]),
+        'text': 'Wochenendausflug planen',
+        'type': 'todo',
+      }),
+      '88de7cd9-af2b-49ce-9afd-bf941d87336b': dict({
+        'created_at': '2024-09-21T22:17:57.816Z',
+        'group': dict({
+          'assignedUsers': list([
+          ]),
+          'completedBy': dict({
+          }),
+        }),
+        'notes': 'Das Buch, das du angefangen hast, bis zum Wochenende fertig lesen.',
+        'priority': 1,
+        'text': 'Buch zu Ende lesen',
+        'type': 'todo',
       }),
       'friendly_name': "test-user To-Do's",
       'unit_of_measurement': 'tasks',
@@ -851,6 +876,6 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2',
+    'state': '4',
   })
 # ---
