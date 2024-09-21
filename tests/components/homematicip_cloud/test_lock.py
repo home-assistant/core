@@ -2,15 +2,14 @@
 
 from unittest.mock import patch
 
-from homematicip.base.enums import LockState, MotorState
+from homematicip.base.enums import LockState as HomematicLockState, MotorState
 import pytest
 
 from homeassistant.components.homematicip_cloud import DOMAIN as HMIPC_DOMAIN
 from homeassistant.components.lock import (
     DOMAIN as LOCK_DOMAIN,
-    STATE_LOCKING,
-    STATE_UNLOCKING,
     LockEntityFeature,
+    LockState,
 )
 from homeassistant.const import ATTR_SUPPORTED_FEATURES
 from homeassistant.core import HomeAssistant
@@ -52,7 +51,7 @@ async def test_hmip_doorlockdrive(
         blocking=True,
     )
     assert hmip_device.mock_calls[-1][0] == "set_lock_state"
-    assert hmip_device.mock_calls[-1][1] == (LockState.OPEN,)
+    assert hmip_device.mock_calls[-1][1] == (HomematicLockState.OPEN,)
 
     await hass.services.async_call(
         "lock",
@@ -61,7 +60,7 @@ async def test_hmip_doorlockdrive(
         blocking=True,
     )
     assert hmip_device.mock_calls[-1][0] == "set_lock_state"
-    assert hmip_device.mock_calls[-1][1] == (LockState.LOCKED,)
+    assert hmip_device.mock_calls[-1][1] == (HomematicLockState.LOCKED,)
 
     await hass.services.async_call(
         "lock",
@@ -71,19 +70,19 @@ async def test_hmip_doorlockdrive(
     )
 
     assert hmip_device.mock_calls[-1][0] == "set_lock_state"
-    assert hmip_device.mock_calls[-1][1] == (LockState.UNLOCKED,)
+    assert hmip_device.mock_calls[-1][1] == (HomematicLockState.UNLOCKED,)
 
     await async_manipulate_test_data(
         hass, hmip_device, "motorState", MotorState.CLOSING
     )
     ha_state = hass.states.get(entity_id)
-    assert ha_state.state == STATE_LOCKING
+    assert ha_state.state == LockState.LOCKING
 
     await async_manipulate_test_data(
         hass, hmip_device, "motorState", MotorState.OPENING
     )
     ha_state = hass.states.get(entity_id)
-    assert ha_state.state == STATE_UNLOCKING
+    assert ha_state.state == LockState.UNLOCKING
 
 
 async def test_hmip_doorlockdrive_handle_errors(

@@ -7,7 +7,7 @@ from typing import Any
 
 from pysmartthings import Attribute, Capability
 
-from homeassistant.components.lock import LockEntity
+from homeassistant.components.lock import LockEntity, LockState
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -15,7 +15,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DATA_BROKERS, DOMAIN
 from .entity import SmartThingsEntity
 
-ST_STATE_LOCKED = "locked"
 ST_LOCK_ATTR_MAP = {
     "codeId": "code_id",
     "codeName": "code_name",
@@ -63,7 +62,7 @@ class SmartThingsLock(SmartThingsEntity, LockEntity):
     @property
     def is_locked(self) -> bool:
         """Return true if lock is locked."""
-        return self._device.status.lock == ST_STATE_LOCKED
+        return self._device.status.lock == LockState.LOCKED
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
