@@ -103,6 +103,6 @@ def mock_energy_history():
     """Mock Teslemetry Energy Specific site_info method."""
     with patch(
         "homeassistant.components.teslemetry.EnergySpecific.energy_history",
-        side_effect=lambda: deepcopy(ENERGY_HISTORY),
+        return_value=ENERGY_HISTORY,
     ) as mock_live_status:
         yield mock_live_status
