@@ -24,7 +24,9 @@ class EzBEQSensorEntityDescription(SensorEntityDescription):
 SENSORS: tuple[EzBEQSensorEntityDescription, ...] = (
     EzBEQSensorEntityDescription(
         key=CURRENT_PROFILE,
-        value_fn=lambda coordinator: coordinator.data.get(CURRENT_PROFILE),
+        value_fn=lambda coordinator: coordinator.data.get(CURRENT_PROFILE)
+        if coordinator.data.get(CURRENT_PROFILE) != ""
+        else None,
         translation_key=CURRENT_PROFILE,
     ),
     EzBEQSensorEntityDescription(
