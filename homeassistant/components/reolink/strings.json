@@ -695,8 +695,8 @@
       "manual_record": {
         "name": "Manual record"
       },
-      "buzzer": {
-        "name": "Buzzer on event"
+      "hub_ringtone_on_event": {
+        "name": "Hub ringtone on event"
       },
       "doorbell_button_sound": {
         "name": "Doorbell button sound"
