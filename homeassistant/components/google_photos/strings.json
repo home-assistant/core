@@ -65,7 +65,7 @@
   "services": {
     "upload": {
       "name": "Upload media",
-      "description": "Upload photos to Google Photos.",
+      "description": "Upload images or videos to Google Photos.",
       "fields": {
         "config_entry_id": {
           "name": "Integration Id",
@@ -75,11 +75,6 @@
           "name": "Filename",
           "description": "Path to the image or video to upload.",
           "example": "/config/www/image.jpg"
-        },
-        "album": {
-          "name": "Album",
-          "description": "Album name that is the destination for the uploaded content.",
-          "example": "Family Photos"
         }
       }
     }
