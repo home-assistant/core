@@ -538,9 +538,7 @@ async def async_setup_entry(
     """Set up a Reolink number entities."""
     reolink_data: ReolinkData = config_entry.runtime_data
 
-    entities: list[
-        ReolinkNumberEntity | ReolinkHostNumberEntity | ReolinkChimeNumberEntity
-    ] = [
+    entities: list[NumberEntity] = [
         ReolinkNumberEntity(reolink_data, channel, entity_description)
         for entity_description in NUMBER_ENTITIES
         for channel in reolink_data.host.api.channels
