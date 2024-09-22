@@ -165,7 +165,7 @@ async def test_create_clientsession_without_ssl_and_cookies(
         (True, 0, SSLCipherList.PYTHON_DEFAULT),
         (False, 0, SSLCipherList.PYTHON_DEFAULT),
         (True, 4, SSLCipherList.PYTHON_DEFAULT),
-        (False, 4), SSLCipherList.PYTHON_DEFAULT,
+        (False, 4, SSLCipherList.PYTHON_DEFAULT),
         (True, 6, SSLCipherList.PYTHON_DEFAULT),
         (False, 6, SSLCipherList.PYTHON_DEFAULT),
         (False, 0, SSLCipherList.INTERMEDIATE),
