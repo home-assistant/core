@@ -182,20 +182,20 @@ class KNXClimate(KnxYamlEntity, ClimateEntity):
             self._attr_supported_features |= ClimateEntityFeature.FAN_MODE
             fan_max_step = config.get(ClimateSchema.CONF_FAN_MAX_STEP)
 
-            if fan_max_step is not None and fan_max_step == 3:
-                self._attr_fan_modes = [FAN_OFF, FAN_LOW, FAN_MEDIUM, FAN_HIGH]
-            elif fan_max_step is not None and fan_max_step == 2:
-                self._attr_fan_modes = [FAN_OFF, FAN_LOW, FAN_HIGH]
-            elif fan_max_step is not None and fan_max_step == 1:
-                self._attr_fan_modes = [FAN_OFF, FAN_ON]
-            elif fan_max_step is not None:
-                self._attr_fan_modes = [FAN_OFF] + [
-                    str(i) for i in range(1, fan_max_step + 1)
-                ]
-            else:
+            if fan_max_step is None:
                 fan_percentages_modes = config[ClimateSchema.CONF_FAN_PERCENTAGES_MODES]
                 self._attr_fan_modes = [FAN_OFF] + [
                     f"{value}%" for value in fan_percentages_modes
+                ]
+            elif fan_max_step == 3:
+                self._attr_fan_modes = [FAN_OFF, FAN_LOW, FAN_MEDIUM, FAN_HIGH]
+            elif fan_max_step == 2:
+                self._attr_fan_modes = [FAN_OFF, FAN_LOW, FAN_HIGH]
+            elif fan_max_step == 1:
+                self._attr_fan_modes = [FAN_OFF, FAN_ON]
+            else:
+                self._attr_fan_modes = [FAN_OFF] + [
+                    str(i) for i in range(1, fan_max_step + 1)
                 ]
 
         self._attr_target_temperature_step = self._device.temperature_step
