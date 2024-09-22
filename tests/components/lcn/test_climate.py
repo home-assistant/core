@@ -7,13 +7,12 @@ from pypck.lcn_addr import LcnAddr
 from pypck.lcn_defs import Var, VarUnit, VarValue
 from syrupy.assertion import SnapshotAssertion
 
-# pylint: disable=hass-component-root-import
-from homeassistant.components.climate import DOMAIN as DOMAIN_CLIMATE
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE,
     ATTR_HVAC_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
+    DOMAIN as DOMAIN_CLIMATE,
     SERVICE_SET_HVAC_MODE,
     SERVICE_SET_TEMPERATURE,
     HVACMode,
@@ -282,6 +281,6 @@ async def test_unload_config_entry(
     """Test the climate is removed when the config entry is unloaded."""
     await init_integration(hass, entry)
 
-    await hass.config_entries.async_forward_entry_unload(entry, DOMAIN_CLIMATE)
+    await hass.config_entries.async_unload(entry.entry_id)
     state = hass.states.get("climate.climate1")
     assert state.state == STATE_UNAVAILABLE

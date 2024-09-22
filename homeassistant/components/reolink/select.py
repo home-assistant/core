@@ -20,19 +20,18 @@ from reolink_aio.api import (
 from reolink_aio.exceptions import InvalidParameterError, ReolinkError
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import ReolinkData
-from .const import DOMAIN
 from .entity import (
     ReolinkChannelCoordinatorEntity,
     ReolinkChannelEntityDescription,
     ReolinkChimeCoordinatorEntity,
+    ReolinkChimeEntityDescription,
 )
+from .util import ReolinkConfigEntry, ReolinkData
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -52,7 +51,7 @@ class ReolinkSelectEntityDescription(
 @dataclass(frozen=True, kw_only=True)
 class ReolinkChimeSelectEntityDescription(
     SelectEntityDescription,
-    ReolinkChannelEntityDescription,
+    ReolinkChimeEntityDescription,
 ):
     """A class that describes select entities for a chime."""
 
@@ -156,6 +155,7 @@ CHIME_SELECT_ENTITIES = (
         cmd_key="GetDingDongCfg",
         translation_key="motion_tone",
         entity_category=EntityCategory.CONFIG,
+        supported=lambda chime: "md" in chime.chime_event_types,
         get_options=[method.name for method in ChimeToneEnum],
         value=lambda chime: ChimeToneEnum(chime.tone("md")).name,
         method=lambda chime, name: chime.set_tone("md", ChimeToneEnum[name].value),
@@ -166,6 +166,7 @@ CHIME_SELECT_ENTITIES = (
         translation_key="people_tone",
         entity_category=EntityCategory.CONFIG,
         get_options=[method.name for method in ChimeToneEnum],
+        supported=lambda chime: "people" in chime.chime_event_types,
         value=lambda chime: ChimeToneEnum(chime.tone("people")).name,
         method=lambda chime, name: chime.set_tone("people", ChimeToneEnum[name].value),
     ),
@@ -175,19 +176,30 @@ CHIME_SELECT_ENTITIES = (
         translation_key="visitor_tone",
         entity_category=EntityCategory.CONFIG,
         get_options=[method.name for method in ChimeToneEnum],
+        supported=lambda chime: "visitor" in chime.chime_event_types,
         value=lambda chime: ChimeToneEnum(chime.tone("visitor")).name,
         method=lambda chime, name: chime.set_tone("visitor", ChimeToneEnum[name].value),
+    ),
+    ReolinkChimeSelectEntityDescription(
+        key="package_tone",
+        cmd_key="GetDingDongCfg",
+        translation_key="package_tone",
+        entity_category=EntityCategory.CONFIG,
+        get_options=[method.name for method in ChimeToneEnum],
+        supported=lambda chime: "package" in chime.chime_event_types,
+        value=lambda chime: ChimeToneEnum(chime.tone("package")).name,
+        method=lambda chime, name: chime.set_tone("package", ChimeToneEnum[name].value),
     ),
 )
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: ReolinkConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up a Reolink select entities."""
-    reolink_data: ReolinkData = hass.data[DOMAIN][config_entry.entry_id]
+    reolink_data: ReolinkData = config_entry.runtime_data
 
     entities: list[ReolinkSelectEntity | ReolinkChimeSelectEntity] = [
         ReolinkSelectEntity(reolink_data, channel, entity_description)
@@ -199,6 +211,7 @@ async def async_setup_entry(
         ReolinkChimeSelectEntity(reolink_data, chime, entity_description)
         for entity_description in CHIME_SELECT_ENTITIES
         for chime in reolink_data.host.api.chime_list
+        if entity_description.supported(chime)
     )
     async_add_entities(entities)
 

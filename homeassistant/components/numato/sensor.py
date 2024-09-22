@@ -74,38 +74,22 @@ class NumatoGpioAdc(SensorEntity):
 
     def __init__(self, name, device_id, port, src_range, dst_range, dst_unit, api):
         """Initialize the sensor."""
-        self._name = name
+        self._attr_name = name
         self._device_id = device_id
         self._port = port
         self._src_range = src_range
         self._dst_range = dst_range
-        self._state = None
-        self._unit_of_measurement = dst_unit
+        self._attr_native_unit_of_measurement = dst_unit
         self._api = api
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def native_value(self):
-        """Return the state of the sensor."""
-        return self._state
-
-    @property
-    def native_unit_of_measurement(self):
-        """Return the unit the value is expressed in."""
-        return self._unit_of_measurement
 
     def update(self) -> None:
         """Get the latest data and updates the state."""
         try:
             adc_val = self._api.read_adc_input(self._device_id, self._port)
             adc_val = self._clamp_to_source_range(adc_val)
-            self._state = self._linear_scale_to_dest_range(adc_val)
+            self._attr_native_value = self._linear_scale_to_dest_range(adc_val)
         except NumatoGpioError as err:
-            self._state = None
+            self._attr_native_value = None
             _LOGGER.error(
                 "Failed to update Numato device %s ADC-port %s: %s",
                 self._device_id,

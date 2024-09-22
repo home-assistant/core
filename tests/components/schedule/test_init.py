@@ -12,6 +12,7 @@ import pytest
 from homeassistant.components.schedule import STORAGE_VERSION, STORAGE_VERSION_MINOR
 from homeassistant.components.schedule.const import (
     ATTR_NEXT_EVENT,
+    CONF_DATA,
     CONF_FRIDAY,
     CONF_FROM,
     CONF_MONDAY,
@@ -66,13 +67,21 @@ def schedule_setup(
                             CONF_NAME: "from storage",
                             CONF_ICON: "mdi:party-popper",
                             CONF_FRIDAY: [
-                                {CONF_FROM: "17:00:00", CONF_TO: "23:59:59"},
+                                {
+                                    CONF_FROM: "17:00:00",
+                                    CONF_TO: "23:59:59",
+                                    CONF_DATA: {"party_level": "epic"},
+                                },
                             ],
                             CONF_SATURDAY: [
                                 {CONF_FROM: "00:00:00", CONF_TO: "23:59:59"},
                             ],
                             CONF_SUNDAY: [
-                                {CONF_FROM: "00:00:00", CONF_TO: "24:00:00"},
+                                {
+                                    CONF_FROM: "00:00:00",
+                                    CONF_TO: "24:00:00",
+                                    CONF_DATA: {"entry": "VIPs only"},
+                                },
                             ],
                         }
                     ]
@@ -95,9 +104,21 @@ def schedule_setup(
                         CONF_TUESDAY: [{CONF_FROM: "00:00:00", CONF_TO: "23:59:59"}],
                         CONF_WEDNESDAY: [{CONF_FROM: "00:00:00", CONF_TO: "23:59:59"}],
                         CONF_THURSDAY: [{CONF_FROM: "00:00:00", CONF_TO: "23:59:59"}],
-                        CONF_FRIDAY: [{CONF_FROM: "00:00:00", CONF_TO: "23:59:59"}],
+                        CONF_FRIDAY: [
+                            {
+                                CONF_FROM: "00:00:00",
+                                CONF_TO: "23:59:59",
+                                CONF_DATA: {"party_level": "epic"},
+                            }
+                        ],
                         CONF_SATURDAY: [{CONF_FROM: "00:00:00", CONF_TO: "23:59:59"}],
-                        CONF_SUNDAY: [{CONF_FROM: "00:00:00", CONF_TO: "23:59:59"}],
+                        CONF_SUNDAY: [
+                            {
+                                CONF_FROM: "00:00:00",
+                                CONF_TO: "23:59:59",
+                                CONF_DATA: {"entry": "VIPs only"},
+                            }
+                        ],
                     }
                 }
             }
@@ -557,13 +578,13 @@ async def test_ws_list(
     assert len(result) == 1
     assert result["from_storage"][ATTR_NAME] == "from storage"
     assert result["from_storage"][CONF_FRIDAY] == [
-        {CONF_FROM: "17:00:00", CONF_TO: "23:59:59"}
+        {CONF_FROM: "17:00:00", CONF_TO: "23:59:59", CONF_DATA: {"party_level": "epic"}}
     ]
     assert result["from_storage"][CONF_SATURDAY] == [
         {CONF_FROM: "00:00:00", CONF_TO: "23:59:59"}
     ]
     assert result["from_storage"][CONF_SUNDAY] == [
-        {CONF_FROM: "00:00:00", CONF_TO: "24:00:00"}
+        {CONF_FROM: "00:00:00", CONF_TO: "24:00:00", CONF_DATA: {"entry": "VIPs only"}}
     ]
     assert "from_yaml" not in result
 

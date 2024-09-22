@@ -78,9 +78,7 @@ async def test_number_workarea_commands(
     values[TEST_MOWER_ID].work_areas[123456].cutting_height = 75
     mock_automower_client.get_status.return_value = values
     mocked_method = AsyncMock()
-    setattr(
-        mock_automower_client.commands, "set_cutting_height_workarea", mocked_method
-    )
+    setattr(mock_automower_client.commands, "workarea_settings", mocked_method)
     await hass.services.async_call(
         domain="number",
         service="set_value",

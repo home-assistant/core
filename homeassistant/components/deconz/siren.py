@@ -9,7 +9,7 @@ from pydeconz.models.light.siren import Siren
 
 from homeassistant.components.siren import (
     ATTR_DURATION,
-    DOMAIN,
+    DOMAIN as SIREN_DOMAIN,
     SirenEntity,
     SirenEntityFeature,
 )
@@ -17,7 +17,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .deconz_device import DeconzDevice
+from .entity import DeconzDevice
 from .hub import DeconzHub
 
 
@@ -28,7 +28,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up sirens for deCONZ component."""
     hub = DeconzHub.get_hub(hass, config_entry)
-    hub.entities[DOMAIN] = set()
+    hub.entities[SIREN_DOMAIN] = set()
 
     @callback
     def async_add_siren(_: EventType, siren_id: str) -> None:
@@ -45,7 +45,7 @@ async def async_setup_entry(
 class DeconzSiren(DeconzDevice[Siren], SirenEntity):
     """Representation of a deCONZ siren."""
 
-    TYPE = DOMAIN
+    TYPE = SIREN_DOMAIN
     _attr_supported_features = (
         SirenEntityFeature.TURN_ON
         | SirenEntityFeature.TURN_OFF

@@ -30,6 +30,16 @@ from tests.typing import WebSocketGenerator
     ),
     [
         (
+            "alarm_control_panel",
+            {"value_template": "{{ states('alarm_control_panel.one') }}"},
+            "armed_away",
+            {"one": "armed_away", "two": "disarmed"},
+            {},
+            {},
+            {"code_arm_required": True, "code_format": "number"},
+            {},
+        ),
+        (
             "binary_sensor",
             {
                 "state": "{{ states('binary_sensor.one') == 'on' or states('binary_sensor.two') == 'on' }}"
@@ -63,7 +73,7 @@ from tests.typing import WebSocketGenerator
                 "device_class": "restart",
                 "press": [
                     {
-                        "service": "input_boolean.toggle",
+                        "action": "input_boolean.toggle",
                         "target": {"entity_id": "input_boolean.test"},
                         "data": {},
                     }
@@ -73,7 +83,7 @@ from tests.typing import WebSocketGenerator
                 "device_class": "restart",
                 "press": [
                     {
-                        "service": "input_boolean.toggle",
+                        "action": "input_boolean.toggle",
                         "target": {"entity_id": "input_boolean.test"},
                         "data": {},
                     }
@@ -101,6 +111,7 @@ from tests.typing import WebSocketGenerator
                 "min": "0",
                 "max": "100",
                 "step": "0.1",
+                "unit_of_measurement": "cm",
                 "set_value": {
                     "action": "input_number.set_value",
                     "target": {"entity_id": "input_number.test"},
@@ -111,6 +122,7 @@ from tests.typing import WebSocketGenerator
                 "min": 0,
                 "max": 100,
                 "step": 0.1,
+                "unit_of_measurement": "cm",
                 "set_value": {
                     "action": "input_number.set_value",
                     "target": {"entity_id": "input_number.test"},
@@ -269,6 +281,12 @@ async def test_config_flow(
             },
         ),
         (
+            "alarm_control_panel",
+            {"value_template": "{{ states('alarm_control_panel.one') }}"},
+            {"code_arm_required": True, "code_format": "number"},
+            {"code_arm_required": True, "code_format": "number"},
+        ),
+        (
             "select",
             {"state": "{{ states('select.one') }}"},
             {"options": "{{ ['off', 'on', 'auto'] }}"},
@@ -410,7 +428,7 @@ def get_suggested(schema, key):
                 "device_class": "restart",
                 "press": [
                     {
-                        "service": "input_boolean.toggle",
+                        "action": "input_boolean.toggle",
                         "target": {"entity_id": "input_boolean.test"},
                         "data": {},
                     }
@@ -419,7 +437,7 @@ def get_suggested(schema, key):
             {
                 "press": [
                     {
-                        "service": "input_boolean.toggle",
+                        "action": "input_boolean.toggle",
                         "target": {"entity_id": "input_boolean.test"},
                         "data": {},
                     }
@@ -454,6 +472,7 @@ def get_suggested(schema, key):
                 "min": 0,
                 "max": 100,
                 "step": 0.1,
+                "unit_of_measurement": "cm",
                 "set_value": {
                     "action": "input_number.set_value",
                     "target": {"entity_id": "input_number.test"},
@@ -464,6 +483,7 @@ def get_suggested(schema, key):
                 "min": 0,
                 "max": 100,
                 "step": 0.1,
+                "unit_of_measurement": "cm",
                 "set_value": {
                     "action": "input_number.set_value",
                     "target": {"entity_id": "input_number.test"},
@@ -471,6 +491,16 @@ def get_suggested(schema, key):
                 },
             },
             "state",
+        ),
+        (
+            "alarm_control_panel",
+            {"value_template": "{{ states('alarm_control_panel.one') }}"},
+            {"value_template": "{{ states('alarm_control_panel.two') }}"},
+            ["armed_away", "disarmed"],
+            {"one": "armed_away", "two": "disarmed"},
+            {"code_arm_required": True, "code_format": "number"},
+            {"code_arm_required": True, "code_format": "number"},
+            "value_template",
         ),
         (
             "select",
@@ -764,7 +794,7 @@ EARLY_END_ERROR = "invalid template (TemplateSyntaxError: unexpected 'end of tem
                 ),
                 "unit_of_measurement": (
                     "'None' is not a valid unit for device class 'energy'; "
-                    "expected one of 'GJ', 'kWh', 'MJ', 'MWh', 'Wh'"
+                    "expected one of 'cal', 'Gcal', 'GJ', 'J', 'kcal', 'kJ', 'kWh', 'Mcal', 'MJ', 'MWh', 'Wh'"
                 ),
             },
         ),
@@ -1239,6 +1269,12 @@ async def test_option_flow_sensor_preview_config_entry_removed(
                 "max": 100,
                 "step": 0.1,
             },
+        ),
+        (
+            "alarm_control_panel",
+            {"value_template": "{{ states('alarm_control_panel.one') }}"},
+            {"code_arm_required": True, "code_format": "number"},
+            {"code_arm_required": True, "code_format": "number"},
         ),
         (
             "select",

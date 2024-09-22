@@ -8,7 +8,7 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.components.lock import (
-    DOMAIN,
+    DOMAIN as LOCK_DOMAIN,
     PLATFORM_SCHEMA as LOCK_PLATFORM_SCHEMA,
     LockEntity,
     LockEntityFeature,
@@ -45,7 +45,7 @@ PARALLEL_UPDATES = 0
 
 PLATFORM_SCHEMA = LOCK_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_ENTITIES): cv.entities_domain(DOMAIN),
+        vol.Required(CONF_ENTITIES): cv.entities_domain(LOCK_DOMAIN),
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
     }
@@ -131,7 +131,7 @@ class LockGroup(GroupEntity, LockEntity):
         _LOGGER.debug("Forwarded lock command: %s", data)
 
         await self.hass.services.async_call(
-            DOMAIN,
+            LOCK_DOMAIN,
             SERVICE_LOCK,
             data,
             blocking=True,
@@ -142,7 +142,7 @@ class LockGroup(GroupEntity, LockEntity):
         """Forward the unlock command to all locks in the group."""
         data = {ATTR_ENTITY_ID: self._entity_ids}
         await self.hass.services.async_call(
-            DOMAIN,
+            LOCK_DOMAIN,
             SERVICE_UNLOCK,
             data,
             blocking=True,
@@ -153,7 +153,7 @@ class LockGroup(GroupEntity, LockEntity):
         """Forward the open command to all locks in the group."""
         data = {ATTR_ENTITY_ID: self._entity_ids}
         await self.hass.services.async_call(
-            DOMAIN,
+            LOCK_DOMAIN,
             SERVICE_OPEN,
             data,
             blocking=True,

@@ -47,15 +47,13 @@ async def test_lock_service_calls(
     hass: HomeAssistant,
     get_data: YaleSmartAlarmData,
     load_config_entry: tuple[MockConfigEntry, Mock],
-    entity_registry: er.EntityRegistry,
-    snapshot: SnapshotAssertion,
 ) -> None:
     """Test the Yale Smart Alarm lock."""
 
     client = load_config_entry[1]
 
     data = deepcopy(get_data.cycle)
-    data["data"] = data.pop("device_status")
+    data["data"] = data["data"].pop("device_status")
 
     client.auth.get_authenticated = Mock(return_value=data)
     client.auth.post_authenticated = Mock(return_value={"code": "000"})
@@ -101,15 +99,13 @@ async def test_lock_service_call_fails(
     hass: HomeAssistant,
     get_data: YaleSmartAlarmData,
     load_config_entry: tuple[MockConfigEntry, Mock],
-    entity_registry: er.EntityRegistry,
-    snapshot: SnapshotAssertion,
 ) -> None:
     """Test the Yale Smart Alarm lock service call fails."""
 
     client = load_config_entry[1]
 
     data = deepcopy(get_data.cycle)
-    data["data"] = data.pop("device_status")
+    data["data"] = data["data"].pop("device_status")
 
     client.auth.get_authenticated = Mock(return_value=data)
     client.auth.post_authenticated = Mock(side_effect=UnknownError("test_side_effect"))
@@ -153,19 +149,15 @@ async def test_lock_service_call_fails_with_incorrect_status(
     hass: HomeAssistant,
     get_data: YaleSmartAlarmData,
     load_config_entry: tuple[MockConfigEntry, Mock],
-    entity_registry: er.EntityRegistry,
-    snapshot: SnapshotAssertion,
 ) -> None:
     """Test the Yale Smart Alarm lock service call fails with incorrect return state."""
 
     client = load_config_entry[1]
 
     data = deepcopy(get_data.cycle)
-    data["data"] = data.pop("device_status")
+    data["data"] = data["data"].pop("device_status")
 
-    client.auth.get_authenticated = Mock(return_value=data)
     client.auth.post_authenticated = Mock(return_value={"code": "FFF"})
-    client.lock_api = YaleDoorManAPI(client.auth)
 
     state = hass.states.get("lock.device1")
     assert state.state == "locked"
