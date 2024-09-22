@@ -74,7 +74,7 @@ def mock_smile_config_flow() -> Generator[MagicMock]:
 @pytest.fixture
 def mock_smile_adam() -> Generator[MagicMock]:
     """Create a Mock Adam environment for testing exceptions."""
-    chosen_env = "adam_multiple_devices_per_zone"
+    chosen_env = "m_adam_multiple_devices_per_zone"
 
     with patch(
         "homeassistant.components.plugwise.coordinator.Smile", autospec=True
