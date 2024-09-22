@@ -240,9 +240,10 @@ class TeslaFleetEnergySiteHistoryCoordinator(DataUpdateCoordinator[dict[str, Any
         }
         for time_entity in data["time_series"]:
             formatted_data["total_grid_import"] += time_entity["grid_energy_imported"]
-            formatted_data["total_grid_export"] += time_entity[
-                "total_grid_energy_exported"
-            ]
+            if "total_grid_energy_exported" in time_entity:
+                formatted_data["total_grid_export"] += time_entity[
+                    "total_grid_energy_exported"
+                ]
             formatted_data["solar_production"] += time_entity["solar_energy_exported"]
             formatted_data["total_battery_import"] += (
                 time_entity["battery_energy_imported_from_grid"]
