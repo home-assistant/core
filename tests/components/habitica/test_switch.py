@@ -36,12 +36,12 @@ def switch_only() -> Generator[None]:
         yield
 
 
+@pytest.mark.usefixtures("mock_habitica")
 async def test_switch(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
-    mock_habitica: AiohttpClientMocker,
 ) -> None:
     """Test switch entities."""
 
@@ -66,7 +66,6 @@ async def test_turn_on_off_toggle(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     service_call: str,
-    entity_registry: er.EntityRegistry,
     mock_habitica: AiohttpClientMocker,
 ) -> None:
     """Test switch turn on/off, toggle method."""
