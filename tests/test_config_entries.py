@@ -5381,9 +5381,18 @@ async def test_unhashable_unique_id_fails_on_update(
         entries.update_unique_id(entry, unique_id)
 
 
-@pytest.mark.parametrize("unique_id", [123])
-async def test_hashable_non_string_unique_id(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, unique_id: Any
+@pytest.mark.parametrize(
+    ("unique_id", "generates_warning"),
+    [
+        (123, True),
+        ("abc", False),
+    ],
+)
+async def test_hashable_unique_id(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    unique_id: Any,
+    generates_warning: bool,
 ) -> None:
     """Test the ConfigEntryItems user dict handles hashable non string unique_id."""
     entries = config_entries.ConfigEntryItems(hass)
@@ -5400,9 +5409,15 @@ async def test_hashable_non_string_unique_id(
     )
 
     entries[entry.entry_id] = entry
-    assert (
-        "Config entry 'title' from integration test has an invalid unique_id"
-    ) in caplog.text
+
+    if generates_warning:
+        assert (
+            "Config entry 'title' from integration test has an invalid unique_id"
+        ) in caplog.text
+    else:
+        assert (
+            "Config entry 'title' from integration test has an invalid unique_id"
+        ) not in caplog.text
 
     assert entry.entry_id in entries
     assert entries[entry.entry_id] is entry
