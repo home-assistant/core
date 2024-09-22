@@ -441,7 +441,6 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
         # Return JID
         return cast(str, config_entry.data[CONF_BEOLINK_JID])
 
-    @callback
     async def _async_update_sound_modes(
         self, active_sound_mode: ListeningModeProps | ListeningModeRef | None = None
     ) -> None:
