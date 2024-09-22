@@ -366,7 +366,13 @@ class KNXClimate(KnxYamlEntity, ClimateEntity):
         if self._device.fan_mode == FanSpeedMode.STEP:
             return self._attr_fan_modes[fan_speed]
 
-        return f"{fan_speed}%"
+        # Find the closest fan mode percentage
+        fan_percentages = [
+            int(mode[:-1]) for mode in self._attr_fan_modes if mode.endswith("%")
+        ]
+        closest_percentage = min(fan_percentages, key=lambda x: abs(x - fan_speed))
+
+        return f"{closest_percentage}%"
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set fan mode."""
@@ -379,7 +385,9 @@ class KNXClimate(KnxYamlEntity, ClimateEntity):
             await self._device.set_fan_speed(fan_mode_index)
             return
 
-        fan_speed = 0 if fan_mode == FAN_OFF else int(fan_mode[:-1])  # Without the percentage sign
+        fan_speed = (
+            0 if fan_mode == FAN_OFF else int(fan_mode[:-1])
+        )  # Without the percentage sign
         await self._device.set_fan_speed(fan_speed)
 
     @property

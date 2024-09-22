@@ -697,3 +697,7 @@ async def test_fan_speed_percentage(hass: HomeAssistant, knx: KNXTestKit) -> Non
     )
     await knx.assert_write("1/2/6", (0x0,))
     knx.assert_state("climate.test", HVACMode.HEAT, fan_mode="off")
+
+    # check fan mode that is not in the fan modes list
+    await knx.receive_write("1/2/6", (127,))  # 127 / 255 = 50%
+    knx.assert_state("climate.test", HVACMode.HEAT, fan_mode="66%")
