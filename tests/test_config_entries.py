@@ -5353,10 +5353,10 @@ async def test_unhashable_unique_id_fails(
 
 
 @pytest.mark.parametrize("unique_id", [["blah", "bleh"], {"key": "value"}])
-async def test_unhashable_unique_id_fails_fails_on_update(
+async def test_unhashable_unique_id_fails_on_update(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture, unique_id: Any
 ) -> None:
-    """Test the ConfigEntryItems user dict raises fails non-hashable unique_id on update."""
+    """Test the ConfigEntryItems user dict fails non-hashable unique_id on update."""
     entries = config_entries.ConfigEntryItems(hass)
     entry = config_entries.ConfigEntry(
         data={},
