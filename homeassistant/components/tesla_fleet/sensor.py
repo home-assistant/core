@@ -380,6 +380,14 @@ ENERGY_LIVE_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
     ),
     SensorEntityDescription(
         key="island_status",
+        options=[
+            "island_status_unknown",
+            "on_grid",
+            "off_grid",
+            "off_grid_unintentional",
+            "off_grid_intentional",
+        ],
+        device_class=SensorDeviceClass.ENUM,
     ),
     SensorEntityDescription(
         key="storm_mode_active",
