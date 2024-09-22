@@ -25,10 +25,10 @@ from homeassistant.components.fan import (
     SERVICE_SET_PRESET_MODE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
-    STATE_ON,
 )
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import ToggleState
 
 
 async def test_fan_entity_with_all_features_old_api(
@@ -64,7 +64,7 @@ async def test_fan_entity_with_all_features_old_api(
     )
     state = hass.states.get("fan.test_myfan")
     assert state is not None
-    assert state.state == STATE_ON
+    assert state.state == ToggleState.ON
 
     await hass.services.async_call(
         FAN_DOMAIN,
@@ -168,7 +168,7 @@ async def test_fan_entity_with_all_features_new_api(
     )
     state = hass.states.get("fan.test_myfan")
     assert state is not None
-    assert state.state == STATE_ON
+    assert state.state == ToggleState.ON
 
     await hass.services.async_call(
         FAN_DOMAIN,
@@ -310,7 +310,7 @@ async def test_fan_entity_with_no_features_new_api(
     )
     state = hass.states.get("fan.test_myfan")
     assert state is not None
-    assert state.state == STATE_ON
+    assert state.state == ToggleState.ON
 
     await hass.services.async_call(
         FAN_DOMAIN,
