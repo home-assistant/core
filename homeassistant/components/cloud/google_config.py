@@ -477,7 +477,8 @@ class CloudGoogleConfig(AbstractConfig):
 
         self.async_schedule_google_sync_all()
 
-    async def _handle_device_registry_updated(
+    @callback
+    def _handle_device_registry_updated(
         self, event: Event[dr.EventDeviceRegistryUpdatedData]
     ) -> None:
         """Handle when device registry updated."""
