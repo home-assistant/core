@@ -380,11 +380,9 @@ ENERGY_LIVE_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
     ),
     SensorEntityDescription(
         key="island_status",
-        entity_registry_enabled_default=True,
     ),
     SensorEntityDescription(
         key="storm_mode_active",
-        entity_registry_enabled_default=True,
     ),
 )
 

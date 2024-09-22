@@ -387,6 +387,7 @@
           "island_status_unknown": "Unknown",
           "on_grid": "Connected",
           "off_grid": "Disconnected",
+          "off_grid_unintentional": "Disconnected",
           "off_grid_intentional": "Disconnected intentionally"
         }
       },

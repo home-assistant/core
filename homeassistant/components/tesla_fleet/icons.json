@@ -194,6 +194,7 @@
         "state": {
           "on_grid": "mdi:transmission-tower",
           "off_grid": "mdi:transmission-tower-off",
+          "off_grid_unintentional": "mdi:transmission-tower-off",
           "island_status_unknown": "mdi:help-circle",
           "off_grid_intentional": "mdi:account-cancel"
         }
