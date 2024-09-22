@@ -1,0 +1,136 @@
+# serializer version: 1
+# name: test_media_player[media_player.test_media_player-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'media_player',
+    'entity_category': None,
+    'entity_id': 'media_player.test_media_player',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <MediaPlayerDeviceClass.SPEAKER: 'speaker'>,
+    'original_icon': None,
+    'original_name': 'Media player',
+    'platform': 'tesla_fleet',
+    'previous_unique_id': None,
+    'supported_features': <MediaPlayerEntityFeature: 16437>,
+    'translation_key': 'media',
+    'unique_id': 'LRWXF7EK4KC700000-media',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_media_player[media_player.test_media_player-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'speaker',
+      'friendly_name': 'Test Media player',
+      'media_album_name': 'Elon Musk',
+      'media_artist': 'Walter Isaacson',
+      'media_duration': 651.0,
+      'media_playlist': 'Elon Musk',
+      'media_position': 1.0,
+      'media_title': 'Chapter 51: Cybertruck: Tesla, 2018–2019',
+      'source': 'Audible',
+      'supported_features': <MediaPlayerEntityFeature: 16437>,
+      'volume_level': 0.16129355359011466,
+    }),
+    'context': <ANY>,
+    'entity_id': 'media_player.test_media_player',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'playing',
+  })
+# ---
+# name: test_media_player_alt[media_player.test_media_player-statealt]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'speaker',
+      'friendly_name': 'Test Media player',
+      'media_album_name': '',
+      'media_artist': '',
+      'media_playlist': '',
+      'media_title': '',
+      'source': 'Spotify',
+      'supported_features': <MediaPlayerEntityFeature: 16437>,
+      'volume_level': 0.25806775026025003,
+    }),
+    'context': <ANY>,
+    'entity_id': 'media_player.test_media_player',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'idle',
+  })
+# ---
+# name: test_media_player_noscope[media_player.test_media_player-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'media_player',
+    'entity_category': None,
+    'entity_id': 'media_player.test_media_player',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <MediaPlayerDeviceClass.SPEAKER: 'speaker'>,
+    'original_icon': None,
+    'original_name': 'Media player',
+    'platform': 'tesla_fleet',
+    'previous_unique_id': None,
+    'supported_features': <MediaPlayerEntityFeature: 16437>,
+    'translation_key': 'media',
+    'unique_id': 'LRWXF7EK4KC700000-media',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_media_player_noscope[media_player.test_media_player-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'speaker',
+      'friendly_name': 'Test Media player',
+      'media_album_name': 'Elon Musk',
+      'media_artist': 'Walter Isaacson',
+      'media_duration': 651.0,
+      'media_playlist': 'Elon Musk',
+      'media_position': 1.0,
+      'media_title': 'Chapter 51: Cybertruck: Tesla, 2018–2019',
+      'source': 'Audible',
+      'supported_features': <MediaPlayerEntityFeature: 16437>,
+      'volume_level': 0.16129355359011466,
+    }),
+    'context': <ANY>,
+    'entity_id': 'media_player.test_media_player',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'playing',
+  })
+# ---
