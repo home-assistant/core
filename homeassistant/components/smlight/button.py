@@ -56,8 +56,8 @@ BUTTONS: list[SmButtonDescription] = [
 ]
 
 ROUTER = SmButtonDescription(
-    key="zigbee_router_reconnect",
-    translation_key="zigbee_router_reconnect",
+    key="reconnect_zigbee_router",
+    translation_key="reconnect_zigbee_router",
     entity_registry_enabled_default=False,
     press_fn=lambda cmd: cmd.zb_router(),
 )

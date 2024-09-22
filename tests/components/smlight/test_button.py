@@ -28,7 +28,7 @@ def platforms() -> Platform | list[Platform]:
         ("core_restart", "reboot"),
         ("zigbee_flash_mode", "zb_bootloader"),
         ("zigbee_restart", "zb_restart"),
-        ("zigbee_router_reconnect", "zb_router"),
+        ("reconnect_zigbee_router", "zb_router"),
     ],
 )
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -41,7 +41,9 @@ async def test_buttons(
     mock_smlight_client: MagicMock,
 ) -> None:
     """Test creation of button entities."""
-    if entity_id == "zigbee_router_reconnect":
+    translation_key = entity_id
+    if entity_id == "reconnect_zigbee_router":
+        translation_key = "zigbee_router_reconnect"
         mock_smlight_client.get_info.return_value = Info(
             MAC="AA:BB:CC:DD:EE:FF", zb_type=1
         )
@@ -54,7 +56,7 @@ async def test_buttons(
 
     entry = entity_registry.async_get(f"button.mock_title_{entity_id}")
     assert entry is not None
-    assert entry.unique_id == f"aa:bb:cc:dd:ee:ff-{entity_id}"
+    assert entry.unique_id == f"aa:bb:cc:dd:ee:ff-{translation_key}"
 
     mock_method = getattr(mock_smlight_client.cmds, method)
 
@@ -69,7 +71,7 @@ async def test_buttons(
     mock_method.assert_called_with()
 
 
-@pytest.mark.parametrize("entity_id", ["zigbee_flash_mode", "zigbee_router_reconnect"])
+@pytest.mark.parametrize("entity_id", ["zigbee_flash_mode", "reconnect_zigbee_router"])
 async def test_disabled_by_default_buttons(
     hass: HomeAssistant,
     entity_id: str,
@@ -78,7 +80,7 @@ async def test_disabled_by_default_buttons(
     mock_smlight_client: MagicMock,
 ) -> None:
     """Test the disabled by default buttons."""
-    if entity_id == "zigbee_router_reconnect":
+    if entity_id == "reconnect_zigbee_router":
         mock_smlight_client.get_info.return_value = Info(
             MAC="AA:BB:CC:DD:EE:FF", zb_type=1
         )
@@ -118,5 +120,5 @@ async def test_remove_router_reconnect(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    entity = entity_registry.async_get("button.mock_title_zigbee_router_reconnect")
+    entity = entity_registry.async_get("button.mock_title_reconnect_zigbee_router")
     assert entity is None

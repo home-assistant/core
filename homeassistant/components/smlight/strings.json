@@ -109,8 +109,8 @@
       "zigbee_flash_mode": {
         "name": "Zigbee flash mode"
       },
-      "zigbee_router_reconnect": {
-        "name": "Zigbee router reconnect"
+      "reconnect_zigbee_router": {
+        "name": "Reconnect zigbee router"
       }
     },
     "switch": {
