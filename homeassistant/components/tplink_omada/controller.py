@@ -39,7 +39,7 @@ class OmadaSiteController:
         """Initialize the all coordinators, and perform first refresh."""
         await self._devices_coordinator.async_config_entry_first_refresh()
 
-        devices = self.devices_coordinator.data.values()
+        devices = self._devices_coordinator.data.values()
         gateway = next((d for d in devices if d.type == "gateway"), None)
         if gateway:
             self._gateway_coordinator = OmadaGatewayCoordinator(
