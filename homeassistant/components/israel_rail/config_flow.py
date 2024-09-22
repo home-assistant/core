@@ -12,6 +12,7 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from .const import CONF_DESTINATION, CONF_START, DOMAIN
 
 STATIONS_NAMES = [station["Heb"] for station in STATIONS.values()]
+STATIONS_NAMES.sort()
 
 DATA_SCHEMA = vol.Schema(
     {

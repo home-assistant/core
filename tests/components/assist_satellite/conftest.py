@@ -8,6 +8,7 @@ import pytest
 from homeassistant.components.assist_pipeline import PipelineEvent
 from homeassistant.components.assist_satellite import (
     DOMAIN as AS_DOMAIN,
+    AssistSatelliteAnnouncement,
     AssistSatelliteConfiguration,
     AssistSatelliteEntity,
     AssistSatelliteEntityFeature,
@@ -43,7 +44,7 @@ class MockAssistSatellite(AssistSatelliteEntity):
     def __init__(self) -> None:
         """Initialize the mock entity."""
         self.events = []
-        self.announcements = []
+        self.announcements: list[AssistSatelliteAnnouncement] = []
         self.config = AssistSatelliteConfiguration(
             available_wake_words=[
                 AssistSatelliteWakeWord(
@@ -63,9 +64,9 @@ class MockAssistSatellite(AssistSatelliteEntity):
         """Handle pipeline events."""
         self.events.append(event)
 
-    async def async_announce(self, message: str, media_id: str) -> None:
+    async def async_announce(self, announcement: AssistSatelliteAnnouncement) -> None:
         """Announce media on a device."""
-        self.announcements.append((message, media_id))
+        self.announcements.append(announcement)
 
     @callback
     def async_get_configuration(self) -> AssistSatelliteConfiguration:
