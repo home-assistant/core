@@ -6,7 +6,6 @@ from homeassistant.components.plugwise.const import DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_component import async_update_entity
-
 import homeassistant.helpers.entity_registry as er
 
 from tests.common import MockConfigEntry

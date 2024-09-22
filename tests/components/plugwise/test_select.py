@@ -78,6 +78,7 @@ async def test_adam_select_regulation_mode(
         "on",
     )
 
+
 async def test_legacy_anna_select_entities(
     hass: HomeAssistant, mock_smile_adam: MagicMock, init_integration: MockConfigEntry
 ) -> None:
