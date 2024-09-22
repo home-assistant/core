@@ -40,6 +40,9 @@
     "filename_does_not_exist": {
       "message": "`{filename}` does not exist"
     },
+    "file_too_large": {
+      "message": "`{filename}` is too large ({size} > {limit})"
+    },
     "filename_is_not_image": {
       "message": "`{filename}` is not an image"
     },
