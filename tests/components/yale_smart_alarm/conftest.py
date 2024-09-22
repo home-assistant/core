@@ -64,6 +64,7 @@ async def load_config_entry(
             client.auth = Mock()
             client.auth.get_authenticated = Mock(return_value=data)
             client.auth.post_authenticated = Mock(return_value={"code": "000"})
+            client.auth.put_authenticated = Mock(return_value={"code": "000"})
             client.lock_api = YaleDoorManAPI(client.auth)
             locks = [
                 YaleLock(device, lock_api=client.lock_api)
