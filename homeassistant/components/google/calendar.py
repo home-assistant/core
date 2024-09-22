@@ -83,18 +83,18 @@ RRULE_PREFIX = "RRULE:"
 SERVICE_CREATE_EVENT = "create_event"
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class GoogleCalendarEntityDescription(EntityDescription):
     """Google calendar entity description."""
 
-    name: str = ""
-    entity_id: str = ""
-    read_only: bool = False
-    ignore_availability: bool = False
-    offset: str | None = None
-    search: str | None = None
-    local_sync: bool = True
-    device_id: str = ""
+    name: str
+    entity_id: str
+    read_only: bool
+    ignore_availability: bool
+    offset: str | None
+    search: str | None
+    local_sync: bool
+    device_id: str
 
 
 def _get_entity_descriptions(
