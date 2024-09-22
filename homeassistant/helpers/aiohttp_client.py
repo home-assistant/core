@@ -32,10 +32,10 @@ if TYPE_CHECKING:
     from aiohttp.typedefs import JSONDecoder
 
 
-DATA_CONNECTOR: HassKey[dict[tuple[bool, str, int], aiohttp.BaseConnector]] = HassKey(
+DATA_CONNECTOR: HassKey[dict[tuple[bool, int, str], aiohttp.BaseConnector]] = HassKey(
     "aiohttp_connector"
 )
-DATA_CLIENTSESSION: HassKey[dict[tuple[bool, str, int], aiohttp.ClientSession]] = (
+DATA_CLIENTSESSION: HassKey[dict[tuple[bool, int, str], aiohttp.ClientSession]] = (
     HassKey("aiohttp_clientsession")
 )
 
