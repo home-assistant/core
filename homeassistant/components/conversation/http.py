@@ -27,13 +27,11 @@ from .agent_manager import (
     async_get_agent,
     get_agent_manager,
 )
-from .const import DOMAIN_DATA
+from .const import DATA_DEFAULT_ENTITY, DOMAIN_DATA
 from .default_agent import (
     METADATA_CUSTOM_FILE,
     METADATA_CUSTOM_SENTENCE,
-    DefaultAgent,
     SentenceTriggerResult,
-    async_get_default_agent,
 )
 from .entity import ConversationEntity
 from .models import ConversationInput
@@ -173,10 +171,8 @@ async def websocket_hass_agent_debug(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
 ) -> None:
     """Return intents that would be matched by the default agent for a list of sentences."""
-    agent = async_get_default_agent(hass)
-    assert isinstance(agent, DefaultAgent)
     results = [
-        await agent.async_recognize(
+        await hass.data[DATA_DEFAULT_ENTITY].async_recognize(
             ConversationInput(
                 text=sentence,
                 context=connection.context(msg),
