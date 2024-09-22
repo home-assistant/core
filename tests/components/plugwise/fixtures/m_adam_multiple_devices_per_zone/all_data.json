@@ -403,14 +403,6 @@
     "e7693eb9582644e5b865dba8d4447cf1": {
       "active_preset": "no_frost",
       "available": true,
-      "available_schedules": [
-        "CV Roan",
-        "Bios Schema met Film Avond",
-        "GF7  Woonkamer",
-        "Badkamer Schema",
-        "CV Jessie",
-        "off"
-      ],
       "binary_sensors": {
         "low_battery": false
       },
@@ -423,7 +415,6 @@
       "model_id": "106-03",
       "name": "CV Kraan Garage",
       "preset_modes": ["home", "asleep", "away", "vacation", "no_frost"],
-      "select_schedule": "off",
       "sensors": {
         "battery": 68,
         "setpoint": 5.5,
