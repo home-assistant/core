@@ -156,7 +156,7 @@ class AutomowerControlEntity(AutomowerAvailableEntity):
 
 
 class WorkAreaControlEntity(AutomowerControlEntity):
-    """Replies available when the mower is connected and has no errors."""
+    """Base entity work work areas with control function."""
 
     def __init__(
         self,
@@ -167,10 +167,16 @@ class WorkAreaControlEntity(AutomowerControlEntity):
         """Initialize AutomowerEntity."""
         super().__init__(mower_id, coordinator)
         self.work_area_id = work_area_id
+        if TYPE_CHECKING:
+            assert self.mower_attributes.work_areas is not None
+        self._work_areas = self.mower_attributes.work_areas
 
     @property
     def work_area_attributes(self) -> WorkArea:
         """Get the work area attributes of the current work area."""
-        if TYPE_CHECKING:
-            assert self.mower_attributes.work_areas is not None
-        return self.mower_attributes.work_areas[self.work_area_id]
+        return self._work_areas[self.work_area_id]
+
+    @property
+    def available(self) -> bool:
+        """Return True if the work area is available and the mower has no errors."""
+        return super().available and self.work_area_id in self._work_areas
