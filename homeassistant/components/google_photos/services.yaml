@@ -6,6 +6,6 @@ upload:
         config_entry:
           integration: google_photos
     filename:
-      required: true
+      required: false
       selector:
         object:
