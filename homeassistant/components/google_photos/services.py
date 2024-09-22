@@ -57,7 +57,7 @@ def _read_file_contents(
         if filename_path.stat().st_size > CONTENT_SIZE_LIMIT:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key="filename_too_large",
+                translation_key="file_too_large",
                 translation_placeholders={
                     "filename": filename,
                     "size": str(filename_path.stat().st_size),
