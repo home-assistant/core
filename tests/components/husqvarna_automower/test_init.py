@@ -10,6 +10,7 @@ from aioautomower.exceptions import (
     AuthException,
     HusqvarnaWSServerHandshakeError,
 )
+from aioautomower.utils import mower_list_to_dictionary_dataclass
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -17,12 +18,16 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.husqvarna_automower.const import DOMAIN, OAUTH2_TOKEN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_integration
 from .const import TEST_MOWER_ID
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    load_json_value_fixture,
+)
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
@@ -160,3 +165,30 @@ async def test_device_info(
         identifiers={(DOMAIN, TEST_MOWER_ID)},
     )
     assert reg_device == snapshot
+
+
+async def test_coordinator_automatic_registry_cleanup(
+    hass: HomeAssistant,
+    mock_automower_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test automatic registry cleanup."""
+    await setup_integration(hass, mock_config_entry)
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    await hass.async_block_till_done()
+
+    assert len(er.async_entries_for_config_entry(entity_registry, entry.entry_id)) == 42
+    assert len(dr.async_entries_for_config_entry(device_registry, entry.entry_id)) == 2
+
+    values = mower_list_to_dictionary_dataclass(
+        load_json_value_fixture("mower.json", DOMAIN)
+    )
+    values.pop(TEST_MOWER_ID)
+    mock_automower_client.get_status.return_value = values
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert len(er.async_entries_for_config_entry(entity_registry, entry.entry_id)) == 12
+    assert len(dr.async_entries_for_config_entry(device_registry, entry.entry_id)) == 1

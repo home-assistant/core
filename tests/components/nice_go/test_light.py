@@ -78,6 +78,7 @@ async def test_update_light_state(
 
     assert hass.states.get("light.test_garage_1_light").state == STATE_ON
     assert hass.states.get("light.test_garage_2_light").state == STATE_OFF
+    assert hass.states.get("light.test_garage_3_light") is None
 
     device_update = load_json_object_fixture("device_state_update.json", DOMAIN)
     await mock_config_entry.runtime_data.on_data(device_update)
@@ -86,3 +87,4 @@ async def test_update_light_state(
 
     assert hass.states.get("light.test_garage_1_light").state == STATE_OFF
     assert hass.states.get("light.test_garage_2_light").state == STATE_ON
+    assert hass.states.get("light.test_garage_3_light") is None

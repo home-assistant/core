@@ -9,6 +9,7 @@ import voluptuous as vol
 
 from homeassistant.components import conversation
 from homeassistant.components.conversation import default_agent
+from homeassistant.components.conversation.const import DATA_DEFAULT_ENTITY
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -143,7 +144,7 @@ async def test_prepare_reload(hass: HomeAssistant, init_components) -> None:
     language = hass.config.language
 
     # Load intents
-    agent = default_agent.async_get_default_agent(hass)
+    agent = hass.data[DATA_DEFAULT_ENTITY]
     assert isinstance(agent, default_agent.DefaultAgent)
     await agent.async_prepare(language)
 
@@ -171,7 +172,7 @@ async def test_prepare_fail(hass: HomeAssistant) -> None:
     assert await async_setup_component(hass, "conversation", {})
 
     # Load intents
-    agent = default_agent.async_get_default_agent(hass)
+    agent = hass.data[DATA_DEFAULT_ENTITY]
     assert isinstance(agent, default_agent.DefaultAgent)
     await agent.async_prepare("not-a-language")
 

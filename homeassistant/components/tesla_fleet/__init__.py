@@ -42,7 +42,9 @@ from .oauth import TeslaSystemImplementation
 PLATFORMS: Final = [
     Platform.BINARY_SENSOR,
     Platform.CLIMATE,
+    Platform.COVER,
     Platform.DEVICE_TRACKER,
+    Platform.MEDIA_PLAYER,
     Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,

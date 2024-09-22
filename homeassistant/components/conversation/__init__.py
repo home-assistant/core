@@ -35,6 +35,7 @@ from .const import (
     ATTR_CONVERSATION_ID,
     ATTR_LANGUAGE,
     ATTR_TEXT,
+    DATA_DEFAULT_ENTITY,
     DOMAIN,
     DOMAIN_DATA,
     HOME_ASSISTANT_AGENT,
@@ -43,7 +44,7 @@ from .const import (
     SERVICE_RELOAD,
     ConversationEntityFeature,
 )
-from .default_agent import async_get_default_agent, async_setup_default_agent
+from .default_agent import async_setup_default_agent
 from .entity import ConversationEntity
 from .http import async_setup as async_setup_conversation_http
 from .models import AbstractConversationAgent, ConversationInput, ConversationResult
@@ -247,8 +248,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async def handle_reload(service: ServiceCall) -> None:
         """Reload intents."""
-        agent = async_get_default_agent(hass)
-        await agent.async_reload(language=service.data.get(ATTR_LANGUAGE))
+        await hass.data[DATA_DEFAULT_ENTITY].async_reload(
+            language=service.data.get(ATTR_LANGUAGE)
+        )
 
     hass.services.async_register(
         DOMAIN,
