@@ -131,11 +131,13 @@ def translation_value_validator(value: Any) -> str:
     - prevents strings with single quoted placeholders
     - prevents combined translations
     """
-    value = cv.string_with_no_html(value)
-    value = string_no_single_quoted_placeholders(value)
-    if RE_COMBINED_REFERENCE.search(value):
+    string_value = cv.string_with_no_html(value)
+    string_value = string_no_single_quoted_placeholders(string_value)
+    if RE_COMBINED_REFERENCE.search(string_value):
         raise vol.Invalid("the string should not contain combined translations")
-    return str(value)
+    if string_value != string_value.strip(" "):
+        raise vol.Invalid("the string should not contain leading or trailing spaces")
+    return string_value
 
 
 def string_no_single_quoted_placeholders(value: str) -> str:
