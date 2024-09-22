@@ -360,13 +360,7 @@ class KNXClimate(KnxYamlEntity, ClimateEntity):
 
         fan_speed = self._device.current_fan_speed
 
-        if fan_speed is None:
-            return FAN_OFF
-
-        if fan_speed == 0:
-            return FAN_OFF
-
-        if self._attr_fan_modes is None:
+        if not fan_speed or self._attr_fan_modes is None:
             return FAN_OFF
 
         if self._device.fan_mode == FanSpeedMode.STEP:
