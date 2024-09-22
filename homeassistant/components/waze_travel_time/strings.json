@@ -100,7 +100,7 @@
         },
         "avoid_subscription_roads": {
           "name": "[%key:component::waze_travel_time::options::step::init::data::avoid_subscription_roads%]",
-          "description": "Whether to avoid subscription roads. "
+          "description": "Whether to avoid subscription roads."
         }
       }
     }

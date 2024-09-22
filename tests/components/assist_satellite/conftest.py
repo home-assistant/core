@@ -44,7 +44,7 @@ class MockAssistSatellite(AssistSatelliteEntity):
     def __init__(self) -> None:
         """Initialize the mock entity."""
         self.events = []
-        self.announcements = []
+        self.announcements: list[AssistSatelliteAnnouncement] = []
         self.config = AssistSatelliteConfiguration(
             available_wake_words=[
                 AssistSatelliteWakeWord(
