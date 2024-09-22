@@ -5381,18 +5381,49 @@ async def test_unhashable_unique_id_fails_on_update(
         entries.update_unique_id(entry, unique_id)
 
 
+async def test_string_unique_id_no_warning(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the ConfigEntryItems user dict string unique id doesn't log warning."""
+    entries = config_entries.ConfigEntryItems(hass)
+    entry = config_entries.ConfigEntry(
+        data={},
+        domain="test",
+        entry_id="mock_id",
+        minor_version=1,
+        options={},
+        source="test",
+        title="title",
+        unique_id="123",
+        version=1,
+    )
+
+    entries[entry.entry_id] = entry
+
+    assert (
+        "Config entry 'title' from integration test has an invalid unique_id"
+    ) not in caplog.text
+
+    assert entry.entry_id in entries
+    assert entries[entry.entry_id] is entry
+    assert entries.get_entry_by_domain_and_unique_id("test", "123") == entry
+    del entries[entry.entry_id]
+    assert not entries
+    assert entries.get_entry_by_domain_and_unique_id("test", "123") is None
+
+
 @pytest.mark.parametrize(
-    ("unique_id", "generates_warning"),
+    "unique_id",
     [
-        (123, True),
-        ("abc", False),
+        (123),
+        (2.3),
     ],
 )
 async def test_hashable_unique_id(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     unique_id: Any,
-    generates_warning: bool,
 ) -> None:
     """Test the ConfigEntryItems user dict handles hashable non string unique_id."""
     entries = config_entries.ConfigEntryItems(hass)
@@ -5410,14 +5441,9 @@ async def test_hashable_unique_id(
 
     entries[entry.entry_id] = entry
 
-    if generates_warning:
-        assert (
-            "Config entry 'title' from integration test has an invalid unique_id"
-        ) in caplog.text
-    else:
-        assert (
-            "Config entry 'title' from integration test has an invalid unique_id"
-        ) not in caplog.text
+    assert (
+        "Config entry 'title' from integration test has an invalid unique_id"
+    ) in caplog.text
 
     assert entry.entry_id in entries
     assert entries[entry.entry_id] is entry
@@ -5425,6 +5451,34 @@ async def test_hashable_unique_id(
     del entries[entry.entry_id]
     assert not entries
     assert entries.get_entry_by_domain_and_unique_id("test", unique_id) is None
+
+
+async def test_no_unique_id_no_warning(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the ConfigEntryItems user dict don't log warning with no unique id."""
+    entries = config_entries.ConfigEntryItems(hass)
+    entry = config_entries.ConfigEntry(
+        data={},
+        domain="test",
+        entry_id="mock_id",
+        minor_version=1,
+        options={},
+        source="test",
+        title="title",
+        unique_id=None,
+        version=1,
+    )
+
+    entries[entry.entry_id] = entry
+
+    assert (
+        "Config entry 'title' from integration test has an invalid unique_id"
+    ) not in caplog.text
+
+    assert entry.entry_id in entries
+    assert entries[entry.entry_id] is entry
 
 
 @pytest.mark.parametrize(
