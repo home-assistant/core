@@ -553,11 +553,19 @@ class ZHAGatewayProxy(EventBase):
         device_entry: dr.DeviceEntry | None = dr.async_get(self.hass).async_get(
             entity_entry.device_id
         )
-        if device_entry is None:
-            return
-        ieee = EUI64.convert(list(list(device_entry.identifiers)[0])[1])
-        if ieee not in self.device_proxies:
-            return
+        assert device_entry
+
+        ieee_address = next(
+            identifier
+            for domain, identifier in device_entry.identifiers
+            if domain == DOMAIN
+        )
+        assert ieee_address
+
+        ieee = EUI64.convert(ieee_address)
+
+        assert ieee in self.device_proxies
+
         zha_device_proxy = self.device_proxies[ieee]
         if entity_entry.unique_id not in zha_device_proxy.device.platform_entities:
             return
