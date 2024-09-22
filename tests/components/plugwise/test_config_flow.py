@@ -94,9 +94,8 @@ TEST_DISCOVERY_ADAM = ZeroconfServiceInfo(
     type="mock_type",
 )
 
-
 @pytest.fixture(name="mock_smile")
-def mock_smile():
+def mock_smile() -> Generator[MagicMock]:
     """Create a Mock Smile for testing exceptions."""
     with patch(
         "homeassistant.components.plugwise.config_flow.Smile",
@@ -390,7 +389,10 @@ async def test_zeroconf_abort_anna_with_adam(hass: HomeAssistant) -> None:
     assert flows_in_progress[0]["context"]["product"] == "smile_open_therm"
 
 
-async def test_form_invalid_setup(hass, mock_smile) -> None:
+async def test_form_invalid_setup(
+    hass: HomeAssistant,
+    mock_smile: MagicMock
+) -> None:
     """Test we handle invalid setup."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -409,7 +411,10 @@ async def test_form_invalid_setup(hass, mock_smile) -> None:
     assert result2["errors"] == {"base": "invalid_setup"}
 
 
-async def test_form_invalid_auth(hass, mock_smile) -> None:
+async def test_form_invalid_auth(
+    hass: HomeAssistant,
+    mock_smile: MagicMock
+) -> None:
     """Test we handle invalid auth."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -428,7 +433,10 @@ async def test_form_invalid_auth(hass, mock_smile) -> None:
     assert result2["errors"] == {"base": "invalid_auth"}
 
 
-async def test_form_cannot_connect(hass, mock_smile) -> None:
+async def test_form_cannot_connect(
+    hass: HomeAssistant,
+    mock_smile: MagicMock
+) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -447,7 +455,10 @@ async def test_form_cannot_connect(hass, mock_smile) -> None:
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
-async def test_form_cannot_connect_port(hass, mock_smile) -> None:
+async def test_form_cannot_connect_port(
+    hass: HomeAssistant,
+    mock_smile: MagicMock
+) -> None:
     """Test we handle cannot connect to port error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -470,7 +481,10 @@ async def test_form_cannot_connect_port(hass, mock_smile) -> None:
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
-async def test_form_other_problem(hass, mock_smile) -> None:
+async def test_form_other_problem(
+    hass: HomeAssistant,
+    mock_smile: MagicMock
+) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
