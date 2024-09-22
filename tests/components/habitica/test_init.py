@@ -17,7 +17,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_NAME
 from homeassistant.core import Event, HomeAssistant
 
-from tests.common import MockConfigEntry, async_capture_events
+from tests.common import MockConfigEntry, async_capture_events, load_json_object_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 TEST_API_CALL_ARGS = {"text": "Use API from Home Assistant", "type": "todo"}
@@ -177,6 +177,29 @@ async def test_config_entry_not_ready(
     aioclient_mock.get(
         f"{DEFAULT_URL}/api/v3/user",
         status=status,
+    )
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_coordinator_update_failed(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test coordinator update failed."""
+
+    aioclient_mock.get(
+        f"{DEFAULT_URL}/api/v3/user",
+        json=load_json_object_fixture("user.json", DOMAIN),
+    )
+    aioclient_mock.get(
+        f"{DEFAULT_URL}/api/v3/tasks/user",
+        status=HTTPStatus.NOT_FOUND,
     )
 
     config_entry.add_to_hass(hass)
