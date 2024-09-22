@@ -132,9 +132,9 @@ async def test_adam_3_climate_entity_attributes(
         ]
 
     data = mock_smile_adam_3.async_update.return_value
-    data.devices["da224107914542988a88561b4452b0f6"][
-        "select_regulation_mode"
-    ] = "cooling"
+    data.devices["da224107914542988a88561b4452b0f6"]["select_regulation_mode"] = (
+        "cooling"
+    )
     data.devices["ad4838d7d35c4d6ea796ee12ae5aedf8"]["control_state"] = "cooling"
     data.devices["056ee145a816487eaa69243c3280f8bf"]["binary_sensors"][
         "cooling_state"

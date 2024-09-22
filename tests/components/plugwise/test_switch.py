@@ -11,8 +11,8 @@ from homeassistant.const import (
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
-    STATE_ON,
     STATE_OFF,
+    STATE_ON,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
