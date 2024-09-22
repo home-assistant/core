@@ -800,7 +800,7 @@ async def test_async_select_sound_mode(
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
-    states = hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID)
+    assert (states := hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID))
     assert states.attributes[ATTR_SOUND_MODE] == TEST_ACTIVE_SOUND_MODE_NAME
 
     active_listening_mode_callback = (
@@ -819,7 +819,7 @@ async def test_async_select_sound_mode(
 
     active_listening_mode_callback(TEST_LISTENING_MODE_REF)
 
-    states = hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID)
+    assert (states := hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID))
     assert states.attributes[ATTR_SOUND_MODE] == TEST_ACTIVE_SOUND_MODE_NAME_2
 
     mock_mozart_client.activate_listening_mode.assert_called_once_with(
