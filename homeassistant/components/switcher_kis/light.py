@@ -102,9 +102,7 @@ class SwitcherLightEntity(
             return self.control_result
 
         data = cast(SwitcherSingleShutterDualLight, self.coordinator.data)
-        if self._light_id == 0:
-            return bool(data.lights[0] == DeviceState.ON)
-        return bool(data.lights[1] == DeviceState.ON)
+        return bool(data.lights[self._light_id] == DeviceState.ON)
 
     async def _async_call_api(self, api: str, *args: Any) -> None:
         """Call Switcher API."""
