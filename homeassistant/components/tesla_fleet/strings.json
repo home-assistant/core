@@ -156,6 +156,7 @@
       },
       "vehicle_state_locked": {
         "name": "[%key:component::lock::title%]"
+      }
     },
     "media_player": {
       "media": {
