@@ -3202,7 +3202,9 @@ class HassTypeHintChecker(BaseChecker):
 
     def visit_asyncfunctiondef(self, node: nodes.AsyncFunctionDef) -> None:
         """Apply checks on an AsyncFunctionDef node."""
-        if (decoratornames := node.decoratornames()) and "callback" in decoratornames:
+        if (
+            decoratornames := node.decoratornames()
+        ) and "homeassistant.core.callback" in decoratornames:
             self.add_message("hass-async-callback", node=node)
         self.visit_functiondef(node)
 
