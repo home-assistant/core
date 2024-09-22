@@ -105,7 +105,9 @@ class PlugwiseDataUpdateCoordinator(DataUpdateCoordinator[PlugwiseData]):
             device_reg, self.config_entry.entry_id
         )
         # First find the Plugwise via_device
-        gateway_device = device_reg.async_get_device({(DOMAIN, data.gateway[GATEWAY_ID])})
+        gateway_device = device_reg.async_get_device(
+            {(DOMAIN, data.gateway[GATEWAY_ID])}
+        )
         if gateway_device is not None:
             via_device_id = gateway_device.id
 
