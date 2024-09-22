@@ -165,11 +165,12 @@ async def test_zeroconf_flow(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={CONF_SOURCE: SOURCE_ZEROCONF},
-        data=discovery,
+        data=TEST_DISCOVERY,
     )
     assert result.get("type") is FlowResultType.FORM
     assert result.get("errors") == {}
     assert result.get("step_id") == "user"
+    assert "flow_id" in result
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -183,7 +184,7 @@ async def test_zeroconf_flow(
         CONF_HOST: TEST_HOST,
         CONF_PASSWORD: TEST_PASSWORD,
         CONF_PORT: DEFAULT_PORT,
-        CONF_USERNAME: username,
+        CONF_USERNAME: TEST_USERNAME,
         PW_TYPE: API,
     }
 
@@ -205,6 +206,7 @@ async def test_zeroconf_flow_stretch(
     assert result.get("type") is FlowResultType.FORM
     assert result.get("errors") == {}
     assert result.get("step_id") == "user"
+    assert "flow_id" in result
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -276,7 +278,6 @@ async def test_zercoconf_discovery_update_configuration(
         (InvalidAuthentication, "invalid_auth"),
         (InvalidSetupError, "invalid_setup"),
         (InvalidXMLError, "response_error"),
-        (ResponseError, "response_error"),
         (RuntimeError, "unknown"),
         (UnsupportedDeviceError, "unsupported"),
     ],
@@ -296,6 +297,7 @@ async def test_flow_errors(
     assert result.get("type") is FlowResultType.FORM
     assert result.get("errors") == {}
     assert result.get("step_id") == "user"
+    assert "flow_id" in result
 
     mock_smile_config_flow.connect.side_effect = side_effect
     result2 = await hass.config_entries.flow.async_configure(
@@ -386,3 +388,102 @@ async def test_zeroconf_abort_anna_with_adam(hass: HomeAssistant) -> None:
     flows_in_progress = hass.config_entries.flow.async_progress()
     assert len(flows_in_progress) == 1
     assert flows_in_progress[0]["context"]["product"] == "smile_open_therm"
+
+
+async def test_form_invalid_setup(hass, mock_smile):
+    """Test we handle invalid setup."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={CONF_SOURCE: SOURCE_USER},
+    )
+
+    mock_smile.connect.side_effect = InvalidSetupError
+    mock_smile.gateway_id = "0a636a4fc1704ab4a24e4f7e37fb187a"
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_HOST: TEST_HOST, CONF_PASSWORD: TEST_PASSWORD},
+    )
+
+    assert result2["type"] == FlowResultType.FORM
+    assert result2["errors"] == {"base": "invalid_setup"}
+
+
+async def test_form_invalid_auth(hass, mock_smile):
+    """Test we handle invalid auth."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={CONF_SOURCE: SOURCE_USER},
+    )
+
+    mock_smile.connect.side_effect = InvalidAuthentication
+    mock_smile.gateway_id = "0a636a4fc1704ab4a24e4f7e37fb187a"
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_HOST: TEST_HOST, CONF_PASSWORD: TEST_PASSWORD},
+    )
+
+    assert result2["type"] == FlowResultType.FORM
+    assert result2["errors"] == {"base": "invalid_auth"}
+
+
+async def test_form_cannot_connect(hass, mock_smile):
+    """Test we handle cannot connect error."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={CONF_SOURCE: SOURCE_USER},
+    )
+
+    mock_smile.connect.side_effect = ConnectionFailedError
+    mock_smile.gateway_id = "0a636a4fc1704ab4a24e4f7e37fb187a"
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_HOST: TEST_HOST, CONF_PASSWORD: TEST_PASSWORD},
+    )
+
+    assert result2["type"] == FlowResultType.FORM
+    assert result2["errors"] == {"base": "cannot_connect"}
+
+
+async def test_form_cannot_connect_port(hass, mock_smile):
+    """Test we handle cannot connect to port error."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={CONF_SOURCE: SOURCE_USER},
+    )
+
+    mock_smile.connect.side_effect = ConnectionFailedError
+    mock_smile.gateway_id = "0a636a4fc1704ab4a24e4f7e37fb187a"
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_HOST: TEST_HOST,
+            CONF_PASSWORD: TEST_PASSWORD,
+            CONF_PORT: TEST_PORT,
+        },
+    )
+
+    assert result2["type"] == FlowResultType.FORM
+    assert result2["errors"] == {"base": "cannot_connect"}
+
+
+async def test_form_other_problem(hass, mock_smile):
+    """Test we handle cannot connect error."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={CONF_SOURCE: SOURCE_USER},
+    )
+
+    mock_smile.connect.side_effect = TimeoutError
+    mock_smile.gateway_id = "0a636a4fc1704ab4a24e4f7e37fb187a"
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_HOST: TEST_HOST, CONF_PASSWORD: TEST_PASSWORD},
+    )
+
+    assert result2["type"] == FlowResultType.FORM
+    assert result2["errors"] == {"base": "unknown"}

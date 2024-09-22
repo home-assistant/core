@@ -3,10 +3,10 @@
 from unittest.mock import MagicMock
 
 from homeassistant.components.plugwise.const import DOMAIN
-from homeassistant.const import Platform
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
+from homeassistant.helpers.entity_registry import async_get
 
 from tests.common import MockConfigEntry
 
@@ -49,16 +49,16 @@ async def test_adam_climate_sensor_entity_2(
 
 async def test_unique_id_migration_humidity(
     hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
     mock_smile_adam_4: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test unique ID migration of -relative_humidity to -humidity."""
     mock_config_entry.add_to_hass(hass)
 
+    entity_registry = async_get(hass)
     # Entry to migrate
     entity_registry.async_get_or_create(
-        Platform.SENSOR,
+        SENSOR_DOMAIN,
         DOMAIN,
         "f61f1a2535f54f52ad006a3d18e459ca-relative_humidity",
         config_entry=mock_config_entry,
@@ -67,7 +67,7 @@ async def test_unique_id_migration_humidity(
     )
     # Entry not needing migration
     entity_registry.async_get_or_create(
-        Platform.SENSOR,
+        SENSOR_DOMAIN,
         DOMAIN,
         "f61f1a2535f54f52ad006a3d18e459ca-battery",
         config_entry=mock_config_entry,
@@ -137,7 +137,6 @@ async def test_p1_dsmr_sensor_entities(
 
 async def test_p1_3ph_dsmr_sensor_entities(
     hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
     mock_smile_p1_2: MagicMock,
     init_integration: MockConfigEntry,
 ) -> None:
@@ -158,6 +157,7 @@ async def test_p1_3ph_dsmr_sensor_entities(
     state = hass.states.get(entity_id)
     assert not state
 
+    entity_registry = async_get(hass)
     entity_registry.async_update_entity(entity_id=entity_id, disabled_by=None)
     await hass.async_block_till_done()
 

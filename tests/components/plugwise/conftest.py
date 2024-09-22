@@ -310,6 +310,34 @@ def mock_smile_p1_2() -> Generator[MagicMock]:
 
 
 @pytest.fixture
+def mock_smile_legacy_anna() -> Generator[None, MagicMock, None]:
+    """Create a Mock legacy Anna environment for testing exceptions."""
+    chosen_env = "legacy_anna"
+    with patch(
+        "homeassistant.components.plugwise.coordinator.Smile", autospec=True
+    ) as smile_mock:
+        smile = smile_mock.return_value
+
+        smile.gateway_id = "0000aaaa0000aaaa0000aaaa0000aa00"
+        smile.heater_id = "04e4cbfe7f4340f090f85ec3b9e6a950"
+        smile.smile_version = "1.8.22"
+        smile.smile_type = "thermostat"
+        smile.smile_hostname = "smile98765"
+        smile.smile_model = "Gateway"
+        smile.smile_model_id = None
+        smile.smile_name = "Smile Anna"
+
+        smile.connect.return_value = True
+
+        all_data = _read_json(chosen_env, "all_data")
+        smile.async_update.return_value = PlugwiseData(
+            all_data["gateway"], all_data["devices"]
+        )
+
+        yield smile
+
+
+@pytest.fixture
 def mock_stretch() -> Generator[MagicMock]:
     """Create a Mock Stretch environment for testing exceptions."""
     chosen_env = "stretch_v31"
