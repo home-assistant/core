@@ -2,8 +2,9 @@
 
 from homeassistant.components.knx.const import KNX_ADDRESS
 from homeassistant.components.knx.schema import FanSchema
-from homeassistant.const import CONF_NAME, STATE_OFF, STATE_ON
+from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import ToggleState
 
 from .conftest import KNXTestKit
 
@@ -34,18 +35,18 @@ async def test_fan_percent(hass: HomeAssistant, knx: KNXTestKit) -> None:
     # receive 100% telegram
     await knx.receive_write("1/2/3", (0xFF,))
     state = hass.states.get("fan.test")
-    assert state.state is STATE_ON
+    assert state.state == ToggleState.ON
 
     # receive 80% telegram
     await knx.receive_write("1/2/3", (0xCC,))
     state = hass.states.get("fan.test")
-    assert state.state is STATE_ON
+    assert state.state == ToggleState.ON
     assert state.attributes.get("percentage") == 80
 
     # receive 0% telegram
     await knx.receive_write("1/2/3", (0,))
     state = hass.states.get("fan.test")
-    assert state.state is STATE_OFF
+    assert state.state == ToggleState.OFF
 
     # fan does not respond to read
     await knx.receive_read("1/2/3")
@@ -85,19 +86,19 @@ async def test_fan_step(hass: HomeAssistant, knx: KNXTestKit) -> None:
     # receive step 4 (100%) telegram
     await knx.receive_write("1/2/3", (4,))
     state = hass.states.get("fan.test")
-    assert state.state is STATE_ON
+    assert state.state == ToggleState.ON
     assert state.attributes.get("percentage") == 100
 
     # receive step 1 (25%) telegram
     await knx.receive_write("1/2/3", (1,))
     state = hass.states.get("fan.test")
-    assert state.state is STATE_ON
+    assert state.state == ToggleState.ON
     assert state.attributes.get("percentage") == 25
 
     # receive step 0 (off) telegram
     await knx.receive_write("1/2/3", (0,))
     state = hass.states.get("fan.test")
-    assert state.state is STATE_OFF
+    assert state.state == ToggleState.OFF
 
     # fan does not respond to read
     await knx.receive_read("1/2/3")

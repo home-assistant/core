@@ -37,16 +37,11 @@ from homeassistant.components.light import (
 )
 from homeassistant.components.tplink.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    CONF_HOST,
-    STATE_OFF,
-    STATE_ON,
-    STATE_UNKNOWN,
-)
+from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.entity import ToggleState
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -530,7 +525,7 @@ async def test_smart_strip_effects(
     entity_id = "light.my_light"
 
     state = hass.states.get(entity_id)
-    assert state.state == STATE_ON
+    assert state.state == ToggleState.ON
     assert state.attributes[ATTR_EFFECT] == "Effect1"
     assert state.attributes[ATTR_EFFECT_LIST] == ["Off", "Effect1", "Effect2"]
 
@@ -560,7 +555,7 @@ async def test_smart_strip_effects(
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=30))
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
-    assert state.state == STATE_ON
+    assert state.state == ToggleState.ON
     assert state.attributes[ATTR_EFFECT] == "Effect2"
 
     # Test setting light effect off
@@ -573,7 +568,7 @@ async def test_smart_strip_effects(
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=30))
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
-    assert state.state == STATE_ON
+    assert state.state == ToggleState.ON
     assert state.attributes[ATTR_EFFECT] == "off"
     light.set_state.assert_not_called()
 
@@ -588,7 +583,7 @@ async def test_smart_strip_effects(
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=30))
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
-    assert state.state == STATE_ON
+    assert state.state == ToggleState.ON
     assert state.attributes[ATTR_EFFECT] == "off"
     assert "Invalid effect Effect3 for" in caplog.text
 
@@ -597,7 +592,7 @@ async def test_smart_strip_effects(
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
-    assert state.state == STATE_ON
+    assert state.state == ToggleState.ON
     assert state.attributes[ATTR_EFFECT] == EFFECT_OFF
 
     light.state = LightState(light_on=False)
@@ -605,7 +600,7 @@ async def test_smart_strip_effects(
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
-    assert state.state == STATE_OFF
+    assert state.state == ToggleState.OFF
     assert state.attributes[ATTR_EFFECT] is None
 
     await hass.services.async_call(
@@ -623,7 +618,7 @@ async def test_smart_strip_effects(
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
-    assert state.state == STATE_ON
+    assert state.state == ToggleState.ON
     assert state.attributes[ATTR_EFFECT_LIST] is None
 
 
@@ -646,7 +641,7 @@ async def test_smart_strip_custom_random_effect(hass: HomeAssistant) -> None:
     entity_id = "light.my_light"
 
     state = hass.states.get(entity_id)
-    assert state.state == STATE_ON
+    assert state.state == ToggleState.ON
 
     await hass.services.async_call(
         DOMAIN,
@@ -716,7 +711,7 @@ async def test_smart_strip_custom_random_effect(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
-    assert state.state == STATE_ON
+    assert state.state == ToggleState.ON
 
     light.state = LightState(light_on=False)
     light_effect.effect = LightEffect.LIGHT_EFFECTS_OFF
@@ -724,7 +719,7 @@ async def test_smart_strip_custom_random_effect(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
-    assert state.state == STATE_OFF
+    assert state.state == ToggleState.OFF
     assert state.attributes[ATTR_EFFECT] is None
 
     await hass.services.async_call(
@@ -800,7 +795,7 @@ async def test_smart_strip_custom_random_effect_at_start(hass: HomeAssistant) ->
     entity_id = "light.my_light"
 
     state = hass.states.get(entity_id)
-    assert state.state == STATE_ON
+    assert state.state == ToggleState.ON
     # fallback to set HSV when custom effect is not known so it does turn back on
     await hass.services.async_call(
         LIGHT_DOMAIN,
@@ -830,7 +825,7 @@ async def test_smart_strip_custom_sequence_effect(hass: HomeAssistant) -> None:
     entity_id = "light.my_light"
 
     state = hass.states.get(entity_id)
-    assert state.state == STATE_ON
+    assert state.state == ToggleState.ON
 
     await hass.services.async_call(
         DOMAIN,
@@ -999,7 +994,7 @@ async def test_scene_effect_light(
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
-    assert state.state is STATE_ON
+    assert state.state == ToggleState.ON
     assert state.attributes["effect"] is EFFECT_OFF
 
     await hass.services.async_call(
@@ -1021,7 +1016,7 @@ async def test_scene_effect_light(
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
-    assert state.state is STATE_OFF
+    assert state.state == ToggleState.OFF
 
     await hass.services.async_call(
         "scene",
@@ -1040,5 +1035,5 @@ async def test_scene_effect_light(
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
-    assert state.state is STATE_ON
+    assert state.state == ToggleState.ON
     assert state.attributes["effect"] is EFFECT_OFF

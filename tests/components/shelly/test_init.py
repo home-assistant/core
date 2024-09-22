@@ -24,7 +24,7 @@ from homeassistant.components.shelly.const import (
     BLEScannerMode,
 )
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
-from homeassistant.const import CONF_HOST, CONF_PORT, STATE_ON, STATE_UNAVAILABLE
+from homeassistant.const import CONF_HOST, CONF_PORT, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.device_registry import (
@@ -32,6 +32,7 @@ from homeassistant.helpers.device_registry import (
     DeviceRegistry,
     format_mac,
 )
+from homeassistant.helpers.entity import ToggleState
 from homeassistant.setup import async_setup_component
 
 from . import MOCK_MAC, init_integration, mutate_rpc_device_status
@@ -374,7 +375,7 @@ async def test_entry_unload(
     entry = await init_integration(hass, gen)
 
     assert entry.state is ConfigEntryState.LOADED
-    assert hass.states.get(entity_id).state is STATE_ON
+    assert hass.states.get(entity_id).state == ToggleState.ON
 
     await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
@@ -422,7 +423,7 @@ async def test_entry_unload_not_connected(
         entity_id = "switch.test_switch_0"
 
         assert entry.state is ConfigEntryState.LOADED
-        assert hass.states.get(entity_id).state is STATE_ON
+        assert hass.states.get(entity_id).state == ToggleState.ON
         assert not mock_stop_scanner.call_count
 
         monkeypatch.setattr(mock_rpc_device, "connected", False)
@@ -448,7 +449,7 @@ async def test_entry_unload_not_connected_but_we_think_we_are(
         entity_id = "switch.test_switch_0"
 
         assert entry.state is ConfigEntryState.LOADED
-        assert hass.states.get(entity_id).state is STATE_ON
+        assert hass.states.get(entity_id).state == ToggleState.ON
         assert not mock_stop_scanner.call_count
 
         monkeypatch.setattr(mock_rpc_device, "connected", False)
@@ -481,7 +482,7 @@ async def test_entry_missing_gen(hass: HomeAssistant, mock_block_device: Mock) -
     entry = await init_integration(hass, None)
 
     assert entry.state is ConfigEntryState.LOADED
-    assert hass.states.get("switch.test_name_channel_1").state is STATE_ON
+    assert hass.states.get("switch.test_name_channel_1").state == ToggleState.ON
 
 
 async def test_entry_missing_port(hass: HomeAssistant) -> None:

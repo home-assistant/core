@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 from homeassistant.components.switch import SwitchDeviceClass
-from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import ToggleState
 
 from .conftest import (
     mock_config_entry,
@@ -51,7 +51,7 @@ async def test_manual_watering_switch_on_off(hass: HomeAssistant) -> None:
         switch = hass.states.get("switch.zone_1")
 
         assert switch is not None
-        assert switch.state is STATE_OFF
+        assert switch.state == ToggleState.OFF
 
         await hass.services.async_call(
             "switch",
@@ -63,7 +63,7 @@ async def test_manual_watering_switch_on_off(hass: HomeAssistant) -> None:
         switch = hass.states.get("switch.zone_1")
 
         assert switch is not None
-        assert switch.state is STATE_ON
+        assert switch.state == ToggleState.ON
         assert device.zone1.is_watering is True
 
         await hass.services.async_call(
@@ -76,7 +76,7 @@ async def test_manual_watering_switch_on_off(hass: HomeAssistant) -> None:
         switch = hass.states.get("switch.zone_1")
 
         assert switch is not None
-        assert switch.state is STATE_OFF
+        assert switch.state == ToggleState.OFF
         assert device.zone1.is_watering is False
 
 
@@ -98,7 +98,7 @@ async def test_schedule_enabled_switch_on_off(hass: HomeAssistant) -> None:
         switch = hass.states.get("switch.zone_1_schedule")
 
         assert switch is not None
-        assert switch.state is STATE_OFF
+        assert switch.state == ToggleState.OFF
         assert device.zone1.schedule_enabled is False
 
         await hass.services.async_call(
@@ -111,5 +111,5 @@ async def test_schedule_enabled_switch_on_off(hass: HomeAssistant) -> None:
         switch = hass.states.get("switch.zone_1_schedule")
 
         assert switch is not None
-        assert switch.state is STATE_ON
+        assert switch.state == ToggleState.ON
         assert device.zone1.schedule_enabled is True
