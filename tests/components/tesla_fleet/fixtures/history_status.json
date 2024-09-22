@@ -19,7 +19,9 @@
         "consumer_energy_imported_from_grid": 441,
         "consumer_energy_imported_from_solar": 10480,
         "consumer_energy_imported_from_battery": 10011,
-        "consumer_energy_imported_from_generator": 0
+        "consumer_energy_imported_from_generator": 0,
+        "total_home_usage": 20932,
+        "total_grid_energy_exported": 43679
       },
       {
         "timestamp": "2023-06-01T01:05:00-07:00",
@@ -38,7 +40,9 @@
         "consumer_energy_imported_from_grid": 841,
         "consumer_energy_imported_from_solar": 20480,
         "consumer_energy_imported_from_battery": 20011,
-        "consumer_energy_imported_from_generator": 0
+        "consumer_energy_imported_from_generator": 0,
+        "total_home_usage": 41332,
+        "total_grid_energy_exported": 83689
       }
     ]
   }

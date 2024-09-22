@@ -201,18 +201,6 @@
       "total_battery_export": {
         "default": "mdi:battery-arrow-down"
       },
-      "storm_mode_active": {
-        "default": "mdi:weather-lightning"
-      },
-      "island_status": {
-        "default": "mdi:help-circle",
-        "state": {
-          "on_grid": "mdi:transmission-tower",
-          "off_grid": "mdi:transmission-tower-off",
-          "island_status_unknown": "mdi:help-circle",
-          "off_grid_intentional": "mdi:account-cancel"
-        }
-      },
       "total_generator_production": {
         "default": "mdi:generator-stationary"
       },

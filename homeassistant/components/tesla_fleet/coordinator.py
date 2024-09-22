@@ -240,11 +240,9 @@ class TeslaFleetEnergySiteHistoryCoordinator(DataUpdateCoordinator[dict[str, Any
         }
         for time_entity in data["time_series"]:
             formatted_data["total_grid_import"] += time_entity["grid_energy_imported"]
-            formatted_data["total_grid_export"] += (
-                time_entity["grid_energy_exported_from_solar"]
-                + time_entity["grid_energy_exported_from_generator"]
-                + time_entity["grid_energy_exported_from_battery"]
-            )
+            formatted_data["total_grid_export"] += time_entity[
+                "total_grid_energy_exported"
+            ]
             formatted_data["solar_production"] += time_entity["solar_energy_exported"]
             formatted_data["total_battery_import"] += (
                 time_entity["battery_energy_imported_from_grid"]
@@ -257,12 +255,7 @@ class TeslaFleetEnergySiteHistoryCoordinator(DataUpdateCoordinator[dict[str, Any
             formatted_data["total_generator_production"] += time_entity[
                 "generator_energy_exported"
             ]
-            formatted_data["total_home_usage"] += (
-                time_entity["consumer_energy_imported_from_grid"]
-                + time_entity["consumer_energy_imported_from_solar"]
-                + time_entity["consumer_energy_imported_from_battery"]
-                + time_entity["consumer_energy_imported_from_generator"]
-            )
+            formatted_data["total_home_usage"] += time_entity["total_home_usage"]
             formatted_data["grid_export_from_solar"] += time_entity[
                 "grid_energy_exported_from_solar"
             ]
