@@ -21,7 +21,7 @@ from .entity import NYTGamesEntity
 
 @dataclass(frozen=True, kw_only=True)
 class NYTGamesWordleSensorEntityDescription(SensorEntityDescription):
-    """Describes NYTGames measurement sensor entity."""
+    """Describes a NYT Games Wordle sensor entity."""
 
     value_fn: Callable[[Wordle], StateType]
 
