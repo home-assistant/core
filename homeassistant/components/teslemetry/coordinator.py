@@ -184,6 +184,8 @@ class TeslemetryEnergySiteInfoCoordinator(DataUpdateCoordinator[dict[str, Any]])
 class TeslemetryEnergyHistoryCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Class to manage fetching energy site info from the Teslemetry API."""
 
+    updated_once: bool
+
     def __init__(self, hass: HomeAssistant, api: EnergySpecific) -> None:
         """Initialize Teslemetry Energy Info coordinator."""
         super().__init__(
@@ -194,6 +196,7 @@ class TeslemetryEnergyHistoryCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
         self.api = api
         self.data = {key: 0 for key in ENERGY_HISTORY_FIELDS}
+        self.updated_once = False
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Update energy site data using Teslemetry API."""
@@ -204,6 +207,8 @@ class TeslemetryEnergyHistoryCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             raise ConfigEntryAuthFailed from e
         except TeslaFleetError as e:
             raise UpdateFailed(e.message) from e
+
+        self.updated_once = True
 
         # Add all time periods together
         output = {key: 0 for key in ENERGY_HISTORY_FIELDS}
