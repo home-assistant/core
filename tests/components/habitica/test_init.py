@@ -1,7 +1,10 @@
 """Test the habitica module."""
 
+import datetime
 from http import HTTPStatus
+import logging
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.habitica.const import (
@@ -17,7 +20,12 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_NAME
 from homeassistant.core import Event, HomeAssistant
 
-from tests.common import MockConfigEntry, async_capture_events, load_json_object_fixture
+from tests.common import (
+    MockConfigEntry,
+    async_capture_events,
+    async_fire_time_changed,
+    load_json_object_fixture,
+)
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 TEST_API_CALL_ARGS = {"text": "Use API from Home Assistant", "type": "todo"}
@@ -207,3 +215,31 @@ async def test_coordinator_update_failed(
     await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_coordinator_rate_limited(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_habitica: AiohttpClientMocker,
+    caplog: pytest.LogCaptureFixture,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test coordinator when rate limited."""
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    mock_habitica.clear_requests()
+    mock_habitica.get(
+        f"{DEFAULT_URL}/api/v3/user",
+        status=HTTPStatus.TOO_MANY_REQUESTS,
+    )
+
+    with caplog.at_level(logging.DEBUG):
+        freezer.tick(datetime.timedelta(seconds=60))
+        async_fire_time_changed(hass)
+
+        assert "Currently rate limited, skipping update" in caplog.text
