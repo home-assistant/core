@@ -11,7 +11,7 @@ from typing import Any
 from aiohttp import ClientResponseError
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -27,6 +27,7 @@ class HabiticaButtonEntityDescription(ButtonEntityDescription):
 
     press_fn: Callable[[HabiticaDataUpdateCoordinator], Any]
     available_fn: Callable[[HabiticaData], bool] | None = None
+    class_needed: str | None = None
 
 
 class HabitipyButtonEntity(StrEnum):
@@ -94,8 +95,8 @@ MAGE_SKILLS: tuple[HabiticaButtonEntityDescription, ...] = (
         available_fn=(
             lambda data: data.user["stats"]["lvl"] >= 12
             and data.user["stats"]["mp"] >= 30
-            and data.user["stats"]["class"] == MAGE
         ),
+        class_needed=MAGE,
     ),
     HabiticaButtonEntityDescription(
         key=HabitipyButtonEntity.EARTH,
@@ -104,8 +105,8 @@ MAGE_SKILLS: tuple[HabiticaButtonEntityDescription, ...] = (
         available_fn=(
             lambda data: data.user["stats"]["lvl"] >= 13
             and data.user["stats"]["mp"] >= 35
-            and data.user["stats"]["class"] == MAGE
         ),
+        class_needed=MAGE,
     ),
     HabiticaButtonEntityDescription(
         key=HabitipyButtonEntity.FROST,
@@ -118,8 +119,8 @@ MAGE_SKILLS: tuple[HabiticaButtonEntityDescription, ...] = (
         available_fn=(
             lambda data: data.user["stats"]["lvl"] >= 14
             and data.user["stats"]["mp"] >= 40
-            and data.user["stats"]["class"] == MAGE
         ),
+        class_needed=MAGE,
     ),
 )
 
@@ -135,8 +136,8 @@ WARRIOR_SKILLS: tuple[HabiticaButtonEntityDescription, ...] = (
         available_fn=(
             lambda data: data.user["stats"]["lvl"] >= 12
             and data.user["stats"]["mp"] >= 25
-            and data.user["stats"]["class"] == WARRIOR
         ),
+        class_needed=WARRIOR,
     ),
     HabiticaButtonEntityDescription(
         key=HabitipyButtonEntity.VALOROUS_PRESENCE,
@@ -149,8 +150,8 @@ WARRIOR_SKILLS: tuple[HabiticaButtonEntityDescription, ...] = (
         available_fn=(
             lambda data: data.user["stats"]["lvl"] >= 13
             and data.user["stats"]["mp"] >= 20
-            and data.user["stats"]["class"] == WARRIOR
         ),
+        class_needed=WARRIOR,
     ),
     HabiticaButtonEntityDescription(
         key=HabitipyButtonEntity.INTIMIDATE,
@@ -163,8 +164,8 @@ WARRIOR_SKILLS: tuple[HabiticaButtonEntityDescription, ...] = (
         available_fn=(
             lambda data: data.user["stats"]["lvl"] >= 14
             and data.user["stats"]["mp"] >= 15
-            and data.user["stats"]["class"] == WARRIOR
         ),
+        class_needed=WARRIOR,
     ),
 )
 
@@ -180,6 +181,7 @@ ROGUE_SKILLS: tuple[HabiticaButtonEntityDescription, ...] = (
             and data.user["stats"]["mp"] >= 25
             and data.user["stats"]["class"] == ROGUE
         ),
+        class_needed=ROGUE,
     ),
     HabiticaButtonEntityDescription(
         key=HabitipyButtonEntity.STEALTH,
@@ -194,6 +196,7 @@ ROGUE_SKILLS: tuple[HabiticaButtonEntityDescription, ...] = (
             and data.user["stats"]["mp"] >= 45
             and data.user["stats"]["class"] == ROGUE
         ),
+        class_needed=ROGUE,
     ),
 )
 
@@ -209,8 +212,8 @@ HEALER_SKILLS: tuple[HabiticaButtonEntityDescription, ...] = (
         available_fn=(
             lambda data: data.user["stats"]["lvl"] >= 11
             and data.user["stats"]["mp"] >= 15
-            and data.user["stats"]["class"] == HEALER
         ),
+        class_needed=HEALER,
     ),
     HabiticaButtonEntityDescription(
         key=HabitipyButtonEntity.BRIGHTNESS,
@@ -223,8 +226,8 @@ HEALER_SKILLS: tuple[HabiticaButtonEntityDescription, ...] = (
         available_fn=(
             lambda data: data.user["stats"]["lvl"] >= 12
             and data.user["stats"]["mp"] >= 15
-            and data.user["stats"]["class"] == HEALER
         ),
+        class_needed=HEALER,
     ),
     HabiticaButtonEntityDescription(
         key=HabitipyButtonEntity.PROTECT_AURA,
@@ -235,8 +238,8 @@ HEALER_SKILLS: tuple[HabiticaButtonEntityDescription, ...] = (
         available_fn=(
             lambda data: data.user["stats"]["lvl"] >= 13
             and data.user["stats"]["mp"] >= 30
-            and data.user["stats"]["class"] == HEALER
         ),
+        class_needed=HEALER,
     ),
     HabiticaButtonEntityDescription(
         key=HabitipyButtonEntity.HEAL_ALL,
@@ -245,8 +248,8 @@ HEALER_SKILLS: tuple[HabiticaButtonEntityDescription, ...] = (
         available_fn=(
             lambda data: data.user["stats"]["lvl"] >= 14
             and data.user["stats"]["mp"] >= 25
-            and data.user["stats"]["class"] == HEALER
         ),
+        class_needed=HEALER,
     ),
 )
 
@@ -259,6 +262,38 @@ async def async_setup_entry(
     """Set up buttons from a config entry."""
 
     coordinator = entry.runtime_data
+    listener: Callable[[], None] | None = None
+    not_setup: set[HabiticaButtonEntityDescription] = set(
+        HEALER_SKILLS + MAGE_SKILLS + ROGUE_SKILLS + WARRIOR_SKILLS
+    )
+
+    @callback
+    def add_entities() -> None:
+        """Add new entities based on player class."""
+        nonlocal not_setup, listener
+        sensor_descriptions = not_setup
+        not_setup = set()
+        buttons = []
+        for description in sensor_descriptions:
+            if (
+                coordinator.data.user["stats"]["lvl"] >= 10
+                and coordinator.data.user["flags"]["classSelected"]
+                and not coordinator.data.user["preferences"]["disableClasses"]
+                and description.class_needed == coordinator.data.user["stats"]["class"]
+            ):
+                buttons.append(HabiticaButton(coordinator, description))
+            else:
+                not_setup.add(description)
+
+        if buttons:
+            async_add_entities(buttons)
+        if not_setup:
+            if not listener:
+                listener = coordinator.async_add_listener(add_entities)
+        elif listener:
+            listener()
+
+    add_entities()
 
     async_add_entities(
         HabiticaButton(coordinator, description) for description in BUTTON_DESCRIPTIONS
