@@ -1689,7 +1689,9 @@ class ConfigEntryItems(UserDict[str, ConfigEntry]):
         self, domain: str, unique_id: str
     ) -> ConfigEntry | None:
         """Get entry by domain and unique id."""
-        if unique_id is not None and not isinstance(unique_id, Hashable):
+        if unique_id is None:
+            return None  # type: ignore[unreachable]
+        if not isinstance(unique_id, Hashable):
             raise HomeAssistantError(
                 f"The entry unique id {unique_id} is not a string."
             )
