@@ -3095,7 +3095,7 @@ class HassTypeHintChecker(BaseChecker):
         ),
         "W7434": (
             "Async function should not be decorated with @callback",
-            "hass-async-callback",
+            "hass-async-callback-decorator",
             "Used when an async function has an invalid @callback decorator",
         ),
     }
@@ -3205,7 +3205,7 @@ class HassTypeHintChecker(BaseChecker):
         if (
             decoratornames := node.decoratornames()
         ) and "homeassistant.core.callback" in decoratornames:
-            self.add_message("hass-async-callback", node=node)
+            self.add_message("hass-async-callback-decorator", node=node)
         self.visit_functiondef(node)
 
     def visit_functiondef(self, node: nodes.FunctionDef) -> None:
