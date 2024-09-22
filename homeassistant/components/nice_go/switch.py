@@ -5,8 +5,12 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+from aiohttp import ClientError
+from nice_go import ApiError
+
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import NiceGOConfigEntry
@@ -42,8 +46,16 @@ class NiceGOSwitchEntity(NiceGOEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
-        await self.coordinator.api.vacation_mode_on(self.data.id)
+
+        try:
+            await self.coordinator.api.vacation_mode_on(self.data.id)
+        except (ApiError, ClientError) as error:
+            raise HomeAssistantError("Error while turning on the switch") from error
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
-        await self.coordinator.api.vacation_mode_off(self.data.id)
+
+        try:
+            await self.coordinator.api.vacation_mode_off(self.data.id)
+        except (ApiError, ClientError) as error:
+            raise HomeAssistantError("Error while turning off the switch") from error

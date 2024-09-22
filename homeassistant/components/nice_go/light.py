@@ -2,8 +2,12 @@
 
 from typing import TYPE_CHECKING, Any
 
+from aiohttp import ClientError
+from nice_go import ApiError
+
 from homeassistant.components.light import ColorMode, LightEntity
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import NiceGOConfigEntry
@@ -43,9 +47,15 @@ class NiceGOLightEntity(NiceGOEntity, LightEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""
 
-        await self.coordinator.api.light_on(self._device_id)
+        try:
+            await self.coordinator.api.light_on(self._device_id)
+        except (ApiError, ClientError) as error:
+            raise HomeAssistantError("Error while turning on the light") from error
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the light."""
 
-        await self.coordinator.api.light_off(self._device_id)
+        try:
+            await self.coordinator.api.light_off(self._device_id)
+        except (ApiError, ClientError) as error:
+            raise HomeAssistantError("Error while turning off the light") from error
