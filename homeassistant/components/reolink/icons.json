@@ -260,6 +260,9 @@
       "wifi_signal": {
         "default": "mdi:wifi"
       },
+      "cpu_usage": {
+        "default": "mdi:cpu-64-bit"
+      },
       "hdd_storage": {
         "default": "mdi:harddisk"
       },

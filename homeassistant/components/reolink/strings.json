@@ -632,6 +632,9 @@
       "wifi_signal": {
         "name": "Wi-Fi signal"
       },
+      "cpu_usage": {
+        "name": "CPU usage"
+      },
       "ptz_pan_position": {
         "name": "PTZ pan position"
       },
