@@ -135,6 +135,9 @@ def translation_value_validator(value: Any) -> str:
     value = string_no_single_quoted_placeholders(value)
     if RE_COMBINED_REFERENCE.search(value):
         raise vol.Invalid("the string should not contain combined translations")
+    value = str(value)
+    if value != value.strip(" "):
+        raise vol.Invalid("the string should not contain leading or trailing spaces")
     return str(value)
 
 
