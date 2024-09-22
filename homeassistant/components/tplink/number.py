@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 import logging
 from typing import Final
 
@@ -26,6 +27,7 @@ from .entity import (
 _LOGGER = logging.getLogger(__name__)
 
 
+@dataclass(frozen=True, kw_only=True)
 class TPLinkNumberEntityDescription(
     NumberEntityDescription, TPLinkFeatureEntityDescription
 ):

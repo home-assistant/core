@@ -160,8 +160,7 @@ def _process_group_platform(
     hass: HomeAssistant, domain: str, platform: GroupProtocol
 ) -> None:
     """Process a group platform."""
-    registry: GroupIntegrationRegistry = hass.data[REG_KEY]
-    platform.async_describe_on_off_states(hass, registry)
+    platform.async_describe_on_off_states(hass, hass.data[REG_KEY])
 
 
 @dataclass(frozen=True, slots=True)
