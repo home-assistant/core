@@ -95,6 +95,44 @@
 # name: test_sensors[sensor.test_user_dailies-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      '2c6d136c-a1c3-4bef-b7c4-fa980784b1e1': dict({
+        'created_at': '2024-09-22T11:44:43.774Z',
+        'every_x': 1,
+        'frequency': 'weekly',
+        'group': dict({
+          'assignedUsers': list([
+          ]),
+          'completedBy': dict({
+          }),
+        }),
+        'is_due': True,
+        'next_due': list([
+          '2024-09-24T22:00:00.000Z',
+          '2024-09-27T22:00:00.000Z',
+          '2024-09-28T22:00:00.000Z',
+          '2024-10-01T22:00:00.000Z',
+          '2024-10-04T22:00:00.000Z',
+          '2024-10-08T22:00:00.000Z',
+        ]),
+        'notes': 'Ein einstündiges Workout im Fitnessstudio absolvieren.',
+        'priority': 2,
+        'repeat': dict({
+          'f': False,
+          'm': False,
+          's': True,
+          'su': True,
+          't': False,
+          'th': False,
+          'w': True,
+        }),
+        'start_date': '2024-09-21T22:00:00.000Z',
+        'tags': list([
+          '51076966-2970-4b40-b6ba-d58c6a756dd7',
+        ]),
+        'text': 'Fitnessstudio besuchen',
+        'type': 'daily',
+        'yester_daily': True,
+      }),
       '564b9ac9-c53d-4638-9e7f-1cd96fe19baa': dict({
         'completed': True,
         'created_at': '2024-07-07T17:51:53.268Z',
@@ -177,7 +215,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2',
+    'state': '3',
   })
 # ---
 # name: test_sensors[sensor.test_user_display_name-entry]
