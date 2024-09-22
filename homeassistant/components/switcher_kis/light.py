@@ -3,10 +3,14 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, cast
 
 from aioswitcher.api import SwitcherBaseResponse, SwitcherType2Api
-from aioswitcher.device import DeviceCategory, DeviceState
+from aioswitcher.device import (
+    DeviceCategory,
+    DeviceState,
+    SwitcherSingleShutterDualLight,
+)
 
 from homeassistant.components.light import ColorMode, LightEntity
 from homeassistant.config_entries import ConfigEntry
@@ -65,9 +69,7 @@ class SwitcherLightEntity(
     @property
     def name(self) -> str:
         """Name of the entity."""
-        if self._light_id is not None:
-            return f"Light{self._light_id + 1}"
-        return "Light"
+        return f"Light{self._light_id + 1}"
 
     def __init__(
         self,
@@ -99,9 +101,10 @@ class SwitcherLightEntity(
         if self.control_result is not None:
             return self.control_result
 
+        data = cast(SwitcherSingleShutterDualLight, self.coordinator.data)
         if self._light_id == 0:
-            return bool(self.coordinator.data.lights[0] == DeviceState.ON)
-        return bool(self.coordinator.data.lights[1] == DeviceState.ON)
+            return bool(data.lights[0] == DeviceState.ON)
+        return bool(data.lights[1] == DeviceState.ON)
 
     async def _async_call_api(self, api: str, *args: Any) -> None:
         """Call Switcher API."""

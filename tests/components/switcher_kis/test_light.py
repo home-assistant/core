@@ -3,7 +3,7 @@
 from unittest.mock import patch
 
 from aioswitcher.api import SwitcherBaseResponse
-from aioswitcher.device import DeviceCategory, DeviceState
+from aioswitcher.device import DeviceState
 import pytest
 
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
