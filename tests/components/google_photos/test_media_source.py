@@ -195,7 +195,7 @@ async def test_missing_photo_id(
 @pytest.mark.usefixtures("setup_integration", "mock_api")
 @pytest.mark.parametrize("api_error", [GooglePhotosApiError("some error")])
 async def test_list_albums_failure(hass: HomeAssistant) -> None:
-    """Test browsing to an album id that does not exist."""
+    """Test an error while browsing albums."""
     browse = await async_browse_media(hass, f"{URI_SCHEME}{DOMAIN}")
     assert browse.domain == DOMAIN
     assert browse.identifier is None

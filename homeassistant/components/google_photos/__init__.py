@@ -12,6 +12,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from . import api
 from .const import DOMAIN
+from .coordinator import GooglePhotosUpdateCoordinator
 from .services import async_register_services
 from .types import GooglePhotosConfigEntry
 
@@ -42,7 +43,10 @@ async def async_setup_entry(
         raise ConfigEntryNotReady from err
     except ClientError as err:
         raise ConfigEntryNotReady from err
-    entry.runtime_data = GooglePhotosLibraryApi(auth)
+    coordinator = GooglePhotosUpdateCoordinator(hass, GooglePhotosLibraryApi(auth))
+    # Start a refresh but don't block startup
+    await coordinator.async_request_refresh()
+    entry.runtime_data = coordinator
 
     async_register_services(hass)
 

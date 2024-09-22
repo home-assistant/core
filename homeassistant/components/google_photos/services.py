@@ -97,7 +97,7 @@ def async_register_services(hass: HomeAssistant) -> None:
                 translation_placeholders={"target": DOMAIN},
             )
 
-        client_api = config_entry.runtime_data
+        client_api = config_entry.runtime_data.client
         upload_tasks = []
         file_results = await hass.async_add_executor_job(
             _read_file_contents, hass, call.data[CONF_FILENAME]
