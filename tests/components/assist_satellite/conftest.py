@@ -8,11 +8,14 @@ import pytest
 from homeassistant.components.assist_pipeline import PipelineEvent
 from homeassistant.components.assist_satellite import (
     DOMAIN as AS_DOMAIN,
+    AssistSatelliteAnnouncement,
+    AssistSatelliteConfiguration,
     AssistSatelliteEntity,
     AssistSatelliteEntityFeature,
+    AssistSatelliteWakeWord,
 )
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.setup import async_setup_component
 
 from tests.common import (
@@ -41,15 +44,40 @@ class MockAssistSatellite(AssistSatelliteEntity):
     def __init__(self) -> None:
         """Initialize the mock entity."""
         self.events = []
-        self.announcements = []
+        self.announcements: list[AssistSatelliteAnnouncement] = []
+        self.config = AssistSatelliteConfiguration(
+            available_wake_words=[
+                AssistSatelliteWakeWord(
+                    id="1234", wake_word="okay nabu", trained_languages=["en"]
+                ),
+                AssistSatelliteWakeWord(
+                    id="5678",
+                    wake_word="hey jarvis",
+                    trained_languages=["en"],
+                ),
+            ],
+            active_wake_words=["1234"],
+            max_active_wake_words=1,
+        )
 
     def on_pipeline_event(self, event: PipelineEvent) -> None:
         """Handle pipeline events."""
         self.events.append(event)
 
-    async def async_announce(self, message: str, media_id: str) -> None:
+    async def async_announce(self, announcement: AssistSatelliteAnnouncement) -> None:
         """Announce media on a device."""
-        self.announcements.append((message, media_id))
+        self.announcements.append(announcement)
+
+    @callback
+    def async_get_configuration(self) -> AssistSatelliteConfiguration:
+        """Get the current satellite configuration."""
+        return self.config
+
+    async def async_set_configuration(
+        self, config: AssistSatelliteConfiguration
+    ) -> None:
+        """Set the current satellite configuration."""
+        self.config = config
 
 
 @pytest.fixture

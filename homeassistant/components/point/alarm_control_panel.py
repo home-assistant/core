@@ -43,7 +43,7 @@ async def async_setup_entry(
 
     async def async_discover_home(home_id):
         """Discover and add a discovered home."""
-        client = hass.data[POINT_DOMAIN][config_entry.entry_id]
+        client = config_entry.runtime_data.client
         async_add_entities([MinutPointAlarmControl(client, home_id)], True)
 
     async_dispatcher_connect(

@@ -18,6 +18,7 @@ from kasa import (
 )
 from kasa.interfaces import Fan, Light, LightEffect, LightState
 from kasa.protocol import BaseProtocol
+from kasa.smart.modules.alarm import Alarm
 from syrupy import SnapshotAssertion
 
 from homeassistant.components.tplink import (
@@ -387,6 +388,15 @@ def _mocked_fan_module(effect) -> Fan:
     return fan
 
 
+def _mocked_alarm_module(device):
+    alarm = MagicMock(auto_spec=Alarm, name="Mocked alarm")
+    alarm.active = False
+    alarm.play = AsyncMock()
+    alarm.stop = AsyncMock()
+
+    return alarm
+
+
 def _mocked_strip_children(features=None, alias=None) -> list[Device]:
     plug0 = _mocked_device(
         alias="Plug0" if alias is None else alias,
@@ -453,6 +463,7 @@ MODULE_TO_MOCK_GEN = {
     Module.Light: _mocked_light_module,
     Module.LightEffect: _mocked_light_effect_module,
     Module.Fan: _mocked_fan_module,
+    Module.Alarm: _mocked_alarm_module,
 }
 
 

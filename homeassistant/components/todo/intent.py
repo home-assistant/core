@@ -6,9 +6,9 @@ import voluptuous as vol
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import intent
-from homeassistant.helpers.entity_component import EntityComponent
 
-from . import DOMAIN, TodoItem, TodoItemStatus, TodoListEntity
+from . import TodoItem, TodoItemStatus, TodoListEntity
+from .const import DOMAIN, DOMAIN_DATA
 
 INTENT_LIST_ADD_ITEM = "HassListAddItem"
 
@@ -37,7 +37,6 @@ class ListAddItemIntent(intent.IntentHandler):
         item = slots["item"]["value"]
         list_name = slots["name"]["value"]
 
-        component: EntityComponent[TodoListEntity] = hass.data[DOMAIN]
         target_list: TodoListEntity | None = None
 
         # Find matching list
@@ -50,7 +49,9 @@ class ListAddItemIntent(intent.IntentHandler):
                 result=match_result, constraints=match_constraints
             )
 
-        target_list = component.get_entity(match_result.states[0].entity_id)
+        target_list = hass.data[DOMAIN_DATA].get_entity(
+            match_result.states[0].entity_id
+        )
         if target_list is None:
             raise intent.IntentHandleError(f"No to-do list: {list_name}")
 

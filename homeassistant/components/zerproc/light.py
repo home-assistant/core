@@ -147,7 +147,7 @@ class ZerprocLight(LightEntity):
             self._attr_available = False
             return
         if not self.available:
-            _LOGGER.info("Reconnected to %s", self._light.address)
+            _LOGGER.warning("Reconnected to %s", self._light.address)
             self._attr_available = True
         self._attr_is_on = state.is_on
         hsv = color_util.color_RGB_to_hsv(*state.color)

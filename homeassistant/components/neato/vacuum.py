@@ -376,7 +376,9 @@ class NeatoConnectedVacuum(NeatoEntity, StateVacuumEntity):
                     "Zone '%s' was not found for the robot '%s'", zone, self.entity_id
                 )
                 return
-            _LOGGER.info("Start cleaning zone '%s' with robot %s", zone, self.entity_id)
+            _LOGGER.debug(
+                "Start cleaning zone '%s' with robot %s", zone, self.entity_id
+            )
 
         self._attr_state = STATE_CLEANING
         try:

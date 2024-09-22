@@ -4,14 +4,22 @@ from collections.abc import Awaitable, Callable
 from unittest.mock import MagicMock, Mock
 
 from freezegun.api import FrozenDateTimeFactory
+from homeconnect.api import HomeConnectAPI
 import pytest
 
+from homeassistant.components.home_connect.const import (
+    BSH_EVENT_PRESENT_STATE_CONFIRMED,
+    BSH_EVENT_PRESENT_STATE_OFF,
+    BSH_EVENT_PRESENT_STATE_PRESENT,
+    COFFEE_EVENT_BEAN_CONTAINER_EMPTY,
+    REFRIGERATION_EVENT_DOOR_ALARM_FREEZER,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_component import async_update_entity
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, load_json_object_fixture
 
 TEST_HC_APP = "Dishwasher"
 
@@ -207,3 +215,94 @@ async def test_remaining_prog_time_edge_cases(
         await hass.async_block_till_done()
         freezer.tick()
         assert hass.states.is_state(entity_id, expected_state)
+
+
+@pytest.mark.parametrize(
+    ("entity_id", "status_key", "event_value_update", "expected", "appliance"),
+    [
+        (
+            "sensor.fridgefreezer_door_alarm_freezer",
+            "EVENT_NOT_IN_STATUS_YET_SO_SET_TO_OFF",
+            "",
+            "off",
+            "FridgeFreezer",
+        ),
+        (
+            "sensor.fridgefreezer_door_alarm_freezer",
+            REFRIGERATION_EVENT_DOOR_ALARM_FREEZER,
+            BSH_EVENT_PRESENT_STATE_OFF,
+            "off",
+            "FridgeFreezer",
+        ),
+        (
+            "sensor.fridgefreezer_door_alarm_freezer",
+            REFRIGERATION_EVENT_DOOR_ALARM_FREEZER,
+            BSH_EVENT_PRESENT_STATE_PRESENT,
+            "present",
+            "FridgeFreezer",
+        ),
+        (
+            "sensor.fridgefreezer_door_alarm_freezer",
+            REFRIGERATION_EVENT_DOOR_ALARM_FREEZER,
+            BSH_EVENT_PRESENT_STATE_CONFIRMED,
+            "confirmed",
+            "FridgeFreezer",
+        ),
+        (
+            "sensor.coffeemaker_bean_container_empty",
+            "EVENT_NOT_IN_STATUS_YET_SO_SET_TO_OFF",
+            "",
+            "off",
+            "CoffeeMaker",
+        ),
+        (
+            "sensor.coffeemaker_bean_container_empty",
+            COFFEE_EVENT_BEAN_CONTAINER_EMPTY,
+            BSH_EVENT_PRESENT_STATE_OFF,
+            "off",
+            "CoffeeMaker",
+        ),
+        (
+            "sensor.coffeemaker_bean_container_empty",
+            COFFEE_EVENT_BEAN_CONTAINER_EMPTY,
+            BSH_EVENT_PRESENT_STATE_PRESENT,
+            "present",
+            "CoffeeMaker",
+        ),
+        (
+            "sensor.coffeemaker_bean_container_empty",
+            COFFEE_EVENT_BEAN_CONTAINER_EMPTY,
+            BSH_EVENT_PRESENT_STATE_CONFIRMED,
+            "confirmed",
+            "CoffeeMaker",
+        ),
+    ],
+    indirect=["appliance"],
+)
+@pytest.mark.usefixtures("bypass_throttle")
+async def test_sensors_states(
+    entity_id: str,
+    status_key: str,
+    event_value_update: str,
+    appliance: Mock,
+    expected: str,
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[], Awaitable[bool]],
+    setup_credentials: None,
+    get_appliances: MagicMock,
+) -> None:
+    """Tests for Appliance alarm sensors."""
+    appliance.status.update(
+        HomeConnectAPI.json2dict(
+            load_json_object_fixture("home_connect/status.json")["data"]["status"]
+        )
+    )
+    get_appliances.return_value = [appliance]
+    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    assert await integration_setup()
+    assert config_entry.state == ConfigEntryState.LOADED
+    appliance.status.update({status_key: {"value": event_value_update}})
+    await async_update_entity(hass, entity_id)
+    await hass.async_block_till_done()
+    assert hass.states.is_state(entity_id, expected)
