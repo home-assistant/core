@@ -64,12 +64,6 @@ class SwitcherLightEntity(
     _attr_color_mode = ColorMode.ONOFF
     _attr_supported_color_modes = {ColorMode.ONOFF}
     _attr_has_entity_name = True
-    _attr_name = None
-
-    @property
-    def name(self) -> str:
-        """Name of the entity."""
-        return f"Light{self._light_id + 1}"
 
     def __init__(
         self,
@@ -82,6 +76,7 @@ class SwitcherLightEntity(
         self.control_result: bool | None = None
 
         # Entity class attributes
+        self._attr_name = f"Light{self._light_id + 1}"
         self._attr_unique_id = (
             f"{coordinator.device_id}-{coordinator.mac_address}-{light_id}"
         )
