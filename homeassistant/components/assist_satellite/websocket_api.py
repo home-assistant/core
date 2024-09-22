@@ -21,7 +21,6 @@ def async_register_websocket_api(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_set_wake_words)
 
 
-@callback
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "assist_satellite/intercept_wake_word",
@@ -88,7 +87,6 @@ def websocket_get_configuration(
     connection.send_result(msg["id"], config_dict)
 
 
-@callback
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "assist_satellite/set_wake_words",

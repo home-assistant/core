@@ -7,7 +7,7 @@ from pyplaato.plaato import PlaatoKeg
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -43,7 +43,6 @@ async def async_setup_entry(
     """Set up Plaato from a config entry."""
     entry_data = hass.data[DOMAIN][entry.entry_id]
 
-    @callback
     async def _async_update_from_webhook(device_id, sensor_data: PlaatoDevice):
         """Update/Create the sensors."""
         entry_data[SENSOR_DATA] = sensor_data

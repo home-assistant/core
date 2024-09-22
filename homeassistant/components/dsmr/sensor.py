@@ -712,7 +712,6 @@ async def async_setup_entry(
     # Can't be hass.async_add_job because job runs forever
     task = asyncio.create_task(connect_and_reconnect())
 
-    @callback
     async def _async_stop(_: Event) -> None:
         if add_entities_handler is not None:
             add_entities_handler()

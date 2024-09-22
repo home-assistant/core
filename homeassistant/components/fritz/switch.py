@@ -9,7 +9,7 @@ from homeassistant.components.network import async_get_source_ip
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
@@ -242,7 +242,6 @@ async def async_setup_entry(
 
     async_add_entities(entities_list)
 
-    @callback
     async def async_update_avm_device() -> None:
         """Update the values of the AVM device."""
         async_add_entities(await _async_profile_entities_list(avm_wrapper, data_fritz))

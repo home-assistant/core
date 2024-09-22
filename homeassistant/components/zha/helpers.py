@@ -1106,7 +1106,6 @@ def async_cluster_exists(hass: HomeAssistant, cluster_id, skip_coordinator=True)
     return False
 
 
-@callback
 async def async_add_entities(
     _async_add_entities: AddEntitiesCallback,
     entity_class: type[ZHAEntity],
