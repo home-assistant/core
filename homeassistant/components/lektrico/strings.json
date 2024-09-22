@@ -22,6 +22,22 @@
     }
   },
   "entity": {
+    "button": {
+      "charge_start": {
+        "name": "Charge start"
+      },
+      "charge_stop": {
+        "name": "Charge stop"
+      }
+    },
+    "number": {
+      "led_max_brightness": {
+        "name": "Led brightness"
+      },
+      "dynamic_limit": {
+        "name": "Dynamic limit"
+      }
+    },
     "sensor": {
       "state": {
         "name": "State",

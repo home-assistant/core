@@ -85,7 +85,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     try:
         zapi = ZabbixAPI(url=url, user=username, password=password)
-        _LOGGER.info("Connected to Zabbix API Version %s", zapi.api_version())
+        _LOGGER.debug("Connected to Zabbix API Version %s", zapi.api_version())
     except ZabbixAPIException as login_exception:
         _LOGGER.error("Unable to login to the Zabbix API: %s", login_exception)
         return False

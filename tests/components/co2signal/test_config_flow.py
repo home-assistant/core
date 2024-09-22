@@ -11,7 +11,8 @@ from aioelectricitymaps import (
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.co2signal import DOMAIN, config_flow
+from homeassistant.components.co2signal import config_flow
+from homeassistant.components.co2signal.const import DOMAIN
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType

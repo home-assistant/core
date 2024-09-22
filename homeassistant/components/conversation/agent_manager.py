@@ -10,9 +10,8 @@ import voluptuous as vol
 
 from homeassistant.core import Context, HomeAssistant, async_get_hass, callback
 from homeassistant.helpers import config_validation as cv, singleton
-from homeassistant.helpers.entity_component import EntityComponent
 
-from .const import DOMAIN, HOME_ASSISTANT_AGENT, OLD_HOME_ASSISTANT_AGENT
+from .const import DOMAIN_DATA, HOME_ASSISTANT_AGENT, OLD_HOME_ASSISTANT_AGENT
 from .default_agent import async_get_default_agent
 from .entity import ConversationEntity
 from .models import (
@@ -54,8 +53,7 @@ def async_get_agent(
         return async_get_default_agent(hass)
 
     if "." in agent_id:
-        entity_component: EntityComponent[ConversationEntity] = hass.data[DOMAIN]
-        return entity_component.get_entity(agent_id)
+        return hass.data[DOMAIN_DATA].get_entity(agent_id)
 
     manager = get_agent_manager(hass)
 

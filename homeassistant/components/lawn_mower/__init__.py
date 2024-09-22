@@ -13,6 +13,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util.hass_dict import HassKey
 
 from .const import (
     DOMAIN,
@@ -25,6 +26,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+DOMAIN_DATA: HassKey[EntityComponent[LawnMowerEntity]] = HassKey(DOMAIN)
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
 PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
 SCAN_INTERVAL = timedelta(seconds=60)
@@ -32,7 +34,7 @@ SCAN_INTERVAL = timedelta(seconds=60)
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the lawn_mower component."""
-    component = hass.data[DOMAIN] = EntityComponent[LawnMowerEntity](
+    component = hass.data[DOMAIN_DATA] = EntityComponent[LawnMowerEntity](
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )
     await component.async_setup(config)
@@ -55,14 +57,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up lawn mower devices."""
-    component: EntityComponent[LawnMowerEntity] = hass.data[DOMAIN]
-    return await component.async_setup_entry(entry)
+    return await hass.data[DOMAIN_DATA].async_setup_entry(entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    component: EntityComponent[LawnMowerEntity] = hass.data[DOMAIN]
-    return await component.async_unload_entry(entry)
+    return await hass.data[DOMAIN_DATA].async_unload_entry(entry)
 
 
 class LawnMowerEntityEntityDescription(EntityDescription, frozen_or_thawed=True):

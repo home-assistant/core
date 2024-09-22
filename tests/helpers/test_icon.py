@@ -25,12 +25,8 @@ def test_battery_icon() -> None:
     iconbase = "mdi:battery"
     for level in range(0, 100, 5):
         print(  # noqa: T201
-            "Level: %d. icon: %s, charging: %s"
-            % (
-                level,
-                icon.icon_for_battery_level(level, False),
-                icon.icon_for_battery_level(level, True),
-            )
+            f"Level: {level}. icon: {icon.icon_for_battery_level(level, False)}, "
+            f"charging: {icon.icon_for_battery_level(level, True)}"
         )
         if level <= 10:
             postfix_charging = "-outline"

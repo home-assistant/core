@@ -60,6 +60,66 @@
         "default": "mdi:routes"
       }
     },
+    "select": {
+      "climate_state_seat_heater_left": {
+        "default": "mdi:car-seat-heater",
+        "state": {
+          "off": "mdi:car-seat"
+        }
+      },
+      "climate_state_seat_heater_rear_center": {
+        "default": "mdi:car-seat-heater",
+        "state": {
+          "off": "mdi:car-seat"
+        }
+      },
+      "climate_state_seat_heater_rear_left": {
+        "default": "mdi:car-seat-heater",
+        "state": {
+          "off": "mdi:car-seat"
+        }
+      },
+      "climate_state_seat_heater_rear_right": {
+        "default": "mdi:car-seat-heater",
+        "state": {
+          "off": "mdi:car-seat"
+        }
+      },
+      "climate_state_seat_heater_right": {
+        "default": "mdi:car-seat-heater",
+        "state": {
+          "off": "mdi:car-seat"
+        }
+      },
+      "climate_state_seat_heater_third_row_left": {
+        "default": "mdi:car-seat-heater",
+        "state": {
+          "off": "mdi:car-seat"
+        }
+      },
+      "climate_state_seat_heater_third_row_right": {
+        "default": "mdi:car-seat-heater",
+        "state": {
+          "off": "mdi:car-seat"
+        }
+      },
+      "components_customer_preferred_export_rule": {
+        "default": "mdi:transmission-tower",
+        "state": {
+          "battery_ok": "mdi:battery-negative",
+          "never": "mdi:transmission-tower-off",
+          "pv_only": "mdi:solar-panel"
+        }
+      },
+      "default_real_mode": {
+        "default": "mdi:home-battery",
+        "state": {
+          "autonomous": "mdi:auto-fix",
+          "backup": "mdi:battery-charging-100",
+          "self_consumption": "mdi:home-battery"
+        }
+      }
+    },
     "sensor": {
       "battery_power": {
         "default": "mdi:home-battery"
@@ -120,6 +180,41 @@
       },
       "wall_connector_state": {
         "default": "mdi:ev-station"
+      }
+    },
+    "switch": {
+      "charge_state_user_charge_enable_request": {
+        "default": "mdi:ev-station"
+      },
+      "climate_state_auto_seat_climate_left": {
+        "default": "mdi:car-seat-heater",
+        "state": {
+          "off": "mdi:car-seat"
+        }
+      },
+      "climate_state_auto_seat_climate_right": {
+        "default": "mdi:car-seat-heater",
+        "state": {
+          "off": "mdi:car-seat"
+        }
+      },
+      "climate_state_auto_steering_wheel_heat": {
+        "default": "mdi:steering"
+      },
+      "climate_state_defrost_mode": {
+        "default": "mdi:snowflake-melt"
+      },
+      "components_disallow_charge_from_grid_with_solar_installed": {
+        "state": {
+          "false": "mdi:transmission-tower",
+          "true": "mdi:solar-power"
+        }
+      },
+      "vehicle_state_sentry_mode": {
+        "default": "mdi:shield-car"
+      },
+      "vehicle_state_valet_mode": {
+        "default": "mdi:speedometer-slow"
       }
     }
   }

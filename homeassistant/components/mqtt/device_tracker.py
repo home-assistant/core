@@ -33,7 +33,7 @@ from homeassistant.helpers.typing import ConfigType, VolSchemaType
 from . import subscription
 from .config import MQTT_BASE_SCHEMA
 from .const import CONF_PAYLOAD_RESET, CONF_STATE_TOPIC
-from .mixins import CONF_JSON_ATTRS_TOPIC, MqttEntity, async_setup_entity_entry_helper
+from .entity import CONF_JSON_ATTRS_TOPIC, MqttEntity, async_setup_entity_entry_helper
 from .models import MqttValueTemplate, ReceiveMessage
 from .schemas import MQTT_ENTITY_COMMON_SCHEMA
 from .util import valid_subscribe_topic
