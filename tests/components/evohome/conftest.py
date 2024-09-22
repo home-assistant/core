@@ -109,7 +109,7 @@ async def block_request(
 
 
 @pytest.fixture
-def evo_config() -> dict[str, str]:
+def config() -> dict[str, str]:
     "Return a default/minimal configuration."
     return {
         CONF_USERNAME: USERNAME,

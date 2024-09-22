@@ -125,12 +125,34 @@
         }
       }
     },
+    "cover": {
+      "charge_state_charge_port_door_open": {
+        "name": "Charge port door"
+      },
+      "vehicle_state_ft": {
+        "name": "Frunk"
+      },
+      "vehicle_state_rt": {
+        "name": "Trunk"
+      },
+      "vehicle_state_sun_roof_state": {
+        "name": "Sunroof"
+      },
+      "windows": {
+        "name": "Windows"
+      }
+    },
     "device_tracker": {
       "location": {
         "name": "Location"
       },
       "route": {
         "name": "Route"
+      }
+    },
+    "media_player": {
+      "media": {
+        "name": "[%key:component::media_player::title%]"
       }
     },
     "number": {
