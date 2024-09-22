@@ -3,6 +3,8 @@
 import asyncio
 from typing import Any
 
+from libaxion_dmx import AxionDmxApi
+
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
@@ -50,12 +52,11 @@ class AxionDMXLight(CoordinatorEntity[AxionDataUpdateCoordinator], LightEntity):
 
     _attr_has_entity_name = True
     _attr_name = None
-    _attr_should_poll = False
 
     def __init__(
         self,
         coordinator: AxionDataUpdateCoordinator,
-        api: Any,
+        api: AxionDmxApi,
         channel: int,
         light_type: str,
     ) -> None:
@@ -78,6 +79,7 @@ class AxionDMXLight(CoordinatorEntity[AxionDataUpdateCoordinator], LightEntity):
         self._last_color_temp = 1
         self._attr_color_mode = ColorMode.BRIGHTNESS
         self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
+        self._attr_supported_features = LightEntityFeature.TRANSITION
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._attr_unique_id)},
             name=self._name,
@@ -105,11 +107,6 @@ class AxionDMXLight(CoordinatorEntity[AxionDataUpdateCoordinator], LightEntity):
     def color_temp(self) -> int:
         """Return the color temperature of the light."""
         return color_util.color_temperature_kelvin_to_mired(self._color_temp)
-
-    @property
-    def supported_features(self) -> LightEntityFeature:
-        """Return the supported features of this light."""
-        return LightEntityFeature.TRANSITION
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
