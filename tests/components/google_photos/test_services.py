@@ -15,11 +15,18 @@ from google_photos_library_api.model import (
 import pytest
 
 from homeassistant.components.google_photos.const import DOMAIN, READ_SCOPE
+from homeassistant.components.google_photos.services import (
+    CONF_CONFIG_ENTRY_ID,
+    UPLOAD_SERVICE,
+)
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import CONF_FILENAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
 from tests.common import MockConfigEntry
+
+TEST_FILENAME = "doorbell_snapshot.jpg"
 
 
 @dataclass
@@ -85,10 +92,10 @@ async def test_upload_service(
 
     response = await hass.services.async_call(
         DOMAIN,
-        "upload",
+        UPLOAD_SERVICE,
         {
-            "config_entry_id": config_entry.entry_id,
-            "filename": "doorbell_snapshot.jpg",
+            CONF_CONFIG_ENTRY_ID: config_entry.entry_id,
+            CONF_FILENAME: TEST_FILENAME,
         },
         blocking=True,
         return_response=True,
@@ -106,10 +113,10 @@ async def test_upload_service_config_entry_not_found(
     with pytest.raises(HomeAssistantError, match="not found in registry"):
         await hass.services.async_call(
             DOMAIN,
-            "upload",
+            UPLOAD_SERVICE,
             {
-                "config_entry_id": "invalid-config-entry-id",
-                "filename": "doorbell_snapshot.jpg",
+                CONF_CONFIG_ENTRY_ID: "invalid-config-entry-id",
+                CONF_FILENAME: TEST_FILENAME,
             },
             blocking=True,
             return_response=True,
@@ -130,10 +137,10 @@ async def test_config_entry_not_loaded(
     with pytest.raises(HomeAssistantError, match="not found in registry"):
         await hass.services.async_call(
             DOMAIN,
-            "upload",
+            UPLOAD_SERVICE,
             {
-                "config_entry_id": config_entry.unique_id,
-                "filename": "doorbell_snapshot.jpg",
+                CONF_CONFIG_ENTRY_ID: config_entry.unique_id,
+                CONF_FILENAME: TEST_FILENAME,
             },
             blocking=True,
             return_response=True,
@@ -152,10 +159,10 @@ async def test_path_is_not_allowed(
     ):
         await hass.services.async_call(
             DOMAIN,
-            "upload",
+            UPLOAD_SERVICE,
             {
-                "config_entry_id": config_entry.entry_id,
-                "filename": "doorbell_snapshot.jpg",
+                CONF_CONFIG_ENTRY_ID: config_entry.entry_id,
+                CONF_FILENAME: TEST_FILENAME,
             },
             blocking=True,
             return_response=True,
@@ -172,10 +179,10 @@ async def test_filename_does_not_exist(
     with pytest.raises(HomeAssistantError, match="does not exist"):
         await hass.services.async_call(
             DOMAIN,
-            "upload",
+            UPLOAD_SERVICE,
             {
-                "config_entry_id": config_entry.entry_id,
-                "filename": "doorbell_snapshot.jpg",
+                CONF_CONFIG_ENTRY_ID: config_entry.entry_id,
+                CONF_FILENAME: TEST_FILENAME,
             },
             blocking=True,
             return_response=True,
@@ -195,10 +202,10 @@ async def test_upload_service_upload_content_failure(
     with pytest.raises(HomeAssistantError, match="Failed to upload content"):
         await hass.services.async_call(
             DOMAIN,
-            "upload",
+            UPLOAD_SERVICE,
             {
-                "config_entry_id": config_entry.entry_id,
-                "filename": "doorbell_snapshot.jpg",
+                CONF_CONFIG_ENTRY_ID: config_entry.entry_id,
+                CONF_FILENAME: TEST_FILENAME,
             },
             blocking=True,
             return_response=True,
@@ -220,10 +227,10 @@ async def test_upload_service_fails_create(
     ):
         await hass.services.async_call(
             DOMAIN,
-            "upload",
+            UPLOAD_SERVICE,
             {
-                "config_entry_id": config_entry.entry_id,
-                "filename": "doorbell_snapshot.jpg",
+                CONF_CONFIG_ENTRY_ID: config_entry.entry_id,
+                CONF_FILENAME: TEST_FILENAME,
             },
             blocking=True,
             return_response=True,
@@ -246,10 +253,10 @@ async def test_upload_service_no_scope(
     with pytest.raises(HomeAssistantError, match="not granted permission"):
         await hass.services.async_call(
             DOMAIN,
-            "upload",
+            UPLOAD_SERVICE,
             {
-                "config_entry_id": config_entry.entry_id,
-                "filename": "doorbell_snapshot.jpg",
+                CONF_CONFIG_ENTRY_ID: config_entry.entry_id,
+                CONF_FILENAME: TEST_FILENAME,
             },
             blocking=True,
             return_response=True,
@@ -265,14 +272,14 @@ async def test_upload_size_limit(
     """Test upload service call with a filename path that does not exist."""
     with pytest.raises(
         HomeAssistantError,
-        match=re.escape("`doorbell_snapshot.jpg` is too large (27262976 > 20971520)"),
+        match=re.escape(f"`{TEST_FILENAME}` is too large (27262976 > 20971520)"),
     ):
         await hass.services.async_call(
             DOMAIN,
-            "upload",
+            UPLOAD_SERVICE,
             {
-                "config_entry_id": config_entry.entry_id,
-                "filename": "doorbell_snapshot.jpg",
+                CONF_CONFIG_ENTRY_ID: config_entry.entry_id,
+                CONF_FILENAME: TEST_FILENAME,
             },
             blocking=True,
             return_response=True,
