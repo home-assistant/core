@@ -9,7 +9,3 @@ upload:
       required: true
       selector:
         object:
-    album:
-      required: true
-      selector:
-        text:
