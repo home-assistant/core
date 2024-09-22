@@ -17,10 +17,9 @@ from homeassistant.const import (
     ATTR_MODE,
     ATTR_SUPPORTED_FEATURES,
     SERVICE_TURN_ON,
-    STATE_OFF,
-    STATE_ON,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity
 from homeassistant.helpers.intent import (
     IntentHandleError,
     IntentResponseType,
@@ -38,7 +37,7 @@ async def test_intent_set_humidity(hass: HomeAssistant) -> None:
     """Test the set humidity intent."""
     assert await async_setup_component(hass, "homeassistant", {})
     hass.states.async_set(
-        "humidifier.bedroom_humidifier", STATE_ON, {ATTR_HUMIDITY: 40}
+        "humidifier.bedroom_humidifier", entity.ToggleState.ON, {ATTR_HUMIDITY: 40}
     )
     humidity_calls = async_mock_service(hass, DOMAIN, SERVICE_SET_HUMIDITY)
     turn_on_calls = async_mock_service(hass, DOMAIN, SERVICE_TURN_ON)
@@ -68,7 +67,7 @@ async def test_intent_set_humidity_and_turn_on(hass: HomeAssistant) -> None:
     """Test the set humidity intent for turned off humidifier."""
     assert await async_setup_component(hass, "homeassistant", {})
     hass.states.async_set(
-        "humidifier.bedroom_humidifier", STATE_OFF, {ATTR_HUMIDITY: 40}
+        "humidifier.bedroom_humidifier", entity.ToggleState.OFF, {ATTR_HUMIDITY: 40}
     )
     humidity_calls = async_mock_service(hass, DOMAIN, SERVICE_SET_HUMIDITY)
     turn_on_calls = async_mock_service(hass, DOMAIN, SERVICE_TURN_ON)
@@ -106,7 +105,7 @@ async def test_intent_set_mode(hass: HomeAssistant) -> None:
     assert await async_setup_component(hass, "homeassistant", {})
     hass.states.async_set(
         "humidifier.bedroom_humidifier",
-        STATE_ON,
+        entity.ToggleState.ON,
         {
             ATTR_HUMIDITY: 40,
             ATTR_SUPPORTED_FEATURES: 1,
@@ -146,7 +145,7 @@ async def test_intent_set_mode_and_turn_on(hass: HomeAssistant) -> None:
     assert await async_setup_component(hass, "homeassistant", {})
     hass.states.async_set(
         "humidifier.bedroom_humidifier",
-        STATE_OFF,
+        entity.ToggleState.OFF,
         {
             ATTR_HUMIDITY: 40,
             ATTR_SUPPORTED_FEATURES: 1,
@@ -189,7 +188,7 @@ async def test_intent_set_mode_tests_feature(hass: HomeAssistant) -> None:
     """Test the set mode intent where modes are not supported."""
     assert await async_setup_component(hass, "homeassistant", {})
     hass.states.async_set(
-        "humidifier.bedroom_humidifier", STATE_ON, {ATTR_HUMIDITY: 40}
+        "humidifier.bedroom_humidifier", entity.ToggleState.ON, {ATTR_HUMIDITY: 40}
     )
     mode_calls = async_mock_service(hass, DOMAIN, SERVICE_SET_MODE)
     await intent.async_setup_intents(hass)
@@ -214,7 +213,7 @@ async def test_intent_set_unknown_mode(
     assert await async_setup_component(hass, "homeassistant", {})
     hass.states.async_set(
         "humidifier.bedroom_humidifier",
-        STATE_ON,
+        entity.ToggleState.ON,
         {
             ATTR_HUMIDITY: 40,
             ATTR_SUPPORTED_FEATURES: 1,
@@ -243,7 +242,7 @@ async def test_intent_errors(hass: HomeAssistant) -> None:
     entity_id = "humidifier.bedroom_humidifier"
     hass.states.async_set(
         entity_id,
-        STATE_ON,
+        entity.ToggleState.ON,
         {
             ATTR_HUMIDITY: 40,
             ATTR_SUPPORTED_FEATURES: 1,

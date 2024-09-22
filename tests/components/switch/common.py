@@ -12,10 +12,9 @@ from homeassistant.const import (
     ENTITY_MATCH_ALL,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
-    STATE_OFF,
-    STATE_ON,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity
 from homeassistant.loader import bind_hass
 
 
@@ -53,7 +52,7 @@ class MockSwitch(SwitchEntity):
     def __init__(self, name: str | None, state: str) -> None:
         """Initialize the mock switch entity."""
         self._attr_name = name
-        self._attr_is_on = state == STATE_ON
+        self._attr_is_on = state == entity.ToggleState.ON
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
@@ -67,7 +66,7 @@ class MockSwitch(SwitchEntity):
 def get_mock_switch_entities() -> list[MockSwitch]:
     """Return a list of mock switch entities."""
     return [
-        MockSwitch("AC", STATE_ON),
-        MockSwitch("AC", STATE_OFF),
-        MockSwitch(None, STATE_OFF),
+        MockSwitch("AC", entity.ToggleState.ON),
+        MockSwitch("AC", entity.ToggleState.OFF),
+        MockSwitch(None, entity.ToggleState.OFF),
     ]

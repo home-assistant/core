@@ -17,7 +17,6 @@ from homeassistant.const import (
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
-    STATE_OFF,
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import (
@@ -30,7 +29,7 @@ from homeassistant.core import (
     split_entity_id,
 )
 from homeassistant.exceptions import ServiceNotFound, TemplateError
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity, entity_registry as er
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.script import (
     SCRIPT_MODE_CHOICES,
@@ -1259,8 +1258,12 @@ async def test_script_restore_last_triggered(hass: HomeAssistant) -> None:
     mock_restore_cache(
         hass,
         (
-            State("script.no_last_triggered", STATE_OFF),
-            State("script.last_triggered", STATE_OFF, {"last_triggered": time}),
+            State("script.no_last_triggered", entity.ToggleState.OFF),
+            State(
+                "script.last_triggered",
+                entity.ToggleState.OFF,
+                {"last_triggered": time},
+            ),
         ),
     )
     hass.set_state(CoreState.starting)

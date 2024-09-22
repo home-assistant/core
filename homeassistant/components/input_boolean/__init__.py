@@ -16,12 +16,11 @@ from homeassistant.const import (
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
-    STATE_ON,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import collection
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import ToggleEntity
+from homeassistant.helpers.entity import ToggleEntity, ToggleState
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
 import homeassistant.helpers.service
@@ -85,7 +84,7 @@ class InputBooleanStorageCollection(collection.DictStorageCollection):
 @bind_hass
 def is_on(hass: HomeAssistant, entity_id: str) -> bool:
     """Test if input_boolean is True."""
-    return hass.states.is_state(entity_id, STATE_ON)
+    return hass.states.is_state(entity_id, ToggleState.ON)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -199,7 +198,7 @@ class InputBoolean(collection.CollectionEntity, ToggleEntity, RestoreEntity):
             return
 
         state = await self.async_get_last_state()
-        self._attr_is_on = state is not None and state.state == STATE_ON
+        self._attr_is_on = state is not None and state.state == ToggleState.ON
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""

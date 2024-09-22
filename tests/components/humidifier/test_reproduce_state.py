@@ -12,14 +12,9 @@ from homeassistant.components.humidifier.const import (
     SERVICE_SET_MODE,
 )
 from homeassistant.components.humidifier.reproduce_state import async_reproduce_states
-from homeassistant.const import (
-    ATTR_MODE,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    STATE_OFF,
-    STATE_ON,
-)
+from homeassistant.const import ATTR_MODE, SERVICE_TURN_OFF, SERVICE_TURN_ON
 from homeassistant.core import Context, HomeAssistant, State
+from homeassistant.helpers import entity
 from homeassistant.helpers.state import async_reproduce_state
 
 from tests.common import async_mock_service
@@ -89,7 +84,7 @@ async def test_reproducing_on_off_states(
 
 async def test_multiple_attrs(hass: HomeAssistant) -> None:
     """Test turn on with multiple attributes."""
-    hass.states.async_set(ENTITY_1, STATE_OFF, {})
+    hass.states.async_set(ENTITY_1, entity.ToggleState.OFF, {})
 
     turn_on_calls = async_mock_service(hass, DOMAIN, SERVICE_TURN_ON)
     turn_off_calls = async_mock_service(hass, DOMAIN, SERVICE_TURN_OFF)
@@ -97,7 +92,14 @@ async def test_multiple_attrs(hass: HomeAssistant) -> None:
     humidity_calls = async_mock_service(hass, DOMAIN, SERVICE_SET_HUMIDITY)
 
     await async_reproduce_states(
-        hass, [State(ENTITY_1, STATE_ON, {ATTR_MODE: MODE_NORMAL, ATTR_HUMIDITY: 45})]
+        hass,
+        [
+            State(
+                ENTITY_1,
+                entity.ToggleState.ON,
+                {ATTR_MODE: MODE_NORMAL, ATTR_HUMIDITY: 45},
+            )
+        ],
     )
 
     await hass.async_block_till_done()
@@ -113,7 +115,7 @@ async def test_multiple_attrs(hass: HomeAssistant) -> None:
 
 async def test_turn_off_multiple_attrs(hass: HomeAssistant) -> None:
     """Test set mode and humidity for off state."""
-    hass.states.async_set(ENTITY_1, STATE_ON, {})
+    hass.states.async_set(ENTITY_1, entity.ToggleState.ON, {})
 
     turn_on_calls = async_mock_service(hass, DOMAIN, SERVICE_TURN_ON)
     turn_off_calls = async_mock_service(hass, DOMAIN, SERVICE_TURN_OFF)
@@ -121,7 +123,14 @@ async def test_turn_off_multiple_attrs(hass: HomeAssistant) -> None:
     humidity_calls = async_mock_service(hass, DOMAIN, SERVICE_SET_HUMIDITY)
 
     await async_reproduce_states(
-        hass, [State(ENTITY_1, STATE_OFF, {ATTR_MODE: MODE_NORMAL, ATTR_HUMIDITY: 45})]
+        hass,
+        [
+            State(
+                ENTITY_1,
+                entity.ToggleState.OFF,
+                {ATTR_MODE: MODE_NORMAL, ATTR_HUMIDITY: 45},
+            )
+        ],
     )
 
     await hass.async_block_till_done()
@@ -135,8 +144,8 @@ async def test_turn_off_multiple_attrs(hass: HomeAssistant) -> None:
 
 async def test_multiple_modes(hass: HomeAssistant) -> None:
     """Test that multiple states gets calls."""
-    hass.states.async_set(ENTITY_1, STATE_OFF, {})
-    hass.states.async_set(ENTITY_2, STATE_OFF, {})
+    hass.states.async_set(ENTITY_1, entity.ToggleState.OFF, {})
+    hass.states.async_set(ENTITY_2, entity.ToggleState.OFF, {})
 
     turn_on_calls = async_mock_service(hass, DOMAIN, SERVICE_TURN_ON)
     turn_off_calls = async_mock_service(hass, DOMAIN, SERVICE_TURN_OFF)
@@ -146,8 +155,16 @@ async def test_multiple_modes(hass: HomeAssistant) -> None:
     await async_reproduce_states(
         hass,
         [
-            State(ENTITY_1, STATE_ON, {ATTR_MODE: MODE_ECO, ATTR_HUMIDITY: 40}),
-            State(ENTITY_2, STATE_ON, {ATTR_MODE: MODE_NORMAL, ATTR_HUMIDITY: 50}),
+            State(
+                ENTITY_1,
+                entity.ToggleState.ON,
+                {ATTR_MODE: MODE_ECO, ATTR_HUMIDITY: 40},
+            ),
+            State(
+                ENTITY_2,
+                entity.ToggleState.ON,
+                {ATTR_MODE: MODE_NORMAL, ATTR_HUMIDITY: 50},
+            ),
         ],
     )
 
@@ -175,7 +192,7 @@ async def test_multiple_modes(hass: HomeAssistant) -> None:
 
 async def test_state_with_none(hass: HomeAssistant) -> None:
     """Test that none is not a humidifier state."""
-    hass.states.async_set(ENTITY_1, STATE_OFF, {})
+    hass.states.async_set(ENTITY_1, entity.ToggleState.OFF, {})
 
     turn_on_calls = async_mock_service(hass, DOMAIN, SERVICE_TURN_ON)
     turn_off_calls = async_mock_service(hass, DOMAIN, SERVICE_TURN_OFF)
@@ -194,7 +211,7 @@ async def test_state_with_none(hass: HomeAssistant) -> None:
 
 async def test_state_with_context(hass: HomeAssistant) -> None:
     """Test that context is forwarded."""
-    hass.states.async_set(ENTITY_1, STATE_OFF, {})
+    hass.states.async_set(ENTITY_1, entity.ToggleState.OFF, {})
 
     turn_on_calls = async_mock_service(hass, DOMAIN, SERVICE_TURN_ON)
     turn_off_calls = async_mock_service(hass, DOMAIN, SERVICE_TURN_OFF)
@@ -205,7 +222,13 @@ async def test_state_with_context(hass: HomeAssistant) -> None:
 
     await async_reproduce_states(
         hass,
-        [State(ENTITY_1, STATE_ON, {ATTR_MODE: MODE_AWAY, ATTR_HUMIDITY: 45})],
+        [
+            State(
+                ENTITY_1,
+                entity.ToggleState.ON,
+                {ATTR_MODE: MODE_AWAY, ATTR_HUMIDITY: 45},
+            )
+        ],
         context=context,
     )
 
@@ -229,7 +252,7 @@ async def test_state_with_context(hass: HomeAssistant) -> None:
 )
 async def test_attribute(hass: HomeAssistant, service, attribute) -> None:
     """Test that service call is made for each attribute."""
-    hass.states.async_set(ENTITY_1, STATE_ON, {})
+    hass.states.async_set(ENTITY_1, entity.ToggleState.ON, {})
 
     turn_on_calls = async_mock_service(hass, DOMAIN, SERVICE_TURN_ON)
     turn_off_calls = async_mock_service(hass, DOMAIN, SERVICE_TURN_OFF)
@@ -237,7 +260,9 @@ async def test_attribute(hass: HomeAssistant, service, attribute) -> None:
 
     value = "dummy"
 
-    await async_reproduce_states(hass, [State(ENTITY_1, STATE_ON, {attribute: value})])
+    await async_reproduce_states(
+        hass, [State(ENTITY_1, entity.ToggleState.ON, {attribute: value})]
+    )
 
     await hass.async_block_till_done()
 

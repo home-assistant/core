@@ -34,7 +34,6 @@ from homeassistant.const import (
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
-    STATE_ON,
 )
 from homeassistant.core import (
     CALLBACK_TYPE,
@@ -56,7 +55,7 @@ from homeassistant.helpers.deprecation import (
     check_if_deprecated_constant,
     dir_with_deprecated_constants,
 )
-from homeassistant.helpers.entity import ToggleEntity
+from homeassistant.helpers.entity import ToggleEntity, ToggleState
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.issue_registry import (
     IssueSeverity,
@@ -156,7 +155,7 @@ def is_on(hass: HomeAssistant, entity_id: str) -> bool:
 
     Async friendly.
     """
-    return hass.states.is_state(entity_id, STATE_ON)
+    return hass.states.is_state(entity_id, ToggleState.ON)
 
 
 def _automations_with_x(
@@ -604,7 +603,7 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
         self.action_script.update_logger(self._logger)
 
         if state := await self.async_get_last_state():
-            enable_automation = state.state == STATE_ON
+            enable_automation = state.state == ToggleState.ON
             last_triggered = state.attributes.get("last_triggered")
             if last_triggered is not None:
                 self.action_script.last_triggered = parse_datetime(last_triggered)

@@ -30,11 +30,10 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_SLAVE,
     CONF_SWITCHES,
-    STATE_OFF,
-    STATE_ON,
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant, State
+from homeassistant.helpers.entity import ToggleState
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -192,19 +191,19 @@ async def test_config_switch(hass: HomeAssistant, mock_modbus) -> None:
             [0x00],
             False,
             {CONF_VERIFY: {}},
-            STATE_OFF,
+            ToggleState.OFF,
         ),
         (
             [0x01],
             False,
             {CONF_VERIFY: {}},
-            STATE_ON,
+            ToggleState.ON,
         ),
         (
             [0xFE],
             False,
             {CONF_VERIFY: {}},
-            STATE_OFF,
+            ToggleState.OFF,
         ),
         (
             [0x00],
@@ -216,7 +215,7 @@ async def test_config_switch(hass: HomeAssistant, mock_modbus) -> None:
             [0x00],
             True,
             None,
-            STATE_OFF,
+            ToggleState.OFF,
         ),
     ],
 )
@@ -227,7 +226,7 @@ async def test_all_switch(hass: HomeAssistant, mock_do_cycle, expected) -> None:
 
 @pytest.mark.parametrize(
     "mock_test_state",
-    [(State(ENTITY_ID, STATE_ON),), (State(ENTITY_ID, STATE_OFF),)],
+    [(State(ENTITY_ID, ToggleState.ON),), (State(ENTITY_ID, ToggleState.OFF),)],
     indirect=True,
 )
 @pytest.mark.parametrize(
@@ -281,31 +280,31 @@ async def test_switch_service_turn(
     """Run test for service turn_on/turn_off."""
     assert MODBUS_DOMAIN in hass.config.components
 
-    assert hass.states.get(ENTITY_ID).state == STATE_OFF
+    assert hass.states.get(ENTITY_ID).state == ToggleState.OFF
     await hass.services.async_call(
         "switch", "turn_on", service_data={"entity_id": ENTITY_ID}
     )
     await hass.async_block_till_done()
-    assert hass.states.get(ENTITY_ID).state == STATE_ON
+    assert hass.states.get(ENTITY_ID).state == ToggleState.ON
     await hass.services.async_call(
         "switch", "turn_off", service_data={"entity_id": ENTITY_ID}
     )
     await hass.async_block_till_done()
-    assert hass.states.get(ENTITY_ID).state == STATE_OFF
+    assert hass.states.get(ENTITY_ID).state == ToggleState.OFF
 
     mock_modbus.read_holding_registers.return_value = ReadResult([0x01])
-    assert hass.states.get(ENTITY_ID2).state == STATE_OFF
+    assert hass.states.get(ENTITY_ID2).state == ToggleState.OFF
     await hass.services.async_call(
         "switch", "turn_on", service_data={"entity_id": ENTITY_ID2}
     )
     await hass.async_block_till_done()
-    assert hass.states.get(ENTITY_ID2).state == STATE_ON
+    assert hass.states.get(ENTITY_ID2).state == ToggleState.ON
     mock_modbus.read_holding_registers.return_value = ReadResult([0x00])
     await hass.services.async_call(
         "switch", "turn_off", service_data={"entity_id": ENTITY_ID2}
     )
     await hass.async_block_till_done()
-    assert hass.states.get(ENTITY_ID2).state == STATE_OFF
+    assert hass.states.get(ENTITY_ID2).state == ToggleState.OFF
 
     mock_modbus.write_register.side_effect = ModbusException("fail write_")
     await hass.services.async_call(
@@ -341,12 +340,12 @@ async def test_service_switch_update(hass: HomeAssistant, mock_modbus_ha) -> Non
     await hass.services.async_call(
         "homeassistant", "update_entity", {"entity_id": ENTITY_ID}, blocking=True
     )
-    assert hass.states.get(ENTITY_ID).state == STATE_OFF
+    assert hass.states.get(ENTITY_ID).state == ToggleState.OFF
     mock_modbus_ha.read_coils.return_value = ReadResult([0x01])
     await hass.services.async_call(
         "homeassistant", "update_entity", {"entity_id": ENTITY_ID}, blocking=True
     )
-    assert hass.states.get(ENTITY_ID).state == STATE_ON
+    assert hass.states.get(ENTITY_ID).state == ToggleState.ON
 
 
 @pytest.mark.parametrize(
@@ -375,12 +374,12 @@ async def test_delay_switch(hass: HomeAssistant, mock_modbus) -> None:
         "switch", "turn_on", service_data={"entity_id": ENTITY_ID}
     )
     await hass.async_block_till_done()
-    assert hass.states.get(ENTITY_ID).state == STATE_OFF
+    assert hass.states.get(ENTITY_ID).state == ToggleState.OFF
     now = now + timedelta(seconds=2)
     with mock.patch("homeassistant.helpers.event.dt_util.utcnow", return_value=now):
         async_fire_time_changed(hass, now)
         await hass.async_block_till_done()
-    assert hass.states.get(ENTITY_ID).state == STATE_ON
+    assert hass.states.get(ENTITY_ID).state == ToggleState.ON
 
 
 async def test_no_discovery_info_switch(

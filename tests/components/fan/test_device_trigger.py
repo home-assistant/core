@@ -8,9 +8,9 @@ from pytest_unordered import unordered
 from homeassistant.components import automation
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.fan import DOMAIN
-from homeassistant.const import STATE_OFF, STATE_ON, EntityCategory
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity, entity_registry as er
 from homeassistant.helpers.entity_registry import RegistryEntryHider
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -186,7 +186,7 @@ async def test_if_fires_on_state_change(
         DOMAIN, "test", "5678", device_id=device_entry.id
     )
 
-    hass.states.async_set(entry.entity_id, STATE_OFF)
+    hass.states.async_set(entry.entity_id, entity.ToggleState.OFF)
 
     assert await async_setup_component(
         hass,
@@ -264,7 +264,7 @@ async def test_if_fires_on_state_change(
     )
 
     # Fake that the entity is turning on.
-    hass.states.async_set(entry.entity_id, STATE_ON)
+    hass.states.async_set(entry.entity_id, entity.ToggleState.ON)
     await hass.async_block_till_done()
     assert len(service_calls) == 2
     assert {service_calls[0].data["some"], service_calls[1].data["some"]} == {
@@ -273,7 +273,7 @@ async def test_if_fires_on_state_change(
     }
 
     # Fake that the entity is turning off.
-    hass.states.async_set(entry.entity_id, STATE_OFF)
+    hass.states.async_set(entry.entity_id, entity.ToggleState.OFF)
     await hass.async_block_till_done()
     assert len(service_calls) == 4
     assert {service_calls[2].data["some"], service_calls[3].data["some"]} == {
@@ -299,7 +299,7 @@ async def test_if_fires_on_state_change_legacy(
         DOMAIN, "test", "5678", device_id=device_entry.id
     )
 
-    hass.states.async_set(entry.entity_id, STATE_OFF)
+    hass.states.async_set(entry.entity_id, entity.ToggleState.OFF)
 
     assert await async_setup_component(
         hass,
@@ -333,7 +333,7 @@ async def test_if_fires_on_state_change_legacy(
     )
 
     # Fake that the entity is turning on.
-    hass.states.async_set(entry.entity_id, STATE_ON)
+    hass.states.async_set(entry.entity_id, entity.ToggleState.ON)
     await hass.async_block_till_done()
     assert len(service_calls) == 1
     assert (
@@ -359,7 +359,7 @@ async def test_if_fires_on_state_change_with_for(
         DOMAIN, "test", "5678", device_id=device_entry.id
     )
 
-    hass.states.async_set(entry.entity_id, STATE_ON)
+    hass.states.async_set(entry.entity_id, entity.ToggleState.ON)
 
     assert await async_setup_component(
         hass,
@@ -394,7 +394,7 @@ async def test_if_fires_on_state_change_with_for(
     await hass.async_block_till_done()
     assert len(service_calls) == 0
 
-    hass.states.async_set(entry.entity_id, STATE_OFF)
+    hass.states.async_set(entry.entity_id, entity.ToggleState.OFF)
     await hass.async_block_till_done()
     assert len(service_calls) == 0
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=10))

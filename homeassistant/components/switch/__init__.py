@@ -10,12 +10,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    SERVICE_TOGGLE,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    STATE_ON,
-)
+from homeassistant.const import SERVICE_TOGGLE, SERVICE_TURN_OFF, SERVICE_TURN_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.deprecation import (
@@ -24,7 +19,11 @@ from homeassistant.helpers.deprecation import (
     check_if_deprecated_constant,
     dir_with_deprecated_constants,
 )
-from homeassistant.helpers.entity import ToggleEntity, ToggleEntityDescription
+from homeassistant.helpers.entity import (
+    ToggleEntity,
+    ToggleEntityDescription,
+    ToggleState,
+)
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
@@ -71,7 +70,7 @@ def is_on(hass: HomeAssistant, entity_id: str) -> bool:
 
     Async friendly.
     """
-    return hass.states.is_state(entity_id, STATE_ON)
+    return hass.states.is_state(entity_id, ToggleState.ON)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:

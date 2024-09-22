@@ -25,11 +25,10 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_SCAN_INTERVAL,
     CONF_SLAVE,
-    STATE_OFF,
-    STATE_ON,
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant, State
+from homeassistant.helpers.entity import ToggleState
 from homeassistant.setup import async_setup_component
 
 from .conftest import TEST_ENTITY_NAME, ReadResult
@@ -177,19 +176,19 @@ async def test_config_light(hass: HomeAssistant, mock_modbus) -> None:
             [0x00],
             False,
             {CONF_VERIFY: {}},
-            STATE_OFF,
+            ToggleState.OFF,
         ),
         (
             [0x01],
             False,
             {CONF_VERIFY: {}},
-            STATE_ON,
+            ToggleState.ON,
         ),
         (
             [0xFE],
             False,
             {CONF_VERIFY: {}},
-            STATE_OFF,
+            ToggleState.OFF,
         ),
         (
             [0x00],
@@ -201,7 +200,7 @@ async def test_config_light(hass: HomeAssistant, mock_modbus) -> None:
             [0x00],
             True,
             None,
-            STATE_OFF,
+            ToggleState.OFF,
         ),
     ],
 )
@@ -212,7 +211,7 @@ async def test_all_light(hass: HomeAssistant, mock_do_cycle, expected) -> None:
 
 @pytest.mark.parametrize(
     "mock_test_state",
-    [(State(ENTITY_ID, STATE_ON),)],
+    [(State(ENTITY_ID, ToggleState.ON),)],
     indirect=True,
 )
 @pytest.mark.parametrize(
@@ -267,31 +266,31 @@ async def test_light_service_turn(
 
     assert MODBUS_DOMAIN in hass.config.components
 
-    assert hass.states.get(ENTITY_ID).state == STATE_OFF
+    assert hass.states.get(ENTITY_ID).state == ToggleState.OFF
     await hass.services.async_call(
         "light", "turn_on", service_data={"entity_id": ENTITY_ID}
     )
     await hass.async_block_till_done()
-    assert hass.states.get(ENTITY_ID).state == STATE_ON
+    assert hass.states.get(ENTITY_ID).state == ToggleState.ON
     await hass.services.async_call(
         "light", "turn_off", service_data={"entity_id": ENTITY_ID}
     )
     await hass.async_block_till_done()
-    assert hass.states.get(ENTITY_ID).state == STATE_OFF
+    assert hass.states.get(ENTITY_ID).state == ToggleState.OFF
 
     mock_modbus.read_holding_registers.return_value = ReadResult([0x01])
-    assert hass.states.get(ENTITY_ID2).state == STATE_OFF
+    assert hass.states.get(ENTITY_ID2).state == ToggleState.OFF
     await hass.services.async_call(
         "light", "turn_on", service_data={"entity_id": ENTITY_ID2}
     )
     await hass.async_block_till_done()
-    assert hass.states.get(ENTITY_ID2).state == STATE_ON
+    assert hass.states.get(ENTITY_ID2).state == ToggleState.ON
     mock_modbus.read_holding_registers.return_value = ReadResult([0x00])
     await hass.services.async_call(
         "light", "turn_off", service_data={"entity_id": ENTITY_ID2}
     )
     await hass.async_block_till_done()
-    assert hass.states.get(ENTITY_ID2).state == STATE_OFF
+    assert hass.states.get(ENTITY_ID2).state == ToggleState.OFF
 
     mock_modbus.write_register.side_effect = ModbusException("fail write_")
     await hass.services.async_call(
@@ -321,12 +320,12 @@ async def test_service_light_update(hass: HomeAssistant, mock_modbus_ha) -> None
     await hass.services.async_call(
         "homeassistant", "update_entity", {"entity_id": ENTITY_ID}, blocking=True
     )
-    assert hass.states.get(ENTITY_ID).state == STATE_OFF
+    assert hass.states.get(ENTITY_ID).state == ToggleState.OFF
     mock_modbus_ha.read_coils.return_value = ReadResult([0x01])
     await hass.services.async_call(
         "homeassistant", "update_entity", {"entity_id": ENTITY_ID}, blocking=True
     )
-    assert hass.states.get(ENTITY_ID).state == STATE_ON
+    assert hass.states.get(ENTITY_ID).state == ToggleState.ON
 
 
 async def test_no_discovery_info_light(

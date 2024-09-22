@@ -7,11 +7,12 @@ import voluptuous_serialize
 from homeassistant.components import automation
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.humidifier import DOMAIN, const, device_condition
-from homeassistant.const import ATTR_MODE, STATE_OFF, STATE_ON, EntityCategory
+from homeassistant.const import ATTR_MODE, EntityCategory
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
+    entity,
     entity_registry as er,
 )
 from homeassistant.helpers.entity_registry import RegistryEntryHider
@@ -156,7 +157,9 @@ async def test_if_state(
         DOMAIN, "test", "5678", device_id=device_entry.id
     )
 
-    hass.states.async_set(entry.entity_id, STATE_ON, {ATTR_MODE: const.MODE_AWAY})
+    hass.states.async_set(
+        entry.entity_id, entity.ToggleState.ON, {ATTR_MODE: const.MODE_AWAY}
+    )
 
     assert await async_setup_component(
         hass,
@@ -236,14 +239,16 @@ async def test_if_state(
     assert len(service_calls) == 1
     assert service_calls[0].data["some"] == "is_on event - test_event1"
 
-    hass.states.async_set(entry.entity_id, STATE_OFF)
+    hass.states.async_set(entry.entity_id, entity.ToggleState.OFF)
     hass.bus.async_fire("test_event1")
     hass.bus.async_fire("test_event2")
     await hass.async_block_till_done()
     assert len(service_calls) == 2
     assert service_calls[1].data["some"] == "is_off event - test_event2"
 
-    hass.states.async_set(entry.entity_id, STATE_ON, {ATTR_MODE: const.MODE_AWAY})
+    hass.states.async_set(
+        entry.entity_id, entity.ToggleState.ON, {ATTR_MODE: const.MODE_AWAY}
+    )
 
     hass.bus.async_fire("test_event3")
     await hass.async_block_till_done()
@@ -251,7 +256,9 @@ async def test_if_state(
     assert len(service_calls) == 3
     assert service_calls[2].data["some"] == "is_mode - event - test_event3"
 
-    hass.states.async_set(entry.entity_id, STATE_ON, {ATTR_MODE: const.MODE_HOME})
+    hass.states.async_set(
+        entry.entity_id, entity.ToggleState.ON, {ATTR_MODE: const.MODE_HOME}
+    )
 
     # Should not fire
     hass.bus.async_fire("test_event3")
@@ -276,7 +283,9 @@ async def test_if_state_legacy(
         DOMAIN, "test", "5678", device_id=device_entry.id
     )
 
-    hass.states.async_set(entry.entity_id, STATE_ON, {ATTR_MODE: const.MODE_AWAY})
+    hass.states.async_set(
+        entry.entity_id, entity.ToggleState.ON, {ATTR_MODE: const.MODE_AWAY}
+    )
 
     assert await async_setup_component(
         hass,
@@ -308,7 +317,9 @@ async def test_if_state_legacy(
     await hass.async_block_till_done()
     assert len(service_calls) == 0
 
-    hass.states.async_set(entry.entity_id, STATE_ON, {ATTR_MODE: const.MODE_AWAY})
+    hass.states.async_set(
+        entry.entity_id, entity.ToggleState.ON, {ATTR_MODE: const.MODE_AWAY}
+    )
 
     hass.bus.async_fire("test_event1")
     await hass.async_block_till_done()
@@ -463,7 +474,7 @@ async def test_capabilities(
     if set_state:
         hass.states.async_set(
             entity_entry.entity_id,
-            STATE_ON,
+            entity.ToggleState.ON,
             capabilities_state,
         )
 
@@ -633,7 +644,7 @@ async def test_capabilities_legacy(
     if set_state:
         hass.states.async_set(
             entity_entry.entity_id,
-            STATE_ON,
+            entity.ToggleState.ON,
             capabilities_state,
         )
 

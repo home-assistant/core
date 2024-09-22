@@ -17,11 +17,9 @@ from homeassistant.const import (
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
-    STATE_OFF,
-    STATE_ON,
 )
 from homeassistant.core import Context, CoreState, HomeAssistant, State
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import entity, entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockUser, mock_component, mock_restore_cache
@@ -115,11 +113,11 @@ async def test_config_options(hass: HomeAssistant) -> None:
     assert state_1 is not None
     assert state_2 is not None
 
-    assert state_1.state == STATE_OFF
+    assert state_1.state == entity.ToggleState.OFF
     assert ATTR_ICON not in state_1.attributes
     assert ATTR_FRIENDLY_NAME not in state_1.attributes
 
-    assert state_2.state == STATE_ON
+    assert state_2.state == entity.ToggleState.ON
     assert state_2.attributes.get(ATTR_FRIENDLY_NAME) == "Hello World"
     assert state_2.attributes.get(ATTR_ICON) == "mdi:work"
 
@@ -227,7 +225,7 @@ async def test_reload(
     assert state_1 is not None
     assert state_2 is not None
     assert state_3 is None
-    assert state_2.state == STATE_ON
+    assert state_2.state == entity.ToggleState.ON
 
     assert entity_registry.async_get_entity_id(DOMAIN, DOMAIN, "test_1") is not None
     assert entity_registry.async_get_entity_id(DOMAIN, DOMAIN, "test_2") is not None
@@ -268,7 +266,9 @@ async def test_reload(
     assert entity_registry.async_get_entity_id(DOMAIN, DOMAIN, "test_2") is not None
     assert entity_registry.async_get_entity_id(DOMAIN, DOMAIN, "test_3") is not None
 
-    assert state_2.state == STATE_ON  # reload is not supposed to change entity state
+    assert (
+        state_2.state == entity.ToggleState.ON
+    )  # reload is not supposed to change entity state
     assert state_2.attributes.get(ATTR_FRIENDLY_NAME) == "Hello World reloaded"
     assert state_2.attributes.get(ATTR_ICON) == "mdi:work_reloaded"
 
@@ -277,7 +277,7 @@ async def test_load_from_storage(hass: HomeAssistant, storage_setup) -> None:
     """Test set up from storage."""
     assert await storage_setup()
     state = hass.states.get(f"{DOMAIN}.from_storage")
-    assert state.state == STATE_OFF
+    assert state.state == entity.ToggleState.OFF
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "from storage"
     assert state.attributes.get(ATTR_EDITABLE)
 
@@ -287,12 +287,12 @@ async def test_editable_state_attribute(hass: HomeAssistant, storage_setup) -> N
     assert await storage_setup(config={DOMAIN: {"from_yaml": None}})
 
     state = hass.states.get(f"{DOMAIN}.from_storage")
-    assert state.state == STATE_OFF
+    assert state.state == entity.ToggleState.OFF
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "from storage"
     assert state.attributes.get(ATTR_EDITABLE)
 
     state = hass.states.get(f"{DOMAIN}.from_yaml")
-    assert state.state == STATE_OFF
+    assert state.state == entity.ToggleState.OFF
     assert not state.attributes.get(ATTR_EDITABLE)
 
 

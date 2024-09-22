@@ -27,8 +27,6 @@ from homeassistant.const import (
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
-    STATE_OFF,
-    STATE_ON,
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import (
@@ -40,7 +38,7 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.exceptions import HomeAssistantError, Unauthorized
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.script import (
     SCRIPT_MODE_CHOICES,
@@ -1414,8 +1412,8 @@ async def test_automation_restore_state(hass: HomeAssistant) -> None:
     mock_restore_cache(
         hass,
         (
-            State("automation.hello", STATE_ON),
-            State("automation.bye", STATE_OFF, {"last_triggered": time}),
+            State("automation.hello", entity.ToggleState.ON),
+            State("automation.bye", entity.ToggleState.OFF, {"last_triggered": time}),
         ),
     )
 
@@ -1438,12 +1436,12 @@ async def test_automation_restore_state(hass: HomeAssistant) -> None:
 
     state = hass.states.get("automation.hello")
     assert state
-    assert state.state == STATE_ON
+    assert state.state == entity.ToggleState.ON
     assert state.attributes["last_triggered"] is None
 
     state = hass.states.get("automation.bye")
     assert state
-    assert state.state == STATE_OFF
+    assert state.state == entity.ToggleState.OFF
     assert state.attributes["last_triggered"] == time
 
     calls = async_mock_service(hass, "test", "automation")
@@ -1518,7 +1516,7 @@ async def test_initial_value_off_but_restore_on(hass: HomeAssistant) -> None:
     """Test initial value off and restored state is turned on."""
     hass.set_state(CoreState.not_running)
     calls = async_mock_service(hass, "test", "automation")
-    mock_restore_cache(hass, (State("automation.hello", STATE_ON),))
+    mock_restore_cache(hass, (State("automation.hello", entity.ToggleState.ON),))
 
     await async_setup_component(
         hass,
@@ -1543,7 +1541,7 @@ async def test_initial_value_off_but_restore_on(hass: HomeAssistant) -> None:
 async def test_initial_value_on_but_restore_off(hass: HomeAssistant) -> None:
     """Test initial value on and restored state is turned off."""
     calls = async_mock_service(hass, "test", "automation")
-    mock_restore_cache(hass, (State("automation.hello", STATE_OFF),))
+    mock_restore_cache(hass, (State("automation.hello", entity.ToggleState.OFF),))
 
     assert await async_setup_component(
         hass,
@@ -1567,7 +1565,7 @@ async def test_initial_value_on_but_restore_off(hass: HomeAssistant) -> None:
 async def test_no_initial_value_and_restore_off(hass: HomeAssistant) -> None:
     """Test initial value off and restored state is turned on."""
     calls = async_mock_service(hass, "test", "automation")
-    mock_restore_cache(hass, (State("automation.hello", STATE_OFF),))
+    mock_restore_cache(hass, (State("automation.hello", entity.ToggleState.OFF),))
 
     assert await async_setup_component(
         hass,
@@ -1830,9 +1828,11 @@ async def test_automation_restore_last_triggered_with_initial_state(
     mock_restore_cache(
         hass,
         (
-            State("automation.hello", STATE_ON),
-            State("automation.bye", STATE_ON, {"last_triggered": time}),
-            State("automation.solong", STATE_OFF, {"last_triggered": time}),
+            State("automation.hello", entity.ToggleState.ON),
+            State("automation.bye", entity.ToggleState.ON, {"last_triggered": time}),
+            State(
+                "automation.solong", entity.ToggleState.OFF, {"last_triggered": time}
+            ),
         ),
     )
 
@@ -1863,17 +1863,17 @@ async def test_automation_restore_last_triggered_with_initial_state(
 
     state = hass.states.get("automation.hello")
     assert state
-    assert state.state == STATE_OFF
+    assert state.state == entity.ToggleState.OFF
     assert state.attributes["last_triggered"] is None
 
     state = hass.states.get("automation.bye")
     assert state
-    assert state.state == STATE_OFF
+    assert state.state == entity.ToggleState.OFF
     assert state.attributes["last_triggered"] == time
 
     state = hass.states.get("automation.solong")
     assert state
-    assert state.state == STATE_ON
+    assert state.state == entity.ToggleState.ON
     assert state.attributes["last_triggered"] == time
 
 

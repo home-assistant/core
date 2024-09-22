@@ -18,10 +18,9 @@ from homeassistant.const import (
     CONF_PLATFORM,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
-    STATE_OFF,
-    STATE_ON,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity
 
 from tests.common import (
     async_mock_service,
@@ -38,10 +37,10 @@ ENTITY_ID = "entity_id_val"
 
 async def test_is_on(hass: HomeAssistant) -> None:
     """Test is_on."""
-    hass.states.async_set("remote.test", STATE_ON)
+    hass.states.async_set("remote.test", entity.ToggleState.ON)
     assert remote.is_on(hass, "remote.test")
 
-    hass.states.async_set("remote.test", STATE_OFF)
+    hass.states.async_set("remote.test", entity.ToggleState.OFF)
     assert not remote.is_on(hass, "remote.test")
 
 

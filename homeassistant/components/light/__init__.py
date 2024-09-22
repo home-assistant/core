@@ -15,16 +15,15 @@ from typing import Any, Self, cast, final
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    SERVICE_TOGGLE,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    STATE_ON,
-)
+from homeassistant.const import SERVICE_TOGGLE, SERVICE_TURN_OFF, SERVICE_TURN_ON
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_registry as er
-from homeassistant.helpers.entity import ToggleEntity, ToggleEntityDescription
+from homeassistant.helpers.entity import (
+    ToggleEntity,
+    ToggleEntityDescription,
+    ToggleState,
+)
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType, VolDictType
 from homeassistant.loader import bind_hass
@@ -297,7 +296,7 @@ _LOGGER = logging.getLogger(__name__)
 @bind_hass
 def is_on(hass: HomeAssistant, entity_id: str) -> bool:
     """Return if the lights are on based on the statemachine."""
-    return hass.states.is_state(entity_id, STATE_ON)
+    return hass.states.is_state(entity_id, ToggleState.ON)
 
 
 def preprocess_turn_on_alternatives(

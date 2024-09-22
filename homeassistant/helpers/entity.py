@@ -7,7 +7,7 @@ import asyncio
 from collections import deque
 from collections.abc import Callable, Coroutine, Iterable, Mapping
 import dataclasses
-from enum import Enum, IntFlag, auto
+from enum import Enum, IntFlag, StrEnum, auto
 import functools as ft
 from functools import cached_property
 import logging
@@ -17,7 +17,7 @@ import sys
 import threading
 import time
 from types import FunctionType
-from typing import TYPE_CHECKING, Any, Final, Literal, NotRequired, TypedDict, final
+from typing import TYPE_CHECKING, Any, Final, NotRequired, TypedDict, final
 
 import voluptuous as vol
 
@@ -32,8 +32,6 @@ from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES,
     ATTR_UNIT_OF_MEASUREMENT,
     DEVICE_DEFAULT_NAME,
-    STATE_OFF,
-    STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     EntityCategory,
@@ -1651,6 +1649,13 @@ class ToggleEntityDescription(EntityDescription, frozen_or_thawed=True):
     """A class that describes toggle entities."""
 
 
+class ToggleState(StrEnum):
+    """State of Valve entities."""
+
+    ON = "on"
+    OFF = "off"
+
+
 TOGGLE_ENTITY_CACHED_PROPERTIES_WITH_ATTR_ = {"is_on"}
 
 
@@ -1665,11 +1670,11 @@ class ToggleEntity(
 
     @property
     @final
-    def state(self) -> Literal["on", "off"] | None:
+    def state(self) -> ToggleState | None:
         """Return the state."""
         if (is_on := self.is_on) is None:
             return None
-        return STATE_ON if is_on else STATE_OFF
+        return ToggleState.ON if is_on else ToggleState.OFF
 
     @cached_property
     def is_on(self) -> bool | None:

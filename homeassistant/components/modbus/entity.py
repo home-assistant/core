@@ -22,12 +22,10 @@ from homeassistant.const import (
     CONF_SLAVE,
     CONF_STRUCTURE,
     CONF_UNIQUE_ID,
-    STATE_OFF,
-    STATE_ON,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import Entity, ToggleEntity
+from homeassistant.helpers.entity import Entity, ToggleEntity, ToggleState
 from homeassistant.helpers.event import async_call_later, async_track_time_interval
 from homeassistant.helpers.restore_state import RestoreEntity
 
@@ -306,9 +304,9 @@ class BaseSwitch(BasePlatform, ToggleEntity, RestoreEntity):
         """Handle entity which will be added."""
         await self.async_base_added_to_hass()
         if state := await self.async_get_last_state():
-            if state.state == STATE_ON:
+            if state.state == ToggleState.ON:
                 self._attr_is_on = True
-            elif state.state == STATE_OFF:
+            elif state.state == ToggleState.OFF:
                 self._attr_is_on = False
 
     async def async_turn(self, command: int) -> None:

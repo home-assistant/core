@@ -14,12 +14,7 @@ from typing import Any, final
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    SERVICE_TOGGLE,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    STATE_ON,
-)
+from homeassistant.const import SERVICE_TOGGLE, SERVICE_TURN_OFF, SERVICE_TURN_ON
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
@@ -29,7 +24,11 @@ from homeassistant.helpers.deprecation import (
     check_if_deprecated_constant,
     dir_with_deprecated_constants,
 )
-from homeassistant.helpers.entity import ToggleEntity, ToggleEntityDescription
+from homeassistant.helpers.entity import (
+    ToggleEntity,
+    ToggleEntityDescription,
+    ToggleState,
+)
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity_platform import EntityPlatform
 from homeassistant.helpers.typing import ConfigType
@@ -116,7 +115,7 @@ def is_on(hass: HomeAssistant, entity_id: str) -> bool:
     """Return if the fans are on based on the statemachine."""
     entity = hass.states.get(entity_id)
     assert entity
-    return entity.state == STATE_ON
+    return entity.state == ToggleState.ON
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:

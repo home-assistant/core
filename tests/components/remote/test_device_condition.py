@@ -9,9 +9,9 @@ from pytest_unordered import unordered
 from homeassistant.components import automation
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.remote import DOMAIN
-from homeassistant.const import STATE_OFF, STATE_ON, EntityCategory
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity, entity_registry as er
 from homeassistant.helpers.entity_registry import RegistryEntryHider
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -189,7 +189,7 @@ async def test_if_state(
         DOMAIN, "test", "5678", device_id=device_entry.id
     )
 
-    hass.states.async_set(entry.entity_id, STATE_ON)
+    hass.states.async_set(entry.entity_id, entity.ToggleState.ON)
 
     assert await async_setup_component(
         hass,
@@ -250,7 +250,7 @@ async def test_if_state(
     assert len(service_calls) == 1
     assert service_calls[0].data["some"] == "is_on event - test_event1"
 
-    hass.states.async_set(entry.entity_id, STATE_OFF)
+    hass.states.async_set(entry.entity_id, entity.ToggleState.OFF)
     hass.bus.async_fire("test_event1")
     hass.bus.async_fire("test_event2")
     await hass.async_block_till_done()
@@ -276,7 +276,7 @@ async def test_if_state_legacy(
         DOMAIN, "test", "5678", device_id=device_entry.id
     )
 
-    hass.states.async_set(entry.entity_id, STATE_ON)
+    hass.states.async_set(entry.entity_id, entity.ToggleState.ON)
 
     assert await async_setup_component(
         hass,
@@ -339,7 +339,7 @@ async def test_if_fires_on_for_condition(
         DOMAIN, "test", "5678", device_id=device_entry.id
     )
 
-    hass.states.async_set(entry.entity_id, STATE_ON)
+    hass.states.async_set(entry.entity_id, entity.ToggleState.ON)
 
     with freeze_time(point1) as freezer:
         assert await async_setup_component(
@@ -383,7 +383,7 @@ async def test_if_fires_on_for_condition(
         await hass.async_block_till_done()
         assert len(service_calls) == 0
 
-        hass.states.async_set(entry.entity_id, STATE_OFF)
+        hass.states.async_set(entry.entity_id, entity.ToggleState.OFF)
         hass.bus.async_fire("test_event1")
         await hass.async_block_till_done()
         assert len(service_calls) == 0

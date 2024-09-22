@@ -9,17 +9,12 @@ import voluptuous_serialize
 from homeassistant.components import automation
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.humidifier import DOMAIN, const, device_trigger
-from homeassistant.const import (
-    ATTR_MODE,
-    ATTR_SUPPORTED_FEATURES,
-    STATE_OFF,
-    STATE_ON,
-    EntityCategory,
-)
+from homeassistant.const import ATTR_MODE, ATTR_SUPPORTED_FEATURES, EntityCategory
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
+    entity,
     entity_registry as er,
 )
 from homeassistant.helpers.entity_registry import RegistryEntryHider
@@ -55,7 +50,7 @@ async def test_get_triggers(
     )
     hass.states.async_set(
         entity_entry.entity_id,
-        STATE_ON,
+        entity.ToggleState.ON,
         {
             const.ATTR_HUMIDITY: 23,
             const.ATTR_CURRENT_HUMIDITY: 48,
@@ -174,7 +169,7 @@ async def test_if_fires_on_state_change(
 
     hass.states.async_set(
         entry.entity_id,
-        STATE_ON,
+        entity.ToggleState.ON,
         {
             const.ATTR_HUMIDITY: 23,
             const.ATTR_CURRENT_HUMIDITY: 35,
@@ -345,7 +340,7 @@ async def test_if_fires_on_state_change(
     # Fake that the humidity target is changing
     hass.states.async_set(
         entry.entity_id,
-        STATE_ON,
+        entity.ToggleState.ON,
         {const.ATTR_HUMIDITY: 7, const.ATTR_CURRENT_HUMIDITY: 35},
     )
     await hass.async_block_till_done()
@@ -355,7 +350,7 @@ async def test_if_fires_on_state_change(
     # Fake that the current humidity is changing
     hass.states.async_set(
         entry.entity_id,
-        STATE_ON,
+        entity.ToggleState.ON,
         {const.ATTR_HUMIDITY: 7, const.ATTR_CURRENT_HUMIDITY: 18},
     )
     await hass.async_block_till_done()
@@ -365,7 +360,7 @@ async def test_if_fires_on_state_change(
     # Fake that the humidity target is changing
     hass.states.async_set(
         entry.entity_id,
-        STATE_ON,
+        entity.ToggleState.ON,
         {const.ATTR_HUMIDITY: 37, const.ATTR_CURRENT_HUMIDITY: 18},
     )
     await hass.async_block_till_done()
@@ -375,7 +370,7 @@ async def test_if_fires_on_state_change(
     # Fake that the current humidity is changing
     hass.states.async_set(
         entry.entity_id,
-        STATE_ON,
+        entity.ToggleState.ON,
         {const.ATTR_HUMIDITY: 37, const.ATTR_CURRENT_HUMIDITY: 41},
     )
     await hass.async_block_till_done()
@@ -394,7 +389,7 @@ async def test_if_fires_on_state_change(
     # Fake turn off
     hass.states.async_set(
         entry.entity_id,
-        STATE_OFF,
+        entity.ToggleState.OFF,
         {const.ATTR_HUMIDITY: 37, const.ATTR_CURRENT_HUMIDITY: 41},
     )
     await hass.async_block_till_done()
@@ -407,7 +402,7 @@ async def test_if_fires_on_state_change(
     # Fake turn on
     hass.states.async_set(
         entry.entity_id,
-        STATE_ON,
+        entity.ToggleState.ON,
         {const.ATTR_HUMIDITY: 37, const.ATTR_CURRENT_HUMIDITY: 41},
     )
     await hass.async_block_till_done()
@@ -437,7 +432,7 @@ async def test_if_fires_on_state_change_legacy(
 
     hass.states.async_set(
         entry.entity_id,
-        STATE_ON,
+        entity.ToggleState.ON,
         {
             const.ATTR_HUMIDITY: 23,
             ATTR_MODE: "home",
@@ -470,7 +465,9 @@ async def test_if_fires_on_state_change_legacy(
     )
 
     # Fake that the humidity is changing
-    hass.states.async_set(entry.entity_id, STATE_ON, {const.ATTR_HUMIDITY: 7})
+    hass.states.async_set(
+        entry.entity_id, entity.ToggleState.ON, {const.ATTR_HUMIDITY: 7}
+    )
     await hass.async_block_till_done()
     assert len(service_calls) == 1
     assert service_calls[0].data["some"] == "target_humidity_changed_below"
@@ -486,7 +483,7 @@ async def test_invalid_config(
 
     hass.states.async_set(
         entry.entity_id,
-        STATE_ON,
+        entity.ToggleState.ON,
         {
             const.ATTR_HUMIDITY: 23,
             ATTR_MODE: "home",
@@ -520,7 +517,9 @@ async def test_invalid_config(
     )
 
     # Fake that the humidity is changing
-    hass.states.async_set(entry.entity_id, STATE_ON, {const.ATTR_HUMIDITY: 7})
+    hass.states.async_set(
+        entry.entity_id, entity.ToggleState.ON, {const.ATTR_HUMIDITY: 7}
+    )
     await hass.async_block_till_done()
     # Should not trigger for invalid config
     assert len(service_calls) == 0

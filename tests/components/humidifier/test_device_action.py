@@ -7,11 +7,12 @@ import voluptuous_serialize
 from homeassistant.components import automation
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.humidifier import DOMAIN, const, device_action
-from homeassistant.const import STATE_ON, EntityCategory
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
+    entity,
     entity_registry as er,
 )
 from homeassistant.helpers.entity_registry import RegistryEntryHider
@@ -161,7 +162,7 @@ async def test_action(
 
     hass.states.async_set(
         entry.entity_id,
-        STATE_ON,
+        entity.ToggleState.ON,
         {const.ATTR_AVAILABLE_MODES: [const.MODE_HOME, const.MODE_AWAY]},
     )
 
@@ -320,7 +321,7 @@ async def test_action_legacy(
 
     hass.states.async_set(
         entry.entity_id,
-        STATE_ON,
+        entity.ToggleState.ON,
         {const.ATTR_AVAILABLE_MODES: [const.MODE_HOME, const.MODE_AWAY]},
     )
 
@@ -477,7 +478,7 @@ async def test_capabilities(
     if set_state:
         hass.states.async_set(
             f"{DOMAIN}.test_5678",
-            STATE_ON,
+            entity.ToggleState.ON,
             capabilities_state,
         )
 
@@ -621,7 +622,7 @@ async def test_capabilities_legacy(
     if set_state:
         hass.states.async_set(
             f"{DOMAIN}.test_5678",
-            STATE_ON,
+            entity.ToggleState.ON,
             capabilities_state,
         )
 

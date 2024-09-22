@@ -29,7 +29,6 @@ from homeassistant.const import (
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
-    STATE_ON,
 )
 from homeassistant.core import (
     Context,
@@ -41,7 +40,7 @@ from homeassistant.core import (
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import make_entity_service_schema
-from homeassistant.helpers.entity import ToggleEntity
+from homeassistant.helpers.entity import ToggleEntity, ToggleState
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.issue_registry import (
     IssueSeverity,
@@ -90,7 +89,7 @@ RELOAD_SERVICE_SCHEMA = vol.Schema({})
 @bind_hass
 def is_on(hass: HomeAssistant, entity_id: str) -> bool:
     """Return if the script is on based on the statemachine."""
-    return hass.states.is_state(entity_id, STATE_ON)
+    return hass.states.is_state(entity_id, ToggleState.ON)
 
 
 def _scripts_with_x(
