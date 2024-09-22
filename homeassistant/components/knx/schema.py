@@ -435,6 +435,7 @@ class ClimateSchema(KNXPlatformSchema):
                 ): vol.All(
                     cv.ensure_list,
                     [vol.All(vol.Coerce(int), vol.Range(min=1, max=100))],
+                    vol.IsTrue(),
                 ),
             }
         ),
