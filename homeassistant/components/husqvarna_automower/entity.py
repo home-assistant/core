@@ -156,7 +156,7 @@ class AutomowerControlEntity(AutomowerAvailableEntity):
 
 
 class WorkAreaControlEntity(AutomowerControlEntity):
-    """Replies available when the mower is connected."""
+    """Replies available when the mower is connected and has no errors."""
 
     def __init__(
         self,
@@ -170,7 +170,7 @@ class WorkAreaControlEntity(AutomowerControlEntity):
 
     @property
     def work_area_attributes(self) -> WorkArea:
-        """Get the mower attributes of the current mower."""
+        """Get the work area attributes of the current work area."""
         if TYPE_CHECKING:
             assert self.mower_attributes.work_areas is not None
         return self.mower_attributes.work_areas[self.work_area_id]

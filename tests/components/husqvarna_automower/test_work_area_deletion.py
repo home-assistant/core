@@ -1,4 +1,4 @@
-"""Tests for number platform."""
+"""Tests for deletion of work area related entities."""
 
 from unittest.mock import AsyncMock
 
