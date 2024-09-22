@@ -11,7 +11,7 @@ from google_photos_library_api.model import (
 )
 import pytest
 
-from homeassistant.components.google_photos.const import DOMAIN, READ_SCOPES
+from homeassistant.components.google_photos.const import DOMAIN, READ_SCOPE
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -225,7 +225,7 @@ async def test_upload_service_fails_create(
 @pytest.mark.parametrize(
     ("scopes"),
     [
-        READ_SCOPES,
+        [READ_SCOPE],
     ],
 )
 async def test_upload_service_no_scope(
