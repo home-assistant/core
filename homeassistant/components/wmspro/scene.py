@@ -23,12 +23,10 @@ async def async_setup_entry(
     """Set up the WMS based scenes from a config entry."""
     hub = config_entry.runtime_data
 
-    entities: list[WebControlProScene] = [
+    async_add_entities(
         WebControlProScene(config_entry.entry_id, scene)
         for scene in hub.scenes.values()
-    ]
-
-    async_add_entities(entities)
+    )
 
 
 class WebControlProScene(Scene):
