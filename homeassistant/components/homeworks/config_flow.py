@@ -39,7 +39,6 @@ from homeassistant.helpers.selector import TextSelector
 from homeassistant.helpers.typing import VolDictType
 from homeassistant.util import slugify
 
-from . import DEFAULT_FADE_RATE, calculate_unique_id
 from .const import (
     CONF_ADDR,
     CONF_BUTTONS,
@@ -56,8 +55,11 @@ from .const import (
     DEFAULT_LIGHT_NAME,
     DOMAIN,
 )
+from .util import calculate_unique_id
 
 _LOGGER = logging.getLogger(__name__)
+
+DEFAULT_FADE_RATE = 1.0
 
 CONTROLLER_EDIT = {
     vol.Required(CONF_HOST): selector.TextSelector(),

@@ -14,6 +14,7 @@ import voluptuous as vol
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
     ATTR_MEDIA_ENQUEUE,
+    BrowseError,
     BrowseMedia,
     MediaPlayerEnqueue,
     MediaPlayerEntity,
@@ -26,6 +27,7 @@ from homeassistant.components.media_player import (
 from homeassistant.config_entries import SOURCE_INTEGRATION_DISCOVERY
 from homeassistant.const import ATTR_COMMAND, CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import (
     config_validation as cv,
     discovery_flow,
@@ -56,11 +58,8 @@ from .const import DISCOVERY_TASK, DOMAIN, KNOWN_PLAYERS, SQUEEZEBOX_SOURCE_STRI
 
 SERVICE_CALL_METHOD = "call_method"
 SERVICE_CALL_QUERY = "call_query"
-SERVICE_SYNC = "sync"
-SERVICE_UNSYNC = "unsync"
 
 ATTR_QUERY_RESULT = "query_result"
-ATTR_SYNC_GROUP = "sync_group"
 
 SIGNAL_PLAYER_REDISCOVERED = "squeezebox_player_rediscovered"
 
@@ -75,7 +74,6 @@ ATTR_OTHER_PLAYER = "other_player"
 
 ATTR_TO_PROPERTY = [
     ATTR_QUERY_RESULT,
-    ATTR_SYNC_GROUP,
 ]
 
 SQUEEZEBOX_MODE = {
@@ -117,7 +115,7 @@ async def async_setup_entry(
     """Set up an player discovery from a config entry."""
     hass.data.setdefault(DOMAIN, {})
     known_players = hass.data[DOMAIN].setdefault(KNOWN_PLAYERS, [])
-    lms = entry.runtime_data
+    lms = entry.runtime_data.server
 
     async def _player_discovery(now: datetime | None = None) -> None:
         """Discover squeezebox players by polling server."""
@@ -140,9 +138,9 @@ async def async_setup_entry(
 
             if not entity:
                 _LOGGER.debug("Adding new entity: %s", player)
-                entity = SqueezeBoxEntity(player)
+                entity = SqueezeBoxEntity(player, lms)
                 known_players.append(entity)
-                async_add_entities([entity])
+                async_add_entities([entity], True)
 
         if players := await lms.async_get_players():
             for player in players:
@@ -181,12 +179,6 @@ async def async_setup_entry(
         },
         "async_call_query",
     )
-    platform.async_register_entity_service(
-        SERVICE_SYNC,
-        {vol.Required(ATTR_OTHER_PLAYER): cv.string},
-        "async_sync",
-    )
-    platform.async_register_entity_service(SERVICE_UNSYNC, None, "async_unsync")
 
     # Start server discovery task if not already running
     entry.async_on_unload(async_at_start(hass, start_server_discovery))
@@ -222,7 +214,7 @@ class SqueezeBoxEntity(MediaPlayerEntity):
     _last_update: datetime | None = None
     _attr_available = True
 
-    def __init__(self, player: Player) -> None:
+    def __init__(self, player: Player, server: Server) -> None:
         """Initialize the SqueezeBox device."""
         self._player = player
         self._query_result: bool | dict = {}
@@ -232,6 +224,7 @@ class SqueezeBoxEntity(MediaPlayerEntity):
             identifiers={(DOMAIN, self._attr_unique_id)},
             name=player.name,
             connections={(CONNECTION_NETWORK_MAC, self._attr_unique_id)},
+            via_device=(DOMAIN, server.uuid),
         )
 
     @property
@@ -257,8 +250,11 @@ class SqueezeBoxEntity(MediaPlayerEntity):
         """Return the state of the device."""
         if not self._player.power:
             return MediaPlayerState.OFF
-        if self._player.mode:
-            return SQUEEZEBOX_MODE.get(self._player.mode)
+        if self._player.mode and self._player.mode in SQUEEZEBOX_MODE:
+            return SQUEEZEBOX_MODE[self._player.mode]
+        _LOGGER.error(
+            "Received unknown mode %s from player %s", self._player.mode, self.name
+        )
         return None
 
     async def async_update(self) -> None:
@@ -287,6 +283,7 @@ class SqueezeBoxEntity(MediaPlayerEntity):
         """Volume level of the media player (0..1)."""
         if self._player.volume:
             return int(float(self._player.volume)) / 100.0
+
         return None
 
     @property
@@ -331,7 +328,7 @@ class SqueezeBoxEntity(MediaPlayerEntity):
     @property
     def media_image_url(self) -> str | None:
         """Image url of current playing media."""
-        return str(self._player.image_url)
+        return str(self._player.image_url) if self._player.image_url else None
 
     @property
     def media_title(self) -> str | None:
@@ -379,11 +376,6 @@ class SqueezeBoxEntity(MediaPlayerEntity):
             for player in self._player.sync_group
             if player in player_ids
         ]
-
-    @property
-    def sync_group(self) -> list[str]:
-        """List players we are synced with. Deprecated."""
-        return self.group_members
 
     @property
     def query_result(self) -> dict | bool:
@@ -483,7 +475,7 @@ class SqueezeBoxEntity(MediaPlayerEntity):
                     "search_type": MediaType.PLAYLIST,
                 }
                 playlist = await generate_playlist(self._player, payload)
-            except ValueError:
+            except BrowseError:
                 # a list of urls
                 content = json.loads(media_id)
                 playlist = content["urls"]
@@ -562,29 +554,13 @@ class SqueezeBoxEntity(MediaPlayerEntity):
             if other_player_id := player_ids.get(other_player):
                 await self._player.async_sync(other_player_id)
             else:
-                _LOGGER.debug(
-                    "Could not find player_id for %s. Not syncing", other_player
+                raise ServiceValidationError(
+                    f"Could not join unknown player {other_player}"
                 )
-
-    async def async_sync(self, other_player: str) -> None:
-        """Sync this Squeezebox player to another. Deprecated."""
-        _LOGGER.warning(
-            "Service squeezebox.sync is deprecated; use media_player.join_players"
-            " instead"
-        )
-        await self.async_join_players([other_player])
 
     async def async_unjoin_player(self) -> None:
         """Unsync this Squeezebox player."""
         await self._player.async_unsync()
-
-    async def async_unsync(self) -> None:
-        """Unsync this Squeezebox player. Deprecated."""
-        _LOGGER.warning(
-            "Service squeezebox.unsync is deprecated; use media_player.unjoin_player"
-            " instead"
-        )
-        await self.async_unjoin_player()
 
     async def async_browse_media(
         self,

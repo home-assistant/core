@@ -19,7 +19,6 @@ from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.const import MATCH_ALL
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers import config_validation as cv, intent
-from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.util import language as language_util
 
 from .agent_manager import (
@@ -28,7 +27,7 @@ from .agent_manager import (
     async_get_agent,
     get_agent_manager,
 )
-from .const import DOMAIN
+from .const import DOMAIN_DATA
 from .default_agent import (
     METADATA_CUSTOM_FILE,
     METADATA_CUSTOM_SENTENCE,
@@ -113,13 +112,11 @@ async def websocket_list_agents(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
 ) -> None:
     """List conversation agents and, optionally, if they support a given language."""
-    entity_component: EntityComponent[ConversationEntity] = hass.data[DOMAIN]
-
     country = msg.get("country")
     language = msg.get("language")
     agents = []
 
-    for entity in entity_component.entities:
+    for entity in hass.data[DOMAIN_DATA].entities:
         supported_languages = entity.supported_languages
         if language and supported_languages != MATCH_ALL:
             supported_languages = language_util.matches(

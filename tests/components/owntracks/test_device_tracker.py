@@ -1540,7 +1540,7 @@ async def test_encrypted_payload_wrong_topic_key(
 async def test_encrypted_payload_no_topic_key(hass: HomeAssistant, setup_comp) -> None:
     """Test encrypted payload with no topic key."""
     await setup_owntracks(
-        hass, {CONF_SECRET: {"owntracks/{}/{}".format(USER, "otherdevice"): "foobar"}}
+        hass, {CONF_SECRET: {f"owntracks/{USER}/otherdevice": "foobar"}}
     )
     await send_message(hass, LOCATION_TOPIC, MOCK_ENCRYPTED_LOCATION_MESSAGE)
     assert hass.states.get(DEVICE_TRACKER_STATE) is None
