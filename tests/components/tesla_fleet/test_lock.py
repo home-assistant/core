@@ -1,6 +1,6 @@
-"""Test the Teslemetry lock platform."""
+"""Test the Tesla Fleet lock platform."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from syrupy import SnapshotAssertion
@@ -25,41 +25,46 @@ from homeassistant.helpers import entity_registry as er
 from . import assert_entities, setup_platform
 from .const import COMMAND_OK
 
+from tests.common import MockConfigEntry
+
 
 async def test_lock(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
+    normal_config_entry: MockConfigEntry,
 ) -> None:
     """Tests that the lock entities are correct."""
 
-    entry = await setup_platform(hass, [Platform.LOCK])
-    assert_entities(hass, entry.entry_id, entity_registry, snapshot)
+    await setup_platform(hass, normal_config_entry, [Platform.LOCK])
+    assert_entities(hass, normal_config_entry.entry_id, entity_registry, snapshot)
 
 
 async def test_lock_offline(
     hass: HomeAssistant,
-    mock_vehicle_data,
+    mock_vehicle_data: AsyncMock,
+    normal_config_entry: MockConfigEntry,
 ) -> None:
     """Tests that the lock entities are correct when offline."""
 
     mock_vehicle_data.side_effect = VehicleOffline
-    await setup_platform(hass, [Platform.LOCK])
+    await setup_platform(hass, normal_config_entry, [Platform.LOCK])
     state = hass.states.get("lock.test_lock")
     assert state.state == STATE_UNKNOWN
 
 
 async def test_lock_services(
     hass: HomeAssistant,
+    normal_config_entry: MockConfigEntry,
 ) -> None:
     """Tests that the lock services work."""
 
-    await setup_platform(hass, [Platform.LOCK])
+    await setup_platform(hass, normal_config_entry, [Platform.LOCK])
 
     entity_id = "lock.test_lock"
 
     with patch(
-        "homeassistant.components.teslemetry.VehicleSpecific.door_lock",
+        "homeassistant.components.tesla_fleet.VehicleSpecific.door_lock",
         return_value=COMMAND_OK,
     ) as call:
         await hass.services.async_call(
@@ -73,7 +78,7 @@ async def test_lock_services(
         call.assert_called_once()
 
     with patch(
-        "homeassistant.components.teslemetry.VehicleSpecific.door_unlock",
+        "homeassistant.components.tesla_fleet.VehicleSpecific.door_unlock",
         return_value=COMMAND_OK,
     ) as call:
         await hass.services.async_call(
@@ -97,7 +102,7 @@ async def test_lock_services(
         )
 
     with patch(
-        "homeassistant.components.teslemetry.VehicleSpecific.charge_port_door_open",
+        "homeassistant.components.tesla_fleet.VehicleSpecific.charge_port_door_open",
         return_value=COMMAND_OK,
     ) as call:
         await hass.services.async_call(
