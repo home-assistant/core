@@ -22,6 +22,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
@@ -92,6 +95,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
@@ -162,6 +168,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
@@ -232,6 +241,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
@@ -260,7 +272,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.000',
+    'state': '0.0',
   })
 # ---
 # name: test_sensors[sensor.energy_site_battery_imported_from_generator-statealt]
@@ -276,7 +288,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.000',
+    'state': '0.0',
   })
 # ---
 # name: test_sensors[sensor.energy_site_battery_imported_from_grid-entry]
@@ -302,6 +314,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
@@ -330,7 +345,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.000',
+    'state': '0.0',
   })
 # ---
 # name: test_sensors[sensor.energy_site_battery_imported_from_grid-statealt]
@@ -346,7 +361,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.000',
+    'state': '0.0',
   })
 # ---
 # name: test_sensors[sensor.energy_site_battery_imported_from_solar-entry]
@@ -372,6 +387,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
@@ -515,6 +533,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
@@ -585,6 +606,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
@@ -613,7 +637,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.000',
+    'state': '0.0',
   })
 # ---
 # name: test_sensors[sensor.energy_site_consumer_imported_from_generator-statealt]
@@ -629,7 +653,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.000',
+    'state': '0.0',
   })
 # ---
 # name: test_sensors[sensor.energy_site_consumer_imported_from_grid-entry]
@@ -655,6 +679,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
@@ -683,7 +710,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.000',
+    'state': '0.0',
   })
 # ---
 # name: test_sensors[sensor.energy_site_consumer_imported_from_grid-statealt]
@@ -699,7 +726,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.000',
+    'state': '0.0',
   })
 # ---
 # name: test_sensors[sensor.energy_site_consumer_imported_from_solar-entry]
@@ -725,6 +752,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
@@ -868,6 +898,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
@@ -896,7 +929,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.000',
+    'state': '0.0',
   })
 # ---
 # name: test_sensors[sensor.energy_site_generator_exported-statealt]
@@ -912,7 +945,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.000',
+    'state': '0.0',
   })
 # ---
 # name: test_sensors[sensor.energy_site_generator_power-entry]
@@ -1011,6 +1044,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
@@ -1081,6 +1117,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
@@ -1109,7 +1148,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.000',
+    'state': '0.0',
   })
 # ---
 # name: test_sensors[sensor.energy_site_grid_exported_from_battery-statealt]
@@ -1125,7 +1164,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.000',
+    'state': '0.0',
   })
 # ---
 # name: test_sensors[sensor.energy_site_grid_exported_from_generator-entry]
@@ -1151,6 +1190,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
@@ -1179,7 +1221,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.000',
+    'state': '0.0',
   })
 # ---
 # name: test_sensors[sensor.energy_site_grid_exported_from_generator-statealt]
@@ -1195,7 +1237,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.000',
+    'state': '0.0',
   })
 # ---
 # name: test_sensors[sensor.energy_site_grid_exported_from_solar-entry]
@@ -1221,6 +1263,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
@@ -1291,6 +1336,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
@@ -1319,7 +1367,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.000',
+    'state': '0.0',
   })
 # ---
 # name: test_sensors[sensor.energy_site_grid_imported-statealt]
@@ -1335,7 +1383,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.000',
+    'state': '0.0',
   })
 # ---
 # name: test_sensors[sensor.energy_site_grid_power-entry]
@@ -1434,6 +1482,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
@@ -1462,7 +1513,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.000',
+    'state': '0.0',
   })
 # ---
 # name: test_sensors[sensor.energy_site_grid_services_exported-statealt]
@@ -1478,7 +1529,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.000',
+    'state': '0.0',
   })
 # ---
 # name: test_sensors[sensor.energy_site_grid_services_imported-entry]
@@ -1504,6 +1555,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
@@ -1532,7 +1586,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.000',
+    'state': '0.0',
   })
 # ---
 # name: test_sensors[sensor.energy_site_grid_services_imported-statealt]
@@ -1548,7 +1602,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.000',
+    'state': '0.0',
   })
 # ---
 # name: test_sensors[sensor.energy_site_grid_services_power-entry]
@@ -1647,6 +1701,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
@@ -1921,6 +1978,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
@@ -1991,6 +2051,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
       'sensor.private': dict({
         'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
