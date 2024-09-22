@@ -1,4 +1,4 @@
-"""MQTT component mixins and helpers."""
+"""MQTT (entity) component mixins and helpers."""
 
 from __future__ import annotations
 
@@ -141,20 +141,6 @@ MQTT_ATTRIBUTES_BLOCKED = {
     "unique_id",
     "unit_of_measurement",
 }
-
-
-class SetupEntity(Protocol):
-    """Protocol type for async_setup_entities."""
-
-    async def __call__(
-        self,
-        hass: HomeAssistant,
-        async_add_entities: AddEntitiesCallback,
-        config: ConfigType,
-        config_entry: ConfigEntry,
-        discovery_data: DiscoveryInfoType | None = None,
-    ) -> None:
-        """Define setup_entities type."""
 
 
 @callback
@@ -369,7 +355,7 @@ def init_entity_id_from_config(
         )
 
 
-class MqttAttributesMixin(Entity):  # pylint: disable=hass-enforce-class-module
+class MqttAttributesMixin(Entity):
     """Mixin used for platforms that support JSON attributes."""
 
     _attributes_extra_blocked: frozenset[str] = frozenset()
@@ -454,7 +440,7 @@ class MqttAttributesMixin(Entity):  # pylint: disable=hass-enforce-class-module
                 _LOGGER.warning("JSON result was not a dictionary")
 
 
-class MqttAvailabilityMixin(Entity):  # pylint: disable=hass-enforce-class-module
+class MqttAvailabilityMixin(Entity):
     """Mixin used for platforms that report availability."""
 
     def __init__(self, config: ConfigType) -> None:
@@ -799,7 +785,7 @@ class MqttDiscoveryDeviceUpdateMixin(ABC):
         """Handle the cleanup of platform specific parts, extend to the platform."""
 
 
-class MqttDiscoveryUpdateMixin(Entity):  # pylint: disable=hass-enforce-class-module
+class MqttDiscoveryUpdateMixin(Entity):
     """Mixin used to handle updated discovery message for entity based platforms."""
 
     def __init__(
@@ -1021,7 +1007,7 @@ def device_info_from_specifications(
     return info
 
 
-class MqttEntityDeviceInfo(Entity):  # pylint: disable=hass-enforce-class-module
+class MqttEntityDeviceInfo(Entity):
     """Mixin used for mqtt platforms that support the device registry."""
 
     def __init__(

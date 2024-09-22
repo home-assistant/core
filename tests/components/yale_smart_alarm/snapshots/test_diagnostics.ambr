@@ -24,8 +24,6 @@
         'capture_latest': None,
         'device_status': list([
           dict({
-            '_state': 'locked',
-            '_state2': 'closed',
             'address': '**REDACTED**',
             'area': '1',
             'bypass': '0',
@@ -86,8 +84,6 @@
             'type_no': '72',
           }),
           dict({
-            '_state': 'unlocked',
-            '_state2': 'unknown',
             'address': '**REDACTED**',
             'area': '1',
             'bypass': '0',
@@ -147,8 +143,6 @@
             'type_no': '72',
           }),
           dict({
-            '_state': 'locked',
-            '_state2': 'unknown',
             'address': '**REDACTED**',
             'area': '1',
             'bypass': '0',
@@ -391,8 +385,6 @@
             'type_no': '4',
           }),
           dict({
-            '_state': 'unlocked',
-            '_state2': 'closed',
             'address': '**REDACTED**',
             'area': '1',
             'bypass': '0',
@@ -453,8 +445,6 @@
             'type_no': '72',
           }),
           dict({
-            '_state': 'unlocked',
-            '_state2': 'open',
             'address': '**REDACTED**',
             'area': '1',
             'bypass': '0',
@@ -515,7 +505,6 @@
             'type_no': '72',
           }),
           dict({
-            '_state': 'unavailable',
             'address': '**REDACTED**',
             'area': '1',
             'bypass': '0',

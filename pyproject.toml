@@ -26,7 +26,7 @@ dependencies    = [
     "aiodns==3.2.0",
     # Integrations may depend on hassio integration without listing it to
     # change behavior based on presence of supervisor
-    "aiohasupervisor==0.1.0b0",
+    "aiohasupervisor==0.1.0b1",
     "aiohttp==3.10.5",
     "aiohttp_cors==0.7.0",
     "aiohttp-fast-zlib==0.1.1",
@@ -151,7 +151,6 @@ class-const-naming-style = "any"
 # inconsistent-return-statements - doesn't handle raise
 # too-many-ancestors - it's too strict.
 # wrong-import-order - isort guards this
-# consider-using-f-string - str.format sometimes more readable
 # possibly-used-before-assignment - too many errors / not necessarily issues
 # ---
 # Pylint CodeStyle plugin
@@ -173,8 +172,8 @@ disable = [
     "too-many-locals",
     "too-many-public-methods",
     "too-many-boolean-expressions",
+    "too-many-positional-arguments",
     "wrong-import-order",
-    "consider-using-f-string",
     "consider-using-namedtuple-or-dataclass",
     "consider-using-assignment-expr",
     "possibly-used-before-assignment",
@@ -316,6 +315,7 @@ disable = [
     "broad-except", # BLE001
     "protected-access", # SLF001
     "broad-exception-raised", # TRY002
+    "consider-using-f-string", # PLC0209
     # "no-self-use", # PLR6301  # Optional plugin, not enabled
 
     # Handled by mypy
@@ -721,6 +721,7 @@ select = [
     "DTZ004", # Use datetime.fromtimestamp(ts, tz=) instead of datetime.utcfromtimestamp(ts)
     "E", # pycodestyle
     "F", # pyflakes/autoflake
+    "F541", # f-string without any placeholders
     "FLY", # flynt
     "FURB", # refurb
     "G", # flake8-logging-format
@@ -773,9 +774,11 @@ select = [
     "T100", # Trace found: {name} used
     "T20", # flake8-print
     "TCH", # flake8-type-checking
-    "TID251", # Banned imports
+    "TID", # Tidy imports
     "TRY", # tryceratops
     "UP", # pyupgrade
+    "UP031", # Use format specifiers instead of percent format
+    "UP032", # Use f-string instead of `format` call
     "W", # pycodestyle
 ]
 
@@ -908,6 +911,11 @@ split-on-trailing-comma = false
 "homeassistant/__main__.py" = ["T201"]
 "homeassistant/scripts/*" = ["T201"]
 "script/*" = ["T20"]
+
+# Allow relative imports within auth and within components
+"homeassistant/auth/*/*" = ["TID252"]
+"homeassistant/components/*/*/*" = ["TID252"]
+"tests/components/*/*/*" = ["TID252"]
 
 # Temporary
 "homeassistant/**" = ["PTH"]
