@@ -190,3 +190,30 @@ async def test_workarea_deleted(
     assert len(
         er.async_entries_for_config_entry(entity_registry, mock_config_entry.entry_id)
     ) == (current_entries - 2)
+    
+    
+async def test_coordinator_automatic_registry_cleanup(
+    hass: HomeAssistant,
+    mock_automower_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test automatic registry cleanup."""
+    await setup_integration(hass, mock_config_entry)
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    await hass.async_block_till_done()
+
+    assert len(er.async_entries_for_config_entry(entity_registry, entry.entry_id)) == 42
+    assert len(dr.async_entries_for_config_entry(device_registry, entry.entry_id)) == 2
+
+    values = mower_list_to_dictionary_dataclass(
+        load_json_value_fixture("mower.json", DOMAIN)
+    )
+    values.pop(TEST_MOWER_ID)
+    mock_automower_client.get_status.return_value = values
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert len(er.async_entries_for_config_entry(entity_registry, entry.entry_id)) == 12
+    assert len(dr.async_entries_for_config_entry(device_registry, entry.entry_id)) == 1

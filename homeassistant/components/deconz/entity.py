@@ -68,7 +68,6 @@ class DeconzBase[_DeviceT: _DeviceType]:
         )
 
 
-# pylint: disable-next=hass-enforce-class-module
 class DeconzDevice[_DeviceT: _DeviceType](DeconzBase[_DeviceT], Entity):
     """Representation of a deCONZ device."""
 
