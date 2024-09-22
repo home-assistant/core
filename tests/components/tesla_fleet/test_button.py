@@ -46,7 +46,7 @@ async def test_press(
     await setup_platform(hass, normal_config_entry, [Platform.BUTTON])
 
     with patch(
-        f"homeassistant.components.TeslaFleet.VehicleSpecific.{func}",
+        f"homeassistant.components.tesla_fleet.VehicleSpecific.{func}",
         return_value=COMMAND_OK,
     ) as command:
         await hass.services.async_call(
