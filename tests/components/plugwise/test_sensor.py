@@ -6,7 +6,8 @@ from homeassistant.components.plugwise.const import DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_component import async_update_entity
-from homeassistant.helpers.entity_registry import async_get
+
+import homeassistant.helpers.entity_registry as er
 
 from tests.common import MockConfigEntry
 
@@ -55,7 +56,7 @@ async def test_unique_id_migration_humidity(
     """Test unique ID migration of -relative_humidity to -humidity."""
     mock_config_entry.add_to_hass(hass)
 
-    entity_registry = async_get(hass)
+    entity_registry = er.async_get(hass)
     # Entry to migrate
     entity_registry.async_get_or_create(
         SENSOR_DOMAIN,
@@ -157,7 +158,7 @@ async def test_p1_3ph_dsmr_sensor_entities(
     state = hass.states.get(entity_id)
     assert not state
 
-    entity_registry = async_get(hass)
+    entity_registry = er.async_get(hass)
     entity_registry.async_update_entity(entity_id=entity_id, disabled_by=None)
     await hass.async_block_till_done()
 

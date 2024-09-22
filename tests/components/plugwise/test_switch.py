@@ -16,7 +16,8 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_registry import async_get
+
+import homeassistant.helpers.entity_registry as er
 
 from tests.common import MockConfigEntry
 
@@ -167,7 +168,7 @@ async def test_unique_id_migration_plug_relay(
     """Test unique ID migration of -plugs to -relay."""
     mock_config_entry.add_to_hass(hass)
 
-    entity_registry = async_get(hass)
+    entity_registry = er.async_get(hass)
     # Entry to migrate
     entity_registry.async_get_or_create(
         SWITCH_DOMAIN,
