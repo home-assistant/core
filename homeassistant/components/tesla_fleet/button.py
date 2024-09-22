@@ -62,7 +62,7 @@ async def async_setup_entry(
         TeslaFleetButtonEntity(vehicle, description)
         for vehicle in entry.runtime_data.vehicles
         for description in DESCRIPTIONS
-        if Scope.VEHICLE_CMDS in entry.runtime_data.scopes
+        if Scope.VEHICLE_CMDS in entry.runtime_data.scopes and not vehicle.signing
     )
 
 
