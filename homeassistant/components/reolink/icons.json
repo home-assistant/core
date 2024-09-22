@@ -222,6 +222,18 @@
       "hdr": {
         "default": "mdi:hdr"
       },
+      "hub_alarm_ringtone": {
+        "default": "mdi:music-note",
+        "state": {
+          "alarm": "mdi:bullhorn"
+        }
+      },
+      "hub_visitor_ringtone": {
+        "default": "mdi:music-note",
+        "state": {
+          "alarm": "mdi:bullhorn"
+        }
+      },
       "motion_tone": {
         "default": "mdi:music-note",
         "state": {
@@ -309,8 +321,8 @@
       "manual_record": {
         "default": "mdi:record-rec"
       },
-      "buzzer": {
-        "default": "mdi:room-service"
+      "hub_ringtone_on_event": {
+        "default": "mdi:music-note"
       },
       "doorbell_button_sound": {
         "default": "mdi:volume-high"

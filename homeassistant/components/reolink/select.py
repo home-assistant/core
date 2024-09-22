@@ -13,6 +13,7 @@ from reolink_aio.api import (
     DayNightEnum,
     HDREnum,
     Host,
+    HubToneEnum,
     SpotlightModeEnum,
     StatusLedEnum,
     TrackMethodEnum,
@@ -112,6 +113,32 @@ SELECT_ENTITIES = (
         value=lambda api, ch: api.quick_reply_dict(ch)[api.quick_reply_file(ch)],
         method=lambda api, ch, mess: (
             api.set_quick_reply(ch, file_id=_get_quick_reply_id(api, ch, mess))
+        ),
+    ),
+    ReolinkSelectEntityDescription(
+        key="hub_alarm_ringtone",
+        cmd_key="GetDeviceAudioCfg",
+        translation_key="hub_alarm_ringtone",
+        entity_category=EntityCategory.CONFIG,
+        get_options=[mode.name for mode in HubToneEnum],
+        supported=lambda api, ch: api.supported(ch, "hub_audio"),
+        value=lambda api, ch: HubToneEnum(api.hub_alarm_tone_id(ch)).name,
+        method=lambda api, ch, name: (
+            api.set_hub_audio(ch, alarm_tone_id=HubToneEnum[name].value)
+        ),
+    ),
+    ReolinkSelectEntityDescription(
+        key="hub_visitor_ringtone",
+        cmd_key="GetDeviceAudioCfg",
+        translation_key="hub_visitor_ringtone",
+        entity_category=EntityCategory.CONFIG,
+        get_options=[mode.name for mode in HubToneEnum],
+        supported=lambda api, ch: (
+            api.supported(ch, "hub_audio") and api.is_doorbell(ch)
+        ),
+        value=lambda api, ch: HubToneEnum(api.hub_visitor_tone_id(ch)).name,
+        method=lambda api, ch, name: (
+            api.set_hub_audio(ch, visitor_tone_id=HubToneEnum[name].value)
         ),
     ),
     ReolinkSelectEntityDescription(
