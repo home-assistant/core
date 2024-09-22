@@ -119,7 +119,7 @@ async def test_cors_middleware_with_cors_allowed_view(hass: HomeAssistant) -> No
         requires_auth = False
         cors_allowed = True
 
-        def __init__(self, url, name):
+        def __init__(self, url, name) -> None:
             """Initialize test view."""
             self.url = url
             self.name = name

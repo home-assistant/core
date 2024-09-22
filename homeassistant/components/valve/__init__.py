@@ -27,10 +27,12 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util.hass_dict import HassKey
 
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "valve"
+DOMAIN_DATA: HassKey[EntityComponent[ValveEntity]] = HassKey(DOMAIN)
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
 PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
@@ -64,18 +66,21 @@ ATTR_POSITION = "position"
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Track states and offer events for valves."""
-    component = hass.data[DOMAIN] = EntityComponent[ValveEntity](
+    component = hass.data[DOMAIN_DATA] = EntityComponent[ValveEntity](
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )
 
     await component.async_setup(config)
 
     component.async_register_entity_service(
-        SERVICE_OPEN_VALVE, {}, "async_handle_open_valve", [ValveEntityFeature.OPEN]
+        SERVICE_OPEN_VALVE, None, "async_handle_open_valve", [ValveEntityFeature.OPEN]
     )
 
     component.async_register_entity_service(
-        SERVICE_CLOSE_VALVE, {}, "async_handle_close_valve", [ValveEntityFeature.CLOSE]
+        SERVICE_CLOSE_VALVE,
+        None,
+        "async_handle_close_valve",
+        [ValveEntityFeature.CLOSE],
     )
 
     component.async_register_entity_service(
@@ -90,12 +95,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
 
     component.async_register_entity_service(
-        SERVICE_STOP_VALVE, {}, "async_stop_valve", [ValveEntityFeature.STOP]
+        SERVICE_STOP_VALVE, None, "async_stop_valve", [ValveEntityFeature.STOP]
     )
 
     component.async_register_entity_service(
         SERVICE_TOGGLE,
-        {},
+        None,
         "async_toggle",
         [ValveEntityFeature.OPEN | ValveEntityFeature.CLOSE],
     )
@@ -105,14 +110,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    component: EntityComponent[ValveEntity] = hass.data[DOMAIN]
-    return await component.async_setup_entry(entry)
+    return await hass.data[DOMAIN_DATA].async_setup_entry(entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    component: EntityComponent[ValveEntity] = hass.data[DOMAIN]
-    return await component.async_unload_entry(entry)
+    return await hass.data[DOMAIN_DATA].async_unload_entry(entry)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -223,7 +226,8 @@ class ValveEntity(Entity):
     async def async_handle_open_valve(self) -> None:
         """Open the valve."""
         if self.supported_features & ValveEntityFeature.SET_POSITION:
-            return await self.async_set_valve_position(100)
+            await self.async_set_valve_position(100)
+            return
         await self.async_open_valve()
 
     def close_valve(self) -> None:
@@ -238,7 +242,8 @@ class ValveEntity(Entity):
     async def async_handle_close_valve(self) -> None:
         """Close the valve."""
         if self.supported_features & ValveEntityFeature.SET_POSITION:
-            return await self.async_set_valve_position(0)
+            await self.async_set_valve_position(0)
+            return
         await self.async_close_valve()
 
     async def async_toggle(self) -> None:

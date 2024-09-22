@@ -1,7 +1,7 @@
 """The tests for the hassio binary sensors."""
 
 import os
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -17,7 +17,7 @@ MOCK_ENVIRON = {"SUPERVISOR": "127.0.0.1", "SUPERVISOR_TOKEN": "abcdefgh"}
 
 
 @pytest.fixture(autouse=True)
-def mock_all(aioclient_mock: AiohttpClientMocker) -> None:
+def mock_all(aioclient_mock: AiohttpClientMocker, addon_installed) -> None:
     """Mock all setup requests."""
     aioclient_mock.post("http://127.0.0.1/homeassistant/options", json={"result": "ok"})
     aioclient_mock.get("http://127.0.0.1/supervisor/ping", json={"result": "ok"})
@@ -193,20 +193,23 @@ def mock_all(aioclient_mock: AiohttpClientMocker) -> None:
 
 
 @pytest.mark.parametrize(
-    ("entity_id", "expected"),
+    ("entity_id", "expected", "addon_state"),
     [
-        ("binary_sensor.test_running", "on"),
-        ("binary_sensor.test2_running", "off"),
+        ("binary_sensor.test_running", "on", "started"),
+        ("binary_sensor.test2_running", "off", "stopped"),
     ],
 )
 async def test_binary_sensor(
     hass: HomeAssistant,
-    entity_id,
-    expected,
+    entity_id: str,
+    expected: str,
+    addon_state: str,
     aioclient_mock: AiohttpClientMocker,
     entity_registry: er.EntityRegistry,
+    addon_installed: AsyncMock,
 ) -> None:
     """Test hassio OS and addons binary sensor."""
+    addon_installed.return_value.state = addon_state
     config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
     config_entry.add_to_hass(hass)
 

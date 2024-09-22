@@ -1,0 +1,9 @@
+{
+  "domain": "fujitsu_fglair",
+  "name": "FGLair",
+  "codeowners": ["@crevetor"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/fujitsu_fglair",
+  "iot_class": "cloud_polling",
+  "requirements": ["ayla-iot-unofficial==1.4.1"]
+}

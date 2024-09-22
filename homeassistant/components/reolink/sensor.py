@@ -16,20 +16,18 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import ReolinkData
-from .const import DOMAIN
 from .entity import (
     ReolinkChannelCoordinatorEntity,
     ReolinkChannelEntityDescription,
     ReolinkHostCoordinatorEntity,
     ReolinkHostEntityDescription,
 )
+from .util import ReolinkConfigEntry, ReolinkData
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -126,11 +124,11 @@ HDD_SENSORS = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: ReolinkConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up a Reolink IP Camera."""
-    reolink_data: ReolinkData = hass.data[DOMAIN][config_entry.entry_id]
+    reolink_data: ReolinkData = config_entry.runtime_data
 
     entities: list[
         ReolinkSensorEntity | ReolinkHostSensorEntity | ReolinkHddSensorEntity
@@ -141,19 +139,15 @@ async def async_setup_entry(
         if entity_description.supported(reolink_data.host.api, channel)
     ]
     entities.extend(
-        [
-            ReolinkHostSensorEntity(reolink_data, entity_description)
-            for entity_description in HOST_SENSORS
-            if entity_description.supported(reolink_data.host.api)
-        ]
+        ReolinkHostSensorEntity(reolink_data, entity_description)
+        for entity_description in HOST_SENSORS
+        if entity_description.supported(reolink_data.host.api)
     )
     entities.extend(
-        [
-            ReolinkHddSensorEntity(reolink_data, hdd_index, entity_description)
-            for entity_description in HDD_SENSORS
-            for hdd_index in reolink_data.host.api.hdd_list
-            if entity_description.supported(reolink_data.host.api, hdd_index)
-        ]
+        ReolinkHddSensorEntity(reolink_data, hdd_index, entity_description)
+        for entity_description in HDD_SENSORS
+        for hdd_index in reolink_data.host.api.hdd_list
+        if entity_description.supported(reolink_data.host.api, hdd_index)
     )
     async_add_entities(entities)
 

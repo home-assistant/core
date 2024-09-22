@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 
+from aiohomekit.model import Accessory
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import ServicesTypes
 
@@ -12,7 +13,7 @@ from homeassistant.helpers import entity_registry as er
 from .common import setup_test_component
 
 
-def create_motion_sensor_service(accessory):
+def create_motion_sensor_service(accessory: Accessory) -> None:
     """Define motion characteristics as per page 225 of HAP spec."""
     service = accessory.add_service(ServicesTypes.MOTION_SENSOR)
 
@@ -43,7 +44,7 @@ async def test_motion_sensor_read_state(
     assert state.attributes["device_class"] == BinarySensorDeviceClass.MOTION
 
 
-def create_contact_sensor_service(accessory):
+def create_contact_sensor_service(accessory: Accessory) -> None:
     """Define contact characteristics."""
     service = accessory.add_service(ServicesTypes.CONTACT_SENSOR)
 
@@ -74,7 +75,7 @@ async def test_contact_sensor_read_state(
     assert state.attributes["device_class"] == BinarySensorDeviceClass.OPENING
 
 
-def create_smoke_sensor_service(accessory):
+def create_smoke_sensor_service(accessory: Accessory) -> None:
     """Define smoke sensor characteristics."""
     service = accessory.add_service(ServicesTypes.SMOKE_SENSOR)
 
@@ -105,7 +106,7 @@ async def test_smoke_sensor_read_state(
     assert state.attributes["device_class"] == BinarySensorDeviceClass.SMOKE
 
 
-def create_carbon_monoxide_sensor_service(accessory):
+def create_carbon_monoxide_sensor_service(accessory: Accessory) -> None:
     """Define carbon monoxide sensor characteristics."""
     service = accessory.add_service(ServicesTypes.CARBON_MONOXIDE_SENSOR)
 
@@ -138,7 +139,7 @@ async def test_carbon_monoxide_sensor_read_state(
     assert state.attributes["device_class"] == BinarySensorDeviceClass.CO
 
 
-def create_occupancy_sensor_service(accessory):
+def create_occupancy_sensor_service(accessory: Accessory) -> None:
     """Define occupancy characteristics."""
     service = accessory.add_service(ServicesTypes.OCCUPANCY_SENSOR)
 
@@ -169,7 +170,7 @@ async def test_occupancy_sensor_read_state(
     assert state.attributes["device_class"] == BinarySensorDeviceClass.OCCUPANCY
 
 
-def create_leak_sensor_service(accessory):
+def create_leak_sensor_service(accessory: Accessory) -> None:
     """Define leak characteristics."""
     service = accessory.add_service(ServicesTypes.LEAK_SENSOR)
 

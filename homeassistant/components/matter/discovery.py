@@ -22,6 +22,7 @@ from .number import DISCOVERY_SCHEMAS as NUMBER_SCHEMAS
 from .select import DISCOVERY_SCHEMAS as SELECT_SCHEMAS
 from .sensor import DISCOVERY_SCHEMAS as SENSOR_SCHEMAS
 from .switch import DISCOVERY_SCHEMAS as SWITCH_SCHEMAS
+from .update import DISCOVERY_SCHEMAS as UPDATE_SCHEMAS
 
 DISCOVERY_SCHEMAS: dict[Platform, list[MatterDiscoverySchema]] = {
     Platform.BINARY_SENSOR: BINARY_SENSOR_SCHEMAS,
@@ -32,9 +33,10 @@ DISCOVERY_SCHEMAS: dict[Platform, list[MatterDiscoverySchema]] = {
     Platform.LIGHT: LIGHT_SCHEMAS,
     Platform.LOCK: LOCK_SCHEMAS,
     Platform.NUMBER: NUMBER_SCHEMAS,
+    Platform.SELECT: SELECT_SCHEMAS,
     Platform.SENSOR: SENSOR_SCHEMAS,
     Platform.SWITCH: SWITCH_SCHEMAS,
-    Platform.SELECT: SELECT_SCHEMAS,
+    Platform.UPDATE: UPDATE_SCHEMAS,
 }
 SUPPORTED_PLATFORMS = tuple(DISCOVERY_SCHEMAS)
 
@@ -98,10 +100,17 @@ def async_discover_entities(
         ):
             continue
 
-        # check for values that may not be present
+        # check for endpoint-attributes that may not be present
         if schema.absent_attributes is not None and any(
             endpoint.has_attribute(None, val_schema)
             for val_schema in schema.absent_attributes
+        ):
+            continue
+
+        # check for clusters that may not be present
+        if schema.absent_clusters is not None and any(
+            endpoint.node.has_cluster(val_schema)
+            for val_schema in schema.absent_clusters
         ):
             continue
 

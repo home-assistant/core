@@ -15,8 +15,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
-
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -25,7 +23,7 @@ async def async_setup_entry(
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the Wake on LAN sensor entry."""
+    """Set up the Wake on LAN button entry."""
     broadcast_address: str | None = entry.options.get(CONF_BROADCAST_ADDRESS)
     broadcast_port: int | None = entry.options.get(CONF_BROADCAST_PORT)
     mac_address: str = entry.options[CONF_MAC]
@@ -33,7 +31,7 @@ async def async_setup_entry(
 
     async_add_entities(
         [
-            WolSwitch(
+            WolButton(
                 name,
                 mac_address,
                 broadcast_address,
@@ -43,7 +41,7 @@ async def async_setup_entry(
     )
 
 
-class WolSwitch(ButtonEntity):
+class WolButton(ButtonEntity):
     """Representation of a wake on lan button."""
 
     _attr_name = None
@@ -62,9 +60,7 @@ class WolSwitch(ButtonEntity):
         self._attr_unique_id = dr.format_mac(mac_address)
         self._attr_device_info = dr.DeviceInfo(
             connections={(dr.CONNECTION_NETWORK_MAC, self._attr_unique_id)},
-            identifiers={(DOMAIN, self._attr_unique_id)},
-            manufacturer="Wake on LAN",
-            name=name,
+            default_name=name,
         )
 
     async def async_press(self) -> None:

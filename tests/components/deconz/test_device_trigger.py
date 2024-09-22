@@ -7,6 +7,8 @@ from pytest_unordered import unordered
 
 from homeassistant.components.automation import DOMAIN as AUTOMATION_DOMAIN
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
+
+# pylint: disable-next=hass-component-root-import
 from homeassistant.components.binary_sensor.device_trigger import (
     CONF_BAT_LOW,
     CONF_NOT_BAT_LOW,
@@ -18,7 +20,6 @@ from homeassistant.components.deconz.const import DOMAIN as DECONZ_DOMAIN
 from homeassistant.components.deconz.device_trigger import CONF_SUBTYPE
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     ATTR_ENTITY_ID,
@@ -35,7 +36,7 @@ from homeassistant.setup import async_setup_component
 
 from .conftest import WebsocketDataType
 
-from tests.common import async_get_device_automations
+from tests.common import MockConfigEntry, async_get_device_automations
 
 
 @pytest.fixture(autouse=True, name="stub_blueprint_populate")
@@ -345,7 +346,6 @@ async def test_functional_device_trigger(
 
     await sensor_ws_data({"state": {"buttonevent": 1002}})
     await hass.async_block_till_done()
-
     assert len(service_calls) == 1
     assert service_calls[0].data["some"] == "test_trigger_button_press"
 
@@ -383,7 +383,7 @@ async def test_validate_trigger_unknown_device(hass: HomeAssistant) -> None:
 async def test_validate_trigger_unsupported_device(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    config_entry_setup: ConfigEntry,
+    config_entry_setup: MockConfigEntry,
 ) -> None:
     """Test unsupported device doesn't return a trigger config."""
     device = device_registry.async_get_or_create(
@@ -423,7 +423,7 @@ async def test_validate_trigger_unsupported_device(
 async def test_validate_trigger_unsupported_trigger(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    config_entry_setup: ConfigEntry,
+    config_entry_setup: MockConfigEntry,
 ) -> None:
     """Test unsupported trigger does not return a trigger config."""
     device = device_registry.async_get_or_create(
@@ -465,7 +465,7 @@ async def test_validate_trigger_unsupported_trigger(
 async def test_attach_trigger_no_matching_event(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    config_entry_setup: ConfigEntry,
+    config_entry_setup: MockConfigEntry,
 ) -> None:
     """Test no matching event for device doesn't return a trigger config."""
     device = device_registry.async_get_or_create(

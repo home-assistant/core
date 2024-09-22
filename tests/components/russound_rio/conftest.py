@@ -37,10 +37,10 @@ def mock_russound() -> Generator[AsyncMock]:
     """Mock the Russound RIO client."""
     with (
         patch(
-            "homeassistant.components.russound_rio.Russound", autospec=True
+            "homeassistant.components.russound_rio.RussoundClient", autospec=True
         ) as mock_client,
         patch(
-            "homeassistant.components.russound_rio.config_flow.Russound",
+            "homeassistant.components.russound_rio.config_flow.RussoundClient",
             return_value=mock_client,
         ),
     ):

@@ -1,5 +1,7 @@
 """Test KNX selectors."""
 
+from typing import Any
+
 import pytest
 import voluptuous as vol
 
@@ -111,7 +113,11 @@ INVALID = "invalid"
         ),
     ],
 )
-def test_ga_selector(selector_config, data, expected):
+def test_ga_selector(
+    selector_config: dict[str, Any],
+    data: dict[str, Any],
+    expected: str | dict[str, Any],
+) -> None:
     """Test GASelector."""
     selector = GASelector(**selector_config)
     if expected == INVALID:

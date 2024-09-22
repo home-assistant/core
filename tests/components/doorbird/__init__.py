@@ -6,7 +6,15 @@ from unittest.mock import AsyncMock, MagicMock, Mock
 import aiohttp
 from doorbirdpy import DoorBird, DoorBirdScheduleEntry
 
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
+from homeassistant import config_entries
+from homeassistant.components.doorbird.const import API_URL
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_TOKEN,
+    CONF_USERNAME,
+)
 
 VALID_CONFIG = {
     CONF_HOST: "1.2.3.4",
@@ -39,23 +47,39 @@ def get_mock_doorbird_api(
     info: dict[str, Any] | None = None,
     info_side_effect: Exception | None = None,
     schedule: list[DoorBirdScheduleEntry] | None = None,
+    schedule_side_effect: Exception | None = None,
+    favorites: dict[str, dict[str, Any]] | None = None,
     favorites_side_effect: Exception | None = None,
+    change_schedule: tuple[bool, int] | None = None,
 ) -> DoorBird:
     """Return a mock DoorBirdAPI object with return values."""
     doorbirdapi_mock = MagicMock(spec_set=DoorBird)
-    type(doorbirdapi_mock).info = AsyncMock(
-        side_effect=info_side_effect, return_value=info
+    api_mock_type = type(doorbirdapi_mock)
+    api_mock_type.info = AsyncMock(side_effect=info_side_effect, return_value=info)
+    api_mock_type.favorites = AsyncMock(
+        side_effect=favorites_side_effect, return_value=favorites
     )
-    type(doorbirdapi_mock).favorites = AsyncMock(
-        side_effect=favorites_side_effect,
-        return_value={"http": {"x": {"value": "http://webhook"}}},
+    api_mock_type.change_favorite = AsyncMock(return_value=True)
+    api_mock_type.change_schedule = AsyncMock(
+        return_value=change_schedule or (True, 200)
     )
-    type(doorbirdapi_mock).change_favorite = AsyncMock(return_value=True)
-    type(doorbirdapi_mock).schedule = AsyncMock(return_value=schedule)
-    type(doorbirdapi_mock).energize_relay = AsyncMock(return_value=True)
-    type(doorbirdapi_mock).turn_light_on = AsyncMock(return_value=True)
-    type(doorbirdapi_mock).delete_favorite = AsyncMock(return_value=True)
-    type(doorbirdapi_mock).doorbell_state = AsyncMock(
-        side_effect=mock_unauthorized_exception()
+    api_mock_type.schedule = AsyncMock(
+        return_value=schedule, side_effect=schedule_side_effect
     )
+    api_mock_type.energize_relay = AsyncMock(return_value=True)
+    api_mock_type.turn_light_on = AsyncMock(return_value=True)
+    api_mock_type.delete_favorite = AsyncMock(return_value=True)
+    api_mock_type.get_image = AsyncMock(return_value=b"image")
+    api_mock_type.doorbell_state = AsyncMock(side_effect=mock_unauthorized_exception())
     return doorbirdapi_mock
+
+
+async def mock_webhook_call(
+    config_entry: config_entries.ConfigEntry,
+    aiohttp_client: aiohttp.ClientSession,
+    event: str,
+) -> None:
+    """Mock the webhook call."""
+    token = config_entry.data.get(CONF_TOKEN, config_entry.entry_id)
+    response = await aiohttp_client.get(f"{API_URL}/{event}?token={token}")
+    response.raise_for_status()

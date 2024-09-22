@@ -57,7 +57,7 @@ EVENT_DEVICE_REGISTRY_UPDATED: EventType[EventDeviceRegistryUpdatedData] = Event
 )
 STORAGE_KEY = "core.device_registry"
 STORAGE_VERSION_MAJOR = 1
-STORAGE_VERSION_MINOR = 7
+STORAGE_VERSION_MINOR = 8
 
 CLEANUP_DELAY = 10
 
@@ -505,9 +505,12 @@ class DeviceRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
                     device["primary_config_entry"] = None
             if old_minor_version < 7:
                 # Introduced in 2024.8
-                created_at = utc_from_timestamp(0).isoformat()
                 for device in old_data["devices"]:
                     device["model_id"] = None
+            if old_minor_version < 8:
+                # Introduced in 2024.8
+                created_at = utc_from_timestamp(0).isoformat()
+                for device in old_data["devices"]:
                     device["created_at"] = device["modified_at"] = created_at
                 for device in old_data["deleted_devices"]:
                     device["created_at"] = device["modified_at"] = created_at

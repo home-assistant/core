@@ -176,14 +176,14 @@ async def test_validate_db_schema_fix_utf8_issue_with_broken_schema_unrepairable
                     "LOCK=EXCLUSIVE;"
                 )
             )
-            _modify_columns(
-                session_maker,
-                recorder_mock.engine,
-                "states",
-                [
-                    "entity_id VARCHAR(255) NOT NULL",
-                ],
-            )
+        _modify_columns(
+            session_maker,
+            recorder_mock.engine,
+            "states",
+            [
+                "entity_id VARCHAR(255) NOT NULL",
+            ],
+        )
 
     await recorder_mock.async_add_executor_job(_break_states_schema)
     schema_errors = await recorder_mock.async_add_executor_job(
