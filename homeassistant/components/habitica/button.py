@@ -110,8 +110,10 @@ MAGE_SKILLS: tuple[HabiticaButtonEntityDescription, ...] = (
     HabiticaButtonEntityDescription(
         key=HabitipyButtonEntity.FROST,
         translation_key=HabitipyButtonEntity.FROST,
-        press_fn=lambda coordinator: coordinator.api.user.class_.cast["frost"].post(
-            targetId=coordinator.config_entry.unique_id
+        press_fn=(
+            lambda coordinator: coordinator.api.user.class_.cast["frost"].post(
+                targetId=coordinator.config_entry.unique_id
+            )
         ),
         available_fn=(
             lambda data: data.user["stats"]["lvl"] >= 14
@@ -125,9 +127,11 @@ WARRIOR_SKILLS: tuple[HabiticaButtonEntityDescription, ...] = (
     HabiticaButtonEntityDescription(
         key=HabitipyButtonEntity.DEFENSIVE_STANCE,
         translation_key=HabitipyButtonEntity.DEFENSIVE_STANCE,
-        press_fn=lambda coordinator: coordinator.api.user.class_.cast[
-            "defensiveStance"
-        ].post(targetId=coordinator.config_entry.unique_id),
+        press_fn=(
+            lambda coordinator: coordinator.api.user.class_.cast[
+                "defensiveStance"
+            ].post(targetId=coordinator.config_entry.unique_id)
+        ),
         available_fn=(
             lambda data: data.user["stats"]["lvl"] >= 12
             and data.user["stats"]["mp"] >= 25
@@ -137,9 +141,11 @@ WARRIOR_SKILLS: tuple[HabiticaButtonEntityDescription, ...] = (
     HabiticaButtonEntityDescription(
         key=HabitipyButtonEntity.VALOROUS_PRESENCE,
         translation_key=HabitipyButtonEntity.VALOROUS_PRESENCE,
-        press_fn=lambda coordinator: coordinator.api.user.class_.cast[
-            "valorousPresence"
-        ].post(targetId=coordinator.config_entry.unique_id),
+        press_fn=(
+            lambda coordinator: coordinator.api.user.class_.cast[
+                "valorousPresence"
+            ].post(targetId=coordinator.config_entry.unique_id)
+        ),
         available_fn=(
             lambda data: data.user["stats"]["lvl"] >= 13
             and data.user["stats"]["mp"] >= 20
@@ -149,9 +155,11 @@ WARRIOR_SKILLS: tuple[HabiticaButtonEntityDescription, ...] = (
     HabiticaButtonEntityDescription(
         key=HabitipyButtonEntity.INTIMIDATE,
         translation_key=HabitipyButtonEntity.INTIMIDATE,
-        press_fn=lambda coordinator: coordinator.api.user.class_.cast[
-            "intimidate"
-        ].post(targetId=coordinator.config_entry.unique_id),
+        press_fn=(
+            lambda coordinator: coordinator.api.user.class_.cast["intimidate"].post(
+                targetId=coordinator.config_entry.unique_id
+            )
+        ),
         available_fn=(
             lambda data: data.user["stats"]["lvl"] >= 14
             and data.user["stats"]["mp"] >= 15
@@ -164,9 +172,9 @@ ROGUE_SKILLS: tuple[HabiticaButtonEntityDescription, ...] = (
     HabiticaButtonEntityDescription(
         key=HabitipyButtonEntity.TOOLS_OF_TRADE,
         translation_key=HabitipyButtonEntity.TOOLS_OF_TRADE,
-        press_fn=lambda coordinator: coordinator.api.user.class_.cast[
-            "toolsOfTrade"
-        ].post(),
+        press_fn=(
+            lambda coordinator: coordinator.api.user.class_.cast["toolsOfTrade"].post()
+        ),
         available_fn=(
             lambda data: data.user["stats"]["lvl"] >= 13
             and data.user["stats"]["mp"] >= 25
@@ -176,8 +184,10 @@ ROGUE_SKILLS: tuple[HabiticaButtonEntityDescription, ...] = (
     HabiticaButtonEntityDescription(
         key=HabitipyButtonEntity.STEALTH,
         translation_key=HabitipyButtonEntity.STEALTH,
-        press_fn=lambda coordinator: coordinator.api.user.class_.cast["stealth"].post(
-            targetId=coordinator.config_entry.unique_id
+        press_fn=(
+            lambda coordinator: coordinator.api.user.class_.cast["stealth"].post(
+                targetId=coordinator.config_entry.unique_id
+            )
         ),
         available_fn=(
             lambda data: data.user["stats"]["lvl"] >= 14
@@ -191,8 +201,10 @@ HEALER_SKILLS: tuple[HabiticaButtonEntityDescription, ...] = (
     HabiticaButtonEntityDescription(
         key=HabitipyButtonEntity.HEAL,
         translation_key=HabitipyButtonEntity.HEAL,
-        press_fn=lambda coordinator: coordinator.api.user.class_.cast["heal"].post(
-            targetId=coordinator.config_entry.unique_id
+        press_fn=(
+            lambda coordinator: coordinator.api.user.class_.cast["heal"].post(
+                targetId=coordinator.config_entry.unique_id
+            )
         ),
         available_fn=(
             lambda data: data.user["stats"]["lvl"] >= 11
@@ -203,9 +215,11 @@ HEALER_SKILLS: tuple[HabiticaButtonEntityDescription, ...] = (
     HabiticaButtonEntityDescription(
         key=HabitipyButtonEntity.BRIGHTNESS,
         translation_key=HabitipyButtonEntity.BRIGHTNESS,
-        press_fn=lambda coordinator: coordinator.api.user.class_.cast[
-            "brightness"
-        ].post(targetId=coordinator.config_entry.unique_id),
+        press_fn=(
+            lambda coordinator: coordinator.api.user.class_.cast["brightness"].post(
+                targetId=coordinator.config_entry.unique_id
+            )
+        ),
         available_fn=(
             lambda data: data.user["stats"]["lvl"] >= 12
             and data.user["stats"]["mp"] >= 15
@@ -215,9 +229,9 @@ HEALER_SKILLS: tuple[HabiticaButtonEntityDescription, ...] = (
     HabiticaButtonEntityDescription(
         key=HabitipyButtonEntity.PROTECT_AURA,
         translation_key=HabitipyButtonEntity.PROTECT_AURA,
-        press_fn=lambda coordinator: coordinator.api.user.class_.cast[
-            "protectAura"
-        ].post(),
+        press_fn=(
+            lambda coordinator: coordinator.api.user.class_.cast["protectAura"].post()
+        ),
         available_fn=(
             lambda data: data.user["stats"]["lvl"] >= 13
             and data.user["stats"]["mp"] >= 30
