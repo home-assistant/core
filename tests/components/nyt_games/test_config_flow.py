@@ -34,7 +34,7 @@ async def test_full_flow(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "NYT Games"
     assert result["data"] == {CONF_TOKEN: "token"}
-    assert result["result"].unique_id == "84fce612f5b8"
+    assert result["result"].unique_id == "218886794"
 
 
 @pytest.mark.parametrize(

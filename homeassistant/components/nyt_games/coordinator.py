@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 
 
 class NYTGamesCoordinator(DataUpdateCoordinator[Wordle]):
-    """Class to manage fetching NYTGames data."""
+    """Class to manage fetching NYT Games data."""
 
     config_entry: NYTGamesConfigEntry
 

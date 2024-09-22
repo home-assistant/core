@@ -30,7 +30,7 @@ class NYTGamesConfigFlow(ConfigFlow, domain=DOMAIN):
             except NYTGamesError:
                 errors["base"] = "cannot_connect"
             except Exception:  # noqa: BLE001
-                errors["base"] = "cannot_connect"
+                errors["base"] = "unknown"
             else:
                 await self.async_set_unique_id(str(latest_stats.user_id))
                 self._abort_if_unique_id_configured()

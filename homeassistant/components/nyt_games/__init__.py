@@ -5,7 +5,7 @@ from __future__ import annotations
 from nyt_games import NYTGamesClient
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, Platform
+from homeassistant.const import CONF_TOKEN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -23,7 +23,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: NYTGamesConfigEntry) -> 
     """Set up NYTGames from a config entry."""
 
     client = NYTGamesClient(
-        entry.data[CONF_HOST], session=async_get_clientsession(hass)
+        entry.data[CONF_TOKEN], session=async_get_clientsession(hass)
     )
 
     coordinator = NYTGamesCoordinator(hass, client)

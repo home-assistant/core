@@ -1,4 +1,4 @@
-"""Base class for NYTGames entities."""
+"""Base class for NYT Games entities."""
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -8,7 +8,7 @@ from .coordinator import NYTGamesCoordinator
 
 
 class NYTGamesEntity(CoordinatorEntity[NYTGamesCoordinator]):
-    """Defines a base NYTGames entity."""
+    """Defines a base NYT Games entity."""
 
     _attr_has_entity_name = True
 
