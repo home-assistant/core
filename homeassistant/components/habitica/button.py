@@ -87,7 +87,7 @@ BUTTON_DESCRIPTIONS: tuple[HabiticaButtonEntityDescription, ...] = (
 )
 
 
-MAGE_SKILLS: tuple[HabiticaButtonEntityDescription, ...] = (
+CLASS_SKILLS: tuple[HabiticaButtonEntityDescription, ...] = (
     HabiticaButtonEntityDescription(
         key=HabitipyButtonEntity.MPHEAL,
         translation_key=HabitipyButtonEntity.MPHEAL,
@@ -122,9 +122,6 @@ MAGE_SKILLS: tuple[HabiticaButtonEntityDescription, ...] = (
         ),
         class_needed=MAGE,
     ),
-)
-
-WARRIOR_SKILLS: tuple[HabiticaButtonEntityDescription, ...] = (
     HabiticaButtonEntityDescription(
         key=HabitipyButtonEntity.DEFENSIVE_STANCE,
         translation_key=HabitipyButtonEntity.DEFENSIVE_STANCE,
@@ -167,9 +164,6 @@ WARRIOR_SKILLS: tuple[HabiticaButtonEntityDescription, ...] = (
         ),
         class_needed=WARRIOR,
     ),
-)
-
-ROGUE_SKILLS: tuple[HabiticaButtonEntityDescription, ...] = (
     HabiticaButtonEntityDescription(
         key=HabitipyButtonEntity.TOOLS_OF_TRADE,
         translation_key=HabitipyButtonEntity.TOOLS_OF_TRADE,
@@ -198,9 +192,6 @@ ROGUE_SKILLS: tuple[HabiticaButtonEntityDescription, ...] = (
         ),
         class_needed=ROGUE,
     ),
-)
-
-HEALER_SKILLS: tuple[HabiticaButtonEntityDescription, ...] = (
     HabiticaButtonEntityDescription(
         key=HabitipyButtonEntity.HEAL,
         translation_key=HabitipyButtonEntity.HEAL,
@@ -263,9 +254,7 @@ async def async_setup_entry(
 
     coordinator = entry.runtime_data
     listener: Callable[[], None] | None = None
-    not_setup: set[HabiticaButtonEntityDescription] = set(
-        HEALER_SKILLS + MAGE_SKILLS + ROGUE_SKILLS + WARRIOR_SKILLS
-    )
+    not_setup: set[HabiticaButtonEntityDescription] = set(CLASS_SKILLS)
 
     @callback
     def add_entities() -> None:
