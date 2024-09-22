@@ -379,14 +379,6 @@ ENERGY_LIVE_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.POWER,
         entity_registry_enabled_default=False,
     ),
-    SensorEntityDescription(
-        key="island_status",
-        entity_registry_enabled_default=True,
-    ),
-    SensorEntityDescription(
-        key="storm_mode_active",
-        entity_registry_enabled_default=True,
-    ),
 )
 
 WALL_CONNECTOR_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
