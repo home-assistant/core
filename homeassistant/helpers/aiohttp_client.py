@@ -287,7 +287,7 @@ def _make_key(
     verify_ssl: bool = True,
     family: socket.AddressFamily = socket.AF_UNSPEC,
     ssl_cipher: ssl_util.SSLCipherList = ssl_util.SSLCipherList.PYTHON_DEFAULT,
-) -> tuple[bool, ssl_util.SSLCipherList, socket.AddressFamily]:
+) -> tuple[bool, socket.AddressFamily, ssl_util.SSLCipherList]:
     """Make a key for connector or session pool."""
     return (verify_ssl, family, ssl_cipher)
 
