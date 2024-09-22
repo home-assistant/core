@@ -352,6 +352,56 @@
       "id": "f2c85972-1a19-4426-bc6d-ce3337b9d99f"
     },
     {
+      "_id": "2c6d136c-a1c3-4bef-b7c4-fa980784b1e1",
+      "frequency": "weekly",
+      "everyX": 1,
+      "startDate": "2024-09-21T22:00:00.000Z",
+      "repeat": {
+        "m": false,
+        "t": false,
+        "w": true,
+        "th": false,
+        "f": false,
+        "s": true,
+        "su": true
+      },
+      "streak": 0,
+      "daysOfMonth": [],
+      "weeksOfMonth": [],
+      "nextDue": [
+        "2024-09-24T22:00:00.000Z",
+        "2024-09-27T22:00:00.000Z",
+        "2024-09-28T22:00:00.000Z",
+        "2024-10-01T22:00:00.000Z",
+        "2024-10-04T22:00:00.000Z",
+        "2024-10-08T22:00:00.000Z"
+      ],
+      "yesterDaily": true,
+      "history": [],
+      "completed": false,
+      "collapseChecklist": false,
+      "checklist": [],
+      "type": "daily",
+      "text": "Fitnessstudio besuchen",
+      "notes": "Ein einstündiges Workout im Fitnessstudio absolvieren.",
+      "tags": ["51076966-2970-4b40-b6ba-d58c6a756dd7"],
+      "value": 0,
+      "priority": 2,
+      "attribute": "str",
+      "challenge": {},
+      "group": {
+        "completedBy": {},
+        "assignedUsers": []
+      },
+      "reminders": [],
+      "byHabitica": false,
+      "createdAt": "2024-09-22T11:44:43.774Z",
+      "updatedAt": "2024-09-22T11:44:43.774Z",
+      "userId": "1343a9af-d891-4027-841a-956d105ca408",
+      "isDue": true,
+      "id": "2c6d136c-a1c3-4bef-b7c4-fa980784b1e1"
+    },
+    {
       "_id": "88de7cd9-af2b-49ce-9afd-bf941d87336b",
       "date": "2024-09-27T22:17:00.000Z",
       "completed": false,
