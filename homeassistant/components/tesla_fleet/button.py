@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from asyncio import sleep
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import Any
@@ -24,11 +25,13 @@ PARALLEL_UPDATES = 0
 class TeslaFleetButtonEntityDescription(ButtonEntityDescription):
     """Describes a TeslaFleet Button entity."""
 
-    func: Callable[[TeslaFleetButtonEntity], Awaitable[Any]] | None = None
+    func: Callable[[TeslaFleetButtonEntity], Awaitable[Any]]
 
 
 DESCRIPTIONS: tuple[TeslaFleetButtonEntityDescription, ...] = (
-    TeslaFleetButtonEntityDescription(key="wake"),  # Every button runs wakeup
+    TeslaFleetButtonEntityDescription(
+        key="wake", func=lambda self: sleep(0)
+    ),  # Every button runs wakeup, so func does nothing
     TeslaFleetButtonEntityDescription(
         key="flash_lights", func=lambda self: self.api.flash_lights()
     ),
@@ -62,7 +65,9 @@ async def async_setup_entry(
         TeslaFleetButtonEntity(vehicle, description)
         for vehicle in entry.runtime_data.vehicles
         for description in DESCRIPTIONS
-        if Scope.VEHICLE_CMDS in entry.runtime_data.scopes and not vehicle.signing
+        if Scope.VEHICLE_CMDS in entry.runtime_data.scopes
+        and (not vehicle.signing or description.key == "wake")
+        # Wake doesn't need signing
     )
 
 
@@ -86,5 +91,4 @@ class TeslaFleetButtonEntity(TeslaFleetVehicleEntity, ButtonEntity):
     async def async_press(self) -> None:
         """Press the button."""
         await self.wake_up_if_asleep()
-        if self.entity_description.func:
-            await handle_vehicle_command(self.entity_description.func(self))
+        await handle_vehicle_command(self.entity_description.func(self))
