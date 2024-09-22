@@ -377,13 +377,10 @@ class KNXClimate(KnxYamlEntity, ClimateEntity):
 
             fan_mode_index = self._attr_fan_modes.index(fan_mode)
             await self._device.set_fan_speed(fan_mode_index)
-        else:
-            if fan_mode == FAN_OFF:
-                fan_speed = 0
-            else:
-                fan_speed = int(fan_mode[:-1])  # Without the percentage sign
+            return
 
-            await self._device.set_fan_speed(fan_speed)
+        fan_speed = 0 if fan_mode == FAN_OFF else int(fan_mode[:-1])  # Without the percentage sign
+        await self._device.set_fan_speed(fan_speed)
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
