@@ -149,6 +149,7 @@ async def test_light_turn_on(
 
     reolink_connect.set_whiteled.reset_mock(side_effect=True)
 
+
 async def test_host_light_state(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,

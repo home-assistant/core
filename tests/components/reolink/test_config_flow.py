@@ -517,6 +517,7 @@ async def test_dhcp_ip_update(
     if attr is not None:
         setattr(reolink_connect, attr, original)
 
+
 async def test_reconfig(hass: HomeAssistant, mock_setup_entry: MagicMock) -> None:
     """Test a reconfiguration flow."""
     config_entry = MockConfigEntry(
