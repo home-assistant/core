@@ -133,6 +133,11 @@
         "name": "Route"
       }
     },
+    "media_player": {
+      "media": {
+        "name": "[%key:component::media_player::title%]"
+      }
+    },
     "number": {
       "backup_reserve_percent": {
         "name": "Backup reserve"
