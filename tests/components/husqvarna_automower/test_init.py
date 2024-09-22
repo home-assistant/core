@@ -190,8 +190,8 @@ async def test_workarea_deleted(
     assert len(
         er.async_entries_for_config_entry(entity_registry, mock_config_entry.entry_id)
     ) == (current_entries - 2)
-    
-    
+
+
 async def test_coordinator_automatic_registry_cleanup(
     hass: HomeAssistant,
     mock_automower_client: AsyncMock,
