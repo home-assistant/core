@@ -3094,9 +3094,9 @@ class HassTypeHintChecker(BaseChecker):
             "Used when an argument type is None and could be a fixture",
         ),
         "W7434": (
-            "Async function should not be decorated with @callback",
+            "A coroutine function should not be decorated with @callback",
             "hass-async-callback-decorator",
-            "Used when an async function has an invalid @callback decorator",
+            "Used when a coroutine function has an invalid @callback decorator",
         ),
     }
     options = (
