@@ -1614,8 +1614,12 @@ class ConfigEntryItems(UserDict[str, ConfigEntry]):
         For hashable return and log warning
         For non-hashable raise error
         """
-        unique_id = entry.unique_id
-        if unique_id is not None and isinstance(unique_id, Hashable):
+        if (unique_id := entry.unique_id) is None:
+            return
+        if isinstance(unique_id, str):
+            # Unique id should be a string
+            return
+        if isinstance(unique_id, Hashable):  # type: ignore[unreachable]
             # Checks for other non-string was added in HA Core 2024.10
             # In HA Core 2025.10, we should remove the error and instead fail
             report_issue = async_suggest_report_issue(
@@ -1631,8 +1635,7 @@ class ConfigEntryItems(UserDict[str, ConfigEntry]):
                 entry.unique_id,
                 report_issue,
             )
-
-        elif unique_id is not None and not isinstance(unique_id, str):  # type: ignore[unreachable]
+        else:
             # Guard against integrations using unhashable unique_id
             # In HA Core 2024.10, the guard was changed from warning to failing
             raise HomeAssistantError(
