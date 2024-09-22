@@ -26,7 +26,6 @@ async def async_setup_entry(
 
     controller: OmadaSiteController = hass.data[DOMAIN][config_entry.entry_id]
 
-    clients_coordinator = controller.get_clients_coordinator()
     site_id = config_entry.data[CONF_SITE]
 
     # Add all known WiFi devices as potentially tracked devices. They will only be
@@ -34,7 +33,7 @@ async def async_setup_entry(
     async_add_entities(
         [
             OmadaClientScannerEntity(
-                site_id, client.mac, client.name, clients_coordinator
+                site_id, client.mac, client.name, controller.clients_coordinator
             )
             async for client in controller.omada_client.get_known_clients()
             if isinstance(client, OmadaWirelessClient)

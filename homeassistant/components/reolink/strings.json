@@ -395,6 +395,12 @@
       "volume": {
         "name": "Volume"
       },
+      "alarm_volume": {
+        "name": "Alarm volume"
+      },
+      "message_volume": {
+        "name": "Message volume"
+      },
       "guard_return_time": {
         "name": "Guard return time"
       },
@@ -631,6 +637,9 @@
     "sensor": {
       "wifi_signal": {
         "name": "Wi-Fi signal"
+      },
+      "cpu_usage": {
+        "name": "CPU usage"
       },
       "ptz_pan_position": {
         "name": "PTZ pan position"

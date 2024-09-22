@@ -79,7 +79,7 @@
       }),
       'GetDeviceAudioCfg': dict({
         '0': 2,
-        'null': 2,
+        'null': 4,
       }),
       'GetEmail': dict({
         '0': 1,
