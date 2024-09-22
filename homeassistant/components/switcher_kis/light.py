@@ -83,7 +83,7 @@ class SwitcherLightEntity(
 
         # Entity class attributes
         self._attr_unique_id = (
-            f"{coordinator.device_id}-{coordinator.mac_address}-{self._light_id}"
+            f"{coordinator.device_id}-{coordinator.mac_address}-{light_id}"
         )
         self._attr_device_info = DeviceInfo(
             connections={(dr.CONNECTION_NETWORK_MAC, coordinator.mac_address)}
