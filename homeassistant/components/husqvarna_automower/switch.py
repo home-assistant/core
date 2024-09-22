@@ -157,9 +157,12 @@ class WorkAreaSwitchEntity(WorkAreaControlEntity, SwitchEntity):
         key = "work_area"
         self._attr_translation_key = _work_area_translation_key(work_area_id, key)
         self._attr_unique_id = f"{self.mower_id}_{work_area_id}_{key}"
-        self._attr_translation_placeholders = {
-            "work_area": self.work_area_attributes.name
-        }
+        if self.work_area_attributes.name == "my_lawn":
+            self._attr_translation_placeholders = {
+                "work_area": self.work_area_attributes.name
+            }
+        if self.work_area_attributes.name != "my_lawn":
+            self._attr_name = self.work_area_attributes.name
 
     @property
     def is_on(self) -> bool:

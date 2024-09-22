@@ -274,9 +274,6 @@
       },
       "my_lawn_work_area": {
         "name": "My lawn"
-      },
-      "work_area_work_area": {
-        "name": "{work_area}"
       }
     }
   },
