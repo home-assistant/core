@@ -28,12 +28,8 @@ class OmadaSiteController:
         self._omada_client = omada_client
 
         self._switch_port_coordinators: dict[str, OmadaSwitchPortCoordinator] = {}
-        self._devices_coordinator = OmadaDevicesCoordinator(
-            hass, omada_client
-        )
-        self._clients_coordinator = OmadaClientsCoordinator(
-            hass, omada_client
-        )
+        self._devices_coordinator = OmadaDevicesCoordinator(hass, omada_client)
+        self._clients_coordinator = OmadaClientsCoordinator(hass, omada_client)
 
     async def initialize_first_refresh(self) -> None:
         """Initialize the all coordinators, and perform first refresh."""
