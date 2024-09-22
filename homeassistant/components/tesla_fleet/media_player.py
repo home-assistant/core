@@ -73,7 +73,8 @@ class TeslaFleetMediaEntity(TeslaFleetVehicleEntity, MediaPlayerEntity):
             self.get("vehicle_state_media_info_audio_volume_max") or VOLUME_MAX
         )
         self._attr_state = STATES.get(
-            self.get("vehicle_state_media_info_media_playback_status") or "Off",
+            self.get("vehicle_state_media_info_media_playback_status")
+            or MediaPlayerState.OFF,
         )
         self._attr_volume_step = (
             1.0
