@@ -646,7 +646,7 @@ async def test_fan_speed_5_steps(hass: HomeAssistant, knx: KNXTestKit) -> None:
 
 
 async def test_fan_speed_percentage(hass: HomeAssistant, knx: KNXTestKit) -> None:
-    """Test KNX climate fan speed 5 steps."""
+    """Test KNX climate fan speed percentage."""
     await knx.setup_integration(
         {
             ClimateSchema.PLATFORM: {
@@ -656,6 +656,7 @@ async def test_fan_speed_percentage(hass: HomeAssistant, knx: KNXTestKit) -> Non
                 ClimateSchema.CONF_TARGET_TEMPERATURE_STATE_ADDRESS: "1/2/5",
                 ClimateSchema.CONF_FAN_SPEED_ADDRESS: "1/2/6",
                 ClimateSchema.CONF_FAN_SPEED_STATE_ADDRESS: "1/2/7",
+                ClimateSchema.CONF_FAN_SPEED_MODE: "percent",
             }
         }
     )
@@ -674,19 +675,19 @@ async def test_fan_speed_percentage(hass: HomeAssistant, knx: KNXTestKit) -> Non
     knx.assert_state(
         "climate.test",
         HVACMode.HEAT,
-        fan_mode="33%",
-        fan_modes=["off", "33%", "66%", "100%"],
+        fan_mode="low",
+        fan_modes=["off", "low", "medium", "high"],
     )
 
     # set fan mode
     await hass.services.async_call(
         "climate",
         "set_fan_mode",
-        {"entity_id": "climate.test", "fan_mode": "66%"},
+        {"entity_id": "climate.test", "fan_mode": "medium"},
         blocking=True,
     )
     await knx.assert_write("1/2/6", (168,))  # 168 / 255 = 66%
-    knx.assert_state("climate.test", HVACMode.HEAT, fan_mode="66%")
+    knx.assert_state("climate.test", HVACMode.HEAT, fan_mode="medium")
 
     # turn off
     await hass.services.async_call(
@@ -700,4 +701,66 @@ async def test_fan_speed_percentage(hass: HomeAssistant, knx: KNXTestKit) -> Non
 
     # check fan mode that is not in the fan modes list
     await knx.receive_write("1/2/6", (127,))  # 127 / 255 = 50%
-    knx.assert_state("climate.test", HVACMode.HEAT, fan_mode="66%")
+    knx.assert_state("climate.test", HVACMode.HEAT, fan_mode="medium")
+
+
+async def test_fan_speed_percentage_4_steps(
+    hass: HomeAssistant, knx: KNXTestKit
+) -> None:
+    """Test KNX climate fan speed percentage with 4 steps."""
+    await knx.setup_integration(
+        {
+            ClimateSchema.PLATFORM: {
+                CONF_NAME: "test",
+                ClimateSchema.CONF_TEMPERATURE_ADDRESS: "1/2/3",
+                ClimateSchema.CONF_TARGET_TEMPERATURE_ADDRESS: "1/2/4",
+                ClimateSchema.CONF_TARGET_TEMPERATURE_STATE_ADDRESS: "1/2/5",
+                ClimateSchema.CONF_FAN_SPEED_ADDRESS: "1/2/6",
+                ClimateSchema.CONF_FAN_SPEED_STATE_ADDRESS: "1/2/7",
+                ClimateSchema.CONF_FAN_SPEED_MODE: "percent",
+                ClimateSchema.CONF_FAN_MAX_STEP: 4,
+            }
+        }
+    )
+
+    # read states state updater
+    await knx.assert_read("1/2/3")
+    await knx.assert_read("1/2/5")
+
+    # StateUpdater initialize state
+    await knx.receive_response("1/2/5", RAW_FLOAT_22_0)
+    await knx.receive_response("1/2/3", RAW_FLOAT_21_0)
+
+    # Query status
+    await knx.assert_read("1/2/7")
+    await knx.receive_response("1/2/7", (64,))  # 64 / 255 = 25%
+    knx.assert_state(
+        "climate.test",
+        HVACMode.HEAT,
+        fan_mode="25%",
+        fan_modes=["off", "25%", "50%", "75%", "100%"],
+    )
+
+    # set fan mode
+    await hass.services.async_call(
+        "climate",
+        "set_fan_mode",
+        {"entity_id": "climate.test", "fan_mode": "50%"},
+        blocking=True,
+    )
+    await knx.assert_write("1/2/6", (128,))  # 128 / 255 = 50%
+    knx.assert_state("climate.test", HVACMode.HEAT, fan_mode="50%")
+
+    # turn off
+    await hass.services.async_call(
+        "climate",
+        "set_fan_mode",
+        {"entity_id": "climate.test", "fan_mode": "off"},
+        blocking=True,
+    )
+    await knx.assert_write("1/2/6", (0x0,))
+    knx.assert_state("climate.test", HVACMode.HEAT, fan_mode="off")
+
+    # check fan mode that is not in the fan modes list
+    await knx.receive_write("1/2/6", (168,))  # 168 / 255 = 66%
+    knx.assert_state("climate.test", HVACMode.HEAT, fan_mode="75%")

@@ -7,7 +7,7 @@ from collections import OrderedDict
 from typing import ClassVar, Final
 
 import voluptuous as vol
-from xknx.devices.climate import SetpointShiftMode
+from xknx.devices.climate import FanSpeedMode, SetpointShiftMode
 from xknx.dpt import DPTBase, DPTNumeric
 from xknx.dpt.dpt_20 import HVACControllerMode, HVACOperationMode
 from xknx.exceptions import ConversionError, CouldNotParseTelegram
@@ -344,7 +344,7 @@ class ClimateSchema(KNXPlatformSchema):
     CONF_FAN_SPEED_ADDRESS = "fan_speed_address"
     CONF_FAN_SPEED_STATE_ADDRESS = "fan_speed_state_address"
     CONF_FAN_MAX_STEP = "fan_max_step"
-    CONF_FAN_PERCENTAGES_MODES = "fan_percentages_modes"
+    CONF_FAN_SPEED_MODE = "fan_speed_mode"
 
     DEFAULT_NAME = "KNX Climate"
     DEFAULT_SETPOINT_SHIFT_MODE = "DPT6010"
@@ -352,6 +352,7 @@ class ClimateSchema(KNXPlatformSchema):
     DEFAULT_SETPOINT_SHIFT_MIN = -6
     DEFAULT_TEMPERATURE_STEP = 0.1
     DEFAULT_ON_OFF_INVERT = False
+    DEFAULT_FAN_SPEED_MODE = "step"
 
     ENTITY_SCHEMA = vol.All(
         # deprecated since September 2020
@@ -429,14 +430,10 @@ class ClimateSchema(KNXPlatformSchema):
                 vol.Optional(CONF_ENTITY_CATEGORY): ENTITY_CATEGORIES_SCHEMA,
                 vol.Optional(CONF_FAN_SPEED_ADDRESS): ga_list_validator,
                 vol.Optional(CONF_FAN_SPEED_STATE_ADDRESS): ga_list_validator,
-                vol.Optional(CONF_FAN_MAX_STEP): cv.byte,
+                vol.Optional(CONF_FAN_MAX_STEP, default=3): cv.byte,
                 vol.Optional(
-                    CONF_FAN_PERCENTAGES_MODES, default=[33, 66, 100]
-                ): vol.All(
-                    cv.ensure_list,
-                    [vol.All(vol.Coerce(int), vol.Range(min=1, max=100))],
-                    vol.IsTrue(),
-                ),
+                    CONF_FAN_SPEED_MODE, default=DEFAULT_FAN_SPEED_MODE
+                ): vol.All(vol.Upper, cv.enum(FanSpeedMode)),
             }
         ),
     )
