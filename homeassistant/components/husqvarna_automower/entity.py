@@ -167,16 +167,20 @@ class WorkAreaControlEntity(AutomowerControlEntity):
         """Initialize AutomowerEntity."""
         super().__init__(mower_id, coordinator)
         self.work_area_id = work_area_id
+
+    @property
+    def work_areas(self) -> dict[int, WorkArea]:
+        """Get the work areas from the mower attributes."""
         if TYPE_CHECKING:
             assert self.mower_attributes.work_areas is not None
-        self._work_areas = self.mower_attributes.work_areas
+        return self.mower_attributes.work_areas
 
     @property
     def work_area_attributes(self) -> WorkArea:
         """Get the work area attributes of the current work area."""
-        return self._work_areas[self.work_area_id]
+        return self.work_areas[self.work_area_id]
 
     @property
     def available(self) -> bool:
         """Return True if the work area is available and the mower has no errors."""
-        return super().available and self.work_area_id in self._work_areas
+        return super().available and self.work_area_id in self.work_areas

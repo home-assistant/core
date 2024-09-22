@@ -204,8 +204,12 @@ async def test_coordinator_automatic_registry_cleanup(
     entry = hass.config_entries.async_entries(DOMAIN)[0]
     await hass.async_block_till_done()
 
-    assert len(er.async_entries_for_config_entry(entity_registry, entry.entry_id)) == 42
-    assert len(dr.async_entries_for_config_entry(device_registry, entry.entry_id)) == 2
+    current_entites = len(
+        er.async_entries_for_config_entry(entity_registry, entry.entry_id)
+    )
+    current_devices = len(
+        dr.async_entries_for_config_entry(device_registry, entry.entry_id)
+    )
 
     values = mower_list_to_dictionary_dataclass(
         load_json_value_fixture("mower.json", DOMAIN)
@@ -215,5 +219,11 @@ async def test_coordinator_automatic_registry_cleanup(
     await hass.config_entries.async_reload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert len(er.async_entries_for_config_entry(entity_registry, entry.entry_id)) == 12
-    assert len(dr.async_entries_for_config_entry(device_registry, entry.entry_id)) == 1
+    assert (
+        len(er.async_entries_for_config_entry(entity_registry, entry.entry_id))
+        == current_entites - 33
+    )
+    assert (
+        len(dr.async_entries_for_config_entry(device_registry, entry.entry_id))
+        == current_devices - 1
+    )
