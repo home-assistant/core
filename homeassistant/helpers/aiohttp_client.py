@@ -92,7 +92,7 @@ def async_get_clientsession(
 
     This method must be run in the event loop.
     """
-    session_key = _make_key(verify_ssl, ssl_cipher, family)
+    session_key = _make_key(verify_ssl, family, ssl_cipher)
     sessions = hass.data.setdefault(DATA_CLIENTSESSION, {})
 
     if session_key not in sessions:
@@ -285,11 +285,11 @@ def _async_register_default_clientsession_shutdown(
 @callback
 def _make_key(
     verify_ssl: bool = True,
-    ssl_cipher: ssl_util.SSLCipherList = ssl_util.SSLCipherList.PYTHON_DEFAULT,
     family: socket.AddressFamily = socket.AF_UNSPEC,
+    ssl_cipher: ssl_util.SSLCipherList = ssl_util.SSLCipherList.PYTHON_DEFAULT,
 ) -> tuple[bool, ssl_util.SSLCipherList, socket.AddressFamily]:
     """Make a key for connector or session pool."""
-    return (verify_ssl, ssl_cipher, family)
+    return (verify_ssl, family, ssl_cipher)
 
 
 class HomeAssistantTCPConnector(aiohttp.TCPConnector):
@@ -318,7 +318,7 @@ def _async_get_connector(
 
     This method must be run in the event loop.
     """
-    connector_key = _make_key(verify_ssl, ssl_cipher, family)
+    connector_key = _make_key(verify_ssl, family, ssl_cipher)
     connectors = hass.data.setdefault(DATA_CONNECTOR, {})
 
     if connector_key in connectors:

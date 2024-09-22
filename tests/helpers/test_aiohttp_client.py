@@ -67,10 +67,10 @@ async def test_get_clientsession_with_ssl(hass: HomeAssistant) -> None:
     family = 0
 
     client_session = hass.data[client.DATA_CLIENTSESSION][
-        (verify_ssl, ssl_cipher, family)
+        (verify_ssl, family, ssl_cipher)
     ]
     assert isinstance(client_session, aiohttp.ClientSession)
-    connector = hass.data[client.DATA_CONNECTOR][(verify_ssl, ssl_cipher, family)]
+    connector = hass.data[client.DATA_CONNECTOR][(verify_ssl, family, ssl_cipher)]
     assert isinstance(connector, aiohttp.TCPConnector)
 
 
@@ -82,49 +82,49 @@ async def test_get_clientsession_without_ssl(hass: HomeAssistant) -> None:
     family = 0
 
     client_session = hass.data[client.DATA_CLIENTSESSION][
-        (verify_ssl, ssl_cipher, family)
+        (verify_ssl, family, ssl_cipher)
     ]
     assert isinstance(client_session, aiohttp.ClientSession)
-    connector = hass.data[client.DATA_CONNECTOR][(verify_ssl, ssl_cipher, family)]
+    connector = hass.data[client.DATA_CONNECTOR][(verify_ssl, family, ssl_cipher)]
     assert isinstance(connector, aiohttp.TCPConnector)
 
 
 @pytest.mark.parametrize(
-    ("verify_ssl", "ssl_cipher", "expected_family"),
+    ("verify_ssl", "expected_family", "ssl_cipher"),
     [
-        (True, SSLCipherList.PYTHON_DEFAULT, socket.AF_UNSPEC),
-        (False, SSLCipherList.PYTHON_DEFAULT, socket.AF_UNSPEC),
-        (True, SSLCipherList.PYTHON_DEFAULT, socket.AF_INET),
-        (False, SSLCipherList.PYTHON_DEFAULT, socket.AF_INET),
-        (True, SSLCipherList.PYTHON_DEFAULT, socket.AF_INET6),
-        (False, SSLCipherList.PYTHON_DEFAULT, socket.AF_INET6),
-        (False, SSLCipherList.INTERMEDIATE, socket.AF_UNSPEC),
-        (False, SSLCipherList.INTERMEDIATE, socket.AF_INET),
-        (False, SSLCipherList.INTERMEDIATE, socket.AF_INET6),
-        (False, SSLCipherList.MODERN, socket.AF_UNSPEC),
-        (False, SSLCipherList.MODERN, socket.AF_INET),
-        (False, SSLCipherList.MODERN, socket.AF_INET6),
-        (False, SSLCipherList.INSECURE, socket.AF_UNSPEC),
-        (False, SSLCipherList.INSECURE, socket.AF_INET),
-        (False, SSLCipherList.INSECURE, socket.AF_INET6),
+        (True, socket.AF_UNSPEC, SSLCipherList.PYTHON_DEFAULT),
+        (False, socket.AF_UNSPEC, SSLCipherList.PYTHON_DEFAULT),
+        (True, socket.AF_INET, SSLCipherList.PYTHON_DEFAULT),
+        (False, socket.AF_INET, SSLCipherList.PYTHON_DEFAULT),
+        (True, socket.AF_INET6, SSLCipherList.PYTHON_DEFAULT),
+        (False, socket.AF_INET6, SSLCipherList.PYTHON_DEFAULT),
+        (False, socket.AF_UNSPEC, SSLCipherList.INTERMEDIATE),
+        (False, socket.AF_INET, SSLCipherList.INTERMEDIATE),
+        (False, socket.AF_INET6, SSLCipherList.INTERMEDIATE),
+        (False, socket.AF_UNSPEC, SSLCipherList.MODERN),
+        (False, socket.AF_INET, SSLCipherList.MODERN),
+        (False, socket.AF_INET6, SSLCipherList.MODERN),
+        (False, socket.AF_UNSPEC, SSLCipherList.INSECURE),
+        (False, socket.AF_INET, SSLCipherList.INSECURE),
+        (False, socket.AF_INET6, SSLCipherList.INSECURE),
     ],
 )
 async def test_get_clientsession(
     hass: HomeAssistant,
     verify_ssl: bool,
-    ssl_cipher: SSLCipherList,
     expected_family: int,
+    ssl_cipher: SSLCipherList,
 ) -> None:
     """Test init clientsession combinations."""
     client.async_get_clientsession(
-        hass, verify_ssl=verify_ssl, ssl_cipher=ssl_cipher, family=expected_family
+        hass, verify_ssl=verify_ssl, family=expected_family, ssl_cipher=ssl_cipher
     )
     client_session = hass.data[client.DATA_CLIENTSESSION][
-        (verify_ssl, ssl_cipher, expected_family)
+        (verify_ssl, expected_family, ssl_cipher)
     ]
     assert isinstance(client_session, aiohttp.ClientSession)
     connector = hass.data[client.DATA_CONNECTOR][
-        (verify_ssl, ssl_cipher, expected_family)
+        (verify_ssl, expected_family, ssl_cipher)
     ]
     assert isinstance(connector, aiohttp.TCPConnector)
 
@@ -139,7 +139,7 @@ async def test_create_clientsession_with_ssl_and_cookies(hass: HomeAssistant) ->
     family = 0
 
     assert client.DATA_CLIENTSESSION not in hass.data
-    connector = hass.data[client.DATA_CONNECTOR][(verify_ssl, ssl_cipher, family)]
+    connector = hass.data[client.DATA_CONNECTOR][(verify_ssl, family, ssl_cipher)]
     assert isinstance(connector, aiohttp.TCPConnector)
 
 
@@ -155,47 +155,47 @@ async def test_create_clientsession_without_ssl_and_cookies(
     family = 0
 
     assert client.DATA_CLIENTSESSION not in hass.data
-    connector = hass.data[client.DATA_CONNECTOR][(verify_ssl, ssl_cipher, family)]
+    connector = hass.data[client.DATA_CONNECTOR][(verify_ssl, family, ssl_cipher)]
     assert isinstance(connector, aiohttp.TCPConnector)
 
 
 @pytest.mark.parametrize(
-    ("verify_ssl", "ssl_cipher", "expected_family"),
+    ("verify_ssl", "expected_family", "ssl_cipher"),
     [
-        (True, SSLCipherList.PYTHON_DEFAULT, 0),
-        (False, SSLCipherList.PYTHON_DEFAULT, 0),
-        (True, SSLCipherList.PYTHON_DEFAULT, 4),
-        (False, SSLCipherList.PYTHON_DEFAULT, 4),
-        (True, SSLCipherList.PYTHON_DEFAULT, 6),
-        (False, SSLCipherList.PYTHON_DEFAULT, 6),
-        (False, SSLCipherList.INTERMEDIATE, 0),
-        (False, SSLCipherList.INTERMEDIATE, 4),
-        (False, SSLCipherList.INTERMEDIATE, 6),
-        (False, SSLCipherList.MODERN, 0),
-        (False, SSLCipherList.MODERN, 4),
-        (False, SSLCipherList.MODERN, 6),
-        (False, SSLCipherList.INSECURE, 0),
-        (False, SSLCipherList.INSECURE, 4),
-        (False, SSLCipherList.INSECURE, 6),
+        (True, 0, SSLCipherList.PYTHON_DEFAULT),
+        (False, 0, SSLCipherList.PYTHON_DEFAULT),
+        (True, 4, SSLCipherList.PYTHON_DEFAULT),
+        (False, 4), SSLCipherList.PYTHON_DEFAULT,
+        (True, 6, SSLCipherList.PYTHON_DEFAULT),
+        (False, 6, SSLCipherList.PYTHON_DEFAULT),
+        (False, 0, SSLCipherList.INTERMEDIATE),
+        (False, 4, SSLCipherList.INTERMEDIATE),
+        (False, 6, SSLCipherList.INTERMEDIATE),
+        (False, 0, SSLCipherList.MODERN),
+        (False, 4, SSLCipherList.MODERN),
+        (False, 6, SSLCipherList.MODERN),
+        (False, 0, SSLCipherList.INSECURE),
+        (False, 4, SSLCipherList.INSECURE),
+        (False, 6, SSLCipherList.INSECURE),
     ],
 )
 async def test_get_clientsession_cleanup(
     hass: HomeAssistant,
     verify_ssl: bool,
-    ssl_cipher: SSLCipherList,
     expected_family: int,
+    ssl_cipher: SSLCipherList,
 ) -> None:
     """Test init clientsession cleanup."""
     client.async_get_clientsession(
-        hass, verify_ssl=verify_ssl, ssl_cipher=ssl_cipher, family=expected_family
+        hass, verify_ssl=verify_ssl, family=expected_family, ssl_cipher=ssl_cipher
     )
 
     client_session = hass.data[client.DATA_CLIENTSESSION][
-        (verify_ssl, ssl_cipher, expected_family)
+        (verify_ssl, expected_family, ssl_cipher)
     ]
     assert isinstance(client_session, aiohttp.ClientSession)
     connector = hass.data[client.DATA_CONNECTOR][
-        (verify_ssl, ssl_cipher, expected_family)
+        (verify_ssl, expected_family, ssl_cipher)
     ]
     assert isinstance(connector, aiohttp.TCPConnector)
 
@@ -217,11 +217,11 @@ async def test_get_clientsession_patched_close(hass: HomeAssistant) -> None:
         session = client.async_get_clientsession(hass)
 
         assert isinstance(
-            hass.data[client.DATA_CLIENTSESSION][(verify_ssl, ssl_cipher, family)],
+            hass.data[client.DATA_CLIENTSESSION][(verify_ssl, family, ssl_cipher)],
             aiohttp.ClientSession,
         )
         assert isinstance(
-            hass.data[client.DATA_CONNECTOR][(verify_ssl, ssl_cipher, family)],
+            hass.data[client.DATA_CONNECTOR][(verify_ssl, family, ssl_cipher)],
             aiohttp.TCPConnector,
         )
 
