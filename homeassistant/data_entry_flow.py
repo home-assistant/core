@@ -296,11 +296,11 @@ class FlowManager(abc.ABC, Generic[_FlowResultT, _HandlerT]):
     ) -> list[_FlowResultT]:
         """Return flows in progress init matching by data type as a partial FlowResult."""
         return self._async_flow_handler_to_flow_result(
-            (
+            [
                 progress
                 for progress in self._init_data_process_index.get(init_data_type, ())
                 if matcher(progress.init_data)
-            ),
+            ],
             include_uninitialized,
         )
 

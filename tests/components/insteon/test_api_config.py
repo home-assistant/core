@@ -406,6 +406,7 @@ async def test_get_broken_links(
     await devices.async_load()
     aldb_data = json.loads(load_fixture("insteon/aldb_data.json"))
     devices.fill_aldb("33.33.33", aldb_data)
+    await asyncio.sleep(1)
     with patch.object(insteon.api.config, "devices", devices):
         await ws_client.send_json({ID: 2, TYPE: "insteon/config/get_broken_links"})
         msg = await ws_client.receive_json()
