@@ -8,6 +8,8 @@ from astroid import nodes
 from pylint.checkers import BaseChecker
 from pylint.lint import PyLinter
 
+from homeassistant.const import Platform
+
 _MODULES: dict[str, set[str]] = {
     "air_quality": {"AirQualityEntity"},
     "alarm_control_panel": {
@@ -63,6 +65,8 @@ _MODULES: dict[str, set[str]] = {
         "WeatherEntityDescription",
     },
 }
+_ENTITY_COMPONENTS: set[str] = {platform.value for platform in Platform}
+_ENTITY_COMPONENTS.add("tag")
 
 
 class HassEnforceClassModule(BaseChecker):
@@ -88,6 +92,18 @@ class HassEnforceClassModule(BaseChecker):
         parts = root_name.split(".")
         current_integration = parts[2]
         current_module = parts[3] if len(parts) > 3 else ""
+
+        if current_module != "entity" and current_integration not in _ENTITY_COMPONENTS:
+            top_level_ancestors = list(node.ancestors(recurs=False))
+
+            for ancestor in top_level_ancestors:
+                if ancestor.name == "Entity":
+                    self.add_message(
+                        "hass-enforce-class-module",
+                        node=node,
+                        args=(ancestor.name, "entity"),
+                    )
+                    return
 
         ancestors: list[ClassDef] | None = None
 

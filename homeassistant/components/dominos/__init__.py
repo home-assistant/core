@@ -182,7 +182,7 @@ class DominosProductListView(http.HomeAssistantView):
         return self.json(self.dominos.get_menu())
 
 
-class DominosOrder(Entity):
+class DominosOrder(Entity):  # pylint: disable=hass-enforce-class-module
     """Represents a Dominos order entity."""
 
     def __init__(self, order_info, dominos):

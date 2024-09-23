@@ -28,7 +28,7 @@ from homeassistant.helpers.typing import ConfigType, VolSchemaType
 from . import subscription
 from .config import MQTT_RW_SCHEMA
 from .const import CONF_COMMAND_TEMPLATE, CONF_COMMAND_TOPIC, CONF_STATE_TOPIC
-from .mixins import MqttEntity, async_setup_entity_entry_helper
+from .entity import MqttEntity, async_setup_entity_entry_helper
 from .models import (
     MqttCommandTemplate,
     MqttValueTemplate,

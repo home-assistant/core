@@ -100,10 +100,17 @@ def async_discover_entities(
         ):
             continue
 
-        # check for values that may not be present
+        # check for endpoint-attributes that may not be present
         if schema.absent_attributes is not None and any(
             endpoint.has_attribute(None, val_schema)
             for val_schema in schema.absent_attributes
+        ):
+            continue
+
+        # check for clusters that may not be present
+        if schema.absent_clusters is not None and any(
+            endpoint.node.has_cluster(val_schema)
+            for val_schema in schema.absent_clusters
         ):
             continue
 

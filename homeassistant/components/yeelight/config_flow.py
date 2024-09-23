@@ -85,9 +85,7 @@ class YeelightConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle discovery from zeroconf."""
         self._discovered_ip = discovery_info.host
-        await self.async_set_unique_id(
-            "{0:#0{1}x}".format(int(discovery_info.name[-26:-18]), 18)
-        )
+        await self.async_set_unique_id(f"{int(discovery_info.name[-26:-18]):#018x}")
         return await self._async_handle_discovery_with_unique_id()
 
     async def async_step_ssdp(

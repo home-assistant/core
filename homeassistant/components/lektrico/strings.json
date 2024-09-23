@@ -70,7 +70,10 @@
           "schedule": "Schedule",
           "em_offline": "EM offline",
           "em": "EM",
-          "ocpp": "OCPP"
+          "ocpp": "OCPP",
+          "overtemperature": "Overtemperature",
+          "switching_phases": "Switching phases",
+          "1p_charging_disabled": "1p charging disabled"
         }
       },
       "breaker_current": {

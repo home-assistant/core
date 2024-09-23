@@ -9,9 +9,9 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import as_local, parse_datetime, utcnow
 
-from . import OpenUvEntity
 from .const import DATA_PROTECTION_WINDOW, DOMAIN, LOGGER, TYPE_PROTECTION_WINDOW
 from .coordinator import OpenUvCoordinator
+from .entity import OpenUvEntity
 
 ATTR_PROTECTION_WINDOW_ENDING_TIME = "end_time"
 ATTR_PROTECTION_WINDOW_ENDING_UV = "end_uv"

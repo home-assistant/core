@@ -78,7 +78,7 @@ TREND_SENSOR_VARIANTS = [
 
 def sense_to_mdi(sense_icon):
     """Convert sense icon to mdi icon."""
-    return "mdi:{}".format(MDI_ICONS.get(sense_icon, "power-plug"))
+    return f"mdi:{MDI_ICONS.get(sense_icon, 'power-plug')}"
 
 
 async def async_setup_entry(

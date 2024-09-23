@@ -85,8 +85,8 @@ class ZWaveMeRGB(ZWaveMeEntity, LightEntity):
                     self.device.id, f"exact?level={round(brightness / 2.55)}"
                 )
             return
-        cmd = "exact?red={}&green={}&blue={}"
-        cmd = cmd.format(*color) if any(color) else cmd.format(*(255, 255, 255))
+        red, green, blue = color if any(color) else (255, 255, 255)
+        cmd = f"exact?red={red}&green={green}&blue={blue}"
         self.controller.zwave_api.send_command(self.device.id, cmd)
 
     @property

@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
 from pyiskra.devices import Device
+from pyiskra.helper import Counter, CounterType
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -17,6 +18,7 @@ from homeassistant.const import (
     UnitOfApparentPower,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
+    UnitOfEnergy,
     UnitOfFrequency,
     UnitOfPower,
     UnitOfReactivePower,
@@ -27,6 +29,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import IskraConfigEntry
 from .const import (
     ATTR_FREQUENCY,
+    ATTR_NON_RESETTABLE_COUNTER,
     ATTR_PHASE1_CURRENT,
     ATTR_PHASE1_POWER,
     ATTR_PHASE1_VOLTAGE,
@@ -36,6 +39,7 @@ from .const import (
     ATTR_PHASE3_CURRENT,
     ATTR_PHASE3_POWER,
     ATTR_PHASE3_VOLTAGE,
+    ATTR_RESETTABLE_COUNTER,
     ATTR_TOTAL_ACTIVE_POWER,
     ATTR_TOTAL_APPARENT_POWER,
     ATTR_TOTAL_REACTIVE_POWER,
@@ -163,6 +167,44 @@ SENSOR_TYPES: tuple[IskraSensorEntityDescription, ...] = (
 )
 
 
+def get_counter_entity_description(
+    counter: Counter,
+    index: int,
+    entity_name: str,
+) -> IskraSensorEntityDescription:
+    """Dynamically create IskraSensor object as energy meter's counters are customizable."""
+
+    key = entity_name.format(index + 1)
+
+    if entity_name == ATTR_NON_RESETTABLE_COUNTER:
+        entity_description = IskraSensorEntityDescription(
+            key=key,
+            translation_key=key,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+            value_func=lambda device: device.counters.non_resettable[index].value,
+            native_unit_of_measurement=counter.units,
+        )
+    else:
+        entity_description = IskraSensorEntityDescription(
+            key=key,
+            translation_key=key,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+            value_func=lambda device: device.counters.resettable[index].value,
+            native_unit_of_measurement=counter.units,
+        )
+
+    # Set unit of measurement and device class based on counter type
+    # HA's Energy device class supports only active energy
+    if counter.counter_type in [CounterType.ACTIVE_IMPORT, CounterType.ACTIVE_EXPORT]:
+        entity_description = replace(
+            entity_description,
+            native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+            device_class=SensorDeviceClass.ENERGY,
+        )
+
+    return entity_description
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: IskraConfigEntry,
@@ -204,6 +246,19 @@ async def async_setup_entry(
             for description in SENSOR_TYPES
             if description.key in sensors
         )
+
+        if device.supports_counters:
+            for index, counter in enumerate(device.counters.non_resettable[:4]):
+                description = get_counter_entity_description(
+                    counter, index, ATTR_NON_RESETTABLE_COUNTER
+                )
+                entities.append(IskraSensor(coordinator, description))
+
+            for index, counter in enumerate(device.counters.resettable[:8]):
+                description = get_counter_entity_description(
+                    counter, index, ATTR_RESETTABLE_COUNTER
+                )
+                entities.append(IskraSensor(coordinator, description))
 
     async_add_entities(entities)
 
