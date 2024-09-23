@@ -131,7 +131,6 @@ def mock_client_api(
     mock_api.get_user_info.return_value = UserInfoResult(
         id=user_identifier,
         name="Test Name",
-        email="test.name@gmail.com",
     )
 
     responses = load_json_array_fixture(fixture_name, DOMAIN) if fixture_name else []

@@ -58,7 +58,6 @@ class YaleDoorlock(YaleLockEntity, LockEntity):
         """Initialize the Yale Lock Device."""
         super().__init__(coordinator, lock)
         self._attr_code_format = rf"^\d{{{code_format}}}$"
-        self.lock_data = lock
 
     async def async_unlock(self, **kwargs: Any) -> None:
         """Send unlock command."""

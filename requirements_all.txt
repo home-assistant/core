@@ -1007,7 +1007,7 @@ google-generativeai==0.7.2
 google-nest-sdm==5.0.1
 
 # homeassistant.components.google_photos
-google-photos-library-api==0.8.0
+google-photos-library-api==0.12.0
 
 # homeassistant.components.google_travel_time
 googlemaps==2.5.1
@@ -1270,7 +1270,7 @@ leaone-ble==0.1.0
 led-ble==1.0.2
 
 # homeassistant.components.lektrico
-lektricowifi==0.0.41
+lektricowifi==0.0.42
 
 # homeassistant.components.foscam
 libpyfoscam==1.2.2
@@ -1393,7 +1393,7 @@ motionblindsble==0.1.1
 motioneye-client==0.3.14
 
 # homeassistant.components.bang_olufsen
-mozart-api==3.4.1.8.6
+mozart-api==3.4.1.8.8
 
 # homeassistant.components.mullvad
 mullvad-api==1.0.0
@@ -1840,7 +1840,7 @@ pydiscovergy==3.0.2
 pydoods==1.0.2
 
 # homeassistant.components.hydrawise
-pydrawise==2024.8.0
+pydrawise==2024.9.0
 
 # homeassistant.components.android_ip_webcam
 pydroid-ipcam==2.0.0
@@ -2956,7 +2956,7 @@ weatherflow4py==1.0.6
 webmin-xmlrpc==0.0.2
 
 # homeassistant.components.weheat
-weheat==2024.09.10
+weheat==2024.09.23
 
 # homeassistant.components.whirlpool
 whirlpool-sixth-sense==0.18.8
@@ -2974,7 +2974,7 @@ wirelesstagpy==0.8.1
 wled==0.20.2
 
 # homeassistant.components.wolflink
-wolf-comm==0.0.9
+wolf-comm==0.0.10
 
 # homeassistant.components.wyoming
 wyoming==1.5.4
@@ -3002,7 +3002,7 @@ xmltodict==0.13.0
 xs1-api-client==3.0.0
 
 # homeassistant.components.yale_smart_alarm
-yalesmartalarmclient==0.4.2
+yalesmartalarmclient==0.4.3
 
 # homeassistant.components.august
 # homeassistant.components.yale

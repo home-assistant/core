@@ -32,6 +32,7 @@ UPLOAD_SERVICE_SCHEMA = vol.Schema(
         vol.Required(CONF_FILENAME): vol.All(cv.ensure_list, [cv.string]),
     }
 )
+CONTENT_SIZE_LIMIT = 20 * 1024 * 1024
 
 
 def _read_file_contents(
@@ -52,6 +53,16 @@ def _read_file_contents(
                 translation_domain=DOMAIN,
                 translation_key="filename_does_not_exist",
                 translation_placeholders={"filename": filename},
+            )
+        if filename_path.stat().st_size > CONTENT_SIZE_LIMIT:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="file_too_large",
+                translation_placeholders={
+                    "filename": filename,
+                    "size": str(filename_path.stat().st_size),
+                    "limit": str(CONTENT_SIZE_LIMIT),
+                },
             )
         mime_type, _ = mimetypes.guess_type(filename)
         if mime_type is None or not (mime_type.startswith(("image", "video"))):
