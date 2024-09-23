@@ -124,19 +124,6 @@ class HassEnforceClassModule(BaseChecker):
 
         ancestors = list(node.ancestors())
 
-        for expected_module, classes in _MODULES.items():
-            if expected_module in (current_module, current_integration):
-                continue
-
-            for ancestor in ancestors:
-                if ancestor.name in classes:
-                    self.add_message(
-                        "hass-enforce-class-module",
-                        node=node,
-                        args=(ancestor.name, expected_module),
-                    )
-                    return
-
         for expected_module, classes in _BASE_MODULES.items():
             if (
                 expected_module == current_module
@@ -155,6 +142,19 @@ class HassEnforceClassModule(BaseChecker):
                         "hass-enforce-class-module",
                         node=node,
                         args=(ancestor.name, "entity"),
+                    )
+                    return
+
+        for expected_module, classes in _MODULES.items():
+            if expected_module in (current_module, current_integration):
+                continue
+
+            for ancestor in ancestors:
+                if ancestor.name in classes:
+                    self.add_message(
+                        "hass-enforce-class-module",
+                        node=node,
+                        args=(ancestor.name, expected_module),
                     )
                     return
 
