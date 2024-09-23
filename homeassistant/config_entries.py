@@ -193,7 +193,7 @@ SIGNAL_CONFIG_ENTRY_CHANGED = SignalType["ConfigEntryChange", "ConfigEntry"](
 )
 
 
-@lru_cache
+@cache
 def signal_discovered_config_entry_removed(
     discovery_domain: str,
 ) -> SignalType[ConfigEntryChange, ConfigEntry]:
