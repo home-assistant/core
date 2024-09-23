@@ -12,6 +12,30 @@
       },
       "wordles_max_streak": {
         "default": "mdi:calendar-month"
+      },
+      "spelling_bees_played": {
+        "default": "mdi:beehive-outline"
+      },
+      "spelling_bees_total_words": {
+        "default": "mdi:beehive-outline"
+      },
+      "spelling_bees_total_pangrams": {
+        "default": "mdi:beehive-outline"
+      },
+      "connections_played": {
+        "default": "mdi:table-large"
+      },
+      "connections_won": {
+        "default": "mdi:trophy-award"
+      },
+      "connections_last_played": {
+        "default": "mdi:beehive-outline"
+      },
+      "connections_streak": {
+        "default": "mdi:calendar-range"
+      },
+      "connections_max_streak": {
+        "default": "mdi:calendar-month"
       }
     }
   }

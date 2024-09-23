@@ -32,6 +32,30 @@
       },
       "wordles_max_streak": {
         "name": "Highest Wordle streak"
+      },
+      "spelling_bees_played": {
+        "name": "Spolling Bees played"
+      },
+      "spelling_bees_total_words": {
+        "name": "Spelling Bees total words found"
+      },
+      "spelling_bees_total_pangrams": {
+        "name": "Spelling Bees total pangrams found"
+      },
+      "connections_played": {
+        "name": "Connections played"
+      },
+      "connections_won": {
+        "name": "Connections won"
+      },
+      "connections_last_played": {
+        "name": "Last played Connections"
+      },
+      "connections_streak": {
+        "name": "Current Connections streak"
+      },
+      "connections_max_streak": {
+        "name": "Highest Connections streak"
       }
     }
   }
