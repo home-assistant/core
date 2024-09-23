@@ -33,26 +33,36 @@ class WatchYourLANConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors = {}
-        hosts = None
+
         if user_input is not None:
+            # Set unique ID (use the URL as the unique ID)
+            await self.async_set_unique_id(user_input[CONF_URL])
+            # Abort if the unique ID is already configured
+            self._abort_if_unique_id_configured()
+
             # Use the WatchYourLANClient to validate the connection
             api_client = WatchYourLANClient(
                 base_url=user_input[CONF_URL],
                 async_mode=True,
                 verify_ssl=user_input[CONF_VERIFY_SSL],
             )
+
             try:
                 hosts = await api_client.get_all_hosts()
+                if not hosts:
+                    errors["base"] = "cannot_connect"
             except (ConnectError, HTTPStatusError) as exc:
                 _LOGGER.error("Connection error during setup: %s", exc)
                 errors["base"] = "cannot_connect"
             except Exception:  # noqa: BLE001
+                _LOGGER.exception("Unexpected error during WatchYourLAN setup")
                 errors["base"] = "unknown"
-            if not hosts:
-                errors["base"] = "cannot_connect"
+
             if not errors:
+                # Successful connection, create the config entry
                 return self.async_create_entry(title="WatchYourLAN", data=user_input)
 
+        # Show the form with errors (if any)
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )

@@ -5,12 +5,13 @@ from unittest.mock import AsyncMock, patch
 from httpx import ConnectError
 import pytest
 
-from homeassistant import config_entries
 from homeassistant.components.watchyourlan.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_URL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+
+from tests.common import MockConfigEntry  # Import MockConfigEntry
 
 
 @pytest.fixture(name="mock_watchyourlan_client")
@@ -83,13 +84,14 @@ async def test_form(
 
     # Ensure the form shows the expected errors
     assert result["type"] is expected_result
-    assert result["errors"] == expected_errors
+    assert result.get("errors", {}) == expected_errors
 
     if expected_result is FlowResultType.CREATE_ENTRY:
         # Ensure that the config entry is created with correct values
         assert result["title"] == "WatchYourLAN"
         assert result["data"] == {
             CONF_URL: user_input[CONF_URL],
+            CONF_VERIFY_SSL: user_input[CONF_VERIFY_SSL],
         }
         assert len(mock_setup_entry.mock_calls) == 1
 
@@ -118,40 +120,30 @@ async def test_form_generic_exception(
 
 
 async def test_form_already_configured(
-    hass: HomeAssistant,
-    mock_watchyourlan_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
+    hass: HomeAssistant, mock_watchyourlan_client: AsyncMock
 ) -> None:
-    """Test when the same configuration is already configured."""
-    # Mock an existing config entry
-    mock_entry = config_entries.ConfigEntry(
-        version=1,
-        minor_version=0,
-        domain=DOMAIN,
-        title="WatchYourLAN",
-        data={CONF_URL: "http://127.0.0.1:8840"},
-        source=SOURCE_USER,
-        entry_id="1",
-        state=config_entries.ConfigEntryState.LOADED,
-        options={},
-        unique_id="unique_id",
-    )
-    hass.config_entries.async_add(mock_entry)
+    """Test if an already configured entry is detected and aborted."""
 
-    result = await hass.config_entries.flow.async_init(
+    # Create a mock config entry to simulate an existing entry
+    mock_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_URL: "http://127.0.0.1:8840"},
+        title="WatchYourLAN",
+        unique_id="http://127.0.0.1:8840",  # The unique_id should match the CONF_URL to trigger the abort
+    )
+    mock_entry.add_to_hass(hass)
+
+    # Initiate the config flow
+    first_result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    mock_watchyourlan_client.get_all_hosts.return_value = {
-        "title": "WatchYourLAN",
-        "url": "http://127.0.0.1:8840",
-    }
-
+    # Provide the user input that matches the already existing entry
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
+        first_result["flow_id"],
         {CONF_URL: "http://127.0.0.1:8840", CONF_VERIFY_SSL: False},
     )
 
-    # Ensure the form shows the already_configured error
+    # Ensure the flow aborts because the entry already exists
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"

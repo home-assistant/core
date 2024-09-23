@@ -36,7 +36,7 @@ class WatchYourLANUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]])
         self.api_client = WatchYourLANClient(
             base_url=self.config_entry.data[CONF_URL],
             async_mode=True,
-            verify_ssl=self.config_entry.data[CONF_VERIFY_SSL],
+            verify_ssl=self.config_entry.data.get(CONF_VERIFY_SSL, True),
         )
 
     async def _async_update_data(self) -> list[dict[str, Any]]:
