@@ -41,13 +41,6 @@ async def test_setup_sensors(hass: HomeAssistant) -> None:
         "homeassistant.components.watchyourlan.coordinator.WatchYourLANClient.get_all_hosts",
         AsyncMock(return_value=devices),  # Ensure it returns a coroutine
     ):
-        # entry = MockConfigEntry(
-        #    domain=DOMAIN,
-        #    data={
-        #        "verify_ssl": False,
-        #        "url": "http://127.0.0.1:8840",
-        #    },
-        # )
         mock_entry = MockConfigEntry(
             domain=DOMAIN,
             data={CONF_URL: "http://127.0.0.1:8840"},
