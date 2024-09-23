@@ -7,6 +7,7 @@ from mozart_api.models import (
     Action,
     BeolinkPeer,
     ContentItem,
+    PairedRemoteResponse,
     PlaybackContentMetadata,
     PlaybackProgress,
     PlaybackState,
@@ -96,6 +97,8 @@ def mock_mozart_client() -> Generator[AsyncMock]:
         client.get_beolink_self.return_value = BeolinkPeer(
             friendly_name=TEST_FRIENDLY_NAME, jid=TEST_JID_1
         )
+        client.get_bluetooth_remotes = AsyncMock()
+        client.get_bluetooth_remotes.return_value = PairedRemoteResponse(items=[])
         client.get_softwareupdate_status = AsyncMock()
         client.get_softwareupdate_status.return_value = SoftwareUpdateStatus(
             software_version="1.0.0", state=SoftwareUpdateState()

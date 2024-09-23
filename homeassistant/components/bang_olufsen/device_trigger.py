@@ -215,7 +215,7 @@ async def async_attach_trigger(
     hass: HomeAssistant,
     config: ConfigType,
     action: TriggerActionType,
-    automation_info: TriggerInfo,
+    trigger_info: TriggerInfo,
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
 
@@ -231,5 +231,5 @@ async def async_attach_trigger(
     )
 
     return await event_trigger.async_attach_trigger(
-        hass, event_config, action, automation_info, platform_type=CONF_DEVICE
+        hass, event_config, action, trigger_info, platform_type=CONF_DEVICE
     )
