@@ -545,17 +545,20 @@ class Scanner:
 
         _LOGGER.debug("Discovery info: %s", discovery_info)
 
-        location = ssdp_device.location
+        if not matching_domains:
+            return  # avoid creating DiscoveryKey if there are no matches
+
+        discovery_key = discovery_flow.DiscoveryKey(
+            domain=DOMAIN, key=ssdp_device.udn, version=1
+        )
         for domain in matching_domains:
-            _LOGGER.debug("Discovered %s at %s", domain, location)
+            _LOGGER.debug("Discovered %s at %s", domain, ssdp_device.location)
             discovery_flow.async_create_flow(
                 self.hass,
                 domain,
                 {"source": config_entries.SOURCE_SSDP},
                 discovery_info,
-                discovery_key=discovery_flow.DiscoveryKey(
-                    domain=DOMAIN, key=ssdp_device.udn, version=1
-                ),
+                discovery_key=discovery_key,
             )
 
     def _async_dismiss_discoveries(
