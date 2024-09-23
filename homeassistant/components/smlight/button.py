@@ -16,7 +16,7 @@ from homeassistant.components.button import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -71,18 +71,25 @@ async def async_setup_entry(
     """Set up SMLIGHT buttons based on a config entry."""
     coordinator = entry.runtime_data.data
 
-    entities = [SmButton(coordinator, button) for button in BUTTONS]
+    async_add_entities(SmButton(coordinator, button) for button in BUTTONS)
+    entity_created = False
 
-    if coordinator.data.info.zb_type == 1:
-        entities.append(SmButton(coordinator, ROUTER))
-    else:
-        entity_registry = er.async_get(hass)
-        if entity_id := entity_registry.async_get_entity_id(
-            BUTTON_DOMAIN, DOMAIN, f"{coordinator.unique_id}-{ROUTER.key}"
-        ):
-            entity_registry.async_remove(entity_id)
+    @callback
+    def _check_router(startup: bool = False) -> None:
+        nonlocal entity_created
 
-    async_add_entities(entities)
+        if coordinator.data.info.zb_type == 1 and not entity_created:
+            async_add_entities([SmButton(coordinator, ROUTER)])
+            entity_created = True
+        elif coordinator.data.info.zb_type != 1 and (startup or entity_created):
+            entity_registry = er.async_get(hass)
+            if entity_id := entity_registry.async_get_entity_id(
+                BUTTON_DOMAIN, DOMAIN, f"{coordinator.unique_id}-{ROUTER.key}"
+            ):
+                entity_registry.async_remove(entity_id)
+
+    coordinator.async_add_listener(_check_router)
+    _check_router(startup=True)
 
 
 class SmButton(SmEntity, ButtonEntity):
