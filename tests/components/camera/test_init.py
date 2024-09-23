@@ -1044,6 +1044,23 @@ def test_deprecated_stream_type_constants(
 
 
 @pytest.mark.parametrize(
+    "enum",
+    list(camera.const.CameraState),
+)
+@pytest.mark.parametrize(
+    "module",
+    [camera],
+)
+def test_deprecated_state_constants(
+    caplog: pytest.LogCaptureFixture,
+    enum: camera.const.StreamType,
+    module: ModuleType,
+) -> None:
+    """Test deprecated stream type constants."""
+    import_and_test_deprecated_constant_enum(caplog, module, enum, "STATE_", "2025.10")
+
+
+@pytest.mark.parametrize(
     "entity_feature",
     list(camera.CameraEntityFeature),
 )
