@@ -75,7 +75,7 @@ async def test_forward_request_onboarded_user_unallowed_methods(
     ("bad_path", "expected_status"),
     [
         # Caught by bullshit filter
-        ("app/%252E./entrypoint.js", HTTPStatus.INTERNAL_SERVER_ERROR),
+        ("app/%252E./entrypoint.js", HTTPStatus.BAD_REQUEST),
         # The .. is processed, making it an unauthenticated path
         ("app/../entrypoint.js", HTTPStatus.UNAUTHORIZED),
         ("app/%2E%2E/entrypoint.js", HTTPStatus.UNAUTHORIZED),
@@ -145,7 +145,7 @@ async def test_forward_request_onboarded_noauth_unallowed_methods(
     ("bad_path", "expected_status"),
     [
         # Caught by bullshit filter
-        ("app/%252E./entrypoint.js", HTTPStatus.INTERNAL_SERVER_ERROR),
+        ("app/%252E./entrypoint.js", HTTPStatus.BAD_REQUEST),
         # The .. is processed, making it an unauthenticated path
         ("app/../entrypoint.js", HTTPStatus.UNAUTHORIZED),
         ("app/%2E%2E/entrypoint.js", HTTPStatus.UNAUTHORIZED),
@@ -258,7 +258,7 @@ async def test_forward_request_not_onboarded_unallowed_methods(
     ("bad_path", "expected_status"),
     [
         # Caught by bullshit filter
-        ("app/%252E./entrypoint.js", HTTPStatus.INTERNAL_SERVER_ERROR),
+        ("app/%252E./entrypoint.js", HTTPStatus.BAD_REQUEST),
         # The .. is processed, making it an unauthenticated path
         ("app/../entrypoint.js", HTTPStatus.UNAUTHORIZED),
         ("app/%2E%2E/entrypoint.js", HTTPStatus.UNAUTHORIZED),
@@ -374,7 +374,7 @@ async def test_forward_request_admin_unallowed_methods(
     ("bad_path", "expected_status"),
     [
         # Caught by bullshit filter
-        ("app/%252E./entrypoint.js", HTTPStatus.INTERNAL_SERVER_ERROR),
+        ("app/%252E./entrypoint.js", HTTPStatus.BAD_REQUEST),
         # The .. is processed, making it an unauthenticated path
         ("app/../entrypoint.js", HTTPStatus.UNAUTHORIZED),
         ("app/%2E%2E/entrypoint.js", HTTPStatus.UNAUTHORIZED),
