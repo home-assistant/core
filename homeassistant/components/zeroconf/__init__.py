@@ -437,7 +437,7 @@ class ZeroconfDiscovery:
             state_change,
         )
 
-        if state_change == ServiceStateChange.Removed:
+        if state_change is ServiceStateChange.Removed:
             self._async_dismiss_discoveries(name)
             return
 

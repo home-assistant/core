@@ -2194,7 +2194,7 @@ async def test_async_functions_with_callback(hass: HomeAssistant) -> None:
     runs = []
 
     @ha.callback
-    async def test():
+    async def test():  # pylint: disable=hass-async-callback-decorator
         runs.append(True)
 
     await hass.async_add_job(test)
@@ -2205,7 +2205,7 @@ async def test_async_functions_with_callback(hass: HomeAssistant) -> None:
     assert len(runs) == 2
 
     @ha.callback
-    async def service_handler(call):
+    async def service_handler(call):  # pylint: disable=hass-async-callback-decorator
         runs.append(True)
 
     hass.services.async_register("test_domain", "test_service", service_handler)
