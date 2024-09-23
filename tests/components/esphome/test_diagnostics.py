@@ -70,7 +70,7 @@ async def test_diagnostics_with_bluetooth(
                 "port": 6053,
             },
             "disabled_by": None,
-            "discovery_keys": [],
+            "discovery_keys": {},
             "domain": "esphome",
             "entry_id": ANY,
             "minor_version": 1,
