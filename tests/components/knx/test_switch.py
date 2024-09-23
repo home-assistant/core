@@ -6,8 +6,9 @@ from homeassistant.components.knx.const import (
     KNX_ADDRESS,
 )
 from homeassistant.components.knx.schema import SwitchSchema
-from homeassistant.const import CONF_NAME, STATE_OFF, STATE_ON, Platform
+from homeassistant.const import CONF_NAME, Platform
 from homeassistant.core import HomeAssistant, State
+from homeassistant.helpers.entity import ToggleState
 
 from . import KnxEntityGenerator
 from .conftest import KNXTestKit
@@ -41,12 +42,12 @@ async def test_switch_simple(hass: HomeAssistant, knx: KNXTestKit) -> None:
     # receive ON telegram
     await knx.receive_write("1/2/3", True)
     state = hass.states.get("switch.test")
-    assert state.state is STATE_ON
+    assert state.state == ToggleState.ON
 
     # receive OFF telegram
     await knx.receive_write("1/2/3", False)
     state = hass.states.get("switch.test")
-    assert state.state is STATE_OFF
+    assert state.state == ToggleState.OFF
 
     # switch does not respond to read by default
     await knx.receive_read("1/2/3")
@@ -72,27 +73,27 @@ async def test_switch_state(hass: HomeAssistant, knx: KNXTestKit) -> None:
     await knx.assert_read(_STATE_ADDRESS)
     await knx.receive_response(_STATE_ADDRESS, True)
     state = hass.states.get("switch.test")
-    assert state.state is STATE_ON
+    assert state.state == ToggleState.ON
 
     # receive OFF telegram at `address`
     await knx.receive_write(_ADDRESS, False)
     state = hass.states.get("switch.test")
-    assert state.state is STATE_OFF
+    assert state.state == ToggleState.OFF
 
     # receive ON telegram at `address`
     await knx.receive_write(_ADDRESS, True)
     state = hass.states.get("switch.test")
-    assert state.state is STATE_ON
+    assert state.state == ToggleState.ON
 
     # receive OFF telegram at `state_address`
     await knx.receive_write(_STATE_ADDRESS, False)
     state = hass.states.get("switch.test")
-    assert state.state is STATE_OFF
+    assert state.state == ToggleState.OFF
 
     # receive ON telegram at `state_address`
     await knx.receive_write(_STATE_ADDRESS, True)
     state = hass.states.get("switch.test")
-    assert state.state is STATE_ON
+    assert state.state == ToggleState.ON
 
     # turn off switch
     await hass.services.async_call(
@@ -129,7 +130,7 @@ async def test_switch_restore_and_respond(hass: HomeAssistant, knx) -> None:
 
     # restored state - doesn't send telegram
     state = hass.states.get("switch.test")
-    assert state.state == STATE_ON
+    assert state.state == ToggleState.ON
     await knx.assert_telegram_count(0)
 
     # respond to restored state
@@ -142,7 +143,7 @@ async def test_switch_restore_and_respond(hass: HomeAssistant, knx) -> None:
     )
     await knx.assert_write(_ADDRESS, False)
     state = hass.states.get("switch.test")
-    assert state.state == STATE_OFF
+    assert state.state == ToggleState.OFF
 
     # respond to new state
     await knx.receive_read(_ADDRESS)
@@ -170,4 +171,4 @@ async def test_switch_ui_create(
     await knx.assert_read("2/2/2")
     await knx.receive_response("2/2/2", True)
     state = hass.states.get("switch.test")
-    assert state.state is STATE_ON
+    assert state.state == ToggleState.ON
