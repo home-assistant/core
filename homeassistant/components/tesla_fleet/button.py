@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from asyncio import sleep
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import Any
@@ -21,6 +20,10 @@ from .models import TeslaFleetVehicleData
 PARALLEL_UPDATES = 0
 
 
+async def do_nothing() -> None:
+    """Do nothing."""
+
+
 @dataclass(frozen=True, kw_only=True)
 class TeslaFleetButtonEntityDescription(ButtonEntityDescription):
     """Describes a TeslaFleet Button entity."""
@@ -30,7 +33,7 @@ class TeslaFleetButtonEntityDescription(ButtonEntityDescription):
 
 DESCRIPTIONS: tuple[TeslaFleetButtonEntityDescription, ...] = (
     TeslaFleetButtonEntityDescription(
-        key="wake", func=lambda self: sleep(0)
+        key="wake", func=lambda self: do_nothing()
     ),  # Every button runs wakeup, so func does nothing
     TeslaFleetButtonEntityDescription(
         key="flash_lights", func=lambda self: self.api.flash_lights()
