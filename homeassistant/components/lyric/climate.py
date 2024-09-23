@@ -208,7 +208,13 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
         if LYRIC_HVAC_MODE_COOL in device.allowed_modes:
             self._attr_hvac_modes.append(HVACMode.COOL)
 
-        if LYRIC_HVAC_MODE_HEAT_COOL in device.allowed_modes:
+        # TCC devices like the Lyric round do not have the Auto
+        # option in allowed_modes, but still support Auto mode
+        if LYRIC_HVAC_MODE_HEAT_COOL in device.allowed_modes or (
+            self._attr_thermostat_type is LyricThermostatType.TCC
+            and LYRIC_HVAC_MODE_HEAT in device.allowed_modes
+            and LYRIC_HVAC_MODE_COOL in device.allowed_modes
+        ):
             self._attr_hvac_modes.append(HVACMode.HEAT_COOL)
 
         # Setup supported features
