@@ -221,17 +221,17 @@ class SqueezeBoxEntity(MediaPlayerEntity):
         self._remove_dispatcher: Callable | None = None
         self._attr_unique_id = format_mac(player.player_id)
         if player.model == "SqueezeLite":
-            _manufacturer = "https://github.com/ralph-irving/squeezelite"
+            _manufacturer = "Ralph Irving"
         elif (
             "Squeezebox" in player.model
             or "Transporter" in player.model
             or "Slim" in player.model
-        ) or "Transporter" in player.model:
+        ):
             _manufacturer = "Logitech"
         elif "SqueezePlay" in player.model:
-            _manufacturer = "https://github.com/ralph-irving/squeezeplay"
+            _manufacturer = "Ralph Irving"
         else:
-            _manufacturer = ""
+            _manufacturer = None
 
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._attr_unique_id)},
