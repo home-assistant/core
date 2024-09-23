@@ -210,6 +210,30 @@ async def test_button_press(
     mocked_feature.set_value.assert_called_with(True)
 
 
+async def test_button_not_exists_with_deprecation(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mocked_feature_button: Feature,
+) -> None:
+    """Test deprecated buttons are not created if they don't previously exist."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
+    )
+    config_entry.add_to_hass(hass)
+    entity_id = "button.my_device_test_alarm"
+
+    assert not hass.states.get(entity_id)
+    mocked_feature = mocked_feature_button
+    dev = _mocked_device(alias="my_device", features=[mocked_feature])
+    with _patch_discovery(device=dev), _patch_connect(device=dev):
+        await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
+        await hass.async_block_till_done()
+
+    assert not entity_registry.async_get(entity_id)
+    assert not er.async_entries_for_config_entry(entity_registry, config_entry.entry_id)
+    assert not hass.states.get(entity_id)
+
+
 @pytest.mark.parametrize(
     ("entity_disabled", "entity_has_automations"),
     [
