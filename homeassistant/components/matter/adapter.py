@@ -210,8 +210,7 @@ class MatterAdapter:
         # we prefer the matter product ID so we can look it up in Matter DCL
         if isinstance(basic_info, clusters.BridgedDeviceBasicInformation):
             # On bridged devices, the productID is not available
-            # we use the product name as fallback model ID
-            model_id = get_clean_name(basic_info.productName)
+            model_id = None
         else:
             model_id = str(product_id) if (product_id := basic_info.productID) else None
 
