@@ -175,7 +175,7 @@ async def test_next_change_sensors(
         hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
     )
 
-    base_name = f"{SENSOR_DOMAIN}.{CONF_FAKE_NAME}"
+    base_name = f"{DOMAIN}.{CONF_FAKE_NAME}"
 
     state = hass.states.get(f"{base_name}_next_scheduled_change_time")
     assert state
