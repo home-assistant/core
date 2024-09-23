@@ -12,8 +12,8 @@ from homeassistant.helpers.device_registry import (
 )
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import MusicCastDataUpdateCoordinator
 from .const import BRAND, DEFAULT_ZONE, DOMAIN, ENTITY_CATEGORY_MAPPING
+from .coordinator import MusicCastDataUpdateCoordinator
 
 
 class MusicCastEntity(CoordinatorEntity[MusicCastDataUpdateCoordinator]):
