@@ -1483,6 +1483,9 @@ numato-gpio==0.13.0
 # homeassistant.components.trend
 numpy==1.26.0
 
+# homeassistant.components.nyt_games
+nyt_games==0.3.0
+
 # homeassistant.components.oasa_telematics
 oasatelematics==0.3
 
