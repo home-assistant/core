@@ -26,8 +26,8 @@
         'post_code': '1234AB',
       }),
       'disabled_by': None,
-      'discovery_keys': tuple(
-      ),
+      'discovery_keys': dict({
+      }),
       'domain': 'twentemilieu',
       'entry_id': <ANY>,
       'minor_version': 1,
@@ -72,8 +72,8 @@
         'post_code': '1234AB',
       }),
       'disabled_by': None,
-      'discovery_keys': tuple(
-      ),
+      'discovery_keys': dict({
+      }),
       'domain': 'twentemilieu',
       'entry_id': <ANY>,
       'minor_version': 1,

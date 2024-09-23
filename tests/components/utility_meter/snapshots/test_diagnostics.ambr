@@ -5,8 +5,8 @@
       'data': dict({
       }),
       'disabled_by': None,
-      'discovery_keys': list([
-      ]),
+      'discovery_keys': dict({
+      }),
       'domain': 'utility_meter',
       'minor_version': 1,
       'options': dict({
