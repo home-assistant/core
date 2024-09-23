@@ -25,7 +25,7 @@ class PlayerMockData:
     host: str
     player: AsyncMock
     status_long_polling_mock: LongPollingMock[Status]
-    sync_long_polling_mock: LongPollingMock[SyncStatus]
+    sync_status_long_polling_mock: LongPollingMock[SyncStatus]
 
     @staticmethod
     async def generate(host: str) -> "PlayerMockData":
@@ -188,9 +188,7 @@ async def player_mocks() -> AsyncGenerator[PlayerMocks, None, None]:
     )
 
     # to simulate a player that is already configured
-    player_mocks.player_data_for_already_configured.sync_long_polling_mock.get().mac = (
-        player_mocks.player_data.sync_long_polling_mock.get().mac
-    )
+    player_mocks.player_data_for_already_configured.sync_status_long_polling_mock.get().mac = player_mocks.player_data.sync_status_long_polling_mock.get().mac
 
     def select_player(*args: Any, **kwargs: Any) -> AsyncMock:
         match args[0]:

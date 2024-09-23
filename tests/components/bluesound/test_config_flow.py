@@ -53,7 +53,9 @@ async def test_user_flow_cannot_connect(
         context={"source": SOURCE_USER},
     )
 
-    player_mocks.player_data.sync_long_polling_mock.set_error(PlayerUnreachableError("Player not reachable"))
+    player_mocks.player_data.sync_status_long_polling_mock.set_error(
+        PlayerUnreachableError("Player not reachable")
+    )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
@@ -65,7 +67,7 @@ async def test_user_flow_cannot_connect(
     assert result["errors"] == {"base": "cannot_connect"}
     assert result["step_id"] == "user"
 
-    player_mocks.player_data.sync_long_polling_mock.set_error(None)
+    player_mocks.player_data.sync_status_long_polling_mock.set_error(None)
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
