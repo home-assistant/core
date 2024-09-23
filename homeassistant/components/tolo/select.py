@@ -13,8 +13,9 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import ToloSaunaCoordinatorEntity, ToloSaunaUpdateCoordinator
+from . import ToloSaunaUpdateCoordinator
 from .const import DOMAIN, AromaTherapySlot, LampMode
+from .entity import ToloSaunaCoordinatorEntity
 
 
 @dataclass(frozen=True, kw_only=True)
