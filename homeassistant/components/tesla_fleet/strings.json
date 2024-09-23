@@ -107,6 +107,26 @@
         "name": "Tire pressure warning rear right"
       }
     },
+    "button": {
+      "boombox": {
+        "name": "Play fart"
+      },
+      "enable_keyless_driving": {
+        "name": "Keyless driving"
+      },
+      "flash_lights": {
+        "name": "Flash lights"
+      },
+      "homelink": {
+        "name": "Homelink"
+      },
+      "honk": {
+        "name": "Honk horn"
+      },
+      "wake": {
+        "name": "Wake"
+      }
+    },
     "climate": {
       "climate_state_cabin_overheat_protection": {
         "name": "Cabin overheat protection"
