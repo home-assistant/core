@@ -161,17 +161,12 @@ class PermobilConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_create_entry(title=self.data[CONF_EMAIL], data=self.data)
 
     async def async_step_reauth(
-        self, user_input: Mapping[str, Any]
+        self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Perform reauth upon an API authentication error."""
-        reauth_entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
-        assert reauth_entry
-
         try:
-            email: str = reauth_entry.data[CONF_EMAIL]
-            region: str = reauth_entry.data[CONF_REGION]
+            email: str = entry_data[CONF_EMAIL]
+            region: str = entry_data[CONF_REGION]
             self.p_api.set_email(email)
             self.p_api.set_region(region)
             self.data = {

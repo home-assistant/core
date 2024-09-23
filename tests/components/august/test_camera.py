@@ -25,14 +25,10 @@ async def test_create_doorbell(
     ):
         await _create_august_with_devices(hass, [doorbell_one], brand=Brand.AUGUST)
 
-        camera_k98gidt45gul_name_camera = hass.states.get(
-            "camera.k98gidt45gul_name_camera"
-        )
-        assert camera_k98gidt45gul_name_camera.state == STATE_IDLE
+        camera_state = hass.states.get("camera.k98gidt45gul_name_camera")
+        assert camera_state.state == STATE_IDLE
 
-        url = hass.states.get("camera.k98gidt45gul_name_camera").attributes[
-            "entity_picture"
-        ]
+        url = camera_state.attributes["entity_picture"]
 
         client = await hass_client_no_auth()
         resp = await client.get(url)

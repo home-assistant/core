@@ -21,6 +21,9 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "possible_error": { "name": "Possible error" }
+    },
     "sensor": {
       "balance": {
         "name": "Balance"

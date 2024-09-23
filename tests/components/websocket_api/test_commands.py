@@ -1262,6 +1262,54 @@ async def test_subscribe_unsubscribe_entities_specific_entities(
     }
 
 
+async def test_subscribe_unsubscribe_entities_with_filter(
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+    hass_admin_user: MockUser,
+) -> None:
+    """Test subscribe/unsubscribe entities with an entity filter."""
+    hass.states.async_set("switch.not_included", "off")
+    hass.states.async_set("light.include", "off")
+    await websocket_client.send_json(
+        {"id": 7, "type": "subscribe_entities", "include": {"domains": ["light"]}}
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 7
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 7
+    assert msg["type"] == "event"
+    assert msg["event"] == {
+        "a": {
+            "light.include": {
+                "a": {},
+                "c": ANY,
+                "lc": ANY,
+                "s": "off",
+            }
+        }
+    }
+    hass.states.async_set("switch.not_included", "on")
+    hass.states.async_set("light.include", "on")
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 7
+    assert msg["type"] == "event"
+    assert msg["event"] == {
+        "c": {
+            "light.include": {
+                "+": {
+                    "c": ANY,
+                    "lc": ANY,
+                    "s": "on",
+                }
+            }
+        }
+    }
+
+
 async def test_render_template_renders_template(
     hass: HomeAssistant, websocket_client
 ) -> None:

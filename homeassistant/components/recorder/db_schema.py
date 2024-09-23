@@ -693,13 +693,13 @@ class StatisticsBase:
 
     @classmethod
     def from_stats(cls, metadata_id: int, stats: StatisticData) -> Self:
-        """Create object from a statistics with datatime objects."""
+        """Create object from a statistics with datetime objects."""
         return cls(  # type: ignore[call-arg]
             metadata_id=metadata_id,
             created=None,
             created_ts=time.time(),
             start=None,
-            start_ts=dt_util.utc_to_timestamp(stats["start"]),
+            start_ts=stats["start"].timestamp(),
             mean=stats.get("mean"),
             min=stats.get("min"),
             max=stats.get("max"),

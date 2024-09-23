@@ -453,7 +453,7 @@ class Camera(HomeAccessory, PyhapCamera):  # type: ignore[misc]
             _LOGGER.error("Failed to open ffmpeg stream")
             return False
 
-        _LOGGER.info(
+        _LOGGER.debug(
             "[%s] Started stream process - PID %d",
             session_info["id"],
             stream.process.pid,
@@ -528,11 +528,11 @@ class Camera(HomeAccessory, PyhapCamera):  # type: ignore[misc]
         self._async_stop_ffmpeg_watch(session_id)
 
         if not pid_is_alive(stream.process.pid):
-            _LOGGER.info("[%s] Stream already stopped", session_id)
+            _LOGGER.warning("[%s] Stream already stopped", session_id)
             return
 
         for shutdown_method in ("close", "kill"):
-            _LOGGER.info("[%s] %s stream", session_id, shutdown_method)
+            _LOGGER.debug("[%s] %s stream", session_id, shutdown_method)
             try:
                 await getattr(stream, shutdown_method)()
             except Exception:

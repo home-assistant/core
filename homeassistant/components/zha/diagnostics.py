@@ -23,7 +23,7 @@ from zigpy.profiles import PROFILES
 from zigpy.types import Channels
 from zigpy.zcl import Cluster
 
-from homeassistant.components.diagnostics.util import async_redact_data
+from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ID, CONF_NAME, CONF_UNIQUE_ID
 from homeassistant.core import HomeAssistant
@@ -49,6 +49,15 @@ KEYS_TO_REDACT = {
 ATTRIBUTES = "attributes"
 CLUSTER_DETAILS = "cluster_details"
 UNSUPPORTED_ATTRIBUTES = "unsupported_attributes"
+
+BELLOWS_VERSION = version("bellows")
+ZIGPY_VERSION = version("zigpy")
+ZIGPY_DECONZ_VERSION = version("zigpy-deconz")
+ZIGPY_XBEE_VERSION = version("zigpy-xbee")
+ZIGPY_ZNP_VERSION = version("zigpy-znp")
+ZIGPY_ZIGATE_VERSION = version("zigpy-zigate")
+ZHA_QUIRKS_VERSION = version("zha-quirks")
+ZHA_VERSION = version("zha")
 
 
 def shallow_asdict(obj: Any) -> dict:
@@ -86,14 +95,14 @@ async def async_get_config_entry_diagnostics(
                 channel: 100 * energy / 255 for channel, energy in energy_scan.items()
             },
             "versions": {
-                "bellows": version("bellows"),
-                "zigpy": version("zigpy"),
-                "zigpy_deconz": version("zigpy-deconz"),
-                "zigpy_xbee": version("zigpy-xbee"),
-                "zigpy_znp": version("zigpy_znp"),
-                "zigpy_zigate": version("zigpy-zigate"),
-                "zhaquirks": version("zha-quirks"),
-                "zha": version("zha"),
+                "bellows": BELLOWS_VERSION,
+                "zigpy": ZIGPY_VERSION,
+                "zigpy_deconz": ZIGPY_DECONZ_VERSION,
+                "zigpy_xbee": ZIGPY_XBEE_VERSION,
+                "zigpy_znp": ZIGPY_ZNP_VERSION,
+                "zigpy_zigate": ZIGPY_ZIGATE_VERSION,
+                "zhaquirks": ZHA_QUIRKS_VERSION,
+                "zha": ZHA_VERSION,
             },
             "devices": [
                 {

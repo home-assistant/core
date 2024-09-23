@@ -981,6 +981,22 @@ class TrackTemplateResultInfo:
 
         self._last_result: dict[Template, bool | str | TemplateError] = {}
 
+        for track_template_ in track_templates:
+            if track_template_.template.hass:
+                continue
+
+            # pylint: disable-next=import-outside-toplevel
+            from .frame import report
+
+            report(
+                (
+                    "calls async_track_template_result with template without hass, "
+                    "which will stop working in HA Core 2025.10"
+                ),
+                error_if_core=False,
+            )
+            track_template_.template.hass = hass
+
         self._rate_limit = KeyedRateLimit(hass)
         self._info: dict[Template, RenderInfo] = {}
         self._track_state_changes: _TrackStateChangeFiltered | None = None

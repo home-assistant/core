@@ -23,6 +23,7 @@ from homeassistant.core import (
 from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
 from homeassistant.helpers import (
     area_registry as ar,
+    config_validation as cv,
     device_registry as dr,
     entity_platform,
     entity_registry as er,
@@ -1810,33 +1811,36 @@ async def test_register_entity_service_none_schema(
 
 
 async def test_register_entity_service_non_entity_service_schema(
-    hass: HomeAssistant,
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """Test attempting to register a service with an incomplete schema."""
+    """Test attempting to register a service with a non entity service schema."""
     entity_platform = MockEntityPlatform(
         hass, domain="mock_integration", platform_name="mock_platform", platform=None
     )
+    expected_message = "registers an entity service with a non entity service schema"
 
-    with pytest.raises(
-        HomeAssistantError,
-        match=(
-            "The schema does not include all required keys: entity_id, device_id, area_id, "
-            "floor_id, label_id"
-        ),
+    for idx, schema in enumerate(
+        (
+            vol.Schema({"some": str}),
+            vol.All(vol.Schema({"some": str})),
+            vol.Any(vol.Schema({"some": str})),
+        )
+    ):
+        entity_platform.async_register_entity_service(f"hello_{idx}", schema, Mock())
+        assert expected_message in caplog.text
+        caplog.clear()
+
+    for idx, schema in enumerate(
+        (
+            cv.make_entity_service_schema({"some": str}),
+            vol.Schema(cv.make_entity_service_schema({"some": str})),
+            vol.All(cv.make_entity_service_schema({"some": str})),
+        )
     ):
         entity_platform.async_register_entity_service(
-            "hello",
-            vol.Schema({"some": str}),
-            Mock(),
+            f"test_service_{idx}", schema, Mock()
         )
-    # The check currently does not recurse into vol.All or vol.Any allowing these
-    # non-compliant schemas to pass
-    entity_platform.async_register_entity_service(
-        "hello", vol.All(vol.Schema({"some": str})), Mock()
-    )
-    entity_platform.async_register_entity_service(
-        "hello", vol.Any(vol.Schema({"some": str})), Mock()
-    )
+        assert expected_message not in caplog.text
 
 
 @pytest.mark.parametrize("update_before_add", [True, False])

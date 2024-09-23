@@ -6,12 +6,7 @@ from pyloadapi.exceptions import CannotConnect, InvalidAuth, ParserError
 import pytest
 
 from homeassistant.components.pyload.const import DEFAULT_NAME, DOMAIN
-from homeassistant.config_entries import (
-    SOURCE_IMPORT,
-    SOURCE_REAUTH,
-    SOURCE_RECONFIGURE,
-    SOURCE_USER,
-)
+from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_RECONFIGURE, SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -180,14 +175,7 @@ async def test_reauth(
 
     config_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": SOURCE_REAUTH,
-            "entry_id": config_entry.entry_id,
-            "unique_id": config_entry.unique_id,
-        },
-    )
+    result = await config_entry.start_reauth_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
@@ -222,14 +210,7 @@ async def test_reauth_errors(
 
     config_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": SOURCE_REAUTH,
-            "entry_id": config_entry.entry_id,
-            "unique_id": config_entry.unique_id,
-        },
-    )
+    result = await config_entry.start_reauth_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"

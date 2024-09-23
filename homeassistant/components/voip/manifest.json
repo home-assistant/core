@@ -3,7 +3,7 @@
   "name": "Voice over IP",
   "codeowners": ["@balloob", "@synesthesiam"],
   "config_flow": true,
-  "dependencies": ["assist_pipeline"],
+  "dependencies": ["assist_pipeline", "assist_satellite"],
   "documentation": "https://www.home-assistant.io/integrations/voip",
   "iot_class": "local_push",
   "quality_scale": "internal",

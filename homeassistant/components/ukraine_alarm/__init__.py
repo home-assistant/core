@@ -47,7 +47,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-class UkraineAlarmDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):  # pylint: disable=hass-enforce-coordinator-module
+class UkraineAlarmDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):  # pylint: disable=hass-enforce-class-module
     """Class to manage fetching Ukraine Alarm API."""
 
     def __init__(

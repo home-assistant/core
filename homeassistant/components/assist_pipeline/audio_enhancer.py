@@ -5,6 +5,7 @@ from dataclasses import dataclass
 import logging
 
 from pymicro_vad import MicroVad
+from pyspeex_noise import AudioProcessor
 
 from .const import BYTES_PER_CHUNK
 
@@ -41,14 +42,32 @@ class AudioEnhancer(ABC):
         """Enhance chunk of PCM audio @ 16Khz with 16-bit mono samples."""
 
 
-class MicroVadEnhancer(AudioEnhancer):
-    """Audio enhancer that just runs microVAD."""
+class MicroVadSpeexEnhancer(AudioEnhancer):
+    """Audio enhancer that runs microVAD and speex."""
 
     def __init__(
         self, auto_gain: int, noise_suppression: int, is_vad_enabled: bool
     ) -> None:
         """Initialize audio enhancer."""
         super().__init__(auto_gain, noise_suppression, is_vad_enabled)
+
+        self.audio_processor: AudioProcessor | None = None
+
+        # Scale from 0-4
+        self.noise_suppression = noise_suppression * -15
+
+        # Scale from 0-31
+        self.auto_gain = auto_gain * 300
+
+        if (self.auto_gain != 0) or (self.noise_suppression != 0):
+            self.audio_processor = AudioProcessor(
+                self.auto_gain, self.noise_suppression
+            )
+            _LOGGER.debug(
+                "Initialized speex with auto_gain=%s, noise_suppression=%s",
+                self.auto_gain,
+                self.noise_suppression,
+            )
 
         self.vad: MicroVad | None = None
         self.threshold = 0.5
@@ -61,11 +80,16 @@ class MicroVadEnhancer(AudioEnhancer):
         """Enhance 10ms chunk of PCM audio @ 16Khz with 16-bit mono samples."""
         is_speech: bool | None = None
 
+        assert len(audio) == BYTES_PER_CHUNK
+
         if self.vad is not None:
             # Run VAD
-            assert len(audio) == BYTES_PER_CHUNK
             speech_prob = self.vad.Process10ms(audio)
             is_speech = speech_prob > self.threshold
+
+        if self.audio_processor is not None:
+            # Run noise suppression and auto gain
+            audio = self.audio_processor.Process10ms(audio).audio
 
         return EnhancedAudioChunk(
             audio=audio, timestamp_ms=timestamp_ms, is_speech=is_speech

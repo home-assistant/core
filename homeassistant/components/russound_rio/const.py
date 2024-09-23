@@ -2,7 +2,7 @@
 
 import asyncio
 
-from aiorussound import CommandException
+from aiorussound import CommandError
 from aiorussound.const import FeatureFlag
 
 from homeassistant.components.media_player import MediaPlayerEntityFeature
@@ -10,7 +10,7 @@ from homeassistant.components.media_player import MediaPlayerEntityFeature
 DOMAIN = "russound_rio"
 
 RUSSOUND_RIO_EXCEPTIONS = (
-    CommandException,
+    CommandError,
     ConnectionRefusedError,
     TimeoutError,
     asyncio.CancelledError,

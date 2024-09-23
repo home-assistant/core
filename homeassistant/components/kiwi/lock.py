@@ -55,7 +55,7 @@ def setup_platform(
         return
     if not (available_locks := kiwi.get_locks()):
         # No locks found; abort setup routine.
-        _LOGGER.info("No KIWI locks found in your account")
+        _LOGGER.debug("No KIWI locks found in your account")
         return
     add_entities([KiwiLock(lock, kiwi) for lock in available_locks], True)
 

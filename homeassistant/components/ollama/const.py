@@ -11,6 +11,11 @@ DEFAULT_KEEP_ALIVE = -1  # seconds. -1 = indefinite, 0 = never
 KEEP_ALIVE_FOREVER = -1
 DEFAULT_TIMEOUT = 5.0  # seconds
 
+CONF_NUM_CTX = "num_ctx"
+DEFAULT_NUM_CTX = 8192
+MIN_NUM_CTX = 2048
+MAX_NUM_CTX = 131072
+
 CONF_MAX_HISTORY = "max_history"
 DEFAULT_MAX_HISTORY = 20
 

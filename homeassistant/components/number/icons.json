@@ -21,6 +21,9 @@
     "carbon_monoxide": {
       "default": "mdi:molecule-co"
     },
+    "conductivity": {
+      "default": "mdi:sprout-outline"
+    },
     "current": {
       "default": "mdi:current-ac"
     },
@@ -146,6 +149,8 @@
     }
   },
   "services": {
-    "set_value": "mdi:numeric"
+    "set_value": {
+      "service": "mdi:numeric"
+    }
   }
 }

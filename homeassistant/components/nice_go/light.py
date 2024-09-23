@@ -1,6 +1,6 @@
 """Nice G.O. light."""
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.light import ColorMode, LightEntity
 from homeassistant.core import HomeAssistant
@@ -20,8 +20,9 @@ async def async_setup_entry(
     coordinator = config_entry.runtime_data
 
     async_add_entities(
-        NiceGOLightEntity(coordinator, device_id, device_data.name, "light")
+        NiceGOLightEntity(coordinator, device_id, device_data.name)
         for device_id, device_data in coordinator.data.items()
+        if device_data.light_status is not None
     )
 
 
@@ -35,6 +36,8 @@ class NiceGOLightEntity(NiceGOEntity, LightEntity):
     @property
     def is_on(self) -> bool:
         """Return if the light is on or not."""
+        if TYPE_CHECKING:
+            assert self.data.light_status is not None
         return self.data.light_status
 
     async def async_turn_on(self, **kwargs: Any) -> None:

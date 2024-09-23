@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from enum import Enum
 import logging
+from typing import Any
 
 import voluptuous as vol
 
@@ -14,8 +15,10 @@ from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntityFeature,
     CodeFormat,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_CODE,
+    CONF_DEVICE_ID,
     CONF_NAME,
     CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
@@ -29,14 +32,18 @@ from homeassistant.const import (
     STATE_ALARM_PENDING,
     STATE_ALARM_TRIGGERED,
     STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
+from homeassistant.helpers import selector
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.script import Script
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.util import slugify
 
 from .const import DOMAIN
 from .template_entity import TemplateEntity, rewrite_common_legacy_to_modern_conf
@@ -102,8 +109,29 @@ PLATFORM_SCHEMA = ALARM_CONTROL_PANEL_PLATFORM_SCHEMA.extend(
     }
 )
 
+ALARM_CONTROL_PANEL_CONFIG_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_NAME): cv.template,
+        vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+        vol.Optional(CONF_DISARM_ACTION): cv.SCRIPT_SCHEMA,
+        vol.Optional(CONF_ARM_AWAY_ACTION): cv.SCRIPT_SCHEMA,
+        vol.Optional(CONF_ARM_CUSTOM_BYPASS_ACTION): cv.SCRIPT_SCHEMA,
+        vol.Optional(CONF_ARM_HOME_ACTION): cv.SCRIPT_SCHEMA,
+        vol.Optional(CONF_ARM_NIGHT_ACTION): cv.SCRIPT_SCHEMA,
+        vol.Optional(CONF_ARM_VACATION_ACTION): cv.SCRIPT_SCHEMA,
+        vol.Optional(CONF_TRIGGER_ACTION): cv.SCRIPT_SCHEMA,
+        vol.Optional(CONF_CODE_ARM_REQUIRED, default=True): cv.boolean,
+        vol.Optional(CONF_CODE_FORMAT, default=TemplateCodeFormat.number.name): cv.enum(
+            TemplateCodeFormat
+        ),
+        vol.Optional(CONF_DEVICE_ID): selector.DeviceSelector(),
+    }
+)
 
-async def _async_create_entities(hass, config):
+
+async def _async_create_entities(
+    hass: HomeAssistant, config: dict[str, Any]
+) -> list[AlarmControlPanelTemplate]:
     """Create Template Alarm Control Panels."""
     alarm_control_panels = []
 
@@ -123,6 +151,27 @@ async def _async_create_entities(hass, config):
     return alarm_control_panels
 
 
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Initialize config entry."""
+    _options = dict(config_entry.options)
+    _options.pop("template_type")
+    validated_config = ALARM_CONTROL_PANEL_CONFIG_SCHEMA(_options)
+    async_add_entities(
+        [
+            AlarmControlPanelTemplate(
+                hass,
+                slugify(_options[CONF_NAME]),
+                validated_config,
+                config_entry.entry_id,
+            )
+        ]
+    )
+
+
 async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
@@ -133,18 +182,18 @@ async def async_setup_platform(
     async_add_entities(await _async_create_entities(hass, config))
 
 
-class AlarmControlPanelTemplate(TemplateEntity, AlarmControlPanelEntity):
+class AlarmControlPanelTemplate(TemplateEntity, AlarmControlPanelEntity, RestoreEntity):
     """Representation of a templated Alarm Control Panel."""
 
     _attr_should_poll = False
 
     def __init__(
         self,
-        hass,
-        object_id,
-        config,
-        unique_id,
-    ):
+        hass: HomeAssistant,
+        object_id: str,
+        config: dict,
+        unique_id: str | None,
+    ) -> None:
         """Initialize the panel."""
         super().__init__(
             hass, config=config, fallback_name=object_id, unique_id=unique_id
@@ -153,6 +202,7 @@ class AlarmControlPanelTemplate(TemplateEntity, AlarmControlPanelEntity):
             ENTITY_ID_FORMAT, object_id, hass=hass
         )
         name = self._attr_name
+        assert name is not None
         self._template = config.get(CONF_VALUE_TEMPLATE)
         self._disarm_script = None
         self._attr_code_arm_required: bool = config[CONF_CODE_ARM_REQUIRED]
@@ -215,6 +265,19 @@ class AlarmControlPanelTemplate(TemplateEntity, AlarmControlPanelEntity):
                 supported_features | AlarmControlPanelEntityFeature.TRIGGER
             )
         self._attr_supported_features = supported_features
+
+    async def async_added_to_hass(self) -> None:
+        """Restore last state."""
+        await super().async_added_to_hass()
+        if (
+            (last_state := await self.async_get_last_state()) is not None
+            and last_state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE)
+            and last_state.state in _VALID_STATES
+            # The trigger might have fired already while we waited for stored data,
+            # then we should not restore state
+            and self._state is None
+        ):
+            self._state = last_state.state
 
     @property
     def state(self) -> str | None:

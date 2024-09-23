@@ -7,7 +7,7 @@ import pytest
 
 from homeassistant.components.homematicip_cloud import DOMAIN as HMIPC_DOMAIN
 from homeassistant.components.lock import (
-    DOMAIN,
+    DOMAIN as LOCK_DOMAIN,
     STATE_LOCKING,
     STATE_UNLOCKING,
     LockEntityFeature,
@@ -23,7 +23,7 @@ from .helper import HomeFactory, async_manipulate_test_data, get_and_check_entit
 async def test_manually_configured_platform(hass: HomeAssistant) -> None:
     """Test that we do not set up an access point."""
     assert await async_setup_component(
-        hass, DOMAIN, {DOMAIN: {"platform": HMIPC_DOMAIN}}
+        hass, LOCK_DOMAIN, {LOCK_DOMAIN: {"platform": HMIPC_DOMAIN}}
     )
     assert not hass.data.get(HMIPC_DOMAIN)
 

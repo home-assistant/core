@@ -91,13 +91,13 @@ SET_ZONE_OVERRIDE_SCHEMA = vol.Schema(
     }
 )
 
-PLATFORMS = (
-    Platform.CLIMATE,
-    Platform.WATER_HEATER,
-    Platform.SENSOR,
+PLATFORMS = [
     Platform.BINARY_SENSOR,
+    Platform.CLIMATE,
+    Platform.SENSOR,
     Platform.SWITCH,
-)
+    Platform.WATER_HEATER,
+]
 
 
 async def _async_import(hass: HomeAssistant, base_config: ConfigType) -> None:
@@ -239,7 +239,7 @@ class GeniusBroker:
             await self.client.update()
             if self._connect_error:
                 self._connect_error = False
-                _LOGGER.info("Connection to geniushub re-established")
+                _LOGGER.warning("Connection to geniushub re-established")
         except (
             aiohttp.ClientResponseError,
             aiohttp.client_exceptions.ClientConnectorError,

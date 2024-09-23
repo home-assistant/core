@@ -620,6 +620,17 @@
           "good": "Good",
           "severe": "Severe"
         }
+      },
+      "air_quality_index": {
+        "name": "Air quality index",
+        "state": {
+          "level_1": "Level 1",
+          "level_2": "Level 2",
+          "level_3": "Level 3",
+          "level_4": "Level 4",
+          "level_5": "Level 5",
+          "level_6": "Level 6"
+        }
       }
     },
     "switch": {

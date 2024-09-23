@@ -9,7 +9,7 @@ from typing import Any
 import aiohttp
 import voluptuous as vol
 from yalexs.authenticator_common import ValidationResult
-from yalexs.const import BRANDS, DEFAULT_BRAND
+from yalexs.const import BRANDS_WITHOUT_OAUTH, DEFAULT_BRAND, Brand
 from yalexs.manager.exceptions import CannotConnect, InvalidAuth, RequireValidation
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -27,6 +27,12 @@ from .const import (
 )
 from .gateway import AugustGateway
 from .util import async_create_august_clientsession
+
+# The Yale Home Brand is not supported by the August integration
+# anymore and should migrate to the Yale integration
+AVAILABLE_BRANDS = BRANDS_WITHOUT_OAUTH.copy()
+del AVAILABLE_BRANDS[Brand.YALE_HOME]
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -118,7 +124,7 @@ class AugustConfigFlow(ConfigFlow, domain=DOMAIN):
                     vol.Required(
                         CONF_BRAND,
                         default=self._user_auth_details.get(CONF_BRAND, DEFAULT_BRAND),
-                    ): vol.In(BRANDS),
+                    ): vol.In(AVAILABLE_BRANDS),
                     vol.Required(
                         CONF_LOGIN_METHOD,
                         default=self._user_auth_details.get(
@@ -208,7 +214,7 @@ class AugustConfigFlow(ConfigFlow, domain=DOMAIN):
                     vol.Required(
                         CONF_BRAND,
                         default=self._user_auth_details.get(CONF_BRAND, DEFAULT_BRAND),
-                    ): vol.In(BRANDS),
+                    ): vol.In(BRANDS_WITHOUT_OAUTH),
                     vol.Required(CONF_PASSWORD): str,
                 }
             ),

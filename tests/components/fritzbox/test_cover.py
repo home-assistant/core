@@ -6,7 +6,7 @@ from unittest.mock import Mock, call
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
     ATTR_POSITION,
-    DOMAIN,
+    DOMAIN as COVER_DOMAIN,
     STATE_OPEN,
 )
 from homeassistant.components.fritzbox.const import DOMAIN as FB_DOMAIN
@@ -32,7 +32,7 @@ from .const import CONF_FAKE_NAME, MOCK_CONFIG
 
 from tests.common import async_fire_time_changed
 
-ENTITY_ID = f"{DOMAIN}.{CONF_FAKE_NAME}"
+ENTITY_ID = f"{COVER_DOMAIN}.{CONF_FAKE_NAME}"
 
 
 async def test_setup(hass: HomeAssistant, fritz: Mock) -> None:
@@ -68,7 +68,7 @@ async def test_open_cover(hass: HomeAssistant, fritz: Mock) -> None:
     )
 
     await hass.services.async_call(
-        DOMAIN, SERVICE_OPEN_COVER, {ATTR_ENTITY_ID: ENTITY_ID}, True
+        COVER_DOMAIN, SERVICE_OPEN_COVER, {ATTR_ENTITY_ID: ENTITY_ID}, True
     )
     assert device.set_blind_open.call_count == 1
 
@@ -81,7 +81,7 @@ async def test_close_cover(hass: HomeAssistant, fritz: Mock) -> None:
     )
 
     await hass.services.async_call(
-        DOMAIN, SERVICE_CLOSE_COVER, {ATTR_ENTITY_ID: ENTITY_ID}, True
+        COVER_DOMAIN, SERVICE_CLOSE_COVER, {ATTR_ENTITY_ID: ENTITY_ID}, True
     )
     assert device.set_blind_close.call_count == 1
 
@@ -94,7 +94,7 @@ async def test_set_position_cover(hass: HomeAssistant, fritz: Mock) -> None:
     )
 
     await hass.services.async_call(
-        DOMAIN,
+        COVER_DOMAIN,
         SERVICE_SET_COVER_POSITION,
         {ATTR_ENTITY_ID: ENTITY_ID, ATTR_POSITION: 50},
         True,
@@ -110,7 +110,7 @@ async def test_stop_cover(hass: HomeAssistant, fritz: Mock) -> None:
     )
 
     await hass.services.async_call(
-        DOMAIN, SERVICE_STOP_COVER, {ATTR_ENTITY_ID: ENTITY_ID}, True
+        COVER_DOMAIN, SERVICE_STOP_COVER, {ATTR_ENTITY_ID: ENTITY_ID}, True
     )
     assert device.set_blind_stop.call_count == 1
 
@@ -134,5 +134,5 @@ async def test_discover_new_device(hass: HomeAssistant, fritz: Mock) -> None:
     async_fire_time_changed(hass, next_update)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    state = hass.states.get(f"{DOMAIN}.new_climate")
+    state = hass.states.get(f"{COVER_DOMAIN}.new_climate")
     assert state

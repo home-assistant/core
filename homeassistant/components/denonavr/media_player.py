@@ -233,7 +233,7 @@ def async_log_errors[_DenonDeviceT: DenonDevice, **_P, _R](
             )
         finally:
             if available and not self.available:
-                _LOGGER.info(
+                _LOGGER.warning(
                     "Denon AVR receiver at host %s is available again",
                     self._receiver.host,
                 )
@@ -301,6 +301,8 @@ class DenonDevice(MediaPlayerEntity):
 
     async def async_will_remove_from_hass(self) -> None:
         """Clean up the entity."""
+        if self._receiver.telnet_connected:
+            await self._receiver.async_telnet_disconnect()
         self._receiver.unregister_callback(ALL_TELNET_EVENTS, self._telnet_callback)
 
     @async_log_errors

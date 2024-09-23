@@ -82,10 +82,7 @@ async def _mock_setup_august(
     )
     entry.add_to_hass(hass)
     with (
-        patch(
-            "yalexs.manager.data.async_create_pubnub",
-            return_value=AsyncMock(),
-        ),
+        patch.object(pubnub_mock, "run"),
         patch("yalexs.manager.data.AugustPubNub", return_value=pubnub_mock),
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)

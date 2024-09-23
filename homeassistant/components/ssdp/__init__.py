@@ -284,16 +284,13 @@ class IntegrationMatchers:
     def async_matching_domains(self, info_with_desc: CaseInsensitiveDict) -> set[str]:
         """Find domains matching the passed CaseInsensitiveDict."""
         assert self._match_by_key is not None
-        domains = set()
-        for key, matchers_by_key in self._match_by_key.items():
-            if not (match_value := info_with_desc.get(key)):
-                continue
-            for domain, matcher in matchers_by_key.get(match_value, []):
-                if domain in domains:
-                    continue
-                if all(info_with_desc.get(k) == v for (k, v) in matcher.items()):
-                    domains.add(domain)
-        return domains
+        return {
+            domain
+            for key, matchers_by_key in self._match_by_key.items()
+            if (match_value := info_with_desc.get(key))
+            for domain, matcher in matchers_by_key.get(match_value, ())
+            if info_with_desc.items() >= matcher.items()
+        }
 
 
 class Scanner:
