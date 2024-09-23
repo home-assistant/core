@@ -124,6 +124,11 @@ _NO_VERIFY_SSL_CONTEXTS = {
     SSLCipherList.MODERN: create_no_verify_ssl_context(SSLCipherList.MODERN),
     SSLCipherList.INSECURE: create_no_verify_ssl_context(SSLCipherList.INSECURE),
 }
+_SSL_CONTEXTS = {
+    SSLCipherList.INTERMEDIATE: server_context_intermediate(),
+    SSLCipherList.MODERN: server_context_modern(),
+    SSLCipherList.INSECURE: server_context_insecure(),
+}
 
 
 def get_default_context() -> ssl.SSLContext:
@@ -139,8 +144,15 @@ def get_default_no_verify_context() -> ssl.SSLContext:
 def server_context_no_verify(
     ssl_cipher_list: SSLCipherList = SSLCipherList.PYTHON_DEFAULT,
 ) -> ssl.SSLContext:
-    """Return a SSL context which a specific ssl cipher."""
+    """Return a SSL context with no verification with a specific ssl cipher."""
     return _NO_VERIFY_SSL_CONTEXTS.get(ssl_cipher_list, _DEFAULT_NO_VERIFY_SSL_CONTEXT)
+
+
+def server_context(
+    ssl_cipher_list: SSLCipherList = SSLCipherList.PYTHON_DEFAULT,
+) -> ssl.SSLContext:
+    """Return a SSL context with a specific ssl cipher."""
+    return _SSL_CONTEXTS.get(ssl_cipher_list, _DEFAULT_SSL_CONTEXT)
 
 
 def server_context_modern() -> ssl.SSLContext:
@@ -178,5 +190,20 @@ def server_context_intermediate() -> ssl.SSLContext:
         context.options |= ssl.OP_NO_COMPRESSION
 
     context.set_ciphers(SSL_CIPHER_LISTS[SSLCipherList.INTERMEDIATE])
+
+    return context
+
+
+def server_context_insecure() -> ssl.SSLContext:
+    """Return an SSL context for old SSL/TLS standards"""
+    context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+
+    context.options |= (
+        ssl.OP_NO_SSLv2 | ssl.OP_NO_SSLv3 | ssl.OP_CIPHER_SERVER_PREFERENCE
+    )
+    if hasattr(ssl, "OP_NO_COMPRESSION"):
+        context.options |= ssl.OP_NO_COMPRESSION
+
+    context.set_ciphers(SSL_CIPHER_LISTS[SSLCipherList.INSECURE])
 
     return context
