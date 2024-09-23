@@ -220,7 +220,7 @@ class SqueezeBoxEntity(MediaPlayerEntity):
         self._query_result: bool | dict = {}
         self._remove_dispatcher: Callable | None = None
         self._attr_unique_id = format_mac(player.player_id)
-        if player.model == "SqueezeLite":
+        if player.model == "SqueezeLite" or "SqueezePlay" in player.model:
             _manufacturer = "Ralph Irving"
         elif (
             "Squeezebox" in player.model
@@ -228,8 +228,6 @@ class SqueezeBoxEntity(MediaPlayerEntity):
             or "Slim" in player.model
         ):
             _manufacturer = "Logitech"
-        elif "SqueezePlay" in player.model:
-            _manufacturer = "Ralph Irving"
         else:
             _manufacturer = None
 
