@@ -65,8 +65,21 @@ _MODULES: dict[str, set[str]] = {
         "WeatherEntityDescription",
     },
 }
-_ENTITY_COMPONENTS: set[str] = {platform.value for platform in Platform}
-_ENTITY_COMPONENTS.add("tag")
+_ENTITY_COMPONENTS: set[str] = {platform.value for platform in Platform}.union(
+    {
+        "automation",
+        "counter",
+        "input_boolean",
+        "input_datetime",
+        "input_number",
+        "input_text",
+        "person",
+        "script",
+        "tag",
+        "template",
+        "timer",
+    }
+)
 
 
 class HassEnforceClassModule(BaseChecker):
