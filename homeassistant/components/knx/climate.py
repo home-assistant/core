@@ -371,7 +371,10 @@ class KNXClimate(KnxYamlEntity, ClimateEntity):
 
         # Find the closest fan mode percentage
         closest_percentage = min(
-            self._fan_modes_percentages, key=lambda x: abs(x - fan_speed)
+            self._fan_modes_percentages[
+                1:
+            ],  # fan_speed == 0 (FAN_OFF) is handled above
+            key=lambda x: abs(x - fan_speed),
         )
         return self._attr_fan_modes[
             self._fan_modes_percentages.index(closest_percentage)
