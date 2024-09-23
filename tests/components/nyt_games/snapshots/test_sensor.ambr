@@ -23,7 +23,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Current Wordle streak',
     'platform': 'nyt_games',
@@ -31,22 +31,23 @@
     'supported_features': 0,
     'translation_key': 'wordles_streak',
     'unique_id': '218886794-wordles_streak',
-    'unit_of_measurement': 'games',
+    'unit_of_measurement': <UnitOfTime.DAYS: 'd'>,
   })
 # ---
 # name: test_all_entities[sensor.nytgames_current_wordle_streak-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'duration',
       'friendly_name': 'NYTGames Current Wordle streak',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': 'games',
+      'unit_of_measurement': <UnitOfTime.DAYS: 'd'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nytgames_current_wordle_streak',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '33',
+    'state': '1',
   })
 # ---
 # name: test_all_entities[sensor.nytgames_highest_wordle_streak-entry]
@@ -73,7 +74,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Highest Wordle streak',
     'platform': 'nyt_games',
@@ -81,22 +82,23 @@
     'supported_features': 0,
     'translation_key': 'wordles_max_streak',
     'unique_id': '218886794-wordles_max_streak',
-    'unit_of_measurement': 'games',
+    'unit_of_measurement': <UnitOfTime.DAYS: 'd'>,
   })
 # ---
 # name: test_all_entities[sensor.nytgames_highest_wordle_streak-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'duration',
       'friendly_name': 'NYTGames Highest Wordle streak',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': 'games',
+      'unit_of_measurement': <UnitOfTime.DAYS: 'd'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nytgames_highest_wordle_streak',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '33',
+    'state': '5',
   })
 # ---
 # name: test_all_entities[sensor.nytgames_wordles_played-entry]
