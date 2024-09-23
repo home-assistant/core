@@ -8,6 +8,7 @@ import logging
 import os
 
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.storage import Store
 
 from . import mawaqit_wrapper
 
@@ -112,26 +113,41 @@ async def async_read_in_data(hass: HomeAssistant, directory, file_name):
     return await hass.async_add_executor_job(read_in_data, directory, file_name)
 
 
-async def read_mawaqit_token(hass: HomeAssistant) -> str:
+async def read_mawaqit_token(hass: HomeAssistant, store: Store | None) -> str:
     """Read the Mawaqit API token from an environment variable."""
 
-    def read_token():
-        return os.environ.get(MAWAQIT_API_KEY_TOKEN, "")
+    # def read_token():
+    #     return os.environ.get(MAWAQIT_API_KEY_TOKEN, "")
 
-    return await hass.async_add_executor_job(read_token)
+    _LOGGER.debug("Reading Mawaqit token from store")
+
+    if store is None:
+        _LOGGER.error("Store is None !")
+        raise ValueError("Store is None !")
+
+    # return await hass.async_add_executor_job(
+    #     read_one_element, store, MAWAQIT_API_KEY_TOKEN
+    # )
+    return await read_one_element(store, MAWAQIT_API_KEY_TOKEN)
 
 
-async def write_mawaqit_token(hass: HomeAssistant, mawaqit_token: str) -> None:
+async def write_mawaqit_token(
+    hass: HomeAssistant, store: Store, mawaqit_token: str
+) -> None:
     """Write the Mawaqit API token to an environment variable."""
 
-    def write_token(token):
-        os.environ[MAWAQIT_API_KEY_TOKEN] = token
+    # def write_token(token):
+    #     os.environ[MAWAQIT_API_KEY_TOKEN] = token
+    _LOGGER.debug("Writing Mawaqit token to store")
 
-    await hass.async_add_executor_job(write_token, mawaqit_token)
+    # await hass.async_add_executor_job(
+    #     write_one_element, store, MAWAQIT_API_KEY_TOKEN, mawaqit_token
+    # )
+    await write_one_element(store, MAWAQIT_API_KEY_TOKEN, mawaqit_token)
 
 
 async def update_my_mosque_data_files(
-    hass: HomeAssistant, dir, mosque_id=None, token=None
+    hass: HomeAssistant, dir, mosque_id=None, token=None, store=None
 ):
     """Update the mosque data files with the latest prayer times.
 
@@ -140,6 +156,7 @@ async def update_my_mosque_data_files(
         dir (str): The directory where the data folder is located.
         mosque_id (str, optional): The ID of the mosque. Defaults to None.
         token (str, optional): The Mawaqit API token. Defaults to None.
+        store (Store, optional): The storage object to read the token from. Defaults to None.
 
     """
     _LOGGER.debug("Updating my mosque data files")
@@ -148,9 +165,12 @@ async def update_my_mosque_data_files(
         mosque_id = my_mosque["uuid"]
 
     if token is None:
-        token = await read_mawaqit_token(hass)
+        if store is None:
+            _LOGGER.error("Update Failed : token and store cannot be both None !")
+            raise ValueError("token and store cannot be both None !")
+        token = await read_mawaqit_token(hass, store)
         if token == "":
-            _LOGGER.error("Mawaqit API token not found")
+            _LOGGER.error("Update Failed : Mawaqit API token not found !")
             return
 
     dict_calendar = await mawaqit_wrapper.fetch_prayer_times(
@@ -158,3 +178,68 @@ async def update_my_mosque_data_files(
     )
 
     await async_write_in_data(hass, dir, "pray_time.txt", dict_calendar)
+
+
+async def read_one_element(store, key):
+    """Read a single element from the store by key.
+
+    Args:
+        store (Store): The storage object to read from.
+        key (str): The key of the element to read.
+
+    Returns:
+        The value associated with the key, or None if the key does not exist.
+
+    """
+    data = await store.async_load()
+    if data is None:
+        return None
+    data = data.get(key)
+    _LOGGER.debug("Read %s from store with key = %s ", data, key)
+    return data
+
+
+async def write_one_element(store, key, value):
+    """Write a single element to the store by key.
+
+    Args:
+        store (Store): The storage object to write to.
+        key (str): The key of the element to write.
+        value: The value to associate with the key.
+
+    """
+    data = await store.async_load()
+    if data is None:
+        data = {}
+    data[key] = value
+    _LOGGER.debug("Writing %s to store with key = %s", data, key)
+    await store.async_save(data)
+
+
+async def read_all_elements(store):
+    """Read all elements from the store.
+
+    Args:
+        store (Store): The storage object to read from.
+
+    Returns:
+        dict: The data read from the store, or an empty dictionary if no data is found.
+
+    """
+    data = await store.async_load()
+    if data is None:
+        return {}
+    _LOGGER.debug("Read %s from store", data)
+    return data
+
+
+async def write_all_elements(store, data):
+    """Write all elements to the store.
+
+    Args:
+        store (Store): The storage object to write to.
+        data (dict): The data to write to the store.
+
+    """
+    _LOGGER.debug("Writing %s to store", data)
+    await store.async_save(data)

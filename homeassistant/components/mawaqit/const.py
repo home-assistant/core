@@ -46,3 +46,7 @@ PASSWORD = "password"
 
 API = "api"
 CONF_UUID: str = "uuid"
+
+
+MAWAQIT_STORAGE_VERSION = 1
+MAWAQIT_STORAGE_KEY = "mawaqit_storage"

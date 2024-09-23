@@ -16,9 +16,16 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import callback
+from homeassistant.helpers.storage import Store
 
 from . import mawaqit_wrapper, utils
-from .const import CONF_CALC_METHOD, CONF_UUID, DOMAIN
+from .const import (
+    CONF_CALC_METHOD,
+    CONF_UUID,
+    DOMAIN,
+    MAWAQIT_STORAGE_KEY,
+    MAWAQIT_STORAGE_VERSION,
+)
 from .utils import (
     create_data_folder,
     read_all_mosques_NN_file,
@@ -41,11 +48,15 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize."""
         self._errors: dict[str, str] = {}
+        self.store: Store | None = None
 
     async def async_step_user(self, user_input=None) -> config_entries.ConfigFlowResult:
         """Handle a flow initialized by the user."""
 
         self._errors = {}
+
+        if self.store is None:
+            self.store = Store(self.hass, MAWAQIT_STORAGE_VERSION, MAWAQIT_STORAGE_KEY)
 
         lat = self.hass.config.latitude
         longi = self.hass.config.longitude
@@ -77,7 +88,7 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 username, password
             )
 
-            await utils.write_mawaqit_token(self.hass, mawaqit_token)
+            await utils.write_mawaqit_token(self.hass, self.store, mawaqit_token)
             # os.environ["MAWAQIT_API_KEY"] = mawaqit_token
 
             try:
@@ -115,7 +126,7 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         lat = self.hass.config.latitude
         longi = self.hass.config.longitude
 
-        mawaqit_token = get_mawaqit_token_from_file()
+        mawaqit_token = await utils.read_mawaqit_token(self.hass, self.store)
 
         if user_input is not None:
             name_servers, uuid_servers, CALC_METHODS = await read_all_mosques_NN_file(
@@ -173,7 +184,7 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         lat = self.hass.config.latitude
         longi = self.hass.config.longitude
 
-        mawaqit_token = get_mawaqit_token_from_file()
+        mawaqit_token = await utils.read_mawaqit_token(self.hass, self.store)
 
         nearest_mosques = await mawaqit_wrapper.all_mosques_neighborhood(
             lat, longi, token=mawaqit_token
@@ -208,11 +219,16 @@ class MawaqitPrayerOptionsFlowHandler(config_entries.OptionsFlow):
     """Handle Mawaqit Prayer client options."""
 
     def __init__(self, config_entry) -> None:
-        """Initialize options flow."""
+        """Initialize the options flow handler."""
+        self.config_entry = config_entry
+        self.store: Store | None = None
         self.config_entry = config_entry
 
     async def async_step_init(self, user_input=None) -> config_entries.ConfigFlowResult:
         """Manage options."""
+
+        self.store = Store(self.hass, MAWAQIT_STORAGE_VERSION, MAWAQIT_STORAGE_KEY)
+
         if user_input is not None:
             lat = self.hass.config.latitude
             longi = self.hass.config.longitude
@@ -225,7 +241,7 @@ class MawaqitPrayerOptionsFlowHandler(config_entries.OptionsFlow):
             index = name_servers.index(mosque)
             mosque_id = uuid_servers[index]
 
-            mawaqit_token = get_mawaqit_token_from_file()
+            mawaqit_token = await utils.read_mawaqit_token(self.hass, self.store)
 
             try:
                 nearest_mosques = await mawaqit_wrapper.all_mosques_neighborhood(
@@ -259,7 +275,7 @@ class MawaqitPrayerOptionsFlowHandler(config_entries.OptionsFlow):
         lat = self.hass.config.latitude
         longi = self.hass.config.longitude
 
-        mawaqit_token = get_mawaqit_token_from_file()
+        mawaqit_token = await utils.read_mawaqit_token(self.hass, self.store)
 
         nearest_mosques = await mawaqit_wrapper.all_mosques_neighborhood(
             lat, longi, token=mawaqit_token
@@ -290,9 +306,9 @@ class MawaqitPrayerOptionsFlowHandler(config_entries.OptionsFlow):
         return self.async_show_form(step_id="init", data_schema=vol.Schema(options))
 
 
-def get_mawaqit_token_from_file():
-    """Retrieve the Mawaqit API token from the environment variable."""
-    return os.environ.get("MAWAQIT_API_KEY", "NA")
+# def get_mawaqit_token_from_file(hass: HomeAssistant, store: Store):
+#     """Retrieve the Mawaqit API token from the environment variable."""
+#     return await utils.read_mawaqit_token(hass, store)
 
 
 def is_already_configured():

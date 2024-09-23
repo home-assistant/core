@@ -24,6 +24,7 @@ from homeassistant.helpers.event import (
     async_track_point_in_time,
     async_track_time_change,
 )
+from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as dt_util
 from homeassistant.util.dt import now as ha_now
@@ -37,6 +38,8 @@ from .const import (
     DATA_UPDATED,
     DEFAULT_CALC_METHOD,
     DOMAIN,
+    MAWAQIT_STORAGE_KEY,
+    MAWAQIT_STORAGE_VERSION,
     UPDATE_TIME,
 )
 
@@ -146,6 +149,7 @@ class MawaqitPrayerClient:
         self.prayer_times_info: dict[str, Any] = {}
         self.available = True
         self.event_unsub = None
+        self.store = None
 
         self.cancel_events_next_salat: list[
             Callable[[], None]
@@ -169,13 +173,14 @@ class MawaqitPrayerClient:
         uuid_servers = []  # noqa: F841
         # TODO check if we should keep this or no  # pylint: disable=fixme
         CALC_METHODS.clear()  # changed due to W0621 with pylint and F841 with Ruff
+        if self.store is None:
+            self.store = Store(self.hass, MAWAQIT_STORAGE_VERSION, MAWAQIT_STORAGE_KEY)
 
         # TODO reload files here from API
         # We get the prayer times of the year from pray_time.txt
         # utils.update_mosque_data_files()
         await utils.update_my_mosque_data_files(
-            self.hass,
-            CURRENT_DIR,
+            self.hass, CURRENT_DIR, store=self.store
         )
 
         # with open(f"{CURRENT_DIR}/data/pray_time.txt", encoding="utf-8") as f:
