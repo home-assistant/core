@@ -84,7 +84,7 @@ class LawnMowerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     @final
     @property
-    def state(self) -> LawnMowerActivity | None:
+    def state(self) -> str | None:
         """Return the current state."""
         return self.activity
 
