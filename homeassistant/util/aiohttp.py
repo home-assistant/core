@@ -28,6 +28,19 @@ class MockStreamReader:
         return self._content.read(byte_count)
 
 
+class MockPayloadWriter:
+    """Small mock to imitate payload writer."""
+
+    def enable_chunking(self) -> None:
+        """Enable chunking."""
+
+    async def write_headers(self, *args: Any, **kwargs: Any) -> None:
+        """Write headers."""
+
+
+_MOCK_PAYLOAD_WRITER = MockPayloadWriter()
+
+
 class MockRequest:
     """Mock an aiohttp request."""
 
@@ -49,8 +62,14 @@ class MockRequest:
         self.status = status
         self.headers: CIMultiDict[str] = CIMultiDict(headers or {})
         self.query_string = query_string or ""
+        self.keep_alive = False
+        self.version = (1, 1)
         self._content = content
         self.mock_source = mock_source
+        self._payload_writer = _MOCK_PAYLOAD_WRITER
+
+    async def _prepare_hook(self, response: Any) -> None:
+        """Prepare hook."""
 
     @property
     def query(self) -> MultiDict[str]:

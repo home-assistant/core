@@ -3,7 +3,6 @@
 from asyncio import AbstractEventLoop
 from collections.abc import Callable
 import copy
-from typing import cast
 from unittest.mock import AsyncMock, Mock, call
 
 from aiohttp import web
@@ -46,6 +45,7 @@ from homeassistant.const import ATTR_DEVICE_ID, ATTR_ENTITY_ID, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.util.aiohttp import MockRequest
 import homeassistant.util.dt as dt_util
 
 from . import (
@@ -298,12 +298,7 @@ async def test_get_stream_from_camera(
     )
     await hass.async_block_till_done()
 
-    # It won't actually get a stream from the dummy handler, so just catch
-    # the expected exception, then verify the right handler was called.
-    with pytest.raises(HTTPBadGateway):
-        await async_get_mjpeg_stream(
-            hass, cast(web.Request, None), TEST_CAMERA_ENTITY_ID
-        )
+    await async_get_mjpeg_stream(hass, MockRequest(b"", "test"), TEST_CAMERA_ENTITY_ID)
     assert stream_handler.called
 
 
@@ -386,10 +381,7 @@ async def test_camera_option_stream_url_template(
     )
     await hass.async_block_till_done()
 
-    # It won't actually get a stream from the dummy handler, so just catch
-    # the expected exception, then verify the right handler was called.
-    with pytest.raises(HTTPBadGateway):
-        await async_get_mjpeg_stream(hass, Mock(), TEST_CAMERA_ENTITY_ID)
+    await async_get_mjpeg_stream(hass, MockRequest(b"", "test"), TEST_CAMERA_ENTITY_ID)
     assert AsyncMock.called
     assert not client.get_camera_stream_url.called
 
