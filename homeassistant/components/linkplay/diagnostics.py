@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import asdict
 from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
@@ -20,7 +21,7 @@ async def async_get_config_entry_diagnostics(
     data = entry.runtime_data
     return async_redact_data(
         {
-            "api_device_info": data.bridge,
+            "device_info": asdict(data),
             "config_entry_data": entry.data,
         },
         TO_REDACT,
