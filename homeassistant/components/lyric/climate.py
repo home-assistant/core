@@ -40,7 +40,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import VolDictType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from . import LyricDeviceEntity
 from .const import (
     DOMAIN,
     LYRIC_EXCEPTIONS,
@@ -50,6 +49,7 @@ from .const import (
     PRESET_TEMPORARY_HOLD,
     PRESET_VACATION_HOLD,
 )
+from .entity import LyricDeviceEntity
 
 _LOGGER = logging.getLogger(__name__)
 
