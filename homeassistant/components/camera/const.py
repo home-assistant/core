@@ -43,8 +43,8 @@ CAMERA_IMAGE_TIMEOUT: Final = 10
 class CameraState(StrEnum):
     """Camera entity states."""
 
-    RECORDING = "cleaning"
-    STREAMING = "docked"
+    RECORDING = "recording"
+    STREAMING = "streaming"
     IDLE = "idle"
 
 
