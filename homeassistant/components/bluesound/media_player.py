@@ -556,6 +556,11 @@ class BluesoundPlayer(MediaPlayerEntity):
         return self._bluesound_device_name
 
     @property
+    def sync_status(self) -> SyncStatus:
+        """Return the sync status."""
+        return self._sync_status
+
+    @property
     def source_list(self) -> list[str] | None:
         """List of available input sources."""
         if self._status is None or (self.is_grouped and not self.is_master):
@@ -693,7 +698,7 @@ class BluesoundPlayer(MediaPlayerEntity):
             reverse=True,
         )
         return [
-            entity._sync_status.name  # noqa: SLF001 has to be done because this was accessible as entity.name before
+            entity.sync_status.name
             for entity in sorted_entities
             if entity.bluesound_device_name in device_group
         ]
