@@ -3093,6 +3093,11 @@ class HassTypeHintChecker(BaseChecker):
             "hass-consider-usefixtures-decorator",
             "Used when an argument type is None and could be a fixture",
         ),
+        "W7434": (
+            "A coroutine function should not be decorated with @callback",
+            "hass-async-callback-decorator",
+            "Used when a coroutine function has an invalid @callback decorator",
+        ),
     }
     options = (
         (
@@ -3195,6 +3200,14 @@ class HassTypeHintChecker(BaseChecker):
                 self._check_function(function_node, match, annotations)
                 checked_class_methods.add(function_node.name)
 
+    def visit_asyncfunctiondef(self, node: nodes.AsyncFunctionDef) -> None:
+        """Apply checks on an AsyncFunctionDef node."""
+        if (
+            decoratornames := node.decoratornames()
+        ) and "homeassistant.core.callback" in decoratornames:
+            self.add_message("hass-async-callback-decorator", node=node)
+        self.visit_functiondef(node)
+
     def visit_functiondef(self, node: nodes.FunctionDef) -> None:
         """Apply relevant type hint checks on a FunctionDef node."""
         annotations = _get_all_annotations(node)
@@ -3233,8 +3246,6 @@ class HassTypeHintChecker(BaseChecker):
             if not match.need_to_check_function(node):
                 continue
             self._check_function(node, match, annotations)
-
-    visit_asyncfunctiondef = visit_functiondef
 
     def _check_function(
         self,
