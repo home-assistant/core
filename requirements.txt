@@ -42,4 +42,4 @@ uv==0.4.12
 voluptuous==0.15.2
 voluptuous-serialize==2.6.0
 voluptuous-openapi==0.0.5
-yarl==1.12.0
+yarl==1.12.1
