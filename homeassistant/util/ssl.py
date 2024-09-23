@@ -154,7 +154,7 @@ def server_context_intermediate() -> ssl.SSLContext:
 
 
 def server_context_insecure() -> ssl.SSLContext:
-    """Return an SSL context for old SSL/TLS standards"""
+    """Return an SSL context for old SSL/TLS standards."""
     context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
 
     context.options |= (
