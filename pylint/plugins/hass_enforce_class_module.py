@@ -2,14 +2,25 @@
 
 from __future__ import annotations
 
-from ast import ClassDef
-
 from astroid import nodes
 from pylint.checkers import BaseChecker
 from pylint.lint import PyLinter
 
 from homeassistant.const import Platform
 
+_BASE_MODULES: dict[str, set[str]] = {
+    "entity": {
+        "BaseCoordinatorEntity",
+        "CoordinatorEntity",
+        "Entity",
+        "EntityDescription",
+        "ManualTriggerEntity",
+        "RestoreEntity",
+        "ToggleEntity",
+        "ToggleEntityDescription",
+        "TriggerBaseEntity",
+    },
+}
 _MODULES: dict[str, set[str]] = {
     "air_quality": {"AirQualityEntity"},
     "alarm_control_panel": {
@@ -82,6 +93,11 @@ _ENTITY_COMPONENTS: set[str] = {platform.value for platform in Platform}.union(
 )
 
 
+_MODULE_CLASSES = {
+    class_name for classes in _MODULES.values() for class_name in classes
+}
+
+
 class HassEnforceClassModule(BaseChecker):
     """Checker for class in correct module."""
 
@@ -106,26 +122,11 @@ class HassEnforceClassModule(BaseChecker):
         current_integration = parts[2]
         current_module = parts[3] if len(parts) > 3 else ""
 
-        if current_module != "entity" and current_integration not in _ENTITY_COMPONENTS:
-            top_level_ancestors = list(node.ancestors(recurs=False))
-
-            for ancestor in top_level_ancestors:
-                if ancestor.name == "Entity":
-                    self.add_message(
-                        "hass-enforce-class-module",
-                        node=node,
-                        args=(ancestor.name, "entity"),
-                    )
-                    return
-
-        ancestors: list[ClassDef] | None = None
+        ancestors = list(node.ancestors())
 
         for expected_module, classes in _MODULES.items():
             if expected_module in (current_module, current_integration):
                 continue
-
-            if ancestors is None:
-                ancestors = list(node.ancestors())  # cache result for other modules
 
             for ancestor in ancestors:
                 if ancestor.name in classes:
@@ -133,6 +134,27 @@ class HassEnforceClassModule(BaseChecker):
                         "hass-enforce-class-module",
                         node=node,
                         args=(ancestor.name, expected_module),
+                    )
+                    return
+
+        for expected_module, classes in _BASE_MODULES.items():
+            if (
+                expected_module == current_module
+                or expected_module == "entity"
+                and current_integration in _ENTITY_COMPONENTS
+            ):
+                continue
+
+            top_level_ancestors = list(node.ancestors(recurs=False))
+
+            for ancestor in top_level_ancestors:
+                if ancestor.name in classes and not any(
+                    anc.name in _MODULE_CLASSES for anc in ancestors
+                ):
+                    self.add_message(
+                        "hass-enforce-class-module",
+                        node=node,
+                        args=(ancestor.name, "entity"),
                     )
                     return
 
