@@ -118,6 +118,9 @@ class HomeAssistantBluetoothManager(BluetoothManager):
             except Exception:
                 _LOGGER.exception("Error in bluetooth callback")
 
+        if not matched_domains:
+            return  # avoid creating DiscoveryKey if there are no matches
+
         discovery_key = discovery_flow.DiscoveryKey(
             domain=DOMAIN,
             key=service_info.address,
