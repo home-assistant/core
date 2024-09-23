@@ -52,6 +52,11 @@
         }
       }
     },
+    "cover": {
+      "charge_state_charge_port_door_open": {
+        "default": "mdi:ev-plug-ccs2"
+      }
+    },
     "device_tracker": {
       "location": {
         "default": "mdi:map-marker"

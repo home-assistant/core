@@ -91,13 +91,13 @@ SET_ZONE_OVERRIDE_SCHEMA = vol.Schema(
     }
 )
 
-PLATFORMS = (
-    Platform.CLIMATE,
-    Platform.WATER_HEATER,
-    Platform.SENSOR,
+PLATFORMS = [
     Platform.BINARY_SENSOR,
+    Platform.CLIMATE,
+    Platform.SENSOR,
     Platform.SWITCH,
-)
+    Platform.WATER_HEATER,
+]
 
 
 async def _async_import(hass: HomeAssistant, base_config: ConfigType) -> None:

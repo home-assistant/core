@@ -1222,11 +1222,29 @@ async def test_announce_media_id(
         [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
         Awaitable[MockESPHomeDevice],
     ],
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test announcement with media id."""
     mock_device: MockESPHomeDevice = await mock_esphome_device(
         mock_client=mock_client,
-        entity_info=[],
+        entity_info=[
+            MediaPlayerInfo(
+                object_id="mymedia_player",
+                key=1,
+                name="my media_player",
+                unique_id="my_media_player",
+                supports_pause=True,
+                supported_formats=[
+                    MediaPlayerSupportedFormat(
+                        format="flac",
+                        sample_rate=48000,
+                        num_channels=2,
+                        purpose=MediaPlayerFormatPurpose.ANNOUNCEMENT,
+                        sample_bytes=2,
+                    ),
+                ],
+            )
+        ],
         user_service=[],
         states=[],
         device_info={
@@ -1238,6 +1256,10 @@ async def test_announce_media_id(
     )
     await hass.async_block_till_done()
 
+    dev = device_registry.async_get_device(
+        connections={(dr.CONNECTION_NETWORK_MAC, mock_device.entry.unique_id)}
+    )
+
     satellite = get_satellite_entity(hass, mock_device.device_info.mac_address)
     assert satellite is not None
 
@@ -1247,7 +1269,7 @@ async def test_announce_media_id(
         media_id: str, timeout: float, text: str
     ):
         assert satellite.state == AssistSatelliteState.RESPONDING
-        assert media_id == "https://www.home-assistant.io/resolved.mp3"
+        assert media_id == "https://www.home-assistant.io/proxied.flac"
 
         done.set()
 
@@ -1257,6 +1279,10 @@ async def test_announce_media_id(
             "send_voice_assistant_announcement_await_response",
             new=send_voice_assistant_announcement_await_response,
         ),
+        patch(
+            "homeassistant.components.esphome.assist_satellite.async_create_proxy_url",
+            return_value="https://www.home-assistant.io/proxied.flac",
+        ) as mock_async_create_proxy_url,
     ):
         async with asyncio.timeout(1):
             await hass.services.async_call(
@@ -1270,6 +1296,16 @@ async def test_announce_media_id(
             )
             await done.wait()
             assert satellite.state == AssistSatelliteState.LISTENING_WAKE_WORD
+
+        mock_async_create_proxy_url.assert_called_once_with(
+            hass,
+            dev.id,
+            "https://www.home-assistant.io/resolved.mp3",
+            media_format="flac",
+            rate=48000,
+            channels=2,
+            width=2,
+        )
 
 
 async def test_satellite_unloaded_on_disconnect(
