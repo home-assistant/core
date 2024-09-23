@@ -583,11 +583,6 @@ class Thermostat(ClimateEntity):
         }
 
     @property
-    def is_aux_heat(self) -> bool:
-        """Return true if aux heater."""
-        return self.settings["hvacMode"] == ECOBEE_AUX_HEAT_ONLY
-
-    @property
     def remote_sensors(self) -> list:
         """Return the remote sensor names of the thermostat."""
         try:
@@ -595,19 +590,6 @@ class Thermostat(ClimateEntity):
         except KeyError:
             sensors_info = []
         return [sensor["name"] for sensor in sensors_info if sensor.get("name")]
-
-    def turn_aux_heat_on(self) -> None:
-        """Turn auxiliary heater on."""
-        _LOGGER.debug("Setting HVAC mode to auxHeatOnly to turn on aux heat")
-        self._last_hvac_mode_before_aux_heat = self.hvac_mode
-        self.data.ecobee.set_hvac_mode(self.thermostat_index, ECOBEE_AUX_HEAT_ONLY)
-        self.update_without_throttle = True
-
-    def turn_aux_heat_off(self) -> None:
-        """Turn auxiliary heater off."""
-        _LOGGER.debug("Setting HVAC mode to last mode to disable aux heat")
-        self.set_hvac_mode(self._last_hvac_mode_before_aux_heat)
-        self.update_without_throttle = True
 
     def set_preset_mode(self, preset_mode: str) -> None:
         """Activate a preset."""
@@ -794,8 +776,9 @@ class Thermostat(ClimateEntity):
 
         # Check if climate is an available preset option.
         elif preset_mode not in self._preset_modes.values():
-            msg = f"Invalid climate name, available options are: {', '.join(self.preset_modes)}"
-            raise ServiceValidationError(msg)
+            if self.preset_modes:
+                msg = f"Invalid climate name, available options are: {', '.join(self.preset_modes)}"
+                raise ServiceValidationError(msg)
 
         # Get device name from device id.
         device_registry = dr.async_get(self.hass)
@@ -828,7 +811,7 @@ class Thermostat(ClimateEntity):
         )
         self.update_without_throttle = True
 
-    def _sensors_in_preset_mode(self, preset_mode: str) -> list[str]:
+    def _sensors_in_preset_mode(self, preset_mode: str | None) -> list[str]:
         """Return current sensors used in climate."""
         climates = self.thermostat["program"]["climates"]
         for climate in climates:
