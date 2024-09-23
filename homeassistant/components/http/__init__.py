@@ -47,11 +47,7 @@ from homeassistant.helpers.http import (
     current_request,
 )
 from homeassistant.helpers.importlib import async_import_module
-from homeassistant.helpers.network import (
-    NoURLAvailableError,
-    get_url,
-    is_cloud_connection,
-)
+from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 from homeassistant.setup import (
@@ -274,10 +270,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     @callback
     def _async_check_ssl_issue(_: Event) -> None:
+        # pylint: disable-next=import-outside-toplevel
+        from homeassistant.components.cloud import async_is_connected
+
         if (
             (hass.config.external_url is None or hass.config.internal_url is None)
             and ssl_certificate is not None
-            and not is_cloud_connection(hass)
+            and not async_is_connected(hass)
         ):
             ir.async_create_issue(
                 hass,

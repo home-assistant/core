@@ -9,11 +9,10 @@ import logging
 from pathlib import Path
 from unittest.mock import Mock, patch
 
-from hass_nabucasa import remote
 import pytest
 
 from homeassistant.auth.providers.homeassistant import HassAuthProvider
-from homeassistant.components import http
+from homeassistant.components import cloud, http
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.http import KEY_HASS
@@ -23,6 +22,7 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.ssl import server_context_intermediate, server_context_modern
 
 from tests.common import async_fire_time_changed
+from tests.components.cloud import mock_cloud
 from tests.typing import ClientSessionGenerator
 
 
@@ -587,15 +587,16 @@ async def test_ssl_issue_if_using_cloud(
     issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test raising no SSL issue if not right configured but using cloud."""
+    await mock_cloud(hass)
+    await hass.async_block_till_done()
 
-    hass.config.components.add("cloud")
-    remote.is_cloud_request.set(True)
     cert_path, key_path, _ = await hass.async_add_executor_job(
         _setup_empty_ssl_pem_files, tmp_path
     )
 
     with (
         patch("ssl.SSLContext.load_cert_chain"),
+        patch.object(cloud, "async_is_connected", return_value=True),
         patch(
             "homeassistant.util.ssl.server_context_modern",
             side_effect=server_context_modern,
