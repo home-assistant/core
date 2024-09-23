@@ -1,4 +1,4 @@
-"""Test ESPHome binary sensors."""
+"""Test ESPHome repairs."""
 
 import pytest
 

@@ -20,14 +20,14 @@ _MODULES: dict[str, set[str]] = {
     "binary_sensor": {"BinarySensorEntity", "BinarySensorEntityDescription"},
     "button": {"ButtonEntity", "ButtonEntityDescription"},
     "calendar": {"CalendarEntity"},
-    "camera": {"CameraEntity", "CameraEntityDescription"},
+    "camera": {"Camera", "CameraEntityDescription"},
     "climate": {"ClimateEntity", "ClimateEntityDescription"},
     "coordinator": {"DataUpdateCoordinator"},
     "conversation": {"ConversationEntity"},
     "cover": {"CoverEntity", "CoverEntityDescription"},
     "date": {"DateEntity", "DateEntityDescription"},
     "datetime": {"DateTimeEntity", "DateTimeEntityDescription"},
-    "device_tracker": {"DeviceTrackerEntity"},
+    "device_tracker": {"DeviceTrackerEntity", "ScannerEntity", "TrackerEntity"},
     "event": {"EventEntity", "EventEntityDescription"},
     "fan": {"FanEntity", "FanEntityDescription"},
     "geo_location": {"GeolocationEvent"},
@@ -54,8 +54,8 @@ _MODULES: dict[str, set[str]] = {
     "time": {"TimeEntity", "TimeEntityDescription"},
     "todo": {"TodoListEntity"},
     "tts": {"TextToSpeechEntity"},
-    "update": {"UpdateEntityDescription"},
-    "vacuum": {"VacuumEntity", "VacuumEntityDescription"},
+    "update": {"UpdateEntity", "UpdateEntityDescription"},
+    "vacuum": {"StateVacuumEntity", "VacuumEntity", "VacuumEntityDescription"},
     "wake_word": {"WakeWordDetectionEntity"},
     "water_heater": {"WaterHeaterEntity"},
     "weather": {
@@ -65,8 +65,21 @@ _MODULES: dict[str, set[str]] = {
         "WeatherEntityDescription",
     },
 }
-_ENTITY_COMPONENTS: set[str] = {platform.value for platform in Platform}
-_ENTITY_COMPONENTS.add("tag")
+_ENTITY_COMPONENTS: set[str] = {platform.value for platform in Platform}.union(
+    {
+        "automation",
+        "counter",
+        "input_boolean",
+        "input_datetime",
+        "input_number",
+        "input_text",
+        "person",
+        "script",
+        "tag",
+        "template",
+        "timer",
+    }
+)
 
 
 class HassEnforceClassModule(BaseChecker):

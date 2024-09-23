@@ -30,6 +30,8 @@
         'api_token': '**REDACTED**',
       }),
       'disabled_by': None,
+      'discovery_keys': list([
+      ]),
       'domain': 'coinbase',
       'entry_id': '080272b77a4f80c41b94d7cdc86fd826',
       'minor_version': 1,

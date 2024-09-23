@@ -175,6 +175,8 @@
       }),
     }),
     'disabled_by': None,
+    'discovery_keys': list([
+    ]),
     'domain': 'husqvarna_automower',
     'entry_id': 'automower_test',
     'minor_version': 1,
