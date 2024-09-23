@@ -83,6 +83,7 @@ SPELLING_BEE_SENSORS: tuple[NYTGamesSpellingBeeSensorEntityDescription, ...] = (
         translation_key="spelling_bees_total_words",
         state_class=SensorStateClass.TOTAL,
         native_unit_of_measurement="words",
+        entity_registry_enabled_default=False,
         value_fn=lambda spelling_bee: spelling_bee.total_words,
     ),
     NYTGamesSpellingBeeSensorEntityDescription(
@@ -90,6 +91,7 @@ SPELLING_BEE_SENSORS: tuple[NYTGamesSpellingBeeSensorEntityDescription, ...] = (
         translation_key="spelling_bees_total_pangrams",
         state_class=SensorStateClass.TOTAL,
         native_unit_of_measurement="pangrams",
+        entity_registry_enabled_default=False,
         value_fn=lambda spelling_bee: spelling_bee.total_pangrams,
     ),
 )
