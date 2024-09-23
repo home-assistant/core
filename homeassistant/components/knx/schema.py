@@ -354,7 +354,7 @@ class ClimateSchema(KNXPlatformSchema):
     DEFAULT_SETPOINT_SHIFT_MIN = -6
     DEFAULT_TEMPERATURE_STEP = 0.1
     DEFAULT_ON_OFF_INVERT = False
-    DEFAULT_FAN_SPEED_MODE = "step"
+    DEFAULT_FAN_SPEED_MODE = "percent"
 
     ENTITY_SCHEMA = vol.All(
         # deprecated since September 2020
