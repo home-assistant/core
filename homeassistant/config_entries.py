@@ -18,7 +18,7 @@ from copy import deepcopy
 from datetime import datetime
 from enum import Enum, StrEnum
 import functools
-from functools import cached_property, lru_cache
+from functools import cache, cached_property
 import logging
 from random import randint
 from types import MappingProxyType
