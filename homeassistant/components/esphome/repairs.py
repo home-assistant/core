@@ -1,4 +1,4 @@
-"""Repairs implementation for the cloud integration."""
+"""Repairs implementation for the esphome integration."""
 
 from __future__ import annotations
 
