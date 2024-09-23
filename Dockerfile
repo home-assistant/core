@@ -14,7 +14,7 @@ ARG QEMU_CPU
 ARG BUILD_ARCH
 
 # Install uv
-RUN pip3 install uv==0.4.9
+RUN pip3 install uv==0.4.12
 
 WORKDIR /usr/src
 

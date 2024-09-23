@@ -113,8 +113,7 @@ from .const import (
     SERVICE_SET_WIFI_LED_ON,
     SUCCESS,
 )
-from .device import XiaomiCoordinatedMiioEntity, XiaomiMiioEntity
-from .gateway import XiaomiGatewayDevice
+from .entity import XiaomiCoordinatedMiioEntity, XiaomiGatewayDevice, XiaomiMiioEntity
 from .typing import ServiceMethodDetails
 
 _LOGGER = logging.getLogger(__name__)

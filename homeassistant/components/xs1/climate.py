@@ -16,7 +16,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import ACTUATORS, DOMAIN as COMPONENT_DOMAIN, SENSORS, XS1DeviceEntity
+from . import ACTUATORS, DOMAIN as COMPONENT_DOMAIN, SENSORS
+from .entity import XS1DeviceEntity
 
 MIN_TEMP = 8
 MAX_TEMP = 25

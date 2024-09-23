@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 import logging
 import time
-from typing import Any, Final, final
+from typing import Any, Final, Literal, final
 
 from homeassistant.components import media_source, stt, tts
 from homeassistant.components.assist_pipeline import (
@@ -84,6 +84,19 @@ class AssistSatelliteConfiguration:
 
     max_active_wake_words: int
     """Maximum number of simultaneous wake words allowed (0 for no limit)."""
+
+
+@dataclass
+class AssistSatelliteAnnouncement:
+    """Announcement to be made."""
+
+    message: str
+    """Message to be spoken."""
+
+    media_id: str
+    """Media ID to be played."""
+
+    media_id_source: Literal["url", "media_id", "tts"]
 
 
 class AssistSatelliteEntity(entity.Entity):
@@ -174,10 +187,13 @@ class AssistSatelliteEntity(entity.Entity):
         """
         await self._cancel_running_pipeline()
 
+        media_id_source: Literal["url", "media_id", "tts"] | None = None
+
         if message is None:
             message = ""
 
         if not media_id:
+            media_id_source = "tts"
             # Synthesize audio and get URL
             pipeline_id = self._resolve_pipeline()
             pipeline = async_get_pipeline(self.hass, pipeline_id)
@@ -198,12 +214,17 @@ class AssistSatelliteEntity(entity.Entity):
             )
 
         if media_source.is_media_source_id(media_id):
+            if not media_id_source:
+                media_id_source = "media_id"
             media = await media_source.async_resolve_media(
                 self.hass,
                 media_id,
                 None,
             )
             media_id = media.url
+
+        if not media_id_source:
+            media_id_source = "url"
 
         # Resolve to full URL
         media_id = async_process_play_media_url(self.hass, media_id)
@@ -216,12 +237,14 @@ class AssistSatelliteEntity(entity.Entity):
 
         try:
             # Block until announcement is finished
-            await self.async_announce(message, media_id)
+            await self.async_announce(
+                AssistSatelliteAnnouncement(message, media_id, media_id_source)
+            )
         finally:
             self._is_announcing = False
             self._set_state(AssistSatelliteState.LISTENING_WAKE_WORD)
 
-    async def async_announce(self, message: str, media_id: str) -> None:
+    async def async_announce(self, announcement: AssistSatelliteAnnouncement) -> None:
         """Announce media on the satellite.
 
         Should block until the announcement is done playing.

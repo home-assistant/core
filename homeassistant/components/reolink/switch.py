@@ -171,7 +171,7 @@ SWITCH_ENTITIES = (
     ReolinkSwitchEntityDescription(
         key="buzzer",
         cmd_key="GetBuzzerAlarmV20",
-        translation_key="buzzer",
+        translation_key="hub_ringtone_on_event",
         entity_category=EntityCategory.CONFIG,
         supported=lambda api, ch: api.supported(ch, "buzzer") and api.is_nvr,
         value=lambda api, ch: api.buzzer_enabled(ch),
@@ -248,7 +248,7 @@ NVR_SWITCH_ENTITIES = (
     ReolinkNVRSwitchEntityDescription(
         key="buzzer",
         cmd_key="GetBuzzerAlarmV20",
-        translation_key="buzzer",
+        translation_key="hub_ringtone_on_event",
         icon="mdi:room-service",
         entity_category=EntityCategory.CONFIG,
         supported=lambda api: api.supported(None, "buzzer"),

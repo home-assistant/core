@@ -9,6 +9,7 @@ from typing import Any, Final, cast
 
 from aioshelly.const import RPC_GENERATIONS
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCallError
+from awesomeversion import AwesomeVersion, AwesomeVersionStrategy
 
 from homeassistant.components.update import (
     ATTR_INSTALLED_VERSION,
@@ -202,6 +203,22 @@ class RestUpdateEntity(ShellyRestAttributeEntity, UpdateEntity):
             await self.coordinator.async_shutdown_device_and_start_reauth()
         else:
             LOGGER.debug("Result of OTA update call: %s", result)
+
+    def version_is_newer(self, latest_version: str, installed_version: str) -> bool:
+        """Return True if available version is newer then installed version.
+
+        Default strategy generate an exception with Shelly firmware format
+        thus making the entity state always true.
+        """
+        return AwesomeVersion(
+            latest_version,
+            find_first_match=True,
+            ensure_strategy=[AwesomeVersionStrategy.SEMVER],
+        ) > AwesomeVersion(
+            installed_version,
+            find_first_match=True,
+            ensure_strategy=[AwesomeVersionStrategy.SEMVER],
+        )
 
 
 class RpcUpdateEntity(ShellyRpcAttributeEntity, UpdateEntity):

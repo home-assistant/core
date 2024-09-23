@@ -5,13 +5,15 @@ import logging
 from typing import Any
 
 from ayla_iot_unofficial import AylaAuthError, new_ayla_api
+from ayla_iot_unofficial.fujitsu_consts import FGLAIR_APP_CREDENTIALS
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers import aiohttp_client
+from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
 
-from .const import API_TIMEOUT, CONF_EUROPE, DOMAIN, FGLAIR_APP_ID, FGLAIR_APP_SECRET
+from .const import API_TIMEOUT, CONF_REGION, DOMAIN, REGION_DEFAULT, REGION_EU
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -20,7 +22,12 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_USERNAME): str,
         vol.Required(CONF_PASSWORD): str,
-        vol.Required(CONF_EUROPE): bool,
+        vol.Required(CONF_REGION, default=REGION_DEFAULT): SelectSelector(
+            SelectSelectorConfig(
+                options=[region.lower() for region in FGLAIR_APP_CREDENTIALS],
+                translation_key=CONF_REGION,
+            )
+        ),
     }
 )
 STEP_REAUTH_DATA_SCHEMA = vol.Schema(
@@ -33,18 +40,20 @@ STEP_REAUTH_DATA_SCHEMA = vol.Schema(
 class FGLairConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Fujitsu HVAC (based on Ayla IOT)."""
 
+    MINOR_VERSION = 2
     _reauth_entry: ConfigEntry | None = None
 
     async def _async_validate_credentials(
         self, user_input: dict[str, Any]
     ) -> dict[str, str]:
         errors: dict[str, str] = {}
+        app_id, app_secret = FGLAIR_APP_CREDENTIALS[user_input[CONF_REGION]]
         api = new_ayla_api(
             user_input[CONF_USERNAME],
             user_input[CONF_PASSWORD],
-            FGLAIR_APP_ID,
-            FGLAIR_APP_SECRET,
-            europe=user_input[CONF_EUROPE],
+            app_id,
+            app_secret,
+            europe=user_input[CONF_REGION] == REGION_EU,
             websession=aiohttp_client.async_get_clientsession(self.hass),
             timeout=API_TIMEOUT,
         )

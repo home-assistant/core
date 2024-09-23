@@ -418,7 +418,7 @@ async def test_option_flow_install_multi_pan_addon_zha_other_radio(
     await hass.async_block_till_done()
     install_addon.assert_called_once_with(hass, "core_silabs_multiprotocol")
 
-    addon_info.return_value["hostname"] = "core-silabs-multiprotocol"
+    addon_info.return_value.hostname = "core-silabs-multiprotocol"
     result = await hass.config_entries.options.async_configure(result["flow_id"])
     assert result["type"] is FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "start_addon"
@@ -513,7 +513,7 @@ async def test_option_flow_addon_installed_same_device_reconfigure_unexpected_us
 ) -> None:
     """Test reconfiguring the multi pan addon."""
 
-    addon_info.return_value["options"]["device"] = "/dev/ttyTEST123"
+    addon_info.return_value.options["device"] = "/dev/ttyTEST123"
 
     multipan_manager = await silabs_multiprotocol_addon.get_multiprotocol_addon_manager(
         hass
@@ -572,7 +572,7 @@ async def test_option_flow_addon_installed_same_device_reconfigure_expected_user
 ) -> None:
     """Test reconfiguring the multi pan addon."""
 
-    addon_info.return_value["options"]["device"] = "/dev/ttyTEST123"
+    addon_info.return_value.options["device"] = "/dev/ttyTEST123"
 
     multipan_manager = await silabs_multiprotocol_addon.get_multiprotocol_addon_manager(
         hass
@@ -643,7 +643,7 @@ async def test_option_flow_addon_installed_same_device_uninstall(
 ) -> None:
     """Test uninstalling the multi pan addon."""
 
-    addon_info.return_value["options"]["device"] = "/dev/ttyTEST123"
+    addon_info.return_value.options["device"] = "/dev/ttyTEST123"
 
     # Setup the config entry
     config_entry = MockConfigEntry(
@@ -738,7 +738,7 @@ async def test_option_flow_addon_installed_same_device_do_not_uninstall_multi_pa
 ) -> None:
     """Test uninstalling the multi pan addon."""
 
-    addon_info.return_value["options"]["device"] = "/dev/ttyTEST123"
+    addon_info.return_value.options["device"] = "/dev/ttyTEST123"
 
     # Setup the config entry
     config_entry = MockConfigEntry(
@@ -781,7 +781,7 @@ async def test_option_flow_flasher_already_running_failure(
 ) -> None:
     """Test uninstalling the multi pan addon but with the flasher addon running."""
 
-    addon_info.return_value["options"]["device"] = "/dev/ttyTEST123"
+    addon_info.return_value.options["device"] = "/dev/ttyTEST123"
 
     # Setup the config entry
     config_entry = MockConfigEntry(
@@ -805,7 +805,7 @@ async def test_option_flow_flasher_already_running_failure(
 
     # The flasher addon is already installed and running, this is bad
     addon_store_info.return_value["installed"] = True
-    addon_info.return_value["state"] = "started"
+    addon_info.return_value.state = "started"
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], {silabs_multiprotocol_addon.CONF_DISABLE_MULTI_PAN: True}
@@ -828,7 +828,7 @@ async def test_option_flow_addon_installed_same_device_flasher_already_installed
 ) -> None:
     """Test uninstalling the multi pan addon."""
 
-    addon_info.return_value["options"]["device"] = "/dev/ttyTEST123"
+    addon_info.return_value.options["device"] = "/dev/ttyTEST123"
 
     # Setup the config entry
     config_entry = MockConfigEntry(
@@ -898,7 +898,7 @@ async def test_option_flow_flasher_install_failure(
 ) -> None:
     """Test uninstalling the multi pan addon, case where flasher addon fails."""
 
-    addon_info.return_value["options"]["device"] = "/dev/ttyTEST123"
+    addon_info.return_value.options["device"] = "/dev/ttyTEST123"
 
     # Setup the config entry
     config_entry = MockConfigEntry(
@@ -967,7 +967,7 @@ async def test_option_flow_flasher_addon_flash_failure(
 ) -> None:
     """Test where flasher addon fails to flash Zigbee firmware."""
 
-    addon_info.return_value["options"]["device"] = "/dev/ttyTEST123"
+    addon_info.return_value.options["device"] = "/dev/ttyTEST123"
 
     # Setup the config entry
     config_entry = MockConfigEntry(
@@ -1034,7 +1034,7 @@ async def test_option_flow_uninstall_migration_initiate_failure(
 ) -> None:
     """Test uninstalling the multi pan addon, case where ZHA migration init fails."""
 
-    addon_info.return_value["options"]["device"] = "/dev/ttyTEST123"
+    addon_info.return_value.options["device"] = "/dev/ttyTEST123"
 
     # Setup the config entry
     config_entry = MockConfigEntry(
@@ -1095,7 +1095,7 @@ async def test_option_flow_uninstall_migration_finish_failure(
 ) -> None:
     """Test uninstalling the multi pan addon, case where ZHA migration init fails."""
 
-    addon_info.return_value["options"]["device"] = "/dev/ttyTEST123"
+    addon_info.return_value.options["device"] = "/dev/ttyTEST123"
 
     # Setup the config entry
     config_entry = MockConfigEntry(
@@ -1667,7 +1667,7 @@ async def test_check_multi_pan_addon_auto_start(
 ) -> None:
     """Test `check_multi_pan_addon` auto starting the addon."""
 
-    addon_info.return_value["state"] = "not_running"
+    addon_info.return_value.state = "not_running"
     addon_store_info.return_value = {
         "installed": True,
         "available": True,
@@ -1686,7 +1686,7 @@ async def test_check_multi_pan_addon(
 ) -> None:
     """Test `check_multi_pan_addon`."""
 
-    addon_info.return_value["state"] = "started"
+    addon_info.return_value.state = "started"
     addon_store_info.return_value = {
         "installed": True,
         "available": True,
@@ -1717,7 +1717,7 @@ async def test_multi_pan_addon_using_device_not_running(
 ) -> None:
     """Test `multi_pan_addon_using_device` when the addon isn't running."""
 
-    addon_info.return_value["state"] = "not_running"
+    addon_info.return_value.state = "not_running"
     addon_store_info.return_value = {
         "installed": True,
         "available": True,
@@ -1745,8 +1745,8 @@ async def test_multi_pan_addon_using_device(
 ) -> None:
     """Test `multi_pan_addon_using_device` when the addon isn't running."""
 
-    addon_info.return_value["state"] = "started"
-    addon_info.return_value["options"] = {
+    addon_info.return_value.state = "started"
+    addon_info.return_value.options = {
         "autoflash_firmware": True,
         "device": options_device,
         "baudrate": "115200",
