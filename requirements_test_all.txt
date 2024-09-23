@@ -966,6 +966,9 @@ huawei-lte-api==1.7.3
 # homeassistant.components.huum
 huum==0.7.10
 
+# homeassistant.components.hwam
+hwamsmartctrl==0.2
+
 # homeassistant.components.hyperion
 hyperion-py==0.7.5
 
