@@ -26,6 +26,22 @@
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
   },
+  "entity": {
+    "sensor": {
+      "urgent": {
+        "name": "Urgent"
+      },
+      "convenient": {
+        "name": "On occasion"
+      },
+      "discounted": {
+        "name": "Discount only"
+      },
+      "list_language": {
+        "name": "Language"
+      }
+    }
+  },
   "exceptions": {
     "todo_save_item_failed": {
       "message": "Failed to save item {name} to Bring! list"
