@@ -92,6 +92,7 @@ async def test_failures_parametrized(
     expected: ConfigEntryState,
 ) -> None:
     """Test outcomes when changing errors."""
+    original = getattr(reolink_connect, attr)
     setattr(reolink_connect, attr, value)
     assert await hass.config_entries.async_setup(config_entry.entry_id) is (
         expected is ConfigEntryState.LOADED
@@ -99,6 +100,8 @@ async def test_failures_parametrized(
     await hass.async_block_till_done()
 
     assert config_entry.state == expected
+
+    setattr(reolink_connect, attr, original)
 
 
 async def test_firmware_error_twice(
@@ -123,6 +126,8 @@ async def test_firmware_error_twice(
     await hass.async_block_till_done()
 
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+    reolink_connect.check_new_firmware.reset_mock(side_effect=True)
 
 
 async def test_credential_error_three(
@@ -149,6 +154,8 @@ async def test_credential_error_three(
 
     assert (HOMEASSISTANT_DOMAIN, issue_id) in issue_registry.issues
 
+    reolink_connect.get_states.reset_mock(side_effect=True)
+
 
 async def test_entry_reloading(
     hass: HomeAssistant,
@@ -157,6 +164,7 @@ async def test_entry_reloading(
 ) -> None:
     """Test the entry is reloaded correctly when settings change."""
     reolink_connect.is_nvr = False
+    reolink_connect.logout.reset_mock()
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
@@ -168,6 +176,8 @@ async def test_entry_reloading(
 
     assert reolink_connect.logout.call_count == 1
     assert config_entry.title == "New Name"
+
+    reolink_connect.is_nvr = True
 
 
 @pytest.mark.parametrize(
@@ -224,6 +234,7 @@ async def test_removing_disconnected_cams(
 
     # Try to remove the device after 'disconnecting' a camera.
     if attr is not None:
+        original = getattr(reolink_connect, attr)
         setattr(reolink_connect, attr, value)
     expected_success = TEST_CAM_MODEL not in expected_models
     for device in device_entries:
@@ -236,6 +247,9 @@ async def test_removing_disconnected_cams(
     )
     device_models = [device.model for device in device_entries]
     assert sorted(device_models) == sorted(expected_models)
+
+    if attr is not None:
+        setattr(reolink_connect, attr, original)
 
 
 @pytest.mark.parametrize(
@@ -547,6 +561,8 @@ async def test_port_repair_issue(
     await hass.async_block_till_done()
 
     assert (DOMAIN, "enable_port") in issue_registry.issues
+
+    reolink_connect.set_net_port.reset_mock(side_effect=True)
 
 
 async def test_webhook_repair_issue(
