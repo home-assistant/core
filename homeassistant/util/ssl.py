@@ -157,12 +157,7 @@ def server_context_insecure() -> ssl.SSLContext:
     """Return an SSL context for old SSL/TLS standards."""
     context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
 
-    context.options |= (
-        ssl.OP_NO_SSLv2 | ssl.OP_NO_SSLv3 | ssl.OP_CIPHER_SERVER_PREFERENCE
-    )
-    if hasattr(ssl, "OP_NO_COMPRESSION"):
-        context.options |= ssl.OP_NO_COMPRESSION
-
+    context.options |= getattr(ssl, "OP_LEGACY_SERVER_CONNECT", 0x4)
     context.set_ciphers(SSL_CIPHER_LISTS[SSLCipherList.INSECURE])
 
     return context
