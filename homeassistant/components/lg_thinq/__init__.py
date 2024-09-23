@@ -41,6 +41,7 @@ PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.EVENT,
     Platform.NUMBER,
+    Platform.SENSOR,
     Platform.SWITCH,
 ]
 

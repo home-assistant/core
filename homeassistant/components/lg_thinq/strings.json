@@ -216,6 +216,364 @@
       "sleep_timer_relative_hour_to_stop_for_location": {
         "name": "{location} sleep timer"
       }
+    },
+    "sensor": {
+      "error": {
+        "name": "Error"
+      },
+      "current_temperature": {
+        "name": "Current temperature"
+      },
+      "temperature": {
+        "name": "Temperature"
+      },
+      "monitoring_enabled": {
+        "name": "Air quality sensor",
+        "state": {
+          "on_working": "Turns on with product",
+          "always": "Always on"
+        }
+      },
+      "growth_mode": {
+        "name": "Mode",
+        "state": {
+          "standard": "Auto",
+          "ext_leaf": "Vegetables",
+          "ext_herb": "Herbs",
+          "ext_flower": "Flowers",
+          "ext_expert": "Custom growing mode"
+        }
+      },
+      "growth_mode_for_location": {
+        "name": "{location} mode",
+        "state": {
+          "standard": "Auto",
+          "ext_leaf": "Vegetables",
+          "ext_herb": "Herbs",
+          "ext_flower": "Flowers",
+          "ext_expert": "Custom growing mode"
+        }
+      },
+      "wind_volume": {
+        "name": "Wind speed"
+      },
+      "wind_volume_for_location": {
+        "name": "{location} wind speed"
+      },
+      "day_target_temperature": {
+        "name": "Day growth temperature"
+      },
+      "day_target_temperature_for_location": {
+        "name": "{location} day growth temperature"
+      },
+      "night_target_temperature": {
+        "name": "Night growth temperature"
+      },
+      "night_target_temperature_for_location": {
+        "name": "{location} night growth temperature"
+      },
+      "temperature_state": {
+        "name": "Temperature",
+        "state": {
+          "high": "High",
+          "normal": "Good",
+          "low": "Low"
+        }
+      },
+      "temperature_state_for_location": {
+        "name": "{location} temperature",
+        "state": {
+          "high": "High",
+          "normal": "Good",
+          "low": "Low"
+        }
+      },
+      "current_state": {
+        "name": "Current status",
+        "state": {
+          "add_drain": "Filling",
+          "as_pop_up": "Product requires attention",
+          "cancel": "Cancel",
+          "carbonation": "Carbonation",
+          "change_condition": "Settings Change",
+          "charging": "Charging",
+          "charging_complete": "Charging completed",
+          "checking_turbidity": "Detecting soil level",
+          "cleaning": "Cleaning",
+          "cleaning_is_done": "Cleaning is done",
+          "complete": "Done",
+          "cook": "Cooking",
+          "cook_complete": "Done",
+          "cooking_in_progress": "Cooking",
+          "cool_down": "Cool down",
+          "cooling": "Cooling",
+          "detecting": "Detecting",
+          "detergent_amount": "Providing the info about the amount of detergent",
+          "diagnosis": "Smart diagnosis is in progress",
+          "dispensing": "Auto dispensing",
+          "display_loadsize": "Load size",
+          "done": "Done",
+          "drying": "Drying",
+          "during_aging": "Aging",
+          "during_fermentation": "Fermentation",
+          "end": "Finished",
+          "end_cooling": "Drying",
+          "error": "Product requires attention",
+          "extracting_capsule": "Capsule brewing",
+          "extraction_mode": "Storing",
+          "firmware": "Updating firmware",
+          "fota": "Updating",
+          "frozen_prevent_initial": "Freeze protection standby",
+          "frozen_prevent_running": "Freeze protection in progress",
+          "frozen_prevent_pause": "Freeze protection paused",
+          "homing": "Moving",
+          "initial": "Standby",
+          "initializing": "Standby",
+          "lock": "Control lock",
+          "macrosector": "Remote is in use",
+          "melting": "Wort dissolving",
+          "monitoring_detecting": "HomeGuard is active",
+          "monitoring_moving": "Going to the starting point",
+          "monitoring_positioning": "Setting homeguard start point",
+          "night_dry": "Night dry",
+          "oven_setting": "Cooktop connected",
+          "pause": "Paused",
+          "paused": "Paused",
+          "power_fail": "Power fail",
+          "power_on": "On",
+          "power_off": "Off",
+          "preference": "Setting",
+          "preheat": "Preheating",
+          "preheat_complete": "Preheating is done",
+          "preheating": "Preheating",
+          "preheating_is_done": "Preheating is done",
+          "prepareing_fermentation": "Preparing now",
+          "presteam": "Ready to steam",
+          "prewash": "Prewashing",
+          "proofing": "Proofing",
+          "refreshing": "Refreshing",
+          "reservation": "Remote is in use",
+          "reserved": "Delay set",
+          "rinse_hold": "Waiting to rinse",
+          "rinsing": "Rinsing",
+          "running": "Running",
+          "running_end": "Complete",
+          "setdate": "Remote is in use",
+          "shoes_module": "Drying shoes",
+          "sleep": "In sleep mode",
+          "smart_grid_run": "Running smart grid",
+          "soaking": "Soak",
+          "softening": "Softener",
+          "spinning": "Spinning",
+          "stay": "Refresh",
+          "standby": "Standby",
+          "steam": "Refresh",
+          "steam_softening": "Steam softening",
+          "sterilize": "Sterilize",
+          "temperature_stabilization": "Temperature adjusting",
+          "working": "Cleaning",
+          "wrinkle_care": "Wrinkle care"
+        }
+      },
+      "current_state_for_location": {
+        "name": "{location} current status",
+        "state": {
+          "add_drain": "Filling",
+          "as_pop_up": "Product requires attention",
+          "cancel": "Cancel",
+          "carbonation": "Carbonation",
+          "change_condition": "Settings Change",
+          "charging": "Charging",
+          "charging_complete": "Charging completed",
+          "checking_turbidity": "Detecting soil level",
+          "cleaning": "Cleaning",
+          "cleaning_is_done": "Cleaning is done",
+          "complete": "Done",
+          "cook": "Cooking",
+          "cook_complete": "Done",
+          "cooking_in_progress": "Cooking",
+          "cool_down": "Cool down",
+          "cooling": "Cooling",
+          "detecting": "Detecting",
+          "detergent_amount": "Providing the info about the amount of detergent",
+          "diagnosis": "Smart diagnosis is in progress",
+          "dispensing": "Auto dispensing",
+          "display_loadsize": "Load size",
+          "done": "Done",
+          "drying": "Drying",
+          "during_aging": "Aging",
+          "during_fermentation": "Fermentation",
+          "end": "Finished",
+          "end_cooling": "Drying",
+          "error": "Product requires attention",
+          "extracting_capsule": "Capsule brewing",
+          "extraction_mode": "Storing",
+          "firmware": "Updating firmware",
+          "fota": "Updating",
+          "frozen_prevent_initial": "Freeze protection standby",
+          "frozen_prevent_running": "Freeze protection in progress",
+          "frozen_prevent_pause": "Freeze protection paused",
+          "homing": "Moving",
+          "initial": "Standby",
+          "initializing": "Standby",
+          "lock": "Control lock",
+          "macrosector": "Remote is in use",
+          "melting": "Wort dissolving",
+          "monitoring_detecting": "HomeGuard is active",
+          "monitoring_moving": "Going to the starting point",
+          "monitoring_positioning": "Setting homeguard start point",
+          "night_dry": "Night dry",
+          "oven_setting": "Cooktop connected",
+          "pause": "Paused",
+          "paused": "Paused",
+          "power_fail": "Power fail",
+          "power_on": "On",
+          "power_off": "Off",
+          "preference": "Setting",
+          "preheat": "Preheating",
+          "preheat_complete": "Preheating is done",
+          "preheating": "Preheating",
+          "preheating_is_done": "Preheating is done",
+          "prepareing_fermentation": "Preparing now",
+          "presteam": "Ready to steam",
+          "prewash": "Prewashing",
+          "proofing": "Proofing",
+          "refreshing": "Refreshing",
+          "reservation": "Remote is in use",
+          "reserved": "Delay set",
+          "rinse_hold": "Waiting to rinse",
+          "rinsing": "Rinsing",
+          "running": "Running",
+          "running_end": "Complete",
+          "setdate": "Remote is in use",
+          "shoes_module": "Drying shoes",
+          "sleep": "In sleep mode",
+          "smart_grid_run": "Running smart grid",
+          "soaking": "Soak",
+          "softening": "Softener",
+          "spinning": "Spinning",
+          "stay": "Refresh",
+          "standby": "Standby",
+          "steam": "Refresh",
+          "steam_softening": "Steam softening",
+          "sterilize": "Sterilize",
+          "temperature_stabilization": "Temperature adjusting",
+          "working": "Cleaning",
+          "wrinkle_care": "Wrinkle care"
+        }
+      },
+      "fresh_air_filter": {
+        "name": "Fresh air filter",
+        "state": {
+          "off": "Off",
+          "auto": "Auto",
+          "power": "Power",
+          "replace": "Replace filter",
+          "smart_power": "Smart safe storage",
+          "smart_off": "Off",
+          "smart_on": "Smart safe storage"
+        }
+      },
+      "used_time": {
+        "name": "Water filter used"
+      },
+      "current_job_mode": {
+        "name": "Operating mode",
+        "state": {
+          "air_clean": "Purify",
+          "auto": "Auto",
+          "clothes_dry": "Laundry",
+          "edge": "Edge cleaning",
+          "heat_pump": "Heat pump",
+          "high": "Power",
+          "intensive_dry": "Spot",
+          "macro": "Custom mode",
+          "mop": "Mop",
+          "normal": "Normal",
+          "off": "Off",
+          "quiet_humidity": "Silent",
+          "rapid_humidity": "Jet",
+          "sector_base": "Cell by cell",
+          "select": "My space",
+          "smart_humidity": "Smart",
+          "spot": "Spiral spot mode",
+          "turbo": "Turbo",
+          "vacation": "Vacation",
+          "zigzag": "Zigzag"
+        }
+      },
+      "current_job_mode_stick_cleaner": {
+        "name": "Operating mode",
+        "state": {
+          "auto": "Low power",
+          "high": "Power",
+          "mop": "Mop",
+          "normal": "Normal",
+          "off": "Off",
+          "turbo": "Turbo"
+        }
+      },
+      "personalization_mode": {
+        "name": "Personal mode",
+        "state": {
+          "auto_inside": "Auto mode",
+          "sleep": "Sleep mode",
+          "baby": "Baby care mode",
+          "sick_house": "New Home mode",
+          "auto_outside": "Interlocking mode",
+          "pet": "Pet mode",
+          "cooking": "Cooking mode",
+          "smoke": "Smoke mode",
+          "exercise": "Exercise mode",
+          "others": "Others"
+        }
+      },
+      "cock_state": {
+        "name": "UVnano",
+        "state": {
+          "cleaning": "In progress",
+          "normal": "Standby"
+        }
+      },
+      "sterilizing_state": {
+        "name": "High-temp sterilization",
+        "state": {
+          "off": "Off",
+          "on": "Sterilizing",
+          "cancel": "Cancel"
+        }
+      },
+      "water_type": {
+        "name": "Type"
+      },
+      "target_temperature": {
+        "name": "Temperature",
+        "state": {
+          "kimchi": "Kimchi",
+          "off": "Off",
+          "freezer": "Freezer",
+          "fridge": "Fridge",
+          "storage": "Storage",
+          "meat_fish": "Meat/Fish",
+          "rice_grain": "Rice/Grain",
+          "vegetable_fruit": "Vege/Fruit",
+          "temperature_number": "Number"
+        }
+      },
+      "target_temperature_for_location": {
+        "name": "{location} temperature",
+        "state": {
+          "kimchi": "Kimchi",
+          "off": "Off",
+          "freezer": "Freezer",
+          "fridge": "Fridge",
+          "storage": "Storage",
+          "meat_fish": "Meat/Fish",
+          "rice_grain": "Rice/Grain",
+          "vegetable_fruit": "Vege/Fruit",
+          "temperature_number": "Number"
+        }
+      }
     }
   }
 }
