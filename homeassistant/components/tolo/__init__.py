@@ -11,12 +11,7 @@ from tololib import ToloClient, ToloSettings, ToloStatus
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-    UpdateFailed,
-)
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DEFAULT_RETRY_COUNT, DEFAULT_RETRY_TIMEOUT, DOMAIN
 
@@ -89,21 +84,3 @@ class ToloSaunaUpdateCoordinator(DataUpdateCoordinator[ToloSaunaData]):  # pylin
         except TimeoutError as error:
             raise UpdateFailed("communication timeout") from error
         return ToloSaunaData(status, settings)
-
-
-class ToloSaunaCoordinatorEntity(CoordinatorEntity[ToloSaunaUpdateCoordinator]):
-    """CoordinatorEntity for TOLO Sauna."""
-
-    _attr_has_entity_name = True
-
-    def __init__(
-        self, coordinator: ToloSaunaUpdateCoordinator, entry: ConfigEntry
-    ) -> None:
-        """Initialize ToloSaunaCoordinatorEntity."""
-        super().__init__(coordinator)
-        self._attr_device_info = DeviceInfo(
-            name="TOLO Sauna",
-            identifiers={(DOMAIN, entry.entry_id)},
-            manufacturer="SteamTec",
-            model=self.coordinator.data.status.model.name.capitalize(),
-        )
