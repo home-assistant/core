@@ -39,6 +39,8 @@
         'address': '00000000-0000-0000-0000-000000000001',
       }),
       'disabled_by': None,
+      'discovery_keys': tuple(
+      ),
       'domain': 'gardena_bluetooth',
       'entry_id': <ANY>,
       'minor_version': 1,
@@ -248,6 +250,8 @@
         'address': '00000000-0000-0000-0000-000000000001',
       }),
       'disabled_by': None,
+      'discovery_keys': tuple(
+      ),
       'domain': 'gardena_bluetooth',
       'entry_id': <ANY>,
       'minor_version': 1,

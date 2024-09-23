@@ -107,6 +107,26 @@
         "name": "Tire pressure warning rear right"
       }
     },
+    "button": {
+      "boombox": {
+        "name": "Play fart"
+      },
+      "enable_keyless_driving": {
+        "name": "Keyless driving"
+      },
+      "flash_lights": {
+        "name": "Flash lights"
+      },
+      "homelink": {
+        "name": "Homelink"
+      },
+      "honk": {
+        "name": "Honk horn"
+      },
+      "wake": {
+        "name": "Wake"
+      }
+    },
     "climate": {
       "climate_state_cabin_overheat_protection": {
         "name": "Cabin overheat protection"
@@ -148,6 +168,14 @@
       },
       "route": {
         "name": "Route"
+      }
+    },
+    "lock": {
+      "charge_state_charge_port_latch": {
+        "name": "Charge cable lock"
+      },
+      "vehicle_state_locked": {
+        "name": "[%key:component::lock::title%]"
       }
     },
     "media_player": {
@@ -443,6 +471,9 @@
     }
   },
   "exceptions": {
+    "no_cable": {
+      "message": "Charge cable will lock automatically when connected"
+    },
     "update_failed": {
       "message": "{endpoint} data request failed: {message}"
     },

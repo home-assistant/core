@@ -5,6 +5,8 @@
     'data': dict({
     }),
     'disabled_by': None,
+    'discovery_keys': tuple(
+    ),
     'domain': 'test',
     'entry_id': 'mock-entry',
     'minor_version': 1,

@@ -9,6 +9,8 @@
         'password': 'pwd',
       }),
       'disabled_by': None,
+      'discovery_keys': list([
+      ]),
       'domain': 'solarlog',
       'entry_id': 'ce5f5431554d101905d31797e1232da8',
       'minor_version': 3,

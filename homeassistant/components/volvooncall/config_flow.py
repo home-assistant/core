@@ -18,7 +18,6 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from . import VolvoData
 from .const import (
     CONF_MUTABLE,
     DOMAIN,
@@ -27,6 +26,7 @@ from .const import (
     UNIT_SYSTEM_SCANDINAVIAN_MILES,
 )
 from .errors import InvalidAuth
+from .models import VolvoData
 
 _LOGGER = logging.getLogger(__name__)
 

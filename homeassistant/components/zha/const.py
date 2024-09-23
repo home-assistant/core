@@ -49,6 +49,7 @@ CONF_GROUP_MEMBERS_ASSUME_STATE = "group_members_assume_state"
 CONF_ENABLE_IDENTIFY_ON_JOIN = "enable_identify_on_join"
 CONF_CONSIDER_UNAVAILABLE_MAINS = "consider_unavailable_mains"
 CONF_CONSIDER_UNAVAILABLE_BATTERY = "consider_unavailable_battery"
+CONF_ENABLE_MAINS_STARTUP_POLLING = "enable_mains_startup_polling"
 
 CONF_ZIGPY = "zigpy_config"
 CONF_DEVICE_CONFIG = "device_config"
