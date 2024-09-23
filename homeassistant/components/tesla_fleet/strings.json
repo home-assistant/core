@@ -150,6 +150,14 @@
         "name": "Route"
       }
     },
+    "lock": {
+      "charge_state_charge_port_latch": {
+        "name": "Charge cable lock"
+      },
+      "vehicle_state_locked": {
+        "name": "[%key:component::lock::title%]"
+      }
+    },
     "media_player": {
       "media": {
         "name": "[%key:component::media_player::title%]"
@@ -443,6 +451,9 @@
     }
   },
   "exceptions": {
+    "no_cable": {
+      "message": "Charge cable will lock automatically when connected"
+    },
     "update_failed": {
       "message": "{endpoint} data request failed: {message}"
     },
