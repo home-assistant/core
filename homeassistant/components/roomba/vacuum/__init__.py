@@ -6,11 +6,11 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import roomba_reported_state
+from .. import roomba_reported_state
+from ..const import DOMAIN
+from ..models import RoombaData
 from .braava import BraavaJet
-from .const import DOMAIN
 from .entity import IRobotVacuum
-from .models import RoombaData
 from .roomba import RoombaVacuum, RoombaVacuumCarpetBoost
 
 
