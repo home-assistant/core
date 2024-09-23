@@ -53,7 +53,7 @@ async def test_block_update(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test block device update entity."""
-    entity_id = "update.test_name_firmware_update"
+    entity_id = "update.test_name_firmware"
     monkeypatch.setitem(mock_block_device.status["update"], "old_version", "1.0.0")
     monkeypatch.setitem(mock_block_device.status["update"], "new_version", "2.0.0")
     monkeypatch.setitem(mock_block_device.status, "cloud", {"connected": False})
@@ -105,7 +105,7 @@ async def test_block_beta_update(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test block device beta update entity."""
-    entity_id = "update.test_name_beta_firmware_update"
+    entity_id = "update.test_name_beta_firmware"
     monkeypatch.setitem(mock_block_device.status["update"], "old_version", "1.0.0")
     monkeypatch.setitem(mock_block_device.status["update"], "new_version", "2.0.0")
     monkeypatch.setitem(mock_block_device.status["update"], "beta_version", "")
@@ -179,7 +179,7 @@ async def test_block_update_connection_error(
         await hass.services.async_call(
             UPDATE_DOMAIN,
             SERVICE_INSTALL,
-            {ATTR_ENTITY_ID: "update.test_name_firmware_update"},
+            {ATTR_ENTITY_ID: "update.test_name_firmware"},
             blocking=True,
         )
     assert "Error starting OTA update" in str(excinfo.value)
@@ -206,7 +206,7 @@ async def test_block_update_auth_error(
     await hass.services.async_call(
         UPDATE_DOMAIN,
         SERVICE_INSTALL,
-        {ATTR_ENTITY_ID: "update.test_name_firmware_update"},
+        {ATTR_ENTITY_ID: "update.test_name_firmware"},
         blocking=True,
     )
 
@@ -237,8 +237,8 @@ async def test_block_version_compare(
     STABLE = "20230913-111730/v1.14.0-gcb84623"
     BETA = "20231107-162609/v1.14.1-rc1-g0617c15"
 
-    entity_id_beta = "update.test_name_beta_firmware_update"
-    entity_id_latest = "update.test_name_firmware_update"
+    entity_id_beta = "update.test_name_beta_firmware"
+    entity_id_latest = "update.test_name_firmware"
     monkeypatch.setitem(mock_block_device.status["update"], "old_version", STABLE)
     monkeypatch.setitem(mock_block_device.status["update"], "new_version", "")
     monkeypatch.setitem(mock_block_device.status["update"], "beta_version", BETA)
@@ -276,7 +276,7 @@ async def test_rpc_update(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test RPC device update entity."""
-    entity_id = "update.test_name_firmware_update"
+    entity_id = "update.test_name_firmware"
     monkeypatch.setitem(mock_rpc_device.shelly, "ver", "1")
     monkeypatch.setitem(
         mock_rpc_device.status["sys"],
@@ -391,7 +391,7 @@ async def test_rpc_sleeping_update(
             "stable": {"version": "2"},
         },
     )
-    entity_id = f"{UPDATE_DOMAIN}.test_name_firmware_update"
+    entity_id = f"{UPDATE_DOMAIN}.test_name_firmware"
     await init_integration(hass, 2, sleep_period=1000)
 
     # Entity should be created when device is online
@@ -436,7 +436,7 @@ async def test_rpc_restored_sleeping_update(
     entity_id = register_entity(
         hass,
         UPDATE_DOMAIN,
-        "test_name_firmware_update",
+        "test_name_firmware",
         "sys-fwupdate",
         entry,
         device_id=device.id,
@@ -495,7 +495,7 @@ async def test_rpc_restored_sleeping_update_no_last_state(
     entity_id = register_entity(
         hass,
         UPDATE_DOMAIN,
-        "test_name_firmware_update",
+        "test_name_firmware",
         "sys-fwupdate",
         entry,
         device_id=device.id,
@@ -534,7 +534,7 @@ async def test_rpc_beta_update(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test RPC device beta update entity."""
-    entity_id = "update.test_name_beta_firmware_update"
+    entity_id = "update.test_name_beta_firmware"
     monkeypatch.setitem(mock_rpc_device.shelly, "ver", "1")
     monkeypatch.setitem(
         mock_rpc_device.status["sys"],
@@ -679,7 +679,7 @@ async def test_rpc_update_errors(
         await hass.services.async_call(
             UPDATE_DOMAIN,
             SERVICE_INSTALL,
-            {ATTR_ENTITY_ID: "update.test_name_firmware_update"},
+            {ATTR_ENTITY_ID: "update.test_name_firmware"},
             blocking=True,
         )
     assert error in str(excinfo.value)
@@ -714,7 +714,7 @@ async def test_rpc_update_auth_error(
     await hass.services.async_call(
         UPDATE_DOMAIN,
         SERVICE_INSTALL,
-        {ATTR_ENTITY_ID: "update.test_name_firmware_update"},
+        {ATTR_ENTITY_ID: "update.test_name_firmware"},
         blocking=True,
     )
 
