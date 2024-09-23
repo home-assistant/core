@@ -1229,7 +1229,7 @@ async def test_dhcp_rediscover(
     rediscovery_watcher = dhcp.RediscoveryWatcher(
         hass, address_data, integration_matchers
     )
-    await rediscovery_watcher.async_start()
+    rediscovery_watcher.async_start()
     with patch.object(hass.config_entries.flow, "async_init") as mock_init:
         await async_handle_dhcp_packet(packet)
         # Ensure no change is ignored
@@ -1325,7 +1325,7 @@ async def test_dhcp_rediscover_no_match(
     rediscovery_watcher = dhcp.RediscoveryWatcher(
         hass, address_data, integration_matchers
     )
-    await rediscovery_watcher.async_start()
+    rediscovery_watcher.async_start()
     with patch.object(hass.config_entries.flow, "async_init") as mock_init:
         await async_handle_dhcp_packet(packet)
         # Ensure no change is ignored
@@ -1407,7 +1407,7 @@ async def test_dhcp_rediscover_no_match_2(
     rediscovery_watcher = dhcp.RediscoveryWatcher(
         hass, address_data, integration_matchers
     )
-    await rediscovery_watcher.async_start()
+    rediscovery_watcher.async_start()
     with patch.object(hass.config_entries.flow, "async_init") as mock_init:
         await async_handle_dhcp_packet(packet)
         # Ensure no change is ignored

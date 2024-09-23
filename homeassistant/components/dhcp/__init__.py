@@ -159,7 +159,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         rediscovery_watcher = RediscoveryWatcher(
             hass, address_data, integration_matchers
         )
-        await rediscovery_watcher.async_start()
+        rediscovery_watcher.async_start()
         watchers.append(rediscovery_watcher)
 
         @callback
@@ -282,6 +282,9 @@ class WatcherBase:
 
             _LOGGER.debug("Matched %s against %s", data, matcher)
             matched_domains.add(domain)
+
+        if not matched_domains:
+            return  # avoid creating DiscoveryKey if there are no matches
 
         discovery_key = DiscoveryKey(
             domain=DOMAIN,
@@ -456,7 +459,8 @@ class RediscoveryWatcher(WatcherBase):
                     True,  # Force rediscovery
                 )
 
-    async def async_start(self) -> None:
+    @callback
+    def async_start(self) -> None:
         """Start watching for config entry removals."""
         self._unsub = async_dispatcher_connect(
             self.hass,
