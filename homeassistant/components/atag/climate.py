@@ -18,7 +18,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.enum import try_parse_enum
 
-from . import DOMAIN, AtagEntity
+from . import DOMAIN
+from .entity import AtagEntity
 
 PRESET_MAP = {
     "Manual": "manual",
