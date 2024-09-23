@@ -15,7 +15,7 @@ from http import HTTPStatus
 import logging
 import secrets
 from typing import Any, Final, Required, TypedDict, final
-from urllib.parse import quote, urlparse
+from urllib.parse import urlparse
 
 import aiohttp
 from aiohttp import web
@@ -1187,12 +1187,10 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """Generate an url for a media browser image."""
         url_path = (
             f"/api/media_player_proxy/{self.entity_id}/browse_media"
-            # quote the media_content_id as it may contain url unsafe characters
-            # aiohttp will unquote the path automatically
-            f"/{media_content_type}/{quote(media_content_id)}"
+            f"/{media_content_type}"
         )
 
-        url_query = {"token": self.access_token}
+        url_query = {"token": self.access_token, "media_content_id": media_content_id}
         if media_image_id:
             url_query["media_image_id"] = media_image_id
 
@@ -1205,11 +1203,7 @@ class MediaPlayerImageView(HomeAssistantView):
     requires_auth = False
     url = "/api/media_player_proxy/{entity_id}"
     name = "api:media_player:image"
-    extra_urls = [
-        # Need to modify the default regex for media_content_id as it may
-        # include arbitrary characters including '/','{', or '}'
-        url + "/browse_media/{media_content_type}/{media_content_id:.+}",
-    ]
+    extra_urls = [url + "/browse_media/{media_content_type}"]
 
     def __init__(self, component: EntityComponent[MediaPlayerEntity]) -> None:
         """Initialize a media player view."""
@@ -1220,7 +1214,6 @@ class MediaPlayerImageView(HomeAssistantView):
         request: web.Request,
         entity_id: str,
         media_content_type: MediaType | str | None = None,
-        media_content_id: str | None = None,
     ) -> web.Response:
         """Start a get request."""
         if (player := self.component.get_entity(entity_id)) is None:
@@ -1232,16 +1225,17 @@ class MediaPlayerImageView(HomeAssistantView):
             return web.Response(status=status)
 
         assert isinstance(player, MediaPlayerEntity)
+        query = request.query
+        media_content_id = query.get("media_content_id")
         authenticated = (
-            request[KEY_AUTHENTICATED]
-            or request.query.get("token") == player.access_token
+            request[KEY_AUTHENTICATED] or query.get("token") == player.access_token
         )
 
         if not authenticated:
             return web.Response(status=HTTPStatus.UNAUTHORIZED)
 
         if media_content_type and media_content_id:
-            media_image_id = request.query.get("media_image_id")
+            media_image_id = query.get("media_image_id")
             data, content_type = await player.async_get_browse_image(
                 media_content_type, media_content_id, media_image_id
             )
