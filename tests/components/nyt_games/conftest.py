@@ -3,7 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import patch
 
-from nyt_games.models import LatestData
+from nyt_games.models import WordleStats
 import pytest
 
 from homeassistant.components.nyt_games.const import DOMAIN
@@ -37,9 +37,10 @@ def mock_nyt_games_client() -> Generator[AsyncMock]:
         ),
     ):
         client = mock_client.return_value
-        client.get_latest_stats.return_value = LatestData.from_json(
+        client.get_latest_stats.return_value = WordleStats.from_json(
             load_fixture("latest.json", DOMAIN)
-        ).player
+        ).player.stats
+        client.get_user_id.return_value = 218886794
         yield client
 
 

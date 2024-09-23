@@ -24,7 +24,7 @@ class NYTGamesConfigFlow(ConfigFlow, domain=DOMAIN):
             session = async_get_clientsession(self.hass)
             client = NYTGamesClient(user_input[CONF_TOKEN], session=session)
             try:
-                latest_stats = await client.get_latest_stats()
+                user_id = await client.get_user_id()
             except NYTGamesAuthenticationError:
                 errors["base"] = "invalid_auth"
             except NYTGamesError:
@@ -32,7 +32,7 @@ class NYTGamesConfigFlow(ConfigFlow, domain=DOMAIN):
             except Exception:  # noqa: BLE001
                 errors["base"] = "unknown"
             else:
-                await self.async_set_unique_id(str(latest_stats.user_id))
+                await self.async_set_unique_id(str(user_id))
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(title="NYT Games", data=user_input)
         return self.async_show_form(
