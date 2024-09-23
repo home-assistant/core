@@ -37,6 +37,7 @@ from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 from homeassistant.loader import async_suggest_report_issue
 from homeassistant.util import dt as dt_util
 from homeassistant.util.enum import try_parse_enum
+from homeassistant.util.hass_dict import HassKey
 
 from .const import (
     ATTR_LAST_RESET,
@@ -63,14 +64,15 @@ EQUIVALENT_UNITS = {
     "ft³/m": UnitOfVolumeFlowRate.CUBIC_FEET_PER_MINUTE,
 }
 
+
 # Keep track of entities for which a warning about decreasing value has been logged
-SEEN_DIP = "sensor_seen_total_increasing_dip"
-WARN_DIP = "sensor_warn_total_increasing_dip"
+SEEN_DIP: HassKey[set[str]] = HassKey(f"{DOMAIN}_seen_total_increasing_dip")
+WARN_DIP: HassKey[set[str]] = HassKey(f"{DOMAIN}_warn_total_increasing_dip")
 # Keep track of entities for which a warning about negative value has been logged
-WARN_NEGATIVE = "sensor_warn_total_increasing_negative"
+WARN_NEGATIVE: HassKey[set[str]] = HassKey(f"{DOMAIN}_warn_total_increasing_negative")
 # Keep track of entities for which a warning about unsupported unit has been logged
-WARN_UNSUPPORTED_UNIT = "sensor_warn_unsupported_unit"
-WARN_UNSTABLE_UNIT = "sensor_warn_unstable_unit"
+WARN_UNSUPPORTED_UNIT: HassKey[set[str]] = HassKey(f"{DOMAIN}_warn_unsupported_unit")
+WARN_UNSTABLE_UNIT: HassKey[set[str]] = HassKey(f"{DOMAIN}_warn_unstable_unit")
 # Link to dev statistics where issues around LTS can be fixed
 LINK_DEV_STATISTICS = "https://my.home-assistant.io/redirect/developer_statistics"
 

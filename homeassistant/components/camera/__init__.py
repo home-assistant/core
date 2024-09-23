@@ -373,9 +373,7 @@ def _async_get_rtsp_to_web_rtc_providers(
     hass: HomeAssistant,
 ) -> Iterable[RtspToWebRtcProviderType]:
     """Return registered RTSP to WebRTC providers."""
-    providers: dict[str, RtspToWebRtcProviderType] = hass.data.get(
-        DATA_RTSP_TO_WEB_RTC, {}
-    )
+    providers = hass.data.get(DATA_RTSP_TO_WEB_RTC, {})
     return providers.values()
 
 
@@ -952,8 +950,9 @@ async def websocket_get_prefs(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle request for account info."""
-    prefs: CameraPreferences = hass.data[DATA_CAMERA_PREFS]
-    stream_prefs = await prefs.get_dynamic_stream_settings(msg["entity_id"])
+    stream_prefs = await hass.data[DATA_CAMERA_PREFS].get_dynamic_stream_settings(
+        msg["entity_id"]
+    )
     connection.send_result(msg["id"], asdict(stream_prefs))
 
 
@@ -970,14 +969,14 @@ async def websocket_update_prefs(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle request for account info."""
-    prefs: CameraPreferences = hass.data[DATA_CAMERA_PREFS]
-
     changes = dict(msg)
     changes.pop("id")
     changes.pop("type")
     entity_id = changes.pop("entity_id")
     try:
-        entity_prefs = await prefs.async_update(entity_id, **changes)
+        entity_prefs = await hass.data[DATA_CAMERA_PREFS].async_update(
+            entity_id, **changes
+        )
     except HomeAssistantError as ex:
         _LOGGER.error("Error setting camera preferences: %s", ex)
         connection.send_error(msg["id"], "update_failed", str(ex))

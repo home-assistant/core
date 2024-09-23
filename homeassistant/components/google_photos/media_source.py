@@ -19,11 +19,10 @@ from homeassistant.components.media_source import (
 from homeassistant.core import HomeAssistant
 
 from . import GooglePhotosConfigEntry
-from .const import DOMAIN, READ_SCOPES
+from .const import DOMAIN, READ_SCOPE
 
 _LOGGER = logging.getLogger(__name__)
 
-MAX_RECENT_PHOTOS = 100
 MEDIA_ITEMS_PAGE_SIZE = 100
 ALBUM_PAGE_SIZE = 50
 
@@ -38,16 +37,12 @@ class SpecialAlbumDetails:
     path: str
     title: str
     list_args: dict[str, Any]
-    max_photos: int | None
 
 
 class SpecialAlbum(Enum):
     """Special Album types."""
 
-    RECENT = SpecialAlbumDetails("recent", "Recent Photos", {}, MAX_RECENT_PHOTOS)
-    FAVORITE = SpecialAlbumDetails(
-        "favorites", "Favorite Photos", {"favorites": True}, None
-    )
+    UPLOADED = SpecialAlbumDetails("uploaded", "Uploaded", {})
 
     @classmethod
     def of(cls, path: str) -> Self | None:
@@ -247,12 +242,6 @@ class GooglePhotosMediaSource(MediaSource):
                 **list_args, page_size=MEDIA_ITEMS_PAGE_SIZE
             ):
                 media_items.extend(media_item_result.media_items)
-                if (
-                    special_album
-                    and (max_photos := special_album.value.max_photos)
-                    and len(media_items) > max_photos
-                ):
-                    break
         except GooglePhotosApiError as err:
             raise BrowseError(f"Error listing media items: {err}") from err
 
@@ -270,7 +259,7 @@ class GooglePhotosMediaSource(MediaSource):
         entries = []
         for entry in self.hass.config_entries.async_loaded_entries(DOMAIN):
             scopes = entry.data["token"]["scope"].split(" ")
-            if any(scope in scopes for scope in READ_SCOPES):
+            if READ_SCOPE in scopes:
                 entries.append(entry)
         return entries
 

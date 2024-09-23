@@ -15,7 +15,7 @@ from .const import TEST_INSTALLS
 @pytest.mark.parametrize("install", TEST_INSTALLS)
 async def test_entities(
     hass: HomeAssistant,
-    evo_config: dict[str, str],
+    config: dict[str, str],
     install: str,
     snapshot: SnapshotAssertion,
     freezer: FrozenDateTimeFactory,
@@ -25,6 +25,6 @@ async def test_entities(
     # some extended state attrs are relative the current time
     freezer.move_to("2024-07-10 12:00:00+00:00")
 
-    await setup_evohome(hass, evo_config, install=install)
+    await setup_evohome(hass, config, install=install)
 
     assert hass.states.async_all() == snapshot

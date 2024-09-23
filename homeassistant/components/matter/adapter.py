@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, cast
 
+from chip.clusters import Objects as clusters
 from matter_server.client.models.device_types import BridgedDevice
 from matter_server.common.models import EventType, ServerInfoMessage
 
@@ -194,11 +195,25 @@ class MatterAdapter:
             identifiers.add((DOMAIN, f"{ID_TYPE_SERIAL}_{basic_info_serial_number}"))
             serial_number = basic_info_serial_number
 
-        model = (
-            get_clean_name(basic_info.productName) or device_type.__name__
+        # Model name is the human readable name of the model/product name
+        model_name = (
+            # productLabel is optional but preferred (e.g. Hue Bloom)
+            get_clean_name(basic_info.productLabel)
+            # alternative is the productName (e.g. LCT001)
+            or get_clean_name(basic_info.productName)
+            # if no product name, use the device type name
+            or device_type.__name__
             if device_type
             else None
         )
+        # Model ID is the non-human readable product ID
+        # we prefer the matter product ID so we can look it up in Matter DCL
+        if isinstance(basic_info, clusters.BridgedDeviceBasicInformation):
+            # On bridged devices, the productID is not available
+            model_id = None
+        else:
+            model_id = str(product_id) if (product_id := basic_info.productID) else None
+
         dr.async_get(self.hass).async_get_or_create(
             name=name,
             config_entry_id=self.config_entry.entry_id,
@@ -206,8 +221,8 @@ class MatterAdapter:
             hw_version=basic_info.hardwareVersionString,
             sw_version=basic_info.softwareVersionString,
             manufacturer=basic_info.vendorName or endpoint.node.device_info.vendorName,
-            model=model,
-            model_id=str(basic_info.productID) if basic_info.productID else None,
+            model=model_name,
+            model_id=model_id,
             serial_number=serial_number,
             via_device=(DOMAIN, bridge_device_id) if bridge_device_id else None,
         )

@@ -1,0 +1,18 @@
+{
+  "entity": {
+    "sensor": {
+      "wordles_played": {
+        "default": "mdi:text-long"
+      },
+      "wordles_won": {
+        "default": "mdi:trophy-award"
+      },
+      "wordles_streak": {
+        "default": "mdi:calendar-range"
+      },
+      "wordles_max_streak": {
+        "default": "mdi:calendar-month"
+      }
+    }
+  }
+}
