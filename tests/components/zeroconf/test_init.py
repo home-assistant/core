@@ -1409,42 +1409,50 @@ async def test_zeroconf_removed(hass: HomeAssistant) -> None:
         # Matching discovery key
         (
             "shelly",
-            (
-                DiscoveryKey(
-                    domain="zeroconf",
-                    key=("_http._tcp.local.", "Shelly108._http._tcp.local."),
-                    version=1,
-                ),
-            ),
+            {
+                "zeroconf": (
+                    DiscoveryKey(
+                        domain="zeroconf",
+                        key=("_http._tcp.local.", "Shelly108._http._tcp.local."),
+                        version=1,
+                    ),
+                )
+            },
         ),
         # Matching discovery key
         (
             "shelly",
-            (
-                DiscoveryKey(
-                    domain="zeroconf",
-                    key=("_http._tcp.local.", "Shelly108._http._tcp.local."),
-                    version=1,
+            {
+                "zeroconf": (
+                    DiscoveryKey(
+                        domain="zeroconf",
+                        key=("_http._tcp.local.", "Shelly108._http._tcp.local."),
+                        version=1,
+                    ),
                 ),
-                DiscoveryKey(
-                    domain="other",
-                    key="blah",
-                    version=1,
+                "other": (
+                    DiscoveryKey(
+                        domain="other",
+                        key="blah",
+                        version=1,
+                    ),
                 ),
-            ),
+            },
         ),
         # Matching discovery key, other domain
         # Note: Rediscovery is not currently restricted to the domain of the removed
         # entry. Such a check can be added if needed.
         (
             "comp",
-            (
-                DiscoveryKey(
-                    domain="zeroconf",
-                    key=("_http._tcp.local.", "Shelly108._http._tcp.local."),
-                    version=1,
-                ),
-            ),
+            {
+                "zeroconf": (
+                    DiscoveryKey(
+                        domain="zeroconf",
+                        key=("_http._tcp.local.", "Shelly108._http._tcp.local."),
+                        version=1,
+                    ),
+                )
+            },
         ),
     ],
 )
@@ -1538,26 +1546,30 @@ async def test_zeroconf_rediscover(
         # Discovery key from other domain
         (
             "shelly",
-            (
-                DiscoveryKey(
-                    domain="bluetooth",
-                    key=("_http._tcp.local.", "Shelly108._http._tcp.local."),
-                    version=1,
-                ),
-            ),
+            {
+                "bluetooth": (
+                    DiscoveryKey(
+                        domain="bluetooth",
+                        key=("_http._tcp.local.", "Shelly108._http._tcp.local."),
+                        version=1,
+                    ),
+                )
+            },
             config_entries.SOURCE_IGNORE,
             "mock-unique-id",
         ),
         # Discovery key from the future
         (
             "shelly",
-            (
-                DiscoveryKey(
-                    domain="zeroconf",
-                    key=("_http._tcp.local.", "Shelly108._http._tcp.local."),
-                    version=2,
-                ),
-            ),
+            {
+                "zeroconf": (
+                    DiscoveryKey(
+                        domain="zeroconf",
+                        key=("_http._tcp.local.", "Shelly108._http._tcp.local."),
+                        version=2,
+                    ),
+                )
+            },
             config_entries.SOURCE_IGNORE,
             "mock-unique-id",
         ),
@@ -1656,13 +1668,15 @@ async def test_zeroconf_rediscover_no_match(
         # Source not SOURCE_IGNORE
         (
             "shelly",
-            (
-                DiscoveryKey(
-                    domain="zeroconf",
-                    key=("_http._tcp.local.", "Shelly108._http._tcp.local."),
-                    version=1,
-                ),
-            ),
+            {
+                "bluetooth": (
+                    DiscoveryKey(
+                        domain="zeroconf",
+                        key=("_http._tcp.local.", "Shelly108._http._tcp.local."),
+                        version=1,
+                    ),
+                )
+            },
             config_entries.SOURCE_ZEROCONF,
             "mock-unique-id",
         ),

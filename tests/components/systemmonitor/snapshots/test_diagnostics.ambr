@@ -34,8 +34,8 @@
       'data': dict({
       }),
       'disabled_by': None,
-      'discovery_keys': list([
-      ]),
+      'discovery_keys': dict({
+      }),
       'domain': 'systemmonitor',
       'minor_version': 3,
       'options': dict({
