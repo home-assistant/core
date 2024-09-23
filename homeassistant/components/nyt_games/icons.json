@@ -1,0 +1,9 @@
+{
+  "entity": {
+    "sensor": {
+      "wordles_played": {
+        "default": "mdi:text-long"
+      }
+    }
+  }
+}
