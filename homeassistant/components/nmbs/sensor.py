@@ -7,7 +7,10 @@ import logging
 from pyrail import iRail
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+    SensorEntity,
+)
 from homeassistant.const import (
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
@@ -35,7 +38,7 @@ CONF_STATION_TO = "station_to"
 CONF_STATION_LIVE = "station_live"
 CONF_EXCLUDE_VIAS = "exclude_vias"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_STATION_FROM): cv.string,
         vol.Required(CONF_STATION_TO): cv.string,
@@ -258,7 +261,7 @@ class NMBSSensor(SensorEntity):
             attrs["via_arrival_platform"] = via["arrival"]["platform"]
             attrs["via_transfer_platform"] = via["departure"]["platform"]
             attrs["via_transfer_time"] = get_delay_in_minutes(
-                via["timeBetween"]
+                via["timebetween"]
             ) + get_delay_in_minutes(via["departure"]["delay"])
 
         if delay > 0:

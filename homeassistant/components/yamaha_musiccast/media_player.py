@@ -27,7 +27,6 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import uuid
 
-from . import MusicCastDataUpdateCoordinator, MusicCastDeviceEntity
 from .const import (
     ATTR_MAIN_SYNC,
     ATTR_MC_LINK,
@@ -38,6 +37,8 @@ from .const import (
     MEDIA_CLASS_MAPPING,
     NULL_GROUP,
 )
+from .coordinator import MusicCastDataUpdateCoordinator
+from .entity import MusicCastDeviceEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -385,7 +386,7 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
                 else:
                     children.append(item)
 
-        overview = BrowseMedia(
+        return BrowseMedia(
             title=media_content_provider.title,
             media_class=MEDIA_CLASS_MAPPING.get(media_content_provider.content_type),
             media_content_id=media_content_provider.content_id,
@@ -394,8 +395,6 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
             can_expand=media_content_provider.can_browse,
             children=children,
         )
-
-        return overview
 
     async def async_select_sound_mode(self, sound_mode: str) -> None:
         """Select sound mode."""

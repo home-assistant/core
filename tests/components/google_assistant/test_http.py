@@ -4,6 +4,7 @@ from datetime import UTC, datetime, timedelta
 from http import HTTPStatus
 import json
 import os
+from pathlib import Path
 from typing import Any
 from unittest.mock import ANY, patch
 from uuid import uuid4
@@ -577,6 +578,8 @@ async def test_async_get_users_from_store(tmpdir: py.path.local) -> None:
 
         assert await async_get_users(hass) == ["agent_1"]
 
+        await hass.async_stop()
+
 
 VALID_STORE_DATA = json.dumps(
     {
@@ -653,9 +656,7 @@ async def test_async_get_users(
         )
         path = hass.config.config_dir / ".storage" / GoogleConfigStore._STORAGE_KEY
         os.makedirs(os.path.dirname(path), exist_ok=True)
-        with open(path, "w") as f:
-            f.write(store_data)
-
+        await hass.async_add_executor_job(Path(path).write_text, store_data)
         assert await async_get_users(hass) == expected_users
 
         await hass.async_stop()

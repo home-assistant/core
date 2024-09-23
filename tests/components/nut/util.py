@@ -33,14 +33,14 @@ def _get_mock_nutclient(
 
 async def async_init_integration(
     hass: HomeAssistant,
-    ups_fixture: str = None,
+    ups_fixture: str | None = None,
     username: str = "mock",
     password: str = "mock",
-    list_ups: dict[str, str] = None,
-    list_vars: dict[str, str] = None,
-    list_commands_return_value: dict[str, str] = None,
+    list_ups: dict[str, str] | None = None,
+    list_vars: dict[str, str] | None = None,
+    list_commands_return_value: dict[str, str] | None = None,
     list_commands_side_effect=None,
-    run_command: MagicMock = None,
+    run_command: MagicMock | None = None,
 ) -> MockConfigEntry:
     """Set up the nut integration in Home Assistant."""
 

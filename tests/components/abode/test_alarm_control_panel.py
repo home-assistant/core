@@ -2,8 +2,6 @@
 
 from unittest.mock import PropertyMock, patch
 
-from jaraco.abode.helpers import constants as CONST
-
 from homeassistant.components.abode import ATTR_DEVICE_ID
 from homeassistant.components.alarm_control_panel import DOMAIN as ALARM_DOMAIN
 from homeassistant.const import (
@@ -70,7 +68,7 @@ async def test_set_alarm_away(hass: HomeAssistant) -> None:
             "jaraco.abode.devices.alarm.Alarm.mode",
             new_callable=PropertyMock,
         ) as mock_mode:
-            mock_mode.return_value = CONST.MODE_AWAY
+            mock_mode.return_value = "away"
 
             update_callback = mock_callback.call_args[0][1]
             await hass.async_add_executor_job(update_callback, "area_1")
@@ -100,7 +98,7 @@ async def test_set_alarm_home(hass: HomeAssistant) -> None:
         with patch(
             "jaraco.abode.devices.alarm.Alarm.mode", new_callable=PropertyMock
         ) as mock_mode:
-            mock_mode.return_value = CONST.MODE_HOME
+            mock_mode.return_value = "home"
 
             update_callback = mock_callback.call_args[0][1]
             await hass.async_add_executor_job(update_callback, "area_1")
@@ -129,7 +127,7 @@ async def test_set_alarm_standby(hass: HomeAssistant) -> None:
         with patch(
             "jaraco.abode.devices.alarm.Alarm.mode", new_callable=PropertyMock
         ) as mock_mode:
-            mock_mode.return_value = CONST.MODE_STANDBY
+            mock_mode.return_value = "standby"
 
             update_callback = mock_callback.call_args[0][1]
             await hass.async_add_executor_job(update_callback, "area_1")

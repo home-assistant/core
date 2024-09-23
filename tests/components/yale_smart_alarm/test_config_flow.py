@@ -21,7 +21,7 @@ async def test_form(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     with (
@@ -43,7 +43,7 @@ async def test_form(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "test-username"
     assert result2["data"] == {
         "username": "test-username",
@@ -85,7 +85,7 @@ async def test_form_invalid_auth(
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": p_error}
 
     with (
@@ -107,7 +107,7 @@ async def test_form_invalid_auth(
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "test-username"
     assert result2["data"] == {
         "username": "test-username",
@@ -132,17 +132,9 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
     )
     entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "unique_id": entry.unique_id,
-            "entry_id": entry.entry_id,
-        },
-        data=entry.data,
-    )
+    result = await entry.start_reauth_flow(hass)
     assert result["step_id"] == "reauth_confirm"
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     with (
@@ -163,7 +155,7 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.ABORT
+    assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "reauth_successful"
     assert entry.data == {
         "username": "test-username",
@@ -202,15 +194,7 @@ async def test_reauth_flow_error(
     )
     entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "unique_id": entry.unique_id,
-            "entry_id": entry.entry_id,
-        },
-        data=entry.data,
-    )
+    result = await entry.start_reauth_flow(hass)
 
     with patch(
         "homeassistant.components.yale_smart_alarm.config_flow.YaleSmartAlarmClient",
@@ -226,7 +210,7 @@ async def test_reauth_flow_error(
         await hass.async_block_till_done()
 
     assert result2["step_id"] == "reauth_confirm"
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": p_error}
 
     with (
@@ -248,7 +232,7 @@ async def test_reauth_flow_error(
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.ABORT
+    assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "reauth_successful"
     assert entry.data == {
         "username": "test-username",
@@ -288,7 +272,7 @@ async def test_options_flow(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
@@ -296,5 +280,5 @@ async def test_options_flow(hass: HomeAssistant) -> None:
         user_input={"lock_code_digits": 6},
     )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {"lock_code_digits": 6}

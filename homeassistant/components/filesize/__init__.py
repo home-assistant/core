@@ -9,11 +9,14 @@ from homeassistant.core import HomeAssistant
 from .const import PLATFORMS
 from .coordinator import FileSizeCoordinator
 
+type FileSizeConfigEntry = ConfigEntry[FileSizeCoordinator]
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+
+async def async_setup_entry(hass: HomeAssistant, entry: FileSizeConfigEntry) -> bool:
     """Set up from a config entry."""
     coordinator = FileSizeCoordinator(hass, entry.data[CONF_FILE_PATH])
     await coordinator.async_config_entry_first_refresh()
+    entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True

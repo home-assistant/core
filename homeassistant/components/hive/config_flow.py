@@ -31,19 +31,21 @@ class HiveFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a Hive config flow."""
 
     VERSION = CONFIG_ENTRY_VERSION
+    hive_auth: Auth
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the config flow."""
-        self.hive_auth = None
-        self.data = {}
-        self.tokens = {}
-        self.entry = None
-        self.device_registration = False
+        self.data: dict[str, Any] = {}
+        self.tokens: dict[str, str] = {}
+        self.entry: ConfigEntry | None = None
+        self.device_registration: bool = False
         self.device_name = "Home Assistant"
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Prompt user input. Create or edit entry."""
-        errors = {}
+        errors: dict[str, str] = {}
         # Login to Hive with user data.
         if user_input is not None:
             self.data.update(user_input)
@@ -83,7 +85,9 @@ class HiveFlowHandler(ConfigFlow, domain=DOMAIN):
         )
         return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
 
-    async def async_step_2fa(self, user_input=None):
+    async def async_step_2fa(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle 2fa step."""
         errors = {}
 
@@ -108,7 +112,9 @@ class HiveFlowHandler(ConfigFlow, domain=DOMAIN):
         schema = vol.Schema({vol.Required(CONF_CODE): str})
         return self.async_show_form(step_id="2fa", data_schema=schema, errors=errors)
 
-    async def async_step_configuration(self, user_input=None):
+    async def async_step_configuration(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle hive configuration step."""
         errors = {}
 
@@ -130,7 +136,7 @@ class HiveFlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="configuration", data_schema=schema, errors=errors
         )
 
-    async def async_setup_hive_entry(self):
+    async def async_setup_hive_entry(self) -> ConfigFlowResult:
         """Finish setup and create the config entry."""
 
         if "AuthenticationResult" not in self.tokens:
@@ -139,6 +145,7 @@ class HiveFlowHandler(ConfigFlow, domain=DOMAIN):
         # Setup the config entry
         self.data["tokens"] = self.tokens
         if self.context["source"] == SOURCE_REAUTH:
+            assert self.entry
             self.hass.config_entries.async_update_entry(
                 self.entry, title=self.data["username"], data=self.data
             )
@@ -156,9 +163,9 @@ class HiveFlowHandler(ConfigFlow, domain=DOMAIN):
         }
         return await self.async_step_user(data)
 
-    async def async_step_import(self, user_input=None):
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Import user."""
-        return await self.async_step_user(user_input)
+        return await self.async_step_user(import_data)
 
     @staticmethod
     @callback
@@ -178,16 +185,21 @@ class HiveOptionsFlowHandler(OptionsFlow):
         self.config_entry = config_entry
         self.interval = config_entry.options.get(CONF_SCAN_INTERVAL, 120)
 
-    async def async_step_init(self, user_input=None):
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Manage the options."""
         return await self.async_step_user()
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
         self.hive = self.hass.data["hive"][self.config_entry.entry_id]
-        errors = {}
+        errors: dict[str, str] = {}
         if user_input is not None:
             new_interval = user_input.get(CONF_SCAN_INTERVAL)
+            assert self.hive
             await self.hive.updateInterval(new_interval)
             return self.async_create_entry(title="", data=user_input)
 

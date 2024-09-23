@@ -12,9 +12,19 @@ CONF_OVERRIDE_MQTT_URL = "override_mqtt_url"
 CONF_VERIFY_MQTT_CERTIFICATE = "verify_mqtt_certificate"
 
 SUPPORTED_LIFESPANS = (
+    LifeSpan.BLADE,
     LifeSpan.BRUSH,
     LifeSpan.FILTER,
+    LifeSpan.LENS_BRUSH,
     LifeSpan.SIDE_BRUSH,
+    LifeSpan.UNIT_CARE,
+    LifeSpan.ROUND_MOP,
+)
+
+LEGACY_SUPPORTED_LIFESPANS = (
+    "main_brush",
+    "side_brush",
+    "filter",
 )
 
 

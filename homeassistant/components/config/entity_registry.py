@@ -8,8 +8,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import websocket_api
-from homeassistant.components.websocket_api import ERR_NOT_FOUND
-from homeassistant.components.websocket_api.decorators import require_admin
+from homeassistant.components.websocket_api import ERR_NOT_FOUND, require_admin
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import (
     config_validation as cv,
@@ -43,7 +42,7 @@ def websocket_list_entities(
     registry = er.async_get(hass)
     # Build start of response message
     msg_json_prefix = (
-        f'{{"id":{msg["id"]},"type": "{websocket_api.const.TYPE_RESULT}",'
+        f'{{"id":{msg["id"]},"type": "{websocket_api.TYPE_RESULT}",'
         '"success":true,"result": ['
     ).encode()
     # Concatenate cached entity registry item JSON serializations
@@ -74,7 +73,7 @@ def websocket_list_entities_for_display(
     registry = er.async_get(hass)
     # Build start of response message
     msg_json_prefix = (
-        f'{{"id":{msg["id"]},"type":"{websocket_api.const.TYPE_RESULT}","success":true,'
+        f'{{"id":{msg["id"]},"type":"{websocket_api.TYPE_RESULT}","success":true,'
         f'"result":{{"entity_categories":{_ENTITY_CATEGORIES_JSON},"entities":['
     ).encode()
     # Concatenate cached entity registry item JSON serializations

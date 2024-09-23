@@ -46,7 +46,7 @@ HLS_CONFIG = {
 
 
 @pytest.fixture
-async def setup_component(hass) -> None:
+async def setup_component(hass: HomeAssistant) -> None:
     """Test fixture to setup the stream component."""
     await async_setup_component(hass, "stream", HLS_CONFIG)
 
@@ -54,7 +54,7 @@ async def setup_component(hass) -> None:
 class HlsClient:
     """Test fixture for fetching the hls stream."""
 
-    def __init__(self, http_client, parsed_url):
+    def __init__(self, http_client, parsed_url) -> None:
         """Initialize HlsClient."""
         self.http_client = http_client
         self.parsed_url = parsed_url
@@ -69,7 +69,7 @@ class HlsClient:
 
 
 @pytest.fixture
-def hls_stream(hass, hass_client):
+def hls_stream(hass: HomeAssistant, hass_client: ClientSessionGenerator):
     """Create test fixture for creating an HLS client for a stream."""
 
     async def create_client_for_stream(stream):
@@ -309,6 +309,7 @@ async def test_stream_retries(
 
     def av_open_side_effect(*args, **kwargs):
         hass.loop.call_soon_threadsafe(futures.pop().set_result, None)
+        # pylint: disable-next=c-extension-no-member
         raise av.error.InvalidDataError(-2, "error")
 
     with (

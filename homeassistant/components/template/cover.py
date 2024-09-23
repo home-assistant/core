@@ -12,7 +12,7 @@ from homeassistant.components.cover import (
     ATTR_TILT_POSITION,
     DEVICE_CLASSES_SCHEMA,
     ENTITY_ID_FORMAT,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as COVER_PLATFORM_SCHEMA,
     CoverEntity,
     CoverEntityFeature,
 )
@@ -96,7 +96,7 @@ COVER_SCHEMA = vol.All(
     cv.has_at_least_one_key(OPEN_ACTION, POSITION_ACTION),
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = COVER_PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_COVERS): cv.schema_with_slug_keys(COVER_SCHEMA)}
 )
 
@@ -106,7 +106,7 @@ async def _async_create_entities(hass, config):
     covers = []
 
     for object_id, entity_config in config[CONF_COVERS].items():
-        entity_config = rewrite_common_legacy_to_modern_conf(entity_config)
+        entity_config = rewrite_common_legacy_to_modern_conf(hass, entity_config)
 
         unique_id = entity_config.get(CONF_UNIQUE_ID)
 

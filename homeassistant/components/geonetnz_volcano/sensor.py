@@ -154,17 +154,17 @@ class GeonetnzVolcanoSensor(SensorEntity):
     @property
     def extra_state_attributes(self):
         """Return the device state attributes."""
-        attributes = {}
-        for key, value in (
-            (ATTR_EXTERNAL_ID, self._external_id),
-            (ATTR_ACTIVITY, self._activity),
-            (ATTR_HAZARDS, self._hazards),
-            (ATTR_LONGITUDE, self._longitude),
-            (ATTR_LATITUDE, self._latitude),
-            (ATTR_DISTANCE, self._distance),
-            (ATTR_LAST_UPDATE, self._feed_last_update),
-            (ATTR_LAST_UPDATE_SUCCESSFUL, self._feed_last_update_successful),
-        ):
-            if value or isinstance(value, bool):
-                attributes[key] = value
-        return attributes
+        return {
+            key: value
+            for key, value in (
+                (ATTR_EXTERNAL_ID, self._external_id),
+                (ATTR_ACTIVITY, self._activity),
+                (ATTR_HAZARDS, self._hazards),
+                (ATTR_LONGITUDE, self._longitude),
+                (ATTR_LATITUDE, self._latitude),
+                (ATTR_DISTANCE, self._distance),
+                (ATTR_LAST_UPDATE, self._feed_last_update),
+                (ATTR_LAST_UPDATE_SUCCESSFUL, self._feed_last_update_successful),
+            )
+            if value or isinstance(value, bool)
+        }

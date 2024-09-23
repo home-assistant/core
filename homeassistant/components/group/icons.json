@@ -1,7 +1,13 @@
 {
   "services": {
-    "reload": "mdi:reload",
-    "set": "mdi:home-group-plus",
-    "remove": "mdi:home-group-remove"
+    "reload": {
+      "service": "mdi:reload"
+    },
+    "set": {
+      "service": "mdi:home-group-plus"
+    },
+    "remove": {
+      "service": "mdi:home-group-remove"
+    }
   }
 }

@@ -43,7 +43,6 @@ class CertexpiryConfigFlow(ConfigFlow, domain=DOMAIN):
                 user_input[CONF_HOST],
                 user_input.get(CONF_PORT, DEFAULT_PORT),
             )
-            return True
         except ResolveFailed:
             self._errors[CONF_HOST] = "resolve_failed"
         except ConnectionTimeout:
@@ -51,6 +50,8 @@ class CertexpiryConfigFlow(ConfigFlow, domain=DOMAIN):
         except ConnectionRefused:
             self._errors[CONF_HOST] = "connection_refused"
         except ValidationFailure:
+            return True
+        else:
             return True
         return False
 
@@ -94,12 +95,9 @@ class CertexpiryConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=self._errors,
         )
 
-    async def async_step_import(
-        self,
-        user_input: Mapping[str, Any] | None = None,
-    ) -> ConfigFlowResult:
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Import a config entry.
 
         Only host was required in the yaml file all other fields are optional
         """
-        return await self.async_step_user(user_input)
+        return await self.async_step_user(import_data)

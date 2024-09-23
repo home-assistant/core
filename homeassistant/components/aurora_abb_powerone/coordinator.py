@@ -14,7 +14,7 @@ from .const import DOMAIN, SCAN_INTERVAL
 _LOGGER = logging.getLogger(__name__)
 
 
-class AuroraAbbDataUpdateCoordinator(DataUpdateCoordinator[dict[str, float]]):  # pylint: disable=hass-enforce-coordinator-module
+class AuroraAbbDataUpdateCoordinator(DataUpdateCoordinator[dict[str, float]]):
     """Class to manage fetching AuroraAbbPowerone data."""
 
     def __init__(self, hass: HomeAssistant, comport: str, address: int) -> None:
@@ -78,9 +78,9 @@ class AuroraAbbDataUpdateCoordinator(DataUpdateCoordinator[dict[str, float]]):  
             finally:
                 if self.available != self.available_prev:
                     if self.available:
-                        _LOGGER.info("Communication with %s back online", self.name)
+                        _LOGGER.warning("Communication with %s back online", self.name)
                     else:
-                        _LOGGER.info(
+                        _LOGGER.warning(
                             "Communication with %s lost",
                             self.name,
                         )

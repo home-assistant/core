@@ -26,7 +26,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import P1MonitorDataUpdateCoordinator
 from .const import (
     DOMAIN,
     SERVICE_PHASES,
@@ -34,6 +33,7 @@ from .const import (
     SERVICE_SMARTMETER,
     SERVICE_WATERMETER,
 )
+from .coordinator import P1MonitorDataUpdateCoordinator
 
 SENSORS_SMARTMETER: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(

@@ -11,7 +11,7 @@ import voluptuous as vol
 
 from homeassistant.components.tts import (
     CONF_LANG,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as TTS_PLATFORM_SCHEMA,
     Provider,
     TextToSpeechEntity,
     TtsAudioType,
@@ -35,7 +35,7 @@ _LOGGER = logging.getLogger(__name__)
 
 SUPPORT_OPTIONS = ["tld"]
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = TTS_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_LANG, default=DEFAULT_LANG): vol.In(SUPPORT_LANGUAGES),
         vol.Optional(CONF_TLD, default=DEFAULT_TLD): vol.In(SUPPORT_TLD),
@@ -74,7 +74,7 @@ class GoogleTTSEntity(TextToSpeechEntity):
         else:
             self._lang = lang
             self._tld = tld
-        self._attr_name = f"Google {self._lang} {self._tld}"
+        self._attr_name = f"Google Translate {self._lang} {self._tld}"
         self._attr_unique_id = config_entry.entry_id
 
     @property
@@ -130,7 +130,7 @@ class GoogleProvider(Provider):
         else:
             self._lang = lang
             self._tld = tld
-        self.name = "Google"
+        self.name = "Google Translate"
 
     @property
     def default_language(self) -> str:

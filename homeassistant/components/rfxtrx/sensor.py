@@ -39,8 +39,9 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import DeviceTuple, RfxtrxEntity, async_setup_platform_entry, get_rfx_object
+from . import DeviceTuple, async_setup_platform_entry, get_rfx_object
 from .const import ATTR_EVENT
+from .entity import RfxtrxEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -149,7 +150,7 @@ SENSOR_TYPES = (
         translation_key="total_energy_usage",
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
     ),
     RfxtrxSensorEntityDescription(
         key="Voltage",

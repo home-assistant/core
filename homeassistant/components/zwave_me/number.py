@@ -6,8 +6,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import ZWaveMeEntity
 from .const import DOMAIN, ZWaveMePlatform
+from .entity import ZWaveMeEntity
 
 DEVICE_NAME = ZWaveMePlatform.NUMBER
 
@@ -50,5 +50,5 @@ class ZWaveMeNumber(ZWaveMeEntity, NumberEntity):
     def set_native_value(self, value: float) -> None:
         """Update the current value."""
         self.controller.zwave_api.send_command(
-            self.device.id, f"exact?level={str(round(value))}"
+            self.device.id, f"exact?level={round(value)!s}"
         )

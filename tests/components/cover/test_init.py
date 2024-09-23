@@ -4,7 +4,7 @@ from enum import Enum
 
 import pytest
 
-import homeassistant.components.cover as cover
+from homeassistant.components import cover
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_PLATFORM,
@@ -14,15 +14,17 @@ from homeassistant.const import (
     STATE_OPEN,
     STATE_OPENING,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceResponse
+from homeassistant.helpers.entity import Entity
 from homeassistant.setup import async_setup_component
+
+from .common import MockCover
 
 from tests.common import (
     help_test_all,
     import_and_test_deprecated_constant_enum,
     setup_test_component_platform,
 )
-from tests.components.cover.common import MockCover
 
 
 async def test_services(
@@ -108,8 +110,17 @@ async def test_services(
     await call_service(hass, SERVICE_TOGGLE, ent6)
     assert is_opening(hass, ent6)
 
+    # After the unusual state transition: closing -> fully open, toggle should close
+    set_state(ent5, STATE_OPEN)
+    await call_service(hass, SERVICE_TOGGLE, ent5)  # Start closing
+    assert is_closing(hass, ent5)
+    set_state(ent5, STATE_OPEN)  # Unusual state transition from closing -> fully open
+    set_cover_position(ent5, 100)
+    await call_service(hass, SERVICE_TOGGLE, ent5)  # Should close, not open
+    assert is_closing(hass, ent5)
 
-def call_service(hass, service, ent):
+
+def call_service(hass: HomeAssistant, service: str, ent: Entity) -> ServiceResponse:
     """Call any service on entity."""
     return hass.services.async_call(
         cover.DOMAIN, service, {ATTR_ENTITY_ID: ent.entity_id}, blocking=True
@@ -126,27 +137,27 @@ def set_state(ent, state) -> None:
     ent._values["state"] = state
 
 
-def is_open(hass, ent):
+def is_open(hass: HomeAssistant, ent: Entity) -> bool:
     """Return if the cover is closed based on the statemachine."""
     return hass.states.is_state(ent.entity_id, STATE_OPEN)
 
 
-def is_opening(hass, ent):
+def is_opening(hass: HomeAssistant, ent: Entity) -> bool:
     """Return if the cover is closed based on the statemachine."""
     return hass.states.is_state(ent.entity_id, STATE_OPENING)
 
 
-def is_closed(hass, ent):
+def is_closed(hass: HomeAssistant, ent: Entity) -> bool:
     """Return if the cover is closed based on the statemachine."""
     return hass.states.is_state(ent.entity_id, STATE_CLOSED)
 
 
-def is_closing(hass, ent):
+def is_closing(hass: HomeAssistant, ent: Entity) -> bool:
     """Return if the cover is closed based on the statemachine."""
     return hass.states.is_state(ent.entity_id, STATE_CLOSING)
 
 
-def _create_tuples(enum: Enum, constant_prefix: str) -> list[tuple[Enum, str]]:
+def _create_tuples(enum: type[Enum], constant_prefix: str) -> list[tuple[Enum, str]]:
     return [(enum_field, constant_prefix) for enum_field in enum]
 
 

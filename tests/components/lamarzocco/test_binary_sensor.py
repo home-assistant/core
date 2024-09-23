@@ -1,7 +1,10 @@
 """Tests for La Marzocco binary sensors."""
 
+from datetime import timedelta
 from unittest.mock import MagicMock
 
+from freezegun.api import FrozenDateTimeFactory
+from lmcloud.exceptions import RequestNotSuccessful
 import pytest
 from syrupy import SnapshotAssertion
 
@@ -11,10 +14,11 @@ from homeassistant.helpers import entity_registry as er
 
 from . import async_init_integration
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 BINARY_SENSORS = (
     "brewing_active",
+    "backflush_active",
     "water_tank_empty",
 )
 
@@ -68,5 +72,31 @@ async def test_brew_active_unavailable(
     state = hass.states.get(
         f"binary_sensor.{mock_lamarzocco.serial_number}_brewing_active"
     )
+    assert state
+    assert state.state == STATE_UNAVAILABLE
+
+
+async def test_sensor_going_unavailable(
+    hass: HomeAssistant,
+    mock_lamarzocco: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test sensor is going unavailable after an unsuccessful update."""
+    brewing_active_sensor = (
+        f"binary_sensor.{mock_lamarzocco.serial_number}_brewing_active"
+    )
+    await async_init_integration(hass, mock_config_entry)
+
+    state = hass.states.get(brewing_active_sensor)
+    assert state
+    assert state.state != STATE_UNAVAILABLE
+
+    mock_lamarzocco.get_config.side_effect = RequestNotSuccessful("")
+    freezer.tick(timedelta(minutes=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(brewing_active_sensor)
     assert state
     assert state.state == STATE_UNAVAILABLE

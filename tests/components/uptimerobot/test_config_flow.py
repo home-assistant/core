@@ -30,7 +30,7 @@ async def test_form(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
 
     with (
@@ -50,7 +50,7 @@ async def test_form(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert result2["result"].unique_id == MOCK_UPTIMEROBOT_UNIQUE_ID
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == MOCK_UPTIMEROBOT_ACCOUNT["email"]
     assert result2["data"] == {CONF_API_KEY: MOCK_UPTIMEROBOT_API_KEY}
     assert len(mock_setup_entry.mock_calls) == 1
@@ -62,7 +62,7 @@ async def test_form_read_only(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
 
     with patch(
@@ -75,7 +75,7 @@ async def test_form_read_only(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"]["base"] == "not_main_key"
 
 
@@ -102,7 +102,7 @@ async def test_form_exception_thrown(hass: HomeAssistant, exception, error_key) 
             {CONF_API_KEY: MOCK_UPTIMEROBOT_API_KEY},
         )
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"]["base"] == error_key
 
 
@@ -137,7 +137,7 @@ async def test_user_unique_id_already_exists(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
 
     with (
@@ -157,7 +157,7 @@ async def test_user_unique_id_already_exists(
         await hass.async_block_till_done()
 
     assert len(mock_setup_entry.mock_calls) == 0
-    assert result2["type"] == FlowResultType.ABORT
+    assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "already_configured"
 
 
@@ -168,17 +168,9 @@ async def test_reauthentication(
     old_entry = MockConfigEntry(**MOCK_UPTIMEROBOT_CONFIG_ENTRY_DATA)
     old_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "unique_id": old_entry.unique_id,
-            "entry_id": old_entry.entry_id,
-        },
-        data=old_entry.data,
-    )
+    result = await old_entry.start_reauth_flow(hass)
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
     assert result["step_id"] == "reauth_confirm"
 
@@ -198,7 +190,7 @@ async def test_reauthentication(
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.ABORT
+    assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "reauth_successful"
 
 
@@ -209,17 +201,9 @@ async def test_reauthentication_failure(
     old_entry = MockConfigEntry(**MOCK_UPTIMEROBOT_CONFIG_ENTRY_DATA)
     old_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "unique_id": old_entry.unique_id,
-            "entry_id": old_entry.entry_id,
-        },
-        data=old_entry.data,
-    )
+    result = await old_entry.start_reauth_flow(hass)
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
     assert result["step_id"] == "reauth_confirm"
 
@@ -240,7 +224,7 @@ async def test_reauthentication_failure(
         await hass.async_block_till_done()
 
     assert result2["step_id"] == "reauth_confirm"
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"]["base"] == "unknown"
 
 
@@ -253,17 +237,9 @@ async def test_reauthentication_failure_no_existing_entry(
     )
     old_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "unique_id": old_entry.unique_id,
-            "entry_id": old_entry.entry_id,
-        },
-        data=old_entry.data,
-    )
+    result = await old_entry.start_reauth_flow(hass)
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
     assert result["step_id"] == "reauth_confirm"
 
@@ -283,7 +259,7 @@ async def test_reauthentication_failure_no_existing_entry(
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.ABORT
+    assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "reauth_failed_existing"
 
 
@@ -294,17 +270,9 @@ async def test_reauthentication_failure_account_not_matching(
     old_entry = MockConfigEntry(**MOCK_UPTIMEROBOT_CONFIG_ENTRY_DATA)
     old_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "unique_id": old_entry.unique_id,
-            "entry_id": old_entry.entry_id,
-        },
-        data=old_entry.data,
-    )
+    result = await old_entry.start_reauth_flow(hass)
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
     assert result["step_id"] == "reauth_confirm"
 
@@ -328,5 +296,5 @@ async def test_reauthentication_failure_account_not_matching(
         await hass.async_block_till_done()
 
     assert result2["step_id"] == "reauth_confirm"
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"]["base"] == "reauth_failed_matching_account"

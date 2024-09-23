@@ -7,7 +7,7 @@ import aprslib
 from aprslib import IS
 import pytest
 
-import homeassistant.components.aprs.device_tracker as device_tracker
+from homeassistant.components.aprs import device_tracker
 from homeassistant.core import HomeAssistant
 
 DEFAULT_PORT = 14580
@@ -20,7 +20,7 @@ TEST_PASSWORD = "testpass"
 
 
 @pytest.fixture(name="mock_ais")
-def mock_ais() -> Generator[MagicMock, None, None]:
+def mock_ais() -> Generator[MagicMock]:
     """Mock aprslib."""
     with patch("aprslib.IS") as mock_ais:
         yield mock_ais
@@ -300,6 +300,37 @@ def test_aprs_listener_rx_msg_no_position(mock_ais: MagicMock) -> None:
     assert listener.start_success
     assert listener.start_message == "Connected to testhost with callsign testcall."
     see.assert_not_called()
+
+
+def test_aprs_listener_rx_msg_object(mock_ais: MagicMock) -> None:
+    """Test rx_msg with object."""
+    callsign = TEST_CALLSIGN
+    password = TEST_PASSWORD
+    host = TEST_HOST
+    server_filter = TEST_FILTER
+    see = Mock()
+
+    sample_msg = aprslib.parse(
+        "CEEWO2-14>APLWS2,qAU,CEEWO2-15:;V4310251 *121203h5105.72N/00131.89WO085/024/A=033178!w&,!Clb=3.5m/s calibration 21% 404.40MHz Type=RS41 batt=2.7V Details on http://radiosondy.info/"
+    )
+
+    listener = device_tracker.AprsListenerThread(
+        callsign, password, host, server_filter, see
+    )
+    listener.run()
+    listener.rx_msg(sample_msg)
+
+    see.assert_called_with(
+        dev_id=device_tracker.slugify("V4310251"),
+        gps=(51.09534249084249, -1.5315201465201465),
+        attributes={
+            "gps_accuracy": 0,
+            "altitude": 10112.654400000001,
+            "comment": "Clb=3.5m/s calibration 21% 404.40MHz Type=RS41 batt=2.7V Details on http://radiosondy.info/",
+            "course": 85,
+            "speed": 44.448,
+        },
+    )
 
 
 async def test_setup_scanner(hass: HomeAssistant) -> None:

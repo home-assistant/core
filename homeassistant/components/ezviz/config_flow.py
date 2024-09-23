@@ -70,14 +70,12 @@ def _validate_and_create_auth(data: dict) -> dict[str, Any]:
 
     ezviz_token = ezviz_client.login()
 
-    auth_data = {
+    return {
         CONF_SESSION_ID: ezviz_token[CONF_SESSION_ID],
         CONF_RFSESSION_ID: ezviz_token[CONF_RFSESSION_ID],
         CONF_URL: ezviz_token["api_url"],
         CONF_TYPE: ATTR_TYPE_CLOUD,
     }
-
-    return auth_data
 
 
 def _test_camera_rtsp_creds(data: dict) -> None:
@@ -191,7 +189,7 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
             except PyEzvizError:
                 errors["base"] = "invalid_auth"
 
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 return self.async_abort(reason="unknown")
 
@@ -244,7 +242,7 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
             except PyEzvizError:
                 errors["base"] = "invalid_auth"
 
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 return self.async_abort(reason="unknown")
 
@@ -299,7 +297,7 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
             except (PyEzvizError, AuthTestResultFailed):
                 errors["base"] = "invalid_auth"
 
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 return self.async_abort(reason="unknown")
 
@@ -321,7 +319,7 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_reauth(
-        self, user_input: Mapping[str, Any]
+        self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle a flow for reauthentication with password."""
 
@@ -360,7 +358,7 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
             except (PyEzvizError, AuthTestResultFailed):
                 errors["base"] = "invalid_auth"
 
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 return self.async_abort(reason="unknown")
 

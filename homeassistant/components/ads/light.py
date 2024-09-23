@@ -9,7 +9,7 @@ import voluptuous as vol
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as LIGHT_PLATFORM_SCHEMA,
     ColorMode,
     LightEntity,
 )
@@ -19,17 +19,15 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import (
-    CONF_ADS_VAR,
-    CONF_ADS_VAR_BRIGHTNESS,
-    DATA_ADS,
-    STATE_KEY_BRIGHTNESS,
-    STATE_KEY_STATE,
-    AdsEntity,
-)
+from .const import CONF_ADS_VAR, DATA_ADS, STATE_KEY_STATE
+from .entity import AdsEntity
+from .hub import AdsHub
+
+CONF_ADS_VAR_BRIGHTNESS = "adsvar_brightness"
+STATE_KEY_BRIGHTNESS = "brightness"
 
 DEFAULT_NAME = "ADS Light"
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = LIGHT_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_ADS_VAR): cv.string,
         vol.Optional(CONF_ADS_VAR_BRIGHTNESS): cv.string,
@@ -45,11 +43,11 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the light platform for ADS."""
-    ads_hub = hass.data.get(DATA_ADS)
+    ads_hub = hass.data[DATA_ADS]
 
-    ads_var_enable = config[CONF_ADS_VAR]
-    ads_var_brightness = config.get(CONF_ADS_VAR_BRIGHTNESS)
-    name = config[CONF_NAME]
+    ads_var_enable: str = config[CONF_ADS_VAR]
+    ads_var_brightness: str | None = config.get(CONF_ADS_VAR_BRIGHTNESS)
+    name: str = config[CONF_NAME]
 
     add_entities([AdsLight(ads_hub, ads_var_enable, ads_var_brightness, name)])
 
@@ -57,7 +55,13 @@ def setup_platform(
 class AdsLight(AdsEntity, LightEntity):
     """Representation of ADS light."""
 
-    def __init__(self, ads_hub, ads_var_enable, ads_var_brightness, name):
+    def __init__(
+        self,
+        ads_hub: AdsHub,
+        ads_var_enable: str,
+        ads_var_brightness: str | None,
+        name: str,
+    ) -> None:
         """Initialize AdsLight entity."""
         super().__init__(ads_hub, name, ads_var_enable)
         self._state_dict[STATE_KEY_BRIGHTNESS] = None

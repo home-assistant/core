@@ -43,7 +43,7 @@ def flatten_translations(translations):
             if isinstance(v, dict):
                 stack.append(iter(v.items()))
                 break
-            elif isinstance(v, str):
+            if isinstance(v, str):
                 common_key = "::".join(key_stack)
                 flattened_translations[common_key] = v
                 key_stack.pop()

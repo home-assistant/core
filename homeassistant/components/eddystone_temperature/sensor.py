@@ -12,7 +12,7 @@ from beacontools import BeaconScanner, EddystoneFilter, EddystoneTLMFrame
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
 )
@@ -43,7 +43,7 @@ BEACON_SCHEMA = vol.Schema(
     }
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_BT_DEVICE_ID, default=0): cv.positive_int,
         vol.Required(CONF_BEACONS): vol.Schema({cv.string: BEACON_SCHEMA}),
@@ -79,12 +79,12 @@ def setup_platform(
 
         def monitor_stop(event: Event) -> None:
             """Stop the monitor thread."""
-            _LOGGER.info("Stopping scanner for Eddystone beacons")
+            _LOGGER.debug("Stopping scanner for Eddystone beacons")
             mon.stop()
 
         def monitor_start(event: Event) -> None:
             """Start the monitor thread."""
-            _LOGGER.info("Starting scanner for Eddystone beacons")
+            _LOGGER.debug("Starting scanner for Eddystone beacons")
             mon.start()
 
         add_entities(devices)

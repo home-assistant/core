@@ -3,6 +3,7 @@
 from unittest.mock import Mock, patch
 
 import pytest
+from yarl import URL
 
 from homeassistant.components import cloud
 from homeassistant.config import async_process_ha_core_config
@@ -362,6 +363,18 @@ async def test_get_url_external(hass: HomeAssistant) -> None:
         with pytest.raises(NoURLAvailableError):
             _get_external_url(hass, require_current_request=True, require_ssl=True)
 
+    with pytest.raises(NoURLAvailableError):
+        _get_external_url(hass, require_cloud=True)
+
+    with patch(
+        "homeassistant.components.cloud.async_remote_ui_url",
+        return_value="https://example.nabu.casa",
+    ):
+        hass.config.components.add("cloud")
+        assert (
+            _get_external_url(hass, require_cloud=True) == "https://example.nabu.casa"
+        )
+
 
 async def test_get_cloud_url(hass: HomeAssistant) -> None:
     """Test getting an instance URL when the user has set an external URL."""
@@ -579,7 +592,7 @@ async def test_get_request_host(hass: HomeAssistant) -> None:
 
     with patch("homeassistant.components.http.current_request") as mock_request_context:
         mock_request = Mock()
-        mock_request.url = "http://example.com:8123/test/request"
+        mock_request.url = URL("http://example.com:8123/test/request")
         mock_request_context.get = Mock(return_value=mock_request)
 
         assert _get_request_host() == "example.com"
@@ -670,10 +683,12 @@ async def test_is_internal_request(hass: HomeAssistant, mock_current_request) ->
     mock_current_request.return_value = None
     assert not is_internal_request(hass)
 
-    mock_current_request.return_value = Mock(url="http://example.local:8123")
+    mock_current_request.return_value = Mock(url=URL("http://example.local:8123"))
     assert is_internal_request(hass)
 
-    mock_current_request.return_value = Mock(url="http://no_match.example.local:8123")
+    mock_current_request.return_value = Mock(
+        url=URL("http://no_match.example.local:8123")
+    )
     assert not is_internal_request(hass)
 
     # Test with internal URL: http://192.168.0.1:8123
@@ -685,18 +700,18 @@ async def test_is_internal_request(hass: HomeAssistant, mock_current_request) ->
     assert hass.config.internal_url == "http://192.168.0.1:8123"
     assert not is_internal_request(hass)
 
-    mock_current_request.return_value = Mock(url="http://192.168.0.1:8123")
+    mock_current_request.return_value = Mock(url=URL("http://192.168.0.1:8123"))
     assert is_internal_request(hass)
 
     # Test for matching against local IP
     hass.config.api = Mock(use_ssl=False, local_ip="192.168.123.123", port=8123)
     for allowed in ("127.0.0.1", "192.168.123.123"):
-        mock_current_request.return_value = Mock(url=f"http://{allowed}:8123")
+        mock_current_request.return_value = Mock(url=URL(f"http://{allowed}:8123"))
         assert is_internal_request(hass), mock_current_request.return_value.url
 
     # Test for matching against HassOS hostname
     for allowed in ("hellohost", "hellohost.local"):
-        mock_current_request.return_value = Mock(url=f"http://{allowed}:8123")
+        mock_current_request.return_value = Mock(url=URL(f"http://{allowed}:8123"))
         assert is_internal_request(hass), mock_current_request.return_value.url
 
 

@@ -216,6 +216,10 @@ async def test_report_notifications(
             hass, datetime.fromisoformat("2023-08-01T01:01:00+00:00")
         )
         await hass.async_block_till_done()
+        for call in mock_report_state.mock_calls:
+            if "states" in call[1][0]["devices"]:
+                states = call[1][0]["devices"]["states"]
+        assert states["event.doorbell"] == {"online": True}
 
     # Test the notification request failed
     caplog.clear()
@@ -233,12 +237,10 @@ async def test_report_notifications(
             hass, datetime.fromisoformat("2023-08-01T01:03:00+00:00")
         )
         await hass.async_block_till_done()
-        assert len(mock_report_state.mock_calls) == 2
+        assert len(mock_report_state.mock_calls) == 1
         for call in mock_report_state.mock_calls:
             if "notifications" in call[1][0]["devices"]:
                 notifications = call[1][0]["devices"]["notifications"]
-            elif "states" in call[1][0]["devices"]:
-                states = call[1][0]["devices"]["states"]
         assert notifications["event.doorbell"] == {
             "ObjectDetection": {
                 "objects": {"unclassified": 1},
@@ -246,7 +248,6 @@ async def test_report_notifications(
                 "detectionTimestamp": epoc_event_time * 1000,
             }
         }
-        assert states["event.doorbell"] == {"online": True}
         assert "Sending event notification for entity event.doorbell" in caplog.text
         assert (
             "Unable to send notification with result code: 500, check log for more info"

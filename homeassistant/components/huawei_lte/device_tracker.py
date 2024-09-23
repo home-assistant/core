@@ -20,7 +20,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import HuaweiLteBaseEntity, Router
+from . import Router
 from .const import (
     CONF_TRACK_WIRED_CLIENTS,
     DEFAULT_TRACK_WIRED_CLIENTS,
@@ -29,12 +29,13 @@ from .const import (
     KEY_WLAN_HOST_LIST,
     UPDATE_SIGNAL,
 )
+from .entity import HuaweiLteBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
 
 _DEVICE_SCAN = f"{DEVICE_TRACKER_DOMAIN}/device_scan"
 
-_HostType = dict[str, Any]
+type _HostType = dict[str, Any]
 
 
 def _get_hosts(

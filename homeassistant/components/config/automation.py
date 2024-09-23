@@ -5,8 +5,8 @@ from __future__ import annotations
 from typing import Any
 import uuid
 
+from homeassistant.components.automation import DOMAIN as AUTOMATION_DOMAIN
 from homeassistant.components.automation.config import (
-    DOMAIN,
     PLATFORM_SCHEMA,
     async_validate_config_item,
 )
@@ -26,12 +26,16 @@ def async_setup(hass: HomeAssistant) -> bool:
     async def hook(action: str, config_key: str) -> None:
         """post_write_hook for Config View that reloads automations."""
         if action != ACTION_DELETE:
-            await hass.services.async_call(DOMAIN, SERVICE_RELOAD)
+            await hass.services.async_call(
+                AUTOMATION_DOMAIN, SERVICE_RELOAD, {CONF_ID: config_key}
+            )
             return
 
         ent_reg = er.async_get(hass)
 
-        entity_id = ent_reg.async_get_entity_id(DOMAIN, DOMAIN, config_key)
+        entity_id = ent_reg.async_get_entity_id(
+            AUTOMATION_DOMAIN, AUTOMATION_DOMAIN, config_key
+        )
 
         if entity_id is None:
             return
@@ -40,7 +44,7 @@ def async_setup(hass: HomeAssistant) -> bool:
 
     hass.http.register_view(
         EditAutomationConfigView(
-            DOMAIN,
+            AUTOMATION_DOMAIN,
             "config",
             AUTOMATION_CONFIG_PATH,
             cv.string,

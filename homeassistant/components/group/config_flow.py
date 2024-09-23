@@ -23,6 +23,7 @@ from homeassistant.helpers.schema_config_entry_flow import (
 )
 
 from .binary_sensor import CONF_ALL, async_create_preview_binary_sensor
+from .button import async_create_preview_button
 from .const import CONF_HIDE_MEMBERS, CONF_IGNORE_NON_NUMERIC, DOMAIN
 from .cover import async_create_preview_cover
 from .entity import GroupEntity
@@ -31,18 +32,20 @@ from .fan import async_create_preview_fan
 from .light import async_create_preview_light
 from .lock import async_create_preview_lock
 from .media_player import MediaPlayerGroup, async_create_preview_media_player
+from .notify import async_create_preview_notify
 from .sensor import async_create_preview_sensor
 from .switch import async_create_preview_switch
 
 _STATISTIC_MEASURES = [
-    "min",
+    "last",
     "max",
     "mean",
     "median",
-    "last",
-    "range",
-    "sum",
+    "min",
     "product",
+    "range",
+    "stdev",
+    "sum",
 ]
 
 
@@ -50,6 +53,7 @@ async def basic_group_options_schema(
     domain: str | list[str], handler: SchemaCommonFlowHandler | None
 ) -> vol.Schema:
     """Generate options schema."""
+    entity_selector: selector.Selector[Any] | vol.Schema
     if handler is None:
         entity_selector = selector.selector(
             {"entity": {"domain": domain, "multiple": True}}
@@ -144,12 +148,14 @@ async def light_switch_options_schema(
 
 GROUP_TYPES = [
     "binary_sensor",
+    "button",
     "cover",
     "event",
     "fan",
     "light",
     "lock",
     "media_player",
+    "notify",
     "sensor",
     "switch",
 ]
@@ -183,6 +189,11 @@ CONFIG_FLOW = {
         preview="group",
         validate_user_input=set_group_type("binary_sensor"),
     ),
+    "button": SchemaFlowFormStep(
+        basic_group_config_schema("button"),
+        preview="group",
+        validate_user_input=set_group_type("button"),
+    ),
     "cover": SchemaFlowFormStep(
         basic_group_config_schema("cover"),
         preview="group",
@@ -213,6 +224,11 @@ CONFIG_FLOW = {
         preview="group",
         validate_user_input=set_group_type("media_player"),
     ),
+    "notify": SchemaFlowFormStep(
+        basic_group_config_schema("notify"),
+        preview="group",
+        validate_user_input=set_group_type("notify"),
+    ),
     "sensor": SchemaFlowFormStep(
         SENSOR_CONFIG_SCHEMA,
         preview="group",
@@ -230,6 +246,10 @@ OPTIONS_FLOW = {
     "init": SchemaFlowFormStep(next_step=choose_options_step),
     "binary_sensor": SchemaFlowFormStep(
         binary_sensor_options_schema,
+        preview="group",
+    ),
+    "button": SchemaFlowFormStep(
+        partial(basic_group_options_schema, "button"),
         preview="group",
     ),
     "cover": SchemaFlowFormStep(
@@ -256,6 +276,10 @@ OPTIONS_FLOW = {
         partial(basic_group_options_schema, "media_player"),
         preview="group",
     ),
+    "notify": SchemaFlowFormStep(
+        partial(basic_group_options_schema, "notify"),
+        preview="group",
+    ),
     "sensor": SchemaFlowFormStep(
         partial(sensor_options_schema, "sensor"),
         preview="group",
@@ -273,12 +297,14 @@ CREATE_PREVIEW_ENTITY: dict[
     Callable[[HomeAssistant, str, dict[str, Any]], GroupEntity | MediaPlayerGroup],
 ] = {
     "binary_sensor": async_create_preview_binary_sensor,
+    "button": async_create_preview_button,
     "cover": async_create_preview_cover,
     "event": async_create_preview_event,
     "fan": async_create_preview_fan,
     "light": async_create_preview_light,
     "lock": async_create_preview_lock,
     "media_player": async_create_preview_media_player,
+    "notify": async_create_preview_notify,
     "sensor": async_create_preview_sensor,
     "switch": async_create_preview_switch,
 }

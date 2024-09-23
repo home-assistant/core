@@ -17,9 +17,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
+from .common import MockUpdateEntity
+
 from tests.common import async_fire_time_changed, setup_test_component_platform
 from tests.components.recorder.common import async_wait_recording_done
-from tests.components.update.common import MockUpdateEntity
 
 
 async def test_exclude_attributes(

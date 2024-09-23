@@ -1,0 +1,23 @@
+{
+  "ID": "ABC123",
+  "ChargeState": 2,
+  "ReadyState": 0,
+  "ChargePower": 1500.27,
+  "ChargeEnergy": 1.8,
+  "SlaveError": 4,
+  "ChargeTime": 4355,
+  "HousePower": 0.0,
+  "FVPower": 0.0,
+  "BatteryPower": 0.0,
+  "Paused": 0,
+  "Locked": 0,
+  "Timer": 0,
+  "Intensity": 6,
+  "Dynamic": 0,
+  "MinIntensity": 6,
+  "MaxIntensity": 16,
+  "PauseDynamic": 0,
+  "FirmwareVersion": "2.1.7",
+  "DynamicPowerMode": 2,
+  "ContractedPower": 4600
+}

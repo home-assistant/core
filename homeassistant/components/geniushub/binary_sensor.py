@@ -5,33 +5,28 @@ from __future__ import annotations
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import DOMAIN, GeniusDevice
+from . import GeniusHubConfigEntry
+from .entity import GeniusDevice
 
 GH_STATE_ATTR = "outputOnOff"
 GH_TYPE = "Receiver"
 
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
+    entry: GeniusHubConfigEntry,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the Genius Hub sensor entities."""
-    if discovery_info is None:
-        return
+    """Set up the Genius Hub binary sensor entities."""
 
-    broker = hass.data[DOMAIN]["broker"]
+    broker = entry.runtime_data
 
-    switches = [
+    async_add_entities(
         GeniusBinarySensor(broker, d, GH_STATE_ATTR)
         for d in broker.client.device_objs
         if GH_TYPE in d.data["type"]
-    ]
-
-    async_add_entities(switches, update_before_add=True)
+    )
 
 
 class GeniusBinarySensor(GeniusDevice, BinarySensorEntity):

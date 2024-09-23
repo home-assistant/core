@@ -1,5 +1,7 @@
 """Tests for the numato switch platform."""
 
+import pytest
+
 from homeassistant.components import switch
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -20,7 +22,7 @@ MOCKUP_ENTITY_IDS = {
 
 
 async def test_failing_setups_no_entities(
-    hass: HomeAssistant, numato_fixture, monkeypatch
+    hass: HomeAssistant, numato_fixture, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """When port setup fails, no entity shall be created."""
     monkeypatch.setattr(numato_fixture.NumatoDeviceMock, "setup", mockup_raise)
@@ -69,7 +71,7 @@ async def test_regular_hass_operations(hass: HomeAssistant, numato_fixture) -> N
 
 
 async def test_failing_hass_operations(
-    hass: HomeAssistant, numato_fixture, monkeypatch
+    hass: HomeAssistant, numato_fixture, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Test failing operations called from within Home Assistant.
 

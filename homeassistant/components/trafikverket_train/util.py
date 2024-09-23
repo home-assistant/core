@@ -14,7 +14,7 @@ def create_unique_id(
     timestr = str(depart_time) if depart_time else ""
     return (
         f"{from_station.casefold().replace(' ', '')}-{to_station.casefold().replace(' ', '')}"
-        f"-{timestr.casefold().replace(' ', '')}-{str(weekdays)}"
+        f"-{timestr.casefold().replace(' ', '')}-{weekdays!s}"
     )
 
 

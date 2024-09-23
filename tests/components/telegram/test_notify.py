@@ -3,7 +3,7 @@
 from unittest.mock import patch
 
 from homeassistant import config as hass_config
-import homeassistant.components.notify as notify
+from homeassistant.components import notify
 from homeassistant.components.telegram import DOMAIN
 from homeassistant.const import SERVICE_RELOAD
 from homeassistant.core import HomeAssistant

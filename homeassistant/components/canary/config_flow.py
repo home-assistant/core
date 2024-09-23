@@ -54,11 +54,9 @@ class CanaryConfigFlow(ConfigFlow, domain=DOMAIN):
         """Get the options flow for this handler."""
         return CanaryOptionsFlowHandler(config_entry)
 
-    async def async_step_import(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Handle a flow initiated by configuration file."""
-        return await self.async_step_user(user_input)
+        return await self.async_step_user(import_data)
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -82,7 +80,7 @@ class CanaryConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
             except (ConnectTimeout, HTTPError):
                 errors["base"] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 return self.async_abort(reason="unknown")
             else:

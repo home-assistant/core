@@ -34,8 +34,7 @@ async def validate_user_input(
     handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
 ) -> dict[str, Any]:
     """Validate user input."""
-    # pylint: disable-next=protected-access
-    handler.parent_handler._async_abort_entries_match(
+    handler.parent_handler._async_abort_entries_match(  # noqa: SLF001
         {CONF_HOST: user_input[CONF_HOST]}
     )
     instance, _ = get_instance_from_options(handler.parent_handler.hass, user_input)
@@ -54,9 +53,10 @@ async def validate_user_input(
     except Exception as err:
         raise SchemaFlowError("unknown") from err
 
-    await cast(SchemaConfigFlowHandler, handler.parent_handler).async_set_unique_id(
-        get_sorted_mac_addresses(data)[0]
-    )
+    if len(mac_addresses := get_sorted_mac_addresses(data)) > 0:
+        await cast(SchemaConfigFlowHandler, handler.parent_handler).async_set_unique_id(
+            mac_addresses[0]
+        )
     return user_input
 
 

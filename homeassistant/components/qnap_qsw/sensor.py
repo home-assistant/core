@@ -25,7 +25,7 @@ from aioqsw.const import (
     QSD_TEMP_MAX,
     QSD_TX_OCTETS,
     QSD_TX_SPEED,
-    QSD_UPTIME,
+    QSD_UPTIME_SECONDS,
 )
 
 from homeassistant.components.sensor import (
@@ -145,7 +145,7 @@ SENSOR_TYPES: Final[tuple[QswSensorEntityDescription, ...]] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfTime.SECONDS,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        subkey=QSD_UPTIME,
+        subkey=QSD_UPTIME_SECONDS,
     ),
 )
 

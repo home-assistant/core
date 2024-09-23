@@ -1,11 +1,12 @@
 """Tests for the yandex transport platform."""
 
 import json
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
 
-import homeassistant.components.sensor as sensor
+from homeassistant.components import sensor
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -76,7 +77,9 @@ SUBURBAN_RESULT_STATE = dt_util.utc_from_timestamp(1634984640).isoformat(
 )
 
 
-async def assert_setup_sensor(hass, config, count=1):
+async def assert_setup_sensor(
+    hass: HomeAssistant, config: dict[str, Any], count: int = 1
+) -> None:
     """Set up the sensor and assert it's been created."""
     with assert_setup_component(count):
         assert await async_setup_component(hass, sensor.DOMAIN, config)

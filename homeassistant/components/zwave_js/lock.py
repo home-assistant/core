@@ -66,7 +66,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Z-Wave lock from config entry."""
-    client: ZwaveClient = hass.data[DOMAIN][config_entry.entry_id][DATA_CLIENT]
+    client: ZwaveClient = config_entry.runtime_data[DATA_CLIENT]
 
     @callback
     def async_add_lock(info: ZwaveDiscoveryInfo) -> None:
@@ -196,15 +196,19 @@ class ZWaveLock(ZWaveBaseEntity, LockEntity):
     ) -> None:
         """Set the lock configuration."""
         params: dict[str, Any] = {"operation_type": operation_type}
-        for attr, val in (
-            ("lock_timeout_configuration", lock_timeout),
-            ("auto_relock_time", auto_relock_time),
-            ("hold_and_release_time", hold_and_release_time),
-            ("twist_assist", twist_assist),
-            ("block_to_block", block_to_block),
-        ):
-            if val is not None:
-                params[attr] = val
+        params.update(
+            {
+                attr: val
+                for attr, val in (
+                    ("lock_timeout_configuration", lock_timeout),
+                    ("auto_relock_time", auto_relock_time),
+                    ("hold_and_release_time", hold_and_release_time),
+                    ("twist_assist", twist_assist),
+                    ("block_to_block", block_to_block),
+                )
+                if val is not None
+            }
+        )
         configuration = DoorLockCCConfigurationSetOptions(**params)
         result = await set_configuration(
             self.info.node.endpoints[self.info.primary_value.endpoint or 0],
@@ -214,5 +218,5 @@ class ZWaveLock(ZWaveBaseEntity, LockEntity):
             return
         msg = f"Result status is {result.status}"
         if result.remaining_duration is not None:
-            msg += f" and remaining duration is {str(result.remaining_duration)}"
+            msg += f" and remaining duration is {result.remaining_duration!s}"
         LOGGER.info("%s after setting lock configuration for %s", msg, self.entity_id)

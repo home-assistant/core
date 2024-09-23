@@ -14,14 +14,14 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfInformation
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import LidarrEntity
-from .const import BYTE_SIZES, DOMAIN
+from . import LidarrConfigEntry
+from .const import BYTE_SIZES
 from .coordinator import LidarrDataUpdateCoordinator, T
+from .entity import LidarrEntity
 
 
 def get_space(data: list[LidarrRootFolder], name: str) -> str:
@@ -106,16 +106,13 @@ SENSOR_TYPES: dict[str, LidarrSensorEntityDescription[Any]] = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: LidarrConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Lidarr sensors based on a config entry."""
-    coordinators: dict[str, LidarrDataUpdateCoordinator[Any]] = hass.data[DOMAIN][
-        entry.entry_id
-    ]
     entities: list[LidarrSensor[Any]] = []
     for coordinator_type, description in SENSOR_TYPES.items():
-        coordinator = coordinators[coordinator_type]
+        coordinator = getattr(entry.runtime_data, coordinator_type)
         if coordinator_type != "disk_space":
             entities.append(LidarrSensor(coordinator, description))
         else:

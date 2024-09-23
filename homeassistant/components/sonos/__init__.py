@@ -9,7 +9,7 @@ import datetime
 from functools import partial
 import logging
 import socket
-from typing import TYPE_CHECKING, Any, cast
+from typing import Any, cast
 from urllib.parse import urlparse
 
 from aiohttp import ClientError
@@ -230,7 +230,8 @@ class SonosDiscoveryManager:
                 return
 
             self.hass.async_create_task(
-                self.async_add_speakers(zones_to_add, subscription, soco.uid)
+                self.async_add_speakers(zones_to_add, subscription, soco.uid),
+                eager_start=True,
             )
 
         async def async_subscription_failed(now: datetime.datetime) -> None:
@@ -371,12 +372,11 @@ class SonosDiscoveryManager:
                 (SonosAlarms, self.data.alarms),
                 (SonosFavorites, self.data.favorites),
             ):
-                if TYPE_CHECKING:
-                    coord_dict = cast(dict[str, Any], coord_dict)
-                if soco.household_id not in coord_dict:
+                c_dict: dict[str, Any] = coord_dict
+                if soco.household_id not in c_dict:
                     new_coordinator = coordinator(self.hass, soco.household_id)
                     new_coordinator.setup(soco)
-                    coord_dict[soco.household_id] = new_coordinator
+                    c_dict[soco.household_id] = new_coordinator
             speaker.setup(self.entry)
         except (OSError, SoCoException, Timeout) as ex:
             _LOGGER.warning("Failed to add SonosSpeaker using %s: %s", soco, ex)
@@ -413,7 +413,7 @@ class SonosDiscoveryManager:
                 continue
 
             if self.hosts_in_error.pop(ip_addr, None):
-                _LOGGER.info("Connection reestablished to Sonos device %s", ip_addr)
+                _LOGGER.warning("Connection reestablished to Sonos device %s", ip_addr)
             # Each speaker has the topology for other online speakers, so add them in here if they were not
             # configured. The metadata is already in Soco for these.
             if new_hosts := {
@@ -576,7 +576,6 @@ class SonosDiscoveryManager:
             self.hass.bus.async_listen_once(
                 EVENT_HOMEASSISTANT_STOP,
                 self._async_stop_event_listener,
-                run_immediately=True,
             )
         )
         _LOGGER.debug("Adding discovery job")
@@ -585,7 +584,6 @@ class SonosDiscoveryManager:
                 self.hass.bus.async_listen_once(
                     EVENT_HOMEASSISTANT_STOP,
                     self._stop_manual_heartbeat,
-                    run_immediately=True,
                 )
             )
             await self.async_poll_manual_hosts()

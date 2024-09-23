@@ -43,7 +43,7 @@
       "fields": {
         "config_entry": {
           "name": "Config Entry",
-          "description": "The config entry to use for this service."
+          "description": "The config entry to use for this action."
         },
         "color_mode": {
           "name": "Color Mode",
@@ -57,7 +57,7 @@
       "fields": {
         "config_entry": {
           "name": "Config Entry",
-          "description": "The config entry to use for this service."
+          "description": "The config entry to use for this action."
         },
         "runtime": {
           "name": "Run Time",
@@ -71,20 +71,7 @@
       "fields": {
         "config_entry": {
           "name": "Config Entry",
-          "description": "The config entry to use for this service."
-        }
-      }
-    }
-  },
-  "issues": {
-    "service_target_deprecation": {
-      "title": "Deprecating use of target for ScreenLogic services",
-      "fix_flow": {
-        "step": {
-          "confirm": {
-            "title": "Deprecating target for ScreenLogic services",
-            "description": "Use of an Area, Device, or Entity as a target for ScreenLogic services is being deprecated. Instead, use `config_entry` with the entry_id of the desired ScreenLogic integration.\n\nPlease update your automations and scripts and select **submit** to fix this issue."
-          }
+          "description": "The config entry to use for this action."
         }
       }
     }

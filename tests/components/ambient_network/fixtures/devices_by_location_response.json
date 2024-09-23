@@ -1,0 +1,364 @@
+[
+  {
+    "_id": "aaaaaaaaaaaaaaaaaaaaaaaa",
+    "macAddress": "AA:AA:AA:AA:AA:AA",
+    "lastData": {
+      "stationtype": "AMBWeatherPro_V5.0.6",
+      "dateutc": 1699474320000,
+      "tempf": 82.9,
+      "humidity": 60,
+      "windspeedmph": 8.72,
+      "windgustmph": 9.17,
+      "maxdailygust": 22.82,
+      "winddir": 11,
+      "uv": 0,
+      "solarradiation": 37.64,
+      "hourlyrainin": 0,
+      "dailyrainin": 0,
+      "weeklyrainin": 0,
+      "monthlyrainin": 0,
+      "totalrainin": 26.402,
+      "baromrelin": 29.586,
+      "baromabsin": 28.869,
+      "batt_co2": 1,
+      "type": "weather-data",
+      "created_at": 1699474320914,
+      "dateutc5": 1699474200000,
+      "lastRain": 1698659100000,
+      "tz": "America/Chicago"
+    },
+    "info": {
+      "name": "Station A",
+      "coords": {
+        "geo": {
+          "coordinates": [-97.0, 32.0],
+          "type": "Point"
+        },
+        "elevation": 237.0,
+        "location": "Location A",
+        "coords": {
+          "lon": -97.0,
+          "lat": 32.0
+        }
+      },
+      "indoor": false,
+      "slug": "aaaaaaaaaaaaaaaaaaaaaaaa"
+    },
+    "tz": {
+      "name": "America/Chicago"
+    }
+  },
+  {
+    "_id": "bbbbbbbbbbbbbbbbbbbbbbbb",
+    "macAddress": "BB:BB:BB:BB:BB:BB",
+    "lastData": {
+      "stationtype": "AMBWeatherV4.2.6",
+      "dateutc": 1700716980000,
+      "baromrelin": 29.342,
+      "baromabsin": 29.342,
+      "tempf": 35.8,
+      "humidity": 88,
+      "winddir": 237,
+      "winddir_avg10m": 221,
+      "windspeedmph": 0,
+      "windspdmph_avg10m": 0,
+      "windgustmph": 1.3,
+      "maxdailygust": 12.3,
+      "hourlyrainin": 0,
+      "eventrainin": 0,
+      "dailyrainin": 0,
+      "weeklyrainin": 0.024,
+      "monthlyrainin": 0.331,
+      "yearlyrainin": 12.382,
+      "solarradiation": 0,
+      "uv": 0,
+      "soilhum2": 0,
+      "type": "weather-data",
+      "created_at": 1700717004020,
+      "dateutc5": 1700716800000,
+      "lastRain": 1700445000000,
+      "discreets": {
+        "humidity1": [41, 42, 43]
+      },
+      "tz": "America/Chicago"
+    },
+    "info": {
+      "name": "Station B",
+      "coords": {
+        "coords": {
+          "lat": 32.0,
+          "lon": -97.0
+        },
+        "location": "Location B",
+        "elevation": 226.0,
+        "geo": {
+          "type": "Point",
+          "coordinates": [-97.0, 32.0]
+        }
+      },
+      "indoor": false,
+      "slug": "bbbbbbbbbbbbbbbbbbbbbbbb"
+    },
+    "tz": {
+      "name": "America/Chicago"
+    }
+  },
+  {
+    "_id": "cccccccccccccccccccccccc",
+    "macAddress": "CC:CC:CC:CC:CC:CC",
+    "lastData": {},
+    "info": {
+      "name": "Station C",
+      "coords": {
+        "geo": {
+          "coordinates": [-97.0, 32.0],
+          "type": "Point"
+        },
+        "elevation": 242.0,
+        "location": "Location C",
+        "coords": {
+          "lon": -97.0,
+          "lat": 32.0
+        }
+      },
+      "indoor": false,
+      "slug": "cccccccccccccccccccccccc"
+    },
+    "tz": {
+      "name": "America/Chicago"
+    }
+  },
+  {
+    "_id": "dddddddddddddddddddddddd",
+    "macAddress": "DD:DD:DD:DD:DD:DD",
+    "lastData": {
+      "stationtype": "AMBWeatherPro_V5.1.3",
+      "dateutc": 1700716920000,
+      "tempf": 38.1,
+      "humidity": 85,
+      "windspeedmph": 0,
+      "windgustmph": 0,
+      "maxdailygust": 0,
+      "winddir": 89,
+      "uv": 0,
+      "solarradiation": 0,
+      "hourlyrainin": 0,
+      "eventrainin": 0,
+      "dailyrainin": 0,
+      "weeklyrainin": 0.028,
+      "monthlyrainin": 0.327,
+      "yearlyrainin": 12.76,
+      "totalrainin": 12.76,
+      "baromrelin": 29.731,
+      "baromabsin": 29.338,
+      "type": "weather-data",
+      "created_at": 1700716969446,
+      "dateutc5": 1700716800000,
+      "lastRain": 1700449500000,
+      "tz": "America/Chicago"
+    },
+    "info": {
+      "name": "Station D",
+      "coords": {
+        "coords": {
+          "lat": 32.0,
+          "lon": -97.0
+        },
+        "address": "",
+        "location": "Location D",
+        "elevation": 221.0,
+        "address_components": [
+          {
+            "long_name": "1234",
+            "short_name": "1234",
+            "types": ["street_number"]
+          },
+          {
+            "long_name": "D Street",
+            "short_name": "D St.",
+            "types": ["route"]
+          },
+          {
+            "long_name": "D Town",
+            "short_name": "D Town",
+            "types": ["locality", "political"]
+          },
+          {
+            "long_name": "D County",
+            "short_name": "D County",
+            "types": ["administrative_area_level_2", "political"]
+          },
+          {
+            "long_name": "Delaware",
+            "short_name": "DE",
+            "types": ["administrative_area_level_1", "political"]
+          },
+          {
+            "long_name": "United States",
+            "short_name": "US",
+            "types": ["country", "political"]
+          },
+          {
+            "long_name": "12345",
+            "short_name": "12345",
+            "types": ["postal_code"]
+          }
+        ],
+        "geo": {
+          "type": "Point",
+          "coordinates": [-97.0, 32.0]
+        }
+      },
+      "indoor": false,
+      "slug": "dddddddddddddddddddddddd"
+    },
+    "tz": {
+      "name": "America/Chicago"
+    }
+  },
+  {
+    "_id": "eeeeeeeeeeeeeeeeeeeeeeee",
+    "macAddress": "EE:EE:EE:EE:EE:EE",
+    "lastData": {
+      "stationtype": "AMBWeatherV4.3.4",
+      "dateutc": 1700716920000,
+      "baromrelin": 29.238,
+      "baromabsin": 29.238,
+      "tempf": 45,
+      "humidity": 55,
+      "winddir": 98,
+      "winddir_avg10m": 185,
+      "windspeedmph": 1.1,
+      "windspdmph_avg10m": 1.3,
+      "windgustmph": 3.4,
+      "maxdailygust": 12.5,
+      "hourlyrainin": 0,
+      "eventrainin": 0,
+      "dailyrainin": 0,
+      "weeklyrainin": 0.059,
+      "monthlyrainin": 0.39,
+      "yearlyrainin": 31.268,
+      "lightning_day": 1,
+      "lightning_time": 1700700515000,
+      "lightning_distance": 8.7,
+      "batt_lightning": 0,
+      "solarradiation": 0,
+      "uv": 0,
+      "batt_co2": 1,
+      "type": "weather-data",
+      "created_at": 1700716954726,
+      "dateutc5": 1700716800000,
+      "lastRain": 1700445300000,
+      "lightnings": [
+        [1700713320000, 0],
+        [1700713380000, 0],
+        [1700713440000, 0],
+        [1700713500000, 0],
+        [1700713560000, 0],
+        [1700713620000, 0],
+        [1700713680000, 0],
+        [1700713740000, 0],
+        [1700713800000, 0],
+        [1700713860000, 0],
+        [1700713920000, 0],
+        [1700713980000, 0],
+        [1700714040000, 0],
+        [1700714100000, 0],
+        [1700714160000, 0],
+        [1700714220000, 0],
+        [1700714280000, 0],
+        [1700714340000, 0],
+        [1700714400000, 0],
+        [1700714460000, 0],
+        [1700714520000, 0],
+        [1700714580000, 0],
+        [1700714640000, 0],
+        [1700714700000, 0],
+        [1700714760000, 0],
+        [1700714820000, 0],
+        [1700714880000, 0],
+        [1700714940000, 0],
+        [1700715000000, 0],
+        [1700715060000, 0],
+        [1700715120000, 0],
+        [1700715180000, 0],
+        [1700715240000, 0],
+        [1700715300000, 0],
+        [1700715360000, 0],
+        [1700715420000, 0],
+        [1700715480000, 0],
+        [1700715540000, 0],
+        [1700715600000, 0],
+        [1700715660000, 0],
+        [1700715720000, 0],
+        [1700715780000, 0],
+        [1700715840000, 0],
+        [1700715900000, 0],
+        [1700715960000, 0],
+        [1700716020000, 0],
+        [1700716080000, 0],
+        [1700716140000, 0],
+        [1700716200000, 0],
+        [1700716260000, 0],
+        [1700716320000, 0],
+        [1700716380000, 0],
+        [1700716440000, 0],
+        [1700716500000, 0],
+        [1700716560000, 0],
+        [1700716620000, 0],
+        [1700716680000, 0],
+        [1700716740000, 0],
+        [1700716800000, 0],
+        [1700716860000, 0],
+        [1700716920000, 0]
+      ],
+      "lightning_hour": 0,
+      "tz": "America/Chicago"
+    },
+    "info": {
+      "name": "Station E",
+      "coords": {
+        "coords": {
+          "lat": 32.0,
+          "lon": -97.0
+        },
+        "location": "Location E",
+        "elevation": 236.0,
+        "geo": {
+          "type": "Point",
+          "coordinates": [-97.0, 32.0]
+        }
+      },
+      "indoor": false,
+      "slug": "eeeeeeeeeeeeeeeeeeeeeeee"
+    },
+    "tz": {
+      "name": "America/Chicago"
+    }
+  },
+  {
+    "_id": "ffffffffffffffffffffffff",
+    "macAddress": "FF:FF:FF:FF:FF:FF",
+    "lastData": {},
+    "info": {
+      "name": "",
+      "coords": {
+        "coords": {
+          "lat": 32.0,
+          "lon": -97.0
+        },
+        "location": "Location F",
+        "elevation": 242.0,
+        "geo": {
+          "type": "Point",
+          "coordinates": [-97.0, 32.0]
+        }
+      },
+      "indoor": false,
+      "slug": "ffffffffffffffffffffffff"
+    },
+    "tz": {
+      "name": "America/Chicago"
+    }
+  }
+]

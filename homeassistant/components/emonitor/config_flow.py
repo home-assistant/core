@@ -1,6 +1,7 @@
 """Config flow for SiteSage Emonitor integration."""
 
 import logging
+from typing import Any
 
 from aioemonitor import Emonitor
 import aiohttp
@@ -33,12 +34,15 @@ class EmonitorConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self):
-        """Initialize Emonitor ConfigFlow."""
-        self.discovered_ip = None
-        self.discovered_info = None
+    discovered_info: dict[str, str]
 
-    async def async_step_user(self, user_input=None):
+    def __init__(self) -> None:
+        """Initialize Emonitor ConfigFlow."""
+        self.discovered_ip: str | None = None
+
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors = {}
         if user_input is not None:
@@ -46,7 +50,7 @@ class EmonitorConfigFlow(ConfigFlow, domain=DOMAIN):
                 info = await fetch_mac_and_title(self.hass, user_input[CONF_HOST])
             except aiohttp.ClientError:
                 errors[CONF_HOST] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
@@ -77,14 +81,16 @@ class EmonitorConfigFlow(ConfigFlow, domain=DOMAIN):
             self.discovered_info = await fetch_mac_and_title(
                 self.hass, self.discovered_ip
             )
-        except Exception as ex:  # pylint: disable=broad-except
+        except Exception as ex:  # noqa: BLE001
             _LOGGER.debug(
                 "Unable to fetch status, falling back to manual entry", exc_info=ex
             )
             return await self.async_step_user()
         return await self.async_step_confirm()
 
-    async def async_step_confirm(self, user_input=None):
+    async def async_step_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Attempt to confirm."""
         if user_input is not None:
             return self.async_create_entry(

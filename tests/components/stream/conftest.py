@@ -14,9 +14,9 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Generator
-from http import HTTPStatus
 import logging
 import threading
+from typing import Any
 from unittest.mock import Mock, patch
 
 from aiohttp import web
@@ -33,7 +33,7 @@ TEST_TIMEOUT = 7.0  # Lower than 9s home assistant timeout
 class WorkerSync:
     """Test fixture that intercepts stream worker calls to StreamOutput."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize WorkerSync."""
         self._event = None
         self._original = StreamState.discontinuity
@@ -61,7 +61,7 @@ class WorkerSync:
 
 
 @pytest.fixture
-def stream_worker_sync(hass):
+def stream_worker_sync() -> Generator[WorkerSync]:
     """Patch StreamOutput to allow test to synchronize worker stream end."""
     sync = WorkerSync()
     with patch(
@@ -75,7 +75,7 @@ def stream_worker_sync(hass):
 class HLSSync:
     """Test fixture that intercepts stream worker calls to StreamOutput."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize HLSSync."""
         self._request_event = asyncio.Event()
         self._original_recv = StreamOutput.recv
@@ -86,6 +86,17 @@ class HLSSync:
         self._num_requests = 0
         self._num_recvs = 0
         self._num_finished = 0
+
+        def on_resp():
+            self._num_finished += 1
+            self.check_requests_ready()
+
+        class SyncResponse(web.Response):
+            def __init__(self, *args: Any, **kwargs: Any) -> None:
+                super().__init__(*args, **kwargs)
+                on_resp()
+
+        self.response = SyncResponse
 
     def reset_request_pool(self, num_requests: int, reset_finished=True):
         """Use to reset the request counter between segments."""
@@ -119,12 +130,6 @@ class HLSSync:
         self._num_finished += 1
         self.check_requests_ready()
         return self._original_not_found()
-
-    def response(self, body, headers=None, status=HTTPStatus.OK):
-        """Intercept the Response call so we know when the web handler is finished."""
-        self._num_finished += 1
-        self.check_requests_ready()
-        return self._original_response(body=body, headers=headers, status=status)
 
     async def recv(self, output: StreamOutput, **kw):
         """Intercept the recv call so we know when the response is blocking on recv."""
@@ -164,14 +169,14 @@ def hls_sync():
         ),
         patch(
             "homeassistant.components.stream.hls.web.Response",
-            side_effect=sync.response,
+            new=sync.response,
         ),
     ):
         yield sync
 
 
 @pytest.fixture(autouse=True)
-def should_retry() -> Generator[Mock, None, None]:
+def should_retry() -> Generator[Mock]:
     """Fixture to disable stream worker retries in tests by default."""
     with patch(
         "homeassistant.components.stream._should_retry", return_value=False

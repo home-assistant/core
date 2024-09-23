@@ -8,16 +8,17 @@ import psutil_home_assistant as ha_psutil
 
 from homeassistant.core import HomeAssistant
 
-from .const import CPU_SENSOR_PREFIXES, DOMAIN
+from .const import CPU_SENSOR_PREFIXES
 
 _LOGGER = logging.getLogger(__name__)
 
 SKIP_DISK_TYPES = {"proc", "tmpfs", "devtmpfs"}
 
 
-def get_all_disk_mounts(hass: HomeAssistant) -> set[str]:
+def get_all_disk_mounts(
+    hass: HomeAssistant, psutil_wrapper: ha_psutil.PsutilWrapper
+) -> set[str]:
     """Return all disk mount points on system."""
-    psutil_wrapper: ha_psutil = hass.data[DOMAIN]
     disks: set[str] = set()
     for part in psutil_wrapper.psutil.disk_partitions(all=True):
         if os.name == "nt":
@@ -53,9 +54,10 @@ def get_all_disk_mounts(hass: HomeAssistant) -> set[str]:
     return disks
 
 
-def get_all_network_interfaces(hass: HomeAssistant) -> set[str]:
+def get_all_network_interfaces(
+    hass: HomeAssistant, psutil_wrapper: ha_psutil.PsutilWrapper
+) -> set[str]:
     """Return all network interfaces on system."""
-    psutil_wrapper: ha_psutil = hass.data[DOMAIN]
     interfaces: set[str] = set()
     for interface in psutil_wrapper.psutil.net_if_addrs():
         if interface.startswith("veth"):
@@ -68,7 +70,7 @@ def get_all_network_interfaces(hass: HomeAssistant) -> set[str]:
 
 def get_all_running_processes(hass: HomeAssistant) -> set[str]:
     """Return all running processes on system."""
-    psutil_wrapper: ha_psutil = hass.data.get(DOMAIN, ha_psutil.PsutilWrapper())
+    psutil_wrapper = ha_psutil.PsutilWrapper()
     processes: set[str] = set()
     for proc in psutil_wrapper.psutil.process_iter(["name"]):
         if proc.name() not in processes:

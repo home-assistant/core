@@ -17,15 +17,14 @@ from homeassistant.components.light import (
     LightEntityDescription,
     filter_supported_color_modes,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import HomeAssistantTuyaData
-from .base import IntegerTypeData, TuyaEntity
-from .const import DOMAIN, TUYA_DISCOVERY_NEW, DPCode, DPType, WorkMode
+from . import TuyaConfigEntry
+from .const import TUYA_DISCOVERY_NEW, DPCode, DPType, WorkMode
+from .entity import IntegerTypeData, TuyaEntity
 from .util import remap_value
 
 
@@ -258,6 +257,15 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
+    # Smart Gardening system
+    # https://developer.tuya.com/en/docs/iot/categorysz?id=Kaiuz4e6h7up0
+    "sz": (
+        TuyaLightEntityDescription(
+            key=DPCode.LIGHT,
+            brightness=DPCode.BRIGHT_VALUE,
+            translation_key="light",
+        ),
+    ),
     # Dimmer Switch
     # https://developer.tuya.com/en/docs/iot/categorytgkg?id=Kaiuz0ktx7m0o
     "tgkg": (
@@ -409,10 +417,10 @@ class ColorData:
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant, entry: TuyaConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up tuya light dynamically through tuya discovery."""
-    hass_data: HomeAssistantTuyaData = hass.data[DOMAIN][entry.entry_id]
+    hass_data = entry.runtime_data
 
     @callback
     def async_discover_device(device_ids: list[str]):

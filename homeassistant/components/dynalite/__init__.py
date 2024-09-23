@@ -106,6 +106,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         ),
     )
 
+    await async_register_dynalite_frontend(hass)
+
     return True
 
 
@@ -131,9 +133,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
-    await async_register_dynalite_frontend(hass)
-
     return True
 
 

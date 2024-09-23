@@ -11,7 +11,7 @@ from homeassistant.components.notify import (
     ATTR_DATA,
     ATTR_TITLE,
     ATTR_TITLE_DEFAULT,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA,
     BaseNotificationService,
 )
 from homeassistant.const import CONF_URL
@@ -23,7 +23,7 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTR_FILE_URL = "image_url"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({vol.Required(CONF_URL): cv.url})
+PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend({vol.Required(CONF_URL): cv.url})
 
 
 def get_service(

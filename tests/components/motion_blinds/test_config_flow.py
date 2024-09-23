@@ -5,12 +5,13 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.components import dhcp
 from homeassistant.components.motion_blinds import const
 from homeassistant.components.motion_blinds.config_flow import DEFAULT_GATEWAY_NAME
 from homeassistant.const import CONF_API_KEY, CONF_HOST
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
@@ -71,7 +72,7 @@ TEST_INTERFACES = [
 
 
 @pytest.fixture(name="motion_blinds_connect", autouse=True)
-def motion_blinds_connect_fixture(mock_get_source_ip):
+def motion_blinds_connect_fixture():
     """Mock Motionblinds connection and entry setup."""
     with (
         patch(
@@ -132,7 +133,7 @@ async def test_config_flow_manual_host_success(hass: HomeAssistant) -> None:
         const.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
@@ -141,7 +142,7 @@ async def test_config_flow_manual_host_success(hass: HomeAssistant) -> None:
         {CONF_HOST: TEST_HOST},
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "connect"
     assert result["errors"] == {}
 
@@ -150,7 +151,7 @@ async def test_config_flow_manual_host_success(hass: HomeAssistant) -> None:
         {CONF_API_KEY: TEST_API_KEY},
     )
 
-    assert result["type"] == "create_entry"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == DEFAULT_GATEWAY_NAME
     assert result["data"] == {
         CONF_HOST: TEST_HOST,
@@ -165,7 +166,7 @@ async def test_config_flow_discovery_1_success(hass: HomeAssistant) -> None:
         const.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
@@ -174,7 +175,7 @@ async def test_config_flow_discovery_1_success(hass: HomeAssistant) -> None:
         {},
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "connect"
     assert result["errors"] == {}
 
@@ -187,7 +188,7 @@ async def test_config_flow_discovery_1_success(hass: HomeAssistant) -> None:
             {CONF_API_KEY: TEST_API_KEY},
         )
 
-    assert result["type"] == "create_entry"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == DEFAULT_GATEWAY_NAME
     assert result["data"] == {
         CONF_HOST: TEST_HOST,
@@ -202,7 +203,7 @@ async def test_config_flow_discovery_2_success(hass: HomeAssistant) -> None:
         const.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
@@ -215,7 +216,7 @@ async def test_config_flow_discovery_2_success(hass: HomeAssistant) -> None:
             {},
         )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "select"
     assert result["data_schema"].schema["select_ip"].container == [
         TEST_HOST,
@@ -228,7 +229,7 @@ async def test_config_flow_discovery_2_success(hass: HomeAssistant) -> None:
         {"select_ip": TEST_HOST2},
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "connect"
     assert result["errors"] == {}
 
@@ -241,7 +242,7 @@ async def test_config_flow_discovery_2_success(hass: HomeAssistant) -> None:
             {CONF_API_KEY: TEST_API_KEY},
         )
 
-    assert result["type"] == "create_entry"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == DEFAULT_GATEWAY_NAME
     assert result["data"] == {
         CONF_HOST: TEST_HOST2,
@@ -256,7 +257,7 @@ async def test_config_flow_connection_error(hass: HomeAssistant) -> None:
         const.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
@@ -265,7 +266,7 @@ async def test_config_flow_connection_error(hass: HomeAssistant) -> None:
         {CONF_HOST: TEST_HOST},
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "connect"
     assert result["errors"] == {}
 
@@ -278,7 +279,7 @@ async def test_config_flow_connection_error(hass: HomeAssistant) -> None:
             {CONF_API_KEY: TEST_API_KEY},
         )
 
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "connection_error"
 
 
@@ -288,7 +289,7 @@ async def test_config_flow_discovery_fail(hass: HomeAssistant) -> None:
         const.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
@@ -301,7 +302,7 @@ async def test_config_flow_discovery_fail(hass: HomeAssistant) -> None:
             {},
         )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "discovery_error"}
 
@@ -312,7 +313,7 @@ async def test_config_flow_invalid_interface(hass: HomeAssistant) -> None:
         const.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
@@ -321,7 +322,7 @@ async def test_config_flow_invalid_interface(hass: HomeAssistant) -> None:
         {CONF_HOST: TEST_HOST},
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "connect"
     assert result["errors"] == {}
 
@@ -334,7 +335,7 @@ async def test_config_flow_invalid_interface(hass: HomeAssistant) -> None:
             {CONF_API_KEY: TEST_API_KEY},
         )
 
-    assert result["type"] == "create_entry"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == DEFAULT_GATEWAY_NAME
     assert result["data"] == {
         CONF_HOST: TEST_HOST,
@@ -355,7 +356,7 @@ async def test_dhcp_flow(hass: HomeAssistant) -> None:
         const.DOMAIN, context={"source": config_entries.SOURCE_DHCP}, data=dhcp_data
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "connect"
     assert result["errors"] == {}
 
@@ -368,7 +369,7 @@ async def test_dhcp_flow(hass: HomeAssistant) -> None:
             {CONF_API_KEY: TEST_API_KEY},
         )
 
-    assert result["type"] == "create_entry"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == DEFAULT_GATEWAY_NAME
     assert result["data"] == {
         CONF_HOST: TEST_HOST,
@@ -393,7 +394,7 @@ async def test_dhcp_flow_abort(hass: HomeAssistant) -> None:
             const.DOMAIN, context={"source": config_entries.SOURCE_DHCP}, data=dhcp_data
         )
 
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "not_motionblinds"
 
 
@@ -413,7 +414,7 @@ async def test_dhcp_flow_abort_invalid_response(hass: HomeAssistant) -> None:
             const.DOMAIN, context={"source": config_entries.SOURCE_DHCP}, data=dhcp_data
         )
 
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "not_motionblinds"
 
 
@@ -435,7 +436,7 @@ async def test_options_flow(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
@@ -443,7 +444,7 @@ async def test_options_flow(hass: HomeAssistant) -> None:
         user_input={const.CONF_WAIT_FOR_PUSH: False},
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert config_entry.options == {
         const.CONF_WAIT_FOR_PUSH: False,
     }
@@ -467,7 +468,7 @@ async def test_change_connection_settings(hass: HomeAssistant) -> None:
         const.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
@@ -476,7 +477,7 @@ async def test_change_connection_settings(hass: HomeAssistant) -> None:
         {CONF_HOST: TEST_HOST2},
     )
 
-    assert result["type"] == "form"
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "connect"
     assert result["errors"] == {}
 
@@ -485,7 +486,7 @@ async def test_change_connection_settings(hass: HomeAssistant) -> None:
         {CONF_API_KEY: TEST_API_KEY2},
     )
 
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert config_entry.data[CONF_HOST] == TEST_HOST2
     assert config_entry.data[CONF_API_KEY] == TEST_API_KEY2
     assert config_entry.data[const.CONF_INTERFACE] == TEST_HOST_ANY

@@ -38,7 +38,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.unit_conversion import DistanceConverter, SpeedConverter
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
-from . import TomorrowioDataUpdateCoordinator, TomorrowioEntity
 from .const import (
     DOMAIN,
     TMRW_ATTR_CARBON_MONOXIDE,
@@ -69,6 +68,8 @@ from .const import (
     TMRW_ATTR_UV_INDEX,
     TMRW_ATTR_WIND_GUST,
 )
+from .coordinator import TomorrowioDataUpdateCoordinator
+from .entity import TomorrowioEntity
 
 
 @dataclass(frozen=True)
@@ -100,7 +101,7 @@ class TomorrowioSensorEntityDescription(SensorEntityDescription):
 
 # From https://cfpub.epa.gov/ncer_abstracts/index.cfm/fuseaction/display.files/fileID/14285
 # x ug/m^3 = y ppb * molecular weight / 24.45
-def convert_ppb_to_ugm3(molecular_weight: int | float) -> Callable[[float], float]:
+def convert_ppb_to_ugm3(molecular_weight: float) -> Callable[[float], float]:
     """Return function to convert ppb to ug/m^3."""
     return lambda x: (x * molecular_weight) / 24.45
 
@@ -339,7 +340,7 @@ async def async_setup_entry(
 
 
 def handle_conversion(
-    value: float | int, conversion: Callable[[float], float] | float
+    value: float, conversion: Callable[[float], float] | float
 ) -> float:
     """Handle conversion of a value based on conversion type."""
     if callable(conversion):

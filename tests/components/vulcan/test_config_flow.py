@@ -14,11 +14,12 @@ from vulcan import (
 )
 from vulcan.model import Student
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.components.vulcan import config_flow, const, register
 from homeassistant.components.vulcan.config_flow import ClientConnectionError, Keystore
 from homeassistant.const import CONF_PIN, CONF_REGION, CONF_TOKEN
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry, load_fixture
 
@@ -38,7 +39,7 @@ async def test_show_form(hass: HomeAssistant) -> None:
 
     result = await flow.async_step_user(user_input=None)
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "auth"
 
 
@@ -58,7 +59,7 @@ async def test_config_flow_auth_success(
         const.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "auth"
     assert result["errors"] is None
 
@@ -72,7 +73,7 @@ async def test_config_flow_auth_success(
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Jan Kowalski"
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -88,16 +89,16 @@ async def test_config_flow_auth_success_with_multiple_students(
     mock_account.return_value = fake_account
     mock_student.return_value = [
         Student.load(student)
-        for student in [
+        for student in (
             load_fixture("fake_student_1.json", "vulcan"),
             load_fixture("fake_student_2.json", "vulcan"),
-        ]
+        )
     ]
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "auth"
     assert result["errors"] is None
 
@@ -106,7 +107,7 @@ async def test_config_flow_auth_success_with_multiple_students(
         {CONF_TOKEN: "token", CONF_REGION: "region", CONF_PIN: "000000"},
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "select_student"
     assert result["errors"] == {}
 
@@ -119,7 +120,7 @@ async def test_config_flow_auth_success_with_multiple_students(
             {"student": "0"},
         )
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Jan Kowalski"
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -136,16 +137,15 @@ async def test_config_flow_reauth_success(
     mock_student.return_value = [
         Student.load(load_fixture("fake_student_1.json", "vulcan"))
     ]
-    MockConfigEntry(
+    entry = MockConfigEntry(
         domain=const.DOMAIN,
         unique_id="0",
         data={"student_id": "0"},
-    ).add_to_hass(hass)
-    result = await hass.config_entries.flow.async_init(
-        const.DOMAIN, context={"source": config_entries.SOURCE_REAUTH}
     )
+    entry.add_to_hass(hass)
+    result = await entry.start_reauth_flow(hass)
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
     assert result["errors"] == {}
 
@@ -158,7 +158,7 @@ async def test_config_flow_reauth_success(
             {CONF_TOKEN: "token", CONF_REGION: "region", CONF_PIN: "000000"},
         )
 
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -175,16 +175,15 @@ async def test_config_flow_reauth_without_matching_entries(
     mock_student.return_value = [
         Student.load(load_fixture("fake_student_1.json", "vulcan"))
     ]
-    MockConfigEntry(
+    entry = MockConfigEntry(
         domain=const.DOMAIN,
         unique_id="0",
         data={"student_id": "1"},
-    ).add_to_hass(hass)
-    result = await hass.config_entries.flow.async_init(
-        const.DOMAIN, context={"source": config_entries.SOURCE_REAUTH}
     )
+    entry.add_to_hass(hass)
+    result = await entry.start_reauth_flow(hass)
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
     assert result["errors"] == {}
 
@@ -193,7 +192,7 @@ async def test_config_flow_reauth_without_matching_entries(
         {CONF_TOKEN: "token", CONF_REGION: "region", CONF_PIN: "000000"},
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_matching_entries"
 
 
@@ -205,10 +204,14 @@ async def test_config_flow_reauth_with_errors(
     """Test reauth config flow with errors."""
     mock_keystore.return_value = fake_keystore
     mock_account.return_value = fake_account
-    result = await hass.config_entries.flow.async_init(
-        const.DOMAIN, context={"source": config_entries.SOURCE_REAUTH}
+    entry = MockConfigEntry(
+        domain=const.DOMAIN,
+        unique_id="0",
+        data={"student_id": "0"},
     )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    entry.add_to_hass(hass)
+    result = await entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
     assert result["errors"] == {}
     with patch(
@@ -220,7 +223,7 @@ async def test_config_flow_reauth_with_errors(
             {CONF_TOKEN: "token", CONF_REGION: "region", CONF_PIN: "000000"},
         )
 
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "reauth_confirm"
         assert result["errors"] == {"base": "invalid_token"}
 
@@ -233,7 +236,7 @@ async def test_config_flow_reauth_with_errors(
             {CONF_TOKEN: "token", CONF_REGION: "region", CONF_PIN: "000000"},
         )
 
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "reauth_confirm"
         assert result["errors"] == {"base": "expired_token"}
 
@@ -246,7 +249,7 @@ async def test_config_flow_reauth_with_errors(
             {CONF_TOKEN: "token", CONF_REGION: "region", CONF_PIN: "000000"},
         )
 
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "reauth_confirm"
         assert result["errors"] == {"base": "invalid_pin"}
 
@@ -259,7 +262,7 @@ async def test_config_flow_reauth_with_errors(
             {CONF_TOKEN: "token", CONF_REGION: "region", CONF_PIN: "000000"},
         )
 
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "reauth_confirm"
         assert result["errors"] == {"base": "invalid_symbol"}
 
@@ -272,7 +275,7 @@ async def test_config_flow_reauth_with_errors(
             {CONF_TOKEN: "token", CONF_REGION: "region", CONF_PIN: "000000"},
         )
 
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "reauth_confirm"
         assert result["errors"] == {"base": "cannot_connect"}
 
@@ -285,7 +288,7 @@ async def test_config_flow_reauth_with_errors(
             {CONF_TOKEN: "token", CONF_REGION: "region", CONF_PIN: "000000"},
         )
 
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "reauth_confirm"
         assert result["errors"] == {"base": "unknown"}
 
@@ -307,12 +310,12 @@ async def test_multiple_config_entries(
         unique_id="123456",
         data=json.loads(load_fixture("fake_config_entry_data.json", "vulcan")),
     ).add_to_hass(hass)
-    await register.register(hass, "token", "region", "000000")
+    await register.register("token", "region", "000000")
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "add_next_config_entry"
     assert result["errors"] == {}
 
@@ -321,7 +324,7 @@ async def test_multiple_config_entries(
         {"use_saved_credentials": False},
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "auth"
     assert result["errors"] is None
 
@@ -334,7 +337,7 @@ async def test_multiple_config_entries(
             {CONF_TOKEN: "token", CONF_REGION: "region", CONF_PIN: "000000"},
         )
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Jan Kowalski"
     assert len(mock_setup_entry.mock_calls) == 2
 
@@ -357,7 +360,7 @@ async def test_multiple_config_entries_using_saved_credentials(
         const.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "add_next_config_entry"
     assert result["errors"] == {}
 
@@ -370,7 +373,7 @@ async def test_multiple_config_entries_using_saved_credentials(
             {"use_saved_credentials": True},
         )
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Jan Kowalski"
     assert len(mock_setup_entry.mock_calls) == 2
 
@@ -394,7 +397,7 @@ async def test_multiple_config_entries_using_saved_credentials_2(
         const.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "add_next_config_entry"
     assert result["errors"] == {}
 
@@ -403,7 +406,7 @@ async def test_multiple_config_entries_using_saved_credentials_2(
         {"use_saved_credentials": True},
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "select_student"
     assert result["errors"] == {}
 
@@ -416,7 +419,7 @@ async def test_multiple_config_entries_using_saved_credentials_2(
             {"student": "0"},
         )
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Jan Kowalski"
     assert len(mock_setup_entry.mock_calls) == 2
 
@@ -447,7 +450,7 @@ async def test_multiple_config_entries_using_saved_credentials_3(
         const.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "add_next_config_entry"
     assert result["errors"] == {}
 
@@ -456,7 +459,7 @@ async def test_multiple_config_entries_using_saved_credentials_3(
         {"use_saved_credentials": True},
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "select_saved_credentials"
     assert result["errors"] is None
 
@@ -469,7 +472,7 @@ async def test_multiple_config_entries_using_saved_credentials_3(
             {"credentials": "123"},
         )
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Jan Kowalski"
     assert len(mock_setup_entry.mock_calls) == 3
 
@@ -501,7 +504,7 @@ async def test_multiple_config_entries_using_saved_credentials_4(
         const.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "add_next_config_entry"
     assert result["errors"] == {}
 
@@ -510,7 +513,7 @@ async def test_multiple_config_entries_using_saved_credentials_4(
         {"use_saved_credentials": True},
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "select_saved_credentials"
     assert result["errors"] is None
 
@@ -519,7 +522,7 @@ async def test_multiple_config_entries_using_saved_credentials_4(
         {"credentials": "123"},
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "select_student"
     assert result["errors"] == {}
 
@@ -532,7 +535,7 @@ async def test_multiple_config_entries_using_saved_credentials_4(
             {"student": "0"},
         )
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Jan Kowalski"
     assert len(mock_setup_entry.mock_calls) == 3
 
@@ -559,7 +562,7 @@ async def test_multiple_config_entries_without_valid_saved_credentials(
         const.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "add_next_config_entry"
     assert result["errors"] == {}
 
@@ -571,7 +574,7 @@ async def test_multiple_config_entries_without_valid_saved_credentials(
         "homeassistant.components.vulcan.config_flow.Vulcan.get_students",
         side_effect=UnauthorizedCertificateException,
     ):
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "select_saved_credentials"
         assert result["errors"] is None
 
@@ -580,7 +583,7 @@ async def test_multiple_config_entries_without_valid_saved_credentials(
             {"credentials": "123"},
         )
 
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "auth"
         assert result["errors"] == {"base": "expired_credentials"}
 
@@ -607,7 +610,7 @@ async def test_multiple_config_entries_using_saved_credentials_with_connections_
         const.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "add_next_config_entry"
     assert result["errors"] == {}
 
@@ -619,7 +622,7 @@ async def test_multiple_config_entries_using_saved_credentials_with_connections_
         "homeassistant.components.vulcan.config_flow.Vulcan.get_students",
         side_effect=ClientConnectionError,
     ):
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "select_saved_credentials"
         assert result["errors"] is None
 
@@ -628,7 +631,7 @@ async def test_multiple_config_entries_using_saved_credentials_with_connections_
             {"credentials": "123"},
         )
 
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "select_saved_credentials"
         assert result["errors"] == {"base": "cannot_connect"}
 
@@ -655,7 +658,7 @@ async def test_multiple_config_entries_using_saved_credentials_with_unknown_erro
         const.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "add_next_config_entry"
     assert result["errors"] == {}
 
@@ -667,7 +670,7 @@ async def test_multiple_config_entries_using_saved_credentials_with_unknown_erro
         "homeassistant.components.vulcan.config_flow.Vulcan.get_students",
         side_effect=Exception,
     ):
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "select_saved_credentials"
         assert result["errors"] is None
 
@@ -676,7 +679,7 @@ async def test_multiple_config_entries_using_saved_credentials_with_unknown_erro
             {"credentials": "123"},
         )
 
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "auth"
         assert result["errors"] == {"base": "unknown"}
 
@@ -700,13 +703,13 @@ async def test_student_already_exists(
         | {"student_id": "0"},
     ).add_to_hass(hass)
 
-    await register.register(hass, "token", "region", "000000")
+    await register.register("token", "region", "000000")
 
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "add_next_config_entry"
     assert result["errors"] == {}
 
@@ -715,7 +718,7 @@ async def test_student_already_exists(
         {"use_saved_credentials": True},
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "all_student_already_configured"
 
 
@@ -733,7 +736,7 @@ async def test_config_flow_auth_invalid_token(
             const.DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
 
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "auth"
         assert result["errors"] is None
 
@@ -742,7 +745,7 @@ async def test_config_flow_auth_invalid_token(
             {CONF_TOKEN: "3S20000", CONF_REGION: "region", CONF_PIN: "000000"},
         )
 
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "auth"
         assert result["errors"] == {"base": "invalid_token"}
 
@@ -761,7 +764,7 @@ async def test_config_flow_auth_invalid_region(
             const.DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
 
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "auth"
         assert result["errors"] is None
 
@@ -770,7 +773,7 @@ async def test_config_flow_auth_invalid_region(
             {CONF_TOKEN: "3S10000", CONF_REGION: "invalid_region", CONF_PIN: "000000"},
         )
 
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "auth"
         assert result["errors"] == {"base": "invalid_symbol"}
 
@@ -787,7 +790,7 @@ async def test_config_flow_auth_invalid_pin(mock_keystore, hass: HomeAssistant) 
             const.DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
 
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "auth"
         assert result["errors"] is None
 
@@ -796,7 +799,7 @@ async def test_config_flow_auth_invalid_pin(mock_keystore, hass: HomeAssistant) 
             {CONF_TOKEN: "3S10000", CONF_REGION: "region", CONF_PIN: "000000"},
         )
 
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "auth"
         assert result["errors"] == {"base": "invalid_pin"}
 
@@ -815,7 +818,7 @@ async def test_config_flow_auth_expired_token(
             const.DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
 
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "auth"
         assert result["errors"] is None
 
@@ -824,7 +827,7 @@ async def test_config_flow_auth_expired_token(
             {CONF_TOKEN: "3S10000", CONF_REGION: "region", CONF_PIN: "000000"},
         )
 
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "auth"
         assert result["errors"] == {"base": "expired_token"}
 
@@ -843,7 +846,7 @@ async def test_config_flow_auth_connection_error(
             const.DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
 
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "auth"
         assert result["errors"] is None
 
@@ -852,7 +855,7 @@ async def test_config_flow_auth_connection_error(
             {CONF_TOKEN: "3S10000", CONF_REGION: "region", CONF_PIN: "000000"},
         )
 
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "auth"
         assert result["errors"] == {"base": "cannot_connect"}
 
@@ -871,7 +874,7 @@ async def test_config_flow_auth_unknown_error(
             const.DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
 
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "auth"
         assert result["errors"] is None
 
@@ -880,6 +883,6 @@ async def test_config_flow_auth_unknown_error(
             {CONF_TOKEN: "3S10000", CONF_REGION: "invalid_region", CONF_PIN: "000000"},
         )
 
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "auth"
         assert result["errors"] == {"base": "unknown"}

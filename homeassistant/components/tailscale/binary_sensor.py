@@ -17,8 +17,8 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import TailscaleEntity
 from .const import DOMAIN
+from .entity import TailscaleEntity
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -35,6 +35,12 @@ BINARY_SENSORS: tuple[TailscaleBinarySensorEntityDescription, ...] = (
         device_class=BinarySensorDeviceClass.UPDATE,
         entity_category=EntityCategory.DIAGNOSTIC,
         is_on_fn=lambda device: device.update_available,
+    ),
+    TailscaleBinarySensorEntityDescription(
+        key="key_expiry_disabled",
+        translation_key="key_expiry_disabled",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        is_on_fn=lambda device: device.key_expiry_disabled,
     ),
     TailscaleBinarySensorEntityDescription(
         key="client_supports_hair_pinning",

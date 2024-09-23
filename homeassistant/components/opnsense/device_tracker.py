@@ -14,10 +14,9 @@ async def async_get_scanner(
 ) -> OPNSenseDeviceScanner:
     """Configure the OPNSense device_tracker."""
     interface_client = hass.data[OPNSENSE_DATA]["interfaces"]
-    scanner = OPNSenseDeviceScanner(
+    return OPNSenseDeviceScanner(
         interface_client, hass.data[OPNSENSE_DATA][CONF_TRACKER_INTERFACE]
     )
-    return scanner
 
 
 class OPNSenseDeviceScanner(DeviceScanner):
@@ -46,8 +45,7 @@ class OPNSenseDeviceScanner(DeviceScanner):
         """Return the name of the given device or None if we don't know."""
         if device not in self.last_results:
             return None
-        hostname = self.last_results[device].get("hostname") or None
-        return hostname
+        return self.last_results[device].get("hostname") or None
 
     def update_info(self):
         """Ensure the information from the OPNSense router is up to date.

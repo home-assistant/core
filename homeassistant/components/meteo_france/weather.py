@@ -165,6 +165,7 @@ class MeteoFranceWeather(
         wind_bearing = self.coordinator.data.current_forecast["wind"]["direction"]
         if wind_bearing != -1:
             return wind_bearing
+        return None
 
     def _forecast(self, mode: str) -> list[Forecast]:
         """Return the forecast."""
@@ -200,7 +201,7 @@ class MeteoFranceWeather(
                     break
                 forecast_data.append(
                     {
-                        ATTR_FORECAST_TIME: self.coordinator.data.timestamp_to_locale_time(
+                        ATTR_FORECAST_TIME: dt_util.utc_from_timestamp(
                             forecast["dt"]
                         ).isoformat(),
                         ATTR_FORECAST_CONDITION: format_condition(

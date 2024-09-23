@@ -3,13 +3,14 @@
 from homeassistant.components import scene, switch
 from homeassistant.components.litejet import DOMAIN
 from homeassistant.const import CONF_PORT
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry
 
 
 async def async_init_integration(
-    hass, use_switch=False, use_scene=False
+    hass: HomeAssistant, use_switch: bool = False, use_scene: bool = False
 ) -> MockConfigEntry:
     """Set up the LiteJet integration in Home Assistant."""
 

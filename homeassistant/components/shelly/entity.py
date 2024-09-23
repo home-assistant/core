@@ -9,22 +9,18 @@ from typing import Any, cast
 from aioshelly.block_device import Block
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCallError
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.entity_registry import (
-    RegistryEntry,
-    async_entries_for_config_entry,
-    async_get as er_async_get,
-)
+from homeassistant.helpers.entity_registry import RegistryEntry
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import CONF_SLEEP_PERIOD, LOGGER
-from .coordinator import ShellyBlockCoordinator, ShellyRpcCoordinator, get_entry_data
+from .coordinator import ShellyBlockCoordinator, ShellyConfigEntry, ShellyRpcCoordinator
 from .utils import (
     async_remove_shelly_entity,
     get_block_entity_name,
@@ -36,13 +32,13 @@ from .utils import (
 @callback
 def async_setup_entry_attribute_entities(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: ShellyConfigEntry,
     async_add_entities: AddEntitiesCallback,
     sensors: Mapping[tuple[str, str], BlockEntityDescription],
     sensor_class: Callable,
 ) -> None:
     """Set up entities for attributes."""
-    coordinator = get_entry_data(hass)[config_entry.entry_id].block
+    coordinator = config_entry.runtime_data.block
     assert coordinator
     if coordinator.device.initialized:
         async_setup_block_attribute_entities(
@@ -74,7 +70,7 @@ def async_setup_block_attribute_entities(
 
     for block in coordinator.device.blocks:
         for sensor_id in block.sensor_ids:
-            description = sensors.get((block.type, sensor_id))
+            description = sensors.get((cast(str, block.type), sensor_id))
             if description is None:
                 continue
 
@@ -104,7 +100,7 @@ def async_setup_block_attribute_entities(
 @callback
 def async_restore_block_attribute_entities(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: ShellyConfigEntry,
     async_add_entities: AddEntitiesCallback,
     coordinator: ShellyBlockCoordinator,
     sensors: Mapping[tuple[str, str], BlockEntityDescription],
@@ -113,8 +109,8 @@ def async_restore_block_attribute_entities(
     """Restore block attributes entities."""
     entities = []
 
-    ent_reg = er_async_get(hass)
-    entries = async_entries_for_config_entry(ent_reg, config_entry.entry_id)
+    ent_reg = er.async_get(hass)
+    entries = er.async_entries_for_config_entry(ent_reg, config_entry.entry_id)
 
     domain = sensor_class.__module__.split(".")[-1]
 
@@ -139,13 +135,13 @@ def async_restore_block_attribute_entities(
 @callback
 def async_setup_entry_rpc(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: ShellyConfigEntry,
     async_add_entities: AddEntitiesCallback,
     sensors: Mapping[str, RpcEntityDescription],
     sensor_class: Callable,
 ) -> None:
     """Set up entities for RPC sensors."""
-    coordinator = get_entry_data(hass)[config_entry.entry_id].rpc
+    coordinator = config_entry.runtime_data.rpc
     assert coordinator
 
     if coordinator.device.initialized:
@@ -161,18 +157,18 @@ def async_setup_entry_rpc(
 @callback
 def async_setup_rpc_attribute_entities(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: ShellyConfigEntry,
     async_add_entities: AddEntitiesCallback,
     sensors: Mapping[str, RpcEntityDescription],
     sensor_class: Callable,
 ) -> None:
     """Set up entities for RPC attributes."""
-    coordinator = get_entry_data(hass)[config_entry.entry_id].rpc
+    coordinator = config_entry.runtime_data.rpc
     assert coordinator
 
     polling_coordinator = None
     if not (sleep_period := config_entry.data[CONF_SLEEP_PERIOD]):
-        polling_coordinator = get_entry_data(hass)[config_entry.entry_id].rpc_poll
+        polling_coordinator = config_entry.runtime_data.rpc_poll
         assert polling_coordinator
 
     entities = []
@@ -213,7 +209,7 @@ def async_setup_rpc_attribute_entities(
 @callback
 def async_restore_rpc_attribute_entities(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: ShellyConfigEntry,
     async_add_entities: AddEntitiesCallback,
     coordinator: ShellyRpcCoordinator,
     sensors: Mapping[str, RpcEntityDescription],
@@ -222,8 +218,8 @@ def async_restore_rpc_attribute_entities(
     """Restore block attributes entities."""
     entities = []
 
-    ent_reg = er_async_get(hass)
-    entries = async_entries_for_config_entry(ent_reg, config_entry.entry_id)
+    ent_reg = er.async_get(hass)
+    entries = er.async_entries_for_config_entry(ent_reg, config_entry.entry_id)
 
     domain = sensor_class.__module__.split(".")[-1]
 
@@ -248,13 +244,13 @@ def async_restore_rpc_attribute_entities(
 @callback
 def async_setup_entry_rest(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: ShellyConfigEntry,
     async_add_entities: AddEntitiesCallback,
     sensors: Mapping[str, RestEntityDescription],
     sensor_class: Callable,
 ) -> None:
     """Set up entities for REST sensors."""
-    coordinator = get_entry_data(hass)[config_entry.entry_id].rest
+    coordinator = config_entry.runtime_data.rest
     assert coordinator
 
     async_add_entities(
@@ -295,6 +291,8 @@ class RpcEntityDescription(EntityDescription):
     extra_state_attributes: Callable[[dict, dict], dict | None] | None = None
     use_polling_coordinator: bool = False
     supported: Callable = lambda _: False
+    unit: Callable[[dict], str | None] | None = None
+    options_fn: Callable[[dict], list[str]] | None = None
 
 
 @dataclass(frozen=True)
@@ -341,7 +339,7 @@ class ShellyBlockEntity(CoordinatorEntity[ShellyBlockCoordinator]):
             self.coordinator.last_update_success = False
             raise HomeAssistantError(
                 f"Setting state for entity {self.name} failed, state: {kwargs}, error:"
-                f" {repr(err)}"
+                f" {err!r}"
             ) from err
         except InvalidAuthError:
             await self.coordinator.async_shutdown_device_and_start_reauth()
@@ -359,6 +357,14 @@ class ShellyRpcEntity(CoordinatorEntity[ShellyRpcCoordinator]):
         }
         self._attr_unique_id = f"{coordinator.mac}-{key}"
         self._attr_name = get_rpc_entity_name(coordinator.device, key)
+
+    @property
+    def available(self) -> bool:
+        """Check if device is available and initialized or sleepy."""
+        coordinator = self.coordinator
+        return super().available and (
+            coordinator.device.initialized or bool(coordinator.sleep_period)
+        )
 
     @property
     def status(self) -> dict:
@@ -389,12 +395,12 @@ class ShellyRpcEntity(CoordinatorEntity[ShellyRpcCoordinator]):
             self.coordinator.last_update_success = False
             raise HomeAssistantError(
                 f"Call RPC for {self.name} connection error, method: {method}, params:"
-                f" {params}, error: {repr(err)}"
+                f" {params}, error: {err!r}"
             ) from err
         except RpcCallError as err:
             raise HomeAssistantError(
                 f"Call RPC for {self.name} request error, method: {method}, params:"
-                f" {params}, error: {repr(err)}"
+                f" {params}, error: {err!r}"
             ) from err
         except InvalidAuthError:
             await self.coordinator.async_shutdown_device_and_start_reauth()
@@ -482,7 +488,7 @@ class ShellyRestAttributeEntity(CoordinatorEntity[ShellyBlockCoordinator]):
     @property
     def attribute_value(self) -> StateType:
         """Value of sensor."""
-        if callable(self.entity_description.value):
+        if self.entity_description.value is not None:
             self._last_value = self.entity_description.value(
                 self.block_coordinator.device.status, self._last_value
             )
@@ -509,6 +515,26 @@ class ShellyRpcAttributeEntity(ShellyRpcEntity, Entity):
         self._attr_unique_id = f"{super().unique_id}-{attribute}"
         self._attr_name = get_rpc_entity_name(coordinator.device, key, description.name)
         self._last_value = None
+        id_key = key.split(":")[-1]
+        self._id = int(id_key) if id_key.isnumeric() else None
+
+        if description.unit is not None:
+            self._attr_native_unit_of_measurement = description.unit(
+                coordinator.device.config[key]
+            )
+
+        self.option_map: dict[str, str] = {}
+        self.reversed_option_map: dict[str, str] = {}
+        if "enum" in key:
+            titles = self.coordinator.device.config[key]["meta"]["ui"]["titles"]
+            options = self.coordinator.device.config[key]["options"]
+            self.option_map = {
+                opt: (titles[opt] if titles.get(opt) is not None else opt)
+                for opt in options
+            }
+            self.reversed_option_map = {
+                tit: opt for opt, tit in self.option_map.items()
+            }
 
     @property
     def sub_status(self) -> Any:
@@ -518,7 +544,7 @@ class ShellyRpcAttributeEntity(ShellyRpcEntity, Entity):
     @property
     def attribute_value(self) -> StateType:
         """Value of sensor."""
-        if callable(self.entity_description.value):
+        if self.entity_description.value is not None:
             # using "get" here since subkey might not exist (e.g. "errors" sub_key)
             self._last_value = self.entity_description.value(
                 self.status.get(self.entity_description.sub_key), self._last_value

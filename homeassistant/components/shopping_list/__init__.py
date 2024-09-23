@@ -582,12 +582,12 @@ def websocket_handle_reorder(
     except NoMatchingShoppingListItem:
         connection.send_error(
             msg_id,
-            websocket_api.const.ERR_NOT_FOUND,
+            websocket_api.ERR_NOT_FOUND,
             "One or more item id(s) not found.",
         )
         return
     except vol.Invalid as err:
-        connection.send_error(msg_id, websocket_api.const.ERR_INVALID_FORMAT, f"{err}")
+        connection.send_error(msg_id, websocket_api.ERR_INVALID_FORMAT, f"{err}")
         return
 
     connection.send_result(msg_id)

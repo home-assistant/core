@@ -7,13 +7,29 @@
     }
   },
   "services": {
-    "add_item": "mdi:cart-plus",
-    "remove_item": "mdi:cart-remove",
-    "complete_item": "mdi:cart-check",
-    "incomplete_item": "mdi:cart-off",
-    "complete_all": "mdi:cart-check",
-    "incomplete_all": "mdi:cart-off",
-    "clear_completed_items": "mdi:cart-remove",
-    "sort": "mdi:sort"
+    "add_item": {
+      "service": "mdi:cart-plus"
+    },
+    "remove_item": {
+      "service": "mdi:cart-remove"
+    },
+    "complete_item": {
+      "service": "mdi:cart-check"
+    },
+    "incomplete_item": {
+      "service": "mdi:cart-off"
+    },
+    "complete_all": {
+      "service": "mdi:cart-check"
+    },
+    "incomplete_all": {
+      "service": "mdi:cart-off"
+    },
+    "clear_completed_items": {
+      "service": "mdi:cart-remove"
+    },
+    "sort": {
+      "service": "mdi:sort"
+    }
   }
 }

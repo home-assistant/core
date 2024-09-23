@@ -1,5 +1,6 @@
 """PyTest fixtures and test helpers."""
 
+from typing import Any
 from unittest import mock
 from unittest.mock import AsyncMock, PropertyMock, patch
 
@@ -8,6 +9,7 @@ import pytest
 
 from homeassistant.components.blebox.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry
@@ -71,12 +73,14 @@ def config_fixture():
 
 
 @pytest.fixture(name="feature")
-def feature_fixture(request):
+def feature_fixture(request: pytest.FixtureRequest) -> Any:
     """Return an entity wrapper from given fixture name."""
     return request.getfixturevalue(request.param)
 
 
-async def async_setup_entities(hass, entity_ids):
+async def async_setup_entities(
+    hass: HomeAssistant, entity_ids: list[str]
+) -> list[er.RegistryEntry]:
     """Return configured entries with the given entity ids."""
 
     config_entry = mock_config()
@@ -89,7 +93,7 @@ async def async_setup_entities(hass, entity_ids):
     return [entity_registry.async_get(entity_id) for entity_id in entity_ids]
 
 
-async def async_setup_entity(hass, entity_id):
+async def async_setup_entity(hass: HomeAssistant, entity_id: str) -> er.RegistryEntry:
     """Return a configured entry with the given entity_id."""
 
     return (await async_setup_entities(hass, [entity_id]))[0]

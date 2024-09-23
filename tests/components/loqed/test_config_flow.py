@@ -42,7 +42,7 @@ async def test_create_entry_zeroconf(hass: HomeAssistant) -> None:
             data=zeroconf_data,
         )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
 
     mock_lock = Mock(spec=loqed.Lock, id="Foo")
@@ -76,7 +76,7 @@ async def test_create_entry_zeroconf(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
     found_lock = all_locks_response["data"][0]
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "LOQED Touch Smart Lock"
     assert result2["data"] == {
         "id": "Foo",
@@ -101,7 +101,7 @@ async def test_create_entry_user(
         context={"source": config_entries.SOURCE_USER},
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
 
     lock_result = json.loads(load_fixture("loqed/status_ok.json"))
@@ -137,7 +137,7 @@ async def test_create_entry_user(
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "LOQED Touch Smart Lock"
     assert result2["data"] == {
         "id": "Foo",
@@ -162,7 +162,7 @@ async def test_cannot_connect(
         context={"source": config_entries.SOURCE_USER},
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
 
     with patch(
@@ -175,7 +175,7 @@ async def test_cannot_connect(
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
@@ -188,7 +188,7 @@ async def test_invalid_auth_when_lock_not_found(
         context={"source": config_entries.SOURCE_USER},
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
 
     all_locks_response = json.loads(load_fixture("loqed/get_all_locks.json"))
@@ -203,7 +203,7 @@ async def test_invalid_auth_when_lock_not_found(
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "invalid_auth"}
 
 
@@ -216,7 +216,7 @@ async def test_cannot_connect_when_lock_not_reachable(
         context={"source": config_entries.SOURCE_USER},
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
 
     all_locks_response = json.loads(load_fixture("loqed/get_all_locks.json"))
@@ -236,5 +236,5 @@ async def test_cannot_connect_when_lock_not_reachable(
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}

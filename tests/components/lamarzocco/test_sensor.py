@@ -2,6 +2,7 @@
 
 from unittest.mock import MagicMock
 
+from lmcloud.const import MachineModel
 import pytest
 from syrupy import SnapshotAssertion
 
@@ -71,3 +72,17 @@ async def test_shot_timer_unavailable(
     state = hass.states.get(f"sensor.{mock_lamarzocco.serial_number}_shot_timer")
     assert state
     assert state.state == STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize("device_fixture", [MachineModel.LINEA_MINI])
+async def test_no_steam_linea_mini(
+    hass: HomeAssistant,
+    mock_lamarzocco: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Ensure Linea Mini has no steam temp."""
+    await async_init_integration(hass, mock_config_entry)
+
+    serial_number = mock_lamarzocco.serial_number
+    state = hass.states.get(f"sensor.{serial_number}_current_temp_steam")
+    assert state is None

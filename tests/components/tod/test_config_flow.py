@@ -18,7 +18,7 @@ async def test_config_flow(hass: HomeAssistant, platform) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
 
     with patch(
@@ -35,7 +35,7 @@ async def test_config_flow(hass: HomeAssistant, platform) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "My tod"
     assert result["data"] == {}
     assert result["options"] == {
@@ -63,7 +63,7 @@ def get_suggested(schema, key):
                 return None
             return k.description["suggested_value"]
     # Wanted key absent from schema
-    raise Exception
+    raise KeyError("Wanted key absent from schema")
 
 
 @pytest.mark.freeze_time("2022-03-16 17:37:00", tz_offset=-7)
@@ -85,7 +85,7 @@ async def test_options(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
     schema = result["data_schema"].schema
     assert get_suggested(schema, "after_time") == "10:00"
@@ -98,7 +98,7 @@ async def test_options(hass: HomeAssistant) -> None:
             "before_time": "17:05",
         },
     )
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         "after_time": "10:00",
         "before_time": "17:05",

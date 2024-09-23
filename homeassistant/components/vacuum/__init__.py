@@ -2,12 +2,11 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 from datetime import timedelta
 from enum import IntFlag
-from functools import partial
+from functools import cached_property, partial
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 import voluptuous as vol
 
@@ -24,29 +23,21 @@ from homeassistant.const import (  # noqa: F401 # STATE_PAUSED/IDLE are API
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.config_validation import (  # noqa: F401
-    PLATFORM_SCHEMA,
-    PLATFORM_SCHEMA_BASE,
-    make_entity_service_schema,
-)
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.icon import icon_for_battery_level
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
+from homeassistant.util.hass_dict import HassKey
 
-from . import group as group_pre_import  # noqa: F401
-from .const import STATE_CLEANING, STATE_DOCKED, STATE_ERROR, STATE_RETURNING
-
-if TYPE_CHECKING:
-    from functools import cached_property
-else:
-    from homeassistant.backports.functools import cached_property
+from .const import DOMAIN, STATE_CLEANING, STATE_DOCKED, STATE_ERROR, STATE_RETURNING
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = "vacuum"
+DOMAIN_DATA: HassKey[EntityComponent[StateVacuumEntity]] = HassKey(DOMAIN)
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
+PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
+PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
 SCAN_INTERVAL = timedelta(seconds=20)
 
 ATTR_BATTERY_ICON = "battery_icon"
@@ -119,7 +110,7 @@ def is_on(hass: HomeAssistant, entity_id: str) -> bool:
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the vacuum component."""
-    component = hass.data[DOMAIN] = EntityComponent[StateVacuumEntity](
+    component = hass.data[DOMAIN_DATA] = EntityComponent[StateVacuumEntity](
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )
 
@@ -127,37 +118,37 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     component.async_register_entity_service(
         SERVICE_START,
-        {},
+        None,
         "async_start",
         [VacuumEntityFeature.START],
     )
     component.async_register_entity_service(
         SERVICE_PAUSE,
-        {},
+        None,
         "async_pause",
         [VacuumEntityFeature.PAUSE],
     )
     component.async_register_entity_service(
         SERVICE_RETURN_TO_BASE,
-        {},
+        None,
         "async_return_to_base",
         [VacuumEntityFeature.RETURN_HOME],
     )
     component.async_register_entity_service(
         SERVICE_CLEAN_SPOT,
-        {},
+        None,
         "async_clean_spot",
         [VacuumEntityFeature.CLEAN_SPOT],
     )
     component.async_register_entity_service(
         SERVICE_LOCATE,
-        {},
+        None,
         "async_locate",
         [VacuumEntityFeature.LOCATE],
     )
     component.async_register_entity_service(
         SERVICE_STOP,
-        {},
+        None,
         "async_stop",
         [VacuumEntityFeature.STOP],
     )
@@ -182,14 +173,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    component: EntityComponent[StateVacuumEntity] = hass.data[DOMAIN]
-    return await component.async_setup_entry(entry)
+    return await hass.data[DOMAIN_DATA].async_setup_entry(entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    component: EntityComponent[StateVacuumEntity] = hass.data[DOMAIN]
-    return await component.async_unload_entry(entry)
+    return await hass.data[DOMAIN_DATA].async_unload_entry(entry)
 
 
 class StateVacuumEntityDescription(EntityDescription, frozen_or_thawed=True):
@@ -237,7 +226,7 @@ class StateVacuumEntity(
         )
 
     @property
-    def capability_attributes(self) -> Mapping[str, Any] | None:
+    def capability_attributes(self) -> dict[str, Any] | None:
         """Return capability attributes."""
         if VacuumEntityFeature.FAN_SPEED in self.supported_features_compat:
             return {ATTR_FAN_SPEED_LIST: self.fan_speed_list}

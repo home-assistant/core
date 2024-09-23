@@ -18,6 +18,7 @@ from homeassistant.components.version.const import (
     VERSION_SOURCE_PYPI,
     VERSION_SOURCE_VERSIONS,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_SOURCE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -31,7 +32,7 @@ from tests.common import async_fire_time_changed
 async def test_reload_config_entry(hass: HomeAssistant) -> None:
     """Test reloading the config entry."""
     config_entry = await setup_version_integration(hass)
-    assert config_entry.state == config_entries.ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     with patch(
         "pyhaversion.HaVersion.get_version",
@@ -44,7 +45,7 @@ async def test_reload_config_entry(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     entry = hass.config_entries.async_get_entry(config_entry.entry_id)
-    assert entry.state == config_entries.ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
 
 async def test_basic_form(hass: HomeAssistant) -> None:
@@ -53,7 +54,7 @@ async def test_basic_form(hass: HomeAssistant) -> None:
         DOMAIN,
         context={"source": config_entries.SOURCE_USER, "show_advanced_options": False},
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
 
     with patch(
         "homeassistant.components.version.async_setup_entry",
@@ -65,7 +66,7 @@ async def test_basic_form(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == VERSION_SOURCE_DOCKER_HUB
     assert result2["data"] == {
         **DEFAULT_CONFIGURATION,
@@ -81,7 +82,7 @@ async def test_advanced_form_pypi(hass: HomeAssistant) -> None:
         DOMAIN,
         context={"source": config_entries.SOURCE_USER, "show_advanced_options": True},
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -89,11 +90,11 @@ async def test_advanced_form_pypi(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "version_source"
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "version_source"
 
     with patch(
@@ -105,7 +106,7 @@ async def test_advanced_form_pypi(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == VERSION_SOURCE_PYPI
     assert result["data"] == {
         **DEFAULT_CONFIGURATION,
@@ -122,7 +123,7 @@ async def test_advanced_form_container(hass: HomeAssistant) -> None:
         DOMAIN,
         context={"source": config_entries.SOURCE_USER, "show_advanced_options": True},
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -130,11 +131,11 @@ async def test_advanced_form_container(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "version_source"
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "version_source"
 
     with patch(
@@ -146,7 +147,7 @@ async def test_advanced_form_container(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == VERSION_SOURCE_DOCKER_HUB
     assert result["data"] == {
         **DEFAULT_CONFIGURATION,
@@ -163,7 +164,7 @@ async def test_advanced_form_supervisor(hass: HomeAssistant) -> None:
         DOMAIN,
         context={"source": config_entries.SOURCE_USER, "show_advanced_options": True},
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -171,11 +172,11 @@ async def test_advanced_form_supervisor(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "version_source"
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "version_source"
 
     with patch(
@@ -188,7 +189,7 @@ async def test_advanced_form_supervisor(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == f"{VERSION_SOURCE_VERSIONS} Dev"
     assert result["data"] == {
         **DEFAULT_CONFIGURATION,

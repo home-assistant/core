@@ -8,9 +8,9 @@ from pathlib import Path
 from typing import Any
 
 from aiohttp import CookieJar
-from pyunifiprotect import ProtectApiClient
-from pyunifiprotect.data import NVR
-from pyunifiprotect.exceptions import ClientError, NotAuthorized
+from uiprotect import ProtectApiClient
+from uiprotect.data import NVR
+from uiprotect.exceptions import ClientError, NotAuthorized
 from unifi_discovery import async_console_is_alive
 import voluptuous as vol
 

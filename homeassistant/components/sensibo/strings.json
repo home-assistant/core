@@ -110,6 +110,14 @@
           "s": "Sensitive"
         }
       },
+      "pm25_pure": {
+        "name": "Pure AQI",
+        "state": {
+          "good": "Good",
+          "moderate": "Moderate",
+          "bad": "Bad"
+        }
+      },
       "timer_time": {
         "name": "Timer end time"
       },
@@ -499,16 +507,16 @@
       "message": "Climate swing mode {swing_mode} is not supported by the integration, please open an issue"
     },
     "service_result_not_true": {
-      "message": "Could not execute service for {name}"
+      "message": "Could not perform action for {name}"
     },
     "service_raised": {
-      "message": "Could not execute service for {name} with error {error}"
+      "message": "Could not perform action for {name} with error {error}"
     },
     "select_option_not_available": {
       "message": "Current mode {hvac_mode} doesn't support setting {key}"
     },
     "climate_react_not_available": {
-      "message": "Use Sensibo Enable Climate React Service once to enable switch or the Sensibo app"
+      "message": "Use Sensibo Enable Climate React action once to enable switch or the Sensibo app"
     }
   }
 }

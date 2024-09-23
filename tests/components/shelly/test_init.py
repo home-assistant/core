@@ -8,7 +8,6 @@ from aioshelly.common import ConnectionOptions
 from aioshelly.const import MODEL_PLUS_2PM
 from aioshelly.exceptions import (
     DeviceConnectionError,
-    FirmwareUnsupported,
     InvalidAuthError,
     MacAddressMismatchError,
 )
@@ -27,6 +26,7 @@ from homeassistant.components.shelly.const import (
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PORT, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
     DeviceRegistry,
@@ -117,13 +117,13 @@ async def test_shared_device_mac(
     gen: int,
     mock_block_device: Mock,
     mock_rpc_device: Mock,
-    device_reg: DeviceRegistry,
+    device_registry: DeviceRegistry,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test first time shared device with another domain."""
     config_entry = MockConfigEntry(domain="test", data={}, unique_id="some_id")
     config_entry.add_to_hass(hass)
-    device_reg.async_get_or_create(
+    device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         connections={(CONNECTION_NETWORK_MAC, format_mac(MOCK_MAC))},
     )
@@ -145,25 +145,44 @@ async def test_setup_entry_not_shelly(
 
 
 @pytest.mark.parametrize("gen", [1, 2, 3])
-@pytest.mark.parametrize("side_effect", [DeviceConnectionError, FirmwareUnsupported])
 async def test_device_connection_error(
     hass: HomeAssistant,
     gen: int,
-    side_effect: Exception,
     mock_block_device: Mock,
     mock_rpc_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test device connection error."""
     monkeypatch.setattr(
-        mock_block_device, "initialize", AsyncMock(side_effect=side_effect)
+        mock_block_device, "initialize", AsyncMock(side_effect=DeviceConnectionError)
     )
     monkeypatch.setattr(
-        mock_rpc_device, "initialize", AsyncMock(side_effect=side_effect)
+        mock_rpc_device, "initialize", AsyncMock(side_effect=DeviceConnectionError)
     )
 
     entry = await init_integration(hass, gen)
-    assert entry.state == ConfigEntryState.SETUP_RETRY
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.parametrize("gen", [1, 2, 3])
+async def test_device_unsupported_firmware(
+    hass: HomeAssistant,
+    gen: int,
+    mock_block_device: Mock,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test device init with unsupported firmware."""
+    monkeypatch.setattr(mock_block_device, "firmware_supported", False)
+    monkeypatch.setattr(mock_rpc_device, "firmware_supported", False)
+
+    entry = await init_integration(hass, gen)
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert (
+        DOMAIN,
+        "firmware_unsupported_123456789ABC",
+    ) in issue_registry.issues
 
 
 @pytest.mark.parametrize("gen", [1, 2, 3])
@@ -183,7 +202,7 @@ async def test_mac_mismatch_error(
     )
 
     entry = await init_integration(hass, gen)
-    assert entry.state == ConfigEntryState.SETUP_RETRY
+    assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
 @pytest.mark.parametrize("gen", [1, 2, 3])
@@ -203,7 +222,7 @@ async def test_device_auth_error(
     )
 
     entry = await init_integration(hass, gen)
-    assert entry.state == ConfigEntryState.SETUP_ERROR
+    assert entry.state is ConfigEntryState.SETUP_ERROR
 
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
@@ -217,27 +236,35 @@ async def test_device_auth_error(
     assert flow["context"].get("entry_id") == entry.entry_id
 
 
-@pytest.mark.parametrize(("entry_sleep", "device_sleep"), [(None, 0), (1000, 1000)])
+@pytest.mark.parametrize(("entry_sleep", "device_sleep"), [(None, 0), (3600, 3600)])
 async def test_sleeping_block_device_online(
     hass: HomeAssistant,
     entry_sleep: int | None,
     device_sleep: int,
     mock_block_device: Mock,
-    device_reg: DeviceRegistry,
+    monkeypatch: pytest.MonkeyPatch,
+    device_registry: DeviceRegistry,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test sleeping block device online."""
     config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id="shelly")
     config_entry.add_to_hass(hass)
-    device_reg.async_get_or_create(
+    device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         connections={(CONNECTION_NETWORK_MAC, format_mac(MOCK_MAC))},
     )
 
+    monkeypatch.setitem(
+        mock_block_device.settings,
+        "sleep_mode",
+        {"period": int(device_sleep / 60), "unit": "m"},
+    )
     entry = await init_integration(hass, 1, sleep_period=entry_sleep)
     assert "will resume when device is online" in caplog.text
 
-    mock_block_device.mock_update()
+    mock_block_device.mock_online()
+    await hass.async_block_till_done(wait_background_tasks=True)
+
     assert "online, resuming setup" in caplog.text
     assert entry.data["sleep_period"] == device_sleep
 
@@ -248,13 +275,18 @@ async def test_sleeping_rpc_device_online(
     entry_sleep: int | None,
     device_sleep: int,
     mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test sleeping RPC device online."""
+    monkeypatch.setattr(mock_rpc_device, "connected", False)
+    monkeypatch.setitem(mock_rpc_device.status["sys"], "wakeup_period", device_sleep)
     entry = await init_integration(hass, 2, sleep_period=entry_sleep)
     assert "will resume when device is online" in caplog.text
 
-    mock_rpc_device.mock_update()
+    mock_rpc_device.mock_online()
+    await hass.async_block_till_done(wait_background_tasks=True)
+
     assert "online, resuming setup" in caplog.text
     assert entry.data["sleep_period"] == device_sleep
 
@@ -266,13 +298,62 @@ async def test_sleeping_rpc_device_online_new_firmware(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test sleeping device Gen2 with firmware 1.0.0 or later."""
+    monkeypatch.setattr(mock_rpc_device, "connected", False)
     entry = await init_integration(hass, 2, sleep_period=None)
     assert "will resume when device is online" in caplog.text
 
     mutate_rpc_device_status(monkeypatch, mock_rpc_device, "sys", "wakeup_period", 1500)
-    mock_rpc_device.mock_update()
+    mock_rpc_device.mock_online()
+    await hass.async_block_till_done(wait_background_tasks=True)
+
     assert "online, resuming setup" in caplog.text
     assert entry.data["sleep_period"] == 1500
+
+
+async def test_sleeping_rpc_device_online_during_setup(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test sleeping device Gen2 woke up by user during setup."""
+    monkeypatch.setattr(mock_rpc_device, "connected", False)
+    monkeypatch.setitem(mock_rpc_device.status["sys"], "wakeup_period", 1000)
+    await init_integration(hass, 2, sleep_period=1000)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert "will resume when device is online" in caplog.text
+    assert "is online (source: setup)" in caplog.text
+    assert hass.states.get("sensor.test_name_temperature") is not None
+
+
+async def test_sleeping_rpc_device_offline_during_setup(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test sleeping device Gen2 woke up by user during setup."""
+    monkeypatch.setattr(mock_rpc_device, "connected", False)
+    monkeypatch.setitem(mock_rpc_device.status["sys"], "wakeup_period", 1000)
+    monkeypatch.setattr(
+        mock_rpc_device, "initialize", AsyncMock(side_effect=DeviceConnectionError)
+    )
+
+    # Init integration, should fail since device is offline
+    await init_integration(hass, 2, sleep_period=1000)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert "will resume when device is online" in caplog.text
+    assert "is online (source: setup)" in caplog.text
+    assert hass.states.get("sensor.test_name_temperature") is None
+
+    # Create an online event and verify that device is init successfully
+    monkeypatch.setattr(mock_rpc_device, "initialize", AsyncMock())
+    mock_rpc_device.mock_online()
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get("sensor.test_name_temperature") is not None
 
 
 @pytest.mark.parametrize(
@@ -413,9 +494,12 @@ async def test_entry_missing_port(hass: HomeAssistant) -> None:
     }
     entry = MockConfigEntry(domain=DOMAIN, data=data, unique_id=MOCK_MAC)
     entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.shelly.RpcDevice.create", return_value=Mock()
-    ) as rpc_device_mock:
+    with (
+        patch("homeassistant.components.shelly.RpcDevice.initialize"),
+        patch(
+            "homeassistant.components.shelly.RpcDevice.create", return_value=Mock()
+        ) as rpc_device_mock,
+    ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
@@ -435,9 +519,12 @@ async def test_rpc_entry_custom_port(hass: HomeAssistant) -> None:
     }
     entry = MockConfigEntry(domain=DOMAIN, data=data, unique_id=MOCK_MAC)
     entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.shelly.RpcDevice.create", return_value=Mock()
-    ) as rpc_device_mock:
+    with (
+        patch("homeassistant.components.shelly.RpcDevice.initialize"),
+        patch(
+            "homeassistant.components.shelly.RpcDevice.create", return_value=Mock()
+        ) as rpc_device_mock,
+    ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 

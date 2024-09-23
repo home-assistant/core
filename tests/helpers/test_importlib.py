@@ -41,16 +41,40 @@ async def test_async_import_module_failures(hass: HomeAssistant) -> None:
     with (
         patch(
             "homeassistant.helpers.importlib.importlib.import_module",
-            side_effect=ImportError,
+            side_effect=ValueError,
         ),
-        pytest.raises(ImportError),
+        pytest.raises(ValueError),
+    ):
+        await importlib.async_import_module(hass, "test.module")
+
+    mock_module = MockModule()
+    # The failure should be not be cached
+    with (
+        patch(
+            "homeassistant.helpers.importlib.importlib.import_module",
+            return_value=mock_module,
+        ),
+    ):
+        assert await importlib.async_import_module(hass, "test.module") is mock_module
+
+
+async def test_async_import_module_failure_caches_module_not_found(
+    hass: HomeAssistant,
+) -> None:
+    """Test importing a module caches ModuleNotFound."""
+    with (
+        patch(
+            "homeassistant.helpers.importlib.importlib.import_module",
+            side_effect=ModuleNotFoundError,
+        ),
+        pytest.raises(ModuleNotFoundError),
     ):
         await importlib.async_import_module(hass, "test.module")
 
     mock_module = MockModule()
     # The failure should be cached
     with (
-        pytest.raises(ImportError),
+        pytest.raises(ModuleNotFoundError),
         patch(
             "homeassistant.helpers.importlib.importlib.import_module",
             return_value=mock_module,

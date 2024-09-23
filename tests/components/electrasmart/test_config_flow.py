@@ -16,7 +16,7 @@ from homeassistant.data_entry_flow import FlowResultType
 from tests.common import load_fixture
 
 
-async def test_form(hass: HomeAssistant):
+async def test_form(hass: HomeAssistant) -> None:
     """Test user config."""
 
     mock_generate_token = loads(load_fixture("generate_token_response.json", DOMAIN))
@@ -40,11 +40,11 @@ async def test_form(hass: HomeAssistant):
             data={CONF_PHONE_NUMBER: "0521234567"},
         )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == CONF_OTP
 
 
-async def test_one_time_password(hass: HomeAssistant):
+async def test_one_time_password(hass: HomeAssistant) -> None:
     """Test one time password."""
 
     mock_generate_token = loads(load_fixture("generate_token_response.json", DOMAIN))
@@ -73,10 +73,10 @@ async def test_one_time_password(hass: HomeAssistant):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_OTP: "1234"}
         )
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def test_one_time_password_api_error(hass: HomeAssistant):
+async def test_one_time_password_api_error(hass: HomeAssistant) -> None:
     """Test one time password."""
     mock_generate_token = loads(load_fixture("generate_token_response.json", DOMAIN))
     with (
@@ -99,10 +99,10 @@ async def test_one_time_password_api_error(hass: HomeAssistant):
             result["flow_id"], {CONF_OTP: "1234"}
         )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
 
 
-async def test_cannot_connect(hass: HomeAssistant):
+async def test_cannot_connect(hass: HomeAssistant) -> None:
     """Test cannot connect."""
 
     with patch(
@@ -115,12 +115,12 @@ async def test_cannot_connect(hass: HomeAssistant):
             context={"source": config_entries.SOURCE_USER},
             data={CONF_PHONE_NUMBER: "0521234567"},
         )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "cannot_connect"}
 
 
-async def test_invalid_phone_number(hass: HomeAssistant):
+async def test_invalid_phone_number(hass: HomeAssistant) -> None:
     """Test invalid phone number."""
 
     mock_invalid_phone_number_response = loads(
@@ -138,12 +138,12 @@ async def test_invalid_phone_number(hass: HomeAssistant):
             data={CONF_PHONE_NUMBER: "0521234567"},
         )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"phone_number": "invalid_phone_number"}
 
 
-async def test_invalid_auth(hass: HomeAssistant):
+async def test_invalid_auth(hass: HomeAssistant) -> None:
     """Test invalid auth."""
 
     mock_generate_token_response = loads(
@@ -171,6 +171,6 @@ async def test_invalid_auth(hass: HomeAssistant):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_OTP: "1234"}
         )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == CONF_OTP
     assert result["errors"] == {CONF_OTP: "invalid_auth"}

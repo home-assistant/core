@@ -9,7 +9,7 @@ from homeassistant.components.network import async_get_source_ip
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
@@ -17,15 +17,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import slugify
 
-from .common import (
-    AvmWrapper,
-    FritzBoxBaseEntity,
-    FritzData,
-    FritzDevice,
-    FritzDeviceBase,
-    SwitchInfo,
-    device_filter_out_from_trackers,
-)
 from .const import (
     DATA_FRITZ,
     DOMAIN,
@@ -36,6 +27,14 @@ from .const import (
     WIFI_STANDARD,
     MeshRoles,
 )
+from .coordinator import (
+    AvmWrapper,
+    FritzData,
+    FritzDevice,
+    SwitchInfo,
+    device_filter_out_from_trackers,
+)
+from .entity import FritzBoxBaseEntity, FritzDeviceBase
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -243,7 +242,6 @@ async def async_setup_entry(
 
     async_add_entities(entities_list)
 
-    @callback
     async def async_update_avm_device() -> None:
         """Update the values of the AVM device."""
         async_add_entities(await _async_profile_entities_list(avm_wrapper, data_fritz))
@@ -332,7 +330,7 @@ class FritzBoxBaseSwitch(FritzBoxBaseEntity, SwitchEntity):
         self._name = f"{self._friendly_name} {self._description}"
         self._unique_id = f"{self._avm_wrapper.unique_id}-{slugify(self._description)}"
 
-        self._attributes: dict[str, str] = {}
+        self._attributes: dict[str, str | None] = {}
         self._is_available = True
 
     @property
@@ -356,7 +354,7 @@ class FritzBoxBaseSwitch(FritzBoxBaseEntity, SwitchEntity):
         return self._is_available
 
     @property
-    def extra_state_attributes(self) -> dict[str, str]:
+    def extra_state_attributes(self) -> dict[str, str | None]:
         """Return device attributes."""
         return self._attributes
 

@@ -5,11 +5,12 @@ from unittest.mock import patch
 
 from aiohttp import ClientConnectionError, ClientResponseError
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.components.nightscout.const import DOMAIN
 from homeassistant.components.nightscout.utils import hash_from_url
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from . import GLUCOSE_READINGS, SERVER_STATUS, SERVER_STATUS_STATUS_ONLY
 
@@ -24,7 +25,7 @@ async def test_form(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     with (
@@ -37,7 +38,7 @@ async def test_form(hass: HomeAssistant) -> None:
             CONFIG,
         )
 
-        assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+        assert result2["type"] is FlowResultType.CREATE_ENTRY
         assert result2["title"] == SERVER_STATUS.name  # pylint: disable=maybe-no-member
         assert result2["data"] == CONFIG
         await hass.async_block_till_done()
@@ -59,7 +60,7 @@ async def test_user_form_cannot_connect(hass: HomeAssistant) -> None:
             {CONF_URL: "https://some.url:1234"},
         )
 
-    assert result2["type"] == data_entry_flow.FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
@@ -84,7 +85,7 @@ async def test_user_form_api_key_required(hass: HomeAssistant) -> None:
             {CONF_URL: "https://some.url:1234"},
         )
 
-    assert result2["type"] == data_entry_flow.FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "invalid_auth"}
 
 
@@ -103,7 +104,7 @@ async def test_user_form_unexpected_exception(hass: HomeAssistant) -> None:
             {CONF_URL: "https://some.url:1234"},
         )
 
-    assert result2["type"] == data_entry_flow.FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}
 
 
@@ -119,7 +120,7 @@ async def test_user_form_duplicate(hass: HomeAssistant) -> None:
             context={"source": config_entries.SOURCE_USER},
             data=CONFIG,
         )
-        assert result["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "already_configured"
 
 

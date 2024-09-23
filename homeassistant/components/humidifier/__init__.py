@@ -4,9 +4,9 @@ from __future__ import annotations
 
 from datetime import timedelta
 from enum import StrEnum
-from functools import partial
+from functools import cached_property, partial
 import logging
-from typing import TYPE_CHECKING, Any, final
+from typing import Any, final
 
 import voluptuous as vol
 
@@ -18,12 +18,9 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_ON,
 )
-from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.config_validation import (  # noqa: F401
-    PLATFORM_SCHEMA,
-    PLATFORM_SCHEMA_BASE,
-)
+from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.deprecation import (
     all_with_deprecated_constants,
     check_if_deprecated_constant,
@@ -33,6 +30,7 @@ from homeassistant.helpers.entity import ToggleEntity, ToggleEntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
+from homeassistant.util.hass_dict import HassKey
 
 from .const import (  # noqa: F401
     _DEPRECATED_DEVICE_CLASS_DEHUMIDIFIER,
@@ -49,25 +47,26 @@ from .const import (  # noqa: F401
     DOMAIN,
     MODE_AUTO,
     MODE_AWAY,
+    MODE_BABY,
+    MODE_BOOST,
+    MODE_COMFORT,
+    MODE_ECO,
+    MODE_HOME,
     MODE_NORMAL,
+    MODE_SLEEP,
     SERVICE_SET_HUMIDITY,
     SERVICE_SET_MODE,
     HumidifierAction,
     HumidifierEntityFeature,
 )
 
-if TYPE_CHECKING:
-    from functools import cached_property
-else:
-    from homeassistant.backports.functools import cached_property
-
-
 _LOGGER = logging.getLogger(__name__)
 
-
-SCAN_INTERVAL = timedelta(seconds=60)
-
+DOMAIN_DATA: HassKey[EntityComponent[HumidifierEntity]] = HassKey(DOMAIN)
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
+PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
+PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
+SCAN_INTERVAL = timedelta(seconds=60)
 
 
 class HumidifierDeviceClass(StrEnum):
@@ -97,14 +96,14 @@ def is_on(hass: HomeAssistant, entity_id: str) -> bool:
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up humidifier devices."""
-    component = hass.data[DOMAIN] = EntityComponent[HumidifierEntity](
+    component = hass.data[DOMAIN_DATA] = EntityComponent[HumidifierEntity](
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )
     await component.async_setup(config)
 
-    component.async_register_entity_service(SERVICE_TURN_ON, {}, "async_turn_on")
-    component.async_register_entity_service(SERVICE_TURN_OFF, {}, "async_turn_off")
-    component.async_register_entity_service(SERVICE_TOGGLE, {}, "async_toggle")
+    component.async_register_entity_service(SERVICE_TURN_ON, None, "async_turn_on")
+    component.async_register_entity_service(SERVICE_TURN_OFF, None, "async_turn_off")
+    component.async_register_entity_service(SERVICE_TOGGLE, None, "async_toggle")
     component.async_register_entity_service(
         SERVICE_SET_MODE,
         {vol.Required(ATTR_MODE): cv.string},
@@ -118,7 +117,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 vol.Coerce(int), vol.Range(min=0, max=100)
             )
         },
-        "async_set_humidity",
+        async_service_humidity_set,
     )
 
     return True
@@ -126,14 +125,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    component: EntityComponent[HumidifierEntity] = hass.data[DOMAIN]
-    return await component.async_setup_entry(entry)
+    return await hass.data[DOMAIN_DATA].async_setup_entry(entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    component: EntityComponent[HumidifierEntity] = hass.data[DOMAIN]
-    return await component.async_unload_entry(entry)
+    return await hass.data[DOMAIN_DATA].async_unload_entry(entry)
 
 
 class HumidifierEntityDescription(ToggleEntityDescription, frozen_or_thawed=True):
@@ -289,6 +286,33 @@ class HumidifierEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_AT
             self._report_deprecated_supported_features_values(new_features)
             return new_features
         return features
+
+
+async def async_service_humidity_set(
+    entity: HumidifierEntity, service_call: ServiceCall
+) -> None:
+    """Handle set humidity service."""
+    humidity = service_call.data[ATTR_HUMIDITY]
+    min_humidity = entity.min_humidity
+    max_humidity = entity.max_humidity
+    _LOGGER.debug(
+        "Check valid humidity %d in range %d - %d",
+        humidity,
+        min_humidity,
+        max_humidity,
+    )
+    if humidity < min_humidity or humidity > max_humidity:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="humidity_out_of_range",
+            translation_placeholders={
+                "humidity": str(humidity),
+                "min_humidity": str(min_humidity),
+                "max_humidity": str(max_humidity),
+            },
+        )
+
+    await entity.async_set_humidity(humidity)
 
 
 # As we import deprecated constants from the const module, we need to add these two functions

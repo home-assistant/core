@@ -3,7 +3,7 @@
 from unittest import mock
 from unittest.mock import patch
 
-import homeassistant.components.datadog as datadog
+from homeassistant.components import datadog
 from homeassistant.const import EVENT_LOGBOOK_ENTRY, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -79,7 +79,7 @@ async def test_logbook_entry(hass: HomeAssistant) -> None:
         assert mock_statsd.event.call_count == 1
         assert mock_statsd.event.call_args == mock.call(
             title="Home Assistant",
-            text="%%% \n **{}** {} \n %%%".format(event["name"], event["message"]),
+            text=f"%%% \n **{event['name']}** {event['message']} \n %%%",
             tags=["entity:sensor.foo.bar", "domain:automation"],
         )
 

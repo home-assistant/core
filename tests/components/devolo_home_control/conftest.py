@@ -1,7 +1,7 @@
 """Fixtures for tests."""
 
 from collections.abc import Generator
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -19,9 +19,7 @@ def maintenance() -> bool:
 
 
 @pytest.fixture(autouse=True)
-def patch_mydevolo(
-    credentials_valid: bool, maintenance: bool
-) -> Generator[None, None, None]:
+def patch_mydevolo(credentials_valid: bool, maintenance: bool) -> Generator[None]:
     """Fixture to patch mydevolo into a desired state."""
     with (
         patch(
@@ -41,5 +39,5 @@ def patch_mydevolo(
 
 
 @pytest.fixture(autouse=True)
-def devolo_home_control_mock_async_zeroconf(mock_async_zeroconf):
+def devolo_home_control_mock_async_zeroconf(mock_async_zeroconf: MagicMock) -> None:
     """Auto mock zeroconf."""

@@ -15,7 +15,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import DOMAIN, PrusaLinkEntity, PrusaLinkUpdateCoordinator
+from .const import DOMAIN
+from .coordinator import PrusaLinkUpdateCoordinator
+from .entity import PrusaLinkEntity
 
 T = TypeVar("T", PrinterStatus, LegacyPrinterStatus, JobInfo)
 

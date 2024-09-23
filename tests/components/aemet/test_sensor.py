@@ -15,7 +15,7 @@ async def test_aemet_forecast_create_sensors(
 ) -> None:
     """Test creation of forecast sensors."""
 
-    hass.config.set_time_zone("UTC")
+    await hass.config.async_set_time_zone("UTC")
     freezer.move_to("2021-01-09 12:00:00+00:00")
     await async_init_integration(hass)
 
@@ -76,7 +76,7 @@ async def test_aemet_weather_create_sensors(
 ) -> None:
     """Test creation of weather sensors."""
 
-    hass.config.set_time_zone("UTC")
+    await hass.config.async_set_time_zone("UTC")
     freezer.move_to("2021-01-09 12:00:00+00:00")
     await async_init_integration(hass)
 

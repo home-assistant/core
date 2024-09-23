@@ -4,7 +4,10 @@ from __future__ import annotations
 
 import voluptuous as vol
 
-from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorEntity
+from homeassistant.components.binary_sensor import (
+    PLATFORM_SCHEMA as BINARY_SENSOR_PLATFORM_SCHEMA,
+    BinarySensorEntity,
+)
 from homeassistant.const import DEVICE_DEFAULT_NAME
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -15,7 +18,7 @@ from . import CONF_PORTS, DATA_GC100
 
 _SENSORS_SCHEMA = vol.Schema({cv.string: cv.string})
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_PORTS): vol.All(cv.ensure_list, [_SENSORS_SCHEMA])}
 )
 

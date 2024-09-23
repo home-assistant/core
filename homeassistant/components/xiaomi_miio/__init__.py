@@ -186,7 +186,9 @@ def _async_update_data_default(hass, device):
         except DeviceException as ex:
             if getattr(ex, "code", None) != -9999:
                 raise UpdateFailed(ex) from ex
-            _LOGGER.info("Got exception while fetching the state, trying again: %s", ex)
+            _LOGGER.error(
+                "Got exception while fetching the state, trying again: %s", ex
+            )
         # Try to fetch the data a second time after error code -9999
         try:
             return await _async_fetch_data()
@@ -248,7 +250,7 @@ def _async_update_data_vacuum(
 
         fan_speeds = device.fan_speed_presets()
 
-        data = VacuumCoordinatorData(
+        return VacuumCoordinatorData(
             device.status(),
             device.dnd_status(),
             device.last_clean_details(),
@@ -258,8 +260,6 @@ def _async_update_data_vacuum(
             fan_speeds,
             {v: k for k, v in fan_speeds.items()},
         )
-
-        return data
 
     async def update_async() -> VacuumCoordinatorData:
         """Fetch data from the device using async_add_executor_job."""
@@ -275,7 +275,9 @@ def _async_update_data_vacuum(
         except DeviceException as ex:
             if getattr(ex, "code", None) != -9999:
                 raise UpdateFailed(ex) from ex
-            _LOGGER.info("Got exception while fetching the state, trying again: %s", ex)
+            _LOGGER.error(
+                "Got exception while fetching the state, trying again: %s", ex
+            )
 
         # Try to fetch the data a second time after error code -9999
         try:
@@ -301,6 +303,7 @@ async def async_create_miio_device_and_coordinator(
 
     # List of models requiring specific lazy_discover setting
     LAZY_DISCOVER_FOR_MODEL = {
+        "zhimi.fan.za3": True,
         "zhimi.fan.za5": True,
         "zhimi.airpurifier.za1": True,
     }

@@ -5,6 +5,8 @@ DOMAIN = "control4"
 DEFAULT_SCAN_INTERVAL = 5
 MIN_SCAN_INTERVAL = 1
 
+API_RETRY_TIMES = 5
+
 CONF_ACCOUNT = "account"
 CONF_DIRECTOR = "director"
 CONF_DIRECTOR_SW_VERSION = "director_sw_version"

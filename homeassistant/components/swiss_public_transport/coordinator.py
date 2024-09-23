@@ -7,14 +7,17 @@ import logging
 from typing import TypedDict
 
 from opendata_transport import OpendataTransport
-from opendata_transport.exceptions import OpendataTransportError
+from opendata_transport.exceptions import (
+    OpendataTransportConnectionError,
+    OpendataTransportError,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 import homeassistant.util.dt as dt_util
 
-from .const import DOMAIN, SENSOR_CONNECTIONS_COUNT
+from .const import CONNECTIONS_COUNT, DEFAULT_UPDATE_TIME, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -23,16 +26,22 @@ class DataConnection(TypedDict):
     """A connection data class."""
 
     departure: datetime | None
-    next_departure: datetime | None
-    next_on_departure: datetime | None
-    duration: str
+    duration: int | None
     platform: str
     remaining_time: str
     start: str
     destination: str
     train_number: str
-    transfers: str
+    transfers: int
     delay: int
+
+
+def calculate_duration_in_seconds(duration_text: str) -> int | None:
+    """Transform and calculate the duration into seconds."""
+    # Transform 01d03:21:23 into 01 days 03:21:23
+    duration_text_pg_format = duration_text.replace("d", " days ")
+    duration = dt_util.parse_duration(duration_text_pg_format)
+    return duration.seconds if duration else None
 
 
 class SwissPublicTransportDataUpdateCoordinator(
@@ -48,7 +57,7 @@ class SwissPublicTransportDataUpdateCoordinator(
             hass,
             _LOGGER,
             name=DOMAIN,
-            update_interval=timedelta(seconds=90),
+            update_interval=timedelta(seconds=DEFAULT_UPDATE_TIME),
         )
         self._opendata = opendata
 
@@ -68,30 +77,34 @@ class SwissPublicTransportDataUpdateCoordinator(
         return None
 
     async def _async_update_data(self) -> list[DataConnection]:
+        return await self.fetch_connections(limit=CONNECTIONS_COUNT)
+
+    async def fetch_connections(self, limit: int) -> list[DataConnection]:
+        """Fetch connections using the opendata api."""
+        self._opendata.limit = limit
         try:
             await self._opendata.async_get_data()
+        except OpendataTransportConnectionError as e:
+            _LOGGER.warning("Connection to transport.opendata.ch cannot be established")
+            raise UpdateFailed from e
         except OpendataTransportError as e:
             _LOGGER.warning(
                 "Unable to connect and retrieve data from transport.opendata.ch"
             )
             raise UpdateFailed from e
-
         connections = self._opendata.connections
-
         return [
             DataConnection(
                 departure=self.nth_departure_time(i),
-                next_departure=self.nth_departure_time(i + 1),
-                next_on_departure=self.nth_departure_time(i + 2),
                 train_number=connections[i]["number"],
                 platform=connections[i]["platform"],
                 transfers=connections[i]["transfers"],
-                duration=connections[i]["duration"],
+                duration=calculate_duration_in_seconds(connections[i]["duration"]),
                 start=self._opendata.from_name,
                 destination=self._opendata.to_name,
                 remaining_time=str(self.remaining_time(connections[i]["departure"])),
                 delay=connections[i]["delay"],
             )
-            for i in range(SENSOR_CONNECTIONS_COUNT)
+            for i in range(limit)
             if len(connections) > i and connections[i] is not None
         ]

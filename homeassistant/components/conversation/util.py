@@ -34,4 +34,4 @@ def create_matcher(utterance: str) -> re.Pattern[str]:
             pattern.append(rf"(?:{optional_match.groups()[0]} *)?")
 
     pattern.append("$")
-    return re.compile("".join(pattern), re.I)
+    return re.compile("".join(pattern), re.IGNORECASE)

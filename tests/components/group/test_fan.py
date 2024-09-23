@@ -1,6 +1,7 @@
 """The tests for the group fan platform."""
 
 import asyncio
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -13,7 +14,7 @@ from homeassistant.components.fan import (
     ATTR_PERCENTAGE_STEP,
     DIRECTION_FORWARD,
     DIRECTION_REVERSE,
-    DOMAIN,
+    DOMAIN as FAN_DOMAIN,
     SERVICE_OSCILLATE,
     SERVICE_SET_DIRECTION,
     SERVICE_SET_PERCENTAGE,
@@ -59,7 +60,7 @@ FULL_SUPPORT_FEATURES = (
 
 
 CONFIG_MISSING_FAN = {
-    DOMAIN: [
+    FAN_DOMAIN: [
         {"platform": "demo"},
         {
             "platform": "group",
@@ -73,7 +74,7 @@ CONFIG_MISSING_FAN = {
 }
 
 CONFIG_FULL_SUPPORT = {
-    DOMAIN: [
+    FAN_DOMAIN: [
         {"platform": "demo"},
         {
             "platform": "group",
@@ -83,7 +84,7 @@ CONFIG_FULL_SUPPORT = {
 }
 
 CONFIG_LIMITED_SUPPORT = {
-    DOMAIN: [
+    FAN_DOMAIN: [
         {
             "platform": "group",
             CONF_ENTITIES: [*LIMITED_FAN_ENTITY_IDS],
@@ -93,7 +94,7 @@ CONFIG_LIMITED_SUPPORT = {
 
 
 CONFIG_ATTRIBUTES = {
-    DOMAIN: {
+    FAN_DOMAIN: {
         "platform": "group",
         CONF_ENTITIES: [*FULL_FAN_ENTITY_IDS, *LIMITED_FAN_ENTITY_IDS],
         CONF_UNIQUE_ID: "unique_identifier",
@@ -102,20 +103,21 @@ CONFIG_ATTRIBUTES = {
 
 
 @pytest.fixture
-async def setup_comp(hass, config_count):
+async def setup_comp(
+    hass: HomeAssistant, config_count: tuple[dict[str, Any], int]
+) -> None:
     """Set up group fan component."""
     config, count = config_count
-    with assert_setup_component(count, DOMAIN):
-        await async_setup_component(hass, DOMAIN, config)
+    with assert_setup_component(count, FAN_DOMAIN):
+        await async_setup_component(hass, FAN_DOMAIN, config)
     await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
 
 
 @pytest.mark.parametrize("config_count", [(CONFIG_ATTRIBUTES, 1)])
-async def test_state(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry, setup_comp
-) -> None:
+@pytest.mark.usefixtures("setup_comp")
+async def test_state(hass: HomeAssistant, entity_registry: er.EntityRegistry) -> None:
     """Test handling of state.
 
     The group state is on if at least one group member is on.
@@ -210,7 +212,8 @@ async def test_state(
 
 
 @pytest.mark.parametrize("config_count", [(CONFIG_ATTRIBUTES, 1)])
-async def test_attributes(hass: HomeAssistant, setup_comp) -> None:
+@pytest.mark.usefixtures("setup_comp")
+async def test_attributes(hass: HomeAssistant) -> None:
     """Test handling of state attributes."""
     state = hass.states.get(FAN_GROUP)
     assert state.state == STATE_UNAVAILABLE
@@ -267,7 +270,8 @@ async def test_attributes(hass: HomeAssistant, setup_comp) -> None:
 
 
 @pytest.mark.parametrize("config_count", [(CONFIG_FULL_SUPPORT, 2)])
-async def test_direction_oscillating(hass: HomeAssistant, setup_comp) -> None:
+@pytest.mark.usefixtures("setup_comp")
+async def test_direction_oscillating(hass: HomeAssistant) -> None:
     """Test handling of direction and oscillating attributes."""
 
     hass.states.async_set(
@@ -378,7 +382,8 @@ async def test_direction_oscillating(hass: HomeAssistant, setup_comp) -> None:
 
 
 @pytest.mark.parametrize("config_count", [(CONFIG_MISSING_FAN, 2)])
-async def test_state_missing_entity_id(hass: HomeAssistant, setup_comp) -> None:
+@pytest.mark.usefixtures("setup_comp")
+async def test_state_missing_entity_id(hass: HomeAssistant) -> None:
     """Test we can still setup with a missing entity id."""
     state = hass.states.get(FAN_GROUP)
     await hass.async_block_till_done()
@@ -388,7 +393,7 @@ async def test_state_missing_entity_id(hass: HomeAssistant, setup_comp) -> None:
 async def test_setup_before_started(hass: HomeAssistant) -> None:
     """Test we can setup before starting."""
     hass.set_state(CoreState.stopped)
-    assert await async_setup_component(hass, DOMAIN, CONFIG_MISSING_FAN)
+    assert await async_setup_component(hass, FAN_DOMAIN, CONFIG_MISSING_FAN)
 
     await hass.async_block_till_done()
     await hass.async_start()
@@ -398,7 +403,8 @@ async def test_setup_before_started(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize("config_count", [(CONFIG_MISSING_FAN, 2)])
-async def test_reload(hass: HomeAssistant, setup_comp) -> None:
+@pytest.mark.usefixtures("setup_comp")
+async def test_reload(hass: HomeAssistant) -> None:
     """Test the ability to reload fans."""
     await hass.async_block_till_done()
     await hass.async_start()
@@ -421,17 +427,18 @@ async def test_reload(hass: HomeAssistant, setup_comp) -> None:
 
 
 @pytest.mark.parametrize("config_count", [(CONFIG_FULL_SUPPORT, 2)])
-async def test_service_calls(hass: HomeAssistant, setup_comp) -> None:
+@pytest.mark.usefixtures("setup_comp")
+async def test_service_calls(hass: HomeAssistant) -> None:
     """Test calling services."""
     await hass.services.async_call(
-        DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: FAN_GROUP}, blocking=True
+        FAN_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: FAN_GROUP}, blocking=True
     )
     assert hass.states.get(LIVING_ROOM_FAN_ENTITY_ID).state == STATE_ON
     assert hass.states.get(PERCENTAGE_FULL_FAN_ENTITY_ID).state == STATE_ON
     assert hass.states.get(FAN_GROUP).state == STATE_ON
 
     await hass.services.async_call(
-        DOMAIN,
+        FAN_DOMAIN,
         SERVICE_TURN_ON,
         {ATTR_ENTITY_ID: FAN_GROUP, ATTR_PERCENTAGE: 66},
         blocking=True,
@@ -445,14 +452,14 @@ async def test_service_calls(hass: HomeAssistant, setup_comp) -> None:
     assert fan_group_state.attributes[ATTR_PERCENTAGE_STEP] == 100 / 3
 
     await hass.services.async_call(
-        DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: FAN_GROUP}, blocking=True
+        FAN_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: FAN_GROUP}, blocking=True
     )
     assert hass.states.get(LIVING_ROOM_FAN_ENTITY_ID).state == STATE_OFF
     assert hass.states.get(PERCENTAGE_FULL_FAN_ENTITY_ID).state == STATE_OFF
     assert hass.states.get(FAN_GROUP).state == STATE_OFF
 
     await hass.services.async_call(
-        DOMAIN,
+        FAN_DOMAIN,
         SERVICE_SET_PERCENTAGE,
         {ATTR_ENTITY_ID: FAN_GROUP, ATTR_PERCENTAGE: 100},
         blocking=True,
@@ -465,7 +472,7 @@ async def test_service_calls(hass: HomeAssistant, setup_comp) -> None:
     assert fan_group_state.attributes[ATTR_PERCENTAGE] == 100
 
     await hass.services.async_call(
-        DOMAIN,
+        FAN_DOMAIN,
         SERVICE_TURN_ON,
         {ATTR_ENTITY_ID: FAN_GROUP, ATTR_PERCENTAGE: 0},
         blocking=True,
@@ -475,7 +482,7 @@ async def test_service_calls(hass: HomeAssistant, setup_comp) -> None:
     assert hass.states.get(FAN_GROUP).state == STATE_OFF
 
     await hass.services.async_call(
-        DOMAIN,
+        FAN_DOMAIN,
         SERVICE_OSCILLATE,
         {ATTR_ENTITY_ID: FAN_GROUP, ATTR_OSCILLATING: True},
         blocking=True,
@@ -488,7 +495,7 @@ async def test_service_calls(hass: HomeAssistant, setup_comp) -> None:
     assert fan_group_state.attributes[ATTR_OSCILLATING] is True
 
     await hass.services.async_call(
-        DOMAIN,
+        FAN_DOMAIN,
         SERVICE_OSCILLATE,
         {ATTR_ENTITY_ID: FAN_GROUP, ATTR_OSCILLATING: False},
         blocking=True,
@@ -501,7 +508,7 @@ async def test_service_calls(hass: HomeAssistant, setup_comp) -> None:
     assert fan_group_state.attributes[ATTR_OSCILLATING] is False
 
     await hass.services.async_call(
-        DOMAIN,
+        FAN_DOMAIN,
         SERVICE_SET_DIRECTION,
         {ATTR_ENTITY_ID: FAN_GROUP, ATTR_DIRECTION: DIRECTION_FORWARD},
         blocking=True,
@@ -514,7 +521,7 @@ async def test_service_calls(hass: HomeAssistant, setup_comp) -> None:
     assert fan_group_state.attributes[ATTR_DIRECTION] == DIRECTION_FORWARD
 
     await hass.services.async_call(
-        DOMAIN,
+        FAN_DOMAIN,
         SERVICE_SET_DIRECTION,
         {ATTR_ENTITY_ID: FAN_GROUP, ATTR_DIRECTION: DIRECTION_REVERSE},
         blocking=True,
@@ -531,9 +538,9 @@ async def test_nested_group(hass: HomeAssistant) -> None:
     """Test nested fan group."""
     await async_setup_component(
         hass,
-        DOMAIN,
+        FAN_DOMAIN,
         {
-            DOMAIN: [
+            FAN_DOMAIN: [
                 {"platform": "demo"},
                 {
                     "platform": "group",
@@ -571,7 +578,7 @@ async def test_nested_group(hass: HomeAssistant) -> None:
     # Test controlling the nested group
     async with asyncio.timeout(0.5):
         await hass.services.async_call(
-            DOMAIN,
+            FAN_DOMAIN,
             SERVICE_TURN_ON,
             {ATTR_ENTITY_ID: "fan.nested_group"},
             blocking=True,

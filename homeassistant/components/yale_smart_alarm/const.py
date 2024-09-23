@@ -26,7 +26,6 @@ MANUFACTURER = "Yale"
 MODEL = "main"
 
 DOMAIN = "yale_smart_alarm"
-COORDINATOR = "coordinator"
 
 DEFAULT_SCAN_INTERVAL = 15
 
@@ -40,6 +39,8 @@ PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
     Platform.LOCK,
+    Platform.SENSOR,
+    Platform.SWITCH,
 ]
 
 STATE_MAP = {

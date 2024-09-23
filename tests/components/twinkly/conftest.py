@@ -13,7 +13,7 @@ from . import TEST_MODEL, TEST_NAME, TEST_UID, ClientMock
 
 from tests.common import MockConfigEntry
 
-ComponentSetup = Callable[[], Awaitable[ClientMock]]
+type ComponentSetup = Callable[[], Awaitable[ClientMock]]
 
 DOMAIN = "twinkly"
 TITLE = "Twinkly"

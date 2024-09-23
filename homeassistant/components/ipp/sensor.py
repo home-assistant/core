@@ -15,13 +15,13 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_LOCATION, PERCENTAGE, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import utcnow
 
+from . import IPPConfigEntry
 from .const import (
     ATTR_COMMAND_SET,
     ATTR_INFO,
@@ -32,9 +32,7 @@ from .const import (
     ATTR_STATE_MESSAGE,
     ATTR_STATE_REASON,
     ATTR_URI_SUPPORTED,
-    DOMAIN,
 )
-from .coordinator import IPPDataUpdateCoordinator
 from .entity import IPPEntity
 
 
@@ -89,11 +87,11 @@ PRINTER_SENSORS: tuple[IPPSensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: IPPConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up IPP sensor based on a config entry."""
-    coordinator: IPPDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     sensors: list[SensorEntity] = [
         IPPSensor(
             coordinator,
@@ -120,7 +118,10 @@ async def async_setup_entry(
                             ATTR_MARKER_TYPE: marker.marker_type,
                         },
                     ),
-                    value_fn=_get_marker_value_fn(index, lambda marker: marker.level),
+                    value_fn=_get_marker_value_fn(
+                        index,
+                        lambda marker: marker.level if marker.level >= 0 else None,
+                    ),
                 ),
             )
         )

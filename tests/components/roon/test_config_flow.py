@@ -2,9 +2,10 @@
 
 from unittest.mock import patch
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.components.roon.const import DOMAIN
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
@@ -47,7 +48,7 @@ class RoonApiMockException(RoonApiMock):
     @property
     def token(self):
         """Throw exception."""
-        raise Exception
+        raise Exception  # noqa: TRY002
 
 
 class RoonDiscoveryMock:
@@ -93,7 +94,7 @@ async def test_successful_discovery_and_auth(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
         # Should go straight to link if server was discovered
-        assert result["type"] == "form"
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "link"
         assert result["errors"] == {}
 
@@ -135,7 +136,7 @@ async def test_unsuccessful_discovery_user_form_and_auth(hass: HomeAssistant) ->
         await hass.async_block_till_done()
 
         # Should show the form if server was not discovered
-        assert result["type"] == "form"
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "fallback"
         assert result["errors"] == {}
 
@@ -182,7 +183,7 @@ async def test_duplicate_config(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
         # Should show the form if server was not discovered
-        assert result["type"] == "form"
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "fallback"
         assert result["errors"] == {}
 
@@ -194,7 +195,7 @@ async def test_duplicate_config(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-        assert result2["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result2["type"] is FlowResultType.ABORT
         assert result2["reason"] == "already_configured"
 
 
@@ -229,7 +230,7 @@ async def test_successful_discovery_no_auth(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
         # Should go straight to link if server was discovered
-        assert result["type"] == "form"
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "link"
         assert result["errors"] == {}
 
@@ -264,7 +265,7 @@ async def test_unexpected_exception(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
         # Should go straight to link if server was discovered
-        assert result["type"] == "form"
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "link"
         assert result["errors"] == {}
 

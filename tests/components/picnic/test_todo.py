@@ -5,7 +5,8 @@ from unittest.mock import MagicMock, Mock
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.todo import DOMAIN
+from homeassistant.components.todo import ATTR_ITEM, DOMAIN as TODO_DOMAIN, TodoServices
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 
@@ -90,10 +91,10 @@ async def test_create_todo_list_item(
     mock_picnic_api.add_product = Mock()
 
     await hass.services.async_call(
-        DOMAIN,
-        "add_item",
-        {"item": "Melk"},
-        target={"entity_id": ENTITY_ID},
+        TODO_DOMAIN,
+        TodoServices.ADD_ITEM,
+        {ATTR_ITEM: "Melk"},
+        target={ATTR_ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
 
@@ -118,9 +119,9 @@ async def test_create_todo_list_item_not_found(
 
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
-            DOMAIN,
-            "add_item",
-            {"item": "Melk"},
-            target={"entity_id": ENTITY_ID},
+            TODO_DOMAIN,
+            TodoServices.ADD_ITEM,
+            {ATTR_ITEM: "Melk"},
+            target={ATTR_ENTITY_ID: ENTITY_ID},
             blocking=True,
         )

@@ -4,6 +4,7 @@ import datetime
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
+from pyipma.observation import Observation
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -15,7 +16,6 @@ from homeassistant.components.weather import (
     ATTR_WEATHER_WIND_BEARING,
     ATTR_WEATHER_WIND_SPEED,
     DOMAIN as WEATHER_DOMAIN,
-    LEGACY_SERVICE_GET_FORECAST,
     SERVICE_GET_FORECASTS,
 )
 from homeassistant.const import STATE_UNKNOWN
@@ -44,7 +44,7 @@ TEST_CONFIG_HOURLY = {
 class MockBadLocation(MockLocation):
     """Mock Location with unresponsive api."""
 
-    async def observation(self, api):
+    async def observation(self, api) -> Observation | None:
         """Mock Observation."""
         return None
 
@@ -101,10 +101,7 @@ async def test_failed_get_observation_forecast(hass: HomeAssistant) -> None:
 
 @pytest.mark.parametrize(
     ("service"),
-    [
-        SERVICE_GET_FORECASTS,
-        LEGACY_SERVICE_GET_FORECAST,
-    ],
+    [SERVICE_GET_FORECASTS],
 )
 async def test_forecast_service(
     hass: HomeAssistant,

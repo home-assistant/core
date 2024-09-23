@@ -13,7 +13,7 @@ from tests.common import MockConfigEntry, load_json_object_fixture
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.streamlabswater.async_setup_entry", return_value=True
@@ -32,7 +32,7 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture(name="streamlabswater")
-def mock_streamlabswater() -> Generator[AsyncMock, None, None]:
+def mock_streamlabswater() -> Generator[AsyncMock]:
     """Mock the StreamLabs client."""
 
     locations = load_json_object_fixture("streamlabswater/get_locations.json")

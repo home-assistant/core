@@ -28,7 +28,7 @@ async def test_form(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         ollama.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
 
     with (
@@ -49,13 +49,13 @@ async def test_form(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
         # Step 2: model
-        assert result2["type"] == FlowResultType.FORM
+        assert result2["type"] is FlowResultType.FORM
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"], {ollama.CONF_MODEL: TEST_MODEL}
         )
         await hass.async_block_till_done()
 
-    assert result3["type"] == FlowResultType.CREATE_ENTRY
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["data"] == {
         ollama.CONF_URL: "http://localhost:11434",
         ollama.CONF_MODEL: TEST_MODEL,
@@ -75,7 +75,7 @@ async def test_form_need_download(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         ollama.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
 
     pull_ready = asyncio.Event()
@@ -113,14 +113,14 @@ async def test_form_need_download(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
         # Step 2: model
-        assert result2["type"] == FlowResultType.FORM
+        assert result2["type"] is FlowResultType.FORM
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"], {ollama.CONF_MODEL: TEST_MODEL}
         )
         await hass.async_block_till_done()
 
         # Step 3: download
-        assert result3["type"] == FlowResultType.SHOW_PROGRESS
+        assert result3["type"] is FlowResultType.SHOW_PROGRESS
         result4 = await hass.config_entries.flow.async_configure(
             result3["flow_id"],
         )
@@ -128,12 +128,12 @@ async def test_form_need_download(hass: HomeAssistant) -> None:
 
         # Run again without the task finishing.
         # We should still be downloading.
-        assert result4["type"] == FlowResultType.SHOW_PROGRESS
+        assert result4["type"] is FlowResultType.SHOW_PROGRESS
         result4 = await hass.config_entries.flow.async_configure(
             result4["flow_id"],
         )
         await hass.async_block_till_done()
-        assert result4["type"] == FlowResultType.SHOW_PROGRESS
+        assert result4["type"] is FlowResultType.SHOW_PROGRESS
 
         # Signal fake pull method to complete
         pull_ready.set()
@@ -147,7 +147,7 @@ async def test_form_need_download(hass: HomeAssistant) -> None:
             result4["flow_id"],
         )
 
-    assert result5["type"] == FlowResultType.CREATE_ENTRY
+    assert result5["type"] is FlowResultType.CREATE_ENTRY
     assert result5["data"] == {
         ollama.CONF_URL: "http://localhost:11434",
         ollama.CONF_MODEL: TEST_MODEL,
@@ -164,13 +164,18 @@ async def test_options(
     )
     options = await hass.config_entries.options.async_configure(
         options_flow["flow_id"],
-        {ollama.CONF_PROMPT: "test prompt", ollama.CONF_MAX_HISTORY: 100},
+        {
+            ollama.CONF_PROMPT: "test prompt",
+            ollama.CONF_MAX_HISTORY: 100,
+            ollama.CONF_NUM_CTX: 32768,
+        },
     )
     await hass.async_block_till_done()
-    assert options["type"] == FlowResultType.CREATE_ENTRY
+    assert options["type"] is FlowResultType.CREATE_ENTRY
     assert options["data"] == {
         ollama.CONF_PROMPT: "test prompt",
         ollama.CONF_MAX_HISTORY: 100,
+        ollama.CONF_NUM_CTX: 32768,
     }
 
 
@@ -195,7 +200,7 @@ async def test_form_errors(hass: HomeAssistant, side_effect, error) -> None:
             result["flow_id"], {ollama.CONF_URL: "http://localhost:11434"}
         )
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": error}
 
 
@@ -205,6 +210,10 @@ async def test_download_error(hass: HomeAssistant) -> None:
         ollama.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
+    async def _delayed_runtime_error(*args, **kwargs):
+        await asyncio.sleep(0)
+        raise RuntimeError
+
     with (
         patch(
             "homeassistant.components.ollama.config_flow.ollama.AsyncClient.list",
@@ -212,7 +221,7 @@ async def test_download_error(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.ollama.config_flow.ollama.AsyncClient.pull",
-            side_effect=RuntimeError(),
+            _delayed_runtime_error,
         ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -220,15 +229,15 @@ async def test_download_error(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-        assert result2["type"] == FlowResultType.FORM
+        assert result2["type"] is FlowResultType.FORM
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"], {ollama.CONF_MODEL: TEST_MODEL}
         )
         await hass.async_block_till_done()
 
-        assert result3["type"] == FlowResultType.SHOW_PROGRESS
+        assert result3["type"] is FlowResultType.SHOW_PROGRESS
         result4 = await hass.config_entries.flow.async_configure(result3["flow_id"])
         await hass.async_block_till_done()
 
-    assert result4["type"] == FlowResultType.ABORT
+    assert result4["type"] is FlowResultType.ABORT
     assert result4["reason"] == "download_failed"

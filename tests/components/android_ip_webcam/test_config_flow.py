@@ -20,7 +20,7 @@ async def test_form(hass: HomeAssistant, aioclient_mock_fixture) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
 
     with patch(
@@ -36,7 +36,7 @@ async def test_form(hass: HomeAssistant, aioclient_mock_fixture) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "1.1.1.1"
     assert result2["data"] == {
         "host": "1.1.1.1",
@@ -55,7 +55,7 @@ async def test_device_already_configured(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -66,7 +66,7 @@ async def test_device_already_configured(
     )
     await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.ABORT
+    assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "already_configured"
 
 
@@ -87,7 +87,7 @@ async def test_form_invalid_auth(
         {"host": "1.1.1.1", "port": 8080, "username": "user", "password": "wrong-pass"},
     )
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"username": "invalid_auth", "password": "invalid_auth"}
 
 
@@ -110,5 +110,5 @@ async def test_form_cannot_connect(
         },
     )
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}

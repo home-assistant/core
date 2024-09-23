@@ -1,6 +1,6 @@
 """The tests for the mochad switch platform."""
 
-import unittest.mock as mock
+from unittest import mock
 
 import pytest
 
@@ -21,7 +21,7 @@ def pymochad_mock():
 
 
 @pytest.fixture
-def switch_mock(hass):
+def switch_mock(hass: HomeAssistant) -> mochad.MochadSwitch:
     """Mock switch."""
     controller_mock = mock.MagicMock()
     dev_dict = {"address": "a1", "name": "fake_switch"}

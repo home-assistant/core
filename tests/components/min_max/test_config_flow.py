@@ -20,7 +20,7 @@ async def test_config_flow(hass: HomeAssistant, platform: str) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
 
     with patch(
@@ -33,7 +33,7 @@ async def test_config_flow(hass: HomeAssistant, platform: str) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "My min_max"
     assert result["data"] == {}
     assert result["options"] == {
@@ -63,7 +63,7 @@ def get_suggested(schema, key):
                 return None
             return k.description["suggested_value"]
     # Wanted key absent from schema
-    raise Exception
+    raise KeyError("Wanted key absent from schema")
 
 
 @pytest.mark.parametrize("platform", ["sensor"])
@@ -93,7 +93,7 @@ async def test_options(hass: HomeAssistant, platform: str) -> None:
     await hass.async_block_till_done()
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
     schema = result["data_schema"].schema
     assert get_suggested(schema, "entity_ids") == input_sensors1
@@ -108,7 +108,7 @@ async def test_options(hass: HomeAssistant, platform: str) -> None:
             "type": "mean",
         },
     )
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         "entity_ids": input_sensors2,
         "name": "My min_max",

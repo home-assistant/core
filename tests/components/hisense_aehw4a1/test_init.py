@@ -4,9 +4,10 @@ from unittest.mock import patch
 
 from pyaehw4a1 import exceptions
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.components import hisense_aehw4a1
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.setup import async_setup_component
 
 
@@ -27,10 +28,10 @@ async def test_creating_entry_sets_up_climate_discovery(hass: HomeAssistant) -> 
         )
 
         # Confirmation form
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
 
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+        assert result["type"] is FlowResultType.CREATE_ENTRY
 
         await hass.async_block_till_done()
 

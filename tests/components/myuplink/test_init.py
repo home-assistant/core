@@ -26,12 +26,12 @@ async def test_load_unload_entry(
     await setup_integration(hass, mock_config_entry)
     entry = hass.config_entries.async_entries(DOMAIN)[0]
 
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
     await hass.config_entries.async_remove(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert entry.state == ConfigEntryState.NOT_LOADED
+    assert entry.state is ConfigEntryState.NOT_LOADED
 
 
 @pytest.mark.parametrize(
@@ -76,25 +76,23 @@ async def test_expired_token_refresh_failure(
 )
 async def test_devices_created_count(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     mock_myuplink_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test that one device is created."""
     await setup_integration(hass, mock_config_entry)
 
-    device_registry = dr.async_get(hass)
-
     assert len(device_registry.devices) == 1
 
 
 async def test_devices_multiple_created_count(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     mock_myuplink_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test that multiple device are created."""
     await setup_integration(hass, mock_config_entry)
-
-    device_registry = dr.async_get(hass)
 
     assert len(device_registry.devices) == 2

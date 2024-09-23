@@ -13,11 +13,16 @@
       "schedulingType": "weeklyScheduling"
     }
   ],
-  "machine_sn": "GS01234",
+  "machine_sn": "Sn01239157",
   "machine_hw": "2",
   "isPlumbedIn": true,
   "isBackFlushEnabled": false,
   "standByTime": 0,
+  "smartStandBy": {
+    "enabled": true,
+    "minutes": 10,
+    "mode": "LastBrewing"
+  },
   "tankStatus": true,
   "groupCapabilities": [
     {
@@ -121,58 +126,32 @@
       }
     ]
   },
-  "weeklySchedulingConfig": {
-    "enabled": true,
-    "monday": {
+  "wakeUpSleepEntries": [
+    {
+      "days": [
+        "monday",
+        "tuesday",
+        "wednesday",
+        "thursday",
+        "friday",
+        "saturday",
+        "sunday"
+      ],
       "enabled": true,
-      "h_on": 6,
-      "h_off": 16,
-      "m_on": 0,
-      "m_off": 0
+      "id": "Os2OswX",
+      "steam": true,
+      "timeOff": "24:0",
+      "timeOn": "22:0"
     },
-    "tuesday": {
+    {
+      "days": ["sunday"],
       "enabled": true,
-      "h_on": 6,
-      "h_off": 16,
-      "m_on": 0,
-      "m_off": 0
-    },
-    "wednesday": {
-      "enabled": true,
-      "h_on": 6,
-      "h_off": 16,
-      "m_on": 0,
-      "m_off": 0
-    },
-    "thursday": {
-      "enabled": true,
-      "h_on": 6,
-      "h_off": 16,
-      "m_on": 0,
-      "m_off": 0
-    },
-    "friday": {
-      "enabled": true,
-      "h_on": 6,
-      "h_off": 16,
-      "m_on": 0,
-      "m_off": 0
-    },
-    "saturday": {
-      "enabled": true,
-      "h_on": 6,
-      "h_off": 16,
-      "m_on": 0,
-      "m_off": 0
-    },
-    "sunday": {
-      "enabled": true,
-      "h_on": 6,
-      "h_off": 16,
-      "m_on": 0,
-      "m_off": 0
+      "id": "aXFz5bJ",
+      "steam": true,
+      "timeOff": "7:30",
+      "timeOn": "7:0"
     }
-  },
+  ],
   "clock": "1901-07-08T10:29:00",
   "firmwareVersions": [
     {

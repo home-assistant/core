@@ -67,7 +67,7 @@ class NanoleafConfigFlow(ConfigFlow, domain=DOMAIN):
             )
         except Unauthorized:
             pass
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Unknown error connecting to Nanoleaf")
             return self.async_show_form(
                 step_id="user",
@@ -173,7 +173,7 @@ class NanoleafConfigFlow(ConfigFlow, domain=DOMAIN):
             )
         except Unavailable:
             return self.async_abort(reason="cannot_connect")
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Unknown error authorizing Nanoleaf")
             return self.async_show_form(step_id="link", errors={"base": "unknown"})
 
@@ -200,7 +200,7 @@ class NanoleafConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="cannot_connect")
         except InvalidToken:
             return self.async_abort(reason="invalid_token")
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception(
                 "Unknown error connecting with Nanoleaf at %s", self.nanoleaf.host
             )
@@ -215,7 +215,7 @@ class NanoleafConfigFlow(ConfigFlow, domain=DOMAIN):
                 self.discovery_conf.pop(self.nanoleaf.host)
             if self.device_id in self.discovery_conf:
                 self.discovery_conf.pop(self.device_id)
-            _LOGGER.info(
+            _LOGGER.debug(
                 "Successfully imported Nanoleaf %s from the discovery integration",
                 name,
             )

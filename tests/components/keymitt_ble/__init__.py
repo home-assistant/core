@@ -46,13 +46,14 @@ SERVICE_INFO = BluetoothServiceInfoBleak(
     device=generate_ble_device("aa:bb:cc:dd:ee:ff", "mibp"),
     time=0,
     connectable=True,
+    tx_power=-127,
 )
 
 
 class MockMicroBotApiClient:
     """Mock MicroBotApiClient."""
 
-    def __init__(self, device, token):
+    def __init__(self, device, token) -> None:
         """Mock init."""
 
     async def connect(self, init):
@@ -69,7 +70,7 @@ class MockMicroBotApiClient:
 class MockMicroBotApiClientFail:
     """Mock MicroBotApiClient."""
 
-    def __init__(self, device, token):
+    def __init__(self, device, token) -> None:
         """Mock init."""
 
     async def connect(self, init):

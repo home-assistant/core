@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from functools import partial
 import math
 from typing import Any
 
@@ -13,9 +14,7 @@ from homeassistant.components.fan import (
     FanEntity,
     FanEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.core import callback
 from homeassistant.util.percentage import (
     ordered_list_item_to_percentage,
     percentage_to_ordered_list_item,
@@ -34,20 +33,6 @@ from .enum_mapper import EsphomeEnumMapper
 ORDERED_NAMED_FAN_SPEEDS = [FanSpeed.LOW, FanSpeed.MEDIUM, FanSpeed.HIGH]
 
 
-async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
-) -> None:
-    """Set up ESPHome fans based on a config entry."""
-    await platform_async_setup_entry(
-        hass,
-        entry,
-        async_add_entities,
-        info_type=FanInfo,
-        entity_type=EsphomeFan,
-        state_type=FanState,
-    )
-
-
 _FAN_DIRECTIONS: EsphomeEnumMapper[FanDirection, str] = EsphomeEnumMapper(
     {
         FanDirection.FORWARD: DIRECTION_FORWARD,
@@ -60,6 +45,7 @@ class EsphomeFan(EsphomeEntity[FanInfo, FanState], FanEntity):
     """A fan implementation for ESPHome."""
 
     _supports_speed_levels: bool = True
+    _enable_turn_on_off_backwards_compatibility = False
 
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed percentage of the fan."""
@@ -163,7 +149,7 @@ class EsphomeFan(EsphomeEntity[FanInfo, FanState], FanEntity):
         api_version = self._api_version
         supports_speed_levels = api_version.major == 1 and api_version.minor > 3
         self._supports_speed_levels = supports_speed_levels
-        flags = FanEntityFeature(0)
+        flags = FanEntityFeature.TURN_OFF | FanEntityFeature.TURN_ON
         if static_info.supports_oscillation:
             flags |= FanEntityFeature.OSCILLATE
         if static_info.supports_speed:
@@ -178,3 +164,11 @@ class EsphomeFan(EsphomeEntity[FanInfo, FanState], FanEntity):
             self._attr_speed_count = len(ORDERED_NAMED_FAN_SPEEDS)
         else:
             self._attr_speed_count = static_info.supported_speed_levels
+
+
+async_setup_entry = partial(
+    platform_async_setup_entry,
+    info_type=FanInfo,
+    entity_type=EsphomeFan,
+    state_type=FanState,
+)

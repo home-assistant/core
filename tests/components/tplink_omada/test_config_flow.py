@@ -43,7 +43,7 @@ async def test_form_single_site(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     with (
@@ -64,7 +64,7 @@ async def test_form_single_site(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "OC200 (Display Name)"
     assert result2["data"] == MOCK_ENTRY_DATA
     assert len(mock_setup_entry.mock_calls) == 1
@@ -76,7 +76,7 @@ async def test_form_multiple_sites(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
@@ -100,7 +100,7 @@ async def test_form_multiple_sites(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "site"
 
     with patch(
@@ -115,7 +115,7 @@ async def test_form_multiple_sites(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result3["type"] == FlowResultType.CREATE_ENTRY
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == "OC200 (Site 2)"
     assert result3["data"] == {
         "host": "https://fake.omada.host",
@@ -142,7 +142,7 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
             MOCK_USER_DATA,
         )
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "invalid_auth"}
 
 
@@ -161,7 +161,7 @@ async def test_form_api_error(hass: HomeAssistant) -> None:
             MOCK_USER_DATA,
         )
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}
 
 
@@ -180,7 +180,7 @@ async def test_form_generic_exception(hass: HomeAssistant) -> None:
             MOCK_USER_DATA,
         )
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}
 
 
@@ -199,7 +199,7 @@ async def test_form_unsupported_controller(hass: HomeAssistant) -> None:
             MOCK_USER_DATA,
         )
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "unsupported_controller"}
 
 
@@ -218,7 +218,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
             MOCK_USER_DATA,
         )
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
@@ -237,7 +237,7 @@ async def test_form_no_sites(hass: HomeAssistant) -> None:
             MOCK_USER_DATA,
         )
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "no_sites_found"}
 
 
@@ -251,16 +251,9 @@ async def test_async_step_reauth_success(hass: HomeAssistant) -> None:
     )
     mock_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": mock_entry.entry_id,
-        },
-        data=mock_entry.data,
-    )
+    result = await mock_entry.start_reauth_flow(hass)
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
     with patch(
@@ -274,7 +267,7 @@ async def test_async_step_reauth_success(hass: HomeAssistant) -> None:
         )
     await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.ABORT
+    assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "reauth_successful"
     mocked_validate.assert_called_once_with(
         hass,
@@ -298,16 +291,9 @@ async def test_async_step_reauth_invalid_auth(hass: HomeAssistant) -> None:
     )
     mock_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": mock_entry.entry_id,
-        },
-        data=mock_entry.data,
-    )
+    result = await mock_entry.start_reauth_flow(hass)
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
     with patch(
@@ -319,7 +305,7 @@ async def test_async_step_reauth_invalid_auth(hass: HomeAssistant) -> None:
         )
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
     assert result2["errors"] == {"base": "invalid_auth"}
 

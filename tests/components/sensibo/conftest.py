@@ -74,7 +74,7 @@ def load_json_from_fixture(load_data: str) -> SensiboData:
     return json_data
 
 
-@pytest.fixture(name="load_data", scope="session")
+@pytest.fixture(name="load_data", scope="package")
 def load_data_from_fixture() -> str:
     """Load fixture with fixture data and return."""
     return load_fixture("data.json", "sensibo")

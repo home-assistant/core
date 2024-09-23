@@ -653,7 +653,7 @@ class LazyState(State):
             "last_updated": last_updated_isoformat,
         }
 
-    def __eq__(self, other: Any) -> bool:
+    def __eq__(self, other: object) -> bool:
         """Return the comparison."""
         return (
             other.__class__ in [self.__class__, State]

@@ -32,7 +32,12 @@ async def async_setup_entry(
 class BalboaPumpFanEntity(BalboaEntity, FanEntity):
     """Representation of a Balboa Spa pump fan entity."""
 
-    _attr_supported_features = FanEntityFeature.SET_SPEED
+    _attr_supported_features = (
+        FanEntityFeature.SET_SPEED
+        | FanEntityFeature.TURN_OFF
+        | FanEntityFeature.TURN_ON
+    )
+    _enable_turn_on_off_backwards_compatibility = False
     _attr_translation_key = "pump"
 
     def __init__(self, control: SpaControl) -> None:

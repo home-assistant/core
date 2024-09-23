@@ -7,7 +7,7 @@ from aiocomelit import CannotAuthenticate, CannotConnect
 import pytest
 
 from homeassistant.components.comelit.const import DOMAIN
-from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_PIN, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -40,13 +40,13 @@ async def test_full_flow(
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
         )
-        assert result["type"] == FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "user"
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=user_input
         )
-        assert result["type"] == FlowResultType.CREATE_ENTRY
+        assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["data"][CONF_HOST] == user_input[CONF_HOST]
         assert result["data"][CONF_PORT] == user_input[CONF_PORT]
         assert result["data"][CONF_PIN] == user_input[CONF_PIN]
@@ -70,7 +70,7 @@ async def test_exception_connection(hass: HomeAssistant, side_effect, error) -> 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result.get("type") == FlowResultType.FORM
+    assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "user"
 
     with (
@@ -89,7 +89,7 @@ async def test_exception_connection(hass: HomeAssistant, side_effect, error) -> 
             result["flow_id"], user_input=MOCK_USER_BRIDGE_DATA
         )
 
-        assert result["type"] == FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "user"
         assert result["errors"] is not None
         assert result["errors"]["base"] == error
@@ -100,6 +100,9 @@ async def test_reauth_successful(hass: HomeAssistant) -> None:
 
     mock_config = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_BRIDGE_DATA)
     mock_config.add_to_hass(hass)
+    result = await mock_config.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
 
     with (
         patch(
@@ -113,15 +116,6 @@ async def test_reauth_successful(hass: HomeAssistant) -> None:
     ):
         mock_request_get.return_value.status_code = 200
 
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_REAUTH, "entry_id": mock_config.entry_id},
-            data=mock_config.data,
-        )
-
-        assert result["type"] == FlowResultType.FORM
-        assert result["step_id"] == "reauth_confirm"
-
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={
@@ -130,7 +124,7 @@ async def test_reauth_successful(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-        assert result["type"] == FlowResultType.ABORT
+        assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "reauth_successful"
 
 
@@ -147,6 +141,9 @@ async def test_reauth_not_successful(hass: HomeAssistant, side_effect, error) ->
 
     mock_config = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_BRIDGE_DATA)
     mock_config.add_to_hass(hass)
+    result = await mock_config.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
 
     with (
         patch("aiocomelit.api.ComeliteSerialBridgeApi.login", side_effect=side_effect),
@@ -155,15 +152,6 @@ async def test_reauth_not_successful(hass: HomeAssistant, side_effect, error) ->
         ),
         patch("homeassistant.components.comelit.async_setup_entry"),
     ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_REAUTH, "entry_id": mock_config.entry_id},
-            data=mock_config.data,
-        )
-
-        assert result["type"] == FlowResultType.FORM
-        assert result["step_id"] == "reauth_confirm"
-
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={
@@ -171,7 +159,7 @@ async def test_reauth_not_successful(hass: HomeAssistant, side_effect, error) ->
             },
         )
 
-        assert result["type"] == FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "reauth_confirm"
         assert result["errors"] is not None
         assert result["errors"]["base"] == error

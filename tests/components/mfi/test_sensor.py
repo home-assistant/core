@@ -1,7 +1,7 @@
 """The tests for the mFi sensor platform."""
 
 from copy import deepcopy
-import unittest.mock as mock
+from unittest import mock
 
 from mficlient.client import FailedToLogin
 import pytest
@@ -116,13 +116,13 @@ async def test_setup_adds_proper_devices(hass: HomeAssistant) -> None:
 
 
 @pytest.fixture(name="port")
-def port_fixture():
+def port_fixture() -> mock.MagicMock:
     """Port fixture."""
     return mock.MagicMock()
 
 
 @pytest.fixture(name="sensor")
-def sensor_fixture(hass, port):
+def sensor_fixture(hass: HomeAssistant, port: mock.MagicMock) -> mfi.MfiSensor:
     """Sensor fixture."""
     sensor = mfi.MfiSensor(port, hass)
     sensor.hass = hass

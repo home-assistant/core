@@ -106,18 +106,18 @@ class ObihaiServiceSensors(SensorEntity):
 
             if not self.requester.available:
                 self.requester.available = True
-                LOGGER.info("Connection restored")
+                LOGGER.warning("Connection restored")
             self._attr_available = True
-
-            return
 
         except RequestException as exc:
             if self.requester.available:
                 LOGGER.warning("Connection failed, Obihai offline? %s", exc)
+            self._attr_native_value = None
+            self._attr_available = False
+            self.requester.available = False
         except IndexError as exc:
             if self.requester.available:
                 LOGGER.warning("Connection failed, bad response: %s", exc)
-
-        self._attr_native_value = None
-        self._attr_available = False
-        self.requester.available = False
+            self._attr_native_value = None
+            self._attr_available = False
+            self.requester.available = False

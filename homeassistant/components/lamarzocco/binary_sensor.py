@@ -3,19 +3,18 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from lmcloud import LMCloud as LaMarzoccoClient
+from lmcloud.models import LaMarzoccoMachineConfig
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from . import LaMarzoccoConfigEntry
 from .entity import LaMarzoccoEntity, LaMarzoccoEntityDescription
 
 
@@ -26,7 +25,7 @@ class LaMarzoccoBinarySensorEntityDescription(
 ):
     """Description of a La Marzocco binary sensor."""
 
-    is_on_fn: Callable[[LaMarzoccoClient], bool]
+    is_on_fn: Callable[[LaMarzoccoMachineConfig], bool]
 
 
 ENTITIES: tuple[LaMarzoccoBinarySensorEntityDescription, ...] = (
@@ -34,7 +33,7 @@ ENTITIES: tuple[LaMarzoccoBinarySensorEntityDescription, ...] = (
         key="water_tank",
         translation_key="water_tank",
         device_class=BinarySensorDeviceClass.PROBLEM,
-        is_on_fn=lambda lm: not lm.current_status.get("water_reservoir_contact"),
+        is_on_fn=lambda config: not config.water_contact,
         entity_category=EntityCategory.DIAGNOSTIC,
         supported_fn=lambda coordinator: coordinator.local_connection_configured,
     ),
@@ -42,8 +41,15 @@ ENTITIES: tuple[LaMarzoccoBinarySensorEntityDescription, ...] = (
         key="brew_active",
         translation_key="brew_active",
         device_class=BinarySensorDeviceClass.RUNNING,
-        is_on_fn=lambda lm: bool(lm.current_status.get("brew_active")),
-        available_fn=lambda lm: lm.websocket_connected,
+        is_on_fn=lambda config: config.brew_active,
+        available_fn=lambda device: device.websocket_connected,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    LaMarzoccoBinarySensorEntityDescription(
+        key="backflush_enabled",
+        translation_key="backflush_enabled",
+        device_class=BinarySensorDeviceClass.RUNNING,
+        is_on_fn=lambda config: config.backflush_enabled,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
 )
@@ -51,11 +57,11 @@ ENTITIES: tuple[LaMarzoccoBinarySensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    entry: LaMarzoccoConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up binary sensor entities."""
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = entry.runtime_data
 
     async_add_entities(
         LaMarzoccoBinarySensorEntity(coordinator, description)
@@ -72,4 +78,4 @@ class LaMarzoccoBinarySensorEntity(LaMarzoccoEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
-        return self.entity_description.is_on_fn(self.coordinator.lm)
+        return self.entity_description.is_on_fn(self.coordinator.device.config)

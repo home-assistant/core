@@ -13,15 +13,19 @@ from homeassistant.const import (
     ATTR_NAME,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_ZONE,
-    UnitOfLength,
 )
-from homeassistant.core import Event, HomeAssistant, State, callback
+from homeassistant.core import (
+    Event,
+    EventStateChangedData,
+    HomeAssistant,
+    State,
+    callback,
+)
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util.location import distance
-from homeassistant.util.unit_conversion import DistanceConverter
 
 from .const import (
     ATTR_DIR_OF_TRAVEL,
@@ -38,6 +42,8 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+type ProximityConfigEntry = ConfigEntry[ProximityDataUpdateCoordinator]
 
 
 @dataclass
@@ -67,7 +73,7 @@ DEFAULT_PROXIMITY_DATA: dict[str, str | int | None] = {
 class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
     """Proximity data update coordinator."""
 
-    config_entry: ConfigEntry
+    config_entry: ProximityConfigEntry
 
     def __init__(
         self, hass: HomeAssistant, friendly_name: str, config: ConfigType
@@ -100,10 +106,14 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
         self.entity_mapping[tracked_entity_id].append(entity_id)
 
     async def async_check_proximity_state_change(
-        self, entity: str, old_state: State | None, new_state: State | None
+        self,
+        event: Event[EventStateChangedData],
     ) -> None:
         """Fetch and process state change event."""
-        self.state_change_data = StateChangedData(entity, old_state, new_state)
+        data = event.data
+        self.state_change_data = StateChangedData(
+            data["entity_id"], data["old_state"], data["new_state"]
+        )
         await self.async_refresh()
 
     async def async_check_tracked_entity_change(
@@ -132,18 +142,6 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
                     ],
                 },
             )
-
-    def convert_legacy(self, value: float | str) -> float | str:
-        """Round and convert given distance value."""
-        if isinstance(value, str):
-            return value
-        return round(
-            DistanceConverter.convert(
-                value,
-                UnitOfLength.METERS,
-                self.unit_of_measurement,
-            )
-        )
 
     def _calc_distance_to_zone(
         self,
@@ -338,7 +336,7 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
             if cast(int, nearest_distance_to) == int(distance_to):
                 _LOGGER.debug("set equally close entity_data: %s", entity_data)
                 proximity_data[ATTR_NEAREST] = (
-                    f"{proximity_data[ATTR_NEAREST]}, {str(entity_data[ATTR_NAME])}"
+                    f"{proximity_data[ATTR_NEAREST]}, {entity_data[ATTR_NAME]!s}"
                 )
 
         return ProximityData(proximity_data, entities_data)

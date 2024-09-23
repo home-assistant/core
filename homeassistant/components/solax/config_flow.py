@@ -56,7 +56,7 @@ class SolaxConfigFlow(ConfigFlow, domain=DOMAIN):
             serial_number = await validate_api(user_input)
         except (ConnectionError, DiscoveryError):
             errors["base"] = "cannot_connect"
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:

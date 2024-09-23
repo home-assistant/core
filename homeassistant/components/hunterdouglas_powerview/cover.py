@@ -25,15 +25,14 @@ from homeassistant.components.cover import (
     CoverEntity,
     CoverEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 
-from .const import DOMAIN, STATE_ATTRIBUTE_ROOM_NAME
+from .const import STATE_ATTRIBUTE_ROOM_NAME
 from .coordinator import PowerviewShadeUpdateCoordinator
 from .entity import ShadeEntity
-from .model import PowerviewDeviceInfo, PowerviewEntryData
+from .model import PowerviewConfigEntry, PowerviewDeviceInfo
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,12 +48,13 @@ SCAN_INTERVAL = timedelta(minutes=10)
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: PowerviewConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the hunter douglas shades."""
-
-    pv_entry: PowerviewEntryData = hass.data[DOMAIN][entry.entry_id]
-    coordinator: PowerviewShadeUpdateCoordinator = pv_entry.coordinator
+    pv_entry = entry.runtime_data
+    coordinator = pv_entry.coordinator
 
     async def _async_initial_refresh() -> None:
         """Force position refresh shortly after adding.
@@ -67,7 +67,8 @@ async def async_setup_entry(
 
         for shade in pv_entry.shade_data.values():
             _LOGGER.debug("Initial refresh of shade: %s", shade.name)
-            await shade.refresh(suppress_timeout=True)  # default 15 second timeout
+            async with coordinator.radio_operation_lock:
+                await shade.refresh(suppress_timeout=True)  # default 15 second timeout
 
     entities: list[ShadeEntity] = []
     for shade in pv_entry.shade_data.values():
@@ -207,7 +208,8 @@ class PowerViewShadeBase(ShadeEntity, CoverEntity):
     async def _async_execute_move(self, move: ShadePosition) -> None:
         """Execute a move that can affect multiple positions."""
         _LOGGER.debug("Move request %s: %s", self.name, move)
-        response = await self._shade.move(move)
+        async with self.coordinator.radio_operation_lock:
+            response = await self._shade.move(move)
         _LOGGER.debug("Move response %s: %s", self.name, response)
 
         # Process the response from the hub (including new positions)
@@ -318,7 +320,10 @@ class PowerViewShadeBase(ShadeEntity, CoverEntity):
             # error if are already have one in flight
             return
         # suppress timeouts caused by hub nightly reboot
-        await self._shade.refresh(suppress_timeout=True)  # default 15 second timeout
+        async with self.coordinator.radio_operation_lock:
+            await self._shade.refresh(
+                suppress_timeout=True
+            )  # default 15 second timeout
         _LOGGER.debug("Process update %s: %s", self.name, self._shade.current_position)
         self._async_update_shade_data(self._shade.current_position)
 

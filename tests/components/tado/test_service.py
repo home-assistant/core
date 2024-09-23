@@ -80,7 +80,7 @@ async def test_add_meter_readings_exception(
             blocking=True,
         )
 
-        assert "Could not set meter reading" in str(exc)
+    assert "Could not set meter reading" in str(exc)
 
 
 async def test_add_meter_readings_invalid(
@@ -109,7 +109,7 @@ async def test_add_meter_readings_invalid(
             blocking=True,
         )
 
-        assert "invalid new reading" in str(exc)
+    assert "invalid new reading" in str(exc)
 
 
 async def test_add_meter_readings_duplicate(
@@ -138,4 +138,4 @@ async def test_add_meter_readings_duplicate(
             blocking=True,
         )
 
-        assert "reading already exists for date" in str(exc)
+    assert "reading already exists for date" in str(exc)

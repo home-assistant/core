@@ -214,7 +214,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-class MicrosoftFaceGroupEntity(Entity):
+class MicrosoftFaceGroupEntity(Entity):  # pylint: disable=hass-enforce-class-module
     """Person-Group state/data Entity."""
 
     _attr_should_poll = False
@@ -244,11 +244,7 @@ class MicrosoftFaceGroupEntity(Entity):
     @property
     def extra_state_attributes(self):
         """Return device specific state attributes."""
-        attr = {}
-        for name, p_id in self._api.store[self._id].items():
-            attr[name] = p_id
-
-        return attr
+        return dict(self._api.store[self._id])
 
 
 class MicrosoftFace:

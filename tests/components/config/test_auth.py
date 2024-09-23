@@ -7,11 +7,13 @@ from homeassistant.components.config import auth as auth_config
 from homeassistant.core import HomeAssistant
 
 from tests.common import CLIENT_ID, MockGroup, MockUser
-from tests.typing import WebSocketGenerator
+from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
 @pytest.fixture(autouse=True)
-async def setup_config(hass, aiohttp_client):
+async def setup_config(
+    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator
+) -> None:
     """Fixture that sets up the auth provider homeassistant module."""
     auth_config.async_setup(hass)
 

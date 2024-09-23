@@ -8,7 +8,13 @@ from typing import Any
 from homeassistant.components import system_health
 from homeassistant.core import HomeAssistant, callback
 
-from .data import get_host_info, get_info, get_os_info, get_supervisor_info
+from .coordinator import (
+    get_host_info,
+    get_info,
+    get_network_info,
+    get_os_info,
+    get_supervisor_info,
+)
 
 SUPERVISOR_PING = "http://{ip_address}/supervisor/ping"
 OBSERVER_URL = "http://{ip_address}:4357"
@@ -28,6 +34,7 @@ async def system_health_info(hass: HomeAssistant) -> dict[str, Any]:
     info = get_info(hass) or {}
     host_info = get_host_info(hass) or {}
     supervisor_info = get_supervisor_info(hass)
+    network_info = get_network_info(hass) or {}
 
     healthy: bool | dict[str, str]
     if supervisor_info is not None and supervisor_info.get("healthy"):
@@ -57,6 +64,10 @@ async def system_health_info(hass: HomeAssistant) -> dict[str, Any]:
         "disk_used": f"{host_info.get('disk_used')} GB",
         "healthy": healthy,
         "supported": supported,
+        "host_connectivity": network_info.get("host_internet"),
+        "supervisor_connectivity": network_info.get("supervisor_internet"),
+        "ntp_synchronized": host_info.get("dt_synchronized"),
+        "virtualization": host_info.get("virtualization"),
     }
 
     if info.get("hassos") is not None:

@@ -4,10 +4,11 @@ from unittest.mock import patch
 
 from apyhiveapi.helper import hive_exceptions
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.components.hive.const import CONF_CODE, CONF_DEVICE_NAME, DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
@@ -52,7 +53,7 @@ async def test_import_flow(hass: HomeAssistant) -> None:
             data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
         )
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == USERNAME
     assert result["data"] == {
         CONF_USERNAME: USERNAME,
@@ -76,7 +77,7 @@ async def test_user_flow(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     with (
@@ -104,7 +105,7 @@ async def test_user_flow(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == USERNAME
     assert result2["data"] == {
         CONF_USERNAME: USERNAME,
@@ -129,7 +130,7 @@ async def test_user_flow_2fa(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     with patch(
@@ -146,7 +147,7 @@ async def test_user_flow_2fa(hass: HomeAssistant) -> None:
             },
         )
 
-    assert result2["type"] == data_entry_flow.FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == CONF_CODE
     assert result2["errors"] == {}
 
@@ -167,7 +168,7 @@ async def test_user_flow_2fa(hass: HomeAssistant) -> None:
             },
         )
 
-    assert result3["type"] == data_entry_flow.FlowResultType.FORM
+    assert result3["type"] is FlowResultType.FORM
     assert result3["step_id"] == "configuration"
     assert result3["errors"] == {}
 
@@ -200,7 +201,7 @@ async def test_user_flow_2fa(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result4["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result4["type"] is FlowResultType.CREATE_ENTRY
     assert result4["title"] == USERNAME
     assert result4["data"] == {
         CONF_USERNAME: USERNAME,
@@ -245,16 +246,9 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
         "homeassistant.components.hive.config_flow.Auth.login",
         side_effect=hive_exceptions.HiveInvalidPassword(),
     ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={
-                "source": config_entries.SOURCE_REAUTH,
-                "unique_id": mock_config.unique_id,
-            },
-            data=mock_config.data,
-        )
+        result = await mock_config.start_reauth_flow(hass)
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_password"}
 
     with patch(
@@ -278,7 +272,7 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
 
     assert mock_config.data.get("username") == USERNAME
     assert mock_config.data.get("password") == UPDATED_PASSWORD
-    assert result2["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "reauth_successful"
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
@@ -304,16 +298,9 @@ async def test_reauth_2fa_flow(hass: HomeAssistant) -> None:
         "homeassistant.components.hive.config_flow.Auth.login",
         side_effect=hive_exceptions.HiveInvalidPassword(),
     ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={
-                "source": config_entries.SOURCE_REAUTH,
-                "unique_id": mock_config.unique_id,
-            },
-            data=mock_config.data,
-        )
+        result = await mock_config.start_reauth_flow(hass)
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_password"}
 
     with patch(
@@ -356,7 +343,7 @@ async def test_reauth_2fa_flow(hass: HomeAssistant) -> None:
 
     assert mock_config.data.get("username") == USERNAME
     assert mock_config.data.get("password") == UPDATED_PASSWORD
-    assert result3["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result3["type"] is FlowResultType.ABORT
     assert result3["reason"] == "reauth_successful"
     assert len(mock_setup_entry.mock_calls) == 1
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
@@ -388,14 +375,14 @@ async def test_option_flow(hass: HomeAssistant) -> None:
         data=None,
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], user_input={CONF_SCAN_INTERVAL: UPDATED_SCAN_INTERVAL}
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_SCAN_INTERVAL] == UPDATED_SCAN_INTERVAL
 
 
@@ -405,7 +392,7 @@ async def test_user_flow_2fa_send_new_code(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     with patch(
@@ -422,7 +409,7 @@ async def test_user_flow_2fa_send_new_code(hass: HomeAssistant) -> None:
             },
         )
 
-    assert result2["type"] == data_entry_flow.FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == CONF_CODE
     assert result2["errors"] == {}
 
@@ -437,7 +424,7 @@ async def test_user_flow_2fa_send_new_code(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result3["type"] == data_entry_flow.FlowResultType.FORM
+    assert result3["type"] is FlowResultType.FORM
     assert result3["step_id"] == CONF_CODE
     assert result3["errors"] == {}
 
@@ -458,7 +445,7 @@ async def test_user_flow_2fa_send_new_code(hass: HomeAssistant) -> None:
             },
         )
 
-    assert result4["type"] == data_entry_flow.FlowResultType.FORM
+    assert result4["type"] is FlowResultType.FORM
     assert result4["step_id"] == "configuration"
     assert result4["errors"] == {}
 
@@ -488,7 +475,7 @@ async def test_user_flow_2fa_send_new_code(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result5["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result5["type"] is FlowResultType.CREATE_ENTRY
     assert result5["title"] == USERNAME
     assert result5["data"] == {
         CONF_USERNAME: USERNAME,
@@ -530,7 +517,7 @@ async def test_abort_if_existing_entry(hass: HomeAssistant) -> None:
         },
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -540,7 +527,7 @@ async def test_user_flow_invalid_username(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     with patch(
@@ -552,7 +539,7 @@ async def test_user_flow_invalid_username(hass: HomeAssistant) -> None:
             {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
         )
 
-    assert result2["type"] == data_entry_flow.FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "user"
     assert result2["errors"] == {"base": "invalid_username"}
 
@@ -563,7 +550,7 @@ async def test_user_flow_invalid_password(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     with patch(
@@ -575,7 +562,7 @@ async def test_user_flow_invalid_password(hass: HomeAssistant) -> None:
             {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
         )
 
-    assert result2["type"] == data_entry_flow.FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "user"
     assert result2["errors"] == {"base": "invalid_password"}
 
@@ -587,7 +574,7 @@ async def test_user_flow_no_internet_connection(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     with patch(
@@ -599,7 +586,7 @@ async def test_user_flow_no_internet_connection(hass: HomeAssistant) -> None:
             {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
         )
 
-    assert result2["type"] == data_entry_flow.FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "user"
     assert result2["errors"] == {"base": "no_internet_available"}
 
@@ -611,7 +598,7 @@ async def test_user_flow_2fa_no_internet_connection(hass: HomeAssistant) -> None
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     with patch(
@@ -625,7 +612,7 @@ async def test_user_flow_2fa_no_internet_connection(hass: HomeAssistant) -> None
             {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
         )
 
-    assert result2["type"] == data_entry_flow.FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == CONF_CODE
     assert result2["errors"] == {}
 
@@ -638,7 +625,7 @@ async def test_user_flow_2fa_no_internet_connection(hass: HomeAssistant) -> None
             {CONF_CODE: MFA_CODE},
         )
 
-    assert result3["type"] == data_entry_flow.FlowResultType.FORM
+    assert result3["type"] is FlowResultType.FORM
     assert result3["step_id"] == CONF_CODE
     assert result3["errors"] == {"base": "no_internet_available"}
 
@@ -649,7 +636,7 @@ async def test_user_flow_2fa_invalid_code(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     with patch(
@@ -663,7 +650,7 @@ async def test_user_flow_2fa_invalid_code(hass: HomeAssistant) -> None:
             {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
         )
 
-    assert result2["type"] == data_entry_flow.FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == CONF_CODE
     assert result2["errors"] == {}
 
@@ -675,7 +662,7 @@ async def test_user_flow_2fa_invalid_code(hass: HomeAssistant) -> None:
             result["flow_id"],
             {CONF_CODE: MFA_INVALID_CODE},
         )
-    assert result3["type"] == data_entry_flow.FlowResultType.FORM
+    assert result3["type"] is FlowResultType.FORM
     assert result3["step_id"] == CONF_CODE
     assert result3["errors"] == {"base": "invalid_code"}
 
@@ -686,7 +673,7 @@ async def test_user_flow_unknown_error(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     with patch(
@@ -699,7 +686,7 @@ async def test_user_flow_unknown_error(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == data_entry_flow.FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}
 
 
@@ -709,7 +696,7 @@ async def test_user_flow_2fa_unknown_error(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     with patch(
@@ -723,7 +710,7 @@ async def test_user_flow_2fa_unknown_error(hass: HomeAssistant) -> None:
             {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
         )
 
-    assert result2["type"] == data_entry_flow.FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == CONF_CODE
 
     with patch(
@@ -735,7 +722,7 @@ async def test_user_flow_2fa_unknown_error(hass: HomeAssistant) -> None:
             {CONF_CODE: MFA_CODE},
         )
 
-    assert result3["type"] == data_entry_flow.FlowResultType.FORM
+    assert result3["type"] is FlowResultType.FORM
     assert result3["step_id"] == "configuration"
     assert result3["errors"] == {}
 
@@ -759,6 +746,6 @@ async def test_user_flow_2fa_unknown_error(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result4["type"] == data_entry_flow.FlowResultType.FORM
+    assert result4["type"] is FlowResultType.FORM
     assert result4["step_id"] == "configuration"
     assert result4["errors"] == {"base": "unknown"}

@@ -8,8 +8,10 @@ from typing import Any
 from uuid import uuid4
 
 from aiohttp import ClientError, web_exceptions
-from pydaikin.daikin_base import Appliance, DaikinException
+from pydaikin.daikin_base import Appliance
 from pydaikin.discovery import Discovery
+from pydaikin.exceptions import DaikinException
+from pydaikin.factory import DaikinFactory
 import voluptuous as vol
 
 from homeassistant.components import zeroconf
@@ -82,7 +84,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
 
         try:
             async with asyncio.timeout(TIMEOUT):
-                device = await Appliance.factory(
+                device: Appliance = await DaikinFactory(
                     host,
                     async_get_clientsession(self.hass),
                     key=key,
@@ -109,7 +111,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                 data_schema=self.schema,
                 errors={"base": "unknown"},
             )
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Unexpected error creating device")
             return self.async_show_form(
                 step_id="user",

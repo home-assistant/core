@@ -144,7 +144,7 @@ async def async_setup_entry(
             isy_data.net_resources.append(resource)
 
     # Dump ISY Clock Information. Future: Add ISY as sensor to Hass with attrs
-    _LOGGER.info(repr(isy.clock))
+    _LOGGER.debug(repr(isy.clock))
 
     isy_data.root = isy
     _async_get_or_create_isy_device_in_registry(hass, entry, isy)
@@ -166,9 +166,7 @@ async def async_setup_entry(
 
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
     entry.async_on_unload(
-        hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_STOP, _async_stop_auto_update, run_immediately=True
-        )
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_stop_auto_update)
     )
 
     # Register Integration-wide Services:

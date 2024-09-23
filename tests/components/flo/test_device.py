@@ -5,23 +5,24 @@ from unittest.mock import patch
 
 from aioflo.errors import RequestError
 from freezegun.api import FrozenDateTimeFactory
+import pytest
 
 from homeassistant.components.flo.const import DOMAIN as FLO_DOMAIN
-from homeassistant.components.flo.device import FloDeviceDataUpdateCoordinator
+from homeassistant.components.flo.coordinator import FloDeviceDataUpdateCoordinator
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from .common import TEST_PASSWORD, TEST_USER_ID
 
-from tests.common import async_fire_time_changed
+from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
+@pytest.mark.usefixtures("aioclient_mock_fixture")
 async def test_device(
     hass: HomeAssistant,
-    config_entry,
-    aioclient_mock_fixture,
+    config_entry: MockConfigEntry,
     aioclient_mock: AiohttpClientMocker,
     freezer: FrozenDateTimeFactory,
 ) -> None:
@@ -90,10 +91,10 @@ async def test_device(
     assert aioclient_mock.call_count == call_count + 6
 
 
+@pytest.mark.usefixtures("aioclient_mock_fixture")
 async def test_device_failures(
     hass: HomeAssistant,
-    config_entry,
-    aioclient_mock_fixture,
+    config_entry: MockConfigEntry,
     aioclient_mock: AiohttpClientMocker,
     freezer: FrozenDateTimeFactory,
 ) -> None:

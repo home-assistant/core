@@ -9,7 +9,7 @@ from homeassistant.util.yaml import dump
 from tests.common import patch_yaml_files
 
 
-def test_remove_device_from_config(hass: HomeAssistant):
+def test_remove_device_from_config(hass: HomeAssistant) -> None:
     """Test the removal of a device from a config."""
     yaml_devices = {
         "test": {

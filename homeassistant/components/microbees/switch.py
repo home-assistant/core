@@ -56,17 +56,17 @@ class MBSwitch(MicroBeesActuatorEntity, SwitchEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
         send_command = await self.coordinator.microbees.sendCommand(self.actuator_id, 1)
-        if send_command:
-            self.actuator.value = True
-            self.async_write_ha_state()
-        else:
+        if not send_command:
             raise HomeAssistantError(f"Failed to turn on {self.name}")
+
+        self.actuator.value = True
+        self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the switch."""
         send_command = await self.coordinator.microbees.sendCommand(self.actuator_id, 0)
-        if send_command:
-            self.actuator.value = False
-            self.async_write_ha_state()
-        else:
+        if not send_command:
             raise HomeAssistantError(f"Failed to turn off {self.name}")
+
+        self.actuator.value = False
+        self.async_write_ha_state()

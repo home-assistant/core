@@ -11,5 +11,5 @@ def create_unique_id(
     """Create unique id."""
     return (
         f"{ferry_from.casefold().replace(' ', '')}-{ferry_to.casefold().replace(' ', '')}"
-        f"-{str(ferry_time)}-{str(weekdays)}"
+        f"-{ferry_time!s}-{weekdays!s}"
     )

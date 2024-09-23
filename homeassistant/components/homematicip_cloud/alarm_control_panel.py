@@ -21,7 +21,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import DOMAIN as HMIPC_DOMAIN
+from .const import DOMAIN
 from .hap import AsyncHome, HomematicipHAP
 
 _LOGGER = logging.getLogger(__name__)
@@ -35,7 +35,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the HomematicIP alrm control panel from a config entry."""
-    hap = hass.data[HMIPC_DOMAIN][config_entry.unique_id]
+    hap = hass.data[DOMAIN][config_entry.unique_id]
     async_add_entities([HomematicipAlarmControlPanelEntity(hap)])
 
 
@@ -47,21 +47,21 @@ class HomematicipAlarmControlPanelEntity(AlarmControlPanelEntity):
         AlarmControlPanelEntityFeature.ARM_HOME
         | AlarmControlPanelEntityFeature.ARM_AWAY
     )
+    _attr_code_arm_required = False
 
     def __init__(self, hap: HomematicipHAP) -> None:
         """Initialize the alarm control panel."""
         self._home: AsyncHome = hap.home
-        _LOGGER.info("Setting up %s", self.name)
 
     @property
     def device_info(self) -> DeviceInfo:
         """Return device specific attributes."""
         return DeviceInfo(
-            identifiers={(HMIPC_DOMAIN, f"ACP {self._home.id}")},
+            identifiers={(DOMAIN, f"ACP {self._home.id}")},
             manufacturer="eQ-3",
             model=CONST_ALARM_CONTROL_PANEL_NAME,
             name=self.name,
-            via_device=(HMIPC_DOMAIN, self._home.id),
+            via_device=(DOMAIN, self._home.id),
         )
 
     @property

@@ -6,7 +6,8 @@
     "sdk_version": "2022.12.0",
     "wifi_credentials_set": true,
     "thread_credentials_set": false,
-    "min_supported_schema_version": 1
+    "min_supported_schema_version": 1,
+    "bluetooth_enabled": false
   },
   "nodes": [
     {

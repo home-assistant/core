@@ -15,7 +15,7 @@ TEST_SYSTEM_STATS = {"system": {"serial_number": TEST_SERIAL, "name": TEST_NAS_N
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.qnap.async_setup_entry", return_value=True
@@ -24,7 +24,7 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
-def qnap_connect(mock_get_source_ip: None) -> Generator[MagicMock, None, None]:
+def qnap_connect() -> Generator[MagicMock]:
     """Mock qnap connection."""
     with patch(
         "homeassistant.components.qnap.config_flow.QNAPStats", autospec=True

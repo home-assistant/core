@@ -57,6 +57,7 @@ class CCM15Climate(CoordinatorEntity[CCM15Coordinator], ClimateEntity):
         HVACMode.HEAT,
         HVACMode.COOL,
         HVACMode.DRY,
+        HVACMode.FAN_ONLY,
         HVACMode.AUTO,
     ]
     _attr_fan_modes = [FAN_AUTO, FAN_LOW, FAN_MEDIUM, FAN_HIGH]

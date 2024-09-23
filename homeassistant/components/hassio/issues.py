@@ -36,12 +36,17 @@ from .const import (
     EVENT_SUPERVISOR_EVENT,
     EVENT_SUPERVISOR_UPDATE,
     EVENT_SUPPORTED_CHANGED,
+    ISSUE_KEY_ADDON_DETACHED_ADDON_MISSING,
+    ISSUE_KEY_ADDON_DETACHED_ADDON_REMOVED,
     ISSUE_KEY_SYSTEM_DOCKER_CONFIG,
+    PLACEHOLDER_KEY_ADDON,
+    PLACEHOLDER_KEY_ADDON_URL,
     PLACEHOLDER_KEY_REFERENCE,
     REQUEST_REFRESH_DELAY,
     UPDATE_KEY_SUPERVISOR,
     SupervisorIssueContext,
 )
+from .coordinator import get_addons_info
 from .handler import HassIO, HassioAPIError
 
 ISSUE_KEY_UNHEALTHY = "unhealthy"
@@ -93,6 +98,8 @@ ISSUE_KEYS_FOR_REPAIRS = {
     "issue_system_multiple_data_disks",
     "issue_system_reboot_required",
     ISSUE_KEY_SYSTEM_DOCKER_CONFIG,
+    ISSUE_KEY_ADDON_DETACHED_ADDON_MISSING,
+    ISSUE_KEY_ADDON_DETACHED_ADDON_REMOVED,
 }
 
 _LOGGER = logging.getLogger(__name__)
@@ -258,6 +265,19 @@ class SupervisorIssues:
             placeholders: dict[str, str] | None = None
             if issue.reference:
                 placeholders = {PLACEHOLDER_KEY_REFERENCE: issue.reference}
+
+                if issue.key == ISSUE_KEY_ADDON_DETACHED_ADDON_MISSING:
+                    placeholders[PLACEHOLDER_KEY_ADDON_URL] = (
+                        f"/hassio/addon/{issue.reference}"
+                    )
+                    addons = get_addons_info(self._hass)
+                    if addons and issue.reference in addons:
+                        placeholders[PLACEHOLDER_KEY_ADDON] = addons[issue.reference][
+                            "name"
+                        ]
+                    else:
+                        placeholders[PLACEHOLDER_KEY_ADDON] = issue.reference
+
             async_create_issue(
                 self._hass,
                 DOMAIN,

@@ -6,14 +6,14 @@ from collections.abc import Awaitable, Callable, Coroutine
 from functools import reduce, wraps
 import logging
 from operator import ior
-from typing import Any, ParamSpec
+from typing import Any
 
 from pyheos import HeosError, const as heos_const
 
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
     ATTR_MEDIA_ENQUEUE,
-    DOMAIN,
+    DOMAIN as MEDIA_PLAYER_DOMAIN,
     BrowseMedia,
     MediaPlayerEnqueue,
     MediaPlayerEntity,
@@ -40,8 +40,6 @@ from .const import (
     SIGNAL_HEOS_PLAYER_ADDED,
     SIGNAL_HEOS_UPDATED,
 )
-
-_P = ParamSpec("_P")
 
 BASE_SUPPORTED_FEATURES = (
     MediaPlayerEntityFeature.VOLUME_MUTE
@@ -85,16 +83,18 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Add media players for a config entry."""
-    players = hass.data[HEOS_DOMAIN][DOMAIN]
+    players = hass.data[HEOS_DOMAIN][MEDIA_PLAYER_DOMAIN]
     devices = [HeosMediaPlayer(player) for player in players.values()]
     async_add_entities(devices, True)
 
 
-_FuncType = Callable[_P, Awaitable[Any]]
-_ReturnFuncType = Callable[_P, Coroutine[Any, Any, None]]
+type _FuncType[**_P] = Callable[_P, Awaitable[Any]]
+type _ReturnFuncType[**_P] = Callable[_P, Coroutine[Any, Any, None]]
 
 
-def log_command_error(command: str) -> Callable[[_FuncType[_P]], _ReturnFuncType[_P]]:
+def log_command_error[**_P](
+    command: str,
+) -> Callable[[_FuncType[_P]], _ReturnFuncType[_P]]:
     """Return decorator that logs command failure."""
 
     def decorator(func: _FuncType[_P]) -> _ReturnFuncType[_P]:
@@ -377,7 +377,7 @@ class HeosMediaPlayer(MediaPlayerEntity):
         return self._media_position_updated_at
 
     @property
-    def media_image_url(self) -> str:
+    def media_image_url(self) -> str | None:
         """Image url of current playing media."""
         # May be an empty string, if so, return None
         image_url = self._player.now_playing_media.image_url

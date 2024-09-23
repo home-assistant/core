@@ -21,17 +21,7 @@ from homeassistant.helpers import (
 )
 from homeassistant.setup import async_setup_component
 
-from tests.common import (
-    MockConfigEntry,
-    async_get_device_automations,
-    async_mock_service,
-)
-
-
-@pytest.fixture
-def calls(hass: HomeAssistant) -> list[ServiceCall]:
-    """Track calls to a mock service."""
-    return async_mock_service(hass, "test", "automation")
+from tests.common import MockConfigEntry, async_get_device_automations
 
 
 async def test_get_triggers(
@@ -105,7 +95,7 @@ async def test_get_triggers_hidden_auxiliary(
             "entity_id": entity_entry.id,
             "metadata": {"secondary": True},
         }
-        for trigger in ["current_option_changed"]
+        for trigger in ("current_option_changed",)
     ]
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, device_entry.id
@@ -117,7 +107,7 @@ async def test_if_fires_on_state_change(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    calls,
+    service_calls: list[ServiceCall],
 ) -> None:
     """Test for turn_on and turn_off triggers firing."""
     config_entry = MockConfigEntry(domain="test", data={})
@@ -210,27 +200,27 @@ async def test_if_fires_on_state_change(
     # Test triggering device trigger with a to state
     hass.states.async_set(entry.entity_id, "option2")
     await hass.async_block_till_done()
-    assert len(calls) == 1
+    assert len(service_calls) == 1
     assert (
-        calls[0].data["some"]
+        service_calls[0].data["some"]
         == f"to - device - {entry.entity_id} - option1 - option2 - None - 0"
     )
 
     # Test triggering device trigger with a from state
     hass.states.async_set(entry.entity_id, "option3")
     await hass.async_block_till_done()
-    assert len(calls) == 2
+    assert len(service_calls) == 2
     assert (
-        calls[1].data["some"]
+        service_calls[1].data["some"]
         == f"from - device - {entry.entity_id} - option2 - option3 - None - 0"
     )
 
     # Test triggering device trigger with both a from and to state
     hass.states.async_set(entry.entity_id, "option1")
     await hass.async_block_till_done()
-    assert len(calls) == 3
+    assert len(service_calls) == 3
     assert (
-        calls[2].data["some"]
+        service_calls[2].data["some"]
         == f"from-to - device - {entry.entity_id} - option3 - option1 - None - 0"
     )
 
@@ -239,7 +229,7 @@ async def test_if_fires_on_state_change_legacy(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    calls,
+    service_calls: list[ServiceCall],
 ) -> None:
     """Test for turn_on and turn_off triggers firing."""
     config_entry = MockConfigEntry(domain="test", data={})
@@ -289,9 +279,9 @@ async def test_if_fires_on_state_change_legacy(
     # Test triggering device trigger with a to state
     hass.states.async_set(entry.entity_id, "option2")
     await hass.async_block_till_done()
-    assert len(calls) == 1
+    assert len(service_calls) == 1
     assert (
-        calls[0].data["some"]
+        service_calls[0].data["some"]
         == f"to - device - {entry.entity_id} - option1 - option2 - None - 0"
     )
 

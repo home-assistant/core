@@ -2,39 +2,22 @@
 
 from unittest.mock import ANY, MagicMock
 
-from pyhomeworks.pyhomeworks import HW_BUTTON_PRESSED, HW_BUTTON_RELEASED
+from pyhomeworks import exceptions as hw_exceptions
+from pyhomeworks.pyhomeworks import (
+    HW_BUTTON_PRESSED,
+    HW_BUTTON_RELEASED,
+    HW_LOGIN_INCORRECT,
+)
+import pytest
 
 from homeassistant.components.homeworks import EVENT_BUTTON_PRESS, EVENT_BUTTON_RELEASE
-from homeassistant.components.homeworks.const import CONF_DIMMERS, CONF_KEYPADS, DOMAIN
+from homeassistant.components.homeworks.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
+from homeassistant.exceptions import ServiceValidationError
 
 from tests.common import MockConfigEntry, async_capture_events
-
-
-async def test_import(
-    hass: HomeAssistant,
-    mock_homeworks: MagicMock,
-) -> None:
-    """Test the Homeworks YAML import."""
-    await async_setup_component(
-        hass,
-        DOMAIN,
-        {
-            DOMAIN: {
-                CONF_HOST: "192.168.0.1",
-                CONF_PORT: 1234,
-                CONF_DIMMERS: [],
-                CONF_KEYPADS: [],
-            }
-        },
-    )
-    await hass.async_block_till_done()
-
-    assert len(hass.config_entries.flow.async_progress()) == 1
-    assert hass.config_entries.flow.async_progress()[0]["context"]["source"] == "import"
 
 
 async def test_load_unload_config_entry(
@@ -48,7 +31,7 @@ async def test_load_unload_config_entry(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
-    mock_homeworks.assert_called_once_with("192.168.0.1", 1234, ANY)
+    mock_homeworks.assert_called_once_with("192.168.0.1", 1234, ANY, None, None)
 
     await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -57,13 +40,60 @@ async def test_load_unload_config_entry(
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 
 
+async def test_load_config_entry_with_credentials(
+    hass: HomeAssistant,
+    mock_config_entry_username_password: MockConfigEntry,
+    mock_homeworks: MagicMock,
+) -> None:
+    """Test the Homeworks configuration entry loading/unloading."""
+    mock_config_entry_username_password.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry_username_password.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry_username_password.state is ConfigEntryState.LOADED
+    mock_homeworks.assert_called_once_with(
+        "192.168.0.1", 1234, ANY, "username", "hunter2"
+    )
+
+    await hass.config_entries.async_unload(mock_config_entry_username_password.entry_id)
+    await hass.async_block_till_done()
+
+    assert not hass.data.get(DOMAIN)
+    assert mock_config_entry_username_password.state is ConfigEntryState.NOT_LOADED
+
+
+async def test_controller_credentials_changed(
+    hass: HomeAssistant,
+    mock_config_entry_username_password: MockConfigEntry,
+    mock_homeworks: MagicMock,
+) -> None:
+    """Test controller credentials changed.
+
+    Note: This just ensures we don't blow up when credentials changed, in the future a
+    reauth flow should be added.
+    """
+    mock_config_entry_username_password.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry_username_password.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry_username_password.state is ConfigEntryState.LOADED
+    mock_homeworks.assert_called_once_with(
+        "192.168.0.1", 1234, ANY, "username", "hunter2"
+    )
+    hw_callback = mock_homeworks.mock_calls[0][1][2]
+
+    hw_callback(HW_LOGIN_INCORRECT, [])
+
+
 async def test_config_entry_not_ready(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_homeworks: MagicMock,
 ) -> None:
     """Test the Homeworks configuration entry not ready."""
-    mock_homeworks.side_effect = ConnectionError
+    mock_homeworks.return_value.connect.side_effect = (
+        hw_exceptions.HomeworksConnectionFailed
+    )
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -85,7 +115,7 @@ async def test_keypad_events(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    mock_homeworks.assert_called_once_with("192.168.0.1", 1234, ANY)
+    mock_homeworks.assert_called_once_with("192.168.0.1", 1234, ANY, None, None)
     hw_callback = mock_homeworks.mock_calls[0][1][2]
 
     hw_callback(HW_BUTTON_PRESSED, ["[02:08:02:01]", 1])
@@ -114,3 +144,99 @@ async def test_keypad_events(
     await hass.async_block_till_done()
     assert len(press_events) == 1
     assert len(release_events) == 1
+
+
+async def test_send_command(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_homeworks: MagicMock,
+) -> None:
+    """Test the send command service."""
+    mock_controller = MagicMock()
+    mock_homeworks.return_value = mock_controller
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    mock_controller._send.reset_mock()
+    await hass.services.async_call(
+        DOMAIN,
+        "send_command",
+        {"controller_id": "main_controller", "command": "KBP, [02:08:02:01], 1"},
+        blocking=True,
+    )
+    assert len(mock_controller._send.mock_calls) == 1
+    assert mock_controller._send.mock_calls[0][1] == ("KBP, [02:08:02:01], 1",)
+
+    mock_controller._send.reset_mock()
+    await hass.services.async_call(
+        DOMAIN,
+        "send_command",
+        {
+            "controller_id": "main_controller",
+            "command": [
+                "KBP, [02:08:02:01], 1",
+                "KBH, [02:08:02:01], 1",
+                "KBR, [02:08:02:01], 1",
+            ],
+        },
+        blocking=True,
+    )
+    assert len(mock_controller._send.mock_calls) == 3
+    assert mock_controller._send.mock_calls[0][1] == ("KBP, [02:08:02:01], 1",)
+    assert mock_controller._send.mock_calls[1][1] == ("KBH, [02:08:02:01], 1",)
+    assert mock_controller._send.mock_calls[2][1] == ("KBR, [02:08:02:01], 1",)
+
+    mock_controller._send.reset_mock()
+    await hass.services.async_call(
+        DOMAIN,
+        "send_command",
+        {
+            "controller_id": "main_controller",
+            "command": [
+                "KBP, [02:08:02:01], 1",
+                "delay 50",
+                "KBH, [02:08:02:01], 1",
+                "dElAy 100",
+                "KBR, [02:08:02:01], 1",
+            ],
+        },
+        blocking=True,
+    )
+    assert len(mock_controller._send.mock_calls) == 3
+    assert mock_controller._send.mock_calls[0][1] == ("KBP, [02:08:02:01], 1",)
+    assert mock_controller._send.mock_calls[1][1] == ("KBH, [02:08:02:01], 1",)
+    assert mock_controller._send.mock_calls[2][1] == ("KBR, [02:08:02:01], 1",)
+
+    mock_controller._send.reset_mock()
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            DOMAIN,
+            "send_command",
+            {"controller_id": "unknown_controller", "command": "KBP, [02:08:02:01], 1"},
+            blocking=True,
+        )
+    assert len(mock_controller._send.mock_calls) == 0
+
+
+async def test_cleanup_on_ha_shutdown(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_homeworks: MagicMock,
+) -> None:
+    """Test cleanup when HA shuts down."""
+    mock_controller = MagicMock()
+    mock_homeworks.return_value = mock_controller
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    mock_homeworks.assert_called_once_with("192.168.0.1", 1234, ANY, None, None)
+    mock_controller.stop.assert_not_called()
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+
+    mock_controller.stop.assert_called_once_with()

@@ -20,6 +20,7 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_PASSWORD, CONF_REGION, CONF_SOURCE, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
 
 from . import DOMAIN
 from .const import CONF_ALLOWED_REGIONS, CONF_GCID, CONF_READ_ONLY, CONF_REFRESH_TOKEN
@@ -28,7 +29,12 @@ DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_USERNAME): str,
         vol.Required(CONF_PASSWORD): str,
-        vol.Required(CONF_REGION): vol.In(CONF_ALLOWED_REGIONS),
+        vol.Required(CONF_REGION): SelectSelector(
+            SelectSelectorConfig(
+                options=CONF_ALLOWED_REGIONS,
+                translation_key="regions",
+            )
+        ),
     }
 )
 

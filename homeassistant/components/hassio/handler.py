@@ -7,8 +7,9 @@ from collections.abc import Callable, Coroutine
 from http import HTTPStatus
 import logging
 import os
-from typing import Any, ParamSpec
+from typing import Any
 
+from aiohasupervisor import SupervisorClient
 import aiohttp
 from yarl import URL
 
@@ -24,8 +25,6 @@ from homeassistant.loader import bind_hass
 
 from .const import ATTR_DISCOVERY, ATTR_MESSAGE, ATTR_RESULT, DOMAIN, X_HASS_SOURCE
 
-_P = ParamSpec("_P")
-
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -33,7 +32,7 @@ class HassioAPIError(RuntimeError):
     """Return if a API trow a error."""
 
 
-def _api_bool(
+def _api_bool[**_P](
     funct: Callable[_P, Coroutine[Any, Any, dict[str, Any]]],
 ) -> Callable[_P, Coroutine[Any, Any, bool]]:
     """Return a boolean."""
@@ -49,7 +48,7 @@ def _api_bool(
     return _wrapper
 
 
-def api_data(
+def api_data[**_P](
     funct: Callable[_P, Coroutine[Any, Any, dict[str, Any]]],
 ) -> Callable[_P, Coroutine[Any, Any, Any]]:
     """Return data of an api."""
@@ -62,17 +61,6 @@ def api_data(
         raise HassioAPIError(data["message"])
 
     return _wrapper
-
-
-@bind_hass
-async def async_get_addon_info(hass: HomeAssistant, slug: str) -> dict:
-    """Return add-on info.
-
-    The add-on must be installed.
-    The caller of the function should handle HassioAPIError.
-    """
-    hassio: HassIO = hass.data[DOMAIN]
-    return await hassio.get_addon_info(slug)
 
 
 @api_data
@@ -334,7 +322,16 @@ class HassIO:
         self.loop = loop
         self.websession = websession
         self._ip = ip
-        self._base_url = URL(f"http://{ip}")
+        base_url = f"http://{ip}"
+        self._base_url = URL(base_url)
+        self._client = SupervisorClient(
+            base_url, os.environ.get("SUPERVISOR_TOKEN", ""), session=websession
+        )
+
+    @property
+    def client(self) -> SupervisorClient:
+        """Return aiohasupervisor client."""
+        return self._client
 
     @_api_bool
     def is_connected(self) -> Coroutine:
@@ -385,12 +382,12 @@ class HassIO:
         return self.send_command("/supervisor/info", method="get")
 
     @api_data
-    def get_addon_info(self, addon: str) -> Coroutine:
-        """Return data for a Add-on.
+    def get_network_info(self) -> Coroutine:
+        """Return data for the Host Network.
 
         This method returns a coroutine.
         """
-        return self.send_command(f"/addons/{addon}/info", method="get")
+        return self.send_command("/network/info", method="get")
 
     @api_data
     def get_core_stats(self) -> Coroutine:
@@ -562,14 +559,13 @@ class HassIO:
 
         This method is a coroutine.
         """
-        url = f"http://{self._ip}{command}"
-        joined_url = self._base_url.join(URL(command))
+        joined_url = self._base_url.with_path(command)
         # This check is to make sure the normalized URL string
         # is the same as the URL string that was passed in. If
         # they are different, then the passed in command URL
         # contained characters that were removed by the normalization
         # such as ../../../../etc/passwd
-        if url != str(joined_url):
+        if joined_url.raw_path != command:
             _LOGGER.error("Invalid request %s", command)
             raise HassioAPIError
 
@@ -612,3 +608,9 @@ class HassIO:
             _LOGGER.error("Client error on %s request %s", command, err)
 
         raise HassioAPIError
+
+
+def get_supervisor_client(hass: HomeAssistant) -> SupervisorClient:
+    """Return supervisor client."""
+    hassio: HassIO = hass.data[DOMAIN]
+    return hassio.client

@@ -8,7 +8,7 @@ from pychannels import Channels
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as MEDIA_PLAYER_PLATFORM_SCHEMA,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
@@ -26,7 +26,7 @@ DATA_CHANNELS = "channels"
 DEFAULT_NAME = "Channels"
 DEFAULT_PORT = 57000
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -49,12 +49,12 @@ async def async_setup_platform(
 
     platform.async_register_entity_service(
         SERVICE_SEEK_FORWARD,
-        {},
+        None,
         "seek_forward",
     )
     platform.async_register_entity_service(
         SERVICE_SEEK_BACKWARD,
-        {},
+        None,
         "seek_backward",
     )
     platform.async_register_entity_service(
@@ -167,8 +167,7 @@ class ChannelsPlayer(MediaPlayerEntity):
     @property
     def source_list(self):
         """List of favorite channels."""
-        sources = [channel["name"] for channel in self.favorite_channels]
-        return sources
+        return [channel["name"] for channel in self.favorite_channels]
 
     @property
     def is_volume_muted(self):

@@ -12,18 +12,16 @@ from screenlogicpy.device_const.pump import PUMP_TYPE
 from screenlogicpy.device_const.system import EQUIPMENT_FLAG
 
 from homeassistant.components.sensor import (
-    DOMAIN,
+    DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN as SL_DOMAIN
 from .coordinator import ScreenlogicDataUpdateCoordinator
 from .entity import (
     ScreenLogicEntity,
@@ -31,6 +29,7 @@ from .entity import (
     ScreenLogicPushEntity,
     ScreenLogicPushEntityDescription,
 )
+from .types import ScreenLogicConfigEntry
 from .util import cleanup_excluded_entity, get_ha_unit
 
 _LOGGER = logging.getLogger(__name__)
@@ -136,11 +135,13 @@ SUPPORTED_INTELLICHEM_SENSORS = [
         subscription_code=CODE.CHEMISTRY_CHANGED,
         data_root=(DEVICE.INTELLICHEM, GROUP.CONFIGURATION),
         key=VALUE.CALCIUM_HARDNESS,
+        entity_registry_enabled_default=False,  # Superseded by number entity
     ),
     ScreenLogicPushSensorDescription(
         subscription_code=CODE.CHEMISTRY_CHANGED,
         data_root=(DEVICE.INTELLICHEM, GROUP.CONFIGURATION),
         key=VALUE.CYA,
+        entity_registry_enabled_default=False,  # Superseded by number entity
     ),
     ScreenLogicPushSensorDescription(
         subscription_code=CODE.CHEMISTRY_CHANGED,
@@ -156,11 +157,13 @@ SUPPORTED_INTELLICHEM_SENSORS = [
         subscription_code=CODE.CHEMISTRY_CHANGED,
         data_root=(DEVICE.INTELLICHEM, GROUP.CONFIGURATION),
         key=VALUE.TOTAL_ALKALINITY,
+        entity_registry_enabled_default=False,  # Superseded by number entity
     ),
     ScreenLogicPushSensorDescription(
         subscription_code=CODE.CHEMISTRY_CHANGED,
         data_root=(DEVICE.INTELLICHEM, GROUP.CONFIGURATION),
         key=VALUE.SALT_TDS_PPM,
+        entity_registry_enabled_default=False,  # Superseded by number entity
     ),
     ScreenLogicPushSensorDescription(
         subscription_code=CODE.CHEMISTRY_CHANGED,
@@ -223,13 +226,11 @@ SUPPORTED_SCG_SENSORS = [
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: ScreenLogicConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up entry."""
-    coordinator: ScreenlogicDataUpdateCoordinator = hass.data[SL_DOMAIN][
-        config_entry.entry_id
-    ]
+    coordinator = config_entry.runtime_data
     gateway = coordinator.gateway
 
     entities: list[ScreenLogicSensor] = [
@@ -266,7 +267,7 @@ async def async_setup_entry(
             chem_sensor_description.key,
         )
         if EQUIPMENT_FLAG.INTELLICHEM not in gateway.equipment_flags:
-            cleanup_excluded_entity(coordinator, DOMAIN, chem_sensor_data_path)
+            cleanup_excluded_entity(coordinator, SENSOR_DOMAIN, chem_sensor_data_path)
             continue
         if gateway.get_data(*chem_sensor_data_path):
             chem_sensor_description = dataclasses.replace(
@@ -281,7 +282,7 @@ async def async_setup_entry(
             scg_sensor_description.key,
         )
         if EQUIPMENT_FLAG.CHLORINATOR not in gateway.equipment_flags:
-            cleanup_excluded_entity(coordinator, DOMAIN, scg_sensor_data_path)
+            cleanup_excluded_entity(coordinator, SENSOR_DOMAIN, scg_sensor_data_path)
             continue
         if gateway.get_data(*scg_sensor_data_path):
             scg_sensor_description = dataclasses.replace(

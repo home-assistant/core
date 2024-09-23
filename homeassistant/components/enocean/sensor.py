@@ -9,7 +9,7 @@ from enocean.utils import combine_hex
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     RestoreSensor,
     SensorDeviceClass,
     SensorEntityDescription,
@@ -30,7 +30,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .device import EnOceanEntity
+from .entity import EnOceanEntity
 
 CONF_MAX_TEMP = "max_temp"
 CONF_MIN_TEMP = "min_temp"
@@ -87,7 +87,7 @@ SENSOR_DESC_WINDOWHANDLE = EnOceanSensorEntityDescription(
 )
 
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_ID): vol.All(cv.ensure_list, [vol.Coerce(int)]),
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,

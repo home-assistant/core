@@ -1,5 +1,7 @@
 {
   "services": {
-    "send_text_command": "mdi:comment-text-outline"
+    "send_text_command": {
+      "service": "mdi:comment-text-outline"
+    }
   }
 }

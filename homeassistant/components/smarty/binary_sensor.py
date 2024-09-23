@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 
-from pysmarty import Smarty
+from pysmarty2 import Smarty
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,

@@ -2,21 +2,17 @@
 
 import pytest
 
-import homeassistant.components.automation as automation
+from homeassistant.components import automation
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.kodi import DOMAIN
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from . import init_integration
 
-from tests.common import (
-    MockConfigEntry,
-    async_get_device_automations,
-    async_mock_service,
-)
+from tests.common import MockConfigEntry, async_get_device_automations
 
 
 @pytest.fixture(autouse=True, name="stub_blueprint_populate")
@@ -25,13 +21,7 @@ def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
 
 
 @pytest.fixture
-def calls(hass):
-    """Track calls to a mock service."""
-    return async_mock_service(hass, "test", "automation")
-
-
-@pytest.fixture
-async def kodi_media_player(hass):
+async def kodi_media_player(hass: HomeAssistant) -> str:
     """Get a kodi media player."""
     await init_integration(hass)
     return f"{MP_DOMAIN}.name"
@@ -61,7 +51,7 @@ async def test_get_triggers(
             "entity_id": entity_entry.id,
             "metadata": {"secondary": False},
         }
-        for trigger in ["turn_off", "turn_on"]
+        for trigger in ("turn_off", "turn_on")
     ]
 
     # Test triggers are either kodi specific triggers or media_player entity triggers
@@ -75,7 +65,10 @@ async def test_get_triggers(
 
 
 async def test_if_fires_on_state_change(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry, calls, kodi_media_player
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    service_calls: list[ServiceCall],
+    kodi_media_player: str,
 ) -> None:
     """Test for turn_on and turn_off triggers firing."""
     entry = entity_registry.async_get(kodi_media_player)
@@ -132,8 +125,8 @@ async def test_if_fires_on_state_change(
     )
 
     await hass.async_block_till_done()
-    assert len(calls) == 1
-    assert calls[0].data["some"] == f"turn_on - {kodi_media_player} - 0"
+    assert len(service_calls) == 2
+    assert service_calls[1].data["some"] == f"turn_on - {kodi_media_player} - 0"
 
     await hass.services.async_call(
         MP_DOMAIN,
@@ -143,12 +136,15 @@ async def test_if_fires_on_state_change(
     )
 
     await hass.async_block_till_done()
-    assert len(calls) == 2
-    assert calls[1].data["some"] == f"turn_off - {kodi_media_player} - 0"
+    assert len(service_calls) == 4
+    assert service_calls[3].data["some"] == f"turn_off - {kodi_media_player} - 0"
 
 
 async def test_if_fires_on_state_change_legacy(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry, calls, kodi_media_player
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    service_calls: list[ServiceCall],
+    kodi_media_player: str,
 ) -> None:
     """Test for turn_on and turn_off triggers firing."""
     entry = entity_registry.async_get(kodi_media_player)
@@ -188,5 +184,5 @@ async def test_if_fires_on_state_change_legacy(
     )
 
     await hass.async_block_till_done()
-    assert len(calls) == 1
-    assert calls[0].data["some"] == f"turn_on - {kodi_media_player} - 0"
+    assert len(service_calls) == 2
+    assert service_calls[1].data["some"] == f"turn_on - {kodi_media_player} - 0"

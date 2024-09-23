@@ -72,5 +72,5 @@ class FreeboxSwitch(SwitchEntity):
 
     async def async_update(self) -> None:
         """Get the state and update it."""
-        datas = await self._router.wifi.get_global_config()
-        self._attr_is_on = bool(datas["enabled"])
+        data = await self._router.wifi.get_global_config()
+        self._attr_is_on = bool(data["enabled"])

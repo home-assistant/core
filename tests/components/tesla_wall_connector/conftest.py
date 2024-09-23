@@ -88,14 +88,12 @@ async def create_wall_connector_entry(
 
 def get_vitals_mock() -> Vitals:
     """Get mocked vitals object."""
-    vitals = MagicMock(auto_spec=Vitals)
-    return vitals
+    return MagicMock(auto_spec=Vitals)
 
 
 def get_lifetime_mock() -> Lifetime:
     """Get mocked lifetime object."""
-    lifetime = MagicMock(auto_spec=Lifetime)
-    return lifetime
+    return MagicMock(auto_spec=Lifetime)
 
 
 @dataclass

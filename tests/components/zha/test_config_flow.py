@@ -1,14 +1,17 @@
 """Tests for ZHA config flow."""
 
+from collections.abc import Callable, Coroutine, Generator
 import copy
 from datetime import timedelta
 from ipaddress import ip_address
 import json
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, create_autospec, patch
 import uuid
 
 import pytest
-import serial.tools.list_ports
+from serial.tools.list_ports_common import ListPortInfo
+from zha.application.const import RadioType
 from zigpy.backups import BackupManager
 import zigpy.config
 from zigpy.config import CONF_DEVICE, CONF_DEVICE_PATH, SCHEMA_DEVICE
@@ -21,13 +24,12 @@ from homeassistant.components import ssdp, usb, zeroconf
 from homeassistant.components.hassio import AddonState
 from homeassistant.components.ssdp import ATTR_UPNP_MANUFACTURER_URL, ATTR_UPNP_SERIAL
 from homeassistant.components.zha import config_flow, radio_manager
-from homeassistant.components.zha.core.const import (
+from homeassistant.components.zha.const import (
     CONF_BAUDRATE,
     CONF_FLOW_CONTROL,
     CONF_RADIO_TYPE,
     DOMAIN,
     EZSP_OVERWRITE_EUI64,
-    RadioType,
 )
 from homeassistant.components.zha.radio_manager import ProbeResult
 from homeassistant.config_entries import (
@@ -35,6 +37,8 @@ from homeassistant.config_entries import (
     SOURCE_USB,
     SOURCE_USER,
     SOURCE_ZEROCONF,
+    ConfigEntryState,
+    ConfigFlowResult,
 )
 from homeassistant.const import CONF_SOURCE
 from homeassistant.core import HomeAssistant
@@ -42,6 +46,9 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
+type RadioPicker = Callable[
+    [RadioType], Coroutine[Any, Any, tuple[ConfigFlowResult, ListPortInfo]]
+]
 PROBE_FUNCTION_PATH = "zigbee.application.ControllerApplication.probe"
 
 
@@ -69,7 +76,7 @@ def mock_multipan_platform():
 
 
 @pytest.fixture(autouse=True)
-def mock_app():
+def mock_app() -> Generator[AsyncMock]:
     """Mock zigpy app interface."""
     mock_app = AsyncMock()
     mock_app.backups = create_autospec(BackupManager, instance=True)
@@ -129,9 +136,9 @@ def mock_detect_radio_type(
     return detect
 
 
-def com_port(device="/dev/ttyUSB1234"):
+def com_port(device="/dev/ttyUSB1234") -> ListPortInfo:
     """Mock of a serial port."""
-    port = serial.tools.list_ports_common.ListPortInfo("/dev/ttyUSB1234")
+    port = ListPortInfo("/dev/ttyUSB1234")
     port.serial_number = "1234"
     port.manufacturer = "Virtual serial port"
     port.device = device
@@ -169,7 +176,7 @@ async def test_zeroconf_discovery_znp(hass: HomeAssistant) -> None:
         result1["flow_id"], user_input={}
     )
 
-    assert result2["type"] == FlowResultType.MENU
+    assert result2["type"] is FlowResultType.MENU
     assert result2["step_id"] == "choose_formation_strategy"
 
     result3 = await hass.config_entries.flow.async_configure(
@@ -178,7 +185,7 @@ async def test_zeroconf_discovery_znp(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
-    assert result3["type"] == FlowResultType.CREATE_ENTRY
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == "socket://192.168.1.200:6638"
     assert result3["data"] == {
         CONF_DEVICE: {
@@ -226,7 +233,7 @@ async def test_zigate_via_zeroconf(setup_entry_mock, hass: HomeAssistant) -> Non
         result1["flow_id"], user_input={}
     )
 
-    assert result3["type"] == FlowResultType.MENU
+    assert result3["type"] is FlowResultType.MENU
     assert result3["step_id"] == "choose_formation_strategy"
 
     result4 = await hass.config_entries.flow.async_configure(
@@ -235,7 +242,7 @@ async def test_zigate_via_zeroconf(setup_entry_mock, hass: HomeAssistant) -> Non
     )
     await hass.async_block_till_done()
 
-    assert result4["type"] == FlowResultType.CREATE_ENTRY
+    assert result4["type"] is FlowResultType.CREATE_ENTRY
     assert result4["title"] == "socket://192.168.1.200:1234"
     assert result4["data"] == {
         CONF_DEVICE: {
@@ -276,7 +283,7 @@ async def test_efr32_via_zeroconf(hass: HomeAssistant) -> None:
         result1["flow_id"], user_input={}
     )
 
-    assert result2["type"] == FlowResultType.MENU
+    assert result2["type"] is FlowResultType.MENU
     assert result2["step_id"] == "choose_formation_strategy"
 
     result3 = await hass.config_entries.flow.async_configure(
@@ -285,7 +292,7 @@ async def test_efr32_via_zeroconf(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
-    assert result3["type"] == FlowResultType.CREATE_ENTRY
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == "socket://192.168.1.200:1234"
     assert result3["data"] == {
         CONF_DEVICE: {
@@ -321,7 +328,7 @@ async def test_discovery_via_zeroconf_ip_change_ignored(hass: HomeAssistant) -> 
         DOMAIN, context={"source": SOURCE_ZEROCONF}, data=service_info
     )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert entry.data[CONF_DEVICE] == {
         CONF_DEVICE_PATH: "socket://192.168.1.22:6638",
@@ -355,7 +362,7 @@ async def test_discovery_confirm_final_abort_if_entries(hass: HomeAssistant) -> 
         )
 
     # Config will fail
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"
 
 
@@ -375,7 +382,7 @@ async def test_discovery_via_usb(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
-    assert result1["type"] == FlowResultType.FORM
+    assert result1["type"] is FlowResultType.FORM
     assert result1["step_id"] == "confirm"
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -383,7 +390,7 @@ async def test_discovery_via_usb(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.MENU
+    assert result2["type"] is FlowResultType.MENU
     assert result2["step_id"] == "choose_formation_strategy"
 
     with patch("homeassistant.components.zha.async_setup_entry", return_value=True):
@@ -393,7 +400,7 @@ async def test_discovery_via_usb(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result3["type"] == FlowResultType.CREATE_ENTRY
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == "zigbee radio"
     assert result3["data"] == {
         "device": {
@@ -420,7 +427,7 @@ async def test_zigate_discovery_via_usb(probe_mock, hass: HomeAssistant) -> None
         DOMAIN, context={"source": SOURCE_USB}, data=discovery_info
     )
     await hass.async_block_till_done()
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "confirm"
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -433,7 +440,7 @@ async def test_zigate_discovery_via_usb(probe_mock, hass: HomeAssistant) -> None
     )
     await hass.async_block_till_done()
 
-    assert result3["type"] == FlowResultType.MENU
+    assert result3["type"] is FlowResultType.MENU
     assert result3["step_id"] == "choose_formation_strategy"
 
     with patch("homeassistant.components.zha.async_setup_entry", return_value=True):
@@ -443,7 +450,7 @@ async def test_zigate_discovery_via_usb(probe_mock, hass: HomeAssistant) -> None
         )
         await hass.async_block_till_done()
 
-    assert result4["type"] == FlowResultType.CREATE_ENTRY
+    assert result4["type"] is FlowResultType.CREATE_ENTRY
     assert result4["title"] == "zigate radio"
     assert result4["data"] == {
         "device": {
@@ -473,7 +480,7 @@ async def test_discovery_via_usb_no_radio(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": SOURCE_USB}, data=discovery_info
     )
     await hass.async_block_till_done()
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "confirm"
 
     with patch("homeassistant.components.zha.async_setup_entry", return_value=True):
@@ -482,7 +489,7 @@ async def test_discovery_via_usb_no_radio(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.ABORT
+    assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "usb_probe_failed"
 
 
@@ -507,7 +514,7 @@ async def test_discovery_via_usb_already_setup(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"
 
 
@@ -541,7 +548,7 @@ async def test_discovery_via_usb_path_does_not_change(hass: HomeAssistant) -> No
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert entry.data[CONF_DEVICE] == {
         CONF_DEVICE_PATH: "/dev/ttyUSB1",
@@ -580,7 +587,7 @@ async def test_discovery_via_usb_deconz_already_discovered(hass: HomeAssistant) 
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "not_zha_device"
 
 
@@ -602,7 +609,7 @@ async def test_discovery_via_usb_deconz_already_setup(hass: HomeAssistant) -> No
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "not_zha_device"
 
 
@@ -626,7 +633,7 @@ async def test_discovery_via_usb_deconz_ignored(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "confirm"
 
 
@@ -654,7 +661,7 @@ async def test_discovery_via_usb_zha_ignored_updates(hass: HomeAssistant) -> Non
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert entry.data[CONF_DEVICE] == {
         CONF_DEVICE_PATH: "/dev/ttyZIGBEE",
@@ -684,7 +691,7 @@ async def test_discovery_already_setup(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"
 
 
@@ -706,7 +713,7 @@ async def test_user_flow(hass: HomeAssistant) -> None:
             zigpy.config.CONF_DEVICE_PATH: port_select,
         },
     )
-    assert result["type"] == FlowResultType.MENU
+    assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "choose_formation_strategy"
 
     with patch("homeassistant.components.zha.async_setup_entry", return_value=True):
@@ -716,7 +723,7 @@ async def test_user_flow(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"].startswith(port.description)
     assert result2["data"] == {
         "device": {
@@ -749,7 +756,7 @@ async def test_user_flow_not_detected(hass: HomeAssistant) -> None:
         },
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "manual_pick_radio_type"
 
 
@@ -761,7 +768,7 @@ async def test_user_flow_show_form(hass: HomeAssistant) -> None:
         context={CONF_SOURCE: SOURCE_USER},
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "choose_serial_port"
 
 
@@ -773,7 +780,7 @@ async def test_user_flow_show_manual(hass: HomeAssistant) -> None:
         context={CONF_SOURCE: SOURCE_USER},
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "manual_pick_radio_type"
 
 
@@ -785,7 +792,7 @@ async def test_user_flow_manual(hass: HomeAssistant) -> None:
         context={CONF_SOURCE: SOURCE_USER},
         data={zigpy.config.CONF_DEVICE_PATH: config_flow.CONF_MANUAL_PATH},
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "manual_pick_radio_type"
 
 
@@ -798,7 +805,7 @@ async def test_pick_radio_flow(hass: HomeAssistant, radio_type) -> None:
         context={CONF_SOURCE: "manual_pick_radio_type"},
         data={CONF_RADIO_TYPE: radio_type},
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "manual_port_config"
 
 
@@ -812,7 +819,7 @@ async def test_user_flow_existing_config_entry(hass: HomeAssistant) -> None:
         DOMAIN, context={CONF_SOURCE: SOURCE_USER}
     )
 
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
 
 
 @patch(f"bellows.{PROBE_FUNCTION_PATH}", return_value=False)
@@ -885,7 +892,7 @@ async def test_user_port_config_fail(probe_mock, hass: HomeAssistant) -> None:
         result["flow_id"],
         user_input={zigpy.config.CONF_DEVICE_PATH: "/dev/ttyUSB33"},
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "manual_port_config"
     assert result["errors"]["base"] == "cannot_connect"
     assert probe_mock.await_count == 1
@@ -907,7 +914,7 @@ async def test_user_port_config(probe_mock, hass: HomeAssistant) -> None:
         user_input={zigpy.config.CONF_DEVICE_PATH: "/dev/ttyUSB33"},
     )
 
-    assert result["type"] == FlowResultType.MENU
+    assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "choose_formation_strategy"
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -946,7 +953,7 @@ async def test_hardware(onboarded, hass: HomeAssistant) -> None:
 
     if onboarded:
         # Confirm discovery
-        assert result1["type"] == FlowResultType.FORM
+        assert result1["type"] is FlowResultType.FORM
         assert result1["step_id"] == "confirm"
 
         result2 = await hass.config_entries.flow.async_configure(
@@ -957,7 +964,7 @@ async def test_hardware(onboarded, hass: HomeAssistant) -> None:
         # No need to confirm
         result2 = result1
 
-    assert result2["type"] == FlowResultType.MENU
+    assert result2["type"] is FlowResultType.MENU
     assert result2["step_id"] == "choose_formation_strategy"
 
     result3 = await hass.config_entries.flow.async_configure(
@@ -997,7 +1004,7 @@ async def test_hardware_already_setup(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_HARDWARE}, data=data
     )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"
 
 
@@ -1011,7 +1018,7 @@ async def test_hardware_invalid_data(hass: HomeAssistant, data) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_HARDWARE}, data=data
     )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "invalid_hardware_data"
 
 
@@ -1037,10 +1044,12 @@ def test_prevent_overwrite_ezsp_ieee() -> None:
 
 
 @pytest.fixture
-def pick_radio(hass):
+def pick_radio(
+    hass: HomeAssistant,
+) -> Generator[RadioPicker]:
     """Fixture for the first step of the config flow (where a radio is picked)."""
 
-    async def wrapper(radio_type):
+    async def wrapper(radio_type: RadioType) -> tuple[ConfigFlowResult, ListPortInfo]:
         port = com_port()
         port_select = f"{port}, s/n: {port.serial_number} - {port.manufacturer}"
 
@@ -1056,7 +1065,7 @@ def pick_radio(hass):
                 },
             )
 
-        assert result["type"] == FlowResultType.MENU
+        assert result["type"] is FlowResultType.MENU
         assert result["step_id"] == "choose_formation_strategy"
 
         return result, port
@@ -1069,7 +1078,7 @@ def pick_radio(hass):
 
 
 async def test_strategy_no_network_settings(
-    pick_radio, mock_app, hass: HomeAssistant
+    pick_radio: RadioPicker, mock_app: AsyncMock, hass: HomeAssistant
 ) -> None:
     """Test formation strategy when no network settings are present."""
     mock_app.load_network_info = MagicMock(side_effect=NetworkNotFormed())
@@ -1082,7 +1091,7 @@ async def test_strategy_no_network_settings(
 
 
 async def test_formation_strategy_form_new_network(
-    pick_radio, mock_app, hass: HomeAssistant
+    pick_radio: RadioPicker, mock_app: AsyncMock, hass: HomeAssistant
 ) -> None:
     """Test forming a new network."""
     result, port = await pick_radio(RadioType.ezsp)
@@ -1096,11 +1105,11 @@ async def test_formation_strategy_form_new_network(
     # A new network will be formed
     mock_app.form_network.assert_called_once()
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_formation_strategy_form_initial_network(
-    pick_radio, mock_app, hass: HomeAssistant
+    pick_radio: RadioPicker, mock_app: AsyncMock, hass: HomeAssistant
 ) -> None:
     """Test forming a new network, with no previous settings on the radio."""
     mock_app.load_network_info = AsyncMock(side_effect=NetworkNotFormed())
@@ -1115,13 +1124,13 @@ async def test_formation_strategy_form_initial_network(
     # A new network will be formed
     mock_app.form_network.assert_called_once()
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
 
 
 @patch(f"zigpy_znp.{PROBE_FUNCTION_PATH}", AsyncMock(return_value=True))
 @patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
 async def test_onboarding_auto_formation_new_hardware(
-    mock_app, hass: HomeAssistant
+    mock_app: AsyncMock, hass: HomeAssistant
 ) -> None:
     """Test auto network formation with new hardware during onboarding."""
     mock_app.load_network_info = AsyncMock(side_effect=NetworkNotFormed())
@@ -1143,7 +1152,7 @@ async def test_onboarding_auto_formation_new_hardware(
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "zigbee radio"
     assert result["data"] == {
         "device": {
@@ -1156,7 +1165,7 @@ async def test_onboarding_auto_formation_new_hardware(
 
 
 async def test_formation_strategy_reuse_settings(
-    pick_radio, mock_app, hass: HomeAssistant
+    pick_radio: RadioPicker, mock_app: AsyncMock, hass: HomeAssistant
 ) -> None:
     """Test reusing existing network settings."""
     result, port = await pick_radio(RadioType.ezsp)
@@ -1170,7 +1179,7 @@ async def test_formation_strategy_reuse_settings(
     # Nothing will be written when settings are reused
     mock_app.write_network_info.assert_not_called()
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
 
 
 @patch("homeassistant.components.zha.config_flow.process_uploaded_file")
@@ -1189,7 +1198,10 @@ def test_parse_uploaded_backup(process_mock) -> None:
 
 @patch("homeassistant.components.zha.radio_manager._allow_overwrite_ezsp_ieee")
 async def test_formation_strategy_restore_manual_backup_non_ezsp(
-    allow_overwrite_ieee_mock, pick_radio, mock_app, hass: HomeAssistant
+    allow_overwrite_ieee_mock,
+    pick_radio: RadioPicker,
+    mock_app: AsyncMock,
+    hass: HomeAssistant,
 ) -> None:
     """Test restoring a manual backup on non-EZSP coordinators."""
     result, port = await pick_radio(RadioType.znp)
@@ -1200,7 +1212,7 @@ async def test_formation_strategy_restore_manual_backup_non_ezsp(
     )
     await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "upload_manual_backup"
 
     with patch(
@@ -1215,13 +1227,17 @@ async def test_formation_strategy_restore_manual_backup_non_ezsp(
     mock_app.backups.restore_backup.assert_called_once()
     allow_overwrite_ieee_mock.assert_not_called()
 
-    assert result3["type"] == FlowResultType.CREATE_ENTRY
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["data"][CONF_RADIO_TYPE] == "znp"
 
 
 @patch("homeassistant.components.zha.radio_manager._allow_overwrite_ezsp_ieee")
 async def test_formation_strategy_restore_manual_backup_overwrite_ieee_ezsp(
-    allow_overwrite_ieee_mock, pick_radio, mock_app, backup, hass: HomeAssistant
+    allow_overwrite_ieee_mock,
+    pick_radio: RadioPicker,
+    mock_app: AsyncMock,
+    backup,
+    hass: HomeAssistant,
 ) -> None:
     """Test restoring a manual backup on EZSP coordinators (overwrite IEEE)."""
     result, port = await pick_radio(RadioType.ezsp)
@@ -1232,7 +1248,7 @@ async def test_formation_strategy_restore_manual_backup_overwrite_ieee_ezsp(
     )
     await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "upload_manual_backup"
 
     with patch(
@@ -1244,7 +1260,7 @@ async def test_formation_strategy_restore_manual_backup_overwrite_ieee_ezsp(
             user_input={config_flow.UPLOADED_BACKUP_FILE: str(uuid.uuid4())},
         )
 
-    assert result3["type"] == FlowResultType.FORM
+    assert result3["type"] is FlowResultType.FORM
     assert result3["step_id"] == "maybe_confirm_ezsp_restore"
 
     result4 = await hass.config_entries.flow.async_configure(
@@ -1255,13 +1271,16 @@ async def test_formation_strategy_restore_manual_backup_overwrite_ieee_ezsp(
     allow_overwrite_ieee_mock.assert_called_once()
     mock_app.backups.restore_backup.assert_called_once()
 
-    assert result4["type"] == FlowResultType.CREATE_ENTRY
+    assert result4["type"] is FlowResultType.CREATE_ENTRY
     assert result4["data"][CONF_RADIO_TYPE] == "ezsp"
 
 
 @patch("homeassistant.components.zha.radio_manager._allow_overwrite_ezsp_ieee")
 async def test_formation_strategy_restore_manual_backup_ezsp(
-    allow_overwrite_ieee_mock, pick_radio, mock_app, hass: HomeAssistant
+    allow_overwrite_ieee_mock,
+    pick_radio: RadioPicker,
+    mock_app: AsyncMock,
+    hass: HomeAssistant,
 ) -> None:
     """Test restoring a manual backup on EZSP coordinators (don't overwrite IEEE)."""
     result, port = await pick_radio(RadioType.ezsp)
@@ -1272,7 +1291,7 @@ async def test_formation_strategy_restore_manual_backup_ezsp(
     )
     await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "upload_manual_backup"
 
     backup = zigpy.backups.NetworkBackup()
@@ -1286,7 +1305,7 @@ async def test_formation_strategy_restore_manual_backup_ezsp(
             user_input={config_flow.UPLOADED_BACKUP_FILE: str(uuid.uuid4())},
         )
 
-    assert result3["type"] == FlowResultType.FORM
+    assert result3["type"] is FlowResultType.FORM
     assert result3["step_id"] == "maybe_confirm_ezsp_restore"
 
     result4 = await hass.config_entries.flow.async_configure(
@@ -1297,12 +1316,12 @@ async def test_formation_strategy_restore_manual_backup_ezsp(
     allow_overwrite_ieee_mock.assert_not_called()
     mock_app.backups.restore_backup.assert_called_once_with(backup)
 
-    assert result4["type"] == FlowResultType.CREATE_ENTRY
+    assert result4["type"] is FlowResultType.CREATE_ENTRY
     assert result4["data"][CONF_RADIO_TYPE] == "ezsp"
 
 
 async def test_formation_strategy_restore_manual_backup_invalid_upload(
-    pick_radio, mock_app, hass: HomeAssistant
+    pick_radio: RadioPicker, mock_app: AsyncMock, hass: HomeAssistant
 ) -> None:
     """Test restoring a manual backup but an invalid file is uploaded."""
     result, port = await pick_radio(RadioType.ezsp)
@@ -1313,7 +1332,7 @@ async def test_formation_strategy_restore_manual_backup_invalid_upload(
     )
     await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "upload_manual_backup"
 
     with patch(
@@ -1327,7 +1346,7 @@ async def test_formation_strategy_restore_manual_backup_invalid_upload(
 
     mock_app.backups.restore_backup.assert_not_called()
 
-    assert result3["type"] == FlowResultType.FORM
+    assert result3["type"] is FlowResultType.FORM
     assert result3["step_id"] == "upload_manual_backup"
     assert result3["errors"]["base"] == "invalid_backup_json"
 
@@ -1354,7 +1373,7 @@ def test_format_backup_choice() -> None:
 )
 @patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
 async def test_formation_strategy_restore_automatic_backup_ezsp(
-    pick_radio, mock_app, make_backup, hass: HomeAssistant
+    pick_radio: RadioPicker, mock_app: AsyncMock, make_backup, hass: HomeAssistant
 ) -> None:
     """Test restoring an automatic backup (EZSP radio)."""
     mock_app.backups.backups = [
@@ -1372,7 +1391,7 @@ async def test_formation_strategy_restore_automatic_backup_ezsp(
     )
     await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "choose_automatic_backup"
 
     result3 = await hass.config_entries.flow.async_configure(
@@ -1382,7 +1401,7 @@ async def test_formation_strategy_restore_automatic_backup_ezsp(
         },
     )
 
-    assert result3["type"] == FlowResultType.FORM
+    assert result3["type"] is FlowResultType.FORM
     assert result3["step_id"] == "maybe_confirm_ezsp_restore"
 
     result4 = await hass.config_entries.flow.async_configure(
@@ -1392,7 +1411,7 @@ async def test_formation_strategy_restore_automatic_backup_ezsp(
 
     mock_app.backups.restore_backup.assert_called_once()
 
-    assert result4["type"] == FlowResultType.CREATE_ENTRY
+    assert result4["type"] is FlowResultType.CREATE_ENTRY
     assert result4["data"][CONF_RADIO_TYPE] == "ezsp"
 
 
@@ -1403,7 +1422,11 @@ async def test_formation_strategy_restore_automatic_backup_ezsp(
 @patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
 @pytest.mark.parametrize("is_advanced", [True, False])
 async def test_formation_strategy_restore_automatic_backup_non_ezsp(
-    is_advanced, pick_radio, mock_app, make_backup, hass: HomeAssistant
+    is_advanced,
+    pick_radio: RadioPicker,
+    mock_app: AsyncMock,
+    make_backup,
+    hass: HomeAssistant,
 ) -> None:
     """Test restoring an automatic backup (non-EZSP radio)."""
     mock_app.backups.backups = [
@@ -1428,7 +1451,7 @@ async def test_formation_strategy_restore_automatic_backup_non_ezsp(
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "choose_automatic_backup"
 
     # We don't prompt for overwriting the IEEE address, since only EZSP needs this
@@ -1450,13 +1473,17 @@ async def test_formation_strategy_restore_automatic_backup_non_ezsp(
 
     mock_app.backups.restore_backup.assert_called_once_with(backup)
 
-    assert result3["type"] == FlowResultType.CREATE_ENTRY
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["data"][CONF_RADIO_TYPE] == "znp"
 
 
 @patch("homeassistant.components.zha.radio_manager._allow_overwrite_ezsp_ieee")
 async def test_ezsp_restore_without_settings_change_ieee(
-    allow_overwrite_ieee_mock, pick_radio, mock_app, backup, hass: HomeAssistant
+    allow_overwrite_ieee_mock,
+    pick_radio: RadioPicker,
+    mock_app: AsyncMock,
+    backup,
+    hass: HomeAssistant,
 ) -> None:
     """Test a manual backup on EZSP coordinators without settings (no IEEE write)."""
     # Fail to load settings
@@ -1480,7 +1507,7 @@ async def test_ezsp_restore_without_settings_change_ieee(
     )
     await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "upload_manual_backup"
 
     with patch(
@@ -1496,7 +1523,7 @@ async def test_ezsp_restore_without_settings_change_ieee(
     allow_overwrite_ieee_mock.assert_not_called()
     mock_app.backups.restore_backup.assert_called_once_with(backup, create_new=False)
 
-    assert result3["type"] == FlowResultType.CREATE_ENTRY
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["data"][CONF_RADIO_TYPE] == "ezsp"
 
 
@@ -1552,7 +1579,7 @@ async def test_options_flow_defaults(
     mock_async_unload.assert_called_once_with(entry.entry_id)
 
     # Unload it ourselves
-    entry.mock_state(hass, config_entries.ConfigEntryState.NOT_LOADED)
+    entry.mock_state(hass, ConfigEntryState.NOT_LOADED)
 
     # Reconfigure ZHA
     assert result1["step_id"] == "prompt_migrate_or_reconfigure"
@@ -1609,7 +1636,7 @@ async def test_options_flow_defaults(
     )
     await hass.async_block_till_done()
 
-    assert result6["type"] == FlowResultType.CREATE_ENTRY
+    assert result6["type"] is FlowResultType.CREATE_ENTRY
     assert result6["data"] == {}
 
     # The updated entry contains correct settings
@@ -1735,7 +1762,7 @@ async def test_options_flow_restarts_running_zha_if_cancelled(
             flow["flow_id"], user_input={}
         )
 
-    entry.mock_state(hass, config_entries.ConfigEntryState.NOT_LOADED)
+    entry.mock_state(hass, ConfigEntryState.NOT_LOADED)
 
     assert result1["step_id"] == "prompt_migrate_or_reconfigure"
     result2 = await hass.config_entries.options.async_configure(
@@ -1790,7 +1817,7 @@ async def test_options_flow_migration_reset_old_adapter(
             flow["flow_id"], user_input={}
         )
 
-    entry.mock_state(hass, config_entries.ConfigEntryState.NOT_LOADED)
+    entry.mock_state(hass, ConfigEntryState.NOT_LOADED)
 
     assert result1["step_id"] == "prompt_migrate_or_reconfigure"
     result2 = await hass.config_entries.options.async_configure(
@@ -1884,7 +1911,7 @@ async def test_probe_wrong_firmware_installed(hass: HomeAssistant) -> None:
             },
         )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "wrong_firmware_installed"
 
 
@@ -1906,7 +1933,7 @@ async def test_discovery_wrong_firmware_installed(hass: HomeAssistant) -> None:
             data={},
         )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "wrong_firmware_installed"
 
 

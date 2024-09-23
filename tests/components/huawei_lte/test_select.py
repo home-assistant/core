@@ -5,8 +5,10 @@ from unittest.mock import MagicMock, patch
 from huawei_lte_api.enums.net import LTEBandEnum, NetworkBandEnum, NetworkModeEnum
 
 from homeassistant.components.huawei_lte.const import DOMAIN
-from homeassistant.components.select import SERVICE_SELECT_OPTION
-from homeassistant.components.select.const import DOMAIN as SELECT_DOMAIN
+from homeassistant.components.select import (
+    DOMAIN as SELECT_DOMAIN,
+    SERVICE_SELECT_OPTION,
+)
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_OPTION, CONF_URL
 from homeassistant.core import HomeAssistant
 

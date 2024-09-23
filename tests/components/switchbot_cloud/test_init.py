@@ -55,7 +55,7 @@ async def test_setup_entry_success(
     entry = configure_integration(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     await hass.async_block_till_done()
@@ -104,7 +104,7 @@ async def test_setup_entry_fails_when_refreshing(
     mock_get_status.side_effect = CannotConnect
     entry = configure_integration(hass)
     await hass.config_entries.async_setup(entry.entry_id)
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     await hass.async_block_till_done()

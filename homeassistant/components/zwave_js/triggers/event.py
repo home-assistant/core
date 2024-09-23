@@ -80,10 +80,8 @@ def validate_event_data(obj: dict) -> dict:
     except ValidationError as exc:
         # Filter out required field errors if keys can be missing, and if there are
         # still errors, raise an exception
-        if errors := [
-            error for error in exc.errors() if error["type"] != "value_error.missing"
-        ]:
-            raise vol.MultipleInvalid(errors) from exc
+        if [error for error in exc.errors() if error["type"] != "value_error.missing"]:
+            raise vol.MultipleInvalid from exc
     return obj
 
 
@@ -219,7 +217,9 @@ async def async_attach_trigger(
         drivers: set[Driver] = set()
         if not (nodes := async_get_nodes_from_targets(hass, config, dev_reg=dev_reg)):
             entry_id = config[ATTR_CONFIG_ENTRY_ID]
-            client: Client = hass.data[DOMAIN][entry_id][DATA_CLIENT]
+            entry = hass.config_entries.async_get_entry(entry_id)
+            assert entry
+            client: Client = entry.runtime_data[DATA_CLIENT]
             driver = client.driver
             assert driver
             drivers.add(driver)

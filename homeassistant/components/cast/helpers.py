@@ -80,7 +80,7 @@ class ChromecastInfo:
                     "+label%3A%22integration%3A+cast%22"
                 )
 
-                _LOGGER.info(
+                _LOGGER.debug(
                     (
                         "Fetched cast details for unknown model '%s' manufacturer:"
                         " '%s', type: '%s'. Please %s"
@@ -162,7 +162,7 @@ class CastStatusListener(
         self._valid = True
         self._mz_mgr = mz_mgr
 
-        if cast_device._cast_info.is_audio_group:
+        if cast_device._cast_info.is_audio_group:  # noqa: SLF001
             self._mz_mgr.add_multizone(chromecast)
         if mz_only:
             return
@@ -170,7 +170,7 @@ class CastStatusListener(
         chromecast.register_status_listener(self)
         chromecast.socket_client.media_controller.register_status_listener(self)
         chromecast.register_connection_listener(self)
-        if not cast_device._cast_info.is_audio_group:
+        if not cast_device._cast_info.is_audio_group:  # noqa: SLF001
             self._mz_mgr.register_listener(chromecast.uuid, self)
 
     def new_cast_status(self, status):
@@ -214,8 +214,7 @@ class CastStatusListener(
 
         All following callbacks won't be forwarded.
         """
-        # pylint: disable-next=protected-access
-        if self._cast_device._cast_info.is_audio_group:
+        if self._cast_device._cast_info.is_audio_group:  # noqa: SLF001
             self._mz_mgr.remove_multizone(self._uuid)
         else:
             self._mz_mgr.deregister_listener(self._uuid, self)
@@ -249,7 +248,7 @@ async def _fetch_playlist(hass, url, supported_content_types):
     """Fetch a playlist from the given url."""
     try:
         session = aiohttp_client.async_get_clientsession(hass, verify_ssl=False)
-        async with session.get(url, timeout=5) as resp:
+        async with session.get(url, timeout=aiohttp.ClientTimeout(total=5)) as resp:
             charset = resp.charset or "utf-8"
             if resp.content_type in supported_content_types:
                 raise PlaylistSupported

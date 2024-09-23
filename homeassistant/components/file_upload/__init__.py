@@ -128,7 +128,7 @@ class FileUploadView(HomeAssistantView):
     async def _upload_file(self, request: web.Request) -> web.Response:
         """Handle uploaded file."""
         # Increase max payload
-        request._client_max_size = MAX_SIZE  # pylint: disable=protected-access
+        request._client_max_size = MAX_SIZE  # noqa: SLF001
 
         reader = await request.multipart()
         file_field_reader = await reader.next()

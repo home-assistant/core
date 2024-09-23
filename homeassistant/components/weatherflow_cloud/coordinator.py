@@ -21,12 +21,11 @@ class WeatherFlowCloudDataUpdateCoordinator(
     def __init__(self, hass: HomeAssistant, api_token: str) -> None:
         """Initialize global WeatherFlow forecast data updater."""
         self.weather_api = WeatherFlowRestAPI(api_token=api_token)
-
         super().__init__(
             hass,
             LOGGER,
             name=DOMAIN,
-            update_interval=timedelta(minutes=15),
+            update_interval=timedelta(seconds=60),
         )
 
     async def _async_update_data(self) -> dict[int, WeatherFlowDataREST]:

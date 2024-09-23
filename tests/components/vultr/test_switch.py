@@ -50,7 +50,7 @@ def load_hass_devices(hass: HomeAssistant):
 
 
 @pytest.mark.usefixtures("valid_config")
-def test_switch(hass: HomeAssistant, hass_devices: list[vultr.VultrSwitch]):
+def test_switch(hass: HomeAssistant, hass_devices: list[vultr.VultrSwitch]) -> None:
     """Test successful instance."""
 
     assert len(hass_devices) == 3
@@ -97,7 +97,7 @@ def test_switch(hass: HomeAssistant, hass_devices: list[vultr.VultrSwitch]):
 
 
 @pytest.mark.usefixtures("valid_config")
-def test_turn_on(hass: HomeAssistant, hass_devices: list[vultr.VultrSwitch]):
+def test_turn_on(hass: HomeAssistant, hass_devices: list[vultr.VultrSwitch]) -> None:
     """Test turning a subscription on."""
     with (
         patch(
@@ -116,7 +116,7 @@ def test_turn_on(hass: HomeAssistant, hass_devices: list[vultr.VultrSwitch]):
 
 
 @pytest.mark.usefixtures("valid_config")
-def test_turn_off(hass: HomeAssistant, hass_devices: list[vultr.VultrSwitch]):
+def test_turn_off(hass: HomeAssistant, hass_devices: list[vultr.VultrSwitch]) -> None:
     """Test turning a subscription off."""
     with (
         patch(

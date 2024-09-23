@@ -34,7 +34,7 @@ class GuardianDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         entry: ConfigEntry,
         client: Client,
         api_name: str,
-        api_coro: Callable[..., Coroutine[Any, Any, dict[str, Any]]],
+        api_coro: Callable[[], Coroutine[Any, Any, dict[str, Any]]],
         api_lock: asyncio.Lock,
         valve_controller_uid: str,
     ) -> None:

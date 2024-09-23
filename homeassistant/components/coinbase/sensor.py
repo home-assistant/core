@@ -12,15 +12,12 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import CoinbaseData
 from .const import (
+    ACCOUNT_IS_VAULT,
     API_ACCOUNT_AMOUNT,
-    API_ACCOUNT_BALANCE,
     API_ACCOUNT_CURRENCY,
-    API_ACCOUNT_CURRENCY_CODE,
     API_ACCOUNT_ID,
     API_ACCOUNT_NAME,
     API_RATES,
-    API_RESOURCE_TYPE,
-    API_TYPE_VAULT,
     CONF_CURRENCIES,
     CONF_EXCHANGE_PRECISION,
     CONF_EXCHANGE_PRECISION_DEFAULT,
@@ -31,6 +28,7 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_NATIVE_BALANCE = "Balance in native currency"
+ATTR_API_VERSION = "API Version"
 
 CURRENCY_ICONS = {
     "BTC": "mdi:currency-btc",
@@ -56,9 +54,9 @@ async def async_setup_entry(
     entities: list[SensorEntity] = []
 
     provided_currencies: list[str] = [
-        account[API_ACCOUNT_CURRENCY][API_ACCOUNT_CURRENCY_CODE]
+        account[API_ACCOUNT_CURRENCY]
         for account in instance.accounts
-        if account[API_RESOURCE_TYPE] != API_TYPE_VAULT
+        if not account[ACCOUNT_IS_VAULT]
     ]
 
     desired_currencies: list[str] = []
@@ -73,6 +71,11 @@ async def async_setup_entry(
     )
 
     for currency in desired_currencies:
+        _LOGGER.debug(
+            "Attempting to set up %s account sensor with %s API",
+            currency,
+            instance.api_version,
+        )
         if currency not in provided_currencies:
             _LOGGER.warning(
                 (
@@ -85,12 +88,17 @@ async def async_setup_entry(
         entities.append(AccountSensor(instance, currency))
 
     if CONF_EXCHANGE_RATES in config_entry.options:
-        entities.extend(
-            ExchangeRateSensor(
-                instance, rate, exchange_base_currency, exchange_precision
+        for rate in config_entry.options[CONF_EXCHANGE_RATES]:
+            _LOGGER.debug(
+                "Attempting to set up %s account sensor with %s API",
+                rate,
+                instance.api_version,
             )
-            for rate in config_entry.options[CONF_EXCHANGE_RATES]
-        )
+            entities.append(
+                ExchangeRateSensor(
+                    instance, rate, exchange_base_currency, exchange_precision
+                )
+            )
 
     async_add_entities(entities)
 
@@ -105,26 +113,21 @@ class AccountSensor(SensorEntity):
         self._coinbase_data = coinbase_data
         self._currency = currency
         for account in coinbase_data.accounts:
-            if (
-                account[API_ACCOUNT_CURRENCY][API_ACCOUNT_CURRENCY_CODE] != currency
-                or account[API_RESOURCE_TYPE] == API_TYPE_VAULT
-            ):
+            if account[API_ACCOUNT_CURRENCY] != currency or account[ACCOUNT_IS_VAULT]:
                 continue
             self._attr_name = f"Coinbase {account[API_ACCOUNT_NAME]}"
             self._attr_unique_id = (
                 f"coinbase-{account[API_ACCOUNT_ID]}-wallet-"
-                f"{account[API_ACCOUNT_CURRENCY][API_ACCOUNT_CURRENCY_CODE]}"
+                f"{account[API_ACCOUNT_CURRENCY]}"
             )
-            self._attr_native_value = account[API_ACCOUNT_BALANCE][API_ACCOUNT_AMOUNT]
-            self._attr_native_unit_of_measurement = account[API_ACCOUNT_CURRENCY][
-                API_ACCOUNT_CURRENCY_CODE
-            ]
+            self._attr_native_value = account[API_ACCOUNT_AMOUNT]
+            self._attr_native_unit_of_measurement = account[API_ACCOUNT_CURRENCY]
             self._attr_icon = CURRENCY_ICONS.get(
-                account[API_ACCOUNT_CURRENCY][API_ACCOUNT_CURRENCY_CODE],
+                account[API_ACCOUNT_CURRENCY],
                 DEFAULT_COIN_ICON,
             )
             self._native_balance = round(
-                float(account[API_ACCOUNT_BALANCE][API_ACCOUNT_AMOUNT])
+                float(account[API_ACCOUNT_AMOUNT])
                 / float(coinbase_data.exchange_rates[API_RATES][currency]),
                 2,
             )
@@ -144,21 +147,26 @@ class AccountSensor(SensorEntity):
         """Return the state attributes of the sensor."""
         return {
             ATTR_NATIVE_BALANCE: f"{self._native_balance} {self._coinbase_data.exchange_base}",
+            ATTR_API_VERSION: self._coinbase_data.api_version,
         }
 
     def update(self) -> None:
         """Get the latest state of the sensor."""
+        _LOGGER.debug(
+            "Updating %s account sensor with %s API",
+            self._currency,
+            self._coinbase_data.api_version,
+        )
         self._coinbase_data.update()
         for account in self._coinbase_data.accounts:
             if (
-                account[API_ACCOUNT_CURRENCY][API_ACCOUNT_CURRENCY_CODE]
-                != self._currency
-                or account[API_RESOURCE_TYPE] == API_TYPE_VAULT
+                account[API_ACCOUNT_CURRENCY] != self._currency
+                or account[ACCOUNT_IS_VAULT]
             ):
                 continue
-            self._attr_native_value = account[API_ACCOUNT_BALANCE][API_ACCOUNT_AMOUNT]
+            self._attr_native_value = account[API_ACCOUNT_AMOUNT]
             self._native_balance = round(
-                float(account[API_ACCOUNT_BALANCE][API_ACCOUNT_AMOUNT])
+                float(account[API_ACCOUNT_AMOUNT])
                 / float(self._coinbase_data.exchange_rates[API_RATES][self._currency]),
                 2,
             )
@@ -202,8 +210,13 @@ class ExchangeRateSensor(SensorEntity):
 
     def update(self) -> None:
         """Get the latest state of the sensor."""
+        _LOGGER.debug(
+            "Updating %s rate sensor with %s API",
+            self._currency,
+            self._coinbase_data.api_version,
+        )
         self._coinbase_data.update()
         self._attr_native_value = round(
-            1 / float(self._coinbase_data.exchange_rates.rates[self._currency]),
+            1 / float(self._coinbase_data.exchange_rates[API_RATES][self._currency]),
             self._precision,
         )

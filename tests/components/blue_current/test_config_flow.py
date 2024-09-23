@@ -24,7 +24,7 @@ async def test_form(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["errors"] == {}
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
 
 
 async def test_user(hass: HomeAssistant) -> None:
@@ -34,7 +34,7 @@ async def test_user(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["errors"] == {}
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
 
     with (
         patch(
@@ -60,7 +60,7 @@ async def test_user(hass: HomeAssistant) -> None:
 
     assert result2["title"] == "test@email.com"
     assert result2["data"] == {"api_token": "123"}
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.parametrize(
@@ -85,7 +85,7 @@ async def test_flow_fails(hass: HomeAssistant, error: Exception, message: str) -
             data={"api_token": "123"},
         )
         assert result["errors"]["base"] == message
-        assert result["type"] == FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
 
     with (
         patch(
@@ -111,7 +111,7 @@ async def test_flow_fails(hass: HomeAssistant, error: Exception, message: str) -
 
         assert result2["title"] == "test@email.com"
         assert result2["data"] == {"api_token": "123"}
-        assert result2["type"] == FlowResultType.CREATE_ENTRY
+        assert result2["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.parametrize(
@@ -129,6 +129,11 @@ async def test_reauth(
     expected_api_token: str,
 ) -> None:
     """Test reauth flow."""
+    config_entry.add_to_hass(hass)
+    result = await config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
     with (
         patch(
             "homeassistant.components.blue_current.config_flow.Client.validate_api_token",
@@ -146,25 +151,11 @@ async def test_reauth(
             lambda self, on_data, on_open: hass.loop.create_future(),
         ),
     ):
-        config_entry.add_to_hass(hass)
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={
-                "source": config_entries.SOURCE_REAUTH,
-                "entry_id": config_entry.entry_id,
-                "unique_id": config_entry.unique_id,
-            },
-            data={"api_token": "123"},
-        )
-
-        assert result["type"] == FlowResultType.FORM
-        assert result["step_id"] == "user"
-
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={"api_token": "1234567890"},
         )
-        assert result["type"] == FlowResultType.ABORT
+        assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == reason
         assert config_entry.data["api_token"] == expected_api_token
 

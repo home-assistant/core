@@ -9,12 +9,12 @@ from pyatmo.const import ALL_SCOPES
 import pytest
 from syrupy import SnapshotAssertion
 
-from homeassistant import config_entries
 from homeassistant.components import cloud
 from homeassistant.components.netatmo import DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_WEBHOOK_ID, Platform
 from homeassistant.core import CoreState, HomeAssistant
-import homeassistant.helpers.device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -31,6 +31,7 @@ from tests.common import (
     async_get_persistent_notifications,
 )
 from tests.components.cloud import mock_cloud
+from tests.typing import WebSocketGenerator
 
 # Fake webhook thermostat mode change to "Max"
 FAKE_WEBHOOK = {
@@ -82,12 +83,12 @@ async def test_setup_component(
     mock_impl.assert_called_once()
     mock_webhook.assert_called_once()
 
-    assert config_entry.state is config_entries.ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
     assert hass.config_entries.async_entries(DOMAIN)
     assert len(hass.states.async_all()) > 0
 
-    for config_entry in hass.config_entries.async_entries("netatmo"):
-        await hass.config_entries.async_remove(config_entry.entry_id)
+    for entry in hass.config_entries.async_entries("netatmo"):
+        await hass.config_entries.async_remove(entry.entry_id)
 
     await hass.async_block_till_done()
     assert len(hass.states.async_all()) == 0
@@ -159,8 +160,8 @@ async def test_setup_component_with_webhook(
     await simulate_webhook(hass, webhook_id, FAKE_WEBHOOK)
     assert hass.states.get(climate_entity_livingroom).state == "heat"
 
-    for config_entry in hass.config_entries.async_entries("netatmo"):
-        await hass.config_entries.async_remove(config_entry.entry_id)
+    for entry in hass.config_entries.async_entries("netatmo"):
+        await hass.config_entries.async_remove(entry.entry_id)
 
     await hass.async_block_till_done()
     assert len(hass.states.async_all()) == 0
@@ -245,8 +246,8 @@ async def test_setup_with_cloud(
         await hass.async_block_till_done()
         assert hass.config_entries.async_entries(DOMAIN)
 
-        for config_entry in hass.config_entries.async_entries("netatmo"):
-            await hass.config_entries.async_remove(config_entry.entry_id)
+        for entry in hass.config_entries.async_entries("netatmo"):
+            await hass.config_entries.async_remove(entry.entry_id)
             fake_delete_cloudhook.assert_called_once()
 
         await hass.async_block_till_done()
@@ -392,13 +393,7 @@ async def test_setup_component_invalid_token_scope(hass: HomeAssistant) -> None:
                 "type": "Bearer",
                 "expires_in": 60,
                 "expires_at": time() + 1000,
-                "scope": " ".join(
-                    [
-                        "read_smokedetector",
-                        "read_thermostat",
-                        "write_thermostat",
-                    ]
-                ),
+                "scope": "read_smokedetector read_thermostat write_thermostat",
             },
         },
         options={},
@@ -425,7 +420,7 @@ async def test_setup_component_invalid_token_scope(hass: HomeAssistant) -> None:
     mock_impl.assert_called_once()
     mock_webhook.assert_not_called()
 
-    assert config_entry.state is config_entries.ConfigEntryState.SETUP_ERROR
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
     assert hass.config_entries.async_entries(DOMAIN)
 
     notifications = async_get_persistent_notifications(hass)
@@ -479,13 +474,13 @@ async def test_setup_component_invalid_token(
     mock_impl.assert_called_once()
     mock_webhook.assert_not_called()
 
-    assert config_entry.state is config_entries.ConfigEntryState.SETUP_ERROR
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
     assert hass.config_entries.async_entries(DOMAIN)
     notifications = async_get_persistent_notifications(hass)
     assert len(notifications) > 0
 
-    for config_entry in hass.config_entries.async_entries("netatmo"):
-        await hass.config_entries.async_remove(config_entry.entry_id)
+    for entry in hass.config_entries.async_entries("netatmo"):
+        await hass.config_entries.async_remove(entry.entry_id)
 
 
 async def test_devices(
@@ -520,3 +515,36 @@ async def test_devices(
     for device_entry in device_entries:
         identifier = list(device_entry.identifiers)[0]
         assert device_entry == snapshot(name=f"{identifier[0]}-{identifier[1]}")
+
+
+async def test_device_remove_devices(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    config_entry: MockConfigEntry,
+    netatmo_auth: AsyncMock,
+) -> None:
+    """Test we can only remove a device that no longer exists."""
+
+    assert await async_setup_component(hass, "config", {})
+
+    with selected_platforms([Platform.CLIMATE]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+
+        await hass.async_block_till_done()
+
+    climate_entity_livingroom = "climate.livingroom"
+    entity = entity_registry.async_get(climate_entity_livingroom)
+
+    device_entry = device_registry.async_get(entity.device_id)
+    client = await hass_ws_client(hass)
+    response = await client.remove_device(device_entry.id, config_entry.entry_id)
+    assert not response["success"]
+
+    dead_device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, "remove-device-id")},
+    )
+    response = await client.remove_device(dead_device_entry.id, config_entry.entry_id)
+    assert response["success"]

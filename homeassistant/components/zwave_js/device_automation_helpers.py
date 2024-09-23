@@ -55,5 +55,5 @@ def async_bypass_dynamic_config_validation(hass: HomeAssistant, device_id: str) 
         return True
 
     # The driver may not be ready when the config entry is loaded.
-    client: ZwaveClient = hass.data[DOMAIN][entry.entry_id][DATA_CLIENT]
+    client: ZwaveClient = entry.runtime_data[DATA_CLIENT]
     return client.driver is None

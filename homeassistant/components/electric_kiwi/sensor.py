@@ -91,13 +91,13 @@ def _check_and_move_time(hop: Hop, time: str) -> datetime:
     date_time = datetime.combine(
         dt_util.start_of_local_day(),
         datetime.strptime(time, "%I:%M %p").time(),
-        dt_util.DEFAULT_TIME_ZONE,
+        dt_util.get_default_time_zone(),
     )
 
     end_time = datetime.combine(
         dt_util.start_of_local_day(),
         datetime.strptime(hop.end.end_time, "%I:%M %p").time(),
-        dt_util.DEFAULT_TIME_ZONE,
+        dt_util.get_default_time_zone(),
     )
 
     if end_time < dt_util.now():
@@ -167,8 +167,8 @@ class ElectricKiwiAccountEntity(
         super().__init__(coordinator)
 
         self._attr_unique_id = (
-            f"{coordinator._ek_api.customer_number}"
-            f"_{coordinator._ek_api.connection_id}_{description.key}"
+            f"{coordinator._ek_api.customer_number}"  # noqa: SLF001
+            f"_{coordinator._ek_api.connection_id}_{description.key}"  # noqa: SLF001
         )
         self.entity_description = description
 
@@ -196,8 +196,8 @@ class ElectricKiwiHOPEntity(
         super().__init__(coordinator)
 
         self._attr_unique_id = (
-            f"{coordinator._ek_api.customer_number}"
-            f"_{coordinator._ek_api.connection_id}_{description.key}"
+            f"{coordinator._ek_api.customer_number}"  # noqa: SLF001
+            f"_{coordinator._ek_api.connection_id}_{description.key}"  # noqa: SLF001
         )
         self.entity_description = description
 

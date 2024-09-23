@@ -122,7 +122,7 @@ def mock_fitbit_config_yaml(token_expiration_time: float) -> dict[str, Any] | No
 @pytest.fixture(name="fitbit_config_setup")
 def mock_fitbit_config_setup(
     fitbit_config_yaml: dict[str, Any] | None,
-) -> Generator[None, None, None]:
+) -> Generator[None]:
     """Fixture to mock out fitbit.conf file data loading and persistence."""
     has_config = fitbit_config_yaml is not None
     with (

@@ -25,7 +25,6 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
     VERSION = 1
-
     entry: ConfigEntry | None = None
 
     async def _create_entry(self, username: str, token: str) -> ConfigFlowResult:
@@ -148,3 +147,66 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
             errors["base"] = "cannot_connect"
 
         return acquired_token, errors
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle a reconfiguration flow initialized by the user."""
+        self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
+        return await self.async_step_reconfigure_confirm()
+
+    async def async_step_reconfigure_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle a reconfiguration flow initialized by the user."""
+        errors: dict[str, str] = {}
+        acquired_token = None
+        assert self.entry
+
+        if user_input is not None:
+            user_input[CONF_USERNAME] = self.entry.data[CONF_USERNAME]
+            try:
+                async with asyncio.timeout(10):
+                    acquired_token = await pymelcloud.login(
+                        user_input[CONF_USERNAME],
+                        user_input[CONF_PASSWORD],
+                        async_get_clientsession(self.hass),
+                    )
+            except (ClientResponseError, AttributeError) as err:
+                if (
+                    isinstance(err, ClientResponseError)
+                    and err.status
+                    in (
+                        HTTPStatus.UNAUTHORIZED,
+                        HTTPStatus.FORBIDDEN,
+                    )
+                    or isinstance(err, AttributeError)
+                    and err.name == "get"
+                ):
+                    errors["base"] = "invalid_auth"
+                else:
+                    errors["base"] = "cannot_connect"
+            except (
+                TimeoutError,
+                ClientError,
+            ):
+                errors["base"] = "cannot_connect"
+
+            if not errors:
+                user_input[CONF_TOKEN] = acquired_token
+                return self.async_update_reload_and_abort(
+                    self.entry,
+                    data={**self.entry.data, **user_input},
+                    reason="reconfigure_successful",
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure_confirm",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_PASSWORD): str,
+                }
+            ),
+            errors=errors,
+            description_placeholders={CONF_USERNAME: self.entry.data[CONF_USERNAME]},
+        )

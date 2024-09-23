@@ -10,7 +10,7 @@ from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
-ComponentSetup = Callable[[dict[str, Any]], Awaitable[None]]
+type ComponentSetup = Callable[[dict[str, Any]], Awaitable[None]]
 
 
 @pytest.fixture(name="config_entry")

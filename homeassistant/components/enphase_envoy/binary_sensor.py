@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from operator import attrgetter
 
 from pyenphase import EnvoyEncharge, EnvoyEnpower
 
@@ -12,14 +13,13 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .coordinator import EnphaseUpdateCoordinator
+from .coordinator import EnphaseConfigEntry, EnphaseUpdateCoordinator
 from .entity import EnvoyBaseEntity
 
 
@@ -36,7 +36,7 @@ ENCHARGE_SENSORS = (
         translation_key="communicating",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda encharge: encharge.communicating,
+        value_fn=attrgetter("communicating"),
     ),
     EnvoyEnchargeBinarySensorEntityDescription(
         key="dc_switch",
@@ -60,7 +60,7 @@ ENPOWER_SENSORS = (
         translation_key="communicating",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda enpower: enpower.communicating,
+        value_fn=attrgetter("communicating"),
     ),
     EnvoyEnpowerBinarySensorEntityDescription(
         key="mains_oper_state",
@@ -73,11 +73,11 @@ ENPOWER_SENSORS = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: EnphaseConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up envoy binary sensor platform."""
-    coordinator: EnphaseUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
     envoy_data = coordinator.envoy.data
     assert envoy_data is not None
     entities: list[BinarySensorEntity] = []

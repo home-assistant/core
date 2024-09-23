@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
+from ring_doorbell import RingOther
+
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, RING_DEVICES, RING_DEVICES_COORDINATOR
+from . import RingConfigEntry
 from .coordinator import RingDataCoordinator
 from .entity import RingEntity, exception_wrap
 
@@ -18,29 +19,27 @@ BUTTON_DESCRIPTION = ButtonEntityDescription(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    entry: RingConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Create the buttons for the Ring devices."""
-    devices = hass.data[DOMAIN][config_entry.entry_id][RING_DEVICES]
-    devices_coordinator: RingDataCoordinator = hass.data[DOMAIN][config_entry.entry_id][
-        RING_DEVICES_COORDINATOR
-    ]
+    ring_data = entry.runtime_data
+    devices_coordinator = ring_data.devices_coordinator
 
     async_add_entities(
         RingDoorButton(device, devices_coordinator, BUTTON_DESCRIPTION)
-        for device in devices["other"]
+        for device in ring_data.devices.other
         if device.has_capability("open")
     )
 
 
-class RingDoorButton(RingEntity, ButtonEntity):
+class RingDoorButton(RingEntity[RingOther], ButtonEntity):
     """Creates a button to open the ring intercom door."""
 
     def __init__(
         self,
-        device,
-        coordinator,
+        device: RingOther,
+        coordinator: RingDataCoordinator,
         description: ButtonEntityDescription,
     ) -> None:
         """Initialize the button."""
@@ -52,6 +51,6 @@ class RingDoorButton(RingEntity, ButtonEntity):
         self._attr_unique_id = f"{device.id}-{description.key}"
 
     @exception_wrap
-    def press(self) -> None:
+    async def async_press(self) -> None:
         """Open the door."""
-        self._device.open_door()
+        await self._device.async_open_door()

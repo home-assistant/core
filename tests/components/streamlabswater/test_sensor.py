@@ -8,8 +8,9 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
+from . import setup_integration
+
 from tests.common import MockConfigEntry
-from tests.components.streamlabswater import setup_integration
 
 
 async def test_all_entities(

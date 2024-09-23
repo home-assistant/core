@@ -5,20 +5,25 @@ from __future__ import annotations
 from typing import Any
 
 import voluptuous as vol
+from zha.exceptions import ZHAException
+from zha.zigbee.cluster_handlers.const import (
+    CLUSTER_HANDLER_IAS_WD,
+    CLUSTER_HANDLER_INOVELLI,
+)
+from zha.zigbee.cluster_handlers.manufacturerspecific import (
+    AllLEDEffectType,
+    SingleLEDEffectType,
+)
 
 from homeassistant.components.device_automation import InvalidDeviceAutomationConfig
 from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_TYPE
 from homeassistant.core import Context, HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
-from . import DOMAIN
-from .core.cluster_handlers.manufacturerspecific import (
-    AllLEDEffectType,
-    SingleLEDEffectType,
-)
-from .core.const import CLUSTER_HANDLER_IAS_WD, CLUSTER_HANDLER_INOVELLI
-from .core.helpers import async_get_zha_device
+from .const import DOMAIN
+from .helpers import async_get_zha_device_proxy
 from .websocket_api import SERVICE_WARNING_DEVICE_SQUAWK, SERVICE_WARNING_DEVICE_WARN
 
 # mypy: disallow-any-generics
@@ -136,8 +141,7 @@ async def async_validate_action_config(
 ) -> ConfigType:
     """Validate config."""
     schema = ACTION_SCHEMA_MAP.get(config[CONF_TYPE], DEFAULT_ACTION_SCHEMA)
-    config = schema(config)
-    return config
+    return schema(config)
 
 
 async def async_get_actions(
@@ -145,7 +149,7 @@ async def async_get_actions(
 ) -> list[dict[str, str]]:
     """List device actions."""
     try:
-        zha_device = async_get_zha_device(hass, device_id)
+        zha_device = async_get_zha_device_proxy(hass, device_id).device
     except (KeyError, AttributeError):
         return []
     cluster_handlers = [
@@ -168,8 +172,9 @@ async def async_get_action_capabilities(
     hass: HomeAssistant, config: ConfigType
 ) -> dict[str, vol.Schema]:
     """List action capabilities."""
-
-    return {"extra_fields": DEVICE_ACTION_SCHEMAS.get(config[CONF_TYPE], {})}
+    if (fields := DEVICE_ACTION_SCHEMAS.get(config[CONF_TYPE])) is None:
+        return {}
+    return {"extra_fields": fields}
 
 
 async def _execute_service_based_action(
@@ -181,7 +186,7 @@ async def _execute_service_based_action(
     action_type = config[CONF_TYPE]
     service_name = SERVICE_NAMES[action_type]
     try:
-        zha_device = async_get_zha_device(hass, config[CONF_DEVICE_ID])
+        zha_device = async_get_zha_device_proxy(hass, config[CONF_DEVICE_ID]).device
     except (KeyError, AttributeError):
         return
 
@@ -201,7 +206,7 @@ async def _execute_cluster_handler_command_based_action(
     action_type = config[CONF_TYPE]
     cluster_handler_name = CLUSTER_HANDLER_MAPPINGS[action_type]
     try:
-        zha_device = async_get_zha_device(hass, config[CONF_DEVICE_ID])
+        zha_device = async_get_zha_device_proxy(hass, config[CONF_DEVICE_ID]).device
     except (KeyError, AttributeError):
         return
 
@@ -224,7 +229,10 @@ async def _execute_cluster_handler_command_based_action(
             f" {action_type}"
         )
 
-    await getattr(action_cluster_handler, action_type)(**config)
+    try:
+        await getattr(action_cluster_handler, action_type)(**config)
+    except ZHAException as err:
+        raise HomeAssistantError(err) from err
 
 
 ZHA_ACTION_TYPES = {

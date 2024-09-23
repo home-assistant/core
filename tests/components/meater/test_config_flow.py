@@ -5,10 +5,11 @@ from unittest.mock import AsyncMock, patch
 from meater import AuthenticationError, ServiceUnavailableError
 import pytest
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.components.meater import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
@@ -39,7 +40,7 @@ async def test_duplicate_error(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}, data=conf
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -85,7 +86,7 @@ async def test_user_flow(hass: HomeAssistant, mock_meater) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}, data=None
     )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     with patch(
@@ -95,7 +96,7 @@ async def test_user_flow(hass: HomeAssistant, mock_meater) -> None:
         result = await hass.config_entries.flow.async_configure(result["flow_id"], conf)
         await hass.async_block_till_done()
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         CONF_USERNAME: "user@host.com",
         CONF_PASSWORD: "password123",
@@ -122,13 +123,9 @@ async def test_reauth_flow(hass: HomeAssistant, mock_meater) -> None:
     )
     mock_config.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_REAUTH},
-        data=data,
-    )
+    result = await mock_config.start_reauth_flow(hass)
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
     assert result["errors"] is None
 
@@ -138,7 +135,7 @@ async def test_reauth_flow(hass: HomeAssistant, mock_meater) -> None:
     )
     await hass.async_block_till_done()
 
-    assert result2["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "reauth_successful"
 
     config_entry = hass.config_entries.async_entries(DOMAIN)[0]

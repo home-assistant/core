@@ -3,7 +3,7 @@
 import pytest
 from pytest_unordered import unordered
 
-import homeassistant.components.automation as automation
+from homeassistant.components import automation
 from homeassistant.components.cover import DOMAIN, CoverEntityFeature
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.const import CONF_PLATFORM, EntityCategory
@@ -12,6 +12,8 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_registry import RegistryEntryHider
 from homeassistant.setup import async_setup_component
 
+from .common import MockCover
+
 from tests.common import (
     MockConfigEntry,
     async_get_device_automation_capabilities,
@@ -19,7 +21,6 @@ from tests.common import (
     async_mock_service,
     setup_test_component_platform,
 )
-from tests.components.cover.common import MockCover
 
 
 @pytest.fixture(autouse=True, name="stub_blueprint_populate")
@@ -135,7 +136,7 @@ async def test_get_actions_hidden_auxiliary(
             "entity_id": entity_entry.id,
             "metadata": {"secondary": True},
         }
-        for action in ["close"]
+        for action in ("close",)
     ]
     actions = await async_get_device_automations(
         hass, DeviceAutomationType.ACTION, device_entry.id

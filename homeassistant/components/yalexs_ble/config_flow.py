@@ -57,7 +57,7 @@ async def async_validate_lock_or_error(
         return {CONF_KEY: "invalid_auth"}
     except BleakError:
         return {"base": "cannot_connect"}
-    except Exception:  # pylint: disable=broad-except
+    except Exception:
         _LOGGER.exception("Unexpected error")
         return {"base": "unknown"}
     return {}

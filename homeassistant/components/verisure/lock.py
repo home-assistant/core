@@ -41,12 +41,12 @@ async def async_setup_entry(
     platform = async_get_current_platform()
     platform.async_register_entity_service(
         SERVICE_DISABLE_AUTOLOCK,
-        {},
+        None,
         VerisureDoorlock.disable_autolock.__name__,
     )
     platform.async_register_entity_service(
         SERVICE_ENABLE_AUTOLOCK,
-        {},
+        None,
         VerisureDoorlock.enable_autolock.__name__,
     )
 
@@ -112,7 +112,7 @@ class VerisureDoorlock(CoordinatorEntity[VerisureDataUpdateCoordinator], LockEnt
         digits = self.coordinator.entry.options.get(
             CONF_LOCK_CODE_DIGITS, DEFAULT_LOCK_CODE_DIGITS
         )
-        return "^\\d{%s}$" % digits
+        return f"^\\d{{{digits}}}$"
 
     @property
     def is_locked(self) -> bool:

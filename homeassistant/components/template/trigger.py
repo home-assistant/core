@@ -8,10 +8,16 @@ import voluptuous as vol
 
 from homeassistant import exceptions
 from homeassistant.const import CONF_FOR, CONF_PLATFORM, CONF_VALUE_TEMPLATE
-from homeassistant.core import CALLBACK_TYPE, Event, HassJob, HomeAssistant, callback
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    Event,
+    EventStateChangedData,
+    HassJob,
+    HomeAssistant,
+    callback,
+)
 from homeassistant.helpers import config_validation as cv, template
 from homeassistant.helpers.event import (
-    EventStateChangedData,
     TrackTemplate,
     TrackTemplateResult,
     async_call_later,
@@ -43,9 +49,7 @@ async def async_attach_trigger(
     """Listen for state changes based on configuration."""
     trigger_data = trigger_info["trigger_data"]
     value_template: Template = config[CONF_VALUE_TEMPLATE]
-    value_template.hass = hass
     time_delta = config.get(CONF_FOR)
-    template.attach(hass, time_delta)
     delay_cancel = None
     job = HassJob(action)
     armed = False

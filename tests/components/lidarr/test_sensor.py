@@ -1,5 +1,7 @@
 """The tests for Lidarr sensor platform."""
 
+import pytest
+
 from homeassistant.components.sensor import CONF_STATE_CLASS, SensorStateClass
 from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT
 from homeassistant.core import HomeAssistant
@@ -7,10 +9,10 @@ from homeassistant.core import HomeAssistant
 from .conftest import ComponentSetup
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensors(
     hass: HomeAssistant,
     setup_integration: ComponentSetup,
-    entity_registry_enabled_by_default: None,
     connection,
 ) -> None:
     """Test for successfully setting up the Lidarr platform."""

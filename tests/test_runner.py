@@ -2,6 +2,7 @@
 
 import asyncio
 from collections.abc import Iterator
+import subprocess
 import threading
 from unittest.mock import patch
 
@@ -104,7 +105,7 @@ def test_run_does_not_block_forever_with_shielded_task(
             try:
                 await asyncio.sleep(2)
             except asyncio.CancelledError:
-                raise Exception
+                raise Exception  # noqa: TRY002
 
         async def async_shielded(*_):
             try:
@@ -115,11 +116,11 @@ def test_run_does_not_block_forever_with_shielded_task(
         tasks.append(asyncio.ensure_future(asyncio.shield(async_shielded())))
         tasks.append(asyncio.ensure_future(asyncio.sleep(2)))
         tasks.append(asyncio.ensure_future(async_raise()))
-        await asyncio.sleep(0.1)
+        await asyncio.sleep(0)
         return 0
 
     with (
-        patch.object(runner, "TASK_CANCELATION_TIMEOUT", 1),
+        patch.object(runner, "TASK_CANCELATION_TIMEOUT", 0.1),
         patch("homeassistant.bootstrap.async_setup_hass", return_value=hass),
         patch("threading._shutdown"),
         patch("homeassistant.core.HomeAssistant.async_run", _async_create_tasks),
@@ -141,11 +142,11 @@ async def test_unhandled_exception_traceback(
 
     async def _unhandled_exception():
         raised.set()
-        raise Exception("This is unhandled")
+        raise Exception("This is unhandled")  # noqa: TRY002
 
     try:
         hass.loop.set_debug(True)
-        task = asyncio.create_task(_unhandled_exception())
+        task = asyncio.create_task(_unhandled_exception(), name="name_of_task")
         await raised.wait()
         # Delete it without checking result to trigger unhandled exception
         del task
@@ -155,9 +156,10 @@ async def test_unhandled_exception_traceback(
     assert "Task exception was never retrieved" in caplog.text
     assert "This is unhandled" in caplog.text
     assert "_unhandled_exception" in caplog.text
+    assert "name_of_task" in caplog.text
 
 
-def test__enable_posix_spawn() -> None:
+def test_enable_posix_spawn() -> None:
     """Test that we can enable posix_spawn on musllinux."""
 
     def _mock_sys_tags_any() -> Iterator[packaging.tags.Tag]:
@@ -167,21 +169,21 @@ def test__enable_posix_spawn() -> None:
         yield from packaging.tags.parse_tag("cp311-cp311-musllinux_1_1_x86_64")
 
     with (
-        patch.object(runner.subprocess, "_USE_POSIX_SPAWN", False),
+        patch.object(subprocess, "_USE_POSIX_SPAWN", False),
         patch(
             "homeassistant.runner.packaging.tags.sys_tags",
             side_effect=_mock_sys_tags_musl,
         ),
     ):
         runner._enable_posix_spawn()
-        assert runner.subprocess._USE_POSIX_SPAWN is True
+        assert subprocess._USE_POSIX_SPAWN is True
 
     with (
-        patch.object(runner.subprocess, "_USE_POSIX_SPAWN", False),
+        patch.object(subprocess, "_USE_POSIX_SPAWN", False),
         patch(
             "homeassistant.runner.packaging.tags.sys_tags",
             side_effect=_mock_sys_tags_any,
         ),
     ):
         runner._enable_posix_spawn()
-        assert runner.subprocess._USE_POSIX_SPAWN is False
+        assert subprocess._USE_POSIX_SPAWN is False

@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant
 from .conftest import TEST_NOTIFIER_NAME
 
 
-async def test_services(hass: HomeAssistant, matrix_bot: MatrixBot):
+async def test_services(hass: HomeAssistant, matrix_bot: MatrixBot) -> None:
     """Test hass/MatrixBot state."""
 
     services = hass.services.async_services()

@@ -45,7 +45,7 @@ MANY_LANGUAGES = [
     "sr",
     "sv",
     "sw",
-    "te",
+    "te",  # codespell:ignore te
     "tr",
     "uk",
     "ur",

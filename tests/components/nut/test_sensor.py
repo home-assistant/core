@@ -142,7 +142,9 @@ async def test_unknown_state_sensors(hass: HomeAssistant) -> None:
         assert state2.state == "OQ"
 
 
-async def test_stale_options(hass: HomeAssistant) -> None:
+async def test_stale_options(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test creation of sensors with stale options to remove."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -166,8 +168,7 @@ async def test_stale_options(hass: HomeAssistant) -> None:
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-        registry = er.async_get(hass)
-        entry = registry.async_get("sensor.ups1_battery_charge")
+        entry = entity_registry.async_get("sensor.ups1_battery_charge")
         assert entry
         assert entry.unique_id == f"{config_entry.entry_id}_battery.charge"
         assert config_entry.data[CONF_RESOURCES] == ["battery.charge"]

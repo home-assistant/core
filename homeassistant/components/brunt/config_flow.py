@@ -43,7 +43,7 @@ async def validate_input(user_input: dict[str, Any]) -> dict[str, str] | None:
     except ServerDisconnectedError:
         _LOGGER.warning("Cannot connect to Brunt")
         errors = {"base": "cannot_connect"}
-    except Exception:  # pylint: disable=broad-except
+    except Exception:
         _LOGGER.exception("Unknown error when trying to login to Brunt")
         errors = {"base": "unknown"}
     finally:

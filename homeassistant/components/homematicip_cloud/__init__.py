@@ -6,9 +6,11 @@ from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import device_registry as dr, entity_registry as er
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity_registry import async_entries_for_config_entry
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -19,8 +21,7 @@ from .const import (
     HMIPC_HAPID,
     HMIPC_NAME,
 )
-from .generic_entity import HomematicipGenericEntity  # noqa: F401
-from .hap import HomematicipAuth, HomematicipHAP  # noqa: F401
+from .hap import HomematicipHAP
 from .services import async_setup_services, async_unload_services
 
 CONFIG_SCHEMA = vol.Schema(
@@ -129,7 +130,7 @@ def _async_remove_obsolete_entities(
         return
 
     entity_registry = er.async_get(hass)
-    er_entries = async_entries_for_config_entry(entity_registry, entry.entry_id)
+    er_entries = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
     for er_entry in er_entries:
         if er_entry.unique_id.startswith("HomematicipAccesspointStatus"):
             entity_registry.async_remove(er_entry.entity_id)

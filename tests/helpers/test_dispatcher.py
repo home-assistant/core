@@ -73,7 +73,7 @@ async def test_signal_type_format(hass: HomeAssistant) -> None:
     assert calls == [("Hello", 2)]
 
     # Test compatibility with string keys
-    async_dispatcher_send(hass, "test-{}".format("unique-id"), "x", 4)
+    async_dispatcher_send(hass, "test-unique-id", "x", 4)
     await hass.async_block_till_done()
 
     assert calls == [("Hello", 2), ("x", 4)]
@@ -188,7 +188,7 @@ async def test_callback_exception_gets_logged(
     @callback
     def bad_handler(*args):
         """Record calls."""
-        raise Exception("This is a bad message callback")
+        raise Exception("This is a bad message callback")  # noqa: TRY002
 
     # wrap in partial to test message logging.
     async_dispatcher_connect(hass, "test", partial(bad_handler))
@@ -208,7 +208,7 @@ async def test_coro_exception_gets_logged(
 
     async def bad_async_handler(*args):
         """Record calls."""
-        raise Exception("This is a bad message in a coro")
+        raise Exception("This is a bad message in a coro")  # noqa: TRY002
 
     # wrap in partial to test message logging.
     async_dispatcher_connect(hass, "test", bad_async_handler)
@@ -239,3 +239,23 @@ async def test_dispatcher_add_dispatcher(hass: HomeAssistant) -> None:
     async_dispatcher_send(hass, "test", 5)
 
     assert calls == [3, 4, 4, 5, 5]
+
+
+async def test_thread_safety_checks(hass: HomeAssistant) -> None:
+    """Test dispatcher thread safety checks."""
+    calls = []
+
+    @callback
+    def _dispatcher(data):
+        calls.append(data)
+
+    async_dispatcher_connect(hass, "test", _dispatcher)
+
+    with pytest.raises(
+        RuntimeError,
+        match="Detected code that calls async_dispatcher_send from a thread.",
+    ):
+        await hass.async_add_executor_job(async_dispatcher_send, hass, "test", 3)
+
+    async_dispatcher_send(hass, "test", 4)
+    assert calls == [4]

@@ -1,4 +1,4 @@
-"""The sensor tests for the Ruckus Unleashed platform."""
+"""The sensor tests for the Ruckus platform."""
 
 from datetime import timedelta
 from unittest.mock import AsyncMock
@@ -84,13 +84,14 @@ async def test_clients_update_auth_failed(hass: HomeAssistant) -> None:
         assert test_client.state == STATE_UNAVAILABLE
 
 
-async def test_restoring_clients(hass: HomeAssistant) -> None:
+async def test_restoring_clients(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test restoring existing device_tracker entities if not detected on startup."""
     entry = mock_config_entry()
     entry.add_to_hass(hass)
 
-    registry = er.async_get(hass)
-    registry.async_get_or_create(
+    entity_registry.async_get_or_create(
         "device_tracker",
         DOMAIN,
         DEFAULT_UNIQUEID,

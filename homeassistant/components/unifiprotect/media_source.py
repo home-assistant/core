@@ -7,20 +7,14 @@ from datetime import date, datetime, timedelta
 from enum import Enum
 from typing import Any, NoReturn, cast
 
-from pyunifiprotect.data import (
-    Camera,
-    Event,
-    EventType,
-    ModelType,
-    SmartDetectObjectType,
-)
-from pyunifiprotect.exceptions import NvrError
-from pyunifiprotect.utils import from_js_time
+from uiprotect.data import Camera, Event, EventType, SmartDetectObjectType
+from uiprotect.exceptions import NvrError
+from uiprotect.utils import from_js_time
 from yarl import URL
 
 from homeassistant.components.camera import CameraImageView
 from homeassistant.components.media_player import BrowseError, MediaClass
-from homeassistant.components.media_source.models import (
+from homeassistant.components.media_source import (
     BrowseMediaSource,
     MediaSource,
     MediaSourceItem,
@@ -32,7 +26,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
-from .data import ProtectData
+from .data import ProtectData, async_get_ufp_entries
 from .views import async_generate_event_video_url, async_generate_thumbnail_url
 
 VIDEO_FORMAT = "video/mp4"
@@ -87,21 +81,15 @@ EVENT_NAME_MAP = {
 }
 
 
-def get_ufp_event(event_type: SimpleEventType) -> set[EventType]:
-    """Get UniFi Protect event type from SimpleEventType."""
-
-    return EVENT_MAP[event_type]
-
-
 async def async_get_media_source(hass: HomeAssistant) -> MediaSource:
     """Set up UniFi Protect media source."""
-
-    data_sources: dict[str, ProtectData] = {}
-    for data in hass.data.get(DOMAIN, {}).values():
-        if isinstance(data, ProtectData):
-            data_sources[data.api.bootstrap.nvr.id] = data
-
-    return ProtectMediaSource(hass, data_sources)
+    return ProtectMediaSource(
+        hass,
+        {
+            entry.runtime_data.api.bootstrap.nvr.id: entry.runtime_data
+            for entry in async_get_ufp_entries(hass)
+        },
+    )
 
 
 @callback
@@ -419,9 +407,7 @@ class ProtectMediaSource(MediaSource):
 
         if camera is not None:
             title = f"{camera.display_name} > {title}"
-        title = f"{data.api.bootstrap.nvr.display_name} > {title}"
-
-        return title
+        return f"{data.api.bootstrap.nvr.display_name} > {title}"
 
     async def _build_event(
         self,
@@ -496,7 +482,7 @@ class ProtectMediaSource(MediaSource):
     ) -> list[BrowseMediaSource]:
         """Build media source for a given range of time and event type."""
 
-        event_types = event_types or get_ufp_event(SimpleEventType.ALL)
+        event_types = event_types or EVENT_MAP[SimpleEventType.ALL]
         types = list(event_types)
         sources: list[BrowseMediaSource] = []
         events = await data.api.get_events_raw(
@@ -551,21 +537,20 @@ class ProtectMediaSource(MediaSource):
             return source
 
         now = dt_util.now()
-
-        args = {
-            "data": data,
-            "start": now - timedelta(days=days),
-            "end": now,
-            "reserve": True,
-            "event_types": get_ufp_event(event_type),
-        }
-
         camera: Camera | None = None
+        event_camera_id: str | None = None
         if camera_id != "all":
             camera = data.api.bootstrap.cameras.get(camera_id)
-            args["camera_id"] = camera_id
+            event_camera_id = camera_id
 
-        events = await self._build_events(**args)  # type: ignore[arg-type]
+        events = await self._build_events(
+            data=data,
+            start=now - timedelta(days=days),
+            end=now,
+            camera_id=event_camera_id,
+            event_types=EVENT_MAP[event_type],
+            reserve=True,
+        )
         source.children = events
         source.title = self._breadcrumb(
             data,
@@ -672,7 +657,7 @@ class ProtectMediaSource(MediaSource):
             hour=0,
             minute=0,
             second=0,
-            tzinfo=dt_util.DEFAULT_TIME_ZONE,
+            tzinfo=dt_util.get_default_time_zone(),
         )
         if is_all:
             if start_dt.month < 12:
@@ -682,21 +667,21 @@ class ProtectMediaSource(MediaSource):
         else:
             end_dt = start_dt + timedelta(hours=24)
 
-        args = {
-            "data": data,
-            "start": start_dt,
-            "end": end_dt,
-            "reserve": False,
-            "event_types": get_ufp_event(event_type),
-        }
-
         camera: Camera | None = None
+        event_camera_id: str | None = None
         if camera_id != "all":
             camera = data.api.bootstrap.cameras.get(camera_id)
-            args["camera_id"] = camera_id
+            event_camera_id = camera_id
 
         title = f"{start.strftime('%B %Y')} > {title}"
-        events = await self._build_events(**args)  # type: ignore[arg-type]
+        events = await self._build_events(
+            data=data,
+            start=start_dt,
+            end=end_dt,
+            camera_id=event_camera_id,
+            reserve=False,
+            event_types=EVENT_MAP[event_type],
+        )
         source.children = events
         source.title = self._breadcrumb(
             data,
@@ -857,8 +842,7 @@ class ProtectMediaSource(MediaSource):
 
         cameras: list[BrowseMediaSource] = [await self._build_camera(data, "all")]
 
-        for camera in data.get_by_types({ModelType.CAMERA}):
-            camera = cast(Camera, camera)
+        for camera in data.get_cameras():
             if not camera.can_read_media(data.api.bootstrap.auth_user):
                 continue
             cameras.append(await self._build_camera(data, camera.id))
@@ -868,7 +852,7 @@ class ProtectMediaSource(MediaSource):
     async def _build_console(self, data: ProtectData) -> BrowseMediaSource:
         """Build media source for a single UniFi Protect NVR."""
 
-        base = BrowseMediaSource(
+        return BrowseMediaSource(
             domain=DOMAIN,
             identifier=f"{data.api.bootstrap.nvr.id}:browse",
             media_class=MediaClass.DIRECTORY,
@@ -879,8 +863,6 @@ class ProtectMediaSource(MediaSource):
             children_media_class=MediaClass.VIDEO,
             children=await self._build_cameras(data),
         )
-
-        return base
 
     async def _build_sources(self) -> BrowseMediaSource:
         """Return all media source for all UniFi Protect NVRs."""

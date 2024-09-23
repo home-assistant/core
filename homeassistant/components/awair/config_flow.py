@@ -250,13 +250,12 @@ class AwairFlowHandler(ConfigFlow, domain=DOMAIN):
         try:
             user = await awair.user()
             devices = await user.devices()
-            if not devices:
-                return (None, "no_devices_found")
-
-            return (user, None)
-
         except AuthError:
             return (None, "invalid_access_token")
         except AwairError as err:
             LOGGER.error("Unexpected API error: %s", err)
             return (None, "unknown")
+
+        if not devices:
+            return (None, "no_devices_found")
+        return (user, None)

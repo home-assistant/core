@@ -4,10 +4,8 @@ import voluptuous as vol
 
 from homeassistant.components.device_automation import (
     DEVICE_TRIGGER_BASE_SCHEMA,
-    async_get_entity_registry_entry_or_raise,
-)
-from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
+    async_get_entity_registry_entry_or_raise,
 )
 from homeassistant.components.homeassistant.triggers import (
     numeric_state as numeric_state_trigger,
@@ -40,6 +38,7 @@ CONF_ATMOSPHERIC_PRESSURE = "atmospheric_pressure"
 CONF_BATTERY_LEVEL = "battery_level"
 CONF_CO = "carbon_monoxide"
 CONF_CO2 = "carbon_dioxide"
+CONF_CONDUCTIVITY = "conductivity"
 CONF_CURRENT = "current"
 CONF_DATA_RATE = "data_rate"
 CONF_DATA_SIZE = "data_size"
@@ -89,6 +88,7 @@ ENTITY_TRIGGERS = {
     SensorDeviceClass.BATTERY: [{CONF_TYPE: CONF_BATTERY_LEVEL}],
     SensorDeviceClass.CO: [{CONF_TYPE: CONF_CO}],
     SensorDeviceClass.CO2: [{CONF_TYPE: CONF_CO2}],
+    SensorDeviceClass.CONDUCTIVITY: [{CONF_TYPE: CONF_CONDUCTIVITY}],
     SensorDeviceClass.CURRENT: [{CONF_TYPE: CONF_CURRENT}],
     SensorDeviceClass.DATA_RATE: [{CONF_TYPE: CONF_DATA_RATE}],
     SensorDeviceClass.DATA_SIZE: [{CONF_TYPE: CONF_DATA_SIZE}],
@@ -153,6 +153,7 @@ TRIGGER_SCHEMA = vol.All(
                     CONF_BATTERY_LEVEL,
                     CONF_CO,
                     CONF_CO2,
+                    CONF_CONDUCTIVITY,
                     CONF_CURRENT,
                     CONF_DATA_RATE,
                     CONF_DATA_SIZE,

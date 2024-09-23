@@ -1,11 +1,12 @@
-"""Config flow for Huisbaasje integration."""
+"""Config flow for EnergyFlip integration."""
 
 import logging
+from typing import Any
 
 from energyflip import EnergyFlip, EnergyFlipConnectionException, EnergyFlipException
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ID, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.data_entry_flow import AbortFlow
 
@@ -18,12 +19,14 @@ DATA_SCHEMA = vol.Schema(
 )
 
 
-class HuisbaasjeConfigFlow(ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for Huisbaasje."""
+class EnergyFlipConfigFlow(ConfigFlow, domain=DOMAIN):
+    """Handle a config flow for EnergyFlip."""
 
     VERSION = 1
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
         if user_input is None:
             return await self._show_setup_form(user_input)
@@ -40,7 +43,7 @@ class HuisbaasjeConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "invalid_auth"
         except AbortFlow:
             raise
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:

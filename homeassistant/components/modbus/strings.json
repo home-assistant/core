@@ -88,7 +88,7 @@
     },
     "duplicate_entity_entry": {
       "title": "Modbus {sub_1} address {sub_2} is duplicate, second entry not loaded.",
-      "description": "An address can only be associated with on entity, Please correct the entry in your configuration.yaml file and restart Home Assistant to fix this issue."
+      "description": "An address can only be associated with one entity, Please correct the entry in your configuration.yaml file and restart Home Assistant to fix this issue."
     },
     "duplicate_entity_name": {
       "title": "Modbus {sub_1} is duplicate, second entry not loaded.",
@@ -97,6 +97,10 @@
     "no_entities": {
       "title": "Modbus {sub_1} contain no entities, entry not loaded.",
       "description": "Please add at least one entity to Modbus {sub_1} in your configuration.yaml file and restart Home Assistant to fix this issue."
+    },
+    "deprecated_restart": {
+      "title": "`modbus.restart` is being removed",
+      "description": "Please use reload yaml via the developer tools in the UI instead of via the `modbus.restart` action."
     }
   }
 }

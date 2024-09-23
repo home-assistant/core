@@ -65,6 +65,15 @@
       "only_light": {
         "name": "Light"
       }
+    },
+    "select": {
+      "temperature_range": {
+        "name": "Temperature range",
+        "state": {
+          "low": "Low",
+          "high": "High"
+        }
+      }
     }
   }
 }

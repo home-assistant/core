@@ -10,11 +10,12 @@ from aiopyarr import exceptions
 from aiopyarr.lidarr_client import LidarrClient
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
+from . import LidarrConfigEntry
 from .const import DEFAULT_NAME, DOMAIN
 
 
@@ -25,10 +26,10 @@ class LidarrConfigFlow(ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize the flow."""
-        self.entry: ConfigEntry | None = None
+        self.entry: LidarrConfigEntry | None = None
 
     async def async_step_reauth(
-        self, user_input: Mapping[str, Any]
+        self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle configuration by re-auth."""
         self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])

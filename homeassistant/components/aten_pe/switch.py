@@ -9,7 +9,7 @@ from atenpdu import AtenPE, AtenPEError
 import voluptuous as vol
 
 from homeassistant.components.switch import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as SWITCH_PLATFORM_SCHEMA,
     SwitchDeviceClass,
     SwitchEntity,
 )
@@ -30,7 +30,7 @@ DEFAULT_COMMUNITY = "private"
 DEFAULT_PORT = "161"
 DEFAULT_USERNAME = "administrator"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,

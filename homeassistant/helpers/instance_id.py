@@ -29,7 +29,7 @@ async def async_get(hass: HomeAssistant) -> str:
             hass.config.path(LEGACY_UUID_FILE),
             store,
         )
-    except Exception:  # pylint: disable=broad-exception-caught
+    except Exception:
         _LOGGER.exception(
             (
                 "Could not read hass instance ID from '%s' or '%s', a new instance ID "

@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from datetime import datetime, timedelta
 import logging
+from types import MappingProxyType
 from typing import Any
 
 from pyasuswrt import AsusWrtError
@@ -289,7 +290,7 @@ class AsusWrtRouter:
 
         if self._connect_error:
             self._connect_error = False
-            _LOGGER.info("Reconnected to ASUS router %s", self.host)
+            _LOGGER.warning("Reconnected to ASUS router %s", self.host)
 
         self._connected_devices = len(wrt_devices)
         consider_home: int = self._options.get(
@@ -362,7 +363,7 @@ class AsusWrtRouter:
         """Add a function to call when router is closed."""
         self._on_close.append(func)
 
-    def update_options(self, new_options: dict[str, Any]) -> bool:
+    def update_options(self, new_options: MappingProxyType[str, Any]) -> bool:
         """Update router options."""
         req_reload = False
         for name, new_opt in new_options.items():

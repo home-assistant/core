@@ -55,7 +55,7 @@ def validate_table_schema_supports_utf8(
         schema_errors = _validate_table_schema_supports_utf8(
             instance, table_object, columns
         )
-    except Exception:  # pylint: disable=broad-except
+    except Exception:
         _LOGGER.exception("Error when validating DB schema")
 
     _log_schema_errors(table_object, schema_errors)
@@ -76,7 +76,7 @@ def validate_table_schema_has_correct_collation(
         schema_errors = _validate_table_schema_has_correct_collation(
             instance, table_object
         )
-    except Exception:  # pylint: disable=broad-except
+    except Exception:
         _LOGGER.exception("Error when validating DB schema")
 
     _log_schema_errors(table_object, schema_errors)
@@ -103,8 +103,7 @@ def _validate_table_schema_has_correct_collation(
         collate = (
             dialect_kwargs.get("mysql_collate")
             or dialect_kwargs.get("mariadb_collate")
-            # pylint: disable-next=protected-access
-            or connection.dialect._fetch_setting(connection, "collation_server")  # type: ignore[attr-defined]
+            or connection.dialect._fetch_setting(connection, "collation_server")  # type: ignore[attr-defined]  # noqa: SLF001
         )
         if collate and collate != "utf8mb4_unicode_ci":
             _LOGGER.debug(
@@ -159,7 +158,7 @@ def validate_db_schema_precision(
         return schema_errors
     try:
         schema_errors = _validate_db_schema_precision(instance, table_object)
-    except Exception:  # pylint: disable=broad-except
+    except Exception:
         _LOGGER.exception("Error when validating DB schema")
 
     _log_schema_errors(table_object, schema_errors)

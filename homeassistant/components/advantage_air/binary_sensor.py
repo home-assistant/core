@@ -6,12 +6,11 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN as ADVANTAGE_AIR_DOMAIN
+from . import AdvantageAirDataConfigEntry
 from .entity import AdvantageAirAcEntity, AdvantageAirZoneEntity
 from .models import AdvantageAirData
 
@@ -20,12 +19,12 @@ PARALLEL_UPDATES = 0
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: AdvantageAirDataConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up AdvantageAir Binary Sensor platform."""
 
-    instance: AdvantageAirData = hass.data[ADVANTAGE_AIR_DOMAIN][config_entry.entry_id]
+    instance = config_entry.runtime_data
 
     entities: list[BinarySensorEntity] = []
     if aircons := instance.coordinator.data.get("aircons"):

@@ -13,7 +13,7 @@ from homeassistant.components.humidifier import (
     ATTR_MIN_HUMIDITY,
     DEFAULT_MAX_HUMIDITY,
     DEFAULT_MIN_HUMIDITY,
-    DOMAIN,
+    DOMAIN as HUMIDIFIER_DOMAIN,
     SERVICE_SET_HUMIDITY,
     HumidifierDeviceClass,
 )
@@ -25,11 +25,14 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_ON,
 )
-from homeassistant.core import Event, State, callback
-from homeassistant.helpers.event import (
+from homeassistant.core import (
+    Event,
     EventStateChangedData,
-    async_track_state_change_event,
+    HassJobType,
+    State,
+    callback,
 )
+from homeassistant.helpers.event import async_track_state_change_event
 
 from .accessories import TYPES, HomeAccessory
 from .const import (
@@ -187,6 +190,7 @@ class HumidifierDehumidifier(HomeAccessory):
                     self.hass,
                     [self.linked_humidity_sensor],
                     self.async_update_current_humidity_event,
+                    job_type=HassJobType.Callback,
                 )
             )
 
@@ -249,7 +253,7 @@ class HumidifierDehumidifier(HomeAccessory):
 
         if CHAR_ACTIVE in char_values:
             self.async_call_service(
-                DOMAIN,
+                HUMIDIFIER_DOMAIN,
                 SERVICE_TURN_ON if char_values[CHAR_ACTIVE] else SERVICE_TURN_OFF,
                 {ATTR_ENTITY_ID: self.entity_id},
                 f"{CHAR_ACTIVE} to {char_values[CHAR_ACTIVE]}",
@@ -268,7 +272,7 @@ class HumidifierDehumidifier(HomeAccessory):
                 self.char_target_humidity.set_value(humidity)
 
             self.async_call_service(
-                DOMAIN,
+                HUMIDIFIER_DOMAIN,
                 SERVICE_SET_HUMIDITY,
                 {ATTR_ENTITY_ID: self.entity_id, ATTR_HUMIDITY: humidity},
                 (

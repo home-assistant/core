@@ -9,10 +9,20 @@ from pytest_unordered import unordered
 
 from homeassistant.components.camera import CameraEntityFeature
 from homeassistant.components.climate import ATTR_MAX_TEMP, ATTR_MIN_TEMP, HVACMode
+
+# pylint: disable-next=hass-component-root-import
 from homeassistant.components.demo.binary_sensor import DemoBinarySensor
+
+# pylint: disable-next=hass-component-root-import
 from homeassistant.components.demo.cover import DemoCover
+
+# pylint: disable-next=hass-component-root-import
 from homeassistant.components.demo.light import LIGHT_EFFECT_LIST, DemoLight
+
+# pylint: disable-next=hass-component-root-import
 from homeassistant.components.demo.media_player import AbstractDemoPlayer
+
+# pylint: disable-next=hass-component-root-import
 from homeassistant.components.demo.switch import DemoSwitch
 from homeassistant.components.google_assistant import (
     EVENT_COMMAND_RECEIVED,
@@ -25,11 +35,12 @@ from homeassistant.components.google_assistant import (
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
+    EVENT_CALL_SERVICE,
     Platform,
     UnitOfTemperature,
     __version__,
 )
-from homeassistant.core import EVENT_CALL_SERVICE, HomeAssistant, State
+from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import (
     area_registry as ar,
     device_registry as dr,
@@ -1076,7 +1087,7 @@ async def test_device_class_binary_sensor(
         ("non_existing_class", "action.devices.types.BLINDS"),
         ("door", "action.devices.types.DOOR"),
         ("garage", "action.devices.types.GARAGE"),
-        ("gate", "action.devices.types.GARAGE"),
+        ("gate", "action.devices.types.GATE"),
         ("awning", "action.devices.types.AWNING"),
         ("shutter", "action.devices.types.SHUTTER"),
         ("curtain", "action.devices.types.CURTAIN"),
@@ -1281,7 +1292,7 @@ async def test_identify(hass: HomeAssistant) -> None:
                     "payload": {
                         "device": {
                             "mdnsScanData": {
-                                "additionals": [
+                                "additionals": [  # codespell:ignore additionals
                                     {
                                         "type": "TXT",
                                         "class": "IN",

@@ -23,9 +23,9 @@ TEST_ENTITY = "binary_sensor.test_name"
 def mock_socket_fixture():
     """Mock the socket."""
     with (
-        patch("homeassistant.components.tcp.common.socket.socket") as mock_socket,
+        patch("homeassistant.components.tcp.entity.socket.socket") as mock_socket,
         patch(
-            "homeassistant.components.tcp.common.select.select",
+            "homeassistant.components.tcp.entity.select.select",
             return_value=(True, False, False),
         ),
     ):
@@ -79,7 +79,7 @@ async def test_state(hass: HomeAssistant, mock_socket, now) -> None:
     mock_socket.recv.return_value = b"on"
 
     async_fire_time_changed(hass, now + timedelta(seconds=45))
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get(TEST_ENTITY)
 

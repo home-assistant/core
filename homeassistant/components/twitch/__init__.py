@@ -39,7 +39,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady from err
 
     access_token = entry.data[CONF_TOKEN][CONF_ACCESS_TOKEN]
-    client = await Twitch(
+    client = Twitch(
         app_id=implementation.client_id,
         authenticate_app=False,
     )

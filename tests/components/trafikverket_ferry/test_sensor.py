@@ -6,7 +6,7 @@ from datetime import timedelta
 from unittest.mock import patch
 
 import pytest
-from pytrafikverket.trafikverket_ferry import FerryStop
+from pytrafikverket.models import FerryStopModel
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -19,7 +19,7 @@ async def test_sensor(
     hass: HomeAssistant,
     load_int: ConfigEntry,
     monkeypatch: pytest.MonkeyPatch,
-    get_ferries: list[FerryStop],
+    get_ferries: list[FerryStopModel],
 ) -> None:
     """Test the Trafikverket Ferry sensor."""
     state1 = hass.states.get("sensor.harbor1_departure_from")

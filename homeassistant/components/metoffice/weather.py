@@ -91,8 +91,6 @@ class MetOfficeWeather(
     CoordinatorWeatherEntity[
         TimestampDataUpdateCoordinator[MetOfficeData],
         TimestampDataUpdateCoordinator[MetOfficeData],
-        TimestampDataUpdateCoordinator[MetOfficeData],
-        TimestampDataUpdateCoordinator[MetOfficeData],  # Can be removed in Python 3.12
     ]
 ):
     """Implementation of a Met Office weather condition."""

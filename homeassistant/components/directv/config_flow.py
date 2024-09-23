@@ -40,9 +40,9 @@ class DirecTVConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Set up the instance."""
-        self.discovery_info = {}
+        self.discovery_info: dict[str, Any] = {}
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -55,7 +55,7 @@ class DirecTVConfigFlow(ConfigFlow, domain=DOMAIN):
             info = await validate_input(self.hass, user_input)
         except DIRECTVError:
             return self._show_setup_form({"base": ERROR_CANNOT_CONNECT})
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Unexpected exception")
             return self.async_abort(reason=ERROR_UNKNOWN)
 
@@ -88,7 +88,7 @@ class DirecTVConfigFlow(ConfigFlow, domain=DOMAIN):
             info = await validate_input(self.hass, self.discovery_info)
         except DIRECTVError:
             return self.async_abort(reason=ERROR_CANNOT_CONNECT)
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Unexpected exception")
             return self.async_abort(reason=ERROR_UNKNOWN)
 

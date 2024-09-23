@@ -407,7 +407,9 @@ class SonosSpeaker:
     @callback
     def async_renew_failed(self, exception: Exception) -> None:
         """Handle a failed subscription renewal."""
-        self.hass.async_create_task(self._async_renew_failed(exception))
+        self.hass.async_create_background_task(
+            self._async_renew_failed(exception), "sonos renew failed", eager_start=True
+        )
 
     async def _async_renew_failed(self, exception: Exception) -> None:
         """Mark the speaker as offline after a subscription renewal failure.
@@ -449,14 +451,20 @@ class SonosSpeaker:
         """Add the soco instance associated with the event to the callback."""
         if "alarm_list_version" not in event.variables:
             return
-        self.hass.async_create_task(self.alarms.async_process_event(event, self))
+        self.hass.async_create_background_task(
+            self.alarms.async_process_event(event, self),
+            "sonos process event",
+            eager_start=True,
+        )
 
     @callback
     def async_dispatch_device_properties(self, event: SonosEvent) -> None:
         """Update device properties from an event."""
         self.event_stats.process(event)
-        self.hass.async_create_task(
-            self.async_update_device_properties(event), eager_start=True
+        self.hass.async_create_background_task(
+            self.async_update_device_properties(event),
+            "sonos device properties",
+            eager_start=True,
         )
 
     async def async_update_device_properties(self, event: SonosEvent) -> None:
@@ -479,7 +487,11 @@ class SonosSpeaker:
             return
         if "container_update_i_ds" not in event.variables:
             return
-        self.hass.async_create_task(self.favorites.async_process_event(event, self))
+        self.hass.async_create_background_task(
+            self.favorites.async_process_event(event, self),
+            "sonos dispatch favorites",
+            eager_start=True,
+        )
 
     @callback
     def async_dispatch_media_update(self, event: SonosEvent) -> None:
@@ -601,7 +613,7 @@ class SonosSpeaker:
         self.available = True
         if not was_available:
             self.async_write_entity_states()
-            self.hass.async_create_task(self.async_subscribe())
+            self.hass.async_create_task(self.async_subscribe(), eager_start=True)
 
     @callback
     def async_check_activity(self, now: datetime.datetime) -> None:
@@ -814,11 +826,12 @@ class SonosSpeaker:
                     f"{SONOS_VANISHED}-{uid}",
                     reason,
                 )
-
-        if "zone_player_uui_ds_in_group" not in event.variables:
-            return
         self.event_stats.process(event)
-        self.hass.async_create_task(self.create_update_groups_coro(event))
+        self.hass.async_create_background_task(
+            self.create_update_groups_coro(event),
+            name=f"sonos group update {self.zone_name}",
+            eager_start=True,
+        )
 
     def create_update_groups_coro(self, event: SonosEvent | None = None) -> Coroutine:
         """Handle callback for topology change event."""
@@ -841,8 +854,7 @@ class SonosSpeaker:
 
         async def _async_extract_group(event: SonosEvent | None) -> list[str]:
             """Extract group layout from a topology event."""
-            group = event and event.zone_player_uui_ds_in_group
-            if group:
+            if group := (event and getattr(event, "zone_player_uui_ds_in_group", None)):
                 assert isinstance(group, str)
                 return group.split(",")
 
@@ -851,11 +863,21 @@ class SonosSpeaker:
         @callback
         def _async_regroup(group: list[str]) -> None:
             """Rebuild internal group layout."""
+            _LOGGER.debug("async_regroup %s %s", self.zone_name, group)
             if (
                 group == [self.soco.uid]
                 and self.sonos_group == [self]
                 and self.sonos_group_entities
             ):
+                # Single speakers do not have a coodinator, check and clear
+                if self.coordinator is not None:
+                    _LOGGER.debug(
+                        "Zone %s Cleared coordinator [%s]",
+                        self.zone_name,
+                        self.coordinator.zone_name,
+                    )
+                    self.coordinator = None
+                    self.async_write_entity_states()
                 # Skip updating existing single speakers in polling mode
                 return
 
@@ -896,6 +918,11 @@ class SonosSpeaker:
                     joined_speaker.coordinator = self
                     joined_speaker.sonos_group = sonos_group
                     joined_speaker.sonos_group_entities = sonos_group_entities
+                    _LOGGER.debug(
+                        "Zone %s Set coordinator [%s]",
+                        joined_speaker.zone_name,
+                        self.zone_name,
+                    )
                     joined_speaker.async_write_entity_states()
 
             _LOGGER.debug("Regrouped %s: %s", self.zone_name, self.sonos_group_entities)
