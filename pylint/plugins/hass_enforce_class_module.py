@@ -8,18 +8,16 @@ from pylint.lint import PyLinter
 
 from homeassistant.const import Platform
 
-_BASE_MODULES: dict[str, set[str]] = {
-    "entity": {
-        "BaseCoordinatorEntity",
-        "CoordinatorEntity",
-        "Entity",
-        "EntityDescription",
-        "ManualTriggerEntity",
-        "RestoreEntity",
-        "ToggleEntity",
-        "ToggleEntityDescription",
-        "TriggerBaseEntity",
-    },
+_BASE_ENTITY_MODULES: set[str] = {
+    "BaseCoordinatorEntity",
+    "CoordinatorEntity",
+    "Entity",
+    "EntityDescription",
+    "ManualTriggerEntity",
+    "RestoreEntity",
+    "ToggleEntity",
+    "ToggleEntityDescription",
+    "TriggerBaseEntity",
 }
 _MODULES: dict[str, set[str]] = {
     "air_quality": {"AirQualityEntity"},
@@ -124,18 +122,11 @@ class HassEnforceClassModule(BaseChecker):
 
         ancestors = list(node.ancestors())
 
-        for expected_module, classes in _BASE_MODULES.items():
-            if (
-                expected_module == current_module
-                or expected_module == "entity"
-                and current_integration in _ENTITY_COMPONENTS
-            ):
-                continue
-
+        if current_module != "entity" and current_integration not in _ENTITY_COMPONENTS:
             top_level_ancestors = list(node.ancestors(recurs=False))
 
             for ancestor in top_level_ancestors:
-                if ancestor.name in classes and not any(
+                if ancestor.name in _BASE_ENTITY_MODULES and not any(
                     anc.name in _MODULE_CLASSES for anc in ancestors
                 ):
                     self.add_message(
