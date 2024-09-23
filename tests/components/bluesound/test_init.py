@@ -41,4 +41,6 @@ async def test_unload_entry_while_player_is_offline(
 
     assert await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
+
     assert hass.states.get("media_player.player_name1111").state == "unavailable"
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
