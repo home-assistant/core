@@ -3,7 +3,8 @@
     "step": {
       "user": {
         "data": {
-          "url": "[%key:common::config_flow::data::host%]"
+          "url": "[%key:common::config_flow::data::host%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         }
       }
     },
