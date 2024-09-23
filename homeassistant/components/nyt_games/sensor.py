@@ -34,6 +34,27 @@ SENSOR_TYPES: tuple[NYTGamesWordleSensorEntityDescription, ...] = (
         native_unit_of_measurement="games",
         value_fn=lambda wordle: wordle.games_played,
     ),
+    NYTGamesWordleSensorEntityDescription(
+        key="wordles_won",
+        translation_key="wordles_won",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement="games",
+        value_fn=lambda wordle: wordle.games_won,
+    ),
+    NYTGamesWordleSensorEntityDescription(
+        key="wordles_streak",
+        translation_key="wordles_streak",
+        state_class=SensorStateClass.TOTAL,
+        native_unit_of_measurement="games",
+        value_fn=lambda wordle: wordle.games_played,
+    ),
+    NYTGamesWordleSensorEntityDescription(
+        key="wordles_max_streak",
+        translation_key="wordles_max_streak",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        native_unit_of_measurement="games",
+        value_fn=lambda wordle: wordle.games_played,
+    ),
 )
 
 
