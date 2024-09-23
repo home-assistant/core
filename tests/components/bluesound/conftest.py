@@ -179,7 +179,7 @@ async def setup_config_entry_secondary(
 
 
 @pytest.fixture
-async def player_mocks() -> AsyncGenerator[PlayerMocks, None, None]:
+async def player_mocks() -> AsyncGenerator[PlayerMocks]:
     """Mock the player."""
     player_mocks = PlayerMocks(
         player_data=await PlayerMockData.generate("1.1.1.1"),
