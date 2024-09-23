@@ -1,8 +1,6 @@
 """Platform to retrieve Mawaqit prayer times information for Home Assistant."""
 
-import json
 import logging
-import os
 from typing import Any
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
@@ -12,6 +10,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.dt as dt_util
 
+from . import utils
 from .const import DATA_UPDATED, DOMAIN, PRAYER_TIMES_ICON, SENSOR_TYPES
 
 _LOGGER = logging.getLogger(__name__)
@@ -179,13 +178,14 @@ class MyMosqueSensor(SensorEntity):
     # @Throttle(TIME_BETWEEN_UPDATES)
     async def async_update(self) -> None:
         """Get the latest data from the Mawaqit API."""
-        current_dir = os.path.dirname(os.path.realpath(__file__))
+        # current_dir = os.path.dirname(os.path.realpath(__file__))
 
-        def read():
-            with open(f"{current_dir}/data/my_mosque_NN.txt", encoding="utf-8") as f:
-                return json.load(f)
+        # def read():
+        #     with open(f"{current_dir}/data/my_mosque_NN.txt", encoding="utf-8") as f:
+        #         return json.load(f)
 
-        data_my_mosque_NN = await self.hass.async_add_executor_job(read)
+        # data_my_mosque_NN = await self.hass.async_add_executor_job(read)
+        data_my_mosque_NN = await utils.read_my_mosque_NN_file(self.hass)
 
         for k, v in data_my_mosque_NN.items():
             if str(k) != "uuid" and str(k) != "id" and str(k) != "slug":
