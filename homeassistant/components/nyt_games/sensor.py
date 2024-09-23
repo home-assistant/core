@@ -6,10 +6,12 @@ from dataclasses import dataclass
 from nyt_games import Wordle
 
 from homeassistant.components.sensor import (
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
 )
+from homeassistant.const import UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -33,6 +35,29 @@ SENSOR_TYPES: tuple[NYTGamesWordleSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement="games",
         value_fn=lambda wordle: wordle.games_played,
+    ),
+    NYTGamesWordleSensorEntityDescription(
+        key="wordles_won",
+        translation_key="wordles_won",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement="games",
+        value_fn=lambda wordle: wordle.games_won,
+    ),
+    NYTGamesWordleSensorEntityDescription(
+        key="wordles_streak",
+        translation_key="wordles_streak",
+        state_class=SensorStateClass.TOTAL,
+        native_unit_of_measurement=UnitOfTime.DAYS,
+        device_class=SensorDeviceClass.DURATION,
+        value_fn=lambda wordle: wordle.current_streak,
+    ),
+    NYTGamesWordleSensorEntityDescription(
+        key="wordles_max_streak",
+        translation_key="wordles_max_streak",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        native_unit_of_measurement=UnitOfTime.DAYS,
+        device_class=SensorDeviceClass.DURATION,
+        value_fn=lambda wordle: wordle.max_streak,
     ),
 )
 

@@ -23,6 +23,15 @@
     "sensor": {
       "wordles_played": {
         "name": "Wordles played"
+      },
+      "wordles_won": {
+        "name": "Wordles won"
+      },
+      "wordles_streak": {
+        "name": "Current Wordle streak"
+      },
+      "wordles_max_streak": {
+        "name": "Highest Wordle streak"
       }
     }
   }
