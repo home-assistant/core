@@ -5,7 +5,6 @@ from typing import Any
 from tplink_omada_client.devices import OmadaDevice
 
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
@@ -19,7 +18,7 @@ class OmadaDeviceEntity[_T: OmadaCoordinator[Any]](CoordinatorEntity[_T]):
         """Initialize the device."""
         super().__init__(coordinator)
         self.device = device
-        self._attr_device_info = DeviceInfo(
+        self._attr_device_info = dr.DeviceInfo(
             connections={(dr.CONNECTION_NETWORK_MAC, device.mac)},
             identifiers={(DOMAIN, device.mac)},
             manufacturer="TP-Link",

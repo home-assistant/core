@@ -5,6 +5,7 @@ from unittest.mock import ANY
 
 import pytest
 from syrupy import SnapshotAssertion
+from syrupy.filters import props
 
 from homeassistant.components import bluetooth
 from homeassistant.core import HomeAssistant
@@ -27,7 +28,7 @@ async def test_diagnostics(
     """Test diagnostics for config entry."""
     result = await get_diagnostics_for_config_entry(hass, hass_client, init_integration)
 
-    assert result == snapshot
+    assert result == snapshot(exclude=props("created_at", "modified_at"))
 
 
 async def test_diagnostics_with_bluetooth(
@@ -61,6 +62,7 @@ async def test_diagnostics_with_bluetooth(
             },
         },
         "config": {
+            "created_at": ANY,
             "data": {
                 "device_name": "test",
                 "host": "test.local",
@@ -71,6 +73,7 @@ async def test_diagnostics_with_bluetooth(
             "domain": "esphome",
             "entry_id": ANY,
             "minor_version": 1,
+            "modified_at": ANY,
             "options": {"allow_service_calls": False},
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,

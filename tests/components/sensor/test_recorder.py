@@ -2466,30 +2466,29 @@ async def test_list_statistic_ids(
 
 
 @pytest.mark.parametrize(
-    "_attributes",
+    "energy_attributes",
     [{**ENERGY_SENSOR_ATTRIBUTES, "last_reset": 0}, TEMPERATURE_SENSOR_ATTRIBUTES],
 )
 async def test_list_statistic_ids_unsupported(
     hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
-    _attributes,
+    energy_attributes: dict[str, Any],
 ) -> None:
     """Test listing future statistic ids for unsupported sensor."""
     await async_setup_component(hass, "sensor", {})
     # Wait for the sensor recorder platform to be added
     await async_recorder_block_till_done(hass)
-    attributes = dict(_attributes)
+    attributes = dict(energy_attributes)
     hass.states.async_set("sensor.test1", 0, attributes=attributes)
     if "last_reset" in attributes:
         attributes.pop("unit_of_measurement")
         hass.states.async_set("last_reset.test2", 0, attributes=attributes)
-    attributes = dict(_attributes)
+    attributes = dict(energy_attributes)
     if "unit_of_measurement" in attributes:
         attributes["unit_of_measurement"] = "invalid"
         hass.states.async_set("sensor.test3", 0, attributes=attributes)
         attributes.pop("unit_of_measurement")
         hass.states.async_set("sensor.test4", 0, attributes=attributes)
-    attributes = dict(_attributes)
+    attributes = dict(energy_attributes)
     attributes["state_class"] = "invalid"
     hass.states.async_set("sensor.test5", 0, attributes=attributes)
     attributes.pop("state_class")
@@ -5105,7 +5104,9 @@ async def async_record_meter_state(
     return states
 
 
-async def async_record_states_partially_unavailable(hass, zero, entity_id, attributes):
+async def async_record_states_partially_unavailable(
+    hass: HomeAssistant, zero: datetime, entity_id: str, attributes: dict[str, Any]
+) -> tuple[datetime, dict[str, list[State]]]:
     """Record some test states.
 
     We inject a bunch of state updates temperature sensors.

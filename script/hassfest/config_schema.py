@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import ast
 
-from homeassistant.core import DOMAIN as HA_DOMAIN
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN
 
 from .model import Config, Integration
 
@@ -12,7 +12,7 @@ CONFIG_SCHEMA_IGNORE = {
     # Configuration under the homeassistant key is a special case, it's handled by
     # conf_util.async_process_ha_core_config already during bootstrapping, not by
     # a schema in the homeassistant integration.
-    HA_DOMAIN,
+    HOMEASSISTANT_DOMAIN,
 }
 
 

@@ -21,7 +21,6 @@ from homeassistant.components.elmax.const import (
     CONF_ELMAX_USERNAME,
     DOMAIN,
 )
-from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -544,20 +543,7 @@ async def test_show_reauth(hass: HomeAssistant) -> None:
     )
     entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": SOURCE_REAUTH,
-            "unique_id": entry.unique_id,
-            "entry_id": entry.entry_id,
-        },
-        data={
-            CONF_ELMAX_PANEL_ID: MOCK_PANEL_ID,
-            CONF_ELMAX_PANEL_PIN: MOCK_PANEL_PIN,
-            CONF_ELMAX_USERNAME: MOCK_USERNAME,
-            CONF_ELMAX_PASSWORD: MOCK_PASSWORD,
-        },
-    )
+    result = await entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
@@ -577,24 +563,11 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
     entry.add_to_hass(hass)
 
     # Trigger reauth
+    reauth_result = await entry.start_reauth_flow(hass)
     with patch(
         "homeassistant.components.elmax.async_setup_entry",
         return_value=True,
     ):
-        reauth_result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={
-                "source": SOURCE_REAUTH,
-                "unique_id": entry.unique_id,
-                "entry_id": entry.entry_id,
-            },
-            data={
-                CONF_ELMAX_PANEL_ID: MOCK_PANEL_ID,
-                CONF_ELMAX_PANEL_PIN: MOCK_PANEL_PIN,
-                CONF_ELMAX_USERNAME: MOCK_USERNAME,
-                CONF_ELMAX_PASSWORD: MOCK_PASSWORD,
-            },
-        )
         result = await hass.config_entries.flow.async_configure(
             reauth_result["flow_id"],
             {
@@ -624,24 +597,11 @@ async def test_reauth_panel_disappeared(hass: HomeAssistant) -> None:
     entry.add_to_hass(hass)
 
     # Trigger reauth
+    reauth_result = await entry.start_reauth_flow(hass)
     with patch(
         "elmax_api.http.Elmax.list_control_panels",
         return_value=[],
     ):
-        reauth_result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={
-                "source": SOURCE_REAUTH,
-                "unique_id": entry.unique_id,
-                "entry_id": entry.entry_id,
-            },
-            data={
-                CONF_ELMAX_PANEL_ID: MOCK_PANEL_ID,
-                CONF_ELMAX_PANEL_PIN: MOCK_PANEL_PIN,
-                CONF_ELMAX_USERNAME: MOCK_USERNAME,
-                CONF_ELMAX_PASSWORD: MOCK_PASSWORD,
-            },
-        )
         result = await hass.config_entries.flow.async_configure(
             reauth_result["flow_id"],
             {
@@ -670,24 +630,11 @@ async def test_reauth_invalid_pin(hass: HomeAssistant) -> None:
     entry.add_to_hass(hass)
 
     # Trigger reauth
+    reauth_result = await entry.start_reauth_flow(hass)
     with patch(
         "elmax_api.http.Elmax.get_panel_status",
         side_effect=ElmaxBadPinError(),
     ):
-        reauth_result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={
-                "source": SOURCE_REAUTH,
-                "unique_id": entry.unique_id,
-                "entry_id": entry.entry_id,
-            },
-            data={
-                CONF_ELMAX_PANEL_ID: MOCK_PANEL_ID,
-                CONF_ELMAX_PANEL_PIN: MOCK_PANEL_PIN,
-                CONF_ELMAX_USERNAME: MOCK_USERNAME,
-                CONF_ELMAX_PASSWORD: MOCK_PASSWORD,
-            },
-        )
         result = await hass.config_entries.flow.async_configure(
             reauth_result["flow_id"],
             {
@@ -716,24 +663,11 @@ async def test_reauth_bad_login(hass: HomeAssistant) -> None:
     entry.add_to_hass(hass)
 
     # Trigger reauth
+    reauth_result = await entry.start_reauth_flow(hass)
     with patch(
         "elmax_api.http.Elmax.login",
         side_effect=ElmaxBadLoginError(),
     ):
-        reauth_result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={
-                "source": SOURCE_REAUTH,
-                "unique_id": entry.unique_id,
-                "entry_id": entry.entry_id,
-            },
-            data={
-                CONF_ELMAX_PANEL_ID: MOCK_PANEL_ID,
-                CONF_ELMAX_PANEL_PIN: MOCK_PANEL_PIN,
-                CONF_ELMAX_USERNAME: MOCK_USERNAME,
-                CONF_ELMAX_PASSWORD: MOCK_PASSWORD,
-            },
-        )
         result = await hass.config_entries.flow.async_configure(
             reauth_result["flow_id"],
             {

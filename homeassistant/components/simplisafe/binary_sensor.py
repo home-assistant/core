@@ -63,7 +63,7 @@ async def async_setup_entry(
 
     for system in simplisafe.systems.values():
         if system.version == 2:
-            LOGGER.info("Skipping sensor setup for V2 system: %s", system.system_id)
+            LOGGER.warning("Skipping sensor setup for V2 system: %s", system.system_id)
             continue
 
         for sensor in system.sensors.values():

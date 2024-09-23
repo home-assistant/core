@@ -98,7 +98,7 @@ class MaxCubeHandle:
         self.mutex = Lock()
         self._updatets = time.monotonic()
 
-    def update(self):
+    def update(self) -> None:
         """Pull the latest data from the MAX! Cube."""
         # Acquire mutex to prevent simultaneous update from multiple threads
         with self.mutex:
@@ -110,7 +110,7 @@ class MaxCubeHandle:
                     self.cube.update()
                 except TimeoutError:
                     _LOGGER.error("Max!Cube connection failed")
-                    return False
+                    return
 
                 self._updatets = time.monotonic()
             else:

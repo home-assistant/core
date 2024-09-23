@@ -31,7 +31,7 @@ from .const import (
     METRIC_KEY_MODE,
     MODE_ON,
     VALLOX_CELL_STATE_TO_STR,
-    VALLOX_PROFILE_TO_PRESET_MODE_REPORTABLE,
+    VALLOX_PROFILE_TO_PRESET_MODE,
 )
 from .coordinator import ValloxDataUpdateCoordinator
 
@@ -78,7 +78,7 @@ class ValloxProfileSensor(ValloxSensorEntity):
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
         vallox_profile = self.coordinator.data.profile
-        return VALLOX_PROFILE_TO_PRESET_MODE_REPORTABLE.get(vallox_profile)
+        return VALLOX_PROFILE_TO_PRESET_MODE.get(vallox_profile)
 
 
 # There is a quirk with respect to the fan speed reporting. The device keeps on reporting the last

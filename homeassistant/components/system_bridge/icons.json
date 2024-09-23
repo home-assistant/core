@@ -1,11 +1,25 @@
 {
   "services": {
-    "get_process_by_id": "mdi:console",
-    "get_processes_by_name": "mdi:console",
-    "open_path": "mdi:folder-open",
-    "open_url": "mdi:web",
-    "send_keypress": "mdi:keyboard",
-    "send_text": "mdi:keyboard",
-    "power_command": "mdi:power"
+    "get_process_by_id": {
+      "service": "mdi:console"
+    },
+    "get_processes_by_name": {
+      "service": "mdi:console"
+    },
+    "open_path": {
+      "service": "mdi:folder-open"
+    },
+    "open_url": {
+      "service": "mdi:web"
+    },
+    "send_keypress": {
+      "service": "mdi:keyboard"
+    },
+    "send_text": {
+      "service": "mdi:keyboard"
+    },
+    "power_command": {
+      "service": "mdi:power"
+    }
   }
 }

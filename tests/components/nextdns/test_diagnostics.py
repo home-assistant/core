@@ -1,6 +1,7 @@
 """Test NextDNS diagnostics."""
 
 from syrupy import SnapshotAssertion
+from syrupy.filters import props
 
 from homeassistant.core import HomeAssistant
 
@@ -18,4 +19,6 @@ async def test_entry_diagnostics(
     """Test config entry diagnostics."""
     entry = await init_integration(hass)
 
-    assert await get_diagnostics_for_config_entry(hass, hass_client, entry) == snapshot
+    assert await get_diagnostics_for_config_entry(hass, hass_client, entry) == snapshot(
+        exclude=props("created_at", "modified_at")
+    )

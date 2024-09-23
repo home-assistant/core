@@ -13,7 +13,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from . import PiHoleConfigEntry, PiHoleEntity
+from . import PiHoleConfigEntry
+from .entity import PiHoleEntity
 
 
 @dataclass(frozen=True)
@@ -22,6 +23,7 @@ class PiHoleUpdateEntityDescription(UpdateEntityDescription):
 
     installed_version: Callable[[dict], str | None] = lambda api: None
     latest_version: Callable[[dict], str | None] = lambda api: None
+    has_update: Callable[[dict], bool | None] = lambda api: None
     release_base_url: str | None = None
     title: str | None = None
 
@@ -34,6 +36,7 @@ UPDATE_ENTITY_TYPES: tuple[PiHoleUpdateEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         installed_version=lambda versions: versions.get("core_current"),
         latest_version=lambda versions: versions.get("core_latest"),
+        has_update=lambda versions: versions.get("core_update"),
         release_base_url="https://github.com/pi-hole/pi-hole/releases/tag",
     ),
     PiHoleUpdateEntityDescription(
@@ -43,6 +46,7 @@ UPDATE_ENTITY_TYPES: tuple[PiHoleUpdateEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         installed_version=lambda versions: versions.get("web_current"),
         latest_version=lambda versions: versions.get("web_latest"),
+        has_update=lambda versions: versions.get("web_update"),
         release_base_url="https://github.com/pi-hole/AdminLTE/releases/tag",
     ),
     PiHoleUpdateEntityDescription(
@@ -52,6 +56,7 @@ UPDATE_ENTITY_TYPES: tuple[PiHoleUpdateEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         installed_version=lambda versions: versions.get("FTL_current"),
         latest_version=lambda versions: versions.get("FTL_latest"),
+        has_update=lambda versions: versions.get("FTL_update"),
         release_base_url="https://github.com/pi-hole/FTL/releases/tag",
     ),
 )
@@ -110,7 +115,9 @@ class PiHoleUpdateEntity(PiHoleEntity, UpdateEntity):
     def latest_version(self) -> str | None:
         """Latest version available for install."""
         if isinstance(self.api.versions, dict):
-            return self.entity_description.latest_version(self.api.versions)
+            if self.entity_description.has_update(self.api.versions):
+                return self.entity_description.latest_version(self.api.versions)
+            return self.installed_version
         return None
 
     @property

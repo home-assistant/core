@@ -282,10 +282,22 @@ _CONVERTED_VALUE: dict[
         (10, UnitOfEnergy.KILO_WATT_HOUR, 0.01, UnitOfEnergy.MEGA_WATT_HOUR),
         (10, UnitOfEnergy.MEGA_WATT_HOUR, 10000000, UnitOfEnergy.WATT_HOUR),
         (10, UnitOfEnergy.MEGA_WATT_HOUR, 10000, UnitOfEnergy.KILO_WATT_HOUR),
-        (10, UnitOfEnergy.GIGA_JOULE, 10000 / 3.6, UnitOfEnergy.KILO_WATT_HOUR),
-        (10, UnitOfEnergy.GIGA_JOULE, 10 / 3.6, UnitOfEnergy.MEGA_WATT_HOUR),
-        (10, UnitOfEnergy.MEGA_JOULE, 10 / 3.6, UnitOfEnergy.KILO_WATT_HOUR),
-        (10, UnitOfEnergy.MEGA_JOULE, 0.010 / 3.6, UnitOfEnergy.MEGA_WATT_HOUR),
+        (10, UnitOfEnergy.GIGA_JOULE, 2777.78, UnitOfEnergy.KILO_WATT_HOUR),
+        (10, UnitOfEnergy.GIGA_JOULE, 2.77778, UnitOfEnergy.MEGA_WATT_HOUR),
+        (10, UnitOfEnergy.MEGA_JOULE, 2.77778, UnitOfEnergy.KILO_WATT_HOUR),
+        (10, UnitOfEnergy.MEGA_JOULE, 2.77778e-3, UnitOfEnergy.MEGA_WATT_HOUR),
+        (10, UnitOfEnergy.KILO_JOULE, 2.77778, UnitOfEnergy.WATT_HOUR),
+        (10, UnitOfEnergy.KILO_JOULE, 2.77778e-6, UnitOfEnergy.MEGA_WATT_HOUR),
+        (10, UnitOfEnergy.JOULE, 2.77778e-3, UnitOfEnergy.WATT_HOUR),
+        (10, UnitOfEnergy.JOULE, 2.390057, UnitOfEnergy.CALORIE),
+        (10, UnitOfEnergy.CALORIE, 0.01, UnitOfEnergy.KILO_CALORIE),
+        (10, UnitOfEnergy.CALORIE, 0.011622222, UnitOfEnergy.WATT_HOUR),
+        (10, UnitOfEnergy.KILO_CALORIE, 0.01, UnitOfEnergy.MEGA_CALORIE),
+        (10, UnitOfEnergy.KILO_CALORIE, 0.011622222, UnitOfEnergy.KILO_WATT_HOUR),
+        (10, UnitOfEnergy.MEGA_CALORIE, 0.01, UnitOfEnergy.GIGA_CALORIE),
+        (10, UnitOfEnergy.MEGA_CALORIE, 0.011622222, UnitOfEnergy.MEGA_WATT_HOUR),
+        (10, UnitOfEnergy.GIGA_CALORIE, 10000, UnitOfEnergy.MEGA_CALORIE),
+        (10, UnitOfEnergy.GIGA_CALORIE, 11.622222, UnitOfEnergy.MEGA_WATT_HOUR),
     ],
     InformationConverter: [
         (8e3, UnitOfInformation.BITS, 8, UnitOfInformation.KILOBITS),
@@ -418,6 +430,20 @@ _CONVERTED_VALUE: dict[
             UnitOfSpeed.METERS_PER_SECOND,
             708661.42,
             UnitOfVolumetricFlux.INCHES_PER_HOUR,
+        ),
+        # 5 m/s * 1000 = 5000 mm/s
+        (
+            5,
+            UnitOfSpeed.METERS_PER_SECOND,
+            5000,
+            UnitOfSpeed.MILLIMETERS_PER_SECOND,
+        ),
+        # 5 m/s ÷ 0.0254 = 196.8503937 in/s
+        (
+            5,
+            UnitOfSpeed.METERS_PER_SECOND,
+            5 / 0.0254,
+            UnitOfSpeed.INCHES_PER_SECOND,
         ),
         # 5000 in/h / 39.3701 in/m / 3600 s/h = 0.03528 m/s
         (

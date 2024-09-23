@@ -4,13 +4,13 @@ from __future__ import annotations
 
 from datetime import timedelta
 
-from forecast_solar import Estimate, ForecastSolar
+from forecast_solar import Estimate, ForecastSolar, ForecastSolarConnectionError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
     CONF_AZIMUTH,
@@ -65,4 +65,7 @@ class ForecastSolarDataUpdateCoordinator(DataUpdateCoordinator[Estimate]):
 
     async def _async_update_data(self) -> Estimate:
         """Fetch Forecast.Solar estimates."""
-        return await self.forecast.estimate()
+        try:
+            return await self.forecast.estimate()
+        except ForecastSolarConnectionError as error:
+            raise UpdateFailed(error) from error

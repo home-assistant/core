@@ -134,6 +134,9 @@
     "select": {
       "mode": {
         "name": "Mode"
+      },
+      "startup_on_off": {
+        "name": "Power-on behavior on Startup"
       }
     },
     "sensor": {

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
+from typing import Any
 
 from homeassistant import config_entries
 from homeassistant.components.sensor import (
@@ -348,6 +349,8 @@ class QNAPCPUSensor(QNAPSensor):
         if self.entity_description.key == "cpu_usage":
             return self.coordinator.data["system_stats"]["cpu"]["usage_percent"]
 
+        return None
+
 
 class QNAPMemorySensor(QNAPSensor):
     """A QNAP sensor that monitors memory stats."""
@@ -370,19 +373,24 @@ class QNAPMemorySensor(QNAPSensor):
         if self.entity_description.key == "memory_percent_used":
             return used / total * 100
 
+        return None
+
     # Deprecated since Home Assistant 2024.6.0
     # Can be removed completely in 2024.12.0
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes."""
         if self.coordinator.data:
             data = self.coordinator.data["system_stats"]["memory"]
             size = round(float(data["total"]) / 1024, 2)
             return {ATTR_MEMORY_SIZE: f"{size} {UnitOfInformation.GIBIBYTES}"}
+        return None
 
 
 class QNAPNetworkSensor(QNAPSensor):
     """A QNAP sensor that monitors network stats."""
+
+    monitor_device: str
 
     @property
     def native_value(self):
@@ -404,10 +412,12 @@ class QNAPNetworkSensor(QNAPSensor):
         if self.entity_description.key == "network_rx":
             return data["rx"]
 
+        return None
+
     # Deprecated since Home Assistant 2024.6.0
     # Can be removed completely in 2024.12.0
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes."""
         if self.coordinator.data:
             data = self.coordinator.data["system_stats"]["nics"][self.monitor_device]
@@ -418,6 +428,7 @@ class QNAPNetworkSensor(QNAPSensor):
                 ATTR_MAX_SPEED: data["max_speed"],
                 ATTR_PACKETS_ERR: data["err_packets"],
             }
+        return None
 
 
 class QNAPSystemSensor(QNAPSensor):
@@ -442,10 +453,12 @@ class QNAPSystemSensor(QNAPSensor):
             )
             return dt_util.now() - uptime_duration
 
+        return None
+
     # Deprecated since Home Assistant 2024.6.0
     # Can be removed completely in 2024.12.0
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes."""
         if self.coordinator.data:
             data = self.coordinator.data["system_stats"]
@@ -459,10 +472,13 @@ class QNAPSystemSensor(QNAPSensor):
                 ATTR_SERIAL: data["system"]["serial_number"],
                 ATTR_UPTIME: f"{days:0>2d}d {hours:0>2d}h {minutes:0>2d}m",
             }
+        return None
 
 
 class QNAPDriveSensor(QNAPSensor):
     """A QNAP sensor that monitors HDD/SSD drive stats."""
+
+    monitor_device: str
 
     @property
     def native_value(self):
@@ -475,8 +491,10 @@ class QNAPDriveSensor(QNAPSensor):
         if self.entity_description.key == "drive_temp":
             return int(data["temp_c"]) if data["temp_c"] is not None else 0
 
+        return None
+
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes."""
         if self.coordinator.data:
             data = self.coordinator.data["smart_drive_health"][self.monitor_device]
@@ -486,10 +504,13 @@ class QNAPDriveSensor(QNAPSensor):
                 ATTR_SERIAL: data["serial"],
                 ATTR_TYPE: data["type"],
             }
+        return None
 
 
 class QNAPVolumeSensor(QNAPSensor):
     """A QNAP sensor that monitors storage volume stats."""
+
+    monitor_device: str
 
     @property
     def native_value(self):
@@ -511,10 +532,12 @@ class QNAPVolumeSensor(QNAPSensor):
         if self.entity_description.key == "volume_percentage_used":
             return used_gb / total_gb * 100
 
+        return None
+
     # Deprecated since Home Assistant 2024.6.0
     # Can be removed completely in 2024.12.0
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes."""
         if self.coordinator.data:
             data = self.coordinator.data["volumes"][self.monitor_device]
@@ -523,3 +546,4 @@ class QNAPVolumeSensor(QNAPSensor):
             return {
                 ATTR_VOLUME_SIZE: f"{round(total_gb, 1)} {UnitOfInformation.GIBIBYTES}"
             }
+        return None

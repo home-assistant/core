@@ -119,7 +119,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     async def set_memo_text(call: ServiceCall) -> None:
         """Handle Memo Text service call."""
         memo_text = call.data[CONF_MEMO_TEXT]
-        memo_text.hass = hass
         await (
             hass.data[DOMAIN][call.data[CONF_INTERFACE]]["cntrl"]
             .get_module(call.data[CONF_ADDRESS])

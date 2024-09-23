@@ -23,7 +23,9 @@ from homeassistant.const import (
 from homeassistant.core import Context, CoreState, HomeAssistant, State, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.template import Template
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.setup import ATTR_COMPONENT, async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -374,7 +376,7 @@ async def test_creating_sensor_loads_group(hass: HomeAssistant) -> None:
     order = []
     after_dep_event = Event()
 
-    async def async_setup_group(hass, config):
+    async def async_setup_group(hass: HomeAssistant, config: ConfigType) -> bool:
         # Make sure group takes longer to load, so that it won't
         # be loaded first by chance
         await after_dep_event.wait()
@@ -383,8 +385,11 @@ async def test_creating_sensor_loads_group(hass: HomeAssistant) -> None:
         return True
 
     async def async_setup_template(
-        hass, config, async_add_entities, discovery_info=None
-    ):
+        hass: HomeAssistant,
+        config: ConfigType,
+        async_add_entities: AddEntitiesCallback,
+        discovery_info: DiscoveryInfoType | None = None,
+    ) -> bool:
         order.append("sensor.template")
         return True
 
@@ -1202,6 +1207,124 @@ async def test_trigger_entity(
     assert state.context is context
 
 
+@pytest.mark.parametrize(("count", "domain"), [(1, template.DOMAIN)])
+@pytest.mark.parametrize(
+    "config",
+    [
+        {
+            "template": [
+                {
+                    "unique_id": "listening-test-event",
+                    "trigger": {"platform": "event", "event_type": "test_event"},
+                    "condition": [
+                        {
+                            "condition": "template",
+                            "value_template": "{{ trigger.event.data.beer >= 42 }}",
+                        }
+                    ],
+                    "sensor": [
+                        {
+                            "name": "Enough Name",
+                            "unique_id": "enough-id",
+                            "state": "You had enough Beer.",
+                        }
+                    ],
+                },
+            ],
+        },
+    ],
+)
+async def test_trigger_conditional_entity(hass: HomeAssistant, start_ha) -> None:
+    """Test conditional trigger entity works."""
+    state = hass.states.get("sensor.enough_name")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+
+    hass.bus.async_fire("test_event", {"beer": 2})
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.enough_name")
+    assert state.state == STATE_UNKNOWN
+
+    hass.bus.async_fire("test_event", {"beer": 42})
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.enough_name")
+    assert state.state == "You had enough Beer."
+
+
+@pytest.mark.parametrize(("count", "domain"), [(1, template.DOMAIN)])
+@pytest.mark.parametrize(
+    "config",
+    [
+        {
+            "template": [
+                {
+                    "unique_id": "listening-test-event",
+                    "trigger": {"platform": "event", "event_type": "test_event"},
+                    "condition": [
+                        {
+                            "condition": "template",
+                            "value_template": "{{ trigger.event.data.beer / 0 == 'narf' }}",
+                        }
+                    ],
+                    "sensor": [
+                        {
+                            "name": "Enough Name",
+                            "unique_id": "enough-id",
+                            "state": "You had enough Beer.",
+                        }
+                    ],
+                },
+            ],
+        },
+    ],
+)
+async def test_trigger_conditional_entity_evaluation_error(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, start_ha
+) -> None:
+    """Test trigger entity is not updated when condition evaluation fails."""
+    hass.bus.async_fire("test_event", {"beer": 1})
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.enough_name")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+
+    assert "Error evaluating condition in 'template entity'" in caplog.text
+
+
+@pytest.mark.parametrize(("count", "domain"), [(0, template.DOMAIN)])
+@pytest.mark.parametrize(
+    "config",
+    [
+        {
+            "template": [
+                {
+                    "unique_id": "listening-test-event",
+                    "trigger": {"platform": "event", "event_type": "test_event"},
+                    "condition": [
+                        {"condition": "template", "value_template": "{{ invalid"}
+                    ],
+                    "sensor": [
+                        {
+                            "name": "Will Not Exist Name",
+                            "state": "Unimportant",
+                        }
+                    ],
+                },
+            ],
+        },
+    ],
+)
+async def test_trigger_conditional_entity_invalid_condition(
+    hass: HomeAssistant, start_ha
+) -> None:
+    """Test trigger entity is not created when condition is invalid."""
+    state = hass.states.get("sensor.will_not_exist_name")
+    assert state is None
+
+
 @pytest.mark.parametrize(("count", "domain"), [(1, "template")])
 @pytest.mark.parametrize(
     "config",
@@ -1896,6 +2019,52 @@ async def test_trigger_action(
 
     assert len(events) == 1
     assert events[0].context.parent_id == context.id
+
+
+@pytest.mark.parametrize(("count", "domain"), [(1, template.DOMAIN)])
+@pytest.mark.parametrize(
+    "config",
+    [
+        {
+            "template": [
+                {
+                    "unique_id": "listening-test-event",
+                    "trigger": {"platform": "event", "event_type": "test_event"},
+                    "condition": [
+                        {
+                            "condition": "template",
+                            "value_template": "{{ trigger.event.data.beer >= 42 }}",
+                        }
+                    ],
+                    "action": [
+                        {"event": "test_event_by_action"},
+                    ],
+                    "sensor": [
+                        {
+                            "name": "Not That Important",
+                            "state": "Really not.",
+                        }
+                    ],
+                },
+            ],
+        },
+    ],
+)
+async def test_trigger_conditional_action(hass: HomeAssistant, start_ha) -> None:
+    """Test conditional trigger entity with an action works."""
+
+    event = "test_event_by_action"
+    events = async_capture_events(hass, event)
+
+    hass.bus.async_fire("test_event", {"beer": 1})
+    await hass.async_block_till_done()
+
+    assert len(events) == 0
+
+    hass.bus.async_fire("test_event", {"beer": 42})
+    await hass.async_block_till_done()
+
+    assert len(events) == 1
 
 
 async def test_device_id(

@@ -1,12 +1,14 @@
 # serializer version: 1
 # name: test_as_dict
   dict({
+    'created_at': '2024-02-14T12:00:00+00:00',
     'data': dict({
     }),
     'disabled_by': None,
     'domain': 'test',
     'entry_id': 'mock-entry',
     'minor_version': 1,
+    'modified_at': '2024-02-14T12:00:00+00:00',
     'options': dict({
     }),
     'pref_disable_new_entities': False,

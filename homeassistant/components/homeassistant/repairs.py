@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 from homeassistant.components.repairs import ConfirmRepairFlow, RepairsFlow
-from homeassistant.core import DOMAIN, HomeAssistant
+from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import issue_registry as ir
+
+from .const import DOMAIN
 
 
 class IntegrationNotFoundFlow(RepairsFlow):

@@ -1,0 +1,67 @@
+# serializer version: 1
+# name: test_entry_diagnostics
+  dict({
+    'device_info': dict({
+      'client_devices': list([
+        dict({
+          'connected_to': 'fritz.box',
+          'connection_type': 'LAN',
+          'hostname': 'printer',
+          'is_connected': True,
+          'wan_access': True,
+        }),
+      ]),
+      'connection_type': 'WANPPPConnection',
+      'current_firmware': '7.29',
+      'discovered_services': list([
+        'DeviceInfo1',
+        'Hosts1',
+        'LANEthernetInterfaceConfig1',
+        'Layer3Forwarding1',
+        'UserInterface1',
+        'WANCommonIFC1',
+        'WANCommonInterfaceConfig1',
+        'WANDSLInterfaceConfig1',
+        'WANIPConn1',
+        'WANPPPConnection1',
+        'WLANConfiguration1',
+        'X_AVM-DE_Homeauto1',
+        'X_AVM-DE_HostFilter1',
+      ]),
+      'is_router': True,
+      'last_exception': None,
+      'last_update success': True,
+      'latest_firmware': None,
+      'mesh_role': 'master',
+      'model': 'FRITZ!Box 7530 AX',
+      'unique_id': '1C:ED:XX:XX:34:11',
+      'update_available': False,
+      'wan_link_properties': dict({
+        'NewLayer1DownstreamMaxBitRate': 318557000,
+        'NewLayer1UpstreamMaxBitRate': 51805000,
+        'NewPhysicalLinkStatus': 'Up',
+        'NewWANAccessType': 'DSL',
+      }),
+    }),
+    'entry': dict({
+      'data': dict({
+        'host': 'fake_host',
+        'password': '**REDACTED**',
+        'port': '1234',
+        'ssl': False,
+        'username': '**REDACTED**',
+      }),
+      'disabled_by': None,
+      'domain': 'fritz',
+      'minor_version': 1,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'title': 'Mock Title',
+      'unique_id': None,
+      'version': 1,
+    }),
+  })
+# ---

@@ -105,14 +105,7 @@ async def test_flow_reauth(
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": mock_config_entry.entry_id,
-        },
-        data=mock_config_entry.data,
-    )
+    result = await mock_config_entry.start_reauth_flow(hass)
 
     assert result["step_id"] == "reauth_confirm"
 

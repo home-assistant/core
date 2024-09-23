@@ -113,7 +113,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 server = egardiaserver.EgardiaServer("", rs_port)
                 bound = server.bind()
                 if not bound:
-                    raise OSError(
+                    raise OSError(  # noqa: TRY301
                         "Binding error occurred while starting EgardiaServer."
                     )
                 hass.data[EGARDIA_SERVER] = server

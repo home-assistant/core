@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 from typing import Any
 
 from pytraccar import ApiClient, ServerModel, TraccarException
@@ -161,36 +160,34 @@ class TraccarServerConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_import(
-        self, import_info: Mapping[str, Any]
-    ) -> ConfigFlowResult:
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Import an entry."""
-        configured_port = str(import_info[CONF_PORT])
+        configured_port = str(import_data[CONF_PORT])
         self._async_abort_entries_match(
             {
-                CONF_HOST: import_info[CONF_HOST],
+                CONF_HOST: import_data[CONF_HOST],
                 CONF_PORT: configured_port,
             }
         )
-        if "all_events" in (imported_events := import_info.get("event", [])):
+        if "all_events" in (imported_events := import_data.get("event", [])):
             events = list(EVENTS.values())
         else:
             events = imported_events
         return self.async_create_entry(
-            title=f"{import_info[CONF_HOST]}:{configured_port}",
+            title=f"{import_data[CONF_HOST]}:{configured_port}",
             data={
-                CONF_HOST: import_info[CONF_HOST],
+                CONF_HOST: import_data[CONF_HOST],
                 CONF_PORT: configured_port,
-                CONF_SSL: import_info.get(CONF_SSL, False),
-                CONF_VERIFY_SSL: import_info.get(CONF_VERIFY_SSL, True),
-                CONF_USERNAME: import_info[CONF_USERNAME],
-                CONF_PASSWORD: import_info[CONF_PASSWORD],
+                CONF_SSL: import_data.get(CONF_SSL, False),
+                CONF_VERIFY_SSL: import_data.get(CONF_VERIFY_SSL, True),
+                CONF_USERNAME: import_data[CONF_USERNAME],
+                CONF_PASSWORD: import_data[CONF_PASSWORD],
             },
             options={
-                CONF_MAX_ACCURACY: import_info[CONF_MAX_ACCURACY],
+                CONF_MAX_ACCURACY: import_data[CONF_MAX_ACCURACY],
                 CONF_EVENTS: events,
-                CONF_CUSTOM_ATTRIBUTES: import_info.get("monitored_conditions", []),
-                CONF_SKIP_ACCURACY_FILTER_FOR: import_info.get(
+                CONF_CUSTOM_ATTRIBUTES: import_data.get("monitored_conditions", []),
+                CONF_SKIP_ACCURACY_FILTER_FOR: import_data.get(
                     "skip_accuracy_filter_on", []
                 ),
             },

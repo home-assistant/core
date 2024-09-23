@@ -1,0 +1,23 @@
+{
+  "did": "E1234567890000000003",
+  "name": "E1234567890000000003",
+  "class": "123",
+  "resource": "atom",
+  "company": "eco-legacy",
+  "deviceName": "DEEBOT Slim2 Series",
+  "icon": "https://portal-ww.ecouser.net/api/pim/file/get/5d2c150dba13eb00013feaae",
+  "ota": false,
+  "UILogicId": "ECO_INTL_123",
+  "materialNo": "110-1639-0102",
+  "pid": "5cae9b201285190001685977",
+  "product_category": "DEEBOT",
+  "model": "Slim2",
+  "updateInfo": {
+    "needUpdate": false,
+    "changeLog": ""
+  },
+  "nick": null,
+  "homeSort": 9999,
+  "status": 2,
+  "otaUpgrade": {}
+}

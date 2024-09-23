@@ -61,18 +61,16 @@ class _GlobalFreezeContext:
 
     def _enter(self) -> None:
         """Run freeze."""
-        if not self._manager.freezes_done:
-            return
+        if self._manager.freezes_done:
+            # Global reset
+            for task in self._manager.global_tasks:
+                task.pause()
 
-        # Global reset
-        for task in self._manager.global_tasks:
-            task.pause()
-
-        # Zones reset
-        for zone in self._manager.zones.values():
-            if not zone.freezes_done:
-                continue
-            zone.pause()
+            # Zones reset
+            for zone in self._manager.zones.values():
+                if not zone.freezes_done:
+                    continue
+                zone.pause()
 
         self._manager.global_freezes.append(self)
 

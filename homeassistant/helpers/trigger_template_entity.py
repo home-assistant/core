@@ -30,7 +30,7 @@ from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads
 
 from . import config_validation as cv
 from .entity import Entity
-from .template import attach as template_attach, render_complex
+from .template import render_complex
 from .typing import ConfigType
 
 CONF_AVAILABILITY = "availability"
@@ -156,11 +156,6 @@ class TriggerBaseEntity(Entity):
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return extra attributes."""
         return self._rendered.get(CONF_ATTRIBUTES)
-
-    async def async_added_to_hass(self) -> None:
-        """Handle being added to Home Assistant."""
-        await super().async_added_to_hass()
-        template_attach(self.hass, self._config)
 
     def _set_unique_id(self, unique_id: str | None) -> None:
         """Set unique id."""

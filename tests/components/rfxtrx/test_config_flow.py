@@ -29,7 +29,9 @@ def com_port():
     return port
 
 
-async def start_options_flow(hass, entry):
+async def start_options_flow(
+    hass: HomeAssistant, entry: MockConfigEntry
+) -> config_entries.ConfigFlowResult:
     """Start the options flow with the entry under test."""
     entry.add_to_hass(hass)
 

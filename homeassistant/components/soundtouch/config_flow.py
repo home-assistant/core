@@ -1,6 +1,7 @@
 """Config flow for Bose SoundTouch integration."""
 
 import logging
+from typing import Any
 
 from libsoundtouch import soundtouch_device
 from requests import RequestException
@@ -21,12 +22,14 @@ class SoundtouchConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize a new SoundTouch config flow."""
-        self.host = None
+        self.host: str | None = None
         self.name = None
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
         errors = {}
 
@@ -65,7 +68,9 @@ class SoundtouchConfigFlow(ConfigFlow, domain=DOMAIN):
         self.context["title_placeholders"] = {"name": self.name}
         return await self.async_step_zeroconf_confirm()
 
-    async def async_step_zeroconf_confirm(self, user_input=None):
+    async def async_step_zeroconf_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle user-confirmation of discovered node."""
         if user_input is not None:
             return await self._async_create_soundtouch_entry()

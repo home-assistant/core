@@ -31,12 +31,16 @@ on:
         description: "Only run mypy"
         default: false
         type: boolean
+      audit-licenses-only:
+        description: "Only run audit licenses"
+        default: false
+        type: boolean
 
 env:
-  CACHE_VERSION: 9
+  CACHE_VERSION: 10
   UV_CACHE_VERSION: 1
   MYPY_CACHE_VERSION: 8
-  HA_SHORT_VERSION: "2024.8"
+  HA_SHORT_VERSION: "2024.10"
   DEFAULT_PYTHON: "3.12"
   ALL_PYTHON_VERSIONS: "['3.12']"
   # 10.3 is the oldest supported version
@@ -222,6 +226,7 @@ jobs:
     if: |
       github.event.inputs.pylint-only != 'true'
       && github.event.inputs.mypy-only != 'true'
+      && github.event.inputs.audit-licenses-only != 'true'
     needs:
       - info
     steps:
@@ -229,7 +234,7 @@ jobs:
         uses: actions/checkout@v4.1.7
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@v5.1.1
+        uses: actions/setup-python@v5.2.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
@@ -247,7 +252,7 @@ jobs:
           python -m venv venv
           . venv/bin/activate
           python --version
-          pip install "$(grep '^uv' < requirements_test.txt)"
+          pip install "$(grep '^uv' < requirements.txt)"
           uv pip install "$(cat requirements_test.txt | grep pre-commit)"
       - name: Restore pre-commit environment from cache
         id: cache-precommit
@@ -274,7 +279,7 @@ jobs:
       - name: Check out code from GitHub
         uses: actions/checkout@v4.1.7
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v5.1.1
+        uses: actions/setup-python@v5.2.0
         id: python
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
@@ -314,7 +319,7 @@ jobs:
       - name: Check out code from GitHub
         uses: actions/checkout@v4.1.7
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v5.1.1
+        uses: actions/setup-python@v5.2.0
         id: python
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
@@ -343,6 +348,7 @@ jobs:
           pre-commit run --hook-stage manual ruff --all-files --show-diff-on-failure
         env:
           RUFF_OUTPUT_FORMAT: github
+
   lint-other:
     name: Check other linters
     runs-on: ubuntu-24.04
@@ -353,7 +359,7 @@ jobs:
       - name: Check out code from GitHub
         uses: actions/checkout@v4.1.7
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v5.1.1
+        uses: actions/setup-python@v5.2.0
         id: python
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
@@ -423,17 +429,32 @@ jobs:
           . venv/bin/activate
           pre-commit run --show-diff-on-failure --hook-stage manual codespell --all-files
 
+  lint-hadolint:
+    name: Check ${{ matrix.file }}
+    runs-on: ubuntu-24.04
+    needs:
+      - info
+    if: |
+      github.event.inputs.pylint-only != 'true'
+      && github.event.inputs.mypy-only != 'true'
+      && github.event.inputs.audit-licenses-only != 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        file:
+          - Dockerfile
+          - Dockerfile.dev
+          - script/hassfest/docker/Dockerfile
+    steps:
+      - name: Check out code from GitHub
+        uses: actions/checkout@v4.1.7
       - name: Register hadolint problem matcher
         run: |
           echo "::add-matcher::.github/workflows/matchers/hadolint.json"
-      - name: Check Dockerfile
-        uses: docker://hadolint/hadolint:v1.18.2
+      - name: Check ${{ matrix.file }}
+        uses: docker://hadolint/hadolint:v2.12.0
         with:
-          args: hadolint Dockerfile
-      - name: Check Dockerfile.dev
-        uses: docker://hadolint/hadolint:v1.18.2
-        with:
-          args: hadolint Dockerfile.dev
+          args: hadolint ${{ matrix.file }}
 
   base:
     name: Prepare dependencies
@@ -448,14 +469,14 @@ jobs:
         uses: actions/checkout@v4.1.7
       - name: Set up Python ${{ matrix.python-version }}
         id: python
-        uses: actions/setup-python@v5.1.1
+        uses: actions/setup-python@v5.2.0
         with:
           python-version: ${{ matrix.python-version }}
           check-latest: true
       - name: Generate partial uv restore key
         id: generate-uv-key
         run: |
-          uv_version=$(cat requirements_test.txt | grep uv | cut -d '=' -f 3)
+          uv_version=$(cat requirements.txt | grep uv | cut -d '=' -f 3)
           echo "version=${uv_version}" >> $GITHUB_OUTPUT
           echo "key=uv-${{ env.UV_CACHE_VERSION }}-${uv_version}-${{
             env.HA_SHORT_VERSION }}-$(date -u '+%Y-%m-%dT%H:%M:%s')" >> $GITHUB_OUTPUT
@@ -504,12 +525,11 @@ jobs:
           python -m venv venv
           . venv/bin/activate
           python --version
-          pip install "$(grep '^uv' < requirements_test.txt)"
+          pip install "$(grep '^uv' < requirements.txt)"
           uv pip install -U "pip>=21.3.1" setuptools wheel
           uv pip install -r requirements.txt
           python -m script.gen_requirements_all ci
-          uv pip install -r requirements_all_pytest.txt
-          uv pip install -r requirements_test.txt
+          uv pip install -r requirements_all_pytest.txt -r requirements_test.txt
           uv pip install -e . --config-settings editable_mode=compat
 
   hassfest:
@@ -518,6 +538,7 @@ jobs:
     if: |
       github.event.inputs.pylint-only != 'true'
       && github.event.inputs.mypy-only != 'true'
+      && github.event.inputs.audit-licenses-only != 'true'
     needs:
       - info
       - base
@@ -532,7 +553,7 @@ jobs:
         uses: actions/checkout@v4.1.7
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@v5.1.1
+        uses: actions/setup-python@v5.2.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
@@ -556,6 +577,7 @@ jobs:
     if: |
       github.event.inputs.pylint-only != 'true'
       && github.event.inputs.mypy-only != 'true'
+      && github.event.inputs.audit-licenses-only != 'true'
     needs:
       - info
       - base
@@ -564,7 +586,7 @@ jobs:
         uses: actions/checkout@v4.1.7
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@v5.1.1
+        uses: actions/setup-python@v5.2.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
@@ -589,13 +611,16 @@ jobs:
       - info
       - base
     if: |
-      needs.info.outputs.requirements == 'true'
+      (github.event.inputs.pylint-only != 'true'
+        && github.event.inputs.mypy-only != 'true'
+        || github.event.inputs.audit-licenses-only == 'true')
+      && needs.info.outputs.requirements == 'true'
     steps:
       - name: Check out code from GitHub
         uses: actions/checkout@v4.1.7
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@v5.1.1
+        uses: actions/setup-python@v5.2.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
@@ -613,7 +638,7 @@ jobs:
           . venv/bin/activate
           pip-licenses --format=json --output-file=licenses.json
       - name: Upload licenses
-        uses: actions/upload-artifact@v4.3.4
+        uses: actions/upload-artifact@v4.4.0
         with:
           name: licenses
           path: licenses.json
@@ -628,6 +653,7 @@ jobs:
     timeout-minutes: 20
     if: |
       github.event.inputs.mypy-only != 'true'
+      && github.event.inputs.audit-licenses-only != 'true'
       || github.event.inputs.pylint-only == 'true'
     needs:
       - info
@@ -637,7 +663,7 @@ jobs:
         uses: actions/checkout@v4.1.7
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@v5.1.1
+        uses: actions/setup-python@v5.2.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
@@ -672,7 +698,9 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     if: |
-      (github.event.inputs.mypy-only != 'true' || github.event.inputs.pylint-only == 'true')
+      (github.event.inputs.mypy-only != 'true'
+        && github.event.inputs.audit-licenses-only != 'true'
+        || github.event.inputs.pylint-only == 'true')
       && (needs.info.outputs.tests_glob || needs.info.outputs.test_full_suite == 'true')
     needs:
       - info
@@ -682,7 +710,7 @@ jobs:
         uses: actions/checkout@v4.1.7
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@v5.1.1
+        uses: actions/setup-python@v5.2.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
@@ -703,20 +731,21 @@ jobs:
         run: |
           . venv/bin/activate
           python --version
-          pylint --ignore-missing-annotations=y tests
+          pylint tests
       - name: Run pylint (partially)
         if: needs.info.outputs.test_full_suite == 'false'
         shell: bash
         run: |
           . venv/bin/activate
           python --version
-          pylint --ignore-missing-annotations=y tests/components/${{ needs.info.outputs.tests_glob }}
+          pylint tests/components/${{ needs.info.outputs.tests_glob }}
 
   mypy:
     name: Check mypy
     runs-on: ubuntu-24.04
     if: |
       github.event.inputs.pylint-only != 'true'
+      && github.event.inputs.audit-licenses-only != 'true'
       || github.event.inputs.mypy-only == 'true'
     needs:
       - info
@@ -726,7 +755,7 @@ jobs:
         uses: actions/checkout@v4.1.7
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@v5.1.1
+        uses: actions/setup-python@v5.2.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
@@ -781,6 +810,7 @@ jobs:
       && github.event.inputs.lint-only != 'true'
       && github.event.inputs.pylint-only != 'true'
       && github.event.inputs.mypy-only != 'true'
+      && github.event.inputs.audit-licenses-only != 'true'
       && needs.info.outputs.test_full_suite == 'true'
     needs:
       - info
@@ -800,7 +830,7 @@ jobs:
         uses: actions/checkout@v4.1.7
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@v5.1.1
+        uses: actions/setup-python@v5.2.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
@@ -818,7 +848,7 @@ jobs:
           . venv/bin/activate
           python -m script.split_tests ${{ needs.info.outputs.test_group_count }} tests
       - name: Upload pytest_buckets
-        uses: actions/upload-artifact@v4.3.4
+        uses: actions/upload-artifact@v4.4.0
         with:
           name: pytest_buckets
           path: pytest_buckets.txt
@@ -831,6 +861,7 @@ jobs:
       && github.event.inputs.lint-only != 'true'
       && github.event.inputs.pylint-only != 'true'
       && github.event.inputs.mypy-only != 'true'
+      && github.event.inputs.audit-licenses-only != 'true'
       && needs.info.outputs.test_full_suite == 'true'
     needs:
       - info
@@ -863,7 +894,7 @@ jobs:
         uses: actions/checkout@v4.1.7
       - name: Set up Python ${{ matrix.python-version }}
         id: python
-        uses: actions/setup-python@v5.1.1
+        uses: actions/setup-python@v5.2.0
         with:
           python-version: ${{ matrix.python-version }}
           check-latest: true
@@ -904,6 +935,7 @@ jobs:
             cov_params+=(--cov-report=xml)
           fi
 
+          echo "Test group ${{ matrix.group }}: $(sed -n "${{ matrix.group }},1p" pytest_buckets.txt)"
           python3 -b -X dev -m pytest \
             -qq \
             --timeout=9 \
@@ -917,14 +949,14 @@ jobs:
               2>&1 | tee pytest-${{ matrix.python-version }}-${{ matrix.group }}.txt
       - name: Upload pytest output
         if: success() || failure() && steps.pytest-full.conclusion == 'failure'
-        uses: actions/upload-artifact@v4.3.4
+        uses: actions/upload-artifact@v4.4.0
         with:
           name: pytest-${{ github.run_number }}-${{ matrix.python-version }}-${{ matrix.group }}
           path: pytest-*.txt
           overwrite: true
       - name: Upload coverage artifact
         if: needs.info.outputs.skip_coverage != 'true'
-        uses: actions/upload-artifact@v4.3.4
+        uses: actions/upload-artifact@v4.4.0
         with:
           name: coverage-${{ matrix.python-version }}-${{ matrix.group }}
           path: coverage.xml
@@ -950,6 +982,7 @@ jobs:
       && github.event.inputs.lint-only != 'true'
       && github.event.inputs.pylint-only != 'true'
       && github.event.inputs.mypy-only != 'true'
+      && github.event.inputs.audit-licenses-only != 'true'
       && needs.info.outputs.mariadb_groups != '[]'
     needs:
       - info
@@ -981,7 +1014,7 @@ jobs:
         uses: actions/checkout@v4.1.7
       - name: Set up Python ${{ matrix.python-version }}
         id: python
-        uses: actions/setup-python@v5.1.1
+        uses: actions/setup-python@v5.2.0
         with:
           python-version: ${{ matrix.python-version }}
           check-latest: true
@@ -1042,7 +1075,7 @@ jobs:
               2>&1 | tee pytest-${{ matrix.python-version }}-${mariadb}.txt
       - name: Upload pytest output
         if: success() || failure() && steps.pytest-partial.conclusion == 'failure'
-        uses: actions/upload-artifact@v4.3.4
+        uses: actions/upload-artifact@v4.4.0
         with:
           name: pytest-${{ github.run_number }}-${{ matrix.python-version }}-${{
             steps.pytest-partial.outputs.mariadb }}
@@ -1050,7 +1083,7 @@ jobs:
           overwrite: true
       - name: Upload coverage artifact
         if: needs.info.outputs.skip_coverage != 'true'
-        uses: actions/upload-artifact@v4.3.4
+        uses: actions/upload-artifact@v4.4.0
         with:
           name: coverage-${{ matrix.python-version }}-${{
             steps.pytest-partial.outputs.mariadb }}
@@ -1075,6 +1108,7 @@ jobs:
       && github.event.inputs.lint-only != 'true'
       && github.event.inputs.pylint-only != 'true'
       && github.event.inputs.mypy-only != 'true'
+      && github.event.inputs.audit-licenses-only != 'true'
       && needs.info.outputs.postgresql_groups != '[]'
     needs:
       - info
@@ -1106,7 +1140,7 @@ jobs:
         uses: actions/checkout@v4.1.7
       - name: Set up Python ${{ matrix.python-version }}
         id: python
-        uses: actions/setup-python@v5.1.1
+        uses: actions/setup-python@v5.2.0
         with:
           python-version: ${{ matrix.python-version }}
           check-latest: true
@@ -1168,7 +1202,7 @@ jobs:
               2>&1 | tee pytest-${{ matrix.python-version }}-${postgresql}.txt
       - name: Upload pytest output
         if: success() || failure() && steps.pytest-partial.conclusion == 'failure'
-        uses: actions/upload-artifact@v4.3.4
+        uses: actions/upload-artifact@v4.4.0
         with:
           name: pytest-${{ github.run_number }}-${{ matrix.python-version }}-${{
             steps.pytest-partial.outputs.postgresql }}
@@ -1176,7 +1210,7 @@ jobs:
           overwrite: true
       - name: Upload coverage artifact
         if: needs.info.outputs.skip_coverage != 'true'
-        uses: actions/upload-artifact@v4.3.4
+        uses: actions/upload-artifact@v4.4.0
         with:
           name: coverage-${{ matrix.python-version }}-${{
             steps.pytest-partial.outputs.postgresql }}
@@ -1219,6 +1253,7 @@ jobs:
       && github.event.inputs.lint-only != 'true'
       && github.event.inputs.pylint-only != 'true'
       && github.event.inputs.mypy-only != 'true'
+      && github.event.inputs.audit-licenses-only != 'true'
       && needs.info.outputs.tests_glob
       && needs.info.outputs.test_full_suite == 'false'
     needs:
@@ -1251,7 +1286,7 @@ jobs:
         uses: actions/checkout@v4.1.7
       - name: Set up Python ${{ matrix.python-version }}
         id: python
-        uses: actions/setup-python@v5.1.1
+        uses: actions/setup-python@v5.2.0
         with:
           python-version: ${{ matrix.python-version }}
           check-latest: true
@@ -1309,14 +1344,14 @@ jobs:
               2>&1 | tee pytest-${{ matrix.python-version }}-${{ matrix.group }}.txt
       - name: Upload pytest output
         if: success() || failure() && steps.pytest-partial.conclusion == 'failure'
-        uses: actions/upload-artifact@v4.3.4
+        uses: actions/upload-artifact@v4.4.0
         with:
           name: pytest-${{ github.run_number }}-${{ matrix.python-version }}-${{ matrix.group }}
           path: pytest-*.txt
           overwrite: true
       - name: Upload coverage artifact
         if: needs.info.outputs.skip_coverage != 'true'
-        uses: actions/upload-artifact@v4.3.4
+        uses: actions/upload-artifact@v4.4.0
         with:
           name: coverage-${{ matrix.python-version }}-${{ matrix.group }}
           path: coverage.xml

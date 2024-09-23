@@ -86,18 +86,21 @@ class MelissaClimate(ClimateEntity):
         """Return the current fan mode."""
         if self._cur_settings is not None:
             return self.melissa_fan_to_hass(self._cur_settings[self._api.FAN])
+        return None
 
     @property
     def current_temperature(self):
         """Return the current temperature."""
         if self._data:
             return self._data[self._api.TEMP]
+        return None
 
     @property
     def current_humidity(self):
         """Return the current humidity value."""
         if self._data:
             return self._data[self._api.HUMIDITY]
+        return None
 
     @property
     def target_temperature_step(self):
@@ -224,6 +227,7 @@ class MelissaClimate(ClimateEntity):
         if mode == HVACMode.FAN_ONLY:
             return self._api.MODE_FAN
         _LOGGER.warning("Melissa have no setting for %s mode", mode)
+        return None
 
     def hass_fan_to_melissa(self, fan):
         """Translate hass fan modes to melissa modes."""
@@ -236,3 +240,4 @@ class MelissaClimate(ClimateEntity):
         if fan == FAN_HIGH:
             return self._api.FAN_HIGH
         _LOGGER.warning("Melissa have no setting for %s fan mode", fan)
+        return None

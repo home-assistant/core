@@ -1,6 +1,7 @@
 """Tests for the Wemo binary_sensor entity."""
 
 import pytest
+import pywemo
 from pywemo import StandbyState
 
 from homeassistant.components.homeassistant import (
@@ -12,6 +13,8 @@ from homeassistant.components.wemo.binary_sensor import (
     MakerBinarySensor,
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from .entity_test_helpers import EntityTestHelpers
@@ -26,8 +29,12 @@ class TestMotion(EntityTestHelpers):
         return "Motion"
 
     async def test_binary_sensor_registry_state_callback(
-        self, hass, pywemo_registry, pywemo_device, wemo_entity
-    ):
+        self,
+        hass: HomeAssistant,
+        pywemo_registry: pywemo.SubscriptionRegistry,
+        pywemo_device: pywemo.WeMoDevice,
+        wemo_entity: er.RegistryEntry,
+    ) -> None:
         """Verify that the binary_sensor receives state updates from the registry."""
         # On state.
         pywemo_device.get_state.return_value = 1
@@ -42,8 +49,12 @@ class TestMotion(EntityTestHelpers):
         assert hass.states.get(wemo_entity.entity_id).state == STATE_OFF
 
     async def test_binary_sensor_update_entity(
-        self, hass, pywemo_registry, pywemo_device, wemo_entity
-    ):
+        self,
+        hass: HomeAssistant,
+        pywemo_registry: pywemo.SubscriptionRegistry,
+        pywemo_device: pywemo.WeMoDevice,
+        wemo_entity: er.RegistryEntry,
+    ) -> None:
         """Verify that the binary_sensor performs state updates."""
         await async_setup_component(hass, HA_DOMAIN, {})
 
@@ -82,8 +93,12 @@ class TestMaker(EntityTestHelpers):
         return MakerBinarySensor._name_suffix.lower()
 
     async def test_registry_state_callback(
-        self, hass, pywemo_registry, pywemo_device, wemo_entity
-    ):
+        self,
+        hass: HomeAssistant,
+        pywemo_registry: pywemo.SubscriptionRegistry,
+        pywemo_device: pywemo.WeMoDevice,
+        wemo_entity: er.RegistryEntry,
+    ) -> None:
         """Verify that the binary_sensor receives state updates from the registry."""
         # On state.
         pywemo_device.sensor_state = 0
@@ -112,8 +127,12 @@ class TestInsight(EntityTestHelpers):
         return InsightBinarySensor._name_suffix.lower()
 
     async def test_registry_state_callback(
-        self, hass, pywemo_registry, pywemo_device, wemo_entity
-    ):
+        self,
+        hass: HomeAssistant,
+        pywemo_registry: pywemo.SubscriptionRegistry,
+        pywemo_device: pywemo.WeMoDevice,
+        wemo_entity: er.RegistryEntry,
+    ) -> None:
         """Verify that the binary_sensor receives state updates from the registry."""
         # On state.
         pywemo_device.get_state.return_value = 1

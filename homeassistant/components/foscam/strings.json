@@ -25,6 +25,13 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
   },
+  "entity": {
+    "switch": {
+      "sleep_switch": {
+        "name": "Sleep"
+      }
+    }
+  },
   "services": {
     "ptz": {
       "name": "PTZ",

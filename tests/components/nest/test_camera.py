@@ -165,7 +165,9 @@ async def mock_create_stream(hass: HomeAssistant) -> Generator[AsyncMock]:
         yield mock_stream
 
 
-async def async_get_image(hass, width=None, height=None):
+async def async_get_image(
+    hass: HomeAssistant, width: int | None = None, height: int | None = None
+) -> bytes:
     """Get the camera image."""
     image = await camera.async_get_image(
         hass, "camera.my_camera", width=width, height=height
@@ -174,7 +176,7 @@ async def async_get_image(hass, width=None, height=None):
     return image.content
 
 
-async def fire_alarm(hass, point_in_time):
+async def fire_alarm(hass: HomeAssistant, point_in_time: datetime.datetime) -> None:
     """Fire an alarm and wait for callbacks to run."""
     with freeze_time(point_in_time):
         async_fire_time_changed(hass, point_in_time)

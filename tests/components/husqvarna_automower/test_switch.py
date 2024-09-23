@@ -1,5 +1,6 @@
 """Tests for switch platform."""
 
+from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
 from aioautomower.exceptions import ApiException
@@ -9,7 +10,10 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy import SnapshotAssertion
 
-from homeassistant.components.husqvarna_automower.const import DOMAIN
+from homeassistant.components.husqvarna_automower.const import (
+    DOMAIN,
+    EXECUTION_TIME_DELAY,
+)
 from homeassistant.components.husqvarna_automower.coordinator import SCAN_INTERVAL
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -109,6 +113,7 @@ async def test_stay_out_zone_switch_commands(
     excepted_state: str,
     mock_automower_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test switch commands."""
     entity_id = "switch.test_mower_1_avoid_danger_zone"
@@ -124,8 +129,11 @@ async def test_stay_out_zone_switch_commands(
         domain="switch",
         service=service,
         service_data={"entity_id": entity_id},
-        blocking=True,
+        blocking=False,
     )
+    freezer.tick(timedelta(seconds=EXECUTION_TIME_DELAY))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
     mocked_method.assert_called_once_with(TEST_MOWER_ID, TEST_ZONE_ID, boolean)
     state = hass.states.get(entity_id)
     assert state is not None

@@ -44,9 +44,15 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_state_added_domain
 from homeassistant.util.json import JsonObjectType, json_loads_object
 
-from .const import DEFAULT_EXPOSED_ATTRIBUTES, DOMAIN, ConversationEntityFeature
+from .const import (
+    DATA_DEFAULT_ENTITY,
+    DEFAULT_EXPOSED_ATTRIBUTES,
+    DOMAIN,
+    ConversationEntityFeature,
+)
 from .entity import ConversationEntity
 from .models import ConversationInput, ConversationResult
+from .trace import ConversationTraceEventType, async_conversation_trace_append
 
 _LOGGER = logging.getLogger(__name__)
 _DEFAULT_ERROR_TEXT = "Sorry, I couldn't understand that"
@@ -59,14 +65,7 @@ TRIGGER_CALLBACK_TYPE = Callable[
 METADATA_CUSTOM_SENTENCE = "hass_custom_sentence"
 METADATA_CUSTOM_FILE = "hass_custom_file"
 
-DATA_DEFAULT_ENTITY = "conversation_default_entity"
 ERROR_SENTINEL = object()
-
-
-@core.callback
-def async_get_default_agent(hass: core.HomeAssistant) -> DefaultAgent:
-    """Get the default agent."""
-    return hass.data[DATA_DEFAULT_ENTITY]
 
 
 def json_load(fp: IO[str]) -> JsonObjectType:
@@ -348,6 +347,19 @@ class DefaultAgent(ConversationEntity):
             }
             for entity in result.entities_list
         }
+        device_area = self._get_device_area(user_input.device_id)
+        if device_area:
+            slots["preferred_area_id"] = {"value": device_area.id}
+        async_conversation_trace_append(
+            ConversationTraceEventType.TOOL_CALL,
+            {
+                "intent_name": result.intent.name,
+                "slots": {
+                    entity.name: entity.value or entity.text
+                    for entity in result.entities_list
+                },
+            },
+        )
 
         try:
             intent_response = await intent.async_handle(
@@ -906,17 +918,25 @@ class DefaultAgent(ConversationEntity):
         if not user_input.device_id:
             return None
 
-        devices = dr.async_get(self.hass)
-        device = devices.async_get(user_input.device_id)
-        if (device is None) or (device.area_id is None):
-            return None
-
-        areas = ar.async_get(self.hass)
-        device_area = areas.async_get_area(device.area_id)
+        device_area = self._get_device_area(user_input.device_id)
         if device_area is None:
             return None
 
         return {"area": {"value": device_area.name, "text": device_area.name}}
+
+    def _get_device_area(self, device_id: str | None) -> ar.AreaEntry | None:
+        """Return area object for given device identifier."""
+        if device_id is None:
+            return None
+
+        devices = dr.async_get(self.hass)
+        device = devices.async_get(device_id)
+        if (device is None) or (device.area_id is None):
+            return None
+
+        areas = ar.async_get(self.hass)
+
+        return areas.async_get_area(device.area_id)
 
     def _get_error_text(
         self,

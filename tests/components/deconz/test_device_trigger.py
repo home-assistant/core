@@ -7,6 +7,8 @@ from pytest_unordered import unordered
 
 from homeassistant.components.automation import DOMAIN as AUTOMATION_DOMAIN
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
+
+# pylint: disable-next=hass-component-root-import
 from homeassistant.components.binary_sensor.device_trigger import (
     CONF_BAT_LOW,
     CONF_NOT_BAT_LOW,
@@ -343,6 +345,7 @@ async def test_functional_device_trigger(
     assert len(hass.states.async_entity_ids(AUTOMATION_DOMAIN)) == 1
 
     await sensor_ws_data({"state": {"buttonevent": 1002}})
+    await hass.async_block_till_done()
     assert len(service_calls) == 1
     assert service_calls[0].data["some"] == "test_trigger_button_press"
 

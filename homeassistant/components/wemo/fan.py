@@ -67,7 +67,7 @@ async def async_setup_entry(
 
     # This will call WemoHumidifier.reset_filter_life()
     platform.async_register_entity_service(
-        SERVICE_RESET_FILTER_LIFE, {}, WemoHumidifier.reset_filter_life.__name__
+        SERVICE_RESET_FILTER_LIFE, None, WemoHumidifier.reset_filter_life.__name__
     )
 
 

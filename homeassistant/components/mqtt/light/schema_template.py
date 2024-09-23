@@ -31,19 +31,19 @@ from homeassistant.const import (
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.service_info.mqtt import ReceivePayloadType
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType, VolSchemaType
 import homeassistant.util.color as color_util
 
 from .. import subscription
 from ..config import MQTT_RW_SCHEMA
 from ..const import CONF_COMMAND_TOPIC, CONF_STATE_TOPIC, PAYLOAD_NONE
-from ..mixins import MqttEntity
+from ..entity import MqttEntity
 from ..models import (
     MqttCommandTemplate,
     MqttValueTemplate,
     PublishPayloadType,
     ReceiveMessage,
-    ReceivePayloadType,
 )
 from ..schemas import MQTT_ENTITY_COMMON_SCHEMA
 from .schema import MQTT_LIGHT_SCHEMA_SCHEMA

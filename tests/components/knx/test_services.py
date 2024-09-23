@@ -154,7 +154,6 @@ async def test_event_register(hass: HomeAssistant, knx: KNXTestKit) -> None:
 
     # no event registered
     await knx.receive_write(test_address, True)
-    await hass.async_block_till_done()
     assert len(events) == 0
 
     # register event with `type`
@@ -165,7 +164,6 @@ async def test_event_register(hass: HomeAssistant, knx: KNXTestKit) -> None:
         blocking=True,
     )
     await knx.receive_write(test_address, (0x04, 0xD2))
-    await hass.async_block_till_done()
     assert len(events) == 1
     typed_event = events.pop()
     assert typed_event.data["data"] == (0x04, 0xD2)
@@ -179,7 +177,6 @@ async def test_event_register(hass: HomeAssistant, knx: KNXTestKit) -> None:
         blocking=True,
     )
     await knx.receive_write(test_address, True)
-    await hass.async_block_till_done()
     assert len(events) == 0
 
     # register event without `type`
@@ -188,7 +185,6 @@ async def test_event_register(hass: HomeAssistant, knx: KNXTestKit) -> None:
     )
     await knx.receive_write(test_address, True)
     await knx.receive_write(test_address, False)
-    await hass.async_block_till_done()
     assert len(events) == 2
     untyped_event_2 = events.pop()
     assert untyped_event_2.data["data"] is False

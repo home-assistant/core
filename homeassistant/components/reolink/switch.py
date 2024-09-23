@@ -6,25 +6,26 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
-from reolink_aio.api import Host
+from reolink_aio.api import Chime, Host
 from reolink_aio.exceptions import ReolinkError
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import ReolinkData
 from .const import DOMAIN
 from .entity import (
     ReolinkChannelCoordinatorEntity,
     ReolinkChannelEntityDescription,
+    ReolinkChimeCoordinatorEntity,
+    ReolinkChimeEntityDescription,
     ReolinkHostCoordinatorEntity,
     ReolinkHostEntityDescription,
 )
+from .util import ReolinkConfigEntry, ReolinkData
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -47,6 +48,17 @@ class ReolinkNVRSwitchEntityDescription(
 
     method: Callable[[Host, bool], Any]
     value: Callable[[Host], bool]
+
+
+@dataclass(frozen=True, kw_only=True)
+class ReolinkChimeSwitchEntityDescription(
+    SwitchEntityDescription,
+    ReolinkChimeEntityDescription,
+):
+    """A class that describes switch entities for a chime."""
+
+    method: Callable[[Chime, bool], Any]
+    value: Callable[[Chime], bool | None]
 
 
 SWITCH_ENTITIES = (
@@ -159,7 +171,7 @@ SWITCH_ENTITIES = (
     ReolinkSwitchEntityDescription(
         key="buzzer",
         cmd_key="GetBuzzerAlarmV20",
-        translation_key="buzzer",
+        translation_key="hub_ringtone_on_event",
         entity_category=EntityCategory.CONFIG,
         supported=lambda api, ch: api.supported(ch, "buzzer") and api.is_nvr,
         value=lambda api, ch: api.buzzer_enabled(ch),
@@ -236,12 +248,23 @@ NVR_SWITCH_ENTITIES = (
     ReolinkNVRSwitchEntityDescription(
         key="buzzer",
         cmd_key="GetBuzzerAlarmV20",
-        translation_key="buzzer",
+        translation_key="hub_ringtone_on_event",
         icon="mdi:room-service",
         entity_category=EntityCategory.CONFIG,
         supported=lambda api: api.supported(None, "buzzer"),
         value=lambda api: api.buzzer_enabled(),
         method=lambda api, value: api.set_buzzer(None, value),
+    ),
+)
+
+CHIME_SWITCH_ENTITIES = (
+    ReolinkChimeSwitchEntityDescription(
+        key="chime_led",
+        cmd_key="DingDongOpt",
+        translation_key="led",
+        entity_category=EntityCategory.CONFIG,
+        value=lambda chime: chime.led_state,
+        method=lambda chime, value: chime.set_option(led=value),
     ),
 )
 
@@ -260,24 +283,29 @@ DEPRECATED_HDR = ReolinkSwitchEntityDescription(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: ReolinkConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up a Reolink switch entities."""
-    reolink_data: ReolinkData = hass.data[DOMAIN][config_entry.entry_id]
+    reolink_data: ReolinkData = config_entry.runtime_data
 
-    entities: list[ReolinkSwitchEntity | ReolinkNVRSwitchEntity] = [
+    entities: list[
+        ReolinkSwitchEntity | ReolinkNVRSwitchEntity | ReolinkChimeSwitchEntity
+    ] = [
         ReolinkSwitchEntity(reolink_data, channel, entity_description)
         for entity_description in SWITCH_ENTITIES
         for channel in reolink_data.host.api.channels
         if entity_description.supported(reolink_data.host.api, channel)
     ]
     entities.extend(
-        [
-            ReolinkNVRSwitchEntity(reolink_data, entity_description)
-            for entity_description in NVR_SWITCH_ENTITIES
-            if entity_description.supported(reolink_data.host.api)
-        ]
+        ReolinkNVRSwitchEntity(reolink_data, entity_description)
+        for entity_description in NVR_SWITCH_ENTITIES
+        if entity_description.supported(reolink_data.host.api)
+    )
+    entities.extend(
+        ReolinkChimeSwitchEntity(reolink_data, chime, entity_description)
+        for entity_description in CHIME_SWITCH_ENTITIES
+        for chime in reolink_data.host.api.chime_list
     )
 
     # Can be removed in HA 2025.2.0
@@ -375,6 +403,43 @@ class ReolinkNVRSwitchEntity(ReolinkHostCoordinatorEntity, SwitchEntity):
         """Turn the entity off."""
         try:
             await self.entity_description.method(self._host.api, False)
+        except ReolinkError as err:
+            raise HomeAssistantError(err) from err
+        self.async_write_ha_state()
+
+
+class ReolinkChimeSwitchEntity(ReolinkChimeCoordinatorEntity, SwitchEntity):
+    """Base switch entity class for a chime."""
+
+    entity_description: ReolinkChimeSwitchEntityDescription
+
+    def __init__(
+        self,
+        reolink_data: ReolinkData,
+        chime: Chime,
+        entity_description: ReolinkChimeSwitchEntityDescription,
+    ) -> None:
+        """Initialize Reolink switch entity."""
+        self.entity_description = entity_description
+        super().__init__(reolink_data, chime)
+
+    @property
+    def is_on(self) -> bool | None:
+        """Return true if switch is on."""
+        return self.entity_description.value(self._chime)
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn the entity on."""
+        try:
+            await self.entity_description.method(self._chime, True)
+        except ReolinkError as err:
+            raise HomeAssistantError(err) from err
+        self.async_write_ha_state()
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn the entity off."""
+        try:
+            await self.entity_description.method(self._chime, False)
         except ReolinkError as err:
             raise HomeAssistantError(err) from err
         self.async_write_ha_state()

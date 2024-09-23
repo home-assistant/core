@@ -41,12 +41,12 @@ async def async_setup_entry(
     platform = async_get_current_platform()
     platform.async_register_entity_service(
         SERVICE_DISABLE_AUTOLOCK,
-        {},
+        None,
         VerisureDoorlock.disable_autolock.__name__,
     )
     platform.async_register_entity_service(
         SERVICE_ENABLE_AUTOLOCK,
-        {},
+        None,
         VerisureDoorlock.enable_autolock.__name__,
     )
 

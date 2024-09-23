@@ -338,3 +338,24 @@ async def test_simple_zone_timeout_zone_with_timeout_exeption() -> None:
                     raise RuntimeError
 
             await asyncio.sleep(0.3)
+
+
+async def test_multiple_global_freezes(hass: HomeAssistant) -> None:
+    """Test multiple global freezes."""
+    timeout = TimeoutManager()
+
+    async def background(delay: float) -> None:
+        async with timeout.async_freeze():
+            await asyncio.sleep(delay)
+
+    async with timeout.async_timeout(0.1):
+        task = hass.async_create_task(background(0.2))
+        async with timeout.async_freeze():
+            await asyncio.sleep(0.1)
+    await task
+
+    async with timeout.async_timeout(0.1):
+        task = hass.async_create_task(background(0.2))
+        async with timeout.async_freeze():
+            await asyncio.sleep(0.3)
+    await task
