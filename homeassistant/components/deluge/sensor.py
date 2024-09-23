@@ -17,9 +17,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import DelugeConfigEntry, DelugeEntity
+from . import DelugeConfigEntry
 from .const import CURRENT_STATUS, DATA_KEYS, DOWNLOAD_SPEED, UPLOAD_SPEED
 from .coordinator import DelugeDataUpdateCoordinator
+from .entity import DelugeEntity
 
 
 def get_state(data: dict[str, float], key: str) -> str | float:
