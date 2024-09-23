@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_all_entities[select.1p7k_500006_lb_mode-entry]
+# name: test_all_entities[select.1p7k_500006_load_balancing_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -18,7 +18,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'select.1p7k_500006_lb_mode',
+    'entity_id': 'select.1p7k_500006_load_balancing_mode',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -30,19 +30,19 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Lb mode',
+    'original_name': 'Load balancing mode',
     'platform': 'lektrico',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'lb_mode',
-    'unique_id': '500006_lb_mode',
+    'translation_key': 'load_balancing_mode',
+    'unique_id': '500006_load_balancing_mode',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[select.1p7k_500006_lb_mode-state]
+# name: test_all_entities[select.1p7k_500006_load_balancing_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': '1p7k_500006 Lb mode',
+      'friendly_name': '1p7k_500006 Load balancing mode',
       'options': list([
         'disabled',
         'power',
@@ -51,7 +51,7 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.1p7k_500006_lb_mode',
+    'entity_id': 'select.1p7k_500006_load_balancing_mode',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

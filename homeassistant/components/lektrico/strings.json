@@ -39,8 +39,8 @@
       }
     },
     "select": {
-      "lb_mode": {
-        "name": "Lb mode",
+      "load_balancing_mode": {
+        "name": "Load balancing mode",
         "state": {
           "disabled": "Disabled",
           "power": "Power",
