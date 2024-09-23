@@ -241,11 +241,31 @@
       }
     },
     "sensor": {
-      "error": {
-        "name": "Error"
+      "odor_level": {
+        "name": "Odor",
+        "state": {
+          "invalid": "Invalid",
+          "weak": "Weak",
+          "normal": "Normal",
+          "strong": "Strong",
+          "very_strong": "Very strong"
+        }
       },
       "current_temperature": {
         "name": "Current temperature"
+      },
+      "temperature": {
+        "name": "Temperature"
+      },
+      "total_pollution_level": {
+        "name": "Overall air quality",
+        "state": {
+          "invalid": "Invalid",
+          "good": "Good",
+          "normal": "Moderate",
+          "bad": "Unhealthy",
+          "very_bad": "Poor"
+        }
       },
       "monitoring_enabled": {
         "name": "Air quality sensor",
@@ -267,15 +287,30 @@
       "growth_mode_for_location": {
         "name": "{location} mode",
         "state": {
-          "standard": "[%key:component::lg_thinq::entity::sensor::growth_mode::state::standard%]",
-          "ext_leaf": "[%key:component::lg_thinq::entity::sensor::growth_mode::state::ext_leaf%]",
-          "ext_herb": "[%key:component::lg_thinq::entity::sensor::growth_mode::state::ext_herb%]",
-          "ext_flower": "[%key:component::lg_thinq::entity::sensor::growth_mode::state::ext_flower%]",
-          "ext_expert": "[%key:component::lg_thinq::entity::sensor::growth_mode::state::ext_expert%]"
+          "standard": "Auto",
+          "ext_leaf": "Vegetables",
+          "ext_herb": "Herbs",
+          "ext_flower": "Flowers",
+          "ext_expert": "Custom growing mode"
         }
+      },
+      "wind_volume": {
+        "name": "Wind speed"
       },
       "wind_volume_for_location": {
         "name": "{location} wind speed"
+      },
+      "brightness": {
+        "name": "Lighting intensity"
+      },
+      "brightness_for_location": {
+        "name": "{location} lighting intensity"
+      },
+      "duration": {
+        "name": "Lighting duration"
+      },
+      "duration_for_location": {
+        "name": "{location} lighting duration"
       },
       "day_target_temperature": {
         "name": "Day growth temperature"
@@ -290,7 +325,7 @@
         "name": "{location} night growth temperature"
       },
       "temperature_state": {
-        "name": "[%key:component::sensor::entity_component::temperature::name%]",
+        "name": "Temperature",
         "state": {
           "high": "High",
           "normal": "Good",
@@ -298,18 +333,18 @@
         }
       },
       "temperature_state_for_location": {
-        "name": "[%key:component::lg_thinq::entity::number::target_temperature_for_location::name%]",
+        "name": "{location} temperature",
         "state": {
-          "high": "[%key:component::lg_thinq::entity::sensor::temperature_state::state::high%]",
-          "normal": "[%key:component::lg_thinq::entity::sensor::temperature_state::state::normal%]",
-          "low": "[%key:component::lg_thinq::entity::sensor::temperature_state::state::low%]"
+          "high": "High",
+          "normal": "Good",
+          "low": "Low"
         }
       },
       "current_state": {
         "name": "Current status",
         "state": {
           "add_drain": "Filling",
-          "as_pop_up": "[%key:component::lg_thinq::entity::event::error::state_attributes::event_type::state::unknown_error%]",
+          "as_pop_up": "Product requires attention",
           "cancel": "Cancel",
           "carbonation": "Carbonation",
           "change_condition": "Settings Change",
@@ -320,8 +355,8 @@
           "cleaning_is_done": "Cleaning is done",
           "complete": "Done",
           "cook": "Cooking",
-          "cook_complete": "[%key:component::lg_thinq::entity::sensor::current_state::state::complete%]",
-          "cooking_in_progress": "[%key:component::lg_thinq::entity::sensor::current_state::state::cook%]",
+          "cook_complete": "Done",
+          "cooking_in_progress": "Cooking",
           "cool_down": "Cool down",
           "cooling": "Cooling",
           "detecting": "Detecting",
@@ -329,13 +364,13 @@
           "diagnosis": "Smart diagnosis is in progress",
           "dispensing": "Auto dispensing",
           "display_loadsize": "Load size",
-          "done": "[%key:component::lg_thinq::entity::sensor::current_state::state::complete%]",
+          "done": "Done",
           "drying": "Drying",
           "during_aging": "Aging",
           "during_fermentation": "Fermentation",
           "end": "Finished",
-          "end_cooling": "[%key:component::lg_thinq::entity::sensor::current_state::state::drying%]",
-          "error": "[%key:component::lg_thinq::entity::event::error::state_attributes::event_type::state::unknown_error%]",
+          "end_cooling": "Drying",
+          "error": "Product requires attention",
           "extracting_capsule": "Capsule brewing",
           "extraction_mode": "Storing",
           "firmware": "Updating firmware",
@@ -344,8 +379,8 @@
           "frozen_prevent_running": "Freeze protection in progress",
           "frozen_prevent_pause": "Freeze protection paused",
           "homing": "Moving",
-          "initial": "[%key:common::state::standby%]",
-          "initializing": "[%key:common::state::standby%]",
+          "initial": "Standby",
+          "initializing": "Standby",
           "lock": "Control lock",
           "macrosector": "Remote is in use",
           "melting": "Wort dissolving",
@@ -354,28 +389,28 @@
           "monitoring_positioning": "Setting homeguard start point",
           "night_dry": "Night dry",
           "oven_setting": "Cooktop connected",
-          "pause": "[%key:common::state::paused%]",
-          "paused": "[%key:common::state::paused%]",
+          "pause": "Paused",
+          "paused": "Paused",
           "power_fail": "Power fail",
-          "power_on": "[%key:common::state::on%]",
-          "power_off": "[%key:common::state::off%]",
+          "power_on": "On",
+          "power_off": "Off",
           "preference": "Setting",
           "preheat": "Preheating",
-          "preheat_complete": "[%key:component::lg_thinq::entity::event::notification::state_attributes::event_type::state::preheating_is_complete%]",
-          "preheating": "[%key:component::lg_thinq::entity::sensor::current_state::state::preheat%]",
-          "preheating_is_done": "[%key:component::lg_thinq::entity::event::notification::state_attributes::event_type::state::preheating_is_complete%]",
+          "preheat_complete": "Preheating is done",
+          "preheating": "Preheating",
+          "preheating_is_done": "Preheating is done",
           "prepareing_fermentation": "Preparing now",
           "presteam": "Ready to steam",
           "prewash": "Prewashing",
           "proofing": "Proofing",
           "refreshing": "Refreshing",
-          "reservation": "[%key:component::lg_thinq::entity::sensor::current_state::state::macrosector%]",
+          "reservation": "Remote is in use",
           "reserved": "Delay set",
           "rinse_hold": "Waiting to rinse",
           "rinsing": "Rinsing",
           "running": "Running",
           "running_end": "Complete",
-          "setdate": "[%key:component::lg_thinq::entity::sensor::current_state::state::macrosector%]",
+          "setdate": "Remote is in use",
           "shoes_module": "Drying shoes",
           "sleep": "In sleep mode",
           "smart_grid_run": "Running smart grid",
@@ -383,113 +418,116 @@
           "softening": "Softener",
           "spinning": "Spinning",
           "stay": "Refresh",
-          "standby": "[%key:common::state::standby%]",
+          "standby": "Standby",
           "steam": "Refresh",
           "steam_softening": "Steam softening",
           "sterilize": "Sterilize",
           "temperature_stabilization": "Temperature adjusting",
-          "working": "[%key:component::lg_thinq::entity::sensor::current_state::state::cleaning%]",
+          "working": "Cleaning",
           "wrinkle_care": "Wrinkle care"
         }
       },
       "current_state_for_location": {
         "name": "{location} current status",
         "state": {
-          "add_drain": "[%key:component::lg_thinq::entity::sensor::current_state::state::add_drain%]",
-          "as_pop_up": "[%key:component::lg_thinq::entity::event::error::state_attributes::event_type::state::unknown_error%]",
-          "cancel": "[%key:component::lg_thinq::entity::sensor::current_state::state::cancel%]",
-          "carbonation": "[%key:component::lg_thinq::entity::sensor::current_state::state::carbonation%]",
-          "change_condition": "[%key:component::lg_thinq::entity::sensor::current_state::state::change_condition%]",
-          "charging": "[%key:component::lg_thinq::entity::sensor::current_state::state::charging%]",
-          "charging_complete": "[%key:component::lg_thinq::entity::sensor::current_state::state::charging_complete%]",
-          "checking_turbidity": "[%key:component::lg_thinq::entity::sensor::current_state::state::checking_turbidity%]",
-          "cleaning": "[%key:component::lg_thinq::entity::sensor::current_state::state::cleaning%]",
-          "cleaning_is_done": "[%key:component::lg_thinq::entity::sensor::current_state::state::cleaning_is_done%]",
-          "complete": "[%key:component::lg_thinq::entity::sensor::current_state::state::complete%]",
-          "cook": "[%key:component::lg_thinq::entity::sensor::current_state::state::cook%]",
-          "cook_complete": "[%key:component::lg_thinq::entity::sensor::current_state::state::complete%]",
-          "cooking_in_progress": "[%key:component::lg_thinq::entity::sensor::current_state::state::cook%]",
-          "cool_down": "[%key:component::lg_thinq::entity::sensor::current_state::state::cool_down%]",
-          "cooling": "[%key:component::lg_thinq::entity::sensor::current_state::state::cooling%]",
-          "detecting": "[%key:component::lg_thinq::entity::sensor::current_state::state::detecting%]",
-          "detergent_amount": "[%key:component::lg_thinq::entity::sensor::current_state::state::detergent_amount%]",
-          "diagnosis": "[%key:component::lg_thinq::entity::sensor::current_state::state::diagnosis%]",
-          "dispensing": "[%key:component::lg_thinq::entity::sensor::current_state::state::dispensing%]",
-          "display_loadsize": "[%key:component::lg_thinq::entity::sensor::current_state::state::display_loadsize%]",
-          "done": "[%key:component::lg_thinq::entity::sensor::current_state::state::complete%]",
-          "drying": "[%key:component::lg_thinq::entity::sensor::current_state::state::drying%]",
-          "during_aging": "[%key:component::lg_thinq::entity::sensor::current_state::state::during_aging%]",
-          "during_fermentation": "[%key:component::lg_thinq::entity::sensor::current_state::state::during_fermentation%]",
-          "end": "[%key:component::lg_thinq::entity::sensor::current_state::state::end%]",
-          "end_cooling": "[%key:component::lg_thinq::entity::sensor::current_state::state::drying%]",
-          "error": "[%key:component::lg_thinq::entity::event::error::state_attributes::event_type::state::unknown_error%]",
-          "extracting_capsule": "[%key:component::lg_thinq::entity::sensor::current_state::state::extracting_capsule%]",
-          "extraction_mode": "[%key:component::lg_thinq::entity::sensor::current_state::state::extraction_mode%]",
-          "firmware": "[%key:component::lg_thinq::entity::sensor::current_state::state::firmware%]",
-          "fota": "[%key:component::lg_thinq::entity::sensor::current_state::state::fota%]",
-          "frozen_prevent_initial": "[%key:component::lg_thinq::entity::sensor::current_state::state::frozen_prevent_initial%]",
-          "frozen_prevent_running": "[%key:component::lg_thinq::entity::sensor::current_state::state::frozen_prevent_running%]",
-          "frozen_prevent_pause": "[%key:component::lg_thinq::entity::sensor::current_state::state::frozen_prevent_pause%]",
-          "homing": "[%key:component::lg_thinq::entity::sensor::current_state::state::homing%]",
-          "initial": "[%key:common::state::standby%]",
-          "initializing": "[%key:common::state::standby%]",
-          "lock": "[%key:component::lg_thinq::entity::sensor::current_state::state::lock%]",
-          "macrosector": "[%key:component::lg_thinq::entity::sensor::current_state::state::macrosector%]",
-          "melting": "[%key:component::lg_thinq::entity::sensor::current_state::state::melting%]",
-          "monitoring_detecting": "[%key:component::lg_thinq::entity::sensor::current_state::state::monitoring_detecting%]",
-          "monitoring_moving": "[%key:component::lg_thinq::entity::sensor::current_state::state::monitoring_moving%]",
-          "monitoring_positioning": "[%key:component::lg_thinq::entity::sensor::current_state::state::monitoring_positioning%]",
-          "night_dry": "[%key:component::lg_thinq::entity::sensor::current_state::state::night_dry%]",
-          "oven_setting": "[%key:component::lg_thinq::entity::sensor::current_state::state::oven_setting%]",
-          "pause": "[%key:common::state::paused%]",
-          "paused": "[%key:common::state::paused%]",
-          "power_fail": "[%key:component::lg_thinq::entity::sensor::current_state::state::power_fail%]",
-          "power_on": "[%key:common::state::on%]",
-          "power_off": "[%key:common::state::off%]",
-          "preference": "[%key:component::lg_thinq::entity::sensor::current_state::state::preference%]",
-          "preheat": "[%key:component::lg_thinq::entity::sensor::current_state::state::preheat%]",
-          "preheat_complete": "[%key:component::lg_thinq::entity::event::notification::state_attributes::event_type::state::preheating_is_complete%]",
-          "preheating": "[%key:component::lg_thinq::entity::sensor::current_state::state::preheat%]",
-          "preheating_is_done": "[%key:component::lg_thinq::entity::event::notification::state_attributes::event_type::state::preheating_is_complete%]",
-          "prepareing_fermentation": "[%key:component::lg_thinq::entity::sensor::current_state::state::prepareing_fermentation%]",
-          "presteam": "[%key:component::lg_thinq::entity::sensor::current_state::state::presteam%]",
-          "prewash": "[%key:component::lg_thinq::entity::sensor::current_state::state::prewash%]",
-          "proofing": "[%key:component::lg_thinq::entity::sensor::current_state::state::proofing%]",
-          "refreshing": "[%key:component::lg_thinq::entity::sensor::current_state::state::refreshing%]",
-          "reservation": "[%key:component::lg_thinq::entity::sensor::current_state::state::macrosector%]",
-          "reserved": "[%key:component::lg_thinq::entity::sensor::current_state::state::reserved%]",
-          "rinse_hold": "[%key:component::lg_thinq::entity::sensor::current_state::state::rinse_hold%]",
-          "rinsing": "[%key:component::lg_thinq::entity::sensor::current_state::state::rinsing%]",
-          "running": "[%key:component::lg_thinq::entity::sensor::current_state::state::running%]",
-          "running_end": "[%key:component::lg_thinq::entity::sensor::current_state::state::running_end%]",
-          "setdate": "[%key:component::lg_thinq::entity::sensor::current_state::state::macrosector%]",
-          "shoes_module": "[%key:component::lg_thinq::entity::sensor::current_state::state::shoes_module%]",
-          "sleep": "[%key:component::lg_thinq::entity::sensor::current_state::state::sleep%]",
-          "smart_grid_run": "[%key:component::lg_thinq::entity::sensor::current_state::state::smart_grid_run%]",
-          "soaking": "[%key:component::lg_thinq::entity::sensor::current_state::state::soaking%]",
-          "softening": "[%key:component::lg_thinq::entity::sensor::current_state::state::softening%]",
-          "spinning": "[%key:component::lg_thinq::entity::sensor::current_state::state::spinning%]",
-          "stay": "[%key:component::lg_thinq::entity::sensor::current_state::state::stay%]",
-          "standby": "[%key:common::state::standby%]",
-          "steam": "[%key:component::lg_thinq::entity::sensor::current_state::state::steam%]",
-          "steam_softening": "[%key:component::lg_thinq::entity::sensor::current_state::state::steam_softening%]",
-          "sterilize": "[%key:component::lg_thinq::entity::sensor::current_state::state::sterilize%]",
-          "temperature_stabilization": "[%key:component::lg_thinq::entity::sensor::current_state::state::temperature_stabilization%]",
-          "working": "[%key:component::lg_thinq::entity::sensor::current_state::state::cleaning%]",
-          "wrinkle_care": "[%key:component::lg_thinq::entity::sensor::current_state::state::wrinkle_care%]"
+          "add_drain": "Filling",
+          "as_pop_up": "Product requires attention",
+          "cancel": "Cancel",
+          "carbonation": "Carbonation",
+          "change_condition": "Settings Change",
+          "charging": "Charging",
+          "charging_complete": "Charging completed",
+          "checking_turbidity": "Detecting soil level",
+          "cleaning": "Cleaning",
+          "cleaning_is_done": "Cleaning is done",
+          "complete": "Done",
+          "cook": "Cooking",
+          "cook_complete": "Done",
+          "cooking_in_progress": "Cooking",
+          "cool_down": "Cool down",
+          "cooling": "Cooling",
+          "detecting": "Detecting",
+          "detergent_amount": "Providing the info about the amount of detergent",
+          "diagnosis": "Smart diagnosis is in progress",
+          "dispensing": "Auto dispensing",
+          "display_loadsize": "Load size",
+          "done": "Done",
+          "drying": "Drying",
+          "during_aging": "Aging",
+          "during_fermentation": "Fermentation",
+          "end": "Finished",
+          "end_cooling": "Drying",
+          "error": "Product requires attention",
+          "extracting_capsule": "Capsule brewing",
+          "extraction_mode": "Storing",
+          "firmware": "Updating firmware",
+          "fota": "Updating",
+          "frozen_prevent_initial": "Freeze protection standby",
+          "frozen_prevent_running": "Freeze protection in progress",
+          "frozen_prevent_pause": "Freeze protection paused",
+          "homing": "Moving",
+          "initial": "Standby",
+          "initializing": "Standby",
+          "lock": "Control lock",
+          "macrosector": "Remote is in use",
+          "melting": "Wort dissolving",
+          "monitoring_detecting": "HomeGuard is active",
+          "monitoring_moving": "Going to the starting point",
+          "monitoring_positioning": "Setting homeguard start point",
+          "night_dry": "Night dry",
+          "oven_setting": "Cooktop connected",
+          "pause": "Paused",
+          "paused": "Paused",
+          "power_fail": "Power fail",
+          "power_on": "On",
+          "power_off": "Off",
+          "preference": "Setting",
+          "preheat": "Preheating",
+          "preheat_complete": "Preheating is done",
+          "preheating": "Preheating",
+          "preheating_is_done": "Preheating is done",
+          "prepareing_fermentation": "Preparing now",
+          "presteam": "Ready to steam",
+          "prewash": "Prewashing",
+          "proofing": "Proofing",
+          "refreshing": "Refreshing",
+          "reservation": "Remote is in use",
+          "reserved": "Delay set",
+          "rinse_hold": "Waiting to rinse",
+          "rinsing": "Rinsing",
+          "running": "Running",
+          "running_end": "Complete",
+          "setdate": "Remote is in use",
+          "shoes_module": "Drying shoes",
+          "sleep": "In sleep mode",
+          "smart_grid_run": "Running smart grid",
+          "soaking": "Soak",
+          "softening": "Softener",
+          "spinning": "Spinning",
+          "stay": "Refresh",
+          "standby": "Standby",
+          "steam": "Refresh",
+          "steam_softening": "Steam softening",
+          "sterilize": "Sterilize",
+          "temperature_stabilization": "Temperature adjusting",
+          "working": "Cleaning",
+          "wrinkle_care": "Wrinkle care"
         }
       },
       "fresh_air_filter": {
-        "name": "[%key:component::lg_thinq::entity::binary_sensor::one_touch_filter::name%]",
+        "name": "Fresh air filter",
         "state": {
-          "off": "[%key:common::state::off%]",
-          "auto": "[%key:component::lg_thinq::entity::sensor::growth_mode::state::standard%]",
+          "off": "Off",
+          "auto": "Auto",
           "power": "Power",
           "replace": "Replace filter",
           "smart_power": "Smart safe storage",
-          "smart_off": "[%key:common::state::off%]",
-          "smart_on": "[%key:component::lg_thinq::entity::sensor::fresh_air_filter::state::smart_power%]"
+          "smart_off": "Off",
+          "smart_on": "Smart safe storage"
         }
+      },
+      "filter_lifetime": {
+        "name": "Filter remaining"
       },
       "used_time": {
         "name": "Water filter used"
@@ -498,16 +536,16 @@
         "name": "Operating mode",
         "state": {
           "air_clean": "Purify",
-          "auto": "[%key:component::lg_thinq::entity::sensor::growth_mode::state::standard%]",
+          "auto": "Auto",
           "clothes_dry": "Laundry",
           "edge": "Edge cleaning",
           "heat_pump": "Heat pump",
-          "high": "[%key:component::lg_thinq::entity::sensor::temperature_state::state::high%]",
+          "high": "Power",
           "intensive_dry": "Spot",
           "macro": "Custom mode",
           "mop": "Mop",
           "normal": "Normal",
-          "off": "[%key:common::state::off%]",
+          "off": "Off",
           "quiet_humidity": "Silent",
           "rapid_humidity": "Jet",
           "sector_base": "Cell by cell",
@@ -523,11 +561,11 @@
         "name": "Operating mode",
         "state": {
           "auto": "Low power",
-          "high": "[%key:component::lg_thinq::entity::sensor::temperature_state::state::high%]",
-          "mop": "[%key:component::lg_thinq::entity::sensor::current_job_mode::state::mop%]",
-          "normal": "[%key:component::lg_thinq::entity::sensor::current_job_mode::state::normal%]",
-          "off": "[%key:common::state::off%]",
-          "turbo": "[%key:component::lg_thinq::entity::sensor::current_job_mode::state::turbo%]"
+          "high": "Power",
+          "mop": "Mop",
+          "normal": "Normal",
+          "off": "Off",
+          "turbo": "Turbo"
         }
       },
       "personalization_mode": {
@@ -545,29 +583,69 @@
           "others": "Others"
         }
       },
+      "current_dish_washing_course": {
+        "name": "Current cycle",
+        "state": {
+          "auto": "Auto",
+          "heavy": "Intensive",
+          "delicate": "Delicate",
+          "turbo": "Turbo",
+          "normal": "Normal",
+          "rinse": "Rinse",
+          "refresh": "Refresh",
+          "express": "Express",
+          "machine_clean": "Machine clean",
+          "short_mode": "Short mode",
+          "download_cycle": "Download cycle",
+          "quick": "Quick",
+          "steam": "Steam care",
+          "spray": "Spray",
+          "eco": "Eco"
+        }
+      },
+      "rinse_level": {
+        "name": "Rinse aid dispenser level",
+        "state": {
+          "rinselevel_0": "0",
+          "rinselevel_1": "1",
+          "rinselevel_2": "2",
+          "rinselevel_3": "3",
+          "rinselevel_4": "4"
+        }
+      },
+      "softening_level": {
+        "name": "Softening level",
+        "state": {
+          "softeninglevel_0": "0",
+          "softeninglevel_1": "1",
+          "softeninglevel_2": "2",
+          "softeninglevel_3": "3",
+          "softeninglevel_4": "4"
+        }
+      },
       "cock_state": {
         "name": "UVnano",
         "state": {
-          "cleaning": "[%key:component::lg_thinq::entity::sensor::current_state::state::cleaning%]",
-          "normal": "[%key:common::state::standby%]"
+          "cleaning": "In progress",
+          "normal": "Standby"
         }
       },
       "sterilizing_state": {
         "name": "High-temp sterilization",
         "state": {
-          "off": "[%key:common::state::off%]",
+          "off": "Off",
           "on": "Sterilizing",
-          "cancel": "[%key:component::lg_thinq::entity::sensor::current_state::state::cancel%]"
+          "cancel": "Cancel"
         }
       },
       "water_type": {
         "name": "Type"
       },
       "target_temperature": {
-        "name": "[%key:component::sensor::entity_component::temperature::name%]",
+        "name": "Temperature",
         "state": {
           "kimchi": "Kimchi",
-          "off": "[%key:common::state::off%]",
+          "off": "Off",
           "freezer": "Freezer",
           "fridge": "Fridge",
           "storage": "Storage",
@@ -578,18 +656,159 @@
         }
       },
       "target_temperature_for_location": {
-        "name": "[%key:component::lg_thinq::entity::number::target_temperature_for_location::name%]",
+        "name": "{location} temperature",
         "state": {
-          "kimchi": "[%key:component::lg_thinq::entity::sensor::target_temperature::state::kimchi%]",
-          "off": "[%key:common::state::off%]",
-          "freezer": "[%key:component::lg_thinq::entity::sensor::target_temperature::state::freezer%]",
-          "fridge": "[%key:component::lg_thinq::entity::sensor::target_temperature::state::fridge%]",
-          "storage": "[%key:component::lg_thinq::entity::sensor::target_temperature::state::storage%]",
-          "meat_fish": "[%key:component::lg_thinq::entity::sensor::target_temperature::state::meat_fish%]",
-          "rice_grain": "[%key:component::lg_thinq::entity::sensor::target_temperature::state::rice_grain%]",
-          "vegetable_fruit": "[%key:component::lg_thinq::entity::sensor::target_temperature::state::vegetable_fruit%]",
-          "temperature_number": "[%key:component::lg_thinq::entity::sensor::target_temperature::state::temperature_number%]"
+          "kimchi": "Kimchi",
+          "off": "Off",
+          "freezer": "Freezer",
+          "fridge": "Fridge",
+          "storage": "Storage",
+          "meat_fish": "Meat/Fish",
+          "rice_grain": "Rice/Grain",
+          "vegetable_fruit": "Vege/Fruit",
+          "temperature_number": "Number"
         }
+      },
+      "elapsed_day_state": {
+        "name": "Brewing period"
+      },
+      "elapsed_day_total": {
+        "name": "Brewing duration"
+      },
+      "recipe_name": {
+        "name": "Homebrew recipe",
+        "state": {
+          "ipa": "IPA",
+          "pale_ale": "Pale ale",
+          "stout": "Stout",
+          "wheat": "Wheat",
+          "pilsner": "Pilsner",
+          "red_ale": "Red ale",
+          "my_recipe": "My recipe"
+        }
+      },
+      "wort_info": {
+        "name": "Wort",
+        "state": {
+          "hoppy": "Hoppy",
+          "deep_gold": "DeepGold",
+          "wheat": "Wheat",
+          "dark": "Dark"
+        }
+      },
+      "yeast_info": {
+        "name": "Yeast",
+        "state": {
+          "american_ale": "American ale",
+          "english_ale": "English ale",
+          "lager": "Lager",
+          "weizen": "Weizen"
+        }
+      },
+      "hop_oil_info": {
+        "name": "Hops"
+      },
+      "flavor_info": {
+        "name": "Flavor"
+      },
+      "beer_remain": {
+        "name": "Recipe progress"
+      },
+      "battery_level": {
+        "name": "Battery",
+        "state": {
+          "high": "Full",
+          "mid": "Medium",
+          "low": "Low",
+          "warning": "Empty"
+        }
+      },
+      "battery_percent": {
+        "name": "Battery"
+      },
+      "relative_to_start": {
+        "name": "Schedule turn-on"
+      },
+      "relative_to_start_for_location": {
+        "name": "{location} schedule turn-on"
+      },
+      "relative_to_start_wm": {
+        "name": "Delay starts in"
+      },
+      "relative_to_start_wm_for_location": {
+        "name": "{location} delay starts in"
+      },
+      "relative_to_stop": {
+        "name": "Schedule turn-off"
+      },
+      "relative_to_stop_for_location": {
+        "name": "{location} schedule turn-off"
+      },
+      "relative_to_stop_wm": {
+        "name": "Delay ends in"
+      },
+      "relative_to_stop_wm_for_location": {
+        "name": "{location} delay ends in"
+      },
+      "sleep_timer_relative_to_stop": {
+        "name": "Sleep timer"
+      },
+      "sleep_timer_relative_to_stop_for_location": {
+        "name": "{location} sleep timer"
+      },
+      "absolute_to_start": {
+        "name": "Schedule turn-on"
+      },
+      "absolute_to_start_for_location": {
+        "name": "{location} schedule turn-on"
+      },
+      "absolute_to_stop": {
+        "name": "Schedule turn-off"
+      },
+      "absolute_to_stop_for_location": {
+        "name": "{location} schedule turn-off"
+      },
+      "remain": {
+        "name": "Remaining time"
+      },
+      "remain_for_location": {
+        "name": "{location} remaining time"
+      },
+      "running": {
+        "name": "Running time"
+      },
+      "running_for_location": {
+        "name": "{location} running time"
+      },
+      "total": {
+        "name": "Total time"
+      },
+      "total_for_location": {
+        "name": "{location} total time"
+      },
+      "target": {
+        "name": "Cook time"
+      },
+      "target_for_location": {
+        "name": "{location} cook time"
+      },
+      "light_start": {
+        "name": "Lights on time"
+      },
+      "light_start_for_location": {
+        "name": "{location} lights on time"
+      },
+      "light_end": {
+        "name": "Lights off time"
+      },
+      "light_end_for_location": {
+        "name": "{location} lights off time"
+      },
+      "power_level": {
+        "name": "Power level"
+      },
+      "power_level_for_location": {
+        "name": "{location} power level"
       }
     }
   }
