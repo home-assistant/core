@@ -402,11 +402,11 @@ class ZeroconfDiscovery:
         if (
             change != config_entries.ConfigEntryChange.REMOVED
             or entry.source != config_entries.SOURCE_IGNORE
-            or not (discovery_keys := entry.discovery_keys)
+            or not (discovery_keys := entry.discovery_keys.get(DOMAIN))
         ):
             return
         for discovery_key in discovery_keys:
-            if discovery_key.domain != DOMAIN or discovery_key.version != 1:
+            if discovery_key.version != 1:
                 continue
             _type = discovery_key.key[0]
             name = discovery_key.key[1]
