@@ -169,18 +169,24 @@ class ThinQClimateEntity(ThinQEntity, ClimateEntity):
         self.reset_requested_hvac_mode()
         self._attr_current_humidity = self.data.humidity
         self._attr_current_temperature = self.data.current_temp
-        self._attr_temperature_unit = (
-            self._get_unit_of_measurement(self.data.unit) or UnitOfTemperature.CELSIUS
-        )
 
-        if (max_temp := self.entity_description.max_temp or self.data.max) is not None:
+        if (
+            self.entity_description.max_temp is None
+            and (max_temp := self.data.max) is not None
+        ):
             self._attr_max_temp = max_temp
 
-        if (min_temp := self.entity_description.min_temp or self.data.min) is not None:
+        if (
+            self.entity_description.min_temp is None
+            and (min_temp := self.data.min) is not None
+        ):
             self._attr_min_temp = min_temp
 
-        if (step := self.entity_description.step or self.data.step) is not None:
-            self._attr_target_temperature_step = self._correct_step(step)
+        if (
+            self.entity_description.step is None
+            and (step := self.data.step) is not None
+        ):
+            self._attr_target_temperature_step = step
 
         # Update target temperatures.
         if (
@@ -196,7 +202,7 @@ class ThinQClimateEntity(ThinQEntity, ClimateEntity):
             self._attr_target_temperature_low = None
 
         _LOGGER.debug(
-            "[%s:%s] update status: %s/%s -> %s/%s, hvac:%s, unit:%s",
+            "[%s:%s] update status: %s/%s -> %s/%s, hvac:%s, unit:%s, step:%s",
             self.coordinator.device_name,
             self.property_id,
             self.data.current_temp,
@@ -205,15 +211,8 @@ class ThinQClimateEntity(ThinQEntity, ClimateEntity):
             self.target_temperature,
             self.hvac_mode,
             self.temperature_unit,
+            self.target_temperature_step,
         )
-
-    def _correct_step(self, step: float) -> float:
-        """Correct step if needed."""
-        hass_unit = self.coordinator.hass.config.units.temperature_unit
-        if self.temperature_unit != hass_unit and step < 1:
-            return 1
-
-        return step
 
     def reset_requested_hvac_mode(self) -> None:
         """Cancel request to set hvac mode."""
