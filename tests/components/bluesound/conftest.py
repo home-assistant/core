@@ -107,7 +107,9 @@ class PlayerMockData:
             ]
         )
 
-        return PlayerMockData(host, player, status_long_polling_mock, sync_status_long_polling_mock)
+        return PlayerMockData(
+            host, player, status_long_polling_mock, sync_status_long_polling_mock
+        )
 
 
 @dataclass

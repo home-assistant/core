@@ -142,7 +142,10 @@ async def test_volume_down(
 
 
 async def test_attributes_set(
-    hass: HomeAssistant, setup_config_entry: None, player_mocks: PlayerMocks, snapshot: SnapshotAssertion
+    hass: HomeAssistant,
+    setup_config_entry: None,
+    player_mocks: PlayerMocks,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test the media player attributes set."""
     state = hass.states.get("media_player.player_name1111")

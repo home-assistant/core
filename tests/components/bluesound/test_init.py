@@ -1,10 +1,7 @@
 """Test bluesound integration."""
 
-import asyncio
-
 from pyblu.errors import PlayerUnreachableError
 
-from homeassistant.components.bluesound import async_unload_entry
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
