@@ -160,7 +160,7 @@ class ThinQMQTT:
         """Handle received mqtt message."""
         _LOGGER.debug("async_handle_device_event: message=%s", message)
 
-        device_id = str(message.get("deviceId", ""))
+        device_id = message["deviceId"]
         coordinator = self.coordinators.get(device_id)
         if coordinator is None:
             _LOGGER.error("Failed to handle device event: No device")
