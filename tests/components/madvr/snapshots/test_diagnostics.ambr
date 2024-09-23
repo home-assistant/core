@@ -7,8 +7,8 @@
         'port': 44077,
       }),
       'disabled_by': None,
-      'discovery_keys': list([
-      ]),
+      'discovery_keys': dict({
+      }),
       'domain': 'madvr',
       'entry_id': '3bd2acb0e4f0476d40865546d0d91132',
       'minor_version': 1,

@@ -91,8 +91,8 @@
         'username': '**REDACTED**',
       }),
       'disabled_by': None,
-      'discovery_keys': list([
-      ]),
+      'discovery_keys': dict({
+      }),
       'domain': 'airzone_cloud',
       'entry_id': 'd186e31edb46d64d14b9b2f11f1ebd9f',
       'minor_version': 1,

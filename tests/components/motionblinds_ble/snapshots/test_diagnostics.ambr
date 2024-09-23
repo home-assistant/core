@@ -18,8 +18,8 @@
         'mac_code': 'CCCC',
       }),
       'disabled_by': None,
-      'discovery_keys': list([
-      ]),
+      'discovery_keys': dict({
+      }),
       'domain': 'motionblinds_ble',
       'entry_id': 'mock_entry_id',
       'minor_version': 1,
