@@ -7,7 +7,7 @@ import logging
 import os
 import re
 from typing import TYPE_CHECKING
-from urllib.parse import quote
+from urllib.parse import quote, unquote
 
 import aiohttp
 from aiohttp import web
@@ -113,7 +113,10 @@ class HassIOView(HomeAssistantView):
         - Load Supervisor panel and add-on logo unauthenticated
         - User upload/restore backups
         """
-        # Paths are always unquoted in aiohttp 3.10.6+
+        # No bullshit
+        if path != unquote(path):
+            return web.Response(status=HTTPStatus.BAD_REQUEST)
+
         hass = request.app[KEY_HASS]
         is_admin = request[KEY_AUTHENTICATED] and request[KEY_HASS_USER].is_admin
         authorized = is_admin

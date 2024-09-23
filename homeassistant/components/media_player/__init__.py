@@ -1223,9 +1223,6 @@ class MediaPlayerImageView(HomeAssistantView):
         media_content_id: str | None = None,
     ) -> web.Response:
         """Start a get request."""
-        # aiohttp 3.10.6+ fixed https://github.com/aio-libs/aiohttp/issues/5621
-        # so we must use request.url.parts instead of request.match_info
-        media_content_id = "/".join(request.url.parts[6:])
         if (player := self.component.get_entity(entity_id)) is None:
             status = (
                 HTTPStatus.NOT_FOUND

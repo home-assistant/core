@@ -88,9 +88,6 @@ class HassIOIngress(HomeAssistantView):
         self, request: web.Request, token: str, path: str
     ) -> web.Response | web.StreamResponse | web.WebSocketResponse:
         """Route data to Hass.io ingress service."""
-        # aiohttp 3.10.6+ fixed https://github.com/aio-libs/aiohttp/issues/5621
-        # so we must use request.url.parts instead of request.match_info
-        path = "/".join(request.url.parts[4:])
         try:
             # Websocket
             if _is_websocket(request):
