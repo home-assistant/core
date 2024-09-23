@@ -2,24 +2,28 @@
 
 from unittest.mock import MagicMock
 
+from freezegun.api import FrozenDateTimeFactory
 from pysmlight import Info
 import pytest
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
-from homeassistant.components.smlight.const import DOMAIN
+from homeassistant.components.smlight.const import SCAN_INTERVAL
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import setup_integration
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.fixture
 def platforms() -> Platform | list[Platform]:
     """Platforms, which should be loaded during the test."""
     return [Platform.BUTTON]
+
+
+MOCK_ROUTER = Info(MAC="AA:BB:CC:DD:EE:FF", zb_type=1)
 
 
 @pytest.mark.parametrize(
@@ -44,9 +48,7 @@ async def test_buttons(
     translation_key = entity_id
     if entity_id == "reconnect_zigbee_router":
         translation_key = "zigbee_router_reconnect"
-        mock_smlight_client.get_info.return_value = Info(
-            MAC="AA:BB:CC:DD:EE:FF", zb_type=1
-        )
+        mock_smlight_client.get_info.return_value = MOCK_ROUTER
 
     await setup_integration(hass, mock_config_entry)
 
@@ -81,9 +83,7 @@ async def test_disabled_by_default_buttons(
 ) -> None:
     """Test the disabled by default buttons."""
     if entity_id == "reconnect_zigbee_router":
-        mock_smlight_client.get_info.return_value = Info(
-            MAC="AA:BB:CC:DD:EE:FF", zb_type=1
-        )
+        mock_smlight_client.get_info.return_value = MOCK_ROUTER
     await setup_integration(hass, mock_config_entry)
 
     assert not hass.states.get(f"button.mock_{entity_id}")
@@ -96,28 +96,26 @@ async def test_disabled_by_default_buttons(
 async def test_remove_router_reconnect(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
     mock_config_entry: MockConfigEntry,
     mock_smlight_client: MagicMock,
 ) -> None:
     """Test removal of orphaned router reconnect button."""
-    mock_config_entry.add_to_hass(hass)
-
-    # create orphan entity that will get removed during setup
-    unique_id = "aa:bb:cc:dd:ee:ff-zigbee_router_reconnect"
-    entity_registry.async_get_or_create(
-        BUTTON_DOMAIN,
-        DOMAIN,
-        unique_id,
-        config_entry=mock_config_entry,
-    )
+    save_mock = mock_smlight_client.get_info.return_value
+    mock_smlight_client.get_info.return_value = MOCK_ROUTER
+    mock_config_entry = await setup_integration(hass, mock_config_entry)
 
     entities = er.async_entries_for_config_entry(
         entity_registry, mock_config_entry.entry_id
     )
-    assert len(entities) == 1
-    assert entities[0].unique_id == unique_id
+    assert len(entities) == 4
+    assert entities[3].unique_id == "aa:bb:cc:dd:ee:ff-zigbee_router_reconnect"
 
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    mock_smlight_client.get_info.return_value = save_mock
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+
     await hass.async_block_till_done()
 
     entity = entity_registry.async_get("button.mock_title_reconnect_zigbee_router")
