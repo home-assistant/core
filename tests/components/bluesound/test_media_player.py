@@ -1,12 +1,13 @@
 """Tests for the Bluesound Media Player platform."""
 
-import asyncio
 import dataclasses
 from unittest.mock import call
 
 from pyblu import PairedPlayer
 from pyblu.errors import PlayerUnreachableError
 import pytest
+from syrupy.assertion import SnapshotAssertion
+from syrupy.filters import props
 
 from homeassistant.components.bluesound import DOMAIN as BLUESOUND_DOMAIN
 from homeassistant.components.media_player import (
@@ -141,21 +142,11 @@ async def test_volume_down(
 
 
 async def test_attributes_set(
-    hass: HomeAssistant, setup_config_entry: None, player_mocks: PlayerMocks
+    hass: HomeAssistant, setup_config_entry: None, player_mocks: PlayerMocks, snapshot: SnapshotAssertion
 ) -> None:
     """Test the media player attributes set."""
     state = hass.states.get("media_player.player_name1111")
-    assert state.state == "playing"
-    assert state.attributes["volume_level"] == 0.1
-    assert state.attributes["is_volume_muted"] is False
-    assert state.attributes["media_content_type"] == "music"
-    assert state.attributes["media_position"] == 2
-    assert state.attributes["shuffle"] is False
-    assert state.attributes["master"] is False
-    assert state.attributes["friendly_name"] == "player-name1111"
-    assert state.attributes["media_title"] == "song"
-    assert state.attributes["media_artist"] == "artist"
-    assert state.attributes["media_album_name"] == "album"
+    assert state == snapshot(exclude=props("media_position_updated_at"))
 
 
 async def test_status_updated(
