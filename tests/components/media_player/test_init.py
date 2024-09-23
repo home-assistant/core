@@ -325,9 +325,7 @@ async def test_get_async_get_browse_image_quoting(
         "homeassistant.components.media_player.MediaPlayerEntity."
         "async_get_browse_image",
     ) as mock_browse_image:
-        # Separators "/" are not supposed to be quoted, aiohttp
-        # no longer decodes them for security reasons.
-        media_content_id = "a/b c/d+e/g{}"
+        media_content_id = "a/b c/d+e%2Fg{}"
         url = player.get_browse_image_url("album", media_content_id)
         await client.get(url)
         mock_browse_image.assert_called_with("album", media_content_id, None)
