@@ -27,7 +27,7 @@ _MODULES: dict[str, set[str]] = {
     "cover": {"CoverEntity", "CoverEntityDescription"},
     "date": {"DateEntity", "DateEntityDescription"},
     "datetime": {"DateTimeEntity", "DateTimeEntityDescription"},
-    "device_tracker": {"DeviceTrackerEntity", "ScannerEntity"},
+    "device_tracker": {"DeviceTrackerEntity", "ScannerEntity", "TrackerEntity"},
     "event": {"EventEntity", "EventEntityDescription"},
     "fan": {"FanEntity", "FanEntityDescription"},
     "geo_location": {"GeolocationEvent"},
@@ -55,7 +55,7 @@ _MODULES: dict[str, set[str]] = {
     "todo": {"TodoListEntity"},
     "tts": {"TextToSpeechEntity"},
     "update": {"UpdateEntity", "UpdateEntityDescription"},
-    "vacuum": {"VacuumEntity", "VacuumEntityDescription"},
+    "vacuum": {"StateVacuumEntity", "VacuumEntity", "VacuumEntityDescription"},
     "wake_word": {"WakeWordDetectionEntity"},
     "water_heater": {"WaterHeaterEntity"},
     "weather": {
