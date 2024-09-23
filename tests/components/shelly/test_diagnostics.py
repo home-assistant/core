@@ -45,7 +45,7 @@ async def test_block_config_entry_diagnostics(
     result = await get_diagnostics_for_config_entry(hass, hass_client, entry)
 
     assert result == {
-        "entry": entry_dict,
+        "entry": entry_dict | {"discovery_keys": []},
         "bluetooth": "not initialized",
         "device_info": {
             "name": "Test name",
@@ -105,7 +105,7 @@ async def test_rpc_config_entry_diagnostics(
     result = await get_diagnostics_for_config_entry(hass, hass_client, entry)
 
     assert result == {
-        "entry": entry_dict,
+        "entry": entry_dict | {"discovery_keys": []},
         "bluetooth": {
             "scanner": {
                 "connectable": False,

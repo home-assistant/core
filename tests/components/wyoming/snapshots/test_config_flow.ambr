@@ -26,6 +26,8 @@
         'port': 10200,
       }),
       'disabled_by': None,
+      'discovery_keys': tuple(
+      ),
       'domain': 'wyoming',
       'entry_id': <ANY>,
       'minor_version': 1,
@@ -70,6 +72,8 @@
         'port': 10200,
       }),
       'disabled_by': None,
+      'discovery_keys': tuple(
+      ),
       'domain': 'wyoming',
       'entry_id': <ANY>,
       'minor_version': 1,
@@ -114,6 +118,8 @@
         'port': 12345,
       }),
       'disabled_by': None,
+      'discovery_keys': tuple(
+      ),
       'domain': 'wyoming',
       'entry_id': <ANY>,
       'minor_version': 1,

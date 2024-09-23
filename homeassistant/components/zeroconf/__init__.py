@@ -33,6 +33,8 @@ from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.data_entry_flow import BaseServiceInfo
 from homeassistant.helpers import discovery_flow, instance_id
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.discovery_flow import DiscoveryKey
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import (
@@ -379,10 +381,37 @@ class ZeroconfDiscovery:
             self.zeroconf, types, handlers=[self.async_service_update]
         )
 
+        async_dispatcher_connect(
+            self.hass,
+            config_entries.SIGNAL_CONFIG_ENTRY_CHANGED,
+            self._handle_config_entry_changed,
+        )
+
     async def async_stop(self) -> None:
         """Cancel the service browser and stop processing the queue."""
         if self.async_service_browser:
             await self.async_service_browser.async_cancel()
+
+    @callback
+    def _handle_config_entry_changed(
+        self,
+        change: config_entries.ConfigEntryChange,
+        entry: config_entries.ConfigEntry,
+    ) -> None:
+        """Handle config entry changes."""
+        if (
+            change != config_entries.ConfigEntryChange.REMOVED
+            or entry.source != config_entries.SOURCE_IGNORE
+            or not (discovery_keys := entry.discovery_keys)
+        ):
+            return
+        for discovery_key in discovery_keys:
+            if discovery_key.domain != DOMAIN or discovery_key.version != 1:
+                continue
+            _type = discovery_key.key[0]
+            name = discovery_key.key[1]
+            _LOGGER.debug("Rediscover unignored service %s.%s", _type, name)
+            self._async_service_update(self.zeroconf, _type, name)
 
     def _async_dismiss_discoveries(self, name: str) -> None:
         """Dismiss all discoveries for the given name."""
@@ -412,6 +441,16 @@ class ZeroconfDiscovery:
             self._async_dismiss_discoveries(name)
             return
 
+        self._async_service_update(zeroconf, service_type, name)
+
+    @callback
+    def _async_service_update(
+        self,
+        zeroconf: HaZeroconf,
+        service_type: str,
+        name: str,
+    ) -> None:
+        """Service state added or changed."""
         try:
             async_service_info = AsyncServiceInfo(service_type, name)
         except BadTypeInNameException as ex:
@@ -453,6 +492,11 @@ class ZeroconfDiscovery:
             return
         _LOGGER.debug("Discovered new device %s %s", name, info)
         props: dict[str, str | None] = info.properties
+        discovery_key = DiscoveryKey(
+            domain=DOMAIN,
+            key=(info.type, info.name),
+            version=1,
+        )
         domain = None
 
         # If we can handle it as a HomeKit discovery, we do that here.
@@ -467,6 +511,7 @@ class ZeroconfDiscovery:
                 homekit_discovery.domain,
                 {"source": config_entries.SOURCE_HOMEKIT},
                 info,
+                discovery_key=discovery_key,
             )
             # Continue on here as homekit_controller
             # still needs to get updates on devices
@@ -515,6 +560,7 @@ class ZeroconfDiscovery:
                 matcher_domain,
                 context,
                 info,
+                discovery_key=discovery_key,
             )
 
 
