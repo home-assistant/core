@@ -10,9 +10,14 @@ from typing import Any
 
 from aiohttp import ClientResponseError
 
-from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
+from homeassistant.components.button import (
+    DOMAIN as BUTTON_DOMAIN,
+    ButtonEntity,
+    ButtonEntityDescription,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HabiticaConfigEntry
@@ -173,7 +178,6 @@ CLASS_SKILLS: tuple[HabiticaButtonEntityDescription, ...] = (
         available_fn=(
             lambda data: data.user["stats"]["lvl"] >= 13
             and data.user["stats"]["mp"] >= 25
-            and data.user["stats"]["class"] == ROGUE
         ),
         class_needed=ROGUE,
     ),
@@ -188,7 +192,6 @@ CLASS_SKILLS: tuple[HabiticaButtonEntityDescription, ...] = (
         available_fn=(
             lambda data: data.user["stats"]["lvl"] >= 14
             and data.user["stats"]["mp"] >= 45
-            and data.user["stats"]["class"] == ROGUE
         ),
         class_needed=ROGUE,
     ),
@@ -253,35 +256,39 @@ async def async_setup_entry(
     """Set up buttons from a config entry."""
 
     coordinator = entry.runtime_data
-    listener: Callable[[], None] | None = None
-    not_setup: set[HabiticaButtonEntityDescription] = set(CLASS_SKILLS)
+    skills_added: set[str] = set()
 
     @callback
     def add_entities() -> None:
-        """Add new entities based on player class."""
-        nonlocal not_setup, listener
-        sensor_descriptions = not_setup
-        not_setup = set()
+        """Add or remove a skillset based on the player's class."""
+
+        nonlocal skills_added
         buttons = []
-        for description in sensor_descriptions:
+        entity_registry = er.async_get(hass)
+
+        for description in CLASS_SKILLS:
             if (
                 coordinator.data.user["stats"]["lvl"] >= 10
                 and coordinator.data.user["flags"]["classSelected"]
                 and not coordinator.data.user["preferences"]["disableClasses"]
                 and description.class_needed == coordinator.data.user["stats"]["class"]
             ):
-                buttons.append(HabiticaButton(coordinator, description))
-            else:
-                not_setup.add(description)
+                if description.key not in skills_added:
+                    buttons.append(HabiticaButton(coordinator, description))
+                    skills_added.add(description.key)
+            elif description.key in skills_added:
+                if entity_id := entity_registry.async_get_entity_id(
+                    BUTTON_DOMAIN,
+                    DOMAIN,
+                    f"{coordinator.config_entry.unique_id}_{description.key}",
+                ):
+                    entity_registry.async_remove(entity_id)
+                skills_added.remove(description.key)
 
         if buttons:
             async_add_entities(buttons)
-        if not_setup:
-            if not listener:
-                listener = coordinator.async_add_listener(add_entities)
-        elif listener:
-            listener()
 
+    coordinator.async_add_listener(add_entities)
     add_entities()
 
     async_add_entities(
