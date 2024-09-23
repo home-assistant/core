@@ -766,7 +766,7 @@ async def test_state_streaming(hass: HomeAssistant) -> None:
     """Camera state."""
     demo_camera = hass.states.get("camera.demo_camera")
     assert demo_camera is not None
-    assert demo_camera.state == camera.STATE_STREAMING
+    assert demo_camera.state == camera.CameraState.STREAMING
 
 
 @pytest.mark.usefixtures("mock_camera", "mock_stream")
@@ -819,7 +819,7 @@ async def test_stream_unavailable(
 
     demo_camera = hass.states.get("camera.demo_camera")
     assert demo_camera is not None
-    assert demo_camera.state == camera.STATE_STREAMING
+    assert demo_camera.state == camera.CameraState.STREAMING
 
 
 @pytest.mark.usefixtures("mock_camera", "mock_stream_source")

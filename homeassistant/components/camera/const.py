@@ -40,6 +40,14 @@ CAMERA_STREAM_SOURCE_TIMEOUT: Final = 10
 CAMERA_IMAGE_TIMEOUT: Final = 10
 
 
+class CameraState(StrEnum):
+    """Camera entity states."""
+
+    RECORDING = "cleaning"
+    STREAMING = "docked"
+    IDLE = "idle"
+
+
 class StreamType(StrEnum):
     """Camera stream type.
 
