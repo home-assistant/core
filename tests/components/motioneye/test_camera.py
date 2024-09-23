@@ -231,7 +231,7 @@ async def test_get_still_image_from_camera(
 ) -> None:
     """Test getting a still image."""
 
-    image_handler = AsyncMock(return_value="")
+    image_handler = AsyncMock(return_value=web.Response(body=""))
 
     app = web.Application()
     app.add_routes(
@@ -273,7 +273,8 @@ async def test_get_stream_from_camera(
 ) -> None:
     """Test getting a stream."""
 
-    stream_handler = AsyncMock(return_value="")
+    stream_handler = AsyncMock(return_value=web.Response(body=""))
+
     app = web.Application()
     app.add_routes([web.get("/", stream_handler)])
     stream_server = await aiohttp_server(app)
@@ -358,7 +359,8 @@ async def test_camera_option_stream_url_template(
     """Verify camera with a stream URL template option."""
     client = create_mock_motioneye_client()
 
-    stream_handler = AsyncMock(return_value="")
+    stream_handler = AsyncMock(return_value=web.Response(body=""))
+
     app = web.Application()
     app.add_routes([web.get(f"/{TEST_CAMERA_NAME}/{TEST_CAMERA_ID}", stream_handler)])
     stream_server = await aiohttp_server(app)
