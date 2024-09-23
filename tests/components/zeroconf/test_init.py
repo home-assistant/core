@@ -1523,7 +1523,7 @@ async def test_zeroconf_rediscover(
             "source": "unignore",
         }
         assert mock_config_flow.mock_calls[2][1][0] == "shelly"
-        assert mock_config_flow.mock_calls[0][2]["context"] == expected_context
+        assert mock_config_flow.mock_calls[2][2]["context"] == expected_context
 
 
 @pytest.mark.usefixtures("mock_async_zeroconf")
