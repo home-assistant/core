@@ -33,6 +33,6 @@ class NYTGamesCoordinator(DataUpdateCoordinator[Wordle]):
 
     async def _async_update_data(self) -> Wordle:
         try:
-            return (await self.client.get_latest_stats()).stats.wordle
+            return (await self.client.get_latest_stats()).wordle
         except NYTGamesError as error:
             raise UpdateFailed(error) from error
