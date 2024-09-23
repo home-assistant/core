@@ -61,7 +61,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up an entry for event platform."""
     entities: list[ThinQEventEntity] = []
-    for coordinator in entry.runtime_data.values():
+    for coordinator in entry.runtime_data.coordinators.values():
         if (
             descriptions := DEVICE_TYPE_EVENT_MAP.get(
                 coordinator.api.device.device_type
