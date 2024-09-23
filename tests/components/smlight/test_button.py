@@ -45,11 +45,7 @@ async def test_buttons(
     mock_smlight_client: MagicMock,
 ) -> None:
     """Test creation of button entities."""
-    translation_key = entity_id
-    if entity_id == "reconnect_zigbee_router":
-        translation_key = "zigbee_router_reconnect"
-        mock_smlight_client.get_info.return_value = MOCK_ROUTER
-
+    mock_smlight_client.get_info.return_value = MOCK_ROUTER
     await setup_integration(hass, mock_config_entry)
 
     state = hass.states.get(f"button.mock_title_{entity_id}")
@@ -58,7 +54,7 @@ async def test_buttons(
 
     entry = entity_registry.async_get(f"button.mock_title_{entity_id}")
     assert entry is not None
-    assert entry.unique_id == f"aa:bb:cc:dd:ee:ff-{translation_key}"
+    assert entry.unique_id == f"aa:bb:cc:dd:ee:ff-{entity_id}"
 
     mock_method = getattr(mock_smlight_client.cmds, method)
 
@@ -82,8 +78,7 @@ async def test_disabled_by_default_buttons(
     mock_smlight_client: MagicMock,
 ) -> None:
     """Test the disabled by default buttons."""
-    if entity_id == "reconnect_zigbee_router":
-        mock_smlight_client.get_info.return_value = MOCK_ROUTER
+    mock_smlight_client.get_info.return_value = MOCK_ROUTER
     await setup_integration(hass, mock_config_entry)
 
     assert not hass.states.get(f"button.mock_{entity_id}")
@@ -109,7 +104,7 @@ async def test_remove_router_reconnect(
         entity_registry, mock_config_entry.entry_id
     )
     assert len(entities) == 4
-    assert entities[3].unique_id == "aa:bb:cc:dd:ee:ff-zigbee_router_reconnect"
+    assert entities[3].unique_id == "aa:bb:cc:dd:ee:ff-reconnect_zigbee_router"
 
     mock_smlight_client.get_info.return_value = save_mock
 
