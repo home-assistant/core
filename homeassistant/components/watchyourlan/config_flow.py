@@ -35,13 +35,13 @@ class WatchYourLANConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
         hosts = None
         if user_input is not None:
+            # Use the WatchYourLANClient to validate the connection
+            api_client = WatchYourLANClient(
+                base_url=user_input[CONF_URL],
+                async_mode=True,
+                verify_ssl=user_input[CONF_VERIFY_SSL],
+            )
             try:
-                # Use the WatchYourLANClient to validate the connection
-                api_client = WatchYourLANClient(
-                    base_url=user_input[CONF_URL],
-                    async_mode=True,
-                    verify_ssl=user_input[CONF_VERIFY_SSL],
-                )
                 hosts = await api_client.get_all_hosts()
             except (ConnectError, HTTPStatusError) as exc:
                 _LOGGER.error("Connection error during setup: %s", exc)
@@ -51,9 +51,7 @@ class WatchYourLANConfigFlow(ConfigFlow, domain=DOMAIN):
             if not hosts:
                 errors["base"] = "cannot_connect"
             if not errors:
-                return self.async_create_entry(
-                    title="WatchYourLAN", data={"url": user_input[CONF_URL]}
-                )
+                return self.async_create_entry(title="WatchYourLAN", data=user_input)
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors

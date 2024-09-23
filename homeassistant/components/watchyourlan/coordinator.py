@@ -8,7 +8,7 @@ from httpx import ConnectError, HTTPStatusError
 from watchyourlanclient import WatchYourLANClient
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_URL
+from homeassistant.const import CONF_URL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -34,7 +34,9 @@ class WatchYourLANUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]])
 
         # Initialize the WatchYourLANClient with the base URL from the config
         self.api_client = WatchYourLANClient(
-            base_url=self.config_entry.data[CONF_URL], async_mode=True
+            base_url=self.config_entry.data[CONF_URL],
+            async_mode=True,
+            verify_ssl=self.config_entry.data[CONF_VERIFY_SSL],
         )
 
     async def _async_update_data(self) -> list[dict[str, Any]]:

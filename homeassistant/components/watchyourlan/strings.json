@@ -24,9 +24,6 @@
       "ip_address": {
         "name": "IP Address"
       },
-      "mac_address": {
-        "name": "MAC Address"
-      },
       "iface": {
         "name": "Network Interface"
       }
