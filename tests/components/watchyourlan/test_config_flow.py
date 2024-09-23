@@ -126,14 +126,13 @@ async def test_form_already_configured(
     # Mock an existing config entry
     mock_entry = config_entries.ConfigEntry(
         version=1,
+        minor_version=0,
         domain=DOMAIN,
         title="WatchYourLAN",
         data={CONF_URL: "http://127.0.0.1:8840"},
         source=SOURCE_USER,
         entry_id="1",
         state=config_entries.ConfigEntryState.LOADED,
-        connection_class=config_entries.CONN_CLASS_LOCAL_PUSH,
-        system_options={},
         options={},
         unique_id="unique_id",
     )
