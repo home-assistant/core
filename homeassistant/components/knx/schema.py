@@ -15,7 +15,7 @@ from xknx.exceptions import ConversionError, CouldNotParseTelegram
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA as BINARY_SENSOR_DEVICE_CLASSES_SCHEMA,
 )
-from homeassistant.components.climate import HVACMode
+from homeassistant.components.climate import FAN_OFF, HVACMode
 from homeassistant.components.cover import (
     DEVICE_CLASSES_SCHEMA as COVER_DEVICE_CLASSES_SCHEMA,
 )
@@ -355,7 +355,6 @@ class ClimateSchema(KNXPlatformSchema):
     DEFAULT_TEMPERATURE_STEP = 0.1
     DEFAULT_ON_OFF_INVERT = False
     DEFAULT_FAN_SPEED_MODE = "step"
-    DEFAULT_FAN_ZERO_MODE = "off"
 
     ENTITY_SCHEMA = vol.All(
         # deprecated since September 2020
@@ -437,9 +436,9 @@ class ClimateSchema(KNXPlatformSchema):
                 vol.Optional(
                     CONF_FAN_SPEED_MODE, default=DEFAULT_FAN_SPEED_MODE
                 ): vol.All(vol.Upper, cv.enum(FanSpeedMode)),
-                vol.Optional(
-                    CONF_FAN_ZERO_MODE, default=DEFAULT_FAN_ZERO_MODE
-                ): vol.All(vol.Upper, cv.enum(FanZeroMode)),
+                vol.Optional(CONF_FAN_ZERO_MODE, default=FAN_OFF): vol.Coerce(
+                    FanZeroMode
+                ),
             }
         ),
     )

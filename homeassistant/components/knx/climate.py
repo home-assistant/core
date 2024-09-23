@@ -15,11 +15,9 @@ from xknx.dpt.dpt_20 import HVACControllerMode, HVACOperationMode
 
 from homeassistant import config_entries
 from homeassistant.components.climate import (
-    FAN_AUTO,
     FAN_HIGH,
     FAN_LOW,
     FAN_MEDIUM,
-    FAN_OFF,
     FAN_ON,
     ClimateEntity,
     ClimateEntityFeature,
@@ -38,7 +36,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
 
 from . import KNXModule
-from .const import CONTROLLER_MODES, CURRENT_HVAC_ACTIONS, KNX_MODULE_KEY, FanZeroMode
+from .const import CONTROLLER_MODES, CURRENT_HVAC_ACTIONS, KNX_MODULE_KEY
 from .entity import KnxYamlEntity
 from .schema import ClimateSchema
 
@@ -183,29 +181,28 @@ class KNXClimate(KnxYamlEntity, ClimateEntity):
         self._fan_modes_percentages = [
             int(100 * i / fan_max_step) for i in range(fan_max_step + 1)
         ]
-        fan_zero_mode = config[ClimateSchema.CONF_FAN_ZERO_MODE]
-        self.fan_zero_value = FAN_OFF if fan_zero_mode == FanZeroMode.OFF else FAN_AUTO
+        self.fan_zero_mode = config[ClimateSchema.CONF_FAN_ZERO_MODE]
 
         if self._device.fan_speed is not None and self._device.fan_speed.initialized:
             self._attr_supported_features |= ClimateEntityFeature.FAN_MODE
 
             if fan_max_step == 3:
                 self._attr_fan_modes = [
-                    self.fan_zero_value,
+                    self.fan_zero_mode,
                     FAN_LOW,
                     FAN_MEDIUM,
                     FAN_HIGH,
                 ]
             elif fan_max_step == 2:
-                self._attr_fan_modes = [self.fan_zero_value, FAN_LOW, FAN_HIGH]
+                self._attr_fan_modes = [self.fan_zero_mode, FAN_LOW, FAN_HIGH]
             elif fan_max_step == 1:
-                self._attr_fan_modes = [self.fan_zero_value, FAN_ON]
+                self._attr_fan_modes = [self.fan_zero_mode, FAN_ON]
             elif self._device.fan_speed_mode == FanSpeedMode.STEP:
-                self._attr_fan_modes = [self.fan_zero_value] + [
+                self._attr_fan_modes = [self.fan_zero_mode] + [
                     str(i) for i in range(1, fan_max_step + 1)
                 ]
             else:
-                self._attr_fan_modes = [self.fan_zero_value] + [
+                self._attr_fan_modes = [self.fan_zero_mode] + [
                     f"{percentage}%" for percentage in self._fan_modes_percentages[1:]
                 ]
 
@@ -372,7 +369,7 @@ class KNXClimate(KnxYamlEntity, ClimateEntity):
         fan_speed = self._device.current_fan_speed
 
         if not fan_speed or self._attr_fan_modes is None:
-            return self.fan_zero_value
+            return self.fan_zero_mode
 
         if self._device.fan_speed_mode == FanSpeedMode.STEP:
             return self._attr_fan_modes[fan_speed]
