@@ -11,7 +11,7 @@ from .const import DOMAIN
 from .coordinator import PresenceData, XboxUpdateCoordinator
 
 
-class XboxBaseSensorEntity(CoordinatorEntity[XboxUpdateCoordinator]):
+class XboxBaseEntity(CoordinatorEntity[XboxUpdateCoordinator]):
     """Base Sensor for the Xbox Integration."""
 
     def __init__(
