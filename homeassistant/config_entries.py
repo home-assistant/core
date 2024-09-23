@@ -18,7 +18,7 @@ from copy import deepcopy
 from datetime import datetime
 from enum import Enum, StrEnum
 import functools
-from functools import cached_property
+from functools import cached_property, lru_cache
 import logging
 from random import randint
 from types import MappingProxyType
@@ -191,6 +191,15 @@ EVENT_FLOW_DISCOVERED = "config_entry_discovered"
 SIGNAL_CONFIG_ENTRY_CHANGED = SignalType["ConfigEntryChange", "ConfigEntry"](
     "config_entry_changed"
 )
+
+
+@lru_cache
+def signal_discovered_config_entry_removed(
+    discovery_domain: str,
+) -> SignalType[ConfigEntryChange, ConfigEntry]:
+    """Format signal."""
+    return SignalType(f"{discovery_domain}_discovered_config_entry_removed")
+
 
 NO_RESET_TRIES_STATES = {
     ConfigEntryState.SETUP_RETRY,
@@ -1862,6 +1871,13 @@ class ConfigEntries:
             )
 
         self._async_dispatch(ConfigEntryChange.REMOVED, entry)
+        for discovery_domain in entry.discovery_keys:
+            async_dispatcher_send_internal(
+                self.hass,
+                signal_discovered_config_entry_removed(discovery_domain),
+                ConfigEntryChange.REMOVED,
+                entry,
+            )
         return {"require_restart": not unload_success}
 
     @callback

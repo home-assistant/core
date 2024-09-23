@@ -383,8 +383,8 @@ class ZeroconfDiscovery:
 
         async_dispatcher_connect(
             self.hass,
-            config_entries.SIGNAL_CONFIG_ENTRY_CHANGED,
-            self._handle_config_entry_changed,
+            config_entries.signal_discovered_config_entry_removed(DOMAIN),
+            self._handle_config_entry_removed,
         )
 
     async def async_stop(self) -> None:
@@ -393,19 +393,15 @@ class ZeroconfDiscovery:
             await self.async_service_browser.async_cancel()
 
     @callback
-    def _handle_config_entry_changed(
+    def _handle_config_entry_removed(
         self,
         change: config_entries.ConfigEntryChange,
         entry: config_entries.ConfigEntry,
     ) -> None:
         """Handle config entry changes."""
-        if (
-            change != config_entries.ConfigEntryChange.REMOVED
-            or entry.source != config_entries.SOURCE_IGNORE
-            or not (discovery_keys := entry.discovery_keys.get(DOMAIN))
-        ):
+        if entry.source != config_entries.SOURCE_IGNORE:
             return
-        for discovery_key in discovery_keys:
+        for discovery_key in entry.discovery_keys[DOMAIN]:
             if discovery_key.version != 1:
                 continue
             _type = discovery_key.key[0]
