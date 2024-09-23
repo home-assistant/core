@@ -165,6 +165,8 @@ def assert_issues(
     issue_registry = ir.async_get(hass)
     assert len(issue_registry.issues) == len(expected_issues)
     for issue_id, expected_issue_data in expected_issues.items():
+        expected_translation_placeholders = dict(expected_issue_data)
+        expected_translation_placeholders.pop("issue_type")
         expected_issue = ir.IssueEntry(
             active=True,
             breaks_in_ha_version=None,
@@ -179,7 +181,7 @@ def assert_issues(
             learn_more_url=None,
             severity=ir.IssueSeverity.WARNING,
             translation_key=expected_issue_data["issue_type"],
-            translation_placeholders=None,
+            translation_placeholders=expected_translation_placeholders,
         )
         assert (DOMAIN, issue_id) in issue_registry.issues
         assert issue_registry.issues[(DOMAIN, issue_id)] == expected_issue

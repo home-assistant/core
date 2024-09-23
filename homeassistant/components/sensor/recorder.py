@@ -761,6 +761,7 @@ def update_statistics_issues(
                 is_fixable=False,
                 severity=ir.IssueSeverity.WARNING,
                 translation_key=issue_type,
+                translation_placeholders=data,
             )
         )
 
