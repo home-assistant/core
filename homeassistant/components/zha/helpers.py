@@ -150,6 +150,7 @@ from .const import (
     CONF_ENABLE_ENHANCED_LIGHT_TRANSITION,
     CONF_ENABLE_IDENTIFY_ON_JOIN,
     CONF_ENABLE_LIGHT_TRANSITIONING_FLAG,
+    CONF_ENABLE_MAINS_STARTUP_POLLING,
     CONF_ENABLE_QUIRKS,
     CONF_FLOW_CONTROL,
     CONF_GROUP_MEMBERS_ASSUME_STATE,
@@ -1163,6 +1164,7 @@ CONF_ZHA_OPTIONS_SCHEMA = vol.Schema(
             CONF_CONSIDER_UNAVAILABLE_BATTERY,
             default=CONF_DEFAULT_CONSIDER_UNAVAILABLE_BATTERY,
         ): cv.positive_int,
+        vol.Required(CONF_ENABLE_MAINS_STARTUP_POLLING, default=True): cv.boolean,
     },
     extra=vol.REMOVE_EXTRA,
 )
@@ -1235,6 +1237,7 @@ def create_zha_config(hass: HomeAssistant, ha_zha_data: HAZHAData) -> ZHAData:
         enable_identify_on_join=zha_options.get(CONF_ENABLE_IDENTIFY_ON_JOIN),
         consider_unavailable_mains=zha_options.get(CONF_CONSIDER_UNAVAILABLE_MAINS),
         consider_unavailable_battery=zha_options.get(CONF_CONSIDER_UNAVAILABLE_BATTERY),
+        enable_mains_startup_polling=zha_options.get(CONF_ENABLE_MAINS_STARTUP_POLLING),
     )
     acp_options: AlarmControlPanelOptions = AlarmControlPanelOptions(
         master_code=ha_acp_options.get(CONF_ALARM_MASTER_CODE),
