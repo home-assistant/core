@@ -38,6 +38,26 @@
         }
       }
     },
+    "button": {
+      "boombox": {
+        "default": "mdi:volume-high"
+      },
+      "enable_keyless_driving": {
+        "default": "mdi:car-key"
+      },
+      "flash_lights": {
+        "default": "mdi:flashlight"
+      },
+      "homelink": {
+        "default": "mdi:garage"
+      },
+      "honk": {
+        "default": "mdi:bullhorn"
+      },
+      "wake": {
+        "default": "mdi:sleep-off"
+      }
+    },
     "climate": {
       "driver_temp": {
         "state_attributes": {
