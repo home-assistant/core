@@ -2,29 +2,22 @@
 
 from __future__ import annotations
 
-from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING
 
-from aiomusiccast import MusicCastConnectionException
-from aiomusiccast.musiccast_device import MusicCastData, MusicCastDevice
+from aiomusiccast.musiccast_device import MusicCastDevice
 
 from homeassistant.components import ssdp
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import CONF_SERIAL, CONF_UPNP_DESC, DOMAIN
-
-if TYPE_CHECKING:
-    from .entity import MusicCastDeviceEntity
+from .coordinator import MusicCastDataUpdateCoordinator
 
 PLATFORMS = [Platform.MEDIA_PLAYER, Platform.NUMBER, Platform.SELECT, Platform.SWITCH]
 
 _LOGGER = logging.getLogger(__name__)
-SCAN_INTERVAL = timedelta(seconds=60)
 
 
 async def get_upnp_desc(hass: HomeAssistant, host: str):
@@ -90,22 +83,3 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Reload config entry."""
     await hass.config_entries.async_reload(entry.entry_id)
-
-
-class MusicCastDataUpdateCoordinator(DataUpdateCoordinator[MusicCastData]):  # pylint: disable=hass-enforce-class-module
-    """Class to manage fetching data from the API."""
-
-    def __init__(self, hass: HomeAssistant, client: MusicCastDevice) -> None:
-        """Initialize."""
-        self.musiccast = client
-
-        super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=SCAN_INTERVAL)
-        self.entities: list[MusicCastDeviceEntity] = []
-
-    async def _async_update_data(self) -> MusicCastData:
-        """Update data via library."""
-        try:
-            await self.musiccast.fetch()
-        except MusicCastConnectionException as exception:
-            raise UpdateFailed from exception
-        return self.musiccast.data
