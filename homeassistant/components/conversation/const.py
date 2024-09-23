@@ -10,6 +10,7 @@ from homeassistant.util.hass_dict import HassKey
 if TYPE_CHECKING:
     from homeassistant.helpers.entity_component import EntityComponent
 
+    from .default_agent import DefaultAgent
     from .entity import ConversationEntity
 
 DOMAIN = "conversation"
@@ -26,6 +27,7 @@ SERVICE_PROCESS = "process"
 SERVICE_RELOAD = "reload"
 
 DOMAIN_DATA: HassKey[EntityComponent[ConversationEntity]] = HassKey(DOMAIN)
+DATA_DEFAULT_ENTITY: HassKey[DefaultAgent] = HassKey(f"{DOMAIN}_default_entity")
 
 
 class ConversationEntityFeature(IntFlag):

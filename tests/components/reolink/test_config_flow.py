@@ -200,7 +200,7 @@ async def test_config_flow_errors(
     assert result["step_id"] == "user"
     assert result["errors"] == {CONF_HOST: "api_error"}
 
-    reolink_connect.get_host_data.side_effect = None
+    reolink_connect.get_host_data.reset_mock(side_effect=True)
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
@@ -224,6 +224,9 @@ async def test_config_flow_errors(
     assert result["options"] == {
         CONF_PROTOCOL: DEFAULT_PROTOCOL,
     }
+
+    reolink_connect.unsubscribe.reset_mock(side_effect=True)
+    reolink_connect.logout.reset_mock(side_effect=True)
 
 
 async def test_options_flow(hass: HomeAssistant, mock_setup_entry: MagicMock) -> None:
@@ -478,6 +481,7 @@ async def test_dhcp_ip_update(
     )
 
     if attr is not None:
+        original = getattr(reolink_connect, attr)
         setattr(reolink_connect, attr, value)
 
     result = await hass.config_entries.flow.async_init(
@@ -507,6 +511,11 @@ async def test_dhcp_ip_update(
 
     await hass.async_block_till_done()
     assert config_entry.data[CONF_HOST] == expected
+
+    reolink_connect.get_states.side_effect = None
+    reolink_connect_class.reset_mock()
+    if attr is not None:
+        setattr(reolink_connect, attr, original)
 
 
 async def test_reconfig(hass: HomeAssistant, mock_setup_entry: MagicMock) -> None:
