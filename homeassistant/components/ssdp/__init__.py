@@ -47,6 +47,7 @@ from homeassistant.core import Event, HassJob, HomeAssistant, callback as core_c
 from homeassistant.data_entry_flow import BaseServiceInfo
 from homeassistant.helpers import config_validation as cv, discovery_flow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.instance_id import async_get as async_get_instance_id
 from homeassistant.helpers.network import NoURLAvailableError, get_url
@@ -394,6 +395,12 @@ class Scanner:
             self.hass, self.async_scan, SCAN_INTERVAL, name="SSDP scanner"
         )
 
+        async_dispatcher_connect(
+            self.hass,
+            config_entries.signal_discovered_config_entry_removed(DOMAIN),
+            self._handle_config_entry_removed,
+        )
+
         # Trigger the initial-scan.
         await self.async_scan()
 
@@ -502,6 +509,7 @@ class Scanner:
         dst: DeviceOrServiceType,
         source: SsdpSource,
         info_desc: Mapping[str, Any],
+        skip_callbacks: bool = False,
     ) -> None:
         """Handle a device/service change."""
         matching_domains: set[str] = set()
@@ -526,7 +534,7 @@ class Scanner:
         )
         discovery_info.x_homeassistant_matching_domains = matching_domains
 
-        if callbacks:
+        if callbacks and not skip_callbacks:
             ssdp_change = SSDP_SOURCE_SSDP_CHANGE_MAPPING[source]
             _async_process_callbacks(self.hass, callbacks, discovery_info, ssdp_change)
 
@@ -545,6 +553,9 @@ class Scanner:
                 domain,
                 {"source": config_entries.SOURCE_SSDP},
                 discovery_info,
+                discovery_key=discovery_flow.DiscoveryKey(
+                    domain=DOMAIN, key=ssdp_device.udn, version=1
+                ),
             )
 
     def _async_dismiss_discoveries(
@@ -617,6 +628,31 @@ class Scanner:
             for headers in ssdp_device.all_combined_headers.values()
             if ssdp_device.udn == udn
         ]
+
+    async def _handle_config_entry_removed(
+        self,
+        entry: config_entries.ConfigEntry,
+    ) -> None:
+        """Handle config entry changes."""
+        if entry.source != config_entries.SOURCE_IGNORE:
+            return
+        for discovery_key in entry.discovery_keys[DOMAIN]:
+            if discovery_key.version != 1 or not isinstance(discovery_key.key, str):
+                continue
+            udn = discovery_key.key
+            _LOGGER.debug("Rediscover unignored service %s", udn)
+
+            for ssdp_device in self._ssdp_devices:
+                if ssdp_device.udn != udn:
+                    continue
+                for dst in ssdp_device.all_combined_headers:
+                    self._ssdp_listener_process_callback(
+                        ssdp_device,
+                        dst,
+                        SsdpSource.SEARCH,
+                        await self._async_get_description_dict(ssdp_device.location),
+                        True,  # Skip integration callbacks
+                    )
 
 
 def discovery_info_from_headers_and_description(
