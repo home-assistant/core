@@ -129,6 +129,13 @@ class ColorTempModes(Enum):
     RELATIVE = "5.001"
 
 
+class FanZeroMode(Enum):
+    """Enum for setting the fan zero mode."""
+
+    OFF = 1
+    AUTO = 2
+
+
 SUPPORTED_PLATFORMS_YAML: Final = {
     Platform.BINARY_SENSOR,
     Platform.BUTTON,

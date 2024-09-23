@@ -54,6 +54,7 @@ from .const import (
     CONF_SYNC_STATE,
     KNX_ADDRESS,
     ColorTempModes,
+    FanZeroMode,
 )
 from .validation import (
     backwards_compatible_xknx_climate_enum_member,
@@ -345,6 +346,7 @@ class ClimateSchema(KNXPlatformSchema):
     CONF_FAN_SPEED_STATE_ADDRESS = "fan_speed_state_address"
     CONF_FAN_MAX_STEP = "fan_max_step"
     CONF_FAN_SPEED_MODE = "fan_speed_mode"
+    CONF_FAN_ZERO_MODE = "fan_zero_mode"
 
     DEFAULT_NAME = "KNX Climate"
     DEFAULT_SETPOINT_SHIFT_MODE = "DPT6010"
@@ -353,6 +355,7 @@ class ClimateSchema(KNXPlatformSchema):
     DEFAULT_TEMPERATURE_STEP = 0.1
     DEFAULT_ON_OFF_INVERT = False
     DEFAULT_FAN_SPEED_MODE = "step"
+    DEFAULT_FAN_ZERO_MODE = "off"
 
     ENTITY_SCHEMA = vol.All(
         # deprecated since September 2020
@@ -434,6 +437,9 @@ class ClimateSchema(KNXPlatformSchema):
                 vol.Optional(
                     CONF_FAN_SPEED_MODE, default=DEFAULT_FAN_SPEED_MODE
                 ): vol.All(vol.Upper, cv.enum(FanSpeedMode)),
+                vol.Optional(
+                    CONF_FAN_ZERO_MODE, default=DEFAULT_FAN_ZERO_MODE
+                ): vol.All(vol.Upper, cv.enum(FanZeroMode)),
             }
         ),
     )
