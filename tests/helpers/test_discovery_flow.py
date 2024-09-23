@@ -8,7 +8,7 @@ import pytest
 from homeassistant import config_entries
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import CoreState, HomeAssistant
-from homeassistant.helpers import discovery_flow
+from homeassistant.helpers import discovery_flow, json as json_helper
 from homeassistant.helpers.discovery_flow import DiscoveryKey
 
 
@@ -141,3 +141,16 @@ async def test_async_create_flow_does_nothing_after_stop(
         {"properties": {"id": "aa:bb:cc:dd:ee:ff"}},
     )
     assert len(mock_flow_init.mock_calls) == 0
+
+
+@pytest.mark.parametrize("key", ["test", ("blah", "bleh")])
+def test_discovery_key_serialize_deserialize(key: str | tuple[str]) -> None:
+    """Test serialize and deserialize discovery key."""
+    discovery_key_1 = discovery_flow.DiscoveryKey(
+        domain="test_domain", key=key, version=1
+    )
+    serialized = json_helper.json_dumps(discovery_key_1)
+    assert (
+        discovery_flow.DiscoveryKey.from_json_dict(json_helper.json_loads(serialized))
+        == discovery_key_1
+    )

@@ -33,7 +33,7 @@ class DiscoveryKey:
     def from_json_dict(cls, json_dict: dict[str, Any]) -> Self:
         """Construct from JSON dict."""
         if type(key := json_dict["key"]) is list:
-            key = tuple(*key)
+            key = tuple(key)
         return cls(domain=json_dict["domain"], key=key, version=json_dict["version"])
 
 

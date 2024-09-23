@@ -888,11 +888,18 @@ async def test_saving_and_loading(
             "test",
             context={
                 "source": config_entries.SOURCE_USER,
-                "discovery_key": DiscoveryKey(domain="test", key="blah", version=1),
+                "discovery_key": DiscoveryKey(domain="test", key=("blah"), version=1),
+            },
+        )
+        await hass.config_entries.flow.async_init(
+            "test",
+            context={
+                "source": config_entries.SOURCE_USER,
+                "discovery_key": DiscoveryKey(domain="test", key=("a", "b"), version=1),
             },
         )
 
-    assert len(hass.config_entries.async_entries()) == 2
+    assert len(hass.config_entries.async_entries()) == 3
     entry_1 = hass.config_entries.async_entries()[0]
 
     hass.config_entries.async_update_entry(
@@ -911,7 +918,7 @@ async def test_saving_and_loading(
     manager = config_entries.ConfigEntries(hass, {})
     await manager.async_initialize()
 
-    assert len(manager.async_entries()) == 2
+    assert len(manager.async_entries()) == 3
 
     # Ensure same order
     for orig, loaded in zip(
