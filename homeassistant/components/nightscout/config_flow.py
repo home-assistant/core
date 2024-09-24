@@ -16,7 +16,7 @@ from .utils import hash_from_url
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_SCHEMA = vol.Schema({vol.Required(CONF_URL): str, vol.Optional(CONF_API_KEY): str})
+DATA_SCHEMA = vol.Schema({vol.Required(CONF_URL): str, vol.Optional(CONF_API_KEY): str, vol.Required('Units'): vol.In(["mmol/l", "mg/dl"])})
 
 
 async def _validate_input(data: dict[str, Any]) -> dict[str, str]:
