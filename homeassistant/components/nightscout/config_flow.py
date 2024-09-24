@@ -11,13 +11,18 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_UNIT_OF_MEASUREMENT
 from homeassistant.exceptions import HomeAssistantError
 
-from .const import DOMAIN
+from .const import DOMAIN, MG_DL, MMOL_L
 from .utils import hash_from_url
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_SCHEMA = vol.Schema({vol.Required(CONF_URL): str, vol.Optional(CONF_API_KEY): str, vol.Required(CONF_UNIT_OF_MEASUREMENT, default='mg/dL'): vol.In(["mmol/L", "mg/dL"])})
-
+DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_URL): str,
+        vol.Optional(CONF_API_KEY): str,
+        vol.Optional(CONF_UNIT_OF_MEASUREMENT, default=MG_DL): vol.In([MG_DL, MMOL_L]),
+    }
+)
 
 async def _validate_input(data: dict[str, Any]) -> dict[str, str]:
     """Validate the user input allows us to connect."""
