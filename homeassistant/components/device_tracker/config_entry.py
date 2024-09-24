@@ -187,7 +187,7 @@ class BaseTrackerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         return self._attr_battery_level
 
     @property
-    def source_type(self) -> SourceType:
+    def source_type(self) -> SourceType | str:
         """Return the source type, eg gps or router, of the device."""
         if hasattr(self, "_attr_source_type"):
             return self._attr_source_type
