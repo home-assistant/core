@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import date
+from datetime import datetime
 
 from chip.clusters import Objects as clusters
 from chip.clusters.Types import Nullable, NullValue
@@ -575,9 +575,9 @@ DISCOVERY_SCHEMAS = [
         entity_description=MatterSensorEntityDescription(
             key="SmokeCOAlarmExpiryDate",
             translation_key="expiry_date",
-            device_class=SensorDeviceClass.DATE,
+            device_class=SensorDeviceClass.TIMESTAMP,
             # raw value is epoch seconds
-            measurement_to_ha=date.fromtimestamp,
+            measurement_to_ha=datetime.fromtimestamp,
         ),
         entity_class=MatterSensor,
         required_attributes=(clusters.SmokeCoAlarm.Attributes.ExpiryDate,),
