@@ -4221,6 +4221,12 @@
       "config_flow": false,
       "iot_class": "local_push"
     },
+    "nyt_games": {
+      "name": "NYT Games",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "nzbget": {
       "name": "NZBGet",
       "integration_type": "hub",

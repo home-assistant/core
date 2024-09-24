@@ -418,7 +418,7 @@ def reset_hass_threading_local_object() -> Generator[None]:
     ha._hass.__dict__.clear()
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(autouse=True, scope="session")
 def bcrypt_cost() -> Generator[None]:
     """Run with reduced rounds during tests, to speed up uses."""
     gensalt_orig = bcrypt.gensalt
@@ -1715,7 +1715,7 @@ async def mock_enable_bluetooth(
     await hass.async_block_till_done()
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(autouse=True, scope="session")
 def mock_bluetooth_adapters() -> Generator[None]:
     """Fixture to mock bluetooth adapters."""
     with (
