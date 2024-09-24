@@ -468,6 +468,43 @@ async def test_migrate_entity_ids(
     assert device_registry.async_get_device(identifiers={(DOMAIN, new_dev_id)})
 
 
+async def test_cleanup_recording_entity(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    reolink_connect: MagicMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test entity ids that need to be migrated."""
+    original_id = f"{TEST_UID}_record"
+    domain = Platform.SWITCH
+
+    def mock_supported(ch, capability):
+        if capability == "recording":
+            return False
+        return True
+
+    reolink_connect.channels = [0]
+    reolink_connect.supported = mock_supported
+
+    entity_registry.async_get_or_create(
+        domain=domain,
+        platform=DOMAIN,
+        unique_id=original_id,
+        config_entry=config_entry,
+        suggested_object_id=original_id,
+        disabled_by=None,
+    )
+
+    assert entity_registry.async_get_entity_id(domain, DOMAIN, original_id)
+
+    # setup CH 0 and host entities/device
+    with patch("homeassistant.components.reolink.PLATFORMS", [domain]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entity_registry.async_get_entity_id(domain, DOMAIN, original_id) is None
+
+
 async def test_no_repair_issue(
     hass: HomeAssistant, config_entry: MockConfigEntry, issue_registry: ir.IssueRegistry
 ) -> None:
