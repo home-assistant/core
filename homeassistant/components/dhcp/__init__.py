@@ -213,19 +213,20 @@ class WatcherBase:
         # and since all consumers of this data are expecting it to be
         # formatted without colons we will continue to do so
         mac_address = formatted_mac.replace(":", "")
+        compressed_ip_address = made_ip_address.compressed
 
-        data = self._address_data.get(ip_address)
+        data = self._address_data.get(mac_address)
         if (
             data
-            and data[MAC_ADDRESS] == mac_address
+            and data[IP_ADDRESS] == compressed_ip_address
             and data[HOSTNAME].startswith(hostname)
         ):
             # If the address data is the same no need
             # to process it
             return
 
-        data = {MAC_ADDRESS: mac_address, HOSTNAME: hostname}
-        self._address_data[ip_address] = data
+        data = {IP_ADDRESS: compressed_ip_address, HOSTNAME: hostname}
+        self._address_data[mac_address] = data
 
         lowercase_hostname = hostname.lower()
         uppercase_mac = mac_address.upper()
