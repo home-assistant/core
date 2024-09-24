@@ -168,8 +168,6 @@ def _async_register_mac(
 class BaseTrackerEntityDescription(EntityDescription, frozen_or_thawed=True):
     """A class that describes tracker entities."""
 
-    source_type: SourceType
-
 
 class BaseTrackerEntity(Entity):
     """Represent a tracked device."""
@@ -192,8 +190,6 @@ class BaseTrackerEntity(Entity):
         """Return the source type, eg gps or router, of the device."""
         if hasattr(self, "_attr_source_type"):
             return self._attr_source_type
-        if hasattr(self, "entity_description"):
-            return self.entity_description.source_type
         raise NotImplementedError
 
     @property
@@ -209,8 +205,6 @@ class BaseTrackerEntity(Entity):
 
 class TrackerEntityDescription(BaseTrackerEntityDescription, frozen_or_thawed=True):
     """A class that describes tracker entities."""
-
-    source_type: SourceType = SourceType.GPS
 
 
 CACHED_TRACKER_PROPERTIES_WITH_ATTR_ = {
@@ -302,9 +296,7 @@ class TrackerEntity(
 
 
 class ScannerEntityDescription(BaseTrackerEntityDescription, frozen_or_thawed=True):
-    """A class that describes tracker entities."""
-
-    source_type: SourceType = SourceType.ROUTER
+    """A class that describes tracker entities.""
 
 
 CACHED_SCANNER_PROPERTIES_WITH_ATTR_ = {
