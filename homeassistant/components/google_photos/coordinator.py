@@ -13,7 +13,7 @@ from typing import Final
 
 from google_photos_library_api.api import GooglePhotosLibraryApi
 from google_photos_library_api.exceptions import GooglePhotosApiError
-from google_photos_library_api.model import Album
+from google_photos_library_api.model import Album, NewAlbum
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -59,3 +59,13 @@ class GooglePhotosUpdateCoordinator(DataUpdateCoordinator[dict[str, str]]):
         return await asyncio.gather(
             *(self.client.get_album(album_id) for album_id in self.data)
         )
+
+    async def get_or_create_album(self, album: str) -> str:
+        """Return an existing album id or create a new one."""
+        for album_id, album_title in self.data.items():
+            if album_title == album:
+                return album_id
+        new_album = await self.client.create_album(NewAlbum(title=album))
+        _LOGGER.debug("Created new album: %s", new_album)
+        self.data[new_album.id] = new_album.title
+        return new_album.id
