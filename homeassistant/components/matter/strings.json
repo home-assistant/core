@@ -46,8 +46,23 @@
   },
   "entity": {
     "binary_sensor": {
+      "battery_alert": {
+        "name": "Battery alert"
+      },
       "end_of_service": {
         "name": "End of service"
+      },
+      "hardware_fault": {
+        "name": "Hardware fault"
+      },
+      "interconnected_smoke_alarm": {
+        "name": "Interconnected smoke alarm"
+      },
+      "interconnected_co_alarm": {
+        "name": "Interconnected CO alarm"
+      },
+      "test_in_progress": {
+        "name": "Test in progress"
       },
       "water_leak": {
         "name": "Water leak"
@@ -141,6 +156,9 @@
       "mode": {
         "name": "Mode"
       },
+      "sensitivity_level": {
+        "name": "Sensitivity"
+      },
       "startup_on_off": {
         "name": "Power-on behavior on Startup"
       }
@@ -148,6 +166,15 @@
     "sensor": {
       "activated_carbon_filter_condition": {
         "name": "Activated carbon filter condition"
+      },
+      "contamination_state": {
+        "name": "Contamination state",
+        "state": {
+          "normal": "Normal",
+          "low": "Low",
+          "warning": "Warning",
+          "critical": "Critical"
+        }
       },
       "air_quality": {
         "name": "Air quality",
@@ -160,6 +187,9 @@
           "moderate": "Moderate",
           "unknown": "Unknown"
         }
+      },
+      "expiry_date": {
+        "name": "Expiry date"
       },
       "flow": {
         "name": "Flow"

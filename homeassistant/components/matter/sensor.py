@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import date
 
 from chip.clusters import Objects as clusters
 from chip.clusters.Types import Nullable, NullValue
@@ -50,6 +51,13 @@ AIR_QUALITY_MAP = {
     clusters.AirQuality.Enums.AirQualityEnum.kModerate: "moderate",
     clusters.AirQuality.Enums.AirQualityEnum.kUnknown: "unknown",
     clusters.AirQuality.Enums.AirQualityEnum.kUnknownEnumValue: "unknown",
+}
+
+CONTAMINATION_STATE_MAP = {
+    clusters.SmokeCoAlarm.Enums.ContaminationStateEnum.kNormal: "normal",
+    clusters.SmokeCoAlarm.Enums.ContaminationStateEnum.kLow: "low",
+    clusters.SmokeCoAlarm.Enums.ContaminationStateEnum.kWarning: "warning",
+    clusters.SmokeCoAlarm.Enums.ContaminationStateEnum.kCritical: "critical",
 }
 
 
@@ -548,5 +556,33 @@ DISCOVERY_SCHEMAS = [
         required_attributes=(
             clusters.ElectricalEnergyMeasurement.Attributes.CumulativeEnergyImported,
         ),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="SmokeCOAlarmContaminationState",
+            translation_key="contamination_state",
+            device_class=SensorDeviceClass.ENUM,
+            state_class=None,
+            # convert to set first to remove the duplicate unknown value
+            options=list(set(CONTAMINATION_STATE_MAP.values())),
+            measurement_to_ha=CONTAMINATION_STATE_MAP.get,
+            icon="mdi:air-filter",
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(clusters.SmokeCoAlarm.Attributes.ContaminationState,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="SmokeCOAlarmExpiryDate",
+            translation_key="expiry_date",
+            device_class=SensorDeviceClass.DATE,
+            state_class=None,
+            # raw value is epoch seconds
+            measurement_to_ha=date.fromtimestamp,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(clusters.SmokeCoAlarm.Attributes.ExpiryDate,),
     ),
 ]
