@@ -97,8 +97,8 @@ async def test_attribute_select_entities(
     await trigger_subscription_callback(hass, matter_client)
     state = hass.states.get(entity_id)
     assert state.state == "on"
-    # test that an invalid value (e.g. 255) leads to an unknown state
-    set_node_attribute(light_node, 1, 6, 16387, 255)
+    # test that an invalid value (e.g. 253) leads to an unknown state
+    set_node_attribute(light_node, 1, 6, 16387, 253)
     await trigger_subscription_callback(hass, matter_client)
     state = hass.states.get(entity_id)
     assert state.state == "unknown"

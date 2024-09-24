@@ -43,7 +43,7 @@ class RussoundBaseEntity(Entity):
         controller: Controller,
     ) -> None:
         """Initialize the entity."""
-        self._instance = controller.instance
+        self._client = controller.client
         self._controller = controller
         self._primary_mac_address = (
             controller.mac_address or controller.parent_controller.mac_address
@@ -60,9 +60,9 @@ class RussoundBaseEntity(Entity):
             model=controller.controller_type,
             sw_version=controller.firmware_version,
         )
-        if isinstance(self._instance.connection_handler, RussoundTcpConnectionHandler):
+        if isinstance(self._client.connection_handler, RussoundTcpConnectionHandler):
             self._attr_device_info["configuration_url"] = (
-                f"http://{self._instance.connection_handler.host}"
+                f"http://{self._client.connection_handler.host}"
             )
         if controller.parent_controller:
             self._attr_device_info["via_device"] = (
@@ -82,12 +82,12 @@ class RussoundBaseEntity(Entity):
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
-        self._instance.connection_handler.add_connection_callback(
+        self._client.connection_handler.add_connection_callback(
             self._is_connected_updated
         )
 
     async def async_will_remove_from_hass(self) -> None:
         """Remove callbacks."""
-        self._instance.connection_handler.remove_connection_callback(
+        self._client.connection_handler.remove_connection_callback(
             self._is_connected_updated
         )

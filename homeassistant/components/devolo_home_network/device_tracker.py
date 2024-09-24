@@ -8,7 +8,6 @@ from devolo_plc_api.device_api import ConnectedStationInfo
 from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER_DOMAIN,
     ScannerEntity,
-    SourceType,
 )
 from homeassistant.const import STATE_UNKNOWN, UnitOfFrequency
 from homeassistant.core import HomeAssistant, callback
@@ -88,8 +87,6 @@ class DevoloScannerEntity(
     CoordinatorEntity[DataUpdateCoordinator[list[ConnectedStationInfo]]], ScannerEntity
 ):
     """Representation of a devolo device tracker."""
-
-    _attr_source_type = SourceType.ROUTER
 
     def __init__(
         self,

@@ -105,7 +105,7 @@ class MatterModeSelectEntity(MatterSelectEntity):
         )
         modes = {mode.mode: mode.label for mode in cluster.supportedModes}
         self._attr_options = list(modes.values())
-        self._attr_current_option = modes[cluster.currentMode]
+        self._attr_current_option = modes.get(cluster.currentMode)
         # handle optional Description attribute as descriptive name for the mode
         if desc := getattr(cluster, "description", None):
             self._attr_name = desc

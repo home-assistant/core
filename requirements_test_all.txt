@@ -103,7 +103,7 @@ PyXiaomiGateway==0.14.3
 RachioPy==1.1.0
 
 # homeassistant.components.python_script
-RestrictedPython==7.0
+RestrictedPython==7.2
 
 # homeassistant.components.remember_the_milk
 RtmAPI==0.7.2
@@ -338,7 +338,7 @@ aioridwell==2024.01.0
 aioruckus==0.41
 
 # homeassistant.components.russound_rio
-aiorussound==3.0.5
+aiorussound==3.1.5
 
 # homeassistant.components.ruuvi_gateway
 aioruuvigateway==0.1.0
