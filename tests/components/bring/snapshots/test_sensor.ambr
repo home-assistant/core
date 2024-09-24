@@ -29,14 +29,14 @@
     'supported_features': 0,
     'translation_key': <BringSensor.DISCOUNTED: 'discounted'>,
     'unique_id': '00000000-00000000-00000000-00000000_b4776778-7f6c-496e-951b-92a35d3db0dd_discounted',
-    'unit_of_measurement': 'Items',
+    'unit_of_measurement': 'items',
   })
 # ---
 # name: test_setup[sensor.baumarkt_discount_only-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Baumarkt Discount only',
-      'unit_of_measurement': 'Items',
+      'unit_of_measurement': 'items',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.baumarkt_discount_only',
@@ -44,331 +44,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2',
-  })
-# ---
-# name: test_setup[sensor.baumarkt_language-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'options': list([
-        'de-AT',
-        'de-CH',
-        'de-DE',
-        'en-AU',
-        'en-CA',
-        'en-GB',
-        'en-US',
-        'es-ES',
-        'fr-CH',
-        'fr-FR',
-        'hu-HU',
-        'it-CH',
-        'it-IT',
-        'nb-NO',
-        'nl-NL',
-        'pl-PL',
-        'pt-BR',
-        'ru-RU',
-        'sv-SE',
-        'tr-TR',
-      ]),
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.baumarkt_language',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-    'original_icon': None,
-    'original_name': 'Language',
-    'platform': 'bring',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': <BringSensor.LIST_LANGUAGE: 'list_language'>,
-    'unique_id': '00000000-00000000-00000000-00000000_b4776778-7f6c-496e-951b-92a35d3db0dd_list_language',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_setup[sensor.baumarkt_language-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Baumarkt Language',
-      'options': list([
-        'de-AT',
-        'de-CH',
-        'de-DE',
-        'en-AU',
-        'en-CA',
-        'en-GB',
-        'en-US',
-        'es-ES',
-        'fr-CH',
-        'fr-FR',
-        'hu-HU',
-        'it-CH',
-        'it-IT',
-        'nb-NO',
-        'nl-NL',
-        'pl-PL',
-        'pt-BR',
-        'ru-RU',
-        'sv-SE',
-        'tr-TR',
-      ]),
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.baumarkt_language',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'en-US',
-  })
-# ---
-# name: test_setup[sensor.baumarkt_none-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.baumarkt_none',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'bring',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': <BringSensor.URGENT: 'urgent'>,
-    'unique_id': '00000000-00000000-00000000-00000000_b4776778-7f6c-496e-951b-92a35d3db0dd_urgent',
-    'unit_of_measurement': 'items',
-  })
-# ---
-# name: test_setup[sensor.baumarkt_none-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Baumarkt None',
-      'unit_of_measurement': 'items',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.baumarkt_none',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '2',
-  })
-# ---
-# name: test_setup[sensor.baumarkt_none_2-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.baumarkt_none_2',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'bring',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': <BringSensor.CONVENIENT: 'convenient'>,
-    'unique_id': '00000000-00000000-00000000-00000000_b4776778-7f6c-496e-951b-92a35d3db0dd_convenient',
-    'unit_of_measurement': 'items',
-  })
-# ---
-# name: test_setup[sensor.baumarkt_none_2-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Baumarkt None',
-      'unit_of_measurement': 'items',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.baumarkt_none_2',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '2',
-  })
-# ---
-# name: test_setup[sensor.baumarkt_none_3-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.baumarkt_none_3',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'bring',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': <BringSensor.DISCOUNTED: 'discounted'>,
-    'unique_id': '00000000-00000000-00000000-00000000_b4776778-7f6c-496e-951b-92a35d3db0dd_discounted',
-    'unit_of_measurement': 'items',
-  })
-# ---
-# name: test_setup[sensor.baumarkt_none_3-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Baumarkt None',
-      'unit_of_measurement': 'items',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.baumarkt_none_3',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '2',
-  })
-# ---
-# name: test_setup[sensor.baumarkt_none_4-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'options': list([
-        'de-at',
-        'de-ch',
-        'de-de',
-        'en-au',
-        'en-ca',
-        'en-gb',
-        'en-us',
-        'es-es',
-        'fr-ch',
-        'fr-fr',
-        'hu-hu',
-        'it-ch',
-        'it-it',
-        'nb-no',
-        'nl-nl',
-        'pl-pl',
-        'pt-br',
-        'ru-ru',
-        'sv-se',
-        'tr-tr',
-      ]),
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.baumarkt_none_4',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'bring',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': <BringSensor.LIST_LANGUAGE: 'list_language'>,
-    'unique_id': '00000000-00000000-00000000-00000000_b4776778-7f6c-496e-951b-92a35d3db0dd_list_language',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_setup[sensor.baumarkt_none_4-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Baumarkt None',
-      'options': list([
-        'de-at',
-        'de-ch',
-        'de-de',
-        'en-au',
-        'en-ca',
-        'en-gb',
-        'en-us',
-        'es-es',
-        'fr-ch',
-        'fr-fr',
-        'hu-hu',
-        'it-ch',
-        'it-it',
-        'nb-no',
-        'nl-nl',
-        'pl-pl',
-        'pt-br',
-        'ru-ru',
-        'sv-se',
-        'tr-tr',
-      ]),
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.baumarkt_none_4',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'en-us',
   })
 # ---
 # name: test_setup[sensor.baumarkt_on_occasion-entry]
@@ -401,14 +76,14 @@
     'supported_features': 0,
     'translation_key': <BringSensor.CONVENIENT: 'convenient'>,
     'unique_id': '00000000-00000000-00000000-00000000_b4776778-7f6c-496e-951b-92a35d3db0dd_convenient',
-    'unit_of_measurement': 'Items',
+    'unit_of_measurement': 'items',
   })
 # ---
 # name: test_setup[sensor.baumarkt_on_occasion-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Baumarkt On occasion',
-      'unit_of_measurement': 'Items',
+      'unit_of_measurement': 'items',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.baumarkt_on_occasion',
@@ -540,14 +215,14 @@
     'supported_features': 0,
     'translation_key': <BringSensor.URGENT: 'urgent'>,
     'unique_id': '00000000-00000000-00000000-00000000_b4776778-7f6c-496e-951b-92a35d3db0dd_urgent',
-    'unit_of_measurement': 'Items',
+    'unit_of_measurement': 'items',
   })
 # ---
 # name: test_setup[sensor.baumarkt_urgent-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Baumarkt Urgent',
-      'unit_of_measurement': 'Items',
+      'unit_of_measurement': 'items',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.baumarkt_urgent',
@@ -587,14 +262,14 @@
     'supported_features': 0,
     'translation_key': <BringSensor.DISCOUNTED: 'discounted'>,
     'unique_id': '00000000-00000000-00000000-00000000_e542eef6-dba7-4c31-a52c-29e6ab9d83a5_discounted',
-    'unit_of_measurement': 'Items',
+    'unit_of_measurement': 'items',
   })
 # ---
 # name: test_setup[sensor.einkauf_discount_only-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Einkauf Discount only',
-      'unit_of_measurement': 'Items',
+      'unit_of_measurement': 'items',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.einkauf_discount_only',
@@ -602,331 +277,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2',
-  })
-# ---
-# name: test_setup[sensor.einkauf_language-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'options': list([
-        'de-AT',
-        'de-CH',
-        'de-DE',
-        'en-AU',
-        'en-CA',
-        'en-GB',
-        'en-US',
-        'es-ES',
-        'fr-CH',
-        'fr-FR',
-        'hu-HU',
-        'it-CH',
-        'it-IT',
-        'nb-NO',
-        'nl-NL',
-        'pl-PL',
-        'pt-BR',
-        'ru-RU',
-        'sv-SE',
-        'tr-TR',
-      ]),
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.einkauf_language',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-    'original_icon': None,
-    'original_name': 'Language',
-    'platform': 'bring',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': <BringSensor.LIST_LANGUAGE: 'list_language'>,
-    'unique_id': '00000000-00000000-00000000-00000000_e542eef6-dba7-4c31-a52c-29e6ab9d83a5_list_language',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_setup[sensor.einkauf_language-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Einkauf Language',
-      'options': list([
-        'de-AT',
-        'de-CH',
-        'de-DE',
-        'en-AU',
-        'en-CA',
-        'en-GB',
-        'en-US',
-        'es-ES',
-        'fr-CH',
-        'fr-FR',
-        'hu-HU',
-        'it-CH',
-        'it-IT',
-        'nb-NO',
-        'nl-NL',
-        'pl-PL',
-        'pt-BR',
-        'ru-RU',
-        'sv-SE',
-        'tr-TR',
-      ]),
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.einkauf_language',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'de-DE',
-  })
-# ---
-# name: test_setup[sensor.einkauf_none-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.einkauf_none',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'bring',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': <BringSensor.URGENT: 'urgent'>,
-    'unique_id': '00000000-00000000-00000000-00000000_e542eef6-dba7-4c31-a52c-29e6ab9d83a5_urgent',
-    'unit_of_measurement': 'items',
-  })
-# ---
-# name: test_setup[sensor.einkauf_none-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Einkauf None',
-      'unit_of_measurement': 'items',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.einkauf_none',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '2',
-  })
-# ---
-# name: test_setup[sensor.einkauf_none_2-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.einkauf_none_2',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'bring',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': <BringSensor.CONVENIENT: 'convenient'>,
-    'unique_id': '00000000-00000000-00000000-00000000_e542eef6-dba7-4c31-a52c-29e6ab9d83a5_convenient',
-    'unit_of_measurement': 'items',
-  })
-# ---
-# name: test_setup[sensor.einkauf_none_2-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Einkauf None',
-      'unit_of_measurement': 'items',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.einkauf_none_2',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '2',
-  })
-# ---
-# name: test_setup[sensor.einkauf_none_3-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.einkauf_none_3',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'bring',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': <BringSensor.DISCOUNTED: 'discounted'>,
-    'unique_id': '00000000-00000000-00000000-00000000_e542eef6-dba7-4c31-a52c-29e6ab9d83a5_discounted',
-    'unit_of_measurement': 'items',
-  })
-# ---
-# name: test_setup[sensor.einkauf_none_3-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Einkauf None',
-      'unit_of_measurement': 'items',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.einkauf_none_3',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '2',
-  })
-# ---
-# name: test_setup[sensor.einkauf_none_4-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'options': list([
-        'de-at',
-        'de-ch',
-        'de-de',
-        'en-au',
-        'en-ca',
-        'en-gb',
-        'en-us',
-        'es-es',
-        'fr-ch',
-        'fr-fr',
-        'hu-hu',
-        'it-ch',
-        'it-it',
-        'nb-no',
-        'nl-nl',
-        'pl-pl',
-        'pt-br',
-        'ru-ru',
-        'sv-se',
-        'tr-tr',
-      ]),
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.einkauf_none_4',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'bring',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': <BringSensor.LIST_LANGUAGE: 'list_language'>,
-    'unique_id': '00000000-00000000-00000000-00000000_e542eef6-dba7-4c31-a52c-29e6ab9d83a5_list_language',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_setup[sensor.einkauf_none_4-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Einkauf None',
-      'options': list([
-        'de-at',
-        'de-ch',
-        'de-de',
-        'en-au',
-        'en-ca',
-        'en-gb',
-        'en-us',
-        'es-es',
-        'fr-ch',
-        'fr-fr',
-        'hu-hu',
-        'it-ch',
-        'it-it',
-        'nb-no',
-        'nl-nl',
-        'pl-pl',
-        'pt-br',
-        'ru-ru',
-        'sv-se',
-        'tr-tr',
-      ]),
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.einkauf_none_4',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'de-de',
   })
 # ---
 # name: test_setup[sensor.einkauf_on_occasion-entry]
@@ -959,14 +309,14 @@
     'supported_features': 0,
     'translation_key': <BringSensor.CONVENIENT: 'convenient'>,
     'unique_id': '00000000-00000000-00000000-00000000_e542eef6-dba7-4c31-a52c-29e6ab9d83a5_convenient',
-    'unit_of_measurement': 'Items',
+    'unit_of_measurement': 'items',
   })
 # ---
 # name: test_setup[sensor.einkauf_on_occasion-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Einkauf On occasion',
-      'unit_of_measurement': 'Items',
+      'unit_of_measurement': 'items',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.einkauf_on_occasion',
@@ -1098,14 +448,14 @@
     'supported_features': 0,
     'translation_key': <BringSensor.URGENT: 'urgent'>,
     'unique_id': '00000000-00000000-00000000-00000000_e542eef6-dba7-4c31-a52c-29e6ab9d83a5_urgent',
-    'unit_of_measurement': 'Items',
+    'unit_of_measurement': 'items',
   })
 # ---
 # name: test_setup[sensor.einkauf_urgent-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Einkauf Urgent',
-      'unit_of_measurement': 'Items',
+      'unit_of_measurement': 'items',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.einkauf_urgent',
