@@ -333,3 +333,23 @@ def migrate_entity_ids(
             and entity.unique_id == f"{host.unique_id}_record"
         ):
             entity_reg.async_remove(entity.entity_id)
+        if (
+            not host.api.supported(None, "ftp")
+            and entity.unique_id == f"{host.unique_id}_ftp_upload"
+        ):
+            entity_reg.async_remove(entity.entity_id)
+        if (
+            not host.api.supported(None, "push")
+            and entity.unique_id == f"{host.unique_id}_push_notifications"
+        ):
+            entity_reg.async_remove(entity.entity_id)
+        if (
+            not host.api.supported(None, "email")
+            and entity.unique_id == f"{host.unique_id}_email"
+        ):
+            entity_reg.async_remove(entity.entity_id)
+        if (
+            not host.api.supported(None, "buzzer")
+            and entity.unique_id == f"{host.unique_id}_buzzer"
+        ):
+            entity_reg.async_remove(entity.entity_id)

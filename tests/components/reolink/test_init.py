@@ -468,18 +468,53 @@ async def test_migrate_entity_ids(
     assert device_registry.async_get_device(identifiers={(DOMAIN, new_dev_id)})
 
 
+@pytest.mark.parametrize(
+    (
+        "original_id",
+        "domain",
+        "capability",
+    ),
+    [
+        (
+            f"{TEST_UID}_record",
+            Platform.SWITCH,
+            "recording",
+        ),
+        (
+            f"{TEST_UID}_ftp_upload",
+            Platform.SWITCH,
+            "ftp",
+        ),
+        (
+            f"{TEST_UID}_push_notifications",
+            Platform.SWITCH,
+            "push",
+        ),
+        (
+            f"{TEST_UID}_email",
+            Platform.SWITCH,
+            "email",
+        ),
+        (
+            f"{TEST_UID}_buzzer",
+            Platform.SWITCH,
+            "buzzer",
+        ),
+    ],
+)
 async def test_cleanup_recording_entity(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     reolink_connect: MagicMock,
     entity_registry: er.EntityRegistry,
+    original_id: str,
+    domain: Platform,
+    capability: str,
 ) -> None:
     """Test entity ids that need to be migrated."""
-    original_id = f"{TEST_UID}_record"
-    domain = Platform.SWITCH
 
-    def mock_supported(ch, capability):
-        if capability == "recording":
+    def mock_supported(ch, cap):
+        if cap == capability:
             return False
         return True
 
