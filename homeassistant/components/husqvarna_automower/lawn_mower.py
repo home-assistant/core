@@ -240,24 +240,21 @@ class AutomowerLawnMowerEntity(AutomowerAvailableEntity, LawnMowerEntity):
             tasks = Tasks(tasks=new_list)
             await self.coordinator.api.commands.set_calendar(self.mower_id, tasks)
         if mode == "add":
-            if existing_data is not None:
-                for calendar_entry in existing_data:
-                    if calendar_entry == user_input:
-                        raise ServiceValidationError(
-                            translation_domain=DOMAIN,
-                            translation_key="calendar_entry_already_exists",
-                        )
-                    if work_area_id is not None:
-                        if calendar_entry.work_area_id == user_input.work_area_id:
-                            new_list.append(calendar_entry)
-                    if work_area_id is None:
+            for calendar_entry in existing_data:
+                if calendar_entry == user_input:
+                    raise ServiceValidationError(
+                        translation_domain=DOMAIN,
+                        translation_key="calendar_entry_already_exists",
+                    )
+                if work_area_id is not None:
+                    if calendar_entry.work_area_id == user_input.work_area_id:
                         new_list.append(calendar_entry)
+                if work_area_id is None:
+                    new_list.append(calendar_entry)
             new_list.append(user_input)
             tasks = Tasks(tasks=new_list)
             await self.coordinator.api.commands.set_calendar(self.mower_id, tasks)
         if mode == "remove":
-            if TYPE_CHECKING:
-                assert existing_data is not None
             if existing_data == []:
                 raise ServiceValidationError(
                     translation_domain=DOMAIN,
