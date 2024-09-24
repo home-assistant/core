@@ -23,7 +23,6 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.ssl import server_context_intermediate, server_context_modern
 
 from tests.common import async_fire_time_changed
-from tests.components.cloud import mock_cloud
 from tests.typing import ClientSessionGenerator
 
 
@@ -588,9 +587,6 @@ async def test_ssl_issue_if_using_cloud(
     issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test raising no SSL issue if not right configured but using cloud."""
-    await mock_cloud(hass)
-    await hass.async_block_till_done()
-
     assert hass.config.external_url is None
     assert hass.config.internal_url is None
 
@@ -626,9 +622,6 @@ async def test_ssl_issue_if_not_connected_to_cloud(
     issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test raising no SSL issue if not right configured and not connected to cloud."""
-    await mock_cloud(hass)
-    await hass.async_block_till_done()
-
     assert hass.config.external_url is None
     assert hass.config.internal_url is None
 
@@ -639,12 +632,12 @@ async def test_ssl_issue_if_not_connected_to_cloud(
     with (
         patch("ssl.SSLContext.load_cert_chain"),
         patch(
-            "homeassistant.components.cloud.async_remote_ui_url",
-            side_effect=CloudNotAvailable,
-        ),
-        patch(
             "homeassistant.util.ssl.server_context_modern",
             side_effect=server_context_modern,
+        ),
+        patch(
+            "homeassistant.components.cloud.async_remote_ui_url",
+            side_effect=CloudNotAvailable,
         ),
     ):
         assert await async_setup_component(
