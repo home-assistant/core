@@ -2300,6 +2300,7 @@ class StatesContextIDMigration(BaseRunTimeMigrationWithQuery):
 
     required_schema_version = CONTEXT_ID_AS_BINARY_SCHEMA_VERSION
     migration_id = "state_context_id_as_binary"
+    migration_version = 2
     index_to_drop = ("states", "ix_states_context_id")
 
     def migrate_data_impl(self, instance: Recorder) -> DataMigrationStatus:
@@ -2342,6 +2343,7 @@ class EventsContextIDMigration(BaseRunTimeMigrationWithQuery):
 
     required_schema_version = CONTEXT_ID_AS_BINARY_SCHEMA_VERSION
     migration_id = "event_context_id_as_binary"
+    migration_version = 2
     index_to_drop = ("events", "ix_events_context_id")
 
     def migrate_data_impl(self, instance: Recorder) -> DataMigrationStatus:

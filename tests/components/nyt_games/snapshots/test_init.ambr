@@ -7,7 +7,7 @@
     'connections': set({
     }),
     'disabled_by': None,
-    'entry_type': None,
+    'entry_type': <DeviceEntryType.SERVICE: 'service'>,
     'hw_version': None,
     'id': <ANY>,
     'identifiers': set({
