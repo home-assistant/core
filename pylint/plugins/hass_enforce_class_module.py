@@ -76,16 +76,23 @@ _MODULES: dict[str, set[str]] = {
 }
 _ENTITY_COMPONENTS: set[str] = {platform.value for platform in Platform}.union(
     {
+        "alert",
         "automation",
         "counter",
+        "dominos",
         "input_boolean",
+        "input_button",
         "input_datetime",
         "input_number",
+        "input_select",
         "input_text",
+        "microsoft_face",
         "person",
+        "plant",
+        "remember_the_milk",
+        "schedule",
         "script",
         "tag",
-        "template",
         "timer",
     }
 )
