@@ -191,7 +191,7 @@ class TeslemetryEnergyHistoryCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         super().__init__(
             hass,
             LOGGER,
-            name=f"Teslemetry Energy History ${api.energy_site_id}",
+            name=f"Teslemetry Energy History {api.energy_site_id}",
             update_interval=ENERGY_HISTORY_INTERVAL,
         )
         self.api = api
