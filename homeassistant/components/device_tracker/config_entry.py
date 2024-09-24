@@ -207,6 +207,8 @@ class BaseTrackerEntity(Entity):
 class TrackerEntityDescription(BaseTrackerEntityDescription, frozen_or_thawed=True):
     """A class that describes tracker entities."""
 
+    source_type: SourceType = SourceType.GPS
+
 
 CACHED_TRACKER_PROPERTIES_WITH_ATTR_ = {
     "latitude",
