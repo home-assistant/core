@@ -20,7 +20,6 @@ from homeassistant.components.light import (
 )
 from homeassistant.const import CONF_ENTITY_CATEGORY, CONF_NAME, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import (
     AddEntitiesCallback,
     async_get_current_platform,
@@ -35,7 +34,6 @@ from .schema import LightSchema
 from .storage.const import (
     CONF_COLOR_TEMP_MAX,
     CONF_COLOR_TEMP_MIN,
-    CONF_DEVICE_INFO,
     CONF_DPT,
     CONF_ENTITY,
     CONF_GA_BLUE_BRIGHTNESS,
@@ -554,21 +552,19 @@ class KnxYamlLight(_KnxLight, KnxYamlEntity):
 class KnxUiLight(_KnxLight, KnxUiEntity):
     """Representation of a KNX light."""
 
-    _attr_has_entity_name = True
     _device: XknxLight
 
     def __init__(
         self, knx_module: KNXModule, unique_id: str, config: ConfigType
     ) -> None:
         """Initialize of KNX light."""
-        self._knx_module = knx_module
+        super().__init__(
+            knx_module=knx_module,
+            unique_id=unique_id,
+            entity_config=config[CONF_ENTITY],
+        )
         self._device = _create_ui_light(
             knx_module.xknx, config[DOMAIN], config[CONF_ENTITY][CONF_NAME]
         )
         self._attr_max_color_temp_kelvin: int = config[DOMAIN][CONF_COLOR_TEMP_MAX]
         self._attr_min_color_temp_kelvin: int = config[DOMAIN][CONF_COLOR_TEMP_MIN]
-
-        self._attr_entity_category = config[CONF_ENTITY][CONF_ENTITY_CATEGORY]
-        self._attr_unique_id = unique_id
-        if device_info := config[CONF_ENTITY].get(CONF_DEVICE_INFO):
-            self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, device_info)})
