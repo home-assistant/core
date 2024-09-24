@@ -342,6 +342,7 @@ async def test_migrate_events_context_ids(
 
 @pytest.mark.parametrize("persistent_database", [True])
 @pytest.mark.parametrize("enable_migrate_event_context_ids", [True])
+@pytest.mark.usefixtures("hass_storage")  # Prevent test hass from writing to storage
 async def test_finish_migrate_events_context_ids(
     async_test_recorder: RecorderInstanceGenerator,
 ) -> None:
@@ -651,6 +652,7 @@ async def test_migrate_states_context_ids(
 
 @pytest.mark.parametrize("persistent_database", [True])
 @pytest.mark.parametrize("enable_migrate_state_context_ids", [True])
+@pytest.mark.usefixtures("hass_storage")  # Prevent test hass from writing to storage
 async def test_finish_migrate_states_context_ids(
     async_test_recorder: RecorderInstanceGenerator,
 ) -> None:
