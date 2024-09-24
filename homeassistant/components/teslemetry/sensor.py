@@ -34,7 +34,9 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.variance import ignore_variance
 
 from . import TeslemetryConfigEntry
+from .const import ENERGY_HISTORY_FIELDS
 from .entity import (
+    TeslemetryEnergyHistoryEntity,
     TeslemetryEnergyInfoEntity,
     TeslemetryEnergyLiveEntity,
     TeslemetryVehicleEntity,
@@ -414,6 +416,21 @@ ENERGY_INFO_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(key="version"),
 )
 
+ENERGY_HISTORY_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = tuple(
+    SensorEntityDescription(
+        key=key,
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        suggested_display_precision=2,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=(
+            key.startswith("total") or key == "grid_energy_imported"
+        ),
+    )
+    for key in ENERGY_HISTORY_FIELDS
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -450,6 +467,13 @@ async def async_setup_entry(
                 for energysite in entry.runtime_data.energysites
                 for description in ENERGY_INFO_DESCRIPTIONS
                 if description.key in energysite.info_coordinator.data
+            ),
+            (  # Add energy history sensor
+                TeslemetryEnergyHistorySensorEntity(energysite, description)
+                for energysite in entry.runtime_data.energysites
+                for description in ENERGY_HISTORY_DESCRIPTIONS
+                if energysite.info_coordinator.data.get("components_battery")
+                or energysite.info_coordinator.data.get("components_solar")
             ),
         )
     )
@@ -565,4 +589,23 @@ class TeslemetryEnergyInfoSensorEntity(TeslemetryEnergyInfoEntity, SensorEntity)
     def _async_update_attrs(self) -> None:
         """Update the attributes of the sensor."""
         self._attr_available = not self.is_none
+        self._attr_native_value = self._value
+
+
+class TeslemetryEnergyHistorySensorEntity(TeslemetryEnergyHistoryEntity, SensorEntity):
+    """Base class for Tesla Fleet energy site metric sensors."""
+
+    entity_description: SensorEntityDescription
+
+    def __init__(
+        self,
+        data: TeslemetryEnergyData,
+        description: SensorEntityDescription,
+    ) -> None:
+        """Initialize the sensor."""
+        self.entity_description = description
+        super().__init__(data, description.key)
+
+    def _async_update_attrs(self) -> None:
+        """Update the attributes of the sensor."""
         self._attr_native_value = self._value

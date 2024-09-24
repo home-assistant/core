@@ -23,6 +23,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, LOGGER, MODELS
 from .coordinator import (
+    TeslemetryEnergyHistoryCoordinator,
     TeslemetryEnergySiteInfoCoordinator,
     TeslemetryEnergySiteLiveCoordinator,
     TeslemetryVehicleDataCoordinator,
@@ -120,8 +121,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
                 continue
 
             api = EnergySpecific(teslemetry.energy, site_id)
-            live_coordinator = TeslemetryEnergySiteLiveCoordinator(hass, api)
-            info_coordinator = TeslemetryEnergySiteInfoCoordinator(hass, api, product)
             device = DeviceInfo(
                 identifiers={(DOMAIN, str(site_id))},
                 manufacturer="Tesla",
@@ -133,8 +132,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
             energysites.append(
                 TeslemetryEnergyData(
                     api=api,
-                    live_coordinator=live_coordinator,
-                    info_coordinator=info_coordinator,
+                    live_coordinator=TeslemetryEnergySiteLiveCoordinator(hass, api),
+                    info_coordinator=TeslemetryEnergySiteInfoCoordinator(
+                        hass, api, product
+                    ),
+                    history_coordinator=TeslemetryEnergyHistoryCoordinator(hass, api),
                     id=site_id,
                     device=device,
                 )
@@ -152,6 +154,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
         ),
         *(
             energysite.info_coordinator.async_config_entry_first_refresh()
+            for energysite in energysites
+        ),
+        *(
+            energysite.history_coordinator.async_config_entry_first_refresh()
             for energysite in energysites
         ),
     )
