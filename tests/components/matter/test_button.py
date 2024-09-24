@@ -21,6 +21,16 @@ async def powerplug_node_fixture(
     )
 
 
+@pytest.fixture(name="dishwasher_node")
+async def dishwasher_node_fixture(
+    hass: HomeAssistant, matter_client: MagicMock
+) -> MatterNode:
+    """Fixture for an dishwasher node."""
+    return await setup_integration_with_node_fixture(
+        hass, "silabs-dishwasher", matter_client
+    )
+
+
 # This tests needs to be adjusted to remove lingering tasks
 @pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_identify_button(
@@ -46,4 +56,32 @@ async def test_identify_button(
         node_id=powerplug_node.node_id,
         endpoint_id=1,
         command=clusters.Identify.Commands.Identify(identifyTime=15),
+    )
+
+
+async def test_operational_state_buttons(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    dishwasher_node: MatterNode,
+) -> None:
+    """Test if button entities are created for operational state commands."""
+    assert hass.states.get("button.dishwasher_pause")
+    assert hass.states.get("button.dishwasher_resume")
+    assert hass.states.get("button.dishwasher_start")
+    assert hass.states.get("button.dishwasher_stop")
+
+    # test press action
+    await hass.services.async_call(
+        "button",
+        "press",
+        {
+            "entity_id": "button.dishwasher_pause",
+        },
+        blocking=True,
+    )
+    assert matter_client.send_device_command.call_count == 1
+    assert matter_client.send_device_command.call_args == call(
+        node_id=dishwasher_node.node_id,
+        endpoint_id=1,
+        command=clusters.OperationalState.Commands.Pause(),
     )
