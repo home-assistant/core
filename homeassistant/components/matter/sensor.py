@@ -72,15 +72,6 @@ OPERATIONAL_STATE_MAP = {
 }
 
 
-OPERATIONAL_STATE_MAP = {
-    # enum with known Operation state values which we can translate
-    clusters.OperationalState.Enums.OperationalStateEnum.kStopped: "stopped",
-    clusters.OperationalState.Enums.OperationalStateEnum.kRunning: "running",
-    clusters.OperationalState.Enums.OperationalStateEnum.kPaused: "paused",
-    clusters.OperationalState.Enums.OperationalStateEnum.kError: "error",
-}
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
