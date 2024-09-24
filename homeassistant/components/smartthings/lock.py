@@ -15,6 +15,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DATA_BROKERS, DOMAIN
 from .entity import SmartThingsEntity
 
+ST_STATE_LOCKED = "locked"
 ST_LOCK_ATTR_MAP = {
     "codeId": "code_id",
     "codeName": "code_name",
