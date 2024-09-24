@@ -1,19 +1,21 @@
-"""Matter Button Inputs for Identify function."""
+"""Matter Button platform."""
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
+from typing import Any
 
 from chip.clusters import Objects as clusters
 
 from homeassistant.components.button import (
+    ButtonDeviceClass,
     ButtonEntity,
     ButtonEntityDescription,
-    ButtonDeviceClass,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory, Platform
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .entity import MatterEntity, MatterEntityDescription
@@ -26,7 +28,7 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up Matter Button"""
+    """Set up Matter Button platform."""
     matter = get_matter(hass)
     matter.register_platform_handler(Platform.BUTTON, async_add_entities)
 
@@ -35,22 +37,21 @@ async def async_setup_entry(
 class MatterButtonEntityDescription(ButtonEntityDescription, MatterEntityDescription):
     """Describe Matter Button entities."""
 
+    command: Callable[[], Any]
 
-class MatterIdentifyButton(MatterEntity, ButtonEntity):
-    """Representation of a Matter Identify Command as a Button entity."""
+
+class MatterCommandButton(MatterEntity, ButtonEntity):
+    """Representation of a Matter Button entity."""
 
     entity_description: MatterButtonEntityDescription
 
     async def async_press(self) -> None:
-        """Handle the Idnetify button press"""
+        """Handle the button press leveraging a Matter command."""
         await self.matter_client.send_device_command(
             node_id=self._endpoint.node.node_id,
             endpoint_id=self._endpoint.endpoint_id,
-            command=clusters.Identify.Commands.Identify(identifyTime=15),
+            command=self.entity_description.command(),
         )
-    @callback
-    def _update_from_device(self) -> None:
-        """Update from device."""
 
 
 # Discovery schema(s) to map Matter Attributes to HA entities
@@ -58,11 +59,12 @@ DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.BUTTON,
         entity_description=MatterButtonEntityDescription(
-            key="identify",
+            key="IdentifyButton",
             entity_category=EntityCategory.CONFIG,
             device_class=ButtonDeviceClass.IDENTIFY,
+            command=lambda: clusters.Identify.Commands.Identify(identifyTime=15),
         ),
-        entity_class=MatterIdentifyButton,
+        entity_class=MatterCommandButton,
         required_attributes=(clusters.Identify.Attributes.IdentifyTime,),
     ),
 ]
