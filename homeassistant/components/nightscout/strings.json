@@ -7,7 +7,7 @@
         "data": {
           "url": "[%key:common::config_flow::data::url%]",
           "api_key": "[%key:common::config_flow::data::api_key%]",
-          "unit_type": "[%key:common::config_flow::data::units%]"
+          "unit_type": "[%key:common::config_flow::data::unit_of_measurement%]"
         }
       }
     },
