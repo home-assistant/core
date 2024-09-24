@@ -418,7 +418,7 @@ async def test_climate_noscope(
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize(
-    ("entity_id", "high", "low"),
+    ("entity_id", "low", "high"),
     [
         ("climate.test_climate", 16, 28),
         ("climate.test_cabin_overheat_protection", 30, 40),
