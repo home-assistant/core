@@ -795,8 +795,8 @@ class Thermostat(ClimateEntity):
             if sensor_registry and sensor_registry.name:
                 sensor_names.append(sensor_registry.name)
 
-        # Ensure sensors provided are available for thermostat.
-        if not set(sensor_names).issubset(set(self._sensors)):
+        # Ensure sensors provided are available for thermostat or not empty.
+        if not set(sensor_names).issubset(set(self._sensors)) or not sensor_names:
             msg = f"Invalid sensor for thermostat, available options are: {', '.join(self._sensors)}"
             raise ServiceValidationError(msg)
 

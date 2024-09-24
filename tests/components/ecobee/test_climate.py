@@ -16,6 +16,7 @@ from homeassistant.components.ecobee.climate import (
 from homeassistant.components.ecobee.const import DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES, STATE_OFF
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import device_registry as dr
 
 from .common import setup_platform
@@ -422,7 +423,7 @@ async def test_remote_sensors(hass: HomeAssistant) -> None:
 async def test_set_sensors_used_in_climate(hass: HomeAssistant) -> None:
     """Test set sensors used in climate."""
     with mock.patch("pyecobee.Ecobee.update_climate_sensors") as mock_sensors:
-        await setup_platform(hass, const.Platform.CLIMATE)
+        await setup_platform(hass, [const.Platform.CLIMATE, const.Platform.SENSOR])
 
         # Get device_id of remote sensor from the device registry.
         device_registry = dr.async_get(hass)
@@ -442,3 +443,29 @@ async def test_set_sensors_used_in_climate(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
         mock_sensors.assert_called_once_with(0, "Climate1", ["Remote Sensor 1"])
+
+        # Error raised because invalid climate name.
+        with pytest.raises(ServiceValidationError):
+            await hass.services.async_call(
+                DOMAIN,
+                "set_sensors_used_in_climate",
+                {
+                    ATTR_ENTITY_ID: ENTITY_ID,
+                    ATTR_PRESET_MODE: "InvalidClimate",
+                    ATTR_SENSOR_LIST: [device_id],
+                },
+                blocking=True,
+            )
+
+        # Error raised because invalid sensor.
+        with pytest.raises(ServiceValidationError):
+            await hass.services.async_call(
+                DOMAIN,
+                "set_sensors_used_in_climate",
+                {
+                    ATTR_ENTITY_ID: ENTITY_ID,
+                    ATTR_PRESET_MODE: "Climate1",
+                    ATTR_SENSOR_LIST: ["abcd"],
+                },
+                blocking=True,
+            )
