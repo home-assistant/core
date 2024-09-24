@@ -38,6 +38,26 @@
         }
       }
     },
+    "button": {
+      "boombox": {
+        "default": "mdi:volume-high"
+      },
+      "enable_keyless_driving": {
+        "default": "mdi:car-key"
+      },
+      "flash_lights": {
+        "default": "mdi:flashlight"
+      },
+      "homelink": {
+        "default": "mdi:garage"
+      },
+      "honk": {
+        "default": "mdi:bullhorn"
+      },
+      "wake": {
+        "default": "mdi:sleep-off"
+      }
+    },
     "climate": {
       "driver_temp": {
         "state_attributes": {
@@ -63,6 +83,17 @@
       },
       "route": {
         "default": "mdi:routes"
+      }
+    },
+    "lock": {
+      "charge_state_charge_port_latch": {
+        "default": "mdi:ev-plug-tesla"
+      },
+      "vehicle_state_locked": {
+        "state": {
+          "locked": "mdi:car-door-lock",
+          "unlocked": "mdi:car-door-lock-open"
+        }
       }
     },
     "select": {

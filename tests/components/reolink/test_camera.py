@@ -43,6 +43,8 @@ async def test_camera(
     # check getting the stream source
     assert await async_get_stream_source(hass, entity_id) is not None
 
+    reolink_connect.get_snapshot.reset_mock(side_effect=True)
+
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_camera_no_stream_source(
