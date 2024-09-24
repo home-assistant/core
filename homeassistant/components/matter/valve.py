@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from chip.clusters import Objects as clusters
+from matter_server.client.models import device_types
 
 from homeassistant.components.valve import (
     ValveDeviceClass,
@@ -24,9 +25,6 @@ ValveConfigurationAndControlFeature = (
 )
 
 ValveStateEnum = clusters.ValveConfigurationAndControl.Enums.ValveStateEnum
-
-# The MASK used for extracting bits 0 to 1 of the byte.
-CURRENT_STATE_MASK = 0b11
 
 
 async def async_setup_entry(
@@ -155,5 +153,6 @@ DISCOVERY_SCHEMAS = [
         optional_attributes=(
             clusters.ValveConfigurationAndControl.Attributes.CurrentLevel,
         ),
+        device_type=(device_types.WaterValve,),
     ),
 ]
