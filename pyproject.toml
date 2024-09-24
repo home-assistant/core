@@ -61,7 +61,7 @@ dependencies    = [
     "python-slugify==8.0.4",
     "PyYAML==6.0.2",
     "requests==2.32.3",
-    "SQLAlchemy==2.0.31",
+    "SQLAlchemy==2.0.35",
     "typing-extensions>=4.12.2,<5.0",
     "ulid-transform==1.0.2",
     # Constrain urllib3 to ensure we deal with CVE-2020-26137 and CVE-2021-33503

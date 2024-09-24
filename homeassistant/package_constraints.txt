@@ -55,7 +55,7 @@ PyTurboJPEG==1.7.5
 pyudev==0.24.1
 PyYAML==6.0.2
 requests==2.32.3
-SQLAlchemy==2.0.31
+SQLAlchemy==2.0.35
 typing-extensions>=4.12.2,<5.0
 ulid-transform==1.0.2
 urllib3>=1.26.5,<2
