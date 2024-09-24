@@ -38,7 +38,29 @@
         "name": "Discount only"
       },
       "list_language": {
-        "name": "Language"
+        "name": "Region & language",
+        "state": {
+          "de-at": "Austria",
+          "de-ch": "Switzerland (German)",
+          "de-de": "Germany",
+          "en-au": "Australia",
+          "en-ca": "Canada",
+          "en-gb": "United Kingdom",
+          "en-us": "United States",
+          "es-es": "Spain",
+          "fr-ch": "Switzerland (French)",
+          "fr-fr": "France",
+          "hu-hu": "Hungary",
+          "it-ch": "Switzerland (Italian)",
+          "it-it": "Italy",
+          "nb-no": "Norway",
+          "nl-nl": "Netherlands",
+          "pl-pl": "Poland",
+          "pt-br": "Portugal",
+          "ru-ru": "Russia",
+          "sv-se": "Sweden",
+          "tr-tr": "Turkey"
+        }
       }
     }
   },

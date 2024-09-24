@@ -11,7 +11,7 @@
         "default": "mdi:fridge-outline"
       },
       "list_language": {
-        "default": "mdi:translate"
+        "default": "mdi:earth"
       }
     },
     "todo": {

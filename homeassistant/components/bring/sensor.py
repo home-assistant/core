@@ -60,9 +60,13 @@ SENSOR_DESCRIPTIONS: tuple[BringSensorEntityDescription, ...] = (
     BringSensorEntityDescription(
         key=BringSensor.LIST_LANGUAGE,
         translation_key=BringSensor.LIST_LANGUAGE,
-        value_fn=(lambda lst, settings: list_language(lst["listUuid"], settings)),
+        value_fn=(
+            lambda lst, settings: x.lower()
+            if (x := list_language(lst["listUuid"], settings))
+            else None
+        ),
         entity_category=EntityCategory.DIAGNOSTIC,
-        options=BRING_SUPPORTED_LOCALES,
+        options=[x.lower() for x in BRING_SUPPORTED_LOCALES],
         device_class=SensorDeviceClass.ENUM,
     ),
 )
