@@ -5,6 +5,20 @@
         "default": "mdi:bell-off"
       }
     },
+    "button": {
+      "pause": {
+        "default": "mdi:pause"
+      },
+      "resume": {
+        "default": "mdi:play-pause"
+      },
+      "start": {
+        "default": "mdi:play"
+      },
+      "stop": {
+        "default": "mdi:stop"
+      }
+    },
     "fan": {
       "fan": {
         "state_attributes": {
