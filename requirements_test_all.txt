@@ -103,7 +103,7 @@ PyXiaomiGateway==0.14.3
 RachioPy==1.1.0
 
 # homeassistant.components.python_script
-RestrictedPython==7.0
+RestrictedPython==7.2
 
 # homeassistant.components.remember_the_milk
 RtmAPI==0.7.2
@@ -186,7 +186,7 @@ aioaseko==1.0.0
 aioasuswrt==1.4.0
 
 # homeassistant.components.husqvarna_automower
-aioautomower==2024.9.1
+aioautomower==2024.9.2
 
 # homeassistant.components.azure_devops
 aioazuredevops==2.2.1
@@ -338,7 +338,7 @@ aioridwell==2024.01.0
 aioruckus==0.41
 
 # homeassistant.components.russound_rio
-aiorussound==3.0.5
+aiorussound==3.1.5
 
 # homeassistant.components.ruuvi_gateway
 aioruuvigateway==0.1.0
@@ -548,7 +548,7 @@ boschshcpy==0.2.91
 botocore==1.34.131
 
 # homeassistant.components.bring
-bring-api==0.8.1
+bring-api==0.9.0
 
 # homeassistant.components.broadlink
 broadlink==0.19.0
@@ -569,7 +569,7 @@ bthome-ble==3.9.1
 buienradar==1.0.6
 
 # homeassistant.components.dhcp
-cached-ipaddress==0.5.0
+cached-ipaddress==0.6.0
 
 # homeassistant.components.caldav
 caldav==1.3.9
@@ -1229,7 +1229,7 @@ numato-gpio==0.13.0
 # homeassistant.components.stream
 # homeassistant.components.tensorflow
 # homeassistant.components.trend
-numpy==1.26.0
+numpy==1.26.4
 
 # homeassistant.components.nyt_games
 nyt_games==0.4.0
@@ -1589,7 +1589,7 @@ pyiss==1.0.1
 pyisy==3.1.14
 
 # homeassistant.components.jvc_projector
-pyjvcprojector==1.1.0
+pyjvcprojector==1.1.2
 
 # homeassistant.components.kaleidescape
 pykaleidescape==1.0.1
@@ -1711,7 +1711,7 @@ pyotgw==2.2.0
 pyotp==2.8.0
 
 # homeassistant.components.overkiz
-pyoverkiz==1.13.14
+pyoverkiz==1.14.1
 
 # homeassistant.components.onewire
 pyownet==0.10.0.post1
@@ -1867,7 +1867,7 @@ python-kasa[speedups]==0.7.3
 python-linkplay==0.0.9
 
 # homeassistant.components.matter
-python-matter-server==6.3.0
+python-matter-server==6.5.2
 
 # homeassistant.components.xiaomi_miio
 python-miio==0.5.12
@@ -2378,7 +2378,7 @@ xbox-webapi==2.0.11
 xiaomi-ble==0.32.0
 
 # homeassistant.components.knx
-xknx==3.1.1
+xknx==3.2.0
 
 # homeassistant.components.knx
 xknxproject==3.7.1

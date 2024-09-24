@@ -11,8 +11,8 @@
         'name': 'AEMET',
       }),
       'disabled_by': None,
-      'discovery_keys': list([
-      ]),
+      'discovery_keys': dict({
+      }),
       'domain': 'aemet',
       'entry_id': '7442b231f139e813fc1939281123f220',
       'minor_version': 1,

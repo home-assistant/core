@@ -4,7 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
-from homeassistant.components.device_tracker import SourceType, TrackerEntity
+from homeassistant.components.device_tracker import TrackerEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityDescription
@@ -28,7 +28,9 @@ async def async_setup_entry(
 
 
 @dataclass(frozen=True, kw_only=True)
-class StarlinkDeviceTrackerEntityDescription(EntityDescription):
+class StarlinkDeviceTrackerEntityDescription(  # pylint: disable=hass-enforce-class-module
+    EntityDescription
+):
     """Describes a Starlink button entity."""
 
     latitude_fn: Callable[[StarlinkData], float]
@@ -52,11 +54,6 @@ class StarlinkDeviceTrackerEntity(StarlinkEntity, TrackerEntity):
     """A TrackerEntity for Starlink devices. Handles creating unique IDs."""
 
     entity_description: StarlinkDeviceTrackerEntityDescription
-
-    @property
-    def source_type(self) -> SourceType | str:
-        """Return the source type, eg gps or router, of the device."""
-        return SourceType.GPS
 
     @property
     def latitude(self) -> float | None:

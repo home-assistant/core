@@ -20,8 +20,8 @@
         'domain': 'example.com',
       }),
       'disabled_by': None,
-      'discovery_keys': tuple(
-      ),
+      'discovery_keys': dict({
+      }),
       'domain': 'whois',
       'entry_id': <ANY>,
       'minor_version': 1,
@@ -60,8 +60,8 @@
         'domain': 'example.com',
       }),
       'disabled_by': None,
-      'discovery_keys': tuple(
-      ),
+      'discovery_keys': dict({
+      }),
       'domain': 'whois',
       'entry_id': <ANY>,
       'minor_version': 1,
@@ -100,8 +100,8 @@
         'domain': 'example.com',
       }),
       'disabled_by': None,
-      'discovery_keys': tuple(
-      ),
+      'discovery_keys': dict({
+      }),
       'domain': 'whois',
       'entry_id': <ANY>,
       'minor_version': 1,
@@ -140,8 +140,8 @@
         'domain': 'example.com',
       }),
       'disabled_by': None,
-      'discovery_keys': tuple(
-      ),
+      'discovery_keys': dict({
+      }),
       'domain': 'whois',
       'entry_id': <ANY>,
       'minor_version': 1,
@@ -180,8 +180,8 @@
         'domain': 'example.com',
       }),
       'disabled_by': None,
-      'discovery_keys': tuple(
-      ),
+      'discovery_keys': dict({
+      }),
       'domain': 'whois',
       'entry_id': <ANY>,
       'minor_version': 1,

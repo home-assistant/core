@@ -92,7 +92,7 @@ class EsphomeAssistInProgressBinarySensor(EsphomeAssistEntity, BinarySensorEntit
             self.hass,
             DOMAIN,
             f"assist_in_progress_deprecated_{self.registry_entry.id}",
-            breaks_in_ha_version="2025.3",
+            breaks_in_ha_version="2025.4",
             data={
                 "entity_id": self.entity_id,
                 "entity_uuid": self.registry_entry.id,

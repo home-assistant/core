@@ -1326,11 +1326,11 @@ async def test_disable_entry_nonexisting(
     [
         (
             {},
-            (),
+            {},
         ),
         (
             {"discovery_key": DiscoveryKey(domain="test", key="blah", version=1)},
-            (DiscoveryKey(domain="test", key="blah", version=1),),
+            {"test": (DiscoveryKey(domain="test", key="blah", version=1),)},
         ),
     ],
 )
