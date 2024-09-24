@@ -42,7 +42,7 @@
       "load_balancing_mode": {
         "name": "Load balancing mode",
         "state": {
-          "disabled": "Disabled",
+          "disabled": "[%key:common::state::disabled%]",
           "power": "Power",
           "hybrid": "Hybrid",
           "green": "Green"
