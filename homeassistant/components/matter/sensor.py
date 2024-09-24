@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import datetime
 
 from chip.clusters import Objects as clusters
 from chip.clusters.Types import Nullable, NullValue
@@ -48,8 +49,15 @@ AIR_QUALITY_MAP = {
     clusters.AirQuality.Enums.AirQualityEnum.kFair: "fair",
     clusters.AirQuality.Enums.AirQualityEnum.kGood: "good",
     clusters.AirQuality.Enums.AirQualityEnum.kModerate: "moderate",
-    clusters.AirQuality.Enums.AirQualityEnum.kUnknown: "unknown",
-    clusters.AirQuality.Enums.AirQualityEnum.kUnknownEnumValue: "unknown",
+    clusters.AirQuality.Enums.AirQualityEnum.kUnknown: None,
+    clusters.AirQuality.Enums.AirQualityEnum.kUnknownEnumValue: None,
+}
+
+CONTAMINATION_STATE_MAP = {
+    clusters.SmokeCoAlarm.Enums.ContaminationStateEnum.kNormal: "normal",
+    clusters.SmokeCoAlarm.Enums.ContaminationStateEnum.kLow: "low",
+    clusters.SmokeCoAlarm.Enums.ContaminationStateEnum.kWarning: "warning",
+    clusters.SmokeCoAlarm.Enums.ContaminationStateEnum.kCritical: "critical",
 }
 
 
@@ -235,6 +243,28 @@ DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
         entity_description=MatterSensorEntityDescription(
+            key="EveThermoValvePosition",
+            translation_key="valve_position",
+            native_unit_of_measurement=PERCENTAGE,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(EveCluster.Attributes.ValvePosition,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="EveWeatherPressure",
+            device_class=SensorDeviceClass.PRESSURE,
+            native_unit_of_measurement=UnitOfPressure.HPA,
+            suggested_display_precision=1,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(EveCluster.Attributes.Pressure,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
             key="CarbonDioxideSensor",
             native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
             device_class=SensorDeviceClass.CO2,
@@ -305,9 +335,8 @@ DISCOVERY_SCHEMAS = [
             device_class=SensorDeviceClass.ENUM,
             state_class=None,
             # convert to set first to remove the duplicate unknown value
-            options=list(set(AIR_QUALITY_MAP.values())),
+            options=[x for x in AIR_QUALITY_MAP.values() if x is not None],
             measurement_to_ha=lambda x: AIR_QUALITY_MAP[x],
-            icon="mdi:air-filter",
         ),
         entity_class=MatterSensor,
         required_attributes=(clusters.AirQuality.Attributes.AirQuality,),
@@ -359,7 +388,6 @@ DISCOVERY_SCHEMAS = [
             device_class=None,
             state_class=SensorStateClass.MEASUREMENT,
             translation_key="hepa_filter_condition",
-            icon="mdi:filter-check",
         ),
         entity_class=MatterSensor,
         required_attributes=(clusters.HepaFilterMonitoring.Attributes.Condition,),
@@ -372,7 +400,6 @@ DISCOVERY_SCHEMAS = [
             device_class=None,
             state_class=SensorStateClass.MEASUREMENT,
             translation_key="activated_carbon_filter_condition",
-            icon="mdi:filter-check",
         ),
         entity_class=MatterSensor,
         required_attributes=(
@@ -548,5 +575,30 @@ DISCOVERY_SCHEMAS = [
         required_attributes=(
             clusters.ElectricalEnergyMeasurement.Attributes.CumulativeEnergyImported,
         ),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="SmokeCOAlarmContaminationState",
+            translation_key="contamination_state",
+            device_class=SensorDeviceClass.ENUM,
+            # convert to set first to remove the duplicate unknown value
+            options=list(set(CONTAMINATION_STATE_MAP.values())),
+            measurement_to_ha=CONTAMINATION_STATE_MAP.get,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(clusters.SmokeCoAlarm.Attributes.ContaminationState,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="SmokeCOAlarmExpiryDate",
+            translation_key="expiry_date",
+            device_class=SensorDeviceClass.TIMESTAMP,
+            # raw value is epoch seconds
+            measurement_to_ha=datetime.fromtimestamp,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(clusters.SmokeCoAlarm.Attributes.ExpiryDate,),
     ),
 ]

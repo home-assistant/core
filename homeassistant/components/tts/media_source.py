@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import mimetypes
 from typing import TypedDict
 
@@ -21,6 +22,8 @@ from homeassistant.exceptions import HomeAssistantError
 
 from .const import DATA_TTS_MANAGER, DOMAIN, DOMAIN_DATA
 from .helper import get_engine_instance
+
+URL_QUERY_TTS_OPTIONS = "tts_options"
 
 
 async def async_get_media_source(hass: HomeAssistant) -> TTSMediaSource:
@@ -55,8 +58,7 @@ def generate_media_source_id(
         params["cache"] = "true" if cache else "false"
     if language is not None:
         params["language"] = language
-    if options is not None:
-        params.update(options)
+    params[URL_QUERY_TTS_OPTIONS] = json.dumps(options, separators=(",", ":"))
 
     return ms_generate_media_source_id(
         DOMAIN,
@@ -78,19 +80,28 @@ class MediaSourceOptions(TypedDict):
 def media_source_id_to_kwargs(media_source_id: str) -> MediaSourceOptions:
     """Turn a media source ID into options."""
     parsed = URL(media_source_id)
+    if URL_QUERY_TTS_OPTIONS in parsed.query:
+        try:
+            options = json.loads(parsed.query[URL_QUERY_TTS_OPTIONS])
+        except json.JSONDecodeError as err:
+            raise Unresolvable(f"Invalid TTS options: {err.msg}") from err
+    else:
+        options = {
+            k: v
+            for k, v in parsed.query.items()
+            if k not in ("message", "language", "cache")
+        }
     if "message" not in parsed.query:
         raise Unresolvable("No message specified.")
-
-    options = dict(parsed.query)
     kwargs: MediaSourceOptions = {
         "engine": parsed.name,
-        "message": options.pop("message"),
-        "language": options.pop("language", None),
+        "message": parsed.query["message"],
+        "language": parsed.query.get("language"),
         "options": options,
         "cache": None,
     }
-    if "cache" in options:
-        kwargs["cache"] = options.pop("cache") == "true"
+    if "cache" in parsed.query:
+        kwargs["cache"] = parsed.query["cache"] == "true"
 
     return kwargs
 
@@ -111,6 +122,8 @@ class TTSMediaSource(MediaSource):
             url = await self.hass.data[DATA_TTS_MANAGER].async_get_url_path(
                 **media_source_id_to_kwargs(item.identifier)
             )
+        except Unresolvable:
+            raise
         except HomeAssistantError as err:
             raise Unresolvable(str(err)) from err
 

@@ -171,6 +171,17 @@ def mock_client_api(
     mock_api.list_albums.return_value.__aiter__ = list_albums
     mock_api.list_albums.return_value.__anext__ = list_albums
     mock_api.list_albums.side_effect = api_error
+
+    # Mock a point lookup by reading contents of the album fixture above
+    async def get_album(album_id: str, **kwargs: Any) -> Mock:
+        for album in load_json_object_fixture("list_albums.json", DOMAIN)["albums"]:
+            if album["id"] == album_id:
+                return Album.from_dict(album)
+        return None
+
+    mock_api.get_album = get_album
+    mock_api.get_album.side_effect = api_error
+
     return mock_api
 
 
