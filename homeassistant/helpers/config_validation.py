@@ -1781,10 +1781,7 @@ def _backward_compat_trigger_schema(value: Any | None) -> Any:
     response = copy(value)
 
     # `platform` has been renamed to `trigger`
-    if CONF_PLATFORM in value:
-        response[CONF_TRIGGER] = value[CONF_PLATFORM]
-    elif CONF_TRIGGER in value:
-        # We should still support the old `platform` key
+    if CONF_TRIGGER in value:
         response[CONF_PLATFORM] = value[CONF_TRIGGER]
 
     return response
