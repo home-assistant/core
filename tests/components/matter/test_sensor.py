@@ -403,6 +403,26 @@ async def test_eve_thermo_sensor(
     assert state.state == "0"
 
 
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
+async def test_pressure_sensor(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    pressure_sensor_node: MatterNode,
+) -> None:
+    """Test pressure sensor."""
+    state = hass.states.get("sensor.mock_pressure_sensor_pressure")
+    assert state
+    assert state.state == "0.0"
+
+    set_node_attribute(pressure_sensor_node, 1, 1027, 0, 1010)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("sensor.mock_pressure_sensor_pressure")
+    assert state
+    assert state.state == "101.0"
+
+
 async def test_eve_weather_sensor_custom_cluster(
     hass: HomeAssistant,
     matter_client: MagicMock,
