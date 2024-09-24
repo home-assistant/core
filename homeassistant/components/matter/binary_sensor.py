@@ -161,4 +161,15 @@ DISCOVERY_SCHEMAS = [
         entity_class=MatterBinarySensor,
         required_attributes=(clusters.DoorLock.Attributes.DoorState,),
     ),
+    MatterDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        entity_description=MatterBinarySensorEntityDescription(
+            key="SmokeCoAlarmDeviceMutedSensor",
+            measurement_to_ha=lambda x: x
+            == clusters.SmokeCoAlarm.Enums.MuteStateEnum.kMuted,
+            translation_key="muted",
+        ),
+        entity_class=MatterBinarySensor,
+        required_attributes=(clusters.SmokeCoAlarm.Attributes.DeviceMuted,),
+    ),
 ]

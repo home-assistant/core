@@ -54,6 +54,9 @@
       },
       "rain": {
         "name": "Rain"
+      },
+      "muted": {
+        "name": "Muted"
       }
     },
     "climate": {
