@@ -135,7 +135,7 @@ def _create_climate(xknx: XKNX, config: ConfigType) -> XknxClimate:
         group_address_fan_speed_state=config.get(
             ClimateSchema.CONF_FAN_SPEED_STATE_ADDRESS
         ),
-        fan_speed_mode=config.get(ClimateSchema.CONF_FAN_SPEED_MODE),
+        fan_speed_mode=config[ClimateSchema.CONF_FAN_SPEED_MODE],
     )
 
 
@@ -181,7 +181,7 @@ class KNXClimate(KnxYamlEntity, ClimateEntity):
         self._fan_modes_percentages = [
             int(100 * i / fan_max_step) for i in range(fan_max_step + 1)
         ]
-        self.fan_zero_mode = config[ClimateSchema.CONF_FAN_ZERO_MODE]
+        self.fan_zero_mode: str = config[ClimateSchema.CONF_FAN_ZERO_MODE]
 
         if self._device.fan_speed is not None and self._device.fan_speed.initialized:
             self._attr_supported_features |= ClimateEntityFeature.FAN_MODE
