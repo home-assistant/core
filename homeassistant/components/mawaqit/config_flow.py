@@ -15,7 +15,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_USERNAME,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.storage import Store
 
 from . import mawaqit_wrapper, utils
@@ -66,7 +66,7 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         # if the data folder is empty, we can continue the configuration
         # otherwise, we abort the configuration because that means that the user has already configured an entry.
-        if is_another_instance():
+        if await is_another_instance(self.hass, self.store):
             # return self.async_abort(reason="one_instance_allowed")
             return await self._show_keep_or_reset_form()
 
@@ -99,11 +99,11 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             except NoMosqueAround:
                 return self.async_abort(reason="no_mosque")
 
-            await write_all_mosques_NN_file(nearest_mosques, self.hass)
+            await write_all_mosques_NN_file(nearest_mosques, self.store)
 
             # creation of the list of mosques to be displayed in the options
             name_servers, uuid_servers, CALC_METHODS = await read_all_mosques_NN_file(
-                self.hass
+                self.store
             )
 
             await utils.async_write_in_data(
@@ -131,7 +131,7 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             name_servers, uuid_servers, CALC_METHODS = await read_all_mosques_NN_file(
-                self.hass
+                self.store
             )
 
             mosque = user_input[CONF_UUID]
@@ -142,10 +142,14 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 lat, longi, token=mawaqit_token
             )
 
-            await write_my_mosque_NN_file(nearest_mosques[index], self.hass)
+            await write_my_mosque_NN_file(nearest_mosques[index], self.store)
 
             await utils.update_my_mosque_data_files(
-                self.hass, CURRENT_DIR, mosque_id=mosque_id, token=mawaqit_token
+                self.hass,
+                CURRENT_DIR,
+                self.store,
+                mosque_id=mosque_id,
+                token=mawaqit_token,
             )
 
             title = "MAWAQIT" + " - " + nearest_mosques[index]["name"]
@@ -191,10 +195,10 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             lat, longi, token=mawaqit_token
         )
 
-        await write_all_mosques_NN_file(nearest_mosques, self.hass)
+        await write_all_mosques_NN_file(nearest_mosques, self.store)
 
         name_servers, uuid_servers, CALC_METHODS = await read_all_mosques_NN_file(
-            self.hass
+            self.store
         )
 
         return self.async_show_form(
@@ -273,7 +277,7 @@ class MawaqitPrayerOptionsFlowHandler(config_entries.OptionsFlow):
             longi = self.hass.config.longitude
 
             name_servers, uuid_servers, CALC_METHODS = await read_all_mosques_NN_file(
-                self.hass
+                self.store
             )
 
             mosque = user_input[CONF_CALC_METHOD]
@@ -289,10 +293,14 @@ class MawaqitPrayerOptionsFlowHandler(config_entries.OptionsFlow):
             except NoMosqueAround as err:
                 raise NoMosqueAround("No mosque around.") from err
 
-            await write_my_mosque_NN_file(nearest_mosques[index], self.hass)
+            await write_my_mosque_NN_file(nearest_mosques[index], self.store)
 
             await utils.update_my_mosque_data_files(
-                self.hass, CURRENT_DIR, mosque_id=mosque_id, token=mawaqit_token
+                self.hass,
+                CURRENT_DIR,
+                self.store,
+                mosque_id=mosque_id,
+                token=mawaqit_token,
             )
 
             title_entry = "MAWAQIT" + " - " + nearest_mosques[index]["name"]
@@ -320,13 +328,13 @@ class MawaqitPrayerOptionsFlowHandler(config_entries.OptionsFlow):
             lat, longi, token=mawaqit_token
         )
 
-        await write_all_mosques_NN_file(nearest_mosques, self.hass)
+        await write_all_mosques_NN_file(nearest_mosques, self.store)
 
         name_servers, uuid_servers, CALC_METHODS = await read_all_mosques_NN_file(
-            self.hass
+            self.store
         )
 
-        current_mosque_data = await read_my_mosque_NN_file(self.hass)
+        current_mosque_data = await read_my_mosque_NN_file(self.store)
         current_mosque = current_mosque_data["uuid"]
 
         try:
@@ -350,13 +358,12 @@ class MawaqitPrayerOptionsFlowHandler(config_entries.OptionsFlow):
 #     return await utils.read_mawaqit_token(hass, store)
 
 
-def is_already_configured():
+async def is_already_configured(hass: HomeAssistant, store: Store) -> bool:
     """Check if the mosque configuration file already exists."""
-    return os.path.isfile(f"{CURRENT_DIR}/data/my_mosque_NN.txt")
+    return await utils.read_my_mosque_NN_file(store) is not None
+    # return os.path.isfile(f"{CURRENT_DIR}/data/my_mosque_NN.txt")
 
 
-def is_another_instance() -> bool:
+async def is_another_instance(hass: HomeAssistant, store: Store) -> bool:
     """Check if another instance of the mosque configuration exists."""
-    if is_already_configured():
-        return True
-    return False
+    return await is_already_configured(hass, store)

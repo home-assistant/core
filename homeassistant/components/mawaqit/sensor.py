@@ -8,10 +8,18 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.storage import Store
 import homeassistant.util.dt as dt_util
 
 from . import utils
-from .const import DATA_UPDATED, DOMAIN, PRAYER_TIMES_ICON, SENSOR_TYPES
+from .const import (
+    DATA_UPDATED,
+    DOMAIN,
+    MAWAQIT_STORAGE_KEY,
+    MAWAQIT_STORAGE_VERSION,
+    PRAYER_TIMES_ICON,
+    SENSOR_TYPES,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -174,6 +182,9 @@ class MyMosqueSensor(SensorEntity):
         longitude = self.hass.config.longitude
         self._latitude = latitude
         self._longitude = longitude
+        self.store: Store = Store(
+            self.hass, MAWAQIT_STORAGE_VERSION, MAWAQIT_STORAGE_KEY
+        )
 
     # @Throttle(TIME_BETWEEN_UPDATES)
     async def async_update(self) -> None:
@@ -185,7 +196,7 @@ class MyMosqueSensor(SensorEntity):
         #         return json.load(f)
 
         # data_my_mosque_NN = await self.hass.async_add_executor_job(read)
-        data_my_mosque_NN = await utils.read_my_mosque_NN_file(self.hass)
+        data_my_mosque_NN = await utils.read_my_mosque_NN_file(self.store)
 
         for k, v in data_my_mosque_NN.items():
             if str(k) != "uuid" and str(k) != "id" and str(k) != "slug":

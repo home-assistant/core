@@ -11,32 +11,37 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.storage import Store
 
 from . import mawaqit_wrapper
+from .const import MAWAQIT_ALL_MOSQUES_NN, MAWAQIT_API_KEY_TOKEN, MAWAQIT_MY_MOSQUE_NN
 
 CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
-MAWAQIT_API_KEY_TOKEN = "MAWAQIT_API_KEY"
+
 _LOGGER = logging.getLogger(__name__)
 
 
-async def write_all_mosques_NN_file(mosques, hass: HomeAssistant) -> None:
+async def write_all_mosques_NN_file(mosques, store: Store | None) -> None:
     """Write the mosque data to the 'all_mosques_NN.txt' file."""
 
-    await async_write_in_data(hass, CURRENT_DIR, "all_mosques_NN.txt", mosques)
+    # await async_write_in_data(hass, CURRENT_DIR, "all_mosques_NN.txt", mosques)
+    # store = Store(hass, 1, "mawaqit_all_mosques")
+    await write_one_element(store, MAWAQIT_ALL_MOSQUES_NN, mosques)
 
 
-async def read_my_mosque_NN_file(hass: HomeAssistant):
+async def read_my_mosque_NN_file(store: Store | None):
     """Read the mosque data from the 'my_mosque_NN.txt' file."""
 
-    def read():
-        with open(f"{CURRENT_DIR}/data/my_mosque_NN.txt", encoding="utf-8") as f:
-            return json.load(f)
+    # def read():
+    #     with open(f"{CURRENT_DIR}/data/my_mosque_NN.txt", encoding="utf-8") as f:
+    #         return json.load(f)
 
-    return await hass.async_add_executor_job(read)
+    return await read_one_element(store, MAWAQIT_MY_MOSQUE_NN)
+    # return await hass.async_add_executor_job(read)
 
 
-async def write_my_mosque_NN_file(mosque, hass: HomeAssistant) -> None:
+async def write_my_mosque_NN_file(mosque, store: Store | None) -> None:
     """Write the mosque data to the 'my_mosque_NN.txt' file."""
 
-    await async_write_in_data(hass, CURRENT_DIR, "my_mosque_NN.txt", mosque)
+    # await async_write_in_data(hass, CURRENT_DIR, "my_mosque_NN.txt", mosque)
+    await write_one_element(store, MAWAQIT_MY_MOSQUE_NN, mosque)
 
 
 def create_data_folder() -> None:
@@ -45,27 +50,42 @@ def create_data_folder() -> None:
         os.makedirs(f"{CURRENT_DIR}/data")
 
 
-async def read_all_mosques_NN_file(hass: HomeAssistant):
+async def read_all_mosques_NN_file(store: Store | None):
     """Read the mosque data from the 'all_mosques_NN.txt' file and return lists of names, UUIDs, and calculation methods."""
 
-    def read():
-        name_servers = []
-        uuid_servers = []
-        CALC_METHODS = []
+    # def read():
+    #     name_servers = []
+    #     uuid_servers = []
+    #     CALC_METHODS = []
 
-        with open(f"{CURRENT_DIR}/data/all_mosques_NN.txt", encoding="utf-8") as f:
-            dict_mosques = json.load(f)
-            for mosque in dict_mosques:
-                distance = mosque["proximity"]
-                distance = distance / 1000
-                distance = round(distance, 2)
-                name_servers.extend([mosque["label"] + " (" + str(distance) + "km)"])
-                uuid_servers.extend([mosque["uuid"]])
-                CALC_METHODS.extend([mosque["label"]])
+    #     with open(f"{CURRENT_DIR}/data/all_mosques_NN.txt", encoding="utf-8") as f:
+    #         dict_mosques = json.load(f)
+    #         for mosque in dict_mosques:
+    #             distance = mosque["proximity"]
+    #             distance = distance / 1000
+    #             distance = round(distance, 2)
+    #             name_servers.extend([mosque["label"] + " (" + str(distance) + "km)"])
+    #             uuid_servers.extend([mosque["uuid"]])
+    #             CALC_METHODS.extend([mosque["label"]])
 
-        return name_servers, uuid_servers, CALC_METHODS
+    #     return name_servers, uuid_servers, CALC_METHODS
 
-    return await hass.async_add_executor_job(read)
+    # return await hass.async_add_executor_job(read)
+
+    name_servers = []
+    uuid_servers = []
+    CALC_METHODS = []
+
+    dict_mosques = await read_one_element(store, MAWAQIT_ALL_MOSQUES_NN)
+    for mosque in dict_mosques:
+        distance = mosque["proximity"]
+        distance = distance / 1000
+        distance = round(distance, 2)
+        name_servers.extend([mosque["label"] + " (" + str(distance) + "km)"])
+        uuid_servers.extend([mosque["uuid"]])
+        CALC_METHODS.extend([mosque["label"]])
+
+    return name_servers, uuid_servers, CALC_METHODS
 
 
 async def async_write_in_data(hass: HomeAssistant, directory, file_name, data):
@@ -147,7 +167,7 @@ async def write_mawaqit_token(
 
 
 async def update_my_mosque_data_files(
-    hass: HomeAssistant, dir, mosque_id=None, token=None, store=None
+    hass: HomeAssistant, dir, store, mosque_id=None, token=None
 ):
     """Update the mosque data files with the latest prayer times.
 
@@ -161,7 +181,7 @@ async def update_my_mosque_data_files(
     """
     _LOGGER.debug("Updating my mosque data files")
     if mosque_id is None:
-        my_mosque = await read_my_mosque_NN_file(hass)
+        my_mosque = await read_my_mosque_NN_file(store)
         mosque_id = my_mosque["uuid"]
 
     if token is None:
@@ -191,10 +211,16 @@ async def read_one_element(store, key):
         The value associated with the key, or None if the key does not exist.
 
     """
+    if store is None:
+        _LOGGER.error("Store is None !")
+        raise ValueError("Store is None !")
+
     data = await store.async_load()
-    if data is None:
+    if data is None or key not in data:
         return None
     data = data.get(key)
+    if data == {} or data is None:
+        return None
     _LOGGER.debug("Read %s from store with key = %s ", data, key)
     return data
 
@@ -208,6 +234,10 @@ async def write_one_element(store, key, value):
         value: The value to associate with the key.
 
     """
+    if store is None:
+        _LOGGER.error("Store is None !")
+        raise ValueError("Store is None !")
+
     data = await store.async_load()
     if data is None:
         data = {}
@@ -226,6 +256,10 @@ async def read_all_elements(store):
         dict: The data read from the store, or an empty dictionary if no data is found.
 
     """
+    if store is None:
+        _LOGGER.error("Store is None !")
+        raise ValueError("Store is None !")
+
     data = await store.async_load()
     if data is None:
         return {}
@@ -241,5 +275,9 @@ async def write_all_elements(store, data):
         data (dict): The data to write to the store.
 
     """
+    if store is None:
+        _LOGGER.error("Store is None !")
+        raise ValueError("Store is None !")
+
     _LOGGER.debug("Writing %s to store", data)
     await store.async_save(data)

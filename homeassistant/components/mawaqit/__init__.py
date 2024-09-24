@@ -38,6 +38,8 @@ from .const import (
     DATA_UPDATED,
     DEFAULT_CALC_METHOD,
     DOMAIN,
+    MAWAQIT_ALL_MOSQUES_NN,
+    MAWAQIT_MY_MOSQUE_NN,
     MAWAQIT_STORAGE_KEY,
     MAWAQIT_STORAGE_VERSION,
     UPDATE_TIME,
@@ -138,6 +140,16 @@ async def async_remove_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     except OSError as e:
         _LOGGER.error("Error: %s : %s", dir_path, e.strerror)
 
+    await utils.write_one_element(
+        Store(hass, MAWAQIT_STORAGE_VERSION, MAWAQIT_STORAGE_KEY),
+        MAWAQIT_MY_MOSQUE_NN,
+        None,
+    )
+    await utils.write_one_element(
+        Store(hass, MAWAQIT_STORAGE_VERSION, MAWAQIT_STORAGE_KEY),
+        MAWAQIT_ALL_MOSQUES_NN,
+        None,
+    )
     _LOGGER.debug("Finished clearing data folder")
 
 
@@ -151,7 +163,9 @@ class MawaqitPrayerClient:
         self.prayer_times_info: dict[str, Any] = {}
         self.available = True
         self.event_unsub = None
-        self.store = None
+        self.store: Store = Store(
+            self.hass, MAWAQIT_STORAGE_VERSION, MAWAQIT_STORAGE_KEY
+        )
 
         self.cancel_events_next_salat: list[
             Callable[[], None]
@@ -175,8 +189,8 @@ class MawaqitPrayerClient:
         uuid_servers = []  # noqa: F841
         # TODO check if we should keep this or no  # pylint: disable=fixme
         CALC_METHODS.clear()  # changed due to W0621 with pylint and F841 with Ruff
-        if self.store is None:
-            self.store = Store(self.hass, MAWAQIT_STORAGE_VERSION, MAWAQIT_STORAGE_KEY)
+        # if self.store is None:
+        #     self.store = Store(self.hass, MAWAQIT_STORAGE_VERSION, MAWAQIT_STORAGE_KEY)
 
         # TODO reload files here from API
         # We get the prayer times of the year from pray_time.txt
