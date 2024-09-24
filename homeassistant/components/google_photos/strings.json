@@ -79,7 +79,7 @@
         "album": {
           "name": "Album",
           "description": "Album name that is the destination for the uploaded content.",
-          "example": "Family Photos"
+          "example": "Family photos"
         }
       }
     }
