@@ -146,7 +146,7 @@
       "far_detection": {
         "name": "Far detection"
       },
-      "target_dist_closest": {
+      "target_dis_closest": {
         "name": "Clostest target distance"
       },
       "water_level": {

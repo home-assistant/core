@@ -97,8 +97,8 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
         NumberEntityDescription(
-            key=DPCode.TARGET_DIST_CLOSEST,
-            translation_key="target_dist_closest",
+            key=DPCode.TARGET_DIS_CLOSEST,
+            translation_key="target_dis_closest",
             device_class=NumberDeviceClass.DISTANCE,
         ),
     ),
