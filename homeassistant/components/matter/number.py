@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from chip.clusters import Objects as clusters
-from matter_server.common.custom_clusters import EveCluster
+from matter_server.common import custom_clusters
 from matter_server.common.helpers.util import create_attribute_path_from_attribute
 
 from homeassistant.components.number import (
@@ -151,6 +151,6 @@ DISCOVERY_SCHEMAS = [
             mode=NumberMode.BOX,
         ),
         entity_class=MatterNumber,
-        required_attributes=(EveCluster.Attributes.Altitude,),
+        required_attributes=(custom_clusters.EveCluster.Attributes.Altitude,),
     ),
 ]
