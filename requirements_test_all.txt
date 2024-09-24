@@ -180,7 +180,7 @@ aioapcaccess==0.4.2
 aioaquacell==0.2.0
 
 # homeassistant.components.aseko_pool_live
-aioaseko==0.2.0
+aioaseko==1.0.0
 
 # homeassistant.components.asuswrt
 aioasuswrt==1.4.0
@@ -392,7 +392,7 @@ aiowithings==3.0.3
 aioymaps==1.2.5
 
 # homeassistant.components.airgradient
-airgradient==0.8.0
+airgradient==0.9.0
 
 # homeassistant.components.airly
 airly==1.1.0
@@ -922,7 +922,7 @@ hole==0.8.0
 
 # homeassistant.components.holiday
 # homeassistant.components.workday
-holidays==0.56
+holidays==0.57
 
 # homeassistant.components.frontend
 home-assistant-frontend==20240909.1
@@ -1141,7 +1141,7 @@ motionblindsble==0.1.1
 motioneye-client==0.3.14
 
 # homeassistant.components.bang_olufsen
-mozart-api==3.4.1.8.6
+mozart-api==3.4.1.8.8
 
 # homeassistant.components.mullvad
 mullvad-api==1.0.0
@@ -1381,7 +1381,7 @@ pyElectra==1.2.4
 pyRFXtrx==0.31.1
 
 # homeassistant.components.tibber
-pyTibber==0.30.1
+pyTibber==0.30.2
 
 # homeassistant.components.dlink
 pyW215==0.7.0
@@ -1445,7 +1445,7 @@ pycoolmasternet-async==0.2.2
 pycsspeechtts==1.0.8
 
 # homeassistant.components.daikin
-pydaikin==2.13.6
+pydaikin==2.13.7
 
 # homeassistant.components.deconz
 pydeconz==116
@@ -1457,7 +1457,7 @@ pydexcom==0.2.3
 pydiscovergy==3.0.1
 
 # homeassistant.components.hydrawise
-pydrawise==2024.8.0
+pydrawise==2024.9.0
 
 # homeassistant.components.android_ip_webcam
 pydroid-ipcam==2.0.0
@@ -1559,7 +1559,7 @@ pyiss==1.0.1
 pyisy==3.1.14
 
 # homeassistant.components.jvc_projector
-pyjvcprojector==1.0.12
+pyjvcprojector==1.1.0
 
 # homeassistant.components.kaleidescape
 pykaleidescape==1.0.1
