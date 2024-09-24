@@ -49,13 +49,13 @@ async def test_adam_climate_sensor_entity_2(
 
 async def test_unique_id_migration_humidity(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     mock_smile_adam_4: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test unique ID migration of -relative_humidity to -humidity."""
     mock_config_entry.add_to_hass(hass)
 
-    entity_registry = er.async_get(hass)
     # Entry to migrate
     entity_registry.async_get_or_create(
         SENSOR_DOMAIN,
@@ -137,6 +137,7 @@ async def test_p1_dsmr_sensor_entities(
 
 async def test_p1_3ph_dsmr_sensor_entities(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     mock_smile_p1_2: MagicMock,
     init_integration: MockConfigEntry,
 ) -> None:
@@ -157,7 +158,6 @@ async def test_p1_3ph_dsmr_sensor_entities(
     state = hass.states.get(entity_id)
     assert not state
 
-    entity_registry = er.async_get(hass)
     entity_registry.async_update_entity(entity_id=entity_id, disabled_by=None)
     await hass.async_block_till_done()
 

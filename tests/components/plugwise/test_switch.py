@@ -161,13 +161,13 @@ async def test_stretch_switch_changes(
 
 async def test_unique_id_migration_plug_relay(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     mock_smile_adam: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test unique ID migration of -plugs to -relay."""
     mock_config_entry.add_to_hass(hass)
 
-    entity_registry = er.async_get(hass)
     # Entry to migrate
     entity_registry.async_get_or_create(
         SWITCH_DOMAIN,
