@@ -122,6 +122,16 @@ async def air_purifier_node_fixture(
     )
 
 
+@pytest.fixture(name="dishwasher_node")
+async def dishwasher_node_fixture(
+    hass: HomeAssistant, matter_client: MagicMock
+) -> MatterNode:
+    """Fixture for an dishwasher node."""
+    return await setup_integration_with_node_fixture(
+        hass, "silabs-dishwasher", matter_client
+    )
+
+
 # This tests needs to be adjusted to remove lingering tasks
 @pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_sensor_null_value(
@@ -622,3 +632,29 @@ async def test_smoke_alarm(
     state = hass.states.get("sensor.smoke_sensor_voltage")
     assert state
     assert state.state == "0.0"
+
+
+async def test_operational_state_sensor(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    dishwasher_node: MatterNode,
+) -> None:
+    """Test dishwasher sensor."""
+    # OperationalState Cluster / OperationalState attribute (1/96/4)
+    state = hass.states.get("sensor.dishwasher_operational_state")
+    assert state
+    assert state.state == "stopped"
+    assert state.attributes["options"] == [
+        "stopped",
+        "running",
+        "paused",
+        "error",
+        "extra_state",
+    ]
+
+    set_node_attribute(dishwasher_node, 1, 96, 4, 8)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("sensor.dishwasher_operational_state")
+    assert state
+    assert state.state == "extra_state"
