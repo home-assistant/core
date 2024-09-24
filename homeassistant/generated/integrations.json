@@ -418,6 +418,13 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "aqara": {
+      "name": "Aqara",
+      "iot_standards": [
+        "matter",
+        "zigbee"
+      ]
+    },
     "aquacell": {
       "name": "AquaCell",
       "integration_type": "device",
