@@ -1119,7 +1119,8 @@ def custom_serializer(schema: Any) -> Any:
 
 def _custom_serializer(schema: Any, *, allow_section: bool) -> Any:
     """Serialize additional types for voluptuous_serialize."""
-    from .. import data_entry_flow  # pylint: disable=import-outside-toplevel
+    from homeassistant import data_entry_flow  # pylint: disable=import-outside-toplevel
+
     from . import selector  # pylint: disable=import-outside-toplevel
 
     if schema is positive_time_period_dict:

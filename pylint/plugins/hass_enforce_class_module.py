@@ -8,6 +8,8 @@ from astroid import nodes
 from pylint.checkers import BaseChecker
 from pylint.lint import PyLinter
 
+from homeassistant.const import Platform
+
 _MODULES: dict[str, set[str]] = {
     "air_quality": {"AirQualityEntity"},
     "alarm_control_panel": {
@@ -18,14 +20,14 @@ _MODULES: dict[str, set[str]] = {
     "binary_sensor": {"BinarySensorEntity", "BinarySensorEntityDescription"},
     "button": {"ButtonEntity", "ButtonEntityDescription"},
     "calendar": {"CalendarEntity"},
-    "camera": {"CameraEntity", "CameraEntityDescription"},
+    "camera": {"Camera", "CameraEntityDescription"},
     "climate": {"ClimateEntity", "ClimateEntityDescription"},
     "coordinator": {"DataUpdateCoordinator"},
     "conversation": {"ConversationEntity"},
     "cover": {"CoverEntity", "CoverEntityDescription"},
     "date": {"DateEntity", "DateEntityDescription"},
     "datetime": {"DateTimeEntity", "DateTimeEntityDescription"},
-    "device_tracker": {"DeviceTrackerEntity"},
+    "device_tracker": {"DeviceTrackerEntity", "ScannerEntity", "TrackerEntity"},
     "event": {"EventEntity", "EventEntityDescription"},
     "fan": {"FanEntity", "FanEntityDescription"},
     "geo_location": {"GeolocationEvent"},
@@ -52,8 +54,8 @@ _MODULES: dict[str, set[str]] = {
     "time": {"TimeEntity", "TimeEntityDescription"},
     "todo": {"TodoListEntity"},
     "tts": {"TextToSpeechEntity"},
-    "update": {"UpdateEntityDescription"},
-    "vacuum": {"VacuumEntity", "VacuumEntityDescription"},
+    "update": {"UpdateEntity", "UpdateEntityDescription"},
+    "vacuum": {"StateVacuumEntity", "VacuumEntity", "VacuumEntityDescription"},
     "wake_word": {"WakeWordDetectionEntity"},
     "water_heater": {"WaterHeaterEntity"},
     "weather": {
@@ -63,6 +65,21 @@ _MODULES: dict[str, set[str]] = {
         "WeatherEntityDescription",
     },
 }
+_ENTITY_COMPONENTS: set[str] = {platform.value for platform in Platform}.union(
+    {
+        "automation",
+        "counter",
+        "input_boolean",
+        "input_datetime",
+        "input_number",
+        "input_text",
+        "person",
+        "script",
+        "tag",
+        "template",
+        "timer",
+    }
+)
 
 
 class HassEnforceClassModule(BaseChecker):
@@ -88,6 +105,18 @@ class HassEnforceClassModule(BaseChecker):
         parts = root_name.split(".")
         current_integration = parts[2]
         current_module = parts[3] if len(parts) > 3 else ""
+
+        if current_module != "entity" and current_integration not in _ENTITY_COMPONENTS:
+            top_level_ancestors = list(node.ancestors(recurs=False))
+
+            for ancestor in top_level_ancestors:
+                if ancestor.name == "Entity":
+                    self.add_message(
+                        "hass-enforce-class-module",
+                        node=node,
+                        args=(ancestor.name, "entity"),
+                    )
+                    return
 
         ancestors: list[ClassDef] | None = None
 
