@@ -35,6 +35,9 @@
       "activated_carbon_filter_condition": {
         "default": "mdi:filter-check"
       },
+      "operational_state": {
+        "default": "mdi:play-pause"
+      },
       "valve_position": {
         "default": "mdi:valve"
       }
