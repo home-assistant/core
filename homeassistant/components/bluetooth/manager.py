@@ -259,11 +259,9 @@ class HomeAssistantBluetoothManager(BluetoothManager):
         entry: config_entries.ConfigEntry,
     ) -> None:
         """Handle config entry changes."""
-        if entry.source != config_entries.SOURCE_IGNORE:
-            return
         for discovery_key in entry.discovery_keys[DOMAIN]:
             if discovery_key.version != 1 or not isinstance(discovery_key.key, str):
                 continue
             address = discovery_key.key
-            _LOGGER.debug("Rediscover unignored address %s", address)
+            _LOGGER.debug("Rediscover address %s", address)
             self.async_rediscover_address(address)
