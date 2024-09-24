@@ -13,11 +13,21 @@
         "climates": [
           {
             "name": "Climate1",
-            "climateRef": "c1"
+            "climateRef": "c1",
+            "sensors": [
+              {
+                "name": "ecobee"
+              }
+            ]
           },
           {
             "name": "Climate2",
-            "climateRef": "c2"
+            "climateRef": "c2",
+            "sensors": [
+              {
+                "name": "ecobee"
+              }
+            ]
           }
         ],
         "currentClimateRef": "c1"

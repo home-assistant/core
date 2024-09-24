@@ -7,9 +7,16 @@ import pytest
 
 from homeassistant import const
 from homeassistant.components.climate import ClimateEntityFeature
-from homeassistant.components.ecobee.climate import PRESET_AWAY_INDEFINITELY, Thermostat
-from homeassistant.const import ATTR_SUPPORTED_FEATURES, STATE_OFF
+from homeassistant.components.ecobee.climate import (
+    ATTR_PRESET_MODE,
+    ATTR_SENSOR_LIST,
+    PRESET_AWAY_INDEFINITELY,
+    Thermostat,
+)
+from homeassistant.components.ecobee.const import DOMAIN
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES, STATE_OFF
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 
 from .common import setup_platform
 
@@ -401,3 +408,37 @@ async def test_set_preset_mode(ecobee_fixture, thermostat, data) -> None:
     data.ecobee.set_climate_hold.assert_has_calls(
         [mock.call(1, "away", "indefinite", thermostat.hold_hours())]
     )
+
+
+async def test_remote_sensors(hass: HomeAssistant) -> None:
+    """Test remote sensors."""
+    await setup_platform(hass, const.Platform.CLIMATE)
+    state = hass.states.get(ENTITY_ID)
+    assert state.attributes.get("available_sensors") == ["Remote Sensor 1"]
+    # Device in "temp" mode from hold event. No active sensors.
+    assert state.attributes.get("active_sensors") == []
+
+
+async def test_set_sensors_used_in_climate(hass: HomeAssistant) -> None:
+    """Test set sensors used in climate."""
+    with mock.patch("pyecobee.Ecobee.update_climate_sensors") as mock_sensors:
+        await setup_platform(hass, const.Platform.CLIMATE)
+
+        # Get device_id of remote sensor from the device registry.
+        device_registry = dr.async_get(hass)
+        for device in device_registry.devices.values():
+            if device.name == "Remote Sensor 1":
+                device_id = device.id
+
+        await hass.services.async_call(
+            DOMAIN,
+            "set_sensors_used_in_climate",
+            {
+                ATTR_ENTITY_ID: ENTITY_ID,
+                ATTR_PRESET_MODE: "Climate1",
+                ATTR_SENSOR_LIST: [device_id],
+            },
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+        mock_sensors.assert_called_once_with(0, "Climate1", ["Remote Sensor 1"])
