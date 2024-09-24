@@ -62,12 +62,6 @@ class GooglePhotosUpdateCoordinator(DataUpdateCoordinator[dict[str, str]]):
 
     async def get_or_create_album(self, album: str) -> str:
         """Return an existing album id or create a new one."""
-        if self.data is None:
-            key = "albums_not_loaded" if self.last_update_success else "albums_failed"
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key=key,
-            )
         for album_id, album_title in self.data.items():
             if album_title == album:
                 return album_id

@@ -394,29 +394,3 @@ async def test_create_album_failed(
             blocking=True,
             return_response=True,
         )
-
-
-@pytest.mark.usefixtures("setup_integration")
-@pytest.mark.parametrize("api_error", [GooglePhotosApiError("some error")])
-async def test_create_album_failed_to_fetch_albums(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    mock_api: Mock,
-) -> None:
-    """Test service call to create to create an album but albums are not loaded."""
-    assert hass.services.has_service(DOMAIN, "upload")
-
-    with pytest.raises(
-        HomeAssistantError, match="Cannot fetch albums from the Google Photos API"
-    ):
-        await hass.services.async_call(
-            DOMAIN,
-            UPLOAD_SERVICE,
-            {
-                CONF_CONFIG_ENTRY_ID: config_entry.entry_id,
-                CONF_FILENAME: TEST_FILENAME,
-                CONF_ALBUM: "New Album",
-            },
-            blocking=True,
-            return_response=True,
-        )
