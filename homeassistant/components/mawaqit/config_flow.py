@@ -67,7 +67,8 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         # if the data folder is empty, we can continue the configuration
         # otherwise, we abort the configuration because that means that the user has already configured an entry.
         if is_another_instance():
-            return self.async_abort(reason="one_instance_allowed")
+            # return self.async_abort(reason="one_instance_allowed")
+            return await self._show_keep_or_reset_form()
 
         if user_input is None:
             return await self._show_config_form(user_input=None)
@@ -205,6 +206,44 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             ),
             errors=self._errors,
         )
+
+    async def _show_keep_or_reset_form(self):
+        """Show form to ask the user if they want to keep current data or reset."""
+        options = {vol.Required("choice", default="keep"): vol.In(["keep", "reset"])}
+
+        return self.async_show_form(
+            step_id="keep_or_reset",
+            data_schema=vol.Schema(options),
+            errors=self._errors,
+        )
+
+    async def async_step_keep_or_reset(
+        self, user_input=None
+    ) -> config_entries.ConfigFlowResult:
+        """Handle the user's choice to keep current data or reset."""
+        if user_input is None:
+            return await self._show_keep_or_reset_form()
+
+        choice = user_input["choice"]
+
+        if choice == "keep":
+            return self.async_abort(reason="configuration_kept")
+        if choice == "reset":
+            # Clear existing data and restart the configuration process
+            await self.async_clear_data()
+            return await self.async_step_user()
+        return await self._show_keep_or_reset_form()
+
+    async def async_clear_data(self):
+        """Clear all data from the store and folders."""
+
+        # Remove all config entries
+        entries = self.hass.config_entries.async_entries(DOMAIN)
+        for entry in entries:
+            if entry.domain == DOMAIN:
+                await self.hass.config_entries.async_remove(entry.entry_id)
+
+        await self.store.async_remove()  # Remove the existing data in the store
 
     @staticmethod
     @callback

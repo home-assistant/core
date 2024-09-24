@@ -125,7 +125,7 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
 
 async def async_remove_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
     """Remove Mawaqit Prayer entry from config_entry."""
-
+    _LOGGER.debug("Started clearing data folder")
     dir_path = f"{CURRENT_DIR}/data"
     try:
         shutil.rmtree(dir_path)
@@ -137,6 +137,8 @@ async def async_remove_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
         shutil.rmtree(dir_path)
     except OSError as e:
         _LOGGER.error("Error: %s : %s", dir_path, e.strerror)
+
+    _LOGGER.debug("Finished clearing data folder")
 
 
 class MawaqitPrayerClient:
@@ -334,7 +336,7 @@ class MawaqitPrayerClient:
         salat_before_update = self.prayer_times_info["Next Salat Name"]
         prayers = ["Fajr", "Dhuhr", "Asr", "Maghrib", "Isha"]
 
-        _LOGGER.debug(
+        _LOGGER.info(
             "[;] [async_update_next_salat_sensor] salat_before_update : %s",
             salat_before_update,
         )
@@ -443,7 +445,7 @@ class MawaqitPrayerClient:
                 self.prayer_times_info[prayer] = dt_util.parse_datetime(
                     f"{pray} {time}"
                 )
-                _LOGGER.debug(
+                _LOGGER.info(
                     "[;] [async_update] self.prayer_times_info[prayer] : %s",
                     self.prayer_times_info[prayer],
                 )
@@ -454,7 +456,7 @@ class MawaqitPrayerClient:
         prayers = ["Fajr", "Dhuhr", "Asr", "Maghrib", "Isha"]
         prayer_times = [self.prayer_times_info[prayer] for prayer in prayers]
 
-        _LOGGER.debug("[;] [async_update] prayer_times : %s", prayer_times)
+        _LOGGER.info("[;] [async_update] prayer_times : %s", prayer_times)
 
         # We cancel the previous scheduled updates (if there is any) to avoid multiple updates for the same prayer.
         try:
@@ -472,7 +474,7 @@ class MawaqitPrayerClient:
             )
             self.cancel_events_next_salat.append(cancel_event)
 
-        _LOGGER.debug(
+        _LOGGER.info(
             "[;] [async_update] self.prayer_times_info : %s", self.prayer_times_info
         )
 

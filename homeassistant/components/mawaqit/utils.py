@@ -169,7 +169,7 @@ async def update_my_mosque_data_files(
             _LOGGER.error("Update Failed : token and store cannot be both None !")
             raise ValueError("token and store cannot be both None !")
         token = await read_mawaqit_token(hass, store)
-        if token == "":
+        if token == "" or token is None:
             _LOGGER.error("Update Failed : Mawaqit API token not found !")
             return
 
