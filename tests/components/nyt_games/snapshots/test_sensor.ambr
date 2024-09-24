@@ -1,0 +1,203 @@
+# serializer version: 1
+# name: test_all_entities[sensor.nytgames_current_wordle_streak-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.nytgames_current_wordle_streak',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'Current Wordle streak',
+    'platform': 'nyt_games',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'wordles_streak',
+    'unique_id': '218886794-wordles_streak',
+    'unit_of_measurement': <UnitOfTime.DAYS: 'd'>,
+  })
+# ---
+# name: test_all_entities[sensor.nytgames_current_wordle_streak-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'NYTGames Current Wordle streak',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': <UnitOfTime.DAYS: 'd'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.nytgames_current_wordle_streak',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1',
+  })
+# ---
+# name: test_all_entities[sensor.nytgames_highest_wordle_streak-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.nytgames_highest_wordle_streak',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'Highest Wordle streak',
+    'platform': 'nyt_games',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'wordles_max_streak',
+    'unique_id': '218886794-wordles_max_streak',
+    'unit_of_measurement': <UnitOfTime.DAYS: 'd'>,
+  })
+# ---
+# name: test_all_entities[sensor.nytgames_highest_wordle_streak-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'NYTGames Highest Wordle streak',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfTime.DAYS: 'd'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.nytgames_highest_wordle_streak',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '5',
+  })
+# ---
+# name: test_all_entities[sensor.nytgames_wordles_played-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.nytgames_wordles_played',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Wordles played',
+    'platform': 'nyt_games',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'wordles_played',
+    'unique_id': '218886794-wordles_played',
+    'unit_of_measurement': 'games',
+  })
+# ---
+# name: test_all_entities[sensor.nytgames_wordles_played-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'NYTGames Wordles played',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'games',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.nytgames_wordles_played',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '33',
+  })
+# ---
+# name: test_all_entities[sensor.nytgames_wordles_won-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.nytgames_wordles_won',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Wordles won',
+    'platform': 'nyt_games',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'wordles_won',
+    'unique_id': '218886794-wordles_won',
+    'unit_of_measurement': 'games',
+  })
+# ---
+# name: test_all_entities[sensor.nytgames_wordles_won-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'NYTGames Wordles won',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'games',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.nytgames_wordles_won',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '26',
+  })
+# ---

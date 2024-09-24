@@ -569,7 +569,7 @@ bthome-ble==3.9.1
 buienradar==1.0.6
 
 # homeassistant.components.dhcp
-cached-ipaddress==0.5.0
+cached-ipaddress==0.6.0
 
 # homeassistant.components.caldav
 caldav==1.3.9
@@ -1230,6 +1230,9 @@ numato-gpio==0.13.0
 # homeassistant.components.tensorflow
 # homeassistant.components.trend
 numpy==1.26.0
+
+# homeassistant.components.nyt_games
+nyt_games==0.4.0
 
 # homeassistant.components.google
 oauth2client==4.1.3

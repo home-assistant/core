@@ -37,8 +37,8 @@
         'refresh_token': '**REDACTED**',
       }),
       'disabled_by': None,
-      'discovery_keys': list([
-      ]),
+      'discovery_keys': dict({
+      }),
       'domain': 'nice_go',
       'entry_id': 'acefdd4b3a4a0911067d1cf51414201e',
       'minor_version': 1,
