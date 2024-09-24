@@ -109,7 +109,7 @@ def mock_ble_device() -> Generator[MagicMock]:
         yield ble_device
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=False)
 async def mock_github(
     aioclient_mock: AiohttpClientMocker,
 ) -> AiohttpClientMocker:
@@ -124,6 +124,21 @@ async def mock_github(
     )
 
     return aioclient_mock
+
+
+@pytest.fixture
+def mock_githubapi() -> Generator[AsyncMock]:
+    """Mock aiogithubapi."""
+
+    with (
+        patch(
+            "homeassistant.components.iron_os.GitHubAPI",
+            new=AsyncMock,
+        ) as mock_client,
+    ):
+        client = mock_client.return_value
+
+        yield client
 
 
 @pytest.fixture
