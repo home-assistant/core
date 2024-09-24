@@ -159,6 +159,70 @@ async def test_trigger_enabled_templates(
     assert len(service_calls) == 2
 
 
+async def test_nested_trigger_list(
+    hass: HomeAssistant, service_calls: list[ServiceCall]
+) -> None:
+    """Test triggers within nested list."""
+
+    assert await async_setup_component(
+        hass,
+        "automation",
+        {
+            "automation": {
+                "trigger": [
+                    {
+                        "triggers": {
+                            "platform": "event",
+                            "event_type": "trigger_1",
+                        },
+                    },
+                    {
+                        "platform": "event",
+                        "event_type": "trigger_2",
+                    },
+                    {"triggers": []},
+                    {"triggers": None},
+                    {
+                        "triggers": [
+                            {
+                                "platform": "event",
+                                "event_type": "trigger_3",
+                            },
+                            {
+                                "platform": "event",
+                                "event_type": "trigger_4",
+                            },
+                        ],
+                    },
+                ],
+                "action": {
+                    "service": "test.automation",
+                },
+            }
+        },
+    )
+
+    hass.bus.async_fire("trigger_1")
+    await hass.async_block_till_done()
+    assert len(service_calls) == 1
+
+    hass.bus.async_fire("trigger_2")
+    await hass.async_block_till_done()
+    assert len(service_calls) == 2
+
+    hass.bus.async_fire("trigger_none")
+    await hass.async_block_till_done()
+    assert len(service_calls) == 2
+
+    hass.bus.async_fire("trigger_3")
+    await hass.async_block_till_done()
+    assert len(service_calls) == 3
+
+    hass.bus.async_fire("trigger_4")
+    await hass.async_block_till_done()
+    assert len(service_calls) == 4
+
+
 async def test_trigger_enabled_template_limited(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],

@@ -14,7 +14,7 @@ import logging
 import re
 import time
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Any, Concatenate, NamedTuple, ParamSpec, TypeVar, cast
+from typing import TYPE_CHECKING, Any, Concatenate, NamedTuple, cast
 from zoneinfo import ZoneInfo
 
 import voluptuous as vol
@@ -150,6 +150,7 @@ from .const import (
     CONF_ENABLE_ENHANCED_LIGHT_TRANSITION,
     CONF_ENABLE_IDENTIFY_ON_JOIN,
     CONF_ENABLE_LIGHT_TRANSITIONING_FLAG,
+    CONF_ENABLE_MAINS_STARTUP_POLLING,
     CONF_ENABLE_QUIRKS,
     CONF_FLOW_CONTROL,
     CONF_GROUP_MEMBERS_ASSUME_STATE,
@@ -171,9 +172,6 @@ if TYPE_CHECKING:
     from .update import ZHAFirmwareUpdateCoordinator
 
     _LogFilterType = Filter | Callable[[LogRecord], bool]
-
-_P = ParamSpec("_P")
-_EntityT = TypeVar("_EntityT", bound="ZHAEntity")
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -620,9 +618,11 @@ class ZHAGatewayProxy(EventBase):
                     ATTR_NWK: str(event.device_info.nwk),
                     ATTR_IEEE: str(event.device_info.ieee),
                     DEVICE_PAIRING_STATUS: event.device_info.pairing_status.name,
-                    ATTR_MODEL: event.device_info.model
-                    if event.device_info.model
-                    else UNKNOWN_MODEL,
+                    ATTR_MODEL: (
+                        event.device_info.model
+                        if event.device_info.model
+                        else UNKNOWN_MODEL
+                    ),
                     ATTR_MANUFACTURER: manuf if manuf else UNKNOWN_MANUFACTURER,
                     ATTR_SIGNATURE: event.device_info.signature,
                 },
@@ -925,9 +925,7 @@ class LogRelayHandler(logging.Handler):
         hass_path: str = HOMEASSISTANT_PATH[0]
         config_dir = self.hass.config.config_dir
         self.paths_re = re.compile(
-            r"(?:{})/(.*)".format(
-                "|".join([re.escape(x) for x in (hass_path, config_dir)])
-            )
+            rf"(?:{re.escape(hass_path)}|{re.escape(config_dir)})/(.*)"
         )
 
     def emit(self, record: LogRecord) -> None:
@@ -1028,9 +1026,9 @@ def cluster_command_schema_to_vol_schema(schema: CommandSchema) -> vol.Schema:
     """Convert a cluster command schema to a voluptuous schema."""
     return vol.Schema(
         {
-            vol.Optional(field.name)
-            if field.optional
-            else vol.Required(field.name): schema_type_to_vol(field.type)
+            (
+                vol.Optional(field.name) if field.optional else vol.Required(field.name)
+            ): schema_type_to_vol(field.type)
             for field in schema.fields
         }
     )
@@ -1110,7 +1108,7 @@ def async_cluster_exists(hass: HomeAssistant, cluster_id, skip_coordinator=True)
 
 
 @callback
-async def async_add_entities(
+def async_add_entities(
     _async_add_entities: AddEntitiesCallback,
     entity_class: type[ZHAEntity],
     entities: list[EntityData],
@@ -1166,7 +1164,9 @@ CONF_ZHA_OPTIONS_SCHEMA = vol.Schema(
             CONF_CONSIDER_UNAVAILABLE_BATTERY,
             default=CONF_DEFAULT_CONSIDER_UNAVAILABLE_BATTERY,
         ): cv.positive_int,
-    }
+        vol.Required(CONF_ENABLE_MAINS_STARTUP_POLLING, default=True): cv.boolean,
+    },
+    extra=vol.REMOVE_EXTRA,
 )
 
 CONF_ZHA_ALARM_SCHEMA = vol.Schema(
@@ -1237,6 +1237,7 @@ def create_zha_config(hass: HomeAssistant, ha_zha_data: HAZHAData) -> ZHAData:
         enable_identify_on_join=zha_options.get(CONF_ENABLE_IDENTIFY_ON_JOIN),
         consider_unavailable_mains=zha_options.get(CONF_CONSIDER_UNAVAILABLE_MAINS),
         consider_unavailable_battery=zha_options.get(CONF_CONSIDER_UNAVAILABLE_BATTERY),
+        enable_mains_startup_polling=zha_options.get(CONF_ENABLE_MAINS_STARTUP_POLLING),
     )
     acp_options: AlarmControlPanelOptions = AlarmControlPanelOptions(
         master_code=ha_acp_options.get(CONF_ALARM_MASTER_CODE),
@@ -1277,7 +1278,7 @@ def create_zha_config(hass: HomeAssistant, ha_zha_data: HAZHAData) -> ZHAData:
     )
 
 
-def convert_zha_error_to_ha_error(
+def convert_zha_error_to_ha_error[**_P, _EntityT: ZHAEntity](
     func: Callable[Concatenate[_EntityT, _P], Awaitable[None]],
 ) -> Callable[Concatenate[_EntityT, _P], Coroutine[Any, Any, None]]:
     """Decorate ZHA commands and re-raises ZHAException as HomeAssistantError."""

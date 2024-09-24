@@ -5,11 +5,7 @@ from unittest.mock import AsyncMock
 import pytest
 from universal_silabs_flasher.const import ApplicationType
 
-from homeassistant.components.hassio.addon_manager import (
-    AddonError,
-    AddonInfo,
-    AddonState,
-)
+from homeassistant.components.hassio import AddonError, AddonInfo, AddonState
 from homeassistant.components.homeassistant_hardware.firmware_config_flow import (
     STEP_PICK_FIRMWARE_THREAD,
     STEP_PICK_FIRMWARE_ZIGBEE,

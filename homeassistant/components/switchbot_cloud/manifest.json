@@ -1,7 +1,7 @@
 {
   "domain": "switchbot_cloud",
   "name": "SwitchBot Cloud",
-  "codeowners": ["@SeraphicRav", "@laurence-presland"],
+  "codeowners": ["@SeraphicRav", "@laurence-presland", "@Gigatrappeur"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/switchbot_cloud",
   "integration_type": "hub",

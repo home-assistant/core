@@ -8,6 +8,11 @@
         "default": "mdi:debug-step-into"
       }
     },
+    "button": {
+      "sync_clock": {
+        "default": "mdi:clock-check-outline"
+      }
+    },
     "number": {
       "cutting_height": {
         "default": "mdi:grass"

@@ -17,10 +17,12 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
+from homeassistant.util.hass_dict import HassKey
 
 from .const import ATTR_EVENT_TYPE, ATTR_EVENT_TYPES, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+DOMAIN_DATA: HassKey[EntityComponent[EventEntity]] = HassKey(DOMAIN)
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
 PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
@@ -51,7 +53,7 @@ __all__ = [
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Event entities."""
-    component = hass.data[DOMAIN] = EntityComponent[EventEntity](
+    component = hass.data[DOMAIN_DATA] = EntityComponent[EventEntity](
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )
     await component.async_setup(config)
@@ -60,14 +62,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    component: EntityComponent[EventEntity] = hass.data[DOMAIN]
-    return await component.async_setup_entry(entry)
+    return await hass.data[DOMAIN_DATA].async_setup_entry(entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    component: EntityComponent[EventEntity] = hass.data[DOMAIN]
-    return await component.async_unload_entry(entry)
+    return await hass.data[DOMAIN_DATA].async_unload_entry(entry)
 
 
 class EventEntityDescription(EntityDescription, frozen_or_thawed=True):

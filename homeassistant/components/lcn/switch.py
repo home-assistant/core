@@ -8,12 +8,11 @@ import pypck
 
 from homeassistant.components.switch import DOMAIN as DOMAIN_SWITCH, SwitchEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ADDRESS, CONF_DOMAIN, CONF_ENTITIES
+from homeassistant.const import CONF_DOMAIN, CONF_ENTITIES
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
 
-from . import LcnEntity
 from .const import (
     ADD_ENTITIES_CALLBACKS,
     CONF_DOMAIN_DATA,
@@ -21,13 +20,13 @@ from .const import (
     DOMAIN,
     OUTPUT_PORTS,
 )
-from .helpers import DeviceConnectionType, InputType, get_device_connection
+from .entity import LcnEntity
+from .helpers import InputType
 
 PARALLEL_UPDATES = 0
 
 
 def add_lcn_switch_entities(
-    hass: HomeAssistant,
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
     entity_configs: Iterable[ConfigType],
@@ -35,18 +34,10 @@ def add_lcn_switch_entities(
     """Add entities for this domain."""
     entities: list[LcnOutputSwitch | LcnRelaySwitch] = []
     for entity_config in entity_configs:
-        device_connection = get_device_connection(
-            hass, entity_config[CONF_ADDRESS], config_entry
-        )
-
         if entity_config[CONF_DOMAIN_DATA][CONF_OUTPUT] in OUTPUT_PORTS:
-            entities.append(
-                LcnOutputSwitch(entity_config, config_entry.entry_id, device_connection)
-            )
+            entities.append(LcnOutputSwitch(entity_config, config_entry))
         else:  # in RELAY_PORTS
-            entities.append(
-                LcnRelaySwitch(entity_config, config_entry.entry_id, device_connection)
-            )
+            entities.append(LcnRelaySwitch(entity_config, config_entry))
 
     async_add_entities(entities)
 
@@ -59,7 +50,6 @@ async def async_setup_entry(
     """Set up LCN switch entities from a config entry."""
     add_entities = partial(
         add_lcn_switch_entities,
-        hass,
         config_entry,
         async_add_entities,
     )
@@ -82,11 +72,9 @@ class LcnOutputSwitch(LcnEntity, SwitchEntity):
 
     _attr_is_on = False
 
-    def __init__(
-        self, config: ConfigType, entry_id: str, device_connection: DeviceConnectionType
-    ) -> None:
+    def __init__(self, config: ConfigType, config_entry: ConfigEntry) -> None:
         """Initialize the LCN switch."""
-        super().__init__(config, entry_id, device_connection)
+        super().__init__(config, config_entry)
 
         self.output = pypck.lcn_defs.OutputPort[config[CONF_DOMAIN_DATA][CONF_OUTPUT]]
 
@@ -133,11 +121,9 @@ class LcnRelaySwitch(LcnEntity, SwitchEntity):
 
     _attr_is_on = False
 
-    def __init__(
-        self, config: ConfigType, entry_id: str, device_connection: DeviceConnectionType
-    ) -> None:
+    def __init__(self, config: ConfigType, config_entry: ConfigEntry) -> None:
         """Initialize the LCN switch."""
-        super().__init__(config, entry_id, device_connection)
+        super().__init__(config, config_entry)
 
         self.output = pypck.lcn_defs.RelayPort[config[CONF_DOMAIN_DATA][CONF_OUTPUT]]
 

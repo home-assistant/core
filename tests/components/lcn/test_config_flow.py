@@ -7,7 +7,12 @@ import pytest
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.lcn.config_flow import LcnFlowHandler, validate_connection
-from homeassistant.components.lcn.const import CONF_DIM_MODE, CONF_SK_NUM_TRIES, DOMAIN
+from homeassistant.components.lcn.const import (
+    CONF_ACKNOWLEDGE,
+    CONF_DIM_MODE,
+    CONF_SK_NUM_TRIES,
+    DOMAIN,
+)
 from homeassistant.const import (
     CONF_BASE,
     CONF_DEVICES,
@@ -31,6 +36,7 @@ CONFIG_DATA = {
     CONF_PASSWORD: "lcn",
     CONF_SK_NUM_TRIES: 0,
     CONF_DIM_MODE: "STEPS200",
+    CONF_ACKNOWLEDGE: False,
 }
 
 CONNECTION_DATA = {CONF_HOST: "pchk", **CONFIG_DATA}
@@ -48,7 +54,7 @@ async def test_step_import(
     """Test for import step."""
 
     with (
-        patch("pypck.connection.PchkConnectionManager.async_connect"),
+        patch("homeassistant.components.lcn.PchkConnectionManager.async_connect"),
         patch("homeassistant.components.lcn.async_setup", return_value=True),
         patch("homeassistant.components.lcn.async_setup_entry", return_value=True),
     ):
@@ -76,7 +82,7 @@ async def test_step_import_existing_host(
     mock_entry = MockConfigEntry(domain=DOMAIN, data=mock_data)
     mock_entry.add_to_hass(hass)
     # Initialize a config flow with different data but same host address
-    with patch("pypck.connection.PchkConnectionManager.async_connect"):
+    with patch("homeassistant.components.lcn.PchkConnectionManager.async_connect"):
         imported_data = IMPORT_DATA.copy()
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=imported_data
@@ -105,7 +111,8 @@ async def test_step_import_error(
 ) -> None:
     """Test for error in import is handled correctly."""
     with patch(
-        "pypck.connection.PchkConnectionManager.async_connect", side_effect=error
+        "homeassistant.components.lcn.PchkConnectionManager.async_connect",
+        side_effect=error,
     ):
         data = IMPORT_DATA.copy()
         data.update({CONF_HOST: "pchk"})
@@ -132,7 +139,7 @@ async def test_show_form(hass: HomeAssistant) -> None:
 async def test_step_user(hass: HomeAssistant) -> None:
     """Test for user step."""
     with (
-        patch("pypck.connection.PchkConnectionManager.async_connect"),
+        patch("homeassistant.components.lcn.PchkConnectionManager.async_connect"),
         patch("homeassistant.components.lcn.async_setup", return_value=True),
         patch("homeassistant.components.lcn.async_setup_entry", return_value=True),
     ):
@@ -156,7 +163,7 @@ async def test_step_user_existing_host(
     """Test for user defined host already exists."""
     entry.add_to_hass(hass)
 
-    with patch("pypck.connection.PchkConnectionManager.async_connect"):
+    with patch("homeassistant.components.lcn.PchkConnectionManager.async_connect"):
         config_data = entry.data.copy()
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}, data=config_data
@@ -179,7 +186,8 @@ async def test_step_user_error(
 ) -> None:
     """Test for error in user step is handled correctly."""
     with patch(
-        "pypck.connection.PchkConnectionManager.async_connect", side_effect=error
+        "homeassistant.components.lcn.PchkConnectionManager.async_connect",
+        side_effect=error,
     ):
         data = CONNECTION_DATA.copy()
         data.update({CONF_HOST: "pchk"})
@@ -197,7 +205,7 @@ async def test_step_reconfigure(hass: HomeAssistant, entry: MockConfigEntry) -> 
     old_entry_data = entry.data.copy()
 
     with (
-        patch("pypck.connection.PchkConnectionManager.async_connect"),
+        patch("homeassistant.components.lcn.PchkConnectionManager.async_connect"),
         patch("homeassistant.components.lcn.async_setup", return_value=True),
         patch("homeassistant.components.lcn.async_setup_entry", return_value=True),
     ):
@@ -235,7 +243,8 @@ async def test_step_reconfigure_error(
     """Test for error in reconfigure step is handled correctly."""
     entry.add_to_hass(hass)
     with patch(
-        "pypck.connection.PchkConnectionManager.async_connect", side_effect=error
+        "homeassistant.components.lcn.PchkConnectionManager.async_connect",
+        side_effect=error,
     ):
         data = {**CONNECTION_DATA, CONF_HOST: "pchk"}
         result = await hass.config_entries.flow.async_init(
@@ -256,8 +265,12 @@ async def test_validate_connection() -> None:
     data = CONNECTION_DATA.copy()
 
     with (
-        patch("pypck.connection.PchkConnectionManager.async_connect") as async_connect,
-        patch("pypck.connection.PchkConnectionManager.async_close") as async_close,
+        patch(
+            "homeassistant.components.lcn.PchkConnectionManager.async_connect"
+        ) as async_connect,
+        patch(
+            "homeassistant.components.lcn.PchkConnectionManager.async_close"
+        ) as async_close,
     ):
         result = await validate_connection(data=data)
 

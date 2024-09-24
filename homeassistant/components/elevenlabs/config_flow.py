@@ -23,7 +23,23 @@ from homeassistant.helpers.selector import (
     SelectSelectorConfig,
 )
 
-from .const import CONF_MODEL, CONF_VOICE, DEFAULT_MODEL, DOMAIN
+from .const import (
+    CONF_CONFIGURE_VOICE,
+    CONF_MODEL,
+    CONF_OPTIMIZE_LATENCY,
+    CONF_SIMILARITY,
+    CONF_STABILITY,
+    CONF_STYLE,
+    CONF_USE_SPEAKER_BOOST,
+    CONF_VOICE,
+    DEFAULT_MODEL,
+    DEFAULT_OPTIMIZE_LATENCY,
+    DEFAULT_SIMILARITY,
+    DEFAULT_STABILITY,
+    DEFAULT_STYLE,
+    DEFAULT_USE_SPEAKER_BOOST,
+    DOMAIN,
+)
 
 USER_STEP_SCHEMA = vol.Schema({vol.Required(CONF_API_KEY): str})
 
@@ -92,6 +108,8 @@ class ElevenLabsOptionsFlow(OptionsFlowWithConfigEntry):
         # id -> name
         self.voices: dict[str, str] = {}
         self.models: dict[str, str] = {}
+        self.model: str | None = None
+        self.voice: str | None = None
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
@@ -103,6 +121,11 @@ class ElevenLabsOptionsFlow(OptionsFlowWithConfigEntry):
         assert self.models and self.voices
 
         if user_input is not None:
+            self.model = user_input[CONF_MODEL]
+            self.voice = user_input[CONF_VOICE]
+            configure_voice = user_input.pop(CONF_CONFIGURE_VOICE)
+            if configure_voice:
+                return await self.async_step_voice_settings()
             return self.async_create_entry(
                 title="ElevenLabs",
                 data=user_input,
@@ -139,7 +162,69 @@ class ElevenLabsOptionsFlow(OptionsFlowWithConfigEntry):
                             ]
                         )
                     ),
+                    vol.Required(CONF_CONFIGURE_VOICE, default=False): bool,
                 }
             ),
             self.options,
+        )
+
+    async def async_step_voice_settings(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle voice settings."""
+        assert self.voices and self.models
+        if user_input is not None:
+            user_input[CONF_MODEL] = self.model
+            user_input[CONF_VOICE] = self.voice
+            return self.async_create_entry(
+                title="ElevenLabs",
+                data=user_input,
+            )
+        return self.async_show_form(
+            step_id="voice_settings",
+            data_schema=self.elevenlabs_config_options_voice_schema(),
+        )
+
+    def elevenlabs_config_options_voice_schema(self) -> vol.Schema:
+        """Elevenlabs options voice schema."""
+        return vol.Schema(
+            {
+                vol.Optional(
+                    CONF_STABILITY,
+                    default=self.config_entry.options.get(
+                        CONF_STABILITY, DEFAULT_STABILITY
+                    ),
+                ): vol.All(
+                    vol.Coerce(float),
+                    vol.Range(min=0, max=1),
+                ),
+                vol.Optional(
+                    CONF_SIMILARITY,
+                    default=self.config_entry.options.get(
+                        CONF_SIMILARITY, DEFAULT_SIMILARITY
+                    ),
+                ): vol.All(
+                    vol.Coerce(float),
+                    vol.Range(min=0, max=1),
+                ),
+                vol.Optional(
+                    CONF_OPTIMIZE_LATENCY,
+                    default=self.config_entry.options.get(
+                        CONF_OPTIMIZE_LATENCY, DEFAULT_OPTIMIZE_LATENCY
+                    ),
+                ): vol.All(int, vol.Range(min=0, max=4)),
+                vol.Optional(
+                    CONF_STYLE,
+                    default=self.config_entry.options.get(CONF_STYLE, DEFAULT_STYLE),
+                ): vol.All(
+                    vol.Coerce(float),
+                    vol.Range(min=0, max=1),
+                ),
+                vol.Optional(
+                    CONF_USE_SPEAKER_BOOST,
+                    default=self.config_entry.options.get(
+                        CONF_USE_SPEAKER_BOOST, DEFAULT_USE_SPEAKER_BOOST
+                    ),
+                ): bool,
+            }
         )

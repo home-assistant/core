@@ -24,7 +24,7 @@ from homeassistant.components.vacuum import (
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from .mock_data import PROP
@@ -38,12 +38,17 @@ DEVICE_ID = "abc123"
 async def test_registry_entries(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
     bypass_api_fixture,
     setup_entry: MockConfigEntry,
 ) -> None:
     """Tests devices are registered in the entity registry."""
-    entry = entity_registry.async_get(ENTITY_ID)
-    assert entry.unique_id == DEVICE_ID
+    entity_entry = entity_registry.async_get(ENTITY_ID)
+    assert entity_entry.unique_id == DEVICE_ID
+
+    device_entry = device_registry.async_get(entity_entry.device_id)
+    assert device_entry is not None
+    assert device_entry.model_id == "roborock.vacuum.a27"
 
 
 @pytest.mark.parametrize(

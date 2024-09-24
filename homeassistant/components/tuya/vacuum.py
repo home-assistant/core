@@ -19,8 +19,8 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import TuyaConfigEntry
-from .base import EnumTypeData, IntegerTypeData, TuyaEntity
 from .const import TUYA_DISCOVERY_NEW, DPCode, DPType
+from .entity import EnumTypeData, IntegerTypeData, TuyaEntity
 
 TUYA_MODE_RETURN_HOME = "chargego"
 TUYA_STATUS_TO_HA = {

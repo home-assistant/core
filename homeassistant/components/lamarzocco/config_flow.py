@@ -10,7 +10,10 @@ from lmcloud.exceptions import AuthFail, RequestNotSuccessful
 from lmcloud.models import LaMarzoccoDeviceInfo
 import voluptuous as vol
 
-from homeassistant.components.bluetooth import BluetoothServiceInfo
+from homeassistant.components.bluetooth import (
+    BluetoothServiceInfo,
+    async_discovered_service_info,
+)
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
@@ -53,6 +56,7 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
 
         self.reauth_entry: ConfigEntry | None = None
+        self.reconfigure_entry: ConfigEntry | None = None
         self._config: dict[str, Any] = {}
         self._fleet: dict[str, LaMarzoccoDeviceInfo] = {}
         self._discovered: dict[str, str] = {}
@@ -92,13 +96,9 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
 
             if not errors:
                 if self.reauth_entry:
-                    self.hass.config_entries.async_update_entry(
-                        self.reauth_entry, data=data
+                    return self.async_update_reload_and_abort(
+                        self.reauth_entry, data=data, reason="reauth_successful"
                     )
-                    await self.hass.config_entries.async_reload(
-                        self.reauth_entry.entry_id
-                    )
-                    return self.async_abort(reason="reauth_successful")
                 if self._discovered:
                     if self._discovered[CONF_MACHINE] not in self._fleet:
                         errors["base"] = "machine_not_found"
@@ -134,8 +134,9 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input:
             if not self._discovered:
                 serial_number = user_input[CONF_MACHINE]
-                await self.async_set_unique_id(serial_number)
-                self._abort_if_unique_id_configured()
+                if self.reconfigure_entry is None:
+                    await self.async_set_unique_id(serial_number)
+                    self._abort_if_unique_id_configured()
             else:
                 serial_number = self._discovered[CONF_MACHINE]
 
@@ -153,6 +154,13 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
                     self._config[CONF_HOST] = user_input[CONF_HOST]
 
             if not errors:
+                if self.reconfigure_entry:
+                    for service_info in async_discovered_service_info(self.hass):
+                        self._discovered[service_info.name] = service_info.address
+
+                    if self._discovered:
+                        return await self.async_step_bluetooth_selection()
+
                 return self.async_create_entry(
                     title=selected_device.name,
                     data={
@@ -189,6 +197,45 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="machine_selection",
             data_schema=machine_selection_schema,
             errors=errors,
+        )
+
+    async def async_step_bluetooth_selection(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle Bluetooth device selection."""
+
+        assert self.reconfigure_entry
+
+        if user_input is not None:
+            return self.async_update_reload_and_abort(
+                self.reconfigure_entry,
+                data={
+                    **self._config,
+                    CONF_MAC: user_input[CONF_MAC],
+                },
+                reason="reconfigure_successful",
+            )
+
+        bt_options = [
+            SelectOptionDict(
+                value=device_mac,
+                label=f"{device_name} ({device_mac})",
+            )
+            for device_name, device_mac in self._discovered.items()
+        ]
+
+        return self.async_show_form(
+            step_id="bluetooth_selection",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_MAC): SelectSelector(
+                        SelectSelectorConfig(
+                            options=bt_options,
+                            mode=SelectSelectorMode.DROPDOWN,
+                        )
+                    ),
+                },
+            ),
         )
 
     async def async_step_bluetooth(
@@ -234,6 +281,40 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
                 data_schema=vol.Schema(
                     {
                         vol.Required(CONF_PASSWORD): str,
+                    }
+                ),
+            )
+
+        return await self.async_step_user(user_input)
+
+    async def async_step_reconfigure(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Perform reconfiguration of the config entry."""
+        self.reconfigure_entry = self.hass.config_entries.async_get_entry(
+            self.context["entry_id"]
+        )
+        return await self.async_step_reconfigure_confirm()
+
+    async def async_step_reconfigure_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm reconfiguration of the device."""
+        assert self.reconfigure_entry
+
+        if not user_input:
+            return self.async_show_form(
+                step_id="reconfigure_confirm",
+                data_schema=vol.Schema(
+                    {
+                        vol.Required(
+                            CONF_USERNAME,
+                            default=self.reconfigure_entry.data[CONF_USERNAME],
+                        ): str,
+                        vol.Required(
+                            CONF_PASSWORD,
+                            default=self.reconfigure_entry.data[CONF_PASSWORD],
+                        ): str,
                     }
                 ),
             )

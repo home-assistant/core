@@ -9,7 +9,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import DATA_UPCLOUD, SIGNAL_UPDATE_UPCLOUD, UpCloudServerEntity
+from .const import DATA_UPCLOUD
+from .entity import UpCloudServerEntity
+
+SIGNAL_UPDATE_UPCLOUD = "upcloud_update"
 
 
 async def async_setup_entry(

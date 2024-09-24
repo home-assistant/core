@@ -63,7 +63,6 @@ from .const import (
     MYSQLDB_URL_PREFIX,
     SQLITE_MAX_BIND_VARS,
     SQLITE_URL_PREFIX,
-    STATISTICS_ROWS_SCHEMA_VERSION,
     SupportedDialect,
 )
 from .db_schema import (
@@ -797,9 +796,7 @@ class Recorder(threading.Thread):
             # since we want the frontend queries to avoid a thundering
             # herd of queries to find the statistics meta data if
             # there are a lot of statistics graphs on the frontend.
-            schema_version = self.schema_version
-            if schema_version >= STATISTICS_ROWS_SCHEMA_VERSION:
-                self.statistics_meta_manager.load(session)
+            self.statistics_meta_manager.load(session)
 
             migration_changes: dict[str, int] = {
                 row[0]: row[1]
