@@ -79,16 +79,16 @@
     },
     "button": {
       "pause": {
-        "name": "Pause"
+        "name": "[%key:common::action::pause%]"
       },
       "resume": {
         "name": "Resume"
       },
       "start": {
-        "name": "Start"
+        "name": "[%key:common::action::start%]"
       },
       "stop": {
-        "name": "Stop"
+        "name": "[%key:common::action::stop%]"
       },
       "reset_filter_condition": {
         "name": "Reset filter condition"
