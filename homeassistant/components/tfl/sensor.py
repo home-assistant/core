@@ -12,6 +12,7 @@ from tflwrapper import stopPoint
 
 from homeassistant.components.sensor import (  # ENTITY_ID_FORMAT,; PLATFORM_SCHEMA,
     SensorEntity,
+    SensorStateClass,
 )
 from homeassistant.const import UnitOfTime
 from homeassistant.core import HomeAssistant
@@ -48,46 +49,53 @@ async def async_setup_entry(
     if typing.TYPE_CHECKING:
         assert unique_id
 
-    try:
-        stop_point_infos = await call_tfl_api(
-            hass, stop_point_api.getByIDs, stop_point_ids, False
-        )
-        devices = []
-        if isinstance(stop_point_infos, list):
-            for idx, stop_point_id in enumerate(stop_point_ids):
-                devices.append(
-                    StopPointSensor(
-                        stop_point_api,
-                        stop_point_infos[idx]["commonName"],
-                        stop_point_id,
-                        unique_id,
-                    )
-                )
-        else:
+    devices = []
+    for stop_point_id in stop_point_ids:
+        try:
+            stop_point_info = await call_tfl_api(
+                hass, stop_point_api.getByIDs, [stop_point_id], False
+            )
             devices.append(
                 StopPointSensor(
                     stop_point_api,
-                    stop_point_infos["commonName"],
-                    stop_point_ids[0],
+                    __getCommonName(stop_point_id, stop_point_info),
+                    stop_point_id,
                     unique_id,
                 )
             )
+        except HTTPError as exception:
+            error_code = exception.code
+            _LOGGER.exception(
+                "Error retrieving stop point info from TfL for stop_point=%s with HTTP error_code=%s, entity will not be created for this stop point",
+                stop_point_ids,
+                error_code,
+            )
+        except URLError as exception:
+            _LOGGER.exception(
+                "Error retrieving stop point info from TfL for stop_point=%s with URLError reason=%s, entity will not be created for this stop point",
+                stop_point_ids,
+                exception.reason,
+            )
 
-        async_add_entities(devices, True)
+    async_add_entities(devices, True)
 
-    except HTTPError as exception:
-        error_code = exception.code
-        _LOGGER.exception(
-            "Error retrieving stop point data from TfL for stop_points=%s with HTTP error_code=%s, entities will not be created",
-            stop_point_ids,
-            error_code,
-        )
-    except URLError as exception:
-        _LOGGER.exception(
-            "Error retrieving stop point data from TfL for stop_points=%s with URLError reason=%s, entities will not be created",
-            stop_point_ids,
-            exception.reason,
-        )
+
+def __getCommonName(stop_point_id: str, stop_point_info: dict[str, typing.Any]) -> str:
+    """Get the common name for the Stop Point.
+
+    In the happy path, the Stop Point Id will match the naptanId, and this is simple.
+    For Stop Points where there are many stops that can be grouped together, the TfL API
+    will group them and we need to find our target Stop Point Id and get the common name.
+    """
+    if stop_point_info["naptanId"] == stop_point_id:
+        return typing.cast(str, stop_point_info["commonName"])
+
+    # The stop point is more complicated and hierarchical, and we need to find the one that was asked for
+    for child_stop_point in stop_point_info["children"]:
+        for subchild in child_stop_point["children"]:
+            if subchild["naptanId"] == stop_point_id:
+                return typing.cast(str, subchild["commonName"])
+    return "Unknown"
 
 
 class StopPointSensor(SensorEntity):
@@ -108,6 +116,7 @@ class StopPointSensor(SensorEntity):
         self._name = name
         self._attr_name = name
         self._attr_unique_id = f"{unique_id}_{stop_point_id}"
+        self._attr_state_class = SensorStateClass.MEASUREMENT
         self._attr_device_info = DeviceInfo(
             name="TfL",
             identifiers={(DOMAIN, unique_id)},

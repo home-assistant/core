@@ -154,6 +154,166 @@ MOCK_DATA_TFL_STATION_ARRIVALS = [
         },
     },
 ]
+MOCK_DATA_TFL_STOP_POINT_INFO = {
+    "$type": "Tfl.Api.Presentation.Entities.StopPoint, Tfl.Api.Presentation.Entities",
+    "naptanId": "AAAAAAAA1",
+    "indicator": "Stop HB",
+    "stopLetter": "HB",
+    "modes": ["bus"],
+    "icsCode": "1006574",
+    "smsCode": "55465",
+    "stopType": "NaptanPublicBusCoachTram",
+    "id": "AAAAAAAA1",
+    "commonName": "Endymion Road",
+    "placeType": "StopPoint",
+    "children": [],
+    "lat": 51.57597,
+    "lon": -0.09845,
+}
+MOCK_DATA_TFL_STOP_POINT_INFO_WITH_CHILDREN = {
+    "$type": "Tfl.Api.Presentation.Entities.StopPoint, Tfl.Api.Presentation.Entities",
+    "naptanId": "910GHRGYGL",
+    "modes": ["bus", "overground"],
+    "icsCode": "1001139",
+    "smsCode": "52931",
+    "stopType": "NaptanRailStation",
+    "stationNaptan": "910GHRGYGL",
+    "id": "910GHRGYGL",
+    "commonName": "Harringay Green Lanes Rail Station",
+    "placeType": "StopPoint",
+    "children": [
+        {
+            "$type": "Tfl.Api.Presentation.Entities.StopPoint, Tfl.Api.Presentation.Entities",
+            "naptanId": "4900HRGYGL1",
+            "indicator": "Entrance",
+            "modes": ["bus", "overground"],
+            "icsCode": "1001139",
+            "stopType": "NaptanRailEntrance",
+            "stationNaptan": "910GHRGYGL",
+            "lines": [],
+            "lineGroup": [],
+            "lineModeGroups": [],
+            "id": "4900HRGYGL1",
+            "commonName": "Harringay Green Lanes Station",
+            "placeType": "StopPoint",
+            "children": [],
+            "lat": 51.57702,
+            "lon": -0.0988,
+        },
+        {
+            "$type": "Tfl.Api.Presentation.Entities.StopPoint, Tfl.Api.Presentation.Entities",
+            "naptanId": "4900HRGYGL2",
+            "indicator": "Entrance",
+            "modes": ["bus", "overground"],
+            "icsCode": "1001139",
+            "stopType": "NaptanRailEntrance",
+            "stationNaptan": "910GHRGYGL",
+            "lines": [],
+            "lineGroup": [],
+            "lineModeGroups": [],
+            "id": "4900HRGYGL2",
+            "commonName": "Harringay Green Lanes Station",
+            "placeType": "StopPoint",
+            "additionalProperties": [],
+            "children": [],
+            "lat": 51.57718,
+            "lon": -0.09879,
+        },
+        {
+            "$type": "Tfl.Api.Presentation.Entities.StopPoint, Tfl.Api.Presentation.Entities",
+            "naptanId": "490G000572",
+            "modes": ["bus"],
+            "icsCode": "1007837",
+            "stopType": "NaptanOnstreetBusCoachStopPair",
+            "stationNaptan": "490G000572",
+            "lines": [
+                {
+                    "$type": "Tfl.Api.Presentation.Entities.Identifier, Tfl.Api.Presentation.Entities",
+                    "id": "w5",
+                    "name": "W5",
+                    "uri": "/Line/w5",
+                    "type": "Line",
+                    "crowding": {
+                        "$type": "Tfl.Api.Presentation.Entities.Crowding, Tfl.Api.Presentation.Entities"
+                    },
+                    "routeType": "Unknown",
+                    "status": "Unknown",
+                }
+            ],
+            "lineGroup": [
+                {
+                    "$type": "Tfl.Api.Presentation.Entities.LineGroup, Tfl.Api.Presentation.Entities",
+                    "naptanIdReference": "490007837HA",
+                    "stationAtcoCode": "490G000572",
+                    "lineIdentifier": ["w5"],
+                }
+            ],
+            "lineModeGroups": [
+                {
+                    "$type": "Tfl.Api.Presentation.Entities.LineModeGroup, Tfl.Api.Presentation.Entities",
+                    "modeName": "bus",
+                    "lineIdentifier": ["w5"],
+                }
+            ],
+            "id": "490G000572",
+            "commonName": "Harringay Sainsbury's",
+            "placeType": "StopPoint",
+            "additionalProperties": [],
+            "children": [
+                {
+                    "$type": "Tfl.Api.Presentation.Entities.StopPoint, Tfl.Api.Presentation.Entities",
+                    "naptanId": "AAAAAAAA1",
+                    "indicator": "Stop HA",
+                    "stopLetter": "HA",
+                    "modes": ["bus"],
+                    "icsCode": "1007837",
+                    "stopType": "NaptanPublicBusCoachTram",
+                    "stationNaptan": "490G000572",
+                    "lines": [
+                        {
+                            "$type": "Tfl.Api.Presentation.Entities.Identifier, Tfl.Api.Presentation.Entities",
+                            "id": "w5",
+                            "name": "W5",
+                            "uri": "/Line/w5",
+                            "type": "Line",
+                            "crowding": {
+                                "$type": "Tfl.Api.Presentation.Entities.Crowding, Tfl.Api.Presentation.Entities"
+                            },
+                            "routeType": "Unknown",
+                            "status": "Unknown",
+                        }
+                    ],
+                    "lineGroup": [
+                        {
+                            "$type": "Tfl.Api.Presentation.Entities.LineGroup, Tfl.Api.Presentation.Entities",
+                            "naptanIdReference": "490007837HA",
+                            "stationAtcoCode": "490G000572",
+                            "lineIdentifier": ["w5"],
+                        }
+                    ],
+                    "lineModeGroups": [
+                        {
+                            "$type": "Tfl.Api.Presentation.Entities.LineModeGroup, Tfl.Api.Presentation.Entities",
+                            "modeName": "bus",
+                            "lineIdentifier": ["w5"],
+                        }
+                    ],
+                    "status": True,
+                    "id": "AAAAAAAA1",
+                    "commonName": "Harringay Sainsbury's",
+                    "placeType": "StopPoint",
+                    "children": [],
+                    "lat": 51.57609,
+                    "lon": -0.09615,
+                }
+            ],
+            "lat": 51.57609,
+            "lon": -0.09615,
+        },
+    ],
+    "lat": 51.577182,
+    "lon": -0.098144,
+}
 
 
 @pytest.fixture
