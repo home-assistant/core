@@ -160,13 +160,10 @@ EXCEPTIONS = {
     "pyvera",  # https://github.com/maximvelichko/pyvera/pull/164
     "pyxeoma",  # https://github.com/jeradM/pyxeoma/pull/11
     "repoze.lru",
-    "russound",  # https://github.com/laf/russound/pull/14   # codespell:ignore laf
     "ruuvitag-ble",  # https://github.com/Bluetooth-Devices/ruuvitag-ble/pull/10
     "sensirion-ble",  # https://github.com/akx/sensirion-ble/pull/9
     "sharp_aquos_rc",  # https://github.com/jmoore987/sharp_aquos_rc/pull/14
     "tapsaff",  # https://github.com/bazwilliams/python-taps-aff/pull/5
-    "tellduslive",  # https://github.com/molobrakos/tellduslive/pull/24
-    "tellsticknet",  # https://github.com/molobrakos/tellsticknet/pull/33
     "vincenty",  # Public domain
     "zeversolar",  # https://github.com/kvanzuijlen/zeversolar/pull/46
 }

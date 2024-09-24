@@ -9,7 +9,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components import script
-from homeassistant.components.blueprint.models import Blueprint, DomainBlueprints
+from homeassistant.components.blueprint import Blueprint, DomainBlueprints
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, template
@@ -109,7 +109,6 @@ async def test_confirmable_notification(
     assert len(mock_call_action.mock_calls) == 1
     _hass, config, variables, _context = mock_call_action.mock_calls[0][1]
 
-    template.attach(hass, config)
     rendered_config = template.render_complex(config, variables)
 
     assert rendered_config == {

@@ -1,0 +1,21 @@
+# serializer version: 1
+# name: test_entry_diagnostics
+  dict({
+    'info': dict({
+      'categories': list([
+      ]),
+      'latitude': '**REDACTED**',
+      'longitude': '**REDACTED**',
+      'radius': 25,
+      'scan_interval': 300.0,
+      'unit_system': 'metric',
+    }),
+    'service': dict({
+      'last_timestamp': None,
+      'last_update': '2024-09-05T15:00:00',
+      'last_update_successful': '2024-09-05T15:00:00',
+      'status': 'OK',
+      'total': 0,
+    }),
+  })
+# ---

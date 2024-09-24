@@ -29,6 +29,8 @@
     }
   },
   "services": {
-    "play_on_speaker_hub": "mdi:speaker"
+    "play_on_speaker_hub": {
+      "service": "mdi:speaker"
+    }
   }
 }

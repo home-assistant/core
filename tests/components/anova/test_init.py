@@ -2,7 +2,7 @@
 
 from anova_wifi import AnovaApi
 
-from homeassistant.components.anova import DOMAIN
+from homeassistant.components.anova.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 

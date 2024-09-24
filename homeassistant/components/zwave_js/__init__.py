@@ -353,7 +353,7 @@ class ControllerEvents:
         self.discovered_value_ids: dict[str, set[str]] = defaultdict(set)
         self.driver_events = driver_events
         self.dev_reg = driver_events.dev_reg
-        self.registered_unique_ids: dict[str, dict[str, set[str]]] = defaultdict(
+        self.registered_unique_ids: dict[str, dict[Platform, set[str]]] = defaultdict(
             lambda: defaultdict(set)
         )
         self.node_events = NodeEvents(hass, self)

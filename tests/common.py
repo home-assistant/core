@@ -47,7 +47,7 @@ from homeassistant.components.device_automation import (  # noqa: F401
     _async_get_device_automation_capabilities as async_get_device_automation_capabilities,
 )
 from homeassistant.config import IntegrationConfigInfo, async_process_component_config
-from homeassistant.config_entries import ConfigEntry, ConfigFlow
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     DEVICE_DEFAULT_NAME,
     EVENT_HOMEASSISTANT_CLOSE,
@@ -419,7 +419,7 @@ def async_fire_mqtt_message(
     from paho.mqtt.client import MQTTMessage
 
     # pylint: disable-next=import-outside-toplevel
-    from homeassistant.components.mqtt.models import MqttData
+    from homeassistant.components.mqtt import MqttData
 
     if isinstance(payload, str):
         payload = payload.encode("utf-8")
@@ -990,6 +990,7 @@ class MockConfigEntry(config_entries.ConfigEntry):
         *,
         data=None,
         disabled_by=None,
+        discovery_keys=None,
         domain="test",
         entry_id=None,
         minor_version=1,
@@ -1004,9 +1005,11 @@ class MockConfigEntry(config_entries.ConfigEntry):
         version=1,
     ) -> None:
         """Initialize a mock config entry."""
+        discovery_keys = discovery_keys or {}
         kwargs = {
             "data": data or {},
             "disabled_by": disabled_by,
+            "discovery_keys": discovery_keys,
             "domain": domain,
             "entry_id": entry_id or ulid_util.ulid_now(),
             "minor_version": minor_version,
@@ -1053,6 +1056,25 @@ class MockConfigEntry(config_entries.ConfigEntry):
         tests.
         """
         self._async_set_state(hass, state, reason)
+
+    async def start_reauth_flow(
+        self,
+        hass: HomeAssistant,
+        context: dict[str, Any] | None = None,
+        data: dict[str, Any] | None = None,
+    ) -> ConfigFlowResult:
+        """Start a reauthentication flow."""
+        return await hass.config_entries.flow.async_init(
+            self.domain,
+            context={
+                "source": config_entries.SOURCE_REAUTH,
+                "entry_id": self.entry_id,
+                "title_placeholders": {"name": self.title},
+                "unique_id": self.unique_id,
+            }
+            | (context or {}),
+            data=self.data | (data or {}),
+        )
 
 
 def patch_yaml_files(files_dict, endswith=True):

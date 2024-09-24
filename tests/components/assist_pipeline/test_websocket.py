@@ -743,7 +743,7 @@ async def test_stt_stream_failed(
     client = await hass_ws_client(hass)
 
     with patch(
-        "tests.components.assist_pipeline.conftest.MockSttProviderEntity.async_process_audio_stream",
+        "tests.components.assist_pipeline.conftest.MockSTTProviderEntity.async_process_audio_stream",
         side_effect=RuntimeError,
     ):
         await client.send_json_auto_id(

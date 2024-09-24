@@ -269,6 +269,9 @@
     },
     "temp_out_of_range": {
       "message": "Provided temperature {check_temp} is not valid. Accepted range is {min_temp} to {max_temp}."
+    },
+    "humidity_out_of_range": {
+      "message": "Provided humidity {humidity} is not valid. Accepted range is {min_humidity} to {max_humidity}."
     }
   }
 }

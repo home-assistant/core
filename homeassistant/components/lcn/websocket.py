@@ -21,7 +21,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_RESOURCE,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 import homeassistant.helpers.config_validation as cv
 
@@ -102,7 +102,6 @@ def get_config_entry(
 ) -> AsyncWebSocketCommandHandler:
     """Websocket decorator to ensure the config_entry exists and return it."""
 
-    @callback
     @wraps(func)
     async def get_entry(
         hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
@@ -158,7 +157,13 @@ async def websocket_get_entity_configs(
     else:
         entity_configs = config_entry.data[CONF_ENTITIES]
 
-    connection.send_result(msg["id"], entity_configs)
+    result_entity_configs = [
+        {**entity_config, CONF_NAME: entity.name or entity.original_name}
+        for entity_config in entity_configs[:]
+        if (entity := get_entity_entry(hass, entity_config, config_entry)) is not None
+    ]
+
+    connection.send_result(msg["id"], result_entity_configs)
 
 
 @websocket_api.require_admin
@@ -438,3 +443,23 @@ async def async_create_or_update_device_in_config_entry(
     await async_update_device_config(device_connection, device_config)
 
     hass.config_entries.async_update_entry(config_entry, data=data)
+
+
+def get_entity_entry(
+    hass: HomeAssistant, entity_config: dict, config_entry: ConfigEntry
+) -> er.RegistryEntry | None:
+    """Get entity RegistryEntry from entity_config."""
+    entity_registry = er.async_get(hass)
+    domain_name = entity_config[CONF_DOMAIN]
+    domain_data = entity_config[CONF_DOMAIN_DATA]
+    resource = get_resource(domain_name, domain_data).lower()
+    unique_id = generate_unique_id(
+        config_entry.entry_id,
+        entity_config[CONF_ADDRESS],
+        resource,
+    )
+    if (
+        entity_id := entity_registry.async_get_entity_id(domain_name, DOMAIN, unique_id)
+    ) is None:
+        return None
+    return entity_registry.async_get(entity_id)

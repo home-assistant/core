@@ -20,15 +20,25 @@
         'name': 'Test Garage 2',
         'vacation_mode': True,
       }),
+      '3': dict({
+        'barrier_status': 'closed',
+        'connected': True,
+        'fw_version': '1.2.3.4.5.6',
+        'id': '3',
+        'light_status': None,
+        'name': 'Test Garage 3',
+        'vacation_mode': False,
+      }),
     }),
     'entry': dict({
       'data': dict({
         'email': '**REDACTED**',
         'password': '**REDACTED**',
         'refresh_token': '**REDACTED**',
-        'refresh_token_creation_time': 1722184160.738171,
       }),
       'disabled_by': None,
+      'discovery_keys': dict({
+      }),
       'domain': 'nice_go',
       'entry_id': 'acefdd4b3a4a0911067d1cf51414201e',
       'minor_version': 1,

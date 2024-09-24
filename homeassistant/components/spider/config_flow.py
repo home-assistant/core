@@ -82,6 +82,6 @@ class SpiderConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_import(self, import_data):
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Import spider config from configuration.yaml."""
         return await self.async_step_user(import_data)

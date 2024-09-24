@@ -415,6 +415,11 @@ def test_get_unit_system_invalid(key: str) -> None:
         ),
         (
             SensorDeviceClass.SPEED,
+            UnitOfSpeed.INCHES_PER_SECOND,
+            UnitOfSpeed.MILLIMETERS_PER_SECOND,
+        ),
+        (
+            SensorDeviceClass.SPEED,
             UnitOfSpeed.MILES_PER_HOUR,
             UnitOfSpeed.KILOMETERS_PER_HOUR,
         ),
@@ -520,6 +525,7 @@ UNCONVERTED_UNITS_METRIC_SYSTEM = {
         UnitOfSpeed.KILOMETERS_PER_HOUR,
         UnitOfSpeed.KNOTS,
         UnitOfSpeed.METERS_PER_SECOND,
+        UnitOfSpeed.MILLIMETERS_PER_SECOND,
         UnitOfVolumetricFlux.MILLIMETERS_PER_DAY,
         UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
     ),
@@ -661,6 +667,11 @@ def test_metric_converted_units(device_class: SensorDeviceClass) -> None:
         ),
         (SensorDeviceClass.SPEED, UnitOfVolumetricFlux.INCHES_PER_DAY, None),
         (SensorDeviceClass.SPEED, UnitOfVolumetricFlux.INCHES_PER_HOUR, None),
+        (
+            SensorDeviceClass.SPEED,
+            UnitOfSpeed.MILLIMETERS_PER_SECOND,
+            UnitOfSpeed.INCHES_PER_SECOND,
+        ),
         (SensorDeviceClass.SPEED, "very_fast", None),
         # Test volume conversion
         (SensorDeviceClass.VOLUME, UnitOfVolume.CUBIC_METERS, UnitOfVolume.CUBIC_FEET),
@@ -729,6 +740,7 @@ UNCONVERTED_UNITS_US_SYSTEM = {
         UnitOfSpeed.FEET_PER_SECOND,
         UnitOfSpeed.KNOTS,
         UnitOfSpeed.MILES_PER_HOUR,
+        UnitOfSpeed.INCHES_PER_SECOND,
         UnitOfVolumetricFlux.INCHES_PER_DAY,
         UnitOfVolumetricFlux.INCHES_PER_HOUR,
     ),

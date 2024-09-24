@@ -18,9 +18,9 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
+from homeassistant.util.hass_dict import HassKey
 
 from .const import (  # noqa: F401
     ATTR_DATA,
@@ -39,7 +39,6 @@ from .legacy import (  # noqa: F401
     async_reload,
     async_reset_platform,
     async_setup_legacy,
-    check_templates_warn,
 )
 from .repairs import migrate_notify_issue  # noqa: F401
 
@@ -48,6 +47,7 @@ from .repairs import migrate_notify_issue  # noqa: F401
 # Platform specific data
 ATTR_TITLE_DEFAULT = "Home Assistant"
 
+DOMAIN_DATA: HassKey[EntityComponent[NotifyEntity]] = HassKey(DOMAIN)
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
@@ -78,7 +78,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         # legacy platforms to finish setting up.
         hass.async_create_task(setup, eager_start=True)
 
-    component = hass.data[DOMAIN] = EntityComponent[NotifyEntity](_LOGGER, DOMAIN, hass)
+    component = hass.data[DOMAIN_DATA] = EntityComponent[NotifyEntity](
+        _LOGGER, DOMAIN, hass
+    )
     component.async_register_entity_service(
         SERVICE_SEND_MESSAGE,
         {
@@ -90,22 +92,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async def persistent_notification(service: ServiceCall) -> None:
         """Send notification via the built-in persistent_notify integration."""
-        message: Template = service.data[ATTR_MESSAGE]
-        check_templates_warn(hass, message)
-
-        title = None
-        title_tpl: Template | None
-        if title_tpl := service.data.get(ATTR_TITLE):
-            check_templates_warn(hass, title_tpl)
-            title = title_tpl.async_render(parse_result=False)
+        message: str = service.data[ATTR_MESSAGE]
+        title: str | None = service.data.get(ATTR_TITLE)
 
         notification_id = None
         if data := service.data.get(ATTR_DATA):
             notification_id = data.get(pn.ATTR_NOTIFICATION_ID)
 
-        pn.async_create(
-            hass, message.async_render(parse_result=False), title, notification_id
-        )
+        pn.async_create(hass, message, title, notification_id)
 
     hass.services.async_register(
         DOMAIN,
@@ -123,14 +117,12 @@ class NotifyEntityDescription(EntityDescription, frozen_or_thawed=True):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    component: EntityComponent[NotifyEntity] = hass.data[DOMAIN]
-    return await component.async_setup_entry(entry)
+    return await hass.data[DOMAIN_DATA].async_setup_entry(entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    component: EntityComponent[NotifyEntity] = hass.data[DOMAIN]
-    return await component.async_unload_entry(entry)
+    return await hass.data[DOMAIN_DATA].async_unload_entry(entry)
 
 
 class NotifyEntity(RestoreEntity):

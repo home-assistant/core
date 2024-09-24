@@ -32,6 +32,7 @@ from homeassistant.components.sonos.const import (
 )
 from homeassistant.components.sonos.media_player import (
     LONG_SERVICE_TIMEOUT,
+    SERVICE_GET_QUEUE,
     SERVICE_RESTORE,
     SERVICE_SNAPSHOT,
     VOLUME_INCREMENT,
@@ -71,6 +72,7 @@ async def test_device_registry(
     )
     assert reg_device is not None
     assert reg_device.model == "Model Name"
+    assert reg_device.model_id == "S12"
     assert reg_device.sw_version == "13.1"
     assert reg_device.connections == {
         (CONNECTION_NETWORK_MAC, "00:11:22:33:44:55"),
@@ -228,6 +230,45 @@ async def test_play_media_library(
         assert (
             sock_mock.play_from_queue.call_args_list[0].args[0]
             == test_result["play_pos"]
+        )
+
+
+@pytest.mark.parametrize(
+    ("media_content_type", "media_content_id", "message"),
+    [
+        (
+            "artist",
+            "A:ALBUM/UnknowAlbum",
+            "Could not find media in library: A:ALBUM/UnknowAlbum",
+        ),
+        (
+            "UnknownContent",
+            "A:ALBUM/UnknowAlbum",
+            "Sonos does not support media content type: UnknownContent",
+        ),
+    ],
+)
+async def test_play_media_library_content_error(
+    hass: HomeAssistant,
+    async_autosetup_sonos,
+    media_content_type,
+    media_content_id,
+    message,
+) -> None:
+    """Test playing local library errors on content and content type."""
+    with pytest.raises(
+        ServiceValidationError,
+        match=message,
+    ):
+        await hass.services.async_call(
+            MP_DOMAIN,
+            SERVICE_PLAY_MEDIA,
+            {
+                ATTR_ENTITY_ID: "media_player.zone_a",
+                ATTR_MEDIA_CONTENT_TYPE: media_content_type,
+                ATTR_MEDIA_CONTENT_ID: media_content_id,
+            },
+            blocking=True,
         )
 
 
@@ -1121,3 +1162,46 @@ async def test_play_media_announce(
             blocking=True,
         )
     assert sonos_websocket.play_clip.call_count == 1
+
+    # Test speakers that do not support announce. This
+    # will result in playing the clip directly via play_uri
+    sonos_websocket.play_clip.reset_mock()
+    sonos_websocket.play_clip.side_effect = None
+    retval = {"success": 0, "type": "globalError"}
+    sonos_websocket.play_clip.return_value = [retval, {}]
+
+    await hass.services.async_call(
+        MP_DOMAIN,
+        SERVICE_PLAY_MEDIA,
+        {
+            ATTR_ENTITY_ID: "media_player.zone_a",
+            ATTR_MEDIA_CONTENT_TYPE: "music",
+            ATTR_MEDIA_CONTENT_ID: content_id,
+            ATTR_MEDIA_ANNOUNCE: True,
+        },
+        blocking=True,
+    )
+    assert sonos_websocket.play_clip.call_count == 1
+    soco.play_uri.assert_called_with(content_id, force_radio=False)
+
+
+async def test_media_get_queue(
+    hass: HomeAssistant,
+    soco: MockSoCo,
+    async_autosetup_sonos,
+    soco_factory,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test getting the media queue."""
+    soco_mock = soco_factory.mock_list.get("192.168.42.2")
+    result = await hass.services.async_call(
+        SONOS_DOMAIN,
+        SERVICE_GET_QUEUE,
+        {
+            ATTR_ENTITY_ID: "media_player.zone_a",
+        },
+        blocking=True,
+        return_response=True,
+    )
+    soco_mock.get_queue.assert_called_with(max_items=0)
+    assert result == snapshot

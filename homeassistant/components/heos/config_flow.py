@@ -43,9 +43,9 @@ class HeosFlowHandler(ConfigFlow, domain=DOMAIN):
         # Show selection form
         return self.async_show_form(step_id="user")
 
-    async def async_step_import(self, user_input=None):
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Occurs when an entry is setup through config."""
-        host = user_input[CONF_HOST]
+        host = import_data[CONF_HOST]
         # raise_on_progress is False here in case ssdp discovers
         # heos first which would block the import
         await self.async_set_unique_id(DOMAIN, raise_on_progress=False)
