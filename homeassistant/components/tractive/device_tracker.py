@@ -62,10 +62,10 @@ class TractiveDeviceTracker(TractiveEntity, TrackerEntity):
             return SourceType.ROUTER
         return SourceType.GPS
 
-    @property	
-    def battery_level(self) -> int | None:	
-        """Return the battery level of the device."""	
-        return self._battery_level	
+    @property
+    def battery_level(self) -> int | None:
+        """Return the battery level of the device."""
+        return self._battery_level
 
     @callback
     def _handle_hardware_status_update(self, event: dict[str, Any]) -> None:
