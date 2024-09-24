@@ -389,9 +389,6 @@ ENERGY_LIVE_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
         ],
         device_class=SensorDeviceClass.ENUM,
     ),
-    SensorEntityDescription(
-        key="storm_mode_active",
-    ),
 )
 
 WALL_CONNECTOR_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
