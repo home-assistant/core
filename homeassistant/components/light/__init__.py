@@ -913,6 +913,17 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     __color_mode_reported = False
 
+    @property  # type: ignore[misc]
+    @final
+    def state(self) -> str | None:  # type: ignore[override]
+        """Return the state."""
+        # Implemented in Home Assistant 2024.10 to enable light entity
+        # to return an enum instead of a string.
+        # When ToggleEntity can return an enum this can be removed.
+        if (_is_on := self.is_on) is None:
+            return None
+        return LightState.ON if _is_on else LightState.OFF
+
     @cached_property
     def brightness(self) -> int | None:
         """Return the brightness of this light between 0..255."""
