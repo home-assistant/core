@@ -9,6 +9,7 @@ from matter_server.common import custom_clusters
 from matter_server.common.helpers.util import create_attribute_path_from_attribute
 
 from homeassistant.components.number import (
+    NumberDeviceClass,
     NumberEntity,
     NumberEntityDescription,
     NumberMode,
@@ -142,6 +143,7 @@ DISCOVERY_SCHEMAS = [
         platform=Platform.NUMBER,
         entity_description=MatterNumberEntityDescription(
             key="EveWeatherAltitude",
+            device_class=NumberDeviceClass.DISTANCE,
             entity_category=EntityCategory.CONFIG,
             translation_key="altitude",
             native_max_value=9000,
