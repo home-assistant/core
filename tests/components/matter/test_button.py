@@ -66,9 +66,11 @@ async def test_operational_state_buttons(
 ) -> None:
     """Test if button entities are created for operational state commands."""
     assert hass.states.get("button.dishwasher_pause")
-    assert hass.states.get("button.dishwasher_resume")
     assert hass.states.get("button.dishwasher_start")
     assert hass.states.get("button.dishwasher_stop")
+
+    # resume may not be disocvered as its missing in the supported command list
+    assert hass.states.get("button.dishwasher_resume") is None
 
     # test press action
     await hass.services.async_call(
