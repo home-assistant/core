@@ -1841,7 +1841,7 @@ async def test_nested_trigger_list() -> None:
                     "event_type": "trigger_3",
                 },
                 {
-                    "platform": "event",
+                    "trigger": "event",
                     "event_type": "trigger_4",
                 },
             ],
@@ -1853,17 +1853,14 @@ async def test_nested_trigger_list() -> None:
     assert validated_triggers == [
         {
             "platform": "event",
-            "trigger": "event",
             "event_type": "trigger_1",
         },
         {
             "platform": "event",
-            "trigger": "event",
             "event_type": "trigger_2",
         },
         {
             "platform": "event",
-            "trigger": "event",
             "event_type": "trigger_3",
         },
         {
@@ -1898,7 +1895,6 @@ async def test_nested_trigger_list_extra() -> None:
     assert validated_triggers == [
         {
             "platform": "other",
-            "trigger": "other",
             "triggers": [
                 {
                     "platform": "event",

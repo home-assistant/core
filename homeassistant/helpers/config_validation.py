@@ -1782,7 +1782,7 @@ def _backward_compat_trigger_schema(value: Any | None) -> Any:
 
     # `platform` has been renamed to `trigger`
     if CONF_TRIGGER in value:
-        response[CONF_PLATFORM] = value[CONF_TRIGGER]
+        response[CONF_PLATFORM] = value.pop(CONF_TRIGGER)
 
     return response
 
