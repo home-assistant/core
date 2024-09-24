@@ -46,7 +46,7 @@ async def test_updating_exception(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert hass.states.get("sensor.nytgames_wordles_played").state == STATE_UNAVAILABLE
+    assert hass.states.get("sensor.wordle_played").state == STATE_UNAVAILABLE
 
     mock_nyt_games_client.get_latest_stats.side_effect = None
 
@@ -54,4 +54,4 @@ async def test_updating_exception(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert hass.states.get("sensor.nytgames_wordles_played").state != STATE_UNAVAILABLE
+    assert hass.states.get("sensor.wordle_played").state != STATE_UNAVAILABLE

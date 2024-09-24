@@ -19,7 +19,7 @@ from homeassistant.helpers.typing import StateType
 
 from . import NYTGamesConfigEntry
 from .coordinator import NYTGamesCoordinator
-from .entity import NYTGamesEntity
+from .entity import ConnectionsEntity, SpellingBeeEntity, WordleEntity
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -168,24 +168,22 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class NYTGamesSensor(NYTGamesEntity, SensorEntity):
+class NYTGamesWordleSensor(WordleEntity, SensorEntity):
     """Defines a NYT Games sensor."""
+
+    entity_description: NYTGamesWordleSensorEntityDescription
 
     def __init__(
         self,
         coordinator: NYTGamesCoordinator,
-        description: SensorEntityDescription,
+        description: NYTGamesWordleSensorEntityDescription,
     ) -> None:
         """Initialize NYT Games sensor."""
         super().__init__(coordinator)
         self.entity_description = description
-        self._attr_unique_id = f"{coordinator.config_entry.unique_id}-{description.key}"
-
-
-class NYTGamesWordleSensor(NYTGamesSensor):
-    """Defines a NYT Games sensor."""
-
-    entity_description: NYTGamesWordleSensorEntityDescription
+        self._attr_unique_id = (
+            f"{coordinator.config_entry.unique_id}-wordle-{description.key}"
+        )
 
     @property
     def native_value(self) -> StateType:
@@ -193,10 +191,22 @@ class NYTGamesWordleSensor(NYTGamesSensor):
         return self.entity_description.value_fn(self.coordinator.data.wordle)
 
 
-class NYTGamesSpellingBeeSensor(NYTGamesSensor):
+class NYTGamesSpellingBeeSensor(SpellingBeeEntity, SensorEntity):
     """Defines a NYT Games sensor."""
 
     entity_description: NYTGamesSpellingBeeSensorEntityDescription
+
+    def __init__(
+        self,
+        coordinator: NYTGamesCoordinator,
+        description: NYTGamesSpellingBeeSensorEntityDescription,
+    ) -> None:
+        """Initialize NYT Games sensor."""
+        super().__init__(coordinator)
+        self.entity_description = description
+        self._attr_unique_id = (
+            f"{coordinator.config_entry.unique_id}-spelling_bee-{description.key}"
+        )
 
     @property
     def native_value(self) -> StateType:
@@ -204,10 +214,22 @@ class NYTGamesSpellingBeeSensor(NYTGamesSensor):
         return self.entity_description.value_fn(self.coordinator.data.spelling_bee)
 
 
-class NYTGamesConnectionsSensor(NYTGamesSensor):
+class NYTGamesConnectionsSensor(ConnectionsEntity, SensorEntity):
     """Defines a NYT Games sensor."""
 
     entity_description: NYTGamesConnectionsSensorEntityDescription
+
+    def __init__(
+        self,
+        coordinator: NYTGamesCoordinator,
+        description: NYTGamesConnectionsSensorEntityDescription,
+    ) -> None:
+        """Initialize NYT Games sensor."""
+        super().__init__(coordinator)
+        self.entity_description = description
+        self._attr_unique_id = (
+            f"{coordinator.config_entry.unique_id}-connections-{description.key}"
+        )
 
     @property
     def native_value(self) -> StateType | date:
