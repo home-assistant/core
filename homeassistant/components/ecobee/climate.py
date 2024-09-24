@@ -580,6 +580,8 @@ class Thermostat(ClimateEntity):
             ),
             "equipment_running": status,
             "fan_min_on_time": self.settings["fanMinOnTime"],
+            "available_sensors": self.remote_sensors,
+            "active_sensors": self.active_sensors_in_preset_mode,
         }
 
     @property
@@ -590,6 +592,11 @@ class Thermostat(ClimateEntity):
         except KeyError:
             sensors_info = []
         return [sensor["name"] for sensor in sensors_info if sensor.get("name")]
+
+    @property
+    def active_sensors_in_preset_mode(self) -> list:
+        """Return the currently active/participating sensors."""
+        return self._sensors_in_preset_mode(self.preset_mode)
 
     def set_preset_mode(self, preset_mode: str) -> None:
         """Activate a preset."""

@@ -25,9 +25,17 @@ def ecobee_fixture():
         "identifier": "abc",
         "program": {
             "climates": [
-                {"name": "Climate1", "climateRef": "c1"},
-                {"name": "Climate2", "climateRef": "c2"},
-                {"name": "Away", "climateRef": "away"},
+                {
+                    "name": "Climate1",
+                    "climateRef": "c1",
+                    "sensors": [{"name": "Ecobee"}],
+                },
+                {
+                    "name": "Climate2",
+                    "climateRef": "c2",
+                    "sensors": [{"name": "Ecobee"}],
+                },
+                {"name": "Away", "climateRef": "away", "sensors": [{"name": "Ecobee"}]},
             ],
             "currentClimateRef": "c1",
         },
@@ -58,6 +66,12 @@ def ecobee_fixture():
                 "startTime": "11:00:00",
                 "endDate": "2017-01-01",
                 "endTime": "10:00:00",
+            }
+        ],
+        "remoteSensors": [
+            {
+                "id": "rs2:100",
+                "name": "Remote Sensor 1",
             }
         ],
     }
@@ -186,6 +200,8 @@ async def test_extra_state_attributes(ecobee_fixture, thermostat) -> None:
         "climate_mode": "Climate1",
         "fan_min_on_time": 10,
         "equipment_running": "heatPump2",
+        "available_sensors": ["Remote Sensor 1"],
+        "active_sensors": ["Ecobee"],
     }
 
     ecobee_fixture["equipmentStatus"] = "auxHeat2"
@@ -194,6 +210,8 @@ async def test_extra_state_attributes(ecobee_fixture, thermostat) -> None:
         "climate_mode": "Climate1",
         "fan_min_on_time": 10,
         "equipment_running": "auxHeat2",
+        "available_sensors": ["Remote Sensor 1"],
+        "active_sensors": ["Ecobee"],
     }
 
     ecobee_fixture["equipmentStatus"] = "compCool1"
@@ -202,6 +220,8 @@ async def test_extra_state_attributes(ecobee_fixture, thermostat) -> None:
         "climate_mode": "Climate1",
         "fan_min_on_time": 10,
         "equipment_running": "compCool1",
+        "available_sensors": ["Remote Sensor 1"],
+        "active_sensors": ["Ecobee"],
     }
     ecobee_fixture["equipmentStatus"] = ""
     assert thermostat.extra_state_attributes == {
@@ -209,6 +229,8 @@ async def test_extra_state_attributes(ecobee_fixture, thermostat) -> None:
         "climate_mode": "Climate1",
         "fan_min_on_time": 10,
         "equipment_running": "",
+        "available_sensors": ["Remote Sensor 1"],
+        "active_sensors": ["Ecobee"],
     }
 
     ecobee_fixture["equipmentStatus"] = "Unknown"
@@ -217,6 +239,8 @@ async def test_extra_state_attributes(ecobee_fixture, thermostat) -> None:
         "climate_mode": "Climate1",
         "fan_min_on_time": 10,
         "equipment_running": "Unknown",
+        "available_sensors": ["Remote Sensor 1"],
+        "active_sensors": ["Ecobee"],
     }
 
     ecobee_fixture["program"]["currentClimateRef"] = "c2"
@@ -225,6 +249,8 @@ async def test_extra_state_attributes(ecobee_fixture, thermostat) -> None:
         "climate_mode": "Climate2",
         "fan_min_on_time": 10,
         "equipment_running": "Unknown",
+        "available_sensors": ["Remote Sensor 1"],
+        "active_sensors": ["Ecobee"],
     }
 
 
