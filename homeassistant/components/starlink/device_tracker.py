@@ -4,7 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
-from homeassistant.components.device_tracker import SourceType, TrackerEntity
+from homeassistant.components.device_tracker import TrackerEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityDescription
@@ -54,11 +54,6 @@ class StarlinkDeviceTrackerEntity(StarlinkEntity, TrackerEntity):
     """A TrackerEntity for Starlink devices. Handles creating unique IDs."""
 
     entity_description: StarlinkDeviceTrackerEntityDescription
-
-    @property
-    def source_type(self) -> SourceType:
-        """Return the source type, eg gps or router, of the device."""
-        return SourceType.GPS
 
     @property
     def latitude(self) -> float | None:
