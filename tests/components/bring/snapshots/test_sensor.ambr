@@ -29,13 +29,14 @@
     'supported_features': 0,
     'translation_key': <BringSensor.DISCOUNTED: 'discounted'>,
     'unique_id': '00000000-00000000-00000000-00000000_b4776778-7f6c-496e-951b-92a35d3db0dd_discounted',
-    'unit_of_measurement': None,
+    'unit_of_measurement': 'Items',
   })
 # ---
 # name: test_setup[sensor.baumarkt_discount_only-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Baumarkt Discount only',
+      'unit_of_measurement': 'Items',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.baumarkt_discount_only',
@@ -167,13 +168,14 @@
     'supported_features': 0,
     'translation_key': <BringSensor.CONVENIENT: 'convenient'>,
     'unique_id': '00000000-00000000-00000000-00000000_b4776778-7f6c-496e-951b-92a35d3db0dd_convenient',
-    'unit_of_measurement': None,
+    'unit_of_measurement': 'Items',
   })
 # ---
 # name: test_setup[sensor.baumarkt_on_occasion-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Baumarkt On occasion',
+      'unit_of_measurement': 'Items',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.baumarkt_on_occasion',
@@ -305,13 +307,14 @@
     'supported_features': 0,
     'translation_key': <BringSensor.URGENT: 'urgent'>,
     'unique_id': '00000000-00000000-00000000-00000000_b4776778-7f6c-496e-951b-92a35d3db0dd_urgent',
-    'unit_of_measurement': None,
+    'unit_of_measurement': 'Items',
   })
 # ---
 # name: test_setup[sensor.baumarkt_urgent-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Baumarkt Urgent',
+      'unit_of_measurement': 'Items',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.baumarkt_urgent',
@@ -351,13 +354,14 @@
     'supported_features': 0,
     'translation_key': <BringSensor.DISCOUNTED: 'discounted'>,
     'unique_id': '00000000-00000000-00000000-00000000_e542eef6-dba7-4c31-a52c-29e6ab9d83a5_discounted',
-    'unit_of_measurement': None,
+    'unit_of_measurement': 'Items',
   })
 # ---
 # name: test_setup[sensor.einkauf_discount_only-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Einkauf Discount only',
+      'unit_of_measurement': 'Items',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.einkauf_discount_only',
@@ -489,13 +493,14 @@
     'supported_features': 0,
     'translation_key': <BringSensor.CONVENIENT: 'convenient'>,
     'unique_id': '00000000-00000000-00000000-00000000_e542eef6-dba7-4c31-a52c-29e6ab9d83a5_convenient',
-    'unit_of_measurement': None,
+    'unit_of_measurement': 'Items',
   })
 # ---
 # name: test_setup[sensor.einkauf_on_occasion-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Einkauf On occasion',
+      'unit_of_measurement': 'Items',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.einkauf_on_occasion',
@@ -627,13 +632,14 @@
     'supported_features': 0,
     'translation_key': <BringSensor.URGENT: 'urgent'>,
     'unique_id': '00000000-00000000-00000000-00000000_e542eef6-dba7-4c31-a52c-29e6ab9d83a5_urgent',
-    'unit_of_measurement': None,
+    'unit_of_measurement': 'Items',
   })
 # ---
 # name: test_setup[sensor.einkauf_urgent-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Einkauf Urgent',
+      'unit_of_measurement': 'Items',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.einkauf_urgent',
