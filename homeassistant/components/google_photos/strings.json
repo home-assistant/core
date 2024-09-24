@@ -54,6 +54,9 @@
     },
     "api_error": {
       "message": "Google Photos API responded with error: {message}"
+    },
+    "albums_failed": {
+      "message": "Cannot fetch albums from the Google Photos API"
     }
   },
   "services": {

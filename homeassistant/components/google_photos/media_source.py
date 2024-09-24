@@ -149,7 +149,7 @@ class GooglePhotosMediaSource(MediaSource):
                 f"Could not resolve identiifer that is not a Photo: {identifier}"
             )
         entry = self._async_config_entry(identifier.config_entry_id)
-        client = entry.runtime_data
+        client = entry.runtime_data.client
         media_item = await client.get_media_item(media_item_id=identifier.media_id)
         if not media_item.mime_type:
             raise BrowseError("Could not determine mime type of media item")
@@ -189,7 +189,8 @@ class GooglePhotosMediaSource(MediaSource):
         # Determine the configuration entry for this item
         identifier = PhotosIdentifier.of(item.identifier)
         entry = self._async_config_entry(identifier.config_entry_id)
-        client = entry.runtime_data
+        coordinator = entry.runtime_data
+        client = coordinator.client
 
         source = _build_account(entry, identifier)
         if identifier.id_type is None:
@@ -202,15 +203,8 @@ class GooglePhotosMediaSource(MediaSource):
                 )
                 for special_album in SpecialAlbum
             ]
-            albums: list[Album] = []
-            try:
-                async for album_result in await client.list_albums(
-                    page_size=ALBUM_PAGE_SIZE
-                ):
-                    albums.extend(album_result.albums)
-            except GooglePhotosApiError as err:
-                raise BrowseError(f"Error listing albums: {err}") from err
 
+            albums = await coordinator.list_albums()
             source.children.extend(
                 _build_album(
                     album.title,
