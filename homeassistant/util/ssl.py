@@ -64,7 +64,7 @@ SSL_CIPHER_LISTS = {
 
 
 @cache
-def _create_no_verify_ssl_context(ssl_cipher_list: SSLCipherList) -> ssl.SSLContext:
+def _client_context_no_verify(ssl_cipher_list: SSLCipherList) -> ssl.SSLContext:
     # This is a copy of aiohttp's create_default_context() function, with the
     # ssl verify turned off.
     # https://github.com/aio-libs/aiohttp/blob/33953f110e97eecc707e1402daa8d543f38a189b/aiohttp/connector.py#L911
@@ -80,14 +80,6 @@ def _create_no_verify_ssl_context(ssl_cipher_list: SSLCipherList) -> ssl.SSLCont
         sslcontext.set_ciphers(SSL_CIPHER_LISTS[ssl_cipher_list])
 
     return sslcontext
-
-
-def create_no_verify_ssl_context(
-    ssl_cipher_list: SSLCipherList = SSLCipherList.PYTHON_DEFAULT,
-) -> ssl.SSLContext:
-    """Return an SSL context that does not verify the server certificate."""
-
-    return _create_no_verify_ssl_context(ssl_cipher_list=ssl_cipher_list)
 
 
 @cache
@@ -110,13 +102,11 @@ def _client_context(
 
 # Create this only once and reuse it
 _DEFAULT_SSL_CONTEXT = _client_context()
-_DEFAULT_NO_VERIFY_SSL_CONTEXT = create_no_verify_ssl_context()
+_DEFAULT_NO_VERIFY_SSL_CONTEXT = _client_context_no_verify()
 _NO_VERIFY_SSL_CONTEXTS = {
-    SSLCipherList.INTERMEDIATE: create_no_verify_ssl_context(
-        SSLCipherList.INTERMEDIATE
-    ),
-    SSLCipherList.MODERN: create_no_verify_ssl_context(SSLCipherList.MODERN),
-    SSLCipherList.INSECURE: create_no_verify_ssl_context(SSLCipherList.INSECURE),
+    SSLCipherList.INTERMEDIATE: _client_context_no_verify(SSLCipherList.INTERMEDIATE),
+    SSLCipherList.MODERN: _client_context_no_verify(SSLCipherList.MODERN),
+    SSLCipherList.INSECURE: _client_context_no_verify(SSLCipherList.INSECURE),
 }
 _SSL_CONTEXTS = {
     SSLCipherList.INTERMEDIATE: _client_context(SSLCipherList.INTERMEDIATE),
@@ -147,6 +137,13 @@ def client_context(
 ) -> ssl.SSLContext:
     """Return an SSL context for making requests."""
     return _SSL_CONTEXTS.get(ssl_cipher_list, _DEFAULT_SSL_CONTEXT)
+
+
+def create_no_verify_ssl_context(
+    ssl_cipher_list: SSLCipherList = SSLCipherList.PYTHON_DEFAULT,
+) -> ssl.SSLContext:
+    """Return an SSL context that does not verify the server certificate."""
+    return _client_context_no_verify(ssl_cipher_list)
 
 
 def server_context_modern() -> ssl.SSLContext:
