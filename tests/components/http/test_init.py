@@ -663,6 +663,8 @@ async def test_ssl_issue_urls_configured(
     hass: HomeAssistant,
     tmp_path: Path,
     issue_registry: ir.IssueRegistry,
+    external_url: str | None,
+    internal_url: str | None,
 ) -> None:
     """Test raising SSL issue if no external or internal URL is configured."""
 
@@ -670,8 +672,8 @@ async def test_ssl_issue_urls_configured(
         _setup_empty_ssl_pem_files, tmp_path
     )
 
-    hass.config.external_url = "http://example.com"
-    hass.config.internal_url = "http://example.local"
+    hass.config.external_url = external_url
+    hass.config.internal_url = internal_url
 
     with (
         patch("ssl.SSLContext.load_cert_chain"),
