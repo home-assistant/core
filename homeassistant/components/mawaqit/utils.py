@@ -11,7 +11,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.storage import Store
 
 from . import mawaqit_wrapper
-from .const import MAWAQIT_ALL_MOSQUES_NN, MAWAQIT_API_KEY_TOKEN, MAWAQIT_MY_MOSQUE_NN
+from .const import (
+    MAWAQIT_ALL_MOSQUES_NN,
+    MAWAQIT_API_KEY_TOKEN,
+    MAWAQIT_MY_MOSQUE_NN,
+    MAWAQIT_PRAY_TIME,
+)
 
 CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
 
@@ -78,6 +83,30 @@ async def read_all_mosques_NN_file(store: Store | None):
         CALC_METHODS.extend([mosque["label"]])
 
     return name_servers, uuid_servers, CALC_METHODS
+
+
+async def read_pray_time(store: Store | None):
+    """Read the prayer time data from the store.
+
+    Args:
+        store (Store | None): The storage object to read from.
+
+    Returns:
+        The prayer time data read from the store.
+
+    """
+    return await read_one_element(store, MAWAQIT_PRAY_TIME)
+
+
+async def write_pray_time(pray_time, store: Store | None) -> None:
+    """Write the prayer time data to the store.
+
+    Args:
+        pray_time (dict): The prayer time data to write.
+        store (Store | None): The storage object to write to.
+
+    """
+    await write_one_element(store, MAWAQIT_PRAY_TIME, pray_time)
 
 
 def create_data_folder() -> None:
@@ -195,7 +224,7 @@ async def update_my_mosque_data_files(
         mosque=mosque_id, token=token
     )
 
-    await async_write_in_data(hass, dir, "pray_time.txt", dict_calendar)
+    await write_pray_time(dict_calendar, store)
 
 
 async def read_one_element(store, key):

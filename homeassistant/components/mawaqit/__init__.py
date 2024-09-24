@@ -8,7 +8,6 @@ import os
 import shutil
 from typing import Any
 
-import anyio
 from dateutil import parser as date_parser
 from mawaqit.consts import BadCredentialsException
 from requests.exceptions import ConnectionError as ConnError
@@ -40,6 +39,7 @@ from .const import (
     DOMAIN,
     MAWAQIT_ALL_MOSQUES_NN,
     MAWAQIT_MY_MOSQUE_NN,
+    MAWAQIT_PRAY_TIME,
     MAWAQIT_STORAGE_KEY,
     MAWAQIT_STORAGE_VERSION,
     UPDATE_TIME,
@@ -140,13 +140,10 @@ async def async_remove_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     except OSError as e:
         _LOGGER.error("Error: %s : %s", dir_path, e.strerror)
 
-    await utils.cleare_storage_entry(
-        Store(hass, MAWAQIT_STORAGE_VERSION, MAWAQIT_STORAGE_KEY), MAWAQIT_MY_MOSQUE_NN
-    )
-    await utils.cleare_storage_entry(
-        Store(hass, MAWAQIT_STORAGE_VERSION, MAWAQIT_STORAGE_KEY),
-        MAWAQIT_ALL_MOSQUES_NN,
-    )
+    store: Store = Store(hass, MAWAQIT_STORAGE_VERSION, MAWAQIT_STORAGE_KEY)
+    await utils.cleare_storage_entry(store, MAWAQIT_MY_MOSQUE_NN)
+    await utils.cleare_storage_entry(store, MAWAQIT_ALL_MOSQUES_NN)
+    await utils.cleare_storage_entry(store, MAWAQIT_PRAY_TIME)
 
     _LOGGER.debug("Finished clearing data folder")
 
@@ -200,9 +197,10 @@ class MawaqitPrayerClient:
         # with open(f"{CURRENT_DIR}/data/pray_time.txt", encoding="utf-8") as f:
         #     content = json.load(f)
 
-        data_pray_time = await utils.async_read_in_data(
-            self.hass, CURRENT_DIR, "pray_time.txt"
-        )
+        # data_pray_time = await utils.async_read_in_data(
+        #     self.hass, CURRENT_DIR, "pray_time.txt"
+        # )
+        data_pray_time = await utils.read_pray_time(self.store)
 
         # data_pray_time = content
         calendar = data_pray_time["calendar"]
@@ -361,10 +359,10 @@ class MawaqitPrayerClient:
             ]
 
         else:  # We retrieve the next Fajr (more calculations).
-            data_pray_time = ""
-            async with await anyio.open_file(f"{CURRENT_DIR}/data/pray_time.txt") as f:
-                data_pray_time = json.loads(await f.read())
-
+            # data_pray_time = ""
+            # async with await anyio.open_file(f"{CURRENT_DIR}/data/pray_time.txt") as f:
+            #     data_pray_time = json.loads(await f.read())
+            data_pray_time = await utils.read_pray_time(self.store)
             calendar = data_pray_time["calendar"]
 
             today = ha_now().today()
