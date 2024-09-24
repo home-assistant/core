@@ -12,7 +12,7 @@ from ipaddress import IPv4Address, IPv6Address
 import logging
 import socket
 from time import time
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from urllib.parse import urljoin
 import xml.etree.ElementTree as ET
 
@@ -632,11 +632,14 @@ class Scanner:
             if ssdp_device.udn == udn
         ]
 
-    async def _handle_config_entry_removed(
+    @core_callback
+    def _handle_config_entry_removed(
         self,
         entry: config_entries.ConfigEntry,
     ) -> None:
         """Handle config entry changes."""
+        if TYPE_CHECKING:
+            assert self._description_cache is not None
         for discovery_key in entry.discovery_keys[DOMAIN]:
             if discovery_key.version != 1 or not isinstance(discovery_key.key, str):
                 continue
@@ -647,13 +650,19 @@ class Scanner:
                 if ssdp_device.udn != udn:
                     continue
                 for dst in ssdp_device.all_combined_headers:
-                    self._ssdp_listener_process_callback(
-                        ssdp_device,
-                        dst,
-                        SsdpSource.SEARCH,
-                        await self._async_get_description_dict(ssdp_device.location),
-                        True,  # Skip integration callbacks
+                    has_cached_desc, info_desc = (
+                        self._description_cache.peek_description_dict(
+                            ssdp_device.location
+                        )
                     )
+                    if has_cached_desc and info_desc:
+                        self._ssdp_listener_process_callback(
+                            ssdp_device,
+                            dst,
+                            SsdpSource.SEARCH,
+                            info_desc,
+                            True,  # Skip integration callbacks
+                        )
 
 
 def discovery_info_from_headers_and_description(
