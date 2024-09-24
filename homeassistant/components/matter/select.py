@@ -245,4 +245,25 @@ DISCOVERY_SCHEMAS = [
         entity_class=MatterSelectEntity,
         required_attributes=(clusters.OnOff.Attributes.StartUpOnOff,),
     ),
+    MatterDiscoverySchema(
+        platform=Platform.SELECT,
+        entity_description=MatterSelectEntityDescription(
+            key="SmokeCOSmokeSensitivityLevel",
+            entity_category=EntityCategory.CONFIG,
+            translation_key="sensitivity_level",
+            options=["high", "standard", "low"],
+            measurement_to_ha={
+                0: "high",
+                1: "standard",
+                2: "low",
+            }.get,
+            ha_to_native_value={
+                "high": 0,
+                "standard": 1,
+                "low": 2,
+            }.get,
+        ),
+        entity_class=MatterSelectEntity,
+        required_attributes=(clusters.SmokeCoAlarm.Attributes.SmokeSensitivityLevel,),
+    ),
 ]

@@ -1,5 +1,10 @@
 {
   "entity": {
+    "binary_sensor": {
+      "muted": {
+        "default": "mdi:bell-off"
+      }
+    },
     "fan": {
       "fan": {
         "state_attributes": {
@@ -18,6 +23,9 @@
       }
     },
     "sensor": {
+      "contamination_state": {
+        "default": "mdi:air-filter"
+      },
       "air_quality": {
         "default": "mdi:air-filter"
       },
