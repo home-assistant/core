@@ -116,6 +116,16 @@ def async_discover_entities(
         ):
             continue
 
+        # check for required value in (primary) attribute
+        if schema.value_contains is not None and (
+            (primary_attribute := next((x for x in schema.required_attributes), None))
+            is None
+            or (value := endpoint.get_attribute_value(None, primary_attribute)) is None
+            or not isinstance(value, list)
+            or schema.value_contains not in value
+        ):
+            continue
+
         # all checks passed, this value belongs to an entity
 
         attributes_to_watch = list(schema.required_attributes)

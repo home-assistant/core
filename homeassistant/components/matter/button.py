@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from chip.clusters import Objects as clusters
 
@@ -37,7 +37,7 @@ async def async_setup_entry(
 class MatterButtonEntityDescription(ButtonEntityDescription, MatterEntityDescription):
     """Describe Matter Button entities."""
 
-    command: Callable[[], Any]
+    command: Callable[[], Any] | None = None
 
 
 class MatterCommandButton(MatterEntity, ButtonEntity):
@@ -47,6 +47,8 @@ class MatterCommandButton(MatterEntity, ButtonEntity):
 
     async def async_press(self) -> None:
         """Handle the button press leveraging a Matter command."""
+        if TYPE_CHECKING:
+            assert self.entity_description.command is not None
         await self.matter_client.send_device_command(
             node_id=self._endpoint.node.node_id,
             endpoint_id=self._endpoint.endpoint_id,
@@ -65,6 +67,55 @@ DISCOVERY_SCHEMAS = [
             command=lambda: clusters.Identify.Commands.Identify(identifyTime=15),
         ),
         entity_class=MatterCommandButton,
-        required_attributes=(clusters.Identify.Attributes.IdentifyTime,),
+        required_attributes=(clusters.Identify.Attributes.AcceptedCommandList,),
+        value_contains=clusters.Identify.Commands.Identify.command_id,
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.BUTTON,
+        entity_description=MatterButtonEntityDescription(
+            key="OperationalStatePauseButton",
+            translation_key="pause",
+            command=clusters.OperationalState.Commands.Pause,
+        ),
+        entity_class=MatterCommandButton,
+        required_attributes=(clusters.OperationalState.Attributes.AcceptedCommandList,),
+        value_contains=clusters.OperationalState.Commands.Pause.command_id,
+        allow_multi=True,
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.BUTTON,
+        entity_description=MatterButtonEntityDescription(
+            key="OperationalStateResumeButton",
+            translation_key="resume",
+            command=clusters.OperationalState.Commands.Resume,
+        ),
+        entity_class=MatterCommandButton,
+        required_attributes=(clusters.OperationalState.Attributes.AcceptedCommandList,),
+        value_contains=clusters.OperationalState.Commands.Resume.command_id,
+        allow_multi=True,
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.BUTTON,
+        entity_description=MatterButtonEntityDescription(
+            key="OperationalStateStartButton",
+            translation_key="start",
+            command=clusters.OperationalState.Commands.Start,
+        ),
+        entity_class=MatterCommandButton,
+        required_attributes=(clusters.OperationalState.Attributes.AcceptedCommandList,),
+        value_contains=clusters.OperationalState.Commands.Start.command_id,
+        allow_multi=True,
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.BUTTON,
+        entity_description=MatterButtonEntityDescription(
+            key="OperationalStateStopButton",
+            translation_key="stop",
+            command=clusters.OperationalState.Commands.Stop,
+        ),
+        entity_class=MatterCommandButton,
+        required_attributes=(clusters.OperationalState.Attributes.AcceptedCommandList,),
+        value_contains=clusters.OperationalState.Commands.Stop.command_id,
+        allow_multi=True,
     ),
 ]

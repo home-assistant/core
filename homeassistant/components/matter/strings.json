@@ -77,6 +77,20 @@
         "name": "Muted"
       }
     },
+    "button": {
+      "pause": {
+        "name": "Pause"
+      },
+      "resume": {
+        "name": "Resume"
+      },
+      "start": {
+        "name": "Start"
+      },
+      "stop": {
+        "name": "Stop"
+      }
+    },
     "climate": {
       "thermostat": {
         "name": "Thermostat"
