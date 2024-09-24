@@ -98,9 +98,8 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
 
         self._audio_queue: asyncio.Queue[bytes | None] = asyncio.Queue()
         self._audio_chunk_timeout: float = 2.0
-        self._pipeline_task: asyncio.Task | None = None
+        self._run_pipeline_task: asyncio.Task | None = None
         self._pipeline_had_error: bool = False
-        self._is_pipeline_running = False
         self._tts_done = asyncio.Event()
         self._tts_extra_timeout: float = 1.0
         self._tone_bytes: dict[Tones, bytes] = {}
@@ -157,13 +156,11 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
 
     def on_chunk(self, audio_bytes: bytes) -> None:
         """Handle raw audio chunk."""
-        if not self._is_pipeline_running:
-            self._is_pipeline_running = True
-
+        if self._run_pipeline_task is None:
             # Run pipeline until voice command finishes, then start over
             self._clear_audio_queue()
             self._tts_done.clear()
-            self._pipeline_task = self.config_entry.async_create_background_task(
+            self._run_pipeline_task = self.config_entry.async_create_background_task(
                 self.hass,
                 self._run_pipeline(),
                 "voip_pipeline_run",
@@ -210,7 +207,7 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
             await self._audio_queue.put(None)
 
             self.voip_device.set_is_active(False)
-            self._is_pipeline_running = False
+            self._run_pipeline_task = None
             _LOGGER.debug("Pipeline finished")
 
     def _clear_audio_queue(self) -> None:
