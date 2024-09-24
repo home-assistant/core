@@ -448,7 +448,7 @@ class RediscoveryWatcher(WatcherBase):
             if discovery_key.version != 1 or not isinstance(discovery_key.key, str):
                 continue
             mac_address = discovery_key.key
-            _LOGGER.debug("Rediscover unignored service %s", mac_address)
+            _LOGGER.debug("Rediscover service %s", mac_address)
             if data := self._address_data.get(mac_address):
                 self.async_process_client(
                     data[IP_ADDRESS],
