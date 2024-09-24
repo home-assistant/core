@@ -6,13 +6,31 @@
       "uuid": "b5d0790b-5f32-4d5c-91da-e29066f167de",
       "itemId": "Paprika",
       "specification": "Rot",
-      "attributes": []
+      "attributes": [
+        {
+          "type": "PURCHASE_CONDITIONS",
+          "content": {
+            "urgent": true,
+            "convenient": true,
+            "discounted": true
+          }
+        }
+      ]
     },
     {
       "uuid": "72d370ab-d8ca-4e41-b956-91df94795b4e",
       "itemId": "Pouletbrüstli",
       "specification": "Bio",
-      "attributes": []
+      "attributes": [
+        {
+          "type": "PURCHASE_CONDITIONS",
+          "content": {
+            "urgent": true,
+            "convenient": true,
+            "discounted": true
+          }
+        }
+      ]
     }
   ],
   "recently": [
