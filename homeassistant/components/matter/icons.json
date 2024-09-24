@@ -16,6 +16,17 @@
           }
         }
       }
+    },
+    "sensor": {
+      "air_quality": {
+        "default": "mdi:air-filter"
+      },
+      "hepa_filter_condition": {
+        "default": "mdi:filter-check"
+      },
+      "activated_carbon_filter_condition": {
+        "default": "mdi:filter-check"
+      }
     }
   }
 }
