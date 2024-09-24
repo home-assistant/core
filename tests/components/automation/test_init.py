@@ -3359,3 +3359,28 @@ async def test_invalid_configuration(
     )
     await hass.async_block_till_done()
     assert message in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("trigger_key"),
+    ["trigger", "platform"],
+)
+async def test_valid_configuration(
+    hass: HomeAssistant,
+    trigger_key: str,
+) -> None:
+    """Test for invalid automation configurations."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "triggers": {
+                    trigger_key: "event",
+                    "event_type": "test_event2",
+                },
+                "action": [],
+            }
+        },
+    )
+    await hass.async_block_till_done()
