@@ -499,7 +499,6 @@ async def test_air_purifier_sensor(
         "fair",
         "good",
         "moderate",
-        "unknown",
     ]
     assert set(state.attributes["options"]) == set(expected_options)
     assert state.attributes["device_class"] == "enum"

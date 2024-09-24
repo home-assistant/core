@@ -157,8 +157,7 @@
           "poor": "Poor",
           "fair": "Fair",
           "good": "Good",
-          "moderate": "Moderate",
-          "unknown": "Unknown"
+          "moderate": "Moderate"
         }
       },
       "flow": {
