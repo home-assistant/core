@@ -18,7 +18,10 @@ from aiounifi.models.client import Client
 from aiounifi.models.device import Device
 from aiounifi.models.event import Event, EventKey
 
-from homeassistant.components.device_tracker import DOMAIN, ScannerEntity, SourceType
+from homeassistant.components.device_tracker import (
+    DOMAIN as DEVICE_TRACKER_DOMAIN,
+    ScannerEntity,
+)
 from homeassistant.core import Event as core_Event, HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -198,11 +201,15 @@ def async_update_unique_id(hass: HomeAssistant, config_entry: UnifiConfigEntry) 
     def update_unique_id(obj_id: str) -> None:
         """Rework unique ID."""
         new_unique_id = f"{hub.site}-{obj_id}"
-        if ent_reg.async_get_entity_id(DOMAIN, UNIFI_DOMAIN, new_unique_id):
+        if ent_reg.async_get_entity_id(
+            DEVICE_TRACKER_DOMAIN, UNIFI_DOMAIN, new_unique_id
+        ):
             return
 
         unique_id = f"{obj_id}-{hub.site}"
-        if entity_id := ent_reg.async_get_entity_id(DOMAIN, UNIFI_DOMAIN, unique_id):
+        if entity_id := ent_reg.async_get_entity_id(
+            DEVICE_TRACKER_DOMAIN, UNIFI_DOMAIN, unique_id
+        ):
             ent_reg.async_update_entity(entity_id, new_unique_id=new_unique_id)
 
     for obj_id in list(hub.api.clients) + list(hub.api.clients_all):
@@ -266,11 +273,6 @@ class UnifiScannerEntity(UnifiEntity[HandlerT, ApiItemT], ScannerEntity):
     def mac_address(self) -> str:
         """Return the mac address of the device."""
         return self._obj_id
-
-    @cached_property
-    def source_type(self) -> SourceType:
-        """Return the source type, eg gps or router, of the device."""
-        return SourceType.ROUTER
 
     @cached_property
     def unique_id(self) -> str:

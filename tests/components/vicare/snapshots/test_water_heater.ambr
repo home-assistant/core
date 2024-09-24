@@ -31,7 +31,7 @@
     'previous_unique_id': None,
     'supported_features': <WaterHeaterEntityFeature: 1>,
     'translation_key': 'domestic_hot_water',
-    'unique_id': 'gateway0-0',
+    'unique_id': 'gateway0_deviceSerialVitodens300W-0',
     'unit_of_measurement': None,
   })
 # ---
@@ -87,7 +87,7 @@
     'previous_unique_id': None,
     'supported_features': <WaterHeaterEntityFeature: 1>,
     'translation_key': 'domestic_hot_water',
-    'unique_id': 'gateway0-1',
+    'unique_id': 'gateway0_deviceSerialVitodens300W-1',
     'unit_of_measurement': None,
   })
 # ---

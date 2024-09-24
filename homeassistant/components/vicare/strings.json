@@ -110,6 +110,12 @@
       },
       "dhw_secondary_temperature": {
         "name": "DHW secondary temperature"
+      },
+      "dhw_hysteresis_switch_on": {
+        "name": "DHW hysteresis switch on"
+      },
+      "dhw_hysteresis_switch_off": {
+        "name": "DHW hysteresis switch off"
       }
     },
     "sensor": {

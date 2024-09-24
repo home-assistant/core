@@ -1,7 +1,9 @@
 """The tests for the Template alarm control panel platform."""
 
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components import template
 from homeassistant.components.alarm_control_panel import DOMAIN as ALARM_DOMAIN
 from homeassistant.const import (
     ATTR_DOMAIN,
@@ -17,8 +19,13 @@ from homeassistant.const import (
     STATE_ALARM_DISARMED,
     STATE_ALARM_PENDING,
     STATE_ALARM_TRIGGERED,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
 )
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant, State, callback
+from homeassistant.setup import async_setup_component
+
+from tests.common import MockConfigEntry, assert_setup_component, mock_restore_cache
 
 TEMPLATE_NAME = "alarm_control_panel.test_template_panel"
 PANEL_NAME = "alarm_control_panel.test"
@@ -123,6 +130,41 @@ async def test_template_state_text(hass: HomeAssistant, start_ha) -> None:
     await hass.async_block_till_done()
     state = hass.states.get(TEMPLATE_NAME)
     assert state.state == "unknown"
+
+
+async def test_setup_config_entry(
+    hass: HomeAssistant, snapshot: SnapshotAssertion
+) -> None:
+    """Test the config flow."""
+    value_template = "{{ states('alarm_control_panel.one') }}"
+
+    hass.states.async_set("alarm_control_panel.one", "armed_away", {})
+
+    template_config_entry = MockConfigEntry(
+        data={},
+        domain=template.DOMAIN,
+        options={
+            "name": "My template",
+            "value_template": value_template,
+            "template_type": "alarm_control_panel",
+            "code_arm_required": True,
+            "code_format": "number",
+        },
+        title="My template",
+    )
+    template_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(template_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("alarm_control_panel.my_template")
+    assert state is not None
+    assert state == snapshot
+
+    hass.states.async_set("alarm_control_panel.one", "disarmed", {})
+    await hass.async_block_till_done()
+    state = hass.states.get("alarm_control_panel.my_template")
+    assert state.state == STATE_ALARM_DISARMED
 
 
 @pytest.mark.parametrize(("count", "domain"), [(1, "alarm_control_panel")])
@@ -400,3 +442,64 @@ async def test_code_config(
     state = hass.states.get(TEMPLATE_NAME)
     assert state.attributes.get("code_format") == code_format
     assert state.attributes.get("code_arm_required") == code_arm_required
+
+
+@pytest.mark.parametrize(("count", "domain"), [(1, "alarm_control_panel")])
+@pytest.mark.parametrize(
+    "config",
+    [
+        {
+            "alarm_control_panel": {
+                "platform": "template",
+                "panels": {"test_template_panel": TEMPLATE_ALARM_CONFIG},
+            }
+        },
+    ],
+)
+@pytest.mark.parametrize(
+    ("restored_state", "initial_state"),
+    [
+        (STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_AWAY),
+        (STATE_ALARM_ARMED_CUSTOM_BYPASS, STATE_ALARM_ARMED_CUSTOM_BYPASS),
+        (STATE_ALARM_ARMED_HOME, STATE_ALARM_ARMED_HOME),
+        (STATE_ALARM_ARMED_NIGHT, STATE_ALARM_ARMED_NIGHT),
+        (STATE_ALARM_ARMED_VACATION, STATE_ALARM_ARMED_VACATION),
+        (STATE_ALARM_ARMING, STATE_ALARM_ARMING),
+        (STATE_ALARM_DISARMED, STATE_ALARM_DISARMED),
+        (STATE_ALARM_PENDING, STATE_ALARM_PENDING),
+        (STATE_ALARM_TRIGGERED, STATE_ALARM_TRIGGERED),
+        (STATE_UNAVAILABLE, STATE_UNKNOWN),
+        (STATE_UNKNOWN, STATE_UNKNOWN),
+        ("faulty_state", STATE_UNKNOWN),
+    ],
+)
+async def test_restore_state(
+    hass: HomeAssistant,
+    count,
+    domain,
+    config,
+    restored_state,
+    initial_state,
+) -> None:
+    """Test restoring template alarm control panel."""
+
+    fake_state = State(
+        "alarm_control_panel.test_template_panel",
+        restored_state,
+        {},
+    )
+    mock_restore_cache(hass, (fake_state,))
+    with assert_setup_component(count, domain):
+        assert await async_setup_component(
+            hass,
+            domain,
+            config,
+        )
+
+        await hass.async_block_till_done()
+
+        await hass.async_start()
+        await hass.async_block_till_done()
+
+    state = hass.states.get("alarm_control_panel.test_template_panel")
+    assert state.state == initial_state

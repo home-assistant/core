@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from abc import abstractmethod
 from collections.abc import Callable
 from dataclasses import dataclass
 from functools import cached_property
@@ -158,7 +157,6 @@ class MatterEntity(Entity):
         self.async_write_ha_state()
 
     @callback
-    @abstractmethod
     def _update_from_device(self) -> None:
         """Update data from Matter device."""
 

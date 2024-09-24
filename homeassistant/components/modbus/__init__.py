@@ -464,7 +464,7 @@ async def async_reset_platform(hass: HomeAssistant, integration_name: str) -> No
     if DOMAIN not in hass.data:
         _LOGGER.error("Modbus cannot reload, because it was never loaded")
         return
-    _LOGGER.info("Modbus reloading")
+    _LOGGER.debug("Modbus reloading")
     hubs = hass.data[DOMAIN]
     for name in hubs:
         await hubs[name].async_close()

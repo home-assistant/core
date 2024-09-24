@@ -2,7 +2,6 @@
 
 from datetime import datetime, timedelta
 import logging
-import socket
 from types import MappingProxyType
 from typing import Any, cast
 
@@ -54,7 +53,7 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
             update_interval=timedelta(hours=12),
         )
         self.api = Opower(
-            aiohttp_client.async_get_clientsession(hass, family=socket.AF_INET),
+            aiohttp_client.async_get_clientsession(hass),
             entry_data[CONF_UTILITY],
             entry_data[CONF_USERNAME],
             entry_data[CONF_PASSWORD],
@@ -129,19 +128,22 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
                 if not cost_reads:
                     _LOGGER.debug("No recent usage/cost data. Skipping update")
                     continue
+                start = cost_reads[0].start_time
+                _LOGGER.debug("Getting statistics at: %s", start)
                 stats = await get_instance(self.hass).async_add_executor_job(
                     statistics_during_period,
                     self.hass,
-                    cost_reads[0].start_time,
-                    None,
+                    start,
+                    start + timedelta(seconds=1),
                     {cost_statistic_id, consumption_statistic_id},
-                    "hour" if account.meter_type == MeterType.ELEC else "day",
+                    "hour",
                     None,
                     {"sum"},
                 )
                 cost_sum = cast(float, stats[cost_statistic_id][0]["sum"])
                 consumption_sum = cast(float, stats[consumption_statistic_id][0]["sum"])
                 last_stats_time = stats[consumption_statistic_id][0]["start"]
+                assert last_stats_time == start.timestamp()
 
             cost_statistics = []
             consumption_statistics = []
@@ -237,9 +239,11 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
         else:
             start = datetime.fromtimestamp(start_time, tz=tz) - timedelta(days=30)
         end = dt_util.now(tz)
+        _LOGGER.debug("Getting monthly cost reads: %s - %s", start, end)
         cost_reads = await self.api.async_get_cost_reads(
             account, AggregateType.BILL, start, end
         )
+        _LOGGER.debug("Got %s monthly cost reads", len(cost_reads))
         if account.read_resolution == ReadResolution.BILLING:
             return cost_reads
 
@@ -250,9 +254,11 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
                 start = cost_reads[0].start_time
             assert start
             start = max(start, end - timedelta(days=3 * 365))
+        _LOGGER.debug("Getting daily cost reads: %s - %s", start, end)
         daily_cost_reads = await self.api.async_get_cost_reads(
             account, AggregateType.DAY, start, end
         )
+        _LOGGER.debug("Got %s daily cost reads", len(daily_cost_reads))
         _update_with_finer_cost_reads(cost_reads, daily_cost_reads)
         if account.read_resolution == ReadResolution.DAY:
             return cost_reads
@@ -262,8 +268,11 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
         else:
             assert start
             start = max(start, end - timedelta(days=2 * 30))
+        _LOGGER.debug("Getting hourly cost reads: %s - %s", start, end)
         hourly_cost_reads = await self.api.async_get_cost_reads(
             account, AggregateType.HOUR, start, end
         )
+        _LOGGER.debug("Got %s hourly cost reads", len(hourly_cost_reads))
         _update_with_finer_cost_reads(cost_reads, hourly_cost_reads)
+        _LOGGER.debug("Got %s cost reads", len(cost_reads))
         return cost_reads

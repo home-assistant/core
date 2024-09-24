@@ -122,28 +122,28 @@ def create_events(events, device_id=DEVICE_ID, timestamp=None):
     [
         (
             "sdm.devices.types.DOORBELL",
-            ["sdm.devices.traits.DoorbellChime"],
+            ["sdm.devices.traits.DoorbellChime", "sdm.devices.traits.CameraEventImage"],
             "sdm.devices.events.DoorbellChime.Chime",
             "Doorbell",
             "doorbell_chime",
         ),
         (
             "sdm.devices.types.CAMERA",
-            ["sdm.devices.traits.CameraMotion"],
+            ["sdm.devices.traits.CameraMotion", "sdm.devices.traits.CameraEventImage"],
             "sdm.devices.events.CameraMotion.Motion",
             "Camera",
             "camera_motion",
         ),
         (
             "sdm.devices.types.CAMERA",
-            ["sdm.devices.traits.CameraPerson"],
+            ["sdm.devices.traits.CameraPerson", "sdm.devices.traits.CameraEventImage"],
             "sdm.devices.events.CameraPerson.Person",
             "Camera",
             "camera_person",
         ),
         (
             "sdm.devices.types.CAMERA",
-            ["sdm.devices.traits.CameraSound"],
+            ["sdm.devices.traits.CameraSound", "sdm.devices.traits.CameraEventImage"],
             "sdm.devices.events.CameraSound.Sound",
             "Camera",
             "camera_sound",
@@ -232,6 +232,41 @@ async def test_camera_multiple_event(
         "type": "camera_person",
         "timestamp": event_time,
     }
+
+
+@pytest.mark.parametrize(
+    "device_traits",
+    [(["sdm.devices.traits.CameraMotion"])],
+)
+async def test_media_not_supported(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, subscriber, setup_platform
+) -> None:
+    """Test a pubsub message for a camera person event."""
+    events = async_capture_events(hass, NEST_EVENT)
+    await setup_platform()
+    entry = entity_registry.async_get("camera.front")
+    assert entry is not None
+
+    event_map = {
+        "sdm.devices.events.CameraMotion.Motion": {
+            "eventSessionId": EVENT_SESSION_ID,
+            "eventId": EVENT_ID,
+        },
+    }
+
+    timestamp = utcnow()
+    await subscriber.async_receive_event(create_events(event_map, timestamp=timestamp))
+    await hass.async_block_till_done()
+
+    event_time = timestamp.replace(microsecond=0)
+    assert len(events) == 1
+    assert event_view(events[0].data) == {
+        "device_id": entry.device_id,
+        "type": "camera_motion",
+        "timestamp": event_time,
+    }
+    # Media fetching not supported by this device
+    assert "attachment" not in events[0].data
 
 
 async def test_unknown_event(hass: HomeAssistant, subscriber, setup_platform) -> None:

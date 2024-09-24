@@ -140,6 +140,8 @@ TASKS_MAP = {
     "frequency": "frequency",
     "every_x": "everyX",
     "streak": "streak",
+    "up": "up",
+    "down": "down",
     "counter_up": "counterUp",
     "counter_down": "counterDown",
     "next_due": "nextDue",

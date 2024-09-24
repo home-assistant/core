@@ -21,7 +21,6 @@ from homeassistant.components.vacuum import (
     ATTR_BATTERY_LEVEL,
     ATTR_FAN_SPEED,
     ATTR_FAN_SPEED_LIST,
-    DOMAIN,
     SERVICE_CLEAN_SPOT,
     SERVICE_LOCATE,
     SERVICE_PAUSE,
@@ -122,31 +121,34 @@ async def test_all_commands(
     mqtt_mock = await mqtt_mock_entry()
 
     await hass.services.async_call(
-        DOMAIN, SERVICE_START, {"entity_id": ENTITY_MATCH_ALL}, blocking=True
+        vacuum.DOMAIN, SERVICE_START, {"entity_id": ENTITY_MATCH_ALL}, blocking=True
     )
     mqtt_mock.async_publish.assert_called_once_with(COMMAND_TOPIC, "start", 0, False)
     mqtt_mock.async_publish.reset_mock()
 
     await hass.services.async_call(
-        DOMAIN, SERVICE_STOP, {"entity_id": ENTITY_MATCH_ALL}, blocking=True
+        vacuum.DOMAIN, SERVICE_STOP, {"entity_id": ENTITY_MATCH_ALL}, blocking=True
     )
     mqtt_mock.async_publish.assert_called_once_with(COMMAND_TOPIC, "stop", 0, False)
     mqtt_mock.async_publish.reset_mock()
 
     await hass.services.async_call(
-        DOMAIN, SERVICE_PAUSE, {"entity_id": ENTITY_MATCH_ALL}, blocking=True
+        vacuum.DOMAIN, SERVICE_PAUSE, {"entity_id": ENTITY_MATCH_ALL}, blocking=True
     )
     mqtt_mock.async_publish.assert_called_once_with(COMMAND_TOPIC, "pause", 0, False)
     mqtt_mock.async_publish.reset_mock()
 
     await hass.services.async_call(
-        DOMAIN, SERVICE_LOCATE, {"entity_id": ENTITY_MATCH_ALL}, blocking=True
+        vacuum.DOMAIN, SERVICE_LOCATE, {"entity_id": ENTITY_MATCH_ALL}, blocking=True
     )
     mqtt_mock.async_publish.assert_called_once_with(COMMAND_TOPIC, "locate", 0, False)
     mqtt_mock.async_publish.reset_mock()
 
     await hass.services.async_call(
-        DOMAIN, SERVICE_CLEAN_SPOT, {"entity_id": ENTITY_MATCH_ALL}, blocking=True
+        vacuum.DOMAIN,
+        SERVICE_CLEAN_SPOT,
+        {"entity_id": ENTITY_MATCH_ALL},
+        blocking=True,
     )
     mqtt_mock.async_publish.assert_called_once_with(
         COMMAND_TOPIC, "clean_spot", 0, False
@@ -154,7 +156,10 @@ async def test_all_commands(
     mqtt_mock.async_publish.reset_mock()
 
     await hass.services.async_call(
-        DOMAIN, SERVICE_RETURN_TO_BASE, {"entity_id": ENTITY_MATCH_ALL}, blocking=True
+        vacuum.DOMAIN,
+        SERVICE_RETURN_TO_BASE,
+        {"entity_id": ENTITY_MATCH_ALL},
+        blocking=True,
     )
     mqtt_mock.async_publish.assert_called_once_with(
         COMMAND_TOPIC, "return_to_base", 0, False
@@ -205,37 +210,43 @@ async def test_commands_without_supported_features(
     mqtt_mock = await mqtt_mock_entry()
 
     await hass.services.async_call(
-        DOMAIN, SERVICE_START, {"entity_id": ENTITY_MATCH_ALL}, blocking=True
+        vacuum.DOMAIN, SERVICE_START, {"entity_id": ENTITY_MATCH_ALL}, blocking=True
     )
     mqtt_mock.async_publish.assert_not_called()
     mqtt_mock.async_publish.reset_mock()
 
     await hass.services.async_call(
-        DOMAIN, SERVICE_PAUSE, {"entity_id": ENTITY_MATCH_ALL}, blocking=True
+        vacuum.DOMAIN, SERVICE_PAUSE, {"entity_id": ENTITY_MATCH_ALL}, blocking=True
     )
     mqtt_mock.async_publish.assert_not_called()
     mqtt_mock.async_publish.reset_mock()
 
     await hass.services.async_call(
-        DOMAIN, SERVICE_STOP, {"entity_id": ENTITY_MATCH_ALL}, blocking=True
+        vacuum.DOMAIN, SERVICE_STOP, {"entity_id": ENTITY_MATCH_ALL}, blocking=True
     )
     mqtt_mock.async_publish.assert_not_called()
     mqtt_mock.async_publish.reset_mock()
 
     await hass.services.async_call(
-        DOMAIN, SERVICE_RETURN_TO_BASE, {"entity_id": ENTITY_MATCH_ALL}, blocking=True
+        vacuum.DOMAIN,
+        SERVICE_RETURN_TO_BASE,
+        {"entity_id": ENTITY_MATCH_ALL},
+        blocking=True,
     )
     mqtt_mock.async_publish.assert_not_called()
     mqtt_mock.async_publish.reset_mock()
 
     await hass.services.async_call(
-        DOMAIN, SERVICE_LOCATE, {"entity_id": ENTITY_MATCH_ALL}, blocking=True
+        vacuum.DOMAIN, SERVICE_LOCATE, {"entity_id": ENTITY_MATCH_ALL}, blocking=True
     )
     mqtt_mock.async_publish.assert_not_called()
     mqtt_mock.async_publish.reset_mock()
 
     await hass.services.async_call(
-        DOMAIN, SERVICE_CLEAN_SPOT, {"entity_id": ENTITY_MATCH_ALL}, blocking=True
+        vacuum.DOMAIN,
+        SERVICE_CLEAN_SPOT,
+        {"entity_id": ENTITY_MATCH_ALL},
+        blocking=True,
     )
     mqtt_mock.async_publish.assert_not_called()
     mqtt_mock.async_publish.reset_mock()

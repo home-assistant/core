@@ -13,14 +13,12 @@ from homeassistant.components.camera import (
     CameraEntityDescription,
     CameraEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import ReolinkData
-from .const import DOMAIN
 from .entity import ReolinkChannelCoordinatorEntity, ReolinkChannelEntityDescription
+from .util import ReolinkConfigEntry, ReolinkData
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -91,11 +89,11 @@ CAMERA_ENTITIES = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: ReolinkConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up a Reolink IP Camera."""
-    reolink_data: ReolinkData = hass.data[DOMAIN][config_entry.entry_id]
+    reolink_data: ReolinkData = config_entry.runtime_data
 
     entities: list[ReolinkCamera] = []
     for entity_description in CAMERA_ENTITIES:

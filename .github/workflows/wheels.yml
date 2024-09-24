@@ -46,7 +46,7 @@ jobs:
           python -m venv venv
           . venv/bin/activate
           python --version
-          pip install "$(grep '^uv' < requirements_test.txt)"
+          pip install "$(grep '^uv' < requirements.txt)"
           uv pip install -r requirements.txt
 
       - name: Get information
@@ -82,14 +82,15 @@ jobs:
           ) > .env_file
 
       - name: Upload env_file
-        uses: actions/upload-artifact@v4.3.6
+        uses: actions/upload-artifact@v4.4.0
         with:
           name: env_file
           path: ./.env_file
+          include-hidden-files: true
           overwrite: true
 
       - name: Upload requirements_diff
-        uses: actions/upload-artifact@v4.3.6
+        uses: actions/upload-artifact@v4.4.0
         with:
           name: requirements_diff
           path: ./requirements_diff.txt
@@ -101,7 +102,7 @@ jobs:
           python -m script.gen_requirements_all ci
 
       - name: Upload requirements_all_wheels
-        uses: actions/upload-artifact@v4.3.6
+        uses: actions/upload-artifact@v4.4.0
         with:
           name: requirements_all_wheels
           path: ./requirements_all_wheels_*.txt
@@ -130,6 +131,12 @@ jobs:
         with:
           name: requirements_diff
 
+      - name: Adjust build env
+        run: |
+          # Don't build wheels for uv as uv requires a greater version of rust as currently available on alpine
+          sed -i "/uv/d" requirements.txt
+          sed -i "/uv/d" requirements_diff.txt
+
       - name: Build wheels
         uses: home-assistant/wheels@2024.07.1
         with:
@@ -139,7 +146,7 @@ jobs:
           wheels-key: ${{ secrets.WHEELS_KEY }}
           env-file: true
           apk: "libffi-dev;openssl-dev;yaml-dev;nasm"
-          skip-binary: aiohttp
+          skip-binary: aiohttp;multidict;yarl
           constraints: "homeassistant/package_constraints.txt"
           requirements-diff: "requirements_diff.txt"
           requirements: "requirements.txt"
@@ -173,6 +180,18 @@ jobs:
         with:
           name: requirements_all_wheels
 
+      - name: Adjust build env
+        run: |
+          if [ "${{ matrix.arch }}" = "i386" ]; then
+            echo "NPY_DISABLE_SVML=1" >> .env_file
+          fi
+
+          # Do not pin numpy in wheels building
+          sed -i "/numpy/d" homeassistant/package_constraints.txt
+          # Don't build wheels for uv as uv requires a greater version of rust as currently available on alpine
+          sed -i "/uv/d" requirements.txt
+          sed -i "/uv/d" requirements_diff.txt
+
       - name: Split requirements all
         run: |
           # We split requirements all into multiple files.
@@ -193,15 +212,6 @@ jobs:
           cat homeassistant/package_constraints.txt | grep 'grpcio==' >> requirements_old-cython.txt
           cat homeassistant/package_constraints.txt | grep 'pydantic==' >> requirements_old-cython.txt
 
-      - name: Adjust build env
-        run: |
-          if [ "${{ matrix.arch }}" = "i386" ]; then
-            echo "NPY_DISABLE_SVML=1" >> .env_file
-          fi
-
-          # Do not pin numpy in wheels building
-          sed -i "/numpy/d" homeassistant/package_constraints.txt
-
       - name: Build wheels (old cython)
         uses: home-assistant/wheels@2024.07.1
         with:
@@ -211,7 +221,7 @@ jobs:
           wheels-key: ${{ secrets.WHEELS_KEY }}
           env-file: true
           apk: "bluez-dev;libffi-dev;openssl-dev;glib-dev;eudev-dev;libxml2-dev;libxslt-dev;libpng-dev;libjpeg-turbo-dev;tiff-dev;cups-dev;gmp-dev;mpfr-dev;mpc1-dev;ffmpeg-dev;gammu-dev;yaml-dev;openblas-dev;fftw-dev;lapack-dev;gfortran;blas-dev;eigen-dev;freetype-dev;glew-dev;harfbuzz-dev;hdf5-dev;libdc1394-dev;libtbb-dev;mesa-dev;openexr-dev;openjpeg-dev;uchardet-dev"
-          skip-binary: aiohttp;charset-normalizer;grpcio;SQLAlchemy;protobuf;pydantic;pymicro-vad
+          skip-binary: aiohttp;charset-normalizer;grpcio;multidict;SQLAlchemy;protobuf;pydantic;pymicro-vad;yarl
           constraints: "homeassistant/package_constraints.txt"
           requirements-diff: "requirements_diff.txt"
           requirements: "requirements_old-cython.txt"
@@ -226,7 +236,7 @@ jobs:
           wheels-key: ${{ secrets.WHEELS_KEY }}
           env-file: true
           apk: "bluez-dev;libffi-dev;openssl-dev;glib-dev;eudev-dev;libxml2-dev;libxslt-dev;libpng-dev;libjpeg-turbo-dev;tiff-dev;cups-dev;gmp-dev;mpfr-dev;mpc1-dev;ffmpeg-dev;gammu-dev;yaml-dev;openblas-dev;fftw-dev;lapack-dev;gfortran;blas-dev;eigen-dev;freetype-dev;glew-dev;harfbuzz-dev;hdf5-dev;libdc1394-dev;libtbb-dev;mesa-dev;openexr-dev;openjpeg-dev;uchardet-dev;nasm"
-          skip-binary: aiohttp;charset-normalizer;grpcio;SQLAlchemy;protobuf;pydantic;pymicro-vad
+          skip-binary: aiohttp;charset-normalizer;grpcio;multidict;SQLAlchemy;protobuf;pydantic;pymicro-vad;yarl
           constraints: "homeassistant/package_constraints.txt"
           requirements-diff: "requirements_diff.txt"
           requirements: "requirements_all.txtaa"
@@ -240,7 +250,7 @@ jobs:
           wheels-key: ${{ secrets.WHEELS_KEY }}
           env-file: true
           apk: "bluez-dev;libffi-dev;openssl-dev;glib-dev;eudev-dev;libxml2-dev;libxslt-dev;libpng-dev;libjpeg-turbo-dev;tiff-dev;cups-dev;gmp-dev;mpfr-dev;mpc1-dev;ffmpeg-dev;gammu-dev;yaml-dev;openblas-dev;fftw-dev;lapack-dev;gfortran;blas-dev;eigen-dev;freetype-dev;glew-dev;harfbuzz-dev;hdf5-dev;libdc1394-dev;libtbb-dev;mesa-dev;openexr-dev;openjpeg-dev;uchardet-dev;nasm"
-          skip-binary: aiohttp;charset-normalizer;grpcio;SQLAlchemy;protobuf;pydantic;pymicro-vad
+          skip-binary: aiohttp;charset-normalizer;grpcio;multidict;SQLAlchemy;protobuf;pydantic;pymicro-vad;yarl
           constraints: "homeassistant/package_constraints.txt"
           requirements-diff: "requirements_diff.txt"
           requirements: "requirements_all.txtab"
@@ -254,7 +264,7 @@ jobs:
           wheels-key: ${{ secrets.WHEELS_KEY }}
           env-file: true
           apk: "bluez-dev;libffi-dev;openssl-dev;glib-dev;eudev-dev;libxml2-dev;libxslt-dev;libpng-dev;libjpeg-turbo-dev;tiff-dev;cups-dev;gmp-dev;mpfr-dev;mpc1-dev;ffmpeg-dev;gammu-dev;yaml-dev;openblas-dev;fftw-dev;lapack-dev;gfortran;blas-dev;eigen-dev;freetype-dev;glew-dev;harfbuzz-dev;hdf5-dev;libdc1394-dev;libtbb-dev;mesa-dev;openexr-dev;openjpeg-dev;uchardet-dev;nasm"
-          skip-binary: aiohttp;charset-normalizer;grpcio;SQLAlchemy;protobuf;pydantic;pymicro-vad
+          skip-binary: aiohttp;charset-normalizer;grpcio;multidict;SQLAlchemy;protobuf;pydantic;pymicro-vad;yarl
           constraints: "homeassistant/package_constraints.txt"
           requirements-diff: "requirements_diff.txt"
           requirements: "requirements_all.txtac"

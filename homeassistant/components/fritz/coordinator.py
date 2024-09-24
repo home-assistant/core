@@ -79,7 +79,7 @@ def device_filter_out_from_trackers(
 
 def _ha_is_stopping(activity: str) -> None:
     """Inform that HA is stopping."""
-    _LOGGER.info("Cannot execute %s: HomeAssistant is shutting down", activity)
+    _LOGGER.warning("Cannot execute %s: HomeAssistant is shutting down", activity)
 
 
 class ClassSetupMissing(Exception):
@@ -658,7 +658,7 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
                 entity.domain == DEVICE_TRACKER_DOMAIN
                 or "_internet_access" in entity.unique_id
             ) and entry_mac not in device_hosts:
-                _LOGGER.info("Removing orphan entity entry %s", entity.entity_id)
+                _LOGGER.debug("Removing orphan entity entry %s", entity.entity_id)
                 entity_reg.async_remove(entity.entity_id)
 
         device_reg = dr.async_get(self.hass)

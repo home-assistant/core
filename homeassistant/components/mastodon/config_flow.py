@@ -28,7 +28,6 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(
             CONF_BASE_URL,
-            default=DEFAULT_URL,
         ): TextSelector(TextSelectorConfig(type=TextSelectorType.URL)),
         vol.Required(
             CONF_CLIENT_ID,

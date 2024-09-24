@@ -35,7 +35,7 @@
     'previous_unique_id': None,
     'supported_features': <FanEntityFeature: 9>,
     'translation_key': 'ventilation',
-    'unique_id': 'gateway0-ventilation',
+    'unique_id': 'gateway0_deviceSerialViAir300F-ventilation',
     'unit_of_measurement': None,
   })
 # ---
