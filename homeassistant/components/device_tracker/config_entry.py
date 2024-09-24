@@ -215,6 +215,7 @@ class TrackerEntity(
     _attr_location_accuracy: int = 0
     _attr_location_name: str | None = None
     _attr_longitude: float | None = None
+    _attr_source_type: SourceType = SourceType.GPS
 
     @cached_property
     def should_poll(self) -> bool:
@@ -299,6 +300,7 @@ class ScannerEntity(
     _attr_hostname: str | None = None
     _attr_ip_address: str | None = None
     _attr_mac_address: str | None = None
+    _attr_source_type: SourceType = SourceType.ROUTER
 
     @cached_property
     def ip_address(self) -> str | None:
