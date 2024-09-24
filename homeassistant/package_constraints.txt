@@ -14,7 +14,7 @@ async-upnp-client==0.40.0
 atomicwrites-homeassistant==1.4.1
 attrs==23.2.0
 awesomeversion==24.6.0
-bcrypt==4.1.3
+bcrypt==4.2.0
 bleak-retry-connector==3.5.0
 bleak==0.22.2
 bluetooth-adapters==0.19.4
@@ -23,7 +23,7 @@ bluetooth-data-tools==1.20.0
 cached-ipaddress==0.6.0
 certifi>=2021.5.30
 ciso8601==2.3.1
-cryptography==43.0.0
+cryptography==43.0.1
 dbus-fast==2.24.0
 fnv-hash-fast==1.0.2
 ha-av==10.1.1
@@ -34,7 +34,7 @@ hassil==1.7.4
 home-assistant-bluetooth==1.12.2
 home-assistant-frontend==20240909.1
 home-assistant-intents==2024.9.23
-httpx==0.27.0
+httpx==0.27.2
 ifaddr==0.2.0
 Jinja2==3.1.4
 lru-dict==1.3.0
@@ -59,7 +59,7 @@ SQLAlchemy==2.0.31
 typing-extensions>=4.12.2,<5.0
 ulid-transform==1.0.2
 urllib3>=1.26.5,<2
-uv==0.4.12
+uv==0.4.15
 voluptuous-openapi==0.0.5
 voluptuous-serialize==2.6.0
 voluptuous==0.15.2
@@ -108,7 +108,7 @@ httpcore==1.0.5
 hyperframe>=5.2.0
 
 # Ensure we run compatible with musllinux build env
-numpy==1.26.0
+numpy==1.26.4
 
 # Constrain multidict to avoid typing issues
 # https://github.com/home-assistant/core/pull/67046

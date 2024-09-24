@@ -78,6 +78,16 @@ async def door_lock_fixture(
     return await setup_integration_with_node_fixture(hass, "door-lock", matter_client)
 
 
+@pytest.fixture(name="smoke_detector")
+async def smoke_detector_fixture(
+    hass: HomeAssistant, matter_client: MagicMock
+) -> MatterNode:
+    """Fixture for a smoke detector node."""
+    return await setup_integration_with_node_fixture(
+        hass, "smoke-detector", matter_client
+    )
+
+
 @pytest.fixture(name="door_lock_with_unbolt")
 async def door_lock_with_unbolt_fixture(
     hass: HomeAssistant, matter_client: MagicMock

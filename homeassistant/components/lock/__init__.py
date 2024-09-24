@@ -13,19 +13,19 @@ from typing import TYPE_CHECKING, Any, final
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
+from homeassistant.const import (  # noqa: F401
+    _DEPRECATED_STATE_JAMMED,
+    _DEPRECATED_STATE_LOCKED,
+    _DEPRECATED_STATE_LOCKING,
+    _DEPRECATED_STATE_UNLOCKED,
+    _DEPRECATED_STATE_UNLOCKING,
     ATTR_CODE,
     ATTR_CODE_FORMAT,
     SERVICE_LOCK,
     SERVICE_OPEN,
     SERVICE_UNLOCK,
-    STATE_JAMMED,
-    STATE_LOCKED,
-    STATE_LOCKING,
     STATE_OPEN,
     STATE_OPENING,
-    STATE_UNLOCKED,
-    STATE_UNLOCKING,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
@@ -41,7 +41,7 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType, StateType
 from homeassistant.util.hass_dict import HassKey
 
-from .const import DOMAIN
+from .const import DOMAIN, LockState
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -274,18 +274,18 @@ class LockEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     def state(self) -> str | None:
         """Return the state."""
         if self.is_jammed:
-            return STATE_JAMMED
+            return LockState.JAMMED
         if self.is_opening:
-            return STATE_OPENING
+            return LockState.OPENING
         if self.is_locking:
-            return STATE_LOCKING
+            return LockState.LOCKING
         if self.is_open:
-            return STATE_OPEN
+            return LockState.OPEN
         if self.is_unlocking:
-            return STATE_UNLOCKING
+            return LockState.UNLOCKING
         if (locked := self.is_locked) is None:
             return None
-        return STATE_LOCKED if locked else STATE_UNLOCKED
+        return LockState.LOCKED if locked else LockState.UNLOCKED
 
     @cached_property
     def supported_features(self) -> LockEntityFeature:
