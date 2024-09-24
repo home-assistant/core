@@ -26,6 +26,9 @@
       },
       "activated_carbon_filter_condition": {
         "default": "mdi:filter-check"
+      },
+      "valve_position": {
+        "default": "mdi:valve"
       }
     }
   }
