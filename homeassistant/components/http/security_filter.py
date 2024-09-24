@@ -58,11 +58,7 @@ def setup_security_filter(app: Application) -> None:
     ) -> StreamResponse:
         """Process request and block commonly known exploit attempts."""
         rel_url = request.rel_url
-        if raw_query_string := rel_url.raw_query_string:
-            path_with_query_string = f"{rel_url.raw_path}?{raw_query_string}"
-        else:
-            path_with_query_string = rel_url.raw_path
-        path_with_query_string = _recursive_unquote(path_with_query_string)
+        path_with_query_string = _recursive_unquote(rel_url.raw_path_qs)
 
         for unsafe_byte in UNSAFE_URL_BYTES:
             if unsafe_byte in path_with_query_string:
