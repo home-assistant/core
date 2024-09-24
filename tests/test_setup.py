@@ -273,6 +273,7 @@ async def test_component_missing_not_raising_in_safe_mode(
     hass: HomeAssistant, issue_registry: IssueRegistry
 ) -> None:
     """setup_component should not raise an issue if component doesn't exist in safe."""
+    MockConfigEntry(domain="non_existing").add_to_hass(hass)
     hass.config.safe_mode = True
     assert await setup.async_setup_component(hass, "non_existing", {}) is False
     assert len(issue_registry.issues) == 0
