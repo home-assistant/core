@@ -271,8 +271,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     @callback
     def _async_check_ssl_issue(_: Event) -> None:
         if (
-            (hass.config.external_url or hass.config.internal_url) is None
-        ) and ssl_certificate is not None:
+            ssl_certificate is not None
+            and (hass.config.external_url or hass.config.internal_url) is None
+        ):
             # pylint: disable-next=import-outside-toplevel
             from homeassistant.components.cloud import (
                 CloudNotAvailable,

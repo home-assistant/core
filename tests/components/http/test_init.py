@@ -651,6 +651,14 @@ async def test_ssl_issue_if_not_connected_to_cloud(
     assert len(issue_registry.issues) == 0
 
 
+@pytest.mark.parametrize(
+    ("external_url", "internal_url"),
+    [
+        ("https://example.com", "https://example.local"),
+        (None, "http://example.local"),
+        ("https://example.com", None),
+    ],
+)
 async def test_ssl_issue_urls_configured(
     hass: HomeAssistant,
     tmp_path: Path,
