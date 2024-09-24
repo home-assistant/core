@@ -70,7 +70,15 @@ async def integration_fixture(
     return entry
 
 
-@pytest.fixture(params=["door-lock", "smoke-detector"])
+@pytest.fixture(
+    params=[
+        "door-lock",
+        "smoke-detector",
+        "air-purifier",
+        "eve-energy-plug-patched",
+        "eve-energy-plug",
+    ]
+)
 async def matter_devices(
     hass: HomeAssistant, matter_client: MagicMock, request: pytest.FixtureRequest
 ) -> MatterNode:
