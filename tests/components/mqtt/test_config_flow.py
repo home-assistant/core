@@ -8,6 +8,7 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import uuid4
 
+from aiohasupervisor import SupervisorError
 import pytest
 import voluptuous as vol
 
@@ -671,7 +672,7 @@ async def test_addon_not_running_api_error(
 
     Case: The Mosquitto add-on start fails on a API error.
     """
-    start_addon.side_effect = HassioAPIError()
+    start_addon.side_effect = SupervisorError()
 
     result = await hass.config_entries.flow.async_init(
         "mqtt", context={"source": config_entries.SOURCE_USER}
@@ -758,7 +759,7 @@ async def test_addon_info_error(
 
     Case: The Mosquitto add-on info could not be retrieved.
     """
-    addon_info.side_effect = AddonError()
+    addon_info.side_effect = SupervisorError()
 
     result = await hass.config_entries.flow.async_init(
         "mqtt", context={"source": config_entries.SOURCE_USER}

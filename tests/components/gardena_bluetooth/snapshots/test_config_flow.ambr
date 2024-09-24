@@ -3,6 +3,11 @@
   FlowResultSnapshot({
     'context': dict({
       'confirm_only': True,
+      'discovery_key': dict({
+        'domain': 'bluetooth',
+        'key': '00000000-0000-0000-0000-000000000001',
+        'version': 1,
+      }),
       'source': 'bluetooth',
       'title_placeholders': dict({
         'name': 'Gardena Water Computer',
@@ -18,6 +23,11 @@
   FlowResultSnapshot({
     'context': dict({
       'confirm_only': True,
+      'discovery_key': dict({
+        'domain': 'bluetooth',
+        'key': '00000000-0000-0000-0000-000000000001',
+        'version': 1,
+      }),
       'source': 'bluetooth',
       'title_placeholders': dict({
         'name': 'Gardena Water Computer',
@@ -40,6 +50,13 @@
       }),
       'disabled_by': None,
       'discovery_keys': dict({
+        'bluetooth': tuple(
+          dict({
+            'domain': 'bluetooth',
+            'key': '00000000-0000-0000-0000-000000000001',
+            'version': 1,
+          }),
+        ),
       }),
       'domain': 'gardena_bluetooth',
       'entry_id': <ANY>,

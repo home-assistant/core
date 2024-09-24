@@ -395,18 +395,15 @@ class ZeroconfDiscovery:
     @callback
     def _handle_config_entry_removed(
         self,
-        change: config_entries.ConfigEntryChange,
         entry: config_entries.ConfigEntry,
     ) -> None:
         """Handle config entry changes."""
-        if entry.source != config_entries.SOURCE_IGNORE:
-            return
         for discovery_key in entry.discovery_keys[DOMAIN]:
             if discovery_key.version != 1:
                 continue
             _type = discovery_key.key[0]
             name = discovery_key.key[1]
-            _LOGGER.debug("Rediscover unignored service %s.%s", _type, name)
+            _LOGGER.debug("Rediscover service %s.%s", _type, name)
             self._async_service_update(self.zeroconf, _type, name)
 
     def _async_dismiss_discoveries(self, name: str) -> None:
