@@ -1,9 +1,9 @@
 """Media source for Google Photos."""
 
 from dataclasses import dataclass
-from enum import Enum, StrEnum
+from enum import StrEnum
 import logging
-from typing import Any, Self, cast
+from typing import Self, cast
 
 from google_photos_library_api.exceptions import GooglePhotosApiError
 from google_photos_library_api.model import Album, MediaItem
@@ -28,29 +28,6 @@ ALBUM_PAGE_SIZE = 50
 
 THUMBNAIL_SIZE = 256
 LARGE_IMAGE_SIZE = 2160
-
-
-@dataclass
-class SpecialAlbumDetails:
-    """Details for a Special album."""
-
-    path: str
-    title: str
-    list_args: dict[str, Any]
-
-
-class SpecialAlbum(Enum):
-    """Special Album types."""
-
-    UPLOADED = SpecialAlbumDetails("uploaded", "Uploaded", {})
-
-    @classmethod
-    def of(cls, path: str) -> Self | None:
-        """Parse a PhotosIdentifierType by string value."""
-        for enum in cls:
-            if enum.value.path == path:
-                return enum
-        return None
 
 
 # The PhotosIdentifier can be in the following forms:
@@ -194,18 +171,8 @@ class GooglePhotosMediaSource(MediaSource):
 
         source = _build_account(entry, identifier)
         if identifier.id_type is None:
-            source.children = [
-                _build_album(
-                    special_album.value.title,
-                    PhotosIdentifier.album(
-                        identifier.config_entry_id, special_album.value.path
-                    ),
-                )
-                for special_album in SpecialAlbum
-            ]
-
             albums = await coordinator.list_albums()
-            source.children.extend(
+            source.children = [
                 _build_album(
                     album.title,
                     PhotosIdentifier.album(
@@ -215,7 +182,7 @@ class GooglePhotosMediaSource(MediaSource):
                     _cover_photo_url(album, THUMBNAIL_SIZE),
                 )
                 for album in albums
-            )
+            ]
             return source
 
         if (
@@ -224,16 +191,10 @@ class GooglePhotosMediaSource(MediaSource):
         ):
             raise BrowseError(f"Unsupported identifier: {identifier}")
 
-        list_args: dict[str, Any]
-        if special_album := SpecialAlbum.of(identifier.media_id):
-            list_args = special_album.value.list_args
-        else:
-            list_args = {"album_id": identifier.media_id}
-
         media_items: list[MediaItem] = []
         try:
             async for media_item_result in await client.list_media_items(
-                **list_args, page_size=MEDIA_ITEMS_PAGE_SIZE
+                album_id=identifier.media_id, page_size=MEDIA_ITEMS_PAGE_SIZE
             ):
                 media_items.extend(media_item_result.media_items)
         except GooglePhotosApiError as err:
