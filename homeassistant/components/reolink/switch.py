@@ -249,7 +249,6 @@ NVR_SWITCH_ENTITIES = (
         key="buzzer",
         cmd_key="GetBuzzerAlarmV20",
         translation_key="hub_ringtone_on_event",
-        icon="mdi:room-service",
         entity_category=EntityCategory.CONFIG,
         supported=lambda api: api.supported(None, "buzzer"),
         value=lambda api: api.buzzer_enabled(),
