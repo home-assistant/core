@@ -10,9 +10,10 @@ from homeassistant.components.light import (
     ATTR_RGBW_COLOR,
     ColorMode,
     LightEntity,
+    LightState,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_OFF, STATE_ON, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -83,7 +84,7 @@ class MySensorsLight(MySensorsChildEntity, LightEntity):
         if self.assumed_state:
             # optimistically assume that light has changed state
             self._state = True
-            self._values[set_req.V_LIGHT] = STATE_ON
+            self._values[set_req.V_LIGHT] = LightState.ON
 
     def _turn_on_dimmer(self, **kwargs: Any) -> None:
         """Turn on dimmer child device."""
@@ -113,14 +114,14 @@ class MySensorsLight(MySensorsChildEntity, LightEntity):
         if self.assumed_state:
             # optimistically assume that light has changed state
             self._state = False
-            self._values[value_type] = STATE_OFF
+            self._values[value_type] = LightState.OFF
             self.async_write_ha_state()
 
     @callback
     def _async_update_light(self) -> None:
         """Update the controller with values from light child."""
         value_type = self.gateway.const.SetReq.V_LIGHT
-        self._state = self._values[value_type] == STATE_ON
+        self._state = self._values[value_type] == LightState.ON
 
     @callback
     def _async_update_dimmer(self) -> None:

@@ -19,15 +19,10 @@ from homeassistant.components.light import (
     ColorMode,
     LightEntity,
     LightEntityFeature,
+    LightState,
     filter_supported_color_modes,
 )
-from homeassistant.const import (
-    CONF_NAME,
-    CONF_OPTIMISTIC,
-    CONF_STATE_TEMPLATE,
-    STATE_OFF,
-    STATE_ON,
-)
+from homeassistant.const import CONF_NAME, CONF_OPTIMISTIC, CONF_STATE_TEMPLATE
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -184,9 +179,9 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
     def _state_received(self, msg: ReceiveMessage) -> None:
         """Handle new MQTT messages."""
         state = self._value_templates[CONF_STATE_TEMPLATE](msg.payload)
-        if state == STATE_ON:
+        if state == LightState.ON:
             self._attr_is_on = True
-        elif state == STATE_OFF:
+        elif state == LightState.OFF:
             self._attr_is_on = False
         elif state == PAYLOAD_NONE:
             self._attr_is_on = None
@@ -269,7 +264,7 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
 
         last_state = await self.async_get_last_state()
         if self._optimistic and last_state:
-            self._attr_is_on = last_state.state == STATE_ON
+            self._attr_is_on = last_state.state == LightState.ON
             if last_state.attributes.get(ATTR_BRIGHTNESS):
                 self._attr_brightness = last_state.attributes.get(ATTR_BRIGHTNESS)
             if last_state.attributes.get(ATTR_HS_COLOR):

@@ -31,8 +31,9 @@ from homeassistant.components.light import (
     ColorMode,
     LightEntity,
     LightEntityFeature,
+    LightState,
 )
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_TYPE, STATE_ON
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_TYPE
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -259,7 +260,7 @@ class LimitlessLEDGroup(LightEntity, RestoreEntity):
         """Handle entity about to be added to hass event."""
         await super().async_added_to_hass()
         if last_state := await self.async_get_last_state():
-            self._attr_is_on = last_state.state == STATE_ON
+            self._attr_is_on = last_state.state == LightState.ON
             self._attr_brightness = last_state.attributes.get("brightness")
             self._attr_color_temp = last_state.attributes.get("color_temp")
             self._attr_hs_color = last_state.attributes.get("hs_color")

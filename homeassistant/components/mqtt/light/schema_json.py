@@ -30,6 +30,7 @@ from homeassistant.components.light import (
     ColorMode,
     LightEntity,
     LightEntityFeature,
+    LightState,
     brightness_supported,
     color_supported,
     filter_supported_color_modes,
@@ -44,7 +45,6 @@ from homeassistant.const import (
     CONF_OPTIMISTIC,
     CONF_RGB,
     CONF_XY,
-    STATE_ON,
 )
 from homeassistant.core import async_get_hass, callback
 import homeassistant.helpers.config_validation as cv
@@ -514,7 +514,7 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
 
         last_state = await self.async_get_last_state()
         if self._optimistic and last_state:
-            self._attr_is_on = last_state.state == STATE_ON
+            self._attr_is_on = last_state.state == LightState.ON
             last_attributes = last_state.attributes
             self._attr_brightness = last_attributes.get(
                 ATTR_BRIGHTNESS, self.brightness

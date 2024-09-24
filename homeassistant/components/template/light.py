@@ -21,6 +21,7 @@ from homeassistant.components.light import (
     ColorMode,
     LightEntity,
     LightEntityFeature,
+    LightState,
     filter_supported_color_modes,
 )
 from homeassistant.const import (
@@ -29,8 +30,6 @@ from homeassistant.const import (
     CONF_LIGHTS,
     CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
-    STATE_OFF,
-    STATE_ON,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
@@ -48,7 +47,7 @@ from .template_entity import (
 )
 
 _LOGGER = logging.getLogger(__name__)
-_VALID_STATES = [STATE_ON, STATE_OFF, "true", "false"]
+_VALID_STATES = [LightState.ON, LightState.OFF, "true", "false"]
 
 # Legacy
 CONF_COLOR_ACTION = "set_color"
@@ -737,7 +736,7 @@ class LightTemplate(TemplateEntity, LightEntity):
 
         state = str(result).lower()
         if state in _VALID_STATES:
-            self._state = state in ("true", STATE_ON)
+            self._state = state in ("true", LightState.ON)
             return
 
         _LOGGER.error(

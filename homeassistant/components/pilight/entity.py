@@ -2,14 +2,8 @@
 
 import voluptuous as vol
 
-from homeassistant.const import (
-    CONF_ID,
-    CONF_NAME,
-    CONF_PROTOCOL,
-    CONF_STATE,
-    STATE_OFF,
-    STATE_ON,
-)
+from homeassistant.components.light import LightState
+from homeassistant.const import CONF_ID, CONF_NAME, CONF_PROTOCOL, CONF_STATE
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.restore_state import RestoreEntity
 
@@ -35,7 +29,7 @@ COMMAND_SCHEMA = vol.Schema(
         vol.Optional(CONF_UNIT): cv.positive_int,
         vol.Optional(CONF_UNITCODE): cv.positive_int,
         vol.Optional(CONF_ID): vol.Any(cv.positive_int, cv.string),
-        vol.Optional(CONF_STATE): vol.Any(STATE_ON, STATE_OFF),
+        vol.Optional(CONF_STATE): vol.Coerce(LightState),
         vol.Optional(CONF_SYSTEMCODE): cv.positive_int,
     },
     extra=vol.ALLOW_EXTRA,
@@ -90,7 +84,7 @@ class PilightBaseDevice(RestoreEntity):
         """Call when entity about to be added to hass."""
         await super().async_added_to_hass()
         if state := await self.async_get_last_state():
-            self._is_on = state.state == STATE_ON
+            self._is_on = state.state == LightState.ON
             self._brightness = state.attributes.get("brightness")
 
     @property

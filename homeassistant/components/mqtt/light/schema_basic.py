@@ -27,6 +27,7 @@ from homeassistant.components.light import (
     ColorMode,
     LightEntity,
     LightEntityFeature,
+    LightState,
     valid_supported_color_modes,
 )
 from homeassistant.const import (
@@ -34,7 +35,6 @@ from homeassistant.const import (
     CONF_OPTIMISTIC,
     CONF_PAYLOAD_OFF,
     CONF_PAYLOAD_ON,
-    STATE_ON,
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
@@ -618,7 +618,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
                 setattr(self, f"_attr_{attribute}", last_state.attributes[attribute])
 
         if self._topic[CONF_STATE_TOPIC] is None and self._optimistic and last_state:
-            self._attr_is_on = last_state.state == STATE_ON
+            self._attr_is_on = last_state.state == LightState.ON
         restore_state(ATTR_BRIGHTNESS)
         restore_state(ATTR_RGB_COLOR)
         restore_state(ATTR_HS_COLOR, ATTR_RGB_COLOR)

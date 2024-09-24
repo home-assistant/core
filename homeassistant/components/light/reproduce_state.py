@@ -7,13 +7,7 @@ from collections.abc import Iterable, Mapping
 import logging
 from typing import Any, NamedTuple, cast
 
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    STATE_OFF,
-    STATE_ON,
-)
+from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
 from homeassistant.core import Context, HomeAssistant, State
 
 from . import (
@@ -30,11 +24,12 @@ from . import (
     ATTR_XY_COLOR,
     DOMAIN,
     ColorMode,
+    LightState,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
-VALID_STATES = {STATE_ON, STATE_OFF}
+VALID_STATES = {LightState.ON, LightState.OFF}
 
 ATTR_GROUP = [ATTR_BRIGHTNESS, ATTR_EFFECT]
 
@@ -111,7 +106,7 @@ async def _async_reproduce_state(
     if reproduce_options is not None and ATTR_TRANSITION in reproduce_options:
         service_data[ATTR_TRANSITION] = reproduce_options[ATTR_TRANSITION]
 
-    if state.state == STATE_ON:
+    if state.state == LightState.ON:
         service = SERVICE_TURN_ON
         for attr in ATTR_GROUP:
             # All attributes that are not colors
@@ -140,7 +135,7 @@ async def _async_reproduce_state(
                     service_data[color_attr] = color_attr_state
                     break
 
-    elif state.state == STATE_OFF:
+    elif state.state == LightState.OFF:
         service = SERVICE_TURN_OFF
 
     await hass.services.async_call(

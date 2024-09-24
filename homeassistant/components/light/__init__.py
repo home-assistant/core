@@ -15,7 +15,7 @@ from typing import Any, Self, cast, final
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
+from homeassistant.const import (  # noqa: F401
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
@@ -39,6 +39,13 @@ PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
 SCAN_INTERVAL = timedelta(seconds=30)
 
 DATA_PROFILES: HassKey[Profiles] = HassKey(f"{DOMAIN}_profiles")
+
+
+class LightState(StrEnum):
+    """Light entity states."""
+
+    ON = "on"
+    OFF = "off"
 
 
 class LightEntityFeature(IntFlag):
@@ -297,7 +304,7 @@ _LOGGER = logging.getLogger(__name__)
 @bind_hass
 def is_on(hass: HomeAssistant, entity_id: str) -> bool:
     """Return if the lights are on based on the statemachine."""
-    return hass.states.is_state(entity_id, STATE_ON)
+    return hass.states.is_state(entity_id, LightState.ON)
 
 
 def preprocess_turn_on_alternatives(

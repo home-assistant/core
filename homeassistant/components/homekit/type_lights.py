@@ -22,16 +22,12 @@ from homeassistant.components.light import (
     ATTR_WHITE,
     DOMAIN as LIGHT_DOMAIN,
     ColorMode,
+    LightState,
     brightness_supported,
     color_supported,
     color_temp_supported,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    STATE_ON,
-)
+from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
 from homeassistant.core import CALLBACK_TYPE, State, callback
 from homeassistant.helpers.event import async_call_later
 from homeassistant.util.color import (
@@ -244,7 +240,7 @@ class Light(HomeAccessory):
         state = new_state.state
         attributes = new_state.attributes
         color_mode = attributes.get(ATTR_COLOR_MODE)
-        self.char_on.set_value(int(state == STATE_ON))
+        self.char_on.set_value(int(state == LightState.ON))
         color_mode_changed = self._previous_color_mode != color_mode
         self._previous_color_mode = color_mode
 
@@ -265,7 +261,7 @@ class Light(HomeAccessory):
             # Therefore, if the brightness is 0 and the device is still on,
             # the brightness is mapped to 1 otherwise the update is ignored in
             # order to avoid this incorrect behavior.
-            if brightness == 0 and state == STATE_ON:
+            if brightness == 0 and state == LightState.ON:
                 brightness = 1
             self.char_brightness.set_value(brightness)
             if color_mode_changed:

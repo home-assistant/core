@@ -10,6 +10,7 @@ from homeassistant.components.light import (
     PLATFORM_SCHEMA as LIGHT_PLATFORM_SCHEMA,
     ColorMode,
     LightEntity,
+    LightState,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -17,7 +18,6 @@ from homeassistant.const import (
     CONF_NAME,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
-    STATE_ON,
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
@@ -108,7 +108,7 @@ class LightSwitch(LightEntity):
                 self._attr_available = False
                 return
             self._attr_available = True
-            self._attr_is_on = state.state == STATE_ON
+            self._attr_is_on = state.state == LightState.ON
             self.async_write_ha_state()
 
         self.async_on_remove(

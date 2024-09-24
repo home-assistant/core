@@ -31,6 +31,7 @@ from homeassistant.components.light import (
     ColorMode,
     LightEntity,
     LightEntityFeature,
+    LightState,
     filter_supported_color_modes,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -42,7 +43,6 @@ from homeassistant.const import (
     CONF_UNIQUE_ID,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
-    STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
@@ -207,7 +207,7 @@ class LightGroup(GroupEntity, LightEntity):
             for entity_id in self._entity_ids
             if (state := self.hass.states.get(entity_id)) is not None
         ]
-        on_states = [state for state in states if state.state == STATE_ON]
+        on_states = [state for state in states if state.state == LightState.ON]
 
         valid_state = self.mode(
             state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE) for state in states
@@ -218,7 +218,9 @@ class LightGroup(GroupEntity, LightEntity):
             self._attr_is_on = None
         else:
             # Set as ON if any / all member is ON
-            self._attr_is_on = self.mode(state.state == STATE_ON for state in states)
+            self._attr_is_on = self.mode(
+                state.state == LightState.ON for state in states
+            )
 
         self._attr_available = any(state.state != STATE_UNAVAILABLE for state in states)
         self._attr_brightness = reduce_attribute(on_states, ATTR_BRIGHTNESS)

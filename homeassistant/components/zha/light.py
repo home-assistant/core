@@ -23,9 +23,10 @@ from homeassistant.components.light import (
     ColorMode,
     LightEntity,
     LightEntityFeature,
+    LightState,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_ON, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -194,7 +195,7 @@ class Light(LightEntity, ZHAEntity):
     def restore_external_state_attributes(self, state: State) -> None:
         """Restore entity state."""
         self.entity_data.entity.restore_external_state_attributes(
-            state=(state.state == STATE_ON),
+            state=(state.state == LightState.ON),
             off_with_transition=state.attributes.get(OFF_WITH_TRANSITION),
             off_brightness=state.attributes.get(OFF_BRIGHTNESS),
             brightness=state.attributes.get(ATTR_BRIGHTNESS),
