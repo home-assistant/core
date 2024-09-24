@@ -634,7 +634,7 @@ async def test_smoke_alarm(
     assert state.state == "0.0"
 
 
-async def test_dishwasher_sensor(
+async def test_operational_state_sensor(
     hass: HomeAssistant,
     matter_client: MagicMock,
     dishwasher_node: MatterNode,
