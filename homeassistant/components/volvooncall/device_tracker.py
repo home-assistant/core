@@ -62,7 +62,7 @@ class VolvoTrackerEntity(VolvoEntity, TrackerEntity):
         return longitude
 
     @property
-    def source_type(self) -> SourceType | str:
+    def source_type(self) -> SourceType:
         """Return the source type (GPS)."""
         return SourceType.GPS
 
