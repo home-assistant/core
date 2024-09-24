@@ -1,11 +1,16 @@
 """Test WebSocket API."""
 
 import asyncio
+from http import HTTPStatus
 from unittest.mock import patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.assist_pipeline import PipelineStage
+from homeassistant.components.assist_satellite.websocket_api import (
+    CONNECTION_TEST_TIMEOUT,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
@@ -13,7 +18,7 @@ from . import ENTITY_ID
 from .conftest import MockAssistSatellite
 
 from tests.common import MockUser
-from tests.typing import WebSocketGenerator
+from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
 async def test_intercept_wake_word(
@@ -273,3 +278,241 @@ async def test_intercept_wake_word_unsubscribe(
 
         # Wake word should not be intercepted
         mock_pipeline_from_audio_stream.assert_called_once()
+
+
+async def test_get_configuration(
+    hass: HomeAssistant,
+    init_components: ConfigEntry,
+    entity: MockAssistSatellite,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test getting satellite configuration."""
+    ws_client = await hass_ws_client(hass)
+
+    with (
+        patch.object(entity, "_attr_pipeline_entity_id", "select.test_pipeline"),
+        patch.object(entity, "_attr_vad_sensitivity_entity_id", "select.test_vad"),
+    ):
+        await ws_client.send_json_auto_id(
+            {
+                "type": "assist_satellite/get_configuration",
+                "entity_id": ENTITY_ID,
+            }
+        )
+        msg = await ws_client.receive_json()
+        assert msg["success"]
+        assert msg["result"] == {
+            "active_wake_words": ["1234"],
+            "available_wake_words": [
+                {"id": "1234", "trained_languages": ["en"], "wake_word": "okay nabu"},
+                {"id": "5678", "trained_languages": ["en"], "wake_word": "hey jarvis"},
+            ],
+            "max_active_wake_words": 1,
+            "pipeline_entity_id": "select.test_pipeline",
+            "vad_entity_id": "select.test_vad",
+        }
+
+
+async def test_set_wake_words(
+    hass: HomeAssistant,
+    init_components: ConfigEntry,
+    entity: MockAssistSatellite,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test setting active wake words."""
+    ws_client = await hass_ws_client(hass)
+
+    await ws_client.send_json_auto_id(
+        {
+            "type": "assist_satellite/set_wake_words",
+            "entity_id": ENTITY_ID,
+            "wake_word_ids": ["5678"],
+        }
+    )
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+
+    # Verify change
+    await ws_client.send_json_auto_id(
+        {
+            "type": "assist_satellite/get_configuration",
+            "entity_id": ENTITY_ID,
+        }
+    )
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+    assert msg["result"].get("active_wake_words") == ["5678"]
+
+
+async def test_set_wake_words_exceed_maximum(
+    hass: HomeAssistant,
+    init_components: ConfigEntry,
+    entity: MockAssistSatellite,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test setting too many active wake words."""
+    ws_client = await hass_ws_client(hass)
+
+    await ws_client.send_json_auto_id(
+        {
+            "type": "assist_satellite/set_wake_words",
+            "entity_id": ENTITY_ID,
+            "wake_word_ids": ["1234", "5678"],  # max of 1
+        }
+    )
+    msg = await ws_client.receive_json()
+    assert not msg["success"]
+    assert msg["error"] == {
+        "code": "not_supported",
+        "message": "Maximum number of active wake words is 1",
+    }
+
+
+async def test_set_wake_words_bad_id(
+    hass: HomeAssistant,
+    init_components: ConfigEntry,
+    entity: MockAssistSatellite,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test setting active wake words with a bad id."""
+    ws_client = await hass_ws_client(hass)
+
+    await ws_client.send_json_auto_id(
+        {
+            "type": "assist_satellite/set_wake_words",
+            "entity_id": ENTITY_ID,
+            "wake_word_ids": ["abcd"],  # not an available id
+        }
+    )
+    msg = await ws_client.receive_json()
+    assert not msg["success"]
+    assert msg["error"] == {
+        "code": "not_supported",
+        "message": "Wake word id is not supported: abcd",
+    }
+
+
+async def test_connection_test(
+    hass: HomeAssistant,
+    init_components: ConfigEntry,
+    entity: MockAssistSatellite,
+    hass_ws_client: WebSocketGenerator,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test connection test."""
+    ws_client = await hass_ws_client(hass)
+
+    await ws_client.send_json_auto_id(
+        {
+            "type": "assist_satellite/test_connection",
+            "entity_id": ENTITY_ID,
+        }
+    )
+
+    for _ in range(3):
+        await asyncio.sleep(0)
+
+    assert len(entity.announcements) == 1
+    assert entity.announcements[0].message == ""
+    announcement_media_id = entity.announcements[0].media_id
+    hass_url = "http://10.10.10.10:8123"
+    assert announcement_media_id.startswith(
+        f"{hass_url}/api/assist_satellite/connection_test/"
+    )
+
+    # Fake satellite fetches the URL
+    client = await hass_client()
+    resp = await client.get(announcement_media_id[len(hass_url) :])
+    assert resp.status == HTTPStatus.OK
+
+    response = await ws_client.receive_json()
+    assert response["success"]
+    assert response["result"] == {"status": "success"}
+
+
+async def test_connection_test_timeout(
+    hass: HomeAssistant,
+    init_components: ConfigEntry,
+    entity: MockAssistSatellite,
+    hass_ws_client: WebSocketGenerator,
+    hass_client: ClientSessionGenerator,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test connection test timeout."""
+    ws_client = await hass_ws_client(hass)
+
+    await ws_client.send_json_auto_id(
+        {
+            "type": "assist_satellite/test_connection",
+            "entity_id": ENTITY_ID,
+        }
+    )
+
+    for _ in range(3):
+        await asyncio.sleep(0)
+
+    assert len(entity.announcements) == 1
+    assert entity.announcements[0].message == ""
+    announcement_media_id = entity.announcements[0].media_id
+    hass_url = "http://10.10.10.10:8123"
+    assert announcement_media_id.startswith(
+        f"{hass_url}/api/assist_satellite/connection_test/"
+    )
+
+    freezer.tick(CONNECTION_TEST_TIMEOUT + 1)
+
+    # Timeout
+    response = await ws_client.receive_json()
+    assert response["success"]
+    assert response["result"] == {"status": "timeout"}
+
+
+async def test_connection_test_invalid_satellite(
+    hass: HomeAssistant,
+    init_components: ConfigEntry,
+    entity: MockAssistSatellite,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test connection test with unknown entity id."""
+    ws_client = await hass_ws_client(hass)
+
+    await ws_client.send_json_auto_id(
+        {
+            "type": "assist_satellite/test_connection",
+            "entity_id": "assist_satellite.invalid",
+        }
+    )
+    response = await ws_client.receive_json()
+
+    assert not response["success"]
+    assert response["error"] == {
+        "code": "not_found",
+        "message": "Entity not found",
+    }
+
+
+async def test_connection_test_timeout_announcement_unsupported(
+    hass: HomeAssistant,
+    init_components: ConfigEntry,
+    entity: MockAssistSatellite,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test connection test entity which does not support announce."""
+    ws_client = await hass_ws_client(hass)
+
+    # Disable announce support
+    entity.supported_features = 0
+
+    await ws_client.send_json_auto_id(
+        {
+            "type": "assist_satellite/test_connection",
+            "entity_id": ENTITY_ID,
+        }
+    )
+    response = await ws_client.receive_json()
+
+    assert not response["success"]
+    assert response["error"] == {
+        "code": "not_supported",
+        "message": "Entity does not support announce",
+    }

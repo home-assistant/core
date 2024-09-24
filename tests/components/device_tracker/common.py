@@ -69,7 +69,7 @@ class MockScannerEntity(ScannerEntity):
         self._mac_address = "ad:de:ef:be:ed:fe"
 
     @property
-    def source_type(self):
+    def source_type(self) -> SourceType:
         """Return the source type, eg gps or router, of the device."""
         return SourceType.ROUTER
 

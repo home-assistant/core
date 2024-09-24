@@ -17,7 +17,14 @@ from homeassistant.components.weheat.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from .const import CLIENT_ID, CLIENT_SECRET, TEST_HP_UUID, TEST_MODEL, TEST_SN
+from .const import (
+    CLIENT_ID,
+    CLIENT_SECRET,
+    TEST_HP_UUID,
+    TEST_MODEL,
+    TEST_SN,
+    USER_UUID_1,
+)
 
 from tests.common import MockConfigEntry
 
@@ -67,6 +74,18 @@ def mock_config_entry() -> MockConfigEntry:
         },
         unique_id="123456789",
     )
+
+
+@pytest.fixture
+def mock_user_id() -> Generator[AsyncMock]:
+    """Mock the user API call."""
+    with (
+        patch(
+            "homeassistant.components.weheat.config_flow.get_user_id_from_token",
+            return_value=USER_UUID_1,
+        ) as user_mock,
+    ):
+        yield user_mock
 
 
 @pytest.fixture

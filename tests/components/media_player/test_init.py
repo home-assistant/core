@@ -298,10 +298,20 @@ async def test_enqueue_alert_exclusive(hass: HomeAssistant) -> None:
         )
 
 
+@pytest.mark.parametrize(
+    "media_content_id",
+    [
+        "a/b c/d+e%2Fg{}",
+        "a/b c/d+e%2D",
+        "a/b c/d+e%2E",
+        "2012-06%20Pool%20party%20%2F%20BBQ",
+    ],
+)
 async def test_get_async_get_browse_image_quoting(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     hass_ws_client: WebSocketGenerator,
+    media_content_id: str,
 ) -> None:
     """Test get browse image using media_content_id with special characters.
 
@@ -325,7 +335,6 @@ async def test_get_async_get_browse_image_quoting(
         "homeassistant.components.media_player.MediaPlayerEntity."
         "async_get_browse_image",
     ) as mock_browse_image:
-        media_content_id = "a/b c/d+e%2Fg{}"
         url = player.get_browse_image_url("album", media_content_id)
         await client.get(url)
         mock_browse_image.assert_called_with("album", media_content_id, None)

@@ -66,8 +66,7 @@ async def test_no_read_scopes(
 @pytest.mark.parametrize(
     ("album_path", "expected_album_title"),
     [
-        (f"{CONFIG_ENTRY_ID}/a/recent", "Recent Photos"),
-        (f"{CONFIG_ENTRY_ID}/a/favorites", "Favorite Photos"),
+        (f"{CONFIG_ENTRY_ID}/a/uploaded", "Uploaded Photos"),
         (f"{CONFIG_ENTRY_ID}/a/album-media-id-1", "Album title"),
     ],
 )
@@ -109,8 +108,7 @@ async def test_browse_albums(
     assert browse.identifier == CONFIG_ENTRY_ID
     assert browse.title == "Account Name"
     assert [(child.identifier, child.title) for child in browse.children] == [
-        (f"{CONFIG_ENTRY_ID}/a/recent", "Recent Photos"),
-        (f"{CONFIG_ENTRY_ID}/a/favorites", "Favorite Photos"),
+        (f"{CONFIG_ENTRY_ID}/a/uploaded", "Uploaded"),
         (f"{CONFIG_ENTRY_ID}/a/album-media-id-1", "Album title"),
     ]
 

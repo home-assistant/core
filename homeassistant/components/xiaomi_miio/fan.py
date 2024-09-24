@@ -91,7 +91,7 @@ from .const import (
     SERVICE_RESET_FILTER,
     SERVICE_SET_EXTRA_FEATURES,
 )
-from .device import XiaomiCoordinatedMiioEntity
+from .entity import XiaomiCoordinatedMiioEntity
 from .typing import ServiceMethodDetails
 
 _LOGGER = logging.getLogger(__name__)

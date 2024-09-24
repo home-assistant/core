@@ -7,7 +7,7 @@ import pytest
 from homeassistant.components import insteon
 from homeassistant.components.insteon import (
     DOMAIN,
-    insteon_entity,
+    entity as insteon_entity,
     utils as insteon_utils,
 )
 from homeassistant.components.lock import (  # SERVICE_LOCK,; SERVICE_UNLOCK,
@@ -48,11 +48,7 @@ def patch_setup_and_devices():
         patch.object(insteon, "async_close"),
         patch.object(insteon, "devices", devices),
         patch.object(insteon_utils, "devices", devices),
-        patch.object(
-            insteon_entity,
-            "devices",
-            devices,
-        ),
+        patch.object(insteon_entity, "devices", devices),
     ):
         yield
 

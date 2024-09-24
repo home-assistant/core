@@ -17,7 +17,10 @@ from homeassistant.components.assist_pipeline import (
     async_update_pipeline,
     vad,
 )
-from homeassistant.components.assist_satellite import SatelliteBusyError
+from homeassistant.components.assist_satellite import (
+    AssistSatelliteAnnouncement,
+    SatelliteBusyError,
+)
 from homeassistant.components.assist_satellite.entity import AssistSatelliteState
 from homeassistant.components.media_source import PlayMedia
 from homeassistant.config_entries import ConfigEntry
@@ -159,18 +162,22 @@ async def test_new_pipeline_cancels_pipeline(
     [
         (
             {"message": "Hello"},
-            ("Hello", "https://www.home-assistant.io/resolved.mp3"),
+            AssistSatelliteAnnouncement(
+                "Hello", "https://www.home-assistant.io/resolved.mp3", "tts"
+            ),
         ),
         (
             {
                 "message": "Hello",
-                "media_id": "http://example.com/bla.mp3",
+                "media_id": "media-source://bla",
             },
-            ("Hello", "http://example.com/bla.mp3"),
+            AssistSatelliteAnnouncement(
+                "Hello", "https://www.home-assistant.io/resolved.mp3", "media_id"
+            ),
         ),
         (
             {"media_id": "http://example.com/bla.mp3"},
-            ("", "http://example.com/bla.mp3"),
+            AssistSatelliteAnnouncement("", "http://example.com/bla.mp3", "url"),
         ),
     ],
 )
@@ -195,10 +202,10 @@ async def test_announce(
     original_announce = entity.async_announce
     announce_started = asyncio.Event()
 
-    async def async_announce(message, media_id):
+    async def async_announce(announcement):
         # Verify state change
         assert entity.state == AssistSatelliteState.RESPONDING
-        await original_announce(message, media_id)
+        await original_announce(announcement)
         announce_started.set()
 
     def tts_generate_media_source_id(
@@ -249,7 +256,7 @@ async def test_announce_busy(
     announce_started = asyncio.Event()
     got_error = asyncio.Event()
 
-    async def async_announce(message, media_id):
+    async def async_announce(announcement):
         announce_started.set()
 
         # Block so we can do another announcement

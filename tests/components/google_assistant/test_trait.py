@@ -612,10 +612,10 @@ async def test_startstop_vacuum(hass: HomeAssistant) -> None:
         ),
         (
             valve.DOMAIN,
-            valve.STATE_OPEN,
-            valve.STATE_CLOSED,
-            valve.STATE_OPENING,
-            valve.STATE_CLOSING,
+            valve.ValveState.OPEN,
+            valve.ValveState.CLOSED,
+            valve.ValveState.OPENING,
+            valve.ValveState.CLOSING,
             ValveEntityFeature.STOP
             | ValveEntityFeature.OPEN
             | ValveEntityFeature.CLOSE,
@@ -736,10 +736,10 @@ async def test_startstop_cover_valve(
         ),
         (
             valve.DOMAIN,
-            valve.STATE_OPEN,
-            valve.STATE_CLOSED,
-            valve.STATE_OPENING,
-            valve.STATE_CLOSING,
+            valve.ValveState.OPEN,
+            valve.ValveState.CLOSED,
+            valve.ValveState.OPENING,
+            valve.ValveState.CLOSING,
             ValveEntityFeature.STOP
             | ValveEntityFeature.OPEN
             | ValveEntityFeature.CLOSE,
@@ -3144,7 +3144,7 @@ async def test_openclose_cover_valve_unknown_state(
             valve.DOMAIN,
             valve.SERVICE_SET_VALVE_POSITION,
             ValveEntityFeature.SET_POSITION,
-            valve.STATE_OPEN,
+            valve.ValveState.OPEN,
         ),
     ],
 )
@@ -3191,7 +3191,7 @@ async def test_openclose_cover_valve_assumed_state(
         ),
         (
             valve.DOMAIN,
-            valve.STATE_OPEN,
+            valve.ValveState.OPEN,
         ),
     ],
 )
@@ -3242,8 +3242,8 @@ async def test_openclose_cover_valve_query_only(
         ),
         (
             valve.DOMAIN,
-            valve.STATE_OPEN,
-            valve.STATE_CLOSED,
+            valve.ValveState.OPEN,
+            valve.ValveState.CLOSED,
             ValveEntityFeature.OPEN | ValveEntityFeature.CLOSE,
             valve.SERVICE_OPEN_VALVE,
             valve.SERVICE_CLOSE_VALVE,

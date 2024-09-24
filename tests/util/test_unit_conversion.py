@@ -431,6 +431,20 @@ _CONVERTED_VALUE: dict[
             708661.42,
             UnitOfVolumetricFlux.INCHES_PER_HOUR,
         ),
+        # 5 m/s * 1000 = 5000 mm/s
+        (
+            5,
+            UnitOfSpeed.METERS_PER_SECOND,
+            5000,
+            UnitOfSpeed.MILLIMETERS_PER_SECOND,
+        ),
+        # 5 m/s ÷ 0.0254 = 196.8503937 in/s
+        (
+            5,
+            UnitOfSpeed.METERS_PER_SECOND,
+            5 / 0.0254,
+            UnitOfSpeed.INCHES_PER_SECOND,
+        ),
         # 5000 in/h / 39.3701 in/m / 3600 s/h = 0.03528 m/s
         (
             5000,

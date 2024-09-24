@@ -21,5 +21,17 @@
         }
       }
     }
+  },
+  "issues": {
+    "assist_in_progress_deprecated": {
+      "title": "{integration_name} assist in progress binary sensors are deprecated",
+      "fix_flow": {
+        "step": {
+          "confirm_disable_entity": {
+            "description": "The {integration_name} assist in progress binary sensor `{entity_id}` is deprecated.\n\nMigrate your configuration to use the corresponding `{assist_satellite_domain}` entity and then click SUBMIT to disable the assist in progress binary sensor and fix this issue."
+          }
+        }
+      }
+    }
   }
 }

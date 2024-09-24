@@ -28,6 +28,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity_platform import EntityPlatform
 from homeassistant.helpers.typing import StateType
+from homeassistant.util.hass_dict import HassKey
 
 from .const import (
     ATTR_HOST_NAME,
@@ -40,6 +41,9 @@ from .const import (
     SourceType,
 )
 
+DOMAIN_DATA: HassKey[EntityComponent[BaseTrackerEntity]] = HassKey(DOMAIN)
+DATA_KEY: HassKey[dict[str, tuple[str, str]]] = HassKey(f"{DOMAIN}_mac")
+
 # mypy: disallow-any-generics
 
 
@@ -50,7 +54,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if component is not None:
         return await component.async_setup_entry(entry)
 
-    component = hass.data[DOMAIN] = EntityComponent[BaseTrackerEntity](
+    component = hass.data[DOMAIN_DATA] = EntityComponent[BaseTrackerEntity](
         LOGGER, DOMAIN, hass
     )
     component.register_shutdown()
@@ -60,8 +64,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload an entry."""
-    component: EntityComponent[BaseTrackerEntity] = hass.data[DOMAIN]
-    return await component.async_unload_entry(entry)
+    return await hass.data[DOMAIN_DATA].async_unload_entry(entry)
 
 
 @callback
@@ -93,16 +96,15 @@ def _async_register_mac(
     unique_id: str,
 ) -> None:
     """Register a mac address with a unique ID."""
-    data_key = "device_tracker_mac"
     mac = dr.format_mac(mac)
-    if data_key in hass.data:
-        hass.data[data_key][mac] = (domain, unique_id)
+    if DATA_KEY in hass.data:
+        hass.data[DATA_KEY][mac] = (domain, unique_id)
         return
 
     # Setup listening.
 
     # dict mapping mac -> partial unique ID
-    data = hass.data[data_key] = {mac: (domain, unique_id)}
+    data = hass.data[DATA_KEY] = {mac: (domain, unique_id)}
 
     @callback
     def handle_device_event(ev: Event[EventDeviceRegistryUpdatedData]) -> None:

@@ -395,6 +395,12 @@
       "volume": {
         "name": "Volume"
       },
+      "alarm_volume": {
+        "name": "Alarm volume"
+      },
+      "message_volume": {
+        "name": "Message volume"
+      },
       "guard_return_time": {
         "name": "Guard return time"
       },
@@ -531,6 +537,38 @@
           "auto": "Auto"
         }
       },
+      "hub_alarm_ringtone": {
+        "name": "Hub alarm ringtone",
+        "state": {
+          "alarm": "Alarm",
+          "citybird": "[%key:component::reolink::entity::select::motion_tone::state::citybird%]",
+          "originaltune": "[%key:component::reolink::entity::select::motion_tone::state::originaltune%]",
+          "pianokey": "[%key:component::reolink::entity::select::motion_tone::state::pianokey%]",
+          "loop": "[%key:component::reolink::entity::select::motion_tone::state::loop%]",
+          "attraction": "[%key:component::reolink::entity::select::motion_tone::state::attraction%]",
+          "hophop": "[%key:component::reolink::entity::select::motion_tone::state::hophop%]",
+          "goodday": "[%key:component::reolink::entity::select::motion_tone::state::goodday%]",
+          "operetta": "[%key:component::reolink::entity::select::motion_tone::state::operetta%]",
+          "moonlight": "[%key:component::reolink::entity::select::motion_tone::state::moonlight%]",
+          "waybackhome": "[%key:component::reolink::entity::select::motion_tone::state::waybackhome%]"
+        }
+      },
+      "hub_visitor_ringtone": {
+        "name": "Hub visitor ringtone",
+        "state": {
+          "alarm": "[%key:component::reolink::entity::select::hub_alarm_ringtone::state::alarm%]",
+          "citybird": "[%key:component::reolink::entity::select::motion_tone::state::citybird%]",
+          "originaltune": "[%key:component::reolink::entity::select::motion_tone::state::originaltune%]",
+          "pianokey": "[%key:component::reolink::entity::select::motion_tone::state::pianokey%]",
+          "loop": "[%key:component::reolink::entity::select::motion_tone::state::loop%]",
+          "attraction": "[%key:component::reolink::entity::select::motion_tone::state::attraction%]",
+          "hophop": "[%key:component::reolink::entity::select::motion_tone::state::hophop%]",
+          "goodday": "[%key:component::reolink::entity::select::motion_tone::state::goodday%]",
+          "operetta": "[%key:component::reolink::entity::select::motion_tone::state::operetta%]",
+          "moonlight": "[%key:component::reolink::entity::select::motion_tone::state::moonlight%]",
+          "waybackhome": "[%key:component::reolink::entity::select::motion_tone::state::waybackhome%]"
+        }
+      },
       "motion_tone": {
         "name": "Motion ringtone",
         "state": {
@@ -600,6 +638,9 @@
       "wifi_signal": {
         "name": "Wi-Fi signal"
       },
+      "cpu_usage": {
+        "name": "CPU usage"
+      },
       "ptz_pan_position": {
         "name": "PTZ pan position"
       },
@@ -663,8 +704,8 @@
       "manual_record": {
         "name": "Manual record"
       },
-      "buzzer": {
-        "name": "Buzzer on event"
+      "hub_ringtone_on_event": {
+        "name": "Hub ringtone on event"
       },
       "doorbell_button_sound": {
         "name": "Doorbell button sound"

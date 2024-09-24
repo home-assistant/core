@@ -1168,7 +1168,7 @@ async def test_stop_restart(
 ) -> None:
     """Run test for service stop."""
 
-    caplog.set_level(logging.INFO)
+    caplog.set_level(logging.WARNING)
     entity_id = f"{SENSOR_DOMAIN}.{TEST_ENTITY_NAME}".replace(" ", "_")
     assert hass.states.get(entity_id).state in (STATE_UNKNOWN, STATE_UNAVAILABLE)
     hass.states.async_set(entity_id, 17)
@@ -1234,7 +1234,7 @@ async def test_integration_reload(
 ) -> None:
     """Run test for integration reload."""
 
-    caplog.set_level(logging.INFO)
+    caplog.set_level(logging.DEBUG)
     caplog.clear()
 
     yaml_path = get_fixture_path("configuration.yaml", "modbus")
@@ -1253,7 +1253,7 @@ async def test_integration_reload_failed(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture, mock_modbus
 ) -> None:
     """Run test for integration connect failure on reload."""
-    caplog.set_level(logging.INFO)
+    caplog.set_level(logging.DEBUG)
     caplog.clear()
 
     yaml_path = get_fixture_path("configuration.yaml", "modbus")
