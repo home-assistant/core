@@ -187,7 +187,7 @@ class MqttDeviceTracker(MqttEntity, TrackerEntity):
         return self._location_name
 
     @property
-    def source_type(self) -> SourceType | str:
+    def source_type(self) -> SourceType:
         """Return the source type, eg gps or router, of the device."""
-        source_type: SourceType | str = self._config[CONF_SOURCE_TYPE]
+        source_type: SourceType = self._config[CONF_SOURCE_TYPE]
         return source_type

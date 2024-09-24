@@ -296,7 +296,7 @@ class TrackerEntity(
 
 
 class ScannerEntityDescription(BaseTrackerEntityDescription, frozen_or_thawed=True):
-    """A class that describes tracker entities.""
+    """A class that describes tracker entities."""
 
 
 CACHED_SCANNER_PROPERTIES_WITH_ATTR_ = {
