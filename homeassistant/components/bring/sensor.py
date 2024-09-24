@@ -80,8 +80,9 @@ async def async_setup_entry(
     """Set up the sensor platform."""
     coordinator = config_entry.runtime_data
 
+    entities: list[BringSensorEntity] = []
     for bring_list in coordinator.data.values():
-        async_add_entities(
+        entities.extend(
             BringSensorEntity(
                 coordinator,
                 bring_list,
@@ -89,6 +90,7 @@ async def async_setup_entry(
             )
             for description in SENSOR_DESCRIPTIONS
         )
+    async_add_entities(entities)
 
 
 class BringSensorEntity(BringBaseEntity, SensorEntity):
@@ -103,9 +105,9 @@ class BringSensorEntity(BringBaseEntity, SensorEntity):
         entity_description: BringSensorEntityDescription,
     ) -> None:
         """Initialize the entity."""
-        self.entity_description = entity_description
-
         super().__init__(coordinator, bring_list)
+        self.entity_description = entity_description
+        self._attr_unique_id = f"{coordinator.config_entry.unique_id}_{self._list_uuid}_{self.entity_description.key}"
 
     @property
     def native_value(self) -> StateType:

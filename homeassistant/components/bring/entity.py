@@ -23,10 +23,6 @@ class BringBaseEntity(CoordinatorEntity[BringDataUpdateCoordinator]):
         super().__init__(coordinator)
 
         self._list_uuid = bring_list["listUuid"]
-        self._attr_unique_id = f"{coordinator.config_entry.unique_id}_{self._list_uuid}"
-
-        if hasattr(self, "entity_description"):
-            self._attr_unique_id += f"_{self.entity_description.key}"
 
         self.device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
