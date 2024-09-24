@@ -13,6 +13,7 @@ import pytest
 
 from homeassistant.auth.providers.homeassistant import HassAuthProvider
 from homeassistant.components import cloud, http
+from homeassistant.components.cloud import CloudNotAvailable
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.http import KEY_HASS
@@ -556,6 +557,9 @@ async def test_ssl_issue_if_no_urls_configured(
 ) -> None:
     """Test raising SSL issue if no external or internal URL is configured."""
 
+    assert hass.config.external_url is None
+    assert hass.config.internal_url is None
+
     cert_path, key_path, _ = await hass.async_add_executor_job(
         _setup_empty_ssl_pem_files, tmp_path
     )
@@ -575,10 +579,7 @@ async def test_ssl_issue_if_no_urls_configured(
         await hass.async_start()
         await hass.async_block_till_done()
 
-    assert hass.config.external_url is None
-    assert hass.config.internal_url is None
-
-    assert len(issue_registry.issues) == 1
+    assert ("http", "ssl_configured_without_configured_urls") in issue_registry.issues
 
 
 async def test_ssl_issue_if_using_cloud(
@@ -589,6 +590,9 @@ async def test_ssl_issue_if_using_cloud(
     """Test raising no SSL issue if not right configured but using cloud."""
     await mock_cloud(hass)
     await hass.async_block_till_done()
+
+    assert hass.config.external_url is None
+    assert hass.config.internal_url is None
 
     cert_path, key_path, _ = await hass.async_add_executor_job(
         _setup_empty_ssl_pem_files, tmp_path
@@ -610,10 +614,10 @@ async def test_ssl_issue_if_using_cloud(
         await hass.async_start()
         await hass.async_block_till_done()
 
-    assert hass.config.external_url is None
-    assert hass.config.internal_url is None
-
-    assert len(issue_registry.issues) == 0
+    assert (
+        "http",
+        "ssl_configured_without_configured_urls",
+    ) not in issue_registry.issues
 
 
 async def test_ssl_issue_if_not_connected_to_cloud(
@@ -625,13 +629,19 @@ async def test_ssl_issue_if_not_connected_to_cloud(
     await mock_cloud(hass)
     await hass.async_block_till_done()
 
+    assert hass.config.external_url is None
+    assert hass.config.internal_url is None
+
     cert_path, key_path, _ = await hass.async_add_executor_job(
         _setup_empty_ssl_pem_files, tmp_path
     )
 
     with (
         patch("ssl.SSLContext.load_cert_chain"),
-        patch.object(cloud, "async_remote_ui_url", side_effect=cloud.CloudNotAvailable),
+        patch(
+            "homeassistant.components.cloud.async_remote_ui_url",
+            side_effect=CloudNotAvailable,
+        ),
         patch(
             "homeassistant.util.ssl.server_context_modern",
             side_effect=server_context_modern,
@@ -645,10 +655,7 @@ async def test_ssl_issue_if_not_connected_to_cloud(
         await hass.async_start()
         await hass.async_block_till_done()
 
-    assert hass.config.external_url is None
-    assert hass.config.internal_url is None
-
-    assert len(issue_registry.issues) == 0
+    assert ("http", "ssl_configured_without_configured_urls") in issue_registry.issues
 
 
 @pytest.mark.parametrize(
@@ -690,4 +697,7 @@ async def test_ssl_issue_urls_configured(
         await hass.async_start()
         await hass.async_block_till_done()
 
-    assert len(issue_registry.issues) == 0
+    assert (
+        "http",
+        "ssl_configured_without_configured_urls",
+    ) not in issue_registry.issues
