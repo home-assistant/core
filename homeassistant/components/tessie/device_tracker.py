@@ -44,7 +44,7 @@ class TessieDeviceTrackerEntity(TessieEntity, TrackerEntity):
         super().__init__(vehicle, self.key)
 
     @property
-    def source_type(self) -> SourceType | str:
+    def source_type(self) -> SourceType:
         """Return the source type of the device tracker."""
         return SourceType.GPS
 

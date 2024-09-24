@@ -632,7 +632,7 @@ async def test_usb_discovery(
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
         await hass.async_block_till_done()
 
-    assert start_addon.call_args == call(hass, "core_zwave_js")
+    assert start_addon.call_args == call("core_zwave_js")
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TITLE
@@ -733,7 +733,7 @@ async def test_usb_discovery_addon_not_running(
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
         await hass.async_block_till_done()
 
-    assert start_addon.call_args == call(hass, "core_zwave_js")
+    assert start_addon.call_args == call("core_zwave_js")
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TITLE
@@ -828,7 +828,7 @@ async def test_discovery_addon_not_running(
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
         await hass.async_block_till_done()
 
-    assert start_addon.call_args == call(hass, "core_zwave_js")
+    assert start_addon.call_args == call("core_zwave_js")
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TITLE
@@ -931,7 +931,7 @@ async def test_discovery_addon_not_installed(
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
         await hass.async_block_till_done()
 
-    assert start_addon.call_args == call(hass, "core_zwave_js")
+    assert start_addon.call_args == call("core_zwave_js")
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TITLE
@@ -1344,7 +1344,7 @@ async def test_addon_installed(
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
         await hass.async_block_till_done()
 
-    assert start_addon.call_args == call(hass, "core_zwave_js")
+    assert start_addon.call_args == call("core_zwave_js")
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TITLE
@@ -1428,7 +1428,7 @@ async def test_addon_installed_start_failure(
     await hass.async_block_till_done()
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    assert start_addon.call_args == call(hass, "core_zwave_js")
+    assert start_addon.call_args == call("core_zwave_js")
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "addon_start_failed"
@@ -1507,7 +1507,7 @@ async def test_addon_installed_failures(
     await hass.async_block_till_done()
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    assert start_addon.call_args == call(hass, "core_zwave_js")
+    assert start_addon.call_args == call("core_zwave_js")
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "addon_start_failed"
@@ -1655,7 +1655,7 @@ async def test_addon_installed_already_configured(
     await hass.async_block_till_done()
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    assert start_addon.call_args == call(hass, "core_zwave_js")
+    assert start_addon.call_args == call("core_zwave_js")
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
@@ -1750,7 +1750,7 @@ async def test_addon_not_installed(
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
         await hass.async_block_till_done()
 
-    assert start_addon.call_args == call(hass, "core_zwave_js")
+    assert start_addon.call_args == call("core_zwave_js")
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TITLE
@@ -2007,7 +2007,7 @@ async def test_options_addon_running(
     result = await hass.config_entries.options.async_configure(result["flow_id"])
     await hass.async_block_till_done()
 
-    assert restart_addon.call_args == call(hass, "core_zwave_js")
+    assert restart_addon.call_args == call("core_zwave_js")
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert entry.data["url"] == "ws://host1:3001"
@@ -2286,7 +2286,7 @@ async def test_options_different_device(
     await hass.async_block_till_done()
 
     assert restart_addon.call_count == 1
-    assert restart_addon.call_args == call(hass, "core_zwave_js")
+    assert restart_addon.call_args == call("core_zwave_js")
 
     result = await hass.config_entries.options.async_configure(result["flow_id"])
     await hass.async_block_till_done()
@@ -2308,7 +2308,7 @@ async def test_options_different_device(
     await hass.async_block_till_done()
 
     assert restart_addon.call_count == 2
-    assert restart_addon.call_args == call(hass, "core_zwave_js")
+    assert restart_addon.call_args == call("core_zwave_js")
 
     result = await hass.config_entries.options.async_configure(result["flow_id"])
     await hass.async_block_till_done()
@@ -2452,7 +2452,7 @@ async def test_options_addon_restart_failed(
     await hass.async_block_till_done()
 
     assert restart_addon.call_count == 1
-    assert restart_addon.call_args == call(hass, "core_zwave_js")
+    assert restart_addon.call_args == call("core_zwave_js")
 
     result = await hass.config_entries.options.async_configure(result["flow_id"])
     await hass.async_block_till_done()
@@ -2471,7 +2471,7 @@ async def test_options_addon_restart_failed(
     await hass.async_block_till_done()
 
     assert restart_addon.call_count == 2
-    assert restart_addon.call_args == call(hass, "core_zwave_js")
+    assert restart_addon.call_args == call("core_zwave_js")
 
     result = await hass.config_entries.options.async_configure(result["flow_id"])
     await hass.async_block_till_done()
@@ -2709,7 +2709,7 @@ async def test_options_addon_not_installed(
     await hass.async_block_till_done()
 
     assert start_addon.call_count == 1
-    assert start_addon.call_args == call(hass, "core_zwave_js")
+    assert start_addon.call_args == call("core_zwave_js")
 
     result = await hass.config_entries.options.async_configure(result["flow_id"])
     await hass.async_block_till_done()

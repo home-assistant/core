@@ -70,7 +70,7 @@ class ImageContentTypeError(HomeAssistantError):
 
 def valid_image_content_type(content_type: str | None) -> str:
     """Validate the assigned content type is one of an image."""
-    if content_type is None or content_type.split("/", 1)[0] != "image":
+    if content_type is None or content_type.split("/", 1)[0].lower() != "image":
         raise ImageContentTypeError
     return content_type
 

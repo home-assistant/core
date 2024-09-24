@@ -990,6 +990,7 @@ class MockConfigEntry(config_entries.ConfigEntry):
         *,
         data=None,
         disabled_by=None,
+        discovery_keys=None,
         domain="test",
         entry_id=None,
         minor_version=1,
@@ -1004,9 +1005,11 @@ class MockConfigEntry(config_entries.ConfigEntry):
         version=1,
     ) -> None:
         """Initialize a mock config entry."""
+        discovery_keys = discovery_keys or {}
         kwargs = {
             "data": data or {},
             "disabled_by": disabled_by,
+            "discovery_keys": discovery_keys,
             "domain": domain,
             "entry_id": entry_id or ulid_util.ulid_now(),
             "minor_version": minor_version,

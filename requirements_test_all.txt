@@ -103,7 +103,7 @@ PyXiaomiGateway==0.14.3
 RachioPy==1.1.0
 
 # homeassistant.components.python_script
-RestrictedPython==7.0
+RestrictedPython==7.2
 
 # homeassistant.components.remember_the_milk
 RtmAPI==0.7.2
@@ -186,7 +186,7 @@ aioaseko==1.0.0
 aioasuswrt==1.4.0
 
 # homeassistant.components.husqvarna_automower
-aioautomower==2024.9.1
+aioautomower==2024.9.2
 
 # homeassistant.components.azure_devops
 aioazuredevops==2.2.1
@@ -338,7 +338,7 @@ aioridwell==2024.01.0
 aioruckus==0.41
 
 # homeassistant.components.russound_rio
-aiorussound==3.0.5
+aiorussound==3.1.5
 
 # homeassistant.components.ruuvi_gateway
 aioruuvigateway==0.1.0
@@ -548,13 +548,13 @@ boschshcpy==0.2.91
 botocore==1.34.131
 
 # homeassistant.components.bring
-bring-api==0.8.1
+bring-api==0.9.0
 
 # homeassistant.components.broadlink
 broadlink==0.19.0
 
 # homeassistant.components.brother
-brother==4.3.0
+brother==4.3.1
 
 # homeassistant.components.brottsplatskartan
 brottsplatskartan==1.0.5
@@ -569,7 +569,7 @@ bthome-ble==3.9.1
 buienradar==1.0.6
 
 # homeassistant.components.dhcp
-cached-ipaddress==0.5.0
+cached-ipaddress==0.6.0
 
 # homeassistant.components.caldav
 caldav==1.3.9
@@ -857,7 +857,7 @@ google-generativeai==0.7.2
 google-nest-sdm==5.0.1
 
 # homeassistant.components.google_photos
-google-photos-library-api==0.11.1
+google-photos-library-api==0.12.0
 
 # homeassistant.components.google_travel_time
 googlemaps==2.5.1
@@ -946,7 +946,7 @@ holidays==0.57
 home-assistant-frontend==20240909.1
 
 # homeassistant.components.conversation
-home-assistant-intents==2024.9.4
+home-assistant-intents==2024.9.23
 
 # homeassistant.components.home_connect
 homeconnect==0.8.0
@@ -1229,7 +1229,10 @@ numato-gpio==0.13.0
 # homeassistant.components.stream
 # homeassistant.components.tensorflow
 # homeassistant.components.trend
-numpy==1.26.0
+numpy==1.26.4
+
+# homeassistant.components.nyt_games
+nyt_games==0.4.0
 
 # homeassistant.components.google
 oauth2client==4.1.3
@@ -1481,7 +1484,7 @@ pydexcom==0.2.3
 pydiscovergy==3.0.2
 
 # homeassistant.components.hydrawise
-pydrawise==2024.8.0
+pydrawise==2024.9.0
 
 # homeassistant.components.android_ip_webcam
 pydroid-ipcam==2.0.0
@@ -1577,7 +1580,7 @@ pyipp==0.16.0
 pyiqvia==2022.04.0
 
 # homeassistant.components.iskra
-pyiskra==0.1.11
+pyiskra==0.1.14
 
 # homeassistant.components.iss
 pyiss==1.0.1
@@ -1586,7 +1589,7 @@ pyiss==1.0.1
 pyisy==3.1.14
 
 # homeassistant.components.jvc_projector
-pyjvcprojector==1.0.12
+pyjvcprojector==1.1.2
 
 # homeassistant.components.kaleidescape
 pykaleidescape==1.0.1
@@ -1708,7 +1711,7 @@ pyotgw==2.2.0
 pyotp==2.8.0
 
 # homeassistant.components.overkiz
-pyoverkiz==1.13.14
+pyoverkiz==1.14.1
 
 # homeassistant.components.onewire
 pyownet==0.10.0.post1
@@ -1798,7 +1801,7 @@ pysml==0.0.12
 pysmlight==0.1.1
 
 # homeassistant.components.snmp
-pysnmp==6.2.5
+pysnmp==6.2.6
 
 # homeassistant.components.snooz
 pysnooz==0.8.6
@@ -1864,7 +1867,7 @@ python-kasa[speedups]==0.7.3
 python-linkplay==0.0.9
 
 # homeassistant.components.matter
-python-matter-server==6.3.0
+python-matter-server==6.5.2
 
 # homeassistant.components.xiaomi_miio
 python-miio==0.5.12
@@ -2348,7 +2351,7 @@ weatherflow4py==1.0.6
 webmin-xmlrpc==0.0.2
 
 # homeassistant.components.weheat
-weheat==2024.09.10
+weheat==2024.09.23
 
 # homeassistant.components.whirlpool
 whirlpool-sixth-sense==0.18.8
@@ -2375,7 +2378,7 @@ xbox-webapi==2.0.11
 xiaomi-ble==0.32.0
 
 # homeassistant.components.knx
-xknx==3.1.1
+xknx==3.2.0
 
 # homeassistant.components.knx
 xknxproject==3.7.1

@@ -14,7 +14,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .coordinator import Coordinator, GardenaBluetoothDescriptorEntity
+from .coordinator import GardenaBluetoothCoordinator
+from .entity import GardenaBluetoothDescriptorEntity
 
 
 @dataclass(frozen=True)
@@ -44,7 +45,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up button based on a config entry."""
-    coordinator: Coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: GardenaBluetoothCoordinator = hass.data[DOMAIN][entry.entry_id]
     entities = [
         GardenaBluetoothButton(coordinator, description, description.context)
         for description in DESCRIPTIONS

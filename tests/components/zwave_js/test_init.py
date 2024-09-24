@@ -5,6 +5,7 @@ from copy import deepcopy
 import logging
 from unittest.mock import AsyncMock, call, patch
 
+from aiohasupervisor import SupervisorError
 import pytest
 from zwave_js_server.client import Client
 from zwave_js_server.event import Event
@@ -556,7 +557,7 @@ async def test_start_addon(
         hass, "core_zwave_js", {"options": addon_options}
     )
     assert start_addon.call_count == 1
-    assert start_addon.call_args == call(hass, "core_zwave_js")
+    assert start_addon.call_args == call("core_zwave_js")
 
 
 async def test_install_addon(
@@ -605,7 +606,7 @@ async def test_install_addon(
         hass, "core_zwave_js", {"options": addon_options}
     )
     assert start_addon.call_count == 1
-    assert start_addon.call_args == call(hass, "core_zwave_js")
+    assert start_addon.call_args == call("core_zwave_js")
 
 
 @pytest.mark.parametrize("addon_info_side_effect", [HassioAPIError("Boom")])
@@ -845,7 +846,7 @@ async def test_issue_registry(
     ("stop_addon_side_effect", "entry_state"),
     [
         (None, ConfigEntryState.NOT_LOADED),
-        (HassioAPIError("Boom"), ConfigEntryState.LOADED),
+        (SupervisorError("Boom"), ConfigEntryState.LOADED),
     ],
 )
 async def test_stop_addon(
@@ -888,7 +889,7 @@ async def test_stop_addon(
 
     assert entry.state == entry_state
     assert stop_addon.call_count == 1
-    assert stop_addon.call_args == call(hass, "core_zwave_js")
+    assert stop_addon.call_args == call("core_zwave_js")
 
 
 async def test_remove_entry(
@@ -927,7 +928,7 @@ async def test_remove_entry(
     await hass.config_entries.async_remove(entry.entry_id)
 
     assert stop_addon.call_count == 1
-    assert stop_addon.call_args == call(hass, "core_zwave_js")
+    assert stop_addon.call_args == call("core_zwave_js")
     assert create_backup.call_count == 1
     assert create_backup.call_args == call(
         hass,
@@ -935,7 +936,7 @@ async def test_remove_entry(
         partial=True,
     )
     assert uninstall_addon.call_count == 1
-    assert uninstall_addon.call_args == call(hass, "core_zwave_js")
+    assert uninstall_addon.call_args == call("core_zwave_js")
     assert entry.state is ConfigEntryState.NOT_LOADED
     assert len(hass.config_entries.async_entries(DOMAIN)) == 0
     stop_addon.reset_mock()
@@ -945,12 +946,12 @@ async def test_remove_entry(
     # test add-on stop failure
     entry.add_to_hass(hass)
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-    stop_addon.side_effect = HassioAPIError()
+    stop_addon.side_effect = SupervisorError()
 
     await hass.config_entries.async_remove(entry.entry_id)
 
     assert stop_addon.call_count == 1
-    assert stop_addon.call_args == call(hass, "core_zwave_js")
+    assert stop_addon.call_args == call("core_zwave_js")
     assert create_backup.call_count == 0
     assert uninstall_addon.call_count == 0
     assert entry.state is ConfigEntryState.NOT_LOADED
@@ -969,7 +970,7 @@ async def test_remove_entry(
     await hass.config_entries.async_remove(entry.entry_id)
 
     assert stop_addon.call_count == 1
-    assert stop_addon.call_args == call(hass, "core_zwave_js")
+    assert stop_addon.call_args == call("core_zwave_js")
     assert create_backup.call_count == 1
     assert create_backup.call_args == call(
         hass,
@@ -988,12 +989,12 @@ async def test_remove_entry(
     # test add-on uninstall failure
     entry.add_to_hass(hass)
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-    uninstall_addon.side_effect = HassioAPIError()
+    uninstall_addon.side_effect = SupervisorError()
 
     await hass.config_entries.async_remove(entry.entry_id)
 
     assert stop_addon.call_count == 1
-    assert stop_addon.call_args == call(hass, "core_zwave_js")
+    assert stop_addon.call_args == call("core_zwave_js")
     assert create_backup.call_count == 1
     assert create_backup.call_args == call(
         hass,
@@ -1001,7 +1002,7 @@ async def test_remove_entry(
         partial=True,
     )
     assert uninstall_addon.call_count == 1
-    assert uninstall_addon.call_args == call(hass, "core_zwave_js")
+    assert uninstall_addon.call_args == call("core_zwave_js")
     assert entry.state is ConfigEntryState.NOT_LOADED
     assert len(hass.config_entries.async_entries(DOMAIN)) == 0
     assert "Failed to uninstall the Z-Wave JS add-on" in caplog.text
