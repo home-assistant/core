@@ -215,7 +215,7 @@
         "state": {
           "stopped": "Stopped",
           "running": "Running",
-          "paused": "Paused",
+          "paused": "[%key:common::state::paused%]",
           "error": "Error"
         }
       },
