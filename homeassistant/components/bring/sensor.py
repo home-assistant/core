@@ -80,17 +80,15 @@ async def async_setup_entry(
     """Set up the sensor platform."""
     coordinator = config_entry.runtime_data
 
-    entities: list[BringSensorEntity] = []
-    for bring_list in coordinator.data.values():
-        entities.extend(
-            BringSensorEntity(
-                coordinator,
-                bring_list,
-                description,
-            )
-            for description in SENSOR_DESCRIPTIONS
+    async_add_entities(
+        BringSensorEntity(
+            coordinator,
+            bring_list,
+            description,
         )
-    async_add_entities(entities)
+        for description in SENSOR_DESCRIPTIONS
+        for bring_list in coordinator.data.values()
+    )
 
 
 class BringSensorEntity(BringBaseEntity, SensorEntity):
