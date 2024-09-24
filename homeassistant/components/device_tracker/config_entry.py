@@ -173,7 +173,6 @@ CACHED_PROPERTIES_WITH_ATTR_ = {
 class BaseTrackerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     """Represent a tracked device."""
 
-    _attr_battery_level: int | None = None
     _attr_device_info: None = None
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_source_type: SourceType
@@ -184,7 +183,7 @@ class BaseTrackerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
         Percentage from 0-100.
         """
-        return self._attr_battery_level
+        return None
 
     @property
     def source_type(self) -> SourceType | str:
