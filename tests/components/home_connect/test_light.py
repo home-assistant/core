@@ -15,13 +15,11 @@ from homeassistant.components.home_connect.const import (
     REFRIGERATION_EXTERNAL_LIGHT_BRIGHTNESS,
     REFRIGERATION_EXTERNAL_LIGHT_POWER,
 )
-from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
+from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN, LightState
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
-    STATE_OFF,
-    STATE_ON,
     STATE_UNKNOWN,
     Platform,
 )
@@ -75,7 +73,7 @@ async def test_light(
             },
             SERVICE_TURN_ON,
             {},
-            STATE_ON,
+            LightState.ON,
             "Hood",
         ),
         (
@@ -88,7 +86,7 @@ async def test_light(
             },
             SERVICE_TURN_ON,
             {"brightness": 200},
-            STATE_ON,
+            LightState.ON,
             "Hood",
         ),
         (
@@ -99,7 +97,7 @@ async def test_light(
             },
             SERVICE_TURN_OFF,
             {},
-            STATE_OFF,
+            LightState.OFF,
             "Hood",
         ),
         (
@@ -125,7 +123,7 @@ async def test_light(
             },
             SERVICE_TURN_ON,
             {"brightness": 200},
-            STATE_ON,
+            LightState.ON,
             "Hood",
         ),
         (
@@ -136,7 +134,7 @@ async def test_light(
             },
             SERVICE_TURN_OFF,
             {},
-            STATE_OFF,
+            LightState.OFF,
             "Hood",
         ),
         (
@@ -147,7 +145,7 @@ async def test_light(
             },
             SERVICE_TURN_ON,
             {},
-            STATE_ON,
+            LightState.ON,
             "Hood",
         ),
         (
@@ -160,7 +158,7 @@ async def test_light(
             },
             SERVICE_TURN_ON,
             {},
-            STATE_ON,
+            LightState.ON,
             "FridgeFreezer",
         ),
     ],

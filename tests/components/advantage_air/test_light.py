@@ -7,8 +7,9 @@ from homeassistant.components.light import (
     DOMAIN as LIGHT_DOMAIN,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    LightState,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -30,7 +31,7 @@ async def test_light(
     light_id = "100"
     state = hass.states.get(entity_id)
     assert state
-    assert state.state == STATE_OFF
+    assert state.state == LightState.OFF
 
     entry = entity_registry.async_get(entity_id)
     assert entry
@@ -96,7 +97,7 @@ async def test_things_light(
     light_id = "204"
     state = hass.states.get(entity_id)
     assert state
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
 
     entry = entity_registry.async_get(entity_id)
     assert entry

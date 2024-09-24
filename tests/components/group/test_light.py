@@ -30,13 +30,12 @@ from homeassistant.components.light import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     ColorMode,
+    LightState,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
     EVENT_CALL_SERVICE,
-    STATE_OFF,
-    STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
@@ -76,7 +75,7 @@ async def test_default_state(
 
     state = hass.states.get("light.bedroom_group")
     assert state is not None
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == 0
     assert state.attributes.get(ATTR_ENTITY_ID) == ["light.kitchen", "light.bedroom"]
     assert state.attributes.get(ATTR_BRIGHTNESS) is None
@@ -135,41 +134,41 @@ async def test_state_reporting_any(hass: HomeAssistant) -> None:
     assert hass.states.get("light.light_group").state == STATE_UNKNOWN
 
     # At least one member on -> group on
-    hass.states.async_set("light.test1", STATE_ON)
+    hass.states.async_set("light.test1", LightState.ON)
     hass.states.async_set("light.test2", STATE_UNAVAILABLE)
     await hass.async_block_till_done()
-    assert hass.states.get("light.light_group").state == STATE_ON
+    assert hass.states.get("light.light_group").state == LightState.ON
 
-    hass.states.async_set("light.test1", STATE_ON)
-    hass.states.async_set("light.test2", STATE_OFF)
+    hass.states.async_set("light.test1", LightState.ON)
+    hass.states.async_set("light.test2", LightState.OFF)
     await hass.async_block_till_done()
-    assert hass.states.get("light.light_group").state == STATE_ON
+    assert hass.states.get("light.light_group").state == LightState.ON
 
-    hass.states.async_set("light.test1", STATE_ON)
-    hass.states.async_set("light.test2", STATE_ON)
+    hass.states.async_set("light.test1", LightState.ON)
+    hass.states.async_set("light.test2", LightState.ON)
     await hass.async_block_till_done()
-    assert hass.states.get("light.light_group").state == STATE_ON
+    assert hass.states.get("light.light_group").state == LightState.ON
 
-    hass.states.async_set("light.test1", STATE_ON)
+    hass.states.async_set("light.test1", LightState.ON)
     hass.states.async_set("light.test2", STATE_UNKNOWN)
     await hass.async_block_till_done()
-    assert hass.states.get("light.light_group").state == STATE_ON
+    assert hass.states.get("light.light_group").state == LightState.ON
 
     # Otherwise -> off
-    hass.states.async_set("light.test1", STATE_OFF)
-    hass.states.async_set("light.test2", STATE_OFF)
+    hass.states.async_set("light.test1", LightState.OFF)
+    hass.states.async_set("light.test2", LightState.OFF)
     await hass.async_block_till_done()
-    assert hass.states.get("light.light_group").state == STATE_OFF
+    assert hass.states.get("light.light_group").state == LightState.OFF
 
     hass.states.async_set("light.test1", STATE_UNKNOWN)
-    hass.states.async_set("light.test2", STATE_OFF)
+    hass.states.async_set("light.test2", LightState.OFF)
     await hass.async_block_till_done()
-    assert hass.states.get("light.light_group").state == STATE_OFF
+    assert hass.states.get("light.light_group").state == LightState.OFF
 
     hass.states.async_set("light.test1", STATE_UNAVAILABLE)
-    hass.states.async_set("light.test2", STATE_OFF)
+    hass.states.async_set("light.test2", LightState.OFF)
     await hass.async_block_till_done()
-    assert hass.states.get("light.light_group").state == STATE_OFF
+    assert hass.states.get("light.light_group").state == LightState.OFF
 
     # All group members removed from the state machine -> unavailable
     hass.states.async_remove("light.test1")
@@ -211,12 +210,12 @@ async def test_state_reporting_all(hass: HomeAssistant) -> None:
     assert hass.states.get("light.light_group").state == STATE_UNAVAILABLE
 
     # At least one member unknown or unavailable -> group unknown
-    hass.states.async_set("light.test1", STATE_ON)
+    hass.states.async_set("light.test1", LightState.ON)
     hass.states.async_set("light.test2", STATE_UNAVAILABLE)
     await hass.async_block_till_done()
     assert hass.states.get("light.light_group").state == STATE_UNKNOWN
 
-    hass.states.async_set("light.test1", STATE_ON)
+    hass.states.async_set("light.test1", LightState.ON)
     hass.states.async_set("light.test2", STATE_UNKNOWN)
     await hass.async_block_till_done()
     assert hass.states.get("light.light_group").state == STATE_UNKNOWN
@@ -226,12 +225,12 @@ async def test_state_reporting_all(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     assert hass.states.get("light.light_group").state == STATE_UNKNOWN
 
-    hass.states.async_set("light.test1", STATE_OFF)
+    hass.states.async_set("light.test1", LightState.OFF)
     hass.states.async_set("light.test2", STATE_UNAVAILABLE)
     await hass.async_block_till_done()
     assert hass.states.get("light.light_group").state == STATE_UNKNOWN
 
-    hass.states.async_set("light.test1", STATE_OFF)
+    hass.states.async_set("light.test1", LightState.OFF)
     hass.states.async_set("light.test2", STATE_UNKNOWN)
     await hass.async_block_till_done()
     assert hass.states.get("light.light_group").state == STATE_UNKNOWN
@@ -242,21 +241,21 @@ async def test_state_reporting_all(hass: HomeAssistant) -> None:
     assert hass.states.get("light.light_group").state == STATE_UNKNOWN
 
     # At least one member off -> group off
-    hass.states.async_set("light.test1", STATE_ON)
-    hass.states.async_set("light.test2", STATE_OFF)
+    hass.states.async_set("light.test1", LightState.ON)
+    hass.states.async_set("light.test2", LightState.OFF)
     await hass.async_block_till_done()
-    assert hass.states.get("light.light_group").state == STATE_OFF
+    assert hass.states.get("light.light_group").state == LightState.OFF
 
-    hass.states.async_set("light.test1", STATE_OFF)
-    hass.states.async_set("light.test2", STATE_OFF)
+    hass.states.async_set("light.test1", LightState.OFF)
+    hass.states.async_set("light.test2", LightState.OFF)
     await hass.async_block_till_done()
-    assert hass.states.get("light.light_group").state == STATE_OFF
+    assert hass.states.get("light.light_group").state == LightState.OFF
 
     # Otherwise -> on
-    hass.states.async_set("light.test1", STATE_ON)
-    hass.states.async_set("light.test2", STATE_ON)
+    hass.states.async_set("light.test1", LightState.ON)
+    hass.states.async_set("light.test2", LightState.ON)
     await hass.async_block_till_done()
-    assert hass.states.get("light.light_group").state == STATE_ON
+    assert hass.states.get("light.light_group").state == LightState.ON
 
     # All group members removed from the state machine -> unavailable
     hass.states.async_remove("light.test1")
@@ -268,8 +267,8 @@ async def test_state_reporting_all(hass: HomeAssistant) -> None:
 async def test_brightness(hass: HomeAssistant) -> None:
     """Test brightness reporting."""
     entities = [
-        MockLight("test1", STATE_ON),
-        MockLight("test2", STATE_OFF),
+        MockLight("test1", LightState.ON),
+        MockLight("test2", LightState.OFF),
     ]
     setup_test_component_platform(hass, LIGHT_DOMAIN, entities)
 
@@ -301,7 +300,7 @@ async def test_brightness(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     state = hass.states.get("light.light_group")
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     assert state.attributes[ATTR_BRIGHTNESS] == 255
     assert state.attributes[ATTR_COLOR_MODE] == "brightness"
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == 0
@@ -315,7 +314,7 @@ async def test_brightness(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
     state = hass.states.get("light.light_group")
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     assert state.attributes[ATTR_BRIGHTNESS] == 177
     assert state.attributes[ATTR_COLOR_MODE] == "brightness"
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == 0
@@ -329,7 +328,7 @@ async def test_brightness(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
     state = hass.states.get("light.light_group")
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     assert state.attributes[ATTR_BRIGHTNESS] == 100
     assert state.attributes[ATTR_COLOR_MODE] == "brightness"
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == 0
@@ -339,8 +338,8 @@ async def test_brightness(hass: HomeAssistant) -> None:
 async def test_color_hs(hass: HomeAssistant) -> None:
     """Test hs color reporting."""
     entities = [
-        MockLight("test1", STATE_ON),
-        MockLight("test2", STATE_OFF),
+        MockLight("test1", LightState.ON),
+        MockLight("test2", LightState.OFF),
     ]
     setup_test_component_platform(hass, LIGHT_DOMAIN, entities)
 
@@ -373,7 +372,7 @@ async def test_color_hs(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     state = hass.states.get("light.light_group")
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     assert state.attributes[ATTR_COLOR_MODE] == "hs"
     assert state.attributes[ATTR_HS_COLOR] == (0, 100)
     assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == ["hs"]
@@ -409,8 +408,8 @@ async def test_color_hs(hass: HomeAssistant) -> None:
 async def test_color_rgb(hass: HomeAssistant) -> None:
     """Test rgbw color reporting."""
     entities = [
-        MockLight("test1", STATE_ON),
-        MockLight("test2", STATE_OFF),
+        MockLight("test1", LightState.ON),
+        MockLight("test2", LightState.OFF),
     ]
     setup_test_component_platform(hass, LIGHT_DOMAIN, entities)
 
@@ -445,7 +444,7 @@ async def test_color_rgb(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     state = hass.states.get("light.light_group")
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     assert state.attributes[ATTR_COLOR_MODE] == "rgb"
     assert state.attributes[ATTR_RGB_COLOR] == (0, 64, 128)
     assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == ["rgb"]
@@ -481,8 +480,8 @@ async def test_color_rgb(hass: HomeAssistant) -> None:
 async def test_color_rgbw(hass: HomeAssistant) -> None:
     """Test rgbw color reporting."""
     entities = [
-        MockLight("test1", STATE_ON),
-        MockLight("test2", STATE_OFF),
+        MockLight("test1", LightState.ON),
+        MockLight("test2", LightState.OFF),
     ]
     setup_test_component_platform(hass, LIGHT_DOMAIN, entities)
 
@@ -517,7 +516,7 @@ async def test_color_rgbw(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     state = hass.states.get("light.light_group")
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     assert state.attributes[ATTR_COLOR_MODE] == "rgbw"
     assert state.attributes[ATTR_RGBW_COLOR] == (0, 64, 128, 255)
     assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == ["rgbw"]
@@ -553,8 +552,8 @@ async def test_color_rgbw(hass: HomeAssistant) -> None:
 async def test_color_rgbww(hass: HomeAssistant) -> None:
     """Test rgbww color reporting."""
     entities = [
-        MockLight("test1", STATE_ON),
-        MockLight("test2", STATE_OFF),
+        MockLight("test1", LightState.ON),
+        MockLight("test2", LightState.OFF),
     ]
     setup_test_component_platform(hass, LIGHT_DOMAIN, entities)
 
@@ -589,7 +588,7 @@ async def test_color_rgbww(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     state = hass.states.get("light.light_group")
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     assert state.attributes[ATTR_COLOR_MODE] == "rgbww"
     assert state.attributes[ATTR_RGBWW_COLOR] == (0, 32, 64, 128, 255)
     assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == ["rgbww"]
@@ -625,8 +624,8 @@ async def test_color_rgbww(hass: HomeAssistant) -> None:
 async def test_white(hass: HomeAssistant) -> None:
     """Test white reporting."""
     entities = [
-        MockLight("test1", STATE_ON),
-        MockLight("test2", STATE_ON),
+        MockLight("test1", LightState.ON),
+        MockLight("test2", LightState.ON),
     ]
     setup_test_component_platform(hass, LIGHT_DOMAIN, entities)
 
@@ -682,8 +681,8 @@ async def test_white(hass: HomeAssistant) -> None:
 async def test_color_temp(hass: HomeAssistant) -> None:
     """Test color temp reporting."""
     entities = [
-        MockLight("test1", STATE_ON),
-        MockLight("test2", STATE_OFF),
+        MockLight("test1", LightState.ON),
+        MockLight("test2", LightState.OFF),
     ]
     setup_test_component_platform(hass, LIGHT_DOMAIN, entities)
 
@@ -751,9 +750,9 @@ async def test_color_temp(hass: HomeAssistant) -> None:
 async def test_emulated_color_temp_group(hass: HomeAssistant) -> None:
     """Test emulated color temperature in a group."""
     entities = [
-        MockLight("test1", STATE_ON),
-        MockLight("test2", STATE_OFF),
-        MockLight("test3", STATE_OFF),
+        MockLight("test1", LightState.ON),
+        MockLight("test2", LightState.OFF),
+        MockLight("test3", LightState.OFF),
     ]
     setup_test_component_platform(hass, LIGHT_DOMAIN, entities)
 
@@ -798,17 +797,17 @@ async def test_emulated_color_temp_group(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     state = hass.states.get("light.test1")
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     assert state.attributes[ATTR_COLOR_TEMP] == 200
     assert ATTR_HS_COLOR in state.attributes
 
     state = hass.states.get("light.test2")
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     assert state.attributes[ATTR_COLOR_TEMP] == 200
     assert ATTR_HS_COLOR in state.attributes
 
     state = hass.states.get("light.test3")
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     assert state.attributes[ATTR_HS_COLOR] == (27.001, 19.243)
 
 
@@ -818,8 +817,8 @@ async def test_min_max_mireds(hass: HomeAssistant) -> None:
     min/max mireds is reported both when light is on and off
     """
     entities = [
-        MockLight("test1", STATE_ON),
-        MockLight("test2", STATE_OFF),
+        MockLight("test1", LightState.ON),
+        MockLight("test2", LightState.OFF),
     ]
     setup_test_component_platform(hass, LIGHT_DOMAIN, entities)
 
@@ -901,7 +900,7 @@ async def test_effect_list(hass: HomeAssistant) -> None:
 
     hass.states.async_set(
         "light.test1",
-        STATE_ON,
+        LightState.ON,
         {ATTR_EFFECT_LIST: ["None", "Random", "Colorloop"], ATTR_SUPPORTED_FEATURES: 4},
     )
     await hass.async_block_till_done()
@@ -914,7 +913,7 @@ async def test_effect_list(hass: HomeAssistant) -> None:
 
     hass.states.async_set(
         "light.test2",
-        STATE_ON,
+        LightState.ON,
         {ATTR_EFFECT_LIST: ["None", "Random", "Rainbow"], ATTR_SUPPORTED_FEATURES: 4},
     )
     await hass.async_block_till_done()
@@ -928,7 +927,7 @@ async def test_effect_list(hass: HomeAssistant) -> None:
 
     hass.states.async_set(
         "light.test1",
-        STATE_OFF,
+        LightState.OFF,
         {ATTR_EFFECT_LIST: ["None", "Colorloop", "Seven"], ATTR_SUPPORTED_FEATURES: 4},
     )
     await hass.async_block_till_done()
@@ -960,31 +959,33 @@ async def test_effect(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     hass.states.async_set(
-        "light.test1", STATE_ON, {ATTR_EFFECT: "None", ATTR_SUPPORTED_FEATURES: 6}
+        "light.test1", LightState.ON, {ATTR_EFFECT: "None", ATTR_SUPPORTED_FEATURES: 6}
     )
     await hass.async_block_till_done()
     state = hass.states.get("light.light_group")
     assert state.attributes[ATTR_EFFECT] == "None"
 
     hass.states.async_set(
-        "light.test2", STATE_ON, {ATTR_EFFECT: "None", ATTR_SUPPORTED_FEATURES: 6}
+        "light.test2", LightState.ON, {ATTR_EFFECT: "None", ATTR_SUPPORTED_FEATURES: 6}
     )
     await hass.async_block_till_done()
     state = hass.states.get("light.light_group")
     assert state.attributes[ATTR_EFFECT] == "None"
 
     hass.states.async_set(
-        "light.test3", STATE_ON, {ATTR_EFFECT: "Random", ATTR_SUPPORTED_FEATURES: 6}
+        "light.test3",
+        LightState.ON,
+        {ATTR_EFFECT: "Random", ATTR_SUPPORTED_FEATURES: 6},
     )
     await hass.async_block_till_done()
     state = hass.states.get("light.light_group")
     assert state.attributes[ATTR_EFFECT] == "None"
 
     hass.states.async_set(
-        "light.test1", STATE_OFF, {ATTR_EFFECT: "None", ATTR_SUPPORTED_FEATURES: 6}
+        "light.test1", LightState.OFF, {ATTR_EFFECT: "None", ATTR_SUPPORTED_FEATURES: 6}
     )
     hass.states.async_set(
-        "light.test2", STATE_OFF, {ATTR_EFFECT: "None", ATTR_SUPPORTED_FEATURES: 6}
+        "light.test2", LightState.OFF, {ATTR_EFFECT: "None", ATTR_SUPPORTED_FEATURES: 6}
     )
     await hass.async_block_till_done()
     state = hass.states.get("light.light_group")
@@ -994,9 +995,9 @@ async def test_effect(hass: HomeAssistant) -> None:
 async def test_supported_color_modes(hass: HomeAssistant) -> None:
     """Test supported_color_modes reporting."""
     entities = [
-        MockLight("test1", STATE_ON),
-        MockLight("test2", STATE_OFF),
-        MockLight("test3", STATE_OFF),
+        MockLight("test1", LightState.ON),
+        MockLight("test2", LightState.OFF),
+        MockLight("test3", LightState.OFF),
     ]
     setup_test_component_platform(hass, LIGHT_DOMAIN, entities)
 
@@ -1042,9 +1043,9 @@ async def test_supported_color_modes(hass: HomeAssistant) -> None:
 async def test_color_mode(hass: HomeAssistant) -> None:
     """Test color_mode reporting."""
     entities = [
-        MockLight("test1", STATE_ON),
-        MockLight("test2", STATE_OFF),
-        MockLight("test3", STATE_OFF),
+        MockLight("test1", LightState.ON),
+        MockLight("test2", LightState.OFF),
+        MockLight("test3", LightState.OFF),
     ]
     setup_test_component_platform(hass, LIGHT_DOMAIN, entities)
 
@@ -1115,12 +1116,12 @@ async def test_color_mode(hass: HomeAssistant) -> None:
 async def test_color_mode2(hass: HomeAssistant) -> None:
     """Test onoff color_mode and brightness are given lowest priority."""
     entities = [
-        MockLight("test1", STATE_ON),
-        MockLight("test2", STATE_ON),
-        MockLight("test3", STATE_ON),
-        MockLight("test4", STATE_ON),
-        MockLight("test5", STATE_ON),
-        MockLight("test6", STATE_ON),
+        MockLight("test1", LightState.ON),
+        MockLight("test2", LightState.ON),
+        MockLight("test3", LightState.ON),
+        MockLight("test4", LightState.ON),
+        MockLight("test5", LightState.ON),
+        MockLight("test6", LightState.ON),
     ]
     setup_test_component_platform(hass, LIGHT_DOMAIN, entities)
 
@@ -1206,28 +1207,28 @@ async def test_supported_features(hass: HomeAssistant) -> None:
     await hass.async_start()
     await hass.async_block_till_done()
 
-    hass.states.async_set("light.test1", STATE_ON, {ATTR_SUPPORTED_FEATURES: 0})
+    hass.states.async_set("light.test1", LightState.ON, {ATTR_SUPPORTED_FEATURES: 0})
     await hass.async_block_till_done()
     state = hass.states.get("light.light_group")
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == 0
 
     # SUPPORT_COLOR_TEMP = 2
     # SUPPORT_COLOR_TEMP = 2 will be blocked in favour of ColorMode.COLOR_TEMP
-    hass.states.async_set("light.test2", STATE_ON, {ATTR_SUPPORTED_FEATURES: 2})
+    hass.states.async_set("light.test2", LightState.ON, {ATTR_SUPPORTED_FEATURES: 2})
     await hass.async_block_till_done()
     state = hass.states.get("light.light_group")
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == 0
 
     # LightEntityFeature.TRANSITION | LightEntityFeature.FLASH | SUPPORT_BRIGHTNESS = 41
     # SUPPORT_BRIGHTNESS = 1 will be translated to ColorMode.BRIGHTNESS
-    hass.states.async_set("light.test1", STATE_OFF, {ATTR_SUPPORTED_FEATURES: 41})
+    hass.states.async_set("light.test1", LightState.OFF, {ATTR_SUPPORTED_FEATURES: 41})
     await hass.async_block_till_done()
     state = hass.states.get("light.light_group")
     # LightEntityFeature.TRANSITION | LightEntityFeature.FLASH = 40
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == 40
 
     # Test that unknown feature 256 is blocked
-    hass.states.async_set("light.test2", STATE_OFF, {ATTR_SUPPORTED_FEATURES: 256})
+    hass.states.async_set("light.test2", LightState.OFF, {ATTR_SUPPORTED_FEATURES: 256})
     await hass.async_block_till_done()
     state = hass.states.get("light.light_group")
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == 40
@@ -1240,9 +1241,9 @@ async def test_service_calls(
 ) -> None:
     """Test service calls."""
     entities = [
-        MockLight("bed_light", STATE_ON),
-        MockLight("ceiling_lights", STATE_OFF),
-        MockLight("kitchen_lights", STATE_OFF),
+        MockLight("bed_light", LightState.ON),
+        MockLight("ceiling_lights", LightState.OFF),
+        MockLight("kitchen_lights", LightState.OFF),
     ]
     setup_test_component_platform(hass, LIGHT_DOMAIN, entities)
 
@@ -1287,7 +1288,7 @@ async def test_service_calls(
     await hass.async_block_till_done()
 
     group_state = hass.states.get("light.light_group")
-    assert group_state.state == STATE_ON
+    assert group_state.state == LightState.ON
     assert group_state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [supported_color_modes]
 
     await hass.services.async_call(
@@ -1296,9 +1297,9 @@ async def test_service_calls(
         {ATTR_ENTITY_ID: "light.light_group"},
         blocking=True,
     )
-    assert hass.states.get("light.bed_light").state == STATE_OFF
-    assert hass.states.get("light.ceiling_lights").state == STATE_OFF
-    assert hass.states.get("light.kitchen_lights").state == STATE_OFF
+    assert hass.states.get("light.bed_light").state == LightState.OFF
+    assert hass.states.get("light.ceiling_lights").state == LightState.OFF
+    assert hass.states.get("light.kitchen_lights").state == LightState.OFF
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
@@ -1307,9 +1308,9 @@ async def test_service_calls(
         blocking=True,
     )
 
-    assert hass.states.get("light.bed_light").state == STATE_ON
-    assert hass.states.get("light.ceiling_lights").state == STATE_ON
-    assert hass.states.get("light.kitchen_lights").state == STATE_ON
+    assert hass.states.get("light.bed_light").state == LightState.ON
+    assert hass.states.get("light.ceiling_lights").state == LightState.ON
+    assert hass.states.get("light.kitchen_lights").state == LightState.ON
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
@@ -1318,9 +1319,9 @@ async def test_service_calls(
         blocking=True,
     )
 
-    assert hass.states.get("light.bed_light").state == STATE_OFF
-    assert hass.states.get("light.ceiling_lights").state == STATE_OFF
-    assert hass.states.get("light.kitchen_lights").state == STATE_OFF
+    assert hass.states.get("light.bed_light").state == LightState.OFF
+    assert hass.states.get("light.ceiling_lights").state == LightState.OFF
+    assert hass.states.get("light.kitchen_lights").state == LightState.OFF
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
@@ -1334,17 +1335,17 @@ async def test_service_calls(
     )
 
     state = hass.states.get("light.bed_light")
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     assert state.attributes[ATTR_BRIGHTNESS] == 128
     assert state.attributes[ATTR_RGB_COLOR] == (42, 255, 255)
 
     state = hass.states.get("light.ceiling_lights")
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     assert state.attributes[ATTR_BRIGHTNESS] == 128
     assert state.attributes[ATTR_RGB_COLOR] == (42, 255, 255)
 
     state = hass.states.get("light.kitchen_lights")
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     assert state.attributes[ATTR_BRIGHTNESS] == 128
     assert state.attributes[ATTR_RGB_COLOR] == (42, 255, 255)
 
@@ -1360,17 +1361,17 @@ async def test_service_calls(
     )
 
     state = hass.states.get("light.bed_light")
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     assert state.attributes[ATTR_BRIGHTNESS] == 128
     assert state.attributes[ATTR_RGB_COLOR] == (255, 0, 0)
 
     state = hass.states.get("light.ceiling_lights")
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     assert state.attributes[ATTR_BRIGHTNESS] == 128
     assert state.attributes[ATTR_RGB_COLOR] == (255, 0, 0)
 
     state = hass.states.get("light.kitchen_lights")
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     assert state.attributes[ATTR_BRIGHTNESS] == 128
     assert state.attributes[ATTR_RGB_COLOR] == (255, 0, 0)
 
@@ -1399,7 +1400,7 @@ async def test_service_call_effect(hass: HomeAssistant) -> None:
     await hass.async_start()
     await hass.async_block_till_done()
 
-    assert hass.states.get("light.light_group").state == STATE_ON
+    assert hass.states.get("light.light_group").state == LightState.ON
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
@@ -1414,18 +1415,18 @@ async def test_service_call_effect(hass: HomeAssistant) -> None:
     )
 
     state = hass.states.get("light.bed_light")
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     assert state.attributes[ATTR_BRIGHTNESS] == 128
     assert state.attributes[ATTR_EFFECT] == "Random"
     assert state.attributes[ATTR_RGB_COLOR] == (42, 255, 255)
 
     state = hass.states.get("light.ceiling_lights")
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     assert state.attributes[ATTR_BRIGHTNESS] == 128
     assert state.attributes[ATTR_RGB_COLOR] == (42, 255, 255)
 
     state = hass.states.get("light.kitchen_lights")
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     assert state.attributes[ATTR_BRIGHTNESS] == 128
     assert state.attributes[ATTR_RGB_COLOR] == (42, 255, 255)
 
@@ -1505,7 +1506,7 @@ async def test_reload(hass: HomeAssistant) -> None:
     await hass.async_start()
 
     await hass.async_block_till_done()
-    assert hass.states.get("light.light_group").state == STATE_ON
+    assert hass.states.get("light.light_group").state == LightState.ON
 
     yaml_path = get_fixture_path("configuration.yaml", "group")
     with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
@@ -1524,7 +1525,7 @@ async def test_reload(hass: HomeAssistant) -> None:
 
 async def test_reload_with_platform_not_setup(hass: HomeAssistant) -> None:
     """Test the ability to reload lights."""
-    hass.states.async_set("light.bowl", STATE_ON)
+    hass.states.async_set("light.bowl", LightState.ON)
     await async_setup_component(
         hass,
         LIGHT_DOMAIN,
@@ -1574,11 +1575,11 @@ async def test_reload_with_base_integration_platform_not_setup(
         },
     )
     await hass.async_block_till_done()
-    hass.states.async_set("light.master_hall_lights", STATE_ON)
-    hass.states.async_set("light.master_hall_lights_2", STATE_OFF)
+    hass.states.async_set("light.master_hall_lights", LightState.ON)
+    hass.states.async_set("light.master_hall_lights_2", LightState.OFF)
 
-    hass.states.async_set("light.outside_patio_lights", STATE_OFF)
-    hass.states.async_set("light.outside_patio_lights_2", STATE_OFF)
+    hass.states.async_set("light.outside_patio_lights", LightState.OFF)
+    hass.states.async_set("light.outside_patio_lights_2", LightState.OFF)
 
     yaml_path = get_fixture_path("configuration.yaml", "group")
     with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
@@ -1593,8 +1594,8 @@ async def test_reload_with_base_integration_platform_not_setup(
     assert hass.states.get("light.light_group") is None
     assert hass.states.get("light.master_hall_lights_g") is not None
     assert hass.states.get("light.outside_patio_lights_g") is not None
-    assert hass.states.get("light.master_hall_lights_g").state == STATE_ON
-    assert hass.states.get("light.outside_patio_lights_g").state == STATE_OFF
+    assert hass.states.get("light.master_hall_lights_g").state == LightState.ON
+    assert hass.states.get("light.outside_patio_lights_g").state == LightState.OFF
 
 
 async def test_nested_group(hass: HomeAssistant) -> None:
@@ -1626,7 +1627,7 @@ async def test_nested_group(hass: HomeAssistant) -> None:
 
     state = hass.states.get("light.bedroom_group")
     assert state is not None
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     assert state.attributes.get(ATTR_ENTITY_ID) == [
         "light.bed_light",
         "light.kitchen_lights",
@@ -1634,7 +1635,7 @@ async def test_nested_group(hass: HomeAssistant) -> None:
 
     state = hass.states.get("light.nested_group")
     assert state is not None
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     assert state.attributes.get(ATTR_ENTITY_ID) == ["light.bedroom_group"]
 
     # Test controlling the nested group
@@ -1645,7 +1646,7 @@ async def test_nested_group(hass: HomeAssistant) -> None:
             {ATTR_ENTITY_ID: "light.nested_group"},
             blocking=True,
         )
-    assert hass.states.get("light.bed_light").state == STATE_OFF
-    assert hass.states.get("light.kitchen_lights").state == STATE_OFF
-    assert hass.states.get("light.bedroom_group").state == STATE_OFF
-    assert hass.states.get("light.nested_group").state == STATE_OFF
+    assert hass.states.get("light.bed_light").state == LightState.OFF
+    assert hass.states.get("light.kitchen_lights").state == LightState.OFF
+    assert hass.states.get("light.bedroom_group").state == LightState.OFF
+    assert hass.states.get("light.nested_group").state == LightState.OFF

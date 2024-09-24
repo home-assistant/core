@@ -9,8 +9,9 @@ from homeassistant.components.light import (
     ATTR_HS_COLOR,
     DOMAIN as LIGHT_DOMAIN,
     SERVICE_TURN_ON,
+    LightState,
 )
-from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, STATE_OFF, STATE_ON
+from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -34,7 +35,7 @@ async def test_light_get_state(
     entity_id = "light.lightbulb"
     state = hass.states.get(entity_id)
     assert state
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     assert state.attributes.get("friendly_name") == "lightbulb"
 
     entry = entity_registry.async_get(entity_id)
@@ -55,7 +56,7 @@ async def test_light_set_on(
     entity_id = "light.lightbulb"
     state = hass.states.get(entity_id)
     assert state
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     assert state.attributes.get("friendly_name") == "lightbulb"
 
     entry = entity_registry.async_get(entity_id)
@@ -74,7 +75,7 @@ async def test_light_set_on(
 
     state = hass.states.get(entity_id)
     assert state
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
 
 
 async def test_light_set_off(
@@ -87,7 +88,7 @@ async def test_light_set_off(
     entity_id = "light.bedroomlight"
     state = hass.states.get(entity_id)
     assert state
-    assert state.state == STATE_OFF
+    assert state.state == LightState.OFF
     assert state.attributes.get("friendly_name") == "bedroomlight"
 
     entry = entity_registry.async_get(entity_id)
@@ -106,7 +107,7 @@ async def test_light_set_off(
 
     state = hass.states.get(entity_id)
     assert state
-    assert state.state == STATE_OFF
+    assert state.state == LightState.OFF
 
 
 async def test_light_set_brightness(
@@ -119,7 +120,7 @@ async def test_light_set_brightness(
     entity_id = "light.lightbulb"
     state = hass.states.get(entity_id)
     assert state
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     assert state.attributes.get("friendly_name") == "lightbulb"
 
     entry = entity_registry.async_get(entity_id)
@@ -138,7 +139,7 @@ async def test_light_set_brightness(
 
     state = hass.states.get(entity_id)
     assert state
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     assert int(state.attributes[ATTR_BRIGHTNESS]) == 0
 
 
@@ -152,7 +153,7 @@ async def test_light_set_hue(
     entity_id = "light.lightbulb"
     state = hass.states.get(entity_id)
     assert state
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     assert state.attributes.get("friendly_name") == "lightbulb"
 
     entry = entity_registry.async_get(entity_id)
@@ -175,6 +176,6 @@ async def test_light_set_hue(
 
     state = hass.states.get(entity_id)
     assert state
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     assert int(state.attributes[ATTR_BRIGHTNESS]) == 0
     assert state.attributes[ATTR_HS_COLOR] == (0, 0)

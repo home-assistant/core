@@ -26,14 +26,9 @@ from homeassistant.components.light import (
     SERVICE_TURN_ON,
     ColorMode,
     LightEntityFeature,
+    LightState,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    ATTR_SUPPORTED_FEATURES,
-    STATE_OFF,
-    STATE_ON,
-    Platform,
-)
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -333,10 +328,10 @@ async def test_light_state_change(
     light_ws_data: WebsocketDataType,
 ) -> None:
     """Verify light can change state on websocket event."""
-    assert hass.states.get("light.hue_go").state == STATE_ON
+    assert hass.states.get("light.hue_go").state == LightState.ON
 
     await light_ws_data({"state": {"on": False}})
-    assert hass.states.get("light.hue_go").state == STATE_OFF
+    assert hass.states.get("light.hue_go").state == LightState.OFF
 
 
 @pytest.mark.parametrize(
@@ -1158,7 +1153,7 @@ async def test_verify_group_supported_features(hass: HomeAssistant) -> None:
     assert len(hass.states.async_all()) == 4
 
     group_state = hass.states.get("light.group")
-    assert group_state.state == STATE_ON
+    assert group_state.state == LightState.ON
     assert group_state.attributes[ATTR_COLOR_MODE] == ColorMode.COLOR_TEMP
     assert (
         group_state.attributes[ATTR_SUPPORTED_FEATURES]
@@ -1275,7 +1270,7 @@ async def test_verify_group_color_mode_fallback(
 ) -> None:
     """Test that group supported features reflect what included lights support."""
     group_state = hass.states.get("light.opbergruimte")
-    assert group_state.state == STATE_OFF
+    assert group_state.state == LightState.OFF
     assert group_state.attributes[ATTR_COLOR_MODE] is None
 
     await mock_websocket_data(
@@ -1300,5 +1295,5 @@ async def test_verify_group_color_mode_fallback(
         }
     )
     group_state = hass.states.get("light.opbergruimte")
-    assert group_state.state == STATE_ON
+    assert group_state.state == LightState.ON
     assert group_state.attributes[ATTR_COLOR_MODE] is ColorMode.BRIGHTNESS

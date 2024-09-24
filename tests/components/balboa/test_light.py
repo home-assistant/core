@@ -9,7 +9,8 @@ from pybalboa.enums import OffOnState, UnknownState
 import pytest
 from syrupy import SnapshotAssertion
 
-from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN, Platform
+from homeassistant.components.light import LightState
+from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -59,17 +60,17 @@ async def test_light(hass: HomeAssistant, client: MagicMock, mock_light) -> None
 
     # check if the initial state is off
     state = hass.states.get(ENTITY_LIGHT)
-    assert state.state == STATE_OFF
+    assert state.state == LightState.OFF
 
     # test calling turn on
     await common.async_turn_on(hass, ENTITY_LIGHT)
     state = await client_update(hass, client, ENTITY_LIGHT)
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
 
     # test calling turn off
     await common.async_turn_off(hass, ENTITY_LIGHT)
     state = await client_update(hass, client, ENTITY_LIGHT)
-    assert state.state == STATE_OFF
+    assert state.state == LightState.OFF
 
 
 async def test_light_unknown_state(

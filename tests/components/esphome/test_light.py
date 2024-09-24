@@ -7,7 +7,7 @@ from aioesphomeapi import (
     APIVersion,
     LightColorCapability,
     LightInfo,
-    LightState,
+    LightState as ESPHomeLightState,
 )
 import pytest
 
@@ -34,8 +34,8 @@ from homeassistant.components.light import (
     FLASH_SHORT,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
-    STATE_ON,
     ColorMode,
+    LightState,
 )
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
@@ -57,7 +57,7 @@ async def test_light_on_off(
             supported_color_modes=[LightColorCapability.ON_OFF],
         )
     ]
-    states = [LightState(key=1, state=True)]
+    states = [ESPHomeLightState(key=1, state=True)]
     user_service = []
     await mock_generic_device_entry(
         mock_client=mock_client,
@@ -67,7 +67,7 @@ async def test_light_on_off(
     )
     state = hass.states.get("light.test_mylight")
     assert state is not None
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
@@ -97,7 +97,7 @@ async def test_light_brightness(
             supported_color_modes=[LightColorCapability.BRIGHTNESS],
         )
     ]
-    states = [LightState(key=1, state=True, brightness=100)]
+    states = [ESPHomeLightState(key=1, state=True, brightness=100)]
     user_service = []
     await mock_generic_device_entry(
         mock_client=mock_client,
@@ -107,7 +107,7 @@ async def test_light_brightness(
     )
     state = hass.states.get("light.test_mylight")
     assert state is not None
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
@@ -215,7 +215,7 @@ async def test_light_brightness_on_off(
             ],
         )
     ]
-    states = [LightState(key=1, state=True, brightness=100)]
+    states = [ESPHomeLightState(key=1, state=True, brightness=100)]
     user_service = []
     await mock_generic_device_entry(
         mock_client=mock_client,
@@ -225,7 +225,7 @@ async def test_light_brightness_on_off(
     )
     state = hass.states.get("light.test_mylight")
     assert state is not None
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
@@ -285,7 +285,7 @@ async def test_light_legacy_white_converted_to_brightness(
             ],
         )
     ]
-    states = [LightState(key=1, state=True, brightness=100)]
+    states = [ESPHomeLightState(key=1, state=True, brightness=100)]
     user_service = []
     await mock_generic_device_entry(
         mock_client=mock_client,
@@ -295,7 +295,7 @@ async def test_light_legacy_white_converted_to_brightness(
     )
     state = hass.states.get("light.test_mylight")
     assert state is not None
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
@@ -343,7 +343,7 @@ async def test_light_legacy_white_with_rgb(
             supported_color_modes=[color_mode, color_mode_2],
         )
     ]
-    states = [LightState(key=1, state=True, brightness=100)]
+    states = [ESPHomeLightState(key=1, state=True, brightness=100)]
     user_service = []
     await mock_generic_device_entry(
         mock_client=mock_client,
@@ -353,7 +353,7 @@ async def test_light_legacy_white_with_rgb(
     )
     state = hass.states.get("light.test_mylight")
     assert state is not None
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [
         ColorMode.RGB,
         ColorMode.WHITE,
@@ -397,7 +397,7 @@ async def test_light_brightness_on_off_with_unknown_color_mode(
             ],
         )
     ]
-    states = [LightState(key=1, state=True, brightness=100)]
+    states = [ESPHomeLightState(key=1, state=True, brightness=100)]
     user_service = []
     await mock_generic_device_entry(
         mock_client=mock_client,
@@ -407,7 +407,7 @@ async def test_light_brightness_on_off_with_unknown_color_mode(
     )
     state = hass.states.get("light.test_mylight")
     assert state is not None
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
@@ -468,7 +468,7 @@ async def test_light_on_and_brightness(
             ],
         )
     ]
-    states = [LightState(key=1, state=True, brightness=100)]
+    states = [ESPHomeLightState(key=1, state=True, brightness=100)]
     user_service = []
     await mock_generic_device_entry(
         mock_client=mock_client,
@@ -478,7 +478,7 @@ async def test_light_on_and_brightness(
     )
     state = hass.states.get("light.test_mylight")
     assert state is not None
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
@@ -518,7 +518,7 @@ async def test_rgb_color_temp_light(
             supported_color_modes=color_modes,
         )
     ]
-    states = [LightState(key=1, state=True, brightness=100)]
+    states = [ESPHomeLightState(key=1, state=True, brightness=100)]
     user_service = []
     await mock_generic_device_entry(
         mock_client=mock_client,
@@ -528,7 +528,7 @@ async def test_rgb_color_temp_light(
     )
     state = hass.states.get("light.test_mylight")
     assert state is not None
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
@@ -606,7 +606,9 @@ async def test_light_rgb(
             ],
         )
     ]
-    states = [LightState(key=1, state=True, brightness=100, red=1, green=1, blue=1)]
+    states = [
+        ESPHomeLightState(key=1, state=True, brightness=100, red=1, green=1, blue=1)
+    ]
     user_service = []
     await mock_generic_device_entry(
         mock_client=mock_client,
@@ -616,7 +618,7 @@ async def test_light_rgb(
     )
     state = hass.states.get("light.test_mylight")
     assert state is not None
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
@@ -725,7 +727,7 @@ async def test_light_rgbw(
         )
     ]
     states = [
-        LightState(
+        ESPHomeLightState(
             key=1,
             state=True,
             brightness=100,
@@ -748,7 +750,7 @@ async def test_light_rgbw(
     )
     state = hass.states.get("light.test_mylight")
     assert state is not None
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.RGBW]
     assert state.attributes[ATTR_COLOR_MODE] == ColorMode.RGBW
 
@@ -892,7 +894,7 @@ async def test_light_rgbww_with_cold_warm_white_support(
         )
     ]
     states = [
-        LightState(
+        ESPHomeLightState(
             key=1,
             state=True,
             color_brightness=1,
@@ -919,7 +921,7 @@ async def test_light_rgbww_with_cold_warm_white_support(
     )
     state = hass.states.get("light.test_mylight")
     assert state is not None
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.RGBWW]
     assert state.attributes[ATTR_COLOR_MODE] == ColorMode.RGBWW
     assert state.attributes[ATTR_RGBWW_COLOR] == (255, 255, 255, 255, 255)
@@ -1131,7 +1133,7 @@ async def test_light_rgbww_without_cold_warm_white_support(
         )
     ]
     states = [
-        LightState(
+        ESPHomeLightState(
             key=1,
             state=True,
             color_brightness=1,
@@ -1156,7 +1158,7 @@ async def test_light_rgbww_without_cold_warm_white_support(
     )
     state = hass.states.get("light.test_mylight")
     assert state is not None
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.RGBWW]
     assert state.attributes[ATTR_COLOR_MODE] == ColorMode.RGBWW
     assert state.attributes[ATTR_RGBWW_COLOR] == (255, 255, 255, 255, 0)
@@ -1359,7 +1361,7 @@ async def test_light_color_temp(
         )
     ]
     states = [
-        LightState(
+        ESPHomeLightState(
             key=1,
             state=True,
             brightness=100,
@@ -1376,7 +1378,7 @@ async def test_light_color_temp(
     )
     state = hass.states.get("light.test_mylight")
     assert state is not None
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     attributes = state.attributes
 
     assert attributes[ATTR_MIN_MIREDS] == 153
@@ -1434,7 +1436,7 @@ async def test_light_color_temp_no_mireds_set(
         )
     ]
     states = [
-        LightState(
+        ESPHomeLightState(
             key=1,
             state=True,
             brightness=100,
@@ -1451,7 +1453,7 @@ async def test_light_color_temp_no_mireds_set(
     )
     state = hass.states.get("light.test_mylight")
     assert state is not None
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     attributes = state.attributes
 
     assert attributes[ATTR_MIN_MIREDS] is None
@@ -1531,7 +1533,7 @@ async def test_light_color_temp_legacy(
         )
     ]
     states = [
-        LightState(
+        ESPHomeLightState(
             key=1,
             state=True,
             brightness=100,
@@ -1553,7 +1555,7 @@ async def test_light_color_temp_legacy(
     )
     state = hass.states.get("light.test_mylight")
     assert state is not None
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     attributes = state.attributes
 
     assert attributes[ATTR_COLOR_MODE] == ColorMode.COLOR_TEMP
@@ -1617,7 +1619,7 @@ async def test_light_rgb_legacy(
         )
     ]
     states = [
-        LightState(
+        ESPHomeLightState(
             key=1,
             state=True,
             brightness=100,
@@ -1639,7 +1641,7 @@ async def test_light_rgb_legacy(
     )
     state = hass.states.get("light.test_mylight")
     assert state is not None
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     attributes = state.attributes
     assert attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.RGB]
     assert attributes[ATTR_COLOR_MODE] == ColorMode.RGB
@@ -1707,7 +1709,7 @@ async def test_light_effects(
             ],
         )
     ]
-    states = [LightState(key=1, state=True, brightness=100)]
+    states = [ESPHomeLightState(key=1, state=True, brightness=100)]
     user_service = []
     await mock_generic_device_entry(
         mock_client=mock_client,
@@ -1717,7 +1719,7 @@ async def test_light_effects(
     )
     state = hass.states.get("light.test_mylight")
     assert state is not None
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     assert state.attributes[ATTR_EFFECT_LIST] == ["effect1", "effect2"]
 
     await hass.services.async_call(
@@ -1762,7 +1764,7 @@ async def test_only_cold_warm_white_support(
         )
     ]
     states = [
-        LightState(
+        ESPHomeLightState(
             key=1,
             state=True,
             color_brightness=1,
@@ -1784,7 +1786,7 @@ async def test_only_cold_warm_white_support(
     )
     state = hass.states.get("light.test_mylight")
     assert state is not None
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.COLOR_TEMP]
     assert state.attributes[ATTR_COLOR_MODE] == ColorMode.COLOR_TEMP
     assert state.attributes[ATTR_COLOR_TEMP_KELVIN] == 0
@@ -1853,7 +1855,7 @@ async def test_light_no_color_modes(
             supported_color_modes=[color_mode],
         )
     ]
-    states = [LightState(key=1, state=True, brightness=100)]
+    states = [ESPHomeLightState(key=1, state=True, brightness=100)]
     user_service = []
     await mock_generic_device_entry(
         mock_client=mock_client,
@@ -1863,7 +1865,7 @@ async def test_light_no_color_modes(
     )
     state = hass.states.get("light.test_mylight")
     assert state is not None
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.ONOFF]
 
     await hass.services.async_call(

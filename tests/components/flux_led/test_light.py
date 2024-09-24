@@ -52,6 +52,7 @@ from homeassistant.components.light import (
     ATTR_WHITE,
     DOMAIN as LIGHT_DOMAIN,
     ColorMode,
+    LightState,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -59,8 +60,6 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_MODE,
     CONF_NAME,
-    STATE_OFF,
-    STATE_ON,
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
@@ -100,7 +99,7 @@ async def test_light_unique_id(
     entity_id = "light.bulb_rgbcw_ddeeff"
     assert entity_registry.async_get(entity_id).unique_id == MAC_ADDRESS
     state = hass.states.get(entity_id)
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
 
 
 async def test_light_goes_unavailable_and_recovers(
@@ -121,7 +120,7 @@ async def test_light_goes_unavailable_and_recovers(
     entity_id = "light.bulb_rgbcw_ddeeff"
     assert entity_registry.async_get(entity_id).unique_id == MAC_ADDRESS
     state = hass.states.get(entity_id)
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
 
     now = utcnow()
     bulb.async_update = AsyncMock(side_effect=RuntimeError)
@@ -135,7 +134,7 @@ async def test_light_goes_unavailable_and_recovers(
         async_fire_time_changed(hass, now + timedelta(seconds=i))
         await hass.async_block_till_done()
     state = hass.states.get(entity_id)
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
 
 
 async def test_light_mac_address_not_found(
@@ -154,7 +153,7 @@ async def test_light_mac_address_not_found(
     entity_id = "light.bulb_rgbcw_ddeeff"
     assert entity_registry.async_get(entity_id).unique_id == config_entry.entry_id
     state = hass.states.get(entity_id)
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
 
 
 @pytest.mark.parametrize(
@@ -215,7 +214,7 @@ async def test_rgb_light(hass: HomeAssistant) -> None:
     entity_id = "light.bulb_rgbcw_ddeeff"
 
     state = hass.states.get(entity_id)
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     attributes = state.attributes
     assert attributes[ATTR_BRIGHTNESS] == 128
     assert attributes[ATTR_COLOR_MODE] == "rgb"
@@ -229,7 +228,7 @@ async def test_rgb_light(hass: HomeAssistant) -> None:
     bulb.async_turn_off.assert_called_once()
 
     await async_mock_device_turn_off(hass, bulb)
-    assert hass.states.get(entity_id).state == STATE_OFF
+    assert hass.states.get(entity_id).state == LightState.OFF
 
     bulb.brightness = 0
     await hass.services.async_call(
@@ -256,7 +255,7 @@ async def test_rgb_light(hass: HomeAssistant) -> None:
     bulb.async_set_brightness.assert_called_with(100)
     bulb.async_set_brightness.reset_mock()
     await async_mock_device_turn_on(hass, bulb)
-    assert hass.states.get(entity_id).state == STATE_ON
+    assert hass.states.get(entity_id).state == LightState.ON
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
@@ -321,7 +320,7 @@ async def test_rgb_light_auto_on(hass: HomeAssistant) -> None:
     entity_id = "light.bulb_rgbcw_ddeeff"
 
     state = hass.states.get(entity_id)
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     attributes = state.attributes
     assert attributes[ATTR_BRIGHTNESS] == 128
     assert attributes[ATTR_COLOR_MODE] == ColorMode.RGB
@@ -335,7 +334,7 @@ async def test_rgb_light_auto_on(hass: HomeAssistant) -> None:
     bulb.async_turn_off.assert_called_once()
 
     await async_mock_device_turn_off(hass, bulb)
-    assert hass.states.get(entity_id).state == STATE_OFF
+    assert hass.states.get(entity_id).state == LightState.OFF
 
     bulb.brightness = 0
     await hass.services.async_call(
@@ -375,7 +374,7 @@ async def test_rgb_light_auto_on(hass: HomeAssistant) -> None:
     )
     bulb.async_turn_on.assert_called_once()
     await async_mock_device_turn_on(hass, bulb)
-    assert hass.states.get(entity_id).state == STATE_ON
+    assert hass.states.get(entity_id).state == LightState.ON
     bulb.async_turn_on.reset_mock()
 
     await hass.services.async_call(
@@ -454,7 +453,7 @@ async def test_rgbw_light_auto_on(hass: HomeAssistant) -> None:
     entity_id = "light.bulb_rgbcw_ddeeff"
 
     state = hass.states.get(entity_id)
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     attributes = state.attributes
     assert attributes[ATTR_BRIGHTNESS] == 128
     assert attributes[ATTR_COLOR_MODE] == ColorMode.RGBW
@@ -468,7 +467,7 @@ async def test_rgbw_light_auto_on(hass: HomeAssistant) -> None:
     bulb.async_turn_off.assert_called_once()
 
     await async_mock_device_turn_off(hass, bulb)
-    assert hass.states.get(entity_id).state == STATE_OFF
+    assert hass.states.get(entity_id).state == LightState.OFF
 
     bulb.brightness = 0
     await hass.services.async_call(
@@ -490,7 +489,7 @@ async def test_rgbw_light_auto_on(hass: HomeAssistant) -> None:
     )
     bulb.async_turn_on.assert_called_once()
     await async_mock_device_turn_on(hass, bulb)
-    assert hass.states.get(entity_id).state == STATE_ON
+    assert hass.states.get(entity_id).state == LightState.ON
     bulb.async_turn_on.reset_mock()
 
     await hass.services.async_call(
@@ -589,7 +588,7 @@ async def test_rgbww_light_auto_on(hass: HomeAssistant) -> None:
     entity_id = "light.bulb_rgbcw_ddeeff"
 
     state = hass.states.get(entity_id)
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     attributes = state.attributes
     assert attributes[ATTR_BRIGHTNESS] == 128
     assert attributes[ATTR_COLOR_MODE] == ColorMode.RGBWW
@@ -603,7 +602,7 @@ async def test_rgbww_light_auto_on(hass: HomeAssistant) -> None:
     bulb.async_turn_off.assert_called_once()
 
     await async_mock_device_turn_off(hass, bulb)
-    assert hass.states.get(entity_id).state == STATE_OFF
+    assert hass.states.get(entity_id).state == LightState.OFF
 
     bulb.brightness = 0
     await hass.services.async_call(
@@ -625,7 +624,7 @@ async def test_rgbww_light_auto_on(hass: HomeAssistant) -> None:
     )
     bulb.async_turn_on.assert_called_once()
     await async_mock_device_turn_on(hass, bulb)
-    assert hass.states.get(entity_id).state == STATE_ON
+    assert hass.states.get(entity_id).state == LightState.ON
     bulb.async_turn_on.reset_mock()
 
     await hass.services.async_call(
@@ -706,7 +705,7 @@ async def test_rgb_cct_light(hass: HomeAssistant) -> None:
     entity_id = "light.bulb_rgbcw_ddeeff"
 
     state = hass.states.get(entity_id)
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     attributes = state.attributes
     assert attributes[ATTR_BRIGHTNESS] == 128
     assert attributes[ATTR_COLOR_MODE] == "rgb"
@@ -720,7 +719,7 @@ async def test_rgb_cct_light(hass: HomeAssistant) -> None:
     bulb.async_turn_off.assert_called_once()
     await async_mock_device_turn_off(hass, bulb)
 
-    assert hass.states.get(entity_id).state == STATE_OFF
+    assert hass.states.get(entity_id).state == LightState.OFF
 
     await hass.services.async_call(
         LIGHT_DOMAIN, "turn_on", {ATTR_ENTITY_ID: entity_id}, blocking=True
@@ -772,7 +771,7 @@ async def test_rgb_cct_light(hass: HomeAssistant) -> None:
     )
     await async_mock_device_turn_on(hass, bulb)
     state = hass.states.get(entity_id)
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     attributes = state.attributes
     assert attributes[ATTR_BRIGHTNESS] == 128
     assert attributes[ATTR_COLOR_MODE] == "color_temp"
@@ -829,7 +828,7 @@ async def test_rgbw_light_cold_white(hass: HomeAssistant) -> None:
     entity_id = "light.bulb_rgbcw_ddeeff"
 
     state = hass.states.get(entity_id)
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     attributes = state.attributes
     assert attributes[ATTR_BRIGHTNESS] == 128
     assert attributes[ATTR_COLOR_MODE] == "rgbw"
@@ -843,7 +842,7 @@ async def test_rgbw_light_cold_white(hass: HomeAssistant) -> None:
     bulb.async_turn_off.assert_called_once()
     await async_mock_device_turn_off(hass, bulb)
 
-    assert hass.states.get(entity_id).state == STATE_OFF
+    assert hass.states.get(entity_id).state == LightState.OFF
 
     await hass.services.async_call(
         LIGHT_DOMAIN, "turn_on", {ATTR_ENTITY_ID: entity_id}, blocking=True
@@ -861,7 +860,7 @@ async def test_rgbw_light_cold_white(hass: HomeAssistant) -> None:
     bulb.async_set_brightness.assert_called_with(100)
     bulb.async_set_brightness.reset_mock()
     state = hass.states.get(entity_id)
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
@@ -935,7 +934,7 @@ async def test_rgbw_light_warm_white(hass: HomeAssistant) -> None:
     entity_id = "light.bulb_rgbcw_ddeeff"
 
     state = hass.states.get(entity_id)
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     attributes = state.attributes
     assert attributes[ATTR_BRIGHTNESS] == 128
     assert attributes[ATTR_COLOR_MODE] == "rgbw"
@@ -949,7 +948,7 @@ async def test_rgbw_light_warm_white(hass: HomeAssistant) -> None:
     bulb.async_turn_off.assert_called_once()
     await async_mock_device_turn_off(hass, bulb)
 
-    assert hass.states.get(entity_id).state == STATE_OFF
+    assert hass.states.get(entity_id).state == LightState.OFF
 
     await hass.services.async_call(
         LIGHT_DOMAIN, "turn_on", {ATTR_ENTITY_ID: entity_id}, blocking=True
@@ -967,7 +966,7 @@ async def test_rgbw_light_warm_white(hass: HomeAssistant) -> None:
     bulb.async_set_brightness.assert_called_with(100)
     bulb.async_set_brightness.reset_mock()
     state = hass.states.get(entity_id)
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
@@ -1073,7 +1072,7 @@ async def test_rgb_or_w_light(hass: HomeAssistant) -> None:
     entity_id = "light.bulb_rgbcw_ddeeff"
 
     state = hass.states.get(entity_id)
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     attributes = state.attributes
     assert attributes[ATTR_BRIGHTNESS] == 128
     assert attributes[ATTR_COLOR_MODE] == "rgb"
@@ -1087,7 +1086,7 @@ async def test_rgb_or_w_light(hass: HomeAssistant) -> None:
     bulb.async_turn_off.assert_called_once()
     await async_mock_device_turn_off(hass, bulb)
 
-    assert hass.states.get(entity_id).state == STATE_OFF
+    assert hass.states.get(entity_id).state == LightState.OFF
 
     await hass.services.async_call(
         LIGHT_DOMAIN, "turn_on", {ATTR_ENTITY_ID: entity_id}, blocking=True
@@ -1105,7 +1104,7 @@ async def test_rgb_or_w_light(hass: HomeAssistant) -> None:
     bulb.async_set_brightness.assert_called_with(100)
     bulb.async_set_brightness.reset_mock()
     state = hass.states.get(entity_id)
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
@@ -1184,7 +1183,7 @@ async def test_rgbcw_light(hass: HomeAssistant) -> None:
     entity_id = "light.bulb_rgbcw_ddeeff"
 
     state = hass.states.get(entity_id)
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     attributes = state.attributes
     assert attributes[ATTR_BRIGHTNESS] == 128
     assert attributes[ATTR_COLOR_MODE] == "rgbww"
@@ -1198,7 +1197,7 @@ async def test_rgbcw_light(hass: HomeAssistant) -> None:
     bulb.async_turn_off.assert_called_once()
     await async_mock_device_turn_off(hass, bulb)
 
-    assert hass.states.get(entity_id).state == STATE_OFF
+    assert hass.states.get(entity_id).state == LightState.OFF
 
     await hass.services.async_call(
         LIGHT_DOMAIN, "turn_on", {ATTR_ENTITY_ID: entity_id}, blocking=True
@@ -1309,7 +1308,7 @@ async def test_rgbcw_light(hass: HomeAssistant) -> None:
     bulb.rgb = (MIN_RGB_BRIGHTNESS, MIN_RGB_BRIGHTNESS, MIN_RGB_BRIGHTNESS)
     await async_mock_device_turn_on(hass, bulb)
     state = hass.states.get(entity_id)
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     assert state.attributes[ATTR_COLOR_MODE] == ColorMode.RGBWW
     assert state.attributes[ATTR_BRIGHTNESS] == 1
 
@@ -1343,7 +1342,7 @@ async def test_white_light(hass: HomeAssistant) -> None:
     entity_id = "light.bulb_rgbcw_ddeeff"
 
     state = hass.states.get(entity_id)
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     attributes = state.attributes
     assert attributes[ATTR_BRIGHTNESS] == 128
     assert attributes[ATTR_COLOR_MODE] == "brightness"
@@ -1356,7 +1355,7 @@ async def test_white_light(hass: HomeAssistant) -> None:
     bulb.async_turn_off.assert_called_once()
     await async_mock_device_turn_off(hass, bulb)
 
-    assert hass.states.get(entity_id).state == STATE_OFF
+    assert hass.states.get(entity_id).state == LightState.OFF
 
     await hass.services.async_call(
         LIGHT_DOMAIN, "turn_on", {ATTR_ENTITY_ID: entity_id}, blocking=True
@@ -1394,7 +1393,7 @@ async def test_no_color_modes(hass: HomeAssistant) -> None:
     entity_id = "light.bulb_rgbcw_ddeeff"
 
     state = hass.states.get(entity_id)
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     attributes = state.attributes
     assert attributes[ATTR_COLOR_MODE] == "onoff"
     assert ATTR_EFFECT_LIST in attributes  # single channel now supports effects
@@ -1405,7 +1404,7 @@ async def test_no_color_modes(hass: HomeAssistant) -> None:
     bulb.async_turn_off.assert_called_once()
     await async_mock_device_turn_off(hass, bulb)
 
-    assert hass.states.get(entity_id).state == STATE_OFF
+    assert hass.states.get(entity_id).state == LightState.OFF
 
     await hass.services.async_call(
         LIGHT_DOMAIN, "turn_on", {ATTR_ENTITY_ID: entity_id}, blocking=True
@@ -1438,7 +1437,7 @@ async def test_rgb_light_custom_effects(hass: HomeAssistant) -> None:
     entity_id = "light.bulb_rgbcw_ddeeff"
 
     state = hass.states.get(entity_id)
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     attributes = state.attributes
     assert attributes[ATTR_BRIGHTNESS] == 128
     assert attributes[ATTR_COLOR_MODE] == "rgb"
@@ -1452,7 +1451,7 @@ async def test_rgb_light_custom_effects(hass: HomeAssistant) -> None:
     bulb.async_turn_off.assert_called_once()
     await async_mock_device_turn_off(hass, bulb)
     await hass.async_block_till_done()
-    assert hass.states.get(entity_id).state == STATE_OFF
+    assert hass.states.get(entity_id).state == LightState.OFF
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
@@ -1468,7 +1467,7 @@ async def test_rgb_light_custom_effects(hass: HomeAssistant) -> None:
     await async_mock_device_turn_on(hass, bulb)
 
     state = hass.states.get(entity_id)
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     attributes = state.attributes
     assert attributes[ATTR_EFFECT] == "custom"
 
@@ -1486,7 +1485,7 @@ async def test_rgb_light_custom_effects(hass: HomeAssistant) -> None:
     await async_mock_device_turn_on(hass, bulb)
 
     state = hass.states.get(entity_id)
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     attributes = state.attributes
     assert attributes[ATTR_EFFECT] == "custom"
 
@@ -1520,7 +1519,7 @@ async def test_rgb_light_custom_effects_invalid_colors(
     entity_id = "light.bulb_rgbcw_ddeeff"
 
     state = hass.states.get(entity_id)
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     attributes = state.attributes
     assert attributes[ATTR_BRIGHTNESS] == 128
     assert attributes[ATTR_COLOR_MODE] == "rgb"
@@ -1549,7 +1548,7 @@ async def test_rgb_light_custom_effect_via_service(
     entity_id = "light.bulb_rgbcw_ddeeff"
 
     state = hass.states.get(entity_id)
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     attributes = state.attributes
     assert attributes[ATTR_BRIGHTNESS] == 128
     assert attributes[ATTR_COLOR_MODE] == "rgb"
@@ -1563,7 +1562,7 @@ async def test_rgb_light_custom_effect_via_service(
     bulb.async_turn_off.assert_called_once()
 
     await async_mock_device_turn_off(hass, bulb)
-    assert hass.states.get(entity_id).state == STATE_OFF
+    assert hass.states.get(entity_id).state == LightState.OFF
 
     await hass.services.async_call(
         DOMAIN,
@@ -1631,7 +1630,7 @@ async def test_addressable_light(hass: HomeAssistant) -> None:
     entity_id = "light.bulb_rgbcw_ddeeff"
 
     state = hass.states.get(entity_id)
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     attributes = state.attributes
     assert attributes[ATTR_COLOR_MODE] == "onoff"
     assert ATTR_EFFECT_LIST in attributes
@@ -1643,7 +1642,7 @@ async def test_addressable_light(hass: HomeAssistant) -> None:
     bulb.async_turn_off.assert_called_once()
 
     await async_mock_device_turn_off(hass, bulb)
-    assert hass.states.get(entity_id).state == STATE_OFF
+    assert hass.states.get(entity_id).state == LightState.OFF
 
     await hass.services.async_call(
         LIGHT_DOMAIN, "turn_on", {ATTR_ENTITY_ID: entity_id}, blocking=True

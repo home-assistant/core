@@ -12,12 +12,12 @@ from homeassistant.components.light import (
     ATTR_COLOR_TEMP,
     ATTR_HS_COLOR,
     DOMAIN as LIGHT_DOMAIN,
+    LightState,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
-    STATE_ON,
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
@@ -66,7 +66,7 @@ async def test_light_change_state_temperature(
 ) -> None:
     """Test the change of state of a Elgato Key Light device."""
     assert (state := hass.states.get("light.frenck"))
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
 
     await hass.services.async_call(
         LIGHT_DOMAIN,

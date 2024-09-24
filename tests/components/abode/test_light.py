@@ -11,6 +11,7 @@ from homeassistant.components.light import (
     ATTR_SUPPORTED_COLOR_MODES,
     DOMAIN as LIGHT_DOMAIN,
     ColorMode,
+    LightState,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -18,7 +19,6 @@ from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
-    STATE_ON,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -43,7 +43,7 @@ async def test_attributes(hass: HomeAssistant) -> None:
     await setup_platform(hass, LIGHT_DOMAIN)
 
     state = hass.states.get(DEVICE_ID)
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     assert state.attributes.get(ATTR_BRIGHTNESS) == 204
     assert state.attributes.get(ATTR_RGB_COLOR) == (0, 63, 255)
     assert state.attributes.get(ATTR_COLOR_TEMP) is None

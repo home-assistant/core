@@ -4,13 +4,15 @@ from unittest.mock import patch
 
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.light import ATTR_BRIGHTNESS, DOMAIN as LIGHT_DOMAIN
+from homeassistant.components.light import (
+    ATTR_BRIGHTNESS,
+    DOMAIN as LIGHT_DOMAIN,
+    LightState,
+)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
-    STATE_OFF,
-    STATE_ON,
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
@@ -41,11 +43,11 @@ async def test_light_without_binary_sensor(
     test_gateway.publisher.dispatch("Test", ("devolo.Dimmer:Test", 0.0))
     await hass.async_block_till_done()
     state = hass.states.get(f"{LIGHT_DOMAIN}.test")
-    assert state.state == STATE_OFF
+    assert state.state == LightState.OFF
     test_gateway.publisher.dispatch("Test", ("devolo.Dimmer:Test", 100.0))
     await hass.async_block_till_done()
     state = hass.states.get(f"{LIGHT_DOMAIN}.test")
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     assert state.attributes[ATTR_BRIGHTNESS] == 255
 
     # Test setting brightness
@@ -109,11 +111,11 @@ async def test_light_with_binary_sensor(
     test_gateway.publisher.dispatch("Test", ("devolo.Dimmer:Test", 0.0))
     await hass.async_block_till_done()
     state = hass.states.get(f"{LIGHT_DOMAIN}.test")
-    assert state.state == STATE_OFF
+    assert state.state == LightState.OFF
     test_gateway.publisher.dispatch("Test", ("devolo.Dimmer:Test", 100.0))
     await hass.async_block_till_done()
     state = hass.states.get(f"{LIGHT_DOMAIN}.test")
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     assert state.attributes[ATTR_BRIGHTNESS] == 255
 
     # Test setting brightness

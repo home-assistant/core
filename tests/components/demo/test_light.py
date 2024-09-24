@@ -19,8 +19,9 @@ from homeassistant.components.light import (
     DOMAIN as LIGHT_DOMAIN,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    LightState,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, Platform
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -56,7 +57,7 @@ async def test_state_attributes(hass: HomeAssistant) -> None:
     )
 
     state = hass.states.get(ENTITY_LIGHT)
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     assert state.attributes.get(ATTR_XY_COLOR) == (0.4, 0.4)
     assert state.attributes.get(ATTR_BRIGHTNESS) == 25
     assert state.attributes.get(ATTR_RGB_COLOR) == (255, 234, 164)
@@ -108,14 +109,14 @@ async def test_turn_off(hass: HomeAssistant) -> None:
     )
 
     state = hass.states.get(ENTITY_LIGHT)
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
 
     await hass.services.async_call(
         LIGHT_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_LIGHT}, blocking=True
     )
 
     state = hass.states.get(ENTITY_LIGHT)
-    assert state.state == STATE_OFF
+    assert state.state == LightState.OFF
 
 
 async def test_turn_off_without_entity_id(hass: HomeAssistant) -> None:
@@ -125,11 +126,11 @@ async def test_turn_off_without_entity_id(hass: HomeAssistant) -> None:
     )
 
     state = hass.states.get(ENTITY_LIGHT)
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
 
     await hass.services.async_call(
         LIGHT_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: "all"}, blocking=True
     )
 
     state = hass.states.get(ENTITY_LIGHT)
-    assert state.state == STATE_OFF
+    assert state.state == LightState.OFF
