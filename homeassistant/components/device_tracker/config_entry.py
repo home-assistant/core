@@ -165,12 +165,7 @@ def _async_register_mac(
     hass.bus.async_listen(dr.EVENT_DEVICE_REGISTRY_UPDATED, handle_device_event)
 
 
-CACHED_PROPERTIES_WITH_ATTR_ = {
-    "battery_level",
-}
-
-
-class BaseTrackerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
+class BaseTrackerEntity(Entity):
     """Represent a tracked device."""
 
     _attr_device_info: None = None
