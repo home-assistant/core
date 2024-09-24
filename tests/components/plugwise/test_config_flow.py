@@ -1,14 +1,13 @@
 """Test the Plugwise config flow."""
 
 from ipaddress import ip_address
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 from plugwise.exceptions import (
     ConnectionFailedError,
     InvalidAuthentication,
     InvalidSetupError,
     InvalidXMLError,
-    ResponseError,
     UnsupportedDeviceError,
 )
 import pytest
