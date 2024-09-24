@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock, call
 
 from chip.clusters import Objects as clusters
+from matter_server.client.models.node import MatterNode
 import pytest
 
 from homeassistant.core import HomeAssistant
@@ -10,27 +11,26 @@ from homeassistant.core import HomeAssistant
 from .common import setup_integration_with_node_fixture
 
 
+@pytest.fixture(name="valve_node")
+async def valve_node_fixture(
+    hass: HomeAssistant, matter_client: MagicMock
+) -> MatterNode:
+    """Fixture for a valve node."""
+    return await setup_integration_with_node_fixture(hass, "valve", matter_client)
+
+
 # This tests needs to be adjusted to remove lingering tasks
 @pytest.mark.parametrize("expected_lingering_tasks", [True])
-@pytest.mark.parametrize(
-    ("fixture", "entity_id"),
-    [
-        ("valve", "valve.mock_valve"),
-    ],
-)
 async def test_valve(
     hass: HomeAssistant,
     matter_client: MagicMock,
-    fixture: str,
-    entity_id: str,
+    valve_node: MatterNode,
 ) -> None:
-    """Test valve commands that always are implemented."""
-
-    valve = await setup_integration_with_node_fixture(
-        hass,
-        fixture,
-        matter_client,
-    )
+    """Test valve entity is created for a Matter ValveConfigurationAndControl Cluster."""
+    entity_id = "valve.valve_valve"
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes["friendly_name"] == "Valve Valve"
 
     await hass.services.async_call(
         "valve",
@@ -43,7 +43,7 @@ async def test_valve(
 
     assert matter_client.send_device_command.call_count == 1
     assert matter_client.send_device_command.call_args == call(
-        node_id=valve.node_id,
+        node_id=valve_node.node_id,
         endpoint_id=1,
         command=clusters.ValveConfigurationAndControl.Commands.Close(),
     )
@@ -60,7 +60,7 @@ async def test_valve(
 
     assert matter_client.send_device_command.call_count == 1
     assert matter_client.send_device_command.call_args == call(
-        node_id=valve.node_id,
+        node_id=valve_node.node_id,
         endpoint_id=1,
         command=clusters.ValveConfigurationAndControl.Commands.Open(),
     )
