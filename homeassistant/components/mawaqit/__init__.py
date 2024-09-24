@@ -140,16 +140,14 @@ async def async_remove_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     except OSError as e:
         _LOGGER.error("Error: %s : %s", dir_path, e.strerror)
 
-    await utils.write_one_element(
-        Store(hass, MAWAQIT_STORAGE_VERSION, MAWAQIT_STORAGE_KEY),
-        MAWAQIT_MY_MOSQUE_NN,
-        None,
+    await utils.cleare_storage_entry(
+        Store(hass, MAWAQIT_STORAGE_VERSION, MAWAQIT_STORAGE_KEY), MAWAQIT_MY_MOSQUE_NN
     )
-    await utils.write_one_element(
+    await utils.cleare_storage_entry(
         Store(hass, MAWAQIT_STORAGE_VERSION, MAWAQIT_STORAGE_KEY),
         MAWAQIT_ALL_MOSQUES_NN,
-        None,
     )
+
     _LOGGER.debug("Finished clearing data folder")
 
 

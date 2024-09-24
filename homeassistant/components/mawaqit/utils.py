@@ -18,59 +18,51 @@ CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
 _LOGGER = logging.getLogger(__name__)
 
 
-async def write_all_mosques_NN_file(mosques, store: Store | None) -> None:
-    """Write the mosque data to the 'all_mosques_NN.txt' file."""
-
-    # await async_write_in_data(hass, CURRENT_DIR, "all_mosques_NN.txt", mosques)
-    # store = Store(hass, 1, "mawaqit_all_mosques")
-    await write_one_element(store, MAWAQIT_ALL_MOSQUES_NN, mosques)
-
-
 async def read_my_mosque_NN_file(store: Store | None):
-    """Read the mosque data from the 'my_mosque_NN.txt' file."""
+    """Read the mosque data from the store.
 
-    # def read():
-    #     with open(f"{CURRENT_DIR}/data/my_mosque_NN.txt", encoding="utf-8") as f:
-    #         return json.load(f)
+    Args:
+        store (Store | None): The storage object to read from.
 
+    Returns:
+        The mosque data read from the store.
+
+    """
     return await read_one_element(store, MAWAQIT_MY_MOSQUE_NN)
-    # return await hass.async_add_executor_job(read)
 
 
 async def write_my_mosque_NN_file(mosque, store: Store | None) -> None:
-    """Write the mosque data to the 'my_mosque_NN.txt' file."""
+    """Write the mosque data to the store.
 
-    # await async_write_in_data(hass, CURRENT_DIR, "my_mosque_NN.txt", mosque)
+    Args:
+        mosque (dict): The mosque data to write.
+        store (Store | None): The storage object to write to.
+
+    """
     await write_one_element(store, MAWAQIT_MY_MOSQUE_NN, mosque)
 
 
-def create_data_folder() -> None:
-    """Create the data folder if it does not exist."""
-    if not os.path.exists(f"{CURRENT_DIR}/data"):
-        os.makedirs(f"{CURRENT_DIR}/data")
+async def write_all_mosques_NN_file(mosques, store: Store | None) -> None:
+    """Write all mosques data to the store.
+
+    Args:
+        mosques (dict): The mosques data to write.
+        store (Store | None): The storage object to write to.
+
+    """
+    await write_one_element(store, MAWAQIT_ALL_MOSQUES_NN, mosques)
 
 
 async def read_all_mosques_NN_file(store: Store | None):
-    """Read the mosque data from the 'all_mosques_NN.txt' file and return lists of names, UUIDs, and calculation methods."""
+    """Read all mosques from the store and return their names, UUIDs, and calculation methods.
 
-    # def read():
-    #     name_servers = []
-    #     uuid_servers = []
-    #     CALC_METHODS = []
+    Args:
+        store (Store | None): The storage object to read from.
 
-    #     with open(f"{CURRENT_DIR}/data/all_mosques_NN.txt", encoding="utf-8") as f:
-    #         dict_mosques = json.load(f)
-    #         for mosque in dict_mosques:
-    #             distance = mosque["proximity"]
-    #             distance = distance / 1000
-    #             distance = round(distance, 2)
-    #             name_servers.extend([mosque["label"] + " (" + str(distance) + "km)"])
-    #             uuid_servers.extend([mosque["uuid"]])
-    #             CALC_METHODS.extend([mosque["label"]])
+    Returns:
+        tuple: A tuple containing three lists: names of mosques, UUIDs of mosques, and calculation methods.
 
-    #     return name_servers, uuid_servers, CALC_METHODS
-
-    # return await hass.async_add_executor_job(read)
+    """
 
     name_servers = []
     uuid_servers = []
@@ -86,6 +78,12 @@ async def read_all_mosques_NN_file(store: Store | None):
         CALC_METHODS.extend([mosque["label"]])
 
     return name_servers, uuid_servers, CALC_METHODS
+
+
+def create_data_folder() -> None:
+    """Create the data folder if it does not exist."""
+    if not os.path.exists(f"{CURRENT_DIR}/data"):
+        os.makedirs(f"{CURRENT_DIR}/data")
 
 
 async def async_write_in_data(hass: HomeAssistant, directory, file_name, data):
@@ -281,3 +279,22 @@ async def write_all_elements(store, data):
 
     _LOGGER.debug("Writing %s to store", data)
     await store.async_save(data)
+
+
+async def cleare_storage_entry(store, key):
+    """Clear the storage entry.
+
+    Args:
+        store (Store): The storage object to clear.
+        key (str): The key of the element to clear.
+
+    """
+    if store is None:
+        _LOGGER.error("Store is None !")
+        raise ValueError("Store is None !")
+    await write_one_element(
+        store,
+        key,
+        None,
+    )
+    # await store.async_remove()
