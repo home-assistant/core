@@ -89,6 +89,8 @@ class DevoloScannerEntity(
 ):
     """Representation of a devolo device tracker."""
 
+    _attr_source_type = SourceType.ROUTER
+
     def __init__(
         self,
         coordinator: DataUpdateCoordinator[list[ConnectedStationInfo]],
@@ -98,7 +100,7 @@ class DevoloScannerEntity(
         """Initialize entity."""
         super().__init__(coordinator)
         self._device = device
-        self._mac = mac
+        self._attr_mac_address = mac
 
     @property
     def extra_state_attributes(self) -> dict[str, str]:
@@ -141,16 +143,6 @@ class DevoloScannerEntity(
         )
 
     @property
-    def mac_address(self) -> str:
-        """Return mac_address."""
-        return self._mac
-
-    @property
-    def source_type(self) -> SourceType:
-        """Return tracker source type."""
-        return SourceType.ROUTER
-
-    @property
     def unique_id(self) -> str:
         """Return unique ID of the entity."""
-        return f"{self._device.serial_number}_{self._mac}"
+        return f"{self._device.serial_number}_{self.mac_address}"
