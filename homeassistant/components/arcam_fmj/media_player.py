@@ -11,6 +11,7 @@ from arcam.fmj import ConnectionFailed, SourceCodes
 from arcam.fmj.state import State
 
 from homeassistant.components.media_player import (
+    BrowseError,
     BrowseMedia,
     MediaClass,
     MediaPlayerEntity,
@@ -18,7 +19,6 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
     MediaType,
 )
-from homeassistant.components.media_player.errors import BrowseError
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError

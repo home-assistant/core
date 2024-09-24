@@ -115,10 +115,10 @@ class FeedReaderConfigFlow(ConfigFlow, domain=DOMAIN):
             options={CONF_MAX_ENTRIES: self._max_entries or DEFAULT_MAX_ENTRIES},
         )
 
-    async def async_step_import(self, user_input: dict[str, Any]) -> ConfigFlowResult:
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Handle an import flow."""
-        self._max_entries = user_input[CONF_MAX_ENTRIES]
-        return await self.async_step_user({CONF_URL: user_input[CONF_URL]})
+        self._max_entries = import_data[CONF_MAX_ENTRIES]
+        return await self.async_step_user({CONF_URL: import_data[CONF_URL]})
 
     async def async_step_reconfigure(
         self, _: dict[str, Any] | None = None

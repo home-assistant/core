@@ -26,6 +26,9 @@
     "button": {
       "boil_water": {
         "name": "Boil water"
+      },
+      "prepare_drink": {
+        "name": "Prepare {drink_name}"
       }
     }
   },

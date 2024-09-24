@@ -24,13 +24,13 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from . import get_hub
-from .base_platform import BasePlatform
 from .const import (
     CALL_TYPE_COIL,
     CALL_TYPE_DISCRETE,
     CONF_SLAVE_COUNT,
     CONF_VIRTUAL_COUNT,
 )
+from .entity import BasePlatform
 from .modbus import ModbusHub
 
 _LOGGER = logging.getLogger(__name__)

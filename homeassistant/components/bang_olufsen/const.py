@@ -78,6 +78,11 @@ class WebsocketNotification(StrEnum):
     VOLUME = "volume"
 
     # Sub-notifications
+    BEOLINK = "beolink"
+    BEOLINK_PEERS = "beolinkPeers"
+    BEOLINK_LISTENERS = "beolinkListeners"
+    BEOLINK_AVAILABLE_LISTENERS = "beolinkAvailableListeners"
+    CONFIGURATION = "configuration"
     NOTIFICATION = "notification"
     REMOTE_MENU_CHANGED = "remoteMenuChanged"
 

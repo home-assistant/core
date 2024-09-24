@@ -8,7 +8,7 @@ from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from .const import DOMAIN, HARMONY_OPTIONS_UPDATE, PLATFORMS  # noqa: F401
+from .const import HARMONY_OPTIONS_UPDATE, PLATFORMS
 from .data import HarmonyConfigEntry, HarmonyData
 
 _LOGGER = logging.getLogger(__name__)
@@ -59,7 +59,7 @@ async def _migrate_old_unique_ids(
             activity_id = names_to_ids.get(activity_name)
 
             if activity_id is not None:
-                _LOGGER.info(
+                _LOGGER.debug(
                     "Migrating unique_id from [%s] to [%s]",
                     entity_entry.unique_id,
                     activity_id,

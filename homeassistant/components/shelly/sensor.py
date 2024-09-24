@@ -1066,7 +1066,7 @@ RPC_SENSORS: Final = {
     "analoginput": RpcSensorDescription(
         key="input",
         sub_key="percent",
-        name="Analog input",
+        name="analog",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         removal_condition=lambda config, _, key: (
@@ -1076,17 +1076,18 @@ RPC_SENSORS: Final = {
     "analoginput_xpercent": RpcSensorDescription(
         key="input",
         sub_key="xpercent",
-        name="Analog value",
+        name="analog value",
         removal_condition=lambda config, status, key: (
             config[key]["type"] != "analog"
             or config[key]["enable"] is False
             or status[key].get("xpercent") is None
         ),
+        unit=lambda config: config["xpercent"]["unit"] or None,
     ),
     "pulse_counter": RpcSensorDescription(
         key="input",
         sub_key="counts",
-        name="Pulse counter",
+        name="pulse counter",
         native_unit_of_measurement="pulse",
         state_class=SensorStateClass.TOTAL,
         value=lambda status, _: status["total"],
@@ -1097,18 +1098,19 @@ RPC_SENSORS: Final = {
     "counter_value": RpcSensorDescription(
         key="input",
         sub_key="counts",
-        name="Counter value",
+        name="counter value",
         value=lambda status, _: status["xtotal"],
         removal_condition=lambda config, status, key: (
             config[key]["type"] != "count"
             or config[key]["enable"] is False
             or status[key]["counts"].get("xtotal") is None
         ),
+        unit=lambda config: config["xcounts"]["unit"] or None,
     ),
     "counter_frequency": RpcSensorDescription(
         key="input",
         sub_key="freq",
-        name="Pulse counter frequency",
+        name="pulse counter frequency",
         native_unit_of_measurement=UnitOfFrequency.HERTZ,
         state_class=SensorStateClass.MEASUREMENT,
         removal_condition=lambda config, _, key: (
@@ -1118,12 +1120,13 @@ RPC_SENSORS: Final = {
     "counter_frequency_value": RpcSensorDescription(
         key="input",
         sub_key="xfreq",
-        name="Pulse counter frequency value",
+        name="pulse counter frequency value",
         removal_condition=lambda config, status, key: (
             config[key]["type"] != "count"
             or config[key]["enable"] is False
             or status[key].get("xfreq") is None
         ),
+        unit=lambda config: config["xfreq"]["unit"] or None,
     ),
     "text": RpcSensorDescription(
         key="text",
@@ -1263,13 +1266,15 @@ class RpcSensor(ShellyRpcAttributeEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return value of sensor."""
-        if not self.option_map:
-            return self.attribute_value
+        attribute_value = self.attribute_value
 
-        if not isinstance(self.attribute_value, str):
+        if not self.option_map:
+            return attribute_value
+
+        if not isinstance(attribute_value, str):
             return None
 
-        return self.option_map[self.attribute_value]
+        return self.option_map[attribute_value]
 
 
 class BlockSleepingSensor(ShellySleepingBlockAttributeEntity, RestoreSensor):

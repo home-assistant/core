@@ -1,16 +1,18 @@
 """Data update coordinator for trigger based template entities."""
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 import logging
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.const import EVENT_HOMEASSISTANT_START
 from homeassistant.core import Context, CoreState, callback
-from homeassistant.helpers import discovery, trigger as trigger_helper
+from homeassistant.helpers import condition, discovery, trigger as trigger_helper
 from homeassistant.helpers.script import Script
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.trace import trace_get
+from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import CONF_ACTION, CONF_TRIGGER, DOMAIN, PLATFORMS
+from .const import CONF_ACTION, CONF_CONDITION, CONF_TRIGGER, DOMAIN, PLATFORMS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,6 +26,7 @@ class TriggerUpdateCoordinator(DataUpdateCoordinator):
         """Instantiate trigger data."""
         super().__init__(hass, _LOGGER, name="Trigger Update Coordinator")
         self.config = config
+        self._cond_func: Callable[[Mapping[str, Any] | None], bool] | None = None
         self._unsub_start: Callable[[], None] | None = None
         self._unsub_trigger: Callable[[], None] | None = None
         self._script: Script | None = None
@@ -73,6 +76,11 @@ class TriggerUpdateCoordinator(DataUpdateCoordinator):
                 DOMAIN,
             )
 
+        if CONF_CONDITION in self.config:
+            self._cond_func = await condition.async_conditions_from_config(
+                self.hass, self.config[CONF_CONDITION], _LOGGER, "template entity"
+            )
+
         if start_event is not None:
             self._unsub_start = None
 
@@ -91,16 +99,43 @@ class TriggerUpdateCoordinator(DataUpdateCoordinator):
             start_event is not None,
         )
 
-    async def _handle_triggered_with_script(self, run_variables, context=None):
+    async def _handle_triggered_with_script(
+        self, run_variables: TemplateVarsType, context: Context | None = None
+    ) -> None:
+        if not self._check_condition(run_variables):
+            return
         # Create a context referring to the trigger context.
         trigger_context_id = None if context is None else context.id
         script_context = Context(parent_id=trigger_context_id)
+        if TYPE_CHECKING:
+            # This method is only called if there's a script
+            assert self._script is not None
         if script_result := await self._script.async_run(run_variables, script_context):
             run_variables = script_result.variables
-        self._handle_triggered(run_variables, context)
+        self._execute_update(run_variables, context)
+
+    async def _handle_triggered(
+        self, run_variables: TemplateVarsType, context: Context | None = None
+    ) -> None:
+        if not self._check_condition(run_variables):
+            return
+        self._execute_update(run_variables, context)
+
+    def _check_condition(self, run_variables: TemplateVarsType) -> bool:
+        if not self._cond_func:
+            return True
+        condition_result = self._cond_func(run_variables)
+        if condition_result is False:
+            _LOGGER.debug(
+                "Conditions not met, aborting template trigger update. Condition summary: %s",
+                trace_get(clear=False),
+            )
+        return condition_result
 
     @callback
-    def _handle_triggered(self, run_variables, context=None):
+    def _execute_update(
+        self, run_variables: TemplateVarsType, context: Context | None = None
+    ) -> None:
         self.async_set_updated_data(
             {"run_variables": run_variables, "context": context}
         )

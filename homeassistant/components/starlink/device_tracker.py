@@ -28,7 +28,9 @@ async def async_setup_entry(
 
 
 @dataclass(frozen=True, kw_only=True)
-class StarlinkDeviceTrackerEntityDescription(EntityDescription):
+class StarlinkDeviceTrackerEntityDescription(  # pylint: disable=hass-enforce-class-module
+    EntityDescription
+):
     """Describes a Starlink button entity."""
 
     latitude_fn: Callable[[StarlinkData], float]
@@ -54,7 +56,7 @@ class StarlinkDeviceTrackerEntity(StarlinkEntity, TrackerEntity):
     entity_description: StarlinkDeviceTrackerEntityDescription
 
     @property
-    def source_type(self) -> SourceType | str:
+    def source_type(self) -> SourceType:
         """Return the source type, eg gps or router, of the device."""
         return SourceType.GPS
 

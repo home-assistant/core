@@ -5,7 +5,7 @@ from unittest.mock import MagicMock
 import pycfdns
 
 from homeassistant.components.cloudflare.const import CONF_RECORDS, DOMAIN
-from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_API_TOKEN, CONF_SOURCE, CONF_ZONE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -151,15 +151,7 @@ async def test_reauth_flow(hass: HomeAssistant, cfupdate_flow: MagicMock) -> Non
     entry = MockConfigEntry(domain=DOMAIN, data=ENTRY_CONFIG)
     entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": SOURCE_REAUTH,
-            "unique_id": entry.unique_id,
-            "entry_id": entry.entry_id,
-        },
-        data=entry.data,
-    )
+    result = await entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 

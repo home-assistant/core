@@ -5,7 +5,7 @@ from __future__ import annotations
 import datetime as dt
 import logging
 
-from pysmarty import Smarty
+from pysmarty2 import Smarty
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.const import UnitOfTemperature

@@ -7,10 +7,10 @@ from asyncio import CancelledError, Task
 from contextlib import suppress
 from datetime import datetime, timedelta
 import logging
-from typing import TYPE_CHECKING, Any, NamedTuple
+from typing import TYPE_CHECKING, Any, NamedTuple, cast
 
-from aiohttp.client_exceptions import ClientError
 from pyblu import Input, Player, Preset, Status, SyncStatus
+from pyblu.errors import PlayerUnreachableError
 import voluptuous as vol
 
 from homeassistant.components import media_source
@@ -46,7 +46,6 @@ from homeassistant.helpers.device_registry import (
 )
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util import Throttle
 import homeassistant.util.dt as dt_util
 
 from .const import (
@@ -66,6 +65,8 @@ if TYPE_CHECKING:
 
 _LOGGER = logging.getLogger(__name__)
 
+SCAN_INTERVAL = timedelta(minutes=15)
+
 DATA_BLUESOUND = DOMAIN
 DEFAULT_PORT = 11000
 
@@ -74,9 +75,7 @@ NODE_RETRY_INITIATION = timedelta(minutes=3)
 
 SYNC_STATUS_INTERVAL = timedelta(minutes=5)
 
-UPDATE_CAPTURE_INTERVAL = timedelta(minutes=30)
-UPDATE_PRESETS_INTERVAL = timedelta(minutes=30)
-UPDATE_SERVICES_INTERVAL = timedelta(minutes=30)
+POLL_TIMEOUT = 120
 
 PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
     {
@@ -201,7 +200,7 @@ async def async_setup_entry(
     )
 
     hass.data[DATA_BLUESOUND].append(bluesound_player)
-    async_add_entities([bluesound_player])
+    async_add_entities([bluesound_player], update_before_add=True)
 
 
 async def async_setup_platform(
@@ -237,9 +236,10 @@ class BluesoundPlayer(MediaPlayerEntity):
         """Initialize the media player."""
         self.host = host
         self.port = port
-        self._polling_task: Task[None] | None = None  # The actual polling task.
+        self._poll_status_loop_task: Task[None] | None = None
+        self._poll_sync_status_loop_task: Task[None] | None = None
         self._id = sync_status.id
-        self._last_status_update = None
+        self._last_status_update: datetime | None = None
         self._sync_status = sync_status
         self._status: Status | None = None
         self._inputs: list[Input] = []
@@ -247,7 +247,7 @@ class BluesoundPlayer(MediaPlayerEntity):
         self._muted = False
         self._master: BluesoundPlayer | None = None
         self._is_master = False
-        self._group_name = None
+        self._group_name: str | None = None
         self._group_list: list[str] = []
         self._bluesound_device_name = sync_status.name
         self._player = player
@@ -273,17 +273,122 @@ class BluesoundPlayer(MediaPlayerEntity):
                 via_device=(DOMAIN, format_mac(sync_status.mac)),
             )
 
-    @staticmethod
-    def _try_get_index(string, search_string):
-        """Get the index."""
-        try:
-            return string.index(search_string)
-        except ValueError:
-            return -1
+    async def _poll_status_loop(self) -> None:
+        """Loop which polls the status of the player."""
+        while True:
+            try:
+                await self.async_update_status()
+            except PlayerUnreachableError:
+                _LOGGER.error(
+                    "Node %s:%s is offline, retrying later", self.host, self.port
+                )
+                await asyncio.sleep(NODE_OFFLINE_CHECK_TIMEOUT)
+            except CancelledError:
+                _LOGGER.debug(
+                    "Stopping the polling of node %s:%s", self.host, self.port
+                )
+                return
+            except:  # noqa: E722 - this loop should never stop
+                _LOGGER.exception(
+                    "Unexpected error for %s:%s, retrying later", self.host, self.port
+                )
+                await asyncio.sleep(NODE_OFFLINE_CHECK_TIMEOUT)
 
-    async def force_update_sync_status(self) -> bool:
+    async def _poll_sync_status_loop(self) -> None:
+        """Loop which polls the sync status of the player."""
+        while True:
+            try:
+                await self.update_sync_status()
+            except PlayerUnreachableError:
+                await asyncio.sleep(NODE_OFFLINE_CHECK_TIMEOUT)
+            except CancelledError:
+                raise
+            except:  # noqa: E722 - all errors must be caught for this loop
+                await asyncio.sleep(NODE_OFFLINE_CHECK_TIMEOUT)
+
+    async def async_added_to_hass(self) -> None:
+        """Start the polling task."""
+        await super().async_added_to_hass()
+
+        self._poll_status_loop_task = self.hass.async_create_background_task(
+            self._poll_status_loop(),
+            name=f"bluesound.poll_status_loop_{self.host}:{self.port}",
+        )
+        self._poll_sync_status_loop_task = self.hass.async_create_background_task(
+            self._poll_sync_status_loop(),
+            name=f"bluesound.poll_sync_status_loop_{self.host}:{self.port}",
+        )
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Stop the polling task."""
+        await super().async_will_remove_from_hass()
+
+        assert self._poll_status_loop_task is not None
+        if self._poll_status_loop_task.cancel():
+            # the sleeps in _poll_loop will raise CancelledError
+            with suppress(CancelledError):
+                await self._poll_status_loop_task
+
+        assert self._poll_sync_status_loop_task is not None
+        if self._poll_sync_status_loop_task.cancel():
+            # the sleeps in _poll_sync_status_loop will raise CancelledError
+            with suppress(CancelledError):
+                await self._poll_sync_status_loop_task
+
+        self.hass.data[DATA_BLUESOUND].remove(self)
+
+    async def async_update(self) -> None:
+        """Update internal status of the entity."""
+        if not self.available:
+            return
+
+        with suppress(PlayerUnreachableError):
+            await self.async_update_presets()
+            await self.async_update_captures()
+
+    async def async_update_status(self) -> None:
+        """Use the poll session to always get the status of the player."""
+        etag = None
+        if self._status is not None:
+            etag = self._status.etag
+
+        try:
+            status = await self._player.status(
+                etag=etag, poll_timeout=POLL_TIMEOUT, timeout=POLL_TIMEOUT + 5
+            )
+
+            self._attr_available = True
+            self._last_status_update = dt_util.utcnow()
+            self._status = status
+
+            group_name = status.group_name
+            if group_name != self._group_name:
+                _LOGGER.debug("Group name change detected on device: %s", self.id)
+                self._group_name = group_name
+
+                # rebuild ordered list of entity_ids that are in the group, master is first
+                self._group_list = self.rebuild_bluesound_group()
+
+            self.async_write_ha_state()
+        except PlayerUnreachableError:
+            self._attr_available = False
+            self._last_status_update = None
+            self._status = None
+            self.async_write_ha_state()
+            _LOGGER.error(
+                "Client connection error, marking %s as offline",
+                self._bluesound_device_name,
+            )
+            raise
+
+    async def update_sync_status(self) -> None:
         """Update the internal status."""
-        sync_status = await self._player.sync_status()
+        etag = None
+        if self._sync_status:
+            etag = self._sync_status.etag
+        sync_status = await self._player.sync_status(
+            etag=etag, poll_timeout=POLL_TIMEOUT, timeout=POLL_TIMEOUT + 5
+        )
 
         self._sync_status = sync_status
 
@@ -307,133 +412,17 @@ class BluesoundPlayer(MediaPlayerEntity):
             slaves = self._sync_status.slaves
             self._is_master = slaves is not None
 
-        return True
+        self.async_write_ha_state()
 
-    async def _start_poll_command(self):
-        """Loop which polls the status of the player."""
-        while True:
-            try:
-                await self.async_update_status()
-            except (TimeoutError, ClientError):
-                _LOGGER.error(
-                    "Node %s:%s is offline, retrying later", self.host, self.port
-                )
-                await asyncio.sleep(NODE_OFFLINE_CHECK_TIMEOUT)
-            except CancelledError:
-                _LOGGER.debug(
-                    "Stopping the polling of node %s:%s", self.host, self.port
-                )
-                return
-            except Exception:
-                _LOGGER.exception(
-                    "Unexpected error in %s:%s, retrying later", self.host, self.port
-                )
-                await asyncio.sleep(NODE_OFFLINE_CHECK_TIMEOUT)
-
-    async def async_added_to_hass(self) -> None:
-        """Start the polling task."""
-        await super().async_added_to_hass()
-
-        self._polling_task = self.hass.async_create_background_task(
-            self._start_poll_command(),
-            name=f"bluesound.polling_{self.host}:{self.port}",
-        )
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Stop the polling task."""
-        await super().async_will_remove_from_hass()
-
-        assert self._polling_task is not None
-        if self._polling_task.cancel():
-            await self._polling_task
-
-        self.hass.data[DATA_BLUESOUND].remove(self)
-
-    async def async_update(self) -> None:
-        """Update internal status of the entity."""
-        if not self.available:
-            return
-
-        with suppress(TimeoutError):
-            await self.async_update_sync_status()
-            await self.async_update_presets()
-            await self.async_update_captures()
-
-    async def async_update_status(self):
-        """Use the poll session to always get the status of the player."""
-        etag = None
-        if self._status is not None:
-            etag = self._status.etag
-
-        try:
-            status = await self._player.status(etag=etag, poll_timeout=120, timeout=125)
-
-            self._attr_available = True
-            self._last_status_update = dt_util.utcnow()
-            self._status = status
-
-            group_name = status.group_name
-            if group_name != self._group_name:
-                _LOGGER.debug("Group name change detected on device: %s", self.id)
-                self._group_name = group_name
-
-                # rebuild ordered list of entity_ids that are in the group, master is first
-                self._group_list = self.rebuild_bluesound_group()
-
-                # the sleep is needed to make sure that the
-                # devices is synced
-                await asyncio.sleep(1)
-                await self.async_trigger_sync_on_all()
-            elif self.is_grouped:
-                # when player is grouped we need to fetch volume from
-                # sync_status. We will force an update if the player is
-                # grouped this isn't a foolproof solution. A better
-                # solution would be to fetch sync_status more often when
-                # the device is playing. This would solve a lot of
-                # problems. This change will be done when the
-                # communication is moved to a separate library
-                with suppress(TimeoutError):
-                    await self.force_update_sync_status()
-
-            self.async_write_ha_state()
-        except (TimeoutError, ClientError):
-            self._attr_available = False
-            self._last_status_update = None
-            self._status = None
-            self.async_write_ha_state()
-            _LOGGER.error(
-                "Client connection error, marking %s as offline",
-                self._bluesound_device_name,
-            )
-            raise
-
-    async def async_trigger_sync_on_all(self):
-        """Trigger sync status update on all devices."""
-        _LOGGER.debug("Trigger sync status on all devices")
-
-        for player in self.hass.data[DATA_BLUESOUND]:
-            await player.force_update_sync_status()
-
-    @Throttle(SYNC_STATUS_INTERVAL)
-    async def async_update_sync_status(self):
-        """Update sync status."""
-        await self.force_update_sync_status()
-
-    @Throttle(UPDATE_CAPTURE_INTERVAL)
-    async def async_update_captures(self) -> list[Input] | None:
+    async def async_update_captures(self) -> None:
         """Update Capture sources."""
         inputs = await self._player.inputs()
         self._inputs = inputs
 
-        return inputs
-
-    @Throttle(UPDATE_PRESETS_INTERVAL)
-    async def async_update_presets(self) -> list[Preset] | None:
+    async def async_update_presets(self) -> None:
         """Update Presets."""
         presets = await self._player.presets()
         self._presets = presets
-
-        return presets
 
     @property
     def state(self) -> MediaPlayerState:
@@ -504,8 +493,6 @@ class BluesoundPlayer(MediaPlayerEntity):
             return None
 
         position = self._status.seconds
-        if position is None:
-            return None
 
         if mediastate == MediaPlayerState.PLAYING:
             position += (dt_util.utcnow() - self._last_status_update).total_seconds()
@@ -522,7 +509,7 @@ class BluesoundPlayer(MediaPlayerEntity):
         if duration is None:
             return None
 
-        return duration
+        return int(duration)
 
     @property
     def media_position_updated_at(self) -> datetime | None:
@@ -658,7 +645,7 @@ class BluesoundPlayer(MediaPlayerEntity):
 
         return shuffle
 
-    async def async_join(self, master):
+    async def async_join(self, master: str) -> None:
         """Join the player to a group."""
         master_device = [
             device
@@ -698,18 +685,18 @@ class BluesoundPlayer(MediaPlayerEntity):
 
         device_group = self._group_name.split("+")
 
-        sorted_entities = sorted(
+        sorted_entities: list[BluesoundPlayer] = sorted(
             self.hass.data[DATA_BLUESOUND],
             key=lambda entity: entity.is_master,
             reverse=True,
         )
         return [
-            entity.name
+            cast(str, entity.name)
             for entity in sorted_entities
             if entity.bluesound_device_name in device_group
         ]
 
-    async def async_unjoin(self):
+    async def async_unjoin(self) -> None:
         """Unjoin the player from a group."""
         if self._master is None:
             return
@@ -717,11 +704,11 @@ class BluesoundPlayer(MediaPlayerEntity):
         _LOGGER.debug("Trying to unjoin player: %s", self.id)
         await self._master.async_remove_slave(self)
 
-    async def async_add_slave(self, slave_device: BluesoundPlayer):
+    async def async_add_slave(self, slave_device: BluesoundPlayer) -> None:
         """Add slave to master."""
         await self._player.add_slave(slave_device.host, slave_device.port)
 
-    async def async_remove_slave(self, slave_device: BluesoundPlayer):
+    async def async_remove_slave(self, slave_device: BluesoundPlayer) -> None:
         """Remove slave to master."""
         await self._player.remove_slave(slave_device.host, slave_device.port)
 
@@ -729,7 +716,7 @@ class BluesoundPlayer(MediaPlayerEntity):
         """Increase sleep time on player."""
         return await self._player.sleep_timer()
 
-    async def async_clear_timer(self):
+    async def async_clear_timer(self) -> None:
         """Clear sleep timer on player."""
         sleep = 1
         while sleep > 0:
@@ -752,6 +739,9 @@ class BluesoundPlayer(MediaPlayerEntity):
         for preset in self._presets:
             if preset.name == source:
                 url = preset.url
+
+        if url is None:
+            raise ServiceValidationError(f"Source {source} not found")
 
         await self._player.play_url(url)
 
@@ -824,20 +814,20 @@ class BluesoundPlayer(MediaPlayerEntity):
     async def async_volume_up(self) -> None:
         """Volume up the media player."""
         if self.volume_level is None:
-            return None
+            return
 
         new_volume = self.volume_level + 0.01
         new_volume = min(1, new_volume)
-        return await self.async_set_volume_level(new_volume)
+        await self.async_set_volume_level(new_volume)
 
     async def async_volume_down(self) -> None:
         """Volume down the media player."""
         if self.volume_level is None:
-            return None
+            return
 
         new_volume = self.volume_level - 0.01
         new_volume = max(0, new_volume)
-        return await self.async_set_volume_level(new_volume)
+        await self.async_set_volume_level(new_volume)
 
     async def async_set_volume_level(self, volume: float) -> None:
         """Send volume_up command to media player."""

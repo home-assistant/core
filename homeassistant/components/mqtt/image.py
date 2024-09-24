@@ -25,7 +25,7 @@ from homeassistant.util import dt as dt_util
 
 from . import subscription
 from .config import MQTT_BASE_SCHEMA
-from .mixins import MqttEntity, async_setup_entity_entry_helper
+from .entity import MqttEntity, async_setup_entity_entry_helper
 from .models import (
     DATA_MQTT,
     MqttValueTemplate,

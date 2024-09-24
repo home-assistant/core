@@ -39,7 +39,7 @@ class FytaCoordinator(DataUpdateCoordinator[dict[int, Plant]]):
             hass,
             _LOGGER,
             name="FYTA Coordinator",
-            update_interval=timedelta(seconds=60),
+            update_interval=timedelta(minutes=4),
         )
         self.fyta = fyta
 

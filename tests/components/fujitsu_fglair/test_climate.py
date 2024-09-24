@@ -18,7 +18,7 @@ from homeassistant.components.climate import (
     SWING_BOTH,
     HVACMode,
 )
-from homeassistant.components.fujitsu_fglair.const import (
+from homeassistant.components.fujitsu_fglair.climate import (
     HA_TO_FUJI_FAN,
     HA_TO_FUJI_HVAC,
     HA_TO_FUJI_SWING,

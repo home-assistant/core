@@ -216,7 +216,7 @@ def _get_request_host() -> str | None:
     """Get the host address of the current request."""
     if (request := http.current_request.get()) is None:
         raise NoURLAvailableError
-    return yarl.URL(request.url).host
+    return request.url.host
 
 
 @bind_hass
