@@ -4,7 +4,8 @@ from __future__ import annotations
 
 import logging
 
-from aiorussound import Source, Zone
+from aiorussound import RussoundClient, Source, Zone
+from aiorussound.models import CallbackType
 
 from homeassistant.components.media_player import (
     MediaPlayerDeviceClass,
@@ -130,25 +131,26 @@ class RussoundZoneDevice(RussoundBaseEntity, MediaPlayerEntity):
         self._attr_name = zone.name
         self._attr_unique_id = f"{self._primary_mac_address}-{zone.device_str()}"
         for flag, feature in MP_FEATURES_BY_FLAG.items():
-            if flag in zone.instance.supported_features:
+            if flag in zone.client.supported_features:
                 self._attr_supported_features |= feature
 
-    def _callback_handler(self, device_str, *args):
-        if (
-            device_str == self._zone.device_str()
-            or device_str == self._current_source().device_str()
-        ):
-            self.schedule_update_ha_state()
+    async def _state_update_callback(
+        self, _client: RussoundClient, _callback_type: CallbackType
+    ) -> None:
+        """Call when the device is notified of changes."""
+        self.async_write_ha_state()
 
     async def async_added_to_hass(self) -> None:
         """Register callback handlers."""
         await super().async_added_to_hass()
-        self._zone.add_callback(self._callback_handler)
+        await self._client.register_state_update_callbacks(self._state_update_callback)
 
     async def async_will_remove_from_hass(self) -> None:
         """Remove callbacks."""
         await super().async_will_remove_from_hass()
-        self._zone.remove_callback(self._callback_handler)
+        await self._client.unregister_state_update_callbacks(
+            self._state_update_callback
+        )
 
     def _current_source(self) -> Source:
         return self._zone.fetch_current_source()
