@@ -17,7 +17,6 @@ from homeassistant.components.media_source import (
     PlayMedia,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 
 from . import GooglePhotosConfigEntry
 from .const import DOMAIN, READ_SCOPE
@@ -205,11 +204,7 @@ class GooglePhotosMediaSource(MediaSource):
                 for special_album in SpecialAlbum
             ]
 
-            try:
-                albums: list[Album] = await coordinator.list_albums()
-            except (GooglePhotosApiError, HomeAssistantError) as err:
-                raise BrowseError(f"Error listing albums: {err}") from err
-
+            albums = await coordinator.list_albums()
             source.children.extend(
                 _build_album(
                     album.title,

@@ -16,10 +16,7 @@ from google_photos_library_api.exceptions import GooglePhotosApiError
 from google_photos_library_api.model import Album
 
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-
-from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,7 +24,7 @@ UPDATE_INTERVAL: Final = datetime.timedelta(hours=24)
 ALBUM_PAGE_SIZE = 50
 
 
-class GooglePhotosUpdateCoordinator(DataUpdateCoordinator[dict[str, str] | None]):
+class GooglePhotosUpdateCoordinator(DataUpdateCoordinator[dict[str, str]]):
     """Coordinator for fetching Google Photos albums.
 
     The `data` object is a dict from Album ID to Album title.
@@ -42,6 +39,7 @@ class GooglePhotosUpdateCoordinator(DataUpdateCoordinator[dict[str, str] | None]
             update_interval=UPDATE_INTERVAL,
         )
         self.client = client
+        self.data = {}
 
     async def _async_update_data(self) -> dict[str, str]:
         """Fetch albums from API endpoint."""
@@ -59,12 +57,6 @@ class GooglePhotosUpdateCoordinator(DataUpdateCoordinator[dict[str, str] | None]
 
     async def list_albums(self) -> list[Album]:
         """Return Albums with refreshed URLs based on the cached list of album ids."""
-        if self.data is None:
-            key = "albums_not_loaded" if self.last_update_success else "albums_failed"
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key=key,
-            )
         return await asyncio.gather(
             *(self.client.get_album(album_id) for album_id in self.data)
         )

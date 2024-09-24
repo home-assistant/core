@@ -57,9 +57,6 @@
     },
     "albums_failed": {
       "message": "Cannot fetch albums from the Google Photos API"
-    },
-    "albums_not_loaded": {
-      "message": "Albums have not yet been loaded from Google Photos API"
     }
   },
   "services": {

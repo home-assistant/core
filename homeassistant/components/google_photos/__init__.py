@@ -44,8 +44,7 @@ async def async_setup_entry(
     except ClientError as err:
         raise ConfigEntryNotReady from err
     coordinator = GooglePhotosUpdateCoordinator(hass, GooglePhotosLibraryApi(auth))
-    # Start a refresh but don't block startup
-    await coordinator.async_request_refresh()
+    await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
 
     async_register_services(hass)
