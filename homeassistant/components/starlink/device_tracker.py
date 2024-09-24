@@ -28,7 +28,9 @@ async def async_setup_entry(
 
 
 @dataclass(frozen=True, kw_only=True)
-class StarlinkDeviceTrackerEntityDescription(EntityDescription):
+class StarlinkDeviceTrackerEntityDescription(  # pylint: disable=hass-enforce-class-module
+    EntityDescription
+):
     """Describes a Starlink button entity."""
 
     latitude_fn: Callable[[StarlinkData], float]
