@@ -1,7 +1,6 @@
 """Test selectors."""
 
 from enum import Enum
-from typing import Any
 
 import pytest
 import voluptuous as vol
@@ -1117,7 +1116,7 @@ def test_condition_selector_schema(
                 ],
                 [
                     {
-                        "trigger": "numeric_state",
+                        "platform": "numeric_state",
                         "entity_id": ["sensor.temperature"],
                         "below": 20,
                     }
@@ -1131,25 +1130,7 @@ def test_condition_selector_schema(
 def test_trigger_selector_schema(schema, valid_selections, invalid_selections) -> None:
     """Test trigger sequence selector."""
 
-    def _custom_trigger_serializer(
-        triggers: list[dict[str, Any]],
-    ) -> list[dict[str, Any]]:
-        res = []
-        for trigger in triggers:
-            if "trigger" in trigger:
-                trigger["platform"] = trigger["trigger"]
-            elif "platform" in trigger:
-                trigger["trigger"] = trigger["platform"]
-            res.append(trigger)
-        return res
-
-    _test_selector(
-        "trigger",
-        schema,
-        valid_selections,
-        invalid_selections,
-        _custom_trigger_serializer,
-    )
+    _test_selector("trigger", schema, valid_selections, invalid_selections)
 
 
 @pytest.mark.parametrize(
