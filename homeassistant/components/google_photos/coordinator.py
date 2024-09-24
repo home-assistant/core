@@ -39,7 +39,6 @@ class GooglePhotosUpdateCoordinator(DataUpdateCoordinator[dict[str, str]]):
             update_interval=UPDATE_INTERVAL,
         )
         self.client = client
-        self.data = {}
 
     async def _async_update_data(self) -> dict[str, str]:
         """Fetch albums from API endpoint."""
