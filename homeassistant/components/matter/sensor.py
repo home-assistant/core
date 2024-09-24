@@ -48,8 +48,8 @@ AIR_QUALITY_MAP = {
     clusters.AirQuality.Enums.AirQualityEnum.kFair: "fair",
     clusters.AirQuality.Enums.AirQualityEnum.kGood: "good",
     clusters.AirQuality.Enums.AirQualityEnum.kModerate: "moderate",
-    clusters.AirQuality.Enums.AirQualityEnum.kUnknown: "unknown",
-    clusters.AirQuality.Enums.AirQualityEnum.kUnknownEnumValue: "unknown",
+    clusters.AirQuality.Enums.AirQualityEnum.kUnknown: None,
+    clusters.AirQuality.Enums.AirQualityEnum.kUnknownEnumValue: None,
 }
 
 
@@ -305,7 +305,7 @@ DISCOVERY_SCHEMAS = [
             device_class=SensorDeviceClass.ENUM,
             state_class=None,
             # convert to set first to remove the duplicate unknown value
-            options=list(set(AIR_QUALITY_MAP.values())),
+            options=[x for x in AIR_QUALITY_MAP.values() if x is not None],
             measurement_to_ha=lambda x: AIR_QUALITY_MAP[x],
             icon="mdi:air-filter",
         ),
