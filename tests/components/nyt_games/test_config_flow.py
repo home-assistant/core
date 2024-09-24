@@ -53,7 +53,7 @@ async def test_flow_errors(
     error: str,
 ) -> None:
     """Test flow errors."""
-    mock_nyt_games_client.get_latest_stats.side_effect = exception
+    mock_nyt_games_client.get_user_id.side_effect = exception
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -70,7 +70,7 @@ async def test_flow_errors(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": error}
 
-    mock_nyt_games_client.get_latest_stats.side_effect = None
+    mock_nyt_games_client.get_user_id.side_effect = None
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],

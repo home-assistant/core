@@ -136,7 +136,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: PointConfigEntry) -> boo
     entry.runtime_data = PointData(client)
 
     await async_setup_webhook(hass, entry, point_session)
-    # Entries are added in the client.update() function.
+    await hass.config_entries.async_forward_entry_setups(
+        entry, [*PLATFORMS, Platform.ALARM_CONTROL_PANEL]
+    )
 
     return True
 
@@ -225,27 +227,23 @@ class MinutPointClient:
             async_dispatcher_send(self._hass, SIGNAL_UPDATE_ENTITY)
             return
 
-        async def new_device(device_id, platform):
-            """Load new device."""
-            async_dispatcher_send(
-                self._hass, POINT_DISCOVERY_NEW.format(platform, DOMAIN), device_id
-            )
-
         self._is_available = True
         for home_id in self._client.homes:
             if home_id not in self._known_homes:
-                await self._hass.config_entries.async_forward_entry_setups(
-                    self._config_entry, [Platform.ALARM_CONTROL_PANEL]
+                async_dispatcher_send(
+                    self._hass,
+                    POINT_DISCOVERY_NEW.format(Platform.ALARM_CONTROL_PANEL),
+                    home_id,
                 )
-                await new_device(home_id, "alarm_control_panel")
                 self._known_homes.add(home_id)
         for device in self._client.devices:
             if device.device_id not in self._known_devices:
-                await self._hass.config_entries.async_forward_entry_setups(
-                    self._config_entry, PLATFORMS
-                )
                 for platform in PLATFORMS:
-                    await new_device(device.device_id, platform)
+                    async_dispatcher_send(
+                        self._hass,
+                        POINT_DISCOVERY_NEW.format(platform),
+                        device.device_id,
+                    )
                 self._known_devices.add(device.device_id)
         async_dispatcher_send(self._hass, SIGNAL_UPDATE_ENTITY)
 

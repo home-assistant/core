@@ -658,7 +658,7 @@ btsmarthub-devicelist==0.2.3
 buienradar==1.0.6
 
 # homeassistant.components.dhcp
-cached-ipaddress==0.5.0
+cached-ipaddress==0.6.0
 
 # homeassistant.components.caldav
 caldav==1.3.9
@@ -1484,7 +1484,7 @@ numato-gpio==0.13.0
 numpy==1.26.0
 
 # homeassistant.components.nyt_games
-nyt_games==0.3.0
+nyt_games==0.4.0
 
 # homeassistant.components.oasa_telematics
 oasatelematics==0.3
@@ -1981,7 +1981,7 @@ pyisy==3.1.14
 pyitachip2ir==0.0.7
 
 # homeassistant.components.jvc_projector
-pyjvcprojector==1.1.0
+pyjvcprojector==1.1.2
 
 # homeassistant.components.kaleidescape
 pykaleidescape==1.0.1
@@ -2989,7 +2989,7 @@ xbox-webapi==2.0.11
 xiaomi-ble==0.32.0
 
 # homeassistant.components.knx
-xknx==3.1.1
+xknx==3.2.0
 
 # homeassistant.components.knx
 xknxproject==3.7.1

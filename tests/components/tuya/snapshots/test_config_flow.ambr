@@ -14,8 +14,8 @@
       'user_code': '12345',
     }),
     'disabled_by': None,
-    'discovery_keys': tuple(
-    ),
+    'discovery_keys': dict({
+    }),
     'domain': 'tuya',
     'entry_id': <ANY>,
     'minor_version': 1,
@@ -44,8 +44,8 @@
       'user_code': '12345',
     }),
     'disabled_by': None,
-    'discovery_keys': tuple(
-    ),
+    'discovery_keys': dict({
+    }),
     'domain': 'tuya',
     'entry_id': <ANY>,
     'minor_version': 1,
@@ -97,8 +97,8 @@
         'user_code': '12345',
       }),
       'disabled_by': None,
-      'discovery_keys': tuple(
-      ),
+      'discovery_keys': dict({
+      }),
       'domain': 'tuya',
       'entry_id': <ANY>,
       'minor_version': 1,
