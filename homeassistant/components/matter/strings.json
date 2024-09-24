@@ -210,6 +210,15 @@
       "hepa_filter_condition": {
         "name": "Hepa filter condition"
       },
+      "operational_state": {
+        "name": "Operational state",
+        "state": {
+          "stopped": "Stopped",
+          "running": "Running",
+          "paused": "Paused",
+          "error": "Error"
+        }
+      },
       "switch_current_position": {
         "name": "Current switch position"
       },

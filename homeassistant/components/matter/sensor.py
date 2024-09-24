@@ -48,10 +48,10 @@ CONTAMINATION_STATE_MAP = {
 
 
 OPERATIONAL_STATE_MAP = {
-    clusters.OperationalState.Enums.OperationalStateEnum.kStopped: "Stopped",
-    clusters.OperationalState.Enums.OperationalStateEnum.kRunning: "Running ",
-    clusters.OperationalState.Enums.OperationalStateEnum.kPaused: "Paused ",
-    clusters.OperationalState.Enums.OperationalStateEnum.kError: "Error",
+    clusters.OperationalState.Enums.OperationalStateEnum.kStopped: "stopped",
+    clusters.OperationalState.Enums.OperationalStateEnum.kRunning: "running ",
+    clusters.OperationalState.Enums.OperationalStateEnum.kPaused: "paused ",
+    clusters.OperationalState.Enums.OperationalStateEnum.kError: "error",
 }
 
 
@@ -605,11 +605,9 @@ DISCOVERY_SCHEMAS = [
             # state_class=SensorStateClass.MEASUREMENT,
             key="OperationalState",
             device_class=SensorDeviceClass.ENUM,
-            state_class=None,
-            # convert to set first to remove the duplicate unknown value
-            options=list(set(OPERATIONAL_STATE_MAP.values())),
-            measurement_to_ha=lambda x: OPERATIONAL_STATE_MAP[x],
-            icon="mdi:play-pause",
+            translation_key="operational_state",
+            options=list(OPERATIONAL_STATE_MAP.values()),
+            measurement_to_ha=OPERATIONAL_STATE_MAP.get,
         ),
         entity_class=MatterSensor,
         required_attributes=(clusters.OperationalState.Attributes.OperationalState,),
