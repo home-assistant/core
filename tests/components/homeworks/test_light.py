@@ -7,14 +7,12 @@ import pytest
 from pytest_unordered import unordered
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.light import ATTR_BRIGHTNESS, DOMAIN as LIGHT_DOMAIN
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    STATE_OFF,
-    STATE_ON,
+from homeassistant.components.light import (
+    ATTR_BRIGHTNESS,
+    DOMAIN as LIGHT_DOMAIN,
+    LightState,
 )
+from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -44,13 +42,13 @@ async def test_light_attributes_state_update(
     assert hass.states.async_entity_ids("light") == unordered([entity_id])
 
     state = hass.states.get(entity_id)
-    assert state.state == STATE_OFF
+    assert state.state == LightState.OFF
     assert state == snapshot
 
     hw_callback(HW_LIGHT_CHANGED, ["[02:08:01:01]", 50])
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     assert state == snapshot
 
 
@@ -114,7 +112,7 @@ async def test_light_restore_brightness(
     hw_callback(HW_LIGHT_CHANGED, ["[02:08:01:01]", 50])
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     assert state.attributes[ATTR_BRIGHTNESS] == 127
 
     await hass.services.async_call(

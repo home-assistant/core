@@ -43,14 +43,9 @@ from homeassistant.components.light import (
     DOMAIN as LIGHT_DOMAIN,
     SERVICE_TURN_ON,
     ColorMode,
+    LightState,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    CONF_HOST,
-    STATE_OFF,
-    STATE_ON,
-    STATE_UNAVAILABLE,
-)
+from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -732,7 +727,7 @@ async def test_matrix_flame_morph_effects(hass: HomeAssistant) -> None:
     await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get(entity_id)
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
 
     assert len(bulb.set_power.calls) == 1
     assert len(bulb.set_tile_effect.calls) == 1
@@ -791,7 +786,7 @@ async def test_matrix_flame_morph_effects(hass: HomeAssistant) -> None:
     await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get(entity_id)
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
 
     assert len(bulb.set_power.calls) == 1
     assert len(bulb.set_tile_effect.calls) == 1
@@ -864,7 +859,7 @@ async def test_sky_effect(hass: HomeAssistant) -> None:
     await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get(entity_id)
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
 
     assert len(bulb.set_power.calls) == 1
     assert len(bulb.set_tile_effect.calls) == 1
@@ -922,7 +917,7 @@ async def test_sky_effect(hass: HomeAssistant) -> None:
     await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get(entity_id)
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
 
     assert len(bulb.set_power.calls) == 1
     assert len(bulb.set_tile_effect.calls) == 1
@@ -1010,7 +1005,7 @@ async def test_lightstrip_move_effect(hass: HomeAssistant) -> None:
     await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get(entity_id)
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
 
     assert len(bulb.set_power.calls) == 1
     assert len(bulb.set_extended_color_zones.calls) == 1
@@ -1308,7 +1303,7 @@ async def test_config_zoned_light_strip_fails(
         await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
         await hass.async_block_till_done()
         assert entity_registry.async_get(entity_id).unique_id == SERIAL
-        assert hass.states.get(entity_id).state == STATE_OFF
+        assert hass.states.get(entity_id).state == LightState.OFF
 
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=30))
         await hass.async_block_till_done(wait_background_tasks=True)
@@ -1356,14 +1351,14 @@ async def test_legacy_zoned_light_strip(
         await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
         await hass.async_block_till_done()
         assert entity_registry.async_get(entity_id).unique_id == SERIAL
-        assert hass.states.get(entity_id).state == STATE_OFF
+        assert hass.states.get(entity_id).state == LightState.OFF
         # 1 to get the number of zones
         # 2 get populate the zones
         assert get_color_zones_mock.call_count == 3
 
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=30))
         await hass.async_block_till_done()
-        assert hass.states.get(entity_id).state == STATE_OFF
+        assert hass.states.get(entity_id).state == LightState.OFF
         # 2 get populate the zones
         assert get_color_zones_mock.call_count == 5
 
@@ -1385,7 +1380,7 @@ async def test_white_light_fails(
         await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
         await hass.async_block_till_done()
         assert entity_registry.async_get(entity_id).unique_id == SERIAL
-        assert hass.states.get(entity_id).state == STATE_OFF
+        assert hass.states.get(entity_id).state == LightState.OFF
         with pytest.raises(HomeAssistantError):
             await hass.services.async_call(
                 LIGHT_DOMAIN, "turn_on", {ATTR_ENTITY_ID: entity_id}, blocking=True
@@ -2013,4 +2008,4 @@ async def test_light_strip_zones_not_populated_yet(hass: HomeAssistant) -> None:
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=30))
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON

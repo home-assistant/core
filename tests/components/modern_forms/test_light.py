@@ -5,7 +5,11 @@ from unittest.mock import patch
 from aiomodernforms import ModernFormsConnectionError
 import pytest
 
-from homeassistant.components.light import ATTR_BRIGHTNESS, DOMAIN as LIGHT_DOMAIN
+from homeassistant.components.light import (
+    ATTR_BRIGHTNESS,
+    DOMAIN as LIGHT_DOMAIN,
+    LightState,
+)
 from homeassistant.components.modern_forms.const import (
     ATTR_SLEEP_TIME,
     DOMAIN,
@@ -17,7 +21,6 @@ from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
-    STATE_ON,
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
@@ -40,7 +43,7 @@ async def test_light_state(
     assert state
     assert state.attributes.get(ATTR_BRIGHTNESS) == 128
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "ModernFormsFan Light"
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
 
     entry = entity_registry.async_get("light.modernformsfan_light")
     assert entry
@@ -130,7 +133,7 @@ async def test_light_error(
         )
         await hass.async_block_till_done()
         state = hass.states.get("light.modernformsfan_light")
-        assert state.state == STATE_ON
+        assert state.state == LightState.ON
         assert "Invalid response from API" in caplog.text
 
 

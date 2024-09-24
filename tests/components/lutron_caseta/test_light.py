@@ -1,6 +1,6 @@
 """Tests for the Lutron Caseta integration."""
 
-from homeassistant.const import STATE_ON
+from homeassistant.components.light import LightState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -23,4 +23,4 @@ async def test_light_unique_id(
     assert entity_registry.async_get(caseta_entity_id).unique_id == "5442321"
 
     state = hass.states.get(ra3_entity_id)
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON

@@ -12,13 +12,12 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_TRANSITION,
     DOMAIN as DOMAIN_LIGHT,
+    LightState,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
-    STATE_OFF,
-    STATE_ON,
     STATE_UNAVAILABLE,
     Platform,
 )
@@ -66,7 +65,7 @@ async def test_output_turn_on(hass: HomeAssistant, entry: MockConfigEntry) -> No
 
         state = hass.states.get(LIGHT_OUTPUT1)
         assert state is not None
-        assert state.state != STATE_ON
+        assert state.state != LightState.ON
 
         # command success
         dim_output.reset_mock(return_value=True)
@@ -83,7 +82,7 @@ async def test_output_turn_on(hass: HomeAssistant, entry: MockConfigEntry) -> No
 
         state = hass.states.get(LIGHT_OUTPUT1)
         assert state is not None
-        assert state.state == STATE_ON
+        assert state.state == LightState.ON
 
 
 async def test_output_turn_on_with_attributes(
@@ -110,7 +109,7 @@ async def test_output_turn_on_with_attributes(
 
         state = hass.states.get(LIGHT_OUTPUT1)
         assert state is not None
-        assert state.state == STATE_ON
+        assert state.state == LightState.ON
 
 
 async def test_output_turn_off(hass: HomeAssistant, entry: MockConfigEntry) -> None:
@@ -119,7 +118,7 @@ async def test_output_turn_off(hass: HomeAssistant, entry: MockConfigEntry) -> N
 
     with patch.object(MockModuleConnection, "dim_output") as dim_output:
         state = hass.states.get(LIGHT_OUTPUT1)
-        state.state = STATE_ON
+        state.state = LightState.ON
 
         # command failed
         dim_output.return_value = False
@@ -135,7 +134,7 @@ async def test_output_turn_off(hass: HomeAssistant, entry: MockConfigEntry) -> N
 
         state = hass.states.get(LIGHT_OUTPUT1)
         assert state is not None
-        assert state.state != STATE_OFF
+        assert state.state != LightState.OFF
 
         # command success
         dim_output.reset_mock(return_value=True)
@@ -152,7 +151,7 @@ async def test_output_turn_off(hass: HomeAssistant, entry: MockConfigEntry) -> N
 
         state = hass.states.get(LIGHT_OUTPUT1)
         assert state is not None
-        assert state.state == STATE_OFF
+        assert state.state == LightState.OFF
 
 
 async def test_output_turn_off_with_attributes(
@@ -165,7 +164,7 @@ async def test_output_turn_off_with_attributes(
         dim_output.return_value = True
 
         state = hass.states.get(LIGHT_OUTPUT1)
-        state.state = STATE_ON
+        state.state = LightState.ON
 
         await hass.services.async_call(
             DOMAIN_LIGHT,
@@ -181,7 +180,7 @@ async def test_output_turn_off_with_attributes(
 
         state = hass.states.get(LIGHT_OUTPUT1)
         assert state is not None
-        assert state.state == STATE_OFF
+        assert state.state == LightState.OFF
 
 
 async def test_relay_turn_on(hass: HomeAssistant, entry: MockConfigEntry) -> None:
@@ -206,7 +205,7 @@ async def test_relay_turn_on(hass: HomeAssistant, entry: MockConfigEntry) -> Non
 
         state = hass.states.get(LIGHT_RELAY1)
         assert state is not None
-        assert state.state != STATE_ON
+        assert state.state != LightState.ON
 
         # command success
         control_relays.reset_mock(return_value=True)
@@ -223,7 +222,7 @@ async def test_relay_turn_on(hass: HomeAssistant, entry: MockConfigEntry) -> Non
 
         state = hass.states.get(LIGHT_RELAY1)
         assert state is not None
-        assert state.state == STATE_ON
+        assert state.state == LightState.ON
 
 
 async def test_relay_turn_off(hass: HomeAssistant, entry: MockConfigEntry) -> None:
@@ -235,7 +234,7 @@ async def test_relay_turn_off(hass: HomeAssistant, entry: MockConfigEntry) -> No
         states[0] = RelayStateModifier.OFF
 
         state = hass.states.get(LIGHT_RELAY1)
-        state.state = STATE_ON
+        state.state = LightState.ON
 
         # command failed
         control_relays.return_value = False
@@ -251,7 +250,7 @@ async def test_relay_turn_off(hass: HomeAssistant, entry: MockConfigEntry) -> No
 
         state = hass.states.get(LIGHT_RELAY1)
         assert state is not None
-        assert state.state != STATE_OFF
+        assert state.state != LightState.OFF
 
         # command success
         control_relays.reset_mock(return_value=True)
@@ -268,7 +267,7 @@ async def test_relay_turn_off(hass: HomeAssistant, entry: MockConfigEntry) -> No
 
         state = hass.states.get(LIGHT_RELAY1)
         assert state is not None
-        assert state.state == STATE_OFF
+        assert state.state == LightState.OFF
 
 
 async def test_pushed_output_status_change(
@@ -287,7 +286,7 @@ async def test_pushed_output_status_change(
 
     state = hass.states.get(LIGHT_OUTPUT1)
     assert state is not None
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     assert state.attributes[ATTR_BRIGHTNESS] == 127
 
     # push status "off"
@@ -297,7 +296,7 @@ async def test_pushed_output_status_change(
 
     state = hass.states.get(LIGHT_OUTPUT1)
     assert state is not None
-    assert state.state == STATE_OFF
+    assert state.state == LightState.OFF
 
 
 async def test_pushed_relay_status_change(
@@ -318,7 +317,7 @@ async def test_pushed_relay_status_change(
 
     state = hass.states.get(LIGHT_RELAY1)
     assert state is not None
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
 
     # push status "off"
     states[0] = False
@@ -328,7 +327,7 @@ async def test_pushed_relay_status_change(
 
     state = hass.states.get(LIGHT_RELAY1)
     assert state is not None
-    assert state.state == STATE_OFF
+    assert state.state == LightState.OFF
 
 
 async def test_unload_config_entry(hass: HomeAssistant, entry: MockConfigEntry) -> None:

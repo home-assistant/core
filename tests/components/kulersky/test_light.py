@@ -21,13 +21,12 @@ from homeassistant.components.light import (
     ATTR_XY_COLOR,
     SCAN_INTERVAL,
     ColorMode,
+    LightState,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
     ATTR_SUPPORTED_FEATURES,
-    STATE_OFF,
-    STATE_ON,
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
@@ -70,7 +69,7 @@ async def mock_light(
 async def test_init(hass: HomeAssistant, mock_light: MagicMock) -> None:
     """Test platform setup."""
     state = hass.states.get("light.bedroom")
-    assert state.state == STATE_OFF
+    assert state.state == LightState.OFF
     assert dict(state.attributes) == {
         ATTR_FRIENDLY_NAME: "Bedroom",
         ATTR_SUPPORTED_COLOR_MODES: [ColorMode.RGBW],
@@ -198,7 +197,7 @@ async def test_light_update(hass: HomeAssistant, mock_light: MagicMock) -> None:
     utcnow = dt_util.utcnow()
 
     state = hass.states.get("light.bedroom")
-    assert state.state == STATE_OFF
+    assert state.state == LightState.OFF
     assert dict(state.attributes) == {
         ATTR_FRIENDLY_NAME: "Bedroom",
         ATTR_SUPPORTED_COLOR_MODES: [ColorMode.RGBW],
@@ -232,7 +231,7 @@ async def test_light_update(hass: HomeAssistant, mock_light: MagicMock) -> None:
     await hass.async_block_till_done()
 
     state = hass.states.get("light.bedroom")
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     assert dict(state.attributes) == {
         ATTR_FRIENDLY_NAME: "Bedroom",
         ATTR_SUPPORTED_COLOR_MODES: [ColorMode.RGBW],
@@ -252,7 +251,7 @@ async def test_light_update(hass: HomeAssistant, mock_light: MagicMock) -> None:
     await hass.async_block_till_done()
 
     state = hass.states.get("light.bedroom")
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     assert dict(state.attributes) == {
         ATTR_FRIENDLY_NAME: "Bedroom",
         ATTR_SUPPORTED_COLOR_MODES: [ColorMode.RGBW],
@@ -272,7 +271,7 @@ async def test_light_update(hass: HomeAssistant, mock_light: MagicMock) -> None:
     await hass.async_block_till_done()
 
     state = hass.states.get("light.bedroom")
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     assert dict(state.attributes) == {
         ATTR_FRIENDLY_NAME: "Bedroom",
         ATTR_SUPPORTED_COLOR_MODES: [ColorMode.RGBW],
