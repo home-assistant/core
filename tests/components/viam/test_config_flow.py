@@ -30,7 +30,7 @@ pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_form(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
-    mock_viam_client: Generator[tuple[MagicMock, MockRobot], None, None],
+    mock_viam_client: Generator[tuple[MagicMock, MockRobot]],
 ) -> None:
     """Test that the form is served with no input."""
     result = await hass.config_entries.flow.async_init(
@@ -86,7 +86,7 @@ async def test_user_form(
 async def test_user_form_with_location_secret(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
-    mock_viam_client: Generator[tuple[MagicMock, MockRobot], None, None],
+    mock_viam_client: Generator[tuple[MagicMock, MockRobot]],
 ) -> None:
     """Test that the form is served with no input."""
     result = await hass.config_entries.flow.async_init(

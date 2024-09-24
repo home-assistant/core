@@ -34,7 +34,7 @@ def async_return(result):
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.viam.async_setup_entry", return_value=True
@@ -43,7 +43,7 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture(name="mock_viam_client")
-def mock_viam_client_fixture() -> Generator[tuple[MagicMock, MockRobot], None, None]:
+def mock_viam_client_fixture() -> Generator[tuple[MagicMock, MockRobot]]:
     """Override ViamClient from Viam SDK."""
     with (
         patch("viam.app.viam_client.ViamClient") as MockClient,
