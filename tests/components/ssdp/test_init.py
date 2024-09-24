@@ -942,6 +942,7 @@ async def test_flow_dismiss_on_byebye(
 async def test_ssdp_rediscover(
     mock_get_ssdp,
     hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
     mock_flow_init,
     entry_domain: str,
     entry_discovery_keys: tuple,
@@ -966,6 +967,17 @@ async def test_ssdp_rediscover(
             "ext": "",
             "_source": "search",
         }
+    )
+    aioclient_mock.get(
+        "http://1.1.1.1",
+        text="""
+<root>
+  <device>
+    <deviceType>Paulus</deviceType>
+    <manufacturer>Paulus</manufacturer>
+  </device>
+</root>
+    """,
     )
     ssdp_listener = await init_ssdp_component(hass)
     ssdp_listener._on_search(mock_ssdp_search_response)
@@ -1036,6 +1048,7 @@ async def test_ssdp_rediscover(
 async def test_ssdp_rediscover_2(
     mock_get_ssdp,
     hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
     mock_flow_init,
     entry_domain: str,
     entry_discovery_keys: tuple,
@@ -1064,6 +1077,17 @@ async def test_ssdp_rediscover_2(
             "ext": "",
             "_source": "search",
         }
+    )
+    aioclient_mock.get(
+        "http://1.1.1.1",
+        text="""
+<root>
+  <device>
+    <deviceType>Paulus</deviceType>
+    <manufacturer>Paulus</manufacturer>
+  </device>
+</root>
+    """,
     )
     ssdp_listener = await init_ssdp_component(hass)
     ssdp_listener._on_search(mock_ssdp_search_response)
