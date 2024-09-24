@@ -90,8 +90,8 @@
       "stop": {
         "name": "Stop"
       },
-      "reset": {
-        "name": "Reset"
+      "reset_filter_condition": {
+        "name": "Reset filter condition"
       }
     },
     "climate": {

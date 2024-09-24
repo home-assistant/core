@@ -122,7 +122,7 @@ DISCOVERY_SCHEMAS = [
         platform=Platform.BUTTON,
         entity_description=MatterButtonEntityDescription(
             key="HepaFilterMonitoringResetButton",
-            translation_key="reset",
+            translation_key="reset_filter_condition",
             command=clusters.HepaFilterMonitoring.Commands.ResetCondition,
         ),
         entity_class=MatterCommandButton,
@@ -136,7 +136,7 @@ DISCOVERY_SCHEMAS = [
         platform=Platform.BUTTON,
         entity_description=MatterButtonEntityDescription(
             key="ActivatedCarbonFilterMonitoringResetButton",
-            translation_key="reset",
+            translation_key="reset_filter_condition",
             command=clusters.ActivatedCarbonFilterMonitoring.Commands.ResetCondition,
         ),
         entity_class=MatterCommandButton,
