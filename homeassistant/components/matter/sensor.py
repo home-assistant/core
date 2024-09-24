@@ -73,10 +73,10 @@ OPERATIONAL_STATE_MAP = {
 
 
 OPERATIONAL_STATE_MAP = {
-    clusters.OperationalState.Enums.OperationalStateEnum.kStopped: "Stopped",
-    clusters.OperationalState.Enums.OperationalStateEnum.kRunning: "Running ",
-    clusters.OperationalState.Enums.OperationalStateEnum.kPaused: "Paused ",
-    clusters.OperationalState.Enums.OperationalStateEnum.kError: "Error",
+    clusters.OperationalState.Enums.OperationalStateEnum.kStopped: "stopped",
+    clusters.OperationalState.Enums.OperationalStateEnum.kRunning: "running ",
+    clusters.OperationalState.Enums.OperationalStateEnum.kPaused: "paused ",
+    clusters.OperationalState.Enums.OperationalStateEnum.kError: "error",
 }
 
 
@@ -637,9 +637,8 @@ DISCOVERY_SCHEMAS = [
             key="SmokeCOAlarmContaminationState",
             translation_key="contamination_state",
             device_class=SensorDeviceClass.ENUM,
-            # convert to set first to remove the duplicate unknown value
-            options=list(set(CONTAMINATION_STATE_MAP.values())),
-            measurement_to_ha=CONTAMINATION_STATE_MAP.get,
+            options=list(OPERATIONAL_STATE_MAP.values()),
+            measurement_to_ha=OPERATIONAL_STATE_MAP.get,
         ),
         entity_class=MatterSensor,
         required_attributes=(clusters.SmokeCoAlarm.Attributes.ContaminationState,),
