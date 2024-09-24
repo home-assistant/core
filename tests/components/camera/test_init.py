@@ -766,7 +766,7 @@ async def test_state_streaming(hass: HomeAssistant) -> None:
     """Camera state."""
     demo_camera = hass.states.get("camera.demo_camera")
     assert demo_camera is not None
-    assert demo_camera.state == camera.STATE_STREAMING
+    assert demo_camera.state == camera.CameraState.STREAMING
 
 
 @pytest.mark.usefixtures("mock_camera", "mock_stream")
@@ -819,7 +819,7 @@ async def test_stream_unavailable(
 
     demo_camera = hass.states.get("camera.demo_camera")
     assert demo_camera is not None
-    assert demo_camera.state == camera.STATE_STREAMING
+    assert demo_camera.state == camera.CameraState.STREAMING
 
 
 @pytest.mark.usefixtures("mock_camera", "mock_stream_source")
@@ -1041,6 +1041,23 @@ def test_deprecated_stream_type_constants(
     import_and_test_deprecated_constant_enum(
         caplog, module, enum, "STREAM_TYPE_", "2025.1"
     )
+
+
+@pytest.mark.parametrize(
+    "enum",
+    list(camera.const.CameraState),
+)
+@pytest.mark.parametrize(
+    "module",
+    [camera],
+)
+def test_deprecated_state_constants(
+    caplog: pytest.LogCaptureFixture,
+    enum: camera.const.StreamType,
+    module: ModuleType,
+) -> None:
+    """Test deprecated stream type constants."""
+    import_and_test_deprecated_constant_enum(caplog, module, enum, "STATE_", "2025.10")
 
 
 @pytest.mark.parametrize(

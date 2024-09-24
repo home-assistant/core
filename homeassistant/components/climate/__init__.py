@@ -1008,10 +1008,21 @@ async def async_service_temperature_set(
         )
 
     hass = entity.hass
-    kwargs = {}
+    kwargs: dict[str, Any] = {}
     min_temp = entity.min_temp
     max_temp = entity.max_temp
     temp_unit = entity.temperature_unit
+
+    if (
+        (target_low_temp := service_call.data.get(ATTR_TARGET_TEMP_LOW))
+        and (target_high_temp := service_call.data.get(ATTR_TARGET_TEMP_HIGH))
+        and target_low_temp > target_high_temp
+    ):
+        # Ensure target_low_temp is not higher than target_high_temp.
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="low_temp_higher_than_high_temp",
+        )
 
     for value, temp in service_call.data.items():
         if value in CONVERTIBLE_ATTRIBUTE:

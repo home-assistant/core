@@ -53,8 +53,8 @@ ATTR_DURATION_UNTIL: Final = "duration"
 class EvoService(StrEnum):
     """The Evohome services."""
 
-    REFRESH_SYSTEM: Final = "refresh_system"
-    SET_SYSTEM_MODE: Final = "set_system_mode"
-    RESET_SYSTEM: Final = "reset_system"
-    SET_ZONE_OVERRIDE: Final = "set_zone_override"
-    RESET_ZONE_OVERRIDE: Final = "clear_zone_override"
+    REFRESH_SYSTEM = "refresh_system"
+    SET_SYSTEM_MODE = "set_system_mode"
+    RESET_SYSTEM = "reset_system"
+    SET_ZONE_OVERRIDE = "set_zone_override"
+    RESET_ZONE_OVERRIDE = "clear_zone_override"
