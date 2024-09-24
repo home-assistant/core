@@ -54,6 +54,12 @@ from homeassistant.const import (  # noqa: F401
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.deprecation import (
+    DeprecatedConstantEnum,
+    all_with_deprecated_constants,
+    check_if_deprecated_constant,
+    dir_with_deprecated_constants,
+)
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.network import get_url
@@ -63,6 +69,26 @@ from homeassistant.util.hass_dict import HassKey
 
 from .browse_media import BrowseMedia, async_process_play_media_url  # noqa: F401
 from .const import (  # noqa: F401
+    _DEPRECATED_MEDIA_CLASS_DIRECTORY,
+    _DEPRECATED_SUPPORT_BROWSE_MEDIA,
+    _DEPRECATED_SUPPORT_CLEAR_PLAYLIST,
+    _DEPRECATED_SUPPORT_GROUPING,
+    _DEPRECATED_SUPPORT_NEXT_TRACK,
+    _DEPRECATED_SUPPORT_PAUSE,
+    _DEPRECATED_SUPPORT_PLAY,
+    _DEPRECATED_SUPPORT_PLAY_MEDIA,
+    _DEPRECATED_SUPPORT_PREVIOUS_TRACK,
+    _DEPRECATED_SUPPORT_REPEAT_SET,
+    _DEPRECATED_SUPPORT_SEEK,
+    _DEPRECATED_SUPPORT_SELECT_SOUND_MODE,
+    _DEPRECATED_SUPPORT_SELECT_SOURCE,
+    _DEPRECATED_SUPPORT_SHUFFLE_SET,
+    _DEPRECATED_SUPPORT_STOP,
+    _DEPRECATED_SUPPORT_TURN_OFF,
+    _DEPRECATED_SUPPORT_TURN_ON,
+    _DEPRECATED_SUPPORT_VOLUME_MUTE,
+    _DEPRECATED_SUPPORT_VOLUME_SET,
+    _DEPRECATED_SUPPORT_VOLUME_STEP,
     ATTR_APP_ID,
     ATTR_APP_NAME,
     ATTR_ENTITY_PICTURE_LOCAL,
@@ -96,7 +122,6 @@ from .const import (  # noqa: F401
     ATTR_SOUND_MODE_LIST,
     CONTENT_AUTH_EXPIRY_TIME,
     DOMAIN,
-    MEDIA_CLASS_DIRECTORY,
     REPEAT_MODES,
     SERVICE_CLEAR_PLAYLIST,
     SERVICE_JOIN,
@@ -104,25 +129,6 @@ from .const import (  # noqa: F401
     SERVICE_SELECT_SOUND_MODE,
     SERVICE_SELECT_SOURCE,
     SERVICE_UNJOIN,
-    SUPPORT_BROWSE_MEDIA,
-    SUPPORT_CLEAR_PLAYLIST,
-    SUPPORT_GROUPING,
-    SUPPORT_NEXT_TRACK,
-    SUPPORT_PAUSE,
-    SUPPORT_PLAY,
-    SUPPORT_PLAY_MEDIA,
-    SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_REPEAT_SET,
-    SUPPORT_SEEK,
-    SUPPORT_SELECT_SOUND_MODE,
-    SUPPORT_SELECT_SOURCE,
-    SUPPORT_SHUFFLE_SET,
-    SUPPORT_STOP,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_SET,
-    SUPPORT_VOLUME_STEP,
     MediaClass,
     MediaPlayerEntityFeature,
     MediaPlayerState,
@@ -172,10 +178,16 @@ DEVICE_CLASSES_SCHEMA = vol.All(vol.Lower, vol.Coerce(MediaPlayerDeviceClass))
 
 # DEVICE_CLASS* below are deprecated as of 2021.12
 # use the MediaPlayerDeviceClass enum instead.
+_DEPRECATED_DEVICE_CLASS_TV = DeprecatedConstantEnum(
+    MediaPlayerDeviceClass.TV, "2025.10"
+)
+_DEPRECATED_DEVICE_CLASS_SPEAKER = DeprecatedConstantEnum(
+    MediaPlayerDeviceClass.SPEAKER, "2025.10"
+)
+_DEPRECATED_DEVICE_CLASS_RECEIVER = DeprecatedConstantEnum(
+    MediaPlayerDeviceClass.RECEIVER, "2025.10"
+)
 DEVICE_CLASSES = [cls.value for cls in MediaPlayerDeviceClass]
-DEVICE_CLASS_TV = MediaPlayerDeviceClass.TV.value
-DEVICE_CLASS_SPEAKER = MediaPlayerDeviceClass.SPEAKER.value
-DEVICE_CLASS_RECEIVER = MediaPlayerDeviceClass.RECEIVER.value
 
 
 MEDIA_PLAYER_PLAY_MEDIA_SCHEMA = {
@@ -1358,3 +1370,13 @@ async def async_fetch_image(
         logger.warning("Error retrieving proxied image from %s", url)
 
     return content, content_type
+
+
+# As we import deprecated constants from the const module, we need to add these two functions
+# otherwise this module will be logged for using deprecated constants and not the custom component
+# These can be removed if no deprecated constant are in this module anymore
+__getattr__ = ft.partial(check_if_deprecated_constant, module_globals=globals())
+__dir__ = ft.partial(
+    dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
+)
+__all__ = all_with_deprecated_constants(globals())
