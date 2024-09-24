@@ -1,6 +1,6 @@
 """Base class for NYT Games entities."""
 
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
@@ -19,5 +19,6 @@ class NYTGamesEntity(CoordinatorEntity[NYTGamesCoordinator]):
         assert unique_id is not None
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, unique_id)},
+            entry_type=DeviceEntryType.SERVICE,
             manufacturer="New York Times",
         )
