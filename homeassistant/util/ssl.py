@@ -91,7 +91,9 @@ def create_no_verify_ssl_context(
 
 
 @cache
-def _client_context(ssl_cipher_list: SSLCipherList = SSLCipherList.PYTHON_DEFAULT) -> ssl.SSLContext:
+def _client_context(
+    ssl_cipher_list: SSLCipherList = SSLCipherList.PYTHON_DEFAULT
+) -> ssl.SSLContext:
     # Reuse environment variable definition from requests, since it's already a
     # requirement. If the environment variable has no value, fall back to using
     # certs from certifi package.
