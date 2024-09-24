@@ -1865,7 +1865,6 @@ async def test_nested_trigger_list() -> None:
         },
         {
             "platform": "event",
-            "trigger": "event",
             "event_type": "trigger_4",
         },
     ]
