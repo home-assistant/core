@@ -4,6 +4,7 @@ import pytest
 
 from homeassistant import setup
 from homeassistant.components import lock
+from homeassistant.components.lock import LockState
 from homeassistant.const import (
     ATTR_CODE,
     ATTR_ENTITY_ID,
@@ -71,13 +72,13 @@ async def test_template_state(hass: HomeAssistant, start_ha) -> None:
     await hass.async_block_till_done()
 
     state = hass.states.get("lock.test_template_lock")
-    assert state.state == lock.STATE_LOCKED
+    assert state.state == LockState.LOCKED
 
     hass.states.async_set("switch.test_state", STATE_OFF)
     await hass.async_block_till_done()
 
     state = hass.states.get("lock.test_template_lock")
-    assert state.state == lock.STATE_UNLOCKED
+    assert state.state == LockState.UNLOCKED
 
 
 @pytest.mark.parametrize(("count", "domain"), [(1, lock.DOMAIN)])
@@ -95,7 +96,7 @@ async def test_template_state(hass: HomeAssistant, start_ha) -> None:
 async def test_template_state_boolean_on(hass: HomeAssistant, start_ha) -> None:
     """Test the setting of the state with boolean on."""
     state = hass.states.get("lock.template_lock")
-    assert state.state == lock.STATE_LOCKED
+    assert state.state == LockState.LOCKED
 
 
 @pytest.mark.parametrize(("count", "domain"), [(1, lock.DOMAIN)])
@@ -113,7 +114,7 @@ async def test_template_state_boolean_on(hass: HomeAssistant, start_ha) -> None:
 async def test_template_state_boolean_off(hass: HomeAssistant, start_ha) -> None:
     """Test the setting of the state with off."""
     state = hass.states.get("lock.template_lock")
-    assert state.state == lock.STATE_UNLOCKED
+    assert state.state == LockState.UNLOCKED
 
 
 @pytest.mark.parametrize(("count", "domain"), [(0, lock.DOMAIN)])
@@ -200,12 +201,12 @@ async def test_template_syntax_error(hass: HomeAssistant, start_ha) -> None:
 async def test_template_static(hass: HomeAssistant, start_ha) -> None:
     """Test that we allow static templates."""
     state = hass.states.get("lock.template_lock")
-    assert state.state == lock.STATE_UNLOCKED
+    assert state.state == LockState.UNLOCKED
 
-    hass.states.async_set("lock.template_lock", lock.STATE_LOCKED)
+    hass.states.async_set("lock.template_lock", LockState.LOCKED)
     await hass.async_block_till_done()
     state = hass.states.get("lock.template_lock")
-    assert state.state == lock.STATE_LOCKED
+    assert state.state == LockState.LOCKED
 
 
 @pytest.mark.parametrize(("count", "domain"), [(1, lock.DOMAIN)])
@@ -229,7 +230,7 @@ async def test_lock_action(
     await hass.async_block_till_done()
 
     state = hass.states.get("lock.template_lock")
-    assert state.state == lock.STATE_UNLOCKED
+    assert state.state == LockState.UNLOCKED
 
     await hass.services.async_call(
         lock.DOMAIN,
@@ -264,7 +265,7 @@ async def test_unlock_action(
     await hass.async_block_till_done()
 
     state = hass.states.get("lock.template_lock")
-    assert state.state == lock.STATE_LOCKED
+    assert state.state == LockState.LOCKED
 
     await hass.services.async_call(
         lock.DOMAIN,
@@ -300,7 +301,7 @@ async def test_lock_action_with_code(
     await hass.async_block_till_done()
 
     state = hass.states.get("lock.template_lock")
-    assert state.state == lock.STATE_UNLOCKED
+    assert state.state == LockState.UNLOCKED
 
     await hass.services.async_call(
         lock.DOMAIN,
@@ -337,7 +338,7 @@ async def test_unlock_action_with_code(
     await hass.async_block_till_done()
 
     state = hass.states.get("lock.template_lock")
-    assert state.state == lock.STATE_LOCKED
+    assert state.state == LockState.LOCKED
 
     await hass.services.async_call(
         lock.DOMAIN,
@@ -446,7 +447,7 @@ async def test_actions_with_none_as_codeformat_ignores_code(
     await hass.async_block_till_done()
 
     state = hass.states.get("lock.template_lock")
-    assert state.state == lock.STATE_UNLOCKED
+    assert state.state == LockState.UNLOCKED
 
     await hass.services.async_call(
         lock.DOMAIN,
@@ -484,7 +485,7 @@ async def test_actions_with_invalid_regexp_as_codeformat_never_execute(
     await hass.async_block_till_done()
 
     state = hass.states.get("lock.template_lock")
-    assert state.state == lock.STATE_UNLOCKED
+    assert state.state == LockState.UNLOCKED
 
     await hass.services.async_call(
         lock.DOMAIN,
@@ -519,7 +520,7 @@ async def test_actions_with_invalid_regexp_as_codeformat_never_execute(
     ],
 )
 @pytest.mark.parametrize(
-    "test_state", [lock.STATE_UNLOCKING, lock.STATE_LOCKING, lock.STATE_JAMMED]
+    "test_state", [LockState.UNLOCKING, LockState.LOCKING, LockState.JAMMED]
 )
 async def test_lock_state(hass: HomeAssistant, test_state, start_ha) -> None:
     """Test value template."""

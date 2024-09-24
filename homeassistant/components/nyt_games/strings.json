@@ -1,0 +1,38 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "token": "Token"
+        },
+        "data_description": {
+          "token": "The NYT Games NYT-S cookie value."
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "wordles_played": {
+        "name": "Wordles played"
+      },
+      "wordles_won": {
+        "name": "Wordles won"
+      },
+      "wordles_streak": {
+        "name": "Current Wordle streak"
+      },
+      "wordles_max_streak": {
+        "name": "Highest Wordle streak"
+      }
+    }
+  }
+}

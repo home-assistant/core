@@ -12,8 +12,7 @@ from zwave_js_server.model.node import Node
 from zwave_js_server.model.value import ValueDataType
 from zwave_js_server.util.node import dump_node_state
 
-from homeassistant.components.diagnostics import REDACTED
-from homeassistant.components.diagnostics.util import async_redact_data
+from homeassistant.components.diagnostics import REDACTED, async_redact_data
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant

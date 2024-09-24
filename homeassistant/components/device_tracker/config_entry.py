@@ -28,6 +28,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity_platform import EntityPlatform
 from homeassistant.helpers.typing import StateType
+from homeassistant.util.hass_dict import HassKey
 
 from .const import (
     ATTR_HOST_NAME,
@@ -40,6 +41,9 @@ from .const import (
     SourceType,
 )
 
+DOMAIN_DATA: HassKey[EntityComponent[BaseTrackerEntity]] = HassKey(DOMAIN)
+DATA_KEY: HassKey[dict[str, tuple[str, str]]] = HassKey(f"{DOMAIN}_mac")
+
 # mypy: disallow-any-generics
 
 
@@ -50,7 +54,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if component is not None:
         return await component.async_setup_entry(entry)
 
-    component = hass.data[DOMAIN] = EntityComponent[BaseTrackerEntity](
+    component = hass.data[DOMAIN_DATA] = EntityComponent[BaseTrackerEntity](
         LOGGER, DOMAIN, hass
     )
     component.register_shutdown()
@@ -60,8 +64,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload an entry."""
-    component: EntityComponent[BaseTrackerEntity] = hass.data[DOMAIN]
-    return await component.async_unload_entry(entry)
+    return await hass.data[DOMAIN_DATA].async_unload_entry(entry)
 
 
 @callback
@@ -93,16 +96,15 @@ def _async_register_mac(
     unique_id: str,
 ) -> None:
     """Register a mac address with a unique ID."""
-    data_key = "device_tracker_mac"
     mac = dr.format_mac(mac)
-    if data_key in hass.data:
-        hass.data[data_key][mac] = (domain, unique_id)
+    if DATA_KEY in hass.data:
+        hass.data[DATA_KEY][mac] = (domain, unique_id)
         return
 
     # Setup listening.
 
     # dict mapping mac -> partial unique ID
-    data = hass.data[data_key] = {mac: (domain, unique_id)}
+    data = hass.data[DATA_KEY] = {mac: (domain, unique_id)}
 
     @callback
     def handle_device_event(ev: Event[EventDeviceRegistryUpdatedData]) -> None:
@@ -168,6 +170,7 @@ class BaseTrackerEntity(Entity):
 
     _attr_device_info: None = None
     _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_source_type: SourceType
 
     @cached_property
     def battery_level(self) -> int | None:
@@ -180,6 +183,8 @@ class BaseTrackerEntity(Entity):
     @property
     def source_type(self) -> SourceType | str:
         """Return the source type, eg gps or router, of the device."""
+        if hasattr(self, "_attr_source_type"):
+            return self._attr_source_type
         raise NotImplementedError
 
     @property
@@ -193,8 +198,24 @@ class BaseTrackerEntity(Entity):
         return attr
 
 
-class TrackerEntity(BaseTrackerEntity):
+CACHED_TRACKER_PROPERTIES_WITH_ATTR_ = {
+    "latitude",
+    "location_accuracy",
+    "location_name",
+    "longitude",
+}
+
+
+class TrackerEntity(
+    BaseTrackerEntity, cached_properties=CACHED_TRACKER_PROPERTIES_WITH_ATTR_
+):
     """Base class for a tracked device."""
+
+    _attr_latitude: float | None = None
+    _attr_location_accuracy: int = 0
+    _attr_location_name: str | None = None
+    _attr_longitude: float | None = None
+    _attr_source_type: SourceType = SourceType.GPS
 
     @cached_property
     def should_poll(self) -> bool:
@@ -212,22 +233,22 @@ class TrackerEntity(BaseTrackerEntity):
 
         Value in meters.
         """
-        return 0
+        return self._attr_location_accuracy
 
     @cached_property
     def location_name(self) -> str | None:
         """Return a location name for the current location of the device."""
-        return None
+        return self._attr_location_name
 
     @cached_property
     def latitude(self) -> float | None:
         """Return latitude value of the device."""
-        return None
+        return self._attr_latitude
 
     @cached_property
     def longitude(self) -> float | None:
         """Return longitude value of the device."""
-        return None
+        return self._attr_longitude
 
     @property
     def state(self) -> str | None:
@@ -264,23 +285,37 @@ class TrackerEntity(BaseTrackerEntity):
         return attr
 
 
-class ScannerEntity(BaseTrackerEntity):
+CACHED_SCANNER_PROPERTIES_WITH_ATTR_ = {
+    "ip_address",
+    "mac_address",
+    "hostname",
+}
+
+
+class ScannerEntity(
+    BaseTrackerEntity, cached_properties=CACHED_SCANNER_PROPERTIES_WITH_ATTR_
+):
     """Base class for a tracked device that is on a scanned network."""
+
+    _attr_hostname: str | None = None
+    _attr_ip_address: str | None = None
+    _attr_mac_address: str | None = None
+    _attr_source_type: SourceType = SourceType.ROUTER
 
     @cached_property
     def ip_address(self) -> str | None:
         """Return the primary ip address of the device."""
-        return None
+        return self._attr_ip_address
 
     @cached_property
     def mac_address(self) -> str | None:
         """Return the mac address of the device."""
-        return None
+        return self._attr_mac_address
 
     @cached_property
     def hostname(self) -> str | None:
         """Return hostname of the device."""
-        return None
+        return self._attr_hostname
 
     @property
     def state(self) -> str:

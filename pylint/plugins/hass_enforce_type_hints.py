@@ -28,6 +28,8 @@ _KNOWN_GENERIC_TYPES: set[str] = {
 }
 _KNOWN_GENERIC_TYPES_TUPLE = tuple(_KNOWN_GENERIC_TYPES)
 
+_FORCE_ANNOTATION_PLATFORMS = ["config_flow"]
+
 
 class _Special(Enum):
     """Sentinel values."""
@@ -3091,6 +3093,11 @@ class HassTypeHintChecker(BaseChecker):
             "hass-consider-usefixtures-decorator",
             "Used when an argument type is None and could be a fixture",
         ),
+        "W7434": (
+            "A coroutine function should not be decorated with @callback",
+            "hass-async-callback-decorator",
+            "Used when a coroutine function has an invalid @callback decorator",
+        ),
     }
     options = (
         (
@@ -3108,6 +3115,7 @@ class HassTypeHintChecker(BaseChecker):
     _class_matchers: list[ClassTypeHintMatch]
     _function_matchers: list[TypeHintMatch]
     _module_node: nodes.Module
+    _module_platform: str | None
     _in_test_module: bool
 
     def visit_module(self, node: nodes.Module) -> None:
@@ -3115,24 +3123,22 @@ class HassTypeHintChecker(BaseChecker):
         self._class_matchers = []
         self._function_matchers = []
         self._module_node = node
+        self._module_platform = _get_module_platform(node.name)
         self._in_test_module = node.name.startswith("tests.")
 
-        if (
-            self._in_test_module
-            or (module_platform := _get_module_platform(node.name)) is None
-        ):
+        if self._in_test_module or self._module_platform is None:
             return
 
-        if module_platform in _PLATFORMS:
+        if self._module_platform in _PLATFORMS:
             self._function_matchers.extend(_FUNCTION_MATCH["__any_platform__"])
 
-        if function_matches := _FUNCTION_MATCH.get(module_platform):
+        if function_matches := _FUNCTION_MATCH.get(self._module_platform):
             self._function_matchers.extend(function_matches)
 
-        if class_matches := _CLASS_MATCH.get(module_platform):
+        if class_matches := _CLASS_MATCH.get(self._module_platform):
             self._class_matchers.extend(class_matches)
 
-        if property_matches := _INHERITANCE_MATCH.get(module_platform):
+        if property_matches := _INHERITANCE_MATCH.get(self._module_platform):
             self._class_matchers.extend(property_matches)
 
         self._class_matchers.reverse()
@@ -3142,7 +3148,12 @@ class HassTypeHintChecker(BaseChecker):
     ) -> bool:
         """Check if we can skip the function validation."""
         return (
-            self.linter.config.ignore_missing_annotations
+            # test modules are excluded from ignore_missing_annotations
+            not self._in_test_module
+            # some modules have checks forced
+            and self._module_platform not in _FORCE_ANNOTATION_PLATFORMS
+            # other modules are only checked ignore_missing_annotations
+            and self.linter.config.ignore_missing_annotations
             and node.returns is None
             and not _has_valid_annotations(annotations)
         )
@@ -3189,6 +3200,14 @@ class HassTypeHintChecker(BaseChecker):
                 self._check_function(function_node, match, annotations)
                 checked_class_methods.add(function_node.name)
 
+    def visit_asyncfunctiondef(self, node: nodes.AsyncFunctionDef) -> None:
+        """Apply checks on an AsyncFunctionDef node."""
+        if (
+            decoratornames := node.decoratornames()
+        ) and "homeassistant.core.callback" in decoratornames:
+            self.add_message("hass-async-callback-decorator", node=node)
+        self.visit_functiondef(node)
+
     def visit_functiondef(self, node: nodes.FunctionDef) -> None:
         """Apply relevant type hint checks on a FunctionDef node."""
         annotations = _get_all_annotations(node)
@@ -3227,8 +3246,6 @@ class HassTypeHintChecker(BaseChecker):
             if not match.need_to_check_function(node):
                 continue
             self._check_function(node, match, annotations)
-
-    visit_asyncfunctiondef = visit_functiondef
 
     def _check_function(
         self,

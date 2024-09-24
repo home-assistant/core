@@ -10,8 +10,8 @@ from uiprotect.exceptions import NvrError
 from uiprotect.websocket import WebsocketState
 
 from homeassistant.components.camera import (
-    STATE_IDLE,
     CameraEntityFeature,
+    CameraState,
     async_get_image,
     async_get_stream_source,
 )
@@ -431,7 +431,7 @@ async def test_camera_websocket_disconnected(
     entity_id = "camera.test_camera_high_resolution_channel"
 
     state = hass.states.get(entity_id)
-    assert state and state.state == STATE_IDLE
+    assert state and state.state == CameraState.IDLE
 
     # websocket disconnects
     ufp.ws_state_subscription(WebsocketState.DISCONNECTED)
@@ -445,7 +445,7 @@ async def test_camera_websocket_disconnected(
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
-    assert state and state.state == STATE_IDLE
+    assert state and state.state == CameraState.IDLE
 
 
 async def test_camera_ws_update(

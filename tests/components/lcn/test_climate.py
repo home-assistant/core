@@ -7,13 +7,12 @@ from pypck.lcn_addr import LcnAddr
 from pypck.lcn_defs import Var, VarUnit, VarValue
 from syrupy.assertion import SnapshotAssertion
 
-# pylint: disable=hass-component-root-import
-from homeassistant.components.climate import DOMAIN as DOMAIN_CLIMATE
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE,
     ATTR_HVAC_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
+    DOMAIN as DOMAIN_CLIMATE,
     SERVICE_SET_HVAC_MODE,
     SERVICE_SET_TEMPERATURE,
     HVACMode,

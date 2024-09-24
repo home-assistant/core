@@ -959,54 +959,6 @@ async def test_user_no_unpaired_devices(hass: HomeAssistant, controller) -> None
     assert result["reason"] == "no_devices"
 
 
-async def test_unignore_works(hass: HomeAssistant, controller) -> None:
-    """Test rediscovery triggered disovers work."""
-    device = setup_mock_accessory(controller)
-
-    # Device is unignored
-    result = await hass.config_entries.flow.async_init(
-        "homekit_controller",
-        context={"source": config_entries.SOURCE_UNIGNORE},
-        data={"unique_id": device.description.id},
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "pair"
-    assert get_flow_context(hass, result) == {
-        "title_placeholders": {"name": "TestDevice", "category": "Other"},
-        "unique_id": "00:00:00:00:00:00",
-        "source": config_entries.SOURCE_UNIGNORE,
-    }
-
-    # User initiates pairing by clicking on 'configure' - device enters pairing mode and displays code
-    result = await hass.config_entries.flow.async_configure(result["flow_id"])
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "pair"
-
-    # Pairing finalized
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={"pairing_code": "111-22-333"}
-    )
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Koogeek-LS1-20833F"
-
-
-async def test_unignore_ignores_missing_devices(
-    hass: HomeAssistant, controller
-) -> None:
-    """Test rediscovery triggered disovers handle devices that have gone away."""
-    setup_mock_accessory(controller)
-
-    # Device is unignored
-    result = await hass.config_entries.flow.async_init(
-        "homekit_controller",
-        context={"source": config_entries.SOURCE_UNIGNORE},
-        data={"unique_id": "00:00:00:00:00:01"},
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "accessory_not_found_error"
-
-
 async def test_discovery_dismiss_existing_flow_on_paired(
     hass: HomeAssistant, controller
 ) -> None:

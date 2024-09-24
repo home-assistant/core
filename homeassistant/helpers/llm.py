@@ -14,16 +14,16 @@ import slugify as unicode_slug
 import voluptuous as vol
 from voluptuous_openapi import UNSUPPORTED, convert
 
-from homeassistant.components.climate.intent import INTENT_GET_TEMPERATURE
-from homeassistant.components.conversation.trace import (
+from homeassistant.components.climate import INTENT_GET_TEMPERATURE
+from homeassistant.components.conversation import (
     ConversationTraceEventType,
     async_conversation_trace_append,
 )
-from homeassistant.components.cover.intent import INTENT_CLOSE_COVER, INTENT_OPEN_COVER
-from homeassistant.components.homeassistant.exposed_entities import async_should_expose
+from homeassistant.components.cover import INTENT_CLOSE_COVER, INTENT_OPEN_COVER
+from homeassistant.components.homeassistant import async_should_expose
 from homeassistant.components.intent import async_device_supports_timers
 from homeassistant.components.script import ATTR_VARIABLES, DOMAIN as SCRIPT_DOMAIN
-from homeassistant.components.weather.intent import INTENT_GET_WEATHER
+from homeassistant.components.weather import INTENT_GET_WEATHER
 from homeassistant.const import (
     ATTR_DOMAIN,
     ATTR_ENTITY_ID,

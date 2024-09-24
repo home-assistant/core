@@ -99,21 +99,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: RingConfigEntry) -> bool
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    if hass.services.has_service(DOMAIN, "update"):
-        return True
-
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload Ring entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-    if len(hass.config_entries.async_loaded_entries(DOMAIN)) == 1:
-        # This is the last loaded entry, clean up service
-        hass.services.async_remove(DOMAIN, "update")
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 async def async_remove_config_entry_device(
@@ -142,7 +133,7 @@ async def _migrate_old_unique_ids(hass: HomeAssistant, entry_id: str) -> None:
                     existing_entity_id,
                 )
                 return None
-            _LOGGER.info("Fixing non string unique id %s", entity_entry.unique_id)
+            _LOGGER.debug("Fixing non string unique id %s", entity_entry.unique_id)
             return {"new_unique_id": new_unique_id}
         return None
 
