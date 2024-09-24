@@ -54,7 +54,7 @@ class StarlinkDeviceTrackerEntity(StarlinkEntity, TrackerEntity):
     entity_description: StarlinkDeviceTrackerEntityDescription
 
     @property
-    def source_type(self) -> SourceType | str:
+    def source_type(self) -> SourceType:
         """Return the source type, eg gps or router, of the device."""
         return SourceType.GPS
 
