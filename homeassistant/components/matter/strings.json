@@ -46,6 +46,9 @@
   },
   "entity": {
     "binary_sensor": {
+      "end_of_service": {
+        "name": "End of service"
+      },
       "water_leak": {
         "name": "Water leak"
       },

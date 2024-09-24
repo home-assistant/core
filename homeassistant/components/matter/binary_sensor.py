@@ -168,8 +168,21 @@ DISCOVERY_SCHEMAS = [
             measurement_to_ha=lambda x: x
             == clusters.SmokeCoAlarm.Enums.MuteStateEnum.kMuted,
             translation_key="muted",
+            icon="mdi:bell-off",
         ),
         entity_class=MatterBinarySensor,
         required_attributes=(clusters.SmokeCoAlarm.Attributes.DeviceMuted,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        entity_description=MatterBinarySensorEntityDescription(
+            key="SmokeCoAlarmEndfOfServiceSensor",
+            measurement_to_ha=lambda x: x
+            == clusters.SmokeCoAlarm.Enums.EndOfServiceEnum.kExpired,
+            translation_key="end_of_service",
+            device_class=BinarySensorDeviceClass.PROBLEM,
+        ),
+        entity_class=MatterBinarySensor,
+        required_attributes=(clusters.SmokeCoAlarm.Attributes.BatteryAlert,),
     ),
 ]
