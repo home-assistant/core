@@ -299,6 +299,10 @@ class TrackerEntity(
         return attr
 
 
+class ScannerEntityDescription(BaseTrackerEntityDescription, frozen_or_thawed=True):
+    """A class that describes tracker entities."""
+
+
 CACHED_SCANNER_PROPERTIES_WITH_ATTR_ = {
     "ip_address",
     "mac_address",
@@ -311,6 +315,7 @@ class ScannerEntity(
 ):
     """Base class for a tracked device that is on a scanned network."""
 
+    entity_description: ScannerEntityDescription
     _attr_hostname: str | None = None
     _attr_ip_address: str | None = None
     _attr_mac_address: str | None = None

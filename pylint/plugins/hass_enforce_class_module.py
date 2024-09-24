@@ -39,6 +39,7 @@ _MODULES: dict[str, set[str]] = {
     "device_tracker": {
         "DeviceTrackerEntity",
         "ScannerEntity",
+        "ScannerEntityDescription",
         "TrackerEntity",
         "TrackerEntityDescription",
     },

@@ -21,6 +21,7 @@ from aiounifi.models.event import Event, EventKey
 from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER_DOMAIN,
     ScannerEntity,
+    ScannerEntityDescription,
 )
 from homeassistant.core import Event as core_Event, HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -141,7 +142,9 @@ def async_device_heartbeat_timedelta_fn(hub: UnifiHub, obj_id: str) -> timedelta
 
 
 @dataclass(frozen=True, kw_only=True)
-class UnifiTrackerEntityDescription(UnifiEntityDescription[HandlerT, ApiItemT]):
+class UnifiTrackerEntityDescription(
+    UnifiEntityDescription[HandlerT, ApiItemT], ScannerEntityDescription
+):
     """Class describing UniFi device tracker entity."""
 
     heartbeat_timedelta_fn: Callable[[UnifiHub, str], timedelta]
