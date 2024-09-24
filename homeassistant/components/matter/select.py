@@ -229,18 +229,18 @@ DISCOVERY_SCHEMAS = [
             entity_category=EntityCategory.CONFIG,
             translation_key="startup_on_off",
             options=["On", "Off", "Toggle", "Previous"],
-            measurement_to_ha=lambda x: {  # pylint: disable=unnecessary-lambda
+            measurement_to_ha={
                 0: "Off",
                 1: "On",
                 2: "Toggle",
                 None: "Previous",
-            }.get(x),
-            ha_to_native_value=lambda x: {
+            }.get,
+            ha_to_native_value={
                 "Off": 0,
                 "On": 1,
                 "Toggle": 2,
                 "Previous": None,
-            }[x],
+            }.get,
         ),
         entity_class=MatterSelectEntity,
         required_attributes=(clusters.OnOff.Attributes.StartUpOnOff,),
