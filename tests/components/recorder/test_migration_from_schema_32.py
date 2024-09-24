@@ -3,6 +3,7 @@
 import datetime
 import importlib
 import sys
+import threading
 from typing import Any
 from unittest.mock import patch
 import uuid
@@ -24,6 +25,7 @@ from homeassistant.components.recorder import (
 from homeassistant.components.recorder.db_schema import (
     Events,
     EventTypes,
+    MigrationChanges,
     States,
     StatesMeta,
 )
@@ -338,6 +340,114 @@ async def test_migrate_events_context_ids(
         assert get_index_by_name(session, "events", "ix_events_context_id") is None
 
 
+@pytest.mark.parametrize("persistent_database", [True])
+@pytest.mark.parametrize("enable_migrate_event_context_ids", [True])
+@pytest.mark.usefixtures("hass_storage")  # Prevent test hass from writing to storage
+async def test_finish_migrate_events_context_ids(
+    async_test_recorder: RecorderInstanceGenerator,
+) -> None:
+    """Test we re migrate old uuid context ids and ulid context ids to binary format.
+
+    Before PR https://github.com/home-assistant/core/pull/125214, the migrator would
+    mark the migration as done before ensuring unused indices were dropped. This
+    test makes sure we drop the unused indices.
+    """
+    importlib.import_module(SCHEMA_MODULE)
+    old_db_schema = sys.modules[SCHEMA_MODULE]
+
+    def _insert_migration():
+        with session_scope(hass=hass) as session:
+            session.merge(
+                MigrationChanges(
+                    migration_id=migration.EventsContextIDMigration.migration_id,
+                    version=1,
+                )
+            )
+
+    # Create database with old schema
+    with (
+        patch.object(recorder, "db_schema", old_db_schema),
+        patch.object(migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION),
+        patch.object(migration.EventsContextIDMigration, "migrate_data"),
+        patch.object(
+            migration.EventIDPostMigration,
+            "needs_migrate_impl",
+            return_value=migration.DataMigrationStatus(
+                needs_migrate=False, migration_done=True
+            ),
+        ),
+        patch(CREATE_ENGINE_TARGET, new=_create_engine_test),
+    ):
+        async with (
+            async_test_home_assistant() as hass,
+            async_test_recorder(hass) as instance,
+        ):
+            instance.recorder_and_worker_thread_ids.add(threading.get_ident())
+
+            await hass.async_block_till_done()
+            await async_wait_recording_done(hass)
+
+            # Check the index which will be removed by the migrator exists
+            with session_scope(hass=hass) as session:
+                assert get_index_by_name(session, "events", "ix_events_context_id")
+
+            await hass.async_stop()
+            await hass.async_block_till_done()
+
+    # Run once with new schema, fake migration did not complete
+    with (
+        patch.object(migration.EventsContextIDMigration, "migrate_data"),
+        patch(CREATE_ENGINE_TARGET, new=_create_engine_test),
+    ):
+        async with (
+            async_test_home_assistant() as hass,
+            async_test_recorder(hass) as instance,
+        ):
+            instance.recorder_and_worker_thread_ids.add(threading.get_ident())
+
+            await hass.async_block_till_done()
+            await async_wait_recording_done(hass)
+            await async_wait_recording_done(hass)
+
+            # Fake migration ran with old version
+            await instance.async_add_executor_job(_insert_migration)
+            await async_wait_recording_done(hass)
+
+            # Check the index which will be removed by the migrator exists
+            with session_scope(hass=hass) as session:
+                assert get_index_by_name(session, "events", "ix_events_context_id")
+
+            await hass.async_stop()
+            await hass.async_block_till_done()
+
+    # Run again with new schema, let migration complete
+    async with (
+        async_test_home_assistant() as hass,
+        async_test_recorder(hass) as instance,
+    ):
+        instance.recorder_and_worker_thread_ids.add(threading.get_ident())
+
+        await hass.async_block_till_done()
+        await async_wait_recording_done(hass)
+        await async_wait_recording_done(hass)
+
+        migration_changes = await instance.async_add_executor_job(
+            _get_migration_id, hass
+        )
+        # Check migration ran again
+        assert (
+            migration_changes[migration.EventsContextIDMigration.migration_id]
+            == migration.EventsContextIDMigration.migration_version
+        )
+
+        # Check the index which will be removed by the migrator no longer exists
+        with session_scope(hass=hass) as session:
+            assert get_index_by_name(session, "events", "ix_events_context_id") is None
+
+        await hass.async_stop()
+        await hass.async_block_till_done()
+
+
 @pytest.mark.parametrize("enable_migrate_state_context_ids", [True])
 @pytest.mark.usefixtures("db_schema_32")
 async def test_migrate_states_context_ids(
@@ -538,6 +648,114 @@ async def test_migrate_states_context_ids(
     # Check the index which will be removed by the migrator no longer exists
     with session_scope(hass=hass) as session:
         assert get_index_by_name(session, "states", "ix_states_context_id") is None
+
+
+@pytest.mark.parametrize("persistent_database", [True])
+@pytest.mark.parametrize("enable_migrate_state_context_ids", [True])
+@pytest.mark.usefixtures("hass_storage")  # Prevent test hass from writing to storage
+async def test_finish_migrate_states_context_ids(
+    async_test_recorder: RecorderInstanceGenerator,
+) -> None:
+    """Test we re migrate old uuid context ids and ulid context ids to binary format.
+
+    Before PR https://github.com/home-assistant/core/pull/125214, the migrator would
+    mark the migration as done before ensuring unused indices were dropped. This
+    test makes sure we drop the unused indices.
+    """
+    importlib.import_module(SCHEMA_MODULE)
+    old_db_schema = sys.modules[SCHEMA_MODULE]
+
+    def _insert_migration():
+        with session_scope(hass=hass) as session:
+            session.merge(
+                MigrationChanges(
+                    migration_id=migration.StatesContextIDMigration.migration_id,
+                    version=1,
+                )
+            )
+
+    # Create database with old schema
+    with (
+        patch.object(recorder, "db_schema", old_db_schema),
+        patch.object(migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION),
+        patch.object(migration.StatesContextIDMigration, "migrate_data"),
+        patch.object(
+            migration.EventIDPostMigration,
+            "needs_migrate_impl",
+            return_value=migration.DataMigrationStatus(
+                needs_migrate=False, migration_done=True
+            ),
+        ),
+        patch(CREATE_ENGINE_TARGET, new=_create_engine_test),
+    ):
+        async with (
+            async_test_home_assistant() as hass,
+            async_test_recorder(hass) as instance,
+        ):
+            instance.recorder_and_worker_thread_ids.add(threading.get_ident())
+
+            await hass.async_block_till_done()
+            await async_wait_recording_done(hass)
+
+            # Check the index which will be removed by the migrator exists
+            with session_scope(hass=hass) as session:
+                assert get_index_by_name(session, "states", "ix_states_context_id")
+
+            await hass.async_stop()
+            await hass.async_block_till_done()
+
+    # Run once with new schema, fake migration did not complete
+    with (
+        patch.object(migration.StatesContextIDMigration, "migrate_data"),
+        patch(CREATE_ENGINE_TARGET, new=_create_engine_test),
+    ):
+        async with (
+            async_test_home_assistant() as hass,
+            async_test_recorder(hass) as instance,
+        ):
+            instance.recorder_and_worker_thread_ids.add(threading.get_ident())
+
+            await hass.async_block_till_done()
+            await async_wait_recording_done(hass)
+            await async_wait_recording_done(hass)
+
+            # Fake migration ran with old version
+            await instance.async_add_executor_job(_insert_migration)
+            await async_wait_recording_done(hass)
+
+            # Check the index which will be removed by the migrator exists
+            with session_scope(hass=hass) as session:
+                assert get_index_by_name(session, "states", "ix_states_context_id")
+
+            await hass.async_stop()
+            await hass.async_block_till_done()
+
+    # Run again with new schema, let migration complete
+    async with (
+        async_test_home_assistant() as hass,
+        async_test_recorder(hass) as instance,
+    ):
+        instance.recorder_and_worker_thread_ids.add(threading.get_ident())
+
+        await hass.async_block_till_done()
+        await async_wait_recording_done(hass)
+        await async_wait_recording_done(hass)
+
+        migration_changes = await instance.async_add_executor_job(
+            _get_migration_id, hass
+        )
+        # Check migration ran again
+        assert (
+            migration_changes[migration.StatesContextIDMigration.migration_id]
+            == migration.StatesContextIDMigration.migration_version
+        )
+
+        # Check the index which will be removed by the migrator no longer exists
+        with session_scope(hass=hass) as session:
+            assert get_index_by_name(session, "states", "ix_states_context_id") is None
+
+        await hass.async_stop()
+        await hass.async_block_till_done()
 
 
 @pytest.mark.parametrize("enable_migrate_event_type_ids", [True])

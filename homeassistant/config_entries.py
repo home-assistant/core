@@ -196,7 +196,7 @@ SIGNAL_CONFIG_ENTRY_CHANGED = SignalType["ConfigEntryChange", "ConfigEntry"](
 @cache
 def signal_discovered_config_entry_removed(
     discovery_domain: str,
-) -> SignalType[ConfigEntryChange, ConfigEntry]:
+) -> SignalType[ConfigEntry]:
     """Format signal."""
     return SignalType(f"{discovery_domain}_discovered_config_entry_removed")
 
@@ -1388,7 +1388,6 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager[ConfigFlowResult]):
                         result["handler"], unique_id
                     )
                 )
-                and entry.source == SOURCE_IGNORE
                 and discovery_key
                 not in (
                     known_discovery_keys := entry.discovery_keys.get(
@@ -1875,7 +1874,6 @@ class ConfigEntries:
             async_dispatcher_send_internal(
                 self.hass,
                 signal_discovered_config_entry_removed(discovery_domain),
-                ConfigEntryChange.REMOVED,
                 entry,
             )
         return {"require_restart": not unload_success}
