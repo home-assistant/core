@@ -23,7 +23,6 @@ from .handler import (
     HassioAPIError,
     async_create_backup,
     async_get_addon_discovery_info,
-    async_install_addon,
     async_set_addon_options,
     async_update_addon,
     get_supervisor_client,
@@ -198,7 +197,7 @@ class AddonManager:
 
         self._check_addon_available(addon_info)
 
-        await async_install_addon(self._hass, self.addon_slug)
+        await get_supervisor_client(self._hass).store.install_addon(self.addon_slug)
 
     @api_error("Failed to uninstall the {addon_name} add-on")
     async def async_uninstall_addon(self) -> None:

@@ -301,13 +301,12 @@ def install_addon_side_effect_fixture(
 
 @pytest.fixture(name="install_addon")
 def install_addon_fixture(
+    supervisor_client: AsyncMock,
     install_addon_side_effect: Any | None,
-) -> Generator[AsyncMock]:
+) -> AsyncMock:
     """Mock install add-on."""
-    # pylint: disable-next=import-outside-toplevel
-    from .hassio.common import mock_install_addon
-
-    yield from mock_install_addon(install_addon_side_effect)
+    supervisor_client.store.install_addon.side_effect = install_addon_side_effect
+    return supervisor_client.store.install_addon
 
 
 @pytest.fixture(name="start_addon_side_effect")

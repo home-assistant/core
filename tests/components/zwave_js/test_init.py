@@ -600,7 +600,7 @@ async def test_install_addon(
 
     assert entry.state is ConfigEntryState.SETUP_RETRY
     assert install_addon.call_count == 1
-    assert install_addon.call_args == call(hass, "core_zwave_js")
+    assert install_addon.call_args == call("core_zwave_js")
     assert set_addon_options.call_count == 1
     assert set_addon_options.call_args == call(
         hass, "core_zwave_js", {"options": addon_options}

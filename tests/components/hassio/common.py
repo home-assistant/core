@@ -61,7 +61,7 @@ def mock_addon_store_info(
         spec=StoreAddonComplete,
         slug="test",
         repository="core",
-        available=False,
+        available=True,
         installed=False,
         update_available=False,
         version="1.0.0",
@@ -137,7 +137,7 @@ def mock_install_addon_side_effect(
 ) -> Any | None:
     """Return the install add-on side effect."""
 
-    async def install_addon(hass: HomeAssistant, slug):
+    async def install_addon(addon: str):
         """Mock install add-on."""
         addon_store_info.return_value.available = True
         addon_store_info.return_value.installed = True
@@ -146,16 +146,6 @@ def mock_install_addon_side_effect(
         addon_info.return_value.version = "1.0.0"
 
     return install_addon
-
-
-def mock_install_addon(install_addon_side_effect: Any | None) -> Generator[AsyncMock]:
-    """Mock install add-on."""
-
-    with patch(
-        "homeassistant.components.hassio.addon_manager.async_install_addon",
-        side_effect=install_addon_side_effect,
-    ) as install_addon:
-        yield install_addon
 
 
 def mock_start_addon_side_effect(

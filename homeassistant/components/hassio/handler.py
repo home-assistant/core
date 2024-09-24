@@ -75,18 +75,6 @@ async def async_update_diagnostics(hass: HomeAssistant, diagnostics: bool) -> bo
 
 @bind_hass
 @api_data
-async def async_install_addon(hass: HomeAssistant, slug: str) -> dict:
-    """Install add-on.
-
-    The caller of the function should handle HassioAPIError.
-    """
-    hassio: HassIO = hass.data[DOMAIN]
-    command = f"/addons/{slug}/install"
-    return await hassio.send_command(command, timeout=None)
-
-
-@bind_hass
-@api_data
 async def async_update_addon(
     hass: HomeAssistant,
     slug: str,

@@ -583,7 +583,7 @@ async def test_usb_discovery(
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    assert install_addon.call_args == call(hass, "core_zwave_js")
+    assert install_addon.call_args == call("core_zwave_js")
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "configure_addon"
@@ -881,7 +881,7 @@ async def test_discovery_addon_not_installed(
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    assert install_addon.call_args == call(hass, "core_zwave_js")
+    assert install_addon.call_args == call("core_zwave_js")
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "configure_addon"
@@ -1700,7 +1700,7 @@ async def test_addon_not_installed(
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    assert install_addon.call_args == call(hass, "core_zwave_js")
+    assert install_addon.call_args == call("core_zwave_js")
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "configure_addon"
@@ -1794,7 +1794,7 @@ async def test_install_addon_failure(
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    assert install_addon.call_args == call(hass, "core_zwave_js")
+    assert install_addon.call_args == call("core_zwave_js")
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "addon_install_failed"
@@ -2685,7 +2685,7 @@ async def test_options_addon_not_installed(
 
     result = await hass.config_entries.options.async_configure(result["flow_id"])
 
-    assert install_addon.call_args == call(hass, "core_zwave_js")
+    assert install_addon.call_args == call("core_zwave_js")
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "configure_addon"

@@ -105,7 +105,6 @@ from .handler import (  # noqa: F401
     async_get_addon_discovery_info,
     async_get_green_settings,
     async_get_yellow_settings,
-    async_install_addon,
     async_reboot_host,
     async_set_addon_options,
     async_set_green_settings,
