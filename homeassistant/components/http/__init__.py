@@ -271,13 +271,24 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     @callback
     def _async_check_ssl_issue(_: Event) -> None:
         # pylint: disable-next=import-outside-toplevel
-        from homeassistant.components.cloud import async_is_connected
+        from homeassistant.components.cloud import (
+            CloudNotAvailable,
+            async_remote_ui_url,
+        )
 
-        if (
-            (hass.config.external_url is None or hass.config.internal_url is None)
-            and ssl_certificate is not None
-            and not async_is_connected(hass)
-        ):
+        create_issue = (
+            hass.config.external_url is None or hass.config.internal_url is None
+        ) and ssl_certificate is not None
+
+        if create_issue:
+            try:
+                async_remote_ui_url(hass)
+            except CloudNotAvailable:
+                create_issue = True
+            else:
+                create_issue = False
+
+        if create_issue:
             ir.async_create_issue(
                 hass,
                 DOMAIN,
