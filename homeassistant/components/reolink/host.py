@@ -30,6 +30,7 @@ from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.network import NoURLAvailableError, get_url
+from homeassistant.util.ssl import SSLCipherList
 
 from .const import CONF_USE_HTTPS, DOMAIN
 from .exceptions import (
@@ -69,7 +70,11 @@ class ReolinkHost:
 
         def get_aiohttp_session() -> aiohttp.ClientSession:
             """Return the HA aiohttp session."""
-            return async_get_clientsession(hass, verify_ssl=False)
+            return async_get_clientsession(
+                hass,
+                verify_ssl=False,
+                ssl_cipher=SSLCipherList.INSECURE,
+            )
 
         self._api = Host(
             config[CONF_HOST],
