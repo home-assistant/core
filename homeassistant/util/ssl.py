@@ -101,8 +101,8 @@ def _client_context(
 
 
 # Create this only once and reuse it
-_DEFAULT_SSL_CONTEXT = _client_context()
-_DEFAULT_NO_VERIFY_SSL_CONTEXT = _client_context_no_verify()
+_DEFAULT_SSL_CONTEXT = _client_context(SSLCipherList.PYTHON_DEFAULT)
+_DEFAULT_NO_VERIFY_SSL_CONTEXT = _client_context_no_verify(SSLCipherList.PYTHON_DEFAULT)
 _NO_VERIFY_SSL_CONTEXTS = {
     SSLCipherList.INTERMEDIATE: _client_context_no_verify(SSLCipherList.INTERMEDIATE),
     SSLCipherList.MODERN: _client_context_no_verify(SSLCipherList.MODERN),
