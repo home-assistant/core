@@ -18,13 +18,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.components.valve import (
-    DOMAIN,
-    ValveDeviceClass,
-    ValveEntity,
-    ValveEntityDescription,
-    ValveEntityFeature,
-)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
@@ -243,7 +236,7 @@ DISCOVERY_SCHEMAS = [
         platform=Platform.SENSOR,
         entity_description=MatterSensorEntityDescription(
             key="EveThermoValvePosition",
-            device_class=ValveDeviceClass.WATER,
+            translation_key="valve_position",
         ),
         entity_class=MatterSensor,
         required_attributes=(EveCluster.Attributes.ValvePosition,),

@@ -401,14 +401,14 @@ async def test_eve_thermo_sensor(
 ) -> None:
     """Test Eve Thermo."""
     # Valve position
-    state = hass.states.get("sensor.eve_thermo_valveposition")
+    state = hass.states.get("sensor.eve_thermo_valve_position")
     assert state
     assert state.state == "10"
 
     set_node_attribute(eve_thermo_node, 1, 319486977, 319422488, 0)
     await trigger_subscription_callback(hass, matter_client)
 
-    state = hass.states.get("sensor.eve_thermo_valveposition")
+    state = hass.states.get("sensor.eve_thermo_valve_position")
     assert state
     assert state.state == "0"
 

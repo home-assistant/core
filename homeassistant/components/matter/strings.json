@@ -168,6 +168,9 @@
       },
       "switch_current_position": {
         "name": "Current switch position"
+      },
+      "valve_position": {
+        "name": "Valve position"
       }
     },
     "switch": {
