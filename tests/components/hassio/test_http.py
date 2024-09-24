@@ -82,7 +82,9 @@ async def test_forward_request_onboarded_user_unallowed_methods(
         # Unauthenticated path
         ("supervisor/info", HTTPStatus.UNAUTHORIZED),
         ("supervisor/logs", HTTPStatus.UNAUTHORIZED),
+        ("supervisor/logs/follow", HTTPStatus.UNAUTHORIZED),
         ("addons/bl_b392/logs", HTTPStatus.UNAUTHORIZED),
+        ("addons/bl_b392/logs/follow", HTTPStatus.UNAUTHORIZED),
     ],
 )
 async def test_forward_request_onboarded_user_unallowed_paths(
@@ -152,7 +154,9 @@ async def test_forward_request_onboarded_noauth_unallowed_methods(
         # Unauthenticated path
         ("supervisor/info", HTTPStatus.UNAUTHORIZED),
         ("supervisor/logs", HTTPStatus.UNAUTHORIZED),
+        ("supervisor/logs/follow", HTTPStatus.UNAUTHORIZED),
         ("addons/bl_b392/logs", HTTPStatus.UNAUTHORIZED),
+        ("addons/bl_b392/logs/follow", HTTPStatus.UNAUTHORIZED),
     ],
 )
 async def test_forward_request_onboarded_noauth_unallowed_paths(
@@ -265,7 +269,9 @@ async def test_forward_request_not_onboarded_unallowed_methods(
         # Unauthenticated path
         ("supervisor/info", HTTPStatus.UNAUTHORIZED),
         ("supervisor/logs", HTTPStatus.UNAUTHORIZED),
+        ("supervisor/logs/follow", HTTPStatus.UNAUTHORIZED),
         ("addons/bl_b392/logs", HTTPStatus.UNAUTHORIZED),
+        ("addons/bl_b392/logs/follow", HTTPStatus.UNAUTHORIZED),
     ],
 )
 async def test_forward_request_not_onboarded_unallowed_paths(
@@ -292,7 +298,9 @@ async def test_forward_request_not_onboarded_unallowed_paths(
         ("addons/bl_b392/icon", False),
         ("backups/1234abcd/info", True),
         ("supervisor/logs", True),
+        ("supervisor/logs/follow", True),
         ("addons/bl_b392/logs", True),
+        ("addons/bl_b392/logs/follow", True),
         ("addons/bl_b392/changelog", True),
         ("addons/bl_b392/documentation", True),
     ],
