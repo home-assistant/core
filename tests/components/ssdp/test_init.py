@@ -938,12 +938,14 @@ async def test_flow_dismiss_on_byebye(
         ),
     ],
 )
+@pytest.mark.parametrize("entry_source", [config_entries.SOURCE_IGNORE])
 async def test_ssdp_rediscover(
     mock_get_ssdp,
     hass: HomeAssistant,
     mock_flow_init,
     entry_domain: str,
     entry_discovery_keys: tuple,
+    entry_source: str,
 ) -> None:
     """Test we reinitiate flows when an ignored config entry is removed."""
     entry = MockConfigEntry(
@@ -951,7 +953,7 @@ async def test_ssdp_rediscover(
         discovery_keys=entry_discovery_keys,
         unique_id="mock-unique-id",
         state=config_entries.ConfigEntryState.LOADED,
-        source=config_entries.SOURCE_IGNORE,
+        source=entry_source,
     )
     entry.add_to_hass(hass)
 
@@ -992,6 +994,102 @@ async def test_ssdp_rediscover(
     assert mock_flow_init.mock_calls[2][2]["context"] == expected_context
     assert (
         mock_flow_init.mock_calls[2][2]["data"]
+        == mock_flow_init.mock_calls[0][2]["data"]
+    )
+
+
+@patch(
+    "homeassistant.components.ssdp.async_get_ssdp",
+    return_value={"mock-domain": [{"st": "mock-st"}]},
+)
+@pytest.mark.parametrize(
+    (
+        "entry_domain",
+        "entry_discovery_keys",
+    ),
+    [
+        # Matching discovery key
+        (
+            "mock-domain",
+            {"ssdp": (DiscoveryKey(domain="ssdp", key="uuid:mock-udn", version=1),)},
+        ),
+        # Matching discovery key
+        (
+            "mock-domain",
+            {
+                "ssdp": (DiscoveryKey(domain="ssdp", key="uuid:mock-udn", version=1),),
+                "other": (DiscoveryKey(domain="other", key="blah", version=1),),
+            },
+        ),
+        # Matching discovery key, other domain
+        # Note: Rediscovery is not currently restricted to the domain of the removed
+        # entry. Such a check can be added if needed.
+        (
+            "comp",
+            {"ssdp": (DiscoveryKey(domain="ssdp", key="uuid:mock-udn", version=1),)},
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    "entry_source", [config_entries.SOURCE_USER, config_entries.SOURCE_ZEROCONF]
+)
+async def test_ssdp_rediscover_2(
+    mock_get_ssdp,
+    hass: HomeAssistant,
+    mock_flow_init,
+    entry_domain: str,
+    entry_discovery_keys: tuple,
+    entry_source: str,
+) -> None:
+    """Test we reinitiate flows when an ignored config entry is removed.
+
+    This test can be merged with test_zeroconf_rediscover when
+    async_step_unignore has been removed from the ConfigFlow base class.
+    """
+    entry = MockConfigEntry(
+        domain=entry_domain,
+        discovery_keys=entry_discovery_keys,
+        unique_id="mock-unique-id",
+        state=config_entries.ConfigEntryState.LOADED,
+        source=entry_source,
+    )
+    entry.add_to_hass(hass)
+
+    mock_ssdp_search_response = _ssdp_headers(
+        {
+            "st": "mock-st",
+            "location": "http://1.1.1.1",
+            "usn": "uuid:mock-udn::mock-st",
+            "server": "mock-server",
+            "ext": "",
+            "_source": "search",
+        }
+    )
+    ssdp_listener = await init_ssdp_component(hass)
+    ssdp_listener._on_search(mock_ssdp_search_response)
+    await hass.async_block_till_done()
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await hass.async_block_till_done()
+
+    expected_context = {
+        "discovery_key": DiscoveryKey(domain="ssdp", key="uuid:mock-udn", version=1),
+        "source": config_entries.SOURCE_SSDP,
+    }
+    assert len(mock_flow_init.mock_calls) == 1
+    assert mock_flow_init.mock_calls[0][1][0] == "mock-domain"
+    assert mock_flow_init.mock_calls[0][2]["context"] == expected_context
+    mock_call_data: ssdp.SsdpServiceInfo = mock_flow_init.mock_calls[0][2]["data"]
+    assert mock_call_data.ssdp_st == "mock-st"
+    assert mock_call_data.ssdp_location == "http://1.1.1.1"
+
+    await hass.config_entries.async_remove(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert len(mock_flow_init.mock_calls) == 2
+    assert mock_flow_init.mock_calls[1][1][0] == "mock-domain"
+    assert mock_flow_init.mock_calls[1][2]["context"] == expected_context
+    assert (
+        mock_flow_init.mock_calls[1][2]["data"]
         == mock_flow_init.mock_calls[0][2]["data"]
     )
 
@@ -1077,81 +1175,3 @@ async def test_ssdp_rediscover_no_match(
     assert len(mock_flow_init.mock_calls) == 2
     assert mock_flow_init.mock_calls[1][1][0] == entry_domain
     assert mock_flow_init.mock_calls[1][2]["context"] == {"source": "unignore"}
-
-
-@patch(
-    "homeassistant.components.ssdp.async_get_ssdp",
-    return_value={"mock-domain": [{"st": "mock-st"}]},
-)
-@pytest.mark.parametrize(
-    (
-        "entry_domain",
-        "entry_discovery_keys",
-        "entry_source",
-        "entry_unique_id",
-    ),
-    [
-        # Source not SOURCE_IGNORE
-        (
-            "mock-domain",
-            {"ssdp": (DiscoveryKey(domain="ssdp", key="uuid:mock-udn", version=1),)},
-            config_entries.SOURCE_SSDP,
-            "mock-unique-id",
-        ),
-    ],
-)
-async def test_ssdp_rediscover_no_match_2(
-    mock_get_ssdp,
-    hass: HomeAssistant,
-    mock_flow_init,
-    entry_domain: str,
-    entry_discovery_keys: tuple,
-    entry_source: str,
-    entry_unique_id: str,
-) -> None:
-    """Test we don't reinitiate flows when a non matching config entry is removed.
-
-    This test can be merged with test_zeroconf_rediscover_no_match when
-    async_step_unignore has been removed from the ConfigFlow base class.
-    """
-    mock_integration(hass, MockModule(entry_domain))
-    entry = MockConfigEntry(
-        domain=entry_domain,
-        discovery_keys=entry_discovery_keys,
-        unique_id=entry_unique_id,
-        state=config_entries.ConfigEntryState.LOADED,
-        source=entry_source,
-    )
-    entry.add_to_hass(hass)
-
-    mock_ssdp_search_response = _ssdp_headers(
-        {
-            "st": "mock-st",
-            "location": "http://1.1.1.1",
-            "usn": "uuid:mock-udn::mock-st",
-            "server": "mock-server",
-            "ext": "",
-            "_source": "search",
-        }
-    )
-    ssdp_listener = await init_ssdp_component(hass)
-    ssdp_listener._on_search(mock_ssdp_search_response)
-    await hass.async_block_till_done()
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
-    await hass.async_block_till_done()
-
-    expected_context = {
-        "discovery_key": DiscoveryKey(domain="ssdp", key="uuid:mock-udn", version=1),
-        "source": config_entries.SOURCE_SSDP,
-    }
-    assert len(mock_flow_init.mock_calls) == 1
-    assert mock_flow_init.mock_calls[0][1][0] == "mock-domain"
-    assert mock_flow_init.mock_calls[0][2]["context"] == expected_context
-    mock_call_data: ssdp.SsdpServiceInfo = mock_flow_init.mock_calls[0][2]["data"]
-    assert mock_call_data.ssdp_st == "mock-st"
-    assert mock_call_data.ssdp_location == "http://1.1.1.1"
-
-    await hass.config_entries.async_remove(entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert len(mock_flow_init.mock_calls) == 1

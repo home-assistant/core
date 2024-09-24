@@ -637,13 +637,11 @@ class Scanner:
         entry: config_entries.ConfigEntry,
     ) -> None:
         """Handle config entry changes."""
-        if entry.source != config_entries.SOURCE_IGNORE:
-            return
         for discovery_key in entry.discovery_keys[DOMAIN]:
             if discovery_key.version != 1 or not isinstance(discovery_key.key, str):
                 continue
             udn = discovery_key.key
-            _LOGGER.debug("Rediscover unignored service %s", udn)
+            _LOGGER.debug("Rediscover service %s", udn)
 
             for ssdp_device in self._ssdp_devices:
                 if ssdp_device.udn != udn:
