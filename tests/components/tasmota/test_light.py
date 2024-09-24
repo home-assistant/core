@@ -13,9 +13,9 @@ from hatasmota.utils import (
 )
 import pytest
 
-from homeassistant.components.light import LightEntityFeature
+from homeassistant.components.light import LightEntityFeature, LightState
 from homeassistant.components.tasmota.const import DEFAULT_PREFIX
-from homeassistant.const import ATTR_ASSUMED_STATE, STATE_OFF, STATE_ON, Platform
+from homeassistant.const import ATTR_ASSUMED_STATE, Platform
 from homeassistant.core import HomeAssistant
 
 from .test_common import (
@@ -353,30 +353,30 @@ async def test_controlling_state_via_mqtt_on_off(
     async_fire_mqtt_message(hass, "tasmota_49A3BC/tele/LWT", "Online")
     await hass.async_block_till_done()
     state = hass.states.get("light.tasmota_test")
-    assert state.state == STATE_OFF
+    assert state.state == LightState.OFF
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
     assert not state.attributes["color_mode"]
 
     async_fire_mqtt_message(hass, "tasmota_49A3BC/tele/STATE", '{"POWER":"ON"}')
     state = hass.states.get("light.tasmota_test")
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     assert state.attributes.get("color_mode") == "onoff"
 
     async_fire_mqtt_message(hass, "tasmota_49A3BC/tele/STATE", '{"POWER":"OFF"}')
     state = hass.states.get("light.tasmota_test")
-    assert state.state == STATE_OFF
+    assert state.state == LightState.OFF
     assert not state.attributes["color_mode"]
 
     async_fire_mqtt_message(hass, "tasmota_49A3BC/stat/RESULT", '{"POWER":"ON"}')
 
     state = hass.states.get("light.tasmota_test")
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     assert state.attributes.get("color_mode") == "onoff"
 
     async_fire_mqtt_message(hass, "tasmota_49A3BC/stat/RESULT", '{"POWER":"OFF"}')
 
     state = hass.states.get("light.tasmota_test")
-    assert state.state == STATE_OFF
+    assert state.state == LightState.OFF
     assert not state.attributes["color_mode"]
 
 
@@ -404,25 +404,25 @@ async def test_controlling_state_via_mqtt_ct(
     async_fire_mqtt_message(hass, "tasmota_49A3BC/tele/LWT", "Online")
     await hass.async_block_till_done()
     state = hass.states.get("light.tasmota_test")
-    assert state.state == STATE_OFF
+    assert state.state == LightState.OFF
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
     assert not state.attributes["color_mode"]
 
     async_fire_mqtt_message(hass, "tasmota_49A3BC/tele/STATE", '{"POWER":"ON"}')
     state = hass.states.get("light.tasmota_test")
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     assert state.attributes.get("color_mode") == "color_temp"
 
     async_fire_mqtt_message(hass, "tasmota_49A3BC/tele/STATE", '{"POWER":"OFF"}')
     state = hass.states.get("light.tasmota_test")
-    assert state.state == STATE_OFF
+    assert state.state == LightState.OFF
     assert not state.attributes["color_mode"]
 
     async_fire_mqtt_message(
         hass, "tasmota_49A3BC/tele/STATE", '{"POWER":"ON","Dimmer":50}'
     )
     state = hass.states.get("light.tasmota_test")
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     assert state.attributes.get("brightness") == 128
     assert state.attributes.get("color_mode") == "color_temp"
 
@@ -430,7 +430,7 @@ async def test_controlling_state_via_mqtt_ct(
         hass, "tasmota_49A3BC/tele/STATE", '{"POWER":"ON","CT":300}'
     )
     state = hass.states.get("light.tasmota_test")
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     assert state.attributes.get("color_temp") == 300
     assert state.attributes.get("color_mode") == "color_temp"
 
@@ -439,7 +439,7 @@ async def test_controlling_state_via_mqtt_ct(
         hass, "tasmota_49A3BC/tele/STATE", '{"POWER":"ON","Color":"255,128"}'
     )
     state = hass.states.get("light.tasmota_test")
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     assert state.attributes.get("color_temp") == 300
     assert state.attributes.get("brightness") == 128
     assert state.attributes.get("color_mode") == "color_temp"
@@ -469,25 +469,25 @@ async def test_controlling_state_via_mqtt_rgbw(
     async_fire_mqtt_message(hass, "tasmota_49A3BC/tele/LWT", "Online")
     await hass.async_block_till_done()
     state = hass.states.get("light.tasmota_test")
-    assert state.state == STATE_OFF
+    assert state.state == LightState.OFF
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
     assert not state.attributes["color_mode"]
 
     async_fire_mqtt_message(hass, "tasmota_49A3BC/tele/STATE", '{"POWER":"ON"}')
     state = hass.states.get("light.tasmota_test")
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     assert state.attributes.get("color_mode") == "hs"
 
     async_fire_mqtt_message(hass, "tasmota_49A3BC/tele/STATE", '{"POWER":"OFF"}')
     state = hass.states.get("light.tasmota_test")
-    assert state.state == STATE_OFF
+    assert state.state == LightState.OFF
     assert not state.attributes["color_mode"]
 
     async_fire_mqtt_message(
         hass, "tasmota_49A3BC/tele/STATE", '{"POWER":"ON","Dimmer":50,"White":0}'
     )
     state = hass.states.get("light.tasmota_test")
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     assert state.attributes.get("brightness") == 128
     assert state.attributes.get("color_mode") == "hs"
 
@@ -495,7 +495,7 @@ async def test_controlling_state_via_mqtt_rgbw(
         hass, "tasmota_49A3BC/tele/STATE", '{"POWER":"ON","Dimmer":75,"White":75}'
     )
     state = hass.states.get("light.tasmota_test")
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     assert state.attributes.get("brightness") == 191
     assert state.attributes.get("color_mode") == "white"
 
@@ -505,7 +505,7 @@ async def test_controlling_state_via_mqtt_rgbw(
         '{"POWER":"ON","Dimmer":50,"HSBColor":"30,100,50","White":0}',
     )
     state = hass.states.get("light.tasmota_test")
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     assert state.attributes.get("brightness") == 128
     assert state.attributes.get("hs_color") == (30, 100)
     assert state.attributes.get("color_mode") == "hs"
@@ -514,7 +514,7 @@ async def test_controlling_state_via_mqtt_rgbw(
         hass, "tasmota_49A3BC/tele/STATE", '{"POWER":"ON","White":50}'
     )
     state = hass.states.get("light.tasmota_test")
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     assert state.attributes.get("brightness") == 128
     assert state.attributes.get("rgb_color") is None
     assert state.attributes.get("color_mode") == "white"
@@ -523,7 +523,7 @@ async def test_controlling_state_via_mqtt_rgbw(
         hass, "tasmota_49A3BC/tele/STATE", '{"POWER":"ON","Dimmer":0}'
     )
     state = hass.states.get("light.tasmota_test")
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     assert state.attributes.get("brightness") == 0
     assert state.attributes.get("rgb_color") is None
     assert state.attributes.get("color_mode") == "white"
@@ -532,18 +532,18 @@ async def test_controlling_state_via_mqtt_rgbw(
         hass, "tasmota_49A3BC/tele/STATE", '{"POWER":"ON","Scheme":3}'
     )
     state = hass.states.get("light.tasmota_test")
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     assert state.attributes.get("effect") == "Cycle down"
 
     async_fire_mqtt_message(hass, "tasmota_49A3BC/stat/RESULT", '{"POWER":"ON"}')
 
     state = hass.states.get("light.tasmota_test")
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
 
     async_fire_mqtt_message(hass, "tasmota_49A3BC/stat/RESULT", '{"POWER":"OFF"}')
 
     state = hass.states.get("light.tasmota_test")
-    assert state.state == STATE_OFF
+    assert state.state == LightState.OFF
 
 
 async def test_controlling_state_via_mqtt_rgbww(
@@ -570,25 +570,25 @@ async def test_controlling_state_via_mqtt_rgbww(
     async_fire_mqtt_message(hass, "tasmota_49A3BC/tele/LWT", "Online")
     await hass.async_block_till_done()
     state = hass.states.get("light.tasmota_test")
-    assert state.state == STATE_OFF
+    assert state.state == LightState.OFF
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
     assert not state.attributes["color_mode"]
 
     async_fire_mqtt_message(hass, "tasmota_49A3BC/tele/STATE", '{"POWER":"ON"}')
     state = hass.states.get("light.tasmota_test")
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     assert state.attributes.get("color_mode") == "color_temp"
 
     async_fire_mqtt_message(hass, "tasmota_49A3BC/tele/STATE", '{"POWER":"OFF"}')
     state = hass.states.get("light.tasmota_test")
-    assert state.state == STATE_OFF
+    assert state.state == LightState.OFF
     assert not state.attributes["color_mode"]
 
     async_fire_mqtt_message(
         hass, "tasmota_49A3BC/tele/STATE", '{"POWER":"ON","Dimmer":50}'
     )
     state = hass.states.get("light.tasmota_test")
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     assert state.attributes.get("brightness") == 128
     assert state.attributes.get("color_mode") == "color_temp"
 
@@ -598,7 +598,7 @@ async def test_controlling_state_via_mqtt_rgbww(
         '{"POWER":"ON","Dimmer":50,"HSBColor":"30,100,50","White":0}',
     )
     state = hass.states.get("light.tasmota_test")
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     assert state.attributes.get("hs_color") == (30, 100)
     assert state.attributes.get("color_mode") == "hs"
 
@@ -606,7 +606,7 @@ async def test_controlling_state_via_mqtt_rgbww(
         hass, "tasmota_49A3BC/tele/STATE", '{"POWER":"ON","White":50}'
     )
     state = hass.states.get("light.tasmota_test")
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     # Setting white > 0 should clear the color
     assert not state.attributes.get("hs_color")
     assert state.attributes.get("color_mode") == "color_temp"
@@ -615,7 +615,7 @@ async def test_controlling_state_via_mqtt_rgbww(
         hass, "tasmota_49A3BC/tele/STATE", '{"POWER":"ON","CT":300}'
     )
     state = hass.states.get("light.tasmota_test")
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     assert state.attributes.get("color_temp") == 300
     assert state.attributes.get("color_mode") == "color_temp"
 
@@ -623,7 +623,7 @@ async def test_controlling_state_via_mqtt_rgbww(
         hass, "tasmota_49A3BC/tele/STATE", '{"POWER":"ON","White":0}'
     )
     state = hass.states.get("light.tasmota_test")
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     # Setting white to 0 should clear the color_temp
     assert not state.attributes.get("color_temp")
     assert state.attributes.get("hs_color") == (30, 100)
@@ -633,18 +633,18 @@ async def test_controlling_state_via_mqtt_rgbww(
         hass, "tasmota_49A3BC/tele/STATE", '{"POWER":"ON","Scheme":3}'
     )
     state = hass.states.get("light.tasmota_test")
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     assert state.attributes.get("effect") == "Cycle down"
 
     async_fire_mqtt_message(hass, "tasmota_49A3BC/stat/RESULT", '{"POWER":"ON"}')
 
     state = hass.states.get("light.tasmota_test")
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
 
     async_fire_mqtt_message(hass, "tasmota_49A3BC/stat/RESULT", '{"POWER":"OFF"}')
 
     state = hass.states.get("light.tasmota_test")
-    assert state.state == STATE_OFF
+    assert state.state == LightState.OFF
 
 
 async def test_controlling_state_via_mqtt_rgbww_tuya(
@@ -672,25 +672,25 @@ async def test_controlling_state_via_mqtt_rgbww_tuya(
     async_fire_mqtt_message(hass, "tasmota_49A3BC/tele/LWT", "Online")
     await hass.async_block_till_done()
     state = hass.states.get("light.tasmota_test")
-    assert state.state == STATE_OFF
+    assert state.state == LightState.OFF
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
     assert not state.attributes["color_mode"]
 
     async_fire_mqtt_message(hass, "tasmota_49A3BC/tele/STATE", '{"POWER":"ON"}')
     state = hass.states.get("light.tasmota_test")
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     assert state.attributes.get("color_mode") == "color_temp"
 
     async_fire_mqtt_message(hass, "tasmota_49A3BC/tele/STATE", '{"POWER":"OFF"}')
     state = hass.states.get("light.tasmota_test")
-    assert state.state == STATE_OFF
+    assert state.state == LightState.OFF
     assert not state.attributes["color_mode"]
 
     async_fire_mqtt_message(
         hass, "tasmota_49A3BC/tele/STATE", '{"POWER":"ON","Dimmer":50}'
     )
     state = hass.states.get("light.tasmota_test")
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     assert state.attributes.get("brightness") == 128
     assert state.attributes.get("color_mode") == "color_temp"
 
@@ -700,7 +700,7 @@ async def test_controlling_state_via_mqtt_rgbww_tuya(
         '{"POWER":"ON","HSBColor":"30,100,0","White":0}',
     )
     state = hass.states.get("light.tasmota_test")
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     assert state.attributes.get("hs_color") == (30, 100)
     assert state.attributes.get("color_mode") == "hs"
 
@@ -710,7 +710,7 @@ async def test_controlling_state_via_mqtt_rgbww_tuya(
         '{"POWER":"ON","Dimmer":0}',
     )
     state = hass.states.get("light.tasmota_test")
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     assert state.attributes.get("hs_color") == (30, 100)
     assert state.attributes.get("color_mode") == "hs"
 
@@ -718,7 +718,7 @@ async def test_controlling_state_via_mqtt_rgbww_tuya(
         hass, "tasmota_49A3BC/tele/STATE", '{"POWER":"ON","Dimmer":50,"White":50}'
     )
     state = hass.states.get("light.tasmota_test")
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     # Setting white > 0 should clear the color
     assert not state.attributes.get("hs_color")
     assert state.attributes.get("color_mode") == "color_temp"
@@ -727,7 +727,7 @@ async def test_controlling_state_via_mqtt_rgbww_tuya(
         hass, "tasmota_49A3BC/tele/STATE", '{"POWER":"ON","CT":300}'
     )
     state = hass.states.get("light.tasmota_test")
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     assert state.attributes.get("color_temp") == 300
     assert state.attributes.get("color_mode") == "color_temp"
 
@@ -735,7 +735,7 @@ async def test_controlling_state_via_mqtt_rgbww_tuya(
         hass, "tasmota_49A3BC/tele/STATE", '{"POWER":"ON","White":0}'
     )
     state = hass.states.get("light.tasmota_test")
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     # Setting white to 0 should clear the color_temp
     assert not state.attributes.get("color_temp")
     assert state.attributes.get("color_mode") == "hs"
@@ -744,18 +744,18 @@ async def test_controlling_state_via_mqtt_rgbww_tuya(
         hass, "tasmota_49A3BC/tele/STATE", '{"POWER":"ON","Scheme":3}'
     )
     state = hass.states.get("light.tasmota_test")
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     assert state.attributes.get("effect") == "Cycle down"
 
     async_fire_mqtt_message(hass, "tasmota_49A3BC/stat/RESULT", '{"POWER":"ON"}')
 
     state = hass.states.get("light.tasmota_test")
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
 
     async_fire_mqtt_message(hass, "tasmota_49A3BC/stat/RESULT", '{"POWER":"OFF"}')
 
     state = hass.states.get("light.tasmota_test")
-    assert state.state == STATE_OFF
+    assert state.state == LightState.OFF
 
 
 async def test_sending_mqtt_commands_on_off(
@@ -777,7 +777,7 @@ async def test_sending_mqtt_commands_on_off(
     async_fire_mqtt_message(hass, "tasmota_49A3BC/tele/LWT", "Online")
     await hass.async_block_till_done()
     state = hass.states.get("light.tasmota_test")
-    assert state.state == STATE_OFF
+    assert state.state == LightState.OFF
     await hass.async_block_till_done()
     await hass.async_block_till_done()
     mqtt_mock.async_publish.reset_mock()
@@ -791,7 +791,7 @@ async def test_sending_mqtt_commands_on_off(
 
     # Tasmota is not optimistic, the state should still be off
     state = hass.states.get("light.tasmota_test")
-    assert state.state == STATE_OFF
+    assert state.state == LightState.OFF
 
     # Turn the light off and verify MQTT message is sent
     await common.async_turn_off(hass, "light.tasmota_test")
@@ -821,7 +821,7 @@ async def test_sending_mqtt_commands_rgbww_tuya(
     async_fire_mqtt_message(hass, "tasmota_49A3BC/tele/LWT", "Online")
     await hass.async_block_till_done()
     state = hass.states.get("light.tasmota_test")
-    assert state.state == STATE_OFF
+    assert state.state == LightState.OFF
     await hass.async_block_till_done()
     await hass.async_block_till_done()
     mqtt_mock.async_publish.reset_mock()
@@ -835,7 +835,7 @@ async def test_sending_mqtt_commands_rgbww_tuya(
 
     # Tasmota is not optimistic, the state should still be off
     state = hass.states.get("light.tasmota_test")
-    assert state.state == STATE_OFF
+    assert state.state == LightState.OFF
 
     # Turn the light off and verify MQTT message is sent
     await common.async_turn_off(hass, "light.tasmota_test")
@@ -871,7 +871,7 @@ async def test_sending_mqtt_commands_rgbw_legacy(
     async_fire_mqtt_message(hass, "tasmota_49A3BC/tele/LWT", "Online")
     await hass.async_block_till_done()
     state = hass.states.get("light.tasmota_test")
-    assert state.state == STATE_OFF
+    assert state.state == LightState.OFF
     await hass.async_block_till_done()
     await hass.async_block_till_done()
     mqtt_mock.async_publish.reset_mock()
@@ -885,7 +885,7 @@ async def test_sending_mqtt_commands_rgbw_legacy(
 
     # Tasmota is not optimistic, the state should still be off
     state = hass.states.get("light.tasmota_test")
-    assert state.state == STATE_OFF
+    assert state.state == LightState.OFF
 
     # Turn the light off and verify MQTT message is sent
     await common.async_turn_off(hass, "light.tasmota_test")
@@ -970,7 +970,7 @@ async def test_sending_mqtt_commands_rgbw(
     async_fire_mqtt_message(hass, "tasmota_49A3BC/tele/LWT", "Online")
     await hass.async_block_till_done()
     state = hass.states.get("light.tasmota_test")
-    assert state.state == STATE_OFF
+    assert state.state == LightState.OFF
     await hass.async_block_till_done()
     await hass.async_block_till_done()
     mqtt_mock.async_publish.reset_mock()
@@ -984,7 +984,7 @@ async def test_sending_mqtt_commands_rgbw(
 
     # Tasmota is not optimistic, the state should still be off
     state = hass.states.get("light.tasmota_test")
-    assert state.state == STATE_OFF
+    assert state.state == LightState.OFF
 
     # Turn the light off and verify MQTT message is sent
     await common.async_turn_off(hass, "light.tasmota_test")
@@ -1069,7 +1069,7 @@ async def test_sending_mqtt_commands_rgbww(
     async_fire_mqtt_message(hass, "tasmota_49A3BC/tele/LWT", "Online")
     await hass.async_block_till_done()
     state = hass.states.get("light.tasmota_test")
-    assert state.state == STATE_OFF
+    assert state.state == LightState.OFF
     await hass.async_block_till_done()
     await hass.async_block_till_done()
     mqtt_mock.async_publish.reset_mock()
@@ -1083,7 +1083,7 @@ async def test_sending_mqtt_commands_rgbww(
 
     # Tasmota is not optimistic, the state should still be off
     state = hass.states.get("light.tasmota_test")
-    assert state.state == STATE_OFF
+    assert state.state == LightState.OFF
 
     # Turn the light off and verify MQTT message is sent
     await common.async_turn_off(hass, "light.tasmota_test")
@@ -1147,7 +1147,7 @@ async def test_sending_mqtt_commands_power_unlinked(
     async_fire_mqtt_message(hass, "tasmota_49A3BC/tele/LWT", "Online")
     await hass.async_block_till_done()
     state = hass.states.get("light.tasmota_test")
-    assert state.state == STATE_OFF
+    assert state.state == LightState.OFF
     await hass.async_block_till_done()
     await hass.async_block_till_done()
     mqtt_mock.async_publish.reset_mock()
@@ -1161,7 +1161,7 @@ async def test_sending_mqtt_commands_power_unlinked(
 
     # Tasmota is not optimistic, the state should still be off
     state = hass.states.get("light.tasmota_test")
-    assert state.state == STATE_OFF
+    assert state.state == LightState.OFF
 
     # Turn the light off and verify MQTT message is sent
     await common.async_turn_off(hass, "light.tasmota_test")
@@ -1200,7 +1200,7 @@ async def test_transition(
     async_fire_mqtt_message(hass, "tasmota_49A3BC/tele/LWT", "Online")
     await hass.async_block_till_done()
     state = hass.states.get("light.tasmota_test")
-    assert state.state == STATE_OFF
+    assert state.state == LightState.OFF
     await hass.async_block_till_done()
     await hass.async_block_till_done()
     mqtt_mock.async_publish.reset_mock()
@@ -1252,7 +1252,7 @@ async def test_transition(
         hass, "tasmota_49A3BC/tele/STATE", '{"POWER":"ON","Dimmer":50}'
     )
     state = hass.states.get("light.tasmota_test")
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     assert state.attributes.get("brightness") == 128
 
     # Dim the light from 50->0: Speed should be 6*2*2=24
@@ -1270,7 +1270,7 @@ async def test_transition(
         hass, "tasmota_49A3BC/tele/STATE", '{"POWER":"ON","Dimmer":100}'
     )
     state = hass.states.get("light.tasmota_test")
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     assert state.attributes.get("brightness") == 255
 
     # Dim the light from 100->0: Speed should be 0
@@ -1293,7 +1293,7 @@ async def test_transition(
         ),
     )
     state = hass.states.get("light.tasmota_test")
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     assert state.attributes.get("brightness") == 128
     assert state.attributes.get("rgb_color") == (0, 255, 0)
 
@@ -1319,7 +1319,7 @@ async def test_transition(
         '{"POWER":"ON","Dimmer":100, "Color":"0,255,0","HSBColor":"120,100,50"}',
     )
     state = hass.states.get("light.tasmota_test")
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     assert state.attributes.get("brightness") == 255
     assert state.attributes.get("rgb_color") == (0, 255, 0)
 
@@ -1345,7 +1345,7 @@ async def test_transition(
         '{"POWER":"ON","Dimmer":50, "CT":153, "White":50}',
     )
     state = hass.states.get("light.tasmota_test")
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     assert state.attributes.get("brightness") == 128
     assert state.attributes.get("color_temp") == 153
 
@@ -1364,7 +1364,7 @@ async def test_transition(
         hass, "tasmota_49A3BC/tele/STATE", '{"POWER":"ON","Dimmer":50, "CT":500}'
     )
     state = hass.states.get("light.tasmota_test")
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     assert state.attributes.get("brightness") == 128
     assert state.attributes.get("color_temp") == 500
 
@@ -1399,7 +1399,7 @@ async def test_transition_fixed(
     async_fire_mqtt_message(hass, "tasmota_49A3BC/tele/LWT", "Online")
     await hass.async_block_till_done()
     state = hass.states.get("light.tasmota_test")
-    assert state.state == STATE_OFF
+    assert state.state == LightState.OFF
     await hass.async_block_till_done()
     await hass.async_block_till_done()
     mqtt_mock.async_publish.reset_mock()

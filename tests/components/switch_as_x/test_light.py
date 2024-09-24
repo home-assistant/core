@@ -10,6 +10,7 @@ from homeassistant.components.light import (
     ATTR_SUPPORTED_COLOR_MODES,
     DOMAIN as LIGHT_DOMAIN,
     ColorMode,
+    LightState,
 )
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.components.switch_as_x.config_flow import SwitchAsXConfigFlowHandler
@@ -84,7 +85,7 @@ async def test_light_service_calls(hass: HomeAssistant) -> None:
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert hass.states.get("light.decorative_lights").state == STATE_ON
+    assert hass.states.get("light.decorative_lights").state == LightState.ON
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
@@ -94,7 +95,7 @@ async def test_light_service_calls(hass: HomeAssistant) -> None:
     )
 
     assert hass.states.get("switch.decorative_lights").state == STATE_OFF
-    assert hass.states.get("light.decorative_lights").state == STATE_OFF
+    assert hass.states.get("light.decorative_lights").state == LightState.OFF
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
@@ -104,7 +105,7 @@ async def test_light_service_calls(hass: HomeAssistant) -> None:
     )
 
     assert hass.states.get("switch.decorative_lights").state == STATE_ON
-    assert hass.states.get("light.decorative_lights").state == STATE_ON
+    assert hass.states.get("light.decorative_lights").state == LightState.ON
     assert (
         hass.states.get("light.decorative_lights").attributes.get(ATTR_COLOR_MODE)
         == ColorMode.ONOFF
@@ -118,7 +119,7 @@ async def test_light_service_calls(hass: HomeAssistant) -> None:
     )
 
     assert hass.states.get("switch.decorative_lights").state == STATE_OFF
-    assert hass.states.get("light.decorative_lights").state == STATE_OFF
+    assert hass.states.get("light.decorative_lights").state == LightState.OFF
 
 
 async def test_switch_service_calls(hass: HomeAssistant) -> None:
@@ -141,7 +142,7 @@ async def test_switch_service_calls(hass: HomeAssistant) -> None:
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert hass.states.get("light.decorative_lights").state == STATE_ON
+    assert hass.states.get("light.decorative_lights").state == LightState.ON
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
@@ -151,7 +152,7 @@ async def test_switch_service_calls(hass: HomeAssistant) -> None:
     )
 
     assert hass.states.get("switch.decorative_lights").state == STATE_OFF
-    assert hass.states.get("light.decorative_lights").state == STATE_OFF
+    assert hass.states.get("light.decorative_lights").state == LightState.OFF
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
@@ -161,7 +162,7 @@ async def test_switch_service_calls(hass: HomeAssistant) -> None:
     )
 
     assert hass.states.get("switch.decorative_lights").state == STATE_ON
-    assert hass.states.get("light.decorative_lights").state == STATE_ON
+    assert hass.states.get("light.decorative_lights").state == LightState.ON
 
 
 async def test_light_service_calls_inverted(hass: HomeAssistant) -> None:
@@ -184,7 +185,7 @@ async def test_light_service_calls_inverted(hass: HomeAssistant) -> None:
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert hass.states.get("light.decorative_lights").state == STATE_ON
+    assert hass.states.get("light.decorative_lights").state == LightState.ON
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
@@ -194,7 +195,7 @@ async def test_light_service_calls_inverted(hass: HomeAssistant) -> None:
     )
 
     assert hass.states.get("switch.decorative_lights").state == STATE_OFF
-    assert hass.states.get("light.decorative_lights").state == STATE_OFF
+    assert hass.states.get("light.decorative_lights").state == LightState.OFF
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
@@ -204,7 +205,7 @@ async def test_light_service_calls_inverted(hass: HomeAssistant) -> None:
     )
 
     assert hass.states.get("switch.decorative_lights").state == STATE_ON
-    assert hass.states.get("light.decorative_lights").state == STATE_ON
+    assert hass.states.get("light.decorative_lights").state == LightState.ON
     assert (
         hass.states.get("light.decorative_lights").attributes.get(ATTR_COLOR_MODE)
         == ColorMode.ONOFF
@@ -218,7 +219,7 @@ async def test_light_service_calls_inverted(hass: HomeAssistant) -> None:
     )
 
     assert hass.states.get("switch.decorative_lights").state == STATE_OFF
-    assert hass.states.get("light.decorative_lights").state == STATE_OFF
+    assert hass.states.get("light.decorative_lights").state == LightState.OFF
 
 
 async def test_switch_service_calls_inverted(hass: HomeAssistant) -> None:
@@ -241,7 +242,7 @@ async def test_switch_service_calls_inverted(hass: HomeAssistant) -> None:
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert hass.states.get("light.decorative_lights").state == STATE_ON
+    assert hass.states.get("light.decorative_lights").state == LightState.ON
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
@@ -251,7 +252,7 @@ async def test_switch_service_calls_inverted(hass: HomeAssistant) -> None:
     )
 
     assert hass.states.get("switch.decorative_lights").state == STATE_OFF
-    assert hass.states.get("light.decorative_lights").state == STATE_OFF
+    assert hass.states.get("light.decorative_lights").state == LightState.OFF
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
@@ -261,4 +262,4 @@ async def test_switch_service_calls_inverted(hass: HomeAssistant) -> None:
     )
 
     assert hass.states.get("switch.decorative_lights").state == STATE_ON
-    assert hass.states.get("light.decorative_lights").state == STATE_ON
+    assert hass.states.get("light.decorative_lights").state == LightState.ON

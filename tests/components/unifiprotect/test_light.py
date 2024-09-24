@@ -7,15 +7,9 @@ from unittest.mock import AsyncMock, Mock
 from uiprotect.data import Light
 from uiprotect.data.types import LEDLevel
 
-from homeassistant.components.light import ATTR_BRIGHTNESS
+from homeassistant.components.light import ATTR_BRIGHTNESS, LightState
 from homeassistant.components.unifiprotect.const import DEFAULT_ATTRIBUTION
-from homeassistant.const import (
-    ATTR_ATTRIBUTION,
-    ATTR_ENTITY_ID,
-    STATE_OFF,
-    STATE_ON,
-    Platform,
-)
+from homeassistant.const import ATTR_ATTRIBUTION, ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -62,7 +56,7 @@ async def test_light_setup(
 
     state = hass.states.get(entity_id)
     assert state
-    assert state.state == STATE_OFF
+    assert state.state == LightState.OFF
     assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
 
 
@@ -88,7 +82,7 @@ async def test_light_update(
 
     state = hass.states.get("light.test_light")
     assert state
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     assert state.attributes[ATTR_BRIGHTNESS] == 128
 
 

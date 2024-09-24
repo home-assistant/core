@@ -36,6 +36,7 @@ from homeassistant.components.light import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     LightEntityFeature,
+    LightState,
 )
 from homeassistant.components.yeelight.const import (
     ATTR_COUNT,
@@ -87,14 +88,7 @@ from homeassistant.components.yeelight.light import (
     YEELIGHT_MONO_EFFECT_LIST,
     YEELIGHT_TEMP_ONLY_EFFECT_LIST,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    CONF_HOST,
-    CONF_NAME,
-    STATE_OFF,
-    STATE_ON,
-    STATE_UNAVAILABLE,
-)
+from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_NAME, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -161,8 +155,8 @@ async def test_services(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert hass.states.get(ENTITY_LIGHT).state == STATE_ON
-    assert hass.states.get(ENTITY_NIGHTLIGHT).state == STATE_OFF
+    assert hass.states.get(ENTITY_LIGHT).state == LightState.ON
+    assert hass.states.get(ENTITY_NIGHTLIGHT).state == LightState.OFF
 
     async def _async_test_service(
         service,
@@ -493,7 +487,7 @@ async def test_services(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -
         {ATTR_ENTITY_ID: ENTITY_LIGHT},
         blocking=True,
     )
-    assert hass.states.get(ENTITY_LIGHT).state == STATE_OFF
+    assert hass.states.get(ENTITY_LIGHT).state == LightState.OFF
 
     mocked_bulb.async_turn_on = AsyncMock()
     mocked_bulb.async_set_brightness = AsyncMock(side_effect=BulbException)
@@ -504,7 +498,7 @@ async def test_services(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -
             {ATTR_ENTITY_ID: ENTITY_LIGHT, ATTR_BRIGHTNESS: 50},
             blocking=True,
         )
-    assert hass.states.get(ENTITY_LIGHT).state == STATE_OFF
+    assert hass.states.get(ENTITY_LIGHT).state == LightState.OFF
 
     mocked_bulb.async_set_brightness = AsyncMock(side_effect=TimeoutError)
     with pytest.raises(HomeAssistantError):
@@ -514,7 +508,7 @@ async def test_services(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -
             {ATTR_ENTITY_ID: ENTITY_LIGHT, ATTR_BRIGHTNESS: 55},
             blocking=True,
         )
-    assert hass.states.get(ENTITY_LIGHT).state == STATE_OFF
+    assert hass.states.get(ENTITY_LIGHT).state == LightState.OFF
 
     mocked_bulb.async_set_brightness = AsyncMock(side_effect=socket.error)
     with pytest.raises(HomeAssistantError):
@@ -552,8 +546,8 @@ async def test_update_errors(
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert hass.states.get(ENTITY_LIGHT).state == STATE_ON
-    assert hass.states.get(ENTITY_NIGHTLIGHT).state == STATE_OFF
+    assert hass.states.get(ENTITY_LIGHT).state == LightState.ON
+    assert hass.states.get(ENTITY_NIGHTLIGHT).state == LightState.OFF
 
     # Timeout usually means the bulb is overloaded with commands
     # but will still respond eventually.
@@ -565,7 +559,7 @@ async def test_update_errors(
             {ATTR_ENTITY_ID: ENTITY_LIGHT},
             blocking=True,
         )
-    assert hass.states.get(ENTITY_LIGHT).state == STATE_ON
+    assert hass.states.get(ENTITY_LIGHT).state == LightState.ON
 
     # socket.error usually means the bulb dropped the connection
     # or lost wifi, then came back online and forced the existing

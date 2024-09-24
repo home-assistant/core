@@ -14,6 +14,7 @@ from homeassistant.components.light import (
     FLASH_LONG,
     FLASH_SHORT,
     ColorMode,
+    LightState,
 )
 from homeassistant.components.zha.helpers import (
     ZHADeviceProxy,
@@ -21,7 +22,7 @@ from homeassistant.components.zha.helpers import (
     get_zha_gateway,
     get_zha_gateway_proxy,
 )
-from homeassistant.const import STATE_OFF, STATE_ON, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
 from .common import (
@@ -150,7 +151,7 @@ async def test_light(
     cluster_level = getattr(zigpy_device.endpoints[1], "level", None)
     cluster_identify = getattr(zigpy_device.endpoints[1], "identify", None)
 
-    assert hass.states.get(entity_id).state == STATE_OFF
+    assert hass.states.get(entity_id).state == LightState.OFF
 
     # test turning the lights on and off from the light
     await async_test_on_off_from_light(hass, cluster_on_off, entity_id)
@@ -176,7 +177,7 @@ async def test_light(
         # test getting a brightness change from the network
         await async_test_on_from_light(hass, cluster_on_off, entity_id)
         await async_test_dimmer_from_light(
-            hass, cluster_level, entity_id, 150, STATE_ON
+            hass, cluster_level, entity_id, 150, LightState.ON
         )
 
 
@@ -286,7 +287,7 @@ async def test_on_with_off_color(
     )
 
     light1_state = hass.states.get(device_1_entity_id)
-    assert light1_state.state == STATE_ON
+    assert light1_state.state == LightState.ON
     assert light1_state.attributes["color_temp"] == 235
     assert light1_state.attributes["color_mode"] == ColorMode.COLOR_TEMP
 
@@ -352,7 +353,7 @@ async def test_on_with_off_color(
     )
 
     light1_state = hass.states.get(device_1_entity_id)
-    assert light1_state.state == STATE_ON
+    assert light1_state.state == LightState.ON
     assert light1_state.attributes["brightness"] == 254
     assert light1_state.attributes["color_temp"] == 240
     assert light1_state.attributes["color_mode"] == ColorMode.COLOR_TEMP
@@ -365,12 +366,12 @@ async def async_test_on_off_from_light(
     # turn on at light
     await send_attributes_report(hass, cluster, {1: 0, 0: 1, 2: 3})
     await hass.async_block_till_done(wait_background_tasks=True)
-    assert hass.states.get(entity_id).state == STATE_ON
+    assert hass.states.get(entity_id).state == LightState.ON
 
     # turn off at light
     await send_attributes_report(hass, cluster, {1: 1, 0: 0, 2: 3})
     await hass.async_block_till_done(wait_background_tasks=True)
-    assert hass.states.get(entity_id).state == STATE_OFF
+    assert hass.states.get(entity_id).state == LightState.OFF
 
 
 async def async_test_on_from_light(
@@ -380,7 +381,7 @@ async def async_test_on_from_light(
     # turn on at light
     await send_attributes_report(hass, cluster, {1: -1, 0: 1, 2: 2})
     await hass.async_block_till_done(wait_background_tasks=True)
-    assert hass.states.get(entity_id).state == STATE_ON
+    assert hass.states.get(entity_id).state == LightState.ON
 
 
 async def async_test_on_off_from_hass(

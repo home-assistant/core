@@ -15,8 +15,9 @@ from homeassistant.components.light import (
     ATTR_SUPPORTED_COLOR_MODES,
     DOMAIN as LIGHT_DOMAIN,
     ColorMode,
+    LightState,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -119,7 +120,7 @@ async def test_light_update_entity(
     assert state.attributes.get(ATTR_COLOR_TEMP) == 432
     assert state.attributes.get(ATTR_SUPPORTED_COLOR_MODES) == [ColorMode.COLOR_TEMP]
     assert state.attributes.get(ATTR_COLOR_MODE) == ColorMode.COLOR_TEMP
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
 
     # Off state.
     pywemo_bridge_light.state["onoff"] = 0
@@ -129,4 +130,4 @@ async def test_light_update_entity(
         {ATTR_ENTITY_ID: [wemo_entity.entity_id]},
         blocking=True,
     )
-    assert hass.states.get(wemo_entity.entity_id).state == STATE_OFF
+    assert hass.states.get(wemo_entity.entity_id).state == LightState.OFF

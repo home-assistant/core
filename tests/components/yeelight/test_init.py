@@ -7,6 +7,7 @@ import pytest
 from yeelight import BulbException, BulbType
 from yeelight.aio import KEY_CONNECTED
 
+from homeassistant.components.light import LightState
 from homeassistant.components.yeelight.const import (
     CONF_DETECTED_MODEL,
     CONF_NIGHTLIGHT_SWITCH,
@@ -21,7 +22,6 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_ID,
     CONF_NAME,
-    STATE_ON,
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
@@ -579,7 +579,7 @@ async def test_connection_dropped_resyncs_properties(hass: HomeAssistant) -> Non
             hass, dt_util.utcnow() + timedelta(seconds=STATE_CHANGE_TIME)
         )
         await hass.async_block_till_done()
-        assert hass.states.get("light.test_name").state == STATE_ON
+        assert hass.states.get("light.test_name").state == LightState.ON
         assert len(mocked_bulb.async_get_properties.mock_calls) == 2
 
 
@@ -659,7 +659,7 @@ async def test_async_setup_with_discovery_not_working(hass: HomeAssistant) -> No
         await hass.async_block_till_done()
         assert config_entry.state is ConfigEntryState.LOADED
 
-    assert hass.states.get("light.yeelight_color_0x15243f").state == STATE_ON
+    assert hass.states.get("light.yeelight_color_0x15243f").state == LightState.ON
 
 
 async def test_async_setup_retries_with_wrong_device(

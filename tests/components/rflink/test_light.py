@@ -7,15 +7,9 @@ control of RFLink switch devices.
 
 import pytest
 
-from homeassistant.components.light import ATTR_BRIGHTNESS
+from homeassistant.components.light import ATTR_BRIGHTNESS, LightState
 from homeassistant.components.rflink.entity import EVENT_BUTTON_PRESSED
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    STATE_OFF,
-    STATE_ON,
-)
+from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
 from homeassistant.core import CoreState, HomeAssistant, State, callback
 
 from .test_init import mock_rflink
@@ -387,14 +381,14 @@ async def test_set_level_command(
     # should affect state
     state = hass.states.get(f"{DOMAIN}.l1")
     assert state
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     assert state.attributes[ATTR_BRIGHTNESS] == 170
     # turn off
     event_callback({"id": "newkaku_12345678_0", "command": "off"})
     await hass.async_block_till_done()
     state = hass.states.get(f"{DOMAIN}.l1")
     assert state
-    assert state.state == STATE_OFF
+    assert state.state == LightState.OFF
     # off light shouldn't have brightness
     assert not state.attributes.get(ATTR_BRIGHTNESS)
     # turn on
@@ -402,7 +396,7 @@ async def test_set_level_command(
     await hass.async_block_till_done()
     state = hass.states.get(f"{DOMAIN}.l1")
     assert state
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     assert state.attributes[ATTR_BRIGHTNESS] == 170
 
     # test sending command to a no dimmable device
@@ -411,7 +405,7 @@ async def test_set_level_command(
     # should NOT affect state
     state = hass.states.get(f"{DOMAIN}.l2")
     assert state
-    assert state.state == STATE_OFF
+    assert state.state == LightState.OFF
     assert not state.attributes.get(ATTR_BRIGHTNESS)
 
     # test sending command to a dimmable device
@@ -420,7 +414,7 @@ async def test_set_level_command(
     # should affect state
     state = hass.states.get(f"{DOMAIN}.l3")
     assert state
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     assert state.attributes[ATTR_BRIGHTNESS] == 85
 
     # test sending command to a hybrid device
@@ -429,7 +423,7 @@ async def test_set_level_command(
     # should affect state
     state = hass.states.get(f"{DOMAIN}.l4")
     assert state
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     assert state.attributes[ATTR_BRIGHTNESS] == 255
 
     event_callback({"id": "test_hybrid", "command": "off"})
@@ -437,7 +431,7 @@ async def test_set_level_command(
     # should affect state
     state = hass.states.get(f"{DOMAIN}.l4")
     assert state
-    assert state.state == STATE_OFF
+    assert state.state == LightState.OFF
     # off light shouldn't have brightness
     assert not state.attributes.get(ATTR_BRIGHTNESS)
 
@@ -446,7 +440,7 @@ async def test_set_level_command(
     # should affect state
     state = hass.states.get(f"{DOMAIN}.l4")
     assert state
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     assert state.attributes[ATTR_BRIGHTNESS] == 0
 
 
@@ -595,10 +589,10 @@ async def test_restore_state(
     mock_restore_cache(
         hass,
         (
-            State(f"{DOMAIN}.l1", STATE_ON, {ATTR_BRIGHTNESS: "123"}),
-            State(f"{DOMAIN}.l2", STATE_ON, {ATTR_BRIGHTNESS: "321"}),
-            State(f"{DOMAIN}.l3", STATE_OFF),
-            State(f"{DOMAIN}.l5", STATE_ON, {ATTR_BRIGHTNESS: "222"}),
+            State(f"{DOMAIN}.l1", LightState.ON, {ATTR_BRIGHTNESS: "123"}),
+            State(f"{DOMAIN}.l2", LightState.ON, {ATTR_BRIGHTNESS: "321"}),
+            State(f"{DOMAIN}.l3", LightState.OFF),
+            State(f"{DOMAIN}.l5", LightState.ON, {ATTR_BRIGHTNESS: "222"}),
         ),
     )
 
@@ -610,24 +604,24 @@ async def test_restore_state(
     # hybrid light must restore brightness
     state = hass.states.get(f"{DOMAIN}.l1")
     assert state
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     assert state.attributes[ATTR_BRIGHTNESS] == 123
 
     # normal light do NOT must restore brightness
     state = hass.states.get(f"{DOMAIN}.l2")
     assert state
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     assert not state.attributes.get(ATTR_BRIGHTNESS)
 
     # OFF state also restores (or not)
     state = hass.states.get(f"{DOMAIN}.l3")
     assert state
-    assert state.state == STATE_OFF
+    assert state.state == LightState.OFF
 
     # not cached light must default values
     state = hass.states.get(f"{DOMAIN}.l4")
     assert state
-    assert state.state == STATE_OFF
+    assert state.state == LightState.OFF
     # off light shouldn't have brightness
     assert not state.attributes.get(ATTR_BRIGHTNESS)
     assert state.attributes["assumed_state"]
@@ -635,5 +629,5 @@ async def test_restore_state(
     # test coverage for dimmable light
     state = hass.states.get(f"{DOMAIN}.l5")
     assert state
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     assert state.attributes[ATTR_BRIGHTNESS] == 222

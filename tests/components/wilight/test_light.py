@@ -9,14 +9,9 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_HS_COLOR,
     DOMAIN as LIGHT_DOMAIN,
+    LightState,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    STATE_OFF,
-    STATE_ON,
-)
+from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -146,7 +141,7 @@ async def test_loading_light(
     # First segment of the strip
     state = hass.states.get("light.wl000000000099_1")
     assert state
-    assert state.state == STATE_OFF
+    assert state.state == LightState.OFF
 
     entry = entity_registry.async_get("light.wl000000000099_1")
     assert entry
@@ -170,7 +165,7 @@ async def test_on_off_light_state(
     await hass.async_block_till_done()
     state = hass.states.get("light.wl000000000099_1")
     assert state
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
 
     # Turn off
     await hass.services.async_call(
@@ -183,7 +178,7 @@ async def test_on_off_light_state(
     await hass.async_block_till_done()
     state = hass.states.get("light.wl000000000099_1")
     assert state
-    assert state.state == STATE_OFF
+    assert state.state == LightState.OFF
 
 
 async def test_dimmer_light_state(
@@ -202,7 +197,7 @@ async def test_dimmer_light_state(
 
     state = hass.states.get("light.wl000000000099_1")
     assert state
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     assert state.attributes.get(ATTR_BRIGHTNESS) == 42
 
     await hass.services.async_call(
@@ -215,7 +210,7 @@ async def test_dimmer_light_state(
 
     state = hass.states.get("light.wl000000000099_1")
     assert state
-    assert state.state == STATE_OFF
+    assert state.state == LightState.OFF
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
@@ -227,7 +222,7 @@ async def test_dimmer_light_state(
 
     state = hass.states.get("light.wl000000000099_1")
     assert state
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     assert state.attributes.get(ATTR_BRIGHTNESS) == 100
 
     await hass.services.async_call(
@@ -240,7 +235,7 @@ async def test_dimmer_light_state(
     await hass.async_block_till_done()
     state = hass.states.get("light.wl000000000099_1")
     assert state
-    assert state.state == STATE_OFF
+    assert state.state == LightState.OFF
 
     # Turn on
     await hass.services.async_call(
@@ -253,7 +248,7 @@ async def test_dimmer_light_state(
     await hass.async_block_till_done()
     state = hass.states.get("light.wl000000000099_1")
     assert state
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
 
 
 async def test_color_light_state(
@@ -276,7 +271,7 @@ async def test_color_light_state(
 
     state = hass.states.get("light.wl000000000099_1")
     assert state
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     assert state.attributes.get(ATTR_BRIGHTNESS) == 42
     state_color = [
         round(state.attributes.get(ATTR_HS_COLOR)[0]),
@@ -294,7 +289,7 @@ async def test_color_light_state(
 
     state = hass.states.get("light.wl000000000099_1")
     assert state
-    assert state.state == STATE_OFF
+    assert state.state == LightState.OFF
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
@@ -310,7 +305,7 @@ async def test_color_light_state(
 
     state = hass.states.get("light.wl000000000099_1")
     assert state
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     assert state.attributes.get(ATTR_BRIGHTNESS) == 100
     state_color = [
         round(state.attributes.get(ATTR_HS_COLOR)[0]),
@@ -328,7 +323,7 @@ async def test_color_light_state(
     await hass.async_block_till_done()
     state = hass.states.get("light.wl000000000099_1")
     assert state
-    assert state.state == STATE_OFF
+    assert state.state == LightState.OFF
 
     # Turn on
     await hass.services.async_call(
@@ -341,7 +336,7 @@ async def test_color_light_state(
     await hass.async_block_till_done()
     state = hass.states.get("light.wl000000000099_1")
     assert state
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
 
     # Hue = 0, Saturation = 100
     await hass.services.async_call(
@@ -354,7 +349,7 @@ async def test_color_light_state(
 
     state = hass.states.get("light.wl000000000099_1")
     assert state
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     state_color = [
         round(state.attributes.get(ATTR_HS_COLOR)[0]),
         round(state.attributes.get(ATTR_HS_COLOR)[1]),
@@ -372,5 +367,5 @@ async def test_color_light_state(
 
     state = hass.states.get("light.wl000000000099_1")
     assert state
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     assert state.attributes.get(ATTR_BRIGHTNESS) == 60

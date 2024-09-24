@@ -20,6 +20,7 @@ from homeassistant.components.light import (
     ATTR_TRANSITION,
     DOMAIN as LIGHT_DOMAIN,
     ColorMode,
+    LightState,
 )
 from homeassistant.components.wled.const import (
     CONF_KEEP_MAIN_LIGHT,
@@ -31,8 +32,6 @@ from homeassistant.const import (
     ATTR_ICON,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
-    STATE_OFF,
-    STATE_ON,
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
@@ -58,7 +57,7 @@ async def test_rgb_light_state(
     assert state.attributes.get(ATTR_EFFECT) == "Solid"
     assert state.attributes.get(ATTR_HS_COLOR) == (218.906, 50.196)
     assert state.attributes.get(ATTR_ICON) is None
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
 
     assert (entry := entity_registry.async_get("light.wled_rgb_light"))
     assert entry.unique_id == "aabbccddeeff_0"
@@ -69,7 +68,7 @@ async def test_rgb_light_state(
     assert state.attributes.get(ATTR_EFFECT) == "Wipe"
     assert state.attributes.get(ATTR_HS_COLOR) == (40.0, 100.0)
     assert state.attributes.get(ATTR_ICON) is None
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
 
     assert (entry := entity_registry.async_get("light.wled_rgb_light_segment_1"))
     assert entry.unique_id == "aabbccddeeff_1"
@@ -77,7 +76,7 @@ async def test_rgb_light_state(
     # Test main control of the lightstrip
     assert (state := hass.states.get("light.wled_rgb_light_main"))
     assert state.attributes.get(ATTR_BRIGHTNESS) == 128
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
 
     assert (entry := entity_registry.async_get("light.wled_rgb_light_main"))
     assert entry.unique_id == "aabbccddeeff"
@@ -196,7 +195,7 @@ async def test_dynamically_handle_segments(
 ) -> None:
     """Test if a new/deleted segment is dynamically added/removed."""
     assert (segment0 := hass.states.get("light.wled_rgb_light"))
-    assert segment0.state == STATE_ON
+    assert segment0.state == LightState.ON
     assert not hass.states.get("light.wled_rgb_light_main")
     assert not hass.states.get("light.wled_rgb_light_segment_1")
 
@@ -210,11 +209,11 @@ async def test_dynamically_handle_segments(
     await hass.async_block_till_done()
 
     assert (main := hass.states.get("light.wled_rgb_light_main"))
-    assert main.state == STATE_ON
+    assert main.state == LightState.ON
     assert (segment0 := hass.states.get("light.wled_rgb_light"))
-    assert segment0.state == STATE_ON
+    assert segment0.state == LightState.ON
     assert (segment1 := hass.states.get("light.wled_rgb_light_segment_1"))
-    assert segment1.state == STATE_ON
+    assert segment1.state == LightState.ON
 
     # Test adding if segment shows up again, including the main entity
     mock_wled.update.return_value = return_value
@@ -225,7 +224,7 @@ async def test_dynamically_handle_segments(
     assert (main := hass.states.get("light.wled_rgb_light_main"))
     assert main.state == STATE_UNAVAILABLE
     assert (segment0 := hass.states.get("light.wled_rgb_light"))
-    assert segment0.state == STATE_ON
+    assert segment0.state == LightState.ON
     assert (segment1 := hass.states.get("light.wled_rgb_light_segment_1"))
     assert segment1.state == STATE_UNAVAILABLE
 
@@ -241,7 +240,7 @@ async def test_single_segment_behavior(
 
     assert not hass.states.get("light.wled_rgb_light_main")
     assert (state := hass.states.get("light.wled_rgb_light"))
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
 
     # Test segment brightness takes main into account
     device.state.brightness = 100
@@ -260,7 +259,7 @@ async def test_single_segment_behavior(
     await hass.async_block_till_done()
     state = hass.states.get("light.wled_rgb_light")
     assert state
-    assert state.state == STATE_OFF
+    assert state.state == LightState.OFF
 
     # Test main is turned off when turning off a single segment
     await hass.services.async_call(
@@ -309,7 +308,7 @@ async def test_light_error(
         )
 
     assert (state := hass.states.get("light.wled_rgb_light"))
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     assert mock_wled.segment.call_count == 1
     mock_wled.segment.assert_called_with(on=False, segment_id=0, transition=None)
 
@@ -339,7 +338,7 @@ async def test_light_connection_error(
 async def test_rgbw_light(hass: HomeAssistant, mock_wled: MagicMock) -> None:
     """Test RGBW support for WLED."""
     assert (state := hass.states.get("light.wled_rgbw_light"))
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     assert state.attributes.get(ATTR_SUPPORTED_COLOR_MODES) == [ColorMode.RGBW]
     assert state.attributes.get(ATTR_COLOR_MODE) == ColorMode.RGBW
     assert state.attributes.get(ATTR_RGBW_COLOR) == (255, 0, 0, 139)
@@ -376,14 +375,14 @@ async def test_single_segment_with_keep_main_light(
     await hass.async_block_till_done()
 
     assert (state := hass.states.get("light.wled_rgb_light_main"))
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
 
 
 @pytest.mark.parametrize("device_fixture", ["cct"])
 async def test_cct_light(hass: HomeAssistant, mock_wled: MagicMock) -> None:
     """Test CCT support for WLED."""
     assert (state := hass.states.get("light.wled_cct_light"))
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     assert state.attributes.get(ATTR_SUPPORTED_COLOR_MODES) == [
         ColorMode.COLOR_TEMP,
         ColorMode.RGBW,

@@ -16,15 +16,10 @@ from homeassistant.components.light import (
     ATTR_SUPPORTED_COLOR_MODES,
     DOMAIN as LIGHT_DOMAIN,
     ColorMode,
+    LightState,
 )
 from homeassistant.components.tradfri.const import DOMAIN
-from homeassistant.const import (
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    STATE_OFF,
-    STATE_ON,
-    STATE_UNAVAILABLE,
-)
+from homeassistant.const import SERVICE_TURN_OFF, SERVICE_TURN_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 
 from .common import CommandStore, setup_integration
@@ -98,7 +93,7 @@ async def test_light_state(
 
     state = hass.states.get(entity_id)
     assert state
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     for key, value in state_attributes.items():
         assert state.attributes[key] == value
 
@@ -115,7 +110,7 @@ async def test_light_available(
 
     state = hass.states.get(entity_id)
     assert state
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
 
     await command_store.trigger_observe_callback(
         hass, device, {ATTR_REACHABLE_STATE: 0}
@@ -263,7 +258,7 @@ async def test_turn_on(
 
     state = hass.states.get(entity_id)
     assert state
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     for key, value in state_attributes.items():
         # Allow some rounding error in color conversions.
         assert state.attributes[key] == pytest.approx(value, abs=0.01)
@@ -307,4 +302,4 @@ async def test_turn_off(
 
     state = hass.states.get(entity_id)
     assert state
-    assert state.state == STATE_OFF
+    assert state.state == LightState.OFF

@@ -5,8 +5,7 @@ Call init before using it in your tests to ensure clean test data.
 
 from typing import Any, Literal
 
-from homeassistant.components.light import ColorMode, LightEntity
-from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.components.light import ColorMode, LightEntity, LightState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -25,9 +24,9 @@ def init(empty=False):
         []
         if empty
         else [
-            MockLight("Ceiling", STATE_ON),
-            MockLight("Ceiling", STATE_OFF),
-            MockLight(None, STATE_OFF),
+            MockLight("Ceiling", LightState.ON),
+            MockLight("Ceiling", LightState.OFF),
+            MockLight(None, LightState.OFF),
         ]
     )
 

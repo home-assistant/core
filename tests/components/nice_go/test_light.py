@@ -11,9 +11,10 @@ from homeassistant.components.light import (
     DOMAIN as LIGHT_DOMAIN,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    LightState,
 )
 from homeassistant.components.nice_go.const import DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, Platform
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -80,8 +81,8 @@ async def test_update_light_state(
 
     await setup_integration(hass, mock_config_entry, [Platform.LIGHT])
 
-    assert hass.states.get("light.test_garage_1_light").state == STATE_ON
-    assert hass.states.get("light.test_garage_2_light").state == STATE_OFF
+    assert hass.states.get("light.test_garage_1_light").state == LightState.ON
+    assert hass.states.get("light.test_garage_2_light").state == LightState.OFF
     assert hass.states.get("light.test_garage_3_light") is None
 
     device_update = load_json_object_fixture("device_state_update.json", DOMAIN)
@@ -89,8 +90,8 @@ async def test_update_light_state(
     device_update_1 = load_json_object_fixture("device_state_update_1.json", DOMAIN)
     await mock_config_entry.runtime_data.on_data(device_update_1)
 
-    assert hass.states.get("light.test_garage_1_light").state == STATE_OFF
-    assert hass.states.get("light.test_garage_2_light").state == STATE_ON
+    assert hass.states.get("light.test_garage_1_light").state == LightState.OFF
+    assert hass.states.get("light.test_garage_2_light").state == LightState.ON
     assert hass.states.get("light.test_garage_3_light") is None
 
 

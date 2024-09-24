@@ -17,14 +17,13 @@ from homeassistant.components.light import (
     ATTR_TRANSITION,
     DOMAIN as LIGHT_DOMAIN,
     LightEntityFeature,
+    LightState,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
-    STATE_OFF,
-    STATE_ON,
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
@@ -50,7 +49,7 @@ async def test_light(
     state = hass.states.get(BULB_6_MULTI_COLOR_LIGHT_ENTITY)
 
     assert state
-    assert state.state == STATE_OFF
+    assert state.state == LightState.OFF
     assert state.attributes[ATTR_MIN_MIREDS] == 153
     assert state.attributes[ATTR_MAX_MIREDS] == 370
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == LightEntityFeature.TRANSITION
@@ -80,7 +79,7 @@ async def test_light(
     state = hass.states.get(BULB_6_MULTI_COLOR_LIGHT_ENTITY)
 
     assert state
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
 
     client.async_send_command.reset_mock()
 
@@ -127,7 +126,7 @@ async def test_light(
     node.receive_event(event)
 
     state = hass.states.get(BULB_6_MULTI_COLOR_LIGHT_ENTITY)
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     assert state.attributes[ATTR_COLOR_MODE] == "color_temp"
     assert state.attributes[ATTR_BRIGHTNESS] == 255
     assert state.attributes[ATTR_COLOR_TEMP] == 370
@@ -252,7 +251,7 @@ async def test_light(
     node.receive_event(blue_event)
 
     state = hass.states.get(BULB_6_MULTI_COLOR_LIGHT_ENTITY)
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     assert state.attributes[ATTR_COLOR_MODE] == "hs"
     assert state.attributes[ATTR_BRIGHTNESS] == 255
     assert state.attributes[ATTR_RGB_COLOR] == (255, 76, 255)
@@ -355,7 +354,7 @@ async def test_light(
     node.receive_event(cold_white_event)
 
     state = hass.states.get(BULB_6_MULTI_COLOR_LIGHT_ENTITY)
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     assert state.attributes[ATTR_COLOR_MODE] == "color_temp"
     assert state.attributes[ATTR_BRIGHTNESS] == 255
     assert state.attributes[ATTR_COLOR_TEMP] == 170
@@ -445,7 +444,7 @@ async def test_v4_dimmer_light(
     state = hass.states.get(EATON_RF9640_ENTITY)
 
     assert state
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     # the light should pick currentvalue which has zwave value 22
     assert state.attributes[ATTR_BRIGHTNESS] == 57
 
@@ -455,7 +454,7 @@ async def test_optional_light(
 ) -> None:
     """Test a device that has an additional light endpoint being identified as light."""
     state = hass.states.get(AEON_SMART_SWITCH_LIGHT_ENTITY)
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
 
 
 async def test_rgbw_light(hass: HomeAssistant, client, zen_31, integration) -> None:
@@ -463,7 +462,7 @@ async def test_rgbw_light(hass: HomeAssistant, client, zen_31, integration) -> N
     state = hass.states.get(ZEN_31_ENTITY)
 
     assert state
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == LightEntityFeature.TRANSITION
 
     # Test turning on
@@ -506,7 +505,7 @@ async def test_light_none_color_value(
     state = hass.states.get(entity_id)
 
     assert state
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == LightEntityFeature.TRANSITION
     assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == ["hs"]
 
@@ -517,7 +516,7 @@ async def test_light_on_off_color(
     """Test the light entity for RGB lights without dimming support."""
     node = logic_group_zdb5100
     state = hass.states.get(ZDB5100_ENTITY)
-    assert state.state == STATE_OFF
+    assert state.state == LightState.OFF
 
     async def update_color(red: int, green: int, blue: int) -> None:
         event = Event(
@@ -667,14 +666,14 @@ async def test_light_on_off_color(
     await update_switch_state(False)
 
     state = hass.states.get(ZDB5100_ENTITY)
-    assert state.state == STATE_OFF
+    assert state.state == LightState.OFF
 
     # Force the light to turn on (green)
     await update_color(0, 255, 0)
     await update_switch_state(True)
 
     state = hass.states.get(ZDB5100_ENTITY)
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
 
     client.async_send_command.reset_mock()
 
@@ -800,7 +799,7 @@ async def test_light_color_only(
     """Test the light entity for RGB lights with Color Switch CC only."""
     node = express_controls_ezmultipli
     state = hass.states.get(HSM200_V1_ENTITY)
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
 
     async def update_color(red: int, green: int, blue: int) -> None:
         event = Event(
@@ -917,13 +916,13 @@ async def test_light_color_only(
     await update_color(0, 0, 0)
 
     state = hass.states.get(HSM200_V1_ENTITY)
-    assert state.state == STATE_OFF
+    assert state.state == LightState.OFF
 
     # Force the light to turn on (50% green)
     await update_color(0, 128, 0)
 
     state = hass.states.get(HSM200_V1_ENTITY)
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
@@ -971,7 +970,7 @@ async def test_light_color_only(
     await update_color(0, 128, 0)
 
     state = hass.states.get(HSM200_V1_ENTITY)
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
 
     client.async_send_command.reset_mock()
 
@@ -999,7 +998,7 @@ async def test_light_color_only(
     await update_color(128, 0, 0)
 
     state = hass.states.get(HSM200_V1_ENTITY)
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
 
     # Assert that the color is preserved when changing brightness
     await hass.services.async_call(
@@ -1174,7 +1173,7 @@ async def test_basic_cc_light(
 
     state = hass.states.get(BASIC_LIGHT_ENTITY)
     assert state
-    assert state.state == STATE_OFF
+    assert state.state == LightState.OFF
 
     # Turn on light
     await hass.services.async_call(
@@ -1200,7 +1199,7 @@ async def test_basic_cc_light(
     state = hass.states.get(BASIC_LIGHT_ENTITY)
 
     assert state
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
 
     client.async_send_command.reset_mock()
 
@@ -1226,7 +1225,7 @@ async def test_basic_cc_light(
 
     state = hass.states.get(BASIC_LIGHT_ENTITY)
     assert state
-    assert state.state == STATE_OFF
+    assert state.state == LightState.OFF
 
     # Turn on light with brightness
     await hass.services.async_call(
@@ -1252,7 +1251,7 @@ async def test_basic_cc_light(
     state = hass.states.get(BASIC_LIGHT_ENTITY)
 
     assert state
-    assert state.state == STATE_OFF
+    assert state.state == LightState.OFF
 
     client.async_send_command.reset_mock()
 

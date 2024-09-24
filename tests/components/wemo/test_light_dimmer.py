@@ -7,8 +7,12 @@ from homeassistant.components.homeassistant import (
     DOMAIN as HA_DOMAIN,
     SERVICE_UPDATE_ENTITY,
 )
-from homeassistant.components.light import ATTR_BRIGHTNESS, DOMAIN as LIGHT_DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_ON, STATE_OFF, STATE_ON
+from homeassistant.components.light import (
+    ATTR_BRIGHTNESS,
+    DOMAIN as LIGHT_DOMAIN,
+    LightState,
+)
+from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -76,7 +80,7 @@ async def test_turn_on_brightness(
 
     pywemo_device.set_brightness.assert_called_once_with(80)
     states = hass.states.get(wemo_entity.entity_id)
-    assert states.state == STATE_ON
+    assert states.state == LightState.ON
     assert states.attributes[ATTR_BRIGHTNESS] == 204
 
 
@@ -88,13 +92,13 @@ async def test_light_registry_state_callback(
     pywemo_device.get_state.return_value = 1
     pywemo_registry.callbacks[pywemo_device.name](pywemo_device, "", "")
     await hass.async_block_till_done()
-    assert hass.states.get(wemo_entity.entity_id).state == STATE_ON
+    assert hass.states.get(wemo_entity.entity_id).state == LightState.ON
 
     # Off state.
     pywemo_device.get_state.return_value = 0
     pywemo_registry.callbacks[pywemo_device.name](pywemo_device, "", "")
     await hass.async_block_till_done()
-    assert hass.states.get(wemo_entity.entity_id).state == STATE_OFF
+    assert hass.states.get(wemo_entity.entity_id).state == LightState.OFF
 
 
 async def test_light_update_entity(
@@ -111,7 +115,7 @@ async def test_light_update_entity(
         {ATTR_ENTITY_ID: [wemo_entity.entity_id]},
         blocking=True,
     )
-    assert hass.states.get(wemo_entity.entity_id).state == STATE_ON
+    assert hass.states.get(wemo_entity.entity_id).state == LightState.ON
 
     # Off state.
     pywemo_device.get_state.return_value = 0
@@ -121,4 +125,4 @@ async def test_light_update_entity(
         {ATTR_ENTITY_ID: [wemo_entity.entity_id]},
         blocking=True,
     )
-    assert hass.states.get(wemo_entity.entity_id).state == STATE_OFF
+    assert hass.states.get(wemo_entity.entity_id).state == LightState.OFF

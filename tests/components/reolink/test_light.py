@@ -5,13 +5,16 @@ from unittest.mock import MagicMock, call, patch
 import pytest
 from reolink_aio.exceptions import InvalidParameterError, ReolinkError
 
-from homeassistant.components.light import ATTR_BRIGHTNESS, DOMAIN as LIGHT_DOMAIN
+from homeassistant.components.light import (
+    ATTR_BRIGHTNESS,
+    DOMAIN as LIGHT_DOMAIN,
+    LightState,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
-    STATE_ON,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -39,7 +42,7 @@ async def test_light_state(
     entity_id = f"{Platform.LIGHT}.{TEST_NVR_NAME}_floodlight"
 
     state = hass.states.get(entity_id)
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     assert state.attributes["brightness"] == 255
 
 
@@ -60,7 +63,7 @@ async def test_light_brightness_none(
     entity_id = f"{Platform.LIGHT}.{TEST_NVR_NAME}_floodlight"
 
     state = hass.states.get(entity_id)
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     assert state.attributes["brightness"] is None
 
 
@@ -166,7 +169,7 @@ async def test_host_light_state(
     entity_id = f"{Platform.LIGHT}.{TEST_NVR_NAME}_status_led"
 
     state = hass.states.get(entity_id)
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
 
 
 async def test_host_light_turn_off(

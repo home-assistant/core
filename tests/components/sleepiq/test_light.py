@@ -1,8 +1,8 @@
 """The tests for SleepIQ light platform."""
 
-from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
+from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN, LightState
 from homeassistant.components.sleepiq.coordinator import LONGER_UPDATE_INTERVAL
-from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util.dt import utcnow
@@ -60,7 +60,7 @@ async def test_switch_get_states(hass: HomeAssistant, mock_asyncsleepiq) -> None
 
     assert (
         hass.states.get(f"light.sleepnumber_{BED_NAME_LOWER}_light_1").state
-        == STATE_OFF
+        == LightState.OFF
     )
     mock_asyncsleepiq.beds[BED_ID].foundation.lights[0].is_on = True
 
@@ -68,5 +68,6 @@ async def test_switch_get_states(hass: HomeAssistant, mock_asyncsleepiq) -> None
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert (
-        hass.states.get(f"light.sleepnumber_{BED_NAME_LOWER}_light_1").state == STATE_ON
+        hass.states.get(f"light.sleepnumber_{BED_NAME_LOWER}_light_1").state
+        == LightState.ON
     )

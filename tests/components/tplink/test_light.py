@@ -10,7 +10,7 @@ from kasa import (
     AuthenticationError,
     DeviceType,
     KasaException,
-    LightState,
+    LightState as KasaLightState,
     Module,
     TimeoutError,
 )
@@ -34,16 +34,11 @@ from homeassistant.components.light import (
     ATTR_XY_COLOR,
     DOMAIN as LIGHT_DOMAIN,
     EFFECT_OFF,
+    LightState,
 )
 from homeassistant.components.tplink.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    CONF_HOST,
-    STATE_OFF,
-    STATE_ON,
-    STATE_UNKNOWN,
-)
+from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -163,13 +158,13 @@ async def test_color_light(
         LIGHT_DOMAIN, "turn_off", BASE_PAYLOAD, blocking=True
     )
     light.set_state.assert_called_once_with(
-        LightState(light_on=False, transition=KASA_TRANSITION_VALUE)
+        KasaLightState(light_on=False, transition=KASA_TRANSITION_VALUE)
     )
     light.set_state.reset_mock()
 
     await hass.services.async_call(LIGHT_DOMAIN, "turn_on", BASE_PAYLOAD, blocking=True)
     light.set_state.assert_called_once_with(
-        LightState(light_on=True, transition=KASA_TRANSITION_VALUE)
+        KasaLightState(light_on=True, transition=KASA_TRANSITION_VALUE)
     )
     light.set_state.reset_mock()
 
@@ -455,7 +450,7 @@ async def test_off_at_start_light(hass: HomeAssistant) -> None:
     light.is_color = False
     light.is_variable_color_temp = False
     light.is_dimmable = False
-    light.state = LightState(light_on=False)
+    light.state = KasaLightState(light_on=False)
 
     with _patch_discovery(device=device), _patch_connect(device=device):
         await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
@@ -478,7 +473,7 @@ async def test_dimmer_turn_on_fix(hass: HomeAssistant) -> None:
     device = _mocked_device(modules=[Module.Light], alias="my_light")
     light = device.modules[Module.Light]
     device.device_type = DeviceType.Dimmer
-    light.state = LightState(light_on=False)
+    light.state = KasaLightState(light_on=False)
 
     with _patch_discovery(device=device), _patch_connect(device=device):
         await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
@@ -493,7 +488,7 @@ async def test_dimmer_turn_on_fix(hass: HomeAssistant) -> None:
         LIGHT_DOMAIN, "turn_on", {ATTR_ENTITY_ID: entity_id}, blocking=True
     )
     light.set_state.assert_called_once_with(
-        LightState(
+        KasaLightState(
             light_on=True,
             brightness=None,
             hue=None,
@@ -530,7 +525,7 @@ async def test_smart_strip_effects(
     entity_id = "light.my_light"
 
     state = hass.states.get(entity_id)
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     assert state.attributes[ATTR_EFFECT] == "Effect1"
     assert state.attributes[ATTR_EFFECT_LIST] == ["Off", "Effect1", "Effect2"]
 
@@ -560,7 +555,7 @@ async def test_smart_strip_effects(
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=30))
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     assert state.attributes[ATTR_EFFECT] == "Effect2"
 
     # Test setting light effect off
@@ -573,7 +568,7 @@ async def test_smart_strip_effects(
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=30))
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     assert state.attributes[ATTR_EFFECT] == "off"
     light.set_state.assert_not_called()
 
@@ -588,7 +583,7 @@ async def test_smart_strip_effects(
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=30))
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     assert state.attributes[ATTR_EFFECT] == "off"
     assert "Invalid effect Effect3 for" in caplog.text
 
@@ -597,15 +592,15 @@ async def test_smart_strip_effects(
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     assert state.attributes[ATTR_EFFECT] == EFFECT_OFF
 
-    light.state = LightState(light_on=False)
+    light.state = KasaLightState(light_on=False)
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=20))
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
-    assert state.state == STATE_OFF
+    assert state.state == LightState.OFF
     assert state.attributes[ATTR_EFFECT] is None
 
     await hass.services.async_call(
@@ -617,13 +612,13 @@ async def test_smart_strip_effects(
     light.set_state.assert_called_once()
     light.set_state.reset_mock()
 
-    light.state = LightState(light_on=True)
+    light.state = KasaLightState(light_on=True)
     light_effect.effect_list = None
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=30))
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     assert state.attributes[ATTR_EFFECT_LIST] is None
 
 
@@ -646,7 +641,7 @@ async def test_smart_strip_custom_random_effect(hass: HomeAssistant) -> None:
     entity_id = "light.my_light"
 
     state = hass.states.get(entity_id)
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
 
     await hass.services.async_call(
         DOMAIN,
@@ -716,15 +711,15 @@ async def test_smart_strip_custom_random_effect(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
 
-    light.state = LightState(light_on=False)
+    light.state = KasaLightState(light_on=False)
     light_effect.effect = LightEffect.LIGHT_EFFECTS_OFF
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=20))
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
-    assert state.state == STATE_OFF
+    assert state.state == LightState.OFF
     assert state.attributes[ATTR_EFFECT] is None
 
     await hass.services.async_call(
@@ -800,7 +795,7 @@ async def test_smart_strip_custom_random_effect_at_start(hass: HomeAssistant) ->
     entity_id = "light.my_light"
 
     state = hass.states.get(entity_id)
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     # fallback to set HSV when custom effect is not known so it does turn back on
     await hass.services.async_call(
         LIGHT_DOMAIN,
@@ -830,7 +825,7 @@ async def test_smart_strip_custom_sequence_effect(hass: HomeAssistant) -> None:
     entity_id = "light.my_light"
 
     state = hass.states.get(entity_id)
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
 
     await hass.services.async_call(
         DOMAIN,
@@ -999,7 +994,7 @@ async def test_scene_effect_light(
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
-    assert state.state is STATE_ON
+    assert state.state == LightState.ON
     assert state.attributes["effect"] is EFFECT_OFF
 
     await hass.services.async_call(
@@ -1021,7 +1016,7 @@ async def test_scene_effect_light(
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
-    assert state.state is STATE_OFF
+    assert state.state == LightState.OFF
 
     await hass.services.async_call(
         "scene",
@@ -1040,5 +1035,5 @@ async def test_scene_effect_light(
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
-    assert state.state is STATE_ON
+    assert state.state == LightState.ON
     assert state.attributes["effect"] is EFFECT_OFF

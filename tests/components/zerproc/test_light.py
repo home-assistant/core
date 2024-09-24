@@ -14,6 +14,7 @@ from homeassistant.components.light import (
     ATTR_XY_COLOR,
     SCAN_INTERVAL,
     ColorMode,
+    LightState,
 )
 from homeassistant.components.zerproc.const import (
     DATA_ADDRESSES,
@@ -24,8 +25,6 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
     ATTR_SUPPORTED_FEATURES,
-    STATE_OFF,
-    STATE_ON,
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
@@ -98,7 +97,7 @@ async def test_init(hass: HomeAssistant, mock_entry) -> None:
         await hass.async_block_till_done()
 
     state = hass.states.get("light.ledblue_ccddeeff")
-    assert state.state == STATE_OFF
+    assert state.state == LightState.OFF
     assert state.attributes == {
         ATTR_FRIENDLY_NAME: "LEDBlue-CCDDEEFF",
         ATTR_SUPPORTED_COLOR_MODES: [ColorMode.HS],
@@ -111,7 +110,7 @@ async def test_init(hass: HomeAssistant, mock_entry) -> None:
     }
 
     state = hass.states.get("light.ledblue_33445566")
-    assert state.state == STATE_ON
+    assert state.state == LightState.ON
     assert state.attributes == {
         ATTR_FRIENDLY_NAME: "LEDBlue-33445566",
         ATTR_SUPPORTED_COLOR_MODES: [ColorMode.HS],
@@ -282,7 +281,7 @@ async def test_light_update(hass: HomeAssistant, mock_light) -> None:
     utcnow = dt_util.utcnow()
 
     state = hass.states.get("light.ledblue_ccddeeff")
-    assert state.state == STATE_OFF
+    assert state.state == LightState.OFF
     assert state.attributes == {
         ATTR_FRIENDLY_NAME: "LEDBlue-CCDDEEFF",
         ATTR_SUPPORTED_COLOR_MODES: [ColorMode.HS],
@@ -322,7 +321,7 @@ async def test_light_update(hass: HomeAssistant, mock_light) -> None:
             await hass.async_block_till_done()
 
         state = hass.states.get("light.ledblue_ccddeeff")
-        assert state.state == STATE_OFF
+        assert state.state == LightState.OFF
         assert state.attributes == {
             ATTR_FRIENDLY_NAME: "LEDBlue-CCDDEEFF",
             ATTR_SUPPORTED_COLOR_MODES: [ColorMode.HS],
@@ -344,7 +343,7 @@ async def test_light_update(hass: HomeAssistant, mock_light) -> None:
             await hass.async_block_till_done()
 
         state = hass.states.get("light.ledblue_ccddeeff")
-        assert state.state == STATE_ON
+        assert state.state == LightState.ON
         assert state.attributes == {
             ATTR_FRIENDLY_NAME: "LEDBlue-CCDDEEFF",
             ATTR_SUPPORTED_COLOR_MODES: [ColorMode.HS],
