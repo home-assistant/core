@@ -87,13 +87,18 @@ async def test_attribute_select_entities(
     entity_id = "select.mock_dimmable_light_power_on_behavior_on_startup"
     state = hass.states.get(entity_id)
     assert state
-    assert state.state == "Previous"
-    assert state.attributes["options"] == ["On", "Off", "Toggle", "Previous"]
+    assert state.state == "previous"
+    assert state.attributes["options"] == ["on", "off", "toggle", "previous"]
     assert (
         state.attributes["friendly_name"]
-        == "Mock Dimmable Light Power-on behavior on Startup"
+        == "Mock Dimmable Light Power-on behavior on startup"
     )
     set_node_attribute(light_node, 1, 6, 16387, 1)
     await trigger_subscription_callback(hass, matter_client)
     state = hass.states.get(entity_id)
-    assert state.state == "On"
+    assert state.state == "on"
+    # test that an invalid value (e.g. 255) leads to an unknown state
+    set_node_attribute(light_node, 1, 6, 16387, 255)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get(entity_id)
+    assert state.state == "unknown"

@@ -1602,7 +1602,7 @@ async def test_lock_unlock_lock(hass: HomeAssistant) -> None:
     assert trait.LockUnlockTrait.might_2fa(lock.DOMAIN, LockEntityFeature.OPEN, None)
 
     trt = trait.LockUnlockTrait(
-        hass, State("lock.front_door", lock.STATE_LOCKED), PIN_CONFIG
+        hass, State("lock.front_door", lock.LockState.LOCKED), PIN_CONFIG
     )
 
     assert trt.sync_attributes() == {}
@@ -1628,7 +1628,7 @@ async def test_lock_unlock_unlocking(hass: HomeAssistant) -> None:
     assert trait.LockUnlockTrait.might_2fa(lock.DOMAIN, LockEntityFeature.OPEN, None)
 
     trt = trait.LockUnlockTrait(
-        hass, State("lock.front_door", lock.STATE_UNLOCKING), PIN_CONFIG
+        hass, State("lock.front_door", lock.LockState.UNLOCKING), PIN_CONFIG
     )
 
     assert trt.sync_attributes() == {}
@@ -1645,7 +1645,7 @@ async def test_lock_unlock_lock_jammed(hass: HomeAssistant) -> None:
     assert trait.LockUnlockTrait.might_2fa(lock.DOMAIN, LockEntityFeature.OPEN, None)
 
     trt = trait.LockUnlockTrait(
-        hass, State("lock.front_door", lock.STATE_JAMMED), PIN_CONFIG
+        hass, State("lock.front_door", lock.LockState.JAMMED), PIN_CONFIG
     )
 
     assert trt.sync_attributes() == {}
@@ -1670,7 +1670,7 @@ async def test_lock_unlock_unlock(hass: HomeAssistant) -> None:
     )
 
     trt = trait.LockUnlockTrait(
-        hass, State("lock.front_door", lock.STATE_LOCKED), PIN_CONFIG
+        hass, State("lock.front_door", lock.LockState.LOCKED), PIN_CONFIG
     )
 
     assert trt.sync_attributes() == {}
@@ -1706,7 +1706,7 @@ async def test_lock_unlock_unlock(hass: HomeAssistant) -> None:
 
     # Test without pin
     trt = trait.LockUnlockTrait(
-        hass, State("lock.front_door", lock.STATE_LOCKED), BASIC_CONFIG
+        hass, State("lock.front_door", lock.LockState.LOCKED), BASIC_CONFIG
     )
 
     with pytest.raises(error.SmartHomeError) as err:

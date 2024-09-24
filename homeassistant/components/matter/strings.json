@@ -165,7 +165,13 @@
         }
       },
       "startup_on_off": {
-        "name": "Power-on behavior on Startup"
+        "name": "Power-on behavior on startup",
+        "state": {
+          "on": "[%key:common::state::on%]",
+          "off": "[%key:common::state::off%]",
+          "toggle": "[%key:common::action::toggle%]",
+          "previous": "Previous"
+        }
       }
     },
     "sensor": {

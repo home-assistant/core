@@ -2911,7 +2911,6 @@ async def test_manual_add_overrides_ignored_entry_singleton(
 @pytest.mark.parametrize(
     (
         "discovery_keys",
-        "entry_source",
         "entry_unique_id",
         "flow_context",
         "flow_source",
@@ -2922,7 +2921,6 @@ async def test_manual_add_overrides_ignored_entry_singleton(
         # No discovery key
         (
             {},
-            config_entries.SOURCE_IGNORE,
             "mock-unique-id",
             {},
             config_entries.SOURCE_ZEROCONF,
@@ -2932,7 +2930,6 @@ async def test_manual_add_overrides_ignored_entry_singleton(
         # Discovery key added to ignored entry data
         (
             {},
-            config_entries.SOURCE_IGNORE,
             "mock-unique-id",
             {"discovery_key": DiscoveryKey(domain="test", key="blah", version=1)},
             config_entries.SOURCE_ZEROCONF,
@@ -2942,7 +2939,6 @@ async def test_manual_add_overrides_ignored_entry_singleton(
         # Discovery key added to ignored entry data
         (
             {"test": (DiscoveryKey(domain="test", key="bleh", version=1),)},
-            config_entries.SOURCE_IGNORE,
             "mock-unique-id",
             {"discovery_key": DiscoveryKey(domain="test", key="blah", version=1)},
             config_entries.SOURCE_ZEROCONF,
@@ -2970,7 +2966,6 @@ async def test_manual_add_overrides_ignored_entry_singleton(
                     DiscoveryKey(domain="test", key="10", version=1),
                 )
             },
-            config_entries.SOURCE_IGNORE,
             "mock-unique-id",
             {"discovery_key": DiscoveryKey(domain="test", key="11", version=1)},
             config_entries.SOURCE_ZEROCONF,
@@ -2993,33 +2988,102 @@ async def test_manual_add_overrides_ignored_entry_singleton(
         # Discovery key already in ignored entry data
         (
             {"test": (DiscoveryKey(domain="test", key="blah", version=1),)},
-            config_entries.SOURCE_IGNORE,
             "mock-unique-id",
             {"discovery_key": DiscoveryKey(domain="test", key="blah", version=1)},
             config_entries.SOURCE_ZEROCONF,
             data_entry_flow.FlowResultType.ABORT,
             {"test": (DiscoveryKey(domain="test", key="blah", version=1),)},
         ),
-        # Discovery key not added to user entry data
-        (
-            {},
-            config_entries.SOURCE_USER,
-            "mock-unique-id",
-            {"discovery_key": DiscoveryKey(domain="test", key="blah", version=1)},
-            config_entries.SOURCE_ZEROCONF,
-            data_entry_flow.FlowResultType.ABORT,
-            {},
-        ),
         # Flow not aborted when unique id is not matching
         (
             {},
-            config_entries.SOURCE_IGNORE,
             "mock-unique-id-2",
             {"discovery_key": DiscoveryKey(domain="test", key="blah", version=1)},
             config_entries.SOURCE_ZEROCONF,
             data_entry_flow.FlowResultType.FORM,
             {},
         ),
+    ],
+)
+@pytest.mark.parametrize(
+    "entry_source",
+    [
+        config_entries.SOURCE_IGNORE,
+        config_entries.SOURCE_USER,
+        config_entries.SOURCE_ZEROCONF,
+    ],
+)
+async def test_update_discovery_keys(
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+    discovery_keys: tuple,
+    entry_source: str,
+    entry_unique_id: str,
+    flow_context: dict,
+    flow_source: str,
+    flow_result: data_entry_flow.FlowResultType,
+    updated_discovery_keys: tuple,
+) -> None:
+    """Test that discovery keys of an entry can be updated."""
+    hass.config.components.add("comp")
+    entry = MockConfigEntry(
+        domain="comp",
+        discovery_keys=discovery_keys,
+        unique_id=entry_unique_id,
+        state=config_entries.ConfigEntryState.LOADED,
+        source=entry_source,
+    )
+    entry.add_to_hass(hass)
+
+    mock_integration(hass, MockModule("comp"))
+    mock_platform(hass, "comp.config_flow", None)
+
+    class TestFlow(config_entries.ConfigFlow):
+        """Test flow."""
+
+        VERSION = 1
+
+        async def async_step_user(self, user_input=None):
+            """Test user step."""
+            await self.async_set_unique_id("mock-unique-id")
+            self._abort_if_unique_id_configured(reload_on_update=False)
+            return self.async_show_form(step_id="step2")
+
+        async def async_step_step2(self, user_input=None):
+            raise NotImplementedError
+
+        async def async_step_zeroconf(self, discovery_info=None):
+            """Test zeroconf step."""
+            return await self.async_step_user(discovery_info)
+
+    with (
+        mock_config_flow("comp", TestFlow),
+        patch(
+            "homeassistant.config_entries.ConfigEntries.async_reload"
+        ) as async_reload,
+    ):
+        result = await manager.flow.async_init(
+            "comp", context={"source": flow_source} | flow_context
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == flow_result
+    assert entry.data == {}
+    assert entry.discovery_keys == updated_discovery_keys
+    assert len(async_reload.mock_calls) == 0
+
+
+@pytest.mark.parametrize(
+    (
+        "discovery_keys",
+        "entry_source",
+        "entry_unique_id",
+        "flow_context",
+        "flow_source",
+        "flow_result",
+        "updated_discovery_keys",
+    ),
+    [
         # Flow not aborted when user initiated flow
         (
             {},
@@ -3032,7 +3096,7 @@ async def test_manual_add_overrides_ignored_entry_singleton(
         ),
     ],
 )
-async def test_ignored_entry_update_discovery_keys(
+async def test_update_discovery_keys_2(
     hass: HomeAssistant,
     manager: config_entries.ConfigEntries,
     discovery_keys: tuple,
@@ -3043,7 +3107,7 @@ async def test_ignored_entry_update_discovery_keys(
     flow_result: data_entry_flow.FlowResultType,
     updated_discovery_keys: tuple,
 ) -> None:
-    """Test that discovery keys of an ignored entry can be updated."""
+    """Test that discovery keys of an entry can be updated."""
     hass.config.components.add("comp")
     entry = MockConfigEntry(
         domain="comp",

@@ -1388,7 +1388,6 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager[ConfigFlowResult]):
                         result["handler"], unique_id
                     )
                 )
-                and entry.source == SOURCE_IGNORE
                 and discovery_key
                 not in (
                     known_discovery_keys := entry.discovery_keys.get(

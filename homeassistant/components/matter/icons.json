@@ -25,6 +25,15 @@
     "sensor": {
       "contamination_state": {
         "default": "mdi:air-filter"
+      },
+      "air_quality": {
+        "default": "mdi:air-filter"
+      },
+      "hepa_filter_condition": {
+        "default": "mdi:filter-check"
+      },
+      "activated_carbon_filter_condition": {
+        "default": "mdi:filter-check"
       }
     }
   }

@@ -315,7 +315,6 @@ DISCOVERY_SCHEMAS = [
             # convert to set first to remove the duplicate unknown value
             options=list(set(AIR_QUALITY_MAP.values())),
             measurement_to_ha=lambda x: AIR_QUALITY_MAP[x],
-            icon="mdi:air-filter",
         ),
         entity_class=MatterSensor,
         required_attributes=(clusters.AirQuality.Attributes.AirQuality,),
@@ -367,7 +366,6 @@ DISCOVERY_SCHEMAS = [
             device_class=None,
             state_class=SensorStateClass.MEASUREMENT,
             translation_key="hepa_filter_condition",
-            icon="mdi:filter-check",
         ),
         entity_class=MatterSensor,
         required_attributes=(clusters.HepaFilterMonitoring.Attributes.Condition,),
@@ -380,7 +378,6 @@ DISCOVERY_SCHEMAS = [
             device_class=None,
             state_class=SensorStateClass.MEASUREMENT,
             translation_key="activated_carbon_filter_condition",
-            icon="mdi:filter-check",
         ),
         entity_class=MatterSensor,
         required_attributes=(
