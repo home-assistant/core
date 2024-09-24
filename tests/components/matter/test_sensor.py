@@ -546,3 +546,23 @@ async def test_air_purifier_sensor(
     assert state.state == "100"
     assert state.attributes["state_class"] == "measurement"
     assert state.attributes["unit_of_measurement"] == "%"
+
+
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
+async def test_smoke_alarm(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    smoke_detector: MatterNode,
+) -> None:
+    """Test smoke detector."""
+
+    # Battery
+    state = hass.states.get("sensor.smoke_sensor_battery")
+    assert state
+    assert state.state == "94"
+
+    # Voltage
+    state = hass.states.get("sensor.smoke_sensor_voltage")
+    assert state
+    assert state.state == "0.0"

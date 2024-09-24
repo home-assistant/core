@@ -107,47 +107,6 @@ async def test_battery_sensor(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     matter_client: MagicMock,
-    smoke_detector: MatterNode,
-) -> None:
-    """Test smoke detector."""
-
-    # Muted
-    state = hass.states.get("binary_sensor.smoke_sensor_muted")
-    assert state
-    assert state.state == STATE_OFF
-
-    # Muted
-    state = hass.states.get("binary_sensor.smoke_sensor_end_of_service")
-    assert state
-    assert state.state == STATE_OFF
-
-    # Muted
-    state = hass.states.get("binary_sensor.smoke_sensor_battery_alert")
-    assert state
-    assert state.state == STATE_OFF
-
-    # Muted
-    state = hass.states.get("binary_sensor.smoke_sensor_test_in_progress")
-    assert state
-    assert state.state == STATE_OFF
-
-    # Muted
-    state = hass.states.get("binary_sensor.smoke_sensor_hardware_fault")
-    assert state
-    assert state.state == STATE_OFF
-
-    # Muted
-    state = hass.states.get("binary_sensor.smoke_sensor_smoke")
-    assert state
-    assert state.state == STATE_OFF
-
-
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
-async def test_smoke_alarm(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    matter_client: MagicMock,
     door_lock: MatterNode,
 ) -> None:
     """Test battery sensor."""
@@ -169,3 +128,43 @@ async def test_smoke_alarm(
 
     assert entry
     assert entry.entity_category == EntityCategory.DIAGNOSTIC
+
+
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
+async def test_smoke_alarm(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    smoke_detector: MatterNode,
+) -> None:
+    """Test smoke detector."""
+
+    # Muted
+    state = hass.states.get("binary_sensor.smoke_sensor_muted")
+    assert state
+    assert state.state == STATE_OFF
+
+    # End of service
+    state = hass.states.get("binary_sensor.smoke_sensor_end_of_service")
+    assert state
+    assert state.state == STATE_OFF
+
+    # Battery alert
+    state = hass.states.get("binary_sensor.smoke_sensor_battery_alert")
+    assert state
+    assert state.state == STATE_OFF
+
+    # Test in progress
+    state = hass.states.get("binary_sensor.smoke_sensor_test_in_progress")
+    assert state
+    assert state.state == STATE_OFF
+
+    # Hardware fault
+    state = hass.states.get("binary_sensor.smoke_sensor_hardware_fault")
+    assert state
+    assert state.state == STATE_OFF
+
+    # Smoke
+    state = hass.states.get("binary_sensor.smoke_sensor_smoke")
+    assert state
+    assert state.state == STATE_OFF
