@@ -93,7 +93,7 @@ async def async_attach_trigger(
     """Listen for state changes based on configuration."""
     trigger_data = trigger_info["trigger_data"]
     variables = trigger_info["variables"] or {}
-    entities: dict[str, CALLBACK_TYPE] = {}
+    entities: dict[tuple[str, timedelta], CALLBACK_TYPE] = {}
     removes: list[CALLBACK_TYPE] = []
     job = HassJob(action, f"time trigger {trigger_info}")
 
