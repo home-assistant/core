@@ -36,7 +36,12 @@ _MODULES: dict[str, set[str]] = {
     "cover": {"CoverEntity", "CoverEntityDescription"},
     "date": {"DateEntity", "DateEntityDescription"},
     "datetime": {"DateTimeEntity", "DateTimeEntityDescription"},
-    "device_tracker": {"DeviceTrackerEntity", "ScannerEntity", "TrackerEntity"},
+    "device_tracker": {
+        "DeviceTrackerEntity",
+        "ScannerEntity",
+        "TrackerEntity",
+        "TrackerEntityDescription",
+    },
     "event": {"EventEntity", "EventEntityDescription"},
     "fan": {"FanEntity", "FanEntityDescription"},
     "geo_location": {"GeolocationEvent"},

@@ -24,7 +24,7 @@ from homeassistant.helpers.device_registry import (
     EventDeviceRegistryUpdatedData,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity_platform import EntityPlatform
 from homeassistant.helpers.typing import StateType
@@ -206,11 +206,16 @@ CACHED_TRACKER_PROPERTIES_WITH_ATTR_ = {
 }
 
 
+class TrackerEntityDescription(EntityDescription, frozen_or_thawed=True):
+    """A class that describes tracker entities."""
+
+
 class TrackerEntity(
     BaseTrackerEntity, cached_properties=CACHED_TRACKER_PROPERTIES_WITH_ATTR_
 ):
     """Base class for a tracked device."""
 
+    entity_description: TrackerEntityDescription
     _attr_latitude: float | None = None
     _attr_location_accuracy: int = 0
     _attr_location_name: str | None = None
